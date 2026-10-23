@@ -14,12 +14,14 @@ import stirling.software.SPDF.model.api.PDFWithPageNums;
 public class AddStampRequest extends PDFWithPageNums {
 
     @Schema(
-            description = "The stamp type (text or image)",
-            allowableValues = {"text", "image"},
+            description = "The stamp type (text, image or qr)",
+            allowableValues = {"text", "image", "qr"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String stampType;
 
-    @Schema(description = "The stamp text", defaultValue = "Stirling Software")
+    @Schema(
+            description = "The stamp text, or the QR code content when the stamp type is qr",
+            defaultValue = "Stirling Software")
     private String stampText;
 
     @Schema(description = "The stamp image")

@@ -1,14 +1,14 @@
-import { apiClient } from "@portal/api/http";
-import type { WireRoutingRule } from "@app/policies/types";
+import { apiClient } from "@processor/api/http";
+import type { WireRoutingRule } from "@editor/policies/types";
 import {
   type SupportingFileBindings,
   type ToolApiStep,
-} from "@app/hooks/tools/shared/toolAutomation";
+} from "@editor/hooks/tools/shared/toolAutomation";
 import type {
   PolicyRunView,
   PolicyRunStatus,
   RunOutputFile,
-} from "@app/policies/types";
+} from "@editor/policies/types";
 
 /**
  * Pipelines service layer: the backend contract.

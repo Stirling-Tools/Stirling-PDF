@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import { DeleteFilesDialog } from "@editor/components/filesPage/DeleteFilesDialog";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const buildFileStub = (
   overrides: Partial<StirlingFileStub> = {},

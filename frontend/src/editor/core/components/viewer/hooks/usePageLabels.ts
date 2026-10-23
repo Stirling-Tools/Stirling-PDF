@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { getPageLabels } from "@app/services/pdfiumService";
-import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
+import { getPageLabels } from "@editor/services/pdfiumService";
+import { runPdfiumScan } from "@editor/services/pdfiumScanQueue";
 
 // `/PageLabels` is immutable for a given set of bytes and the viewer re-renders
 // on every page turn, so labels are parsed once per document and cached by

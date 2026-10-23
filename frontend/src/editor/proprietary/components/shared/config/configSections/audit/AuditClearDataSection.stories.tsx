@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AuditClearDataSection from "@app/components/shared/config/configSections/audit/AuditClearDataSection";
+import AuditClearDataSection from "@editor/components/shared/config/configSections/audit/AuditClearDataSection";
 
 /**
  * Destructive action card for permanently clearing all audit logs, gated

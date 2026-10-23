@@ -1,11 +1,11 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId, ToolOperation } from "@app/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId, ToolOperation } from "@editor/types/file";
 
 // A conflict marker must not outlive its file, nor precede one: the modal would
 // name a file that is gone, and an inherited marker suppresses the child's own.
 
-vi.mock("@app/services/desktopFileLink", () => ({
+vi.mock("@editor/services/desktopFileLink", () => ({
   desktopFileLinkingSupported: true,
   getDiskFileState: vi.fn(async () => ({
     availability: "present" as const,
@@ -14,24 +14,24 @@ vi.mock("@app/services/desktopFileLink", () => ({
   })),
   readFileFromDisk: vi.fn(async () => null),
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: vi.fn(),
     updateFileMetadata: vi.fn(async () => true),
   },
 }));
-vi.mock("@app/utils/thumbnailUtils", () => ({
+vi.mock("@editor/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata: () => new Promise(() => {}),
 }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 
-import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
-import { createChildStub } from "@app/contexts/file/fileActions";
+import { FileLifecycleManager } from "@editor/contexts/file/lifecycle";
+import { createChildStub } from "@editor/contexts/file/fileActions";
 import {
   requestDiskConflictChoice,
   subscribeDiskConflicts,
   __resetDiskConflicts,
-} from "@app/services/diskConflictPrompt";
+} from "@editor/services/diskConflictPrompt";
 
 beforeEach(() => __resetDiskConflicts());
 

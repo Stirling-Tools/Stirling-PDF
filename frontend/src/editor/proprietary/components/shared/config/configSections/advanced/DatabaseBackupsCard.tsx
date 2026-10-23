@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Icon, type IconName } from "@app/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
@@ -17,14 +17,14 @@ import {
   Box,
   Modal,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { alert } from "@app/components/toast";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { alert } from "@editor/components/toast";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
 import databaseManagementService, {
   DatabaseBackupFile,
-} from "@app/services/databaseManagementService";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+} from "@editor/services/databaseManagementService";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 interface DatabaseBackupsCardProps {
   /** Backups exist only for the embedded H2 database. */

@@ -1,14 +1,14 @@
 import {
   Provider,
   useAllProviders,
-} from "@app/components/shared/config/configSections/providerDefinitions";
+} from "@editor/components/shared/config/configSections/providerDefinitions";
 import type {
   ConnectionsSettingsData,
   GoogleDriveSettings,
   OAuth2ClientSettings,
   OAuth2GenericSettings,
   ProviderSettings,
-} from "@app/components/shared/config/configSections/security/securitySettingsTypes";
+} from "@editor/components/shared/config/configSections/security/securitySettingsTypes";
 
 // Shared by the linked and unlinked cards, and by the page, which needs the
 // counts to decide whether either section renders at all.

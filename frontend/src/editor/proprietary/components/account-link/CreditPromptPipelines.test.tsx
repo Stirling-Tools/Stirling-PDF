@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
-import { CreditPromptPipelines } from "@app/components/account-link/CreditPromptPipelines";
+import { CreditPromptPipelines } from "@editor/components/account-link/CreditPromptPipelines";
 
 const { fetchPipelines, setEnabled } = vi.hoisted(() => ({
   fetchPipelines: vi.fn(),
   setEnabled: vi.fn(),
 }));
-vi.mock("@app/services/creditPromptPipelines", () => ({
+vi.mock("@editor/services/creditPromptPipelines", () => ({
   fetchCreditPromptPipelines: fetchPipelines,
   setCreditPromptPipelineEnabled: setEnabled,
 }));
@@ -17,9 +17,9 @@ vi.mock("react-i18next", () => ({
     t: (key: string, fallback?: string) => fallback ?? key,
   }),
 }));
-vi.mock("@app/ui", async () => ({
-  ...(await import("@app/ui/Button")),
-  ...(await import("@app/ui/ToggleSwitch")),
+vi.mock("@editor/ui", async () => ({
+  ...(await import("@editor/ui/Button")),
+  ...(await import("@editor/ui/ToggleSwitch")),
 }));
 
 const optional = {

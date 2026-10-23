@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from "msw";
-import { buildAdminSettingsData } from "@portal/mocks/users";
+import { buildAdminSettingsData } from "@processor/mocks/users";
 
 /** Mock mode serves the REAL routes the users view reads and mutates. */
 export const usersHandlers = [

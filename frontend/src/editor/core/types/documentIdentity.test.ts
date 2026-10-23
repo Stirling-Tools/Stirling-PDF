@@ -3,8 +3,8 @@ import {
   createStirlingFile,
   getFormFillFileId,
   documentBytesReplaced,
-} from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+} from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const ID = "file-1" as FileId;
 

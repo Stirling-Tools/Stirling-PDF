@@ -1,24 +1,24 @@
-import { AccountConnectionNotice } from "@app/portal/components/account-link/AccountConnectionNotice";
+import { AccountConnectionNotice } from "@editor/portal/components/account-link/AccountConnectionNotice";
 import { useCallback, useState } from "react";
-import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
-import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
+import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
+import { SaasSessionBanner } from "@editor/portal/components/account-link/SaasSessionBanner";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, InfoTooltip, Skeleton } from "@app/ui";
-import { Icon } from "@app/ui/Icon";
-import { AccountConnectionLayout } from "@app/components/settings/AccountConnectionLayout";
-import { useAsync } from "@app/portal/hooks/useAsync";
-import { useAccountLinkContext } from "@app/portal/contexts/AccountLinkContext";
-import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
-import { HttpError } from "@app/portal/api/http";
-import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
+import { Banner, Button, InfoTooltip, Skeleton } from "@editor/ui";
+import { Icon } from "@editor/ui/Icon";
+import { AccountConnectionLayout } from "@editor/components/settings/AccountConnectionLayout";
+import { useAsync } from "@editor/portal/hooks/useAsync";
+import { useAccountLinkContext } from "@editor/portal/contexts/AccountLinkContext";
+import { SaasSessionRequiredError } from "@editor/portal/auth/portalSaasSession";
+import { HttpError } from "@editor/portal/api/http";
+import { usePortalSaasSession } from "@editor/portal/hooks/usePortalSaasSession";
 import {
   fetchInstances,
   revokeInstance as apiRevokeInstance,
   type LinkedInstanceRow,
-} from "@app/portal/api/link";
-import { LinkAccountCard } from "@app/portal/components/account-link/LinkAccountCard";
-import { LinkedInstancesTable } from "@app/portal/components/account-link/LinkedInstancesTable";
-import "@app/portal/views/AccountLink.css";
+} from "@editor/portal/api/link";
+import { LinkAccountCard } from "@editor/portal/components/account-link/LinkAccountCard";
+import { LinkedInstancesTable } from "@editor/portal/components/account-link/LinkedInstancesTable";
+import "@editor/portal/views/AccountLink.css";
 
 /** Self-hosted connection status plus the owning team's connected instances. */
 export function AccountLinkPanel() {

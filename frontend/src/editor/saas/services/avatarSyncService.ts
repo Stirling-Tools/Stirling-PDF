@@ -3,7 +3,7 @@
  * Downloads, optimizes, and syncs profile pictures from OAuth providers
  */
 
-import { supabase } from "@app/auth/supabase";
+import { supabase } from "@editor/auth/supabase";
 import type { User } from "@supabase/supabase-js";
 
 const PROFILE_BUCKET = "profile-pictures";

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import "@app/components/settings/AccountConnectionLayout.css";
+import "@editor/components/settings/AccountConnectionLayout.css";
 
 /** Shared settings surface for an instance's account connection and its team's instance list. */
 export function AccountConnectionLayout({

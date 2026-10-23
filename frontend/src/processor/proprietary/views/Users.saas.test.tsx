@@ -1,4 +1,4 @@
-import { UIProvider } from "@portal/contexts/UIContext";
+import { UIProvider } from "@processor/contexts/UIContext";
 import {
   afterAll,
   afterEach,
@@ -16,14 +16,14 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import { MemoryRouter } from "react-router-dom";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import {
   teamSaasHandlers,
   resetTeamSaasStore,
-} from "@portal/mocks/handlers/teamSaas";
+} from "@processor/mocks/handlers/teamSaas";
 
 /**
  * End-to-end SaaS Users page: renders the real <Users> view wired for the SaaS
@@ -34,31 +34,33 @@ import {
  */
 
 // Keep apiClient.local's transport hermetic (no real token / Supabase at import).
-vi.mock("@app/auth", () => ({
+vi.mock("@editor/auth", () => ({
   getStoredToken: () => null,
   clearStoredToken: vi.fn(),
 }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => null,
   configureSupabase: vi.fn(),
 }));
-vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
+vi.mock("@processor/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 
-// Force the SaaS flavor: the portal vitest project resolves @app to proprietary,
+// Force the SaaS flavor: the portal vitest project resolves @editor to proprietary,
 // so redirect the two flavor seams to their real SaaS implementations.
-vi.mock("@app/portal/usersCapabilities", async () => ({
+vi.mock("@editor/portal/usersCapabilities", async () => ({
   usersCapabilities:
-    // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @app alias
+    // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @editor alias
     (await import("../../../editor/saas/portal/usersCapabilities"))
       .usersCapabilities,
 }));
-vi.mock("@app/portal/usersBackend", async () => ({
+vi.mock("@editor/portal/usersBackend", async () => ({
   usersBackend:
-    // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @app alias
+    // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @editor alias
     (await import("../../../editor/saas/portal/usersBackend")).usersBackend,
 }));
 
-vi.mock("@portal/contexts/TierContext", () => ({
+vi.mock("@processor/contexts/TierContext", () => ({
   useTier: () => ({ tier: "pro" }),
 }));
 
@@ -74,7 +76,7 @@ vi.mock("react-i18next", async (importOriginal) => {
   return { ...actual, useTranslation: () => ({ t: i18n.t, i18n }) };
 });
 
-import { Users } from "@portal/views/Users";
+import { Users } from "@processor/views/Users";
 
 const server = setupServer(...teamSaasHandlers);
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));

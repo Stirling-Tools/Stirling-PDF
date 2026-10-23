@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import MergeFileSorter from "@app/components/tools/merge/MergeFileSorter";
+import MergeFileSorter from "@editor/components/tools/merge/MergeFileSorter";
 
 const meta = {
   title: "Tools/Merge/MergeFileSorter",

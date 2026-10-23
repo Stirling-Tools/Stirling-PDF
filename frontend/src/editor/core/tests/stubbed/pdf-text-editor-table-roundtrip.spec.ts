@@ -1,10 +1,10 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
-import { mockAppApis } from "@app/tests/helpers/api-stubs";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
+import { mockAppApis } from "@editor/tests/helpers/api-stubs";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import type { PageRect } from "@app/tools/pdfTextEditor/types";
+import type { PageRect } from "@editor/tools/pdfTextEditor/types";
 
 const fixture = path.join(
   import.meta.dirname,

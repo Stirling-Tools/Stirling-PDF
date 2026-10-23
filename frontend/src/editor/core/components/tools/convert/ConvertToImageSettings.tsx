@@ -1,8 +1,11 @@
 import { Stack, Text, Select, NumberInput, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { COLOR_TYPES, OUTPUT_OPTIONS } from "@app/constants/convertConstants";
-import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import {
+  COLOR_TYPES,
+  OUTPUT_OPTIONS,
+} from "@editor/constants/convertConstants";
+import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface ConvertToImageSettingsProps {
   parameters: ConvertParameters;

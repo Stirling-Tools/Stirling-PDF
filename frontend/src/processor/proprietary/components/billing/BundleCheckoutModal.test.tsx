@@ -7,9 +7,9 @@ import {
   cleanup,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
-import { subscribedWallet } from "@app/billing/walletFixtures";
-import type { LatestBundleQuote } from "@portal/billing/stripe";
+import { BundleCheckoutModal } from "@processor/components/billing/BundleCheckoutModal";
+import { subscribedWallet } from "@editor/billing/walletFixtures";
+import type { LatestBundleQuote } from "@processor/billing/stripe";
 
 const api = vi.hoisted(() => ({
   getLatestBundleQuote: vi.fn(),
@@ -19,8 +19,8 @@ const api = vi.hoisted(() => ({
   acceptBundleStripeQuote: vi.fn(),
   finalizeBundleInvoice: vi.fn(),
 }));
-vi.mock("@portal/billing/stripe", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@portal/billing/stripe")>()),
+vi.mock("@processor/billing/stripe", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@processor/billing/stripe")>()),
   ...api,
 }));
 vi.mock("react-i18next", () => ({

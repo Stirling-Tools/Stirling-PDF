@@ -1,17 +1,17 @@
-import { locateTable } from "@app/tools/pdfTextEditor/util/locateTable";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
-import type { TableCellStyle } from "@app/tools/pdfTextEditor/types";
-import { DeleteObjectCommand } from "@app/tools/pdfTextEditor/commands/DeleteObjectCommand";
-import { defaultCellStyle } from "@app/tools/pdfTextEditor/model/TableModel";
+import { locateTable } from "@editor/tools/pdfTextEditor/util/locateTable";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
+import type { TableCellStyle } from "@editor/tools/pdfTextEditor/types";
+import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
+import { defaultCellStyle } from "@editor/tools/pdfTextEditor/model/TableModel";
 import {
   insertColumnEdges,
   insertRowEdges,
   removeColumnEdges,
   removeRowEdges,
-} from "@app/tools/pdfTextEditor/util/tableGeometry";
+} from "@editor/tools/pdfTextEditor/util/tableGeometry";
 import {
   bandColorFor,
   paintRowFill,
@@ -19,8 +19,8 @@ import {
   removeObjects,
   renormaliseFontBase,
   shiftRunBy,
-} from "@app/tools/pdfTextEditor/commands/tableHelpers";
-import type { RowFill } from "@app/tools/pdfTextEditor/model/TableModel";
+} from "@editor/tools/pdfTextEditor/commands/tableHelpers";
+import type { RowFill } from "@editor/tools/pdfTextEditor/model/TableModel";
 
 export type TableOp = "add-row" | "delete-row" | "add-col" | "delete-col";
 

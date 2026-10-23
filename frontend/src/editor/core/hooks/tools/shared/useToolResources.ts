@@ -3,9 +3,9 @@ import {
   generateThumbnailForFile,
   generateThumbnailWithMetadata,
   ThumbnailWithMetadata,
-} from "@app/utils/thumbnailUtils";
-import { zipFileService } from "@app/services/zipFileService";
-import { usePreferences } from "@app/contexts/PreferencesContext";
+} from "@editor/utils/thumbnailUtils";
+import { zipFileService } from "@editor/services/zipFileService";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
 
 export const useToolResources = () => {
   const { preferences } = usePreferences();

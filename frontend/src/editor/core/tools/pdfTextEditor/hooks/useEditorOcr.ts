@@ -1,27 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import apiClient from "@app/services/apiClient";
-import { ensureBackendReady } from "@app/services/backendReadinessGuard";
-import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
-import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { useCreditCheck } from "@app/hooks/useCreditCheck";
-import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
+import apiClient from "@editor/services/apiClient";
+import { ensureBackendReady } from "@editor/services/backendReadinessGuard";
+import { assertFilesNotBlocked } from "@editor/services/policyFileGuard";
+import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { useCreditCheck } from "@editor/hooks/useCreditCheck";
+import { useToolResources } from "@editor/hooks/tools/shared/useToolResources";
 import {
   buildOCRFormData,
   ocrOperationConfig,
   ocrResponseHandler,
-} from "@app/hooks/tools/ocr/useOCROperation";
-import { defaultParameters } from "@app/hooks/tools/ocr/useOCRParameters";
-import { getAutoOcrLanguage } from "@app/utils/languageMapping";
-import { extractErrorMessage } from "@app/utils/toolErrorHandler";
-import { exportToBlob } from "@app/tools/pdfTextEditor/util/exportPdf";
+} from "@editor/hooks/tools/ocr/useOCROperation";
+import { defaultParameters } from "@editor/hooks/tools/ocr/useOCRParameters";
+import { getAutoOcrLanguage } from "@editor/utils/languageMapping";
+import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
+import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import {
   assertEditorOcrAllowed,
   getEditorOcrBlockedReason,
-} from "@app/tools/pdfTextEditor/util/ocrProtection";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import type { FileId } from "@app/types/file";
+} from "@editor/tools/pdfTextEditor/util/ocrProtection";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { FileId } from "@editor/types/file";
 
 const OCR_ENDPOINT =
   (typeof ocrOperationConfig.endpoint === "function"

@@ -67,13 +67,16 @@ vi.mock("@embedpdf/pdfium", () => ({
   init: vi.fn(async () => pdfium.makeModule()),
 }));
 
-vi.mock("@app/services/wasmPrecompiler", () => ({
+vi.mock("@editor/services/wasmPrecompiler", () => ({
   pdfiumWasmModulePromise: Promise.resolve(null),
   startEagerWasmCompilation: vi.fn(),
   pdfiumWasmUrl: "mem://pdfium-test.wasm",
 }));
 
-import { getPageLabels, resetPdfiumModule } from "@app/services/pdfiumService";
+import {
+  getPageLabels,
+  resetPdfiumModule,
+} from "@editor/services/pdfiumService";
 
 describe("getPageLabels", () => {
   beforeEach(() => {

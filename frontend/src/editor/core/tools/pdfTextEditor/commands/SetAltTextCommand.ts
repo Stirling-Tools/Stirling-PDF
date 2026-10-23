@@ -1,9 +1,9 @@
 import {
   RolledBackError,
   type Command,
-} from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { StructureElementEdit } from "@app/tools/pdfTextEditor/model/PageStructure";
+} from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { StructureElementEdit } from "@editor/tools/pdfTextEditor/model/PageStructure";
 
 /**
  * Set or remove the description of the structure element owning `mcid`.

@@ -7,9 +7,9 @@ import {
   setPageRotation,
   degreesToPdfiumRotation,
   addNewPage,
-} from "@app/services/pdfiumService";
-import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
-import { PDFDocument, PDFPage } from "@app/types/pageEditor";
+} from "@editor/services/pdfiumService";
+import { downloadFileWithPolicy } from "@editor/services/exportWithPolicy";
+import { PDFDocument, PDFPage } from "@editor/types/pageEditor";
 
 // A4 dimensions in PDF points (72 dpi)
 const A4_WIDTH = 595.276;

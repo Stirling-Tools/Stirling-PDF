@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,13 +13,13 @@ import {
   Text,
   Textarea,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import apiClient from "@app/services/apiClient";
-import { supportedLanguages } from "@app/i18n";
-import { alert } from "@app/components/toast";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import apiClient from "@editor/services/apiClient";
+import { supportedLanguages } from "@editor/i18n";
+import { alert } from "@editor/components/toast";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 const languageOptions = Object.entries(supportedLanguages).map(
   ([value, label]) => ({ value, label: `${label} (${value})` }),

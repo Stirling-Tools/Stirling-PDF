@@ -6,17 +6,17 @@ import React, {
   useMemo,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useFileActions } from "@app/contexts/FileContext";
-import { useFileContext } from "@app/contexts/file/fileHooks";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
+import { useFileActions } from "@editor/contexts/FileContext";
+import { useFileContext } from "@editor/contexts/file/fileHooks";
 import {
   useNavigationActions,
   useNavigationState,
-} from "@app/contexts/NavigationContext";
-import { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import { fileStorage } from "@app/services/fileStorage";
-import apiClient from "@app/services/apiClient";
+} from "@editor/contexts/NavigationContext";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import { fileStorage } from "@editor/services/fileStorage";
+import apiClient from "@editor/services/apiClient";
 import {
   extractLatestFilesFromBundle,
   getShareBundleEntryRootId,
@@ -24,7 +24,7 @@ import {
   loadShareBundleEntries,
   parseContentDispositionFilename,
   readResponseHeader,
-} from "@app/services/shareBundleUtils";
+} from "@editor/services/shareBundleUtils";
 
 type CustomFileHandler = (
   files: File[],

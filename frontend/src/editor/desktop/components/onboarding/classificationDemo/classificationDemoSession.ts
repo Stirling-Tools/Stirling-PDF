@@ -3,11 +3,11 @@
  *  it in the tree, and the view can remount while its sweep is still running. */
 
 import { useSyncExternalStore } from "react";
-import type { ClassificationDemoViewData } from "@app/components/onboarding/classificationDemo/classificationDemoShared";
+import type { ClassificationDemoViewData } from "@editor/components/onboarding/classificationDemo/classificationDemoShared";
 import type {
   ClassificationDemoOutcome,
   ClassificationDemoProgress,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSweep";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSweep";
 
 export type ClassificationDemoStatus = "idle" | "running" | "done" | "failed";
 

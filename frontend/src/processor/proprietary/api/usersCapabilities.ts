@@ -3,9 +3,9 @@
  *
  * The Users page UI and its data endpoints are shared across flavors; only this
  * capability set differs. The endpoints are identical - the build flavor just
- * selects the client + credential (`apiClient.local` in @portal/api/http, via the
+ * selects the client + credential (`apiClient.local` in @processor/api/http, via the
  * localBackend seam: self-hosted -> local Spring bearer, SaaS -> SaaS-backend
- * Supabase bearer). Resolved at build time via the `@app/*` alias - see
+ * Supabase bearer). Resolved at build time via the `@editor/*` alias - see
  * `src/editor/proprietary/portal/usersCapabilities.ts`
  * (self-hosted, org-admin: everything) and `src/editor/saas/portal/usersCapabilities.ts`
  * (SaaS, team-leader scoped: invite / rename / remove / seats only).

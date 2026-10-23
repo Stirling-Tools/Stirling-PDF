@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PriceDisplay } from "@app/components/shared/stripeCheckout/components/PriceDisplay";
+import { PriceDisplay } from "@editor/components/shared/stripeCheckout/components/PriceDisplay";
 
 /**
  * Renders a plan's price, either a simple single price or an enterprise

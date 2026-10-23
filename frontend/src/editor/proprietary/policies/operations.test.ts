@@ -7,7 +7,7 @@ import {
   policyStepToWire,
   policyToolIdForEndpoint,
   type PolicyToolId,
-} from "@app/policies/operations";
+} from "@editor/policies/operations";
 
 const ALL_TOOL_IDS = Object.keys(POLICY_OPERATIONS) as PolicyToolId[];
 

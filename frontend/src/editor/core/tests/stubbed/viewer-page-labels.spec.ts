@@ -1,5 +1,5 @@
 import path from "path";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 
 // 6 pages: /PageLabels makes the first three roman (i, ii, iii) and the rest
 // arabic from 1, so index and label disagree from page 4 on.

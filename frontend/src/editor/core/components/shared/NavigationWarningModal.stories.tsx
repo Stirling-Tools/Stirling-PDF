@@ -1,12 +1,12 @@
 import { useEffect, type ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import NavigationWarningModal from "@app/components/shared/NavigationWarningModal";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
+import NavigationWarningModal from "@editor/components/shared/NavigationWarningModal";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
 import {
   NavigationProvider,
   useNavigationGuard,
   type NavigationWarningHandlers,
-} from "@app/contexts/NavigationContext";
+} from "@editor/contexts/NavigationContext";
 
 /**
  * The modal renders nothing until NavigationContext has unsaved changes AND a

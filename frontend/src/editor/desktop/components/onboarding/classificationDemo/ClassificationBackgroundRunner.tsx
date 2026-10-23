@@ -3,15 +3,15 @@
 
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useFolders } from "@app/contexts/FolderContext";
-import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useFolders } from "@editor/contexts/FolderContext";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
 import {
   claimBackgroundClassification,
   finishBackgroundClassification,
   reportBackgroundClassificationProgress,
   useBackgroundClassification,
-} from "@app/components/onboarding/classificationDemo/backgroundClassification";
-import { runClassificationDemoSweep } from "@app/components/onboarding/classificationDemo/classificationDemoSweep";
+} from "@editor/components/onboarding/classificationDemo/backgroundClassification";
+import { runClassificationDemoSweep } from "@editor/components/onboarding/classificationDemo/classificationDemoSweep";
 
 export function ClassificationBackgroundRunner() {
   const { t } = useTranslation();

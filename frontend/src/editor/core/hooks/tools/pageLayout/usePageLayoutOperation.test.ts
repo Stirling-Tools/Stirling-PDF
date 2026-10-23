@@ -2,11 +2,11 @@ import { describe, expect, test } from "vitest";
 import {
   pageLayoutFromApiParams,
   pageLayoutToApiParams,
-} from "@app/hooks/tools/pageLayout/usePageLayoutOperation";
+} from "@editor/hooks/tools/pageLayout/usePageLayoutOperation";
 import {
   PageLayoutParameters,
   defaultParameters,
-} from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
+} from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
 
 describe("pageLayout mappers", () => {
   test.each<Partial<PageLayoutParameters>>([

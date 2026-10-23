@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { FormField, Select } from "@app/ui";
+import { FormField, Select } from "@editor/ui";
 import {
   PDFA_OUTPUT_FORMATS,
   type PdfaOutputFormat,
   type PdfaPolicyParameters,
-} from "@app/policies/pdfaOperation";
-import "@app/components/policies/PolicySetupWizard.css";
+} from "@editor/policies/pdfaOperation";
+import "@editor/components/policies/PolicySetupWizard.css";
 
 /** Configures the PDF/A step: which archival profile to convert to. */
 interface PolicyPdfaConfigProps {

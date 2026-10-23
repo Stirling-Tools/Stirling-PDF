@@ -13,12 +13,12 @@ const { getSession, refreshSession, getStoredTokenMock } = vi.hoisted(() => ({
   getStoredTokenMock: vi.fn(),
 }));
 
-vi.mock("@app/auth", () => ({ getStoredToken: getStoredTokenMock }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth", () => ({ getStoredToken: getStoredTokenMock }));
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => ({ auth: { getSession, refreshSession } }),
   configureSupabase: vi.fn(),
 }));
-vi.mock("@app/portal/auth/saasSupabase", () => ({
+vi.mock("@editor/portal/auth/saasSupabase", () => ({
   ensureSaasSupabase: vi.fn(),
 }));
 
@@ -27,8 +27,8 @@ import {
   HttpError,
   SaasSessionRequiredError,
   SaasUnconfiguredError,
-} from "@app/portal/api/http";
-import { resetPortalSaasSessionState } from "@app/portal/auth/portalSaasSession";
+} from "@editor/portal/api/http";
+import { resetPortalSaasSessionState } from "@editor/portal/auth/portalSaasSession";
 
 const fetchMock = vi.fn();
 

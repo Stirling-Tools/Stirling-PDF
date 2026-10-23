@@ -5,9 +5,9 @@ import type {
   ParsedPdfSections,
   PdfFontInfo,
   PdfComplianceSummary,
-} from "@app/types/getPdfInfo";
-import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
-import KeyValueList from "@app/components/tools/getPdfInfo/shared/KeyValueList";
+} from "@editor/types/getPdfInfo";
+import SectionBlock from "@editor/components/tools/getPdfInfo/shared/SectionBlock";
+import KeyValueList from "@editor/components/tools/getPdfInfo/shared/KeyValueList";
 
 interface SummarySectionProps {
   sections: ParsedPdfSections;

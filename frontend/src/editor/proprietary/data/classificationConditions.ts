@@ -1,4 +1,4 @@
-import type { Condition, MatchesAnyCondition } from "@app/conditions/types";
+import type { Condition, MatchesAnyCondition } from "@editor/conditions/types";
 
 /** Creates the classification comparison offered by the policy wizard and pipeline builder. */
 export function classificationCondition(

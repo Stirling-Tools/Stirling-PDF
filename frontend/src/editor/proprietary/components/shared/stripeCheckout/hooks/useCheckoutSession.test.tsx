@@ -10,26 +10,26 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const getLicenseInfo = vi.fn();
 const getInstallationId = vi.fn();
 
-vi.mock("@app/services/licenseService", () => ({
+vi.mock("@editor/services/licenseService", () => ({
   default: {
     getLicenseInfo: () => getLicenseInfo(),
     getInstallationId: () => getInstallationId(),
   },
 }));
-vi.mock("@app/utils/licenseCheckoutUtils", () => ({
+vi.mock("@editor/utils/licenseCheckoutUtils", () => ({
   resyncExistingLicense: vi.fn(),
   pollTeamCheckout: vi.fn(),
 }));
-vi.mock("@app/utils/protocolDetection", () => ({
+vi.mock("@editor/utils/protocolDetection", () => ({
   getCheckoutMode: () => "embedded",
 }));
-vi.mock("@app/services/serverPlanCheckout", () => ({
+vi.mock("@editor/services/serverPlanCheckout", () => ({
   createServerPlanCheckoutSession: vi.fn(),
 }));
 
-import { useCheckoutSession } from "@app/components/shared/stripeCheckout/hooks/useCheckoutSession";
-import { pollTeamCheckout } from "@app/utils/licenseCheckoutUtils";
-import type { CheckoutState } from "@app/components/shared/stripeCheckout/types/checkout";
+import { useCheckoutSession } from "@editor/components/shared/stripeCheckout/hooks/useCheckoutSession";
+import { pollTeamCheckout } from "@editor/utils/licenseCheckoutUtils";
+import type { CheckoutState } from "@editor/components/shared/stripeCheckout/types/checkout";
 
 const plan = {
   id: "selfhosted:team:yearly",

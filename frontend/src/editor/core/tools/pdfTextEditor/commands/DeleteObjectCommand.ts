@@ -1,16 +1,16 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { TextRunSnapshot } from "@app/tools/pdfTextEditor/types";
-import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { TextRunSnapshot } from "@editor/tools/pdfTextEditor/types";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
   collectContainersByPtr,
   collectMemberPtrs,
   removeMemberPtrs,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   renderScanEdit,
   scanEditOf,
-} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 
 /** Remove a run from the page model and from PDFium. */
 interface CapturedPtr {
