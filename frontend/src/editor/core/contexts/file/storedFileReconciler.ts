@@ -1,4 +1,4 @@
-import { FileId, StirlingFileStub } from "@app/types/fileContext";
+import { FileId, StirlingFileStub } from "@editor/types/fileContext";
 
 // Seam for settling a stored record against wherever it came from. Core owns
 // when a record is reconciled - on open, and when a source reports a change -

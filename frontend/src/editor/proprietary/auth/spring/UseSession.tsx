@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback, type ReactNode } from "react";
-import { springAuth } from "@app/auth/spring/springAuthClient";
-import { getSpringAuthConfig } from "@app/auth/config";
-import { isAdminRole } from "@app/auth/roles";
-import { AuthContext } from "@app/auth/context";
+import { springAuth } from "@editor/auth/spring/springAuthClient";
+import { getSpringAuthConfig } from "@editor/auth/config";
+import { isAdminRole } from "@editor/auth/roles";
+import { AuthContext } from "@editor/auth/context";
 import {
   defaultTranslate,
   type AuthContextValue,
@@ -11,8 +11,8 @@ import {
   type AuthSession,
   type AuthUser,
   type AuthTranslate,
-} from "@app/auth/types";
-import { suspendWorkbenchSession } from "@app/services/workbenchSession";
+} from "@editor/auth/types";
+import { suspendWorkbenchSession } from "@editor/services/workbenchSession";
 
 /**
  * Strip the configured base path so route comparisons work under subpath

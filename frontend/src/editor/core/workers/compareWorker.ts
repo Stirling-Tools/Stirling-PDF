@@ -4,7 +4,7 @@ import type {
   CompareDiffToken,
   CompareWorkerRequest,
   CompareWorkerResponse,
-} from "@app/types/compare";
+} from "@editor/types/compare";
 
 declare const self: DedicatedWorkerGlobalScope;
 

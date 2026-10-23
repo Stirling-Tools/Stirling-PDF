@@ -8,20 +8,20 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useAuth } from "@app/auth/UseSession";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useAuth } from "@editor/auth/UseSession";
 import {
   loadPolicies,
   onPoliciesChange,
   updatePolicy,
   forgetPolicies,
-} from "@app/services/policyStorage";
-import { loadPolicyCatalog } from "@app/services/policyCatalog";
+} from "@editor/services/policyStorage";
+import { loadPolicyCatalog } from "@editor/services/policyCatalog";
 import {
   fetchPoliciesByCategory,
   decodedToState,
-} from "@app/services/policyBackend";
-import type { PoliciesByKey } from "@app/types/policies";
+} from "@editor/services/policyBackend";
+import type { PoliciesByKey } from "@editor/types/policies";
 
 /** Cold-start reconcile retry budget + capped backoff (≈0.5s→5s, ~1 min total),
  *  enough to outlast a backend that starts a little after the frontend. */

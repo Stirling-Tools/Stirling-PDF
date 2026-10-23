@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { shouldBumpThumbnailTtl } from "@app/services/fileStorage";
+import { shouldBumpThumbnailTtl } from "@editor/services/fileStorage";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const TTL_MS = 30 * DAY_MS;

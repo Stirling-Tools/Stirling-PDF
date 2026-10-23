@@ -2,9 +2,9 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
 import type {
   FileContextState,
   StirlingFileStub,
-} from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import { addStirlingFileStubs } from "@app/contexts/file/fileActions";
+} from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import { addStirlingFileStubs } from "@editor/contexts/file/fileActions";
 
 // updateStirlingFileStub drops updates for a file not yet in filesRef, so marking
 // the conflict before the bytes are published loses the badge with no visible failure.
@@ -12,20 +12,20 @@ import { addStirlingFileStubs } from "@app/contexts/file/fileActions";
 const diskState = vi.hoisted(() => ({
   state: { availability: "present", size: 999, modifiedMs: 9_000 },
 }));
-vi.mock("@app/services/desktopFileLink", () => ({
+vi.mock("@editor/services/desktopFileLink", () => ({
   desktopFileLinkingSupported: true,
   getDiskFileState: vi.fn(async () => diskState.state),
   readFileFromDisk: vi.fn(async () => new Uint8Array([1, 2, 3]).buffer),
 }));
 
 const getStirlingFile = vi.hoisted(() => vi.fn());
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { getStirlingFile, updateFileMetadata: vi.fn(async () => true) },
 }));
-vi.mock("@app/utils/thumbnailUtils", () => ({
+vi.mock("@editor/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata: () => new Promise(() => {}),
 }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 
 const dirtyLinkedStub = (): StirlingFileStub =>
   ({

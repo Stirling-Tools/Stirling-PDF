@@ -1,6 +1,6 @@
 import type { UseQueryOptions } from "@tanstack/react-query";
-import { qk } from "@app/portal/queries/keys";
-import { fetchWallet, type Wallet } from "@app/portal/api/billing";
+import { qk } from "@editor/portal/queries/keys";
+import { fetchWallet, type Wallet } from "@editor/portal/api/billing";
 
 /** How often a reader re-reads the wallet while its tab is in front. */
 export const WALLET_POLL_MS = 30_000;

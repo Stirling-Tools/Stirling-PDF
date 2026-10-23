@@ -1,8 +1,8 @@
 import { createRef, useEffect, useRef } from "react";
 import type { Meta, StoryObj, Decorator } from "@storybook/react-vite";
-import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
-import { SignatureProvider } from "@app/contexts/SignatureContext";
-import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import { StampPlacementOverlay } from "@editor/components/viewer/StampPlacementOverlay";
+import { SignatureProvider } from "@editor/contexts/SignatureContext";
+import type { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
 
 // StampPlacementOverlay reads/writes SignatureContext (useSignature, for
 // placementPreviewSize), which isn't mounted by the shared preview.

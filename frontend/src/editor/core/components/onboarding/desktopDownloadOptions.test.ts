@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { DOWNLOAD_URLS } from "@app/constants/downloads";
+import { DOWNLOAD_URLS } from "@editor/constants/downloads";
 import {
   DESKTOP_DOWNLOAD_OPTIONS,
   desktopDownloadForOs,
-} from "@app/components/onboarding/desktopDownloadOptions";
+} from "@editor/components/onboarding/desktopDownloadOptions";
 
 describe("desktopDownloadForOs", () => {
   it("offers the .deb on x64 Linux", () => {

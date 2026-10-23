@@ -1,15 +1,15 @@
 import { useRef, useState, type FocusEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { ChatPanel } from "@app/components/chat/ChatPanel";
-import { useChat } from "@app/components/chat/ChatContext";
-import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
-import { useChatAccess } from "@app/hooks/useChatAccess";
-import { useIsScrolled } from "@app/hooks/useIsScrolled";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { ChatPanel } from "@editor/components/chat/ChatPanel";
+import { useChat } from "@editor/components/chat/ChatContext";
+import { useAiEngineEnabled } from "@editor/hooks/useAiEngineEnabled";
+import { useChatAccess } from "@editor/hooks/useChatAccess";
+import { useIsScrolled } from "@editor/hooks/useIsScrolled";
 // Its header reuses the file sidebar's section header, so the two sections match.
-import "@app/components/shared/FileSidebar.css";
-import "@app/components/chat/SidebarChat.css";
+import "@editor/components/shared/FileSidebar.css";
+import "@editor/components/chat/SidebarChat.css";
 
 export function SidebarChat() {
   return useAiEngineEnabled() ? <ChatDock /> : null;

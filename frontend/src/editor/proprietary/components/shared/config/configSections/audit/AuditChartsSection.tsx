@@ -9,7 +9,7 @@ import {
   Box,
   SimpleGrid,
 } from "@mantine/core";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import {
   AreaChart,
   Area,
@@ -23,7 +23,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useTranslation } from "react-i18next";
-import auditService, { AuditChartsData } from "@app/services/auditService";
+import auditService, { AuditChartsData } from "@editor/services/auditService";
 
 // Event type color mapping
 const EVENT_TYPE_COLORS: Record<string, string> = {

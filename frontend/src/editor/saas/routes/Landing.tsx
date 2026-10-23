@@ -1,13 +1,13 @@
 import React, { useMemo } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
-import { useAutoAnonymousAuth } from "@app/hooks/useAutoAnonymousAuth";
-import { isHomeRoute, isToolRoute } from "@app/utils/pathUtils";
-import { AppRoot } from "@app/components/layout/AppRoot";
-import Login from "@app/routes/Login";
-import GuestUserBanner from "@app/components/auth/GuestUserBanner";
-import { TeamInvitationBanner } from "@app/components/shared/TeamInvitationBanner";
+import { useAuth } from "@editor/auth/UseSession";
+import { useAutoAnonymousAuth } from "@editor/hooks/useAutoAnonymousAuth";
+import { isHomeRoute, isToolRoute } from "@editor/utils/pathUtils";
+import { AppRoot } from "@editor/components/layout/AppRoot";
+import Login from "@editor/routes/Login";
+import GuestUserBanner from "@editor/components/auth/GuestUserBanner";
+import { TeamInvitationBanner } from "@editor/components/shared/TeamInvitationBanner";
 
 export default function Landing() {
   const { t } = useTranslation();

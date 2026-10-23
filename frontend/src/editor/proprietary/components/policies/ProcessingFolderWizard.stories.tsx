@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ProcessingFolderWizard } from "@app/components/policies/ProcessingFolderWizard";
-import { createFolderId, type FolderRecord } from "@app/types/folder";
-import type { ProcessingRecordSummary } from "@app/hooks/useProcessingFolders";
+import { ProcessingFolderWizard } from "@editor/components/policies/ProcessingFolderWizard";
+import { createFolderId, type FolderRecord } from "@editor/types/folder";
+import type { ProcessingRecordSummary } from "@editor/hooks/useProcessingFolders";
 
-import { assemblePolicies } from "@app/policies/overview";
+import { assemblePolicies } from "@editor/policies/overview";
 
 const invoices: FolderRecord = {
   id: createFolderId(),

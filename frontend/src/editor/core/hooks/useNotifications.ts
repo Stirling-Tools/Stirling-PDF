@@ -2,12 +2,12 @@ import { useSyncExternalStore } from "react";
 import {
   fetchNotifications,
   type AppNotification,
-} from "@app/services/notifications";
+} from "@editor/services/notifications";
 import {
   hasLocalFile,
   loadRetryPayload,
   type RetryPayload,
-} from "@app/services/notificationRetry";
+} from "@editor/services/notificationRetry";
 
 /**
  * One polled store for however many bells are mounted. A module store rather than a context because

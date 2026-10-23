@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Box, Text, Loader, Stack, Center, Flex } from "@mantine/core";
-import FilePreview from "@app/components/shared/FilePreview";
-import FileMetadata from "@app/components/tools/shared/FileMetadata";
-import NavigationControls from "@app/components/tools/shared/NavigationControls";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
+import FilePreview from "@editor/components/shared/FilePreview";
+import FileMetadata from "@editor/components/tools/shared/FileMetadata";
+import NavigationControls from "@editor/components/tools/shared/NavigationControls";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 export interface ReviewFile {
   file: File;

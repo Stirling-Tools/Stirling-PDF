@@ -14,8 +14,8 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { PendingInvitations } from "@portal/components/users/PendingInvitations";
-import type { PendingInvitation } from "@portal/api/users";
+import { PendingInvitations } from "@processor/components/users/PendingInvitations";
+import type { PendingInvitation } from "@processor/api/users";
 
 const INVITES: PendingInvitation[] = [
   { id: 101, email: "sam@acme.com", invitedBy: "leader@acme.com" },

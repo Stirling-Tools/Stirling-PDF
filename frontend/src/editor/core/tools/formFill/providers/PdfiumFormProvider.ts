@@ -13,18 +13,18 @@
  * FormUtils.createWidgetCoordinates() does, so the same overlay code works
  * for both providers.
  */
-import { PDF_FORM_FIELD_TYPE } from "@app/services/pdfiumService";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { documentHasFormFields } from "@app/services/documentFormProbe";
-import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
-import { FPDF_ANNOT_WIDGET, FLAT_PRINT } from "@app/utils/pdfiumBitmapUtils";
+import { PDF_FORM_FIELD_TYPE } from "@editor/services/pdfiumService";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
+import { documentHasFormFields } from "@editor/services/documentFormProbe";
+import { runPdfiumScan } from "@editor/services/pdfiumScanQueue";
+import { FPDF_ANNOT_WIDGET, FLAT_PRINT } from "@editor/utils/pdfiumBitmapUtils";
 import type {
   FormField,
   FormFieldType,
   WidgetCoordinates,
   ButtonAction,
-} from "@app/tools/formFill/types";
-import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
+} from "@editor/tools/formFill/types";
+import type { IFormDataProvider } from "@editor/tools/formFill/providers/types";
 import type { PDFDict } from "@cantoo/pdf-lib";
 
 interface PDFAcroField {
@@ -42,7 +42,7 @@ import {
   readUtf16,
   saveRawDocument,
   type PdfiumFormField,
-} from "@app/services/pdfiumService";
+} from "@editor/services/pdfiumService";
 
 /**
  * Map PDFium form field type enum to our FormFieldType string.

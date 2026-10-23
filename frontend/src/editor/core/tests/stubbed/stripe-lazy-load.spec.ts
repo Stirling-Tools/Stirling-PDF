@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 
 /**
  * Verifies that the Stripe SDK (@stripe/stripe-js, @stripe/react-stripe-js,

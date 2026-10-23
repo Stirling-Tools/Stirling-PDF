@@ -1,4 +1,4 @@
-import { useLink } from "@portal/contexts/LinkContext";
+import { useLink } from "@processor/contexts/LinkContext";
 
 /**
  * Whether the portal is authorized against a SaaS billing account — the gate the

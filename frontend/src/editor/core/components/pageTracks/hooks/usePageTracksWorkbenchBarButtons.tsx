@@ -3,19 +3,19 @@ import { useTranslation } from "react-i18next";
 import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
-} from "@app/hooks/useWorkbenchBarButtons";
-import { Icon } from "@app/ui/Icon";
-import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
-import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import styles from "@app/components/pageTracks/PageTracks.module.css";
-import { SelectedPagesLayout } from "@app/components/pageTracks/buildTrackFile";
-import { DownloadSelectedPagesMenu } from "@app/components/pageTracks/DownloadSelectedPagesMenu";
+} from "@editor/hooks/useWorkbenchBarButtons";
+import { Icon } from "@editor/ui/Icon";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
+import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import styles from "@editor/components/pageTracks/PageTracks.module.css";
+import { SelectedPagesLayout } from "@editor/components/pageTracks/buildTrackFile";
+import { DownloadSelectedPagesMenu } from "@editor/components/pageTracks/DownloadSelectedPagesMenu";
 import {
   SelectByNumberPopover,
   SelectByNumberPopoverProps,
-} from "@app/components/pageTracks/SelectByNumberPopover";
+} from "@editor/components/pageTracks/SelectByNumberPopover";
 
 export interface PageTracksBarParams {
   totalPages: number;

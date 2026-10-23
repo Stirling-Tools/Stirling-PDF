@@ -4,20 +4,23 @@ import {
   useToolOperation,
   ToolOperationConfig,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   validateSplitParameters,
   SplitParameters,
   defaultParameters,
-} from "@app/hooks/tools/split/useSplitParameters";
-import { SPLIT_METHODS, type SplitMethod } from "@app/constants/splitConstants";
-import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
+} from "@editor/hooks/tools/split/useSplitParameters";
+import {
+  SPLIT_METHODS,
+  type SplitMethod,
+} from "@editor/constants/splitConstants";
+import { useToolResources } from "@editor/hooks/tools/shared/useToolResources";
 
 // Split routes to a different endpoint per method. This map is the single source
 // of truth: getSplitEndpoint returns from it, and the mapper types below are

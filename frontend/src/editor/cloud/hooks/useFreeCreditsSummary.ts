@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { useWallet } from "@app/hooks/useWallet";
-import { useAuth } from "@app/auth/UseSession";
+import { useWallet } from "@editor/hooks/useWallet";
+import { useAuth } from "@editor/auth/UseSession";
 import {
   readCachedCredits,
   writeCachedCredits,
   type CachedCredits,
-} from "@app/services/navFooterCache";
-import { type NavFooterCredits } from "@app/components/shared/navFooter/NavFooterCreditsRow";
+} from "@editor/services/navFooterCache";
+import { type NavFooterCredits } from "@editor/components/shared/navFooter/NavFooterCreditsRow";
 
 /** The wallet reduced to what the footer shows: figures, or null for a payer. */
 function toCredits(

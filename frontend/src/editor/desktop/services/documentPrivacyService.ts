@@ -1,7 +1,7 @@
-import i18n from "@app/i18n";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import { STIRLING_SAAS_BACKEND_API_URL } from "@app/constants/connection";
+import i18n from "@editor/i18n";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { STIRLING_SAAS_BACKEND_API_URL } from "@editor/constants/connection";
 
 /** These endpoints can send document data onward even from the bundled backend. */
 export function requiresOffDeviceProcessing(endpoint: string): boolean {

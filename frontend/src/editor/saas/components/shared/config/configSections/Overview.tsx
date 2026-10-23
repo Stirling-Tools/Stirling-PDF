@@ -9,27 +9,27 @@ import {
   TextInput,
   Modal,
 } from "@mantine/core";
-import { Avatar } from "@app/ui/Avatar";
-import { Button as DSButton } from "@app/ui/Button";
-import { FilePicker } from "@app/ui/FilePicker";
+import { Avatar } from "@editor/ui/Avatar";
+import { Button as DSButton } from "@editor/ui/Button";
+import { FilePicker } from "@editor/ui/FilePicker";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
-import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
+import { useAuth } from "@editor/auth/UseSession";
+import { useAccountIdentity } from "@editor/hooks/useAccountIdentity";
 import {
   isUserAnonymous,
   linkEmailIdentity,
   linkOAuthIdentity,
   supabase,
-} from "@app/auth/supabase";
-import { ProviderMark } from "@app/auth/ui/ProviderMark";
-import { oauthProviders } from "@app/constants/authProviders";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { absoluteWithBasePath } from "@app/constants/app";
-import { synchronizeUserUpgrade } from "@app/services/userService";
-import { ProfilePictureCropper } from "@app/components/shared/config/ProfilePictureCropper";
-import { updateProfilePictureMetadata } from "@app/services/avatarSyncService";
-import { deleteCurrentAccount } from "@app/services/accountDeletion";
-import { alert as showToast } from "@app/components/toast";
+} from "@editor/auth/supabase";
+import { ProviderMark } from "@editor/auth/ui/ProviderMark";
+import { oauthProviders } from "@editor/constants/authProviders";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { absoluteWithBasePath } from "@editor/constants/app";
+import { synchronizeUserUpgrade } from "@editor/services/userService";
+import { ProfilePictureCropper } from "@editor/components/shared/config/ProfilePictureCropper";
+import { updateProfilePictureMetadata } from "@editor/services/avatarSyncService";
+import { deleteCurrentAccount } from "@editor/services/accountDeletion";
+import { alert as showToast } from "@editor/components/toast";
 
 interface OverviewProps {
   onLogoutClick: () => void;

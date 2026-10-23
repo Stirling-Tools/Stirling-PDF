@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import { useAuth } from "@app/auth/UseSession";
-import { useOs } from "@app/hooks/useOs";
-import { useWallet } from "@app/hooks/useWallet";
-import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
+import { useAuth } from "@editor/auth/UseSession";
+import { useOs } from "@editor/hooks/useOs";
+import { useWallet } from "@editor/hooks/useWallet";
+import { useSaaSTeam } from "@editor/contexts/SaaSTeamContext";
 import {
   SLIDE_DEFINITIONS,
   type ButtonAction,
   type FlowState,
   type SlideId,
-} from "@app/components/onboarding/saasOnboardingFlowConfig";
-import { resolveSaasFlow } from "@app/components/onboarding/saasFlowResolver";
+} from "@editor/components/onboarding/saasOnboardingFlowConfig";
+import { resolveSaasFlow } from "@editor/components/onboarding/saasFlowResolver";
 import {
   DESKTOP_DOWNLOAD_OPTIONS,
   desktopDownloadForOs,
-} from "@app/components/onboarding/desktopDownloadOptions";
-import { openExternal } from "@app/platform/openExternal";
+} from "@editor/components/onboarding/desktopDownloadOptions";
+import { openExternal } from "@editor/platform/openExternal";
 
 interface UseSaasOnboardingStateResult {
   currentStep: number;

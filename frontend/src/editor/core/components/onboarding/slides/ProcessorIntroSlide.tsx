@@ -1,6 +1,6 @@
 import { Trans } from "react-i18next";
-import { SlideConfig } from "@app/types/types";
-import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
+import { SlideConfig } from "@editor/types/types";
+import { UNIFIED_CIRCLE_CONFIG } from "@editor/components/onboarding/slides/unifiedBackgroundConfig";
 
 const ProcessorIntroBody = () => (
   <span>

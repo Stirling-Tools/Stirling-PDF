@@ -2,8 +2,8 @@ import {
   PdfiumFont,
   PdfiumPage,
   PdfiumImage,
-} from "@app/services/pdfiumDocBuilder";
-import { colorPalette } from "@app/hooks/tools/validateSignature/utils/pdfPalette";
+} from "@editor/services/pdfiumDocBuilder";
+import { colorPalette } from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
 
 export const drawThumbnailPlaceholder = (
   page: PdfiumPage,

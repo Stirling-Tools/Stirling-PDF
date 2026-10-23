@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 
-import { sha256Hex } from "@app/tools/pdfTextEditor/util/sha256";
+import { sha256Hex } from "@editor/tools/pdfTextEditor/util/sha256";
 
 // The pure-JS SHA-256 fingerprints embedded font programs so the backend can
 // match the EXACT subset font a charcode request targets.

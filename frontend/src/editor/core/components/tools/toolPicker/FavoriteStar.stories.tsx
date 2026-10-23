@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
+import FavoriteStar from "@editor/components/tools/toolPicker/FavoriteStar";
 
 const meta = {
   title: "Tools/ToolPicker/FavoriteStar",

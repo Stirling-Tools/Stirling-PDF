@@ -6,13 +6,13 @@ import {
   italicCapability,
   resetDocumentFontMatchCache,
   warmDocumentDeviceFonts,
-} from "@app/tools/pdfTextEditor/util/fontCapability";
+} from "@editor/tools/pdfTextEditor/util/fontCapability";
 import {
   listLocalFonts,
   loadLocalFontBytes,
   resetLocalFontsCache,
-} from "@app/tools/pdfTextEditor/util/localFonts";
-import type { LocalFont } from "@app/tools/pdfTextEditor/util/localFonts";
+} from "@editor/tools/pdfTextEditor/util/localFonts";
+import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
 
 // The editor used to answer "make this italic" for ANY font by swapping the run
 // wholesale to Helvetica-Oblique. For a document set in Calibri that is not
