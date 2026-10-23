@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -10,16 +10,16 @@ import {
   Loader,
   Divider,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
-import { ProgressBar } from "@app/ui/ProgressBar";
-import { Banner } from "@app/ui/Banner";
-import { Collapsible } from "@app/ui/Collapsible";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { StatusBadge, type StatusTone } from "@editor/ui/StatusBadge";
+import { ProgressBar } from "@editor/ui/ProgressBar";
+import { Banner } from "@editor/ui/Banner";
+import { Collapsible } from "@editor/ui/Collapsible";
 import {
   useFormDetectionModelStatus,
   FormDetectionCatalogEntry,
-} from "@app/hooks/useFormDetectionModelStatus";
+} from "@editor/hooks/useFormDetectionModelStatus";
 
 function formatSize(
   t: (k: string, d: string) => string,

@@ -5,9 +5,9 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 
 const h = vi.hoisted(() => ({ get: vi.fn() }));
 
-vi.mock("@app/services/apiClient", () => ({ default: { get: h.get } }));
+vi.mock("@editor/services/apiClient", () => ({ default: { get: h.get } }));
 
-import { RootGate } from "@app/routes/RootGate";
+import { RootGate } from "@editor/routes/RootGate";
 
 function httpError(status: number) {
   return { isAxiosError: true, message: "http", response: { status } };

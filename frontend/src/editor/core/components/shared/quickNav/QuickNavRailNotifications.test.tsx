@@ -1,21 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { AppNotification } from "@app/services/notifications";
-import { QuickNavRailNotifications } from "@app/components/shared/quickNav/QuickNavRailNotifications";
+import type { AppNotification } from "@editor/services/notifications";
+import { QuickNavRailNotifications } from "@editor/components/shared/quickNav/QuickNavRailNotifications";
 
 const fetchNotifications = vi.fn();
 
-vi.mock("@app/services/notifications", () => ({
+vi.mock("@editor/services/notifications", () => ({
   fetchNotifications: (...args: unknown[]) => fetchNotifications(...args),
 }));
 
-vi.mock("@app/services/localFilePresence", () => ({
+vi.mock("@editor/services/localFilePresence", () => ({
   hasLocalFile: () => Promise.resolve(false),
 }));
 
 const h = vi.hoisted(() => ({ notificationsAvailable: true }));
 
-vi.mock("@app/components/notifications/useNotificationsAvailable", () => ({
+vi.mock("@editor/components/notifications/useNotificationsAvailable", () => ({
   useNotificationsAvailable: () => h.notificationsAvailable,
 }));
 

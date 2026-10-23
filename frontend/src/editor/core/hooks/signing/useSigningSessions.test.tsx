@@ -2,15 +2,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { baseQueryOptions } from "@app/query/queryClient";
-import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
-import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
-import { fetchSigningSessions } from "@app/api/signing";
-import { alert } from "@app/components/toast";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { baseQueryOptions } from "@editor/query/queryClient";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
+import { useSigningSessions } from "@editor/hooks/signing/useSigningSessions";
+import { fetchSigningSessions } from "@editor/api/signing";
+import { alert } from "@editor/components/toast";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
-vi.mock("@app/api/signing", () => ({ fetchSigningSessions: vi.fn() }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/api/signing", () => ({ fetchSigningSessions: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (_k: string, fallback?: string) => fallback ?? _k,

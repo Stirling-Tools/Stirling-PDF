@@ -1,12 +1,12 @@
-import OnboardingModalSlide from "@app/components/onboarding/OnboardingModalSlide";
+import OnboardingModalSlide from "@editor/components/onboarding/OnboardingModalSlide";
 import {
   SLIDE_DEFINITIONS,
   type ButtonAction,
   type ButtonDefinition,
   type SlideFactoryParams,
   type SlideId,
-} from "@app/components/onboarding/onboardingFlowConfig";
-import type { OnboardingRuntimeState } from "@app/components/onboarding/orchestrator/onboardingConfig";
+} from "@editor/components/onboarding/onboardingFlowConfig";
+import type { OnboardingRuntimeState } from "@editor/components/onboarding/orchestrator/onboardingConfig";
 
 interface StaticOnboardingSlideProps {
   slideId: SlideId;

@@ -1,14 +1,14 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { useEditorOcr } from "@app/tools/pdfTextEditor/hooks/useEditorOcr";
-import type { FileId } from "@app/types/file";
+import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { useEditorOcr } from "@editor/tools/pdfTextEditor/hooks/useEditorOcr";
+import type { FileId } from "@editor/types/file";
 import {
   bindPdfAccess,
   clearPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
@@ -22,25 +22,25 @@ const mocks = vi.hoisted(() => ({
   locale: "en-GB",
 }));
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: mocks.get, post: mocks.post },
 }));
-vi.mock("@app/services/backendReadinessGuard", () => ({
+vi.mock("@editor/services/backendReadinessGuard", () => ({
   ensureBackendReady: mocks.ensureReady,
 }));
-vi.mock("@app/services/policyFileGuard", () => ({
+vi.mock("@editor/services/policyFileGuard", () => ({
   assertFilesNotBlocked: mocks.assertAllowed,
 }));
-vi.mock("@app/hooks/useEndpointConfig", () => ({
+vi.mock("@editor/hooks/useEndpointConfig", () => ({
   useEndpointEnabled: () => ({ enabled: mocks.enabled }),
 }));
-vi.mock("@app/hooks/useCreditCheck", () => ({
+vi.mock("@editor/hooks/useCreditCheck", () => ({
   useCreditCheck: () => ({ checkCredits: mocks.checkCredits }),
 }));
-vi.mock("@app/hooks/tools/shared/useToolResources", () => ({
+vi.mock("@editor/hooks/tools/shared/useToolResources", () => ({
   useToolResources: () => ({ extractZipFiles: mocks.extractZipFiles }),
 }));
-vi.mock("@app/tools/pdfTextEditor/util/exportPdf", () => ({
+vi.mock("@editor/tools/pdfTextEditor/util/exportPdf", () => ({
   exportToBlob: mocks.exportPdf,
 }));
 vi.mock("react-i18next", () => ({

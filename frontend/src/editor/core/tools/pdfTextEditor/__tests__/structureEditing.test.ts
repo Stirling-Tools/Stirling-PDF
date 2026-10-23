@@ -12,24 +12,24 @@ import {
   test,
   vi,
 } from "vitest";
-import { SetAltTextCommand } from "@app/tools/pdfTextEditor/commands/SetAltTextCommand";
-import { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { PageStructure } from "@app/tools/pdfTextEditor/model/PageStructure";
-import { StructureEditError } from "@app/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
-import { readPageStructure } from "@app/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
-import { readFileStructure } from "@app/tools/pdfTextEditor/pdfdoc/readFileStructure";
-import { RawPdf } from "@app/tools/pdfTextEditor/pdfdoc/raw";
-import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
-import { PdfiumTextReader } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import { SetAltTextCommand } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
+import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import { StructureEditError } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
+import { readPageStructure } from "@editor/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
+import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
+import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
+import { PdfiumSave } from "@editor/tools/pdfTextEditor/pdfium/PdfiumSave";
+import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import {
   HistoryStack,
   HistoryStepError,
-} from "@app/tools/pdfTextEditor/store/HistoryStack";
-import { exportToBlob } from "@app/tools/pdfTextEditor/util/exportPdf";
+} from "@editor/tools/pdfTextEditor/store/HistoryStack";
+import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import {
   buildClassicPdf,
   streamBody,
-} from "@app/tools/pdfTextEditor/__tests__/pdfFixtures";
+} from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 const TAGGED_SAMPLE = path.join(
   import.meta.dirname,

@@ -1,10 +1,10 @@
 import { Box, Group, Tooltip } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { EditorFileSwitcher } from "@app/tools/pdfTextEditor/components/EditorFileSwitcher";
-import type { FileId } from "@app/types/file";
-import { modShortcut } from "@app/utils/hotkeys";
+import { Button } from "@editor/ui/Button";
+import { EditorFileSwitcher } from "@editor/tools/pdfTextEditor/components/EditorFileSwitcher";
+import type { FileId } from "@editor/types/file";
+import { modShortcut } from "@editor/utils/hotkeys";
 
 interface Props {
   compact: boolean;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractHeadings, slugify } from "@app/docs/headings";
+import { extractHeadings, slugify } from "@editor/docs/headings";
 
 describe("slugify", () => {
   it("lowercases, hyphenates, and trims punctuation", () => {

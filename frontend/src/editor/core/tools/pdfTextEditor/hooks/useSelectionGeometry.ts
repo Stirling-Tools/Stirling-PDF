@@ -1,10 +1,13 @@
 import { useMemo } from "react";
-import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/commands/MoveTextRunCommand";
-import { ReflowWrapCommand } from "@app/tools/pdfTextEditor/commands/ReflowWrapCommand";
-import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/commands/SetImageTransformCommand";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import type { EditorViewState } from "@app/tools/pdfTextEditor/store/EditorStore";
-import type { PageRect, SelectionState } from "@app/tools/pdfTextEditor/types";
+import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
+import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import { SetImageTransformCommand } from "@editor/tools/pdfTextEditor/commands/SetImageTransformCommand";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type {
+  PageRect,
+  SelectionState,
+} from "@editor/tools/pdfTextEditor/types";
 
 export interface SingleSelectionGeometry {
   bounds: PageRect;

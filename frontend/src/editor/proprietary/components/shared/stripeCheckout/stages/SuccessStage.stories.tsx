@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SuccessStage } from "@app/components/shared/stripeCheckout/stages/SuccessStage";
+import { SuccessStage } from "@editor/components/shared/stripeCheckout/stages/SuccessStage";
 
 /**
  * The success state shown after a Stripe checkout completes, including

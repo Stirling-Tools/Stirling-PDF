@@ -1,6 +1,6 @@
 import path from "path";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
 
 // A pipeline reaches the editor auto-run through its own editor flag; a swept one must not.
 

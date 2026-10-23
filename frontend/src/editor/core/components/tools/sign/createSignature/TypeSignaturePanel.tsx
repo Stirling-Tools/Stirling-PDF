@@ -1,27 +1,27 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Checkbox } from "@app/ui/Checkbox";
-import { FormField } from "@app/ui/FormField";
-import { Input } from "@app/ui/Input";
+import { Checkbox } from "@editor/ui/Checkbox";
+import { FormField } from "@editor/ui/FormField";
+import { Input } from "@editor/ui/Input";
 import {
   deriveInitials,
   renderTypedSignature,
-} from "@app/utils/signatureImage";
-import { InkSwatches } from "@app/components/tools/sign/createSignature/InkSwatches";
-import { SignatureStylePicker } from "@app/components/tools/sign/createSignature/SignatureStylePicker";
+} from "@editor/utils/signatureImage";
+import { InkSwatches } from "@editor/components/tools/sign/createSignature/InkSwatches";
+import { SignatureStylePicker } from "@editor/components/tools/sign/createSignature/SignatureStylePicker";
 import {
   DEFAULT_INK,
   INK_COLORS,
   SIGNATURE_FONTS,
   type InkColor,
   type SignatureFont,
-} from "@app/components/tools/sign/createSignature/signatureStyles";
+} from "@editor/components/tools/sign/createSignature/signatureStyles";
 import type {
   CreatedSignature,
   TypePanelHandle,
   TypedSignatureSource,
-} from "@app/components/tools/sign/createSignature/types";
-import styles from "@app/components/tools/sign/createSignature/TypeSignaturePanel.module.css";
+} from "@editor/components/tools/sign/createSignature/types";
+import styles from "@editor/components/tools/sign/createSignature/TypeSignaturePanel.module.css";
 
 const RENDER_FONT_SIZE = 120;
 

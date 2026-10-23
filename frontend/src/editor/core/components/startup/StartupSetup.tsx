@@ -2,17 +2,20 @@ import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useServerExperience } from "@app/hooks/useServerExperience";
-import { useAccountLogout } from "@app/extensions/accountLogout";
-import { accountService, type AccountData } from "@app/services/accountService";
-import apiClient from "@app/services/apiClient";
-import { withBasePath } from "@app/constants/app";
-import { DEFAULT_RUNTIME_STATE } from "@app/components/onboarding/orchestrator/onboardingConfig";
-import StaticOnboardingSlide from "@app/components/onboarding/StaticOnboardingSlide";
-import { Button } from "@app/ui/Button";
-import { Z_INDEX_ONBOARDING_CARD } from "@app/styles/zIndex";
+import { useAuth } from "@editor/auth/UseSession";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useServerExperience } from "@editor/hooks/useServerExperience";
+import { useAccountLogout } from "@editor/extensions/accountLogout";
+import {
+  accountService,
+  type AccountData,
+} from "@editor/services/accountService";
+import apiClient from "@editor/services/apiClient";
+import { withBasePath } from "@editor/constants/app";
+import { DEFAULT_RUNTIME_STATE } from "@editor/components/onboarding/orchestrator/onboardingConfig";
+import StaticOnboardingSlide from "@editor/components/onboarding/StaticOnboardingSlide";
+import { Button } from "@editor/ui/Button";
+import { Z_INDEX_ONBOARDING_CARD } from "@editor/styles/zIndex";
 
 function requiresMfaSetup(account: AccountData): boolean {
   if (account.mfaEnabled) return false;

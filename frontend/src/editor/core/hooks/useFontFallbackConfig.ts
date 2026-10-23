@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { getLocalFontFallbackConfig } from "@app/services/pdfiumFontFallback";
-import { subscribeToFontBaseUrl } from "@app/services/fontBaseUrl";
+import { getLocalFontFallbackConfig } from "@editor/services/pdfiumFontFallback";
+import { subscribeToFontBaseUrl } from "@editor/services/fontBaseUrl";
 
 /**
  * PDFium fallback-font configuration, recomputed when the font base URL changes.

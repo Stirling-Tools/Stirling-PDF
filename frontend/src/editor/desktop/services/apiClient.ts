@@ -1,14 +1,14 @@
 /**
  * Desktop-specific API client using Tauri's native HTTP client
- * This file overrides @core/services/apiClient.ts for desktop builds
+ * This file overrides @editor-core/services/apiClient.ts for desktop builds
  * Bypasses CORS restrictions by using native HTTP instead of browser fetch
  */
 
 import type { AxiosInstance } from "axios";
-import { create } from "@app/services/tauriHttpClient";
-import { handleHttpError } from "@app/services/httpErrorHandler";
-import { setupApiInterceptors } from "@app/services/apiClientSetup";
-import { getApiBaseUrl } from "@app/services/apiClientConfig";
+import { create } from "@editor/services/tauriHttpClient";
+import { handleHttpError } from "@editor/services/httpErrorHandler";
+import { setupApiInterceptors } from "@editor/services/apiClientSetup";
+import { getApiBaseUrl } from "@editor/services/apiClientConfig";
 
 // Create Tauri HTTP client with default config
 const apiClient = create({

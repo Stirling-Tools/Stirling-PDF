@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ComplianceSection from "@app/components/tools/getPdfInfo/sections/ComplianceSection";
+import ComplianceSection from "@editor/components/tools/getPdfInfo/sections/ComplianceSection";
 
 const meta = {
   title: "Tools/GetPdfInfo/ComplianceSection",

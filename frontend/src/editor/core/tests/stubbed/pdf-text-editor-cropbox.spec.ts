@@ -1,8 +1,8 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import {
   DisplayTransform,
   type DisplayTransformData,
-} from "@app/tools/pdfTextEditor/model/DisplayTransform";
+} from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import path from "path";
 
 // Regression for the CropBox/rotation positioning bug (root-caused on

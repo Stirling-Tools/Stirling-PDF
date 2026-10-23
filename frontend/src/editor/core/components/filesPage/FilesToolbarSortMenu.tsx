@@ -1,9 +1,9 @@
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import type { FilesPageSortMode } from "@editor/contexts/FilesPageContext";
 
 interface FilesToolbarSortMenuProps {
   value: FilesPageSortMode;

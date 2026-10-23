@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import path from "path";
 
 // Two things the user sees go wrong while typing into a run, both because the

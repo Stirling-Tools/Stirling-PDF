@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import MobileTransferModal from "@app/components/shared/MobileTransferModal";
-import { parseMobileSignatureFile } from "@app/components/tools/sign/parseMobileSignatureFile";
+import MobileTransferModal from "@editor/components/shared/MobileTransferModal";
+import { parseMobileSignatureFile } from "@editor/components/tools/sign/parseMobileSignatureFile";
 
 /**
  * What the phone sent, routed to the matching signature source: ink and

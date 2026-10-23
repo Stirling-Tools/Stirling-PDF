@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Icon } from "@app/ui/Icon";
-import { NodeCard } from "@app/ui/NodeCard";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { NodeCard } from "@editor/ui/NodeCard";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 
 const meta = {
   title: "UI/NodeCard",

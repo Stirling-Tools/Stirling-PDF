@@ -1,11 +1,11 @@
 import { Modal, Stack, Text, PasswordInput, Group } from "@mantine/core";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { ProtectedPdfFileCard } from "@app/components/shared/ProtectedPdfFileCard";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { ProtectedPdfFileCard } from "@editor/components/shared/ProtectedPdfFileCard";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@editor/styles/zIndex";
 
 interface EncryptedPdfUnlockModalProps {
   opened: boolean;

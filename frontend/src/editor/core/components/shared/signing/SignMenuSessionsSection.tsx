@@ -1,14 +1,14 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Tabs } from "@app/ui/Tabs";
-import { Tooltip } from "@app/ui/Tooltip";
-import type { SigningIntent } from "@app/utils/pendingSigningIntent";
-import type { SigningMenuItem } from "@app/utils/signingItems";
-import { SigningSessionRow } from "@app/components/shared/signing/SigningSessionRow";
+import { Icon } from "@editor/ui/Icon";
+import { Tabs } from "@editor/ui/Tabs";
+import { Tooltip } from "@editor/ui/Tooltip";
+import type { SigningIntent } from "@editor/utils/pendingSigningIntent";
+import type { SigningMenuItem } from "@editor/utils/signingItems";
+import { SigningSessionRow } from "@editor/components/shared/signing/SigningSessionRow";
 import type {
   SessionTab,
   SignMenuSessions,
-} from "@app/components/shared/signing/useSignMenuSessions";
+} from "@editor/components/shared/signing/useSignMenuSessions";
 
 interface SessionsHeaderProps {
   disabled: boolean;

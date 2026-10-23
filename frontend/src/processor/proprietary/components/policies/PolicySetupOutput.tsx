@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, FormField, Input } from "@app/ui";
-import type { PolicySetupConfigProps } from "@app/components/policies/PolicySetupWizard";
-import { PolicyIngestionConfig } from "@app/components/policies/PolicyIngestionConfig";
-import { EditorDeliverySelect } from "@portal/components/pipelines/EditorDeliverySelect";
-import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
-import { availableOutputModes } from "@portal/components/pipelines/outputModes";
-import { SourceModal } from "@portal/components/sources/SourceModal";
-import { fetchSources } from "@portal/api/sources";
-import { errorMessage } from "@portal/api/http";
-import { qk } from "@portal/queries/keys";
-import { usePolicySetupIngestion } from "@portal/components/policies/usePolicySetupIngestion";
+import { Banner, Button, FormField, Input } from "@editor/ui";
+import type { PolicySetupConfigProps } from "@editor/components/policies/PolicySetupWizard";
+import { PolicyIngestionConfig } from "@editor/components/policies/PolicyIngestionConfig";
+import { EditorDeliverySelect } from "@processor/components/pipelines/EditorDeliverySelect";
+import { DestinationPicker } from "@processor/components/pipelines/DestinationPicker";
+import { availableOutputModes } from "@processor/components/pipelines/outputModes";
+import { SourceModal } from "@processor/components/sources/SourceModal";
+import { fetchSources } from "@processor/api/sources";
+import { errorMessage } from "@processor/api/http";
+import { qk } from "@processor/queries/keys";
+import { usePolicySetupIngestion } from "@processor/components/policies/usePolicySetupIngestion";
 
 interface Props extends PolicySetupConfigProps {
   folderName?: string;

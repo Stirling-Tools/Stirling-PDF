@@ -1,16 +1,16 @@
 import React, { createContext, useContext, useMemo } from "react";
 import { Text, Stack, Flex, Divider } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { TooltipTip } from "@app/types/tips";
+import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { TooltipTip } from "@editor/types/tips";
 import {
   createFilesToolStep,
   FilesToolStepProps,
-} from "@app/components/tools/shared/FilesToolStep";
+} from "@editor/components/tools/shared/FilesToolStep";
 import {
   createReviewToolStep,
   ReviewToolStepProps,
-} from "@app/components/tools/shared/ReviewToolStep";
+} from "@editor/components/tools/shared/ReviewToolStep";
 
 interface ToolStepContextType {
   visibleStepCount: number;
@@ -261,6 +261,6 @@ export function ToolStepProvider({
   );
 }
 
-export type { FilesToolStepProps } from "@app/components/tools/shared/FilesToolStep";
-export type { ReviewToolStepProps } from "@app/components/tools/shared/ReviewToolStep";
+export type { FilesToolStepProps } from "@editor/components/tools/shared/FilesToolStep";
+export type { ReviewToolStepProps } from "@editor/components/tools/shared/ReviewToolStep";
 export default ToolStep;

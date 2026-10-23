@@ -7,8 +7,8 @@ import {
   detectTables,
   rowPins,
   rowSpans,
-} from "@app/tools/pdfTextEditor/util/tableDetection";
-import type { TextRunSnapshot } from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/util/tableDetection";
+import type { TextRunSnapshot } from "@editor/tools/pdfTextEditor/types";
 
 let seq = 0;
 function run(

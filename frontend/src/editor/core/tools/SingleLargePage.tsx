@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { useSingleLargePageParameters } from "@app/hooks/tools/singleLargePage/useSingleLargePageParameters";
-import { useSingleLargePageOperation } from "@app/hooks/tools/singleLargePage/useSingleLargePageOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { useSingleLargePageParameters } from "@editor/hooks/tools/singleLargePage/useSingleLargePageParameters";
+import { useSingleLargePageOperation } from "@editor/hooks/tools/singleLargePage/useSingleLargePageOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 
 const SingleLargePage = (props: BaseToolProps) => {
   const { t } = useTranslation();
