@@ -14,45 +14,45 @@ import {
   useAllFiles,
   useFileManagement,
   useFileContext,
-} from "@app/contexts/FileContext";
-import { fileStorage } from "@app/services/fileStorage";
-import { refreshNotificationsNow } from "@app/hooks/useNotifications";
+} from "@editor/contexts/FileContext";
+import { fileStorage } from "@editor/services/fileStorage";
+import { refreshNotificationsNow } from "@editor/hooks/useNotifications";
 import {
   isAwaitingUnlock,
   pendingUnlocksVersion,
   subscribeToPendingUnlocks,
-} from "@app/services/pendingUnlocks";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
-import i18n from "@app/i18n";
+} from "@editor/services/pendingUnlocks";
+import { useIndexedDB } from "@editor/contexts/IndexedDBContext";
+import i18n from "@editor/i18n";
 import {
   getPolicyRun,
   listPolicyRuns,
   downloadPolicyOutput,
-} from "@app/services/policyApi";
+} from "@editor/services/policyApi";
 import type {
   PolicyRunStatus,
   PolicyRunView,
-} from "@app/services/policyPipeline";
-import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
-import { reportFreeTierExhausted } from "@app/services/accountLinkBlock";
+} from "@editor/services/policyPipeline";
+import { dispatchPaygLimitReached } from "@editor/services/usageLimitBridge";
+import { reportFreeTierExhausted } from "@editor/services/accountLinkBlock";
 import {
   dispatchableFileId,
   type DispatchableFileId,
-} from "@app/components/policies/policyLocalPass";
-import type { FileId } from "@app/types/file";
-import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
-import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
+} from "@editor/components/policies/policyLocalPass";
+import type { FileId } from "@editor/types/file";
+import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
+import { readClassificationLabelsFromFile } from "@editor/services/fileClassification";
 import {
   orderedRewritingPolicies,
   policyDeliversOutputFiles,
-} from "@app/data/classificationPolicy";
-import { runPolicyOnFile } from "@app/services/policyDispatch";
-import { policyCreditContext } from "@app/services/policyCreditContext";
-import { policyAcceptsFile } from "@app/services/policyInput";
-import { splitFileName } from "@app/utils/fileUtils";
-import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
-import type { PoliciesByKey } from "@app/types/policies";
-import { usePolicies } from "@app/hooks/usePolicies";
+} from "@editor/data/classificationPolicy";
+import { runPolicyOnFile } from "@editor/services/policyDispatch";
+import { policyCreditContext } from "@editor/services/policyCreditContext";
+import { policyAcceptsFile } from "@editor/services/policyInput";
+import { splitFileName } from "@editor/utils/fileUtils";
+import type { StirlingFile, StirlingFileStub } from "@editor/types/fileContext";
+import type { PoliciesByKey } from "@editor/types/policies";
+import { usePolicies } from "@editor/hooks/usePolicies";
 import {
   addReconciledRun,
   dispatchKey,
@@ -63,7 +63,7 @@ import {
   updateRun,
   usePolicyRuns,
   type PolicyRunRecord,
-} from "@app/components/policies/policyRunStore";
+} from "@editor/components/policies/policyRunStore";
 
 /** Status poll cadence. */
 const POLL_MS = 2000;

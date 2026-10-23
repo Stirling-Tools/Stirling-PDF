@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import styles from "@app/components/shared/setupCard/SetupCard.module.css";
+import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 
 /** Resizes closer together than this are one continuous change. */
 const FOLLOW_WINDOW_MS = 100;

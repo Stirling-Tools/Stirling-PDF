@@ -1,6 +1,6 @@
 /** Per-category default for the editor event a policy enforces on. */
 
-import type { PolicyState } from "@app/types/policies";
+import type { PolicyState } from "@editor/types/policies";
 
 export type PolicyRunOn = "upload" | "export";
 

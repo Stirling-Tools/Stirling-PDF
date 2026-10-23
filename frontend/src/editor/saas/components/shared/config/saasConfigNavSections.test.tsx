@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import type { ReactElement } from "react";
 import { type TFunction } from "i18next";
-import { createSaasConfigNavSections } from "@app/components/shared/config/saasConfigNavSections";
+import { createSaasConfigNavSections } from "@editor/components/shared/config/saasConfigNavSections";
 import PreferencesSection, {
   type PreferencesSectionProps,
-} from "@core/components/shared/config/configSections/preferences/PreferencesSection";
+} from "@editor-core/components/shared/config/configSections/preferences/PreferencesSection";
 
 // Passthrough i18n stub: return the provided fallback (2nd arg) or the key.
 const t = ((key: string, fallback?: string) =>

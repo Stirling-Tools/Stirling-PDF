@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Logo } from "@app/ui/Logo";
-import styles from "@app/components/shared/setupCard/SetupCard.module.css";
+import { Logo } from "@editor/ui/Logo";
+import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 
 interface SetupCardLayoutProps {
   title: ReactNode;

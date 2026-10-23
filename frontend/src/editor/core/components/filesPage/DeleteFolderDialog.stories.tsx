@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
-import { createFolderId } from "@app/types/folder";
+import { DeleteFolderDialog } from "@editor/components/filesPage/DeleteFolderDialog";
+import { createFolderId } from "@editor/types/folder";
 
 const mockFolder = {
   id: createFolderId(),

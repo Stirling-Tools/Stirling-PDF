@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { AuthShell } from "@app/auth/ui/AuthShell";
-import { Z_INDEX_ONBOARDING_CARD } from "@app/styles/zIndex";
-import { SetupStepFrame } from "@app/components/serverSetup/SetupStepFrame";
-import styles from "@app/components/shared/setupCard/SetupCard.module.css";
+import { AuthShell } from "@editor/auth/ui/AuthShell";
+import { Z_INDEX_ONBOARDING_CARD } from "@editor/styles/zIndex";
+import { SetupStepFrame } from "@editor/components/serverSetup/SetupStepFrame";
+import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 
 /** Covers the whole app: setup runs before anything else is usable. */
 export function SetupScreen({ children }: { children: ReactNode }) {

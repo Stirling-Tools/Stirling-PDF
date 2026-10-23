@@ -5,8 +5,8 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import "@app/ui/FormField.css";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import "@editor/ui/FormField.css";
 
 export interface FormFieldProps {
   label?: ReactNode;

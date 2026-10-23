@@ -4,7 +4,7 @@ import {
   rememberPendingDestination,
   resetPendingDestinationForTests,
   takePendingDestination,
-} from "@app/services/pendingDestination";
+} from "@editor/services/pendingDestination";
 
 const KEY = "stirling-pending-destination";
 

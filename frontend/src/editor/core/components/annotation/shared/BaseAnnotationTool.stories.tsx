@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { BaseAnnotationTool } from "@app/components/annotation/shared/BaseAnnotationTool";
-import { PDFAnnotationProvider } from "@app/components/annotation/providers/PDFAnnotationProvider";
-import { SignatureProvider } from "@app/contexts/SignatureContext";
+import { BaseAnnotationTool } from "@editor/components/annotation/shared/BaseAnnotationTool";
+import { PDFAnnotationProvider } from "@editor/components/annotation/providers/PDFAnnotationProvider";
+import { SignatureProvider } from "@editor/contexts/SignatureContext";
 
 // BaseAnnotationTool reads usePDFAnnotation()/useSignature() for undo/redo and
 // placement wiring — stub both providers so the story can mount standalone.

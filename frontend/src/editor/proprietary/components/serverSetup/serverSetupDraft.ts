@@ -5,7 +5,7 @@
  * the server's own default (including env overrides) in place.
  */
 
-import { EMBEDDING_MODEL_SUGGESTIONS } from "@app/components/shared/config/configSections/aiEngineSettings";
+import { EMBEDDING_MODEL_SUGGESTIONS } from "@editor/components/shared/config/configSections/aiEngineSettings";
 
 export type SetupMode = "quick" | "custom";
 

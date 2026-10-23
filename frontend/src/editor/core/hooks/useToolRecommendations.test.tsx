@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 
-import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
-import { fetchToolRecommendations } from "@app/api/toolRecommendations";
-import { useToolRecommendations } from "@app/hooks/useToolRecommendations";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
+import { fetchToolRecommendations } from "@editor/api/toolRecommendations";
+import { useToolRecommendations } from "@editor/hooks/useToolRecommendations";
 import {
   notifyToolCompleted,
   resetToolUsageTrackerForTests,
-} from "@app/services/toolUsageTracker";
+} from "@editor/services/toolUsageTracker";
 
-vi.mock("@app/api/toolRecommendations", () => ({
+vi.mock("@editor/api/toolRecommendations", () => ({
   fetchToolRecommendations: vi.fn(),
   recordToolUsage: vi.fn().mockResolvedValue(undefined),
 }));

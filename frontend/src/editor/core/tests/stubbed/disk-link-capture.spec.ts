@@ -1,4 +1,4 @@
-import { test } from "@app/tests/helpers/stub-test-base";
+import { test } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import {
   type DiskEntry,
@@ -10,7 +10,7 @@ import {
   gotoFiles,
   openCard,
   stage,
-} from "@app/tests/helpers/tauriDiskStub";
+} from "@editor/tests/helpers/tauriDiskStub";
 import fs from "node:fs";
 import path from "node:path";
 

@@ -2,18 +2,18 @@ import { isAxiosError } from "axios";
 import {
   isLocalProcessingOnly,
   isOffDeviceEndpointName,
-} from "@app/services/documentPrivacyService";
-import apiClient from "@app/services/apiClient";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
-import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
-import { connectionModeService } from "@app/services/connectionModeService";
+} from "@editor/services/documentPrivacyService";
+import apiClient from "@editor/services/apiClient";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
+import { connectionModeService } from "@editor/services/connectionModeService";
 import {
   createBackendNotReadyError,
   isBackendNotReadyError,
-} from "@app/constants/backendErrors";
-import type { EndpointAvailabilityDetails } from "@app/types/endpointAvailability";
-import type { AppConfig } from "@app/contexts/AppConfigContext";
+} from "@editor/constants/backendErrors";
+import type { EndpointAvailabilityDetails } from "@editor/types/endpointAvailability";
+import type { AppConfig } from "@editor/contexts/AppConfigContext";
 
 export type EndpointAvailabilityMap = Record<
   string,

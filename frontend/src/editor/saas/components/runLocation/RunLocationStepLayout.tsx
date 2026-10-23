@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { SetupCardLayout } from "@app/components/shared/setupCard/SetupCardLayout";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { SetupCardLayout } from "@editor/components/shared/setupCard/SetupCardLayout";
 
 interface RunLocationStepLayoutProps {
   title: ReactNode;

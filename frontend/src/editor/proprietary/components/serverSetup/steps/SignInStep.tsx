@@ -1,19 +1,19 @@
 import { useTranslation } from "react-i18next";
-import { Select } from "@app/ui/Select";
+import { Select } from "@editor/ui/Select";
 import {
   sectionToggle,
   SETUP_DROPDOWN,
   SettingRow,
   TextField,
   type SetupStepProps,
-} from "@app/components/serverSetup/SetupFields";
+} from "@editor/components/serverSetup/SetupFields";
 import {
   loginChange,
   loginNeedsIssuer,
   oauthRedirectUri,
   type LoginMethod,
-} from "@app/components/serverSetup/serverSetupDraft";
-import styles from "@app/components/shared/setupCard/SetupCard.module.css";
+} from "@editor/components/serverSetup/serverSetupDraft";
+import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 
 export function SignInStep(props: SetupStepProps) {
   const { draft, update, errors, setOpenSection } = props;

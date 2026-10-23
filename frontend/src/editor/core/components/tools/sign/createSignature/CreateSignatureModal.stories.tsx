@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CreateSignatureModal } from "@app/components/tools/sign/createSignature/CreateSignatureModal";
+import { CreateSignatureModal } from "@editor/components/tools/sign/createSignature/CreateSignatureModal";
 
 const limits = {
   canSave: true,

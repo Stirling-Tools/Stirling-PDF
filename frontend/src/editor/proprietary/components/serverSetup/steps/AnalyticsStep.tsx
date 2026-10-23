@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Icon } from "@editor/ui/Icon";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import {
   SettingRow,
   SetupNote,
   type SetupStepProps,
-} from "@app/components/serverSetup/SetupFields";
-import styles from "@app/components/shared/setupCard/SetupCard.module.css";
+} from "@editor/components/serverSetup/SetupFields";
+import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 
 const ANALYTICS_DOCS = "https://docs.stirlingpdf.com/analytics-telemetry/";
 

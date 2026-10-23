@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import type { ServerSetupGateProps } from "@core/components/startup/ServerSetupGate";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { ServerSetupWizard } from "@app/components/serverSetup/ServerSetupWizard";
-import { SetupSignInScreen } from "@app/components/serverSetup/SetupScreen";
+import type { ServerSetupGateProps } from "@editor-core/components/startup/ServerSetupGate";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { ServerSetupWizard } from "@editor/components/serverSetup/ServerSetupWizard";
+import { SetupSignInScreen } from "@editor/components/serverSetup/SetupScreen";
 import {
   clearSetupSignIn,
   isSetupSignInPending,
-} from "@app/components/serverSetup/setupSignInHandoff";
+} from "@editor/components/serverSetup/setupSignInHandoff";
 
 /**
  * Pending for an admin of a server with login on that has not finished setup.

@@ -1,19 +1,19 @@
 import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { FormField } from "@app/ui/FormField";
-import { Icon } from "@app/ui/Icon";
-import { Input } from "@app/ui/Input";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Button } from "@editor/ui/Button";
+import { FormField } from "@editor/ui/FormField";
+import { Icon } from "@editor/ui/Icon";
+import { Input } from "@editor/ui/Input";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import type {
   SetupStepId,
   ErrorCode,
   ServerSetupDraft,
   SetupMode,
   StepErrors,
-} from "@app/components/serverSetup/serverSetupDraft";
-import { Z_INDEX_ONBOARDING_CARD } from "@app/styles/zIndex";
-import styles from "@app/components/shared/setupCard/SetupCard.module.css";
+} from "@editor/components/serverSetup/serverSetupDraft";
+import { Z_INDEX_ONBOARDING_CARD } from "@editor/styles/zIndex";
+import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 
 /** Select dropdowns portal to the body, so they must sit above the setup screen. */
 export const SETUP_DROPDOWN = { zIndex: Z_INDEX_ONBOARDING_CARD + 1 };

@@ -5,7 +5,7 @@ import {
   SettingRow,
   TextField,
   type SetupStepProps,
-} from "@app/components/serverSetup/SetupFields";
+} from "@editor/components/serverSetup/SetupFields";
 
 export function EmailStep(props: SetupStepProps) {
   const { draft, update, errors, setOpenSection } = props;

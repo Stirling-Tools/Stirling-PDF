@@ -1,5 +1,5 @@
-import apiClient from "@app/services/apiClient";
-import { putAdminSettings } from "@app/api/adminSettings";
+import apiClient from "@editor/services/apiClient";
+import { putAdminSettings } from "@editor/api/adminSettings";
 
 const RESTART_POLL_MS = 1500;
 const RESTART_GIVE_UP_MS = 120_000;

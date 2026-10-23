@@ -1,12 +1,12 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { writeUtf16 } from "@app/services/pdfiumService";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { writeUtf16 } from "@editor/services/pdfiumService";
 import {
   fallbackFamilyFor,
   fallbackFontIdFor,
-} from "@app/tools/pdfTextEditor/util/fontCapability";
-import { sanitizeForBase14 } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+} from "@editor/tools/pdfTextEditor/util/fontCapability";
+import { sanitizeForBase14 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 
 // Clone a text run at a fixed offset (default 12pt right + 12pt down) so the
 // user can quickly stamp the same text elsewhere on the page.

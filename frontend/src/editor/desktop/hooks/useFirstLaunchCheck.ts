@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { authService } from "@app/services/authService";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { authService } from "@editor/services/authService";
 
 /**
  * First launch check hook

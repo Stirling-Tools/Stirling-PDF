@@ -12,7 +12,7 @@ import {
   revertStep,
   settingsDelta,
   validateStep,
-} from "@app/components/serverSetup/serverSetupDraft";
+} from "@editor/components/serverSetup/serverSetupDraft";
 
 const SETTINGS = {
   system: {

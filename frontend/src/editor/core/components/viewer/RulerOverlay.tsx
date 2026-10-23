@@ -12,20 +12,20 @@ import {
   type Rotation,
   type Size,
 } from "@embedpdf/models";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import type {
   MeasureScale,
   Measurement,
   PageMeasureScales,
   PagePoint,
-} from "@app/utils/measurementTypes";
-import { validateMeasurement } from "@app/utils/measurementUtils";
-import type { ScaleCalibrationMeasurement } from "@app/components/viewer/ScaleCalibrationDialog";
+} from "@editor/utils/measurementTypes";
+import { validateMeasurement } from "@editor/utils/measurementUtils";
+import type { ScaleCalibrationMeasurement } from "@editor/components/viewer/ScaleCalibrationDialog";
 import {
   RulerMeasurementLayer,
   type RulerLabelVisibilityMode,
   type RulerRenderedMeasurement,
-} from "@app/components/viewer/RulerMeasurementLayer";
+} from "@editor/components/viewer/RulerMeasurementLayer";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

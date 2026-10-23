@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { Select } from "@app/ui/Select";
-import { supportedLanguages } from "@app/i18n/languages";
+import { Select } from "@editor/ui/Select";
+import { supportedLanguages } from "@editor/i18n/languages";
 import {
   SETUP_DROPDOWN,
   SettingRow,
   type SetupStepProps,
-} from "@app/components/serverSetup/SetupFields";
+} from "@editor/components/serverSetup/SetupFields";
 
 const AUTO_DETECT = "auto";
 

@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { AnimatedHeight } from "@app/components/shared/setupCard/AnimatedHeight";
-import { SetupCardLayout } from "@app/components/shared/setupCard/SetupCardLayout";
-import styles from "@app/components/shared/setupCard/SetupCard.module.css";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { AnimatedHeight } from "@editor/components/shared/setupCard/AnimatedHeight";
+import { SetupCardLayout } from "@editor/components/shared/setupCard/SetupCardLayout";
+import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 
 interface SetupStepFrameProps {
   /** Shown top right, as "current of total". */

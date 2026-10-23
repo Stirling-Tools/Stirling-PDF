@@ -7,9 +7,9 @@ import {
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { withBasePath } from "@app/constants/app";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import styles from "@app/components/shared/setupCard/SetupCard.module.css";
+import { withBasePath } from "@editor/constants/app";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 import {
   SettingRow,
   SetupNote,
@@ -18,29 +18,29 @@ import {
   sectionForField,
   type ExpandableSection,
   type SetupStepProps,
-} from "@app/components/serverSetup/SetupFields";
-import { SetupStepFrame } from "@app/components/serverSetup/SetupStepFrame";
+} from "@editor/components/serverSetup/SetupFields";
+import { SetupStepFrame } from "@editor/components/serverSetup/SetupStepFrame";
 import {
   SetupScreen,
   SetupSignInScreen,
-} from "@app/components/serverSetup/SetupScreen";
+} from "@editor/components/serverSetup/SetupScreen";
 import {
   clearSetupSignIn,
   isSetupSignInPending,
-} from "@app/components/serverSetup/setupSignInHandoff";
+} from "@editor/components/serverSetup/setupSignInHandoff";
 import {
   PasswordChangeError,
   SignInAgainError,
   UsernameChangeError,
   useSetupFinish,
-} from "@app/components/serverSetup/useSetupFinish";
-import { useAuth } from "@app/auth/UseSession";
-import { DEFAULT_ADMIN_CREDENTIALS } from "@app/auth/defaultCredentials";
+} from "@editor/components/serverSetup/useSetupFinish";
+import { useAuth } from "@editor/auth/UseSession";
+import { DEFAULT_ADMIN_CREDENTIALS } from "@editor/auth/defaultCredentials";
 import {
   checkIssuer,
   fetchServerSettings,
   markSetupComplete,
-} from "@app/components/serverSetup/serverSetupApi";
+} from "@editor/components/serverSetup/serverSetupApi";
 import {
   draftFromSettings,
   draftToSave,
@@ -52,16 +52,16 @@ import {
   type SetupMode,
   type SetupStepId,
   type StepErrors,
-} from "@app/components/serverSetup/serverSetupDraft";
-import { AddressesStep } from "@app/components/serverSetup/steps/AddressesStep";
-import { LanguageStep } from "@app/components/serverSetup/steps/LanguageStep";
-import { SignInStep } from "@app/components/serverSetup/steps/SignInStep";
-import { EmailStep } from "@app/components/serverSetup/steps/EmailStep";
-import { FilesStep } from "@app/components/serverSetup/steps/FilesStep";
-import { AiStep } from "@app/components/serverSetup/steps/AiStep";
-import { AnalyticsStep } from "@app/components/serverSetup/steps/AnalyticsStep";
-import { PasswordStep } from "@app/components/serverSetup/steps/PasswordStep";
-import { QuickSummaryStep } from "@app/components/serverSetup/steps/QuickSummaryStep";
+} from "@editor/components/serverSetup/serverSetupDraft";
+import { AddressesStep } from "@editor/components/serverSetup/steps/AddressesStep";
+import { LanguageStep } from "@editor/components/serverSetup/steps/LanguageStep";
+import { SignInStep } from "@editor/components/serverSetup/steps/SignInStep";
+import { EmailStep } from "@editor/components/serverSetup/steps/EmailStep";
+import { FilesStep } from "@editor/components/serverSetup/steps/FilesStep";
+import { AiStep } from "@editor/components/serverSetup/steps/AiStep";
+import { AnalyticsStep } from "@editor/components/serverSetup/steps/AnalyticsStep";
+import { PasswordStep } from "@editor/components/serverSetup/steps/PasswordStep";
+import { QuickSummaryStep } from "@editor/components/serverSetup/steps/QuickSummaryStep";
 
 const STEP_COMPONENTS: Record<SetupStepId, ComponentType<SetupStepProps>> = {
   addresses: AddressesStep,

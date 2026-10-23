@@ -3,15 +3,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fetchCreditPromptPipelines,
   setCreditPromptPipelineEnabled,
-} from "@app/services/creditPromptPipelines";
+} from "@editor/services/creditPromptPipelines";
 
 const { get, post, updatePolicy } = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
   updatePolicy: vi.fn(),
 }));
-vi.mock("@app/services/apiClient", () => ({ default: { get, post } }));
-vi.mock("@app/services/policyStorage", () => ({
+vi.mock("@editor/services/apiClient", () => ({ default: { get, post } }));
+vi.mock("@editor/services/policyStorage", () => ({
   loadPolicies: () => ({ rotate: { backendId: "rotate-id" } }),
   updatePolicy,
 }));

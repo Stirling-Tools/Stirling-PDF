@@ -4,8 +4,8 @@ import {
   SettingRow,
   SetupNote,
   type SetupStepProps,
-} from "@app/components/serverSetup/SetupFields";
-import styles from "@app/components/shared/setupCard/SetupCard.module.css";
+} from "@editor/components/serverSetup/SetupFields";
+import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 
 export function FilesStep({ draft, initial, update }: SetupStepProps) {
   const { t } = useTranslation();

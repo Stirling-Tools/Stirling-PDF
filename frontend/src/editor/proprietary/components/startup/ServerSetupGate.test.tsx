@@ -9,9 +9,9 @@ import {
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ServerSetupGate } from "@app/components/startup/ServerSetupGate";
-import * as api from "@app/components/serverSetup/serverSetupApi";
-import { alert } from "@app/components/toast";
+import { ServerSetupGate } from "@editor/components/startup/ServerSetupGate";
+import * as api from "@editor/components/serverSetup/serverSetupApi";
+import { alert } from "@editor/components/toast";
 
 /** A stand-in for the server's app-config: it reports setup done once marked so. */
 const server = vi.hoisted(() => {
@@ -37,7 +37,7 @@ const server = vi.hoisted(() => {
   };
   return state;
 });
-vi.mock("@app/contexts/AppConfigContext", async () => {
+vi.mock("@editor/contexts/AppConfigContext", async () => {
   const { useSyncExternalStore } = await import("react");
   return {
     useAppConfig: () => ({
@@ -48,11 +48,11 @@ vi.mock("@app/contexts/AppConfigContext", async () => {
   };
 });
 vi.mock(
-  "@app/components/serverSetup/serverSetupApi",
+  "@editor/components/serverSetup/serverSetupApi",
   async (importOriginal) => ({
     httpStatus: (
       await importOriginal<
-        typeof import("@app/components/serverSetup/serverSetupApi")
+        typeof import("@editor/components/serverSetup/serverSetupApi")
       >()
     ).httpStatus,
     fetchServerSettings: vi.fn(),
@@ -72,11 +72,11 @@ const auth = vi.hoisted(() => ({
   user: { username: "admin" },
 }));
 const signIn = vi.hoisted(() => vi.fn());
-vi.mock("@app/auth/spring/springAuthClient", () => ({
+vi.mock("@editor/auth/spring/springAuthClient", () => ({
   springAuth: { signInWithPassword: signIn },
 }));
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => auth }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => auth }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (

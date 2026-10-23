@@ -1,6 +1,6 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from "react";
-import { Icon } from "@app/ui/Icon";
-import "@app/ui/Checkbox.css";
+import { Icon } from "@editor/ui/Icon";
+import "@editor/ui/Checkbox.css";
 
 export interface CheckboxProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,

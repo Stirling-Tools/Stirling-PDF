@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
-import { springAuth } from "@app/auth/spring/springAuthClient";
-import { alert } from "@app/components/toast";
+import { useAuth } from "@editor/auth/UseSession";
+import { springAuth } from "@editor/auth/spring/springAuthClient";
+import { alert } from "@editor/components/toast";
 import {
   answerAnalytics,
   changeAdminPassword,
@@ -12,11 +12,11 @@ import {
   requestRestart,
   saveServerSettings,
   waitForServer,
-} from "@app/components/serverSetup/serverSetupApi";
+} from "@editor/components/serverSetup/serverSetupApi";
 import {
   settingsDelta,
   type ServerSetupDraft,
-} from "@app/components/serverSetup/serverSetupDraft";
+} from "@editor/components/serverSetup/serverSetupDraft";
 
 export type FinishState =
   | "idle"

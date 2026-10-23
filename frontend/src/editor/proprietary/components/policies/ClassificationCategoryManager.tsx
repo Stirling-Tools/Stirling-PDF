@@ -4,10 +4,10 @@
 // forms no group, so its files fall to "Other".
 
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import type { SidebarCategory } from "@app/services/fileSidebarCategories";
-import "@app/components/policies/ClassificationCategoryManager.css";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import type { SidebarCategory } from "@editor/services/fileSidebarCategories";
+import "@editor/components/policies/ClassificationCategoryManager.css";
 
 interface ClassificationCategoryManagerProps {
   categories: SidebarCategory[];

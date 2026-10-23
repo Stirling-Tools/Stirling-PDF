@@ -1,5 +1,5 @@
-import pageOrder from "@app/assets/booklet/page-order.svg";
-import assembly from "@app/assets/booklet/assembly.svg";
+import pageOrder from "@editor/assets/booklet/page-order.svg";
+import assembly from "@editor/assets/booklet/assembly.svg";
 
 const diagrams = {
   pageOrder: { source: pageOrder, ratio: "280 / 124" },

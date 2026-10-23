@@ -1,27 +1,27 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Card, SegmentedControl, Skeleton, StatusBadge } from "@app/ui";
-import "@app/ui/Surface.css";
+import { Card, SegmentedControl, Skeleton, StatusBadge } from "@editor/ui";
+import "@editor/ui/Surface.css";
 import {
   useView,
   VIEW_PATHS,
   toPortalPath,
-} from "@portal/contexts/ViewContext";
-import { useProcessorFlow } from "@portal/queries/processorFlow";
-import { type ProcessorFlow as ProcessorFlowModel } from "@portal/api/processorFlow";
+} from "@processor/contexts/ViewContext";
+import { useProcessorFlow } from "@processor/queries/processorFlow";
+import { type ProcessorFlow as ProcessorFlowModel } from "@processor/api/processorFlow";
 import {
   DEV_KEEP_FLOWING,
   DEV_SYNTH_RATE,
   type Lens,
-} from "@portal/components/processor-flow/flowTypes";
-import { useFlowGeometry } from "@portal/components/processor-flow/useFlowGeometry";
-import { useFlowParticles } from "@portal/components/processor-flow/useFlowParticles";
-import { FlowSources } from "@portal/components/processor-flow/FlowSources";
-import { FlowPolicies } from "@portal/components/processor-flow/FlowPolicies";
-import { FlowOutcomes } from "@portal/components/processor-flow/FlowOutcomes";
-import { FlowSankey } from "@portal/components/processor-flow/FlowSankey";
-import "@portal/components/ProcessorFlow.css";
+} from "@processor/components/processor-flow/flowTypes";
+import { useFlowGeometry } from "@processor/components/processor-flow/useFlowGeometry";
+import { useFlowParticles } from "@processor/components/processor-flow/useFlowParticles";
+import { FlowSources } from "@processor/components/processor-flow/FlowSources";
+import { FlowPolicies } from "@processor/components/processor-flow/FlowPolicies";
+import { FlowOutcomes } from "@processor/components/processor-flow/FlowOutcomes";
+import { FlowSankey } from "@processor/components/processor-flow/FlowSankey";
+import "@processor/components/ProcessorFlow.css";
 
 /** Home processor visualiser: sources → policies → outcomes, as a live particle
  *  flow or a Sankey. Data + gating here; moving parts live under `processor-flow/`. */

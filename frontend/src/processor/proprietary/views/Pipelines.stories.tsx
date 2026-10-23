@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
-import { Pipelines } from "@portal/views/Pipelines";
+import { Pipelines } from "@processor/views/Pipelines";
 
 const meta: Meta<typeof Pipelines> = {
   title: "Portal/Views/Pipelines",

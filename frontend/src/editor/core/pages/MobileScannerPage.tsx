@@ -11,18 +11,18 @@ import {
   Card,
 } from "@mantine/core";
 import { useMediaQuery, useViewportSize } from "@mantine/hooks";
-import { Button as DSButton } from "@app/ui/Button";
+import { Button as DSButton } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { LogoIcon } from "@app/components/shared/LogoIcon";
-import { Wordmark } from "@app/components/shared/Wordmark";
-import { Icon } from "@app/ui/Icon";
+import { LogoIcon } from "@editor/components/shared/LogoIcon";
+import { Wordmark } from "@editor/components/shared/Wordmark";
+import { Icon } from "@editor/ui/Icon";
 import {
   loadJscanify,
   type JscanifyCornerPoints,
   type JscanifyScanner,
-} from "@app/utils/loadJscanify";
-import apiClient from "@app/services/apiClient";
-import { fitThumbs, THUMB_GAP } from "@app/utils/mobileScannerThumbs";
+} from "@editor/utils/loadJscanify";
+import apiClient from "@editor/services/apiClient";
+import { fitThumbs, THUMB_GAP } from "@editor/utils/mobileScannerThumbs";
 
 const API_BASE = (apiClient.defaults.baseURL ?? "").replace(/\/+$/, "");
 

@@ -11,14 +11,14 @@ vi.mock("react-i18next", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));
-vi.mock("@app/contexts/FolderContext", () => ({
+vi.mock("@editor/contexts/FolderContext", () => ({
   useFolders: () => ({ mountLocalFolder: vi.fn() }),
 }));
-vi.mock("@app/hooks/useFileHandler", () => ({
+vi.mock("@editor/hooks/useFileHandler", () => ({
   useFileHandler: () => ({ addFiles: vi.fn() }),
 }));
 vi.mock(
-  "@app/components/onboarding/classificationDemo/classificationDemoSweep",
+  "@editor/components/onboarding/classificationDemo/classificationDemoSweep",
   async (importOriginal) => ({
     ...(await importOriginal<object>()),
     resolveDownloadsDirectory: () => Promise.resolve("/downloads"),
@@ -27,16 +27,16 @@ vi.mock(
   }),
 );
 
-import { useClassificationDemo } from "@app/components/onboarding/classificationDemo/useClassificationDemo";
+import { useClassificationDemo } from "@editor/components/onboarding/classificationDemo/useClassificationDemo";
 import {
   endClassificationDemo,
   startClassificationDemo,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSession";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSession";
 import type {
   ClassificationDemoDeps,
   ClassificationDemoOutcome,
   ClassificationDemoProgress,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSweep";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSweep";
 
 const PROGRESS: ClassificationDemoProgress = {
   phase: "processing",

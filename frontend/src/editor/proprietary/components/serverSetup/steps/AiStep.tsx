@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { FormField } from "@app/ui/FormField";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { Select } from "@app/ui/Select";
+import { FormField } from "@editor/ui/FormField";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { Select } from "@editor/ui/Select";
 import {
   OnOffControl,
   sectionToggle,
@@ -9,7 +9,7 @@ import {
   SettingRow,
   TextField,
   type SetupStepProps,
-} from "@app/components/serverSetup/SetupFields";
+} from "@editor/components/serverSetup/SetupFields";
 import {
   aiProviderChange,
   embeddingNeedsApiKey,
@@ -18,7 +18,7 @@ import {
   type AiChoice,
   type AiProvider,
   type EmbeddingProvider,
-} from "@app/components/serverSetup/serverSetupDraft";
+} from "@editor/components/serverSetup/serverSetupDraft";
 
 export function AiStep(props: SetupStepProps) {
   const { draft, initial, update, errors, mode, setOpenSection } = props;

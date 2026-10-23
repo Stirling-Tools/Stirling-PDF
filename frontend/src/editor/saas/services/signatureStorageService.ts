@@ -1,4 +1,4 @@
-import type { SavedSignature } from "@app/hooks/tools/sign/useSavedSignatures";
+import type { SavedSignature } from "@editor/hooks/tools/sign/useSavedSignatures";
 
 export type StorageType = "backend" | "localStorage";
 

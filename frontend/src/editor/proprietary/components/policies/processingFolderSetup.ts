@@ -2,18 +2,21 @@ import {
   folderKind,
   type FolderId,
   type FolderRecord,
-} from "@app/types/folder";
-import type { PickedDirectory } from "@app/services/directoryPicker";
-import { directoryKey } from "@app/services/localFolderStorage";
-import { getFolderPath } from "@app/utils/folderPath";
-import type { ProcessingRecordSummary } from "@app/hooks/useProcessingFolders";
+} from "@editor/types/folder";
+import type { PickedDirectory } from "@editor/services/directoryPicker";
+import { directoryKey } from "@editor/services/localFolderStorage";
+import { getFolderPath } from "@editor/utils/folderPath";
+import type { ProcessingRecordSummary } from "@editor/hooks/useProcessingFolders";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
   type CatalogueEntry,
-} from "@app/policies/catalog";
-import { policyStepFromWire, policyStepToWire } from "@app/policies/operations";
-import type { PipelineStep } from "@app/policies/catalog";
+} from "@editor/policies/catalog";
+import {
+  policyStepFromWire,
+  policyStepToWire,
+} from "@editor/policies/operations";
+import type { PipelineStep } from "@editor/policies/catalog";
 
 /** New folders are materialised only when processing is enabled; native directories mount at the root. */
 export type ProcessingFolderTarget =

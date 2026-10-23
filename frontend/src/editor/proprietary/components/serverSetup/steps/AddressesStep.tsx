@@ -3,7 +3,7 @@ import {
   FieldGroup,
   TextField,
   type SetupStepProps,
-} from "@app/components/serverSetup/SetupFields";
+} from "@editor/components/serverSetup/SetupFields";
 
 export function AddressesStep({ draft, update, errors }: SetupStepProps) {
   const { t } = useTranslation();

@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
 function makeCmd(overrides: Partial<Command> = {}): Command {
   return {

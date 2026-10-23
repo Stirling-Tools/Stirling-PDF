@@ -1,6 +1,6 @@
 import { Alert, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { DEFAULT_ADMIN_CREDENTIALS } from "@app/auth/defaultCredentials";
+import { DEFAULT_ADMIN_CREDENTIALS } from "@editor/auth/defaultCredentials";
 
 /**
  * First-time-setup notice showing the default admin credentials. Rendered

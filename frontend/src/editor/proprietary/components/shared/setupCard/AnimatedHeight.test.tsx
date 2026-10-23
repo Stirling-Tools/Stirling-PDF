@@ -1,7 +1,7 @@
 import { act, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AnimatedHeight } from "@app/components/shared/setupCard/AnimatedHeight";
-import styles from "@app/components/shared/setupCard/SetupCard.module.css";
+import { AnimatedHeight } from "@editor/components/shared/setupCard/AnimatedHeight";
+import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 
 let resize: () => void = () => {};
 let contentHeight = 100;

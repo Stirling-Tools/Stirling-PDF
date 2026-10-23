@@ -22,7 +22,7 @@ export const ENDPOINTS = {
 
 export type SplitMethod = (typeof SPLIT_METHODS)[keyof typeof SPLIT_METHODS];
 
-import { CardOption } from "@app/components/shared/CardSelector";
+import { CardOption } from "@editor/components/shared/CardSelector";
 
 export interface MethodOption extends CardOption<SplitMethod> {
   tooltipKey: string;
