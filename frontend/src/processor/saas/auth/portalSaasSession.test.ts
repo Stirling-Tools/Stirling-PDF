@@ -19,35 +19,35 @@ const {
 }));
 
 const login = vi.hoisted(() => ({ redirect: vi.fn() }));
-vi.mock("@app/auth/redirectToLogin", () => ({
+vi.mock("@editor/auth/redirectToLogin", () => ({
   redirectToLogin: login.redirect,
 }));
 
-vi.mock("@app/auth/supabase", () => ({
+vi.mock("@editor/auth/supabase", () => ({
   supabase: {
     auth: { getSession, refreshSession },
     functions: { invoke },
     rpc,
   },
 }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: getLinkedClient,
 }));
-vi.mock("@app/portal/auth/saasSupabase", () => ({
+vi.mock("@editor/portal/auth/saasSupabase", () => ({
   ensureSaasSupabase: ensureLinkClient,
 }));
 
 import {
   getPortalSaasToken,
   resetPortalSaasSessionState,
-} from "@app/portal/auth/portalSaasSession";
+} from "@editor/portal/auth/portalSaasSession";
 import {
   createPortalSession,
   getLatestBundleQuote,
-} from "@app/portal/billing/stripe";
-import { invokeSaasFunction } from "@app/portal/auth/saasFunctions";
-import { fetchWallet } from "@app/portal/api/billing";
-import { apiClient, SaasSessionRequiredError } from "@app/portal/api/http";
+} from "@editor/portal/billing/stripe";
+import { invokeSaasFunction } from "@editor/portal/auth/saasFunctions";
+import { fetchWallet } from "@editor/portal/api/billing";
+import { apiClient, SaasSessionRequiredError } from "@editor/portal/api/http";
 
 describe("SaaS billing session", () => {
   beforeEach(() => {

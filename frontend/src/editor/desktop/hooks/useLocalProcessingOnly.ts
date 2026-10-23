@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { connectionModeService } from "@app/services/connectionModeService";
+import { connectionModeService } from "@editor/services/connectionModeService";
 
 /** Hides off-device features until the native policy is known, including on read errors. */
 export function useLocalProcessingOnly(): boolean {

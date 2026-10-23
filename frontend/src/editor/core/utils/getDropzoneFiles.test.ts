@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { getDropzoneFiles } from "@app/utils/getDropzoneFiles";
+import { getDropzoneFiles } from "@editor/utils/getDropzoneFiles";
 
 function dropEvent(items: object[], files: File[] = []) {
   return Object.assign(new Event("drop"), {

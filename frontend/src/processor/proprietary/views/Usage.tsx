@@ -1,7 +1,7 @@
-import { TeamSubscriptionChange } from "@app/billing/TeamSubscriptionChange";
-import { fetchCheckoutPricing } from "@app/portal/billing/stripe";
-import type { ServerPlan } from "@app/billing/serverPlan";
-import { fleetUsersInUse } from "@app/billing/fleetSeats";
+import { TeamSubscriptionChange } from "@editor/billing/TeamSubscriptionChange";
+import { fetchCheckoutPricing } from "@editor/portal/billing/stripe";
+import type { ServerPlan } from "@editor/billing/serverPlan";
+import { fleetUsersInUse } from "@editor/billing/fleetSeats";
 import {
   useCallback,
   useEffect,
@@ -13,39 +13,39 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
-import { Banner, Button } from "@app/ui";
-import { BillingScreen, KvRow, formatPeriodDate } from "@app/billing";
-import { useLegacySubscriptions } from "@app/hooks/useLegacySubscriptions";
-import { LegacySubscriptionPlan } from "@app/components/shared/config/LegacySubscriptionPlan";
-import { useUI } from "@app/portal/contexts/UIContext";
-import { useProcurement } from "@app/portal/components/procurement/useProcurement";
-import { ControlledDealStatusHero } from "@app/portal/components/procurement/ProcurementBanner";
-import { ProcurementFlow } from "@app/portal/components/procurement/ProcurementFlow";
+import { Banner, Button } from "@editor/ui";
+import { BillingScreen, KvRow, formatPeriodDate } from "@editor/billing";
+import { useLegacySubscriptions } from "@editor/hooks/useLegacySubscriptions";
+import { LegacySubscriptionPlan } from "@editor/components/shared/config/LegacySubscriptionPlan";
+import { useUI } from "@editor/portal/contexts/UIContext";
+import { useProcurement } from "@editor/portal/components/procurement/useProcurement";
+import { ControlledDealStatusHero } from "@editor/portal/components/procurement/ProcurementBanner";
+import { ProcurementFlow } from "@editor/portal/components/procurement/ProcurementFlow";
 import {
   fetchWallet,
   refreshWalletCache,
   type Wallet,
-} from "@app/portal/api/billing";
-import { fetchLocalUsage, triggerLocalSync } from "@app/portal/api/link";
-import { useAccountLinkOptional } from "@app/portal/contexts/AccountLinkContext";
-import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
-import { useStripePortal } from "@app/portal/hooks/useStripePortal";
-import { useBundleFlowState } from "@app/portal/hooks/useBundleFlowState";
-import { FreePlanView } from "@app/portal/components/billing/FreePlanView";
-import { PaymentSection } from "@app/portal/components/billing/PaymentSection";
-import { InvoicesSection } from "@app/portal/components/billing/InvoicesSection";
-import { useFleetStats } from "@app/portal/queries/infrastructure";
-import { qk } from "@app/portal/queries/keys";
-import { walletQuery, WALLET_POLL_MS } from "@app/portal/queries/wallet";
-import { useCheckoutOptional } from "@app/contexts/CheckoutContext";
-import { SubscribedPlanView } from "@app/portal/components/billing/SubscribedPlanView";
+} from "@editor/portal/api/billing";
+import { fetchLocalUsage, triggerLocalSync } from "@editor/portal/api/link";
+import { useAccountLinkOptional } from "@editor/portal/contexts/AccountLinkContext";
+import { usePortalSaasSession } from "@editor/portal/hooks/usePortalSaasSession";
+import { useStripePortal } from "@editor/portal/hooks/useStripePortal";
+import { useBundleFlowState } from "@editor/portal/hooks/useBundleFlowState";
+import { FreePlanView } from "@editor/portal/components/billing/FreePlanView";
+import { PaymentSection } from "@editor/portal/components/billing/PaymentSection";
+import { InvoicesSection } from "@editor/portal/components/billing/InvoicesSection";
+import { useFleetStats } from "@editor/portal/queries/infrastructure";
+import { qk } from "@editor/portal/queries/keys";
+import { walletQuery, WALLET_POLL_MS } from "@editor/portal/queries/wallet";
+import { useCheckoutOptional } from "@editor/contexts/CheckoutContext";
+import { SubscribedPlanView } from "@editor/portal/components/billing/SubscribedPlanView";
 import {
   HttpError,
   SaasSessionRequiredError,
   SaasUnconfiguredError,
-} from "@app/portal/api/http";
-import "@app/portal/views/Usage.css";
-import "@app/portal/components/billing/billing.css";
+} from "@editor/portal/api/http";
+import "@editor/portal/views/Usage.css";
+import "@editor/portal/components/billing/billing.css";
 
 export interface UsageProps {
   /** Local occupied seats for self-hosted; undefined keeps the SaaS membership count. */

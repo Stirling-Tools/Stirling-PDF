@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { useRepairParameters } from "@app/hooks/tools/repair/useRepairParameters";
-import { useRepairOperation } from "@app/hooks/tools/repair/useRepairOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { useRepairParameters } from "@editor/hooks/tools/repair/useRepairParameters";
+import { useRepairOperation } from "@editor/hooks/tools/repair/useRepairOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 
 const Repair = (props: BaseToolProps) => {
   const { t } = useTranslation();

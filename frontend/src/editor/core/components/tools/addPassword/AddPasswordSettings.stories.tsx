@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
-import { AddPasswordParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
+import AddPasswordSettings from "@editor/components/tools/addPassword/AddPasswordSettings";
+import { AddPasswordParameters } from "@editor/hooks/tools/addPassword/useAddPasswordParameters";
 
 const meta = {
   title: "Tools/AddPassword/AddPasswordSettings",

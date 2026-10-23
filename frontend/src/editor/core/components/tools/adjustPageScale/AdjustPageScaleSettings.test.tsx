@@ -1,12 +1,12 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import AdjustPageScaleSettings from "@app/components/tools/adjustPageScale/AdjustPageScaleSettings";
+import AdjustPageScaleSettings from "@editor/components/tools/adjustPageScale/AdjustPageScaleSettings";
 import {
   AdjustPageScaleParameters,
   PageSize,
   defaultParameters as hookDefaultParameters,
-} from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+} from "@editor/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 
 // Mock useTranslation with predictable return values
 const mockT = vi.fn(

@@ -1,9 +1,9 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 
-import { useFilesPage } from "@app/contexts/FilesPageContext";
-import { useFolders } from "@app/contexts/FolderContext";
+import { useFilesPage } from "@editor/contexts/FilesPageContext";
+import { useFolders } from "@editor/contexts/FolderContext";
 
 /**
  * Pull the server's folders and files again. Shared by every surface that offers

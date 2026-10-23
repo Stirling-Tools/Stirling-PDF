@@ -2,11 +2,11 @@
  * File processing utilities specifically for automation workflows
  */
 
-import apiClient from "@app/services/apiClient";
-import { zipFileService } from "@app/services/zipFileService";
-import { ResourceManager } from "@app/utils/resourceManager";
-import { AUTOMATION_CONSTANTS } from "@app/constants/automation";
-import { extractErrorMessage } from "@app/utils/toolErrorHandler";
+import apiClient from "@editor/services/apiClient";
+import { zipFileService } from "@editor/services/zipFileService";
+import { ResourceManager } from "@editor/utils/resourceManager";
+import { AUTOMATION_CONSTANTS } from "@editor/constants/automation";
+import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
 
 export interface AutomationProcessingOptions {
   timeout?: number;

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import OperatorsSection from "@app/components/shared/pageSelection/OperatorsSection";
+import OperatorsSection from "@editor/components/shared/pageSelection/OperatorsSection";
 
 const meta = {
   title: "Shared/PageSelection/OperatorsSection",

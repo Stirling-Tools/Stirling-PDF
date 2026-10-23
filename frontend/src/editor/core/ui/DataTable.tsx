@@ -5,7 +5,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import {
   type ColumnDef,
   createColumnHelper,
@@ -23,15 +23,15 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
-import { Skeleton } from "@app/ui/Skeleton";
+import { Skeleton } from "@editor/ui/Skeleton";
 import {
   type CellAction,
   type DataTableColumn,
   renderCellActions,
-} from "@app/ui/dataTableColumns";
-import "@app/ui/DataTable.css";
+} from "@editor/ui/dataTableColumns";
+import "@editor/ui/DataTable.css";
 
-export * from "@app/ui/dataTableColumns";
+export * from "@editor/ui/dataTableColumns";
 
 /** Per-column presentation carried through TanStack's typed `meta` slot. */
 interface ColumnMeta {

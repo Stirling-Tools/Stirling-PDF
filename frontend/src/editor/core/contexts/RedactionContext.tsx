@@ -7,10 +7,10 @@ import React, {
   useRef,
   useEffect,
 } from "react";
-import { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
-import { useNavigationGuard } from "@app/contexts/NavigationContext";
+import { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
+import { useNavigationGuard } from "@editor/contexts/NavigationContext";
 import { RedactionMode } from "@embedpdf/plugin-redaction";
-import { leaveRedactionMode } from "@app/components/viewer/leaveRedactionMode";
+import { leaveRedactionMode } from "@editor/components/viewer/leaveRedactionMode";
 
 /**
  * API interface that the EmbedPDF bridge will implement

@@ -6,10 +6,10 @@ import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Icon } from "@app/ui/Icon";
-import { useRedaction } from "@app/contexts/RedactionContext";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import "@app/components/viewer/TextSelectionMenu.css";
+import { Icon } from "@editor/ui/Icon";
+import { useRedaction } from "@editor/contexts/RedactionContext";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import "@editor/components/viewer/TextSelectionMenu.css";
 
 export type { RedactionSelectionMenuProps };
 

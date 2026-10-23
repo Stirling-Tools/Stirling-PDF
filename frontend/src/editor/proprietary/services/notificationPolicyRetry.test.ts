@@ -3,14 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Nothing was stashed: the policy, the document and the bytes all come off the row's reference.
 
 const getStirlingFile = vi.fn();
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: (...args: unknown[]) => getStirlingFile(...args),
   },
 }));
 
 const runStoredPolicy = vi.fn();
-vi.mock("@app/services/policyApi", () => ({
+vi.mock("@editor/services/policyApi", () => ({
   runStoredPolicy: (...args: unknown[]) => runStoredPolicy(...args),
   resolvePolicyRunTarget: () => "saas",
 }));
@@ -32,7 +32,7 @@ const policies = vi.hoisted(() => ({
     }
   >,
 }));
-vi.mock("@app/services/policyStorage", () => ({
+vi.mock("@editor/services/policyStorage", () => ({
   loadPolicies: () => policies.value,
   // Derived from the same fixture, so swapping it invalidates the placeability cache exactly as
   // a real write to storage would.
@@ -41,9 +41,9 @@ vi.mock("@app/services/policyStorage", () => ({
 
 // The REAL run store: a mock would assert the call and prove nothing about the record.
 const { getRun, isDispatched, recordRunStart, resetPolicyRuns, updateRun } =
-  await import("@app/components/policies/policyRunStore");
+  await import("@editor/components/policies/policyRunStore");
 const { canPlacePolicy, rerunPolicy, rechainPolicyOnDocument } =
-  await import("@app/services/notificationPolicyRetry");
+  await import("@editor/services/notificationPolicyRetry");
 
 const target = { policyId: "pol-1", fileId: "f-1" };
 

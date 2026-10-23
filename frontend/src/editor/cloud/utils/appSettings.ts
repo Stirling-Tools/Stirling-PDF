@@ -1,8 +1,8 @@
 // Programmatic entry into the settings page from outside the router (cloud
 // modals, onboarding checklists, service callbacks).
 
-import type { NavKey } from "@app/components/shared/config/types";
-import { navigateToSettings } from "@app/utils/settingsNavigation";
+import type { NavKey } from "@editor/components/shared/config/types";
+import { navigateToSettings } from "@editor/utils/settingsNavigation";
 
 export function openAppSettings(targetKey: NavKey, notice?: string) {
   try {

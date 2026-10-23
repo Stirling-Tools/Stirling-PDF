@@ -5,7 +5,7 @@ import { deflateRawSync } from "node:zlib";
 import {
   readFieldBundle,
   supportsFieldBundle,
-} from "@app/tools/formFill/fieldBundle";
+} from "@editor/tools/formFill/fieldBundle";
 
 /**
  * Builds ZIPs the way the backend does, using node:buffer's Blob: jsdom's ignores slice() ranges

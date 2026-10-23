@@ -1,5 +1,5 @@
-import type { FolderProcessingSetupProps } from "@core/components/policies/FolderProcessingSetup";
-import { ProcessingFolderSetupFlow } from "@app/components/policies/ProcessingFolderSetupFlow";
+import type { FolderProcessingSetupProps } from "@editor-core/components/policies/FolderProcessingSetup";
+import { ProcessingFolderSetupFlow } from "@editor/components/policies/ProcessingFolderSetupFlow";
 
 export type { FolderProcessingSetupProps };
 

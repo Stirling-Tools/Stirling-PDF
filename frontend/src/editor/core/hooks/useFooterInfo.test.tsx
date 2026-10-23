@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
-import { useFooterInfo } from "@app/hooks/useFooterInfo";
-import { fetchFooterInfo } from "@app/api/config";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
+import { useFooterInfo } from "@editor/hooks/useFooterInfo";
+import { fetchFooterInfo } from "@editor/api/config";
 
-vi.mock("@app/api/config", () => ({ fetchFooterInfo: vi.fn() }));
+vi.mock("@editor/api/config", () => ({ fetchFooterInfo: vi.fn() }));
 
 const mockFetch = vi.mocked(fetchFooterInfo);
 

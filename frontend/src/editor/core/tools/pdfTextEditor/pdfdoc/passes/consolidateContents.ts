@@ -17,14 +17,14 @@ import {
   concatBytes,
   deflate,
   fromLatin1,
-} from "@app/tools/pdfTextEditor/pdfdoc/bytes";
-import { RawPdf, spliceValue } from "@app/tools/pdfTextEditor/pdfdoc/raw";
+} from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
+import { RawPdf, spliceValue } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   appendRevision,
   plainObject,
   streamObject,
   type RevisionObject,
-} from "@app/tools/pdfTextEditor/pdfdoc/revision";
+} from "@editor/tools/pdfTextEditor/pdfdoc/revision";
 
 export interface ConsolidateResult {
   bytes: Uint8Array;

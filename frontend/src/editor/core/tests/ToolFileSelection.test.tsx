@@ -9,34 +9,34 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
-import Compress from "@app/tools/Compress";
-import Convert from "@app/tools/Convert";
-import Merge from "@app/tools/Merge";
-import ScannerImageSplit from "@app/tools/ScannerImageSplit";
-import ConvertToPdfUaSettings from "@app/components/tools/convert/ConvertToPdfUaSettings";
-import type { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
-import type { ToolAutomationSettingsProps } from "@app/hooks/tools/shared/toolOperationTypes";
+import Compress from "@editor/tools/Compress";
+import Convert from "@editor/tools/Convert";
+import Merge from "@editor/tools/Merge";
+import ScannerImageSplit from "@editor/tools/ScannerImageSplit";
+import ConvertToPdfUaSettings from "@editor/components/tools/convert/ConvertToPdfUaSettings";
+import type { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
+import type { ToolAutomationSettingsProps } from "@editor/hooks/tools/shared/toolOperationTypes";
 import {
   createNewStirlingFileStub,
   createStirlingFile,
   type FileContextState,
   type StirlingFile,
   type StirlingFileStub,
-} from "@app/types/fileContext";
-import { createTestStirlingFile } from "@app/tests/utils/testFileHelpers";
+} from "@editor/types/fileContext";
+import { createTestStirlingFile } from "@editor/tests/utils/testFileHelpers";
 import {
   ToolFileEligibilityProvider,
   useToolEligibleFileIds,
-} from "@app/contexts/ToolFileEligibilityContext";
-import { FileItem } from "@app/components/shared/FileSidebarFileItem";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { useCompressOperation } from "@app/hooks/tools/compress/useCompressOperation";
-import { defaultParameters as compressParameters } from "@app/hooks/tools/compress/useCompressParameters";
+} from "@editor/contexts/ToolFileEligibilityContext";
+import { FileItem } from "@editor/components/shared/FileSidebarFileItem";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { useCompressOperation } from "@editor/hooks/tools/compress/useCompressOperation";
+import { defaultParameters as compressParameters } from "@editor/hooks/tools/compress/useCompressParameters";
 import {
   rememberPdfAccess,
   clearPdfAccess,
   forgetPdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
 const workspace = {
   files: [] as StirlingFile[],
@@ -87,11 +87,11 @@ function EmptyFileSelectionTool({ filesVisible }: { filesVisible: boolean }) {
   });
 }
 
-vi.mock("@app/hooks/useLazyThumbnail", () => ({
+vi.mock("@editor/hooks/useLazyThumbnail", () => ({
   useLazyThumbnail: () => undefined,
 }));
 
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => ({
     ...workspace,
     fileIds: workspace.files.map((file) => file.fileId),
@@ -104,33 +104,33 @@ vi.mock("@app/contexts/FileContext", () => ({
   useFileSelection: () => ({ setSelectedFiles: vi.fn() }),
   useFileManagement: () => ({ reorderFiles: vi.fn() }),
 }));
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   ViewerContext: createContext(null),
   useViewer: () => viewer,
 }));
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationState: () => navigation,
   useNavigationActions: () => ({ actions: {} }),
 }));
-vi.mock("@app/contexts/ToolWorkflowContext", () => ({
+vi.mock("@editor/contexts/ToolWorkflowContext", () => ({
   useToolWorkflowActions: () => ({ handleToolSelect }),
 }));
-vi.mock("@app/contexts/PreferencesContext", () => ({
+vi.mock("@editor/contexts/PreferencesContext", () => ({
   usePreferences: () => ({ preferences: {} }),
 }));
-vi.mock("@app/contexts/FilesModalContext", () => ({
+vi.mock("@editor/contexts/FilesModalContext", () => ({
   useFilesModalContext: () => ({}),
 }));
-vi.mock("@app/hooks/useFileManager", () => ({
+vi.mock("@editor/hooks/useFileManager", () => ({
   useFileManager: () => ({ loadRecentFiles }),
 }));
-vi.mock("@app/hooks/useEndpointConfig", () => ({
+vi.mock("@editor/hooks/useEndpointConfig", () => ({
   useEndpointEnabled: () => ({ enabled: true, loading: false }),
 }));
-vi.mock("@app/hooks/useBackendHealth", () => ({
+vi.mock("@editor/hooks/useBackendHealth", () => ({
   useBackendHealth: () => ({ isOnline: true }),
 }));
-vi.mock("@app/services/pdfWorkerManager", () => ({
+vi.mock("@editor/services/pdfWorkerManager", () => ({
   pdfWorkerManager: pdfWorker,
 }));
 vi.mock("react-i18next", () => ({
@@ -142,16 +142,16 @@ vi.mock("react-i18next", () => ({
       ),
   }),
 }));
-vi.mock("@app/components/tools/compress/CompressSettings", () => ({
+vi.mock("@editor/components/tools/compress/CompressSettings", () => ({
   default: () => null,
 }));
 vi.mock(
-  "@app/components/tools/scannerImageSplit/ScannerImageSplitSettings",
+  "@editor/components/tools/scannerImageSplit/ScannerImageSplitSettings",
   () => ({
     default: () => null,
   }),
 );
-vi.mock("@app/components/tools/convert/ConvertSettings", () => ({
+vi.mock("@editor/components/tools/convert/ConvertSettings", () => ({
   default: ({
     parameters,
     onParameterChange,

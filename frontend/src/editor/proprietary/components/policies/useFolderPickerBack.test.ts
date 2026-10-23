@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useFolderPickerBack } from "@app/components/policies/useFolderPickerBack";
+import { useFolderPickerBack } from "@editor/components/policies/useFolderPickerBack";
 
 const routeState = { idx: 4, key: "editor", usr: { keep: true } };
 

@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import EmailPasswordForm from "@app/auth/ui/EmailPasswordForm";
-import OAuthButtons from "@app/auth/ui/OAuthButtons";
-import type { SpringLoginState } from "@app/auth/ui/useSpringLogin";
+import ErrorMessage from "@editor/auth/ui/ErrorMessage";
+import EmailPasswordForm from "@editor/auth/ui/EmailPasswordForm";
+import OAuthButtons from "@editor/auth/ui/OAuthButtons";
+import type { SpringLoginState } from "@editor/auth/ui/useSpringLogin";
 
 interface SpringLoginFormProps {
   /** Login state + handlers, from useSpringLogin. */

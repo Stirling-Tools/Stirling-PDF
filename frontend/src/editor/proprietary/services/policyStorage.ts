@@ -5,10 +5,10 @@
  * re-render. Mirrors the change-event pattern of the automation/folder stores.
  */
 
-import { loadPolicyCatalog } from "@app/services/policyCatalog";
-import { defaultRunOn } from "@app/policies/runOn";
-import type { PoliciesByKey, PolicyState } from "@app/types/policies";
-import { isToolEndpoint } from "@app/hooks/tools/shared/toolApiMapping";
+import { loadPolicyCatalog } from "@editor/services/policyCatalog";
+import { defaultRunOn } from "@editor/policies/runOn";
+import type { PoliciesByKey, PolicyState } from "@editor/types/policies";
+import { isToolEndpoint } from "@editor/hooks/tools/shared/toolApiMapping";
 
 const STORAGE_KEY = "stirling-policies-state";
 

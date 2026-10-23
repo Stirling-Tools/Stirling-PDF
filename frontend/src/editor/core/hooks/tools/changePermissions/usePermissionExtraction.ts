@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import {
   getPdfAccess,
   ensureLocalPdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 import { PdfPermissionFlag } from "@embedpdf/models";
 
 import {
   defaultParameters,
   type ChangePermissionsParametersHook,
-} from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
+} from "@editor/hooks/tools/changePermissions/useChangePermissionsParameters";
 
 type ExtractionStatus = "idle" | "loading" | "loaded" | "error";
 

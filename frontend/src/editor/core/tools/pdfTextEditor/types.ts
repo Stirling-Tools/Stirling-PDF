@@ -1,7 +1,7 @@
 /** Shared types for the PDF text editor. */
 
-import type { DisplayTransformData } from "@app/tools/pdfTextEditor/model/DisplayTransform";
-import type { AnnotationBox } from "@app/tools/pdfTextEditor/model/AnnotationBox";
+import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import type { AnnotationBox } from "@editor/tools/pdfTextEditor/model/AnnotationBox";
 
 export interface RGBA {
   r: number; // 0..255

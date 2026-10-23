@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import type { FolderRecord } from "@app/types/folder";
+import { FileDetailsPanel } from "@editor/components/filesPage/FileDetailsPanel";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import type { FolderRecord } from "@editor/types/folder";
 
 const buildFileStub = (
   overrides: Partial<StirlingFileStub> = {},

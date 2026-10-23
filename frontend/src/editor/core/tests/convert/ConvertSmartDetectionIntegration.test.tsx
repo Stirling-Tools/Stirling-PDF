@@ -14,22 +14,22 @@ import {
   Mock,
 } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useConvertOperation } from "@app/hooks/tools/convert/useConvertOperation";
-import { useConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
-import { FileContextProvider } from "@app/contexts/FileContext";
-import { NavigationProvider } from "@app/contexts/NavigationContext";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
+import { useConvertOperation } from "@editor/hooks/tools/convert/useConvertOperation";
+import { useConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
+import { FileContextProvider } from "@editor/contexts/FileContext";
+import { NavigationProvider } from "@editor/contexts/NavigationContext";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
 import { I18nextProvider } from "react-i18next";
-import i18n from "@app/i18n/config";
-import { detectFileExtension } from "@app/utils/fileUtils";
-import { FIT_OPTIONS } from "@app/constants/convertConstants";
+import i18n from "@editor/i18n/config";
+import { detectFileExtension } from "@editor/utils/fileUtils";
+import { FIT_OPTIONS } from "@editor/constants/convertConstants";
 import {
   createTestStirlingFile,
   createTestFilesWithId,
-} from "@app/tests/utils/testFileHelpers";
-import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
-import { fileStorage } from "@app/services/fileStorage";
+} from "@editor/tests/utils/testFileHelpers";
+import { allowConsole, expectConsole } from "@editor/tests/failOnConsole";
+import { fileStorage } from "@editor/services/fileStorage";
 import { MantineProvider } from "@mantine/core";
 
 // Mock axios (for static methods like CancelToken, isCancel)
@@ -61,10 +61,10 @@ vi.mock("../../services/apiClient", () => ({
 }));
 
 // Import the mocked apiClient
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 const mockedApiClient = vi.mocked(apiClient);
 const onToolRunComplete = vi.hoisted(() => vi.fn());
-vi.mock("@app/hooks/useToolRunComplete", () => ({
+vi.mock("@editor/hooks/useToolRunComplete", () => ({
   useToolRunComplete: () => onToolRunComplete,
 }));
 

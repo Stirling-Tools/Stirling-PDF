@@ -1,15 +1,15 @@
 import React from "react";
 import { Group, Tooltip } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import { useFilesPage } from "@app/contexts/FilesPageContext";
-import { useFolders } from "@app/contexts/FolderContext";
-import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useIsMobile } from "@app/hooks/useIsMobile";
-import { CreateProcessingFolderButton } from "@app/components/policies/CreateProcessingFolderButton";
-import { folderKind } from "@app/types/folder";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
+import { useFilesPage } from "@editor/contexts/FilesPageContext";
+import { useFolders } from "@editor/contexts/FolderContext";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import { CreateProcessingFolderButton } from "@editor/components/policies/CreateProcessingFolderButton";
+import { folderKind } from "@editor/types/folder";
 
 type LandingActionsProps = {
   fileInputRef: React.RefObject<HTMLInputElement | null>;

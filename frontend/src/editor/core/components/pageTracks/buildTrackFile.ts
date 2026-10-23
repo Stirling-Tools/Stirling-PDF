@@ -1,24 +1,24 @@
-import { StirlingFileStub } from "@app/types/fileContext";
-import { FileId } from "@app/types/file";
-import { PDFDocument, PDFPage } from "@app/types/pageEditor";
-import { pdfExportService } from "@app/services/pdfExportService";
-import { policySourceIds } from "@app/services/policyFileGuard";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { FileId } from "@editor/types/file";
+import { PDFDocument, PDFPage } from "@editor/types/pageEditor";
+import { pdfExportService } from "@editor/services/pdfExportService";
+import { policySourceIds } from "@editor/services/policyFileGuard";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
-} from "@app/services/pdfSessionUnlock";
-import { createStirlingFile } from "@app/types/fileContext";
+} from "@editor/services/pdfSessionUnlock";
+import { createStirlingFile } from "@editor/types/fileContext";
 import {
   asPdfSource,
   toPdfName,
-} from "@app/components/pageTracks/trackFileKind";
+} from "@editor/components/pageTracks/trackFileKind";
 import {
   Track,
   TrackPage,
   TrackWorkspace,
   allPages,
   isSourcePage,
-} from "@app/components/pageTracks/types";
+} from "@editor/components/pageTracks/types";
 
 export interface TrackFileLookup {
   getStub: (id: FileId) => StirlingFileStub | undefined;

@@ -7,7 +7,7 @@ import {
   SOURCE_OPTIONS,
   DESTINATION_OPTIONS,
   type OpKind,
-} from "@portal/data/ops";
+} from "@processor/data/ops";
 
 const meta: Meta = {
   title: "Data/Ops library",

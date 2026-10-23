@@ -1,15 +1,15 @@
 import { useEffect } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@app/auth/UseSession";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useSuppressQuickNavRail } from "@app/contexts/QuickNavHostContext";
-import { AppRoot } from "@app/components/layout/AppRoot";
-import { useBackendProbe } from "@app/hooks/useBackendProbe";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import AuthLayout from "@app/routes/authShared/AuthLayout";
-import LoginHeader from "@app/routes/login/LoginHeader";
+import { useAuth } from "@editor/auth/UseSession";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useSuppressQuickNavRail } from "@editor/contexts/QuickNavHostContext";
+import { AppRoot } from "@editor/components/layout/AppRoot";
+import { useBackendProbe } from "@editor/hooks/useBackendProbe";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
+import AuthLayout from "@editor/routes/authShared/AuthLayout";
+import LoginHeader from "@editor/routes/login/LoginHeader";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 
 /**
  * Landing component - Smart router based on authentication status

@@ -11,9 +11,9 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { ProcessorPlanRow } from "@app/billing/ProcessorPlanRow";
-import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
-import type { Wallet } from "@app/billing/types";
+import { ProcessorPlanRow } from "@editor/billing/ProcessorPlanRow";
+import { freeWallet, subscribedWallet } from "@editor/billing/walletFixtures";
+import type { Wallet } from "@editor/billing/types";
 
 const off = (over: Partial<Wallet> = {}): Wallet => ({
   ...freeWallet,

@@ -1,10 +1,10 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 import { render, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import LoggedInState from "@app/routes/login/LoggedInState";
-import { resolveLandingPath } from "@app/utils/loginLanding";
+import LoggedInState from "@editor/routes/login/LoggedInState";
+import { resolveLandingPath } from "@editor/utils/loginLanding";
 
-vi.mock("@app/utils/loginLanding", () => ({
+vi.mock("@editor/utils/loginLanding", () => ({
   resolveLandingPath: vi.fn(),
 }));
 
