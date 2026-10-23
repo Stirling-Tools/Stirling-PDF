@@ -55,6 +55,7 @@ public class ScalePagesController {
     private static PDRectangle getTargetSize(ScalePagesRequest request, PDDocument sourceDocument) {
         String targetPDRectangle = request.getPageSize();
         if ("CUSTOM".equals(targetPDRectangle)) {
+            // Explicit dimensions define orientation, so the orientation parameter is ignored.
             return getCustomSize(request);
         }
         if ("KEEP".equals(targetPDRectangle)) {
@@ -106,8 +107,10 @@ public class ScalePagesController {
                     name, "required when pageSize is CUSTOM");
         }
         float points = value * pointsPerUnit;
-        // Negated so NaN is rejected too.
-        if (!(points >= MIN_CUSTOM_SIDE_POINTS && points <= MAX_CUSTOM_SIDE_POINTS)) {
+        // False for NaN, so NaN is rejected too.
+        boolean withinAllowedRange =
+                points >= MIN_CUSTOM_SIDE_POINTS && points <= MAX_CUSTOM_SIDE_POINTS;
+        if (!withinAllowedRange) {
             throw ExceptionUtils.createInvalidArgumentException(
                     name, value + " (must be between 3 points and 200 inches)");
         }
