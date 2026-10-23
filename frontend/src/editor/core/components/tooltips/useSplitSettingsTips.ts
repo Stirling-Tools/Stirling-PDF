@@ -1,6 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@app/types/tips";
-import { SPLIT_METHODS, type SplitMethod } from "@app/constants/splitConstants";
+import { TooltipContent } from "@editor/types/tips";
+import {
+  SPLIT_METHODS,
+  type SplitMethod,
+} from "@editor/constants/splitConstants";
 
 export const useSplitSettingsTips = (
   method: SplitMethod | null,

@@ -2,31 +2,31 @@ import { useEffect, useMemo, useCallback, useState, useRef } from "react";
 import { type StepType } from "@reactour/tour";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
-import { isAuthRoute } from "@app/constants/routes";
-import { dispatchTourState } from "@app/constants/events";
-import { useOnboardingOrchestrator } from "@app/components/onboarding/orchestrator/useOnboardingOrchestrator";
-import { useBypassOnboarding } from "@app/components/onboarding/useBypassOnboarding";
+import { isAuthRoute } from "@editor/constants/routes";
+import { dispatchTourState } from "@editor/constants/events";
+import { useOnboardingOrchestrator } from "@editor/components/onboarding/orchestrator/useOnboardingOrchestrator";
+import { useBypassOnboarding } from "@editor/components/onboarding/useBypassOnboarding";
 import OnboardingTour, {
   type AdvanceArgs,
   type CloseArgs,
-} from "@app/components/onboarding/OnboardingTour";
-import OnboardingModalSlide from "@app/components/onboarding/OnboardingModalSlide";
+} from "@editor/components/onboarding/OnboardingTour";
+import OnboardingModalSlide from "@editor/components/onboarding/OnboardingModalSlide";
 import {
   useServerLicenseRequest,
   useTourRequest,
-} from "@app/components/onboarding/useOnboardingEffects";
-import { useOnboardingDownload } from "@app/components/onboarding/useOnboardingDownload";
+} from "@editor/components/onboarding/useOnboardingEffects";
+import { useOnboardingDownload } from "@editor/components/onboarding/useOnboardingDownload";
 import {
   SLIDE_DEFINITIONS,
   type ButtonAction,
-} from "@app/components/onboarding/onboardingFlowConfig";
-import ToolPanelModePrompt from "@app/components/tools/ToolPanelModePrompt";
-import { useTourOrchestration } from "@app/contexts/TourOrchestrationContext";
-import { useAdminTourOrchestration } from "@app/contexts/AdminTourOrchestrationContext";
-import { getTourSteps } from "@app/components/onboarding/tourRegistry";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import { useServerExperience } from "@app/hooks/useServerExperience";
-import "@app/components/onboarding/OnboardingTour.css";
+} from "@editor/components/onboarding/onboardingFlowConfig";
+import ToolPanelModePrompt from "@editor/components/tools/ToolPanelModePrompt";
+import { useTourOrchestration } from "@editor/contexts/TourOrchestrationContext";
+import { useAdminTourOrchestration } from "@editor/contexts/AdminTourOrchestrationContext";
+import { getTourSteps } from "@editor/components/onboarding/tourRegistry";
+import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
+import { useServerExperience } from "@editor/hooks/useServerExperience";
+import "@editor/components/onboarding/OnboardingTour.css";
 
 export default function Onboarding() {
   const { t } = useTranslation();

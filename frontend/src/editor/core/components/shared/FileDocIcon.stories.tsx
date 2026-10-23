@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FileDocIcon } from "@app/components/shared/FileDocIcon";
+import { FileDocIcon } from "@editor/components/shared/FileDocIcon";
 
 const meta = {
   title: "Shared/FileDocIcon",

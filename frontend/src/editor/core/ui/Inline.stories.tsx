@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Inline } from "@app/ui/Inline";
-import { Button } from "@app/ui/Button";
-import { StatusBadge } from "@app/ui/StatusBadge";
+import { Inline } from "@editor/ui/Inline";
+import { Button } from "@editor/ui/Button";
+import { StatusBadge } from "@editor/ui/StatusBadge";
 
 const meta: Meta<typeof Inline> = {
   title: "Primitives/Layout/Inline",

@@ -1,4 +1,4 @@
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 
 export type SignatureType = "draw" | "upload" | "type";

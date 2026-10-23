@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import path from "path";
 
 // Selecting text set in an embedded or subset face left the font picker showing

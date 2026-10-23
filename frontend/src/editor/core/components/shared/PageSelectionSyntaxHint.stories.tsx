@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import PageSelectionSyntaxHint from "@app/components/shared/PageSelectionSyntaxHint";
+import PageSelectionSyntaxHint from "@editor/components/shared/PageSelectionSyntaxHint";
 
 const meta = {
   title: "Shared/PageSelectionSyntaxHint",

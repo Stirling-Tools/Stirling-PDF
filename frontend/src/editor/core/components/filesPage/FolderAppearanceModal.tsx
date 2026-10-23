@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 
-import { Modal } from "@app/ui/Modal";
-import { Button } from "@app/ui/Button";
-import { FolderRecord } from "@app/types/folder";
-import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
+import { Modal } from "@editor/ui/Modal";
+import { Button } from "@editor/ui/Button";
+import { FolderRecord } from "@editor/types/folder";
+import { FolderAppearancePicker } from "@editor/components/filesPage/FolderAppearancePicker";
 
 interface FolderAppearanceModalProps {
   /** The folder being restyled; null closes the modal. */

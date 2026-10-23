@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Text, Anchor, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import { useAllFiles } from "@app/contexts/FileContext";
-import { useFileManager } from "@app/hooks/useFileManager";
-import { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { ProtectedPdfToolNotice } from "@app/components/tools/shared/ProtectedPdfToolNotice";
+import { Icon } from "@editor/ui/Icon";
+import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import { useFileManager } from "@editor/hooks/useFileManager";
+import { StirlingFile, StirlingFileStub } from "@editor/types/fileContext";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { ProtectedPdfToolNotice } from "@editor/components/tools/shared/ProtectedPdfToolNotice";
 
 export interface FileStatusIndicatorProps {
   selectedFiles?: StirlingFile[];

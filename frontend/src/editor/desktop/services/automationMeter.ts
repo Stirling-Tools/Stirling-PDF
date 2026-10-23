@@ -1,13 +1,13 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import {
   getServerAutomationSession,
   type ServerAutomationSession,
-} from "@app/services/serverAutomationSession";
-import type { AutomationMeterPayload } from "@core/services/automationMeter";
+} from "@editor/services/serverAutomationSession";
+import type { AutomationMeterPayload } from "@editor-core/services/automationMeter";
 export type {
   AutomationMeterPayload,
   AutomationMeterInput,
-} from "@core/services/automationMeter";
+} from "@editor-core/services/automationMeter";
 
 /** Matches AutomationMeterController.MAX_INPUTS; larger payloads are truncated by the server. */
 const MAX_METER_INPUTS = 10_000;

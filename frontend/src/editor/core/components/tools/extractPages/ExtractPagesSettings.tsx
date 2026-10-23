@@ -1,7 +1,7 @@
 import { Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ExtractPagesParameters } from "@app/hooks/tools/extractPages/useExtractPagesParameters";
-import PageSelectionSyntaxHint from "@app/components/shared/PageSelectionSyntaxHint";
+import { ExtractPagesParameters } from "@editor/hooks/tools/extractPages/useExtractPagesParameters";
+import PageSelectionSyntaxHint from "@editor/components/shared/PageSelectionSyntaxHint";
 
 interface ExtractPagesSettingsProps {
   parameters: ExtractPagesParameters;

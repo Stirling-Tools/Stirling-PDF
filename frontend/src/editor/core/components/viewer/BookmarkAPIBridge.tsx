@@ -3,12 +3,12 @@ import {
   useBookmarkCapability,
   BookmarkCapability,
 } from "@embedpdf/plugin-bookmark/react";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import {
   BookmarkState,
   BookmarkAPIWrapper,
-} from "@app/contexts/viewer/viewerBridges";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+} from "@editor/contexts/viewer/viewerBridges";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 
 /**
  * Connects the PDF bookmark plugin to the shared ViewerContext.

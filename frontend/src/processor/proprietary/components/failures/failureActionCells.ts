@@ -1,8 +1,8 @@
 import type { TFunction } from "i18next";
-import type { CellAction, CellMenuItem } from "@app/ui";
-import { promoteActions } from "@app/components/notifications/notificationActionSlots";
-import type { NotificationActionOffer } from "@app/services/notifications";
-import type { FileRunEvent } from "@portal/api/fileRunEvents";
+import type { CellAction, CellMenuItem } from "@editor/ui";
+import { promoteActions } from "@editor/components/notifications/notificationActionSlots";
+import type { NotificationActionOffer } from "@editor/services/notifications";
+import type { FileRunEvent } from "@processor/api/fileRunEvents";
 
 /** A row's actions as [primary][menu]: one button at most, everything else behind the kebab. */
 

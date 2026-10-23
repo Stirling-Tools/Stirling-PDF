@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   HistoryStack,
   HistoryStepError,
-} from "@app/tools/pdfTextEditor/store/HistoryStack";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+} from "@editor/tools/pdfTextEditor/store/HistoryStack";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
 const doc = {} as EditorDocument;
 

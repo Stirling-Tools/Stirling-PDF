@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 
 /** Palette guardrails: category marks stay distinguishable, the accent stays readable as text and as a fill. */

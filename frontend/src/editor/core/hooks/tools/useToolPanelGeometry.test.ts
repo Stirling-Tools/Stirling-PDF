@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { translatedBy } from "@app/hooks/tools/useToolPanelGeometry";
+import { translatedBy } from "@editor/hooks/tools/useToolPanelGeometry";
 
 /**
  * Builds an element chain outside-in from the given transforms and returns the

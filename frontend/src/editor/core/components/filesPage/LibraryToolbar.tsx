@@ -1,19 +1,19 @@
 import { MultiSelect, Select } from "@mantine/core";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
-import { Icon } from "@app/ui/Icon";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
-import { FilesToolbarSortMenu } from "@app/components/filesPage/FilesToolbarSortMenu";
-import { FilenameSearch } from "@app/components/filesPage/FilenameSearch";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
+import { Icon } from "@editor/ui/Icon";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { FilesToolbarFilterMenu } from "@editor/components/filesPage/FilesToolbarFilterMenu";
+import { FilesToolbarSortMenu } from "@editor/components/filesPage/FilesToolbarSortMenu";
+import { FilenameSearch } from "@editor/components/filesPage/FilenameSearch";
 import {
   FILES_PAGE_VIEW_MODES,
   type FilesPageOriginFilter,
   type FilesPageSortMode,
   type FilesPageViewMode,
-} from "@app/contexts/FilesPageContext";
-import type { LibraryFilters } from "@app/components/filesPage/useLibraryFiles";
+} from "@editor/contexts/FilesPageContext";
+import type { LibraryFilters } from "@editor/components/filesPage/useLibraryFiles";
 
 type Props = Pick<
   LibraryFilters,

@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner } from "@app/ui";
-import { isSaasSupabaseConfigured } from "@app/portal/auth/saasSupabase";
-import { ConnectBenefitsSlide } from "@app/portal/components/account-link/connect/ConnectBenefitsSlide";
-import { FreeTierExhaustedSummary } from "@app/portal/components/account-link/connect/FreeTierExhaustedSummary";
-import { ExhaustedAccountLinkContent } from "@app/components/account-link/ExhaustedAccountLinkModal";
-import "@app/components/account-link/connect.css";
+import { Banner } from "@editor/ui";
+import { isSaasSupabaseConfigured } from "@editor/portal/auth/saasSupabase";
+import { ConnectBenefitsSlide } from "@editor/portal/components/account-link/connect/ConnectBenefitsSlide";
+import { FreeTierExhaustedSummary } from "@editor/portal/components/account-link/connect/FreeTierExhaustedSummary";
+import { ExhaustedAccountLinkContent } from "@editor/components/account-link/ExhaustedAccountLinkModal";
+import "@editor/components/account-link/connect.css";
 
 interface Props {
   /** Re-auth says why it is being asked; a first link is pitched instead. */

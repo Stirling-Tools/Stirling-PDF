@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
-import ToolStep from "@app/components/tools/shared/ToolStep";
+import ToolStep from "@editor/components/tools/shared/ToolStep";
 
 function renderStep(
   props: Partial<React.ComponentProps<typeof ToolStep>> = {},
@@ -44,6 +44,18 @@ describe("ToolStep collapsible header", () => {
     renderStep({ isCollapsed: true, onCollapsedClick });
 
     await userEvent.setup().click(settingsHeader());
+    expect(onCollapsedClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("collapses when the tooltip title is clicked", async () => {
+    const onCollapsedClick = vi.fn();
+    renderStep({
+      isCollapsed: false,
+      onCollapsedClick,
+      tooltip: { content: "Help" },
+    });
+
+    await userEvent.setup().click(screen.getByText("Settings"));
     expect(onCollapsedClick).toHaveBeenCalledTimes(1);
   });
 

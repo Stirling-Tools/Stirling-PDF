@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
+import { MoveToFolderDialog } from "@editor/components/filesPage/MoveToFolderDialog";
 import {
   createFolderId,
   FOLDER_COLOR_PALETTE,
   FolderRecord,
-} from "@app/types/folder";
+} from "@editor/types/folder";
 
 const workId = createFolderId();
 const invoicesId = createFolderId();

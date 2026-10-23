@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import "@app/ui/SettingsShell.css";
+import { Button } from "@editor/ui/Button";
+import "@editor/ui/SettingsShell.css";
 
 export interface SettingsNavItem {
   key: string;

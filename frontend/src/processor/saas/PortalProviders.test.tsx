@@ -2,25 +2,25 @@ import type { ReactNode } from "react";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, expect, it, vi } from "vitest";
-import { PortalProviders } from "@app/portal/PortalProviders";
-import { PortalSettingsProviders } from "@app/portal/components/settings/PortalSettingsProviders";
-import { useUI } from "@app/portal/contexts/UIContext";
-vi.mock("@app/portal/contexts/TierContext", () => ({
+import { PortalProviders } from "@editor/portal/PortalProviders";
+import { PortalSettingsProviders } from "@editor/portal/components/settings/PortalSettingsProviders";
+import { useUI } from "@editor/portal/contexts/UIContext";
+vi.mock("@editor/portal/contexts/TierContext", () => ({
   TierProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   AppConfigProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@app/contexts/LicenseContext", () => ({
+vi.mock("@editor/contexts/LicenseContext", () => ({
   LicenseProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@app/contexts/CheckoutContext", () => ({
+vi.mock("@editor/contexts/CheckoutContext", () => ({
   CheckoutProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@app/components/startup/StartupPrompts", () => ({
+vi.mock("@editor/components/startup/StartupPrompts", () => ({
   StartupPrompts: () => null,
 }));
-vi.mock("@app/portal/components/PortalChrome", () => ({
+vi.mock("@editor/portal/components/PortalChrome", () => ({
   PortalChrome: () => <Trigger />,
 }));
 function Trigger() {

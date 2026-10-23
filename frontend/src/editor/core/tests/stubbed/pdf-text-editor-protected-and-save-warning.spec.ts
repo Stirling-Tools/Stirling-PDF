@@ -1,8 +1,8 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
 import { readFile, writeFile } from "node:fs/promises";
-import { readPdfProtection } from "@app/tests/helpers/pdf-protection";
+import { readPdfProtection } from "@editor/tests/helpers/pdf-protection";
 import { PDFDocument } from "@cantoo/pdf-lib";
 
 /** Coverage for two save/open safety features. */

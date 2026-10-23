@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
-import { PDFDocument, PDFPage } from "@app/types/pageEditor";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { createQuickKey } from "@app/types/fileContext";
+import { PDFDocument, PDFPage } from "@editor/types/pageEditor";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import { createQuickKey } from "@editor/types/fileContext";
 
 export function usePDFProcessor() {
   const [loading, setLoading] = useState(false);

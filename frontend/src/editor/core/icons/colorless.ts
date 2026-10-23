@@ -1,4 +1,4 @@
-import "@app/icons/colorless.css";
+import "@editor/icons/colorless.css";
 
 /**
  * Class that dims a brand mark, for `<Icon colorless />`. Only meaningful on the marks in

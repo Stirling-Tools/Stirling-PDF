@@ -2,9 +2,9 @@ import React from "react";
 import { describe, expect, test } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import FileEditorFileName from "@app/components/fileEditor/FileEditorFileName";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import FileEditorFileName from "@editor/components/fileEditor/FileEditorFileName";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const buildFileStub = (
   overrides: Partial<StirlingFileStub> = {},

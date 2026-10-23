@@ -1,13 +1,13 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
+import { useNotificationsAvailable } from "@editor/components/notifications/useNotificationsAvailable";
 import {
   connectionModeService,
   type ConnectionConfig,
   type ConnectionMode,
-} from "@app/services/connectionModeService";
+} from "@editor/services/connectionModeService";
 
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentMode: vi.fn(),
     subscribeToModeChanges: vi.fn(),
@@ -77,6 +77,6 @@ describe("desktop notification availability", () => {
     expect(result.current).toBe(false);
   });
 });
-vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => false,
 }));

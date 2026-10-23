@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import type { ReactNode } from "react";
-import type { FileId, StirlingFile } from "@app/types/fileContext";
+import type { FileId, StirlingFile } from "@editor/types/fileContext";
 
 type EligibleFileIds = ReadonlySet<FileId> | null;
 

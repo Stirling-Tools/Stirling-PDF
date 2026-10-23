@@ -2,10 +2,10 @@ import { useCallback } from "react";
 import {
   thumbnailGenerationService,
   type ThumbnailResult,
-} from "@app/services/thumbnailGenerationService";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { createQuickKey, isStirlingFile } from "@app/types/fileContext";
-import { FileId } from "@app/types/file";
+} from "@editor/services/thumbnailGenerationService";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
+import { createQuickKey, isStirlingFile } from "@editor/types/fileContext";
+import { FileId } from "@editor/types/file";
 
 // Request queue to handle concurrent thumbnail requests
 interface ThumbnailRequest {

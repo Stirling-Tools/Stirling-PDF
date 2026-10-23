@@ -1,17 +1,17 @@
-import { TierProvider } from "@app/portal/contexts/TierContext";
-import { LinkProvider } from "@app/portal/contexts/LinkContext";
-import { UIProvider } from "@app/portal/contexts/UIContext";
-import { LinkAccountModalHost } from "@app/portal/components/account-link/LinkAccountModal";
-import { AccountLinkProvider } from "@app/portal/contexts/AccountLinkContext";
-import { ConnectCallbackHost } from "@app/portal/components/account-link/ConnectCallbackHost";
-import { PortalChrome } from "@app/portal/components/PortalChrome";
-import { AccountLinkSessionBoundary } from "@app/portal/components/account-link/AccountLinkSessionBoundary";
-import { useFreeTierExhaustedPrompt } from "@app/portal/hooks/useFreeTierExhaustedPrompt";
-import { LicenseProvider } from "@app/contexts/LicenseContext";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import { StartupPrompts } from "@app/components/startup/StartupPrompts";
-import { ServerExperienceProvider } from "@app/contexts/ServerExperienceContext";
-import { CheckoutProvider } from "@app/contexts/CheckoutContext";
+import { TierProvider } from "@editor/portal/contexts/TierContext";
+import { LinkProvider } from "@editor/portal/contexts/LinkContext";
+import { UIProvider } from "@editor/portal/contexts/UIContext";
+import { LinkAccountModalHost } from "@editor/portal/components/account-link/LinkAccountModal";
+import { AccountLinkProvider } from "@editor/portal/contexts/AccountLinkContext";
+import { ConnectCallbackHost } from "@editor/portal/components/account-link/ConnectCallbackHost";
+import { PortalChrome } from "@editor/portal/components/PortalChrome";
+import { AccountLinkSessionBoundary } from "@editor/portal/components/account-link/AccountLinkSessionBoundary";
+import { useFreeTierExhaustedPrompt } from "@editor/portal/hooks/useFreeTierExhaustedPrompt";
+import { LicenseProvider } from "@editor/contexts/LicenseContext";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import { StartupPrompts } from "@editor/components/startup/StartupPrompts";
+import { ServerExperienceProvider } from "@editor/contexts/ServerExperienceContext";
+import { CheckoutProvider } from "@editor/contexts/CheckoutContext";
 
 function LinkModalHost() {
   useFreeTierExhaustedPrompt();

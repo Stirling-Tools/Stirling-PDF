@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSettings";
+import ConvertToCbrSettings from "@editor/components/tools/convert/ConvertToCbrSettings";
 import {
   ConvertParameters,
   defaultParameters,
-} from "@app/hooks/tools/convert/useConvertParameters";
+} from "@editor/hooks/tools/convert/useConvertParameters";
 
 const meta = {
   title: "Tools/Convert/ConvertToCbrSettings",
