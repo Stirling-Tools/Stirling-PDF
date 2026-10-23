@@ -43,6 +43,7 @@ import { useResolutionContinuation } from "@editor/hooks/tools/shared/useResolut
 import { useNotificationsAvailable } from "@editor/components/notifications/useNotificationsAvailable";
 import { zipFileService } from "@editor/services/zipFileService";
 import {
+  detectExtensionFromSignature,
   detectFileExtension,
   getFilenameWithoutExtension,
   mimeTypeToExtension,
@@ -460,13 +461,18 @@ export const useToolOperation = <TParams>(
               // from the response MIME type so it always matches the actual
               // content (#8404: merged images were named
               // "merged_sample.jpeg" for PDF content, which broke downstream
-              // tool selection). MIME types outside the map fall back to the
-              // input extension, then "pdf".
+              // tool selection). When the MIME type is generic (e.g.
+              // "application/octet-stream" set by a proxy), sniff the
+              // response signature instead of trusting the input extension:
+              // the first input may be a JPEG while the output is a PDF.
+              // Unrecognized content falls back to the input extension, then
+              // "pdf".
               const baseName =
                 getFilenameWithoutExtension(inputName, { preserveCase: true }) ||
                 "document";
               const extension =
                 mimeTypeToExtension(outputType) ||
+                (await detectExtensionFromSignature(responseBlob)) ||
                 detectFileExtension(inputName) ||
                 "pdf";
               const filename =

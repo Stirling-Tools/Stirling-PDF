@@ -99,4 +99,29 @@ test.describe("Merge output filename (#8404)", () => {
     ).toBeVisible();
     await expect(review.getByText(/merged_sample\.jpe?g/i)).toHaveCount(0);
   });
+
+  test("JPEG-first merge with generic Content-Type -> .pdf filename from response signature", async ({
+    page,
+  }) => {
+    // A proxy/gateway may replace the merge response Content-Type with
+    // "application/octet-stream", leaving no usable MIME type. The output
+    // extension must then come from the response bytes (%PDF), not from
+    // the first input file (a JPEG).
+    await page.route("**/api/v1/general/merge-pdfs", (route: Route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/octet-stream",
+        body: SAMPLE_PDF_BYTES,
+      }),
+    );
+    await page.goto("/merge");
+    await uploadFiles(page, [SAMPLE_JPG, SAMPLE_PDF]);
+    await switchToEditorIfViewerMode(page);
+    await runToolAndWaitForReview(page);
+
+    const review = page.locator('[data-testid="review-panel-container"]');
+    await expect(review).toBeVisible();
+    await expect(review.getByText(/merged_sample\.pdf/i).first()).toBeVisible();
+    await expect(review.getByText(/merged_sample\.jpe?g/i)).toHaveCount(0);
+  });
 });

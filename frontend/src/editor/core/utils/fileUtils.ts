@@ -96,6 +96,43 @@ export function mimeTypeToExtension(mimeType: string): string {
 }
 
 /**
+ * Leading byte signatures ("magic bytes") for the formats in
+ * MIME_TYPE_TO_EXTENSION that have a fixed prefix.
+ */
+const FILE_SIGNATURES: readonly {
+  signature: readonly number[];
+  extension: string;
+}[] = [
+  { signature: [0x25, 0x50, 0x44, 0x46], extension: "pdf" }, // "%PDF"
+  { signature: [0x50, 0x4b, 0x03, 0x04], extension: "zip" }, // "PK\x03\x04"
+  { signature: [0xff, 0xd8, 0xff], extension: "jpg" }, // JPEG start of image
+  {
+    signature: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+    extension: "png",
+  },
+];
+
+/**
+ * Detects a file extension from a blob's leading bytes, for responses whose
+ * Content-Type is missing or generic (e.g. "application/octet-stream" set by
+ * a proxy) and so cannot be trusted to describe the actual content.
+ * Returns "" when no known signature matches or the blob cannot be read.
+ */
+export async function detectExtensionFromSignature(
+  blob: Blob,
+): Promise<string> {
+  try {
+    const header = new Uint8Array(await blob.slice(0, 8).arrayBuffer());
+    for (const { signature, extension } of FILE_SIGNATURES) {
+      if (signature.every((byte, i) => header[i] === byte)) return extension;
+    }
+  } catch {
+    // Unreadable blob: no signature to detect.
+  }
+  return "";
+}
+
+/**
  * Removes the file extension from a filename
  * @param filename - The filename to process
  * @param options - Options for processing
