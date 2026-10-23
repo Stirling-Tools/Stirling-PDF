@@ -1,13 +1,13 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Icon } from "@app/ui/Icon";
-import { NavSurface } from "@app/ui/NavSurface";
+import { Icon } from "@editor/ui/Icon";
+import { NavSurface } from "@editor/ui/NavSurface";
 import {
   QuickNavRailBase,
   type QuickNavEntry,
-} from "@app/components/shared/quickNav/QuickNavRailBase";
-import { ClassificationProgressRing } from "@app/components/quickNav/ClassificationProgressRing";
-import "@app/components/shared/quickNav/QuickNavRailContainer.css";
+} from "@editor/components/shared/quickNav/QuickNavRailBase";
+import { ClassificationProgressRing } from "@editor/components/quickNav/ClassificationProgressRing";
+import "@editor/components/shared/quickNav/QuickNavRailContainer.css";
 
 /**
  * Draft of the rail indicator for a folder being classified in the background. The ring

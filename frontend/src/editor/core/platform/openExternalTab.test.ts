@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { openExternalTab } from "@app/platform/openExternalTab";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { openExternalTab } from "@editor/platform/openExternalTab";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 describe("openExternalTab (core/web)", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  // Opening in a new tab is the point of this seam: @app/platform/openExternal
+  // Opening in a new tab is the point of this seam: @editor/platform/openExternal
   // navigates the current tab on saas, which would tear the user out of the PDF.
   test("opens alongside the app rather than navigating it away", async () => {
     const openSpy = vi

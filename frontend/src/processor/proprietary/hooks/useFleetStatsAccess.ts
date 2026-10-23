@@ -1,4 +1,4 @@
-import { useAuth } from "@app/auth/UseSession";
+import { useAuth } from "@editor/auth/UseSession";
 
 /** Cache scope for a confirmed local admin; null prevents requests, including login-off sessions. */
 export function useFleetStatsAccess(): string | null {

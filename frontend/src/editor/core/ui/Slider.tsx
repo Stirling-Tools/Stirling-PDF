@@ -2,8 +2,8 @@ import {
   Slider as MantineSlider,
   type SliderProps as MantineSliderProps,
 } from "@mantine/core";
-import { useThumbAria } from "@app/ui/ariaForwarding";
-import "@app/ui/MantineForms.css";
+import { useThumbAria } from "@editor/ui/ariaForwarding";
+import "@editor/ui/MantineForms.css";
 
 export interface SliderMark {
   value: number;

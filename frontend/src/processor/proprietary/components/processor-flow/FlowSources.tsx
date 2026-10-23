@@ -1,16 +1,16 @@
 import { type RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui";
+import { Icon } from "@editor/ui/Icon";
 import type {
   FlowComingSoonSource,
   FlowSource,
-} from "@portal/api/processorFlow";
+} from "@processor/api/processorFlow";
 import {
   EDITOR_TYPE,
   ICON_SIZE,
-} from "@portal/components/processor-flow/flowTypes";
-import { SourceIcon } from "@portal/components/processor-flow/FlowIcons";
+} from "@processor/components/processor-flow/flowTypes";
+import { SourceIcon } from "@processor/components/processor-flow/FlowIcons";
 
 interface FlowSourcesProps {
   sources: FlowSource[];

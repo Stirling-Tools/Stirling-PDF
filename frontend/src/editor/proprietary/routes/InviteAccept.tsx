@@ -12,15 +12,15 @@ import {
   PasswordInput,
   Anchor,
 } from "@mantine/core";
-import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
-import AuthLayout from "@app/routes/authShared/AuthLayout";
-import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import { authInputStyles } from "@app/auth/ui/EmailPasswordForm";
-import "@app/auth/ui/auth.css";
-import { BASE_PATH } from "@app/constants/app";
-import apiClient from "@app/services/apiClient";
-import { Button } from "@app/ui/Button";
+import { useDocumentMeta } from "@editor/hooks/useDocumentMeta";
+import AuthLayout from "@editor/routes/authShared/AuthLayout";
+import LoginHeader from "@editor/routes/login/LoginHeader";
+import ErrorMessage from "@editor/auth/ui/ErrorMessage";
+import { authInputStyles } from "@editor/auth/ui/EmailPasswordForm";
+import "@editor/auth/ui/auth.css";
+import { BASE_PATH } from "@editor/constants/app";
+import apiClient from "@editor/services/apiClient";
+import { Button } from "@editor/ui/Button";
 interface InviteData {
   email: string | null;
   role: string;

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { promoteActions } from "@app/components/notifications/notificationActionSlots";
+import { promoteActions } from "@editor/components/notifications/notificationActionSlots";
 import type {
   NotificationActionOffer,
   NotificationActionSlot,
-} from "@app/services/notifications";
+} from "@editor/services/notifications";
 
 // Slot and key order both copy FailureKind.java, which FailureKindTest pins: declared order is the
 // tiebreak within a slot, so a fixture that drifts from it tests a shape no server sends.

@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { TextInput, Stack, Paper, Group } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import type { GeneralCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import type { GeneralCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
 
 /** Metadata stamped onto every processed document. Saved under premium.proFeatures. */
 export function CustomMetadataCard({

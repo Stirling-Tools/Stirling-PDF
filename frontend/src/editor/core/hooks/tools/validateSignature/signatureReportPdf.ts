@@ -2,19 +2,19 @@ import {
   PdfiumDocument,
   PdfiumPage,
   StandardFonts,
-} from "@app/services/pdfiumDocBuilder";
+} from "@editor/services/pdfiumDocBuilder";
 import type { TFunction } from "i18next";
-import { SignatureValidationReportEntry } from "@app/types/validateSignature";
-import { REPORT_PDF_FILENAME } from "@app/hooks/tools/validateSignature/utils/signatureUtils";
-import { colorPalette } from "@app/hooks/tools/validateSignature/utils/pdfPalette";
+import { SignatureValidationReportEntry } from "@editor/types/validateSignature";
+import { REPORT_PDF_FILENAME } from "@editor/hooks/tools/validateSignature/utils/signatureUtils";
+import { colorPalette } from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
 import {
   startReportPage,
   createThumbnailLoader,
-} from "@app/hooks/tools/validateSignature/utils/pdfPageHelpers";
-import { deriveEntryStatus } from "@app/hooks/tools/validateSignature/utils/reportStatus";
-import { drawCenteredMessage } from "@app/hooks/tools/validateSignature/outputtedPDFSections/CenteredMessageSection";
-import { drawSummarySection } from "@app/hooks/tools/validateSignature/outputtedPDFSections/SummarySection";
-import { drawSignatureSection } from "@app/hooks/tools/validateSignature/outputtedPDFSections/SignatureSection";
+} from "@editor/hooks/tools/validateSignature/utils/pdfPageHelpers";
+import { deriveEntryStatus } from "@editor/hooks/tools/validateSignature/utils/reportStatus";
+import { drawCenteredMessage } from "@editor/hooks/tools/validateSignature/outputtedPDFSections/CenteredMessageSection";
+import { drawSummarySection } from "@editor/hooks/tools/validateSignature/outputtedPDFSections/SummarySection";
+import { drawSignatureSection } from "@editor/hooks/tools/validateSignature/outputtedPDFSections/SignatureSection";
 
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;

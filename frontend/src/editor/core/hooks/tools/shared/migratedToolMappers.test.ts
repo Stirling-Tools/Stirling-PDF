@@ -2,47 +2,47 @@ import { describe, expect, test } from "vitest";
 import {
   ToolType,
   type RegistryToolOperationConfig,
-} from "@app/hooks/tools/shared/toolOperationTypes";
-import { objectToFormData } from "@app/hooks/tools/shared/toolApiMapping";
+} from "@editor/hooks/tools/shared/toolOperationTypes";
+import { objectToFormData } from "@editor/hooks/tools/shared/toolApiMapping";
 
 // Pilot tools.
-import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
-import { rotateOperationConfig } from "@app/hooks/tools/rotate/useRotateOperation";
-import { mergeOperationConfig } from "@app/hooks/tools/merge/useMergeOperation";
-import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
+import { compressOperationConfig } from "@editor/hooks/tools/compress/useCompressOperation";
+import { rotateOperationConfig } from "@editor/hooks/tools/rotate/useRotateOperation";
+import { mergeOperationConfig } from "@editor/hooks/tools/merge/useMergeOperation";
+import { splitOperationConfig } from "@editor/hooks/tools/split/useSplitOperation";
 // Rolled out in Phase 3.
-import { addAttachmentsOperationConfig } from "@app/hooks/tools/addAttachments/useAddAttachmentsOperation";
-import { addPageNumbersOperationConfig } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
-import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
-import { addStampOperationConfig } from "@app/components/tools/addStamp/useAddStampOperation";
-import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAddWatermarkOperation";
-import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
-import { autoRenameOperationConfig } from "@app/hooks/tools/autoRename/useAutoRenameOperation";
-import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
-import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
-import { changeMetadataOperationConfig } from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
-import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
-import { cropOperationConfig } from "@app/hooks/tools/crop/useCropOperation";
-import { editTableOfContentsOperationConfig } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
-import { extractImagesOperationConfig } from "@app/hooks/tools/extractImages/useExtractImagesOperation";
-import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
-import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
-import { overlayPdfsOperationConfig } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
-import { pageLayoutOperationConfig } from "@app/hooks/tools/pageLayout/usePageLayoutOperation";
-import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
-import { removeBlanksOperationConfig } from "@app/hooks/tools/removeBlanks/useRemoveBlanksOperation";
-import { removeCertificateSignOperationConfig } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
-import { removeImageOperationConfig } from "@app/hooks/tools/removeImage/useRemoveImageOperation";
-import { removePagesOperationConfig } from "@app/hooks/tools/removePages/useRemovePagesOperation";
-import { removePasswordOperationConfig } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
-import { reorganizePagesOperationConfig } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
-import { repairOperationConfig } from "@app/hooks/tools/repair/useRepairOperation";
-import { replaceColorOperationConfig } from "@app/hooks/tools/replaceColor/useReplaceColorOperation";
-import { sanitizeOperationConfig } from "@app/hooks/tools/sanitize/useSanitizeOperation";
-import { scannerImageSplitOperationConfig } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
-import { singleLargePageOperationConfig } from "@app/hooks/tools/singleLargePage/useSingleLargePageOperation";
-import { timestampPdfOperationConfig } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
-import { unlockPdfFormsOperationConfig } from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
+import { addAttachmentsOperationConfig } from "@editor/hooks/tools/addAttachments/useAddAttachmentsOperation";
+import { addPageNumbersOperationConfig } from "@editor/components/tools/addPageNumbers/useAddPageNumbersOperation";
+import { addPasswordOperationConfig } from "@editor/hooks/tools/addPassword/useAddPasswordOperation";
+import { addStampOperationConfig } from "@editor/components/tools/addStamp/useAddStampOperation";
+import { addWatermarkOperationConfig } from "@editor/hooks/tools/addWatermark/useAddWatermarkOperation";
+import { adjustPageScaleOperationConfig } from "@editor/hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
+import { autoRenameOperationConfig } from "@editor/hooks/tools/autoRename/useAutoRenameOperation";
+import { bookletImpositionOperationConfig } from "@editor/hooks/tools/bookletImposition/useBookletImpositionOperation";
+import { certSignOperationConfig } from "@editor/hooks/tools/certSign/useCertSignOperation";
+import { changeMetadataOperationConfig } from "@editor/hooks/tools/changeMetadata/useChangeMetadataOperation";
+import { changePermissionsOperationConfig } from "@editor/hooks/tools/changePermissions/useChangePermissionsOperation";
+import { cropOperationConfig } from "@editor/hooks/tools/crop/useCropOperation";
+import { editTableOfContentsOperationConfig } from "@editor/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
+import { extractImagesOperationConfig } from "@editor/hooks/tools/extractImages/useExtractImagesOperation";
+import { flattenOperationConfig } from "@editor/hooks/tools/flatten/useFlattenOperation";
+import { ocrOperationConfig } from "@editor/hooks/tools/ocr/useOCROperation";
+import { overlayPdfsOperationConfig } from "@editor/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
+import { pageLayoutOperationConfig } from "@editor/hooks/tools/pageLayout/usePageLayoutOperation";
+import { redactOperationConfig } from "@editor/hooks/tools/redact/useRedactOperation";
+import { removeBlanksOperationConfig } from "@editor/hooks/tools/removeBlanks/useRemoveBlanksOperation";
+import { removeCertificateSignOperationConfig } from "@editor/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
+import { removeImageOperationConfig } from "@editor/hooks/tools/removeImage/useRemoveImageOperation";
+import { removePagesOperationConfig } from "@editor/hooks/tools/removePages/useRemovePagesOperation";
+import { removePasswordOperationConfig } from "@editor/hooks/tools/removePassword/useRemovePasswordOperation";
+import { reorganizePagesOperationConfig } from "@editor/hooks/tools/reorganizePages/useReorganizePagesOperation";
+import { repairOperationConfig } from "@editor/hooks/tools/repair/useRepairOperation";
+import { replaceColorOperationConfig } from "@editor/hooks/tools/replaceColor/useReplaceColorOperation";
+import { sanitizeOperationConfig } from "@editor/hooks/tools/sanitize/useSanitizeOperation";
+import { scannerImageSplitOperationConfig } from "@editor/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
+import { singleLargePageOperationConfig } from "@editor/hooks/tools/singleLargePage/useSingleLargePageOperation";
+import { timestampPdfOperationConfig } from "@editor/hooks/tools/timestampPdf/useTimestampPdfOperation";
+import { unlockPdfFormsOperationConfig } from "@editor/hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
 
 // Every tool migrated to the mapper seam. Erased to the registry shape so one
 // loop can invoke toApiParams(defaultParameters) uniformly regardless of the

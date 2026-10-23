@@ -1,4 +1,4 @@
-import { PlanTierGroup } from "@app/services/licenseService";
+import { PlanTierGroup } from "@editor/services/licenseService";
 
 export interface StripeCheckoutProps {
   /**

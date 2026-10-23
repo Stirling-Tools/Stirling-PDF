@@ -3,8 +3,8 @@ import {
   bypassOnboarding,
   mockAppApis,
   seedCookieConsent,
-} from "@app/tests/helpers/api-stubs";
-import { openSettings } from "@app/tests/helpers/ui-helpers";
+} from "@editor/tests/helpers/api-stubs";
+import { openSettings } from "@editor/tests/helpers/ui-helpers";
 
 /**
  * Stubbed audit-log UI coverage. Drives the audit dashboard against

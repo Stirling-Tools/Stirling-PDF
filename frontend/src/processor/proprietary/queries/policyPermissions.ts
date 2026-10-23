@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { qk } from "@portal/queries/keys";
-import { fetchPolicyPermissions } from "@portal/api/pipelines";
+import { qk } from "@processor/queries/keys";
+import { fetchPolicyPermissions } from "@processor/api/pipelines";
 
 export interface PolicyPermissionsState {
   canManage: boolean;

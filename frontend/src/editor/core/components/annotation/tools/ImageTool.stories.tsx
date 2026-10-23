@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ImageTool } from "@app/components/annotation/tools/ImageTool";
-import { SignatureProvider } from "@app/contexts/SignatureContext";
-import { PDFAnnotationProvider } from "@app/components/annotation/providers/PDFAnnotationProvider";
+import { ImageTool } from "@editor/components/annotation/tools/ImageTool";
+import { SignatureProvider } from "@editor/contexts/SignatureContext";
+import { PDFAnnotationProvider } from "@editor/components/annotation/providers/PDFAnnotationProvider";
 
 // ImageTool renders BaseAnnotationTool, which reads both SignatureContext and
 // PDFAnnotationContext — neither is mounted by the shared preview, so stub both

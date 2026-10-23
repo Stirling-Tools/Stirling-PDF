@@ -3,7 +3,7 @@
  * frontend<->backend parameter conversion.
  */
 
-import type { ToolApiParams, ToolEndpoint } from "@app/types/toolApiTypes";
+import type { ToolApiParams, ToolEndpoint } from "@editor/types/toolApiTypes";
 
 export interface ToolOperationDescriptor<E extends ToolEndpoint, TParams> {
   readonly endpoint: E;

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
-import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
+import { DesktopOnboardingModal } from "@editor/components/DesktopOnboardingModal";
 
 const { isAuthenticated } = vi.hoisted(() => ({
   isAuthenticated: vi.fn<() => Promise<boolean>>(),
@@ -11,19 +11,19 @@ const { automationEnabled, switchToLocal } = vi.hoisted(() => ({
   automationEnabled: vi.fn(() => false),
   switchToLocal: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock("@app/components/policies/usePoliciesEnabled", () => ({
+vi.mock("@editor/components/policies/usePoliciesEnabled", () => ({
   usePoliciesEnabled: automationEnabled,
 }));
 
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: { isAuthenticated },
 }));
 
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: { switchToLocal },
 }));
 
-vi.mock("@app/components/onboarding/OnboardingSlideShell", () => ({
+vi.mock("@editor/components/onboarding/OnboardingSlideShell", () => ({
   default: ({
     opened,
     body,
@@ -42,7 +42,7 @@ vi.mock("@app/components/onboarding/OnboardingSlideShell", () => ({
   ShellHero: () => null,
 }));
 
-vi.mock("@app/components/SetupWizard", () => ({
+vi.mock("@editor/components/SetupWizard", () => ({
   SetupWizard: ({ onComplete }: { onComplete: () => void }) => (
     <div>
       Sign in to a server<button onClick={onComplete}>Skip sign-in</button>
@@ -50,12 +50,12 @@ vi.mock("@app/components/SetupWizard", () => ({
   ),
 }));
 
-vi.mock("@app/components/onboarding/slides/WelcomeSlide", () => ({
+vi.mock("@editor/components/onboarding/slides/WelcomeSlide", () => ({
   default: () => ({ title: "Welcome", body: null }),
 }));
 
 vi.mock(
-  "@app/components/onboarding/classificationDemo/ClassificationDemoModal",
+  "@editor/components/onboarding/classificationDemo/ClassificationDemoModal",
   () => ({
     ClassificationDemoModal: () => <div role="dialog">Downloads demo</div>,
   }),

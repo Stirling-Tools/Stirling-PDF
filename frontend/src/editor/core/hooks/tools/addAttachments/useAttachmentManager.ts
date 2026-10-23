@@ -6,8 +6,8 @@ import {
   extractAttachments as apiExtractAttachments,
   extractSingleAttachment as apiExtractSingleAttachment,
   parseBlobError,
-} from "@app/services/attachmentService";
-import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
+} from "@editor/services/attachmentService";
+import { downloadFileWithPolicy } from "@editor/services/exportWithPolicy";
 
 export type DraftRowKind = "existing" | "staged" | "renamed" | "deleted";
 

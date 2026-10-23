@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ApiKeySection from "@app/components/shared/config/configSections/apiKeys/ApiKeySection";
+import ApiKeySection from "@editor/components/shared/config/configSections/apiKeys/ApiKeySection";
 
 /**
  * Card showing a public API key with copy and refresh actions.

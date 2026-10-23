@@ -1,18 +1,18 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import { useTranslation } from "react-i18next";
 import {
   defineCustomTool,
   useToolOperation,
   CustomProcessorResult,
-} from "@app/hooks/tools/shared/useToolOperation";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   validateExtractPagesParameters,
   ExtractPagesParameters,
   defaultParameters,
-} from "@app/hooks/tools/extractPages/useExtractPagesParameters";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { parseSelection } from "@app/utils/bulkselection/parseSelection";
+} from "@editor/hooks/tools/extractPages/useExtractPagesParameters";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import { parseSelection } from "@editor/utils/bulkselection/parseSelection";
 
 // Convert advanced page selection expression into CSV of explicit one-based page numbers
 async function resolveSelectionToCsv(

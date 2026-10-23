@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from "vitest";
-import { AuthService } from "@app/services/authService";
+import { AuthService } from "@editor/services/authService";
 import { AxiosError } from "axios";
 
 const state = vi.hoisted(() => ({
@@ -15,19 +15,19 @@ vi.mock("@tauri-apps/api/core", () => ({
 }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn() }));
 vi.mock("@tauri-apps/plugin-shell", () => ({ open: vi.fn() }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentConfig: state.getConfig,
     assertSelfHostedAllowed: state.allowSelfHosted,
   },
 }));
-vi.mock("@app/services/tauriBackendService", () => ({
+vi.mock("@editor/services/tauriBackendService", () => ({
   tauriBackendService: {},
 }));
-vi.mock("@app/services/tauriHttpClient", () => ({
+vi.mock("@editor/services/tauriHttpClient", () => ({
   default: { post: state.post },
 }));
-vi.mock("@app/constants/connection", () => ({
+vi.mock("@editor/constants/connection", () => ({
   STIRLING_SAAS_URL: "https://cloud.example.org",
   SUPABASE_KEY: "public-key",
   DESKTOP_DEEP_LINK_CALLBACK: "stirlingpdf://auth",

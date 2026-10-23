@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 
 function CopyButton({ text }: { text: string }) {
   const { t } = useTranslation();

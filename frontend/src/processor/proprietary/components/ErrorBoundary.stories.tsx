@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ErrorBoundary } from "@portal/components/ErrorBoundary";
+import { ErrorBoundary } from "@processor/components/ErrorBoundary";
 
 function Boom(): never {
   throw new Error("kaboom");

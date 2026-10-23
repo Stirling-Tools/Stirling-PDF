@@ -2,13 +2,13 @@ import { useRef } from "react";
 import { createPortal } from "react-dom";
 import { ScrollArea, Switch } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
-import FullscreenToolList from "@app/components/tools/FullscreenToolList";
-import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
-import { ToolId } from "@app/types/toolId";
-import { useFocusTrap } from "@app/hooks/useFocusTrap";
-import "@app/components/tools/ToolPanel.css";
-import { ToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
+import ToolSearch from "@editor/components/tools/toolPicker/ToolSearch";
+import FullscreenToolList from "@editor/components/tools/FullscreenToolList";
+import { ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
+import { ToolId } from "@editor/types/toolId";
+import { useFocusTrap } from "@editor/hooks/useFocusTrap";
+import "@editor/components/tools/ToolPanel.css";
+import { ToolPanelGeometry } from "@editor/hooks/tools/useToolPanelGeometry";
 
 interface FullscreenToolSurfaceProps {
   searchQuery: string;

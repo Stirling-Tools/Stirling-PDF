@@ -1,10 +1,10 @@
 import React from "react";
 import { Group } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { useFileSelector } from "@app/contexts/FileContext";
-import { useFileActions } from "@app/contexts/file/fileHooks";
-import { Z_INDEX_TOAST } from "@app/styles/zIndex";
+import { useFileSelector } from "@editor/contexts/FileContext";
+import { useFileActions } from "@editor/contexts/file/fileHooks";
+import { Z_INDEX_TOAST } from "@editor/styles/zIndex";
 
 interface DismissAllErrorsButtonProps {
   className?: string;

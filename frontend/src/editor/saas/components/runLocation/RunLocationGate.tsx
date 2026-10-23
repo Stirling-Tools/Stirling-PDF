@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { normalizePath } from "@app/utils/pathUtils";
-import { PublicRouteProviders } from "@app/components/PublicRouteProviders";
-import { RunLocationChooser } from "@app/components/runLocation/RunLocationChooser";
-import { hasChosenRunLocation } from "@app/components/runLocation/runLocationChosen";
+import { normalizePath } from "@editor/utils/pathUtils";
+import { PublicRouteProviders } from "@editor/components/PublicRouteProviders";
+import { RunLocationChooser } from "@editor/components/runLocation/RunLocationChooser";
+import { hasChosenRunLocation } from "@editor/components/runLocation/runLocationChosen";
 
 // Links that finish a flow already in progress (an emailed sign-in, an OAuth
 // redirect, a shared file). Interrupting them with the chooser in a fresh

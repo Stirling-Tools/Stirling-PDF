@@ -5,8 +5,8 @@ import {
   type ServerLicenseRequestPayload,
   type TourType,
   type StartTourPayload,
-} from "@app/constants/events";
-import type { OnboardingRuntimeState } from "@app/components/onboarding/orchestrator/onboardingConfig";
+} from "@editor/constants/events";
+import type { OnboardingRuntimeState } from "@editor/components/onboarding/orchestrator/onboardingConfig";
 
 export function useServerLicenseRequest(): {
   showLicenseSlide: boolean;

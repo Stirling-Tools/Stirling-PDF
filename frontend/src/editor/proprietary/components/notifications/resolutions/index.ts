@@ -1,7 +1,7 @@
-import type { ToolId } from "@app/types/toolId";
-import { repair } from "@app/components/notifications/resolutions/repair";
-import type { Resolution } from "@app/components/notifications/resolutions/resolution";
-import { unlock } from "@app/components/notifications/resolutions/unlock";
+import type { ToolId } from "@editor/types/toolId";
+import { repair } from "@editor/components/notifications/resolutions/repair";
+import type { Resolution } from "@editor/components/notifications/resolutions/resolution";
+import { unlock } from "@editor/components/notifications/resolutions/unlock";
 
 export {
   canRetry,
@@ -14,7 +14,7 @@ export {
   type ResolutionActionId,
   type ResolutionDeps,
   type RetryTarget,
-} from "@app/components/notifications/resolutions/resolution";
+} from "@editor/components/notifications/resolutions/resolution";
 
 /**
  * Every fix this build can run. The action registry and the manual-run continuation both derive

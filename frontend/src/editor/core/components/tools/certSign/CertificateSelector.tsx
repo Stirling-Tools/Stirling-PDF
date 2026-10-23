@@ -1,14 +1,14 @@
 import { Stack, Text } from "@mantine/core";
-import { Radio } from "@app/ui/Radio";
-import { Icon, type IconName } from "@app/ui/Icon";
-import { FormField } from "@app/ui/FormField";
-import { Input } from "@app/ui/Input";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Radio } from "@editor/ui/Radio";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import { FormField } from "@editor/ui/FormField";
+import { Input } from "@editor/ui/Input";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { useEffect, useId } from "react";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import FileUploadButton from "@app/components/shared/FileUploadButton";
-import "@app/components/tools/certSign/CertificateSelector.css";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import FileUploadButton from "@editor/components/shared/FileUploadButton";
+import "@editor/components/tools/certSign/CertificateSelector.css";
 
 export type CertificateType = "USER_CERT" | "SERVER" | "UPLOAD";
 export type UploadFormat = "PKCS12" | "PFX" | "PEM" | "JKS";

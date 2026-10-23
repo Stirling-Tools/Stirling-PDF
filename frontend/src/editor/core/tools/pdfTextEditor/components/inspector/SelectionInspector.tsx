@@ -1,18 +1,18 @@
 import { useMemo } from "react";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import {
   Field,
   PointsInput,
   Section,
   SectionLabel,
-} from "@app/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
-import type { SelectionGeometry } from "@app/tools/pdfTextEditor/hooks/useSelectionGeometry";
-import type { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
-import type { SelectionState } from "@app/tools/pdfTextEditor/types";
-import { modShortcut } from "@app/utils/hotkeys";
+} from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+import type { SelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
+import type { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
+import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
+import { modShortcut } from "@editor/utils/hotkeys";
 
 export type InspectorController = ReturnType<typeof useToolbarController>;
 

@@ -1,14 +1,14 @@
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useLabelName } from "@app/data/labelDisplay";
-import { qk } from "@app/query/keys";
-import { useFoldPoll } from "@app/query/useFoldPoll";
+import { useLabelName } from "@editor/data/labelDisplay";
+import { qk } from "@editor/query/keys";
+import { useFoldPoll } from "@editor/query/useFoldPoll";
 import {
   fetchProcessingFolderRuns,
   type ProcessingFolderRun,
-} from "@app/services/processingFolderApi";
-import "@app/components/policies/SweepRunWall.css";
+} from "@editor/services/processingFolderApi";
+import "@editor/components/policies/SweepRunWall.css";
 
 const TERMINAL = ["COMPLETED", "FAILED", "CANCELLED"];
 

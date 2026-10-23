@@ -1,4 +1,4 @@
-import "@app/ui/Spinner.css";
+import "@editor/ui/Spinner.css";
 
 export type SpinnerSize = "xs" | "sm" | "md" | "lg";
 
