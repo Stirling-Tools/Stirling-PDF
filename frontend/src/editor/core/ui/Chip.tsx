@@ -5,7 +5,7 @@ import type {
   KeyboardEvent,
   ReactNode,
 } from "react";
-import "@app/ui/Chip.css";
+import "@editor/ui/Chip.css";
 
 /** Same accent dial as Button. */
 export type ChipAccent =

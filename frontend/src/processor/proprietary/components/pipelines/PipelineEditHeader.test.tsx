@@ -4,11 +4,11 @@ import {
   render as baseRender,
   screen,
 } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import {
   PipelineEditHeader,
   type PipelineEditHeaderProps,
-} from "@portal/components/pipelines/PipelineEditHeader";
+} from "@processor/components/pipelines/PipelineEditHeader";
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: PortalTestProviders });

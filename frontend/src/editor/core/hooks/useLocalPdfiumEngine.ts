@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { type Logger, type PdfEngine } from "@embedpdf/models";
 import type { FontFallbackConfig } from "@embedpdf/engines/pdfium-worker-engine";
-import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
+import { startEagerWasmCompilation } from "@editor/services/wasmPrecompiler";
 
 interface LocalPdfiumEngineOptions {
   wasmUrl: string;

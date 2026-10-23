@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { BASE_SECTION_ALIASES } from "@app/data/settingsAliases";
-import { SETTINGS_SEARCH_INDEX } from "@app/data/settingsSearchIndex";
+import { BASE_SECTION_ALIASES } from "@editor/data/settingsAliases";
+import { SETTINGS_SEARCH_INDEX } from "@editor/data/settingsSearchIndex";
 
 /**
  * Sections keep folding into one another, and both tables address a page by its

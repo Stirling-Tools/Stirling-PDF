@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { HistoryStack } from "@app/tools/pdfTextEditor/store/HistoryStack";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
 function makeCmd(type = "test") {
   const apply = vi.fn();

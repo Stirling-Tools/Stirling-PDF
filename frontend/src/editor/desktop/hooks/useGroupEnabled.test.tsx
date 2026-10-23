@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
-import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
-import { useGroupEnabled } from "@app/hooks/useGroupEnabled";
-import { fetchGroupEnabled } from "@app/api/config";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
+import { useGroupEnabled } from "@editor/hooks/useGroupEnabled";
+import { fetchGroupEnabled } from "@editor/api/config";
 
-vi.mock("@app/api/config", () => ({ fetchGroupEnabled: vi.fn() }));
+vi.mock("@editor/api/config", () => ({ fetchGroupEnabled: vi.fn() }));
 const privacy = vi.hoisted(() => ({ localOnly: false }));
-vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => privacy.localOnly,
 }));
 
@@ -21,7 +21,7 @@ let status = "online";
 let cachedSnapshot = { status };
 const listeners = new Set<() => void>();
 
-vi.mock("@app/services/selfHostedServerMonitor", () => ({
+vi.mock("@editor/services/selfHostedServerMonitor", () => ({
   selfHostedServerMonitor: {
     getSnapshot: () => cachedSnapshot,
     subscribe: (listener: () => void) => {

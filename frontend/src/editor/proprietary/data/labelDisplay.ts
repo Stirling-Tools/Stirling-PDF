@@ -4,7 +4,7 @@
 // the built-in map, so they fall back to the id.
 
 import { useTranslation } from "react-i18next";
-import { DEFAULT_CLASSIFICATION_LABELS } from "@app/data/classificationLabels";
+import { DEFAULT_CLASSIFICATION_LABELS } from "@editor/data/classificationLabels";
 
 const NAME_BY_ID = new Map(
   DEFAULT_CLASSIFICATION_LABELS.map((label) => [label.id, label.name]),

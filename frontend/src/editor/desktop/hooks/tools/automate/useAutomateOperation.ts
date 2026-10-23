@@ -2,10 +2,10 @@ import { useCallback } from "react";
 import {
   defineCustomTool,
   useToolOperation,
-} from "@app/hooks/tools/shared/useToolOperation";
-import { executeAutomationSequence } from "@app/utils/automationExecutor";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
-import type { AutomateParameters } from "@app/types/automation";
+} from "@editor/hooks/tools/shared/useToolOperation";
+import { executeAutomationSequence } from "@editor/utils/automationExecutor";
+import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
+import type { AutomateParameters } from "@editor/types/automation";
 
 /** Server execution includes metering; a second browser meter would charge the same run twice. */
 export function useAutomateOperation() {

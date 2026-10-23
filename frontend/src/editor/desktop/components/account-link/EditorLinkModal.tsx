@@ -1,1 +1,1 @@
-export { ExhaustedAccountLinkModal as EditorLinkModal } from "@app/components/account-link/ExhaustedAccountLinkModal";
+export { ExhaustedAccountLinkModal as EditorLinkModal } from "@editor/components/account-link/ExhaustedAccountLinkModal";

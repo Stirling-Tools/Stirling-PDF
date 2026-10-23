@@ -15,7 +15,7 @@
  *   *offer* it; `IntegrationConfigService` refuses the call regardless of what the client believed.
  */
 
-import type { IntegrationType } from "@portal/api/integrations";
+import type { IntegrationType } from "@processor/api/integrations";
 
 /** One configurable field. `control` mirrors the source builder's vocabulary. */
 export interface ConnectionFieldDef {

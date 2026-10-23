@@ -1,7 +1,7 @@
-import apiClient from "@app/services/apiClient";
-import { JWT_STORAGE_KEY } from "@app/auth/httpClient";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import apiClient from "@editor/services/apiClient";
+import { JWT_STORAGE_KEY } from "@editor/auth/httpClient";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
+import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
 
 export type LoginLandingMode = "editor" | "dynamic";
 

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@app/types/tips";
-import { usePageSelectionTips } from "@app/components/tooltips/usePageSelectionTips";
+import { TooltipContent } from "@editor/types/tips";
+import { usePageSelectionTips } from "@editor/components/tooltips/usePageSelectionTips";
 
 export const useExtractPagesTips = (): TooltipContent => {
   const { t } = useTranslation();

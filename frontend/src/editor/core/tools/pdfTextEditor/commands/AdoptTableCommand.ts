@@ -1,17 +1,17 @@
 import {
   RolledBackError,
   type Command,
-} from "@app/tools/pdfTextEditor/commands/Command";
-import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
-import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/commands/UngroupParagraphCommand";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
-import type { TableSnapshot } from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/commands/Command";
+import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
+import { UngroupParagraphCommand } from "@editor/tools/pdfTextEditor/commands/UngroupParagraphCommand";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
+import type { TableSnapshot } from "@editor/tools/pdfTextEditor/types";
 import {
   adoptedTableModel,
   overlaps,
-} from "@app/tools/pdfTextEditor/util/tableAdoption";
-import { detectTables } from "@app/tools/pdfTextEditor/util/tableDetection";
+} from "@editor/tools/pdfTextEditor/util/tableAdoption";
+import { detectTables } from "@editor/tools/pdfTextEditor/util/tableDetection";
 
 /** Keeps an adopted grid and the paragraph splits backing its cells in one undo step. */
 export class AdoptTableCommand implements Command {

@@ -1,6 +1,6 @@
 import type { ElementType, ReactNode, HTMLAttributes } from "react";
-import type { StackGap, StackAlign, StackJustify } from "@app/ui/Stack";
-import "@app/ui/Inline.css";
+import type { StackGap, StackAlign, StackJustify } from "@editor/ui/Stack";
+import "@editor/ui/Inline.css";
 
 export interface InlineProps extends HTMLAttributes<HTMLElement> {
   /** Token-aligned gap between children (maps to `--space-*`). */

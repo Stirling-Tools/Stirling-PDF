@@ -1,10 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import apiClient from "@app/services/apiClient";
-import type { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
-import type { StirlingFile } from "@app/types/fileContext";
-import { extractErrorMessage } from "@app/utils/toolErrorHandler";
-import type { ShowJSParameters } from "@app/hooks/tools/showJS/useShowJSParameters";
+import apiClient from "@editor/services/apiClient";
+import type { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
+import type { StirlingFile } from "@editor/types/fileContext";
+import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
+import type { ShowJSParameters } from "@editor/hooks/tools/showJS/useShowJSParameters";
 
 export interface ShowJSOperationHook extends ToolOperationHook<ShowJSParameters> {
   scriptText: string | null;

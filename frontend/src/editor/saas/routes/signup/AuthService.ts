@@ -1,5 +1,5 @@
-import { supabase } from "@app/auth/supabase";
-import { absoluteWithBasePath } from "@app/constants/app";
+import { supabase } from "@editor/auth/supabase";
+import { absoluteWithBasePath } from "@editor/constants/app";
 
 export const useAuthService = () => {
   const signUp = async (email: string, password: string, name?: string) => {

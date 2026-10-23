@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ErrorStage } from "@app/components/shared/stripeCheckout/stages/ErrorStage";
+import { ErrorStage } from "@editor/components/shared/stripeCheckout/stages/ErrorStage";
 
 /**
  * The error state shown when a Stripe checkout attempt fails.

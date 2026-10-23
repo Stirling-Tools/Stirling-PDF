@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { EmptyState } from "@app/ui/EmptyState";
-import { Button } from "@app/ui/Button";
-import { Card } from "@app/ui/Card";
+import { EmptyState } from "@editor/ui/EmptyState";
+import { Button } from "@editor/ui/Button";
+import { Card } from "@editor/ui/Card";
 
 const meta: Meta<typeof EmptyState> = {
   title: "Primitives/EmptyState",

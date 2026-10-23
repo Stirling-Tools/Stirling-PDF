@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
 
 /**
  * SaaS pre-release: the Components page isn't shipped yet and its nav item is

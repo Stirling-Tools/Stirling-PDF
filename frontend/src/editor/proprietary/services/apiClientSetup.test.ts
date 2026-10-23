@@ -1,15 +1,15 @@
 import type { AxiosInstance } from "axios";
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
-import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
+import { allowConsole, expectConsole } from "@editor/tests/failOnConsole";
 
-vi.mock("@app/auth/spring/springAuthClient", () => ({
+vi.mock("@editor/auth/spring/springAuthClient", () => ({
   setPostLoginRedirectPath: vi.fn(),
 }));
-vi.mock("@app/utils/browserIdentifier", () => ({
+vi.mock("@editor/utils/browserIdentifier", () => ({
   getBrowserId: () => "browser-1",
 }));
 
-import { setupApiInterceptors } from "@app/services/apiClientSetup";
+import { setupApiInterceptors } from "@editor/services/apiClientSetup";
 
 type Rejected = (error: unknown) => Promise<unknown>;
 

@@ -9,7 +9,7 @@ import {
   connectionTypeOf,
   creatableConnectionTypes,
   isFieldVisible,
-} from "@portal/components/sources/connectionTypes";
+} from "@processor/components/sources/connectionTypes";
 
 const byId = (id: string) => {
   const type = CREATABLE_CONNECTION_TYPES.find((entry) => entry.id === id);

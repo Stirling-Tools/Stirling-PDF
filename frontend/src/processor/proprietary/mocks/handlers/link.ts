@@ -6,7 +6,7 @@ import {
   listInstances,
   revokeInstance,
   unlinkLocal,
-} from "@portal/mocks/link";
+} from "@processor/mocks/link";
 
 /**
  * Account-link MSW handlers. Two surfaces:

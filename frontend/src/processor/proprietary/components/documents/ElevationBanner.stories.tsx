@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ElevationBanner } from "@portal/components/documents/ElevationBanner";
-import { ELEVATION_WINDOW_SECONDS } from "@portal/components/documents/format";
-import "@portal/views/Documents.css";
+import { ElevationBanner } from "@processor/components/documents/ElevationBanner";
+import { ELEVATION_WINDOW_SECONDS } from "@processor/components/documents/format";
+import "@processor/views/Documents.css";
 
 const meta: Meta<typeof ElevationBanner> = {
   title: "Portal/Documents/ElevationBanner",

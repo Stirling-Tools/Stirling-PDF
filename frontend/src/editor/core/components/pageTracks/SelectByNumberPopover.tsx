@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Popover } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import BulkSelectionPanel from "@app/components/shared/pageSelection/BulkSelectionPanel";
-import { parseSelection } from "@app/utils/bulkselection/parseSelection";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import BulkSelectionPanel from "@editor/components/shared/pageSelection/BulkSelectionPanel";
+import { parseSelection } from "@editor/utils/bulkselection/parseSelection";
 
 export interface SelectByNumberPopoverProps {
   label: string;

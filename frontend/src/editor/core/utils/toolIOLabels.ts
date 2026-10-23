@@ -1,5 +1,5 @@
 import { type TFunction } from "i18next";
-import { type ToolFormat } from "@app/types/toolIO";
+import { type ToolFormat } from "@editor/types/toolIO";
 
 /**
  * A tool format as a phrase to show someone, not the enum name. `PDF_ENCRYPTED` is a wire value;

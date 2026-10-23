@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AuditSystemStatus from "@app/components/shared/config/configSections/audit/AuditSystemStatus";
-import type { AuditSystemStatus as AuditStatus } from "@app/services/auditService";
+import AuditSystemStatus from "@editor/components/shared/config/configSections/audit/AuditSystemStatus";
+import type { AuditSystemStatus as AuditStatus } from "@editor/services/auditService";
 
 const meta = {
   title: "Config/Audit/AuditSystemStatus",

@@ -7,7 +7,7 @@ export type {
   WalletActivityRow,
   TeamHolding,
   ProcessorHolding,
-} from "@app/billing/types";
+} from "@editor/billing/types";
 export {
   DEFAULT_CAP_PRESETS,
   currencySymbol,
@@ -33,23 +33,23 @@ export {
   type BundleQuoteInput,
   type BundleQuoteBreakdown,
   type MeterState,
-} from "@app/billing/format";
-export { MeterBar } from "@app/billing/MeterBar";
+} from "@editor/billing/format";
+export { MeterBar } from "@editor/billing/MeterBar";
 export {
   BillingScreen,
   type BillingScreenProps,
-} from "@app/billing/BillingScreen";
-export { TeamPlanRow } from "@app/billing/TeamPlanRow";
-export { ProcessorPlanRow } from "@app/billing/ProcessorPlanRow";
+} from "@editor/billing/BillingScreen";
+export { TeamPlanRow } from "@editor/billing/TeamPlanRow";
+export { ProcessorPlanRow } from "@editor/billing/ProcessorPlanRow";
 export {
   MeterRow,
   type MeterRowProps,
   type MeterRowTone,
-} from "@app/billing/MeterRow";
-export { KvRow } from "@app/billing/KvRow";
-export { InvoiceRow, type InvoiceRowState } from "@app/billing/InvoiceRow";
+} from "@editor/billing/MeterRow";
+export { KvRow } from "@editor/billing/KvRow";
+export { InvoiceRow, type InvoiceRowState } from "@editor/billing/InvoiceRow";
 export {
   SpendCapControl,
   type SpendCapControlProps,
   type SpendCapControlLabels,
-} from "@app/billing/SpendCapControl";
+} from "@editor/billing/SpendCapControl";

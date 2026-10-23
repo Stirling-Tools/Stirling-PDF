@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PaymentStage } from "@app/components/shared/stripeCheckout/stages/PaymentStage";
-import type { PlanTier } from "@app/services/licenseService";
+import { PaymentStage } from "@editor/components/shared/stripeCheckout/stages/PaymentStage";
+import type { PlanTier } from "@editor/services/licenseService";
 
 const serverPlan: PlanTier = {
   id: "server-monthly",

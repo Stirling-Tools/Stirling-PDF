@@ -4,7 +4,7 @@
  * data for Storybook and tests.
  */
 
-import type { Notification } from "@portal/api/notifications";
+import type { Notification } from "@processor/api/notifications";
 
 export const NOTIFICATIONS: Notification[] = [
   {

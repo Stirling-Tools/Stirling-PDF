@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useState, useRef } from "react";
-import { clearAccountLinkBlock } from "@app/services/accountLinkBlock";
-import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
-import { errorMessage } from "@app/portal/api/http";
-import { isSaasSupabaseConfigured } from "@app/portal/auth/saasSupabase";
+import { clearAccountLinkBlock } from "@editor/services/accountLinkBlock";
+import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
+import { errorMessage } from "@editor/portal/api/http";
+import { isSaasSupabaseConfigured } from "@editor/portal/auth/saasSupabase";
 import {
   fetchStatus,
   unlinkInstance,
   type LinkStatus,
-} from "@app/portal/api/link";
-import { useApplyLinkFacts, useLink } from "@app/portal/contexts/LinkContext";
-import { clearAccountLinkSession } from "@app/portal/auth/accountLinkSession";
+} from "@editor/portal/api/link";
+import {
+  useApplyLinkFacts,
+  useLink,
+} from "@editor/portal/contexts/LinkContext";
+import { clearAccountLinkSession } from "@editor/portal/auth/accountLinkSession";
 
 /** Reads and clears THIS instance's link status. */
 

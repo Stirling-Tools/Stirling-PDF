@@ -1,4 +1,4 @@
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 interface SettingsNavChevronProps {
   /** Mobile nav items drill into a second pane, so they get an affordance. */
   show: boolean;

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AuditStatsCards from "@app/components/shared/config/configSections/audit/AuditStatsCards";
+import AuditStatsCards from "@editor/components/shared/config/configSections/audit/AuditStatsCards";
 
 /**
  * Stat cards summarising audit log activity (events, success rate, active

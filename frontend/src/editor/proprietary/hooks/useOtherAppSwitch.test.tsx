@@ -12,17 +12,17 @@ const mocks = vi.hoisted(() => ({
 vi.mock("react-router-dom", () => ({
   useNavigate: () => mocks.navigate,
 }));
-vi.mock("@app/auth/context", () => ({
+vi.mock("@editor/auth/context", () => ({
   useAuth: () => ({ portalAccess: mocks.portalAccess }),
 }));
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationActions: () => ({
     actions: { requestNavigation: mocks.requestNavigation },
   }),
 }));
 
-import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
-import { takeEditorReturnPath } from "@app/services/workbenchSession";
+import { useOtherAppSwitch } from "@editor/hooks/useOtherAppSwitch";
+import { takeEditorReturnPath } from "@editor/services/workbenchSession";
 
 beforeEach(() => {
   sessionStorage.clear();
