@@ -243,18 +243,13 @@ export const SignatureAPIBridge = forwardRef<
     ) => {
       if (!annotationApi) return;
 
-      annotationApi.setActiveTool(null);
-      annotationApi.setActiveTool("stamp");
-      const stampTool = annotationApi.getActiveTool();
-      if (stampTool && stampTool.id === "stamp") {
-        annotationApi.setToolDefaults("stamp", {
-          imageSrc,
-          subject,
-          ...(size
-            ? { imageSize: { width: size.width, height: size.height } }
-            : {}),
-        });
-      }
+      annotationApi.setToolDefaults("stamp", {
+        imageSrc,
+        subject,
+        ...(size
+          ? { imageSize: { width: size.width, height: size.height } }
+          : {}),
+      });
     },
     [annotationApi],
   );
@@ -429,6 +424,8 @@ export const SignatureAPIBridge = forwardRef<
       activateSignaturePlacementMode: () => {
         if (!annotationApi || !signatureConfig) return;
 
+        annotationApi.setActiveTool(null);
+        annotationApi.setActiveTool("stamp");
         configureStampDefaults().catch((error) => {
           console.error("Error activating signature tool:", error);
         });
