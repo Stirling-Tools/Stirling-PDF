@@ -1,0 +1,742 @@
+import {
+  createElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+
+import { useAuth } from "@editor/auth/UseSession";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { ViewerContext } from "@editor/contexts/ViewerContext";
+import { usePortalAccess } from "@editor/hooks/usePortalAccess";
+import { useAccountCardShown } from "@editor/hooks/useAccountCardShown";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useFileActions } from "@editor/contexts/file/fileHooks";
+import { fileStorage } from "@editor/services/fileStorage";
+import { FileDocIcon } from "@editor/components/shared/FileDocIcon";
+import { getFileDocVariant } from "@editor/components/shared/filePreview/getFileTypeIcon";
+import { detectFileExtension } from "@editor/utils/fileUtils";
+import { openExternalUrl } from "@editor/utils/safeNavigation";
+import { rankByFuzzy, FUZZY_MIN_SCORE } from "@editor/utils/fuzzySearch";
+import { TOOL_SEARCH_FIELDS } from "@editor/utils/toolSearch";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { ToolId } from "@editor/types/toolId";
+import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import {
+  useToolSearchAccess,
+  type ToolSearchAccess,
+  type ToolSearchAccessResolver,
+} from "@editor/hooks/useToolSearchAccess";
+import { SETTINGS_SEARCH_INDEX } from "@editor/data/settingsSearchIndex";
+import {
+  SETTINGS_SECTION_REGISTRY,
+  type SettingsSectionEntry,
+} from "@editor/data/settingsSectionRegistry";
+import {
+  buildMatchSnippet,
+  findSettingsContentMatch,
+} from "@editor/data/settingsContentSearch";
+import {
+  PROCESSOR_SEARCH_INDEX,
+  isPortalEntityScopeAccessible,
+  type ProcessorSearchEntry,
+} from "@editor/data/processorSearchIndex";
+import { useProcessorEntityGroups } from "@editor/data/processorEntitySearch";
+import { isPortalEntityScopeShipped } from "@editor/data/portalEntityScopes";
+import {
+  PORTAL_ENTITY_SCOPE_DEFS,
+  PORTAL_DOCS_SCOPE_ID,
+  type SuperSearchGates,
+  type SuperSearchGroup,
+  type SuperSearchGroupId,
+  type SuperSearchQueryOptions,
+  type SuperSearchResult,
+  type SuperSearchScope,
+  type UseSuperSearchResult,
+} from "@editor/types/superSearch";
+
+// Re-exported so existing consumers keep one import site; the definitions
+// live in the types leaf (see that module for why).
+export type {
+  SuperSearchGates,
+  SuperSearchGroup,
+  SuperSearchGroupId,
+  SuperSearchQueryOptions,
+  SuperSearchResult,
+  SuperSearchScope,
+  UseSuperSearchResult,
+};
+
+/**
+ * How many results a ranker computes per group. This is the ceiling the
+ * dropdown can reveal via "show more" — the component shows a small initial
+ * slice per group and expands to the rest on demand.
+ */
+export const GROUP_RESULT_CEILING = 24;
+/** Translation subtrees General only renders inside the account card. */
+const ACCOUNT_CARD_PREFIXES = ["account"];
+/** Group display order in the dropdown. */
+const GROUP_ORDER: SuperSearchGroupId[] = [
+  "files",
+  "tools",
+  "settings",
+  "processor",
+];
+
+/**
+ * Whether the current user can enter the Processor at all: explicit portal
+ * access, admin, or single-user mode with login disabled. Null gates (config
+ * still loading) stay closed.
+ */
+export function isProcessorGateOpen(gates: SuperSearchGates | null): boolean {
+  return (
+    !!gates &&
+    (gates.portalAccessible === true || gates.isAdmin || !gates.loginEnabled)
+  );
+}
+
+/** The editor's visibility gates, from app config + the session's flags. */
+export function useSuperSearchGates(): SuperSearchGates | null {
+  const authState = useAuth();
+  const { config } = useAppConfig();
+  // Through the seam, not authState: on SaaS the editor's Supabase session
+  // carries no permission flags, so reading it here hid every processor lane.
+  const portalAccessible = usePortalAccess();
+  const accountCardShown = useAccountCardShown();
+  return useMemo(
+    () =>
+      config
+        ? {
+            isAdmin: authState.isAdmin ?? config.isAdmin ?? false,
+            loginEnabled: config.enableLogin ?? false,
+            portalAccessible,
+            isAnonymous: authState.isAnonymous,
+            showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
+            accountCardShown,
+            // Not every build's user type carries orgOwner (SaaS has no
+            // owner-only sections), hence the `in` check.
+            isOrgOwner:
+              (authState.isAdmin ?? false) &&
+              !authState.loading &&
+              !!authState.user &&
+              "orgOwner" in authState.user &&
+              authState.user.orgOwner === true,
+          }
+        : null,
+    [
+      authState.isAdmin,
+      authState.isAnonymous,
+      authState.loading,
+      authState.user,
+      portalAccessible,
+      accountCardShown,
+      config,
+    ],
+  );
+}
+
+/**
+ * The editor bar's filter chips — one per source lane, granular over the
+ * Processor's contents (pages plus each entity type). Processor lanes only
+ * show when this build ships the portal and the user can enter it.
+ */
+export function useEditorSearchScopes(): SuperSearchScope[] {
+  const { t } = useTranslation();
+  const gates = useSuperSearchGates();
+  const processorAvailable =
+    PROCESSOR_SEARCH_INDEX.length > 0 && isProcessorGateOpen(gates);
+
+  return useMemo(() => {
+    const visibleViewIds = new Set(
+      PROCESSOR_SEARCH_INDEX.map((entry) => entry.id),
+    );
+    return [
+      {
+        id: "files",
+        label: t("superSearch.group.files", "Files"),
+        aliases: ["file", "files"],
+      },
+      {
+        id: "tools",
+        label: t("superSearch.group.tools", "Tools"),
+        aliases: ["tool", "tools"],
+      },
+      {
+        id: "settings",
+        label: t("superSearch.group.settings", "Settings"),
+        aliases: ["setting", "settings"],
+      },
+      ...(processorAvailable
+        ? [
+            {
+              id: "processor",
+              label: t("superSearch.group.pages", "Pages"),
+              aliases: ["page", "pages", "processor", "portal"],
+            },
+            ...PORTAL_ENTITY_SCOPE_DEFS.filter((def) =>
+              isPortalEntityScopeOffered(def.id, gates),
+            ).map((def) => ({
+              id: def.id,
+              label: t(def.labelKey, def.labelFallback),
+              aliases: [...def.aliases],
+            })),
+            ...(visibleViewIds.has("docs")
+              ? [
+                  {
+                    id: PORTAL_DOCS_SCOPE_ID,
+                    label: t("superSearch.group.docs", "Docs"),
+                    aliases: ["doc", "docs", "documentation"],
+                  },
+                ]
+              : []),
+          ]
+        : []),
+    ];
+  }, [t, processorAvailable, gates]);
+}
+
+/**
+ * Shared scope handling for hosts that accept SuperSearchQueryOptions:
+ * which source lanes are enabled for the current chip/prefix selection.
+ */
+export function useSearchScopeFilter(options?: SuperSearchQueryOptions): {
+  scopeEnabled: (scopeId: string) => boolean;
+} {
+  const scopedIds = useMemo(
+    () => new Set(options?.scopeIds ?? []),
+    [options?.scopeIds],
+  );
+  const hasScopedSearch = scopedIds.size > 0;
+  const scopeEnabled = useCallback(
+    (scopeId: string) => !hasScopedSearch || scopedIds.has(scopeId),
+    [hasScopedSearch, scopedIds],
+  );
+  return { scopeEnabled };
+}
+
+// ---------------------------------------------------------------------------
+// Shared sources. Every host bar (editor workbench, portal shell) builds its
+// results from these, so a query ranks identically everywhere — only the
+// select actions differ (in-app contexts vs cross-app navigation).
+// ---------------------------------------------------------------------------
+
+/** Loads the My Files stubs whenever the search surface is open. */
+export function useMyFilesStubs(active: boolean): {
+  stubs: StirlingFileStub[];
+  loadingFiles: boolean;
+} {
+  const [stubs, setStubs] = useState<StirlingFileStub[]>([]);
+  const [loadingFiles, setLoadingFiles] = useState(false);
+  const loadedOnceRef = useRef(false);
+
+  useEffect(() => {
+    if (!active) return;
+    // Refresh whenever the surface opens so newly added files appear.
+    let cancelled = false;
+    if (!loadedOnceRef.current) setLoadingFiles(true);
+    fileStorage
+      .getLeafStirlingFileStubs()
+      .then((all) => {
+        if (cancelled) return;
+        setStubs(all);
+        loadedOnceRef.current = true;
+      })
+      .catch((err) => {
+        console.error("[SuperSearch] Failed to load file stubs:", err);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingFiles(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [active]);
+
+  return { stubs, loadingFiles };
+}
+
+/**
+ * @param dataLostLabel reason shown on a file whose stored bytes are gone —
+ *   still listed, as the sidebar lists it, but it can't be opened.
+ */
+export function rankFileResults(
+  stubs: StirlingFileStub[],
+  trimmed: string,
+  openFile: (stub: StirlingFileStub) => void | Promise<void>,
+  dataLostLabel: string,
+  limit = GROUP_RESULT_CEILING,
+): SuperSearchResult[] {
+  if (!trimmed) return [];
+  return rankByFuzzy(stubs, trimmed, [{ get: (s) => s.name, anywhere: true }])
+    .slice(0, limit)
+    .map(({ item, score }) => ({
+      key: `file:${item.id}`,
+      group: "files",
+      title: item.name,
+      // The file-type doc icon (PDF/image/doc/…) the sidebar and grid use,
+      // rather than a flat generic file glyph.
+      icon: createElement(FileDocIcon, {
+        variant: getFileDocVariant(
+          detectFileExtension(item.name.toLowerCase()),
+          (item.type ?? "").toLowerCase(),
+        ),
+        size: "1.15rem",
+      }),
+      score,
+      ...(item.dataUnavailable
+        ? { subtitle: dataLostLabel, disabledReason: dataLostLabel }
+        : {}),
+      onSelect: () => (item.dataUnavailable ? undefined : openFile(item)),
+    }));
+}
+
+/**
+ * @param access how each tool may be offered (see useToolSearchAccess), so
+ *   search shows, greys or omits a tool exactly as the tool list does.
+ */
+export function rankToolResults(
+  registry: Partial<ToolRegistry>,
+  trimmed: string,
+  openTool: (id: ToolId, access: ToolSearchAccess) => void,
+  access: ToolSearchAccessResolver,
+  limit = GROUP_RESULT_CEILING,
+): SuperSearchResult[] {
+  if (!trimmed) return [];
+  const entries = (
+    Object.entries(registry) as [ToolId, ToolRegistry[ToolId] | undefined][]
+  ).flatMap(([id, tool]) => {
+    if (!tool) return [];
+    const toolAccess = access(id, tool);
+    return toolAccess.kind === "hidden"
+      ? []
+      : [[id, tool, toolAccess] as const];
+  });
+  return rankByFuzzy(entries, trimmed, TOOL_SEARCH_FIELDS)
+    .slice(0, limit)
+    .map(({ item: [id, tool, toolAccess], score }) => {
+      const disabledReason =
+        toolAccess.kind === "disabled" ? toolAccess.message : undefined;
+      return {
+        key: `tool:${id}`,
+        group: "tools",
+        title: tool.name,
+        // The list's tooltip shape: the reason, then what the tool does.
+        subtitle: disabledReason
+          ? `${disabledReason} ${tool.description}`
+          : tool.description,
+        icon: tool.icon,
+        score,
+        disabledReason,
+        onSelect: () => openTool(id, toolAccess),
+      };
+    });
+}
+
+/** Whether the settings nav shows this section to the current session. */
+export function isSettingsSectionVisible(
+  s: SettingsSectionEntry,
+  gates: SuperSearchGates | null,
+): boolean {
+  // Null gates (config still loading): hide every gated section.
+  // requiresLogin keys off the deployment's login *mode*, mirroring the nav
+  // builder: with login on the editor is login-walled (an unauthenticated
+  // visitor never reaches this code), and with login off those sections
+  // (account, API keys) have no meaning. Actual per-session auth state only
+  // matters on SaaS, where requiresAccount/isAnonymous carries it.
+  if (s.requiresLogin && !(gates?.loginEnabled ?? false)) return false;
+  // Admin-area sections mirror the builder's gate: admins always; no-login
+  // mode only while system.showSettingsWhenNoLogin keeps the admin preview.
+  const adminGateOpen =
+    !!gates &&
+    (gates.isAdmin ||
+      (!gates.loginEnabled && (gates.showSettingsWhenNoLogin ?? true)));
+  if (s.adminArea && !adminGateOpen) return false;
+  // Account-bound sections mirror the SaaS builder's `!isAnonymous` gate.
+  if (s.requiresAccount && (gates ? (gates.isAnonymous ?? false) : true))
+    return false;
+  // The processor's own sections mirror its nav builder's portalAccess gate.
+  if (s.requiresPortalAccess && gates?.portalAccessible !== true) return false;
+  // Billing is the owner's alone, mirroring the settings nav.
+  if (s.requiresOrgOwner && gates?.isOrgOwner !== true) return false;
+  return true;
+}
+
+/**
+ * Whether a Processor entity lane can be offered and return results here: its
+ * page ships in this build, or — for entities that now live in settings
+ * (users) — that settings section is visible to this session; and the session
+ * may list them. Both a lane's chip and its fetch go through this, so an
+ * offered chip always has something behind it.
+ */
+export function isPortalEntityScopeOffered(
+  scopeId: string,
+  gates: SuperSearchGates | null,
+): boolean {
+  const def = PORTAL_ENTITY_SCOPE_DEFS.find((d) => d.id === scopeId);
+  if (!def) return true;
+  if (!isPortalEntityScopeShipped(def.id)) return false;
+  // A settings-hosted lane also needs its section visible to this session.
+  if (
+    def.settingsKey !== undefined &&
+    !SETTINGS_SECTION_REGISTRY.some(
+      (s) => s.key === def.settingsKey && isSettingsSectionVisible(s, gates),
+    )
+  ) {
+    return false;
+  }
+  return isPortalEntityScopeAccessible(def.id, gates?.isAdmin ?? false);
+}
+
+export function rankSettingsResults(
+  trimmed: string,
+  t: TFunction,
+  gates: SuperSearchGates | null,
+  openSettings: (section: string, anchor?: string) => void,
+  limit = GROUP_RESULT_CEILING,
+): SuperSearchResult[] {
+  if (!trimmed) return [];
+
+  // Sections gated like the settings nav. The registry resolves per build
+  // (core / proprietary / saas / desktop), so this only ever sees sections
+  // the current build's settings page can actually show.
+  const visibleSections = SETTINGS_SECTION_REGISTRY.filter((s) =>
+    isSettingsSectionVisible(s, gates),
+  );
+  // Row context: the display label of the section the row lives in.
+  const sectionLabelFor = new Map(
+    visibleSections.map((s) => [s.key, t(s.labelKey, s.labelFallback)]),
+  );
+
+  // Row-level entries (deep-link by slug) take priority. Rows for
+  // sections this build/user can't open are dropped with them.
+  const accountCardShown = gates?.accountCardShown ?? false;
+  const rowMatches = rankByFuzzy(
+    SETTINGS_SEARCH_INDEX.filter(
+      (e) =>
+        sectionLabelFor.has(e.section) &&
+        (!e.requiresAccountCard || accountCardShown),
+    ),
+    trimmed,
+    [
+      (e) => t(e.labelKey, e.labelFallback),
+      (e) => e.labelFallback,
+      (e) => e.keywords,
+    ],
+  );
+  const rows: SuperSearchResult[] = rowMatches.map(({ item, score }) => ({
+    key: `setting:${item.section}:${item.anchor}`,
+    group: "settings",
+    title: t(item.labelKey, item.labelFallback),
+    subtitle: sectionLabelFor.get(item.section),
+    iconName: "settings",
+    score: score + 1, // nudge rows above bare section matches
+    onSelect: () => openSettings(item.section, item.anchor),
+  }));
+  // The nav group a section lives under, shown as result context (joined to a
+  // content-match snippet with " · ").
+  const groupTitle = (s: (typeof SETTINGS_SECTION_REGISTRY)[number]) =>
+    s.groupLabelKey
+      ? t(s.groupLabelKey, s.groupLabelFallback ?? "")
+      : undefined;
+
+  const sectionMatches = rankByFuzzy(visibleSections, trimmed, [
+    (s) => t(s.labelKey, s.labelFallback),
+    (s) => s.labelFallback,
+    (s) => s.keywords,
+  ]);
+  const sections: SuperSearchResult[] = sectionMatches.map(
+    ({ item, score }) => ({
+      key: `setting-section:${item.key}`,
+      group: "settings",
+      title: t(item.labelKey, item.labelFallback),
+      subtitle: groupTitle(item),
+      iconName: "settings",
+      score,
+      onSelect: () => openSettings(item.key),
+    }),
+  );
+
+  // Content matches: sections whose rendered copy contains the query, so terms
+  // with no curated keyword ("SMTP", a field label) still find their section.
+  // Ranked below every label/keyword match; 3+ chars so a single letter doesn't
+  // match half the modal. Sections already surfaced by a label match — their
+  // own or a row's — are skipped so the same hit isn't listed twice.
+  const labelMatchedKeys = new Set<string>([
+    ...sectionMatches.map(({ item }) => item.key),
+    ...rowMatches.map(({ item }) => item.section),
+  ]);
+  const contentMatches: SuperSearchResult[] =
+    trimmed.length < 3
+      ? []
+      : visibleSections
+          .filter((s) => !labelMatchedKeys.has(s.key))
+          .flatMap((s) => {
+            const match = findSettingsContentMatch(
+              s.key,
+              trimmed,
+              t,
+              accountCardShown ? undefined : ACCOUNT_CARD_PREFIXES,
+            );
+            if (!match) return [];
+            const snippet = buildMatchSnippet(match, trimmed);
+            const group = groupTitle(s);
+            return [
+              {
+                key: `setting-content:${s.key}`,
+                group: "settings",
+                title: t(s.labelKey, s.labelFallback),
+                subtitle: group ? `${group} · ${snippet}` : snippet,
+                iconName: "settings",
+                // Always below the weakest possible label/keyword match.
+                score: FUZZY_MIN_SCORE - 10,
+                onSelect: () => openSettings(s.key),
+              },
+            ];
+          });
+
+  return [...rows, ...sections, ...contentMatches]
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+}
+
+export function rankProcessorResults(
+  trimmed: string,
+  t: TFunction,
+  gates: SuperSearchGates | null,
+  selectEntry: (entry: ProcessorSearchEntry) => void,
+  limit = GROUP_RESULT_CEILING,
+): SuperSearchResult[] {
+  if (!trimmed || PROCESSOR_SEARCH_INDEX.length === 0) return [];
+  // Only offer Processor pages to users who can actually enter that app.
+  if (!isProcessorGateOpen(gates)) return [];
+  return rankByFuzzy(PROCESSOR_SEARCH_INDEX, trimmed, [
+    (e) => t(e.labelKey, e.labelFallback),
+    (e) => e.labelFallback,
+    (e) => e.keywords,
+  ])
+    .slice(0, limit)
+    .map(({ item, score }) => ({
+      key: `processor:${item.id}`,
+      group: "processor",
+      title: t(item.labelKey, item.labelFallback),
+      iconName: "layout-grid",
+      score,
+      onSelect: () => selectEntry(item),
+    }));
+}
+
+/**
+ * Orders the sources into the shared group layout, dropping empties. Hosts
+ * pass their own order so local results lead (the editor puts its own
+ * files/tools first and Processor pages last; the portal the reverse).
+ */
+export function assembleSuperSearchGroups(
+  byId: Partial<Record<SuperSearchGroupId, SuperSearchResult[]>>,
+  t: TFunction,
+  order: SuperSearchGroupId[] = GROUP_ORDER,
+): SuperSearchGroup[] {
+  const labels: Record<SuperSearchGroupId, string> = {
+    files: t("superSearch.group.files", "Files"),
+    tools: t("superSearch.group.tools", "Tools"),
+    settings: t("superSearch.group.settings", "Settings"),
+    processor: t("superSearch.group.processor", "Processor"),
+  };
+  return order
+    .map((id) => ({
+      id,
+      label: labels[id],
+      results: byId[id] ?? [],
+    }))
+    .filter((g) => g.results.length > 0);
+}
+
+/**
+ * The editor's results provider: the shared sources wired to in-app select
+ * actions (open file → viewer, select tool in the workbench, deep-link into
+ * the settings page, route into the Processor).
+ *
+ * @param query   current search text
+ * @param active  whether the search surface is open; gates the My Files load
+ */
+export function useSuperSearch(
+  query: string,
+  active: boolean,
+  options?: SuperSearchQueryOptions,
+): UseSuperSearchResult {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const {
+    toolRegistry,
+    handleToolSelect,
+    handleToolSelectForced,
+    toolAvailability,
+  } = useToolWorkflow();
+  const { actions: navActions } = useNavigationActions();
+  const { actions: fileActions } = useFileActions();
+  // ViewerContext is only present once the viewer subtree mounts; treat as
+  // optional. Read through a ref: the provider value is rebuilt every viewer
+  // render, and a direct dependency would re-rank every result lane on each
+  // page turn — openFile only needs the value at click time.
+  const viewer = useContext(ViewerContext);
+  const viewerRef = useRef(viewer);
+  useEffect(() => {
+    viewerRef.current = viewer;
+  }, [viewer]);
+
+  const trimmed = query.trim();
+  const { stubs, loadingFiles } = useMyFilesStubs(active);
+  const { scopeEnabled } = useSearchScopeFilter(options);
+
+  // --- Actions -----------------------------------------------------------
+  const openFile = useCallback(
+    async (stub: StirlingFileStub) => {
+      try {
+        // The file already lives in storage — load it as a stub so its id and
+        // metadata are preserved (addFiles would persist a duplicate record).
+        await fileActions.addStirlingFileStubs([stub], { selectFiles: true });
+        // Leaving the library is the view changing; HomePage takes the path with it.
+        navActions.setWorkbench("viewer");
+        viewerRef.current?.setActiveFileId?.(stub.id);
+      } catch (err) {
+        console.error("[SuperSearch] Failed to open file:", stub.name, err);
+      }
+    },
+    [fileActions, navActions],
+  );
+
+  const toolAccess = useToolSearchAccess(toolAvailability);
+  const openTool = useCallback(
+    (id: ToolId, access: ToolSearchAccess) => {
+      if (access.kind === "disabled" || access.kind === "hidden") return;
+      // Link tools have no in-editor UI — selecting one shows a "tool not
+      // found" panel. Open their destination directly, matching how the
+      // editor's tool lists treat them.
+      const link = toolRegistry[id]?.link;
+      if (link) {
+        openExternalUrl(link);
+        return;
+      }
+      if (access.kind === "openForced") {
+        handleToolSelectForced(id);
+      } else {
+        handleToolSelect(id);
+      }
+    },
+    [handleToolSelect, handleToolSelectForced, toolRegistry],
+  );
+
+  const openSettings = useCallback(
+    (section: string, anchor?: string) => {
+      const path = anchor
+        ? `/settings/${section}#${encodeURIComponent(anchor)}`
+        : `/settings/${section}`;
+      navigate(path);
+    },
+    [navigate],
+  );
+
+  const selectProcessorEntry = useCallback(
+    (item: ProcessorSearchEntry) => {
+      if (item.externalUrl) {
+        openExternalUrl(item.externalUrl);
+      } else {
+        navigate(item.path);
+      }
+    },
+    [navigate],
+  );
+
+  // --- Assemble ----------------------------------------------------------
+  const gates = useSuperSearchGates();
+
+  // Processor entities (users, policies, pipelines, sources) join the pages
+  // under the Processor section — same access gate as the pages group, each
+  // entity type filterable by its own scope.
+  // The chip filter plus the lane's own availability, so an unoffered lane
+  // is neither fetched nor shown.
+  const entityScopeEnabled = useCallback(
+    (scopeId: string) =>
+      scopeEnabled(scopeId) && isPortalEntityScopeOffered(scopeId, gates),
+    [scopeEnabled, gates],
+  );
+  const entityGroups = useProcessorEntityGroups(
+    trimmed,
+    active && trimmed.length > 0 && isProcessorGateOpen(gates),
+    t,
+    navigate,
+    entityScopeEnabled,
+    gates?.isAdmin ?? false,
+  );
+
+  const groups = useMemo<SuperSearchGroup[]>(() => {
+    const assembledGroups = assembleSuperSearchGroups(
+      {
+        files: scopeEnabled("files")
+          ? rankFileResults(
+              stubs,
+              trimmed,
+              openFile,
+              t("fileSidebar.dataLostTitle", "File data is unavailable"),
+            )
+          : [],
+        tools: scopeEnabled("tools")
+          ? rankToolResults(toolRegistry, trimmed, openTool, toolAccess)
+          : [],
+        settings: scopeEnabled("settings")
+          ? rankSettingsResults(trimmed, t, gates, openSettings)
+          : [],
+        processor: scopeEnabled("processor")
+          ? rankProcessorResults(trimmed, t, gates, selectProcessorEntry)
+          : [],
+      },
+      t,
+    );
+
+    // Section order: Editor first, Settings second, Processor last.
+    const processorSection = t("superSearch.group.processor", "Processor");
+    const sectionFor = (groupId: string): string => {
+      if (groupId === "processor") return processorSection;
+      if (groupId === "settings")
+        return t("superSearch.group.settings", "Settings");
+      return t("portal.nav.editor", "Editor");
+    };
+    return [
+      ...assembledGroups.map((group) => ({
+        ...group,
+        label:
+          group.id === "processor"
+            ? t("superSearch.group.pages", "Pages")
+            : group.label,
+        sectionLabel: sectionFor(group.id),
+      })),
+      ...entityGroups.map((group) => ({
+        ...group,
+        sectionLabel: processorSection,
+      })),
+    ];
+  }, [
+    stubs,
+    trimmed,
+    openFile,
+    toolRegistry,
+    openTool,
+    toolAccess,
+    gates,
+    openSettings,
+    selectProcessorEntry,
+    scopeEnabled,
+    entityGroups,
+    t,
+  ]);
+
+  const flatResults = useMemo(() => groups.flatMap((g) => g.results), [groups]);
+
+  return { groups, flatResults, loadingFiles };
+}
