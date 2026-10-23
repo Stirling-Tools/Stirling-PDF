@@ -1,11 +1,11 @@
 import { Suspense, lazy } from "react";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
-import "@app/components/docs/DocsPage.css";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import { QuickNavHostBridge } from "@editor/components/shared/quickNav/QuickNavHostBridge";
+import "@editor/components/docs/DocsPage.css";
 
 // Its own chunk: the generated docs manifest is bundled JSON.
 const DeveloperDocs = lazy(async () => {
-  const m = await import("@app/components/docs/DeveloperDocs");
+  const m = await import("@editor/components/docs/DeveloperDocs");
   return { default: m.DeveloperDocs };
 });
 

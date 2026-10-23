@@ -1,7 +1,7 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
-import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
+import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 
 // Letter-spacing (Tc) preservation through an edit. letter-spacing-sample.pdf
 // has an 18pt "SPACED HEADING" drawn with `2 Tc` plus a normal 12pt body line.

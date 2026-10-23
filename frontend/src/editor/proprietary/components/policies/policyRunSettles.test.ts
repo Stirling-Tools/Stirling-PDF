@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { finishedWithNothingToDeliver } from "@app/components/policies/usePolicyAutoRun";
-import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
+import { finishedWithNothingToDeliver } from "@editor/components/policies/usePolicyAutoRun";
+import type { PolicyRunRecord } from "@editor/components/policies/policyRunStore";
 
 /**
  * A redaction that matches nothing completes with no output file. The import

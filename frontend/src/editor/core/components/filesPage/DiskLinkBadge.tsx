@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@mantine/core";
 
-import { StirlingFileStub } from "@app/types/fileContext";
-import { diskLinkState } from "@app/services/diskLinkState";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { diskLinkState } from "@editor/services/diskLinkState";
 
 /** Keeps a lost or diverged disk link on screen, where only a transient toast said so.
  *  Silent when healthy or never from disk, so it always means trouble. */

@@ -1,4 +1,4 @@
-import { FileId, StirlingFileStub } from "@app/types/fileContext";
+import { FileId, StirlingFileStub } from "@editor/types/fileContext";
 import {
   DiskFileState,
   DiskUnavailableReason,
@@ -6,8 +6,8 @@ import {
   desktopFileLinkingSupported,
   getDiskFileState,
   readFileFromDisk,
-} from "@app/services/desktopFileLink";
-import { fileStorage } from "@app/services/fileStorage";
+} from "@editor/services/desktopFileLink";
+import { fileStorage } from "@editor/services/fileStorage";
 
 // Keeps desktop files 1:1 with disk: the stored copy is a cache, not truth, so
 // every read re-checks disk. No-op off desktop, where the copy is the truth.
@@ -262,7 +262,7 @@ export async function saveOrphanAsCopy(
     // Only the export gateway is lazy - it is heavy and this path is rare.
     // fileStorage is already a module-level import.
     const { downloadFileWithPolicy } =
-      await import("@app/services/exportWithPolicy");
+      await import("@editor/services/exportWithPolicy");
     const file = await fileStorage.getStirlingFile(stub.id);
     if (!file) return null;
 
@@ -335,7 +335,7 @@ interface ToastSpec {
 /** Lazy: this sits on the hydration path and the toast barrel pulls in the
  *  whole icon set, costing ~3s of module load per file open. */
 function toast({ alertType = "warning", ...options }: ToastSpec): void {
-  void import("@app/components/toast")
+  void import("@editor/components/toast")
     .then(({ alert }) => alert({ alertType, expandable: false, ...options }))
     .catch((error) => console.error("[diskFileSync] toast failed:", error));
 }

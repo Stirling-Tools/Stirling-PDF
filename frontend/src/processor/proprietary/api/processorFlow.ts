@@ -1,10 +1,10 @@
 /** Assembles the home visualiser's sources → policies → outcomes from the real
  *  sources/policies/runs APIs. Counts are real; the flow motion is illustrative. */
 
-import type { SourcesResponse } from "@portal/api/sources";
-import { POLICY_CATEGORIES } from "@portal/api/policies";
-import { fromWirePolicy } from "@app/policies/codec";
-import type { PolicyRunView, WirePolicy } from "@app/policies/types";
+import type { SourcesResponse } from "@processor/api/sources";
+import { POLICY_CATEGORIES } from "@processor/api/policies";
+import { fromWirePolicy } from "@editor/policies/codec";
+import type { PolicyRunView, WirePolicy } from "@editor/policies/types";
 
 /** A source that actually feeds the processor today (editor, folder, S3, …). */
 export interface FlowSource {

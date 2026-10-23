@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Icon } from "@app/ui/Icon";
-import { ToolIcon } from "@app/components/shared/ToolIcon";
+import { Icon } from "@editor/ui/Icon";
+import { ToolIcon } from "@editor/components/shared/ToolIcon";
 
 const meta = {
   title: "Shared/ToolIcon",

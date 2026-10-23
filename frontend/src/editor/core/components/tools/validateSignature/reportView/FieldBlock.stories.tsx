@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import FieldBlock from "@app/components/tools/validateSignature/reportView/FieldBlock";
+import FieldBlock from "@editor/components/tools/validateSignature/reportView/FieldBlock";
 
 // FieldBlock is a plain function that returns a JSX element (called directly
 // as `FieldBlock(label, value)`), not a React component consumed via JSX

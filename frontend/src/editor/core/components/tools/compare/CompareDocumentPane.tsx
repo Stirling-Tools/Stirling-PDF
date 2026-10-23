@@ -1,19 +1,19 @@
 import { Group, Loader, Stack, Text } from "@mantine/core";
 import { useMemo, useRef, useEffect, useState } from "react";
-import type { PagePreview } from "@app/types/compare";
+import type { PagePreview } from "@editor/types/compare";
 import type {
   TokenBoundingBox,
   CompareDocumentPaneProps,
-} from "@app/types/compare";
+} from "@editor/types/compare";
 import {
   mergeConnectedRects,
   normalizeRotation,
   groupWordRects,
   computePageLayoutMetrics,
-} from "@app/components/tools/compare/compare";
-import CompareNavigationDropdown from "@app/components/tools/compare/CompareNavigationDropdown";
-import { useIsMobile } from "@app/hooks/useIsMobile";
-import { truncateCenter } from "@app/utils/textUtils";
+} from "@editor/components/tools/compare/compare";
+import CompareNavigationDropdown from "@editor/components/tools/compare/CompareNavigationDropdown";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import { truncateCenter } from "@editor/utils/textUtils";
 
 const COMPARE_PANE_TITLE_MAX_LEN = 48;
 

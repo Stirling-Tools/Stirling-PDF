@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
+import { useAuth } from "@editor/auth/UseSession";
 import {
   useProfilePictureLoading,
   useProfilePictureUrl,
-} from "@app/hooks/useProfilePictureUrl";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { accountService } from "@app/services/accountService";
+} from "@editor/hooks/useProfilePictureUrl";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { accountService } from "@editor/services/accountService";
 
 export interface AccountIdentity {
   /** Never empty — falls back to a generic "User" so a row is never blank. */

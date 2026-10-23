@@ -1,23 +1,23 @@
 import React, { useCallback, useMemo } from "react";
 import { Box, Center, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { useAllFiles } from "@app/contexts/FileContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import {
   detectFileExtension,
   detectNonPdfFileType,
-} from "@app/utils/fileUtils";
-import { CONVERSION_MATRIX } from "@app/constants/convertConstants";
+} from "@editor/utils/fileUtils";
+import { CONVERSION_MATRIX } from "@editor/constants/convertConstants";
 
-import { NonPdfBanner } from "@app/components/viewer/nonpdf/NonPdfBanner";
-import { ImageViewer } from "@app/components/viewer/nonpdf/ImageViewer";
-import { CsvViewer } from "@app/components/viewer/nonpdf/CsvViewer";
-import { JsonViewer } from "@app/components/viewer/nonpdf/JsonViewer";
-import { TextViewer } from "@app/components/viewer/nonpdf/TextViewer";
-import { HtmlViewer } from "@app/components/viewer/nonpdf/HtmlViewer";
+import { NonPdfBanner } from "@editor/components/viewer/nonpdf/NonPdfBanner";
+import { ImageViewer } from "@editor/components/viewer/nonpdf/ImageViewer";
+import { CsvViewer } from "@editor/components/viewer/nonpdf/CsvViewer";
+import { JsonViewer } from "@editor/components/viewer/nonpdf/JsonViewer";
+import { TextViewer } from "@editor/components/viewer/nonpdf/TextViewer";
+import { HtmlViewer } from "@editor/components/viewer/nonpdf/HtmlViewer";
 
 export interface ViewerProps {
   onClose?: () => void;

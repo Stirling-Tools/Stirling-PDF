@@ -1,8 +1,8 @@
 import { useMemo, type FC } from "react";
 import { Card, Text, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { column, DataTable, type DataTableColumn } from "@app/ui";
-import { type EndpointStatistic } from "@app/services/usageAnalyticsService";
+import { column, DataTable, type DataTableColumn } from "@editor/ui";
+import { type EndpointStatistic } from "@editor/services/usageAnalyticsService";
 
 interface UsageAnalyticsTableProps {
   data: EndpointStatistic[];

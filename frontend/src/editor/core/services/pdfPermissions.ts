@@ -1,4 +1,4 @@
-import type { PdfAccess } from "@app/services/pdfAccessService";
+import type { PdfAccess } from "@editor/services/pdfAccessService";
 import { PdfPermissionFlag } from "@embedpdf/models";
 
 type PermissionAccess = Pick<

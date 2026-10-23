@@ -1,13 +1,13 @@
 import { type ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { PortalAuthBoundary } from "@portal/auth/PortalAuthBoundary";
-import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
-import { SuiProvider } from "@portal/theme/SuiProvider";
-import { PortalProviders } from "@portal/PortalProviders";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { getPortalQueryClient } from "@portal/queryClient";
+import { PortalAuthBoundary } from "@processor/auth/PortalAuthBoundary";
+import { ThemeProvider, useTheme } from "@processor/contexts/ThemeContext";
+import { SuiProvider } from "@processor/theme/SuiProvider";
+import { PortalProviders } from "@processor/PortalProviders";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { getPortalQueryClient } from "@processor/queryClient";
 // Reset + typography, scoped to .portal-scope below.
-import "@portal/theme/base.css";
+import "@processor/theme/base.css";
 
 /**
  * Binds the SUI design system to the portal's own ThemeProvider so the SUI

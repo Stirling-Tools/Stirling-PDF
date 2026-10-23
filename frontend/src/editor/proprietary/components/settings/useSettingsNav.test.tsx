@@ -9,25 +9,25 @@ const state = vi.hoisted(() => ({
   portal: true,
   roster: true,
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({
     config: { isAdmin: state.admin, enableLogin: state.login },
   }),
 }));
-vi.mock("@app/auth/context", () => ({
+vi.mock("@editor/auth/context", () => ({
   useAuth: () => ({
     isAdmin: state.admin,
     user: { orgOwner: state.owner },
     loading: state.loading,
   }),
 }));
-vi.mock("@app/hooks/usePortalAccess", () => ({
+vi.mock("@editor/hooks/usePortalAccess", () => ({
   usePortalAccessState: () => ({ granted: state.portal, settled: true }),
 }));
-vi.mock("@app/hooks/useRosterAvailable", () => ({
+vi.mock("@editor/hooks/useRosterAvailable", () => ({
   useRosterAvailable: () => state.roster,
 }));
-vi.mock("@core/components/settings/useSettingsNav", () => ({
+vi.mock("@editor-core/components/settings/useSettingsNav", () => ({
   useSettingsNav: () => ({
     sections: [
       {
@@ -49,9 +49,9 @@ vi.mock("@core/components/settings/useSettingsNav", () => ({
     aliases: {},
   }),
 }));
-vi.mock("@app/routes/hasPortal", () => ({ HAS_PORTAL: true }));
+vi.mock("@editor/routes/hasPortal", () => ({ HAS_PORTAL: true }));
 
-import { useSettingsNav } from "@app/components/settings/useSettingsNav";
+import { useSettingsNav } from "@editor/components/settings/useSettingsNav";
 
 describe("self-hosted owner settings", () => {
   beforeEach(() => {

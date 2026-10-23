@@ -9,29 +9,29 @@
  */
 
 import type { TFunction } from "i18next";
-import { apiClient } from "@portal/api/http";
-import { policyInputs, toWirePolicy } from "@app/policies/codec";
-import { assemblePolicies } from "@app/policies/overview";
+import { apiClient } from "@processor/api/http";
+import { policyInputs, toWirePolicy } from "@editor/policies/codec";
+import { assemblePolicies } from "@editor/policies/overview";
 export { assemblePolicies };
 import {
   policyStepFromWire,
   type PolicyToolId,
-} from "@app/policies/operations";
-import { HttpError } from "@portal/api/http";
-import type { Policy } from "@portal/api/pipelines";
-import type { PolicyRunView, WirePolicy } from "@app/policies/types";
+} from "@editor/policies/operations";
+import { HttpError } from "@processor/api/http";
+import type { Policy } from "@processor/api/pipelines";
+import type { PolicyRunView, WirePolicy } from "@editor/policies/types";
 
-export type { PolicyRunView, WirePolicy } from "@app/policies/types";
+export type { PolicyRunView, WirePolicy } from "@editor/policies/types";
 
-/* Catalogue model + definitions live in @app/policies/catalog - shared with the
+/* Catalogue model + definitions live in @editor/policies/catalog - shared with the
    editor's folder-processing setup - and are re-exported here for the portal. */
-export * from "@app/policies/catalog";
+export * from "@editor/policies/catalog";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
   type CatalogueEntry,
   type PolicySetupResult,
-} from "@app/policies/catalog";
+} from "@editor/policies/catalog";
 
 /** GET /api/v1/policies — the flat stored-policy records. */
 export function fetchPoliciesList(): Promise<WirePolicy[]> {

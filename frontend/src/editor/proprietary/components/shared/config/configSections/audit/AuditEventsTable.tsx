@@ -9,16 +9,16 @@ import {
   Code,
   Alert,
 } from "@mantine/core";
-import { column, DataTable, type DataTableColumn } from "@app/ui";
-import { type StatusTone } from "@app/ui/StatusBadge";
+import { column, DataTable, type DataTableColumn } from "@editor/ui";
+import { type StatusTone } from "@editor/ui/StatusBadge";
 import { useTranslation } from "react-i18next";
 import auditService, {
   AuditEvent,
   AuditFilters,
-} from "@app/services/auditService";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import { useAuditFilters } from "@app/hooks/useAuditFilters";
-import AuditFiltersForm from "@app/components/shared/config/configSections/audit/AuditFiltersForm";
+} from "@editor/services/auditService";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import { useAuditFilters } from "@editor/hooks/useAuditFilters";
+import AuditFiltersForm from "@editor/components/shared/config/configSections/audit/AuditFiltersForm";
 
 interface AuditEventsTableProps {
   loginEnabled?: boolean;

@@ -20,13 +20,13 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import { Icon, type IconName } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import {
   SavedSignature,
   SavedSignatureType,
-} from "@app/hooks/tools/sign/useSavedSignatures";
-import type { StorageType } from "@app/services/signatureStorageService";
+} from "@editor/hooks/tools/sign/useSavedSignatures";
+import type { StorageType } from "@editor/services/signatureStorageService";
 
 interface SavedSignaturesSectionProps {
   signatures: SavedSignature[];

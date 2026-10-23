@@ -1,8 +1,12 @@
-import { ProcessedFile, ProcessingState, PDFPage } from "@app/types/processing";
-import { ProcessingCache } from "@app/services/processingCache";
-import { ProcessingErrorHandler } from "@app/services/processingErrorHandler";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { createQuickKey } from "@app/types/fileContext";
+import {
+  ProcessedFile,
+  ProcessingState,
+  PDFPage,
+} from "@editor/types/processing";
+import { ProcessingCache } from "@editor/services/processingCache";
+import { ProcessingErrorHandler } from "@editor/services/processingErrorHandler";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import { createQuickKey } from "@editor/types/fileContext";
 
 export class PDFProcessingService {
   private static instance: PDFProcessingService;

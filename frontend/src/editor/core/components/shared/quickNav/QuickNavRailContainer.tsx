@@ -1,22 +1,22 @@
 import { useTranslation } from "react-i18next";
-import { NavSurface } from "@app/ui/NavSurface";
-import { Icon } from "@app/ui/Icon";
-import { QuickNavBrand } from "@app/components/shared/quickNav/QuickNavBrand";
-import type { QuickNavIdentity } from "@app/contexts/QuickNavHostContext";
+import { NavSurface } from "@editor/ui/NavSurface";
+import { Icon } from "@editor/ui/Icon";
+import { QuickNavBrand } from "@editor/components/shared/quickNav/QuickNavBrand";
+import type { QuickNavIdentity } from "@editor/contexts/QuickNavHostContext";
 import {
   QuickNavRailBase,
   RailButton,
   type QuickNavRailBaseProps,
-} from "@app/components/shared/quickNav/QuickNavRailBase";
-import { QuickNavRailAccount } from "@app/components/shared/quickNav/QuickNavRailAccount";
-import { QuickNavRailNotifications } from "@app/components/shared/quickNav/QuickNavRailNotifications";
-import { QuickNavRailFooterExtensions } from "@app/components/shared/quickNav/QuickNavRailFooterExtensions";
-import "@app/components/shared/quickNav/QuickNavRailContainer.css";
+} from "@editor/components/shared/quickNav/QuickNavRailBase";
+import { QuickNavRailAccount } from "@editor/components/shared/quickNav/QuickNavRailAccount";
+import { QuickNavRailNotifications } from "@editor/components/shared/quickNav/QuickNavRailNotifications";
+import { QuickNavRailFooterExtensions } from "@editor/components/shared/quickNav/QuickNavRailFooterExtensions";
+import "@editor/components/shared/quickNav/QuickNavRailContainer.css";
 
 export type {
   QuickNavEntry,
   QuickNavTarget,
-} from "@app/components/shared/quickNav/QuickNavRailBase";
+} from "@editor/components/shared/quickNav/QuickNavRailBase";
 
 export interface QuickNavRailContainerProps extends Omit<
   QuickNavRailBaseProps,

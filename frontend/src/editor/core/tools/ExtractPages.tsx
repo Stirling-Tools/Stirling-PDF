@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { useExtractPagesParameters } from "@app/hooks/tools/extractPages/useExtractPagesParameters";
-import { useExtractPagesOperation } from "@app/hooks/tools/extractPages/useExtractPagesOperation";
-import ExtractPagesSettings from "@app/components/tools/extractPages/ExtractPagesSettings";
-import useExtractPagesTips from "@app/components/tooltips/useExtractPagesTips";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { useExtractPagesParameters } from "@editor/hooks/tools/extractPages/useExtractPagesParameters";
+import { useExtractPagesOperation } from "@editor/hooks/tools/extractPages/useExtractPagesOperation";
+import ExtractPagesSettings from "@editor/components/tools/extractPages/ExtractPagesSettings";
+import useExtractPagesTips from "@editor/components/tooltips/useExtractPagesTips";
 
 const ExtractPages = (props: BaseToolProps) => {
   const { t } = useTranslation();

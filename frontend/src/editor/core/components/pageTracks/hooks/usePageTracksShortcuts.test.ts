@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 
-import { TrackEditorAction } from "@app/components/pageTracks/trackWorkspaceReducer";
-import { usePageTracksShortcuts } from "@app/components/pageTracks/hooks/usePageTracksShortcuts";
+import { TrackEditorAction } from "@editor/components/pageTracks/trackWorkspaceReducer";
+import { usePageTracksShortcuts } from "@editor/components/pageTracks/hooks/usePageTracksShortcuts";
 
 function setup(selected: string[]) {
   const dispatch = vi.fn<(action: TrackEditorAction) => void>();

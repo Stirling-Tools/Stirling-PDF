@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
-import { EditorStatusCard } from "@portal/components/EditorStatusCard";
+import { EditorStatusCard } from "@processor/components/EditorStatusCard";
 
 const meta: Meta<typeof EditorStatusCard> = {
   title: "Portal/Home/EditorStatusCard",

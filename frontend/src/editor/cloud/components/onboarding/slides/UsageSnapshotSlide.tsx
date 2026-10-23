@@ -1,13 +1,13 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { SlideConfig } from "@app/types/types";
-import { createLightSlideBackground } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
+import { SlideConfig } from "@editor/types/types";
+import { createLightSlideBackground } from "@editor/components/onboarding/slides/unifiedBackgroundConfig";
 import {
   FreeMeterPanel,
   useFreeSnapshot,
-} from "@app/components/shared/config/configSections/usageMeters";
-import i18n from "@app/i18n";
-import styles from "@app/components/onboarding/slides/SaasOnboardingSlides.module.css";
+} from "@editor/components/shared/config/configSections/usageMeters";
+import i18n from "@editor/i18n";
+import styles from "@editor/components/onboarding/slides/SaasOnboardingSlides.module.css";
 
 const USAGE_BACKGROUND = createLightSlideBackground([249, 115, 22], "#FFEDD5");
 

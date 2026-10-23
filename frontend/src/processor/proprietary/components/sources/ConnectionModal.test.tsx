@@ -3,23 +3,23 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ConnectionModal } from "@portal/components/sources/ConnectionModal";
+import { ConnectionModal } from "@processor/components/sources/ConnectionModal";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-vi.mock("@portal/api/integrations", () => ({
+vi.mock("@processor/api/integrations", () => ({
   createIntegration: vi.fn(),
   updateIntegration: vi.fn(),
 }));
 
-vi.mock("@portal/api/http", () => ({
+vi.mock("@processor/api/http", () => ({
   errorMessage: (e: unknown) => String(e),
 }));
 
 const { createIntegration, updateIntegration } =
-  await import("@portal/api/integrations");
+  await import("@processor/api/integrations");
 
 const wrap = (ui: React.ReactNode) => <MantineProvider>{ui}</MantineProvider>;
 

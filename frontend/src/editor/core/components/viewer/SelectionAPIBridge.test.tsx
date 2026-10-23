@@ -1,11 +1,11 @@
 import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { SelectionAPIBridge } from "@app/components/viewer/SelectionAPIBridge";
+import { SelectionAPIBridge } from "@editor/components/viewer/SelectionAPIBridge";
 import type {
   BridgeRef,
   SelectionAPIWrapper,
   SelectionState,
-} from "@app/contexts/viewer/viewerBridges";
+} from "@editor/contexts/viewer/viewerBridges";
 
 const mock = vi.hoisted(() => ({
   activeDocumentId: "first",
@@ -41,16 +41,16 @@ vi.mock("@embedpdf/plugin-selection/react", () => {
 vi.mock("@embedpdf/core/react", () => ({
   useDocumentState: () => ({ scale: 1 }),
 }));
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => ({ registerBridge: mock.register }),
 }));
-vi.mock("@app/components/viewer/hooks/useDocumentReady", () => ({
+vi.mock("@editor/components/viewer/hooks/useDocumentReady", () => ({
   useDocumentReady: () => true,
 }));
-vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
+vi.mock("@editor/components/viewer/useActiveDocumentId", () => ({
   useActiveDocumentId: () => mock.activeDocumentId,
 }));
-vi.mock("@app/utils/copyText", () => ({ copyText: mock.copyText }));
+vi.mock("@editor/utils/copyText", () => ({ copyText: mock.copyText }));
 
 function selectText() {
   let complete!: (texts: string[]) => void;

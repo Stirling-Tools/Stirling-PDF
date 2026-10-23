@@ -1,10 +1,10 @@
 import { useId } from "react";
 import { Stack, Text } from "@mantine/core";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
+import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 
 // A page that is one big picture with no text on it: a scan nobody has OCR'd.
 function isUnreadScan(page: PageSnapshot): boolean {

@@ -1,39 +1,39 @@
-import { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
   HistoryStack,
   HistoryStepError,
-} from "@app/tools/pdfTextEditor/store/HistoryStack";
-import { Selection } from "@app/tools/pdfTextEditor/store/Selection";
-import { pageGuides } from "@app/tools/pdfTextEditor/util/guides";
-import { PdfiumTextReader } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+} from "@editor/tools/pdfTextEditor/store/HistoryStack";
+import { Selection } from "@editor/tools/pdfTextEditor/store/Selection";
+import { pageGuides } from "@editor/tools/pdfTextEditor/util/guides";
+import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import {
   PdfiumModelSync,
   type ModelSyncResult,
-} from "@app/tools/pdfTextEditor/pdfium/PdfiumModelSync";
-import { resetBackendResolverCaches } from "@app/tools/pdfTextEditor/charcode/BackendResolver";
-import { resetCmapCache } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
-import { resetContentStreamCache } from "@app/tools/pdfTextEditor/charcode/ContentStreamResolver";
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumModelSync";
+import { resetBackendResolverCaches } from "@editor/tools/pdfTextEditor/charcode/BackendResolver";
+import { resetCmapCache } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import { resetContentStreamCache } from "@editor/tools/pdfTextEditor/charcode/ContentStreamResolver";
 import {
   resetCharCoverageCache,
   resetDroppedBase14Chars,
   resetOnPageAdvCache,
   resetPerCharBranchPtrs,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import { AdoptTableCommand } from "@app/tools/pdfTextEditor/commands/AdoptTableCommand";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import { AdoptTableCommand } from "@editor/tools/pdfTextEditor/commands/AdoptTableCommand";
 import {
   adoptedTableId,
   adoptedTableModel,
   overlaps,
-} from "@app/tools/pdfTextEditor/util/tableAdoption";
-import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
+} from "@editor/tools/pdfTextEditor/util/tableAdoption";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type {
   GroupingMode,
   PageSnapshot,
   TableSnapshot,
   WidthMode,
-} from "@app/tools/pdfTextEditor/types";
-import { resetEmbeddedFaces } from "@app/tools/pdfTextEditor/util/embeddedFace";
+} from "@editor/tools/pdfTextEditor/types";
+import { resetEmbeddedFaces } from "@editor/tools/pdfTextEditor/util/embeddedFace";
 
 /** Drop EVERY per-document charcode/glyph cache. */
 function resetCharcodeCaches(): void {

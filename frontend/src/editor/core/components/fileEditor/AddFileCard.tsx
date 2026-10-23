@@ -1,20 +1,20 @@
 import React, { useRef, useState } from "react";
 import { Menu, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
-import { useIsPhone } from "@app/hooks/useIsMobile";
-import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
-import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
-import { useIsWorkbenchFileDragOver } from "@app/components/layout/useWorkbenchFileDrop";
-import MobileUploadModal from "@app/components/shared/MobileUploadModal";
-import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { Logo } from "@app/ui/Logo";
-import styles from "@app/components/fileEditor/AddFileCard.module.css";
+import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
+import { useIsPhone } from "@editor/hooks/useIsMobile";
+import { useProcessingFolderCreation } from "@editor/hooks/useProcessingFolderCreation";
+import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
+import { useIsWorkbenchFileDragOver } from "@editor/components/layout/useWorkbenchFileDrop";
+import MobileUploadModal from "@editor/components/shared/MobileUploadModal";
+import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { Logo } from "@editor/ui/Logo";
+import styles from "@editor/components/fileEditor/AddFileCard.module.css";
 
 interface AddFileCardProps {
   /** Receives files from the computer and mobile sources; the library adds its own. */

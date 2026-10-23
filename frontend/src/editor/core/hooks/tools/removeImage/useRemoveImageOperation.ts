@@ -2,14 +2,14 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   fileOnlyMapping,
   objectToFormData,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import type { RemoveImageParameters } from "@app/hooks/tools/removeImage/useRemoveImageParameters";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
+import type { RemoveImageParameters } from "@editor/hooks/tools/removeImage/useRemoveImageParameters";
 
 const ENDPOINT = "/api/v1/general/remove-image-pdf" satisfies ToolEndpoint;
 

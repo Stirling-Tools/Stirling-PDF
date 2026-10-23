@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Group, Loader, Paper, Stack, Text } from "@mantine/core";
-import { column, DataTable, type DataTableColumn } from "@app/ui";
+import { column, DataTable, type DataTableColumn } from "@editor/ui";
 import { isAxiosError } from "axios";
-import apiClient from "@app/services/apiClient";
-import frontendLicenses from "../../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @app alias root
+import apiClient from "@editor/services/apiClient";
+import frontendLicenses from "../../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @editor alias root
 
 interface Dependency {
   moduleName?: string;

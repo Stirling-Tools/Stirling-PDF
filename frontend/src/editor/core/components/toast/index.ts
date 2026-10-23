@@ -2,9 +2,9 @@ import {
   ToastApi,
   ToastInstance,
   ToastOptions,
-} from "@app/components/toast/types";
-import { useToast, ToastProvider } from "@app/components/toast/ToastContext";
-import ToastRenderer from "@app/components/toast/ToastRenderer";
+} from "@editor/components/toast/types";
+import { useToast, ToastProvider } from "@editor/components/toast/ToastContext";
+import ToastRenderer from "@editor/components/toast/ToastRenderer";
 
 export { useToast, ToastProvider, ToastRenderer };
 

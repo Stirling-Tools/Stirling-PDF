@@ -1,6 +1,6 @@
 import { describe, expect, test, afterEach, beforeEach, vi } from "vitest";
 import "fake-indexeddb/auto";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 /**
  * WebKit refuses blob values when it can't write the blob's backing file, so
@@ -11,7 +11,7 @@ import { expectConsole } from "@app/tests/failOnConsole";
  */
 
 const alertMock = vi.hoisted(() => vi.fn());
-vi.mock("@app/components/toast", () => ({
+vi.mock("@editor/components/toast", () => ({
   alert: (options: unknown) => alertMock(options),
 }));
 
@@ -153,8 +153,8 @@ async function freshFileStorage() {
   vi.resetModules();
   const [{ fileStorage }, { createStirlingFile, createNewStirlingFileStub }] =
     await Promise.all([
-      import("@app/services/fileStorage"),
-      import("@app/types/fileContext"),
+      import("@editor/services/fileStorage"),
+      import("@editor/types/fileContext"),
     ]);
   const store = async (name: string) => {
     const file = new File(["%PDF-1.7 stirling"], name, {
@@ -398,7 +398,7 @@ describe("orphanedAncestorIds", () => {
     isLeaf: boolean,
   ) => {
     const { createStirlingFile, createNewStirlingFileStub } =
-      await import("@app/types/fileContext");
+      await import("@editor/types/fileContext");
     const file = new File(["%PDF-1.7"], `${id}.pdf`, {
       type: "application/pdf",
     });
@@ -449,7 +449,7 @@ describe("confirmed-unreadable records", () => {
     expectConsole.warn(/could not read its bytes back/);
     expectConsole.error(/cannot be read/);
     const { fileStorage, store } = await freshFileStorage();
-    const { onRecordUnreadable } = await import("@app/services/fileStorage");
+    const { onRecordUnreadable } = await import("@editor/services/fileStorage");
     instrumentAdd({ rejectBlobs: false });
     const id = await store("doomed.pdf");
 
@@ -550,7 +550,8 @@ describe("stub listings — data-lost auditing", () => {
  *  blob-bodied records on a browser that can't rewrite them anyway. */
 describe("maintenanceMayRewrite", () => {
   test("keeps maintenance away from blob records on a no-blob browser", async () => {
-    const { maintenanceMayRewrite } = await import("@app/services/fileStorage");
+    const { maintenanceMayRewrite } =
+      await import("@editor/services/fileStorage");
     const blobRecord = { data: new Blob(["x"]) };
     const copyRecord = { data: new ArrayBuffer(1) };
 

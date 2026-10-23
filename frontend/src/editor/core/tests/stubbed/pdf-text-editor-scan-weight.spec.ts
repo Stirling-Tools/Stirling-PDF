@@ -1,5 +1,5 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import path from "node:path";
 
 test.use({ autoGoto: false });

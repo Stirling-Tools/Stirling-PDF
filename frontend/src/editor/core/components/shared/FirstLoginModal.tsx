@@ -1,12 +1,12 @@
 import { useState } from "react";
 import axios from "axios";
 import { Modal, Stack, Text, PasswordInput, Alert } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { accountService } from "@app/services/accountService";
-import { alert } from "@app/components/toast";
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
+import { Icon } from "@editor/ui/Icon";
+import { accountService } from "@editor/services/accountService";
+import { alert } from "@editor/components/toast";
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@editor/styles/zIndex";
 
 interface FirstLoginModalProps {
   opened: boolean;

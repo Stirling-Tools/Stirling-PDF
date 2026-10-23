@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { setActivePosthog } from "@app/services/analytics";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { setActivePosthog } from "@editor/services/analytics";
 
 // posthog-js is ~230 KB and only needed when analytics is on. This hook owns the
 // load and publishes the client to analytics.ts, so capture never loads it.

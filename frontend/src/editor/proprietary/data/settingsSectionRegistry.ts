@@ -1,8 +1,8 @@
 import {
   SETTINGS_SECTION_REGISTRY as CORE_SETTINGS_SECTION_REGISTRY,
   type SettingsSectionEntry,
-} from "@core/data/settingsSectionRegistry";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
+} from "@editor-core/data/settingsSectionRegistry";
+import { HAS_PORTAL } from "@editor/routes/hasPortal";
 
 export type { SettingsSectionEntry };
 

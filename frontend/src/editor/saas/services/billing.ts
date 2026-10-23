@@ -1,24 +1,24 @@
 /**
- * SaaS (web) implementation of the @app/services/billing seam.
+ * SaaS (web) implementation of the @editor/services/billing seam.
  *
  * Stripe-touching work lives in Supabase edge functions, invoked through the web
  * supabase-js client (which attaches the signed-in user's session JWT
  * automatically). The return URL is the browser origin.
  */
-import { supabase } from "@app/auth/supabase";
+import { supabase } from "@editor/auth/supabase";
 import type {
   CheckoutParams,
   CheckoutSession,
   PortalParams,
   PortalSession,
-} from "@cloud/services/billing";
+} from "@editor-cloud/services/billing";
 
 export type {
   CheckoutParams,
   CheckoutSession,
   PortalParams,
   PortalSession,
-} from "@cloud/services/billing";
+} from "@editor-cloud/services/billing";
 
 /**
  * Create a Stripe Checkout Session for the PAYG subscription via the

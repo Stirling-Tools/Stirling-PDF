@@ -5,7 +5,7 @@ import {
   MAX_COMPRESSION_LEVEL,
   useCompressParameters,
   usedStrongestCompression,
-} from "@app/hooks/tools/compress/useCompressParameters";
+} from "@editor/hooks/tools/compress/useCompressParameters";
 
 describe("useCompressParameters", () => {
   test("defaults (quality mode) validate", () => {

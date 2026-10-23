@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { OnboardingChecklist } from "@app/components/onboarding/OnboardingChecklist";
-import type { AccountCreatedAt } from "@app/components/onboarding/accountCreatedAt";
-import type { ChecklistInviteTarget } from "@app/components/onboarding/checklistInviteTarget";
+import { OnboardingChecklist } from "@editor/components/onboarding/OnboardingChecklist";
+import type { AccountCreatedAt } from "@editor/components/onboarding/accountCreatedAt";
+import type { ChecklistInviteTarget } from "@editor/components/onboarding/checklistInviteTarget";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const FLOW = "onboarding::flow::saas-checklist";
@@ -15,16 +15,16 @@ const { account, inviteTarget } = vi.hoisted(() => ({
   inviteTarget: vi.fn<() => ChecklistInviteTarget>(),
 }));
 
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ isAnonymous: false, loading: false }),
 }));
-vi.mock("@app/components/onboarding/accountCreatedAt", () => ({
+vi.mock("@editor/components/onboarding/accountCreatedAt", () => ({
   useAccountCreatedAt: account,
 }));
-vi.mock("@app/components/onboarding/checklistInviteTarget", () => ({
+vi.mock("@editor/components/onboarding/checklistInviteTarget", () => ({
   useChecklistInviteTarget: inviteTarget,
 }));
-vi.mock("@app/components/onboarding/checklistSetupItem", () => ({
+vi.mock("@editor/components/onboarding/checklistSetupItem", () => ({
   useChecklistSetupItem: () => ({
     item: {
       id: "download-desktop",
@@ -37,8 +37,8 @@ vi.mock("@app/components/onboarding/checklistSetupItem", () => ({
     dialog: null,
   }),
 }));
-vi.mock("@app/utils/appSettings", () => ({ openAppSettings: vi.fn() }));
-vi.mock("@app/constants/events", () => ({ requestStartTour: vi.fn() }));
+vi.mock("@editor/utils/appSettings", () => ({ openAppSettings: vi.fn() }));
+vi.mock("@editor/constants/events", () => ({ requestStartTour: vi.fn() }));
 
 const checklist = () => screen.queryByTestId("onboarding-checklist");
 

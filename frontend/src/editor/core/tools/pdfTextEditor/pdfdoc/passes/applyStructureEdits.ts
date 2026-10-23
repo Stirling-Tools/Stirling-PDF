@@ -6,12 +6,12 @@ import {
   referencedObject,
   removeDictEntry,
   setDictEntry,
-} from "@app/tools/pdfTextEditor/pdfdoc/raw";
+} from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   appendRevision,
   plainObject,
-} from "@app/tools/pdfTextEditor/pdfdoc/revision";
-import { encodeTextString } from "@app/tools/pdfTextEditor/pdfdoc/textString";
+} from "@editor/tools/pdfTextEditor/pdfdoc/revision";
+import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 
 /** A change to the structure element that owns marked content `mcid` on a page. */
 export interface StructureEdit {
