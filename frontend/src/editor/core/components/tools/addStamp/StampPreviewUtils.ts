@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
+import type { AddStampParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
 
 export type ContainerSize = { width: number; height: number };
 export type PageSizePts = { widthPts: number; heightPts: number } | null;

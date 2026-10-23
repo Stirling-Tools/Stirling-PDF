@@ -1,5 +1,5 @@
 /**
- * Team-session auth seam (@app/auth/teamSession). {@link SaaSTeamContext} needs
+ * Team-session auth seam (@editor/auth/teamSession). {@link SaaSTeamContext} needs
  * just two things from auth (can-use-teams + a post-membership refresh), so it
  * consumes them through this narrow seam rather than reaching a platform auth
  * surface directly. Default reports no access; saas/ and desktop/ shadow it.

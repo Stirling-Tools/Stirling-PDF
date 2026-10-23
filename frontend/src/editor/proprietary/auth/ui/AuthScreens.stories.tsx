@@ -1,16 +1,16 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { AuthShell } from "@app/auth/ui/AuthShell";
-import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
-import AuthDefaultCredentials from "@app/auth/ui/AuthDefaultCredentials";
-import type { SpringLoginState } from "@app/auth/ui/useSpringLogin";
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import SignupForm from "@app/routes/signup/SignupForm";
-import DividerWithText from "@app/components/shared/DividerWithText";
-import { Button } from "@app/ui/Button";
-import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
-import "@app/auth/ui/auth-theme.css";
-import "@app/auth/ui/auth.css";
+import { AuthShell } from "@editor/auth/ui/AuthShell";
+import SpringLoginForm from "@editor/auth/ui/SpringLoginForm";
+import AuthDefaultCredentials from "@editor/auth/ui/AuthDefaultCredentials";
+import type { SpringLoginState } from "@editor/auth/ui/useSpringLogin";
+import ErrorMessage from "@editor/auth/ui/ErrorMessage";
+import SignupForm from "@editor/routes/signup/SignupForm";
+import DividerWithText from "@editor/components/shared/DividerWithText";
+import { Button } from "@editor/ui/Button";
+import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import "@editor/auth/ui/auth-theme.css";
+import "@editor/auth/ui/auth.css";
 
 const darkLogo = "/modern-logo/LoginDarkModeHeader.svg";
 

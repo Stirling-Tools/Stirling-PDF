@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { baseQueryOptions } from "@app/query/queryClient";
+import { baseQueryOptions } from "@editor/query/queryClient";
 
 let current: QueryClient | null = null;
 

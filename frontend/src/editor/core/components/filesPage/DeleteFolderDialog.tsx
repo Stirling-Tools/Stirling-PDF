@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Checkbox, Group, Modal, Stack, Text } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui/Button";
-import { folderKind, FolderRecord } from "@app/types/folder";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { folderKind, FolderRecord } from "@editor/types/folder";
 
 interface DeleteFolderDialogProps {
   opened: boolean;

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Menu } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Tooltip } from "@app/components/shared/Tooltip";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { useTranslation } from "react-i18next";
-import { supportedLanguages, setUserLanguage } from "@app/i18n";
-import { Icon } from "@app/ui/Icon";
-import styles from "@app/components/shared/LanguageSelector.module.css";
-import { Z_INDEX_CONFIG_MODAL } from "@app/styles/zIndex";
+import { supportedLanguages, setUserLanguage } from "@editor/i18n";
+import { Icon } from "@editor/ui/Icon";
+import styles from "@editor/components/shared/LanguageSelector.module.css";
+import { Z_INDEX_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 // Types
 interface LanguageSelectorProps {

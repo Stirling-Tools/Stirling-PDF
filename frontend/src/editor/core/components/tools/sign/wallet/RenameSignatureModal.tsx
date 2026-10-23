@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { FormField } from "@app/ui/FormField";
-import { Input } from "@app/ui/Input";
-import { Modal } from "@app/ui/Modal";
-import styles from "@app/components/tools/sign/wallet/SignatureWallet.module.css";
+import { Button } from "@editor/ui/Button";
+import { FormField } from "@editor/ui/FormField";
+import { Input } from "@editor/ui/Input";
+import { Modal } from "@editor/ui/Modal";
+import styles from "@editor/components/tools/sign/wallet/SignatureWallet.module.css";
 
 interface RenameSignatureModalProps {
   currentName: string;

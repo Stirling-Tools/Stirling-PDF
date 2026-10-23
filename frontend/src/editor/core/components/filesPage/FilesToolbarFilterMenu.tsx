@@ -1,11 +1,11 @@
 import { MultiSelect, Popover, Select, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import type { FilesPageOriginFilter } from "@app/contexts/FilesPageContext";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import type { FilesPageOriginFilter } from "@editor/contexts/FilesPageContext";
 
 interface FilesToolbarFilterMenuProps {
   originFilter: FilesPageOriginFilter;

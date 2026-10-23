@@ -1,14 +1,14 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Center, Loader, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { SetupWizard } from "@app/components/SetupWizard";
-import { useSuppressQuickNavRail } from "@app/contexts/QuickNavHostContext";
-import { authService } from "@app/services/authService";
+import { Button } from "@editor/ui/Button";
+import { SetupWizard } from "@editor/components/SetupWizard";
+import { useSuppressQuickNavRail } from "@editor/contexts/QuickNavHostContext";
+import { authService } from "@editor/services/authService";
 import {
   ConnectionConfig,
   connectionModeService,
-} from "@app/services/connectionModeService";
+} from "@editor/services/connectionModeService";
 
 /** Withholds the workbench and background file handlers until managed sign-in succeeds. */
 export function DesktopAccessGate({

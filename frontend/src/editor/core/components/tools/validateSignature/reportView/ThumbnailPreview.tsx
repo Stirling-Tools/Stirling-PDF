@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import "@app/components/tools/validateSignature/reportView/styles.css";
+import { Icon } from "@editor/ui/Icon";
+import "@editor/components/tools/validateSignature/reportView/styles.css";
 
 const ThumbnailPreview = ({
   thumbnailUrl,

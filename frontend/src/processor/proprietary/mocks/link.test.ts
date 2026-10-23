@@ -7,7 +7,7 @@ import {
   resetLinkStore,
   revokeInstance,
   unlinkLocal,
-} from "@portal/mocks/link";
+} from "@processor/mocks/link";
 
 describe("mocks/link store", () => {
   beforeEach(() => resetLinkStore());

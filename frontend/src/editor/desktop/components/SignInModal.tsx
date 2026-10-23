@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Modal } from "@mantine/core";
-import { SetupWizard } from "@app/components/SetupWizard";
-import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
-import { Z_INDEX_SIGN_IN_MODAL } from "@app/styles/zIndex";
+import { SetupWizard } from "@editor/components/SetupWizard";
+import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
+import { Z_INDEX_SIGN_IN_MODAL } from "@editor/styles/zIndex";
 
 export function SignInModal() {
   const [opened, setOpened] = useState(false);

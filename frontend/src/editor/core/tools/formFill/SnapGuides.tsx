@@ -1,7 +1,7 @@
 /** Alignment guide lines shared by the create and edit overlays; positioned within the page overlay. */
 import React from "react";
-import type { SnapGuide } from "@app/tools/formFill/formSnapUtils";
-import { FORM_COLORS } from "@app/tools/formFill/formFieldColors";
+import type { SnapGuide } from "@editor/tools/formFill/formSnapUtils";
+import { FORM_COLORS } from "@editor/tools/formFill/formFieldColors";
 
 const GUIDE_COLOR = FORM_COLORS.guide;
 

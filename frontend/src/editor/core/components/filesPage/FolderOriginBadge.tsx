@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { folderKind, type FolderRecord } from "@app/types/folder";
-import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
+import { folderKind, type FolderRecord } from "@editor/types/folder";
+import { FileOriginBadge } from "@editor/components/filesPage/FileOriginBadge";
 
 /** Shows where a folder is stored, using the same origin marks as its files. */
 export function FolderOriginBadge({ folder }: { folder: FolderRecord }) {

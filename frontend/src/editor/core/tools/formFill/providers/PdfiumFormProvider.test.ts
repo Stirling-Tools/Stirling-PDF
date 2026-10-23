@@ -1,19 +1,19 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 
-vi.mock("@app/services/documentBytesCache", () => ({
+vi.mock("@editor/services/documentBytesCache", () => ({
   getDocumentBytes: vi.fn(),
 }));
 
-vi.mock("@app/services/pdfiumScanQueue", () => ({
+vi.mock("@editor/services/pdfiumScanQueue", () => ({
   runPdfiumScan: (task: () => Promise<unknown>) => task(),
 }));
 
-vi.mock("@app/services/documentFormProbe", () => ({
+vi.mock("@editor/services/documentFormProbe", () => ({
   documentHasFormFields: vi.fn(async () => false),
 }));
 
-vi.mock("@app/services/pdfiumService", () => ({
+vi.mock("@editor/services/pdfiumService", () => ({
   PDF_FORM_FIELD_TYPE: new Proxy({}, { get: (_target, prop) => String(prop) }),
   extractFormFields: vi.fn(async () => []),
   openRawDocumentSafe: vi.fn(async () => 1),
@@ -25,12 +25,12 @@ vi.mock("@app/services/pdfiumService", () => ({
   })),
 }));
 
-import { allowConsole } from "@app/tests/failOnConsole";
+import { allowConsole } from "@editor/tests/failOnConsole";
 
-import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { documentHasFormFields } from "@app/services/documentFormProbe";
-import { extractFormFields } from "@app/services/pdfiumService";
-import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
+import { documentHasFormFields } from "@editor/services/documentFormProbe";
+import { extractFormFields } from "@editor/services/pdfiumService";
+import { PdfiumFormProvider } from "@editor/tools/formFill/providers/PdfiumFormProvider";
 
 describe("PdfiumFormProvider", () => {
   beforeEach(() => {

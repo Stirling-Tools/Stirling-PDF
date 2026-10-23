@@ -8,7 +8,7 @@ import {
   fetchRunOutputFile,
   type ProcessingFolderRun,
   type ProcessingRunOutput,
-} from "@app/services/processingFolderApi";
+} from "@editor/services/processingFolderApi";
 
 const TERMINAL = ["COMPLETED", "FAILED", "CANCELLED"];
 /** Fast polls first — the earliest finishes land within seconds — then a steady 1s,

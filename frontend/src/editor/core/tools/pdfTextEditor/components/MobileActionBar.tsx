@@ -1,12 +1,12 @@
 import { forwardRef, type ComponentPropsWithoutRef } from "react";
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon, type IconName } from "@app/ui/Icon";
-import { ArrangeMenuItems } from "@app/tools/pdfTextEditor/components/toolbar/ObjectGroup";
-import type { Controller } from "@app/tools/pdfTextEditor/components/toolbar/toolbarShared";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import { useEditorSession } from "@app/tools/pdfTextEditor/store/EditorSession";
-import "@app/tools/pdfTextEditor/components/MobileEditor.css";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import { ArrangeMenuItems } from "@editor/tools/pdfTextEditor/components/toolbar/ObjectGroup";
+import type { Controller } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import "@editor/tools/pdfTextEditor/components/MobileEditor.css";
 
 interface Props {
   store: EditorStore;

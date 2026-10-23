@@ -1,10 +1,10 @@
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { FileAnalyzer } from "@app/services/fileAnalyzer";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import { FileAnalyzer } from "@editor/services/fileAnalyzer";
 import {
   TrappedStatus,
   CustomMetadataEntry,
   ExtractedPDFMetadata,
-} from "@app/types/metadata";
+} from "@editor/types/metadata";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 
 export interface MetadataExtractionResult {

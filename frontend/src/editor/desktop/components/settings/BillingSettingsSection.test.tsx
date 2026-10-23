@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { BillingSettingsSection } from "@app/components/settings/BillingSettingsSection";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { openExternal } from "@app/platform/openExternal";
+import { BillingSettingsSection } from "@editor/components/settings/BillingSettingsSection";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { openExternal } from "@editor/platform/openExternal";
 
 vi.mock("react-i18next", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react-i18next")>()),
@@ -11,8 +11,8 @@ vi.mock("react-i18next", async (importOriginal) => ({
     t: (key: string, fallback?: string) => fallback ?? key,
   }),
 }));
-vi.mock("@app/platform/openExternal", () => ({ openExternal: vi.fn() }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/platform/openExternal", () => ({ openExternal: vi.fn() }));
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: { getCurrentConfig: vi.fn() },
 }));
 beforeEach(() => {

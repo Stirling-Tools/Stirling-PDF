@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { authService } from "@app/services/authService";
+import { authService } from "@editor/services/authService";
 import {
   connectionModeService,
   type ConnectionMode,
-} from "@app/services/connectionModeService";
+} from "@editor/services/connectionModeService";
 
 function isServerMode(mode: ConnectionMode | null): boolean {
   return mode === "saas" || mode === "selfhosted";

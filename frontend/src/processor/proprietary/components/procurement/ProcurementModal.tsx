@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { FlowModal } from "@portal/components/shared/FlowModal";
-import "@portal/views/Procurement.css";
+import { FlowModal } from "@processor/components/shared/FlowModal";
+import "@processor/views/Procurement.css";
 
 /**
  * The procurement takeover: the shared {@link FlowModal} at takeover width. Chrome and copy only —

@@ -1,17 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { Page } from "@app/tools/pdfTextEditor/model/Page";
-import { ShapeObject } from "@app/tools/pdfTextEditor/model/ShapeObject";
-import type { PageRuleSnapshot } from "@app/tools/pdfTextEditor/types";
-import { MoveShapeCommand } from "@app/tools/pdfTextEditor/commands/MoveShapeCommand";
-import { DeleteShapeCommand } from "@app/tools/pdfTextEditor/commands/DeleteShapeCommand";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { InsertTableCommand } from "@app/tools/pdfTextEditor/commands/InsertTableCommand";
-import { FillTableCellCommand } from "@app/tools/pdfTextEditor/commands/FillTableCellCommand";
-import { ModifyTableCommand } from "@app/tools/pdfTextEditor/commands/ModifyTableCommand";
-import { ResizeTableCommand } from "@app/tools/pdfTextEditor/commands/ResizeTableCommand";
-import { HistoryStack } from "@app/tools/pdfTextEditor/store/HistoryStack";
-import { redrawGrid } from "@app/tools/pdfTextEditor/commands/tableHelpers";
-import { emitCellText } from "@app/tools/pdfTextEditor/commands/tableHelpers";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
+import type { PageRuleSnapshot } from "@editor/tools/pdfTextEditor/types";
+import { MoveShapeCommand } from "@editor/tools/pdfTextEditor/commands/MoveShapeCommand";
+import { DeleteShapeCommand } from "@editor/tools/pdfTextEditor/commands/DeleteShapeCommand";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { InsertTableCommand } from "@editor/tools/pdfTextEditor/commands/InsertTableCommand";
+import { FillTableCellCommand } from "@editor/tools/pdfTextEditor/commands/FillTableCellCommand";
+import { ModifyTableCommand } from "@editor/tools/pdfTextEditor/commands/ModifyTableCommand";
+import { ResizeTableCommand } from "@editor/tools/pdfTextEditor/commands/ResizeTableCommand";
+import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
+import { redrawGrid } from "@editor/tools/pdfTextEditor/commands/tableHelpers";
+import { emitCellText } from "@editor/tools/pdfTextEditor/commands/tableHelpers";
 
 // A fake PDFium module that tracks which object pointers are live on the page,
 // plus each object's kind, translation, and text. Enough to exercise the table

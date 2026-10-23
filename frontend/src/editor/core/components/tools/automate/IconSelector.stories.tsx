@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import IconSelector from "@app/components/tools/automate/IconSelector";
+import IconSelector from "@editor/components/tools/automate/IconSelector";
 
 const meta = {
   title: "Automate/IconSelector",

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { SettingsFieldLabel } from "@editor/components/shared/config/SettingsFieldLabel";
 import {
   Collapse,
   Alert,
@@ -10,16 +10,16 @@ import {
   Group,
   Text,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { FilePicker } from "@app/ui/FilePicker";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Button } from "@editor/ui/Button";
+import { FilePicker } from "@editor/ui/FilePicker";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { alert } from "@app/components/toast";
-import { LicenseInfo } from "@app/services/licenseService";
-import licenseService from "@app/services/licenseService";
-import { useLicense } from "@app/contexts/LicenseContext";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import { Icon } from "@editor/ui/Icon";
+import { alert } from "@editor/components/toast";
+import { LicenseInfo } from "@editor/services/licenseService";
+import licenseService from "@editor/services/licenseService";
+import { useLicense } from "@editor/contexts/LicenseContext";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
 
 interface LicenseKeySectionProps {
   currentLicenseInfo?: LicenseInfo;

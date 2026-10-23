@@ -6,7 +6,7 @@ import React, {
   type ComponentType,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 
 type MarkdownRendererImplComponent = ComponentType<{ content: string }>;
 
@@ -18,7 +18,7 @@ let loadedMarkdownRendererImpl: MarkdownRendererImplComponent | undefined;
 // markdown document is open (viewer) or a chat message arrives, so the heavy
 // module is its own chunk while callers keep the synchronous signature.
 const loadMarkdownRendererImpl = () =>
-  import("@app/components/viewer/nonpdf/MarkdownRendererImpl").then(
+  import("@editor/components/viewer/nonpdf/MarkdownRendererImpl").then(
     (module) => {
       loadedMarkdownRendererImpl = module.default;
       return module;

@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { Button, Modal } from "@app/ui";
-import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
-import { PortalRosterHost } from "@portal/components/settings/PortalRosterHost";
-import { useUsersData } from "@portal/views/usersData";
-import { usersCapabilities as caps } from "@app/portal/usersCapabilities";
+import { Button, Modal } from "@editor/ui";
+import { InviteMemberModal } from "@processor/components/users/InviteMemberModal";
+import { PortalRosterHost } from "@processor/components/settings/PortalRosterHost";
+import { useUsersData } from "@processor/views/usersData";
+import { usersCapabilities as caps } from "@editor/portal/usersCapabilities";
 
 interface InviteTeammateFlowProps {
   initialValue: string;

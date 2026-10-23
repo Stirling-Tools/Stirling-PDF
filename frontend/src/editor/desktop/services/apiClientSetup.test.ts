@@ -1,8 +1,8 @@
 import type { AxiosInstance } from "axios";
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
-import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
-import { expectConsole } from "@app/tests/failOnConsole";
-import { alert } from "@app/components/toast";
+import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
+import { expectConsole } from "@editor/tests/failOnConsole";
+import { alert } from "@editor/components/toast";
 
 // Exercise the error-interceptor logic against a hand-rolled axios-like
 // client; transitive imports are mocked out so this is a pure unit test.
@@ -11,23 +11,23 @@ const { getAccessTokenMock } = vi.hoisted(() => ({
   getAccessTokenMock: vi.fn(),
 }));
 
-vi.mock("@app/auth/session", () => ({ getAccessToken: getAccessTokenMock }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
-vi.mock("@core/services/apiClientSetup", () => ({
+vi.mock("@editor/auth/session", () => ({ getAccessToken: getAccessTokenMock }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor-core/services/apiClientSetup", () => ({
   setupApiInterceptors: vi.fn(),
   getAuthHeaders: vi.fn(),
 }));
-vi.mock("@app/services/tauriBackendService", () => ({
+vi.mock("@editor/services/tauriBackendService", () => ({
   tauriBackendService: {
     isOnline: true,
     getBackendStatus: () => "healthy",
     getBackendPort: () => 8080,
   },
 }));
-vi.mock("@app/constants/backendErrors", () => ({
+vi.mock("@editor/constants/backendErrors", () => ({
   createBackendNotReadyError: () => new Error("backend not ready"),
 }));
-vi.mock("@app/services/operationRouter", () => ({
+vi.mock("@editor/services/operationRouter", () => ({
   operationRouter: {
     isSelfHostedMode: vi.fn().mockResolvedValue(true),
     isSaaSMode: vi.fn().mockResolvedValue(false),
@@ -35,7 +35,7 @@ vi.mock("@app/services/operationRouter", () => ({
     shouldSkipBackendReadyCheck: vi.fn().mockResolvedValue(false),
   },
 }));
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: {
     awaitRefreshIfInProgress: vi.fn().mockResolvedValue(undefined),
     getAuthToken: vi.fn().mockResolvedValue(null),
@@ -43,24 +43,24 @@ vi.mock("@app/services/authService", () => ({
     refreshSupabaseToken: vi.fn().mockResolvedValue(false),
   },
 }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getServerConfig: vi.fn().mockResolvedValue({ url: "https://example.test" }),
   },
 }));
-vi.mock("@app/constants/connection", () => ({
+vi.mock("@editor/constants/connection", () => ({
   STIRLING_SAAS_URL: "https://saas.test",
   STIRLING_SAAS_BACKEND_API_URL: "https://api.saas.test",
 }));
-vi.mock("@app/i18n", () => ({
+vi.mock("@editor/i18n", () => ({
   default: { t: (_key: string, fallback: string) => fallback || _key },
 }));
 
 import {
   setupApiInterceptors,
   getAuthHeaders,
-} from "@app/services/apiClientSetup";
-import { operationRouter } from "@app/services/operationRouter";
+} from "@editor/services/apiClientSetup";
+import { operationRouter } from "@editor/services/operationRouter";
 
 type Interceptor = (value: unknown) => unknown;
 

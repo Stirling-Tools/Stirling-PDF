@@ -1,7 +1,7 @@
 import { Stack, Select, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface ConvertToEpubSettingsProps {
   parameters: ConvertParameters;

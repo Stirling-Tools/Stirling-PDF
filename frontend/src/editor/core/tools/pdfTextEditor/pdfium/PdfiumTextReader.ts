@@ -1,27 +1,30 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { ImageObject } from "@app/tools/pdfTextEditor/model/ImageObject";
-import { ShapeObject } from "@app/tools/pdfTextEditor/model/ShapeObject";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { LineGrouper } from "@app/tools/pdfTextEditor/pdfium/LineGrouper";
-import { ParagraphGrouper } from "@app/tools/pdfTextEditor/pdfium/ParagraphGrouper";
-import { PdfiumAnnotationReader } from "@app/tools/pdfTextEditor/pdfium/PdfiumAnnotationReader";
-import { primeFontGlyphMap } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
+import { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { LineGrouper } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
+import { ParagraphGrouper } from "@editor/tools/pdfTextEditor/pdfium/ParagraphGrouper";
+import { PdfiumAnnotationReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumAnnotationReader";
+import { primeFontGlyphMap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 import type {
   Affine,
   GroupingMode,
   PageRect,
   PageRuleSnapshot,
   RGBA,
-} from "@app/tools/pdfTextEditor/types";
-import { readUtf16 } from "@app/services/pdfiumService";
-import { registerEmbeddedFace } from "@app/tools/pdfTextEditor/util/embeddedFace";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/types";
+import { readUtf16 } from "@editor/services/pdfiumService";
+import { registerEmbeddedFace } from "@editor/tools/pdfTextEditor/util/embeddedFace";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import {
   ARTIFACT_TAG,
   readTagMarks,
-} from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 /** PDFium page-object type constants - mirrors `public/fpdf_edit.h`. */
 const FPDF_PAGEOBJ_TEXT = 1;

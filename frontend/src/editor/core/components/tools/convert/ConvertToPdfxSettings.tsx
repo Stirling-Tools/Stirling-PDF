@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
-import { StirlingFile } from "@app/types/fileContext";
+import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
+import { StirlingFile } from "@editor/types/fileContext";
 
 interface ConvertToPdfxSettingsProps {
   parameters: ConvertParameters;

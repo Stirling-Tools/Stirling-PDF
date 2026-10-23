@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { AddParticipantsFlow } from "@app/components/tools/certSign/modals/AddParticipantsFlow";
+import { AddParticipantsFlow } from "@editor/components/tools/certSign/modals/AddParticipantsFlow";
 
 const meta = {
   title: "Tools/CertSign/Modals/AddParticipantsFlow",

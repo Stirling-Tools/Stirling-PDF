@@ -1,10 +1,10 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
 import i18n from "i18next";
-import { installFailOnConsole } from "@app/tests/failOnConsole";
+import { installFailOnConsole } from "@editor/tests/failOnConsole";
 
 // The shims `src/index.tsx` installs - see core/setupTests.ts.
-import "@app/utils/engineShims";
+import "@editor/utils/engineShims";
 
 // Modules outside React call i18n.t directly; no resources means the English defaults render.
 void i18n.init({
@@ -39,7 +39,7 @@ const localStorageMock = (() => {
 Object.defineProperty(global, "localStorage", { value: localStorageMock });
 
 // Mock Supabase for tests
-vi.mock("@app/auth/supabase", () => ({
+vi.mock("@editor/auth/supabase", () => ({
   supabase: {
     auth: {
       getSession: vi

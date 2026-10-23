@@ -8,13 +8,13 @@ import {
   Text,
   NumberInput,
 } from "@mantine/core";
-import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
-import { Icon } from "@app/ui/Icon";
-import styles from "@app/components/tools/addStamp/StampPreview.module.css";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { AddStampParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
+import { Icon } from "@editor/ui/Icon";
+import styles from "@editor/components/tools/addStamp/StampPreview.module.css";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface StampPositionFormattingSettingsProps {
   parameters: AddStampParameters;

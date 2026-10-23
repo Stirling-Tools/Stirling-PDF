@@ -1,11 +1,11 @@
 import React from "react";
 import { Box, Center } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { StirlingFileStub } from "@app/types/fileContext";
-import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
-import DocumentStack from "@app/components/shared/filePreview/DocumentStack";
-import HoverOverlay from "@app/components/shared/filePreview/HoverOverlay";
-import NavigationArrows from "@app/components/shared/filePreview/NavigationArrows";
+import { Icon } from "@editor/ui/Icon";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
+import DocumentStack from "@editor/components/shared/filePreview/DocumentStack";
+import HoverOverlay from "@editor/components/shared/filePreview/HoverOverlay";
+import NavigationArrows from "@editor/components/shared/filePreview/NavigationArrows";
 
 export interface FilePreviewProps {
   // Core file data

@@ -4,8 +4,8 @@ import {
   defaultParameters,
   isQrContentWithinLimit,
   validateAddStampParameters,
-} from "@app/components/tools/addStamp/useAddStampParameters";
-import { addStampToApiParams } from "@app/components/tools/addStamp/useAddStampOperation";
+} from "@editor/components/tools/addStamp/useAddStampParameters";
+import { addStampToApiParams } from "@editor/components/tools/addStamp/useAddStampOperation";
 
 const qrParams = (stampText: string) => ({
   ...defaultParameters,

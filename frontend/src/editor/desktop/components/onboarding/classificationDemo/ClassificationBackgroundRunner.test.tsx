@@ -11,16 +11,16 @@ const mountLocalFolder = vi.fn();
 const addFiles = vi.fn();
 
 vi.mock(
-  "@app/components/onboarding/classificationDemo/classificationDemoSweep",
+  "@editor/components/onboarding/classificationDemo/classificationDemoSweep",
   () => ({
     runClassificationDemoSweep: (...args: unknown[]) =>
       runClassificationDemoSweep(...args),
   }),
 );
-vi.mock("@app/contexts/FolderContext", () => ({
+vi.mock("@editor/contexts/FolderContext", () => ({
   useFolders: () => ({ mountLocalFolder }),
 }));
-vi.mock("@app/hooks/useFileHandler", () => ({
+vi.mock("@editor/hooks/useFileHandler", () => ({
   useFileHandler: () => ({ addFiles }),
 }));
 vi.mock("react-i18next", () => ({
@@ -29,12 +29,12 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { ClassificationBackgroundRunner } from "@app/components/onboarding/classificationDemo/ClassificationBackgroundRunner";
+import { ClassificationBackgroundRunner } from "@editor/components/onboarding/classificationDemo/ClassificationBackgroundRunner";
 import {
   resetBackgroundClassificationForTests,
   startBackgroundClassification,
   useBackgroundClassification,
-} from "@app/components/onboarding/classificationDemo/backgroundClassification";
+} from "@editor/components/onboarding/classificationDemo/backgroundClassification";
 
 function Probe() {
   const job = useBackgroundClassification();

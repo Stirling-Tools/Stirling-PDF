@@ -10,7 +10,7 @@ import type {
   AppNotification,
   NotificationActionOffer,
   NotificationActionSlot,
-} from "@app/services/notifications";
+} from "@editor/services/notifications";
 
 vi.mock("@mantine/hooks", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@mantine/hooks")>()),
@@ -32,7 +32,7 @@ const render = (ui: Parameters<typeof baseRender>[0]) =>
 const fetchNotifications = vi.fn();
 
 // A bare array is wrapped as a reviewer's response; member filtering is the hook's own test.
-vi.mock("@app/services/notifications", () => ({
+vi.mock("@editor/services/notifications", () => ({
   fetchNotifications: async (...args: unknown[]) => {
     const value = await fetchNotifications(...args);
     return Array.isArray(value)
@@ -58,20 +58,20 @@ const h = vi.hoisted(() => ({
   >,
 }));
 
-vi.mock("@app/services/notificationRetry", () => ({
+vi.mock("@editor/services/notificationRetry", () => ({
   hasLocalFile: () => Promise.resolve(h.hasLocalFile),
   loadRetryPayload: () => Promise.resolve(h.retryPayload),
 }));
 
-vi.mock("@app/components/notifications/useNotificationsAvailable", () => ({
+vi.mock("@editor/components/notifications/useNotificationsAvailable", () => ({
   useNotificationsAvailable: () => h.notificationsAvailable,
 }));
 
 // Core's own registry is empty, so without this there are no client actions to test.
-vi.mock("@app/components/notifications/notificationActions", async () => ({
+vi.mock("@editor/components/notifications/notificationActions", async () => ({
   ...(await vi.importActual<
-    typeof import("@app/components/notifications/notificationActions")
-  >("@app/components/notifications/notificationActions")),
+    typeof import("@editor/components/notifications/notificationActions")
+  >("@editor/components/notifications/notificationActions")),
   useNotificationActions: () => h.specs,
 }));
 
@@ -96,7 +96,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 const { NotificationBell } =
-  await import("@app/components/notifications/NotificationBell");
+  await import("@editor/components/notifications/NotificationBell");
 
 function offer(
   id: string,
