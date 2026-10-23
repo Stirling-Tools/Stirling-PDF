@@ -6,7 +6,10 @@ import { useAuth } from "@editor/auth/UseSession";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { useServerExperience } from "@editor/hooks/useServerExperience";
 import { useAccountLogout } from "@editor/extensions/accountLogout";
-import { accountService, type AccountData } from "@editor/services/accountService";
+import {
+  accountService,
+  type AccountData,
+} from "@editor/services/accountService";
 import apiClient from "@editor/services/apiClient";
 import { withBasePath } from "@editor/constants/app";
 import { DEFAULT_RUNTIME_STATE } from "@editor/components/onboarding/orchestrator/onboardingConfig";
