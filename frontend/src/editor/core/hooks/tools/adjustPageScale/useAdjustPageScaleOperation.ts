@@ -2,19 +2,19 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   validateAdjustPageScaleParameters,
   AdjustPageScaleParameters,
   defaultParameters,
-} from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+} from "@editor/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 import {
   buildAdjustPageScaleFormData,
   adjustPageScaleToApiParams,
   adjustPageScaleFromApiParams,
   ADJUST_PAGE_SCALE_ENDPOINT,
-} from "@app/hooks/tools/adjustPageScale/adjustPageScaleFormData";
+} from "@editor/hooks/tools/adjustPageScale/adjustPageScaleFormData";
 
 export {
   buildAdjustPageScaleFormData,

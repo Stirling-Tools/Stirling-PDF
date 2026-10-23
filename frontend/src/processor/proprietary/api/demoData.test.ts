@@ -4,7 +4,7 @@ import {
   enablePortalDemoData,
   isPortalDemoDataActive,
   resolveDemoResponse,
-} from "@portal/api/demoData";
+} from "@processor/api/demoData";
 
 describe("portal demo data seam", () => {
   // The first enable dynamically imports msw and the handler set. On a loaded

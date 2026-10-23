@@ -1,10 +1,13 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { writeUtf16 } from "@app/services/pdfiumService";
-import { collectMemberPtrs } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { writeUtf16 } from "@editor/services/pdfiumService";
+import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 // Narrowest base-14 glyph ("i") is ~0.22em, so ink well under ~0.15em per
 // visible char means the font produced .notdef / zero-width filler.

@@ -1,5 +1,5 @@
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { pdfAllows } from "@app/services/pdfPermissions";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { pdfAllows } from "@editor/services/pdfPermissions";
 
 import { PdfPermissionFlag } from "@embedpdf/models";
 import React, {
@@ -12,58 +12,58 @@ import React, {
   useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import {
   clearFilesPageReturnRoute,
   getFilesPageReturnRoute,
   subscribeFilesPageReturnRoute,
-} from "@app/components/filesPage/filesPageReturnRoute";
-import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
+} from "@editor/components/filesPage/filesPageReturnRoute";
+import { useWorkbenchBar } from "@editor/contexts/WorkbenchBarContext";
 import {
   useAllFiles,
   useFileSelectors,
   useFileSelection,
   useFileActions,
-} from "@app/contexts/FileContext";
-import { isStirlingFile } from "@app/types/fileContext";
-import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
-import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useNavigationState } from "@app/contexts/NavigationContext";
-import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
-import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
-import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
-import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
-import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
-import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
-import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
-import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+} from "@editor/contexts/FileContext";
+import { isStirlingFile } from "@editor/types/fileContext";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
+import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useNavigationState } from "@editor/contexts/NavigationContext";
+import { ViewerContext, useViewer } from "@editor/contexts/ViewerContext";
+import { WorkbenchType, isBaseWorkbench } from "@editor/types/workbench";
+import SuperSearch from "@editor/components/shared/superSearch/SuperSearch";
+import { useEditorSearchScopes } from "@editor/hooks/useSuperSearch";
+import { useTitleBarStrip } from "@editor/contexts/TitleBarStripContext";
+import ViewerShareButton from "@editor/components/viewer/ViewerShareButton";
+import { useSharingEnabled } from "@editor/hooks/useSharingEnabled";
+import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
 import {
   POLICY_IN_FLIGHT_STATUSES,
   usePolicyRuns,
-} from "@app/components/policies/policyRunStore";
-import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
-import { enforceExportPolicies } from "@app/services/policyExport";
-import { downloadFile as downloadRaw } from "@app/services/downloadService";
-import { alert as showAlert } from "@app/components/toast";
+} from "@editor/components/policies/policyRunStore";
+import { downloadFileWithPolicy as downloadFile } from "@editor/services/exportWithPolicy";
+import { enforceExportPolicies } from "@editor/services/policyExport";
+import { downloadFile as downloadRaw } from "@editor/services/downloadService";
+import { alert as showAlert } from "@editor/components/toast";
 import {
   WorkbenchBarButtonConfig,
   WorkbenchBarRenderContext,
   WorkbenchBarSection,
-} from "@app/types/workbenchBar";
-import WorkbenchBarDesktopActions from "@app/components/shared/workbenchBar/WorkbenchBarDesktopActions";
-import WorkbenchBarMobileActions from "@app/components/shared/workbenchBar/WorkbenchBarMobileActions";
-import WorkbenchBarToolbarHandle from "@app/components/shared/workbenchBar/WorkbenchBarToolbarHandle";
-import { renderWithTooltip } from "@app/components/shared/workbenchBar/workbenchBarTooltip";
-import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/types";
-import { useIsMobile, useIsPhone } from "@app/hooks/useIsMobile";
-import "@app/components/shared/WorkbenchBar.css";
-import { NotificationBell } from "@app/components/notifications/NotificationBell";
+} from "@editor/types/workbenchBar";
+import WorkbenchBarDesktopActions from "@editor/components/shared/workbenchBar/WorkbenchBarDesktopActions";
+import WorkbenchBarMobileActions from "@editor/components/shared/workbenchBar/WorkbenchBarMobileActions";
+import WorkbenchBarToolbarHandle from "@editor/components/shared/workbenchBar/WorkbenchBarToolbarHandle";
+import { renderWithTooltip } from "@editor/components/shared/workbenchBar/workbenchBarTooltip";
+import { WorkbenchBarActionsProps } from "@editor/components/shared/workbenchBar/types";
+import { useIsMobile, useIsPhone } from "@editor/hooks/useIsMobile";
+import "@editor/components/shared/WorkbenchBar.css";
+import { NotificationBell } from "@editor/components/notifications/NotificationBell";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
 

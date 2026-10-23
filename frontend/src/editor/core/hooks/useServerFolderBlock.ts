@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useFolders } from "@app/contexts/FolderContext";
+import { useAuth } from "@editor/auth/UseSession";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useFolders } from "@editor/contexts/FolderContext";
 
 /** Why a server folder can't be created right now, or null when it can. */
 export function useServerFolderBlock(): string | null {

@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Paper, Stack, Group, Text, Loader } from "@mantine/core";
-import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import type { AiEngineSettingsData } from "@app/components/shared/config/configSections/aiEngineSettings";
+import { StatusBadge, type StatusTone } from "@editor/ui/StatusBadge";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import type { AiEngineSettingsData } from "@editor/components/shared/config/configSections/aiEngineSettings";
 import {
   formatAge,
   healthOf,
   useAiEngineStatus,
   type AiEngineHealth,
-} from "@app/components/shared/config/configSections/ai/useAiEngineStatus";
+} from "@editor/components/shared/config/configSections/ai/useAiEngineStatus";
 
 interface AiStatusCardProps {
   settings: AiEngineSettingsData;

@@ -4,7 +4,7 @@
  * (typically a login screen).
  */
 import { type ReactNode } from "react";
-import { useAuth } from "@app/auth/context";
+import { useAuth } from "@editor/auth/context";
 
 export interface RequireAuthProps {
   children: ReactNode;

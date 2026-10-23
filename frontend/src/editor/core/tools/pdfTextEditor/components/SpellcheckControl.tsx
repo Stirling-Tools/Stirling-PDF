@@ -1,14 +1,14 @@
 import type { CSSProperties } from "react";
 import { Group, Select, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ToggleSwitch } from "@app/ui/ToggleSwitch";
+import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
 import {
   SPELLCHECK_AUTO,
   SPELLCHECK_LANGUAGES,
   setSpellcheckEnabled,
   setSpellcheckLang,
   useSpellcheckPreference,
-} from "@app/tools/pdfTextEditor/util/spellcheck";
+} from "@editor/tools/pdfTextEditor/util/spellcheck";
 
 interface SpellcheckControlProps {
   className?: string;

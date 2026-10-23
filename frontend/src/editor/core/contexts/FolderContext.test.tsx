@@ -1,17 +1,17 @@
 import React from "react";
 import { describe, expect, test, vi, beforeEach } from "vitest";
-import type { useAuth } from "@app/auth/UseSession";
+import type { useAuth } from "@editor/auth/UseSession";
 import { render, screen, waitFor, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
-import { FolderProvider, useFolders } from "@app/contexts/FolderContext";
+import { FolderProvider, useFolders } from "@editor/contexts/FolderContext";
 import {
   createFolderId,
   diskFolderId,
   FolderId,
   FolderRecord,
-} from "@app/types/folder";
-import { expectConsole } from "@app/tests/failOnConsole";
+} from "@editor/types/folder";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 /**
  * Regression test for the sync-banner 4xx gating fix in commit c38b646c5.
@@ -36,7 +36,7 @@ import { expectConsole } from "@app/tests/failOnConsole";
 const mockList = vi.fn();
 const mockUpdate = vi.fn();
 const mockDelete = vi.fn();
-vi.mock("@app/services/folderSyncService", () => ({
+vi.mock("@editor/services/folderSyncService", () => ({
   folderSyncService: {
     list: () => mockList(),
     create: vi.fn(),
@@ -54,7 +54,7 @@ const mockAuth = vi.hoisted<
   user: { id: "test-user", is_anonymous: false },
   isAnonymous: false,
 }));
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({
     user: mockAuth.user,
     isAnonymous: mockAuth.isAnonymous,
@@ -76,7 +76,7 @@ const { mockIdb } = vi.hoisted(() => ({
     reads: 0,
   },
 }));
-vi.mock("@app/services/folderStorage", () => ({
+vi.mock("@editor/services/folderStorage", () => ({
   folderStorage: {
     getAllFolders: vi.fn(async () => {
       const snapshot = [...mockIdb.folders];
@@ -109,7 +109,7 @@ vi.mock("@app/services/folderStorage", () => ({
 
 // The virtual store is exercised by its own suite (virtualFolderStorage.test);
 // here it only needs to exist and be empty so the merged load resolves.
-vi.mock("@app/services/virtualFolderStorage", () => ({
+vi.mock("@editor/services/virtualFolderStorage", () => ({
   virtualFolderStorage: {
     getAllFolders: vi.fn(() => Promise.resolve([])),
     createFolder: vi.fn(),
@@ -124,9 +124,11 @@ vi.mock("@app/services/virtualFolderStorage", () => ({
 const { mockLocal } = vi.hoisted(() => ({
   mockLocal: { folders: [] as unknown[] },
 }));
-vi.mock("@app/services/localFolderStorage", async (importOriginal) => {
+vi.mock("@editor/services/localFolderStorage", async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import("@app/services/localFolderStorage")>();
+    await importOriginal<
+      typeof import("@editor/services/localFolderStorage")
+    >();
   return {
     directoryKey: actual.directoryKey,
     localFolderStorage: {
@@ -137,7 +139,7 @@ vi.mock("@app/services/localFolderStorage", async (importOriginal) => {
   };
 });
 
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({
     clearFolderForFiles: vi.fn().mockResolvedValue(undefined),
   }),
@@ -146,7 +148,7 @@ vi.mock("@app/contexts/IndexedDBContext", () => ({
 // FolderProvider short-circuits pullFromServer when AppConfig says storage
 // is off. These tests are specifically about what happens when the pull
 // DOES fire and rejects, so we mock `storageEnabled = true`.
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({
     config: { storageEnabled: true, storageSharingEnabled: false },
   }),

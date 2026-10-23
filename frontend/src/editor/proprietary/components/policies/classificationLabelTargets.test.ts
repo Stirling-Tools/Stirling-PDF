@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { classificationLabelTargetStubs } from "@app/components/policies/usePolicyAutoRun";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import { classificationLabelTargetStubs } from "@editor/components/policies/usePolicyAutoRun";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 // Loosely-typed builder: FileId is a branded string, so accept plain string ids
 // in tests and cast — classificationLabelTargetStubs only reads id/parent/sources.

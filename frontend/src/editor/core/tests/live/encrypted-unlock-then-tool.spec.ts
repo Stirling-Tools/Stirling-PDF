@@ -1,10 +1,10 @@
-import { test } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import { test } from "@editor/tests/helpers/test-base";
+import { loginAndSetup } from "@editor/tests/helpers/login";
 import {
   switchToEditorIfViewerMode,
   runToolAndWaitForReview,
   waitForModalClose,
-} from "@app/tests/helpers/ui-helpers";
+} from "@editor/tests/helpers/ui-helpers";
 import path from "path";
 
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");

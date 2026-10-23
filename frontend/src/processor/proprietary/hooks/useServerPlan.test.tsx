@@ -6,9 +6,9 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { LicenseInfo } from "@app/types/license";
-import { BillingScreen } from "@app/billing/BillingScreen";
-import { freeWallet } from "@app/billing/walletFixtures";
+import type { LicenseInfo } from "@editor/types/license";
+import { BillingScreen } from "@editor/billing/BillingScreen";
+import { freeWallet } from "@editor/billing/walletFixtures";
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (_key: string, fallback?: string, vars?: Record<string, unknown>) =>
@@ -21,13 +21,13 @@ const state = vi.hoisted(() => ({
   licenseInfo: null as LicenseInfo | null,
   fetchUsers: vi.fn(),
 }));
-vi.mock("@app/contexts/LicenseContext", () => ({
+vi.mock("@editor/contexts/LicenseContext", () => ({
   useLicense: () => ({ licenseInfo: state.licenseInfo, loading: false }),
 }));
-vi.mock("@app/portal/usersBackend", () => ({
+vi.mock("@editor/portal/usersBackend", () => ({
   usersBackend: { fetchUsers: state.fetchUsers },
 }));
-import { useServerPlan } from "@portal/hooks/useServerPlan";
+import { useServerPlan } from "@processor/hooks/useServerPlan";
 
 describe("local licence entitlements", () => {
   beforeEach(() => {

@@ -1,11 +1,13 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { waitFor } from "@testing-library/react";
 const mocks = vi.hoisted(() => ({ post: vi.fn(), session: vi.fn() }));
-vi.mock("@app/services/apiClient", () => ({ default: { post: mocks.post } }));
-vi.mock("@app/services/serverAutomationSession", () => ({
+vi.mock("@editor/services/apiClient", () => ({
+  default: { post: mocks.post },
+}));
+vi.mock("@editor/services/serverAutomationSession", () => ({
   getServerAutomationSession: mocks.session,
 }));
-import { meterAutomationRun } from "@app/services/automationMeter";
+import { meterAutomationRun } from "@editor/services/automationMeter";
 const payload = {
   automationName: "Classification",
   operations: ["classify"],

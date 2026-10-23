@@ -14,11 +14,11 @@ const files = {
   ],
 };
 
-vi.mock("@app/contexts/ViewerContext", () => ({ useViewer: () => viewer }));
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({ useViewer: () => viewer }));
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationState: () => ({ workbench: "viewer" }),
 }));
-vi.mock("@app/contexts/FileContext", () => ({ useAllFiles: () => files }));
+vi.mock("@editor/contexts/FileContext", () => ({ useAllFiles: () => files }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (_key: string, fallback?: string, values?: Record<string, unknown>) =>
@@ -28,7 +28,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import RotateSettings from "@app/components/tools/rotate/RotateSettings";
+import RotateSettings from "@editor/components/tools/rotate/RotateSettings";
 
 const parameters = {
   parameters: { angle: 0 },

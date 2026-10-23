@@ -11,7 +11,7 @@ import {
   updateRun,
   resetPolicyRuns,
   type PolicyRunRecord,
-} from "@app/components/policies/policyRunStore";
+} from "@editor/components/policies/policyRunStore";
 
 function rec(over: Partial<PolicyRunRecord>): PolicyRunRecord {
   return {
@@ -54,7 +54,7 @@ describe("policyRunStore", () => {
     );
     vi.resetModules();
 
-    const fresh = await import("@app/components/policies/policyRunStore");
+    const fresh = await import("@editor/components/policies/policyRunStore");
 
     expect(fresh.getRun("r1")?.policyKey).toBe("security");
   });

@@ -7,7 +7,7 @@
 //
 // targets.json shape: [{ "id":"compress", "url":"/compress", "name":"Compress",
 //                        "needsFile": true }]
-import { test } from "@app/tests/helpers/stub-test-base";
+import { test } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";

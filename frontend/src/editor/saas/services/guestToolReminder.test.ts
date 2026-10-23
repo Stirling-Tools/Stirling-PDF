@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { recordGuestToolRun } from "@app/services/guestToolReminder";
+import { recordGuestToolRun } from "@editor/services/guestToolReminder";
 
 describe("guest tool signup reminders", () => {
   beforeEach(() => {
@@ -16,7 +16,7 @@ describe("guest tool signup reminders", () => {
   it("persists the cadence across a fresh module load", async () => {
     expect(recordGuestToolRun("reload")).toBe(false);
     vi.resetModules();
-    const reloaded = await import("@app/services/guestToolReminder");
+    const reloaded = await import("@editor/services/guestToolReminder");
     expect(reloaded.recordGuestToolRun("reload")).toBe(true);
   });
 

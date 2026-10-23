@@ -1,5 +1,5 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { assertSavedPdf } from "@app/tools/pdfTextEditor/util/savedBytes";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { assertSavedPdf } from "@editor/tools/pdfTextEditor/util/savedBytes";
 
 /** `FPDF_SaveAsCopy` flags. */
 const FPDF_INCREMENTAL = 1;

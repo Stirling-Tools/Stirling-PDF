@@ -1,4 +1,4 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 
 // Derived server-side from whatever produces them, so this client knows nothing about failures.
 const NOTIFICATIONS_PATH = "/api/v1/notifications";

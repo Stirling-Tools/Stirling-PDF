@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { Avatar, column, DataTable, type DataTableColumn } from "@app/ui";
-import type { PendingInvitation } from "@portal/api/users";
+import { Avatar, column, DataTable, type DataTableColumn } from "@editor/ui";
+import type { PendingInvitation } from "@processor/api/users";
 
 interface PendingInvitationsProps {
   invitations: PendingInvitation[];

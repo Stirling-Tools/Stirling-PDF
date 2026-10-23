@@ -1,9 +1,9 @@
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
-vi.mock("@app/constants/app", () => ({
+vi.mock("@editor/constants/app", () => ({
   withBasePath: (path: string) => "/app" + path,
   stripBasePath: (path: string) => path.replace(/^\/app/, ""),
 }));
-import { redirectToLogin } from "@app/auth/redirectToLogin";
+import { redirectToLogin } from "@editor/auth/redirectToLogin";
 let href: string;
 beforeEach(() => {
   href = "";

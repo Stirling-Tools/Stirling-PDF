@@ -5,12 +5,12 @@
  */
 // Imported as a raw string (not a JSON module) so tsc doesn't infer a ~half-MB
 // literal type; parsed once here into the typed manifest.
-import manifestRaw from "@app/generated/docsManifest.json?raw";
+import manifestRaw from "@editor/generated/docsManifest.json?raw";
 import type {
   DocEntry,
   DocsManifest,
   DocsNavSection,
-} from "@app/docs/manifest/transform";
+} from "@editor/docs/manifest/transform";
 
 const manifest = JSON.parse(manifestRaw) as DocsManifest;
 

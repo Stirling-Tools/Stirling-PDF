@@ -1,20 +1,23 @@
 import i18n from "i18next";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type {
   ParagraphLineSlot,
   TextRun,
-} from "@app/tools/pdfTextEditor/model/TextRun";
+} from "@editor/tools/pdfTextEditor/model/TextRun";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { readUtf16 } from "@app/services/pdfiumService";
-import { rotationFromMatrix } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import { readUtf16 } from "@editor/services/pdfiumService";
+import { rotationFromMatrix } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import {
   endsWithSpace,
   groupWords,
   type Word as GenericWord,
-} from "@app/tools/pdfTextEditor/util/wordGrouping";
+} from "@editor/tools/pdfTextEditor/util/wordGrouping";
 
 /** Reflow a text run's EXISTING glyph objects to fit within `maxWidthPt`. */
 

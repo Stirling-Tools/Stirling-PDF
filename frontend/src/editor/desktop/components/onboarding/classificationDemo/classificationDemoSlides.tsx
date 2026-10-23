@@ -2,18 +2,18 @@
  *  belongs to {@link OnboardingSlideShell}. */
 
 import { useEffect, useState } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { ShellHero } from "@app/components/onboarding/OnboardingSlideShell";
-import { BrandMark } from "@app/components/shared/BrandMark";
+import { ShellHero } from "@editor/components/onboarding/OnboardingSlideShell";
+import { BrandMark } from "@editor/components/shared/BrandMark";
 import {
   CLASSIFICATION_DEMO_BATCH_SIZE,
   groupColour,
   type ClassificationDemoGroupCount,
   type ClassificationDemoPhase,
   type ClassificationDemoProgress,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSweep";
-import styles from "@app/components/onboarding/classificationDemo/classificationDemo.module.css";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSweep";
+import styles from "@editor/components/onboarding/classificationDemo/classificationDemo.module.css";
 
 export function DefaultAppHero() {
   return <ShellHero appIcon />;

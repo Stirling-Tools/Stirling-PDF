@@ -1,12 +1,12 @@
-import { estimatedBillWithPending } from "@app/billing/pendingUsage";
+import { estimatedBillWithPending } from "@editor/billing/pendingUsage";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button } from "@app/ui";
-import { meterState } from "@app/billing";
-import type { Wallet } from "@portal/api/billing";
-import { useStripePortal } from "@portal/hooks/useStripePortal";
-import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
-import { SpendLimitModal } from "@portal/components/billing/SpendLimitModal";
+import { Banner, Button } from "@editor/ui";
+import { meterState } from "@editor/billing";
+import type { Wallet } from "@processor/api/billing";
+import { useStripePortal } from "@processor/hooks/useStripePortal";
+import { BundleCheckoutModal } from "@processor/components/billing/BundleCheckoutModal";
+import { SpendLimitModal } from "@processor/components/billing/SpendLimitModal";
 
 interface Props {
   wallet: Wallet;

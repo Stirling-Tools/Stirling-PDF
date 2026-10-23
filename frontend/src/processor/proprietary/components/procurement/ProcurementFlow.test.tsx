@@ -4,21 +4,21 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { it, expect, vi } from "vitest";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { UIProvider, useUI } from "@app/portal/contexts/UIContext";
-import { LinkProvider } from "@app/portal/contexts/LinkContext";
-import { ProcurementFlow } from "@app/portal/components/procurement/ProcurementFlow";
-import { useProcurement } from "@app/portal/components/procurement/useProcurement";
-import { LinkAccountModal } from "@app/portal/components/account-link/LinkAccountModal";
+import { UIProvider, useUI } from "@editor/portal/contexts/UIContext";
+import { LinkProvider } from "@editor/portal/contexts/LinkContext";
+import { ProcurementFlow } from "@editor/portal/components/procurement/ProcurementFlow";
+import { useProcurement } from "@editor/portal/components/procurement/useProcurement";
+import { LinkAccountModal } from "@editor/portal/components/account-link/LinkAccountModal";
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, fallback?: string) => fallback ?? key,
     i18n: { language: "en-US" },
   }),
 }));
-vi.mock("@app/portal/hooks/useLinkedAccountEmail", () => ({
+vi.mock("@editor/portal/hooks/useLinkedAccountEmail", () => ({
   useLinkedAccountEmail: () => null,
 }));
-vi.mock("@app/portal/hooks/useConnectHandoff", () => ({
+vi.mock("@editor/portal/hooks/useConnectHandoff", () => ({
   useConnectHandoff: () => ({ busy: false, error: null, begin: vi.fn() }),
 }));
 function Flow() {

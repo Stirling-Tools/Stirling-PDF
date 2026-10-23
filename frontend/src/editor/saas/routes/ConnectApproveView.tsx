@@ -1,9 +1,9 @@
 import { useState, type ReactNode } from "react";
-import { useTranslation } from "@app/hooks/useTranslation";
-import { Banner, Button, Checkbox, Spinner } from "@app/ui";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { StepModalHeader } from "@app/portal/components/shared/StepModalHeader";
+import { useTranslation } from "@editor/hooks/useTranslation";
+import { Banner, Button, Checkbox, Spinner } from "@editor/ui";
+import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { StepModalHeader } from "@editor/portal/components/shared/StepModalHeader";
 
 /**
  * This page is step 2 of a flow that started on the instance, so it wears the same chrome: the admin

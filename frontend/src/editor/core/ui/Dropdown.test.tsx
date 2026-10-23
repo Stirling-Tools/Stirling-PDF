@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { Dropdown } from "@app/ui/Dropdown";
+import { Dropdown } from "@editor/ui/Dropdown";
 
 beforeEach(() => {
   vi.stubGlobal(

@@ -1,9 +1,9 @@
-import { isConditionComplete } from "@app/conditions/validation";
+import { isConditionComplete } from "@editor/conditions/validation";
 import {
   classificationCondition,
   documentFieldCondition,
   requiresClassification,
-} from "@app/data/classificationConditions";
+} from "@editor/data/classificationConditions";
 import {
   Fragment,
   useCallback,
@@ -14,16 +14,16 @@ import {
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Banner, Button, Card, Modal, ToggleSwitch } from "@app/ui";
-import { SettingsRow } from "@app/ui/SettingsRow";
-import { EnforceAsPolicyControl } from "@app/components/policies/EnforceAsPolicyControl";
+import { Icon } from "@editor/ui/Icon";
+import { Banner, Button, Card, Modal, ToggleSwitch } from "@editor/ui";
+import { SettingsRow } from "@editor/ui/SettingsRow";
+import { EnforceAsPolicyControl } from "@editor/components/policies/EnforceAsPolicyControl";
 import {
   humanizeEndpoint,
   type CatalogueEntry,
   type PipelineStep,
   type PolicySetupResult,
-} from "@app/policies/catalog";
+} from "@editor/policies/catalog";
 import {
   policyEndpoint,
   policyStepFromWire,
@@ -31,16 +31,19 @@ import {
   type PolicyParams,
   type PolicyToolId,
   type PolicyToolStep,
-} from "@app/policies/operations";
-import { resolveRunOn } from "@app/policies/runOn";
-import type { WireRoutingRule, WireTriggerConfig } from "@app/policies/types";
-import { PolicyCategoryBadge } from "@app/components/policies/PolicyCategoryBadge";
-import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
-import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
-import { PolicyPdfaConfig } from "@app/components/policies/PolicyPdfaConfig";
-import { ClassificationLabelsSection } from "@app/components/policies/ClassificationLabelsSection";
-import { useAiClassificationEnabled } from "@app/hooks/useAiClassificationEnabled";
-import "@app/components/policies/PolicySetupWizard.css";
+} from "@editor/policies/operations";
+import { resolveRunOn } from "@editor/policies/runOn";
+import type {
+  WireRoutingRule,
+  WireTriggerConfig,
+} from "@editor/policies/types";
+import { PolicyCategoryBadge } from "@editor/components/policies/PolicyCategoryBadge";
+import { PolicyRedactConfig } from "@editor/components/policies/PolicyRedactConfig";
+import { PolicyWatermarkConfig } from "@editor/components/policies/PolicyWatermarkConfig";
+import { PolicyPdfaConfig } from "@editor/components/policies/PolicyPdfaConfig";
+import { ClassificationLabelsSection } from "@editor/components/policies/ClassificationLabelsSection";
+import { useAiClassificationEnabled } from "@editor/hooks/useAiClassificationEnabled";
+import "@editor/components/policies/PolicySetupWizard.css";
 
 /** What a host frame needs to wrap the form: the middle content plus submit state. */
 export interface PolicySetupFrame {

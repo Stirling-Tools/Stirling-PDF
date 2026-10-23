@@ -8,7 +8,7 @@ const state = vi.hoisted(() => ({
   unsubscribe: vi.fn(),
   listener: null as ((event: string, session: EmailSession) => void) | null,
 }));
-vi.mock("@app/portal/auth/saasSupabase", () => ({
+vi.mock("@editor/portal/auth/saasSupabase", () => ({
   ensureSaasSupabase: () =>
     state.configured
       ? {
@@ -27,11 +27,11 @@ vi.mock("@app/portal/auth/saasSupabase", () => ({
       : null,
 }));
 
-import { useLinkedAccountEmail } from "@app/portal/hooks/useLinkedAccountEmail";
+import { useLinkedAccountEmail } from "@editor/portal/hooks/useLinkedAccountEmail";
 import {
   portalSaasSessionRestored,
   resetPortalSaasSessionState,
-} from "@app/portal/auth/portalSaasSession";
+} from "@editor/portal/auth/portalSaasSession";
 
 describe("Current SaaS email", () => {
   beforeEach(() => {

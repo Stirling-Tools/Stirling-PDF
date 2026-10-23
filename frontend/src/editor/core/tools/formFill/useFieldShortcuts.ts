@@ -3,13 +3,13 @@
  */
 import { useEffect, useRef } from "react";
 
-import { useFormFill } from "@app/tools/formFill/FormFillContext";
-import { isTextEntryTarget } from "@app/tools/formFill/usePageScale";
+import { useFormFill } from "@editor/tools/formFill/FormFillContext";
+import { isTextEntryTarget } from "@editor/tools/formFill/usePageScale";
 import {
   pendingIdFrom,
   pendingSelectionName,
-} from "@app/tools/formFill/pendingSelection";
-import type { NewFieldDefinition } from "@app/tools/formFill/types";
+} from "@editor/tools/formFill/pendingSelection";
+import type { NewFieldDefinition } from "@editor/tools/formFill/types";
 
 /** Enough offset that the copy is visibly its own field rather than hiding the original. */
 const PASTE_OFFSET_PT = 12;

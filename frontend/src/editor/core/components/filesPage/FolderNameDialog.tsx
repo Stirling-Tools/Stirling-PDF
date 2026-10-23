@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Group, Modal, Stack, TextInput } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui/Button";
 
 interface FolderNameDialogProps {
   opened: boolean;

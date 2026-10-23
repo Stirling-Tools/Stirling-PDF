@@ -1,7 +1,7 @@
 import { useLayoutEffect } from "react";
 import { useExportCapability } from "@embedpdf/plugin-export/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 
 /** Supply originalFile for protected, read-only documents: native export can remove their encryption. */
 export function ExportAPIBridge({

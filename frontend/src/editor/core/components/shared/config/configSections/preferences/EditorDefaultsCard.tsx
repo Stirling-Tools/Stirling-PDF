@@ -1,15 +1,15 @@
 import { useId } from "react";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { Paper, Select, Stack, Switch, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { usePreferences } from "@app/contexts/PreferencesContext";
-import type { ToolPanelMode } from "@app/constants/toolPanel";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import type { ToolPanelMode } from "@editor/constants/toolPanel";
 import {
   type StartupView,
   type ViewerZoomSetting,
-} from "@app/services/preferencesService";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+} from "@editor/services/preferencesService";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 /** What the editor opens with, and which tools it bothers to list. */
 export function EditorDefaultsCard() {

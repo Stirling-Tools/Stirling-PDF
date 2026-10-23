@@ -1,18 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Text, Checkbox, Stack, Loader, Tooltip } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { SidebarBase } from "@app/components/viewer/SidebarBase";
-import "@app/components/viewer/LayerSidebar.css";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { SidebarBase } from "@editor/components/viewer/SidebarBase";
+import "@editor/components/viewer/LayerSidebar.css";
 import {
   readPdfLayers,
   applyOCGVisibilityToPdf,
   collectLeafIds,
-} from "@app/components/viewer/layerUtils";
+} from "@editor/components/viewer/layerUtils";
 
-import type { LayerInfo } from "@app/components/viewer/layerUtils";
+import type { LayerInfo } from "@editor/components/viewer/layerUtils";
 export type { LayerInfo };
 
 interface LayerSidebarProps {

@@ -1,23 +1,23 @@
 import React, { useCallback, useMemo } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Checkbox } from "@app/ui/Checkbox";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Tooltip } from "@app/components/shared/Tooltip";
+import { Icon } from "@editor/ui/Icon";
+import { Checkbox } from "@editor/ui/Checkbox";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import HoverActionMenu, {
   HoverAction,
-} from "@app/components/shared/HoverActionMenu";
-import { useIsMobile } from "@app/hooks/useIsMobile";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { FileId } from "@app/types/file";
-import { TrackPage } from "@app/components/pageTracks/types";
+} from "@editor/components/shared/HoverActionMenu";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { FileId } from "@editor/types/file";
+import { TrackPage } from "@editor/components/pageTracks/types";
 import {
   TrackThumbnailStore,
   useTrackThumbnail,
-} from "@app/components/pageTracks/hooks/useTrackThumbnails";
-import styles from "@app/components/pageTracks/PageTracks.module.css";
-import { BlankPagePreview } from "@app/components/pageTracks/BlankPagePreview";
+} from "@editor/components/pageTracks/hooks/useTrackThumbnails";
+import styles from "@editor/components/pageTracks/PageTracks.module.css";
+import { BlankPagePreview } from "@editor/components/pageTracks/BlankPagePreview";
 
 export const pageDroppableId = (pageId: string) => `page:${pageId}`;
 

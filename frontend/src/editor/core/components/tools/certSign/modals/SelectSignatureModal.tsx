@@ -1,12 +1,12 @@
 import { Modal, Stack, Text, Group, Box } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import {
   useSavedSignatures,
   SavedSignature,
-} from "@app/hooks/tools/sign/useSavedSignatures";
-import { Icon } from "@app/ui/Icon";
+} from "@editor/hooks/tools/sign/useSavedSignatures";
+import { Icon } from "@editor/ui/Icon";
 interface SelectSignatureModalProps {
   opened: boolean;
   onClose: () => void;

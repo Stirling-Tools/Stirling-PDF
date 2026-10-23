@@ -2,9 +2,9 @@ import { createRef } from "react";
 import { MantineProvider } from "@mantine/core";
 import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { TypeSignaturePanel } from "@app/components/tools/sign/createSignature/TypeSignaturePanel";
-import type { TypePanelHandle } from "@app/components/tools/sign/createSignature/types";
-import { renderTypedSignature } from "@app/utils/signatureImage";
+import { TypeSignaturePanel } from "@editor/components/tools/sign/createSignature/TypeSignaturePanel";
+import type { TypePanelHandle } from "@editor/components/tools/sign/createSignature/types";
+import { renderTypedSignature } from "@editor/utils/signatureImage";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -12,7 +12,7 @@ vi.mock("react-i18next", () => ({
       typeof fallback === "string" ? fallback : key,
   }),
 }));
-vi.mock("@app/utils/signatureImage", () => ({
+vi.mock("@editor/utils/signatureImage", () => ({
   deriveInitials: (name: string) =>
     name
       .split(" ")

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { AuthenticationSection } from "@portal/components/docs/AuthenticationSection";
-import "@core/components/docs/DeveloperDocs.css";
+import { AuthenticationSection } from "@processor/components/docs/AuthenticationSection";
+import "@editor-core/components/docs/DeveloperDocs.css";
 
 const meta: Meta<typeof AuthenticationSection> = {
   title: "Portal/DeveloperDocs/AuthenticationSection",

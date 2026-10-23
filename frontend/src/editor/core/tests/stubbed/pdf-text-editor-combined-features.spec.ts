@@ -1,10 +1,10 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type {
   EditorMatrix,
   EditorTestWindow,
-} from "@app/tests/stubbed/editorTestTypes";
+} from "@editor/tests/stubbed/editorTestTypes";
 
 // Combined-feature regression suite: the new editor features AND their
 // interaction with the 12 bug fixes.

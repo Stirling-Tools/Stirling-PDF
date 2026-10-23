@@ -1,11 +1,11 @@
 import { useState } from "react";
 import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AllToolsNavButton from "@app/components/shared/AllToolsNavButton";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { NavigationProvider } from "@app/contexts/NavigationContext";
-import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
+import AllToolsNavButton from "@editor/components/shared/AllToolsNavButton";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { NavigationProvider } from "@editor/contexts/NavigationContext";
+import { ToolWorkflowProvider } from "@editor/contexts/ToolWorkflowContext";
 
 /**
  * The button reads/writes tool selection and panel state via ToolWorkflowContext,
