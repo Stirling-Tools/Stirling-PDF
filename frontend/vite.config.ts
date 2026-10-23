@@ -12,6 +12,8 @@ import type { PreRenderedAsset } from "rollup";
 import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
+// oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
+import { posthogSourcemapPlugin } from "./scripts/posthogSourcemaps.mts";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const gzipPromise = promisify(gzip);
@@ -580,6 +582,7 @@ export default defineConfig(async ({ mode, command }) => {
       tsconfigPaths({
         projects: [tsconfigProject],
       }),
+      posthogSourcemapPlugin(),
       // Desktop/mobile output is embedded in the Tauri binary, which brotli-
       // compresses every asset itself and never negotiates encodings, so the
       // .br/.gz siblings would only add their full size (tens of MB) to the
