@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import {
   getPdfiumModule,
   openRawDocumentSafe,
@@ -8,23 +8,23 @@ import {
   degreesToPdfiumRotation,
   saveRawDocument,
   closeDocAndFreeBuffer,
-} from "@app/services/pdfiumService";
+} from "@editor/services/pdfiumService";
 import {
   useToolOperation,
   defineCustomTool,
   CustomProcessorResult,
   ToolOperationHook,
-} from "@app/hooks/tools/shared/useToolOperation";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import type {
   ToolApiParams,
   ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
+} from "@editor/hooks/tools/shared/toolApiMapping";
 import {
   AutoRotateParameters,
   defaultParameters,
   validateAutoRotateParameters,
-} from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
+} from "@editor/hooks/tools/autoRotate/useAutoRotateParameters";
 
 export const AUTO_ROTATE_ENDPOINT =
   "/api/v1/misc/auto-rotate-pdf" satisfies ToolEndpoint;

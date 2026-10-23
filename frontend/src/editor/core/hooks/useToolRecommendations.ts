@@ -5,13 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import {
   fetchToolRecommendations,
   type ToolRecommendationDto,
-} from "@app/api/toolRecommendations";
-import { qk } from "@app/query/keys";
+} from "@editor/api/toolRecommendations";
+import { qk } from "@editor/query/keys";
 import {
   getCompletionCount,
   subscribeToToolCompletions,
-} from "@app/services/toolUsageTracker";
-import { ToolId } from "@app/types/toolId";
+} from "@editor/services/toolUsageTracker";
+import { ToolId } from "@editor/types/toolId";
 
 const RECOMMENDATIONS_STALE_TIME = 2 * 60 * 1000;
 

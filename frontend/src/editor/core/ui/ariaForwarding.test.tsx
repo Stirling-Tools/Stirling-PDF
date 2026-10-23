@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { render } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { Select } from "@app/ui/Select";
-import { MultiSelect } from "@app/ui/MultiSelect";
-import { NumberInput } from "@app/ui/NumberInput";
-import { ColorInput } from "@app/ui/ColorInput";
-import { Slider } from "@app/ui/Slider";
+import { Select } from "@editor/ui/Select";
+import { MultiSelect } from "@editor/ui/MultiSelect";
+import { NumberInput } from "@editor/ui/NumberInput";
+import { ColorInput } from "@editor/ui/ColorInput";
+import { Slider } from "@editor/ui/Slider";
 
 // Guards the FormField contract on the Mantine-backed components: the
 // injected required / aria-describedby / aria-invalid wiring must reach the

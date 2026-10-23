@@ -3,15 +3,15 @@ import {
   PdfiumFont,
   PdfiumImage,
   PdfiumPage,
-} from "@app/services/pdfiumDocBuilder";
-import { SignatureValidationReportEntry } from "@app/types/validateSignature";
-import { drawFieldBox } from "@app/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection";
+} from "@editor/services/pdfiumDocBuilder";
+import { SignatureValidationReportEntry } from "@editor/types/validateSignature";
+import { drawFieldBox } from "@editor/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection";
 import {
   drawThumbnailImage,
   drawThumbnailPlaceholder,
-} from "@app/hooks/tools/validateSignature/outputtedPDFSections/ThumbnailSection";
-import { colorPalette } from "@app/hooks/tools/validateSignature/utils/pdfPalette";
-import { formatFileSize } from "@app/hooks/tools/validateSignature/utils/pdfText";
+} from "@editor/hooks/tools/validateSignature/outputtedPDFSections/ThumbnailSection";
+import { colorPalette } from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
+import { formatFileSize } from "@editor/hooks/tools/validateSignature/utils/pdfText";
 
 interface DrawSummarySectionOptions {
   page: PdfiumPage;

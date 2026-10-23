@@ -16,18 +16,18 @@ import {
   type SubcategoryId,
   type ToolRegistry,
   type ToolRegistryEntry,
-} from "@app/data/toolsTaxonomy";
-import { type ToolId } from "@app/types/toolId";
-import { TOOL_FILE_FIELDS } from "@app/types/toolApiTypes";
+} from "@editor/data/toolsTaxonomy";
+import { type ToolId } from "@editor/types/toolId";
+import { TOOL_FILE_FIELDS } from "@editor/types/toolApiTypes";
 import {
   isToolEndpoint,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
+} from "@editor/hooks/tools/shared/toolApiMapping";
 import {
   ToolType,
   type ErasedToolParams,
   type RegistryToolOperationConfig,
-} from "@app/hooks/tools/shared/toolOperationTypes";
+} from "@editor/hooks/tools/shared/toolOperationTypes";
 
 /**
  * How much of a tool's parameters a UI can edit when composing a backend step:

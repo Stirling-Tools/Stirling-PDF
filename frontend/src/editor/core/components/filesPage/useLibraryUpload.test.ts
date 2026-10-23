@@ -1,7 +1,7 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useLibraryUpload } from "@app/components/filesPage/useLibraryUpload";
-import type { FolderId, FolderRecord } from "@app/types/folder";
+import { useLibraryUpload } from "@editor/components/filesPage/useLibraryUpload";
+import type { FolderId, FolderRecord } from "@editor/types/folder";
 
 const mocks = vi.hoisted(() => ({
   addFiles: vi.fn(),
@@ -25,16 +25,16 @@ const mocks = vi.hoisted(() => ({
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
-vi.mock("@app/contexts/FolderContext", () => ({
+vi.mock("@editor/contexts/FolderContext", () => ({
   useFolders: () => mocks.folders,
 }));
-vi.mock("@app/contexts/FilesPageContext", () => ({
+vi.mock("@editor/contexts/FilesPageContext", () => ({
   useFilesPage: () => mocks.library,
 }));
-vi.mock("@app/hooks/useFileHandler", () => ({
+vi.mock("@editor/hooks/useFileHandler", () => ({
   useFileHandler: () => ({ addFiles: mocks.addFiles }),
 }));
-vi.mock("@app/services/mountWrites", () => ({
+vi.mock("@editor/services/mountWrites", () => ({
   writeIntoMount: mocks.writeIntoMount,
 }));
 

@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { MeterRow } from "@app/billing/MeterRow";
-import type { ServerPlan } from "@app/billing/serverPlan";
-import type { Wallet } from "@app/billing/types";
-import { SeatBreakdown } from "@app/billing/SeatBreakdown";
-import { fleetUsersInUse } from "@app/billing/fleetSeats";
-import type { LegacyTeamAllowance } from "@app/types/legacyBilling";
+import { MeterRow } from "@editor/billing/MeterRow";
+import type { ServerPlan } from "@editor/billing/serverPlan";
+import type { Wallet } from "@editor/billing/types";
+import { SeatBreakdown } from "@editor/billing/SeatBreakdown";
+import { fleetUsersInUse } from "@editor/billing/fleetSeats";
+import type { LegacyTeamAllowance } from "@editor/types/legacyBilling";
 
 /**
  * The Team product, as a row: users against the capacity the plan covers.

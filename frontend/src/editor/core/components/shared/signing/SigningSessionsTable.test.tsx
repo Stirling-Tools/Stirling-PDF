@@ -2,8 +2,11 @@ import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
-import { SigningSessionsTable } from "@app/components/shared/signing/SigningSessionsTable";
-import { collectSigningItems, type SigningItem } from "@app/utils/signingItems";
+import { SigningSessionsTable } from "@editor/components/shared/signing/SigningSessionsTable";
+import {
+  collectSigningItems,
+  type SigningItem,
+} from "@editor/utils/signingItems";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

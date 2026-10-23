@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
+import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
 
 const mockFile = new File(["dummy content"], "sample-report.pdf", {
   type: "application/pdf",

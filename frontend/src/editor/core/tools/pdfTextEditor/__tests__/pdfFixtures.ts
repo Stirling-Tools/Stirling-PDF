@@ -1,6 +1,6 @@
 // Hand-assembled PDFs for the raw-PDF tests: small enough to reason about
 // byte by byte, where a library fixture would hide the structural variation.
-import { fromLatin1 } from "@app/tools/pdfTextEditor/pdfdoc/bytes";
+import { fromLatin1 } from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
 
 export interface FixtureObject {
   num: number;

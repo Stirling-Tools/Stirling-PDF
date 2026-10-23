@@ -9,17 +9,17 @@ import {
   Tooltip,
   Box,
 } from "@mantine/core";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import SliderWithInput from "@app/components/shared/sliderWithInput/SliderWithInput";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import SliderWithInput from "@editor/components/shared/sliderWithInput/SliderWithInput";
 import { useTranslation } from "react-i18next";
 import {
   CompressParameters,
   MAX_COMPRESSION_LEVEL,
   MIN_COMPRESSION_LEVEL,
-} from "@app/hooks/tools/compress/useCompressParameters";
-import ButtonSelector from "@app/components/shared/ButtonSelector";
-import { useGroupEnabled } from "@app/hooks/useGroupEnabled";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+} from "@editor/hooks/tools/compress/useCompressParameters";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
+import { useGroupEnabled } from "@editor/hooks/useGroupEnabled";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface CompressSettingsProps {
   parameters: CompressParameters;

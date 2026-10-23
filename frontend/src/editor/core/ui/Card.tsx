@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import "@app/ui/Surface.css";
-import "@app/ui/Card.css";
+import "@editor/ui/Surface.css";
+import "@editor/ui/Card.css";
 
 /** Subset of the shared accent dial that has a styled strip (see Card.css). */
 export type CardAccent =

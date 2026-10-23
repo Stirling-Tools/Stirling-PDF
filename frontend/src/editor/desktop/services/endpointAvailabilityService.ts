@@ -1,5 +1,5 @@
 import { fetch } from "@tauri-apps/plugin-http";
-import { STIRLING_SAAS_BACKEND_API_URL } from "@app/constants/connection";
+import { STIRLING_SAAS_BACKEND_API_URL } from "@editor/constants/connection";
 
 /**
  * Service for checking endpoint availability on the local bundled backend.

@@ -1,11 +1,11 @@
 import { useMemo, useRef } from "react";
-import { usePolicyRuns } from "@app/components/policies/policyRunStore";
-import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
-import { useAllFiles } from "@app/contexts/FileContext";
-import { loadPolicyCatalog } from "@app/services/policyCatalog";
-import { policyAccentVar } from "@app/components/policies/policyStatus";
-import { isClassificationPolicy } from "@app/data/classificationPolicy";
-import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
+import { usePolicyRuns } from "@editor/components/policies/policyRunStore";
+import type { PolicyRunRecord } from "@editor/components/policies/policyRunStore";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import { loadPolicyCatalog } from "@editor/services/policyCatalog";
+import { policyAccentVar } from "@editor/components/policies/policyStatus";
+import { isClassificationPolicy } from "@editor/data/classificationPolicy";
+import type { FileItemPolicyRef } from "@editor/components/shared/PolicyBadges";
 
 /** Minimal provenance shape needed to resolve a file's inherited badges. */
 type LineageStub = {
@@ -168,7 +168,7 @@ export function reusePolicyBadgeArrays(
  * Distinct policies that have produced each file, keyed by fileId, derived from
  * the reactive policy run store. Drives the file sidebar's shield badges. The
  * badge follows a document down its tool-edit chain — see
- * {@link buildPolicyBadgeMap}. Shadows the core stub via the {@code @app/*}
+ * {@link buildPolicyBadgeMap}. Shadows the core stub via the {@code @editor/*}
  * alias cascade.
  *
  * Per-file array identity is preserved across rebuilds so memoized consumers

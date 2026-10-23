@@ -1,10 +1,10 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useFolders } from "@app/contexts/FolderContext";
-import { useFilesPage } from "@app/contexts/FilesPageContext";
-import { useFileHandler } from "@app/hooks/useFileHandler";
-import { writeIntoMount } from "@app/services/mountWrites";
-import { folderKind } from "@app/types/folder";
+import { useFolders } from "@editor/contexts/FolderContext";
+import { useFilesPage } from "@editor/contexts/FilesPageContext";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
+import { writeIntoMount } from "@editor/services/mountWrites";
+import { folderKind } from "@editor/types/folder";
 
 /** Imports into the current folder without opening the editor; root imports appear in Recents. */
 export function useLibraryUpload() {

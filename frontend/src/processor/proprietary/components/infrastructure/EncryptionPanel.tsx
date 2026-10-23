@@ -10,8 +10,8 @@ import {
   Skeleton,
   StatTile,
   StatusBadge,
-} from "@app/ui";
-import { errorMessage } from "@portal/api/http";
+} from "@editor/ui";
+import { errorMessage } from "@processor/api/http";
 import {
   disableEncryptionKey,
   enableEncryptionKey,
@@ -27,16 +27,16 @@ import {
   type EncryptionKeyInfo,
   type MigrationStatus,
   type StorageEncryptionStatus,
-} from "@portal/api/storageEncryption";
-import { qk } from "@portal/queries/keys";
-import { useFoldPoll } from "@app/query/useFoldPoll";
-import { InfoHint } from "@portal/components/InfoHint";
-import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
-import { EncryptionKeyTable } from "@portal/components/infrastructure/EncryptionKeyTable";
-import { EncryptionMigrationCard } from "@portal/components/infrastructure/EncryptionMigrationCard";
-import { EncryptionRotationCard } from "@portal/components/infrastructure/EncryptionRotationCard";
-import "@portal/components/infrastructure/infrastructure.css";
-import "@portal/components/infrastructure/EncryptionPanel.css";
+} from "@processor/api/storageEncryption";
+import { qk } from "@processor/queries/keys";
+import { useFoldPoll } from "@editor/query/useFoldPoll";
+import { InfoHint } from "@processor/components/InfoHint";
+import { SectionHeader } from "@processor/components/infrastructure/SectionHeader";
+import { EncryptionKeyTable } from "@processor/components/infrastructure/EncryptionKeyTable";
+import { EncryptionMigrationCard } from "@processor/components/infrastructure/EncryptionMigrationCard";
+import { EncryptionRotationCard } from "@processor/components/infrastructure/EncryptionRotationCard";
+import "@processor/components/infrastructure/infrastructure.css";
+import "@processor/components/infrastructure/EncryptionPanel.css";
 
 /** How often to re-read migration progress while a run is going. */
 const MIGRATION_POLL_MS = 2000;

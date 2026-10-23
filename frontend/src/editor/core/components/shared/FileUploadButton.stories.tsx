@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import FileUploadButton from "@app/components/shared/FileUploadButton";
+import FileUploadButton from "@editor/components/shared/FileUploadButton";
 
 const meta: Meta<typeof FileUploadButton> = {
   title: "Shared/FileUploadButton",

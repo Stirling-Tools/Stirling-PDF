@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CsvViewer } from "@app/components/viewer/nonpdf/CsvViewer";
+import { CsvViewer } from "@editor/components/viewer/nonpdf/CsvViewer";
 
 const buildCsvFile = (contents: string, name = "data.csv"): File =>
   new File([contents], name, { type: "text/csv" });

@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { Stack, Paper, Group, MultiSelect } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import type { EndpointsCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import type { EndpointsCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
 
 // Complete list of all endpoints from frontend tool registry (alphabetical)
 const commonEndpoints = [

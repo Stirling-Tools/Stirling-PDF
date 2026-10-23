@@ -9,9 +9,9 @@ import {
   primeFontGlyphMap,
   getCachedFontProgramSha256,
   _clearCmapCacheForTests,
-} from "@app/tools/pdfTextEditor/charcode/CmapResolver";
-import { sha256Hex } from "@app/tools/pdfTextEditor/util/sha256";
-import type { ResolverContext } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
+} from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import { sha256Hex } from "@editor/tools/pdfTextEditor/util/sha256";
+import type { ResolverContext } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 
 // Build a minimal TrueType sfnt carrying a single format-4 cmap subtable that
 // maps each [codepoint => glyphId] entry.

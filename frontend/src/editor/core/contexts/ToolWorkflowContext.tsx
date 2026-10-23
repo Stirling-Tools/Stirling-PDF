@@ -16,35 +16,35 @@ import { useLocation } from "react-router-dom";
 import {
   useToolManagement,
   type ToolAvailabilityMap,
-} from "@app/hooks/useToolManagement";
-import { ToolRegistryEntry, ToolRegistry } from "@app/data/toolsTaxonomy";
+} from "@editor/hooks/useToolManagement";
+import { ToolRegistryEntry, ToolRegistry } from "@editor/data/toolsTaxonomy";
 import {
   useNavigationActions,
   useNavigationState,
-} from "@app/contexts/NavigationContext";
-import { ToolId, isValidToolId } from "@app/types/toolId";
+} from "@editor/contexts/NavigationContext";
+import { ToolId, isValidToolId } from "@editor/types/toolId";
 import {
   WorkbenchType,
   getDefaultWorkbench,
   isBaseWorkbench,
-} from "@app/types/workbench";
-import { useNavigationUrlSync } from "@app/hooks/useUrlSync";
-import { isAuthRoute } from "@app/constants/routes";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
-import { useToolHistory } from "@app/hooks/tools/useUserToolActivity";
-import { markReaderModeFromPreference } from "@app/utils/pendingReaderMode";
+} from "@editor/types/workbench";
+import { useNavigationUrlSync } from "@editor/hooks/useUrlSync";
+import { isAuthRoute } from "@editor/constants/routes";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
+import { filterToolRegistryByQuery } from "@editor/utils/toolSearch";
+import { useToolHistory } from "@editor/hooks/tools/useUserToolActivity";
+import { markReaderModeFromPreference } from "@editor/utils/pendingReaderMode";
 import {
   ToolWorkflowState,
   createInitialState,
   toolWorkflowReducer,
-} from "@app/contexts/toolWorkflow/toolWorkflowState";
-import type { ToolPanelMode } from "@app/constants/toolPanel";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { usePreferences } from "@app/contexts/PreferencesContext";
-import { preferencesService } from "@app/services/preferencesService";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
-import { ToolFileEligibilityProvider } from "@app/contexts/ToolFileEligibilityContext";
+} from "@editor/contexts/toolWorkflow/toolWorkflowState";
+import type { ToolPanelMode } from "@editor/constants/toolPanel";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { preferencesService } from "@editor/services/preferencesService";
+import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
+import { ToolFileEligibilityProvider } from "@editor/contexts/ToolFileEligibilityContext";
 
 // State interface
 // Types and reducer/state moved to './toolWorkflow/state'

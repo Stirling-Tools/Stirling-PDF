@@ -1,11 +1,11 @@
 import React from "react";
 import { Card, Group, Text, Progress } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { StorageStats } from "@app/services/fileStorage";
-import { formatFileSize } from "@app/utils/fileUtils";
-import { getStorageUsagePercent } from "@app/utils/storageUtils";
+import { Icon } from "@editor/ui/Icon";
+import { StorageStats } from "@editor/services/fileStorage";
+import { formatFileSize } from "@editor/utils/fileUtils";
+import { getStorageUsagePercent } from "@editor/utils/storageUtils";
 
 interface StorageStatsCardProps {
   storageStats: StorageStats | null;

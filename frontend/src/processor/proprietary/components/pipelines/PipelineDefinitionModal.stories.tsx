@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Button } from "@app/ui";
-import { PipelineDefinitionModal } from "@portal/components/pipelines/PipelineDefinitionModal";
+import { Button } from "@editor/ui";
+import { PipelineDefinitionModal } from "@processor/components/pipelines/PipelineDefinitionModal";
 
 const meta: Meta<typeof PipelineDefinitionModal> = {
   title: "Portal/Pipelines/PipelineDefinitionModal",

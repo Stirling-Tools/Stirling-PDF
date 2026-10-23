@@ -7,7 +7,7 @@ const client = vi.hoisted(() => ({
   createSignedUrls: vi.fn(),
 }));
 
-vi.mock("@app/services/supabaseClient", () => ({
+vi.mock("@editor/services/supabaseClient", () => ({
   get isSupabaseConfigured() {
     return client.configured;
   },
@@ -19,7 +19,7 @@ vi.mock("@app/services/supabaseClient", () => ({
   },
 }));
 
-import { useTeamAvatarUrls } from "@app/hooks/useTeamAvatarUrls";
+import { useTeamAvatarUrls } from "@editor/hooks/useTeamAvatarUrls";
 
 const ALICE = "11111111-1111-4111-8111-111111111111";
 const BOB = "22222222-2222-4222-8222-222222222222";

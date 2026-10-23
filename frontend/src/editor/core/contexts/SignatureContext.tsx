@@ -6,12 +6,12 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
 import type {
   SignatureAPI,
   HistoryAPI,
   AnnotationAPI,
-} from "@app/components/viewer/viewerTypes";
+} from "@editor/components/viewer/viewerTypes";
 
 export interface PlacedSignature {
   id: string;

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { TextInput } from "@app/components/shared/TextInput";
+import { TextInput } from "@editor/components/shared/TextInput";
 import { MantineProvider } from "@mantine/core";
 
 function renderWithMantine(ui: React.ReactElement) {

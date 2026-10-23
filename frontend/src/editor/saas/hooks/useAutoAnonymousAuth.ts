@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "@app/auth/UseSession";
-import { signInAnonymously, supabase } from "@app/auth/supabase";
-import { isAuthRoute, isHomeRoute, isToolRoute } from "@app/utils/pathUtils";
+import { useAuth } from "@editor/auth/UseSession";
+import { signInAnonymously, supabase } from "@editor/auth/supabase";
+import { isAuthRoute, isHomeRoute, isToolRoute } from "@editor/utils/pathUtils";
 
 interface AutoAnonymousAuthState {
   isAutoAuthenticating: boolean;

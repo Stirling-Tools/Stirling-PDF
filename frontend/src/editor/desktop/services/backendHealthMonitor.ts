@@ -1,6 +1,6 @@
-import i18n from "@app/i18n";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import type { BackendHealthState } from "@app/types/backendHealth";
+import i18n from "@editor/i18n";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import type { BackendHealthState } from "@editor/types/backendHealth";
 
 type Listener = (state: BackendHealthState) => void;
 

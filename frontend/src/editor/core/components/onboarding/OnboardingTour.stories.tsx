@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { StepType } from "@reactour/tour";
-import OnboardingTour from "@app/components/onboarding/OnboardingTour";
-import "@app/components/onboarding/OnboardingTour.css";
+import OnboardingTour from "@editor/components/onboarding/OnboardingTour";
+import "@editor/components/onboarding/OnboardingTour.css";
 
 /**
  * Selectors go unused here since the target elements don't exist on the

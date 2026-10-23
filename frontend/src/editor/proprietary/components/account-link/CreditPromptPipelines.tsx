@@ -2,15 +2,15 @@ import { useEffect, useId, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { type TFunction } from "i18next";
-import { Button, ToggleSwitch } from "@app/ui";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip } from "@app/ui/Tooltip";
+import { Button, ToggleSwitch } from "@editor/ui";
+import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/ui/Tooltip";
 import {
   fetchCreditPromptPipelines,
   setCreditPromptPipelineEnabled,
   type CreditPromptPipeline,
-} from "@app/services/creditPromptPipelines";
-import { pipelineQueryKeys } from "@app/policies/queryKeys";
+} from "@editor/services/creditPromptPipelines";
+import { pipelineQueryKeys } from "@editor/policies/queryKeys";
 
 const VISIBLE_PIPELINES = 5;
 

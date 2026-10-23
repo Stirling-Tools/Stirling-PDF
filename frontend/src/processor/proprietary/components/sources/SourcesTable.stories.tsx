@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { SourceView } from "@portal/api/sources";
-import { SourcesTable } from "@portal/components/sources/SourcesTable";
+import type { SourceView } from "@processor/api/sources";
+import { SourcesTable } from "@processor/components/sources/SourcesTable";
 
 const SOURCES: SourceView[] = [
   {

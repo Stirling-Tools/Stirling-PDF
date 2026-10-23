@@ -3,12 +3,12 @@ import { describe, it, expect } from "vitest";
 import type {
   ConfigNavSection,
   NavKey,
-} from "@app/components/shared/config/types";
+} from "@editor/components/shared/config/types";
 import {
   buildPortalSettingsSections,
   portalSupersededSectionKeys,
-} from "@app/components/settings/portalSettingsNav";
-import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
+} from "@editor/components/settings/portalSettingsNav";
+import { mergeSettingsGroups } from "@editor/components/settings/mergeSettingsGroups";
 
 const group = (
   id: string,

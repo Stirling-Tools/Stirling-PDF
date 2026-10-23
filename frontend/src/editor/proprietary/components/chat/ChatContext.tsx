@@ -8,26 +8,26 @@ import {
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { generateId } from "@app/utils/generateId";
-import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
-import apiClient from "@app/services/apiClient";
-import { getAiBaseUrl } from "@app/services/aiBaseUrl";
-import { getAuthHeaders } from "@app/services/apiClientSetup";
-import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
+import { generateId } from "@editor/utils/generateId";
+import { useAllFiles, useFileActions } from "@editor/contexts/FileContext";
+import apiClient from "@editor/services/apiClient";
+import { getAiBaseUrl } from "@editor/services/aiBaseUrl";
+import { getAuthHeaders } from "@editor/services/apiClientSetup";
+import { dispatchPaygLimitReached } from "@editor/services/usageLimitBridge";
 import {
   reportAccountLinkBlock,
   reportFreeTierExhausted,
-} from "@app/services/accountLinkBlock";
+} from "@editor/services/accountLinkBlock";
 import {
   createChildStub,
   generateProcessedFileMetadata,
-} from "@app/contexts/file/fileActions";
+} from "@editor/contexts/file/fileActions";
 import {
   createNewStirlingFileStub,
   createStirlingFile,
   type StirlingFileStub,
-} from "@app/types/fileContext";
-import type { ToolOperation } from "@app/types/file";
+} from "@editor/types/fileContext";
+import type { ToolOperation } from "@editor/types/file";
 
 export enum ChatRole {
   USER = "user",

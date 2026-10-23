@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
-import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import { PdfiumSave } from "@editor/tools/pdfTextEditor/pdfium/PdfiumSave";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
 const MIN_PDF = `%PDF-1.7\n${"x".repeat(400)}\n%%EOF\n`;
 
