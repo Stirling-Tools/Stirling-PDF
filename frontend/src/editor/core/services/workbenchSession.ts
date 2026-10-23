@@ -1,6 +1,6 @@
-// The last editor session (open files, selection, view, and the page each file was read at), so a
-// processor switch, reload or restart does not cost the user their workbench. localStorage, so it
-// outlives the tab: tabs share the one record and the last to write wins.
+// The tab's last editor session (open files, selection, view, and the page each file was read at),
+// so a processor switch or reload does not cost the user their workbench. sessionStorage on purpose:
+// per-tab, tabs never clobber.
 
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import { stripBasePath } from "@editor/constants/app";
@@ -19,7 +19,7 @@ export interface WorkbenchSession {
   /** Which view was on screen. Absent for a record written before this was tracked. */
   workbench?: string;
   activeFileId?: string;
-  /** Fingerprint of who the workbench belonged to, so the next person on this device does not
+  /** Fingerprint of who the workbench belonged to, so the next person in this tab does not
    *  inherit it. Never the account id itself - see {@link fingerprintOwner}. */
   userId?: string | null;
   /** Page each file was last read at, kept after it closes so reopening it from My Files resumes
@@ -47,7 +47,7 @@ function readPages(value: unknown): Record<string, number> {
 
 export function readWorkbenchSession(): WorkbenchSession | null {
   try {
-    const raw = localStorage.getItem(SESSION_KEY);
+    const raw = sessionStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<WorkbenchSession> & {
       v?: number;
@@ -99,7 +99,7 @@ export function writeWorkbenchSession(session: WorkbenchSession): void {
     const recorded = readWorkbenchSession();
     const owner = session.userId ?? recorded?.userId ?? null;
     const pages = session.pages ?? recorded?.pages;
-    localStorage.setItem(
+    sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ ...session, pages, userId: owner, v: SESSION_VERSION }),
     );
@@ -134,7 +134,7 @@ export function writeViewedPage(originalId: string, page: number): void {
  * A one-way fingerprint of the signed-in user. Owners are only ever compared, never read back, so
  * the account id itself never needs to reach storage. Falls back to a non-cryptographic digest
  * where SubtleCrypto is absent (a self-hosted instance served over plain http): the fingerprint
- * only has to tell two accounts sharing one browser apart, and the files it gates are reachable from
+ * only has to tell two accounts sharing one tab apart, and the files it gates are reachable from
  * My Files regardless, since IndexedDB is per-origin.
  */
 export async function fingerprintOwner(userId: string): Promise<string> {
@@ -159,7 +159,7 @@ export async function fingerprintOwner(userId: string): Promise<string> {
 /** Drop the record: on sign-out, and whenever it would otherwise be restored for the wrong person. */
 export function clearWorkbenchSession(): void {
   try {
-    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
   } catch {
     // A record we cannot remove is also one we cannot read.
   }

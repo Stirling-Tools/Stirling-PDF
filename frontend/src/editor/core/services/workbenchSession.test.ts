@@ -17,7 +17,6 @@ import type { StirlingFileStub } from "@editor/types/fileContext";
 const SESSION_KEY = "stirling.workbench.session";
 
 beforeEach(() => {
-  localStorage.clear();
   sessionStorage.clear();
   resumeWorkbenchSession();
 });
@@ -36,9 +35,9 @@ describe("workbench session record", () => {
   });
 
   it("rejects a malformed record instead of throwing", () => {
-    localStorage.setItem(SESSION_KEY, "not json");
+    sessionStorage.setItem(SESSION_KEY, "not json");
     expect(readWorkbenchSession()).toBeNull();
-    localStorage.setItem(
+    sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: "nope" }),
     );
@@ -46,7 +45,7 @@ describe("workbench session record", () => {
   });
 
   it("drops non-string ids and defaults a missing selection", () => {
-    localStorage.setItem(
+    sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: ["a", 7, null, "b"] }),
     );
@@ -83,7 +82,7 @@ describe("originalIdOf", () => {
 describe("record hygiene", () => {
   it("discards a record written by an older schema", () => {
     // No version stamp: a shape this build no longer understands.
-    localStorage.setItem(
+    sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ fileIds: ["a"], selectedFileIds: [] }),
     );
@@ -91,7 +90,7 @@ describe("record hygiene", () => {
 
     // v1 recorded userId before it meant anything, so those must go too rather than
     // look like a workbench that legitimately belongs to an anonymous session.
-    localStorage.setItem(
+    sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
         v: 1,
@@ -106,7 +105,7 @@ describe("record hygiene", () => {
   it("drops the previous record when a write fails, rather than leaving it stale", () => {
     writeWorkbenchSession({ fileIds: ["old"], selectedFileIds: [] });
     const setItem = vi
-      .spyOn(Object.getPrototypeOf(localStorage), "setItem")
+      .spyOn(Object.getPrototypeOf(sessionStorage), "setItem")
       .mockImplementation(() => {
         throw new Error("QuotaExceededError");
       });
@@ -140,7 +139,7 @@ describe("record hygiene", () => {
       userId: null,
     });
 
-    expect(localStorage.getItem(SESSION_KEY)).toBeNull();
+    expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
   });
 
   it("keeps the owner when the identity is momentarily unknown", () => {
@@ -188,7 +187,7 @@ describe("record hygiene", () => {
   });
 
   it("treats refused storage as no remembered page instead of throwing", () => {
-    const storage = Object.getPrototypeOf(localStorage);
+    const storage = Object.getPrototypeOf(sessionStorage);
     const refuse = () => {
       throw new Error("SecurityError");
     };
@@ -205,7 +204,7 @@ describe("record hygiene", () => {
   });
 
   it("ignores a stored page that is not a page number", () => {
-    localStorage.setItem(
+    sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
         v: 2,

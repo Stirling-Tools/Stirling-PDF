@@ -30,7 +30,7 @@ const NO_RESTORE = "this build ships the workbench restore off";
 const NO_PORTAL = "this build ships no processor to switch to";
 
 // Switching editor -> processor unmounts every editor provider; the session record
-// in localStorage is what brings the workbench back on return.
+// in sessionStorage is what brings the workbench back on return.
 test.describe("Workbench survives the editor/processor switch", () => {
   test.use({
     stubOptions: {
@@ -88,7 +88,7 @@ test.describe("Workbench survives the editor/processor switch", () => {
     expect(
       await page.evaluate(() => ({
         session: JSON.parse(
-          localStorage.getItem("stirling.workbench.session") ?? "{}",
+          sessionStorage.getItem("stirling.workbench.session") ?? "{}",
         ),
         returnPath: sessionStorage.getItem(
           "stirling.workbench.editorReturnPath",

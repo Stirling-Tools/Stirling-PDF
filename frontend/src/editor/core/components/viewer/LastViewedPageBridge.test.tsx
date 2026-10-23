@@ -57,7 +57,7 @@ function pageChange(documentId: string, pageNumber: number) {
 }
 
 beforeEach(() => {
-  localStorage.clear();
+  sessionStorage.clear();
   resumeWorkbenchSession();
   fixture.scrollToPage.mockClear();
 });
@@ -125,6 +125,6 @@ describe("LastViewedPageBridge", () => {
     layoutReady("doc");
     pageChange("doc", 3);
 
-    expect(localStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
   });
 });
