@@ -1,5 +1,5 @@
 /**
- * desktop (Tauri) implementation of the @app/platform/openExternalTab seam.
+ * desktop (Tauri) implementation of the @editor/platform/openExternalTab seam.
  *
  * window.open would trap the URL inside our own webview, so hand it to the OS.
  * Delegates to the openExternal seam rather than calling the Tauri shell plugin
@@ -8,9 +8,9 @@
  * Re-checks the URL for the same reason the core impl does, and more so: here it
  * reaches an OS handler, so an unvalidated scheme is not confined to a browser.
  */
-import { openExternal } from "@app/platform/openExternal";
-import type { OpenExternalTab } from "@core/platform/openExternalTab";
-import { getExternalHref } from "@core/utils/externalUrl";
+import { openExternal } from "@editor/platform/openExternal";
+import type { OpenExternalTab } from "@editor-core/platform/openExternalTab";
+import { getExternalHref } from "@editor-core/utils/externalUrl";
 
 export const openExternalTab: OpenExternalTab = async (
   url: string,

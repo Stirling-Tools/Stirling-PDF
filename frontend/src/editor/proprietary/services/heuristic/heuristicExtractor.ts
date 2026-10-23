@@ -1,12 +1,12 @@
 // pdf.js extraction feeding the engine: page-1 text, a first-5 + last-2 page
 // window, Info-dict metadata, and a large-font page-1 "title" zone.
 
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
 import type {
   PDFDocumentProxy,
   TextItem,
 } from "pdfjs-dist/types/src/display/api";
-import type { HeuristicDoc } from "@app/services/heuristic/types";
+import type { HeuristicDoc } from "@editor/services/heuristic/types";
 
 const WINDOW_FIRST = 5;
 const WINDOW_LAST = 2;

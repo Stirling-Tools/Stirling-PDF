@@ -4,7 +4,7 @@ import {
   layoutScanEdit,
   type LayoutInput,
   type LayoutLine,
-} from "@app/tools/pdfTextEditor/commands/scanLayout";
+} from "@editor/tools/pdfTextEditor/commands/scanLayout";
 
 // Two scanned lines of 5pt-per-char words, 4pt apart, 12pt between baselines.
 function block(...texts: string[]): LayoutLine[] {

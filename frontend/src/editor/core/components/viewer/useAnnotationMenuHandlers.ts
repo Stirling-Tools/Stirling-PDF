@@ -12,10 +12,10 @@ import type {
 import type {
   AnnotationObject,
   AnnotationPatch,
-} from "@app/components/viewer/viewerTypes";
-import type { ScrollActions } from "@app/contexts/viewer/viewerActions";
-import { openExternalTab } from "@app/platform/openExternalTab";
-import { getExternalHref } from "@app/utils/externalUrl";
+} from "@editor/components/viewer/viewerTypes";
+import type { ScrollActions } from "@editor/contexts/viewer/viewerActions";
+import { openExternalTab } from "@editor/platform/openExternalTab";
+import { getExternalHref } from "@editor/utils/externalUrl";
 
 export type AnnotationType =
   | "textMarkup"

@@ -2,8 +2,8 @@ import {
   TOOL_FORMATS,
   TOOL_FORMAT_EXTENSIONS,
   type ToolFormat,
-} from "@app/types/toolIO";
-import type { StirlingFileStub } from "@app/types/fileContext";
+} from "@editor/types/toolIO";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 /**
  * Consolidated file size formatting utility

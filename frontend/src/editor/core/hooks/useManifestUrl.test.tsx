@@ -9,10 +9,10 @@ import {
 } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { useState, type ReactNode } from "react";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
-import { allowConsole } from "@app/tests/failOnConsole";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
+import { allowConsole } from "@editor/tests/failOnConsole";
 import {
   MAX_SHORT_NAME_CODE_POINTS,
   resolveAppName,
@@ -21,7 +21,7 @@ import {
   absolutizeManifestUrls,
   useManifestUrl,
   type StaticManifest,
-} from "@app/hooks/useManifestUrl";
+} from "@editor/hooks/useManifestUrl";
 
 const MODERN_MANIFEST: StaticManifest = {
   short_name: "Stirling PDF",

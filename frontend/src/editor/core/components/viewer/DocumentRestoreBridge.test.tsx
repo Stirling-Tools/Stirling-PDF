@@ -6,8 +6,8 @@ import {
   DocumentRestoreBridge,
   type DocumentRestoreEvent,
   type DocumentRestoreRequest,
-} from "@app/components/viewer/DocumentRestoreBridge";
-import type { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+} from "@editor/components/viewer/DocumentRestoreBridge";
+import type { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
 
 const activeDocument = vi.hoisted<{
   id: ReturnType<typeof useActiveDocumentId>;
@@ -138,7 +138,7 @@ const fixture = vi.hoisted(() => {
   return { current: createFixture(), createFixture };
 });
 
-vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
+vi.mock("@editor/components/viewer/useActiveDocumentId", () => ({
   useActiveDocumentId: () => activeDocument.id,
   useDocumentReady: () => true,
 }));

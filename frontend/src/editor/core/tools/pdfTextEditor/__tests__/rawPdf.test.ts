@@ -3,21 +3,21 @@ import {
   fromLatin1,
   toLatin1,
   undoPngPredictor,
-} from "@app/tools/pdfTextEditor/pdfdoc/bytes";
+} from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
 import {
   RawPdf,
   arrayItems,
   removeDictEntry,
   setDictEntry,
   spliceValue,
-} from "@app/tools/pdfTextEditor/pdfdoc/raw";
+} from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   buildClassicPdf,
   buildXrefStreamPdf,
   singleContentPdf,
   splitContentPdf,
   streamBody,
-} from "@app/tools/pdfTextEditor/__tests__/pdfFixtures";
+} from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 describe("RawPdf.parse", () => {
   it("indexes objects and resolves the catalogue of a classic-xref file", async () => {

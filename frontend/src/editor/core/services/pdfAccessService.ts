@@ -1,16 +1,16 @@
 /** Owns session access, file lifetimes and local inspection. Credentials are never persisted. */
-import type { FileId } from "@app/types/file";
-import { combineAbortSignals } from "@app/utils/combineAbortSignals";
-import PdfAccessWorker from "@app/workers/pdfAccessWorker?worker";
+import type { FileId } from "@editor/types/file";
+import { combineAbortSignals } from "@editor/utils/combineAbortSignals";
+import PdfAccessWorker from "@editor/workers/pdfAccessWorker?worker";
 import type {
   PdfAccessRequest,
   PdfAccessResponse,
-} from "@app/workers/pdfAccessWorker";
+} from "@editor/workers/pdfAccessWorker";
 import {
   pdfiumWasmUrl,
   pdfiumWasmModulePromise,
   startEagerWasmCompilation,
-} from "@app/services/wasmPrecompiler";
+} from "@editor/services/wasmPrecompiler";
 
 /** Session-only access to encrypted bytes. Never serialize this object or include it in tool parameters. */
 export interface PdfAccess {

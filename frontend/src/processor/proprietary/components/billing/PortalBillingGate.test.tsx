@@ -1,4 +1,4 @@
-vi.mock("@app/portal/hooks/useServerPlan", () => ({
+vi.mock("@editor/portal/hooks/useServerPlan", () => ({
   useServerPlan: () => ({ serverPlan: undefined, loading: false }),
 }));
 
@@ -16,7 +16,7 @@ import { MantineProvider } from "@mantine/core";
 const gate = { gated: false, loading: false, available: true };
 const admin = { is: true };
 const owner = { is: true, loading: false };
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({
     isAdmin: admin.is,
     user: { orgOwner: owner.is },
@@ -41,32 +41,34 @@ const saveLicenseKey = vi.fn();
 const saveLicenseFile = vi.fn();
 const onLicenseSaved = vi.fn();
 
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config }),
 }));
-vi.mock("@app/contexts/LicenseContext", () => ({ useLicense: () => license }));
-vi.mock("@app/services/licenseService", () => ({
+vi.mock("@editor/contexts/LicenseContext", () => ({
+  useLicense: () => license,
+}));
+vi.mock("@editor/services/licenseService", () => ({
   default: {
     saveLicenseKey: (...args: unknown[]) => saveLicenseKey(...args),
     saveLicenseFile: (...args: unknown[]) => saveLicenseFile(...args),
   },
 }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 
-vi.mock("@app/portal/hooks/useConnectGate", () => ({
+vi.mock("@editor/portal/hooks/useConnectGate", () => ({
   useConnectGate: () => ({ ...gate, connect, guard: (f: unknown) => f }),
 }));
-vi.mock("@app/portal/contexts/LinkContext", () => ({
+vi.mock("@editor/portal/contexts/LinkContext", () => ({
   useApplyLinkFacts: () => applyLinkFacts,
   useLinkOptional: () => ({ isLinked: link.is }),
 }));
-vi.mock("@app/portal/contexts/UIContext", () => ({
+vi.mock("@editor/portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: vi.fn() }),
 }));
-vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+vi.mock("@editor/portal/hooks/useAccountLinkOwner", () => ({
   useAccountLinkOwner: () => admin.is && owner.is && !owner.loading,
 }));
-vi.mock("@app/portal/views/Usage", () => ({
+vi.mock("@editor/portal/views/Usage", () => ({
   Usage: ({
     onWalletLoaded,
     renderLicenseSection,
@@ -88,13 +90,13 @@ vi.mock("@app/portal/views/Usage", () => ({
   },
 }));
 
-vi.mock("@app/portal/components/billing/FreeTierPlanView", () => ({
+vi.mock("@editor/portal/components/billing/FreeTierPlanView", () => ({
   FreeTierPlanView: ({ licenseSection }: { licenseSection?: ReactNode }) => (
     <div data-testid="free-tier">{licenseSection}</div>
   ),
 }));
 
-import { BillingSettingsSection } from "@app/portal/components/settings/BillingSettingsSection";
+import { BillingSettingsSection } from "@editor/portal/components/settings/BillingSettingsSection";
 
 function Location() {
   const location = useLocation();

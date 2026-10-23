@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import HelpSection from "@app/components/shared/config/configSections/HelpSection";
+import HelpSection from "@editor/components/shared/config/configSections/HelpSection";
 
 const meta = {
   title: "Shared/Config/ConfigSections/HelpSection",

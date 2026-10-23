@@ -1,5 +1,5 @@
 /**
- * Desktop (Tauri) implementation of the @app/auth/teamSession seam.
+ * Desktop (Tauri) implementation of the @editor/auth/teamSession seam.
  *
  * Wires the cloud {@link SaaSTeamContext} to the desktop auth surface. Desktop
  * keeps its JWT in the Tauri secure store via authService, so team access is
@@ -21,11 +21,11 @@
  * refreshers, so the post-membership refresh is a no-op.
  */
 import { useEffect, useState } from "react";
-import { authService } from "@app/services/authService";
-import { useConfirmedSaaSMode } from "@app/hooks/useConfirmedSaaSMode";
-import type { TeamAuth } from "@cloud/auth/teamSession";
+import { authService } from "@editor/services/authService";
+import { useConfirmedSaaSMode } from "@editor/hooks/useConfirmedSaaSMode";
+import type { TeamAuth } from "@editor-cloud/auth/teamSession";
 
-export type { TeamAuth } from "@cloud/auth/teamSession";
+export type { TeamAuth } from "@editor-cloud/auth/teamSession";
 
 export function useTeamAuth(): TeamAuth {
   const [isAuthenticated, setIsAuthenticated] = useState(false);

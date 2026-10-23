@@ -1,11 +1,11 @@
 import { expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { TeamPlanRow } from "@app/billing/TeamPlanRow";
-import { ProcessorPlanRow } from "@app/billing/ProcessorPlanRow";
-import { BillingScreen } from "@app/billing/BillingScreen";
-import { freeWallet } from "@app/billing/walletFixtures";
-import type { Wallet } from "@app/billing/types";
+import { TeamPlanRow } from "@editor/billing/TeamPlanRow";
+import { ProcessorPlanRow } from "@editor/billing/ProcessorPlanRow";
+import { BillingScreen } from "@editor/billing/BillingScreen";
+import { freeWallet } from "@editor/billing/walletFixtures";
+import type { Wallet } from "@editor/billing/types";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

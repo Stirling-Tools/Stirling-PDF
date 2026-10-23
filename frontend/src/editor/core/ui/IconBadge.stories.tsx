@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Icon } from "@app/ui/Icon";
-import { IconBadge } from "@app/ui/IconBadge";
+import { Icon } from "@editor/ui/Icon";
+import { IconBadge } from "@editor/ui/IconBadge";
 
 function Glyph() {
   return <Icon name="star" size={16} />;

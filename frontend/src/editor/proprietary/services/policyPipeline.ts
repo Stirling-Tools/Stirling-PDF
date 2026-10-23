@@ -11,13 +11,13 @@
  * using that registry.
  */
 
-import { resolveRunOn, type PolicyRunOn } from "@app/policies/runOn";
-import type { AutomationConfig } from "@app/types/automation";
-import type { PolicyFolderSettings } from "@app/types/policies";
+import { resolveRunOn, type PolicyRunOn } from "@editor/policies/runOn";
+import type { AutomationConfig } from "@editor/types/automation";
+import type { PolicyFolderSettings } from "@editor/types/policies";
 import {
   isToolEndpoint,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
+} from "@editor/hooks/tools/shared/toolApiMapping";
 
 /** A single backend pipeline step: a tool endpoint path + its scalar params. */
 export interface BackendPipelineStep {

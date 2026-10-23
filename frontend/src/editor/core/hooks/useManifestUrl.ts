@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useLogoAssets } from "@editor/hooks/useLogoAssets";
 
 /**
  * The served PWA manifest is a static JSON file (manifest.json) that hardcodes

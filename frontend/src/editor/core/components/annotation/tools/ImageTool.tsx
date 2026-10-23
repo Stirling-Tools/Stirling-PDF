@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { BaseAnnotationTool } from "@app/components/annotation/shared/BaseAnnotationTool";
-import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
+import { BaseAnnotationTool } from "@editor/components/annotation/shared/BaseAnnotationTool";
+import { ImageUploader } from "@editor/components/annotation/shared/ImageUploader";
 
 interface ImageToolProps {
   onImageChange?: (data: string | null) => void;

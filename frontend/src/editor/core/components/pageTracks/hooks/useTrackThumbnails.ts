@@ -5,16 +5,16 @@ import {
   useRef,
   useSyncExternalStore,
 } from "react";
-import { useFileSelectors } from "@app/contexts/FileContext";
-import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
+import { useFileSelectors } from "@editor/contexts/FileContext";
+import { useThumbnailGeneration } from "@editor/hooks/useThumbnailGeneration";
 import {
   SourceTrackPage,
   TrackPage,
   isSourcePage,
   sourcePageKey,
-} from "@app/components/pageTracks/types";
-import { isPageImage } from "@app/components/pageTracks/trackFileKind";
-import { generateImageThumbnail } from "@app/utils/thumbnailUtils";
+} from "@editor/components/pageTracks/types";
+import { isPageImage } from "@editor/components/pageTracks/trackFileKind";
+import { generateImageThumbnail } from "@editor/utils/thumbnailUtils";
 
 /** Pre-load a screen's worth either side so sideways scrolling stays smooth. */
 const ROOT_MARGIN = "300px";

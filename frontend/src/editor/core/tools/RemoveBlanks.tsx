@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { useRemoveBlanksParameters } from "@app/hooks/tools/removeBlanks/useRemoveBlanksParameters";
-import { useRemoveBlanksOperation } from "@app/hooks/tools/removeBlanks/useRemoveBlanksOperation";
-import RemoveBlanksSettings from "@app/components/tools/removeBlanks/RemoveBlanksSettings";
-import { useRemoveBlanksTips } from "@app/components/tooltips/useRemoveBlanksTips";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { useRemoveBlanksParameters } from "@editor/hooks/tools/removeBlanks/useRemoveBlanksParameters";
+import { useRemoveBlanksOperation } from "@editor/hooks/tools/removeBlanks/useRemoveBlanksOperation";
+import RemoveBlanksSettings from "@editor/components/tools/removeBlanks/RemoveBlanksSettings";
+import { useRemoveBlanksTips } from "@editor/components/tooltips/useRemoveBlanksTips";
 
 const RemoveBlanks = (props: BaseToolProps) => {
   const { t } = useTranslation();

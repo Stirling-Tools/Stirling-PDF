@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SourceTypeIcon } from "@portal/components/sources/SourceTypeIcon";
+import { SourceTypeIcon } from "@processor/components/sources/SourceTypeIcon";
 
 const meta: Meta<typeof SourceTypeIcon> = {
   title: "Portal/Sources/SourceTypeIcon",

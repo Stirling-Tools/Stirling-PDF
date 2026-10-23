@@ -1,26 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
-import { useSelectionGeometry } from "@app/tools/pdfTextEditor/hooks/useSelectionGeometry";
-import { DocumentInspector } from "@app/tools/pdfTextEditor/components/inspector/DocumentInspector";
-import { SelectionInspector } from "@app/tools/pdfTextEditor/components/inspector/SelectionInspector";
-import { analyzePageFonts } from "@app/tools/pdfTextEditor/util/pageFonts";
+import { Icon } from "@editor/ui/Icon";
+import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
+import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
+import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
+import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
+import { analyzePageFonts } from "@editor/tools/pdfTextEditor/util/pageFonts";
 import {
   ScanHint,
   type ScanHintProps,
-} from "@app/tools/pdfTextEditor/components/ScanHint";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
+} from "@editor/tools/pdfTextEditor/components/ScanHint";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type {
   EditorViewState,
   LoadProgress,
-} from "@app/tools/pdfTextEditor/store/EditorStore";
+} from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type {
   GroupingMode,
   SelectionState,
   WidthMode,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
 
 interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   store: EditorStore;

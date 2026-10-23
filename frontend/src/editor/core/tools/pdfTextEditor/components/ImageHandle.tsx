@@ -4,8 +4,8 @@ import { Rnd } from "react-rnd";
 import type {
   ImageObjectSnapshot,
   PageRect,
-} from "@app/tools/pdfTextEditor/types";
-import type { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
+} from "@editor/tools/pdfTextEditor/types";
+import type { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 
 interface ImageHandleProps {
   image: ImageObjectSnapshot;

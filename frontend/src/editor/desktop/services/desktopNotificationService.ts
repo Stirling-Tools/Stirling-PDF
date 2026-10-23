@@ -5,7 +5,7 @@ import {
   requestPermission,
   sendNotification,
 } from "@tauri-apps/plugin-notification";
-import i18n from "@app/i18n";
+import i18n from "@editor/i18n";
 
 const APP_TITLE = "Stirling-PDF";
 

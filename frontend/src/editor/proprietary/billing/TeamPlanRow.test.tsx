@@ -11,9 +11,9 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { TeamPlanRow } from "@app/billing/TeamPlanRow";
-import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
-import type { TeamHolding, Wallet } from "@app/billing/types";
+import { TeamPlanRow } from "@editor/billing/TeamPlanRow";
+import { freeWallet, subscribedWallet } from "@editor/billing/walletFixtures";
+import type { TeamHolding, Wallet } from "@editor/billing/types";
 
 // The base wallet is spread FIRST so the explicit holding wins: passing freeWallet as the base
 // would otherwise bring its own team along and silently override the one under test.

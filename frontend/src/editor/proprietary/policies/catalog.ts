@@ -7,16 +7,16 @@ import {
   policyStep,
   type PolicyToolStep,
   type UntypedPolicyEndpoint,
-} from "@app/policies/operations";
-import type { ToolEndpoint } from "@app/types/toolApiTypes";
+} from "@editor/policies/operations";
+import type { ToolEndpoint } from "@editor/types/toolApiTypes";
 import type {
   WirePipelineInput,
   WirePipelineStep,
   WireRoutingRule,
   WireTriggerConfig,
-} from "@app/policies/types";
+} from "@editor/policies/types";
 
-export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
+export type { WirePipelineStep as PipelineStep } from "@editor/policies/types";
 
 export type PolicyStatus = "active" | "paused";
 
@@ -112,8 +112,8 @@ export interface DecoratedPolicy {
   config: PolicyConfigDef;
   state: PolicyState;
   steps: WirePipelineStep[];
-  stats: import("@app/policies/types").PolicyStats;
-  activity: import("@app/policies/types").PolicyActivityItem[];
+  stats: import("@editor/policies/types").PolicyStats;
+  activity: import("@editor/policies/types").PolicyActivityItem[];
 }
 
 export interface PoliciesResponse {

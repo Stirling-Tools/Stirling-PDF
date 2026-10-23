@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
-import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
-import { ClassificationDemoWorkbenchView } from "@app/components/onboarding/classificationDemo/ClassificationDemoWorkbenchView";
+import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
+import { ClassificationDemoWorkbenchView } from "@editor/components/onboarding/classificationDemo/ClassificationDemoWorkbenchView";
 import {
   endClassificationDemo,
   useClassificationDemoSession,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSession";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSession";
 
 /** Onboarding's Downloads sweep owns the canvas from acceptance until dismissal.
  *  See the core stub for why this is a takeover, not a registered custom view. */

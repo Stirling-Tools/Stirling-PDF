@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import type { AnnotationToolId } from "@app/components/viewer/viewerTypes";
+import type { AnnotationToolId } from "@editor/components/viewer/viewerTypes";
 
 type Size = { width: number; height: number };
 

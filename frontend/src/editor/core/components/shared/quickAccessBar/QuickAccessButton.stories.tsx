@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Icon } from "@app/ui/Icon";
-import QuickAccessButton from "@app/components/shared/quickAccessBar/QuickAccessButton";
+import { Icon } from "@editor/ui/Icon";
+import QuickAccessButton from "@editor/components/shared/quickAccessBar/QuickAccessButton";
 
 const meta = {
   title: "Shared/QuickAccessBar/QuickAccessButton",

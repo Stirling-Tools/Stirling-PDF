@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { supabase, isSupabaseConfigured } from "@app/services/supabaseClient";
+import {
+  supabase,
+  isSupabaseConfigured,
+} from "@editor/services/supabaseClient";
 
 const PROFILE_BUCKET = "profile-pictures";
 const SIGNED_URL_TTL_SECONDS = 60 * 60;

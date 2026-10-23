@@ -1,9 +1,9 @@
 import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import UploadToServerModal from "@app/components/shared/UploadToServerModal";
-import { FileContextProvider } from "@app/contexts/FileContext";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import UploadToServerModal from "@editor/components/shared/UploadToServerModal";
+import { FileContextProvider } from "@editor/contexts/FileContext";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const mockFile: StirlingFileStub = {
   id: "file-1" as FileId,

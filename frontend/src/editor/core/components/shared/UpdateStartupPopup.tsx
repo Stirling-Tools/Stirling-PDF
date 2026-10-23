@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
-import { useIsMobile } from "@app/hooks/useIsMobile";
-import { updateService, type UpdateSummary } from "@app/services/updateService";
-import { isUpdatePopupAllowed } from "@app/components/shared/updatePopupGate";
-import UpdateModal from "@app/components/shared/UpdateModal";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useFrontendVersionInfo } from "@editor/hooks/useFrontendVersionInfo";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import {
+  updateService,
+  type UpdateSummary,
+} from "@editor/services/updateService";
+import { isUpdatePopupAllowed } from "@editor/components/shared/updatePopupGate";
+import UpdateModal from "@editor/components/shared/UpdateModal";
 
 /**
  * How long to wait after mount before checking for an update. Matches the

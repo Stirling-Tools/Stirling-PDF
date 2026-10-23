@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { ensureCookieConsent } from "@app/tests/helpers/login";
-import { bypassOnboarding } from "@app/tests/helpers/api-stubs";
+import { ensureCookieConsent } from "@editor/tests/helpers/login";
+import { bypassOnboarding } from "@editor/tests/helpers/api-stubs";
 
 /**
  * SAML login round-trip via Keycloak.

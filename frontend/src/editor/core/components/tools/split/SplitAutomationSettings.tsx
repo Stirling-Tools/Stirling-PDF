@@ -7,10 +7,10 @@
 
 import { Stack, Text, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { SplitParameters } from "@app/hooks/tools/split/useSplitParameters";
-import { METHOD_OPTIONS, SplitMethod } from "@app/constants/splitConstants";
-import SplitSettings from "@app/components/tools/split/SplitSettings";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { SplitParameters } from "@editor/hooks/tools/split/useSplitParameters";
+import { METHOD_OPTIONS, SplitMethod } from "@editor/constants/splitConstants";
+import SplitSettings from "@editor/components/tools/split/SplitSettings";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface SplitAutomationSettingsProps {
   parameters: SplitParameters;

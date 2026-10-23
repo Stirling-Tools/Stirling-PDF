@@ -1,13 +1,13 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
 import {
   captureMultipartPart,
   readCapturedPart,
-} from "@app/tests/helpers/multipart-capture";
+} from "@editor/tests/helpers/multipart-capture";
 import { readFileSync } from "fs";
 import path from "path";
 import type { Page, Route } from "@playwright/test";
-import type { FieldEditBatch } from "@app/tools/formFill/types";
+import type { FieldEditBatch } from "@editor/tools/formFill/types";
 
 /**
  * Form field editor with `/api/v1/form/*` mocked: panel UI, staged-change bookkeeping and the

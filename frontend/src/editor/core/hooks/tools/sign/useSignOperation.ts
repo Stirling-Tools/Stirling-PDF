@@ -3,13 +3,13 @@ import {
   useToolOperation,
   ToolOperationHook,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   validateSignParameters,
   SignParameters,
   DEFAULT_PARAMETERS,
-} from "@app/hooks/tools/sign/useSignParameters";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/sign/useSignParameters";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildSignFormData = (

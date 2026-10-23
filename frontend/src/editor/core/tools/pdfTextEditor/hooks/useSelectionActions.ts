@@ -1,22 +1,22 @@
 import { useCallback } from "react";
-import { DeleteImageCommand } from "@app/tools/pdfTextEditor/commands/DeleteImageCommand";
-import { ReplaceImageCommand } from "@app/tools/pdfTextEditor/commands/ReplaceImageCommand";
-import type { DecodedImage } from "@app/utils/pdfiumBitmapUtils";
-import { DeleteObjectCommand } from "@app/tools/pdfTextEditor/commands/DeleteObjectCommand";
-import { DeleteShapeCommand } from "@app/tools/pdfTextEditor/commands/DeleteShapeCommand";
-import { DuplicateRunCommand } from "@app/tools/pdfTextEditor/commands/DuplicateRunCommand";
-import { SetColourCommand } from "@app/tools/pdfTextEditor/commands/SetColourCommand";
-import { SetTextOutlineCommand } from "@app/tools/pdfTextEditor/commands/SetTextOutlineCommand";
-import { SetFontFamilyCommand } from "@app/tools/pdfTextEditor/commands/SetFontFamilyCommand";
-import { SetFontSizeCommand } from "@app/tools/pdfTextEditor/commands/SetFontSizeCommand";
-import { parseCssColor } from "@app/tools/pdfTextEditor/model/Color";
-import { ensureDeviceFontReady } from "@app/tools/pdfTextEditor/util/deviceFontEmbed";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import { isItalicFamily } from "@app/tools/pdfTextEditor/util/fontFamily";
-import { italicCapability } from "@app/tools/pdfTextEditor/util/fontCapability";
-import { loadedLocalFonts } from "@app/tools/pdfTextEditor/util/localFonts";
-import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
+import { DeleteImageCommand } from "@editor/tools/pdfTextEditor/commands/DeleteImageCommand";
+import { ReplaceImageCommand } from "@editor/tools/pdfTextEditor/commands/ReplaceImageCommand";
+import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
+import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
+import { DeleteShapeCommand } from "@editor/tools/pdfTextEditor/commands/DeleteShapeCommand";
+import { DuplicateRunCommand } from "@editor/tools/pdfTextEditor/commands/DuplicateRunCommand";
+import { SetColourCommand } from "@editor/tools/pdfTextEditor/commands/SetColourCommand";
+import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetTextOutlineCommand";
+import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
+import { SetFontSizeCommand } from "@editor/tools/pdfTextEditor/commands/SetFontSizeCommand";
+import { parseCssColor } from "@editor/tools/pdfTextEditor/model/Color";
+import { ensureDeviceFontReady } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import { isItalicFamily } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { italicCapability } from "@editor/tools/pdfTextEditor/util/fontCapability";
+import { loadedLocalFonts } from "@editor/tools/pdfTextEditor/util/localFonts";
+import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 
 /** The fields the selection actions read off a run they are about to change. */
 interface SelectedRun {

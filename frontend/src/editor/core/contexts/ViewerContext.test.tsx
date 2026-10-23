@@ -5,9 +5,9 @@ import {
   ViewerProvider,
   useViewer,
   type ViewerContextType,
-} from "@app/contexts/ViewerContext";
+} from "@editor/contexts/ViewerContext";
 
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigation: () => ({ currentRoute: "/" }),
 }));
 
@@ -16,14 +16,14 @@ const mockFile = Object.assign(new File(["%PDF"], "sample.pdf"), {
   quickKey: "quick-1",
 });
 const mockSelectors = { getFiles: () => [mockFile] };
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useFileSelectors: () => mockSelectors,
   // The workbench id list the provider watches when pruning activeFileId.
   useFileSelector: () => [mockFile.fileId],
   useFileIndex: () => -1,
 }));
 
-vi.mock("@app/services/policyExport", () => ({
+vi.mock("@editor/services/policyExport", () => ({
   enforceExportPolicies: vi.fn(),
 }));
 

@@ -1,5 +1,5 @@
-import { usePreferences } from "@app/contexts/PreferencesContext";
-import { useIsMobile } from "@app/hooks/useIsMobile";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
 
 export function useShouldShowWelcomeModal(): boolean {
   const { preferences } = usePreferences();

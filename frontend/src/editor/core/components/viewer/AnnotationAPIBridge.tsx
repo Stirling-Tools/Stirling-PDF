@@ -11,9 +11,9 @@ import type {
   AnnotationRect,
   AnnotationSelection,
   ClearDocumentAnnotationsResult,
-} from "@app/components/viewer/viewerTypes";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
-import { MARKUP_ANNOTATION_COLORS } from "@app/components/viewer/annotationDefaults";
+} from "@editor/components/viewer/viewerTypes";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
+import { MARKUP_ANNOTATION_COLORS } from "@editor/components/viewer/annotationDefaults";
 
 type NoteIcon = NonNullable<AnnotationToolOptions["icon"]>;
 

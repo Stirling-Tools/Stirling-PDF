@@ -5,18 +5,18 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import OnboardingSlideShell, {
   type ShellButton,
-} from "@app/components/onboarding/OnboardingSlideShell";
-import { useDefaultApp } from "@app/hooks/useDefaultApp";
-import { startClassificationDemo } from "@app/components/onboarding/classificationDemo/classificationDemoSession";
+} from "@editor/components/onboarding/OnboardingSlideShell";
+import { useDefaultApp } from "@editor/hooks/useDefaultApp";
+import { startClassificationDemo } from "@editor/components/onboarding/classificationDemo/classificationDemoSession";
 import {
   CLASSIFICATION_DEMO_BATCH_SIZE,
   resolveDownloadsDirectory,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSweep";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSweep";
 import {
   DefaultAppHero,
   FolderHero,
   PrivacyNote,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSlides";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSlides";
 
 type Stage = "default-app" | "offer";
 

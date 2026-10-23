@@ -1,4 +1,4 @@
-import { DOWNLOAD_URLS } from "@app/constants/downloads";
+import { DOWNLOAD_URLS } from "@editor/constants/downloads";
 
 export type DockerImageTag = "latest" | "latest-fat" | "latest-ultra-lite";
 

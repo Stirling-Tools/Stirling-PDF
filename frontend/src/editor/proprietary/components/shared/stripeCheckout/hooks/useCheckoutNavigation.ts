@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import {
   CheckoutState,
   CheckoutStage,
-} from "@app/components/shared/stripeCheckout/types/checkout";
+} from "@editor/components/shared/stripeCheckout/types/checkout";
 
 /**
  * Stage navigation and history management hook
