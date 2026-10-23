@@ -1,7 +1,8 @@
 name: Stale PR triage
 
 # Dry run unless the STALE_PR_BOT_LIVE repository variable is "true"; unsetting it
-# is the kill switch. The rules live in .github/scripts/stale-prs.ts.
+# is the kill switch. The size limit's part has its own, PR_SIZE_BOT_LIVE. The rules
+# live in .github/scripts/stale-prs.ts.
 
 on:
   schedule:
@@ -17,11 +18,11 @@ on:
       - ".github/workflows/stale-prs.yml"
       - ".github/scripts/*.ts"
       - ".github/workflows/pr-turn-labels.yml"
-      - ".github/workflows/pr-review-events.yml"
       - ".github/scripts/package.json"
       - ".github/scripts/package-lock.json"
       - ".github/scripts/tsconfig.json"
       - ".github/workflows/pr-conflict-labeler.yml"
+      - ".github/workflows/pr-size-limit.yml"
 
 permissions:
   contents: read
@@ -41,19 +42,19 @@ jobs:
       pull-requests: read
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
 
       - name: Check out the scripts
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           sparse-checkout: .github/scripts
 
       # Same Node as github-script v9, so the tests load the .ts the way the bot does.
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
           cache: "npm"
@@ -77,7 +78,7 @@ jobs:
         with:
           script: |
             const { default: triage } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/stale-prs.ts`);
-            await triage({ github, context, core, live: false });
+            await triage({ github, context, core, live: false, sizeLive: false });
 
   triage:
     name: Warn and close stale PRs
@@ -89,12 +90,12 @@ jobs:
       pull-requests: write # close PRs
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
 
       - name: Check out the scripts
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           sparse-checkout: .github/scripts
@@ -103,8 +104,9 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           LIVE: ${{ vars.STALE_PR_BOT_LIVE == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+          SIZE_LIVE: ${{ vars.PR_SIZE_BOT_LIVE == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
         with:
           github-token: ${{ github.token }}
           script: |
             const { default: triage } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/stale-prs.ts`);
-            await triage({ github, context, core, live: process.env.LIVE === "true" });
+            await triage({ github, context, core, live: process.env.LIVE === "true", sizeLive: process.env.SIZE_LIVE === "true" });

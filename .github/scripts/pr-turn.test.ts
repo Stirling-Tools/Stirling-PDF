@@ -2,32 +2,22 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { type GitHubClient, LABELS } from "./github.ts";
-import {
-  clearStaleTurnLabel,
-  type ReviewNode,
-  type TimelineItem,
-  turnChangeForEvent,
-  type TurnPayload,
-  updateTurnLabel,
-} from "./pr-turn.ts";
+import { answeredPull, type ReviewNode, syncTurnLabel, type TimelineItem, type TurnPayload, updateTurnLabel } from "./pr-turn.ts";
 
 type TurnItem = ReviewNode | TimelineItem;
 
 const AUTHOR = "contributor";
 const HEAD = "head-sha";
-const FORK = "contributor/r";
-const BRANCH = "feature";
 const NOW = Date.parse("2026-10-01T12:00:00Z");
 const repo = { owner: "o", repo: "r" };
+const issue = { ...repo, issue_number: 7 };
 
 interface FakeOptions {
-  labelled?: boolean;
   alreadyRemoved?: boolean;
-  missing?: boolean;
   pageSize?: number;
 }
 
-function fakeGitHub(items: TurnItem[] = [], { labelled = false, alreadyRemoved = false, missing = false, pageSize = 100 }: FakeOptions = {}) {
+function fakeGitHub(items: TurnItem[] = [], { alreadyRemoved = false, pageSize = 100 }: FakeOptions = {}) {
   const calls: string[] = [];
   const reads = { pages: 0 };
   const github: GitHubClient = {
@@ -44,6 +34,9 @@ function fakeGitHub(items: TurnItem[] = [], { labelled = false, alreadyRemoved =
       return { repository: { pullRequest: { timelineItems } } } as T;
     },
     rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async () => assert.fail("no permission lookups"),
+      },
       issues: {
         createComment: async () => assert.fail("no comments"),
         addLabels: async ({ issue_number, labels }) => calls.push(`label #${issue_number} ${labels.join(",")}`),
@@ -51,14 +44,13 @@ function fakeGitHub(items: TurnItem[] = [], { labelled = false, alreadyRemoved =
           if (alreadyRemoved) throw Object.assign(new Error("Label does not exist"), { status: 404 });
           return calls.push(`unlabel #${issue_number} ${name}`);
         },
+        listComments: async () => assert.fail("no comment reads"),
+        updateComment: async () => assert.fail("no comment edits"),
       },
       pulls: {
-        get: async () => {
-          if (missing) throw Object.assign(new Error("Not Found"), { status: 404 });
-          const labels = labelled ? [{ name: LABELS.waitingOnAuthor }] : [];
-          return { data: { mergeable: null, mergeable_state: "unknown", labels, head: { ref: BRANCH, repo: { full_name: FORK } } } };
-        },
+        get: async () => assert.fail("no PR reads"),
         update: async () => assert.fail("no closes"),
+        listFiles: async () => assert.fail("no file lists"),
       },
     },
   };
@@ -92,144 +84,122 @@ const commentBy = (login: string, onPullRequest = true): TurnPayload => ({
   issue: { number: 7, user: { login: AUTHOR }, ...(onPullRequest ? { pull_request: {} } : {}) },
   comment: { user: { login } },
 });
-const relayRun = ({ title = "Review on #7", event = "pull_request_review", headRepo = FORK, headBranch = BRANCH } = {}): TurnPayload => ({
-  workflow_run: { event, display_title: title, head_branch: headBranch, head_repository: { full_name: headRepo } },
-});
 
-const changeFor = (payload: TurnPayload, items: TurnItem[] = [], options: FakeOptions = {}) =>
-  turnChangeForEvent(fakeGitHub(items, options).github, { repo, payload });
+async function sync(items: TurnItem[], { labelled = false, live = true } = {}) {
+  const { github, calls } = fakeGitHub(items);
+  return { waiting: await syncTurnLabel(github, issue, labelled, live), calls };
+}
 
-describe("turn change for an author's event", () => {
-  it("hands the turn back when the author pushes, re-requests review or marks it ready", async () => {
-    assert.deepEqual(await changeFor(pushBy(AUTHOR)), { number: 7, add: false });
+const ADDED = ["label #7 waiting-on-author"];
+const REMOVED = ["unlabel #7 waiting-on-author"];
+
+describe("answered pull", () => {
+  it("hands the turn back when the author pushes, re-requests review or marks it ready", () => {
+    assert.equal(answeredPull(pushBy(AUTHOR)), 7);
   });
 
-  it("ignores a maintainer's push, such as Update branch", async () => {
-    assert.equal(await changeFor(pushBy("maintainer")), null);
+  it("ignores a maintainer's push, such as Update branch", () => {
+    assert.equal(answeredPull(pushBy("maintainer")), null);
   });
 
-  it("hands the turn back when the author comments", async () => {
-    assert.deepEqual(await changeFor(commentBy(AUTHOR)), { number: 7, add: false });
+  it("hands the turn back when the author comments", () => {
+    assert.equal(answeredPull(commentBy(AUTHOR)), 7);
   });
 
-  it("ignores someone else's comment, and comments on issues", async () => {
-    assert.equal(await changeFor(commentBy("maintainer")), null);
-    assert.equal(await changeFor(commentBy(AUTHOR, false)), null);
-  });
-});
-
-describe("turn change for a relayed review", () => {
-  it("gives the author the turn on a changes-requested review from someone who can push", async () => {
-    assert.deepEqual(await changeFor(relayRun(), [review("CHANGES_REQUESTED", "maintainer", true, 1)]), { number: 7, add: true });
-  });
-
-  it("ignores changes requested by someone who cannot push, or by a bot", async () => {
-    assert.equal(await changeFor(relayRun(), [review("CHANGES_REQUESTED", "passer-by", false, 1)]), null);
-    assert.equal(await changeFor(relayRun(), [review("CHANGES_REQUESTED", "review-bot", true, 1, HEAD, "Bot")]), null);
-  });
-
-  it("hands the turn back on an approval from someone who can push", async () => {
-    const items = [review("CHANGES_REQUESTED", "maintainer", true, 10), labelEvent("LabeledEvent", 9), review("APPROVED", "maintainer", true, 1)];
-    assert.deepEqual(await changeFor(relayRun(), items, { labelled: true }), { number: 7, add: false });
-  });
-
-  it("ignores approvals from someone who cannot push, and comment-only reviews", async () => {
-    const items = [review("CHANGES_REQUESTED", "maintainer", true, 10), labelEvent("LabeledEvent", 9)];
-    assert.equal(await changeFor(relayRun(), [...items, review("APPROVED", "passer-by", false, 1)], { labelled: true }), null);
-    assert.equal(await changeFor(relayRun(), [...items, review("COMMENTED", "maintainer", true, 1)], { labelled: true }), null);
-  });
-
-  it("hands the turn back when the author replies in a review", async () => {
-    const items = [review("CHANGES_REQUESTED", "maintainer", true, 10), labelEvent("LabeledEvent", 9), review("COMMENTED", AUTHOR, false, 1)];
-    assert.deepEqual(await changeFor(relayRun(), items, { labelled: true }), { number: 7, add: false });
-  });
-
-  it("hands the turn back when a changes-requested review is dismissed", async () => {
-    const items = [review("DISMISSED", "maintainer", true, 10), labelEvent("LabeledEvent", 9), dismissal(1)];
-    assert.deepEqual(await changeFor(relayRun(), items, { labelled: true }), { number: 7, add: false });
-  });
-
-  it("goes by the latest review, whichever run arrives first", async () => {
-    const items = [review("CHANGES_REQUESTED", "maintainer", true, 2), review("APPROVED", "other-maintainer", true, 1)];
-    assert.equal(await changeFor(relayRun(), items), null);
-  });
-
-  it("does not add the label when the author answered before the run", async () => {
-    assert.equal(await changeFor(relayRun(), [review("CHANGES_REQUESTED", "maintainer", true, 2, "older-sha")]), null);
-    assert.equal(await changeFor(relayRun(), [review("CHANGES_REQUESTED", "maintainer", true, 2), comment(AUTHOR, 1)]), null);
-  });
-
-  it("keeps a label added by hand", async () => {
-    assert.equal(await changeFor(relayRun(), [review("APPROVED", "maintainer", true, 10), labelEvent("LabeledEvent", 1)], { labelled: true }), null);
-  });
-
-  it("reads further back in the timeline when the newest page moves nothing", async () => {
-    const noise = Array.from({ length: 5 }, (_, index) => comment("maintainer", 5 - index));
-    const items = [review("CHANGES_REQUESTED", "maintainer", true, 10), comment(AUTHOR, 8), ...noise];
-    const { github, reads } = fakeGitHub(items, { pageSize: 2 });
-    assert.equal(await turnChangeForEvent(github, { repo, payload: relayRun() }), null);
-    assert.ok(reads.pages > 2);
-  });
-
-  it("hands the turn back when the author replies to a review thread", async () => {
-    const items = [review("CHANGES_REQUESTED", "maintainer", true, 10), labelEvent("LabeledEvent", 9), review("COMMENTED", AUTHOR, false, 1)];
-    const payload = relayRun({ event: "pull_request_review_comment" });
-    assert.deepEqual(await changeFor(payload, items, { labelled: true }), { number: 7, add: false });
-  });
-
-  it("ignores a run built from another PR, whatever its title says", async () => {
-    const { github, reads } = fakeGitHub([review("CHANGES_REQUESTED", "maintainer", true, 1)]);
-    assert.equal(await turnChangeForEvent(github, { repo, payload: relayRun({ headRepo: "attacker/r" }) }), null);
-    assert.equal(await turnChangeForEvent(github, { repo, payload: relayRun({ headBranch: "other" }) }), null);
-    assert.equal(await turnChangeForEvent(github, { repo, payload: relayRun({ event: "pull_request" }) }), null);
-    assert.equal(reads.pages, 0);
-  });
-
-  it("ignores runs it did not relay, and PRs that do not exist", async () => {
-    assert.equal(await changeFor(relayRun({ title: "Something else" })), null);
-    assert.equal(await changeFor(relayRun(), [], { missing: true }), null);
+  it("ignores someone else's comment, and comments on issues", () => {
+    assert.equal(answeredPull(commentBy("maintainer")), null);
+    assert.equal(answeredPull(commentBy(AUTHOR, false)), null);
   });
 });
 
 describe("update turn label", () => {
   const core = { info: () => {} };
 
-  it("adds the label", async () => {
-    const { github, calls } = fakeGitHub([review("CHANGES_REQUESTED", "maintainer", true, 1)]);
-    await updateTurnLabel({ github, context: { repo, payload: relayRun() }, core });
-    assert.deepEqual(calls, ["label #7 waiting-on-author"]);
-  });
-
   it("removes the label, and does not mind when it is not there", async () => {
     const present = fakeGitHub();
     await updateTurnLabel({ github: present.github, context: { repo, payload: pushBy(AUTHOR) }, core });
-    assert.deepEqual(present.calls, ["unlabel #7 waiting-on-author"]);
+    assert.deepEqual(present.calls, REMOVED);
 
     const absent = fakeGitHub([], { alreadyRemoved: true });
     await updateTurnLabel({ github: absent.github, context: { repo, payload: pushBy(AUTHOR) }, core });
     assert.deepEqual(absent.calls, []);
   });
+
+  it("leaves the label for an event that is not the author's", async () => {
+    const { github, calls } = fakeGitHub();
+    await updateTurnLabel({ github, context: { repo, payload: commentBy("maintainer") }, core });
+    assert.deepEqual(calls, []);
+  });
 });
 
-describe("clear stale turn label", () => {
-  const issue = { ...repo, issue_number: 7 };
-  const answered = [review("CHANGES_REQUESTED", "maintainer", true, 10), labelEvent("LabeledEvent", 9), review("COMMENTED", AUTHOR, false, 1)];
-
-  it("removes a label whose turn has moved on", async () => {
-    const { github, calls } = fakeGitHub(answered);
-    assert.equal(await clearStaleTurnLabel(github, issue, true), true);
-    assert.deepEqual(calls, ["unlabel #7 waiting-on-author"]);
+describe("sync turn label", () => {
+  it("gives the author the turn on a changes-requested review from someone who can push", async () => {
+    assert.deepEqual(await sync([review("CHANGES_REQUESTED", "maintainer", true, 1)]), { waiting: true, calls: ADDED });
   });
 
-  it("keeps a label that still stands", async () => {
-    const { github, calls } = fakeGitHub([review("CHANGES_REQUESTED", "maintainer", true, 10), labelEvent("LabeledEvent", 9)]);
-    assert.equal(await clearStaleTurnLabel(github, issue, true), false);
-    assert.deepEqual(calls, []);
+  it("ignores changes requested by someone who cannot push, or by a bot", async () => {
+    assert.deepEqual(await sync([review("CHANGES_REQUESTED", "passer-by", false, 1)]), { waiting: false, calls: [] });
+    assert.deepEqual(await sync([review("CHANGES_REQUESTED", "review-bot", true, 1, HEAD, "Bot")]), { waiting: false, calls: [] });
+  });
+
+  it("hands the turn back on an approval from someone who can push", async () => {
+    const items = [review("CHANGES_REQUESTED", "maintainer", true, 10), labelEvent("LabeledEvent", 9), review("APPROVED", "maintainer", true, 1)];
+    assert.deepEqual(await sync(items, { labelled: true }), { waiting: false, calls: REMOVED });
+  });
+
+  it("ignores approvals from someone who cannot push, and comment-only reviews", async () => {
+    const items = [review("CHANGES_REQUESTED", "maintainer", true, 10), labelEvent("LabeledEvent", 9)];
+    const stillWaiting = { waiting: true, calls: [] };
+    assert.deepEqual(await sync([...items, review("APPROVED", "passer-by", false, 1)], { labelled: true }), stillWaiting);
+    assert.deepEqual(await sync([...items, review("COMMENTED", "maintainer", true, 1)], { labelled: true }), stillWaiting);
+  });
+
+  it("hands the turn back when the author replies in a review or a review thread", async () => {
+    const items = [review("CHANGES_REQUESTED", "maintainer", true, 10), labelEvent("LabeledEvent", 9), review("COMMENTED", AUTHOR, false, 1)];
+    assert.deepEqual(await sync(items, { labelled: true }), { waiting: false, calls: REMOVED });
+  });
+
+  it("hands the turn back when a changes-requested review is dismissed", async () => {
+    const items = [review("DISMISSED", "maintainer", true, 10), labelEvent("LabeledEvent", 9), dismissal(1)];
+    assert.deepEqual(await sync(items, { labelled: true }), { waiting: false, calls: REMOVED });
+  });
+
+  it("goes by the latest review", async () => {
+    const items = [review("CHANGES_REQUESTED", "maintainer", true, 2), review("APPROVED", "other-maintainer", true, 1)];
+    assert.deepEqual(await sync(items), { waiting: false, calls: [] });
+  });
+
+  it("does not add the label when the author answered before the triage ran", async () => {
+    assert.deepEqual(await sync([review("CHANGES_REQUESTED", "maintainer", true, 2, "older-sha")]), { waiting: false, calls: [] });
+    assert.deepEqual(await sync([review("CHANGES_REQUESTED", "maintainer", true, 2), comment(AUTHOR, 1)]), { waiting: false, calls: [] });
+  });
+
+  it("keeps a label added by hand", async () => {
+    const items = [review("APPROVED", "maintainer", true, 10), labelEvent("LabeledEvent", 1)];
+    assert.deepEqual(await sync(items, { labelled: true }), { waiting: true, calls: [] });
+  });
+
+  it("does not re-add a label removed by hand", async () => {
+    const items = [review("CHANGES_REQUESTED", "maintainer", true, 10), labelEvent("LabeledEvent", 9), labelEvent("UnlabeledEvent", 1)];
+    assert.deepEqual(await sync(items), { waiting: false, calls: [] });
+  });
+
+  it("reads further back in the timeline when the newest page moves nothing", async () => {
+    const noise = Array.from({ length: 5 }, (_, index) => comment("maintainer", 5 - index));
+    const items = [review("CHANGES_REQUESTED", "maintainer", true, 10), comment(AUTHOR, 8), ...noise];
+    const { github, reads } = fakeGitHub(items, { pageSize: 2 });
+    assert.equal(await syncTurnLabel(github, issue, false, true), false);
+    assert.ok(reads.pages > 2);
+  });
+
+  it("reads no timeline for an unlabelled PR no review hands to the author", async () => {
+    const { github, reads } = fakeGitHub([review("APPROVED", "maintainer", true, 2), comment(AUTHOR, 1)]);
+    assert.equal(await syncTurnLabel(github, issue, false, true), false);
+    assert.equal(reads.pages, 1);
   });
 
   it("changes nothing in a dry run", async () => {
-    const { github, calls } = fakeGitHub(answered);
-    assert.equal(await clearStaleTurnLabel(github, issue, false), true);
-    assert.deepEqual(calls, []);
+    assert.deepEqual(await sync([review("CHANGES_REQUESTED", "maintainer", true, 1)], { live: false }), { waiting: true, calls: [] });
+    assert.deepEqual(await sync([], { labelled: true, live: false }), { waiting: false, calls: [] });
   });
 });

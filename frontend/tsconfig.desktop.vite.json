@@ -1,0 +1,43 @@
+{
+  "extends": "./tsconfig.proprietary.vite.json",
+  "compilerOptions": {
+    "paths": {
+      "@editor/*": [
+        "./src/editor/desktop/*",
+        "./src/editor/cloud/*",
+        "./src/editor/proprietary/*",
+        "./src/editor/core/*"
+      ],
+      "@editor/portal/*": [
+        "./src/editor/desktop/portal/*",
+        "./src/editor/cloud/portal/*",
+        "./src/editor/proprietary/portal/*",
+        "./src/editor/core/portal/*",
+        "./src/processor/desktop/*",
+        "./src/processor/proprietary/*"
+      ],
+      "@processor/*": [
+        "./src/processor/desktop/*",
+        "./src/processor/proprietary/*"
+      ],
+      "@processor-proprietary/*": ["./src/processor/proprietary/*"],
+      "@processor-cloud/*": ["./src/processor/cloud/*"],
+      "@editor-cloud/*": ["./src/editor/cloud/*"],
+      "@editor-proprietary/*": ["./src/editor/proprietary/*"],
+      "@editor-core/*": ["./src/editor/core/*"]
+    }
+  },
+  "exclude": [
+    "src/editor/core/**/*.test.ts*",
+    "src/editor/core/**/*.spec.ts*",
+    "src/editor/proprietary/**/*.test.ts*",
+    "src/editor/proprietary/**/*.spec.ts*",
+    "src/editor/cloud/**/*.test.ts*",
+    "src/editor/cloud/**/*.spec.ts*",
+    "src/editor/saas",
+    "src/processor/saas",
+    "src/processor/cloud/**/*.test.ts*",
+    "src/processor/proprietary/**/*.test.ts*",
+    "src/processor/proprietary/**/*.spec.ts*"
+  ]
+}
