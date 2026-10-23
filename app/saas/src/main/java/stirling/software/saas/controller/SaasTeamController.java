@@ -54,6 +54,8 @@ public class SaasTeamController {
     private final TeamInvitationRepository invitationRepository;
     private final UserService userService;
     private final TeamSecurityExpressions teamSecurityExpressions;
+    private final stirling.software.saas.procurement.service.EnterpriseEntitlementService
+            enterprise;
 
     // ========== NEW TEAM INVITATION ENDPOINTS ==========
 
@@ -566,7 +568,7 @@ public class SaasTeamController {
                 // seatCount and maxSeats now share the same backing field on the extension.
                 maxSeats,
                 saasTeamExtensionService.getSeatsUsed(team),
-                maxSeats,
+                enterprise.isActive(team.getId()) ? null : maxSeats,
                 isLeader);
     }
 

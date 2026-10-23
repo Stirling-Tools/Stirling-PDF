@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { BOT_LOGIN, type Core, type GitHubClient, LABELS } from "./github.ts";
+import { type ChangedFile, oversizedComment } from "./pr-size.ts";
 import type { ReviewNode, TimelineItem } from "./pr-turn.ts";
 import triageStalePullRequests, {
   type Actor,
@@ -26,6 +27,7 @@ interface PullRequestOptions {
   isDraft?: boolean;
   activeDaysAgo?: number;
   authorType?: string;
+  additions?: number;
 }
 
 function pullRequest({
@@ -33,16 +35,20 @@ function pullRequest({
   isDraft = false,
   activeDaysAgo = 0,
   authorType = "User",
+  additions = 10,
 }: PullRequestOptions = {}): PullRequest {
   return {
     number,
     url: `https://github.com/o/r/pull/${number}`,
     isDraft,
     baseRefName: "main",
+    additions,
+    deletions: 0,
     author: { login: "contributor", __typename: authorType },
     labels: [],
     timeline: [],
     lastActivityAt: daysAgo(activeDaysAgo),
+    comments: [],
   };
 }
 
@@ -55,6 +61,11 @@ function label(pr: PullRequest, name: string, daysAgoAdded: number, actor = BOT)
 function unlabel(pr: PullRequest, name: string, daysAgoRemoved: number, actor = BOT) {
   pr.labels = pr.labels.filter((existing) => existing !== name);
   pr.timeline.push({ __typename: "UnlabeledEvent", createdAt: daysAgo(daysAgoRemoved), label: { name }, actor });
+  return pr;
+}
+
+function commented(pr: PullRequest, author: string, daysAgoPosted: number, fromTeam = false) {
+  pr.comments.push({ createdAt: daysAgo(daysAgoPosted), author, fromTeam });
   return pr;
 }
 
@@ -182,6 +193,48 @@ describe("ready PRs after the warning", () => {
   });
 });
 
+describe("too-large PRs", () => {
+  const tooLarge = (daysAgoAdded: number, options: PullRequestOptions = {}) => label(pullRequest(options), LABELS.tooLarge, daysAgoAdded);
+
+  it("are pending until a week after the size warning, then close", () => {
+    assert.deepEqual(decision(tooLarge(3)), { action: "pending", reasons: ["tooLarge"] });
+    assert.deepEqual(decision(tooLarge(7)), { action: "close", reasons: ["tooLarge"] });
+    assert.deepEqual(decision(tooLarge(7, { isDraft: true, activeDaysAgo: 1 })), { action: "close", reasons: ["tooLarge"] });
+  });
+
+  it("still get the stale warnings while pending", () => {
+    assert.deepEqual(decision(label(conflicted(10), LABELS.tooLarge, 2)), { action: "warn", reasons: ["conflicts"] });
+  });
+
+  it("are never closed on hold", () => {
+    assert.equal(actionFor(label(tooLarge(30), LABELS.onHold, 1)), "none");
+  });
+
+  it("finish a size close that stopped partway", () => {
+    assert.deepEqual(decision(label(tooLarge(8), LABELS.backlogCleanup, 1)), { action: "resume", reasons: [] });
+  });
+
+  it("get a fresh week when reopened after the size close", () => {
+    const pr = label(tooLarge(10), LABELS.backlogCleanup, 3);
+    assert.equal(actionFor(happened(pr, "ReopenedEvent", 2)), "pending");
+  });
+
+  it("are not closed while the author's explanation waits for the team", () => {
+    assert.deepEqual(decision(commented(tooLarge(10), "contributor", 9)), { action: "pending", reasons: ["tooLarge"] });
+    assert.equal(actionFor(commented(commented(tooLarge(20), "contributor", 15), "passer-by", 9)), "pending");
+  });
+
+  it("restart the week from the team's reply", () => {
+    const replied = (daysAgoReplied: number) => commented(commented(tooLarge(20), "contributor", 15), "maintainer", daysAgoReplied, true);
+    assert.equal(actionFor(replied(3)), "pending");
+    assert.equal(actionFor(replied(8)), "close");
+  });
+
+  it("ignore what the author said before the warning", () => {
+    assert.equal(actionFor(commented(tooLarge(10), "contributor", 11)), "close");
+  });
+});
+
 describe("drafts", () => {
   const draft = (activeDaysAgo: number) => pullRequest({ isDraft: true, activeDaysAgo });
 
@@ -263,7 +316,11 @@ describe("latest activity", () => {
     commits: { nodes: [{ commit: { committedDate: daysAgo(committedDaysAgo) } }] },
     activity: { nodes: activity },
   });
-  const commentBy = (author: Actor, ago: number) => ({ __typename: "IssueComment" as const, createdAt: daysAgo(ago), author });
+  const commentBy = (author: Actor, ago: number) => ({
+    __typename: "IssueComment" as const,
+    createdAt: daysAgo(ago),
+    author,
+  });
 
   it("counts people, not bots", () => {
     assert.equal(latestActivity(node([commentBy(PERSON, 40), commentBy(BOT, 1)]), []), daysAgo(40));
@@ -297,10 +354,18 @@ function toNode(pr: PullRequest, pageSize: number, before: string | null): PullR
     isDraft: pr.isDraft,
     createdAt: pr.lastActivityAt,
     baseRefName: pr.baseRefName,
+    additions: pr.additions,
+    deletions: pr.deletions,
     author: pr.author,
     labels: { nodes: pr.labels.map((name) => ({ name })) },
     commits: { nodes: [] },
-    activity: { nodes: [] },
+    activity: {
+      nodes: pr.comments.map((comment) => ({
+        __typename: "IssueComment" as const,
+        createdAt: comment.createdAt,
+        author: { login: comment.author, __typename: "User" },
+      })),
+    },
     timelineItems: {
       pageInfo: { hasPreviousPage: start > 0, startCursor: String(start) },
       nodes: pr.timeline.slice(start, end) satisfies TimelineEvent[],
@@ -321,8 +386,14 @@ interface FakeOptions {
   failFor?: number;
   failWrite?: string;
   alreadyRemoved?: string[];
-  /** The history pr-turn.ts reads to re-check waiting-on-author. */
+  /** The history pr-turn.ts reads for waiting-on-author; the PR's own label events by default. */
   turnItems?: TurnItem[];
+  /** What pulls.listFiles returns, for a PR over the size limit in total. */
+  files?: ChangedFile[];
+  /** What issues.listComments returns. */
+  comments?: { id: number; body: string; user: { login: string; type: string } }[];
+  /** Logins that can push to the repository. */
+  writers?: string[];
 }
 
 function fakeGitHub(
@@ -334,7 +405,10 @@ function fakeGitHub(
     failFor,
     failWrite,
     alreadyRemoved = [],
-    turnItems = STILL_WAITING,
+    turnItems,
+    files = [],
+    comments = [],
+    writers = [],
   }: FakeOptions = {},
 ) {
   const calls: string[] = [];
@@ -345,17 +419,24 @@ function fakeGitHub(
     calls.push(call);
     writeTimes.push(Date.now());
   };
+  const turnHistory = (number: unknown): TurnItem[] =>
+    turnItems ??
+    (prs.find((pr) => pr.number === number)?.timeline ?? []).flatMap((event) =>
+      event.__typename === "LabeledEvent" || event.__typename === "UnlabeledEvent"
+        ? [{ __typename: event.__typename, createdAt: event.createdAt, label: event.label }]
+        : [],
+    );
   const graphql = async (query: string, variables: Record<string, unknown>) => {
     if (query.includes("pullRequests(states: OPEN")) {
       const nodes = prs.map((pr) => ({ number: pr.number }));
       return { repository: { pullRequests: { pageInfo: { hasNextPage: false, endCursor: null }, nodes } } };
     }
     if (query.includes("reviews(last")) {
-      const reviews = { nodes: turnItems.filter((item) => item.__typename === "PullRequestReview") };
+      const reviews = { nodes: turnHistory(variables.number).filter((item) => item.__typename === "PullRequestReview") };
       return { repository: { pullRequest: { author: { login: "contributor" }, headRefOid: "head-sha", reviews } } };
     }
     if (query.includes("REVIEW_DISMISSED_EVENT")) {
-      const nodes = turnItems.filter((item) => item.__typename !== "PullRequestReview");
+      const nodes = turnHistory(variables.number).filter((item) => item.__typename !== "PullRequestReview");
       return { repository: { pullRequest: { timelineItems: { pageInfo: { hasPreviousPage: false, startCursor: null }, nodes } } } };
     }
     if (variables.number === failFor) throw new Error("boom");
@@ -367,6 +448,9 @@ function fakeGitHub(
   const github: GitHubClient = {
     graphql: async <T>(query: string, variables: Record<string, unknown>) => (await graphql(query, variables)) as T,
     rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async ({ username }) => ({ data: { permission: writers.includes(username) ? "write" : "read" } }),
+      },
       issues: {
         createComment: async ({ issue_number }) => write(`comment #${issue_number}`),
         addLabels: async ({ issue_number, labels }) => write(`label #${issue_number} ${labels.join(",")}`),
@@ -374,13 +458,16 @@ function fakeGitHub(
           if (alreadyRemoved.includes(name)) throw Object.assign(new Error("Label does not exist"), { status: 404 });
           write(`unlabel #${issue_number} ${name}`);
         },
+        listComments: async () => ({ data: comments }),
+        updateComment: async ({ comment_id }) => write(`edit comment ${comment_id}`),
       },
       pulls: {
         get: async () => {
           reads.mergeable += 1;
-          return { data: { mergeable, mergeable_state: mergeableState, labels: [], head: { ref: "feature", repo: null } } };
+          return { data: { mergeable, mergeable_state: mergeableState } };
         },
         update: async ({ pull_number }) => write(`close #${pull_number}`),
+        listFiles: async ({ page }) => ({ data: page === 1 ? files : [] }),
       },
     },
   };
@@ -404,17 +491,24 @@ function recordingCore() {
       return summary;
     },
   };
-  const core: Core = { info: () => {}, error: (message) => errors.push(message), setFailed: (message) => failed.push(message), summary };
+  const core: Core = {
+    info: () => {},
+    warning: () => {},
+    error: (message) => errors.push(message),
+    setFailed: (message) => failed.push(message),
+    summary,
+  };
   return { core, errors, failed, tables, summaries: () => summaries };
 }
 
-async function triage(github: GitHubClient, { live = true, writeIntervalMs = 0 } = {}) {
+async function triage(github: GitHubClient, { live = true, sizeLive = true, writeIntervalMs = 0 } = {}) {
   const recorded = recordingCore();
   await triageStalePullRequests({
     github,
     context: { repo: { owner: "o", repo: "r" } },
     core: recorded.core,
     live,
+    sizeLive,
     writeIntervalMs,
     mergeabilityRetryMs: 0,
   });
@@ -497,6 +591,35 @@ describe("triage run", () => {
     assert.deepEqual(calls, ["unlabel #1 waiting-on-author", "unlabel #1 Stale PR"]);
   });
 
+  describe("waiting-on-author from a review", () => {
+    const changesRequested: TurnItem = {
+      __typename: "PullRequestReview",
+      submittedAt: daysAgo(10),
+      state: "CHANGES_REQUESTED",
+      authorCanPushToRepository: true,
+      author: PERSON,
+      commit: { oid: "head-sha" },
+    };
+
+    it("adds the label, and dates the turn from then rather than warning at once", async () => {
+      const { github, calls } = fakeGitHub([pullRequest()], { turnItems: [changesRequested] });
+      await triage(github);
+      assert.deepEqual(calls, ["label #1 waiting-on-author"]);
+    });
+
+    it("only reports it in a dry run", async () => {
+      const { github, calls } = fakeGitHub([pullRequest()], { turnItems: [changesRequested] });
+      await triage(github, { live: false });
+      assert.deepEqual(calls, []);
+    });
+
+    it("leaves a draft alone", async () => {
+      const { github, calls } = fakeGitHub([pullRequest({ isDraft: true })], { turnItems: [changesRequested] });
+      await triage(github);
+      assert.deepEqual(calls, []);
+    });
+  });
+
   it("reads a timeline longer than one page", async () => {
     const pr = conflicted(40);
     for (let day = 39; day > 0; day -= 1) label(pr, `noise-${day}`, day);
@@ -521,6 +644,72 @@ describe("triage run", () => {
     assert.deepEqual(errors, ["#1: boom"]);
     assert.equal(failed.length, 1);
     assert.equal(summaries(), 1);
+  });
+
+  describe("size limit", () => {
+    const javaFile = (lines: number): ChangedFile[] => [{ filename: "app/core/A.java", additions: lines, deletions: 0 }];
+
+    it("warns a PR over the limit, then holds it pending", async () => {
+      const { github, calls } = fakeGitHub([pullRequest({ additions: 1500 })], { files: javaFile(1500) });
+      const { tables } = await triage(github);
+      assert.deepEqual(calls, ["comment #1", "label #1 too-large"]);
+      assert.deepEqual(tables[0]?.[1]?.slice(2), ["pending", "tooLarge"]);
+    });
+
+    it("closes a PR still over the limit a week after the warning", async () => {
+      const pr = label(pullRequest({ additions: 1500 }), LABELS.tooLarge, 30);
+      const comments = [{ id: 9, body: oversizedComment("contributor", 1500), user: { login: "github-actions[bot]", type: "Bot" } }];
+      const { github, calls } = fakeGitHub([pr], { files: javaFile(1500), comments });
+      await triage(github);
+      assert.deepEqual(calls, ["comment #1", "label #1 backlog-cleanup", "close #1"]);
+    });
+
+    it("does not close a PR whose author explained why it can't be split", async () => {
+      const pr = commented(label(pullRequest({ additions: 1500 }), LABELS.tooLarge, 30), "contributor", 20);
+      const comments = [{ id: 9, body: oversizedComment("contributor", 1500), user: { login: "github-actions[bot]", type: "Bot" } }];
+      const { github, calls } = fakeGitHub([pr], { files: javaFile(1500), comments });
+      await triage(github);
+      assert.deepEqual(calls, []);
+    });
+
+    it("restarts the week from a reply by someone who can push", async () => {
+      const pr = () => commented(commented(label(pullRequest({ additions: 1500 }), LABELS.tooLarge, 30), "contributor", 20), "maintainer", 10);
+      const comments = [{ id: 9, body: oversizedComment("contributor", 1500), user: { login: "github-actions[bot]", type: "Bot" } }];
+      const replied = fakeGitHub([pr()], { files: javaFile(1500), comments, writers: ["maintainer"] });
+      await triage(replied.github);
+      assert.deepEqual(replied.calls, ["comment #1", "label #1 backlog-cleanup", "close #1"]);
+
+      const passerBy = fakeGitHub([pr()], { files: javaFile(1500), comments });
+      await triage(passerBy.github);
+      assert.deepEqual(passerBy.calls, []);
+    });
+
+    it("lifts the warning once the PR is split down", async () => {
+      const pr = label(pullRequest({ additions: 500 }), LABELS.tooLarge, 3);
+      const comments = [{ id: 9, body: oversizedComment("contributor", 1500), user: { login: "github-actions[bot]", type: "Bot" } }];
+      const { github, calls } = fakeGitHub([pr], { comments });
+      await triage(github);
+      assert.deepEqual(calls, ["edit comment 9", "unlabel #1 too-large"]);
+    });
+
+    it("only reports it until the size limit is live, whatever the stale switch says", async () => {
+      const { github, calls } = fakeGitHub([pullRequest({ additions: 1500 })], { files: javaFile(1500) });
+      const { tables } = await triage(github, { sizeLive: false });
+      assert.deepEqual(calls, []);
+      assert.deepEqual(tables[0]?.[1]?.slice(2), ["pending", "tooLarge"]);
+    });
+
+    it("closes for size on the size limit's switch alone", async () => {
+      const overdue = () => label(pullRequest({ additions: 1500 }), LABELS.tooLarge, 30);
+      const comments = [{ id: 9, body: oversizedComment("contributor", 1500), user: { login: "github-actions[bot]", type: "Bot" } }];
+      const sizeOnly = fakeGitHub([overdue()], { files: javaFile(1500), comments });
+      await triage(sizeOnly.github, { live: false });
+      assert.deepEqual(sizeOnly.calls, ["comment #1", "label #1 backlog-cleanup", "close #1"]);
+
+      const staleOnly = fakeGitHub([overdue()], { files: javaFile(1500), comments });
+      await triage(staleOnly.github, { sizeLive: false });
+      assert.deepEqual(staleOnly.calls, []);
+    });
   });
 
   it("marks a write that failed in the summary", async () => {

@@ -99,6 +99,9 @@ class PaygWalletControllerTest {
                         new UserTeamResolver(memberRepo),
                         teamExtensionsRepository,
                         fleetSeats,
+                        org.mockito.Mockito.mock(
+                                stirling.software.saas.procurement.service
+                                        .EnterpriseEntitlementService.class),
                         subscriptionDao);
     }
 
