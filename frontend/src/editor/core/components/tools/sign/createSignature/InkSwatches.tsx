@@ -3,9 +3,9 @@ import { useTranslation } from "react-i18next";
 import {
   INK_COLORS,
   type InkColor,
-} from "@app/components/tools/sign/createSignature/signatureStyles";
-import { ControlLabel } from "@app/components/tools/sign/createSignature/ControlLabel";
-import styles from "@app/components/tools/sign/createSignature/InkSwatches.module.css";
+} from "@editor/components/tools/sign/createSignature/signatureStyles";
+import { ControlLabel } from "@editor/components/tools/sign/createSignature/ControlLabel";
+import styles from "@editor/components/tools/sign/createSignature/InkSwatches.module.css";
 
 interface InkSwatchesProps {
   value: InkColor;

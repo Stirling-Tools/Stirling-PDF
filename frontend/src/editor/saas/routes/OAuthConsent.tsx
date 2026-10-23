@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { List, Paper, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { useAuth } from "@app/auth/UseSession";
-import { useTranslation } from "@app/hooks/useTranslation";
-import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
-import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/auth/ui/auth.css";
-import "@app/routes/authShared/saas-auth.css";
-import { withBasePath } from "@app/constants/app";
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import { Button } from "@editor/ui/Button";
+import { useAuth } from "@editor/auth/UseSession";
+import { useTranslation } from "@editor/hooks/useTranslation";
+import { useDocumentMeta } from "@editor/hooks/useDocumentMeta";
+import AuthLayout from "@editor/routes/authShared/AuthLayout";
+import "@editor/auth/ui/auth.css";
+import "@editor/routes/authShared/saas-auth.css";
+import { withBasePath } from "@editor/constants/app";
+import ErrorMessage from "@editor/auth/ui/ErrorMessage";
+import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 // Supabase OAuth consent screen for MCP clients (e.g. Claude): loads the pending
 // authorization and forwards approve/deny to GoTrue, which redirects to the client.

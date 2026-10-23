@@ -1,8 +1,8 @@
 import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dropdown } from "@app/ui/Dropdown";
-import { Icon, type IconName } from "@app/ui/Icon";
-import styles from "@app/components/tools/sign/wallet/SignatureTile.module.css";
+import { Dropdown } from "@editor/ui/Dropdown";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import styles from "@editor/components/tools/sign/wallet/SignatureTile.module.css";
 
 export interface SignatureTileAction {
   id: string;

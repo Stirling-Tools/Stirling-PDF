@@ -1,4 +1,4 @@
-import type { IconName } from "@app/ui/Icon";
+import type { IconName } from "@editor/ui/Icon";
 /** Curated palette the classification labels pick from, shown in the file
  * sidebar. Names are registry icons; the generator bundles what the app references. */
 

@@ -1,11 +1,11 @@
 import { Menu, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { isBrowserOnlyFile } from "@app/components/filesPage/fileOrigin";
-import { FileId } from "@app/types/file";
-import { StirlingFileStub } from "@app/types/fileContext";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { isBrowserOnlyFile } from "@editor/components/filesPage/fileOrigin";
+import { FileId } from "@editor/types/file";
+import { StirlingFileStub } from "@editor/types/fileContext";
 
 export interface FileDetailsActionsProps {
   selectedFileIds: FileId[];

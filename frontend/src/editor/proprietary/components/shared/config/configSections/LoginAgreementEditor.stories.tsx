@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import LoginAgreementEditor from "@app/components/shared/config/configSections/LoginAgreementEditor";
+import LoginAgreementEditor from "@editor/components/shared/config/configSections/LoginAgreementEditor";
 
 /**
  * Per-language editor for the login agreement markdown shown on the login screen.

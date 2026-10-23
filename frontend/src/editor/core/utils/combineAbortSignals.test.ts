@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { combineAbortSignals } from "@app/utils/combineAbortSignals";
+import { combineAbortSignals } from "@editor/utils/combineAbortSignals";
 
 const nativeAny = AbortSignal.any;
 beforeEach(() => {

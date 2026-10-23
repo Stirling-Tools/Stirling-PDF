@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
   TextInput,
@@ -10,15 +10,15 @@ import {
   MultiSelect,
   Select,
 } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import {
   normalizeLanguageCode,
   supportedLanguages,
   toUnderscoreFormat,
   toUnderscoreLanguages,
-} from "@app/i18n";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import type { GeneralCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
+} from "@editor/i18n";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import type { GeneralCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
 
 /** Branding, languages and the system-wide toggles. Writes ui.* and system.*. */
 export function SystemCard({

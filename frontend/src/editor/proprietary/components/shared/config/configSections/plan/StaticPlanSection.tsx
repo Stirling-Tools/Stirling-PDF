@@ -1,24 +1,24 @@
 import React, { useState } from "react";
 import { Card, Text, Stack, Collapse, Divider, Tooltip } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { alert } from "@app/components/toast";
-import { LicenseInfo, mapLicenseToTier } from "@app/services/licenseService";
+import { alert } from "@editor/components/toast";
+import { LicenseInfo, mapLicenseToTier } from "@editor/services/licenseService";
 import {
   usePlanFeatures,
   usePlanHighlights,
-} from "@app/constants/planConstants";
-import FeatureComparisonTable from "@app/components/shared/config/configSections/plan/FeatureComparisonTable";
-import StaticCheckoutModal from "@app/components/shared/config/configSections/plan/StaticCheckoutModal";
-import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
-import { STATIC_STRIPE_LINKS } from "@app/constants/staticStripeLinks";
-import { PricingBadge } from "@app/components/shared/stripeCheckout/components/PricingBadge";
-import { getBaseCardStyle } from "@app/components/shared/stripeCheckout/utils/cardStyles";
+} from "@editor/constants/planConstants";
+import FeatureComparisonTable from "@editor/components/shared/config/configSections/plan/FeatureComparisonTable";
+import StaticCheckoutModal from "@editor/components/shared/config/configSections/plan/StaticCheckoutModal";
+import LicenseKeySection from "@editor/components/shared/config/configSections/plan/LicenseKeySection";
+import { STATIC_STRIPE_LINKS } from "@editor/constants/staticStripeLinks";
+import { PricingBadge } from "@editor/components/shared/stripeCheckout/components/PricingBadge";
+import { getBaseCardStyle } from "@editor/components/shared/stripeCheckout/utils/cardStyles";
 import {
   isCurrentTier as checkIsCurrentTier,
   isDowngrade as checkIsDowngrade,
   isEnterpriseBlockedForFree,
-} from "@app/utils/planTierUtils";
+} from "@editor/utils/planTierUtils";
 
 interface StaticPlanSectionProps {
   currentLicenseInfo?: LicenseInfo;

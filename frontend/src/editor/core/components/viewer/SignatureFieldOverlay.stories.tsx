@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
+import SignatureFieldOverlay from "@editor/components/viewer/SignatureFieldOverlay";
 
 // With no pdfSource the overlay resolves zero fields and renders null — this
 // is the state it's mounted in until the host viewer has a document loaded.

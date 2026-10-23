@@ -1,7 +1,7 @@
 import { Divider, Select, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { PageLayoutParameters } from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { PageLayoutParameters } from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 export default function PageLayoutAdvancedSettings({
   parameters,

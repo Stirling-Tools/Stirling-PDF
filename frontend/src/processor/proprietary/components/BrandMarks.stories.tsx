@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { BrandMark } from "@portal/components/BrandMarks";
+import { BrandMark } from "@processor/components/BrandMarks";
 
 const meta = {
   title: "Portal/BrandMarks",

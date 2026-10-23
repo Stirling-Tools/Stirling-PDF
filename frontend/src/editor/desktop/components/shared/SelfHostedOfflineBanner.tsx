@@ -1,27 +1,27 @@
 import { useState, useEffect, useMemo } from "react";
 import { Paper, Group, Text, Popover, List, ScrollArea } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
+import { Icon } from "@editor/ui/Icon";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useConversionCloudStatus } from "@editor/hooks/useConversionCloudStatus";
 import {
   selfHostedServerMonitor,
   type SelfHostedServerState,
-} from "@app/services/selfHostedServerMonitor";
+} from "@editor/services/selfHostedServerMonitor";
 import {
   connectionModeService,
   type ConnectionMode,
-} from "@app/services/connectionModeService";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
+} from "@editor/services/connectionModeService";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
 import {
   EXTENSION_TO_ENDPOINT,
   ENDPOINT_I18N,
-} from "@app/constants/convertConstants";
-import { ENDPOINTS as SPLIT_ENDPOINTS } from "@app/constants/splitConstants";
-import type { ToolId } from "@app/types/toolId";
+} from "@editor/constants/convertConstants";
+import { ENDPOINTS as SPLIT_ENDPOINTS } from "@editor/constants/splitConstants";
+import type { ToolId } from "@editor/types/toolId";
 
 const BANNER_BG = "var(--mantine-color-gray-1)";
 const BANNER_BORDER = "var(--mantine-color-gray-3)";

@@ -1,12 +1,12 @@
-import type { FilesPageEntry } from "@app/components/filesPage/FileGrid";
+import type { FilesPageEntry } from "@editor/components/filesPage/FileGrid";
 import type {
   FilesPageSortMode,
   FilesPageOriginFilter,
-} from "@app/contexts/FilesPageContext";
-import type { DiskFileEntry } from "@app/services/localFolderContents";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FolderId, FolderRecord } from "@app/types/folder";
-import { getFolderPath } from "@app/utils/folderPath";
+} from "@editor/contexts/FilesPageContext";
+import type { DiskFileEntry } from "@editor/services/localFolderContents";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FolderId, FolderRecord } from "@editor/types/folder";
+import { getFolderPath } from "@editor/utils/folderPath";
 
 interface Options {
   visibleFiles: StirlingFileStub[];

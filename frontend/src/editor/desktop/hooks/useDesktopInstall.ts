@@ -5,11 +5,11 @@ import type {
   DesktopInstallState,
   DesktopInstallProgress,
   DesktopInstallActions,
-} from "@core/components/shared/UpdateModal";
+} from "@editor-core/components/shared/UpdateModal";
 import {
   desktopUpdateService,
   type CanInstallResult,
-} from "@app/services/desktopUpdateService";
+} from "@editor/services/desktopUpdateService";
 
 /**
  * Desktop-only hook managing the Tauri updater install state.

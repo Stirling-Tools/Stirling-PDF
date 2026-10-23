@@ -1,9 +1,9 @@
 import {
   hasNativeFileDialog,
   openFileDialog,
-} from "@app/services/fileDialogService";
-import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
-import { getDocumentFileDialogFilter } from "@app/utils/fileDialogUtils";
+} from "@editor/services/fileDialogService";
+import { pendingFilePathMappings } from "@editor/services/pendingFilePathMappings";
+import { getDocumentFileDialogFilter } from "@editor/utils/fileDialogUtils";
 
 interface OpenFilesFromDiskOptions {
   multiple?: boolean;

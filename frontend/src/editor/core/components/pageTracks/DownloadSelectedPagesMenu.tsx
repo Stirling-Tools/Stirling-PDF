@@ -1,8 +1,8 @@
 import { Menu } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon, IconName } from "@app/ui/Icon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { SelectedPagesLayout } from "@app/components/pageTracks/buildTrackFile";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon, IconName } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { SelectedPagesLayout } from "@editor/components/pageTracks/buildTrackFile";
 
 interface DownloadSelectedPagesMenuProps {
   label: string;

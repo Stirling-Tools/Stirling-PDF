@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { DrawingCanvas } from "@app/components/annotation/shared/DrawingCanvas";
+import { DrawingCanvas } from "@editor/components/annotation/shared/DrawingCanvas";
 
 const meta = {
   title: "Annotation/DrawingCanvas",

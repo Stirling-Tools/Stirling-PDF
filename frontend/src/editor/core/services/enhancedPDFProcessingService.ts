@@ -4,14 +4,14 @@ import {
   PDFPage,
   ProcessingConfig,
   ProcessingMetrics,
-} from "@app/types/processing";
+} from "@editor/types/processing";
 import type { PDFPageProxy } from "pdfjs-dist";
-import { ProcessingCache } from "@app/services/processingCache";
-import { FileHasher } from "@app/utils/fileHash";
-import { FileAnalyzer } from "@app/services/fileAnalyzer";
-import { ProcessingErrorHandler } from "@app/services/processingErrorHandler";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { createQuickKey } from "@app/types/fileContext";
+import { ProcessingCache } from "@editor/services/processingCache";
+import { FileHasher } from "@editor/utils/fileHash";
+import { FileAnalyzer } from "@editor/services/fileAnalyzer";
+import { ProcessingErrorHandler } from "@editor/services/processingErrorHandler";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import { createQuickKey } from "@editor/types/fileContext";
 
 export class EnhancedPDFProcessingService {
   private static instance: EnhancedPDFProcessingService;

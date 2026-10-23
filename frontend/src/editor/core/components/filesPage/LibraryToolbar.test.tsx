@@ -1,25 +1,27 @@
 import { render } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { LibraryToolbar } from "@app/components/filesPage/LibraryToolbar";
-import type { FilesPageOriginFilter } from "@app/contexts/FilesPageContext";
+import { LibraryToolbar } from "@editor/components/filesPage/LibraryToolbar";
+import type { FilesPageOriginFilter } from "@editor/contexts/FilesPageContext";
 
 const policy = vi.hoisted(() => ({ localOnly: false }));
-vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => policy.localOnly,
 }));
 vi.mock("@mantine/core", () => ({
   Select: () => null,
   MultiSelect: () => null,
 }));
-vi.mock("@app/ui/SegmentedControl", () => ({ SegmentedControl: () => null }));
-vi.mock("@app/ui/Icon", () => ({ Icon: () => null }));
-vi.mock("@app/components/filesPage/FilesToolbarFilterMenu", () => ({
+vi.mock("@editor/ui/SegmentedControl", () => ({
+  SegmentedControl: () => null,
+}));
+vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
+vi.mock("@editor/components/filesPage/FilesToolbarFilterMenu", () => ({
   FilesToolbarFilterMenu: () => null,
 }));
-vi.mock("@app/components/filesPage/FilesToolbarSortMenu", () => ({
+vi.mock("@editor/components/filesPage/FilesToolbarSortMenu", () => ({
   FilesToolbarSortMenu: () => null,
 }));
-vi.mock("@app/components/filesPage/FilenameSearch", () => ({
+vi.mock("@editor/components/filesPage/FilenameSearch", () => ({
   FilenameSearch: () => null,
 }));
 

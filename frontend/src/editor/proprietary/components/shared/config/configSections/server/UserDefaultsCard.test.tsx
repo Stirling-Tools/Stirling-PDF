@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MantineProvider } from "@mantine/core";
-import { UserDefaultsCard } from "@app/components/shared/config/configSections/server/UserDefaultsCard";
-import type { UiDefaultsSettingsData } from "@app/components/shared/config/configSections/server/serverSettings";
+import { UserDefaultsCard } from "@editor/components/shared/config/configSections/server/UserDefaultsCard";
+import type { UiDefaultsSettingsData } from "@editor/components/shared/config/configSections/server/serverSettings";
 
 vi.mock("react-i18next", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react-i18next")>()),

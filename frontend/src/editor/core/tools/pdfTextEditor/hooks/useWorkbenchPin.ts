@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef } from "react";
 import {
   useNavigationActions,
   useNavigationState,
-} from "@app/contexts/NavigationContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import type { CustomWorkbenchViewRegistration } from "@app/contexts/ToolWorkflowContext";
+} from "@editor/contexts/NavigationContext";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import type { CustomWorkbenchViewRegistration } from "@editor/contexts/ToolWorkflowContext";
 
 interface PinOptions {
   workbenchId: CustomWorkbenchViewRegistration["workbenchId"];

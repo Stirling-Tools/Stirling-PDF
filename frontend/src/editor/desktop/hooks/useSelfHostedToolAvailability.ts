@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
-import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
 
 /**
  * Desktop implementation of useSelfHostedToolAvailability.

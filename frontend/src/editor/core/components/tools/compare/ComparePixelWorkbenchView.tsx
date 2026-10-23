@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react";
 import { Badge, Group, Stack, Text } from "@mantine/core";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
 import type {
   CompareResultPixelData,
   ComparePixelPageResult,
-} from "@app/types/compare";
-import "@app/components/tools/compare/compareView.css";
+} from "@editor/types/compare";
+import "@editor/components/tools/compare/compareView.css";
 
 interface ComparePixelWorkbenchViewProps {
   result: CompareResultPixelData;

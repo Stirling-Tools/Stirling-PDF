@@ -1,5 +1,5 @@
 import path from "path";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 
 // A bulk upload must classify every file in the browser and group it - no file
 // may be stranded in "Other" by races between the upload wave and delivery.

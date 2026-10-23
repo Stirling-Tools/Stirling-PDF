@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ReplaceColorSettings from "@app/components/tools/replaceColor/ReplaceColorSettings";
+import ReplaceColorSettings from "@editor/components/tools/replaceColor/ReplaceColorSettings";
 import {
   ReplaceColorParameters,
   defaultParameters,
-} from "@app/hooks/tools/replaceColor/useReplaceColorParameters";
+} from "@editor/hooks/tools/replaceColor/useReplaceColorParameters";
 
 const meta = {
   title: "Tools/ReplaceColor/ReplaceColorSettings",

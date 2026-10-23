@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AnalyticsChoiceSlide from "@app/components/onboarding/slides/AnalyticsChoiceSlide";
+import AnalyticsChoiceSlide from "@editor/components/onboarding/slides/AnalyticsChoiceSlide";
 
 // AnalyticsChoiceSlide is a slide-content factory (returns a SlideConfig), not
 // a component, so wrap it to render its `body` the way the real onboarding

@@ -1,16 +1,16 @@
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { truncateCenter } from "@app/utils/textUtils";
-import { FileId } from "@app/types/file";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { truncateCenter } from "@editor/utils/textUtils";
+import { FileId } from "@editor/types/file";
 import {
   trackHandleId,
   trackZoneId,
-} from "@app/components/pageTracks/TrackRow";
-import styles from "@app/components/pageTracks/PageTracks.module.css";
+} from "@editor/components/pageTracks/TrackRow";
+import styles from "@editor/components/pageTracks/PageTracks.module.css";
 
 interface DisabledFileTrackProps {
   fileId: FileId;

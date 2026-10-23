@@ -1,8 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ProcurementFlow } from "@portal/components/procurement/ProcurementFlow";
-import type { ProcurementController } from "@portal/components/procurement/useProcurement";
-import type { ProcurementSnapshot, QuoteResult } from "@portal/api/procurement";
-import "@portal/views/Procurement.css";
+import { ProcurementFlow } from "@processor/components/procurement/ProcurementFlow";
+import type { ProcurementController } from "@processor/components/procurement/useProcurement";
+import type {
+  ProcurementSnapshot,
+  QuoteResult,
+} from "@processor/api/procurement";
+import "@processor/views/Procurement.css";
 
 const quote: QuoteResult = {
   quoteId: 488,

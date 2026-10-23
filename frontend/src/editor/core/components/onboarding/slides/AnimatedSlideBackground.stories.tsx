@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
-import type { AnimatedCircleConfig } from "@app/types/types";
+import AnimatedSlideBackground from "@editor/components/onboarding/slides/AnimatedSlideBackground";
+import type { AnimatedCircleConfig } from "@editor/types/types";
 
 const circles: AnimatedCircleConfig[] = [
   {

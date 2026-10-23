@@ -10,8 +10,8 @@ import {
   Alert,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import auditService, { AuditStats } from "@app/services/auditService";
-import { Icon, type IconName } from "@app/ui/Icon";
+import auditService, { AuditStats } from "@editor/services/auditService";
+import { Icon, type IconName } from "@editor/ui/Icon";
 interface AuditStatsCardsProps {
   loginEnabled?: boolean;
   timePeriod: "day" | "week" | "month";
