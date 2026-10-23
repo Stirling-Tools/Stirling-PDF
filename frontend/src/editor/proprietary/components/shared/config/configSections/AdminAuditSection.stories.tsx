@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import auditService from "@app/services/auditService";
+import AdminAuditSection from "@editor/components/shared/config/configSections/AdminAuditSection";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import auditService from "@editor/services/auditService";
 
 // AdminAuditSection reads its config through useAppConfig()/useLoginRequired()
 // rather than taking props, so each variant wraps it in an AppConfigProvider

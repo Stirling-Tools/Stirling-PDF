@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ComparePixelWorkbenchView from "@app/components/tools/compare/ComparePixelWorkbenchView";
-import type { CompareResultPixelData } from "@app/types/compare";
+import ComparePixelWorkbenchView from "@editor/components/tools/compare/ComparePixelWorkbenchView";
+import type { CompareResultPixelData } from "@editor/types/compare";
 
 // A tiny transparent PNG data URI so the <img> elements have something valid to
 // load without reaching out to a real file or network resource.

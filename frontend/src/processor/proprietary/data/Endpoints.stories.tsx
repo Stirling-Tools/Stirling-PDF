@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { VERTICALS, ALL_ENDPOINTS } from "@portal/data/endpoints";
-import { MethodBadge } from "@app/ui/MethodBadge";
-import { StatusBadge } from "@app/ui/StatusBadge";
+import { VERTICALS, ALL_ENDPOINTS } from "@processor/data/endpoints";
+import { MethodBadge } from "@editor/ui/MethodBadge";
+import { StatusBadge } from "@editor/ui/StatusBadge";
 
 const meta: Meta = {
   title: "Data/Endpoint catalogue",

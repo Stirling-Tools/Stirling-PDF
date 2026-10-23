@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-// Resolves to the SaaS override (src/portal-saas) via the @portal cascade.
+// Resolves to the SaaS override (src/portal-saas) via the @processor cascade.
 import {
   GROUP_PROCESSOR,
   GROUP_PLATFORM,
-} from "@portal/components/sidebarGroups";
+} from "@processor/components/sidebarGroups";
 
 describe("sidebarGroups (SaaS)", () => {
   it("inherits the processor group unchanged from base", () => {

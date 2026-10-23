@@ -1,6 +1,6 @@
 import i18n from "i18next";
-import { alert } from "@app/components/toast";
-import { titleForStatus } from "@app/services/httpErrorUtils";
+import { alert } from "@editor/components/toast";
+import { titleForStatus } from "@editor/services/httpErrorUtils";
 
 interface ErrorToastMapping {
   regex: RegExp;

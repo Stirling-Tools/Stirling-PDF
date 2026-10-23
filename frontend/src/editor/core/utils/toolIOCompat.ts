@@ -13,11 +13,11 @@ import {
   type ToolFormat,
   type ToolIOSpec,
   type ToolIOTable,
-} from "@app/types/toolIO";
-import { detectFileExtension, getFileFormats } from "@app/utils/fileUtils";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import { getPdfAccess } from "@app/services/pdfAccessService";
-import { supportsSessionUnlock } from "@app/services/pdfSessionUnlock";
+} from "@editor/types/toolIO";
+import { detectFileExtension, getFileFormats } from "@editor/utils/fileUtils";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
+import { supportsSessionUnlock } from "@editor/services/pdfSessionUnlock";
 
 export type ToolDiagnosticSeverity = "ERROR" | "WARN" | "INFO";
 

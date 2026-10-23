@@ -1,7 +1,7 @@
 import React from "react";
-import { StirlingFileStub } from "@app/types/fileContext";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { truncateCenter } from "@app/utils/textUtils";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { truncateCenter } from "@editor/utils/textUtils";
 
 interface FileEditorFileNameProps {
   file: StirlingFileStub;

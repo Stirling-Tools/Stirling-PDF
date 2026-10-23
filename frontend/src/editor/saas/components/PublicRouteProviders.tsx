@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { ThemeProvider } from "@app/components/shared/ThemeProvider";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { ThemeProvider } from "@editor/components/shared/ThemeProvider";
 
 /**
  * Theme and preferences only, for pages that render without a session: no

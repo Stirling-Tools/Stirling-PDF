@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FilePicker } from "@app/ui/FilePicker";
+import { FilePicker } from "@editor/ui/FilePicker";
 
 const meta = {
   title: "Primitives/FilePicker",

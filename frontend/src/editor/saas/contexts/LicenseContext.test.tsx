@@ -2,16 +2,16 @@ import { act, renderHook } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactNode } from "react";
-import { LicenseProvider, useLicense } from "@app/contexts/LicenseContext";
+import { LicenseProvider, useLicense } from "@editor/contexts/LicenseContext";
 
 const getLicenseInfo = vi.hoisted(() => vi.fn());
-vi.mock("@app/services/licenseService", () => ({
+vi.mock("@editor/services/licenseService", () => ({
   default: { getLicenseInfo },
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { isAdmin: true } }),
 }));
-vi.mock("@app/testing/serverExperienceSimulations", () => ({
+vi.mock("@editor/testing/serverExperienceSimulations", () => ({
   getSimulatedLicenseInfo: () => null,
 }));
 

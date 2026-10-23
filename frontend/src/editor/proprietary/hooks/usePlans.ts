@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { getPreferredCurrency } from "@app/utils/currencyDetection";
+import { getPreferredCurrency } from "@editor/utils/currencyDetection";
 import licenseService, {
   PlanTier,
   PlansResponse,
-} from "@app/services/licenseService";
+} from "@editor/services/licenseService";
 import {
   usePlanFeatures,
   usePlanHighlights,
-} from "@app/constants/planConstants";
+} from "@editor/constants/planConstants";
 
 export interface UsePlansReturn {
   plans: PlanTier[];

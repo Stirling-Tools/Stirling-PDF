@@ -1,5 +1,5 @@
 /**
- * saas (web) implementation of the @app/hooks/walletDevPreview seam.
+ * saas (web) implementation of the @editor/hooks/walletDevPreview seam.
  *
  * Houses the PAYG dev-preview side-channel that {@code useWallet} used to carry
  * inline. It synthesises a wallet snapshot from {@code localStorage} when the
@@ -16,10 +16,10 @@
  *  - subscription state is read from / written to {@code localStorage} so the
  *    modal's "mark subscribed" action survives a reload.
  */
-import type { Wallet, WalletRole } from "@app/hooks/useWallet";
-import type { WalletDevPreview } from "@cloud/hooks/walletDevPreview";
+import type { Wallet, WalletRole } from "@editor/hooks/useWallet";
+import type { WalletDevPreview } from "@editor-cloud/hooks/walletDevPreview";
 
-export type { WalletDevPreview } from "@cloud/hooks/walletDevPreview";
+export type { WalletDevPreview } from "@editor-cloud/hooks/walletDevPreview";
 
 const STORAGE_KEY = "stirling.payg.devSubscription";
 

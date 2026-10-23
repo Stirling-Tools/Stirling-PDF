@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { SuperSearchGroup } from "@app/types/superSearch";
+import type { SuperSearchGroup } from "@editor/types/superSearch";
 
 const NO_GROUPS: SuperSearchGroup[] = [];
 

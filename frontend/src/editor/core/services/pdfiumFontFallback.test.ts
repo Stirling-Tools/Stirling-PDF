@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { FontCharset } from "@embedpdf/models";
 import { FontFallbackManager, type FontEntry } from "@embedpdf/engines";
-import { getLocalFontFallbackConfig } from "@app/services/pdfiumFontFallback";
+import { getLocalFontFallbackConfig } from "@editor/services/pdfiumFontFallback";
 
 const fontUrls = (entry: FontEntry | undefined): string[] =>
   entry === undefined

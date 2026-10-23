@@ -3,59 +3,59 @@ import { useTranslation } from "react-i18next";
 import { Alert, Drawer, Text } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { useMediaQuery } from "@mantine/hooks";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { alert } from "@app/components/toast";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import { useFilesPage } from "@app/contexts/FilesPageContext";
-import { useFolders } from "@app/contexts/FolderContext";
-import { useAllFiles } from "@app/contexts/FileContext";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
-import { useGoogleDrivePicker } from "@app/hooks/useGoogleDrivePicker";
-import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
-import { useFolderFileStates } from "@app/components/filesPage/useFolderFileStates";
-import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
-import { createQuickKey } from "@app/types/fileContext";
-import { useIsMobile } from "@app/hooks/useIsMobile";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { alert } from "@editor/components/toast";
+import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
+import { useFilesPage } from "@editor/contexts/FilesPageContext";
+import { useFolders } from "@editor/contexts/FolderContext";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useSharingEnabled } from "@editor/hooks/useSharingEnabled";
+import { useGoogleDrivePicker } from "@editor/hooks/useGoogleDrivePicker";
+import { useProcessingFolders } from "@editor/hooks/useProcessingFolders";
+import { useFolderFileStates } from "@editor/components/filesPage/useFolderFileStates";
+import { pendingFilePathMappings } from "@editor/services/pendingFilePathMappings";
+import { createQuickKey } from "@editor/types/fileContext";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
 import {
   FileGrid,
   type FilesPageEntry,
-} from "@app/components/filesPage/FileGrid";
-import { LibraryToolbar } from "@app/components/filesPage/LibraryToolbar";
-import { LibraryTabs } from "@app/components/filesPage/LibraryTabs";
-import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
-import { useLibraryViewState } from "@app/components/filesPage/useLibraryViewState";
-import { useLibraryScrollPosition } from "@app/components/filesPage/useLibraryScrollPosition";
-import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
-import { libraryEntries } from "@app/components/filesPage/libraryEntries";
-import { useLibraryFiles } from "@app/components/filesPage/useLibraryFiles";
-import { useDiskFolder } from "@app/components/filesPage/useDiskFolder";
+} from "@editor/components/filesPage/FileGrid";
+import { LibraryToolbar } from "@editor/components/filesPage/LibraryToolbar";
+import { LibraryTabs } from "@editor/components/filesPage/LibraryTabs";
+import { FolderNameDialog } from "@editor/components/filesPage/FolderNameDialog";
+import { useLibraryViewState } from "@editor/components/filesPage/useLibraryViewState";
+import { useLibraryScrollPosition } from "@editor/components/filesPage/useLibraryScrollPosition";
+import { FileDetailsPanel } from "@editor/components/filesPage/FileDetailsPanel";
+import { libraryEntries } from "@editor/components/filesPage/libraryEntries";
+import { useLibraryFiles } from "@editor/components/filesPage/useLibraryFiles";
+import { useDiskFolder } from "@editor/components/filesPage/useDiskFolder";
 import {
   addPickerItems,
   pickerKey,
   supportsPickerFile,
   type PickerItem,
-} from "@app/components/filesPage/pickerSelection";
-import MobileUploadModal from "@app/components/shared/MobileUploadModal";
-import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
-import { readDiskFile } from "@app/services/localFolderContents";
-import { zipFileService } from "@app/services/zipFileService";
+} from "@editor/components/filesPage/pickerSelection";
+import MobileUploadModal from "@editor/components/shared/MobileUploadModal";
+import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
+import { readDiskFile } from "@editor/services/localFolderContents";
+import { zipFileService } from "@editor/services/zipFileService";
 import {
   createNewStirlingFileStub,
   type StirlingFileStub,
-} from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import { folderKind, type FolderId } from "@app/types/folder";
-import { getFolderChain } from "@app/utils/folderPath";
-import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
+} from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import { folderKind, type FolderId } from "@editor/types/folder";
+import { getFolderChain } from "@editor/utils/folderPath";
+import { useDropzoneFiles } from "@editor/hooks/useDropzoneFiles";
 import {
   Z_INDEX_FILE_MANAGER_MODAL,
   Z_INDEX_OVER_FILE_MANAGER_MODAL,
-} from "@app/styles/zIndex";
-import "@app/components/filesPage/FilesPage.css";
-import "@app/components/filesPage/LibraryFilePicker.css";
+} from "@editor/styles/zIndex";
+import "@editor/components/filesPage/FilesPage.css";
+import "@editor/components/filesPage/LibraryFilePicker.css";
 
 interface Props {
   supportedFormats?: string[];

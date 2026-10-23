@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import type { HistoryAPI } from "@app/components/viewer/viewerTypes";
+import type { HistoryAPI } from "@editor/components/viewer/viewerTypes";
 
 export interface HistoryAvailability {
   canUndo: boolean;

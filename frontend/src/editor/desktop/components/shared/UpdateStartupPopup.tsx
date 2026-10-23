@@ -1,5 +1,5 @@
 /**
- * Desktop (Tauri) override of @app/components/shared/UpdateStartupPopup.
+ * Desktop (Tauri) override of @editor/components/shared/UpdateStartupPopup.
  *
  * On desktop the update flow is owned end-to-end by `useDesktopUpdatePopup`,
  * which also honours the headless `updateMode` provisioning flag and wires up

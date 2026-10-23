@@ -2,12 +2,12 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
 import type {
   FileContextState,
   StirlingFileStub,
-} from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+} from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const disk = vi.hoisted(() => ({ gone: new Set<string>() }));
 
-vi.mock("@app/services/desktopFileLink", () => ({
+vi.mock("@editor/services/desktopFileLink", () => ({
   desktopFileLinkingSupported: true,
   getDiskFileState: vi.fn(async (path: string) =>
     disk.gone.has(path)
@@ -16,16 +16,16 @@ vi.mock("@app/services/desktopFileLink", () => ({
   ),
   readFileFromDisk: vi.fn(async () => null),
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: vi.fn(),
     updateFileMetadata: vi.fn(async () => true),
     deleteStirlingFile: vi.fn(async () => undefined),
   },
 }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 
-import { reconcileOpenFilesAt } from "@app/contexts/file/fileActions";
+import { reconcileOpenFilesAt } from "@editor/contexts/file/fileActions";
 
 const SHARED = "/Users/x/Documents/report.pdf";
 

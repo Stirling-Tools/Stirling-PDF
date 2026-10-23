@@ -1,27 +1,28 @@
 import { Suspense, lazy, type ComponentType } from "react";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import { useEnterpriseEnabled } from "@portal/hooks/useEnterpriseEnabled";
-import { PortalSettingsSectionHost } from "@portal/components/settings/PortalSettingsSectionHost";
-import { PortalRosterHost } from "@portal/components/settings/PortalRosterHost";
-import { accountLinkSettings } from "@portal/components/settings/accountLinkSettings";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import { useEnterpriseEnabled } from "@processor/hooks/useEnterpriseEnabled";
+import { PortalSettingsSectionHost } from "@processor/components/settings/PortalSettingsSectionHost";
+import { PortalRosterHost } from "@processor/components/settings/PortalRosterHost";
+import { accountLinkSettings } from "@processor/components/settings/accountLinkSettings";
 
 const Users = lazy(async () => {
-  const m = await import("@portal/views/Users");
+  const m = await import("@processor/views/Users");
   return { default: m.Users };
 });
 
 const ApiKeys = lazy(async () => {
-  const m = await import("@portal/components/infrastructure/ApiKeysTab");
+  const m = await import("@processor/components/infrastructure/ApiKeysTab");
   return { default: m.ApiKeysTab };
 });
 
 const Audit = lazy(async () => {
-  const m = await import("@portal/components/infrastructure/AuditTab");
+  const m = await import("@processor/components/infrastructure/AuditTab");
   return { default: m.AuditTab };
 });
 
 const EncryptionPanel = lazy(async () => {
-  const m = await import("@portal/components/infrastructure/EncryptionPanel");
+  const m =
+    await import("@processor/components/infrastructure/EncryptionPanel");
   return { default: m.EncryptionPanel };
 });
 
@@ -37,7 +38,8 @@ function Encryption() {
 }
 
 const Billing = lazy(async () => {
-  const m = await import("@portal/components/settings/BillingSettingsSection");
+  const m =
+    await import("@processor/components/settings/BillingSettingsSection");
   return { default: m.BillingSettingsSection };
 });
 

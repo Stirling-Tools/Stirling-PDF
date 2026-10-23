@@ -6,27 +6,27 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import { Button } from "@app/ui/Button";
-import { isSafePostLoginRedirect } from "@app/auth";
+import { Button } from "@editor/ui/Button";
+import { isSafePostLoginRedirect } from "@editor/auth";
 import {
   setPostLoginRedirectPath,
   consumePostLoginRedirectPath,
-} from "@app/auth/spring/springAuthClient";
-import { useAuth } from "@app/auth/UseSession";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+} from "@editor/auth/spring/springAuthClient";
+import { useAuth } from "@editor/auth/UseSession";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { useTranslation } from "react-i18next";
-import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
-import AuthLayout from "@app/routes/authShared/AuthLayout";
-import { useBackendProbe } from "@app/hooks/useBackendProbe";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { resolveLandingPath } from "@app/utils/loginLanding";
-import { BASE_PATH, withBasePath } from "@app/constants/app";
-import { updateSupportedLanguages } from "@app/i18n";
-import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
-import AuthDefaultCredentials from "@app/auth/ui/AuthDefaultCredentials";
-import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import { useDocumentMeta } from "@editor/hooks/useDocumentMeta";
+import AuthLayout from "@editor/routes/authShared/AuthLayout";
+import { useBackendProbe } from "@editor/hooks/useBackendProbe";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
+import { resolveLandingPath } from "@editor/utils/loginLanding";
+import { BASE_PATH, withBasePath } from "@editor/constants/app";
+import { updateSupportedLanguages } from "@editor/i18n";
+import SpringLoginForm from "@editor/auth/ui/SpringLoginForm";
+import AuthDefaultCredentials from "@editor/auth/ui/AuthDefaultCredentials";
+import { useSpringLogin } from "@editor/auth/ui/useSpringLogin";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -224,7 +224,7 @@ export default function Login() {
     // isn't torn down and remounted on the way.
     let active = true;
     // Warm the editor chunk while /me resolves so the landing paints at once.
-    void import("@app/routes/Landing").catch(() => {});
+    void import("@editor/routes/Landing").catch(() => {});
     void resolveLandingPath().then(
       (path) => {
         if (!active) return;

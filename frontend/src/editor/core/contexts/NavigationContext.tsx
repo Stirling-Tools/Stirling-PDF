@@ -6,10 +6,10 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { WorkbenchType, getDefaultWorkbench } from "@app/types/workbench";
-import { ToolId, isValidToolId } from "@app/types/toolId";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
-import { registerUnsavedWorkChecker } from "@app/services/unsavedWork";
+import { WorkbenchType, getDefaultWorkbench } from "@editor/types/workbench";
+import { ToolId, isValidToolId } from "@editor/types/toolId";
+import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
+import { registerUnsavedWorkChecker } from "@editor/services/unsavedWork";
 
 /**
  * NavigationContext - Complete navigation management system

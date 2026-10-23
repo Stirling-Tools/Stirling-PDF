@@ -1,33 +1,35 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { rememberUnprotectedPdf } from "@app/tests/utils/testFileHelpers";
-import { FileId } from "@app/types/file";
-import { StirlingFileStub } from "@app/types/fileContext";
-import { PDFDocument } from "@app/types/pageEditor";
+import { rememberUnprotectedPdf } from "@editor/tests/utils/testFileHelpers";
+import { FileId } from "@editor/types/file";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { PDFDocument } from "@editor/types/pageEditor";
 import {
   BlankTrackPage,
   SourceTrackPage,
   TrackWorkspace,
-} from "@app/components/pageTracks/types";
+} from "@editor/components/pageTracks/types";
 import {
   buildTrackFile,
   buildSelectedPagesFiles,
   policyIdsForPages,
-} from "@app/components/pageTracks/buildTrackFile";
-import apiClient from "@app/services/apiClient";
+} from "@editor/components/pageTracks/buildTrackFile";
+import apiClient from "@editor/services/apiClient";
 import {
   clearPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfAccessService";
-import { convertImageToPdf } from "@app/utils/imageToPdfUtils";
+} from "@editor/services/pdfAccessService";
+import { convertImageToPdf } from "@editor/utils/imageToPdfUtils";
 
 const exportPDFMultiFile = vi.hoisted(() => vi.fn());
-vi.mock("@app/services/pdfExportService", () => ({
+vi.mock("@editor/services/pdfExportService", () => ({
   pdfExportService: { exportPDFMultiFile },
 }));
-vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
-vi.mock("@app/utils/imageToPdfUtils", () => ({ convertImageToPdf: vi.fn() }));
+vi.mock("@editor/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@editor/utils/imageToPdfUtils", () => ({
+  convertImageToPdf: vi.fn(),
+}));
 
 const A = "file-a" as FileId;
 const B = "file-b" as FileId;

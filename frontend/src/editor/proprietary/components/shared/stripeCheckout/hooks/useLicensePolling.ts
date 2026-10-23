@@ -2,8 +2,8 @@ import { useCallback } from "react";
 import {
   pollLicenseKeyWithBackoff,
   activateLicenseKey,
-} from "@app/utils/licenseCheckoutUtils";
-import { PollingStatus } from "@app/components/shared/stripeCheckout/types/checkout";
+} from "@editor/utils/licenseCheckoutUtils";
+import { PollingStatus } from "@editor/components/shared/stripeCheckout/types/checkout";
 
 /**
  * License key polling and activation logic hook

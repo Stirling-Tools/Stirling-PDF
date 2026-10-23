@@ -1,10 +1,10 @@
 import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ToolPanelModePrompt from "@app/components/tools/ToolPanelModePrompt";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { NavigationProvider } from "@app/contexts/NavigationContext";
-import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
+import ToolPanelModePrompt from "@editor/components/tools/ToolPanelModePrompt";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { NavigationProvider } from "@editor/contexts/NavigationContext";
+import { ToolWorkflowProvider } from "@editor/contexts/ToolWorkflowContext";
 
 /**
  * ToolWorkflowProvider reads navigation and tool-registry state on mount, so

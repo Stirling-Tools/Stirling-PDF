@@ -2,17 +2,20 @@ import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
 
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
-import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useNavigationGuard } from "@app/contexts/NavigationContext";
-import { useAllFiles, useFileManagement } from "@app/contexts/file/fileHooks";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import { truncateCenter } from "@app/utils/textUtils";
-import { isStirlingFile } from "@app/types/fileContext";
-import "@app/components/viewer/readerRail/ReaderRail.css";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Tooltip as AppTooltip } from "@editor/components/shared/Tooltip";
+import { useWorkbenchBar } from "@editor/contexts/WorkbenchBarContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useNavigationGuard } from "@editor/contexts/NavigationContext";
+import {
+  useAllFiles,
+  useFileManagement,
+} from "@editor/contexts/file/fileHooks";
+import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
+import { truncateCenter } from "@editor/utils/textUtils";
+import { isStirlingFile } from "@editor/types/fileContext";
+import "@editor/components/viewer/readerRail/ReaderRail.css";
 
 /** The quick-nav rail's icon size, so the two rails read as one family. */
 const SIZE = "1.125rem";

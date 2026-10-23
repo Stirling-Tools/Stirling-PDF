@@ -3,7 +3,7 @@
 // definitions and the portal's catalogue cards, summaries, and setup wizard.
 
 import type { ReactNode } from "react";
-import { Icon, type IconName } from "@app/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 
 /** Policy category id → outline glyph. */
 const POLICY_CATEGORY_ICONS: Record<string, IconName> = {

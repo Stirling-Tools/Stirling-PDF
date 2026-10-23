@@ -1,42 +1,42 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
-import { isAuthRoute } from "@app/utils/pathUtils";
-import { AppProviders } from "@app/components/AppProviders";
-import { PublicRouteProviders } from "@app/components/PublicRouteProviders";
-import { RunLocationGate } from "@app/components/runLocation/RunLocationGate";
-import { setBaseUrl } from "@app/constants/app";
-import type { AppConfig } from "@app/contexts/AppConfigContext";
-import { AppLayout } from "@app/components/AppLayout";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import OnboardingTour from "@app/components/onboarding/OnboardingTour";
-import Landing from "@app/routes/Landing";
-import Login from "@app/routes/Login";
-import { ResumePendingConnect } from "@app/routes/ResumePendingConnect";
-import Signup from "@app/routes/Signup";
-import AuthCallback from "@app/routes/AuthCallback";
-import ResetPassword from "@app/routes/ResetPassword";
-import OAuthConsent from "@app/routes/OAuthConsent";
-import ConnectApprove from "@app/routes/ConnectApprove";
-import ShareLinkPage from "@app/routes/ShareLinkPage";
-import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
-import { AppFrame } from "@app/components/layout/AppFrame";
-import { NoAppChrome } from "@app/components/layout/NoAppChrome";
-import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
-import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
-import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
-import { RootGate } from "@app/routes/RootGate";
+import { isAuthRoute } from "@editor/utils/pathUtils";
+import { AppProviders } from "@editor/components/AppProviders";
+import { PublicRouteProviders } from "@editor/components/PublicRouteProviders";
+import { RunLocationGate } from "@editor/components/runLocation/RunLocationGate";
+import { setBaseUrl } from "@editor/constants/app";
+import type { AppConfig } from "@editor/contexts/AppConfigContext";
+import { AppLayout } from "@editor/components/AppLayout";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import OnboardingTour from "@editor/components/onboarding/OnboardingTour";
+import Landing from "@editor/routes/Landing";
+import Login from "@editor/routes/Login";
+import { ResumePendingConnect } from "@editor/routes/ResumePendingConnect";
+import Signup from "@editor/routes/Signup";
+import AuthCallback from "@editor/routes/AuthCallback";
+import ResetPassword from "@editor/routes/ResetPassword";
+import OAuthConsent from "@editor/routes/OAuthConsent";
+import ConnectApprove from "@editor/routes/ConnectApprove";
+import ShareLinkPage from "@editor/routes/ShareLinkPage";
+import { getAdminRouteExtensions } from "@editor/routes/adminRouteExtensions";
+import { AppFrame } from "@editor/components/layout/AppFrame";
+import { NoAppChrome } from "@editor/components/layout/NoAppChrome";
+import OnboardingBootstrap from "@editor/components/OnboardingBootstrap";
+import SignupRequiredBootstrap from "@editor/components/SignupRequiredBootstrap";
+import UsageLimitModalHost from "@editor/components/UsageLimitModalHost";
+import { RootGate } from "@editor/routes/RootGate";
 
-const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
-const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
+const MobileScannerPage = lazy(() => import("@editor/pages/MobileScannerPage"));
+const MobileSignPage = lazy(() => import("@editor/pages/MobileSignPage"));
 
 // Import global styles
-import "@app/styles/tailwind.css";
-import "@app/auth/ui/auth-theme.css";
-import "@app/styles/cookieconsent.css";
-import "@app/styles/index.css";
+import "@editor/styles/tailwind.css";
+import "@editor/auth/ui/auth-theme.css";
+import "@editor/styles/cookieconsent.css";
+import "@editor/styles/index.css";
 
 // Import file ID debugging helpers (development only)
-import "@app/utils/fileIdSafety";
+import "@editor/utils/fileIdSafety";
 
 function handleConfigLoaded(config: AppConfig) {
   if (config.baseUrl) setBaseUrl(config.baseUrl);

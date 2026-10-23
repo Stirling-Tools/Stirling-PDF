@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { Stack, Text, Box, Group, Center } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { RotateParametersHook } from "@app/hooks/tools/rotate/useRotateParameters";
-import { useViewScopedFileStubs } from "@app/hooks/tools/shared/useViewScopedFiles";
-import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
+import { Icon } from "@editor/ui/Icon";
+import { RotateParametersHook } from "@editor/hooks/tools/rotate/useRotateParameters";
+import { useViewScopedFileStubs } from "@editor/hooks/tools/shared/useViewScopedFiles";
+import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
 
 interface RotateSettingsProps {
   parameters: RotateParametersHook;

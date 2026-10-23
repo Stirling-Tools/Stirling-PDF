@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -12,11 +12,11 @@ import {
   Tabs,
   Tooltip,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { openAppSettings } from "@app/utils/appSettings";
-import { useAuth } from "@app/auth/UseSession";
-import { isUserAnonymous } from "@app/auth/supabase";
+import { Button } from "@editor/ui/Button";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { openAppSettings } from "@editor/utils/appSettings";
+import { useAuth } from "@editor/auth/UseSession";
+import { isUserAnonymous } from "@editor/auth/supabase";
 
 /** Strip a single trailing slash so we can safely append paths. */
 function trimTrailingSlash(url: string): string {

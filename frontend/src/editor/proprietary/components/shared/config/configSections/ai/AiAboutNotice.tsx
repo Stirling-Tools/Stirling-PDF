@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Alert, Group, Text, Code } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { handleExternalLinkClick } from "@app/platform/externalLinkClick";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { handleExternalLinkClick } from "@editor/platform/externalLinkClick";
 
 /** Null until the docs page is written; setting it brings back the set-up guide button. */
 export const AI_ENGINE_DOCS_URL: string | null = null;

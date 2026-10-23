@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Group, NumberInput, Select, Stack, Text, Grid } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import type { MeasureScale } from "@app/utils/measurementTypes";
+import { Button } from "@editor/ui/Button";
+import type { MeasureScale } from "@editor/utils/measurementTypes";
 import {
   generateScaleLabel,
   parsePresetRatio,
   calculateScaleFactor,
   getUnitOptions,
-} from "@app/utils/measurementUtils";
+} from "@editor/utils/measurementUtils";
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 // Preset scales as architectural ratios (e.g., "1:100" = 1 page unit = 100 real-world units)

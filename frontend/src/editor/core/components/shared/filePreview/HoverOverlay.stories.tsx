@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Box, Text } from "@mantine/core";
-import HoverOverlay from "@app/components/shared/filePreview/HoverOverlay";
+import HoverOverlay from "@editor/components/shared/filePreview/HoverOverlay";
 
 const meta = {
   title: "Shared/FilePreview/HoverOverlay",

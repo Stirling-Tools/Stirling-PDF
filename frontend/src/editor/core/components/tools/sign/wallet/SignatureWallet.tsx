@@ -1,28 +1,28 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useSignature } from "@app/contexts/SignatureContext";
-import { useIsMobile } from "@app/hooks/useIsMobile";
-import { useHistoryAvailability } from "@app/hooks/useHistoryAvailability";
-import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
-import type { SavedSignature } from "@app/types/signature";
-import { CreateSignatureModal } from "@app/components/tools/sign/createSignature/CreateSignatureModal";
-import type { CreateTab } from "@app/components/tools/sign/createSignature/types";
-import { ApplySignaturesButton } from "@app/components/tools/sign/wallet/ApplySignaturesButton";
-import { DeleteSignatureModal } from "@app/components/tools/sign/wallet/DeleteSignatureModal";
-import { PlacedSignaturesList } from "@app/components/tools/sign/wallet/PlacedSignaturesList";
-import { PlacementStatus } from "@app/components/tools/sign/wallet/PlacementStatus";
-import { RenameSignatureModal } from "@app/components/tools/sign/wallet/RenameSignatureModal";
-import { SignatureLibraryView } from "@app/components/tools/sign/wallet/SignatureLibraryView";
-import { SignatureWalletIntro } from "@app/components/tools/sign/wallet/SignatureWalletIntro";
-import { useSignatureLibrary } from "@app/components/tools/sign/wallet/useSignatureLibrary";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useSignature } from "@editor/contexts/SignatureContext";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import { useHistoryAvailability } from "@editor/hooks/useHistoryAvailability";
+import type { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
+import type { SavedSignature } from "@editor/types/signature";
+import { CreateSignatureModal } from "@editor/components/tools/sign/createSignature/CreateSignatureModal";
+import type { CreateTab } from "@editor/components/tools/sign/createSignature/types";
+import { ApplySignaturesButton } from "@editor/components/tools/sign/wallet/ApplySignaturesButton";
+import { DeleteSignatureModal } from "@editor/components/tools/sign/wallet/DeleteSignatureModal";
+import { PlacedSignaturesList } from "@editor/components/tools/sign/wallet/PlacedSignaturesList";
+import { PlacementStatus } from "@editor/components/tools/sign/wallet/PlacementStatus";
+import { RenameSignatureModal } from "@editor/components/tools/sign/wallet/RenameSignatureModal";
+import { SignatureLibraryView } from "@editor/components/tools/sign/wallet/SignatureLibraryView";
+import { SignatureWalletIntro } from "@editor/components/tools/sign/wallet/SignatureWalletIntro";
+import { useSignatureLibrary } from "@editor/components/tools/sign/wallet/useSignatureLibrary";
 import {
   useArmDefaultSignature,
   useSignaturePlacement,
-} from "@app/components/tools/sign/wallet/useSignaturePlacement";
-import { useWalletActions } from "@app/components/tools/sign/wallet/useWalletActions";
-import styles from "@app/components/tools/sign/wallet/SignatureWallet.module.css";
-import { alert } from "@app/components/toast";
+} from "@editor/components/tools/sign/wallet/useSignaturePlacement";
+import { useWalletActions } from "@editor/components/tools/sign/wallet/useWalletActions";
+import styles from "@editor/components/tools/sign/wallet/SignatureWallet.module.css";
+import { alert } from "@editor/components/toast";
 
 type WalletDialog =
   | { kind: "create"; tab: CreateTab }

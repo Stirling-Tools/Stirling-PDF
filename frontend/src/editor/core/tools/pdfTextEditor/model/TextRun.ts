@@ -1,11 +1,11 @@
-import type { ScanEditState } from "@app/tools/pdfTextEditor/commands/scanTextEdit";
-import type { TagMark } from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import type { ScanEditState } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import type { TagMark } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import type {
   Affine,
   PageRect,
   RGBA,
   TextRunSnapshot,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
 
 /** One line's worth of sub-run data inside a paragraph. */
 export interface ParagraphLineSlot {

@@ -4,8 +4,8 @@ import {
   addPasswordFromApiParams,
   addPasswordToApiParams,
   useAddPasswordOperation,
-} from "@app/hooks/tools/addPassword/useAddPasswordOperation";
-import type { AddPasswordFullParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
+} from "@editor/hooks/tools/addPassword/useAddPasswordOperation";
+import type { AddPasswordFullParameters } from "@editor/hooks/tools/addPassword/useAddPasswordParameters";
 
 // Mock the useToolOperation hook
 vi.mock("../shared/useToolOperation", async () => {
@@ -33,7 +33,7 @@ import {
   ToolOperationHook,
   ToolType,
   useToolOperation,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 
 describe("useAddPasswordOperation", () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);

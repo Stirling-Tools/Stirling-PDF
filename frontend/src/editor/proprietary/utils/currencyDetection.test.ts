@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import {
   getPreferredCurrency,
   setCachedCurrency,
-} from "@app/utils/currencyDetection";
+} from "@editor/utils/currencyDetection";
 
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.unstubAllGlobals());

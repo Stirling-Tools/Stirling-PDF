@@ -1,4 +1,4 @@
-import { getFontBaseUrl } from "@app/services/fontBaseUrl";
+import { getFontBaseUrl } from "@editor/services/fontBaseUrl";
 import type {
   FontEntry,
   FontFallbackConfig,
