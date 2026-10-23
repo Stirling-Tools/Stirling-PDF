@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   PdfiumOpenError,
   FPDF_ERR_PASSWORD,
-} from "@app/services/pdfiumService";
+} from "@editor/services/pdfiumService";
 
 /**
  * thumbnailUtils identifies password-protected PDFs from the error that
@@ -191,7 +191,7 @@ describe("generateThumbnailForFile — images", () => {
 
   it("skips the decode when the header gives no dimensions", async () => {
     const { generateThumbnailForFile } =
-      await import("@app/utils/thumbnailUtils");
+      await import("@editor/utils/thumbnailUtils");
     const { closed, draws, calls } = stubBitmapPipeline();
     const file = new File([pngBytes], "photo.png", { type: "image/png" });
     const thumb = await generateThumbnailForFile(file);
@@ -205,7 +205,7 @@ describe("generateThumbnailForFile — images", () => {
 
   it("passes both dimensions when the header gives the source size", async () => {
     const { generateThumbnailForFile } =
-      await import("@app/utils/thumbnailUtils");
+      await import("@editor/utils/thumbnailUtils");
     const { closed, calls } = stubBitmapPipeline();
     const file = fileWithHeader(pngHeader(400, 300));
     const thumb = await generateThumbnailForFile(file);
@@ -221,7 +221,7 @@ describe("generateThumbnailForFile — images", () => {
 
   it("bounds the resize request for extreme-aspect images", async () => {
     const { generateThumbnailForFile } =
-      await import("@app/utils/thumbnailUtils");
+      await import("@editor/utils/thumbnailUtils");
     const { calls } = stubBitmapPipeline();
     const file = fileWithHeader(pngHeader(1, 100000));
     await generateThumbnailForFile(file);
@@ -231,7 +231,7 @@ describe("generateThumbnailForFile — images", () => {
 
   it("fits a requested box without enlarging a smaller image", async () => {
     const { generateImageThumbnail } =
-      await import("@app/utils/thumbnailUtils");
+      await import("@editor/utils/thumbnailUtils");
     const { calls } = stubBitmapPipeline();
     await generateImageThumbnail(fileWithHeader(pngHeader(4000, 3000)), 1024);
     await generateImageThumbnail(fileWithHeader(pngHeader(200, 100)), 1024);
@@ -243,7 +243,7 @@ describe("generateThumbnailForFile — images", () => {
 
   it("reads JPEG dimensions from the start-of-frame marker", async () => {
     const { generateThumbnailForFile } =
-      await import("@app/utils/thumbnailUtils");
+      await import("@editor/utils/thumbnailUtils");
     const { calls } = stubBitmapPipeline();
     const file = fileWithHeader(buildJpeg(600, 300), "photo.jpg", "image/jpeg");
     await generateThumbnailForFile(file);
@@ -253,7 +253,7 @@ describe("generateThumbnailForFile — images", () => {
 
   it("swaps axes for EXIF orientations that rotate the image", async () => {
     const { generateThumbnailForFile } =
-      await import("@app/utils/thumbnailUtils");
+      await import("@editor/utils/thumbnailUtils");
     const { calls } = stubBitmapPipeline();
     const file = fileWithHeader(
       buildJpeg(600, 300, { orientation: 6 }),
@@ -267,7 +267,7 @@ describe("generateThumbnailForFile — images", () => {
 
   it("finds a JPEG start-of-frame behind a large metadata segment", async () => {
     const { generateThumbnailForFile } =
-      await import("@app/utils/thumbnailUtils");
+      await import("@editor/utils/thumbnailUtils");
     const { calls } = stubBitmapPipeline();
     const file = fileWithHeader(
       buildJpeg(400, 300, { padding: 300 * 1024 }),
@@ -281,7 +281,7 @@ describe("generateThumbnailForFile — images", () => {
 
   it("falls back to the data URL when decode-at-size is unavailable", async () => {
     const { generateThumbnailForFile } =
-      await import("@app/utils/thumbnailUtils");
+      await import("@editor/utils/thumbnailUtils");
     const file = new File([pngBytes], "photo.png", { type: "image/png" });
     const thumb = await generateThumbnailForFile(file);
     expect(thumb.startsWith("data:image/png;base64,")).toBe(true);

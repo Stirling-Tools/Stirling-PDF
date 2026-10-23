@@ -1,9 +1,9 @@
 import React, { StrictMode } from "react";
 import { act, render, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
-import { InitialDocumentLoadBridge } from "@app/components/viewer/InitialDocumentLoadBridge";
-import { useDocumentLoadWaiter } from "@app/components/viewer/useDocumentLoadWaiter";
+import { DocumentSwapBridge } from "@editor/components/viewer/DocumentSwapBridge";
+import { InitialDocumentLoadBridge } from "@editor/components/viewer/InitialDocumentLoadBridge";
+import { useDocumentLoadWaiter } from "@editor/components/viewer/useDocumentLoadWaiter";
 
 const mocks = vi.hoisted(() => ({
   open: vi.fn(),

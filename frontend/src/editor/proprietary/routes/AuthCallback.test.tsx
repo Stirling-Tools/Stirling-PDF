@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import AuthCallback from "@app/routes/AuthCallback";
+import AuthCallback from "@editor/routes/AuthCallback";
 import {
   POST_LOGIN_REDIRECT_STORAGE_KEY,
   springAuth,
-} from "@app/auth/spring/springAuthClient";
-import { expectConsole } from "@app/tests/failOnConsole";
+} from "@editor/auth/spring/springAuthClient";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 // Mock springAuth; keep the real redirect-path helpers.
-vi.mock("@app/auth/spring/springAuthClient", async () => {
+vi.mock("@editor/auth/spring/springAuthClient", async () => {
   const actual = await vi.importActual<
-    typeof import("@app/auth/spring/springAuthClient")
-  >("@app/auth/spring/springAuthClient");
+    typeof import("@editor/auth/spring/springAuthClient")
+  >("@editor/auth/spring/springAuthClient");
   return {
     ...actual,
     springAuth: {

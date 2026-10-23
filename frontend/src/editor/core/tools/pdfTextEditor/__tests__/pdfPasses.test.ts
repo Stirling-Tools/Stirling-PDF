@@ -1,19 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { toLatin1 } from "@app/tools/pdfTextEditor/pdfdoc/bytes";
-import { parseOps, tokenize } from "@app/tools/pdfTextEditor/pdfdoc/contentOps";
-import { RawPdf } from "@app/tools/pdfTextEditor/pdfdoc/raw";
-import { consolidateContents } from "@app/tools/pdfTextEditor/pdfdoc/passes/consolidateContents";
+import { toLatin1 } from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
+import {
+  parseOps,
+  tokenize,
+} from "@editor/tools/pdfTextEditor/pdfdoc/contentOps";
+import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
+import { consolidateContents } from "@editor/tools/pdfTextEditor/pdfdoc/passes/consolidateContents";
 import {
   extractShadingDraws,
   preserveShadings,
-} from "@app/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
-import { prepareForEditing } from "@app/tools/pdfTextEditor/pdfdoc/prepareForEditing";
+} from "@editor/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
+import { prepareForEditing } from "@editor/tools/pdfTextEditor/pdfdoc/prepareForEditing";
 import {
   buildClassicPdf,
   singleContentPdf,
   splitContentPdf,
   streamBody,
-} from "@app/tools/pdfTextEditor/__tests__/pdfFixtures";
+} from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 describe("content-stream tokeniser", () => {
   it("treats a parenthesised string as one token even with escapes", () => {

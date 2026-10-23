@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Group, Stack, Badge, Text, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AuditSystemStatus as AuditStatus } from "@app/services/auditService";
+import { AuditSystemStatus as AuditStatus } from "@editor/services/auditService";
 
 interface AuditSystemStatusProps {
   status: AuditStatus;

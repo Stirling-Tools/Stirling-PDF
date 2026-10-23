@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import "@app/ui/EmptyState.css";
+import "@editor/ui/EmptyState.css";
 
 export interface EmptyStateProps {
   /** Eyebrow text shown above the title (e.g. "No pipelines yet"). */

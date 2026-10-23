@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CertificateSelectionStep } from "@app/components/tools/certSign/steps/CertificateSelectionStep";
+import { CertificateSelectionStep } from "@editor/components/tools/certSign/steps/CertificateSelectionStep";
 import {
   CertificateType,
   UploadFormat,
-} from "@app/components/tools/certSign/CertificateSelector";
+} from "@editor/components/tools/certSign/CertificateSelector";
 
 const meta = {
   title: "Tools/CertSign/CertificateSelectionStep",

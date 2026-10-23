@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { PdfiumPageRenderer } from "@app/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
-import { TextRunOverlay } from "@app/tools/pdfTextEditor/components/TextRunOverlay";
-import { TableOverlay } from "@app/tools/pdfTextEditor/components/TableOverlay";
-import { ImageHandle } from "@app/tools/pdfTextEditor/components/ImageHandle";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import { ShapeHandle } from "@app/tools/pdfTextEditor/components/ShapeHandle";
-import { AnnotationOutline } from "@app/tools/pdfTextEditor/components/AnnotationOutline";
-import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
-import { PageGuides } from "@app/tools/pdfTextEditor/components/PageRulers";
-import { useDevicePixelRatio } from "@app/tools/pdfTextEditor/hooks/useDevicePixelRatio";
+import { Button } from "@editor/ui/Button";
+import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
+import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
+import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
+import { ImageHandle } from "@editor/tools/pdfTextEditor/components/ImageHandle";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import { ShapeHandle } from "@editor/tools/pdfTextEditor/components/ShapeHandle";
+import { AnnotationOutline } from "@editor/tools/pdfTextEditor/components/AnnotationOutline";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { PageGuides } from "@editor/tools/pdfTextEditor/components/PageRulers";
+import { useDevicePixelRatio } from "@editor/tools/pdfTextEditor/hooks/useDevicePixelRatio";
 
 interface PageViewProps {
   document: EditorDocument;
@@ -25,7 +25,7 @@ interface PageViewProps {
   /** Fires when the page's bitmap finishes its first render. */
   onFirstRendered?: (pageIndex: number) => void;
   scale: number;
-  widthMode: import("@app/tools/pdfTextEditor/types").WidthMode;
+  widthMode: import("@editor/tools/pdfTextEditor/types").WidthMode;
   /** Show the page rulers and alignment guides. */
   showRulers?: boolean;
   selectedRunIds: string[];

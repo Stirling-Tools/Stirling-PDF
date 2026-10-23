@@ -1,7 +1,7 @@
-vi.mock("@app/contexts/LicenseContext", () => ({
+vi.mock("@editor/contexts/LicenseContext", () => ({
   useLicense: () => ({ licenseInfo: service.license }),
 }));
-vi.mock("@app/services/supabaseClient", () => ({
+vi.mock("@editor/services/supabaseClient", () => ({
   get isSupabaseConfigured() {
     return service.configured;
   },
@@ -16,12 +16,12 @@ const service = vi.hoisted(() => ({
   license: { enabled: true, licenseKey: "test-installed-license" },
   createBillingPortalSession: vi.fn(),
 }));
-vi.mock("@app/services/licenseService", () => ({ default: service }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/services/licenseService", () => ({ default: service }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));
-import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
+import { ManageBillingButton } from "@editor/components/shared/ManageBillingButton";
 it("opens the legacy subscription using the installed licence identity", async () => {
   service.getLicenseInfo.mockResolvedValue({
     licenseKey: "test-installed-license",

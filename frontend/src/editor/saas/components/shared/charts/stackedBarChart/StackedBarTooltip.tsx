@@ -1,5 +1,5 @@
 import React from "react";
-import { TooltipData } from "@app/types/charts";
+import { TooltipData } from "@editor/types/charts";
 
 interface StackedBarTooltipProps {
   data: TooltipData;

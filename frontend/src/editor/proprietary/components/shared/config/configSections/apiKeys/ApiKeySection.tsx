@@ -1,8 +1,8 @@
 import React from "react";
 import { Box, Group, Paper } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import FitText from "@app/components/shared/FitText";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import FitText from "@editor/components/shared/FitText";
 import { useTranslation } from "react-i18next";
 
 interface ApiKeySectionProps {

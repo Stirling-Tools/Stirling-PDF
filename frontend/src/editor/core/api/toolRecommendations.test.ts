@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import {
   fetchToolRecommendations,
   recordToolUsage,
   resetToolRecommendationsAvailabilityForTests,
-} from "@app/api/toolRecommendations";
+} from "@editor/api/toolRecommendations";
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: vi.fn(), post: vi.fn() },
 }));
 

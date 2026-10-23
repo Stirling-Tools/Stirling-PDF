@@ -4,7 +4,7 @@ import {
   acquireDispatchSlot,
   releaseDispatchSlot,
   resetDispatchSemaphoreForTests,
-} from "@app/components/policies/dispatchSemaphore";
+} from "@editor/components/policies/dispatchSemaphore";
 
 // Drain the microtask queue so an acquire's await-resume AND the caller's .then
 // have both run.

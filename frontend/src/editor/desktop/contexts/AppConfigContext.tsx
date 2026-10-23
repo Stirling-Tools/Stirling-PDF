@@ -1,15 +1,15 @@
 import { useMemo } from "react";
-import { useAppConfig as useCoreAppConfig } from "@core/contexts/AppConfigContext";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
-import { DESKTOP_DEFAULT_APP_CONFIG } from "@app/config/defaultAppConfig";
+import { useAppConfig as useCoreAppConfig } from "@editor-core/contexts/AppConfigContext";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
+import { DESKTOP_DEFAULT_APP_CONFIG } from "@editor/config/defaultAppConfig";
 
-export { AppConfigProvider } from "@core/contexts/AppConfigContext";
+export { AppConfigProvider } from "@editor-core/contexts/AppConfigContext";
 export type {
   AppConfig,
   AppConfigProviderProps,
   AppConfigRetryOptions,
   AppConfigBootstrapMode,
-} from "@core/contexts/AppConfigContext";
+} from "@editor-core/contexts/AppConfigContext";
 
 /** The managed device policy takes precedence over server feature flags and cached config. */
 export function useAppConfig() {

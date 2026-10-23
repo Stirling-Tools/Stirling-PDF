@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChevron";
-import "@app/components/shared/config/settingsSections.css";
+import { SettingsNavChevron } from "@editor/components/shared/config/SettingsNavChevron";
+import "@editor/components/shared/config/settingsSections.css";
 
 const meta = {
   title: "Shared/Config/SettingsNavChevron",

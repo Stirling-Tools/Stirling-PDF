@@ -1,15 +1,15 @@
-import apiClient from "@app/services/apiClient";
-import { fileStorage } from "@app/services/fileStorage";
-import type { FileId } from "@app/types/file";
-import type { StirlingFile } from "@app/types/fileContext";
-import type { FileContextActions } from "@app/types/fileContext";
+import apiClient from "@editor/services/apiClient";
+import { fileStorage } from "@editor/services/fileStorage";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFile } from "@editor/types/fileContext";
+import type { FileContextActions } from "@editor/types/fileContext";
 import {
   getShareBundleEntryRootId,
   isZipBundle,
   loadShareBundleEntries,
   parseContentDispositionFilename,
   readResponseHeader,
-} from "@app/services/shareBundleUtils";
+} from "@editor/services/shareBundleUtils";
 
 export interface ShareLinkMetadata {
   shareToken?: string;

@@ -35,9 +35,11 @@ jobs:
       fail-fast: false
       matrix:
         theme: [light, dark]
+        # One slice of the story set per entry, each on its own runner; add an
+        # entry when the slowest leg passes about 15 minutes.
+        shard: ["1/4", "2/4", "3/4", "4/4"]
     runs-on: ubuntu-latest
-    # One full sweep (~30 minutes of browser time).
-    timeout-minutes: 60
+    timeout-minutes: 30
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
@@ -59,14 +61,15 @@ jobs:
         with:
           version: 3.54.0
 
-      - name: a11y gate (every story, ${{ matrix.theme }})
-        run: task frontend:storybook:a11y:${{ matrix.theme }}
+      - name: a11y gate (every story, ${{ matrix.theme }} ${{ matrix.shard }})
+        run: task frontend:storybook:a11y:${{ matrix.theme }} -- --shard=${{ matrix.shard }}
 
       - name: Upload scan reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: a11y-scan-nightly-${{ matrix.theme }}-${{ github.run_id }}
+          # job-index because `shard` holds a slash, which artifact names reject.
+          name: a11y-scan-nightly-${{ matrix.theme }}-${{ strategy.job-index }}-${{ github.run_id }}
           path: frontend/.a11y-scan/
           retention-days: 14
           if-no-files-found: ignore

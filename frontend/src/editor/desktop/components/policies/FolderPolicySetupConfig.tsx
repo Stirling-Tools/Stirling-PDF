@@ -1,1 +1,1 @@
-export { FolderIngestionSettings as FolderPolicySetupConfig } from "@app/components/policies/FolderIngestionSettings";
+export { FolderIngestionSettings as FolderPolicySetupConfig } from "@editor/components/policies/FolderIngestionSettings";

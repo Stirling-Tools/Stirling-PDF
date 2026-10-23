@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ExtractPagesSettings from "@app/components/tools/extractPages/ExtractPagesSettings";
-import { ExtractPagesParameters } from "@app/hooks/tools/extractPages/useExtractPagesParameters";
+import ExtractPagesSettings from "@editor/components/tools/extractPages/ExtractPagesSettings";
+import { ExtractPagesParameters } from "@editor/hooks/tools/extractPages/useExtractPagesParameters";
 
 const meta = {
   title: "Tools/ExtractPages/ExtractPagesSettings",

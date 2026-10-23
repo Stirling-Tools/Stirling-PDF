@@ -1,13 +1,13 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { Home } from "@portal/views/Home";
-import { Documents } from "@portal/views/Documents";
-import { Review } from "@portal/views/Review";
-import { Pipelines } from "@portal/views/Pipelines";
-import { PipelineBuilder } from "@portal/views/PipelineBuilder";
-import { Sources } from "@portal/views/Sources";
-import { Integrations } from "@portal/views/Integrations";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { DOCS_PATH } from "@app/routes/docsRoute";
+import { Home } from "@processor/views/Home";
+import { Documents } from "@processor/views/Documents";
+import { Review } from "@processor/views/Review";
+import { Pipelines } from "@processor/views/Pipelines";
+import { PipelineBuilder } from "@processor/views/PipelineBuilder";
+import { Sources } from "@processor/views/Sources";
+import { Integrations } from "@processor/views/Integrations";
+import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
+import { DOCS_PATH } from "@editor/routes/docsRoute";
 
 /** Keeps the query and hash a moved tab's deep links carry (?tab=, #doc-id). */
 function MovedTo({ to }: { to: string }) {

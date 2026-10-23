@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   PolicyPurviewConfig,
   type PurviewLabelParams,
-} from "@portal/components/policies/PolicyPurviewConfig";
+} from "@processor/components/policies/PolicyPurviewConfig";
 
 const meta: Meta<typeof PolicyPurviewConfig> = {
   title: "Portal/Policies/PolicyPurviewConfig",
