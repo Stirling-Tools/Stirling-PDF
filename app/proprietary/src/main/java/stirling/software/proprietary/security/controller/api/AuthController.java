@@ -37,7 +37,6 @@ import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.MfaCodeRequest;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPassMfa;
-import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
@@ -369,6 +368,11 @@ public class AuthController {
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             User user = (User) userDetails;
+            if (!user.isEnabled()) {
+                log.warn("Token refresh rejected: user {} is disabled", username);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Token refresh failed"));
+            }
 
             Map<String, Object> newClaims = new HashMap<>();
             newClaims.put("authType", user.getAuthenticationType());
@@ -412,7 +416,7 @@ public class AuthController {
                                             "expires_in",
                                             getTokenExpirySeconds(isDesktopClient))));
 
-        } catch (AuthenticationFailureException e) {
+        } catch (AuthenticationException e) {
             log.warn("Token refresh failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Token refresh failed"));
