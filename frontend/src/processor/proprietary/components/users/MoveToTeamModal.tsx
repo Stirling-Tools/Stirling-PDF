@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, FormField, Modal, Select } from "@app/ui";
-import { moveMemberToTeam, type Member } from "@portal/api/users";
-import type { Team } from "@portal/api/teams";
-import { errorMessage } from "@portal/api/http";
-import "@portal/views/Users.css";
+import { Button, FormField, Modal, Select } from "@editor/ui";
+import { moveMemberToTeam, type Member } from "@processor/api/users";
+import type { Team } from "@processor/api/teams";
+import { errorMessage } from "@processor/api/http";
+import "@processor/views/Users.css";
 
 interface MoveToTeamModalProps {
   open: boolean;

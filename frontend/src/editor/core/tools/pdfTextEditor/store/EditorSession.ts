@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import type { FileId } from "@app/types/file";
+import type { FileId } from "@editor/types/file";
 
 export interface EditorSession {
   fileName: string | null;

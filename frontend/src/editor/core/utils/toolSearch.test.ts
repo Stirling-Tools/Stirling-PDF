@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
+import { filterToolRegistryByQuery } from "@editor/utils/toolSearch";
 import {
   ToolCategoryId,
   SubcategoryId,
   ToolRegistry,
   ToolRegistryEntry,
-} from "@app/data/toolsTaxonomy";
+} from "@editor/data/toolsTaxonomy";
 
 function makeEntry(name: string, tags: string): ToolRegistryEntry {
   return {

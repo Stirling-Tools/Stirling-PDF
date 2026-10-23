@@ -1,9 +1,9 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { Affine } from "@app/tools/pdfTextEditor/types";
+import type { Affine } from "@editor/tools/pdfTextEditor/types";
 import {
   composeAffine,
   invertAffine,
-} from "@app/tools/pdfTextEditor/model/affine";
+} from "@editor/tools/pdfTextEditor/model/affine";
 
 interface ClipPathModule {
   FPDFPageObj_TransformClipPath?: (

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import CompressSettings from "@app/components/tools/compress/CompressSettings";
+import CompressSettings from "@editor/components/tools/compress/CompressSettings";
 import {
   CompressParameters,
   defaultParameters,
-} from "@app/hooks/tools/compress/useCompressParameters";
+} from "@editor/hooks/tools/compress/useCompressParameters";
 
 const meta = {
   title: "Tools/Compress/CompressSettings",

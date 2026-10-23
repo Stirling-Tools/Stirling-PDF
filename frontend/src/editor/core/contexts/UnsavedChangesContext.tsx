@@ -6,7 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import { Modal, Text, Group, Stack } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 
 interface UnsavedChangesContextType {

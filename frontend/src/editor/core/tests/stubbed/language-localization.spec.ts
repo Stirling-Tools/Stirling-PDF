@@ -1,5 +1,5 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { openSettings } from "@app/tests/helpers/ui-helpers";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openSettings } from "@editor/tests/helpers/ui-helpers";
 
 test.describe("13. Language / Localization", () => {
   test.use({

@@ -1,13 +1,13 @@
 import { useState, type ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { NavigationProvider } from "@app/contexts/NavigationContext";
+import ToolSearch from "@editor/components/tools/toolPicker/ToolSearch";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { NavigationProvider } from "@editor/contexts/NavigationContext";
 import {
   ToolWorkflowProvider,
   useToolWorkflow,
-} from "@app/contexts/ToolWorkflowContext";
+} from "@editor/contexts/ToolWorkflowContext";
 
 // ToolSearchDemo below sources toolRegistry via useToolWorkflow(), so
 // ToolWorkflowProvider must be present — and it in turn needs

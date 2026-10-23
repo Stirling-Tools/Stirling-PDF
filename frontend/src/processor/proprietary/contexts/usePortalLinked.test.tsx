@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render } from "@testing-library/react";
-import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { usePortalLinked } from "@portal/contexts/usePortalLinked";
+import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
+import { usePortalLinked } from "@processor/contexts/usePortalLinked";
 
 function Probe() {
   return <span data-testid="linked">{String(usePortalLinked())}</span>;

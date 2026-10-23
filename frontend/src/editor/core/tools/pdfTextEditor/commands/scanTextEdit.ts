@@ -1,8 +1,8 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import type { PageRect, RGBA } from "@app/tools/pdfTextEditor/types";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
 import {
   INK_SCALE,
   capturePatch,
@@ -10,20 +10,20 @@ import {
   sampleBackground,
   type PixelPatch,
   type ScanInk,
-} from "@app/tools/pdfTextEditor/pdfium/BackgroundSampler";
+} from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   layoutScanEdit,
   type LayoutWord,
-} from "@app/tools/pdfTextEditor/commands/scanLayout";
-import { createBitmapImageObject } from "@app/utils/pdfiumBitmapUtils";
-import type { TagMark } from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+} from "@editor/tools/pdfTextEditor/commands/scanLayout";
+import { createBitmapImageObject } from "@editor/utils/pdfiumBitmapUtils";
+import type { TagMark } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
   emitFillRect,
   emitTextLine,
   measureObjSpanPt,
   removeAndDestroyObject,
   removeMemberPtrs,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   COURIER,
   FACES,
@@ -41,7 +41,7 @@ import {
   spanOf,
   topShare,
   type Face,
-} from "@app/tools/pdfTextEditor/commands/scanStyle";
+} from "@editor/tools/pdfTextEditor/commands/scanStyle";
 
 // Editing OCR text on a scanned page. The words live twice: as pixels in the
 // scan and as invisible (Tr 3) text. An edit draws only the words the user

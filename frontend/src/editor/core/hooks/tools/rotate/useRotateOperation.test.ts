@@ -1,7 +1,7 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useRotateOperation } from "@app/hooks/tools/rotate/useRotateOperation";
-import type { RotateParameters } from "@app/hooks/tools/rotate/useRotateParameters";
+import { useRotateOperation } from "@editor/hooks/tools/rotate/useRotateOperation";
+import type { RotateParameters } from "@editor/hooks/tools/rotate/useRotateParameters";
 
 // Mock the useToolOperation hook
 vi.mock("../shared/useToolOperation", async () => {
@@ -29,11 +29,11 @@ import {
   ToolOperationHook,
   ToolType,
   useToolOperation,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   rotateFromApiParams,
   rotateToApiParams,
-} from "@app/hooks/tools/rotate/useRotateOperation";
+} from "@editor/hooks/tools/rotate/useRotateOperation";
 
 describe("useRotateOperation", () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);

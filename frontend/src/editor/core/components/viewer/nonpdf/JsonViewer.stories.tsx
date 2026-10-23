@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { JsonViewer } from "@app/components/viewer/nonpdf/JsonViewer";
+import { JsonViewer } from "@editor/components/viewer/nonpdf/JsonViewer";
 
 function jsonFile(name: string, contents: string) {
   return new File([contents], name, { type: "application/json" });

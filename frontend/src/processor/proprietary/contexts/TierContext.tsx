@@ -5,7 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { usePlanTier } from "@portal/contexts/usePlanTier";
+import { usePlanTier } from "@processor/contexts/usePlanTier";
 
 export type Tier = "free" | "pro" | "enterprise";
 

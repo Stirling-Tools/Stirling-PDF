@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SignaturePreviewLayer } from "@app/components/viewer/SignaturePreviewLayer";
-import type { SignaturePreview } from "@app/components/viewer/viewerTypes";
+import { SignaturePreviewLayer } from "@editor/components/viewer/SignaturePreviewLayer";
+import type { SignaturePreview } from "@editor/components/viewer/viewerTypes";
 
 // A 1x1 transparent PNG — enough to satisfy the <img> src without a real signature asset.
 const PLACEHOLDER_SIGNATURE_DATA =

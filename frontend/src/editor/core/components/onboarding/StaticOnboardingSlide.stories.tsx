@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import StaticOnboardingSlide from "@app/components/onboarding/StaticOnboardingSlide";
-import { DEFAULT_RUNTIME_STATE } from "@app/components/onboarding/orchestrator/onboardingConfig";
+import StaticOnboardingSlide from "@editor/components/onboarding/StaticOnboardingSlide";
+import { DEFAULT_RUNTIME_STATE } from "@editor/components/onboarding/orchestrator/onboardingConfig";
 
 /**
  * Renders the "interrupt" onboarding modals — slides shown outside the normal

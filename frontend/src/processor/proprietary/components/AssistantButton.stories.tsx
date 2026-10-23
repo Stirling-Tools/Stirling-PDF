@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect } from "react";
-import { AssistantButton } from "@portal/components/AssistantButton";
-import { useUI } from "@portal/contexts/UIContext";
+import { AssistantButton } from "@processor/components/AssistantButton";
+import { useUI } from "@processor/contexts/UIContext";
 
 function ForceOpen() {
   const { openAssistant } = useUI();

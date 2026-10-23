@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { copyRgbaToBgraHeap } from "@app/utils/pdfiumBitmapUtils";
-import type { WrappedPdfiumModule } from "@app/services/pdfiumService";
+import { copyRgbaToBgraHeap } from "@editor/utils/pdfiumBitmapUtils";
+import type { WrappedPdfiumModule } from "@editor/services/pdfiumService";
 
 function createMockPdfium(bufferSize: number): {
   m: WrappedPdfiumModule;

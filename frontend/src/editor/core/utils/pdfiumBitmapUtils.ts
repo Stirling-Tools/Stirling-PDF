@@ -10,7 +10,7 @@
  * copy the result into the WASM heap with a single `HEAPU8.set()`.
  */
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { ExtendedPdfiumRuntime } from "@app/services/pdfiumService";
+import type { ExtendedPdfiumRuntime } from "@editor/services/pdfiumService";
 
 /** FPDF_ANNOT_LINK */
 export const FPDF_ANNOT_LINK = 4;

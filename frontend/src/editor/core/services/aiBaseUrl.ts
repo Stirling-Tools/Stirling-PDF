@@ -1,4 +1,4 @@
-import { getApiBaseUrl } from "@app/services/apiClientConfig";
+import { getApiBaseUrl } from "@editor/services/apiClientConfig";
 
 /**
  * Base URL for AI-engine calls (orchestrate stream, AI result-file download).

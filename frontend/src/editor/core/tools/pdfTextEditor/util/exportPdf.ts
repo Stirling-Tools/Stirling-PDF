@@ -1,12 +1,12 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { applyStructureEdits } from "@app/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
-import { repairStructure } from "@app/tools/pdfTextEditor/pdfdoc/passes/repairStructure";
-import { preserveShadings } from "@app/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
-import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { applyStructureEdits } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
+import { repairStructure } from "@editor/tools/pdfTextEditor/pdfdoc/passes/repairStructure";
+import { preserveShadings } from "@editor/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
+import { PdfiumSave } from "@editor/tools/pdfTextEditor/pdfium/PdfiumSave";
 import {
   assertIncrementalAppend,
   assertSavedPdf,
-} from "@app/tools/pdfTextEditor/util/savedBytes";
+} from "@editor/tools/pdfTextEditor/util/savedBytes";
 
 /** Serialize the editor document to a Blob plus the download filename. */
 export async function exportToBlob(

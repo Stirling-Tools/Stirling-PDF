@@ -9,15 +9,15 @@ import {
   Loader,
   Tooltip,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { useConnectedServer } from "@app/hooks/useConnectedServer";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
-import { AutomationConfig, ExecutionStep } from "@app/types/automation";
-import { EXECUTION_STATUS } from "@app/constants/automation";
-import { useResourceCleanup } from "@app/utils/resourceManager";
-import type { useAutomateOperation } from "@app/hooks/tools/automate/useAutomateOperation";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { useConnectedServer } from "@editor/hooks/useConnectedServer";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
+import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
+import { AutomationConfig, ExecutionStep } from "@editor/types/automation";
+import { EXECUTION_STATUS } from "@editor/constants/automation";
+import { useResourceCleanup } from "@editor/utils/resourceManager";
+import type { useAutomateOperation } from "@editor/hooks/tools/automate/useAutomateOperation";
 
 interface AutomationRunProps {
   automation: AutomationConfig;

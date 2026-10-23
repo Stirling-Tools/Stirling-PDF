@@ -8,7 +8,7 @@ import {
 import {
   nextPlacedSignatures,
   usePlacedSignatureTracking,
-} from "@app/components/viewer/hooks/usePlacedSignatureTracking";
+} from "@editor/components/viewer/hooks/usePlacedSignatureTracking";
 
 const tracking = vi.hoisted(() => ({
   api: { forDocument: vi.fn() },
@@ -20,16 +20,16 @@ const tracking = vi.hoisted(() => ({
 vi.mock("@embedpdf/plugin-annotation/react", () => ({
   useAnnotationCapability: () => ({ provides: tracking.api }),
 }));
-vi.mock("@app/contexts/SignatureContext", () => ({
+vi.mock("@editor/contexts/SignatureContext", () => ({
   useSignature: () => ({
     setPlacedSignatures: tracking.setPlaced,
     getImageData: tracking.imageFor,
   }),
 }));
-vi.mock("@app/components/viewer/hooks/useDocumentReady", () => ({
+vi.mock("@editor/components/viewer/hooks/useDocumentReady", () => ({
   useDocumentReady: () => tracking.ready,
 }));
-vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
+vi.mock("@editor/components/viewer/useActiveDocumentId", () => ({
   useActiveDocumentId: () => tracking.documentId,
 }));
 

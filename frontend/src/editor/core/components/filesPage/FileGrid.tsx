@@ -1,61 +1,61 @@
 import React, { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Checkbox, Loader, Menu, Tooltip } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { PolicyBadges as PolicyBadgeRow } from "@app/components/shared/PolicyBadges";
-import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
-import { FileId } from "@app/types/file";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { PolicyBadges as PolicyBadgeRow } from "@editor/components/shared/PolicyBadges";
+import type { FileItemPolicyRef } from "@editor/components/shared/PolicyBadges";
+import { FileId } from "@editor/types/file";
 import {
   FolderId,
   FolderRecord,
   ROOT_FOLDER_ID,
   folderKind,
-} from "@app/types/folder";
-import type { DiskFileEntry } from "@app/services/localFolderContents";
-import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
-import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
+} from "@editor/types/folder";
+import type { DiskFileEntry } from "@editor/services/localFolderContents";
+import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
+import { useServerProcessingBlock } from "@editor/hooks/useServerProcessingBlock";
+import { useProcessingFolders } from "@editor/hooks/useProcessingFolders";
 import {
   useVirtualFileRows,
   rowHeightPx,
-} from "@app/components/filesPage/useVirtualFileRows";
-import { StirlingFileStub } from "@app/types/fileContext";
+} from "@editor/components/filesPage/useVirtualFileRows";
+import { StirlingFileStub } from "@editor/types/fileContext";
 import {
   detectFileExtension,
   formatFileSize,
   getFileDate,
-} from "@app/utils/fileUtils";
+} from "@editor/utils/fileUtils";
 import {
   FILES_PAGE_DRAG_TYPE,
   parseFilesPageDragPayload,
   serialiseFilesPageDragPayload,
-} from "@app/components/filesPage/dragDrop";
-import { useDropTarget } from "@app/components/filesPage/useDropTarget";
+} from "@editor/components/filesPage/dragDrop";
+import { useDropTarget } from "@editor/components/filesPage/useDropTarget";
 import {
   getFileOrigin,
   isBrowserOnlyFile,
-} from "@app/components/filesPage/fileOrigin";
-import { libraryFileDate } from "@app/components/filesPage/libraryFileDate";
-import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
-import { FolderProcessingTag } from "@app/components/filesPage/FolderProcessingTag";
-import { FolderOriginBadge } from "@app/components/filesPage/FolderOriginBadge";
-import { DiskLinkBadge } from "@app/components/filesPage/DiskLinkBadge";
-import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
-import { useProcessingFolderCounts } from "@app/components/filesPage/processingFolderCounts";
-import { findFolderIcon } from "@app/components/filesPage/folderIcons";
-import { FolderMenu } from "@app/components/filesPage/FolderMenu";
+} from "@editor/components/filesPage/fileOrigin";
+import { libraryFileDate } from "@editor/components/filesPage/libraryFileDate";
+import { FileOriginBadge } from "@editor/components/filesPage/FileOriginBadge";
+import { FolderProcessingTag } from "@editor/components/filesPage/FolderProcessingTag";
+import { FolderOriginBadge } from "@editor/components/filesPage/FolderOriginBadge";
+import { DiskLinkBadge } from "@editor/components/filesPage/DiskLinkBadge";
+import { FolderThumbnail } from "@editor/components/filesPage/FolderThumbnail";
+import { useProcessingFolderCounts } from "@editor/components/filesPage/processingFolderCounts";
+import { findFolderIcon } from "@editor/components/filesPage/folderIcons";
+import { FolderMenu } from "@editor/components/filesPage/FolderMenu";
 import {
   useLazyThumbnail,
   useDiskThumbnail,
-} from "@app/hooks/useLazyThumbnail";
-import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
-import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
-import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
-import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
-import { useLongPress } from "@app/components/filesPage/useLongPress";
-import { useIsTouch } from "@app/hooks/useIsMobile";
+} from "@editor/hooks/useLazyThumbnail";
+import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
+import type { FilesPageSortMode } from "@editor/contexts/FilesPageContext";
+import { OpenInNewWindowMenuItem } from "@editor/components/filesPage/OpenInNewWindowMenuItem";
+import { useLongPress } from "@editor/components/filesPage/useLongPress";
+import { useIsTouch } from "@editor/hooks/useIsMobile";
 
 export type FilesPageViewMode = "grid" | "list";
 

@@ -3,9 +3,9 @@ import { useTranslation } from "react-i18next";
 import {
   AutoRotateParameters,
   AutoRotateDetectionMode,
-} from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
-import ButtonSelector from "@app/components/shared/ButtonSelector";
-import { Checkbox } from "@app/ui/Checkbox";
+} from "@editor/hooks/tools/autoRotate/useAutoRotateParameters";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
+import { Checkbox } from "@editor/ui/Checkbox";
 
 interface AutoRotateAutomationSettingsProps {
   parameters: AutoRotateParameters;

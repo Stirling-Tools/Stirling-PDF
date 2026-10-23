@@ -10,13 +10,13 @@ import {
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { createAppQueryClient } from "@app/query/queryClient";
-import { LibraryFilePicker } from "@app/components/filesPage/LibraryFilePicker";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FolderRecord } from "@app/types/folder";
-import type { DiskFileEntry } from "@app/services/localFolderContents";
-import type { ProcessingFolderState } from "@app/hooks/useProcessingFolders";
-import { allowConsole } from "@app/tests/failOnConsole";
+import { createAppQueryClient } from "@editor/query/queryClient";
+import { LibraryFilePicker } from "@editor/components/filesPage/LibraryFilePicker";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FolderRecord } from "@editor/types/folder";
+import type { DiskFileEntry } from "@editor/services/localFolderContents";
+import type { ProcessingFolderState } from "@editor/hooks/useProcessingFolders";
+import { allowConsole } from "@editor/tests/failOnConsole";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -59,8 +59,10 @@ const state = vi.hoisted(() => ({
   listProcessingFiles: vi.fn(),
 }));
 
-vi.mock("@app/contexts/FilesPageContext", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/contexts/FilesPageContext")>()),
+vi.mock("@editor/contexts/FilesPageContext", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@editor/contexts/FilesPageContext")
+  >()),
   useFilesPage: () => ({
     allFiles: state.files,
     fileMap: new Map(state.files.map((file) => [file.id, file])),
@@ -71,7 +73,7 @@ vi.mock("@app/contexts/FilesPageContext", async (importOriginal) => ({
     setViewMode: vi.fn(),
   }),
 }));
-vi.mock("@app/contexts/FolderContext", () => ({
+vi.mock("@editor/contexts/FolderContext", () => ({
   useFolders: () => ({
     folders: state.folders,
     foldersById: new Map(state.folders.map((folder) => [folder.id, folder])),
@@ -81,7 +83,7 @@ vi.mock("@app/contexts/FolderContext", () => ({
     createFolder: state.createFolder,
   }),
 }));
-vi.mock("@app/contexts/FilesModalContext", () => ({
+vi.mock("@editor/contexts/FilesModalContext", () => ({
   useFilesModalContext: () => ({
     closeFilesModal: state.close,
     onRecentFileSelect: state.selected,
@@ -89,55 +91,55 @@ vi.mock("@app/contexts/FilesModalContext", () => ({
     loadFiles: vi.fn(),
   }),
 }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileIds: [] }),
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { storageEnabled: state.storageEnabled } }),
 }));
-vi.mock("@app/hooks/useSharingEnabled", () => ({
+vi.mock("@editor/hooks/useSharingEnabled", () => ({
   useSharingEnabled: () => ({ sharingEnabled: false }),
 }));
-vi.mock("@app/hooks/useGoogleDrivePicker", () => ({
+vi.mock("@editor/hooks/useGoogleDrivePicker", () => ({
   useGoogleDrivePicker: () => ({
     isEnabled: false,
     error: state.driveError,
     clearError: state.clearDriveError,
   }),
 }));
-vi.mock("@app/hooks/useIsMobile", () => ({
+vi.mock("@editor/hooks/useIsMobile", () => ({
   useIsMobile: () => false,
   useIsTouch: () => false,
 }));
-vi.mock("@app/hooks/usePolicyFileBadges", () => ({
+vi.mock("@editor/hooks/usePolicyFileBadges", () => ({
   usePolicyFileBadges: () => new Map(),
 }));
-vi.mock("@app/hooks/useProcessingFolders", () => ({
+vi.mock("@editor/hooks/useProcessingFolders", () => ({
   useProcessingFolders: () => ({
     stateFor: () => state.processingRecord,
     listFiles: state.listProcessingFiles,
   }),
 }));
-vi.mock("@app/hooks/useServerProcessingBlock", () => ({
+vi.mock("@editor/hooks/useServerProcessingBlock", () => ({
   useServerProcessingBlock: () => null,
 }));
-vi.mock("@app/hooks/useLazyThumbnail", () => ({
+vi.mock("@editor/hooks/useLazyThumbnail", () => ({
   useLazyThumbnail: () => undefined,
   useDiskThumbnail: () => undefined,
 }));
-vi.mock("@app/components/shared/MobileUploadModal", () => ({
+vi.mock("@editor/components/shared/MobileUploadModal", () => ({
   default: () => null,
 }));
-vi.mock("@app/components/toast", () => ({ alert: state.alert }));
-vi.mock("@app/services/localFolderContents", () => ({
+vi.mock("@editor/components/toast", () => ({ alert: state.alert }));
+vi.mock("@editor/services/localFolderContents", () => ({
   canListDirectory: true,
   listDirectory: state.listDirectory,
   readDiskFile: state.readDiskFile,
 }));
-vi.mock("@app/services/zipFileService", () => ({
+vi.mock("@editor/services/zipFileService", () => ({
   zipFileService: { extractAllFiles: state.extractAllFiles },
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { getHistoryChainStubs: vi.fn().mockResolvedValue([]) },
 }));
 
@@ -867,7 +869,7 @@ describe("library file picker", () => {
     const input = view.container.querySelector('input[type="file"]')!;
     fireEvent.change(input, { target: { files: [upload, duplicate] } });
     const { pendingFilePathMappings } =
-      await import("@app/services/pendingFilePathMappings");
+      await import("@editor/services/pendingFilePathMappings");
     pendingFilePathMappings.set(duplicate, "C:/Documents/Duplicate.pdf");
     fireEvent.change(input, { target: { files: [duplicate] } });
 
@@ -882,7 +884,7 @@ describe("library file picker", () => {
     const view = show();
     const upload = new File(["PDF"], "Native.pdf");
     const { pendingFilePathMappings } =
-      await import("@app/services/pendingFilePathMappings");
+      await import("@editor/services/pendingFilePathMappings");
     const path = Promise.resolve("C:/Documents/Native.pdf");
     pendingFilePathMappings.set(upload, path);
     const input = view.container.querySelector('input[type="file"]')!;
@@ -968,7 +970,7 @@ describe("library file picker", () => {
     expect(state.selected).toHaveBeenCalledExactlyOnceWith([], [diskFile]);
     expect(state.readDiskFile).toHaveBeenCalledWith(state.diskFiles[0]);
     const { pendingFilePathMappings } =
-      await import("@app/services/pendingFilePathMappings");
+      await import("@editor/services/pendingFilePathMappings");
     const imported = state.selected.mock.calls[0][1][0];
     expect(pendingFilePathMappings.get(imported)).toBe("C:/Documents/Disk.pdf");
   });

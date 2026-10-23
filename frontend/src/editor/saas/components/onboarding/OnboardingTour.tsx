@@ -18,14 +18,14 @@ import { type StepType } from "@reactour/tour";
 import ReactourTour, {
   type AdvanceArgs,
   type CloseArgs,
-} from "@core/components/onboarding/OnboardingTour";
-import { getTourSteps } from "@app/components/onboarding/tourRegistry";
-import { useTourRequest } from "@app/components/onboarding/useOnboardingEffects";
-import { useTourOrchestration } from "@app/contexts/TourOrchestrationContext";
-import { useAdminTourOrchestration } from "@app/contexts/AdminTourOrchestrationContext";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import { dispatchTourState } from "@app/constants/events";
-import "@core/components/onboarding/OnboardingTour.css";
+} from "@editor-core/components/onboarding/OnboardingTour";
+import { getTourSteps } from "@editor/components/onboarding/tourRegistry";
+import { useTourRequest } from "@editor/components/onboarding/useOnboardingEffects";
+import { useTourOrchestration } from "@editor/contexts/TourOrchestrationContext";
+import { useAdminTourOrchestration } from "@editor/contexts/AdminTourOrchestrationContext";
+import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
+import { dispatchTourState } from "@editor/constants/events";
+import "@editor-core/components/onboarding/OnboardingTour.css";
 
 export default function OnboardingTour() {
   const { t } = useTranslation();

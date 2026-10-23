@@ -2,7 +2,7 @@
  * Export entry points call {@link downloadFileWithPolicy} instead of
  * {@link downloadFile} so any "export"-triggered policy enforces on the file
  * before it's downloaded. The enforcement itself is proprietary (a no-op in the
- * core build via the `@app/services/policyExport` stub). Required-policy failures
+ * core build via the `@editor/services/policyExport` stub). Required-policy failures
  * cancel the export; ordinary pipeline failures may download the original.
  */
 
@@ -10,8 +10,8 @@ import {
   downloadFile,
   type DownloadRequest,
   type DownloadResult,
-} from "@app/services/downloadService";
-import { enforceExportPolicies } from "@app/services/policyExport";
+} from "@editor/services/downloadService";
+import { enforceExportPolicies } from "@editor/services/policyExport";
 
 export async function downloadFileWithPolicy(
   request: DownloadRequest,

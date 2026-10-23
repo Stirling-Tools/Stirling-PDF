@@ -7,7 +7,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import {
   markDispatched,
   resetPolicyRuns,
-} from "@app/components/policies/policyRunStore";
+} from "@editor/components/policies/policyRunStore";
 
 interface TestStub {
   id: string;
@@ -33,19 +33,19 @@ const mocks = vi.hoisted(() => ({
   runPolicyOnFile: vi.fn(),
 }));
 
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: {}, loading: mocks.configLoading }),
 }));
-vi.mock("@app/hooks/useClassificationEnabled", () => ({
+vi.mock("@editor/hooks/useClassificationEnabled", () => ({
   useClassificationEnabled: () => true,
 }));
-vi.mock("@app/hooks/useAiEngineEnabled", () => ({
+vi.mock("@editor/hooks/useAiEngineEnabled", () => ({
   useAiEngineEnabled: () => aiEnabled.value,
 }));
-vi.mock("@app/services/policyDispatch", () => ({
+vi.mock("@editor/services/policyDispatch", () => ({
   runPolicyOnFile: (...args: unknown[]) => mocks.runPolicyOnFile(...args),
 }));
-vi.mock("@app/hooks/usePolicies", () => ({
+vi.mock("@editor/hooks/usePolicies", () => ({
   usePolicies: () => ({
     policies: {
       classification: {
@@ -59,38 +59,38 @@ vi.mock("@app/hooks/usePolicies", () => ({
     },
   }),
 }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.workspace }),
   useFileManagement: () => ({
     updateStirlingFileStub: mocks.updateStirlingFileStub,
   }),
 }));
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: mocks.bumpRevision }),
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: (id: string) => mocks.getStirlingFile(id),
     updateFileMetadata: (id: string, updates: unknown) =>
       mocks.updateFileMetadata(id, updates),
   },
 }));
-vi.mock("@app/services/heuristic/heuristicClassification", () => ({
+vi.mock("@editor/services/heuristic/heuristicClassification", () => ({
   classifyFileHeuristically: async (file: File) => ({
     language: "en",
     packs: ["en"],
     ...(await mocks.classify(file)),
   }),
 }));
-vi.mock("@app/services/automationMeter", () => ({
+vi.mock("@editor/services/automationMeter", () => ({
   meterAutomationRun: (payload: unknown) => mocks.meter(payload),
 }));
 
-import { usePolicyLocalPasses } from "@app/components/policies/usePolicyLocalPasses";
+import { usePolicyLocalPasses } from "@editor/components/policies/usePolicyLocalPasses";
 import {
   beginDamageCheck,
   settleDamageCheck,
-} from "@app/services/pendingDamageChecks";
+} from "@editor/services/pendingDamageChecks";
 
 // Run idle callbacks immediately so batches start without timer waits.
 vi.stubGlobal("requestIdleCallback", (cb: () => void) => {

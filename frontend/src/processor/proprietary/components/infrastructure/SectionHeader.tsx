@@ -1,4 +1,4 @@
-import { InfoHint } from "@portal/components/InfoHint";
+import { InfoHint } from "@processor/components/InfoHint";
 
 export interface SectionHeaderProps {
   title: string;

@@ -3,11 +3,11 @@ import { MantineProvider } from "@mantine/core";
 import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { RunLocationGate } from "@app/components/runLocation/RunLocationGate";
-import { startDownload } from "@app/components/runLocation/startDownload";
-import { DOWNLOAD_URLS } from "@app/constants/downloads";
+import { RunLocationGate } from "@editor/components/runLocation/RunLocationGate";
+import { startDownload } from "@editor/components/runLocation/startDownload";
+import { DOWNLOAD_URLS } from "@editor/constants/downloads";
 
-vi.mock("@app/components/PublicRouteProviders", () => ({
+vi.mock("@editor/components/PublicRouteProviders", () => ({
   PublicRouteProviders: ({ children }: { children: ReactNode }) => (
     <MantineProvider>{children}</MantineProvider>
   ),
@@ -19,15 +19,15 @@ vi.mock("react-i18next", () => ({
       fallback.replace(/\{\{(\w+)\}\}/g, (_, name: string) => options[name]),
   }),
 }));
-vi.mock("@app/components/runLocation/startDownload", () => ({
+vi.mock("@editor/components/runLocation/startDownload", () => ({
   startDownload: vi.fn(),
 }));
 // Detection reads the runner's own OS, so pin it: CI runs on Linux.
 vi.mock(
-  "@app/components/runLocation/desktopTargets",
+  "@editor/components/runLocation/desktopTargets",
   async (importOriginal) => ({
     ...(await importOriginal<
-      typeof import("@app/components/runLocation/desktopTargets")
+      typeof import("@editor/components/runLocation/desktopTargets")
     >()),
     detectDesktopTarget: vi.fn(() => Promise.resolve("mac")),
   }),

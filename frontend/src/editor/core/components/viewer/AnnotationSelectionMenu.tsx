@@ -9,12 +9,12 @@ import {
 import type {
   AnnotationMenuAnchor,
   AnnotationObject,
-} from "@app/components/viewer/viewerTypes";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useAnnotationMenuHandlers } from "@app/components/viewer/useAnnotationMenuHandlers";
-import { AnnotationTypeButtons } from "@app/components/viewer/AnnotationTypeButtons";
-import "@app/components/viewer/TextSelectionMenu.css";
+} from "@editor/components/viewer/viewerTypes";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useAnnotationMenuHandlers } from "@editor/components/viewer/useAnnotationMenuHandlers";
+import { AnnotationTypeButtons } from "@editor/components/viewer/AnnotationTypeButtons";
+import "@editor/components/viewer/TextSelectionMenu.css";
 
 /**
  * Props interface matching EmbedPDF's annotation selection menu pattern

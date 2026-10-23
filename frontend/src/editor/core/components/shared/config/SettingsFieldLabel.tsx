@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import "@app/components/shared/config/SettingsFieldLabel.css";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import "@editor/components/shared/config/SettingsFieldLabel.css";
 
 export interface SettingsFieldLabelProps {
   /** Guidance for the field, revealed on hover or focus. */

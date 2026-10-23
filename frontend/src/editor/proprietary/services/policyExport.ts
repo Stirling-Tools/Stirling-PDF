@@ -1,7 +1,7 @@
 /**
  * Export-time policy enforcement. A policy whose `runOn` is "export" runs its
  * pipeline on a file just before it leaves the editor; the enforced result is
- * what gets exported. Core export handlers reach this via the `@app/*` alias
+ * what gets exported. Core export handlers reach this via the `@editor/*` alias
  * (the open-source build ships a no-op stub).
  *
  * Required-policy failures cancel the export; ordinary pipeline failures warn.
@@ -10,35 +10,35 @@
  * download. Each policy selects files using its first step's accepted inputs.
  */
 
-import { dispatchPolicyFile } from "@app/services/policyDispatch";
-import { loadPolicies } from "@app/services/policyStorage";
-import { reportFreeTierExhausted } from "@app/services/accountLinkBlock";
-import { policyCreditContext } from "@app/services/policyCreditContext";
-import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
-import { loadPolicyCatalog } from "@app/services/policyCatalog";
-import { editorTriggerOf } from "@app/policies/runOn";
-import { policyAcceptsFile } from "@app/services/policyInput";
-import { splitFileName } from "@app/utils/fileUtils";
+import { dispatchPolicyFile } from "@editor/services/policyDispatch";
+import { loadPolicies } from "@editor/services/policyStorage";
+import { reportFreeTierExhausted } from "@editor/services/accountLinkBlock";
+import { policyCreditContext } from "@editor/services/policyCreditContext";
+import { assertFilesNotBlocked } from "@editor/services/policyFileGuard";
+import { loadPolicyCatalog } from "@editor/services/policyCatalog";
+import { editorTriggerOf } from "@editor/policies/runOn";
+import { policyAcceptsFile } from "@editor/services/policyInput";
+import { splitFileName } from "@editor/utils/fileUtils";
 import {
   runStoredPolicy,
   getPolicyRun,
   downloadPolicyOutput,
   resolvePolicyRunTarget,
-} from "@app/services/policyApi";
-import type { PolicyExecutionTarget } from "@app/services/policyPipeline";
-import type { PolicyState } from "@app/types/policies";
+} from "@editor/services/policyApi";
+import type { PolicyExecutionTarget } from "@editor/services/policyPipeline";
+import type { PolicyState } from "@editor/types/policies";
 import {
   recordRunStart,
   isDispatched,
   markDispatched,
-} from "@app/components/policies/policyRunStore";
+} from "@editor/components/policies/policyRunStore";
 import {
   runQueued,
   type EnforcementTrigger,
-} from "@app/components/policies/enforcementQueue";
-import { ROW_ACCENT } from "@app/components/policies/policyStatus";
-import { alert, updateToast, dismissToast } from "@app/components/toast";
-import i18n from "@app/i18n";
+} from "@editor/components/policies/enforcementQueue";
+import { ROW_ACCENT } from "@editor/components/policies/policyStatus";
+import { alert, updateToast, dismissToast } from "@editor/components/toast";
+import i18n from "@editor/i18n";
 
 /** Poll cadence + cap for a single export run (≈2.5 min worst case). */
 const POLL_MS = 2000;

@@ -1,27 +1,27 @@
 import { useCallback } from "react";
-import { refreshNotificationsNow } from "@app/hooks/useNotifications";
+import { refreshNotificationsNow } from "@editor/hooks/useNotifications";
 import {
   fetchNotifications,
   reportNotificationResolved,
   type AppNotification,
-} from "@app/services/notifications";
+} from "@editor/services/notifications";
 import {
   clearRetryPayload,
   loadRetryPayload,
   stashMatchesKind,
-} from "@app/services/notificationRetry";
+} from "@editor/services/notificationRetry";
 import {
   canPlacePolicy,
   rechainPolicyOnDocument,
-} from "@app/services/notificationPolicyRetry";
+} from "@editor/services/notificationPolicyRetry";
 import {
   isResolvingTool,
   resolvingToolFor,
-} from "@app/components/notifications/resolutions";
+} from "@editor/components/notifications/resolutions";
 import type {
   SucceededToolRun,
   ToolRunOutput,
-} from "@core/hooks/tools/shared/useResolutionContinuation";
+} from "@editor-core/hooks/tools/shared/useResolutionContinuation";
 
 export type { SucceededToolRun, ToolRunOutput };
 

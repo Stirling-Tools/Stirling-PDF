@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Box, Center, Group, Paper, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@app/ui/Button";
-import { useIsMobile } from "@app/hooks/useIsMobile";
-import { formatFileSize } from "@app/utils/fileUtils";
+import { Button } from "@editor/ui/Button";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import { formatFileSize } from "@editor/utils/fileUtils";
 
 interface HtmlViewerProps {
   file: File;
