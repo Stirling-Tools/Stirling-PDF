@@ -319,6 +319,8 @@ jobs:
                 STIRLING_BILLING_ACCOUNT_LINK_METERING_ENABLED: "false"
                 # Browser connection state belongs to the origin advertised in the preview link.
                 SYSTEM_FRONTENDURL: "http://${NEW_VPS_HOST}:${V2_PORT}"
+                # Previews are throwaway demos; the first-run setup wizard would greet every reviewer.
+                SYSTEM_SETUPCOMPLETED: "true"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${TEST_LOGIN_USERNAME}"
                 SECURITY_INITIALLOGIN_PASSWORD: "${TEST_LOGIN_PASSWORD}"
