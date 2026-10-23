@@ -4,8 +4,8 @@ import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { SpreadMode } from "@embedpdf/plugin-spread/react";
 import type { ZoomLevel } from "@embedpdf/plugin-zoom";
 
-import { ZoomAPIBridge } from "@app/components/viewer/ZoomAPIBridge";
-import type { ZoomAPIWrapper } from "@app/contexts/viewer/viewerBridges";
+import { ZoomAPIBridge } from "@editor/components/viewer/ZoomAPIBridge";
+import type { ZoomAPIWrapper } from "@editor/contexts/viewer/viewerBridges";
 
 // Matches useFitWidthResize's default debounce.
 const RESIZE_DEBOUNCE_MS = 150;
@@ -129,23 +129,23 @@ vi.mock("@embedpdf/plugin-spread/react", async () => {
 vi.mock("@embedpdf/plugin-scroll/react", () => ({
   useScroll: () => ({ state: { totalPages: 3 } }),
 }));
-vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
+vi.mock("@editor/components/viewer/useActiveDocumentId", () => ({
   useActiveDocumentId: () => "doc-1",
 }));
-vi.mock("@app/components/viewer/hooks/useDocumentReady", () => ({
+vi.mock("@editor/components/viewer/hooks/useDocumentReady", () => ({
   useDocumentReady: () => true,
 }));
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => fixture.viewer,
 }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => fixture.files.all,
   useFileSelection: () => fixture.files.selection,
 }));
-vi.mock("@app/utils/pageMetadata", () => ({
+vi.mock("@editor/utils/pageMetadata", () => ({
   getFirstPageAspectRatioFromStub: () => fixture.page.aspectRatio,
 }));
-vi.mock("@app/services/preferencesService", () => ({
+vi.mock("@editor/services/preferencesService", () => ({
   preferencesService: { getPreference: () => "auto" },
 }));
 
