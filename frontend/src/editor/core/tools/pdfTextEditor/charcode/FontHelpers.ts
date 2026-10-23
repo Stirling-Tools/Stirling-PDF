@@ -1,5 +1,8 @@
-import type { ResolverContext } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import type { ResolverContext } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 /**
  * Client-side font helpers for the charcode emit path.

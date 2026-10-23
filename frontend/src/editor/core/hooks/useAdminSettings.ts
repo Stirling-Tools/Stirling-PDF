@@ -4,14 +4,14 @@ import {
   fetchAdminSection,
   putAdminSection,
   putAdminSettings,
-} from "@app/api/adminSettings";
-import { qk } from "@app/query/keys";
+} from "@editor/api/adminSettings";
+import { qk } from "@editor/query/keys";
 import {
   mergePendingSettings,
   isFieldPending,
   hasPendingChanges,
   type SettingsWithPending,
-} from "@app/utils/settingsPendingHelper";
+} from "@editor/utils/settingsPendingHelper";
 
 /** A settings block, which is an object of unknown-shaped fields. */
 type SettingsBlock = Record<string, unknown>;

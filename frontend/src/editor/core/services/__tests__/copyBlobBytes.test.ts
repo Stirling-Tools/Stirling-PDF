@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { copyBlobBytes } from "@app/services/fileStorage";
+import { copyBlobBytes } from "@editor/services/fileStorage";
 
 // WebKit can lose a File's backing store and then never answer a read at all. This is the
 // fallback taken once IndexedDB refuses blob values, so an unanswered read here used to

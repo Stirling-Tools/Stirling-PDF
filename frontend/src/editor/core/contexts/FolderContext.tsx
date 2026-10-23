@@ -15,7 +15,7 @@
  * dialog Alert pattern.
  */
 
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 import React, {
   createContext,
   useCallback,
@@ -27,10 +27,10 @@ import React, {
 } from "react";
 
 import i18n from "i18next";
-import { folderStorage } from "@app/services/folderStorage";
-import { virtualFolderStorage } from "@app/services/virtualFolderStorage";
-import { localFolderStorage } from "@app/services/localFolderStorage";
-import { folderSyncService } from "@app/services/folderSyncService";
+import { folderStorage } from "@editor/services/folderStorage";
+import { virtualFolderStorage } from "@editor/services/virtualFolderStorage";
+import { localFolderStorage } from "@editor/services/localFolderStorage";
+import { folderSyncService } from "@editor/services/folderSyncService";
 import {
   FolderBreadcrumbEntry,
   FolderId,
@@ -44,15 +44,15 @@ import {
   folderKind,
   isDiskFolderId,
   pickFolderColor,
-} from "@app/types/folder";
-import { directoryKey } from "@app/services/localFolderStorage";
-import { makeDiskDirectory } from "@app/services/localFolderContents";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useAuth } from "@app/auth/UseSession";
+} from "@editor/types/folder";
+import { directoryKey } from "@editor/services/localFolderStorage";
+import { makeDiskDirectory } from "@editor/services/localFolderContents";
+import { useIndexedDB } from "@editor/contexts/IndexedDBContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useAuth } from "@editor/auth/UseSession";
 import { useLocation } from "react-router-dom";
-import { isAuthRoute } from "@app/constants/routes";
-import { getFolderChain } from "@app/utils/folderPath";
+import { isAuthRoute } from "@editor/constants/routes";
+import { getFolderChain } from "@editor/utils/folderPath";
 
 interface FolderContextValue {
   folders: FolderRecord[];

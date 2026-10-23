@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "@mantine/core";
 import DropdownListWithFooter, {
   DropdownItem,
-} from "@app/components/shared/DropdownListWithFooter";
+} from "@editor/components/shared/DropdownListWithFooter";
 
 const meta: Meta<typeof DropdownListWithFooter> = {
   title: "Shared/DropdownListWithFooter",

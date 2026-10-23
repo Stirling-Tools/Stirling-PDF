@@ -1,11 +1,11 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { SlideConfig } from "@app/types/types";
-import { UNIFIED_LIGHT_BACKGROUND } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
+import { SlideConfig } from "@editor/types/types";
+import { UNIFIED_LIGHT_BACKGROUND } from "@editor/components/onboarding/slides/unifiedBackgroundConfig";
 import {
   DesktopInstallTitle,
   type OSOption,
-} from "@app/components/onboarding/slides/DesktopInstallTitle";
+} from "@editor/components/onboarding/slides/DesktopInstallTitle";
 
 export type { OSOption };
 

@@ -193,16 +193,17 @@ class Position1(IntEnum):
 
 class StampType(StrEnum):
     """
-    The stamp type (text or image)
+    The stamp type (text, image or qr)
     """
 
     text = "text"
     image = "image"
+    qr = "qr"
 
 
 class AddStampParams(ApiModel):
     """
-    This endpoint adds a stamp to a given PDF file. Users can specify the stamp type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO
+    This endpoint adds a stamp to a given PDF file. Users can specify the stamp type (text, image or qr), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO
     """
 
     alphabet: Alphabet = Field(Alphabet.roman, description="The selected alphabet of the stamp text")
@@ -227,8 +228,10 @@ class AddStampParams(ApiModel):
         description="Position for stamp placement based on a 1-9 grid (1: bottom-left, 2: bottom-center, 3: bottom-right, 4: middle-left, 5: middle-center, 6: middle-right, 7: top-left, 8: top-center, 9: top-right)",
     )
     rotation: float = Field(0, description="The rotation of the stamp in degrees")
-    stamp_text: str = Field("Stirling Software", description="The stamp text")
-    stamp_type: StampType = Field(..., description="The stamp type (text or image)")
+    stamp_text: str = Field(
+        "Stirling Software", description="The stamp text, or the QR code content when the stamp type is qr"
+    )
+    stamp_type: StampType = Field(..., description="The stamp type (text, image or qr)")
 
 
 class Alphabet1(StrEnum):

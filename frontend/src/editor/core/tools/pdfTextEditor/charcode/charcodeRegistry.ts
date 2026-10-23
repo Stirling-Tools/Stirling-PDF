@@ -2,7 +2,7 @@ import {
   findFontForChar,
   fontIsReusable,
   styleClassFromName,
-} from "@app/tools/pdfTextEditor/charcode/FontHelpers";
+} from "@editor/tools/pdfTextEditor/charcode/FontHelpers";
 
 /** Re-export so the emit path can do per-char font lookup. */
 export { findFontForChar, fontIsReusable, styleClassFromName };
@@ -11,10 +11,13 @@ import {
   CharcodeStrategy,
   getActiveCharcodeStrategy,
   ResolverContext,
-} from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
-import { CmapResolver } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
-import { ContentStreamResolver } from "@app/tools/pdfTextEditor/charcode/ContentStreamResolver";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
+import { CmapResolver } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import { ContentStreamResolver } from "@editor/tools/pdfTextEditor/charcode/ContentStreamResolver";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 /** Per-emit telemetry. */
 export interface CharcodeEvent {

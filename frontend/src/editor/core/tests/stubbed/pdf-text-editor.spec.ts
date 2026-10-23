@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import path from "path";
 // Independent parser for the round-trip cross-check: the same @cantoo/pdf-lib
 // the fixture generators use.
@@ -6,7 +6,7 @@ import { PDFDocument } from "@cantoo/pdf-lib";
 import {
   stashCurrentDocument,
   waitForReopenedPage,
-} from "@app/tests/stubbed/saveHelpers";
+} from "@editor/tests/stubbed/saveHelpers";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,

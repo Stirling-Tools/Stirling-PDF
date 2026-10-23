@@ -1,6 +1,6 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import path from "path";
-import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
+import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 
 /** Regression for the mushroom-life.pdf "paragraph scramble" report. */
 

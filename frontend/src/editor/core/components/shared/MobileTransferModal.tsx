@@ -1,9 +1,9 @@
 import { ReactNode } from "react";
 import { Modal, Stack, Text, Box, Alert } from "@mantine/core";
 import { QRCodeSVG } from "qrcode.react";
-import { Icon } from "@app/ui/Icon";
-import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
-import { useMobileTransferSession } from "@app/hooks/useMobileTransferSession";
+import { Icon } from "@editor/ui/Icon";
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
+import { useMobileTransferSession } from "@editor/hooks/useMobileTransferSession";
 
 /**
  * The QR modal shell every phone-to-desktop transfer feature shares: session

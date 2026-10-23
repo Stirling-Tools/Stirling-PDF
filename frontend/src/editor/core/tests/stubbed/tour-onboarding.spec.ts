@@ -1,11 +1,11 @@
 import path from "path";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import {
   uploadFiles,
   openSettings,
   expandSettingsGroups,
   revealPickerTool,
-} from "@app/tests/helpers/ui-helpers";
+} from "@editor/tests/helpers/ui-helpers";
 
 /**
  * Tour selector integrity tests.

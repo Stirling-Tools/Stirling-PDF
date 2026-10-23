@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
-import ParticipantView from "@app/components/workflow/ParticipantView";
+import ParticipantView from "@editor/components/workflow/ParticipantView";
 import type {
   ParticipantResponse,
   WorkflowSessionResponse,
-} from "@app/services/workflowService";
+} from "@editor/services/workflowService";
 
 /**
  * The signing hook (`useParticipantSession`) fires two GETs on mount —

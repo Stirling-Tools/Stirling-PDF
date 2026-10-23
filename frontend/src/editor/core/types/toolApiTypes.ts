@@ -164,13 +164,13 @@ export interface AddStampRequest {
   rotation?: number;
   stampImage?: File;
   /**
-   * The stamp text
+   * The stamp text, or the QR code content when the stamp type is qr
    */
   stampText?: string;
   /**
-   * The stamp type (text or image)
+   * The stamp type (text, image or qr)
    */
-  stampType: "text" | "image";
+  stampType: "text" | "image" | "qr";
 }
 export interface AddWatermarkRequest {
   /**

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ConfirmModal } from "@portal/components/users/ConfirmModal";
+import { ConfirmModal } from "@processor/components/users/ConfirmModal";
 
 const meta: Meta<typeof ConfirmModal> = {
   title: "Portal/Users/ConfirmModal",

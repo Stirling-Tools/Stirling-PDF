@@ -2,7 +2,7 @@ import { createContext, useContext, type ReactNode } from "react";
 import {
   useAccountLink,
   type UseAccountLink,
-} from "@portal/hooks/useAccountLink";
+} from "@processor/hooks/useAccountLink";
 
 /**
  * Single app-wide {@link useAccountLink} instance, so status is fetched once on mount rather than per consumer.

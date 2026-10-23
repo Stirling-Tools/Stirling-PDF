@@ -6,10 +6,10 @@ const { getSession, refreshSession, state } = vi.hoisted(() => ({
   getSession: vi.fn(),
   refreshSession: vi.fn(),
 }));
-vi.mock("@app/portal/auth/saasSupabase", () => ({
+vi.mock("@editor/portal/auth/saasSupabase", () => ({
   ensureSaasSupabase: vi.fn(),
 }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () =>
     state.configured ? { auth: { getSession, refreshSession } } : null,
 }));
@@ -20,7 +20,7 @@ import {
   portalSaasSessionRestored,
   SaasSessionRequiredError,
   withPortalSaasSession,
-} from "@app/portal/auth/portalSaasSession";
+} from "@editor/portal/auth/portalSaasSession";
 
 const session = (token: string | null) => ({
   data: { session: token ? { access_token: token } : null },

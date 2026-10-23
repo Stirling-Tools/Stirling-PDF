@@ -1,7 +1,7 @@
 // Read an image object's pixels back out of PDFium: the round trip must hand
 // over the picture as it stands now, not the file it originally came from.
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
 export interface ImagePixels {
   rgba: Uint8Array;

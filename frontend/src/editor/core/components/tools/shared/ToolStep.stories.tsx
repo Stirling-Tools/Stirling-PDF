@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Text } from "@mantine/core";
-import ToolStep from "@app/components/tools/shared/ToolStep";
+import ToolStep from "@editor/components/tools/shared/ToolStep";
 
 const meta = {
   title: "Tools/Shared/ToolStep",

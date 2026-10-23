@@ -1,7 +1,7 @@
 import type {
   SessionSummary,
   SignRequestSummary,
-} from "@app/types/signingSession";
+} from "@editor/types/signingSession";
 
 export type SigningItem =
   | (SignRequestSummary & { kind: "request" })

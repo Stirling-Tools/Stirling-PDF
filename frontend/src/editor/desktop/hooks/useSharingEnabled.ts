@@ -1,6 +1,6 @@
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useSelfHostedAuth } from "@app/hooks/useSelfHostedAuth";
-import type { SharingEnabledResult } from "@core/hooks/useSharingEnabled";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useSelfHostedAuth } from "@editor/hooks/useSelfHostedAuth";
+import type { SharingEnabledResult } from "@editor-core/hooks/useSharingEnabled";
 
 /**
  * Desktop override: file-sharing features require self-hosted mode AND an

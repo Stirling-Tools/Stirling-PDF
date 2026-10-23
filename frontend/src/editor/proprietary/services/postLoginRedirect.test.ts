@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
+import { isSafePostLoginRedirect } from "@editor/services/postLoginRedirect";
 
 // Proprietary override: the core base plus the Spring SSO routes (/oauth2, /saml2).
 describe("isSafePostLoginRedirect (proprietary override)", () => {

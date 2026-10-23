@@ -1,4 +1,4 @@
-import PixelCompareWorkerCtor from "@app/workers/pixelCompareWorker?worker";
+import PixelCompareWorkerCtor from "@editor/workers/pixelCompareWorker?worker";
 import {
   ADDITION_HIGHLIGHT,
   REMOVAL_HIGHLIGHT,
@@ -9,7 +9,7 @@ import {
   type PixelCompareWorkerResponse,
   type PixelCompareWorkerWarnings,
   type PixelRgb,
-} from "@app/types/compare";
+} from "@editor/types/compare";
 
 const hexToRgb = (hex: string): PixelRgb => {
   const normalised = hex.replace("#", "");

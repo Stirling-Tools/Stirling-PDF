@@ -1,4 +1,4 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 
 /** Where a delete should remove the file from. */
 export type DeleteScope = "device" | "cloud" | "everywhere";

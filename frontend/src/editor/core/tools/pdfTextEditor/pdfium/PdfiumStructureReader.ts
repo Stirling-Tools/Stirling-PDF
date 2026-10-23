@@ -1,6 +1,6 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { readUtf16 } from "@app/services/pdfiumService";
-import type { StructureElement } from "@app/tools/pdfTextEditor/model/PageStructure";
+import { readUtf16 } from "@editor/services/pdfiumService";
+import type { StructureElement } from "@editor/tools/pdfTextEditor/model/PageStructure";
 
 type StringGetter = (el: number, buf: number, len: number) => number;
 

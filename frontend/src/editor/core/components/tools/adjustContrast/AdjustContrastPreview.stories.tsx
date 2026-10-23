@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AdjustContrastPreview from "@app/components/tools/adjustContrast/AdjustContrastPreview";
-import { defaultParameters } from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
+import AdjustContrastPreview from "@editor/components/tools/adjustContrast/AdjustContrastPreview";
+import { defaultParameters } from "@editor/hooks/tools/adjustContrast/useAdjustContrastParameters";
 
 const meta = {
   title: "Tools/AdjustContrast/AdjustContrastPreview",

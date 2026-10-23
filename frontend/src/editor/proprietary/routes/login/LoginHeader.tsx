@@ -1,4 +1,4 @@
-import { Wordmark } from "@app/components/shared/Wordmark";
+import { Wordmark } from "@editor/components/shared/Wordmark";
 
 interface LoginHeaderProps {
   title: string;

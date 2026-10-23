@@ -1,4 +1,4 @@
-import type { StatusTone } from "@app/ui";
+import type { StatusTone } from "@editor/ui";
 
 /**
  * Format a 0–1 confidence fraction as a whole-percent string. `null`/`undefined`

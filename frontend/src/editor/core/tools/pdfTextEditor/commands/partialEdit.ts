@@ -1,23 +1,26 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type {
   ParagraphLineSlot,
   TextRun,
-} from "@app/tools/pdfTextEditor/model/TextRun";
+} from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
   cssFontSpecFor,
   emitTextLine,
   inkFromRun,
   isVerifiedPerCharPtr,
   measureObjRightEdgePt,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   fallbackFamilyFor,
   fallbackFontIdFor,
-} from "@app/tools/pdfTextEditor/util/fontCapability";
-import { writeUtf16 } from "@app/services/pdfiumService";
-import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/util/fontCapability";
+import { writeUtf16 } from "@editor/services/pdfiumService";
+import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 /** Set the text of an EXISTING PDFium text object, preserving its font. */
 export function setObjText(

@@ -1,28 +1,28 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { SettingsCard } from "@app/components/shared/config/SettingsCard";
+import { SettingsCard } from "@editor/components/shared/config/SettingsCard";
 import { Stack, Loader } from "@mantine/core";
-import { alert } from "@app/components/toast";
-import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
-import { useRestartServer } from "@app/components/shared/config/useRestartServer";
-import { useAdminSettings } from "@app/hooks/useAdminSettings";
-import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
-import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import { alert } from "@editor/components/toast";
+import RestartConfirmationModal from "@editor/components/shared/config/RestartConfirmationModal";
+import { useRestartServer } from "@editor/components/shared/config/useRestartServer";
+import { useAdminSettings } from "@editor/hooks/useAdminSettings";
+import { useSettingsDirty } from "@editor/hooks/useSettingsDirty";
+import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsStickyFooter";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
 import type {
   LegalSettingsData,
   PrivacySettingsData,
-} from "@app/components/shared/config/configSections/security/securitySettingsTypes";
+} from "@editor/components/shared/config/configSections/security/securitySettingsTypes";
 import {
   fetchPrivacySettings,
   saveLegalSettings,
   savePrivacySettings,
-} from "@app/components/shared/config/configSections/security/securitySettingsTransformers";
-import { LegalDocumentsCard } from "@app/components/shared/config/configSections/security/LegalDocumentsCard";
-import { LoginAgreementCard } from "@app/components/shared/config/configSections/security/LoginAgreementCard";
-import { AnalyticsTrackingCard } from "@app/components/shared/config/configSections/security/AnalyticsTrackingCard";
-import { SearchEngineVisibilityCard } from "@app/components/shared/config/configSections/security/SearchEngineVisibilityCard";
-import "@app/components/shared/config/configSections/security/AdminSecurityPage.css";
+} from "@editor/components/shared/config/configSections/security/securitySettingsTransformers";
+import { LegalDocumentsCard } from "@editor/components/shared/config/configSections/security/LegalDocumentsCard";
+import { LoginAgreementCard } from "@editor/components/shared/config/configSections/security/LoginAgreementCard";
+import { AnalyticsTrackingCard } from "@editor/components/shared/config/configSections/security/AnalyticsTrackingCard";
+import { SearchEngineVisibilityCard } from "@editor/components/shared/config/configSections/security/SearchEngineVisibilityCard";
+import "@editor/components/shared/config/configSections/security/AdminSecurityPage.css";
 
 /**
  * What this deployment tells the world about itself: the documents people are

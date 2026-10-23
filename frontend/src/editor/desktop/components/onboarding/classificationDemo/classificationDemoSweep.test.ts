@@ -8,32 +8,32 @@ const meterAutomationRun = vi.fn();
 const listDirectory = vi.fn();
 const readDiskFile = vi.fn();
 
-vi.mock("@app/services/serverAutomationSession", () => ({
+vi.mock("@editor/services/serverAutomationSession", () => ({
   getServerAutomationSession: vi
     .fn()
     .mockResolvedValue({ key: "session", baseUrl: "https://server.test" }),
   requireAutomationSession: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("@app/services/localFolderContents", () => ({
+vi.mock("@editor/services/localFolderContents", () => ({
   canListDirectory: true,
   listDirectory: (...args: unknown[]) => listDirectory(...args),
   readDiskFile: (...args: unknown[]) => readDiskFile(...args),
 }));
-vi.mock("@app/services/heuristic/heuristicClassification", () => ({
+vi.mock("@editor/services/heuristic/heuristicClassification", () => ({
   classifyFileHeuristically: (...args: unknown[]) =>
     classifyFileHeuristically(...args),
 }));
-vi.mock("@app/services/automationMeter", () => ({
+vi.mock("@editor/services/automationMeter", () => ({
   meterAutomationRun: (...args: unknown[]) => meterAutomationRun(...args),
 }));
-vi.mock("@app/services/pdfWorkerManager", () => ({
+vi.mock("@editor/services/pdfWorkerManager", () => ({
   pdfWorkerManager: {
     getWorkerStats: () => ({ active: 10, max: 10, total: 10 }),
   },
 }));
-import { requireAutomationSession } from "@app/services/serverAutomationSession";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
+import { requireAutomationSession } from "@editor/services/serverAutomationSession";
+import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
 import {
   DOCUMENT_DEADLINE_MS,
   HEURISTIC_BUDGET_MS,
@@ -44,7 +44,7 @@ import {
   runClassificationDemoSweep,
   type ClassificationDemoDeps,
   type ClassificationDemoOutcome,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSweep";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSweep";
 
 function entry(name: string, lastModified: number) {
   return { path: `/downloads/${name}`, name, sizeBytes: 1, lastModified };

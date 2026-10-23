@@ -5,8 +5,8 @@ import ReactMarkdown, {
 } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
-import { makeSlugger } from "@app/docs/headings";
+import { Button } from "@editor/ui";
+import { makeSlugger } from "@editor/docs/headings";
 
 /** Flatten a heading's React children to plain text for its anchor id. */
 function childText(node: ReactNode): string {

@@ -1,6 +1,6 @@
 import React from "react";
 import { Box } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 export interface HoverOverlayProps {
   onMouseEnter?: (e: React.MouseEvent) => void;
   onMouseLeave?: (e: React.MouseEvent) => void;

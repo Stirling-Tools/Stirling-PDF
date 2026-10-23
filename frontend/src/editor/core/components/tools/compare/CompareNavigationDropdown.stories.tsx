@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import CompareNavigationDropdown from "@app/components/tools/compare/CompareNavigationDropdown";
+import CompareNavigationDropdown from "@editor/components/tools/compare/CompareNavigationDropdown";
 
 const meta = {
   title: "Compare/CompareNavigationDropdown",

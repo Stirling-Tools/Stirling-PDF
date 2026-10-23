@@ -1,9 +1,9 @@
 import React, { ReactNode } from "react";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { Icon, isIconName, type IconName } from "@app/ui/Icon";
-import "@app/components/shared/AppBanner.css";
+import { Icon, isIconName, type IconName } from "@editor/ui/Icon";
+import "@editor/components/shared/AppBanner.css";
 
 /** Picks the whole look. Callers choose meaning, never colours. */
 export type AppBannerTone = "info" | "promo" | "warning" | "danger";

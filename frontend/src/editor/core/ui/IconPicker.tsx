@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Dropdown } from "@app/ui/Dropdown";
-import "@app/ui/IconPicker.css";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Dropdown } from "@editor/ui/Dropdown";
+import "@editor/ui/IconPicker.css";
 
 export interface IconPickerOption {
   /** Stable identifier stored as the picked value. */

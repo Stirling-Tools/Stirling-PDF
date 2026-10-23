@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
+import { getStartupNavigationAction } from "@editor/utils/homePageNavigation";
 
 describe("getStartupNavigationAction", () => {
   it("returns viewer + active index for 0->1 transition when not in fileEditor", () => {

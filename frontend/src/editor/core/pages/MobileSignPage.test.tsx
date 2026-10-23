@@ -8,9 +8,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
-import MobileSignPage from "@app/pages/MobileSignPage";
+import MobileSignPage from "@editor/pages/MobileSignPage";
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { defaults: { baseURL: "http://localhost:8080" } },
 }));
 
@@ -25,10 +25,10 @@ vi.mock("react-i18next", () => ({
 
 // Branding components pull theme preferences from providers this page doesn't
 // need for its session-state contract.
-vi.mock("@app/components/shared/LogoIcon", () => ({
+vi.mock("@editor/components/shared/LogoIcon", () => ({
   LogoIcon: () => <span data-testid="logo" />,
 }));
-vi.mock("@app/components/shared/Wordmark", () => ({
+vi.mock("@editor/components/shared/Wordmark", () => ({
   Wordmark: () => <span data-testid="wordmark" />,
 }));
 

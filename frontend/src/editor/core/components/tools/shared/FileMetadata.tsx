@@ -1,6 +1,6 @@
 import { Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
+import { formatFileSize, getFileDate } from "@editor/utils/fileUtils";
 
 export interface FileMetadataProps {
   file: File;

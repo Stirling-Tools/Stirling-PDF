@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { HttpError } from "@portal/api/http";
-import { classifyAccountLinkBlock } from "@portal/services/accountLinkBlock";
+import { HttpError } from "@processor/api/http";
+import { classifyAccountLinkBlock } from "@processor/services/accountLinkBlock";
 
 /**
  * Strict on purpose: an incidental 402 from anywhere else must not be turned into a pitch for an

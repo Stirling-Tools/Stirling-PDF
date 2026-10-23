@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import { Modal } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button, type ButtonAccent } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { Z_INDEX_ONBOARDING_CARD } from "@app/styles/zIndex";
-import stirlingMark from "@app/assets/brand/modern-logo/logo512.png";
-import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button, type ButtonAccent } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { Z_INDEX_ONBOARDING_CARD } from "@editor/styles/zIndex";
+import stirlingMark from "@editor/assets/brand/modern-logo/logo512.png";
+import styles from "@editor/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 
 /** A footer button. `action` is an opaque string handled by the caller. */
 export interface ShellButton {

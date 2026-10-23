@@ -1,4 +1,4 @@
-import { downloadFromUrl } from "@app/services/downloadService";
+import { downloadFromUrl } from "@editor/services/downloadService";
 
 export type ShowJsTokenType = "kw" | "str" | "num" | "com" | "plain";
 export type ShowJsToken = { type: ShowJsTokenType; text: string };

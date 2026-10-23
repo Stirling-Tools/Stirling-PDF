@@ -2,8 +2,8 @@
  * Test utilities for creating StirlingFile objects in tests
  */
 
-import { rememberPdfAccess } from "@app/services/pdfAccessService";
-import { StirlingFile, createStirlingFile } from "@app/types/fileContext";
+import { rememberPdfAccess } from "@editor/services/pdfAccessService";
+import { StirlingFile, createStirlingFile } from "@editor/types/fileContext";
 
 /**
  * Create a StirlingFile object for testing purposes

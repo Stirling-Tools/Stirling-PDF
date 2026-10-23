@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import { useAllFiles } from "@app/contexts/FileContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useNavigationState } from "@app/contexts/NavigationContext";
-import { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useNavigationState } from "@editor/contexts/NavigationContext";
+import { StirlingFile, StirlingFileStub } from "@editor/types/fileContext";
 
 export function useViewScopedFiles(ignoreViewerScope = false): StirlingFile[] {
   const { activeFileIndex } = useViewer();
