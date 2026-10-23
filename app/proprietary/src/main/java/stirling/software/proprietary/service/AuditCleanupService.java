@@ -1,19 +1,22 @@
 package stirling.software.proprietary.service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.scheduling.LazyScheduledTask;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 
@@ -25,6 +28,7 @@ public class AuditCleanupService {
     private final PersistentAuditEventRepository auditRepository;
     private final AuditConfigurationProperties auditConfig;
     private final boolean runningEE;
+    private final LazyScheduledTask dailyCleanup;
 
     // Default batch size for deletions
     private static final int BATCH_SIZE = 10000;
@@ -39,17 +43,31 @@ public class AuditCleanupService {
     public AuditCleanupService(
             PersistentAuditEventRepository auditRepository,
             AuditConfigurationProperties auditConfig,
-            @Qualifier("runningEE") boolean runningEE) {
+            @Qualifier("runningEE") boolean runningEE,
+            TaskScheduler scheduler) {
         this.auditRepository = auditRepository;
         this.auditConfig = auditConfig;
         this.runningEE = runningEE;
+        this.dailyCleanup = new LazyScheduledTask(scheduler, this::cleanupOldAuditEvents);
     }
 
     /**
-     * Scheduled task that runs daily to clean up old audit events. The retention period is
-     * configurable in settings.yml.
+     * Registers the daily retention sweep on the first recorded audit event. The first run happens
+     * immediately so a restart cannot postpone cleanup past the retention window.
      */
-    @Scheduled(fixedDelay = 1, initialDelay = 1, timeUnit = TimeUnit.DAYS)
+    public boolean ensureScheduled() {
+        return dailyCleanup.ensureFixedDelay(Duration.ofDays(1));
+    }
+
+    /** Persisted rows from before the restart still need a retention schedule. */
+    @EventListener(ApplicationReadyEvent.class)
+    public void armIfRowsExist() {
+        if (auditConfig.isEnabled() && auditRepository.count() > 0) {
+            ensureScheduled();
+        }
+    }
+
+    /** Deletes audit events past the retention period configured in settings.yml. */
     public void cleanupOldAuditEvents() {
         if (!auditConfig.isEnabled()) {
             return;

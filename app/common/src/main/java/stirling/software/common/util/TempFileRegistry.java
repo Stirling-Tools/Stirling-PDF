@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
@@ -25,6 +26,22 @@ import lombok.extern.slf4j.Slf4j;
 public class TempFileRegistry {
 
     private final ConcurrentMap<Path, Instant> registeredFiles = new ConcurrentHashMap<>();
+
+    private final Runnable onFirstUse;
+    private final AtomicBoolean firstUseSignalled = new AtomicBoolean();
+
+    /** Construction without a first-use callback. */
+    public TempFileRegistry() {
+        this(() -> {});
+    }
+
+    /**
+     * @param onFirstUse runs at most once, on the first registered file, directory or third-party
+     *     file; a callback that fails is retried by the next registration
+     */
+    public TempFileRegistry(Runnable onFirstUse) {
+        this.onFirstUse = onFirstUse;
+    }
 
     /**
      * -- GETTER -- Get all registered third-party temporary files.
@@ -52,6 +69,7 @@ public class TempFileRegistry {
     public File register(File file) {
         if (file != null) {
             registeredFiles.put(file.toPath(), Instant.now());
+            signalFirstUse();
             log.debug("Registered temp file: {}", file.getAbsolutePath());
         }
         return file;
@@ -66,6 +84,7 @@ public class TempFileRegistry {
     public Path register(Path path) {
         if (path != null) {
             registeredFiles.put(path, Instant.now());
+            signalFirstUse();
             log.debug("Registered temp path: {}", path.toString());
         }
         return path;
@@ -80,6 +99,7 @@ public class TempFileRegistry {
     public Path registerDirectory(Path directory) {
         if (directory != null && Files.isDirectory(directory)) {
             tempDirectories.add(directory);
+            signalFirstUse();
             log.debug("Registered temp directory: {}", directory.toString());
         }
         return directory;
@@ -106,9 +126,22 @@ public class TempFileRegistry {
     public File registerThirdParty(File file) {
         if (file != null) {
             thirdPartyTempFiles.add(file.toPath());
+            signalFirstUse();
             log.debug("Registered third-party temp file: {}", file.getAbsolutePath());
         }
         return file;
+    }
+
+    private void signalFirstUse() {
+        if (firstUseSignalled.get()) {
+            return;
+        }
+        try {
+            onFirstUse.run();
+            firstUseSignalled.set(true);
+        } catch (RuntimeException e) {
+            log.warn("First-use callback failed; a later registration will retry", e);
+        }
     }
 
     /**

@@ -34,6 +34,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
+import stirling.software.common.configuration.SchedulingConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.mcp.McpAnalytics;
 import stirling.software.proprietary.mcp.McpServerController;
@@ -314,6 +315,7 @@ class McpOAuthIntegrationTest {
     @SpringBootConfiguration
     @EnableAutoConfiguration
     @Import({
+        SchedulingConfig.class,
         McpSecurityConfig.class,
         McpServerController.class,
         McpAnalytics.class,

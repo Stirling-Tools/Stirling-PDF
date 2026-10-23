@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.scheduling.TaskScheduler;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
@@ -21,7 +22,10 @@ class AuditCleanupServiceTest {
         audit.setEnabled(true);
         audit.setRetentionDays(retentionDays);
         return new AuditCleanupService(
-                repository, new AuditConfigurationProperties(props), runningEE);
+                repository,
+                new AuditConfigurationProperties(props),
+                runningEE,
+                mock(TaskScheduler.class));
     }
 
     @Test

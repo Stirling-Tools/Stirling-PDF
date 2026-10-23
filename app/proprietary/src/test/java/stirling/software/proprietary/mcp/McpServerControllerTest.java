@@ -28,6 +28,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -97,7 +98,9 @@ class McpServerControllerTest {
         @SuppressWarnings("unchecked")
         ObjectProvider<McpToolCatalog> catalogProvider = mock(ObjectProvider.class);
         when(catalogProvider.getIfAvailable()).thenReturn(analyticsCatalog);
-        analytics = new McpAnalytics(postHogProvider, catalogProvider, props);
+        analytics =
+                new McpAnalytics(
+                        postHogProvider, catalogProvider, props, mock(TaskScheduler.class));
         return new McpServerController(mapper, props, tools, analytics);
     }
 
