@@ -108,7 +108,7 @@ undoSuccess = "Åtgärden ångrades"
 unknown = "Okänt"
 unpin = "Lossa fil (ersätt efter verktygskörning)"
 unsavedChanges = "Du har osparade ändringar i din PDF."
-unsavedChangesBody = "Du har osparade ändringar i PDF-filen. Är du säker på att du vill lämna sidan?"
+unsavedChangesBody = "Du har osparade ändringar i din PDF. Är du säker på att du vill lämna?"
 unsavedChangesTitle = "Osparade ändringar"
 unsupported = "Stöds inte"
 username = "Användarnamn"
@@ -1042,7 +1042,7 @@ pageFormatKeep = "Behåll (ursprungliga dimensioner)"
 pageFormatLetter = "Letter (8,5 × 11 tum)"
 
 [admin.settings.connections.oauth2]
-label = "OAuth 2"
+label = "OAuth2"
 
 [admin.settings.connections.oauth2.autoCreateUser]
 description = "Skapa automatiskt användarkonton vid första OAuth2-inloggningen"
@@ -1081,7 +1081,7 @@ description = "Det OAuth2-anspråk som ska användas som användarnamn (t.ex. em
 label = "Använd som användarnamn"
 
 [admin.settings.connections.saml2]
-label = "SAML 2"
+label = "SAML2"
 
 [admin.settings.connections.saml2.autoCreateUser]
 description = "Skapa automatiskt användarkonton vid första SAML2-inloggningen"
@@ -1246,12 +1246,6 @@ label = "Certifikatets giltighet (dagar)"
 description = "Kataloger som mappkällor och mappmål får läsa från och skriva till. Detta är en säkerhetsgräns: automatiseringar kan aldrig pekas mot en serversökväg utanför denna lista."
 securityNote = "Lämna detta tomt för att inaktivera mappkällor och mappmål helt. Stirlings egen konfigurationskatalog är alltid förbjuden."
 title = "Mappåtkomst"
-
-[admin.settings.folderAccess.implied]
-description = "Dessa Stirling-hanterade kataloger är alltid tillåtna och kan inte ändras här."
-serverStorage = "Serverfillagring"
-title = "Alltid tillåtet"
-watchedFolder = "Övervakad pipeline-mapp"
 
 [admin.settings.folderAccess.roots]
 add = "Lägg till"
@@ -5574,8 +5568,8 @@ location = "Plats:"
 logo = "Logotyp:"
 logoHidden = "Ingen logotyp"
 logoShown = "Stirling PDF-logotyp visas"
-participantCount_one = "{{count}} deltagare kommer att signera i ordning"
-participantCount_other = "{{count}} deltagare kommer att signera i ordning"
+participantCount_one = "{{count}} deltagare har valts"
+participantCount_other = "{{count}} deltagare har valts"
 participants = "Deltagare"
 reason = "Orsak:"
 send = "Skicka signeringsförfrågningar"
@@ -7475,6 +7469,27 @@ width = "Bredd"
 widthHint = "Texten radbryts om för att passa bredden."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.inspector.accessibility]
+cannotChange = "Den här bildens tillgänglighetsinformation kan inte ändras."
+decorativeInfo = "Skärmläsare hoppar över dekorativa bilder. Använd detta för ramar, bakgrunder och andra bilder som inte förmedlar information."
+decorativeLabel = "Dekorativ bild"
+description = "Bildbeskrivning"
+descriptionInfo = "Skärmläsare läser upp denna text i stället för bilden."
+encrypted = "Taggar kan inte redigeras i en krypterad fil"
+heading = "Tillgänglighet"
+missingDescriptions = "Beskrivningar saknas"
+mixedContent = "Figuren innehåller annat innehåll"
+needsDescriptionBadge = "Saknar beskrivning"
+nextImage = "Nästa bild"
+notFigure = "Taggad som en del av texten"
+saveFailed = "Dina ändringar av tillgängligheten kunde inte sparas, så filen sparades inte. Ångra ändringarna och försök igen."
+unreadable = "Den här filens taggar kan inte redigeras"
+untaggableImages = "Kan inte taggas här"
+untaggedBadge = "Inte taggad"
+untaggedDocument = "Dokumentet saknar taggar"
+untaggedImage = "Kan inte taggas här"
+untaggedImages = "Otaggade bilder"
 
 [pdfTextEditor.mobile]
 actions = "Redigeringsåtgärder"
@@ -13822,8 +13837,6 @@ engineSlowWarning = "Initieringen av PDF-motorn tar längre tid än förväntat.
 fitPage = "Anpassa till sida"
 fitWidth = "Anpassa till bredd"
 firstPage = "Första sidan"
-fitPage = "Anpassa till sidan"
-fitWidth = "Anpassa till bredden"
 lastPage = "Sista sidan"
 loadingEngine = "Läser in PDF-motor..."
 moreOptions = "Mer"
