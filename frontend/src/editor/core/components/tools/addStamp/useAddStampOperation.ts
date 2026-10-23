@@ -41,7 +41,7 @@ export const addStampToApiParams = (
     alphabet: parameters.alphabet,
   };
 
-  if (stampType === "text") {
+  if (stampType !== "image") {
     apiParams.stampText = parameters.stampText;
   }
 
