@@ -508,6 +508,8 @@ public class PdfUtils {
                 reader.setInput(imageInput);
                 int numPages = reader.getNumImages(true);
                 for (int i = 0; i < numPages; i++) {
+                    // A single oversized frame can hide in an otherwise small multi-page TIFF.
+                    ImageProcessingUtils.assertReaderWithinPixelLimit(reader, i);
                     BufferedImage convertedImage =
                             ImageProcessingUtils.convertColorType(reader.read(i), colorType);
                     PDImageXObject pdImage = LosslessFactory.createFromImage(doc, convertedImage);
@@ -597,6 +599,8 @@ public class PdfUtils {
             float y,
             boolean everyPage)
             throws IOException {
+
+        ImageProcessingUtils.assertWithinPixelLimit(imageBytes);
 
         try (PDDocument document = pdfDocumentFactory.load(pdfBytes)) {
             // Get the first page of the PDF

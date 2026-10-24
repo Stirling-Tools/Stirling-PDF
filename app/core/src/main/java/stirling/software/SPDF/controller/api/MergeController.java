@@ -47,6 +47,7 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ImageProcessingUtils;
 import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.TempFile;
@@ -278,6 +279,8 @@ public class MergeController {
                 MultipartFile multipartFile = files[index];
                 File tempFile;
                 if (isImageFile(multipartFile)) {
+                    // Reject a pixel bomb before any decode; a clear 400 beats the raw fallback.
+                    ImageProcessingUtils.assertWithinPixelLimit(multipartFile);
                     // Convert images to PDF so JPDFium can merge them; fall back to the raw
                     // upload if conversion fails so pre-validate can flag it.
                     try {
