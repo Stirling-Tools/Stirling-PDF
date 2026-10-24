@@ -15,7 +15,9 @@ import {
 const PATH = "C:/Docs/report.pdf";
 const BYTES = Array.from(
   fs.readFileSync(
-    path.resolve("src/editor/core/tests/test-fixtures/annotation-text-sample.pdf"),
+    path.resolve(
+      "src/editor/core/tests/test-fixtures/annotation-text-sample.pdf",
+    ),
   ),
 );
 const MTIME = 1_700_000_000_000;
