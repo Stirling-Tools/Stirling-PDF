@@ -11611,43 +11611,6 @@
       "artifact_name": "cache-untrusted-pr-8307-tauri-task-state-cache-windows-x64-f36291e59f791d2e72c0d97a01ab4c1400abc3ea24f3f51cf3370442419872cf-v6--26c650c6efe9d93392e8585d76ff966bb5b65d27-part-000000",
       "workflow_run_id": 38883434118
     },
-    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-cargo-registry/macos-arm64/9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-cache-e1b7946154cca207/v6": {
-      "object": "sha256:1764e88450cc2929408c760976189e1eb4bf81c072e4c1530644f98040c2f772",
-      "storage": "github-artifact",
-      "updated_at": "2026-10-18T07:37:17.486Z",
-      "source": "Stirling-Tools/Stirling-PDF",
-      "created_by": "Ludy87",
-      "size": 59122775,
-      "parts": [
-        {
-          "index": 0,
-          "object": "sha256:8f49a1c7de113b52c32371505d63e14f56a7df68de0897b8c3a0189020bda8af",
-          "size": 25165824,
-          "artifact_id": 12129810734,
-          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--1764e88450cc2929408c760976189e1eb4bf81c072-part-000000",
-          "workflow_run_id": 39106642268
-        },
-        {
-          "index": 1,
-          "object": "sha256:905a99285274d7ad7fd2fd9800c48f64d6f8cc657463dabe7b04cfa5012f400b",
-          "size": 25165824,
-          "artifact_id": 12129402077,
-          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--1764e88450cc2929408c760976189e1eb4bf81c072-part-000001",
-          "workflow_run_id": 39106642268
-        },
-        {
-          "index": 2,
-          "object": "sha256:8a82cf4faea61f75a7cebb76a4f4f3116adca5a1ba2c59f017c5396b5e6a9801",
-          "size": 8791127,
-          "artifact_id": 12129456682,
-          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--1764e88450cc2929408c760976189e1eb4bf81c072-part-000002",
-          "workflow_run_id": 39106642268
-        }
-      ],
-      "artifact_id": 12129810734,
-      "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-9a2f7529327e0d8ad9005cba8deeddc2a7b93a031a208998c97c057385ed0aeb-v6--1764e88450cc2929408c760976189e1eb4bf81c072-part-000000",
-      "workflow_run_id": 39106642268
-    },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-frontend-dist/macos-arm64/96488e54b95a21bb57420a4664da68390aefa260b7fe1ed8fd2641ca5cc8c7b4-cache-e1b7946154cca207/v6": {
       "object": "sha256:8daa8567e598b46a41048ed8e2d95110b3e29ece1dabd5ceb547b66707ae0c2a",
       "storage": "github-artifact",
@@ -17474,10 +17437,47 @@
       "artifact_id": 12561292583,
       "artifact_name": "cache-untrusted-pr-8307-tauri-build-target-windows-x64-ef043b03263322bb0218eb567e8088ef85c1aa0b3ffda4b685422471ebc61522-v6--258a6c31bb507d594bd999f53b9278632454ced060c5-part-000000",
       "workflow_run_id": 40095699853
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-cargo-registry/macos-arm64/ef043b03263322bb0218eb567e8088ef85c1aa0b3ffda4b685422471ebc61522-cache-e3b6888c3c920824/v6": {
+      "object": "sha256:c91b8771bab8d3a98930f052872b62f7aa4a8d7293293846415d5813dc27b32f",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-24T13:13:40.452Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 59146834,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:5a54fef16551a18d638bbee572a69b4cfed08af6bd9f6328fdb63fcb26f9f34c",
+          "size": 25165824,
+          "artifact_id": 12561253328,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-ef043b03263322bb0218eb567e8088ef85c1aa0b3ffda4b685422471ebc61522-v6--c91b8771bab8d3a98930f052872b62f7aa4a8d7293-part-000000",
+          "workflow_run_id": 40095699853
+        },
+        {
+          "index": 1,
+          "object": "sha256:0972a0882d454f02137001cd1e488d61e6842651af5dfe311de4aa1202948b8b",
+          "size": 25165824,
+          "artifact_id": 12561268090,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-ef043b03263322bb0218eb567e8088ef85c1aa0b3ffda4b685422471ebc61522-v6--c91b8771bab8d3a98930f052872b62f7aa4a8d7293-part-000001",
+          "workflow_run_id": 40095699853
+        },
+        {
+          "index": 2,
+          "object": "sha256:0007a25bce54c0bdc05fb14de3b1d24216faf206f0c60da1f2a45ec2f5ce7141",
+          "size": 8815186,
+          "artifact_id": 12561258133,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-ef043b03263322bb0218eb567e8088ef85c1aa0b3ffda4b685422471ebc61522-v6--c91b8771bab8d3a98930f052872b62f7aa4a8d7293-part-000002",
+          "workflow_run_id": 40095699853
+        }
+      ],
+      "artifact_id": 12561253328,
+      "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-macos-arm64-ef043b03263322bb0218eb567e8088ef85c1aa0b3ffda4b685422471ebc61522-v6--c91b8771bab8d3a98930f052872b62f7aa4a8d7293-part-000000",
+      "workflow_run_id": 40095699853
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-24T12:58:09.315Z",
-    "writes": 22
+    "writes": 23
   }
 }
