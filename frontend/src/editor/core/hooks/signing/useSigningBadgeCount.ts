@@ -2,11 +2,11 @@ import { useMemo } from "react";
 import {
   collectSigningItems,
   type SigningMenuItem,
-} from "@app/utils/signingItems";
-import { useAuth } from "@app/auth/UseSession";
-import { useGroupSigningState } from "@app/hooks/useGroupSigningEnabled";
-import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
-import { useSigningActivity } from "@app/hooks/signing/useSigningActivity";
+} from "@editor/utils/signingItems";
+import { useAuth } from "@editor/auth/UseSession";
+import { useGroupSigningState } from "@editor/hooks/useGroupSigningEnabled";
+import { useSigningSessions } from "@editor/hooks/signing/useSigningSessions";
+import { useSigningActivity } from "@editor/hooks/signing/useSigningActivity";
 
 /**
  * Counts unread invitations, participant decisions and completed documents.

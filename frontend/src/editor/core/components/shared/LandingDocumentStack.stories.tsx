@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { LandingDocumentStack } from "@app/components/shared/LandingDocumentStack";
+import { LandingDocumentStack } from "@editor/components/shared/LandingDocumentStack";
 
 /** Decorative stack only: window dots + grey bars — no props, no i18n. */
 const meta: Meta<typeof LandingDocumentStack> = {

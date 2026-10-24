@@ -4,18 +4,18 @@ import { beforeEach, expect, it, vi } from "vitest";
 import {
   RedactionPendingTracker,
   type RedactionPendingTrackerAPI,
-} from "@app/components/viewer/RedactionPendingTracker";
+} from "@editor/components/viewer/RedactionPendingTracker";
 
 const h = vi.hoisted(() => ({
   commit: vi.fn<() => Promise<boolean>>(),
   setPendingCount: vi.fn(),
 }));
 
-vi.mock("@app/contexts/RedactionContext", () => ({
+vi.mock("@editor/contexts/RedactionContext", () => ({
   useRedaction: () => ({ setPendingCount: h.setPendingCount }),
 }));
 
-vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
+vi.mock("@editor/components/viewer/useActiveDocumentId", () => ({
   useActiveDocumentId: () => "document",
 }));
 vi.mock("@embedpdf/plugin-redaction/react", () => ({

@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, type Mock, test, vi } from "vitest";
-import apiClient from "@app/services/apiClient";
-import type { ToolRegistry } from "@app/data/toolsTaxonomy";
-import { ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import apiClient from "@editor/services/apiClient";
+import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { ToolType } from "@editor/hooks/tools/shared/useToolOperation";
 import {
   executeToolOperation,
   processMultiFileResponse,
-} from "@app/utils/automationExecutor";
+} from "@editor/utils/automationExecutor";
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: {
     post: vi.fn(),
   },

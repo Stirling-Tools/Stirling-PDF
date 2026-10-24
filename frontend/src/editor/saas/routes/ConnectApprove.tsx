@@ -1,24 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 import { isAxiosError } from "axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import apiClient from "@app/services/apiClient";
-import { useAuth } from "@app/auth/UseSession";
-import { useTranslation } from "@app/hooks/useTranslation";
-import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
-import { withBasePath } from "@app/constants/app";
+import apiClient from "@editor/services/apiClient";
+import { useAuth } from "@editor/auth/UseSession";
+import { useTranslation } from "@editor/hooks/useTranslation";
+import { useDocumentMeta } from "@editor/hooks/useDocumentMeta";
+import { withBasePath } from "@editor/constants/app";
 import {
   clearPendingConnect,
   rememberPendingConnect,
-} from "@app/routes/pendingConnect";
-import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
-import AuthLayout from "@app/routes/authShared/AuthLayout";
+} from "@editor/routes/pendingConnect";
+import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import AuthLayout from "@editor/routes/authShared/AuthLayout";
 import {
   ConnectApproveView,
   type ApprovePhase,
   type PendingConnect,
-} from "@app/routes/ConnectApproveView";
-import "@app/routes/authShared/saas-auth.css";
-import "@app/routes/connect.css";
+} from "@editor/routes/ConnectApproveView";
+import "@editor/routes/authShared/saas-auth.css";
+import "@editor/routes/connect.css";
 
 interface ApproveResponse {
   callbackUrl: string;

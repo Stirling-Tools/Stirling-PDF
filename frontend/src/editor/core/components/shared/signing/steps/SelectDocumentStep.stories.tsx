@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SelectDocumentStep } from "@app/components/shared/signing/steps/SelectDocumentStep";
-import type { FileState } from "@app/types/file";
+import { SelectDocumentStep } from "@editor/components/shared/signing/steps/SelectDocumentStep";
+import type { FileState } from "@editor/types/file";
 
 const meta = {
   title: "Shared/Signing/SelectDocumentStep",

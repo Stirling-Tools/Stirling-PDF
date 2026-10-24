@@ -7,20 +7,20 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
-import { isBackendNotReadyError } from "@app/constants/backendErrors";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
-import { isOffDeviceEndpointName } from "@app/services/documentPrivacyService";
-import { qk } from "@app/query/keys";
-import { CONFIG_STALE_TIME } from "@app/query/staleTime";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import { isBackendNotReadyError } from "@editor/constants/backendErrors";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
+import { isOffDeviceEndpointName } from "@editor/services/documentPrivacyService";
+import { qk } from "@editor/query/keys";
+import { CONFIG_STALE_TIME } from "@editor/query/staleTime";
 import {
   isSelfHostedOffline,
   resolveEndpointEnabled,
   resolveEndpointsAvailability,
-} from "@app/api/endpointAvailability";
-import type { EndpointAvailabilityDetails } from "@app/types/endpointAvailability";
+} from "@editor/api/endpointAvailability";
+import type { EndpointAvailabilityDetails } from "@editor/types/endpointAvailability";
 
 interface EndpointConfig {
   backendUrl: string;

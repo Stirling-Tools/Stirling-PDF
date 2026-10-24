@@ -1,8 +1,8 @@
 import React, { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import styles from "@app/components/shared/textInput/TextInput.module.css";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import styles from "@editor/components/shared/textInput/TextInput.module.css";
 
 /**
  * Props for the TextInput component

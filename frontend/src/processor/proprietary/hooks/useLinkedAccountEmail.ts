@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { ensurePortalSessionClient } from "@app/portal/auth/sessionClient";
-import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
+import { ensurePortalSessionClient } from "@editor/portal/auth/sessionClient";
+import { usePortalSaasSession } from "@editor/portal/hooks/usePortalSaasSession";
 
 /**
  * Current browser SaaS identity, independent of the local server login or connection owner.

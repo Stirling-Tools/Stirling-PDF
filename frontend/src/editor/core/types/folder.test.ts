@@ -4,7 +4,7 @@ import {
   diskFolderId,
   diskFolderPath,
   isDiskFolderId,
-} from "@app/types/folder";
+} from "@editor/types/folder";
 
 /**
  * A mount's subdirectories have no stored record, so their ids must carry the

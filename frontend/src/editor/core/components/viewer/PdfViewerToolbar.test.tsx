@@ -5,7 +5,7 @@ import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import type { ZoomLevel } from "@embedpdf/plugin-zoom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { PdfViewerToolbar } from "@app/components/viewer/PdfViewerToolbar";
+import { PdfViewerToolbar } from "@editor/components/viewer/PdfViewerToolbar";
 
 const device = vi.hoisted(() => ({ isPhone: false }));
 
@@ -56,10 +56,10 @@ const viewer = vi.hoisted(() => {
   };
 });
 
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => viewer.value,
 }));
-vi.mock("@app/hooks/useIsMobile", () => ({
+vi.mock("@editor/hooks/useIsMobile", () => ({
   useIsPhone: () => device.isPhone,
 }));
 

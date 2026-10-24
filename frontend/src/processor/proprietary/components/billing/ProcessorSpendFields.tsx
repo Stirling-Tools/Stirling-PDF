@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, NumberInput } from "@app/ui";
+import { Button, NumberInput } from "@editor/ui";
 import {
   currencySymbol,
   formatMinor,
   formatMoneyMajor,
-} from "@app/billing/format";
+} from "@editor/billing/format";
 
 /** The monthly ceiling is separate from the per-credit rate; null is explicitly uncapped. */
 export function ProcessorSpendFields({

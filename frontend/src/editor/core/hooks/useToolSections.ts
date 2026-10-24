@@ -5,9 +5,9 @@ import {
   SubcategoryId,
   ToolCategoryId,
   ToolRegistryEntry,
-} from "@app/data/toolsTaxonomy";
+} from "@editor/data/toolsTaxonomy";
 import { useTranslation } from "react-i18next";
-import { ToolId } from "@app/types/toolId";
+import { ToolId } from "@editor/types/toolId";
 
 type SubcategoryIdMap = {
   [subcategoryId in SubcategoryId]: Array<{

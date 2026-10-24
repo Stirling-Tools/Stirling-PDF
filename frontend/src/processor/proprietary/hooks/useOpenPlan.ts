@@ -1,6 +1,6 @@
-import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
 import { useCallback } from "react";
-import { useUI } from "@app/portal/contexts/UIContext";
+import { useUI } from "@editor/portal/contexts/UIContext";
 
 /**
  * Self-hosted processor: settings carries no cloud Plan section, so the

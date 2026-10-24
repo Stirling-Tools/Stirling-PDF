@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import PageLayoutAdvancedSettings from "@app/components/tools/pageLayout/PageLayoutAdvancedSettings";
+import PageLayoutAdvancedSettings from "@editor/components/tools/pageLayout/PageLayoutAdvancedSettings";
 import {
   PageLayoutParameters,
   defaultParameters,
-} from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
+} from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
 
 const meta = {
   title: "Tools/PageLayout/PageLayoutAdvancedSettings",

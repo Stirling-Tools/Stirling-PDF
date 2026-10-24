@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ExtractImagesSettings from "@app/components/tools/extractImages/ExtractImagesSettings";
+import ExtractImagesSettings from "@editor/components/tools/extractImages/ExtractImagesSettings";
 import {
   ExtractImagesParameters,
   defaultParameters,
-} from "@app/hooks/tools/extractImages/useExtractImagesParameters";
+} from "@editor/hooks/tools/extractImages/useExtractImagesParameters";
 
 const meta = {
   title: "Tools/ExtractImages/ExtractImagesSettings",

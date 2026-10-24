@@ -8,70 +8,70 @@ import React, {
   type RefCallback,
 } from "react";
 import { Loader, Tooltip } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { NavSurface } from "@app/ui/NavSurface";
-import { Button } from "@app/ui/Button";
-import { Icon, type IconName } from "@app/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { NavSurface } from "@editor/ui/NavSurface";
+import { Button } from "@editor/ui/Button";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useGoogleDrivePicker } from "@app/hooks/useGoogleDrivePicker";
+import { useFileState, useFileActions } from "@editor/contexts/file/fileHooks";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useGoogleDrivePicker } from "@editor/hooks/useGoogleDrivePicker";
 import {
   useNavigationState,
   useNavigationActions,
   useNavigationGuard,
-} from "@app/contexts/NavigationContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useFileHandler } from "@app/hooks/useFileHandler";
-import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
-import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
-import { useFreeCreditsSummary } from "@app/hooks/useFreeCreditsSummary";
-import { useOpenPlan } from "@app/hooks/useOpenPlan";
-import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
+} from "@editor/contexts/NavigationContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
+import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
+import { useAccountIdentity } from "@editor/hooks/useAccountIdentity";
+import { useFreeCreditsSummary } from "@editor/hooks/useFreeCreditsSummary";
+import { useOpenPlan } from "@editor/hooks/useOpenPlan";
+import { NavFooter } from "@editor/components/shared/navFooter/NavFooter";
 import {
   useIndexedDB,
   useIndexedDBRevision,
-} from "@app/contexts/IndexedDBContext";
-import { SidebarHeader } from "@app/components/shared/SidebarHeader";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import { FileItem } from "@app/components/shared/FileSidebarFileItem";
-import { useLabelName } from "@app/data/labelDisplay";
-import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
+} from "@editor/contexts/IndexedDBContext";
+import { SidebarHeader } from "@editor/components/shared/SidebarHeader";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import { FileItem } from "@editor/components/shared/FileSidebarFileItem";
+import { useLabelName } from "@editor/data/labelDisplay";
+import { useClassificationEnabled } from "@editor/hooks/useClassificationEnabled";
 import {
   FileSidebarGroupControls,
   useFileSidebarGroups,
   type FileSidebarGroup,
-} from "@app/components/shared/fileSidebarGrouping";
-import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
-import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
-import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
-import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
-import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
-import { duplicateStoredFile } from "@app/utils/duplicateFile";
-import { SidebarChecklistSlot } from "@app/components/shared/SidebarChecklistSlot";
-import { SidebarChat } from "@app/components/chat/SidebarChat";
+} from "@editor/components/shared/fileSidebarGrouping";
+import BulkUploadToServerModal from "@editor/components/shared/BulkUploadToServerModal";
+import { getFileOrigin } from "@editor/components/filesPage/fileOrigin";
+import { VersionHistoryModal } from "@editor/components/filesPage/VersionHistoryModal";
+import { DeleteFilesDialog } from "@editor/components/filesPage/DeleteFilesDialog";
+import { RenameFileDialog } from "@editor/components/shared/RenameFileDialog";
+import { duplicateStoredFile } from "@editor/utils/duplicateFile";
+import { SidebarChecklistSlot } from "@editor/components/shared/SidebarChecklistSlot";
+import { SidebarChat } from "@editor/components/chat/SidebarChat";
 import {
   deleteServerFile,
   type DeleteScope,
-} from "@app/services/serverStorageDelete";
-import { fileStorage, onRecordUnreadable } from "@app/services/fileStorage";
-import { renameStoredFile } from "@app/services/renameStoredFile";
-import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
-import { useOpenInNewWindow } from "@app/extensions/openInNewWindow";
-import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSearch";
-import { alert } from "@app/components/toast";
-import { useBulkAddProgress } from "@app/services/bulkAddProgress";
-import { useIsScrolled } from "@app/hooks/useIsScrolled";
-import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import { useCoalescedCallback } from "@app/hooks/useCoalescedCallback";
-import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
-import { useFilesPage } from "@app/contexts/FilesPageContext";
-import type { FolderId, FolderRecord } from "@app/types/folder";
-import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
-import { useWorkbenchFileDrop } from "@app/components/layout/useWorkbenchFileDrop";
-import { useDamagedFileRepair } from "@app/contexts/DamagedFileRepairContext";
-import "@app/components/shared/FileSidebar.css";
+} from "@editor/services/serverStorageDelete";
+import { fileStorage, onRecordUnreadable } from "@editor/services/fileStorage";
+import { renameStoredFile } from "@editor/services/renameStoredFile";
+import { downloadFileWithPolicy } from "@editor/services/exportWithPolicy";
+import { useOpenInNewWindow } from "@editor/extensions/openInNewWindow";
+import { openSuperSearch } from "@editor/components/shared/superSearch/openSuperSearch";
+import { alert } from "@editor/components/toast";
+import { useBulkAddProgress } from "@editor/services/bulkAddProgress";
+import { useIsScrolled } from "@editor/hooks/useIsScrolled";
+import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
+import { useCoalescedCallback } from "@editor/hooks/useCoalescedCallback";
+import { FolderTreeSidebar } from "@editor/components/filesPage/FolderTreeSidebar";
+import { useFilesPage } from "@editor/contexts/FilesPageContext";
+import type { FolderId, FolderRecord } from "@editor/types/folder";
+import { useToolEligibleFileIds } from "@editor/contexts/ToolFileEligibilityContext";
+import { useWorkbenchFileDrop } from "@editor/components/layout/useWorkbenchFileDrop";
+import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
+import "@editor/components/shared/FileSidebar.css";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
 const SIDEBAR_WIDTH = "var(--sidebar-w)";

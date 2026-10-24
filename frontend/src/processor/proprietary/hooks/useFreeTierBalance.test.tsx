@@ -8,25 +8,27 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { baseQueryOptions } from "@app/query/queryClient";
-import { TestQueryProvider } from "@portal/test/TestQueryProvider";
-import { useFreeTierBalance } from "@portal/hooks/useFreeTierBalance";
+import { baseQueryOptions } from "@editor/query/queryClient";
+import { TestQueryProvider } from "@processor/test/TestQueryProvider";
+import { useFreeTierBalance } from "@processor/hooks/useFreeTierBalance";
 import {
   clearAccountLinkBlock,
   reportFreeTierExhausted,
   useAccountLinkBlock,
-} from "@app/services/accountLinkBlock";
+} from "@editor/services/accountLinkBlock";
 
 const mocks = vi.hoisted(() => ({
   isAdmin: true,
   gated: true,
   fetchFreeTier: vi.fn(),
 }));
-vi.mock("@app/auth", () => ({ useAuth: () => ({ isAdmin: mocks.isAdmin }) }));
-vi.mock("@portal/hooks/useConnectGate", () => ({
+vi.mock("@editor/auth", () => ({
+  useAuth: () => ({ isAdmin: mocks.isAdmin }),
+}));
+vi.mock("@processor/hooks/useConnectGate", () => ({
   useConnectGate: () => ({ gated: mocks.gated, loading: false }),
 }));
-vi.mock("@portal/api/link", () => ({ fetchFreeTier: mocks.fetchFreeTier }));
+vi.mock("@processor/api/link", () => ({ fetchFreeTier: mocks.fetchFreeTier }));
 const balance = (remainingUnits: number) => ({
   grantUnits: 500,
   remainingUnits,

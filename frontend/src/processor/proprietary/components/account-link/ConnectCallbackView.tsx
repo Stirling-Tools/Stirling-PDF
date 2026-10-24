@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Banner, Spinner } from "@app/ui";
-import { ConnectDoneSlide } from "@app/portal/components/account-link/connect/ConnectDoneSlide";
-import type { ConnectMode } from "@app/portal/auth/pendingConnect";
-import "@app/components/account-link/connect.css";
+import { Banner, Spinner } from "@editor/ui";
+import { ConnectDoneSlide } from "@editor/portal/components/account-link/connect/ConnectDoneSlide";
+import type { ConnectMode } from "@editor/portal/auth/pendingConnect";
+import "@editor/components/account-link/connect.css";
 
 /** Outcomes of returning from the approval page. */
 export type ConnectCallbackState =

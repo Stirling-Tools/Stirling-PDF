@@ -9,7 +9,7 @@
 import {
   stripeAmountToMajor,
   stripeMinorUnitScale,
-} from "@app/utils/stripeCurrency";
+} from "@editor/utils/stripeCurrency";
 
 /** Quick-amount cap presets (major currency units) offered everywhere. */
 export const DEFAULT_CAP_PRESETS = [500, 1000, 2500, 5000] as const;

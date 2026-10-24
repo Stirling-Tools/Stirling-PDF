@@ -1,4 +1,4 @@
-import { createStampTool } from "@app/tools/stamp/createStampTool";
+import { createStampTool } from "@editor/tools/stamp/createStampTool";
 
 const Sign = createStampTool({
   toolId: "sign",

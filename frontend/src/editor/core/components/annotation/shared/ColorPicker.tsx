@@ -9,7 +9,7 @@ import {
   Text,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 interface ColorPickerProps {
   isOpen: boolean;
   onClose: () => void;

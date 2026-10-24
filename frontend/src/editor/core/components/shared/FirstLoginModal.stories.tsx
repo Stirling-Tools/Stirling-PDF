@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import FirstLoginModal from "@app/components/shared/FirstLoginModal";
+import FirstLoginModal from "@editor/components/shared/FirstLoginModal";
 
 const meta = {
   title: "Shared/FirstLoginModal",

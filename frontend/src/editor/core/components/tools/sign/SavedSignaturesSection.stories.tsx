@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SavedSignaturesSection from "@app/components/tools/sign/SavedSignaturesSection";
-import type { SavedSignature } from "@app/hooks/tools/sign/useSavedSignatures";
+import SavedSignaturesSection from "@editor/components/tools/sign/SavedSignaturesSection";
+import type { SavedSignature } from "@editor/hooks/tools/sign/useSavedSignatures";
 
 const mockSignatures: SavedSignature[] = [
   {

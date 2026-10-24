@@ -1,18 +1,18 @@
 import { Stack, Group, Text, Collapse, Loader } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Modal } from "@app/ui/Modal";
-import { FormField } from "@app/ui/FormField";
-import { Input } from "@app/ui/Input";
+import { Button } from "@editor/ui/Button";
+import { Modal } from "@editor/ui/Modal";
+import { FormField } from "@editor/ui/FormField";
+import { Input } from "@editor/ui/Input";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useMemo } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import {
   CertificateSelector,
   CertificateType,
   UploadFormat,
-} from "@app/components/tools/certSign/CertificateSelector";
+} from "@editor/components/tools/certSign/CertificateSelector";
 import { isAxiosError } from "axios";
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 
 export interface CertificateSubmitData {
   certType: CertificateType;

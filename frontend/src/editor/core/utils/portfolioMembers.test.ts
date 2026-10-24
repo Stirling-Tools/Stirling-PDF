@@ -5,7 +5,7 @@ import { PDFDocument, PDFName } from "@cantoo/pdf-lib";
 import {
   readPortfolioMemberBytes,
   readPortfolioMembers,
-} from "@app/utils/portfolioMembers";
+} from "@editor/utils/portfolioMembers";
 
 const buildPdf = async (options: {
   collection: boolean;

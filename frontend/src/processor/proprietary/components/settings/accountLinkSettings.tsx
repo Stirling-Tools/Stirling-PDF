@@ -1,6 +1,6 @@
-import type { IconName } from "@app/ui/Icon";
+import type { IconName } from "@editor/ui/Icon";
 import type { ComponentType } from "react";
-import { AccountLinkPanel } from "@portal/components/account-link/AccountLinkPanel";
+import { AccountLinkPanel } from "@processor/components/account-link/AccountLinkPanel";
 
 export interface AccountLinkSettingsSeam {
   /** Nav key in the shared settings page (registered in config/types.ts). */

@@ -1,4 +1,4 @@
-import { StatusBadge, type StatusTone } from "@app/ui";
+import { StatusBadge, type StatusTone } from "@editor/ui";
 
 export type InvoiceRowState = "paid" | "current" | "failed" | "other";
 

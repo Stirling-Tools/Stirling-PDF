@@ -6,16 +6,16 @@
  */
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useWallet, type Wallet } from "@app/hooks/useWallet";
+import { useWallet, type Wallet } from "@editor/hooks/useWallet";
 import {
   currencySymbol,
   formatPeriodDate,
   MeterBar,
   meterState,
   remainingMeter,
-} from "@app/billing";
-import "@app/components/shared/config/configSections/Payg.css";
-import "@app/components/shared/config/configSections/PaygFree.css";
+} from "@editor/billing";
+import "@editor/components/shared/config/configSections/Payg.css";
+import "@editor/components/shared/config/configSections/PaygFree.css";
 
 export interface FreeSnapshot {
   /** Free documents used so far this period (grant − remaining). */

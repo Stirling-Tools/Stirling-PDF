@@ -1,6 +1,6 @@
-import { ActionIcon, Tooltip, type TooltipPlacement } from "@app/ui";
-import { Icon } from "@app/ui/Icon";
-import "@portal/components/InfoHint.css";
+import { ActionIcon, Tooltip, type TooltipPlacement } from "@editor/ui";
+import { Icon } from "@editor/ui/Icon";
+import "@processor/components/InfoHint.css";
 
 export interface InfoHintProps {
   /** The explanation. Shown on hover, keyboard focus and tap. */

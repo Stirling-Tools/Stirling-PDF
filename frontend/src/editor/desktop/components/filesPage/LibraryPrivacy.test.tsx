@@ -1,14 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { expect, test, vi } from "vitest";
-vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => true,
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));
-import { LibraryTabs } from "@app/components/filesPage/LibraryTabs";
-import { SignMenu } from "@app/components/shared/signing/SignMenu";
+import { LibraryTabs } from "@editor/components/filesPage/LibraryTabs";
+import { SignMenu } from "@editor/components/shared/signing/SignMenu";
 
 test("keeps local files accessible without offering Stirling library or shared files", () => {
   render(

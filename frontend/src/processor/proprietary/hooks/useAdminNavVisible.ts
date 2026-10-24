@@ -1,4 +1,4 @@
-import { usePortalAdmin } from "@portal/hooks/usePortalAdmin";
+import { usePortalAdmin } from "@processor/hooks/usePortalAdmin";
 
 /**
  * Whether nav entries marked {@code requiresAdmin} appear. Those entries are gated on

@@ -1,17 +1,17 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { usePageLayoutParameters } from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
-import { usePageLayoutOperation } from "@app/hooks/tools/pageLayout/usePageLayoutOperation";
-import PageLayoutSettings from "@app/components/tools/pageLayout/PageLayoutSettings";
-import PageLayoutAdvancedSettings from "@app/components/tools/pageLayout/PageLayoutAdvancedSettings";
-import PageLayoutMarginsBordersSettings from "@app/components/tools/pageLayout/PageLayoutMarginsBordersSettings";
-import { usePageLayoutTips } from "@app/components/tooltips/PageLayout/usePageLayoutTips";
-import { usePageLayoutAdvancedTips } from "@app/components/tooltips/PageLayout/usePageLayoutAdvancedTips";
-import { usePageLayoutMarginsBordersTips } from "@app/components/tooltips/PageLayout/usePageLayoutMarginsBordersTips";
-import PageLayoutPreview from "@app/components/tools/pageLayout/PageLayoutPreview";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { useAccordionSteps } from "@editor/hooks/tools/shared/useAccordionSteps";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { usePageLayoutParameters } from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
+import { usePageLayoutOperation } from "@editor/hooks/tools/pageLayout/usePageLayoutOperation";
+import PageLayoutSettings from "@editor/components/tools/pageLayout/PageLayoutSettings";
+import PageLayoutAdvancedSettings from "@editor/components/tools/pageLayout/PageLayoutAdvancedSettings";
+import PageLayoutMarginsBordersSettings from "@editor/components/tools/pageLayout/PageLayoutMarginsBordersSettings";
+import { usePageLayoutTips } from "@editor/components/tooltips/PageLayout/usePageLayoutTips";
+import { usePageLayoutAdvancedTips } from "@editor/components/tooltips/PageLayout/usePageLayoutAdvancedTips";
+import { usePageLayoutMarginsBordersTips } from "@editor/components/tooltips/PageLayout/usePageLayoutMarginsBordersTips";
+import PageLayoutPreview from "@editor/components/tools/pageLayout/PageLayoutPreview";
 
 enum PageLayoutStep {
   NONE = "none",

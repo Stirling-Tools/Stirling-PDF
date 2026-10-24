@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
+import { StirlingLogoAnimated } from "@editor/components/agents/StirlingLogoAnimated";
 
 /**
  * Animated Stirling logo mark, used as a "thinking" indicator in the chat panel.

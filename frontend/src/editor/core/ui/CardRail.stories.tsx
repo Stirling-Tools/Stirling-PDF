@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Icon } from "@app/ui/Icon";
-import { CardRail } from "@app/ui/CardRail";
-import { OptionCard } from "@app/ui/OptionCard";
+import { Icon } from "@editor/ui/Icon";
+import { CardRail } from "@editor/ui/CardRail";
+import { OptionCard } from "@editor/ui/OptionCard";
 
 const items = [
   {
