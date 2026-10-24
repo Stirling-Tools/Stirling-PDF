@@ -94,8 +94,9 @@ test("a file that changed on disk since is stored again", async ({ page }) => {
   await openFromExplorer(page);
   await expect.poll(() => storedCount(page)).toBe(1);
 
-  await setDisk(page, { [PATH]: { bytes: BYTES, modifiedMs: MTIME + 60_000 } });
+  // After the reload: restoring the session reconciles the open record with disk.
   await reload(page);
+  await setDisk(page, { [PATH]: { bytes: BYTES, modifiedMs: MTIME + 60_000 } });
   await openFromExplorer(page);
   await expect.poll(() => storedCount(page)).toBe(2);
 });
