@@ -352,7 +352,7 @@ public class AutoJobAspect {
                 } else {
                     MDC.clear();
                 }
-                if (caller != null) {
+                if (caller != null && MDC.get(AUDIT_PRINCIPAL_MDC_KEY) == null) {
                     MDC.put(AUDIT_PRINCIPAL_MDC_KEY, caller);
                 }
                 return supplier.get();

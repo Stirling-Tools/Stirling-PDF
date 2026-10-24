@@ -383,8 +383,9 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
 
     start_time = time.time()
 
-    log_dir = Path(args.log_dir) / datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_dir.mkdir(parents=True, exist_ok=True)
+    log_root = Path(args.log_dir)
+    log_root.mkdir(parents=True, exist_ok=True)
+    log_dir = Path(tempfile.mkdtemp(prefix=datetime.now().strftime("%Y%m%d_%H%M%S_"), dir=log_root))
     print(f"Logging each language's output to {log_dir}/\n")
 
     # Stale key lists are handed to auto_translate.py as files

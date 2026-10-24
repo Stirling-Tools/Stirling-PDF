@@ -35,6 +35,7 @@ public class FileToPdf {
                     "(<img\\b[^>]*?\\bsrc\\s*=\\s*)(\"([^\"]*)\"|'([^']*)'|([^\\s\"'>]+))",
                     Pattern.CASE_INSENSITIVE);
     private static final Pattern NUMERIC_ENTITY = Pattern.compile("&#(x?)([0-9a-fA-F]+);");
+    private static final long MAX_INLINED_IMAGE_CHARS = 64L * 1024 * 1024;
     private static final Map<String, String> IMAGE_MIME_TYPES =
             Map.of(
                     "png", "image/png",
@@ -162,12 +163,27 @@ public class FileToPdf {
 
         Matcher matcher = IMG_SRC.matcher(html);
         StringBuilder out = new StringBuilder();
+        Map<String, String> encoded = new HashMap<>();
+        long inlined = 0;
         while (matcher.find()) {
             String raw =
                     matcher.group(3) != null
                             ? matcher.group(3)
                             : matcher.group(4) != null ? matcher.group(4) : matcher.group(5);
-            String dataUri = toDataUri(decodeHtmlAttribute(raw), baseDir, entries);
+            String ref = decodeHtmlAttribute(raw);
+            String dataUri;
+            if (encoded.containsKey(ref)) {
+                dataUri = encoded.get(ref);
+            } else {
+                dataUri = toDataUri(ref, baseDir, entries);
+                encoded.put(ref, dataUri);
+            }
+            if (dataUri != null) {
+                inlined += dataUri.length();
+                if (inlined > MAX_INLINED_IMAGE_CHARS) {
+                    throw new IOException("Inlined image content exceeds the permitted size");
+                }
+            }
             String replacement =
                     dataUri == null ? matcher.group() : matcher.group(1) + "\"" + dataUri + "\"";
             matcher.appendReplacement(out, Matcher.quoteReplacement(replacement));
@@ -204,10 +220,15 @@ public class FileToPdf {
         Matcher matcher = NUMERIC_ENTITY.matcher(value);
         StringBuilder out = new StringBuilder();
         while (matcher.find()) {
-            int codePoint =
-                    Integer.parseInt(matcher.group(2), matcher.group(1).isEmpty() ? 10 : 16);
-            matcher.appendReplacement(
-                    out, Matcher.quoteReplacement(new String(Character.toChars(codePoint))));
+            String replacement;
+            try {
+                int codePoint =
+                        Integer.parseInt(matcher.group(2), matcher.group(1).isEmpty() ? 10 : 16);
+                replacement = new String(Character.toChars(codePoint));
+            } catch (IllegalArgumentException e) {
+                replacement = matcher.group();
+            }
+            matcher.appendReplacement(out, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(out);
         return out.toString()
