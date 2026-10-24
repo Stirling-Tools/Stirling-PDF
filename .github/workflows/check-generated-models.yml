@@ -75,7 +75,6 @@ jobs:
       pull-requests: write
     env:
       UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
-      UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
       NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -108,8 +107,6 @@ jobs:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             models-gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
-            models-uv-python-dir:
-              path: .cache/uv-python-dir
             models-setup-uv-cache:
               path: .cache/setup-uv-cache
           key: |
@@ -117,7 +114,6 @@ jobs:
             models-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
             models-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             models-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
-            models-uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
