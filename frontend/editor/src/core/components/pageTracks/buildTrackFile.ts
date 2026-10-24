@@ -4,6 +4,11 @@ import { PDFDocument, PDFPage } from "@app/types/pageEditor";
 import { pdfExportService } from "@app/services/pdfExportService";
 import { policySourceIds } from "@app/services/policyFileGuard";
 import {
+  prepareUnlockedFile,
+  protectUnlockedResults,
+} from "@app/services/pdfSessionUnlock";
+import { createStirlingFile } from "@app/types/fileContext";
+import {
   asPdfSource,
   toPdfName,
 } from "@app/components/pageTracks/trackFileKind";
@@ -18,6 +23,8 @@ import {
 export interface TrackFileLookup {
   getStub: (id: FileId) => StirlingFileStub | undefined;
   getFile: (id: FileId) => File | undefined;
+  /** The initiating view owns cancellation; document closure also cancels inspection. */
+  signal?: AbortSignal;
 }
 
 export interface BuiltTrackFile {
@@ -82,21 +89,39 @@ export async function buildTrackFile(
   const name = toPdfName(track.isNew ? track.name : parentStub.name);
 
   const sourceFiles = new Map<string, File>();
+  sourceFiles.set(anchorFileId, ownFile);
   for (const page of sourcePages) {
     if (sourceFiles.has(page.sourceFileId)) continue;
     const sourceFile = lookup.getFile(page.sourceFileId);
-    if (sourceFile)
-      sourceFiles.set(page.sourceFileId, await asPdfSource(sourceFile));
+    if (sourceFile) sourceFiles.set(page.sourceFileId, sourceFile);
   }
 
+  const workingSources = new Map<string, File>();
+  for (const [id, file] of sourceFiles) {
+    workingSources.set(
+      id,
+      await asPdfSource(
+        await prepareUnlockedFile(
+          createStirlingFile(file, id as FileId),
+          "/api/v1/general/rearrange-pages",
+          lookup.signal,
+        ),
+      ),
+    );
+  }
   const { blob } = await pdfExportService.exportPDFMultiFile(
     toExportDocument(name, ownFile, pages),
-    sourceFiles,
+    workingSources,
     [],
     { filename: name },
   );
+  const [file] = await protectUnlockedResults(
+    [new File([blob], name, { type: "application/pdf" })],
+    [...sourceFiles.values()],
+    "/api/v1/general/rearrange-pages",
+  );
   return {
-    file: new File([blob], name, { type: "application/pdf" }),
+    file,
     parentStub,
   };
 }

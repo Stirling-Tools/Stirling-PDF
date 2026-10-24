@@ -1,10 +1,7 @@
 import type { StepType } from "@reactour/tour";
 import type { TFunction } from "i18next";
 import {
-  addGlowToElements,
-  removeAllGlows,
-} from "@app/components/onboarding/tourGlow";
-import {
+  besideCentered,
   waitForElement,
   waitForHighlightable,
 } from "@app/components/onboarding/tourUtils";
@@ -33,31 +30,21 @@ interface CreateAdminStepsConfigArgs {
   actions: AdminStepActions;
 }
 
-// Delay before applying glow so the target section has mounted after navigation.
-const GLOW_DELAY_MS = 100;
-
 /**
- * Declarative spec for an admin tour step. Most steps do the same thing —
- * clear existing glows, navigate to a settings section, then glow a set of nav
- * items — so that behaviour is expressed as data (`section` + `glow`) and the
- * runner below turns it into the reactour enter/after hooks. This replaces the
- * removeGlow→navigate→setTimeout→addGlow block that was previously copy-pasted
- * into every step.
+ * Declarative spec for an admin tour step. Most steps open a settings section
+ * and point at its nav row, so that is expressed as data (`section`) and the
+ * runner below turns it into the reactour enter/after hooks.
  */
 interface AdminStepSpec {
   step: AdminTourStep;
   selector: string;
   contentKey: string;
   contentDefault: string;
-  position: StepType["position"];
+  position?: StepType["position"];
   padding?: number;
   highlightedSelectors?: string[];
-  /** Navigate to this settings section on enter (clears glows first). */
+  /** Navigate to this settings section on enter. */
   section?: string;
-  /** Selectors to glow shortly after navigating to `section`. */
-  glow?: string[];
-  /** Clear glows on enter without navigating (settings-overview step). */
-  clearGlowOnEnter?: boolean;
   /** Save admin/workbench state on enter (first step). */
   saveStateOnEnter?: boolean;
   /** Open the config modal after this step (config-button step). */
@@ -68,29 +55,8 @@ interface AdminStepSpec {
   waitForSelectorOnEnter?: boolean;
 }
 
-const NAV = {
-  users: [
-    '[data-tour="admin-users-nav"]',
-    '[data-tour="settings-content-area"]',
-  ],
-  adminGeneral: [
-    '[data-tour="admin-adminGeneral-nav"]',
-    '[data-tour="settings-content-area"]',
-  ],
-  adminAdvanced: [
-    '[data-tour="admin-adminAdvanced-nav"]',
-    '[data-tour="settings-content-area"]',
-  ],
-  adminSecurity: [
-    '[data-tour="admin-adminSecurity-nav"]',
-    '[data-tour="settings-content-area"]',
-  ],
-  adminTools: [
-    '[data-tour="admin-adminAudit-nav"]',
-    '[data-tour="admin-adminUsage-nav"]',
-    '[data-tour="settings-content-area"]',
-  ],
-} as const;
+// Nav rows sit flush in a narrow rail; a wider ring overlaps their neighbours.
+const NAV_PADDING = 4;
 
 const ADMIN_STEP_SPECS: AdminStepSpec[] = [
   {
@@ -99,7 +65,7 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     contentKey: "adminOnboarding.welcome",
     contentDefault:
       "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators.",
-    position: "right",
+    padding: NAV_PADDING,
     saveStateOnEnter: true,
   },
   {
@@ -108,7 +74,7 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     contentKey: "adminOnboarding.configButton",
     contentDefault:
       "Open <strong>Settings</strong> to access all system configuration and administrative controls.",
-    position: "right",
+    padding: NAV_PADDING,
     openConfigAfter: true,
   },
   {
@@ -117,9 +83,7 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     contentKey: "adminOnboarding.settingsOverview",
     contentDefault:
       "This is the <strong>Settings Panel</strong>. Admin settings are organised by category for easy navigation.",
-    position: "right",
     padding: 0,
-    clearGlowOnEnter: true,
   },
   {
     step: AdminTourStep.TEAMS_AND_USERS,
@@ -127,10 +91,8 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     contentKey: "adminOnboarding.teamsAndUsers",
     contentDefault:
       "Manage <strong>Teams</strong> and individual users here. You can invite new users via email, shareable links, or create custom accounts for them yourself.",
-    position: "right",
+    padding: NAV_PADDING,
     section: "users",
-    glow: [...NAV.users],
-    highlightedSelectors: [...NAV.users],
   },
   {
     step: AdminTourStep.SYSTEM_CUSTOMIZATION,
@@ -138,21 +100,17 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     contentKey: "adminOnboarding.systemCustomization",
     contentDefault:
       "We have extensive ways to customise the UI: <strong>System Settings</strong> let you change the app name and languages, <strong>Features</strong> allows server certificate management, and <strong>Endpoints</strong> lets you enable or disable specific tools for your users.",
-    position: "right",
+    padding: NAV_PADDING,
     section: "adminGeneral",
-    glow: [...NAV.adminGeneral],
-    highlightedSelectors: [...NAV.adminGeneral],
   },
   {
     step: AdminTourStep.DATABASE_SECTION,
-    selector: '[data-tour="admin-adminAdvanced-nav"]',
+    selector: '[data-tour="admin-adminDatabase-nav"]',
     contentKey: "adminOnboarding.databaseSection",
     contentDefault:
       "For advanced production environments, we have settings to allow <strong>external database hookups</strong> so you can integrate with your existing infrastructure.",
-    position: "right",
-    section: "adminAdvanced",
-    glow: [...NAV.adminAdvanced],
-    highlightedSelectors: [...NAV.adminAdvanced],
+    padding: NAV_PADDING,
+    section: "adminDatabase",
   },
   {
     step: AdminTourStep.CONNECTIONS_SECTION,
@@ -160,10 +118,8 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     contentKey: "adminOnboarding.connectionsSection",
     contentDefault:
       "The <strong>Connections</strong> section supports various login methods including custom SSO and SAML providers like Google and GitHub, plus email integrations for notifications and communications.",
-    position: "right",
+    padding: NAV_PADDING,
     section: "adminSecurity",
-    glow: [...NAV.adminSecurity],
-    highlightedSelectors: [...NAV.adminSecurity],
     scrollToAfter: "adminAudit",
   },
   {
@@ -172,10 +128,12 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     contentKey: "adminOnboarding.adminTools",
     contentDefault:
       "Finally, we have advanced administration tools like <strong>Auditing</strong> to track system activity and <strong>Usage Analytics</strong> to monitor how your users interact with the platform.",
-    position: "right",
+    padding: NAV_PADDING,
     section: "adminAudit",
-    glow: [...NAV.adminTools],
-    highlightedSelectors: [...NAV.adminTools],
+    highlightedSelectors: [
+      '[data-tour="admin-adminAudit-nav"]',
+      '[data-tour="admin-adminUsage-nav"]',
+    ],
   },
   {
     step: AdminTourStep.WRAP_UP,
@@ -183,7 +141,7 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
     contentKey: "adminOnboarding.wrapUp",
     contentDefault:
       "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime — just open <strong>Settings</strong> and find it here under <strong>About</strong>.",
-    position: "right",
+    padding: NAV_PADDING,
     section: "about",
     waitForSelectorOnEnter: true,
   },
@@ -204,7 +162,7 @@ export function createAdminStepsConfig({
     const step: StepType = {
       selector: spec.selector,
       content: t(spec.contentKey, spec.contentDefault),
-      position: spec.position,
+      position: spec.position ?? besideCentered,
       padding: spec.padding ?? 10,
     };
     if (spec.highlightedSelectors) {
@@ -212,22 +170,11 @@ export function createAdminStepsConfig({
     }
 
     const hasEnter =
-      spec.saveStateOnEnter ||
-      spec.clearGlowOnEnter ||
-      !!spec.section ||
-      spec.waitForSelectorOnEnter;
+      spec.saveStateOnEnter || !!spec.section || spec.waitForSelectorOnEnter;
     if (hasEnter) {
       step.action = async () => {
         if (spec.saveStateOnEnter) saveAdminState();
-        if (spec.clearGlowOnEnter) removeAllGlows();
-        if (spec.section) {
-          removeAllGlows();
-          navigateToSection(spec.section);
-          if (spec.glow) {
-            const glow = spec.glow;
-            setTimeout(() => addGlowToElements(glow), GLOW_DELAY_MS);
-          }
-        }
+        if (spec.section) navigateToSection(spec.section);
         if (spec.waitForSelectorOnEnter) {
           await waitForElement(spec.selector, 5000);
           await waitForHighlightable(spec.selector, 5000);

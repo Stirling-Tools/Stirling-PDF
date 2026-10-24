@@ -1,4 +1,6 @@
 import { useTranslation } from "react-i18next";
+import type { StirlingFile } from "@app/types/fileContext";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 import {
   useToolOperation,
   defineSingleFileTool,
@@ -16,10 +18,6 @@ import {
   REMOVE_PASSWORD_ENDPOINT,
 } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
 
-// Re-export for backwards compatibility with any other imports
-export { buildRemovePasswordFormData };
-
-// Static configuration object
 export const removePasswordOperationConfig = defineSingleFileTool({
   validateParams: validateRemovePasswordParameters,
   buildFormData: buildRemovePasswordFormData,
@@ -30,11 +28,32 @@ export const removePasswordOperationConfig = defineSingleFileTool({
   defaultParameters,
 });
 
+// Only selective removal omits absent roles. Legacy automation and unprotected copies
+// use the shared form builder's password as authentication, irrespective of its role.
+function getRemovePasswordParametersForFile(
+  parameters: RemovePasswordParameters,
+  file: File,
+): RemovePasswordParameters {
+  const access = getPdfAccess(file);
+  return {
+    password:
+      access?.encrypted === false || access?.requiresOpeningPassword === false
+        ? ""
+        : parameters.password,
+    ownerPassword: access?.encrypted === false ? "" : parameters.ownerPassword,
+  };
+}
+
 export const useRemovePasswordOperation = () => {
   const { t } = useTranslation();
 
-  return useToolOperation<RemovePasswordParameters>({
+  const operation = useToolOperation<RemovePasswordParameters>({
     ...removePasswordOperationConfig,
+    buildFormData: (params: RemovePasswordParameters, file: File) =>
+      buildRemovePasswordFormData(
+        getRemovePasswordParametersForFile(params, file),
+        file,
+      ),
     getErrorMessage: createStandardErrorHandler(
       t(
         "removePassword.error.failed",
@@ -42,4 +61,19 @@ export const useRemovePasswordOperation = () => {
       ),
     ),
   });
+  return {
+    ...operation,
+    executeOperation: (
+      params: RemovePasswordParameters,
+      files: StirlingFile[],
+    ) =>
+      operation.executeOperation(
+        params,
+        files.filter((file) =>
+          validateRemovePasswordParameters(
+            getRemovePasswordParametersForFile(params, file),
+          ),
+        ),
+      ),
+  };
 };

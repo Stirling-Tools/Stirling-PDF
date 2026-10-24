@@ -19,11 +19,11 @@ import {
   useNavigationState,
   useNavigationGuard,
 } from "@app/contexts/NavigationContext";
-import { stripBasePath, withBasePath } from "@app/constants/app";
 import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
 import { RulerScaleSettingsButton } from "@app/components/viewer/RulerScaleSettingsButton";
 import type { MeasureScale } from "@app/utils/measurementTypes";
+import type { StirlingFile } from "@app/types/fileContext";
 
 export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,
@@ -33,6 +33,7 @@ export function useViewerWorkbenchBarButtons(
   isScaleCalibrationActive?: boolean,
   startScaleCalibration?: () => void,
   cancelScaleCalibration?: () => void,
+  displayedFile?: StirlingFile | File | null,
 ) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
@@ -68,7 +69,7 @@ export function useViewerWorkbenchBarButtons(
     handleReadAloud,
     handleSpeechRateChange,
     handleSpeechLanguageChange,
-  } = useViewerReadAloud(i18n.language || "en-US");
+  } = useViewerReadAloud(i18n.language || "en-US", displayedFile);
 
   useEffect(() => {
     return registerImmediatePanUpdate((newIsPanning) => {
@@ -76,30 +77,9 @@ export function useViewerWorkbenchBarButtons(
     });
   }, [registerImmediatePanUpdate]);
 
-  const isAnnotationsPath = useCallback(() => {
-    const cleanPath = stripBasePath(window.location.pathname).toLowerCase();
-    return cleanPath === "/annotations" || cleanPath.endsWith("/annotations");
-  }, []);
-
-  const [isAnnotationsActive, setIsAnnotationsActive] = useState<boolean>(() =>
-    isAnnotationsPath(),
-  );
-
-  useEffect(() => {
-    if (selectedTool === "annotate") {
-      setIsAnnotationsActive(true);
-    } else if (selectedTool) {
-      setIsAnnotationsActive(false);
-    } else {
-      setIsAnnotationsActive(isAnnotationsPath());
-    }
-  }, [selectedTool, isAnnotationsPath]);
-
-  useEffect(() => {
-    const handlePopState = () => setIsAnnotationsActive(isAnnotationsPath());
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [isAnnotationsPath]);
+  // The tool the URL resolves to is the single source of truth: a separate
+  // mirror drifts the moment the address changes without a popstate.
+  const isAnnotationsActive = selectedTool === "annotate";
 
   const searchLabel = t("workbenchBar.search", "Search PDF");
   const panLabel = t("workbenchBar.panMode", "Pan Mode");
@@ -121,6 +101,10 @@ export function useViewerWorkbenchBarButtons(
   const layersLabel = t("workbenchBar.toggleLayers", "Toggle Layers");
   const commentsLabel = t("workbenchBar.toggleComments", "Comments");
   const annotationsLabel = t("workbenchBar.annotations", "Annotations");
+  const exitAnnotationsLabel = t(
+    "workbenchBar.exitAnnotations",
+    "Exit annotation mode",
+  );
   const formFillLabel = t("workbenchBar.formFill", "Form Editor");
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
   const rulerSettingsLabel = t("workbenchBar.rulerSettings", "Scale Settings");
@@ -477,7 +461,9 @@ export function useViewerWorkbenchBarButtons(
         active: isAnnotationsActive,
         render: ({ disabled }) => (
           <Tooltip
-            content={annotationsLabel}
+            content={
+              isAnnotationsActive ? exitAnnotationsLabel : annotationsLabel
+            }
             position={tooltipPosition}
             offset={12}
             arrow
@@ -487,31 +473,27 @@ export function useViewerWorkbenchBarButtons(
               variant={isAnnotationsActive ? "primary" : "tertiary"}
               className="workbench-bar-action-icon"
               onClick={() => {
-                if (disabled || isAnnotationsActive) return;
-
-                const hasRedactionChanges =
-                  pendingCount > 0 || redactionsApplied;
-
-                const switchToAnnotations = () => {
-                  const targetPath = withBasePath("/annotations");
-                  if (window.location.pathname !== targetPath) {
-                    window.history.pushState(null, "", targetPath);
-                  }
-                  setIsAnnotationsActive(true);
-                  // Use handleToolSelectForced to bypass the unsaved-changes guard —
-                  // the navigation warning modal already handled that check.
-                  handleToolSelectForced("annotate");
-                };
-
-                if (hasRedactionChanges) {
-                  requestNavigation(switchToAnnotations);
+                if (disabled) return;
+                if (isAnnotationsActive) {
+                  // The tool's own exit path, so pending annotations get the
+                  // same save warning Form Editor has always shown.
+                  handleBackToTools();
+                  return;
+                }
+                if (pendingCount > 0 || redactionsApplied) {
+                  // The redaction warning answers the save question, so the
+                  // forced selection here avoids a second modal.
+                  requestNavigation(() => handleToolSelectForced("annotate"));
                 } else {
-                  switchToAnnotations();
+                  handleToolSelect("annotate");
                 }
               }}
               disabled={disabled}
               aria-pressed={isAnnotationsActive}
-              aria-label={annotationsLabel}
+              aria-label={
+                isAnnotationsActive ? exitAnnotationsLabel : annotationsLabel
+              }
+              data-testid="annotations-toggle"
             >
               <Icon name="pencil" size="1rem" />
             </ActionIcon>
@@ -585,8 +567,13 @@ export function useViewerWorkbenchBarButtons(
     layersLabel,
     tooltipPosition,
     annotationsLabel,
+    exitAnnotationsLabel,
     isAnnotationsActive,
     handleToolSelect,
+    handleToolSelectForced,
+    handleBackToTools,
+    requestNavigation,
+    redactionsApplied,
     pendingCount,
     redactionActiveType,
     formFillLabel,

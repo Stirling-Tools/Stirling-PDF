@@ -70,8 +70,10 @@ export const createStampTool = (config: StampToolConfig) => {
       updateDrawSettings,
       undo,
       redo,
+      applySignaturesRef,
       signatureApiRef,
       getImageData,
+      signaturesApplied,
       setSignaturesApplied,
       placedSignatures,
       setApplyingSignatures,
@@ -138,6 +140,8 @@ export const createStampTool = (config: StampToolConfig) => {
       deactivateDrawMode();
     }, [deactivateDrawMode]);
 
+    useEffect(() => handleDeactivateSignature, [handleDeactivateSignature]);
+
     useEffect(() => {
       if (base.selectedFiles.length > 0 && !hasOpenedViewer.current) {
         setWorkbench("viewer");
@@ -150,11 +154,14 @@ export const createStampTool = (config: StampToolConfig) => {
     }, [base.params.parameters, setSignatureConfig]);
 
     useEffect(() => {
-      if (placedSignatures.length > 0) setHasUnsavedChanges(true);
-    }, [placedSignatures, setHasUnsavedChanges]);
+      // Permission checks can reconnect the old stamp list while the saved PDF opens.
+      if (placedSignatures.length > 0 && !signaturesApplied) {
+        setHasUnsavedChanges(true);
+      }
+    }, [placedSignatures, signaturesApplied, setHasUnsavedChanges]);
 
     const handleSaveToSystem = useCallback(async () => {
-      if (applyInFlightRef.current) return;
+      if (applyInFlightRef.current) return false;
       applyInFlightRef.current = true;
       setIsApplying(true);
       setApplyingSignatures(true);
@@ -191,6 +198,7 @@ export const createStampTool = (config: StampToolConfig) => {
           setHasApplied(true);
           handleDeactivateSignature();
           setHasUnsavedChanges(false);
+          return true;
         } else {
           throw new Error("Signature flattening failed");
         }
@@ -208,6 +216,7 @@ export const createStampTool = (config: StampToolConfig) => {
             "Your signatures are still on the document. Try again.",
           ),
         });
+        return false;
       } finally {
         applyInFlightRef.current = false;
         setIsApplying(false);
@@ -232,6 +241,18 @@ export const createStampTool = (config: StampToolConfig) => {
       activeFileIndex,
       setActiveFileIndex,
     ]);
+
+    useEffect(() => {
+      if (!enableApplyAction) return;
+      applySignaturesRef.current = async () => {
+        if (!(await handleSaveToSystem())) {
+          throw new Error("Signatures have not been applied");
+        }
+      };
+      return () => {
+        applySignaturesRef.current = null;
+      };
+    }, [applySignaturesRef, handleSaveToSystem]);
 
     const renderSettings = () => {
       const onSave = enableApplyAction ? handleSaveToSystem : undefined;

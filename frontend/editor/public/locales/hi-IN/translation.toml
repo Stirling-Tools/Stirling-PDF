@@ -55,7 +55,9 @@ keepWorking = "काम जारी रखें"
 loading = "लोड हो रहा है..."
 loginAgreementAccept = "स्वीकार करें"
 loginAgreementDecline = "अस्वीकार करें"
+loginAgreementLoadFailed = "लॉगिन अनुबंध लोड नहीं किया जा सका।"
 loginAgreementProvider = "यह सूचना आपके व्यवस्थापक द्वारा प्रदान की गई है, Stirling PDF Inc. द्वारा नहीं।"
+loginAgreementRetry = "पुनः प्रयास करें"
 loginAgreementTitle = "लॉगिन समझौता"
 logOut = "लॉग आउट"
 marginTooltip = "पृष्ठ संख्या और पृष्ठ की किनारी के बीच की दूरी।"
@@ -299,7 +301,6 @@ title = "पृष्ठ क्रमांक परिणाम"
 
 [addPassword]
 desc = "अपने PDF दस्तावेज़ को पासवर्ड से एन्क्रिप्ट करें।"
-submit = "एन्क्रिप्ट करें"
 tags = "एन्क्रिप्ट,पासवर्ड,लॉक,सुरक्षित,सुरक्षा,एन्क्रिप्शन,सुरक्षित रखना,गोपनीय,निजी,एक्सेस सीमित करें"
 title = "पासवर्ड जोड़ें"
 
@@ -311,17 +312,6 @@ label = "एन्क्रिप्शन कुंजी लंबाई"
 
 [addPassword.error]
 failed = "PDF एन्क्रिप्ट करते समय एक त्रुटि हुई।"
-
-[addPassword.passwords]
-stepTitle = "पासवर्ड और एन्क्रिप्शन"
-
-[addPassword.passwords.owner]
-label = "ओनर पासवर्ड"
-placeholder = "ओनर पासवर्ड दर्ज करें"
-
-[addPassword.passwords.user]
-label = "उपयोगकर्ता पासवर्ड"
-placeholder = "उपयोगकर्ता पासवर्ड दर्ज करें"
 
 [addPassword.results]
 title = "एन्क्रिप्टेड PDF"
@@ -1627,6 +1617,7 @@ title = "रीस्टार्ट आवश्यक"
 [admin.settings.security]
 authentication = "प्रमाणीकरण"
 description = "प्रमाणीकरण, लॉगिन व्यवहार, और सुरक्षा नीतियाँ कॉन्फ़िगर करें।"
+pdfPermissions = "PDF अनुमतियाँ"
 title = "सुरक्षा"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "CSRF सुरक्षा निष्क्रिय करें"
 [admin.settings.security.enableLogin]
 description = "एप्लिकेशन तक पहुँच से पहले उपयोगकर्ताओं से लॉगिन आवश्यक करें"
 label = "लॉगिन सक्रिय करें"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "प्रतिबंधित क्रियाओं के लिए अनुमति पासवर्ड आवश्यक करें। इसे बंद करने पर भी PDFs खोलने के लिए आवश्यक पासवर्ड चाहिए होंगे।"
+label = "PDF अनुमतियों का पालन करें"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "उन्नत सेटिंग्स"
@@ -1938,9 +1933,6 @@ wrapUp = "यह admin tour था! आपने enterprise features देख �
 [adminUserSettings]
 admin = "व्यवस्थापक"
 title = "उपयोगकर्ता नियंत्रण सेटिंग्स"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "अरबी"
@@ -3173,12 +3165,14 @@ unknown = "अज्ञात"
 
 [changePermissions]
 desc = "दस्तावेज़ प्रतिबंध और अनुमतियाँ बदलें।"
+loading = "वर्तमान अनुमतियाँ लोड हो रही हैं..."
 submit = "अनुमतियां बदलें"
 tags = "अनुमतियाँ,प्रतिबंध,अधिकार,एक्सेस नियंत्रण,अनुमति दें,अस्वीकार करें,प्रिंटिंग,कॉपी करना,संपादन,अनुमतियाँ संशोधित करें,सुरक्षा सेटिंग्स,उपयोगकर्ता अधिकार"
 title = "अनुमतियां बदलें"
 
 [changePermissions.error]
 failed = "PDF अनुमतियाँ बदलते समय एक त्रुटि हुई।"
+readFailed = "इस PDF की वर्तमान अनुमतियाँ पढ़ी नहीं जा सकीं। बदलाव लागू करने से पहले प्रतिबंध मैन्युअल रूप से सेट करें।"
 
 [changePermissions.permissions.preventAssembly]
 label = "दस्तावेज़ असेंबली को रोकें"
@@ -3219,21 +3213,16 @@ text = "इन अनुमतियों को अपरिवर्तनी
 [chat.actions]
 copy = "संदेश कॉपी करें"
 
-[chat.emptyState]
-text = "अपने documents के बारे में सवाल पूछें या PDF tools के साथ मदद पाएँ।"
-
-[chat.fab]
-close = "Chat बंद करें"
-open = "Stirling AI assistant खोलें"
+[chat.dock]
+collapse = "चैट संक्षिप्त करें"
+placeholder = "Stirling Agent से पूछें"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling एजेंट विकल्प"
-assistant = "AI सहायक"
 clearChat = "चैट साफ़ करें"
 
 [chat.input]
 disclaimer = "AI गलतियाँ कर सकता है। साझा करने से पहले output सत्यापित करना सुनिश्चित करें।"
-placeholder = "आप क्या करना चाहते हैं?"
 send = "संदेश भेजें"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "इन दस्तावेज़ों को PDF में ब
 convertOne = "इस दस्तावेज़ को PDF में बदलें"
 heading = "शुरू करें"
 mergeMany = "इन {{count}} दस्तावेज़ों को 1 में मिलाएँ"
-moreFiles = "+{{count}} और"
 openFromComputer = "कंप्यूटर से खोलें"
-removeFile = "{{name}} हटाएं"
 splitOne = "इस दस्तावेज़ को विभाजित करें"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "मुझे अनुरोधित जानकारी नह�
 processing = "प्रक्रिया जारी ({{outcome}})..."
 unsupported_capability = "असमर्थित क्षमता: {{capability}}"
 usage_limit_reached = "आप अपनी usage limit तक पहुँच गए हैं। जारी रखने के लिए अपने plan options देखें।"
-
-[chat.toolsUsed]
-summary_one = "1 उपकरण चलाया"
-summary_other = "{{count}} उपकरण चलाए"
-unknownTool = "अज्ञात उपकरण"
 
 [classification.families]
 correspondence = "पत्राचार"
@@ -3649,6 +3631,7 @@ tooltip = "स्क्रीन से रंग चुनें"
 hue = "ह्यू"
 saturation = "Saturation और brightness"
 title = "रंग चुनें"
+transparent = "पारदर्शी"
 
 [common]
 actions = "कार्रवाइयाँ"
@@ -3664,6 +3647,7 @@ continue = "जारी रखें"
 copied = "कॉपी हो गया!"
 copy = "कॉपी करें"
 copyCode = "कोड कॉपी करें"
+copyFailed = "कॉपी विफल रही"
 dismiss = "खारिज करें"
 done = "पूर्ण"
 enterValue = "मान दर्ज करें"
@@ -3847,6 +3831,12 @@ unavailable = "ImageMagick इस सर्वर पर इंस्टॉल �
 filesize = "फ़ाइल आकार"
 quality = "गुणवत्ता"
 title = "संपीड़न विधि"
+
+[compress.noReduction]
+multiple = "कंप्रेशन सफलतापूर्वक चला, लेकिन {{total}} में से {{count}} फ़ाइलों को और कंप्रेस नहीं किया जा सकता।"
+multipleAtLevel = "इस स्तर पर कंप्रेशन से {{total}} में से {{count}} फ़ाइलों में कोई सुधार नहीं हुआ। उच्च कंप्रेशन स्तर आज़माएँ।"
+single = "कंप्रेशन सफलतापूर्वक चला, लेकिन इस फ़ाइल को और कंप्रेस नहीं किया जा सकता।"
+singleAtLevel = "इस स्तर पर कंप्रेशन से इस फ़ाइल में कोई सुधार नहीं हुआ। उच्च कंप्रेशन स्तर आज़माएँ।"
 
 [compress.settings]
 desiredSize = "वांछित फ़ाइल आकार"
@@ -4295,6 +4285,13 @@ precision = "सटीक पोजिशनिंग के लिए निर
 resize = "आकार बदलने के लिए कोनों और किनारों के हैंडल खींचें"
 title = "PDF कैसे क्रॉप करें"
 
+[damagedPdf]
+description = "यह PDF क्षतिग्रस्त है और खोली नहीं जा सकती।"
+label = "क्षतिग्रस्त"
+repair = "मरम्मत करें"
+repaired = "{{name}} की मरम्मत हो गई"
+repairFailed = "{{name}} की मरम्मत नहीं की जा सकी"
+
 [database]
 backupCreated = "डेटाबेस बैकअप सफल"
 fileName = "फ़ाइल नाम"
@@ -4363,6 +4360,10 @@ title = "डिस्क से अपडेट किया गया"
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\" डिस्क पर बदली गई। यह इतनी बड़ी है कि इसे फिर से लोड करने में समय लगेगा, इसलिए यहां का संस्करण वैसा ही रखा गया है।"
 title = "डिस्क पर फ़ाइल बदली गई"
+
+[desktopPrivacy]
+blocked = "आपके administrator के अनुसार दस्तावेज़ इस डिवाइस पर ही रहने चाहिए। यह सुविधा उपलब्ध नहीं है।"
+localFiles = "स्थानीय फ़ाइलें"
 
 [desktopUpdate]
 downloading = "अपडेट डाउनलोड हो रहा है..."
@@ -4491,22 +4492,80 @@ description = "उसका वर्कस्पेस लोड करने �
 title = "संपादन शुरू करने के लिए टूल खोलें"
 
 [encryptedPdfUnlock]
-description = "यह PDF पासवर्ड प्रोटेक्टेड है। काम जारी रखने के लिए पासवर्ड दर्ज करें।"
-emptyResponse = "पासवर्ड हटाने से कोई फ़ाइल नहीं बनी।"
+actionIgnored = "{{action}} प्रतिबंध अनदेखा किया गया"
+actionUnlocked = "इस सत्र के लिए {{action}} अनलॉक किया गया"
+advanced = "उन्नत"
+allowed = "अनुमत"
+annotations = "एनोटेशन"
+authoriseAction = "इस PDF में {{action}} का उपयोग करने के लिए अनुमति आवश्यक है।"
+changeOwnerPassword = "अनुमति पासवर्ड बदलें"
+checkingPermissions = "PDF अनुमतियाँ जाँची जा रही हैं..."
+chooseOwnerPassword = "कोई अलग पासवर्ड चुनें"
+continue = "जारी रखें"
+copyFailed = "कॉपी बनाने में असमर्थ। आपका PDF अपरिवर्तित है।"
+copying = "सामग्री कॉपी की जा रही है"
+editing = "संपादन"
+enterPassword = "पासवर्ड दर्ज करें"
+ignoredByServer = "अनुमतियाँ इस server की settings द्वारा अनदेखी की जाती हैं। PDF की सुरक्षा अपरिवर्तित है।"
 incorrectPassword = "गलत पासवर्ड"
+inspectionFailed = "इस PDF की अनुमतियाँ जाँचने में असमर्थ। फिर से प्रयास करें।"
+lowQualityPrintUnsupported = "यह PDF केवल कम-गुणवत्ता वाली printing की अनुमति देता है, जिसे यह viewer support नहीं करता।"
+lowResolutionOnly = "केवल कम resolution"
+manageProtection = "सुरक्षा प्रबंधित करें"
 missingFile = "चयनित फ़ाइल अब उपलब्ध नहीं है।"
+mixedProtection = "इन PDFs की अलग-अलग सुरक्षा settings हैं। इन्हें अलग-अलग process करें।"
+newOwnerPassword = "नया अनुमति पासवर्ड"
+notRequired = "आवश्यक नहीं"
+openingPassword = "खोलने का पासवर्ड"
+openPdf = "PDF खोलें"
+ownerPassword = "अनुमति पासवर्ड"
+ownerRequired = "जारी रखने के लिए अनुमति पासवर्ड दर्ज करें।"
+ownerTitle = "अनुमति पासवर्ड दर्ज करें"
+passwordRetained = "अपरिवर्तित रखा गया"
+passwordsMustDiffer = "दोनों पासवर्ड अलग होने चाहिए।"
+permissionsUnlocked = "इस सत्र के लिए अनुमतियाँ अनलॉक की गईं"
+prepareFailed = "इस सुरक्षित PDF को processing के लिए तैयार करने में असमर्थ।"
+printing = "Printing"
+printRestricted = "Printing प्रतिबंधित है। सुरक्षा प्रबंधित करें में अनुमतियाँ सत्यापित करें।"
+protectedPdf = "सुरक्षित PDF"
+protectionRetained = "सुरक्षा बरकरार रखी गई"
+protectionSaved = "सुरक्षा सेव की गई"
+removePasswordHelp = "कौन से पासवर्ड हटाने हैं, यह चुनने के लिए Remove Password खोलें।"
+removeProtection = "असुरक्षित कॉपी बनाएँ"
+replaceProtection = "ये settings PDF की वर्तमान सुरक्षा को बदल देती हैं।"
 required = "जारी रखने के लिए पासवर्ड दर्ज करें।"
-skip = "अभी छोड़ें"
-successBody = "पासवर्ड सफलतापूर्वक हटाया गया।"
-successBodyWithName = "{{fileName}} से पासवर्ड हटाया गया"
-successTitle = "पासवर्ड हटाया गया"
+requiredStatus = "आवश्यक"
+requiredToApply = "बदलाव लागू करने के लिए आवश्यक"
+restoreFailed = "PDF सुरक्षा बनाए रखने में असमर्थ। कोई असुरक्षित परिणाम सेव नहीं किया गया।"
+restrictActions = "क्रियाएँ प्रतिबंधित करें"
+restricted = "प्रतिबंधित"
+restrictedActions = "प्रतिबंधित क्रियाएँ"
+restrictedOperation = "इस क्रिया के लिए अनुमति पासवर्ड आवश्यक है।"
+retainOwnerVerification = "खोलने का पासवर्ड हटाते समय अनुमति पासवर्ड को अपरिवर्तित रखने के लिए उसे सत्यापित करें। इससे यह हटेगा नहीं।"
+saveProtection = "सुरक्षा सेव करें"
+securityChangeFailed = "सुरक्षा बदलने में असमर्थ। अनुमति पासवर्ड और नई security settings जाँचें।"
+sessionDetails = "इस सत्र के लिए खुला है। PDF सुरक्षित रहता है।"
+sessionDetailsLabel = "सत्र अनलॉकिंग के बारे में"
+sessionFailed = "इस PDF को अनलॉक करने में असमर्थ। कृपया फिर से प्रयास करें।"
+sessionSuccessBody = "सुरक्षा बरकरार रखी गई।"
+sessionSuccessBodyWithName = "{{fileName}} के लिए सुरक्षा बरकरार रखी गई।"
+sessionSuccessTitle = "PDF खोला गया"
+sessionTitle = "PDF खोलें"
+signedReadOnly = "इस signed PDF को देखा जा सकता है, लेकिन यहाँ संपादित नहीं किया जा सकता।"
 title = "जारी रखने के लिए पासवर्ड हटाएँ"
+toolUnavailable = "यह tool encrypted PDFs को support नहीं करता। पहले पासवर्ड हटाएँ।"
+toolUnavailableDetails = "{{name}} अनुपलब्ध क्यों है"
 unlock = "अनलॉक करें और जारी रखें"
 unlockAll = "सभी के लिए उपयोग करें ({{count}})"
 unlockAllPartialFail = "इनके लिए गलत पासवर्ड: {{names}}"
 unlockAllSuccess_one = "{{count}} file unlock हो गई।"
 unlockAllSuccess_other = "{{count}} files unlock हो गईं।"
+unlockedForSession = "आपके अनुमति पासवर्ड का उपयोग करके इस सत्र के लिए अनलॉक किया गया।"
 unlockPrompt = "जारी रखने के लिए PDF अनलॉक करें"
+unprotectedCopyConsequence = "कॉपी में कोई पासवर्ड या प्रतिबंध नहीं होंगे। मूल सुरक्षित रहेगा।"
+unsupportedTool = "यह tool अभी इस PDF की सुरक्षा को बनाए नहीं रख सकता।"
+verifiedForSession = "इस सत्र के लिए सत्यापित"
+verifyPermissions = "इस सत्र के लिए अनुमतियाँ सत्यापित करें"
 viewerLocked = "यह PDF पासवर्ड से सुरक्षित है"
 viewerUnlock = "अनलॉक करें"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "व्यूअर में देखें"
 closeFile = "फ़ाइल बंद करें"
 
 [fileEditor]
-addFiles = "फ़ाइलें जोड़ें"
 closedFile = "{{name}} बंद किया गया"
 couldNotSave = "{{name}} सहेजा नहीं जा सका"
-filesAdded_one = "{{count}} फ़ाइल जोड़ी गई"
-filesAdded_other = "{{count}} फ़ाइलें जोड़ी गईं"
 filesReordered_one = "फ़ाइल का क्रम बदला गया"
 filesReordered_other = "{{count}} फ़ाइलों का क्रम बदला गया"
 loadedFromStorage_one = "स्टोरेज से {{count}} फ़ाइल लोड की गई"
 loadedFromStorage_other = "स्टोरेज से {{count}} फ़ाइलें लोड की गईं"
 loadFromStorageFailed = "स्टोरेज से कुछ फ़ाइलें लोड करने में विफल"
 pinnedFile = "{{name}} पिन किया गया"
-processFilesFailed = "फ़ाइलें प्रोसेस करने में विफल"
 savedAndClosed = "{{name}} सहेजा और बंद किया गया"
 saveFailed = "सहेजना विफल"
 unpinnedFile = "{{name}} अनपिन किया गया"
 unzipping = "{{name}} अनज़िप किया जा रहा है"
+
+[fileEditor.addCard]
+dropHint = "या फ़ाइलें कहीं भी drop करें"
+fromComputer = "कंप्यूटर से अपलोड करें"
+moreOptions = "और अपलोड विकल्प"
 
 [fileEditor.unzip]
 error = "{{name}} अनज़िप करने में त्रुटि"
@@ -4729,7 +4789,6 @@ dataLostBody = "इस browser ने इस file की contents खो दी 
 dataLostTitle = "File data उपलब्ध नहीं है"
 downloadFailed = "डाउनलोड विफल"
 dropHint = "शुरू करने के लिए फ़ाइलें खोलें"
-dropToAdd = "जोड़ने के लिए files drop करें"
 duplicateFailed = "File duplicate नहीं की जा सकी"
 expand = "साइडबार फैलाएँ"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "फ़ील्ड्स दोबारा स्कैन क�
 rescanFormFields = "फॉर्म फ़ील्ड्स दोबारा स्कैन करें"
 save = "सहेजें"
 saveShortcut = "सहेजने के लिए Ctrl+S"
+saving = "सेव हो रहा है..."
 selectOptionPlaceholder = "— चुनें —"
 skippedEdits_one = "1 बदलाव लागू नहीं किया जा सका:"
 skippedEdits_other = "{{count}} बदलाव लागू नहीं किए जा सके:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "{{count}} और सूचीबद्ध नहीं 
 unsavedChanges = "बिना सहेजे बदलाव"
 
 [formFill.create]
-commit = "PDF में {{count}} फ़ील्ड जोड़ें"
 empty = "अभी तक कोई फ़ील्ड नहीं बनाया गया है।"
-failed = "फ़ील्ड जोड़ने में विफल"
 goToField = "इस फ़ील्ड पर जाएँ"
 hint = "फ़ील्ड प्रकार चुनें, फिर उसे पेज पर बनाएँ।"
 placing = "पेज पर {{type}} फ़ील्ड बनाएँ। रोकने के लिए Esc दबाएँ।"
@@ -5334,7 +5392,6 @@ modify = "संशोधित करें"
 commit = "{{count}} बदलाव सहेजें"
 delete = "हटाएँ"
 empty = "इस PDF में अभी कोई फ़ॉर्म फ़ील्ड नहीं है।"
-failed = "बदलाव सहेजने में विफल"
 groupSizeHint = "विकल्प आकार का उपयोग करें"
 hint = "किसी फ़ील्ड के गुण संपादित करने के लिए उसे चुनें, उसे पेज पर खींचें, या हटाएँ।"
 restore = "पुनर्स्थापित करें"
@@ -5732,11 +5789,6 @@ title = "PDF ओवरले करें"
 desc = "PDF दस्तावेज के कई पृष्ठों को एक पृष्ठ में मर्ज करें"
 tags = "layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,pages layout करें,tile,grid layout,multi-page layout,page पर combine करें,handout"
 title = "मल्टी-पेज लेआउट"
-
-[home.pdfCommentAgent]
-desc = "AI से आपके प्रॉम्प्ट के आधार पर PDF पर स्टिकी-नोट टिप्पणियाँ जोड़ने के लिए कहें"
-tags = "AI,एजेंट,टिप्पणी,एनोटेट,स्टिकी नोट,समीक्षा,प्रतिक्रिया,नोट्स"
-title = "AI टिप्पणियाँ जोड़ें"
 
 [home.pdfOrganiser]
 tags = "organize,rearrange,reorder,pages arrange करें,sort,pages move करें,pages delete करें,pages remove करें,page management,page organizer,resequence"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "आप टीम सदस्य बन जाएँगे �
 deselectAll = "कोई नहीं"
 selectAll = "सभी चेक करें"
 
-[pageEditor]
-dragPreviewAlt = "खींचा जा रहा है"
-filePosition = "स्थिति {{position}}"
-pageLabel = "पृष्ठ {{page}}"
-title = "पृष्ठ संपादक"
-
-[pageEditor.actions]
-deletePage = "पृष्ठ हटाएँ"
-insertFileAfter = "इसके बाद फ़ाइल डालें"
-moveLeft = "बाएँ ले जाएँ"
-moveRight = "दाएँ ले जाएँ"
-rotateLeft = "बाएँ घुमाएँ"
-rotateRight = "दाएँ घुमाएँ"
-splitAfter = "इसके बाद विभाजित करें"
-
-[pageEditor.commands]
-addSplitAt = "Position {{position}} पर split जोड़ें"
-addSplits_one = "{{count}} split जोड़ें"
-addSplits_other = "{{count}} splits जोड़ें"
-deletePages_one = "{{count}} page हटाएँ"
-deletePages_other = "{{count}} pages हटाएँ"
-insertFiles_one = "Page {{page}} के बाद {{count}} फ़ाइल insert करें"
-insertFiles_other = "Page {{page}} के बाद {{count}} फ़ाइलें insert करें"
-insertPageBreaks_one = "{{count}} page break insert करें"
-insertPageBreaks_other = "{{count}} page breaks insert करें"
-insertPageBreaksAll = "सभी pages के बाद page breaks insert करें"
-removeAllSplits = "सभी splits हटाएँ"
-removeSplitAt = "Position {{position}} पर split हटाएँ"
-removeSplits_one = "{{count}} split हटाएँ"
-removeSplits_other = "{{count}} splits हटाएँ"
-reorderPages = "Pages reorder करें"
-rotatePageLeft = "Page को बाएँ rotate करें"
-rotatePageRight = "Page को दाएँ rotate करें"
-rotatePagesLeft_one = "{{count}} page को बाएँ rotate करें"
-rotatePagesLeft_other = "{{count}} pages को बाएँ rotate करें"
-rotatePagesRight_one = "{{count}} page को दाएँ rotate करें"
-rotatePagesRight_other = "{{count}} pages को दाएँ rotate करें"
-splitAllPages = "सभी pages split करें"
-toggleSplits_one = "{{count}} split position toggle करें"
-toggleSplits_other = "{{count}} split positions toggle करें"
-
-[pageEditor.emptyState]
-body = "पृष्ठ संपादित करना शुरू करने के लिए फ़ाइलें जोड़ें"
-title = "कोई PDF फ़ाइलें लोड नहीं"
-
-[pageEditor.fileDropdown]
-addFile = "फ़ाइल जोड़ें"
-selectedCount = "{{selected}}/{{total}} फ़ाइलें चयनित"
-untitled = "शीर्षकहीन"
-
-[pageEditor.toolbar]
-delete = "चयनित हटाएं"
-redo = "दोहराएँ"
-rotateLeft = "चयनित को बाएँ घुमाएँ"
-rotateRight = "चयनित को दाएँ घुमाएँ"
-undo = "पूर्ववत करें"
-
 [pageExtracter]
 title = "पृष्ठ निकालें"
 
@@ -6815,6 +6810,79 @@ title = "पृष्ठ रेंज"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → सभी पृष्ठ चुनता है"
 title = "विशेष कीवर्ड"
+
+[pageTracks]
+blankPage = "खाली पृष्ठ"
+deleteSelected = "चयनित पृष्ठ हटाएँ"
+downloadAsOneFile = "एक फ़ाइल के रूप में डाउनलोड करें"
+downloadEachPage = "प्रत्येक पृष्ठ अलग-अलग डाउनलोड करें"
+downloadSelectedPages = "चयनित पृष्ठ डाउनलोड करें"
+dragging_one = "{{count}} पृष्ठ"
+dragging_other = "{{count}} पृष्ठ"
+duplicateSelected = "चयनित पृष्ठों की डुप्लिकेट बनाएँ"
+edited = "संपादित"
+emptyTrack = "कोई पृष्ठ शेष नहीं। पृष्ठों को यहाँ drag करें, या इस फ़ाइल को बंद करने के लिए सेव करें।"
+insertBlank = "खाली पृष्ठ डालें"
+insertBlankAfterSelected = "चयनित पृष्ठों के बाद खाली पृष्ठ डालें"
+moveLeft = "बाएँ ले जाएँ"
+moveRight = "दाएँ ले जाएँ"
+nextPage = "अगला पृष्ठ"
+page = "पृष्ठ {{number}}"
+pageCount_one = "{{count}} पृष्ठ"
+pageCount_other = "{{count}} पृष्ठ"
+pagePosition = "{{total}} में से पृष्ठ {{number}}"
+prevPage = "पिछला पृष्ठ"
+readingPages = "पृष्ठ पढ़े जा रहे हैं..."
+redo = "फिर से करें"
+rotateLeft = "बाएँ घुमाएँ"
+rotateRight = "दाएँ घुमाएँ"
+rotateSelectedLeft = "चयनित पृष्ठों को बाएँ घुमाएँ"
+rotateSelectedRight = "चयनित पृष्ठों को दाएँ घुमाएँ"
+saveAsOneFile = "एक फ़ाइल के रूप में सेव करें"
+saveChanges = "सभी फ़ाइलों में बदलाव सेव करें"
+saveEachPage = "प्रत्येक पृष्ठ अलग-अलग सेव करें"
+saveSelectedPages = "चयनित पृष्ठ सेव करें"
+saving = "सेव हो रहा है..."
+savingProgress = "{{total}} में से {{done}} सेव हो रहा है"
+selectPage = "पृष्ठ {{number}} चुनें"
+splitAfterSelected = "चयनित पृष्ठों के बाद विभाजित करें"
+splitHere = "यहाँ विभाजित करें"
+undo = "पूर्ववत करें"
+viewError = "यह पृष्ठ render नहीं किया जा सका"
+viewPage = "पृष्ठ देखें"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "क्या आप वाकई सभी फ़ाइलें बंद करना चाहते हैं?"
+unsaved = "इन फ़ाइलों में सेव न किए गए बदलाव हैं।"
+
+[pageTracks.delete]
+page = "पृष्ठ हटाएँ"
+
+[pageTracks.duplicate]
+page = "पृष्ठ की डुप्लिकेट बनाएँ"
+
+[pageTracks.empty]
+body = "PDFs जोड़ें ताकि उन्हें संपादन योग्य पृष्ठ tracks में विस्तृत किया जा सके"
+title = "कोई PDF फ़ाइल लोड नहीं की गई"
+
+[pageTracks.exportFailed]
+body = "संपादित फ़ाइलें तैयार नहीं की जा सकीं। फिर से प्रयास करें।"
+title = "डाउनलोड नहीं किया जा सका"
+
+[pageTracks.saveFailed]
+body = "आपके संपादन खोए नहीं हैं। फिर से सेव करने का प्रयास करें।"
+title = "बदलाव सेव नहीं किए जा सके"
+
+[pageTracks.track]
+close = "फ़ाइल बंद करें"
+collapse = "संक्षिप्त करें"
+expand = "विस्तृत करें"
+rename = "फ़ाइल का नाम बदलें"
+
+[pageTracks.wrap]
+label = "पृष्ठ wrap करें"
 
 [payg.activity]
 docs = "docs"
@@ -7144,24 +7212,6 @@ totalSeats_other = "कुल ({{count}} सीटें)"
 [payment.upgradeTeam]
 title = "टीम में अपग्रेड करें"
 
-[pdfCommentAgent]
-submit = "टिप्पणियाँ उत्पन्न करें"
-
-[pdfCommentAgent.error]
-emptyPrompt = "कृपया बताएँ कि AI को किस पर टिप्पणी करनी है"
-failed = "टिप्पणियाँ उत्पन्न करने में विफल"
-tooLong = "प्रॉम्प्ट बहुत लंबा है (अधिकतम {{max}} वर्ण)"
-
-[pdfCommentAgent.prompt]
-label = "AI को किस पर टिप्पणी करनी चाहिए?"
-placeholder = "उदा. किसी भी संदिग्ध तारीख़ों को फ़्लैग करें और स्पष्टीकरण सुझाएँ"
-
-[pdfCommentAgent.results]
-title = "टिप्पणीयुक्त PDF"
-
-[pdfCommentAgent.settings]
-title = "टिप्पणी निर्देश"
-
 [pdfOrganiser]
 placeholder = "(जैसे 1,3,2 या 4-8,2,10-12 या 2n-1)"
 tags = "डुप्लेक्स,सम,विषम,क्रमबद्ध करें,मूव"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "यहाँ edit करने के लिए page प�
 ocrDocumentChanged = "OCR चलते समय document बदल गया। अपने नवीनतम बदलाव शामिल करने के लिए OCR फिर से चलाएँ।"
 ocrInvalidResult = "OCR ने PDF नहीं लौटाया। कृपया फिर से प्रयास करें।"
 ocrNoLanguages = "Server पर कोई OCR languages इंस्टॉल नहीं हैं।"
+ocrProtected = "OCR अभी इस PDF की सुरक्षा को बनाए नहीं रख सकता। सुरक्षित मूल देखने के लिए उपलब्ध रहता है।"
 ocrRunning = "Text पहचाना जा रहा है..."
 ocrUnavailable = "इस server पर OCR उपलब्ध नहीं है।"
 oneImage = "छवि"
@@ -7389,13 +7440,8 @@ pageNumber = "पृष्ठ {{page}}"
 renderFailed = "पृष्ठ रेंडर करने में विफल"
 
 [pdfTextEditor.password]
-cancel = "रद्द करें"
 incorrect = "गलत पासवर्ड - फिर प्रयास करें।"
 label = "पासवर्ड"
-open = "खोलें"
-protected = "यह PDF पासवर्ड-संरक्षित है।"
-protectedNamed = "\"{{fileName}}\" पासवर्ड-संरक्षित है।"
-title = "पासवर्ड आवश्यक"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}} पर alignment guide - हटाने के लिए ruler पर खींचें"
@@ -7994,6 +8040,7 @@ before = "सेट करें"
 title = "Stirling connection configured नहीं है"
 
 [portal.accountLink.notice]
+loadFailed = "खाता linking dialog लोड नहीं किया जा सका।"
 openFailed = "आपका browser नहीं खोल सके। खाता लिंक करने के लिए अपने कनेक्टेड सर्वर पर Usage & billing खोलें।"
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "Monthly spend limit {{amount}}/mo। Processing limit पर pause ह�
 limitNoCap = "कोई spend limit नहीं। Processing pause नहीं होगी। Invoices monthly post होते हैं।"
 
 [portal.billing.chip]
-invoices = "चालान"
-nav = "अनुभाग"
-payment = "भुगतान"
 plan = "प्लान"
 procurement = "खरीद"
 usage = "उपयोग"
@@ -8178,9 +8222,22 @@ pdfs = "प्रोसेस किए गए PDFs"
 users = "उपयोगकर्ता"
 
 [portal.billing.enterprise]
+active = "अनुबंध {{date}} तक सक्रिय"
 cta = "Enterprise quote पाएं"
+included = "Enterprise में शामिल"
+payment_pending = "भुगतान लंबित · {{date}} तक access"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "सहमत मात्रा से {{count}} PDF अधिक"
+pdfsOver_other = "सहमत मात्रा से {{count}} PDFs अधिक"
+pdfsUsed_one = "{{count}} PDF processed"
+pdfsUsed_other = "{{count}} PDFs प्रोसेस किए गए"
+period = "अनुबंध अवधि: {{start}} – {{end}}"
 sub = "Air-gapped deployment, SCIM, data residency, uptime SLAs, और मेल खाता agreement।"
 title = "क्या आप Stirling को regulated environment में चला रहे हैं?"
+trial = "{{days}}-दिन का ट्रायल · {{date}} को समाप्त होगा"
+usersAgreed = "{{used}} / {{agreed}} अनुबंधित उपयोगकर्ता"
+usersOver_one = "अनुबंधित संख्या से {{count}} उपयोगकर्ता अधिक"
+usersOver_other = "अनुबंधित संख्या से {{count}} उपयोगकर्ता अधिक"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "checkout शुरू नहीं किया जा सका"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "आपके वितरण के लिए नेटिव builds।"
-guideBtn = "Linux इंस्टॉल विकल्प देखें"
+downloadAppImage = "AppImage"
+downloadDeb = ".deb डाउनलोड करें (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "सामान्य distros के लिए AppImage, .deb और .rpm builds उपलब्ध हैं।"
 tagline = "आपके distro के लिए नेटिव desktop app"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "Redact,छिपाएँ,black out,काला,marker,छिपा ह
 title = "रेडैक्ट"
 
 [redact.auto]
+caseSensitiveLabel = "केस-सेंसिटिव मिलान"
 colorLabel = "बॉक्स का रंग"
 convertPDFToImageLabel = "PDF को PDF-Image में बदलें"
 customPaddingLabel = "कस्टम अतिरिक्त पैडिंग"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "एक साथ कई फ़ाइलों पर
 manual = "मैनुअल"
 mode = "मोड"
 title = "रिडैक्शन विधि"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "केवल उसी केस में टेक्स्ट का मिलान करें। सक्षम होने पर 'Secret' का मिलान 'SECRET' से नहीं होगा, और regex में [A-Z] केवल बड़े अक्षरों से मेल खाता है।"
+title = "केस-सेंसिटिव मिलान"
 
 [redact.tooltip.advanced.color]
 text = "रिडैक्शन बॉक्स की उपस्थिति को कस्टमाइज़ करें। काला मानक है, पर आप कोई भी रंग चुन सकते हैं। पैडिंग पाए गए टेक्स्ट के चारों ओर अतिरिक्त स्थान जोड़ती है।"
@@ -11396,7 +11460,12 @@ text = "अपने PDF से किन पृष्ठों को हटा
 title = "पृष्ठ चयन"
 
 [removePassword]
-desc = "अपने PDF दस्तावेज से पासवर्ड सुरक्षा हटाएं।"
+appliesTo = "{{total}} में से {{count}} PDFs पर सेट"
+keepBlank = "उस पासवर्ड को बनाए रखने के लिए फ़ील्ड खाली छोड़ें।"
+notSet = "सेट नहीं है"
+openWithReaderFirst = "केवल permissions पासवर्ड हटाने से पहले इस PDF को उसके खोलने वाले पासवर्ड से फिर से खोलें।"
+selectiveHelp = "जिस सुरक्षा को आप हटाना चाहते हैं, उसके लिए वर्तमान पासवर्ड दर्ज करें। खाली फ़ील्ड उस पासवर्ड को बनाए रखता है। permissions पासवर्ड हटाने से क्रिया प्रतिबंध भी हट जाते हैं।"
+selectPasswords = "हटाने के लिए पासवर्ड"
 submit = "पासवर्ड हटाएँ"
 tags = "सुरक्षित,डिक्रिप्ट,सुरक्षा,अनपासवर्ड,पासवर्ड हटाएं"
 title = "पासवर्ड हटाएं"
@@ -11407,13 +11476,9 @@ failed = "PDF से पासवर्ड हटाते समय एक त�
 [removePassword.password]
 label = "वर्तमान पासवर्ड"
 placeholder = "वर्तमान पासवर्ड दर्ज करें"
-stepTitle = "पासवर्ड हटाएं"
 
 [removePassword.results]
 title = "डिक्रिप्टेड PDF"
-
-[removePassword.tooltip]
-description = "पासवर्ड सुरक्षा हटाने के लिए वह पासवर्ड आवश्यक है जिससे PDF एन्क्रिप्ट किया गया था। यह दस्तावेज़ को डिक्रिप्ट करेगा, जिससे पासवर्ड के बिना भी एक्सेस संभव होगा।"
 
 [reorganizePages]
 submit = "पृष्ठों का पुनर्गठन करें"
@@ -11543,6 +11608,64 @@ m = "मीटर (m)"
 mi = "मील (mi)"
 mm = "मिलीमीटर (mm)"
 yd = "यार्ड (yd)"
+
+[runLocation]
+back = "वापस"
+continue = "जारी रखें"
+subtitle = "चुनें कि यह कहाँ चलेगा।"
+title = "आप Stirling कहाँ चलाना चाहते हैं?"
+
+[runLocation.choice.browser]
+description = "वेब ऐप।"
+title = "आपके ब्राउज़र में"
+
+[runLocation.choice.computer]
+description = "डेस्कटॉप ऐप।"
+title = "आपके कंप्यूटर पर"
+
+[runLocation.choice.server]
+description = "Self-hosted, टीम के लिए।"
+title = "आपके सर्वर पर"
+
+[runLocation.desktop]
+computerLabel = "आपका कंप्यूटर"
+download = "{{platform}} के लिए डाउनलोड करें"
+downloadAgain = "फिर से डाउनलोड करें"
+guide = "{{platform}} इंस्टॉल गाइड खोलें"
+startedSubtitle = "अपना Downloads फ़ोल्डर देखें, फिर इंस्टॉलर खोलें।"
+startedTitle = "आपका डाउनलोड शुरू हो गया है"
+subtitle = "इसे डाउनलोड करें और खोलें।"
+title = "डेस्कटॉप ऐप प्राप्त करें"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (इंस्टॉल गाइड)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "कॉपी किया गया"
+copy = "कमांड कॉपी करें"
+copyCompose = "compose फ़ाइल कॉपी करें"
+guide = "{{method}} इंस्टॉल गाइड"
+methodLabel = "इसके साथ चलाएँ"
+note = "फिर सेटअप पूरा करने के लिए <url/> खोलें।"
+subtitle = "इसे अपने सर्वर पर चलाएँ, फिर इसे ब्राउज़र में खोलें।"
+title = "अपना सर्वर सेट अप करें"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "PDF फ़ाइलों से संभावित रूप से हानिकारक तत्व हटाएँ।"
@@ -12054,6 +12177,7 @@ title = "वर्कस्पेस"
 loginIncomplete = "लॉगिन पूरा करने में विफल"
 noSaasServer = "कोई SaaS सर्वर कॉन्फ़िगर नहीं है"
 noServer = "कोई सर्वर कॉन्फ़िगर नहीं है"
+policyUnavailable = "आपके संगठन की साइन-इन सेटिंग्स लोड करने में असमर्थ।"
 saasLoginFailed = "SaaS लॉगिन विफल"
 saasLoginIncomplete = "SaaS लॉगिन पूरा करने में विफल"
 selfHostedLoginFailed = "Self-hosted लॉगिन विफल"
@@ -13563,7 +13687,9 @@ validUntrusted = "मान्य, हस्ताक्षरकर्ता �
 
 [viewer]
 cannotPreviewFile = "फ़ाइल का पूर्वावलोकन नहीं किया जा सकता"
+copyRestricted = "इस PDF की permissions के कारण कॉपी करना अक्षम है।"
 copyText = "कॉपी करें"
+coverPageView = "कवर पेज अलग से दिखाएँ"
 disableColorFilter = "रंग फ़िल्टर अक्षम करें"
 documentUpdated = "दस्तावेज़ updated"
 dualPageView = "दोहरा पृष्ठ दृश्य"
@@ -13580,6 +13706,7 @@ noPdfProvided = "कोई PDF प्रदान नहीं किया ग�
 onlyPdfSupported = "यह फ़ाइल फ़ॉर्मैट पूर्वावलोकन के लिए समर्थित नहीं है।"
 pageNavigation = "पृष्ठ नेविगेशन"
 previousPage = "पिछला पृष्ठ"
+readAloudFromHere = "यहाँ से ज़ोर से पढ़ें"
 saveChangesErrorBody = "दस्तावेज़ सहेजा नहीं जा सका। पुनः प्रयास करें।"
 saveChangesErrorTitle = "बदलाव सहेजे नहीं जा सके"
 singlePageView = "एकल पृष्ठ दृश्य"
@@ -13640,6 +13767,7 @@ closeSidebar = "comments sidebar बंद करें"
 deleteAnnotationAndComment = "एनोटेशन और टिप्पणी हटाएँ"
 deleteDescription = "इस एनोटेशन के साथ एक टिप्पणी जुड़ी है। आप साइडबार से केवल टिप्पणी हटा सकते हैं और एनोटेशन बनाए रख सकते हैं, या सब कुछ हटा सकते हैं।"
 deleteTitle = "टिप्पणियों से एनोटेशन हटाएँ?"
+exportCsv = "CSV के रूप में एक्सपोर्ट करें"
 goToLink = "लिंक पर जाएँ"
 hint = "टिप्पणी, पाठ डालें या पाठ बदलें उपकरणों से टिप्पणियाँ जोड़ें। वे यहाँ पेज के अनुसार दिखाई देंगी।"
 locateAnnotation = "दस्तावेज़ में ढूँढें"
@@ -13658,7 +13786,16 @@ typeInsertText = "पाठ डालें"
 typeReplaceText = "पाठ बदलें"
 viewComment = "टिप्पणी देखें"
 
+[viewer.comments.csv]
+author = "लेखक"
+comment = "टिप्पणी"
+inReplyTo = "इसके जवाब में"
+modifiedUtc = "अंतिम संशोधन (UTC)"
+page = "पेज"
+thread = "थ्रेड"
+
 [viewer.error]
+loadError = "PDF लोड करने में विफल"
 noFileProvided = "त्रुटि: व्यूअर को कोई फ़ाइल प्रदान नहीं की गई"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "वॉटरमार्क टेक्स्ट"
 image = "इमेज"
 text = "टेक्स्ट"
 
+[workbench]
+dropFailedSingle = "आपकी फ़ाइल जोड़ी नहीं जा सकी"
+dropFailedSome = "आपकी {{failed}} फ़ाइलें जोड़ी नहीं जा सकीं"
+dropOverlay = "फ़ाइलों को कार्यक्षेत्र में जोड़ने के लिए छोड़ें"
+
 [workbench.sessionRestore]
 none = "आपकी पिछली फ़ाइलें अब इस device पर stored नहीं हैं।"
 partial = "{{total}} में से {{restored}} फ़ाइलें restore की गईं। बाकी अब इस device पर stored नहीं हैं।"
@@ -13915,16 +14057,14 @@ annotations = "एनोटेशन"
 applyRedactionsFirst = "पहले रिडैक्शन लागू करें"
 closeAll = "सभी फ़ाइलें बंद करें"
 closePdf = "PDF बंद करें"
-deleteSelected = "चयनित पृष्ठ हटाएँ"
 deselectAll = "सभी चयन हटाएँ"
 downloadAll = "सभी डाउनलोड करें"
+exitAnnotations = "एनोटेशन मोड से बाहर निकलें"
 exitRedaction = "रिडैक्शन मोड से बाहर निकलें"
-exportAll = "PDF निर्यात करें"
-exportSelected = "चयनित पृष्ठ निर्यात करें"
 formFill = "फ़ॉर्म एडिटर"
 hideToolbar = "टूलबार छिपाएँ"
 moreActions = "अधिक कार्रवाइयाँ"
-multiTool = "मल्टी-टूल"
+pageEditor = "पेज एडिटर"
 panMode = "पैन मोड"
 print = "PDF प्रिंट करें"
 readAloud = "जोर से पढ़ें"
@@ -13938,7 +14078,6 @@ rulerSettings = "पैमाना सेटिंग्स"
 save = "सहेजें"
 saveAll = "सभी सहेजें"
 saveAs = "इस रूप में सहेजें"
-saveChanges = "परिवर्तन सहेजें"
 search = "PDF खोजें"
 selectAll = "सभी चुनें"
 selectByNumber = "पृष्ठ संख्याओं से चुनें"

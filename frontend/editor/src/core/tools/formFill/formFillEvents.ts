@@ -3,11 +3,24 @@ export const FORM_APPLY_EVENT = "formfill:apply";
 
 export interface FormApplyDetail {
   blob: Blob;
+  complete: (application: Promise<void>) => void;
 }
 
-/** Dispatch a produced PDF blob to the viewer for reload + refresh. */
-export function dispatchFormApply(blob: Blob): void {
-  window.dispatchEvent(
-    new CustomEvent<FormApplyDetail>(FORM_APPLY_EVENT, { detail: { blob } }),
-  );
+/** Resolves after the viewer has stored the PDF, replaced it and refreshed its fields. */
+export function dispatchFormApply(blob: Blob): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let handled = false;
+    window.dispatchEvent(
+      new CustomEvent<FormApplyDetail>(FORM_APPLY_EVENT, {
+        detail: {
+          blob,
+          complete: (application) => {
+            handled = true;
+            application.then(resolve, reject);
+          },
+        },
+      }),
+    );
+    if (!handled) reject(new Error("The PDF viewer is not ready to save."));
+  });
 }

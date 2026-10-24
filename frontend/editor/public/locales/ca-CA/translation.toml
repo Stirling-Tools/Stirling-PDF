@@ -55,7 +55,9 @@ keepWorking = "Continua treballant"
 loading = "Carregant..."
 loginAgreementAccept = "Accepta"
 loginAgreementDecline = "Rebutja"
+loginAgreementLoadFailed = "No s'ha pogut carregar l'acord d'inici de sessió."
 loginAgreementProvider = "Aquest avís és proporcionat pel vostre administrador, no per Stirling PDF Inc."
+loginAgreementRetry = "Torna-ho a provar"
 loginAgreementTitle = "Acord d'inici de sessió"
 logOut = "Tanca la sessió"
 marginTooltip = "Distància entre el número de pàgina i la vora de la pàgina."
@@ -299,7 +301,6 @@ title = "Resultats de numeració de pàgina"
 
 [addPassword]
 desc = "Xifra el vostre document PDF amb una contrasenya."
-submit = "Encripta"
 tags = "xifrar,contrasenya,bloquejar,segur,protegir,seguretat,xifrat,protecció,confidencial,privat,restringir l'accés"
 title = "Afegir Contrasenya"
 
@@ -311,17 +312,6 @@ label = "Longitud de la clau de xifratge"
 
 [addPassword.error]
 failed = "S'ha produït un error en xifrar el PDF."
-
-[addPassword.passwords]
-stepTitle = "Contrasenyes i xifratge"
-
-[addPassword.passwords.owner]
-label = "Contrasenya del propietari"
-placeholder = "Introduïu la contrasenya del propietari"
-
-[addPassword.passwords.user]
-label = "Contrasenya d'usuari"
-placeholder = "Introduïu la contrasenya d’usuari"
 
 [addPassword.results]
 title = "PDF xifrats"
@@ -1627,6 +1617,7 @@ title = "Cal reiniciar"
 [admin.settings.security]
 authentication = "Autenticació"
 description = "Configureu l'autenticació, el comportament d'inici de sessió i les polítiques de seguretat."
+pdfPermissions = "Permisos de PDF"
 title = "Seguretat"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "Desactiva la protecció CSRF"
 [admin.settings.security.enableLogin]
 description = "Requereix que els usuaris iniciïn sessió abans d'accedir a l'aplicació"
 label = "Habilita l'inici de sessió"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Requereix la contrasenya de permisos per a accions restringides. Desactivar-ho encara requereix les contrasenyes necessàries per obrir PDFs."
+label = "Respecta els permisos de PDF"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Paràmetres avançats"
@@ -1938,9 +1933,6 @@ wrapUp = "Això és tot per al recorregut d'administració! Has vist les funcion
 [adminUserSettings]
 admin = "Administrador"
 title = "Opcions de Control d'Usuari"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Àrab"
@@ -3173,12 +3165,14 @@ unknown = "Desconegut"
 
 [changePermissions]
 desc = "Canvia les restriccions i permisos del document."
+loading = "S'estan carregant els permisos actuals..."
 submit = "Canviar Permissos"
 tags = "permisos,restriccions,drets,control d'accés,permetre,denegar,impressió,còpia,edició,modificar permisos,configuració de seguretat,drets d'usuari"
 title = "Canviar Permissos"
 
 [changePermissions.error]
 failed = "S’ha produït un error en canviar els permisos del PDF."
+readFailed = "No s'han pogut llegir els permisos actuals d'aquest PDF. Defineix les restriccions manualment abans d'aplicar els canvis."
 
 [changePermissions.permissions.preventAssembly]
 label = "Evita el muntatge del document"
@@ -3219,21 +3213,16 @@ text = "Per fer que aquests permisos no es puguin canviar, utilitzeu l’eina Af
 [chat.actions]
 copy = "Copia el missatge"
 
-[chat.emptyState]
-text = "Fes una pregunta sobre els teus documents o obtén ajuda amb les eines PDF."
-
-[chat.fab]
-close = "Tanca el xat"
-open = "Obre l'assistent AI de Stirling"
+[chat.dock]
+collapse = "Replega el xat"
+placeholder = "Pregunta a Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Opcions de l'agent Stirling"
-assistant = "Assistent AI"
 clearChat = "Neteja el xat"
 
 [chat.input]
 disclaimer = "La AI pot cometre errors. Assegura't de verificar el resultat abans de compartir-lo."
-placeholder = "Què vols fer?"
 send = "Envia el missatge"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Converteix aquests documents a PDF"
 convertOne = "Converteix aquest document a PDF"
 heading = "Comença"
 mergeMany = "Fusiona aquests {{count}} documents en 1"
-moreFiles = "+{{count}} més"
 openFromComputer = "Obre des de l'ordinador"
-removeFile = "Elimina {{name}}"
 splitOne = "Divideix aquest document"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "No he pogut trobar la informació sol·licitada."
 processing = "Processant ({{outcome}})..."
 unsupported_capability = "Capacitat no admesa: {{capability}}"
 usage_limit_reached = "Has assolit el teu límit d'ús. Consulta les opcions del teu pla per continuar."
-
-[chat.toolsUsed]
-summary_one = "S'ha executat 1 eina"
-summary_other = "S'han executat {{count}} eines"
-unknownTool = "Eina desconeguda"
 
 [classification.families]
 correspondence = "Correspondència"
@@ -3649,6 +3631,7 @@ tooltip = "Tria el color de la pantalla"
 hue = "To"
 saturation = "Saturació i brillantor"
 title = "Tria el color"
+transparent = "Transparent"
 
 [common]
 actions = "Accions"
@@ -3664,6 +3647,7 @@ continue = "Continua"
 copied = "Copiat!"
 copy = "Copia"
 copyCode = "Copia el codi"
+copyFailed = "Ha fallat la còpia"
 dismiss = "Descarta"
 done = "Fet"
 enterValue = "Introdueix un valor"
@@ -3847,6 +3831,12 @@ unavailable = "ImageMagick no està instal·lat ni habilitat en aquest servidor"
 filesize = "Mida del Fitxer"
 quality = "Qualitat"
 title = "Mètode de compressió"
+
+[compress.noReduction]
+multiple = "La compressió s'ha executat correctament, però {{count}} de {{total}} fitxers no es poden comprimir més."
+multipleAtLevel = "La compressió en aquest nivell no ha millorat {{count}} de {{total}} fitxers. Prova un nivell de compressió més alt."
+single = "La compressió s'ha executat correctament, però aquest fitxer no es pot comprimir més."
+singleAtLevel = "La compressió en aquest nivell no ha millorat aquest fitxer. Prova un nivell de compressió més alt."
 
 [compress.settings]
 desiredSize = "Mida de fitxer desitjada"
@@ -4295,6 +4285,13 @@ precision = "Utilitzeu les entrades de coordenades per a un posicionament precí
 resize = "Arrossegueu les nanses de les cantonades i vores per redimensionar"
 title = "Com retallar PDFs"
 
+[damagedPdf]
+description = "Aquest PDF està danyat i no es pot obrir."
+label = "Danyat"
+repair = "Reparar"
+repaired = "S'ha reparat {{name}}"
+repairFailed = "No s'ha pogut reparar {{name}}"
+
 [database]
 backupCreated = "Còpia de seguretat de la base de dades creada correctament"
 fileName = "Nom del Fitxer"
@@ -4363,6 +4360,10 @@ title = "Actualitzat des del disc"
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\" ha canviat al disc. És prou gran perquè tornar-lo a carregar trigui una estona, així que la versió d'aquí s'ha deixat intacta."
 title = "El fitxer ha canviat al disc"
+
+[desktopPrivacy]
+blocked = "L'administrador requereix que els documents romanguin en aquest dispositiu. Aquesta funció no està disponible."
+localFiles = "Fitxers locals"
 
 [desktopUpdate]
 downloading = "Descarregant l'actualització..."
@@ -4491,22 +4492,80 @@ description = "Selecciona l'eina Editar taula de continguts per carregar-ne l'es
 title = "Obre l'eina per començar a editar"
 
 [encryptedPdfUnlock]
-description = "Aquest PDF està protegit amb contrasenya. Introdueix-la per poder continuar treballant-hi."
-emptyResponse = "L'eliminació de la contrasenya no ha produït cap fitxer."
+actionIgnored = "S'ha ignorat la restricció de {{action}}"
+actionUnlocked = "{{action}} desbloquejat per a aquesta sessió"
+advanced = "Avançat"
+allowed = "Permès"
+annotations = "Anotacions"
+authoriseAction = "Aquest PDF requereix permís per utilitzar {{action}}."
+changeOwnerPassword = "Canvia la contrasenya de permisos"
+checkingPermissions = "S'estan comprovant els permisos del PDF..."
+chooseOwnerPassword = "Tria una contrasenya diferent"
+continue = "Continua"
+copyFailed = "No s'ha pogut crear la còpia. El PDF no s'ha modificat."
+copying = "S'està copiant el contingut"
+editing = "Edició"
+enterPassword = "Introdueix la contrasenya"
+ignoredByServer = "La configuració d'aquest servidor ignora els permisos. La protecció del PDF no s'ha modificat."
 incorrectPassword = "Contrasenya incorrecta"
+inspectionFailed = "No s'han pogut comprovar els permisos d'aquest PDF. Torna-ho a provar."
+lowQualityPrintUnsupported = "Aquest PDF només permet la impressió de baixa qualitat, que aquest visor no admet."
+lowResolutionOnly = "Només baixa resolució"
+manageProtection = "Gestiona la protecció"
 missingFile = "El fitxer seleccionat ja no està disponible."
+mixedProtection = "Aquests PDFs tenen configuracions de protecció separades. Processa'ls individualment."
+newOwnerPassword = "Contrasenya de permisos nova"
+notRequired = "No requerida"
+openingPassword = "Contrasenya per obrir"
+openPdf = "Obre PDF"
+ownerPassword = "Contrasenya de permisos"
+ownerRequired = "Introdueix la contrasenya de permisos per continuar."
+ownerTitle = "Introdueix la contrasenya de permisos"
+passwordRetained = "Mantinguda sense canvis"
+passwordsMustDiffer = "Les dues contrasenyes han de ser diferents."
+permissionsUnlocked = "Permisos desbloquejats per a aquesta sessió"
+prepareFailed = "No s'ha pogut preparar aquest PDF protegit per al processament."
+printing = "Impressió"
+printRestricted = "La impressió està restringida. Verifica els permisos a Gestiona la protecció."
+protectedPdf = "PDF protegit"
+protectionRetained = "Protecció conservada"
+protectionSaved = "Protecció desada"
+removePasswordHelp = "Obre Elimina la contrasenya per triar quines contrasenyes vols eliminar."
+removeProtection = "Crea una còpia sense protecció"
+replaceProtection = "Aquesta configuració substitueix la protecció actual del PDF."
 required = "Introdueix la contrasenya per continuar."
-skip = "Omet per ara"
-successBody = "Contrasenya eliminada correctament."
-successBodyWithName = "Contrasenya eliminada de {{fileName}}"
-successTitle = "Contrasenya eliminada"
+requiredStatus = "Requerida"
+requiredToApply = "Requerida per aplicar els canvis"
+restoreFailed = "No s'ha pogut conservar la protecció del PDF. No s'ha desat cap resultat sense protecció."
+restrictActions = "Restringeix accions"
+restricted = "Restringit"
+restrictedActions = "accions restringides"
+restrictedOperation = "Aquesta acció requereix la contrasenya de permisos."
+retainOwnerVerification = "Verifica la contrasenya de permisos per mantenir-la sense canvis mentre elimines la contrasenya d'obertura. Això no l'eliminarà."
+saveProtection = "Desa la protecció"
+securityChangeFailed = "No s'ha pogut canviar la protecció. Comprova la contrasenya de permisos i la configuració de seguretat nova."
+sessionDetails = "Obert per a aquesta sessió. El PDF continua protegit."
+sessionDetailsLabel = "Sobre el desbloqueig de sessió"
+sessionFailed = "No s'ha pogut desbloquejar aquest PDF. Torna-ho a provar."
+sessionSuccessBody = "Protecció conservada."
+sessionSuccessBodyWithName = "Protecció conservada per a {{fileName}}."
+sessionSuccessTitle = "PDF obert"
+sessionTitle = "Obre PDF"
+signedReadOnly = "Aquest PDF signat es pot visualitzar, però no es pot editar aquí."
 title = "Elimina la contrasenya per continuar"
+toolUnavailable = "Aquesta eina no admet PDFs encriptats. Elimina primer la contrasenya."
+toolUnavailableDetails = "Per què {{name}} no està disponible"
 unlock = "Desbloqueja i continua"
 unlockAll = "Aplica-ho a tots ({{count}})"
 unlockAllPartialFail = "Contrasenya incorrecta per a: {{names}}"
 unlockAllSuccess_one = "S'ha desbloquejat {{count}} fitxer."
 unlockAllSuccess_other = "S'han desbloquejat {{count}} fitxers."
+unlockedForSession = "Desbloquejat per a aquesta sessió amb la teva contrasenya de permisos."
 unlockPrompt = "Desbloqueja el PDF per continuar"
+unprotectedCopyConsequence = "La còpia no tindrà contrasenyes ni restriccions. L'original continua protegit."
+unsupportedTool = "Aquesta eina encara no pot conservar la protecció d'aquest PDF."
+verifiedForSession = "Verificat per a aquesta sessió"
+verifyPermissions = "Verifica els permisos per a aquesta sessió"
 viewerLocked = "Aquest PDF està protegit amb contrasenya"
 viewerUnlock = "Desbloqueja"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "Obre al visor"
 closeFile = "Tanca el fitxer"
 
 [fileEditor]
-addFiles = "Afegeix fitxers"
 closedFile = "S'ha tancat {{name}}"
 couldNotSave = "No s'ha pogut desar {{name}}"
-filesAdded_one = "S'ha afegit {{count}} fitxer"
-filesAdded_other = "S'han afegit {{count}} fitxers"
 filesReordered_one = "Fitxer reordenat"
 filesReordered_other = "{{count}} fitxers reordenats"
 loadedFromStorage_one = "S'ha carregat {{count}} fitxer de l'emmagatzematge"
 loadedFromStorage_other = "S'han carregat {{count}} fitxers de l'emmagatzematge"
 loadFromStorageFailed = "No s'han pogut carregar alguns fitxers de l'emmagatzematge"
 pinnedFile = "S'ha fixat {{name}}"
-processFilesFailed = "No s'han pogut processar els fitxers"
 savedAndClosed = "S'ha desat i tancat {{name}}"
 saveFailed = "Ha fallat el desament"
 unpinnedFile = "S'ha deixat de fixar {{name}}"
 unzipping = "Descomprimint {{name}}"
+
+[fileEditor.addCard]
+dropHint = "o deixa anar fitxers a qualsevol lloc"
+fromComputer = "Puja des de l'ordinador"
+moreOptions = "Més opcions de pujada"
 
 [fileEditor.unzip]
 error = "Error en descomprimir {{name}}"
@@ -4729,7 +4789,6 @@ dataLostBody = "Aquest navegador ha perdut el contingut d'aquest fitxer. Torna'l
 dataLostTitle = "Les dades del fitxer no estan disponibles"
 downloadFailed = "La baixada ha fallat"
 dropHint = "Obre fitxers per començar"
-dropToAdd = "Deixa anar fitxers per afegir-los"
 duplicateFailed = "No s'ha pogut duplicar el fitxer"
 expand = "Amplia la barra lateral"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "Torna a analitzar els camps"
 rescanFormFields = "Torna a analitzar els camps del formulari"
 save = "Desa"
 saveShortcut = "Ctrl+S per desar"
+saving = "S'està desant..."
 selectOptionPlaceholder = "— seleccioneu —"
 skippedEdits_one = "No s'ha pogut aplicar 1 canvi:"
 skippedEdits_other = "No s'han pogut aplicar {{count}} canvis:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "{{count}} més no es mostren."
 unsavedChanges = "Canvis no desats"
 
 [formFill.create]
-commit = "Afegeix {{count}} camp(s) al PDF"
 empty = "No s'ha dibuixat cap camp encara."
-failed = "No s'han pogut afegir els camps"
 goToField = "Ves a aquest camp"
 hint = "Tria un tipus de camp i després dibuixa'l a la pàgina."
 placing = "Dibuixa un camp de tipus {{type}} a la pàgina. Prem Esc per aturar-te."
@@ -5334,7 +5392,6 @@ modify = "Modifica"
 commit = "Desa {{count}} canvi(s)"
 delete = "Suprimeix"
 empty = "Aquest PDF encara no té camps de formulari."
-failed = "No s'han pogut desar els canvis"
 groupSizeHint = "Utilitza la mida de l'opció"
 hint = "Selecciona un camp per editar-ne les propietats, arrossega'l a la pàgina o suprimeix-lo."
 restore = "Restaura"
@@ -5732,11 +5789,6 @@ title = "Superposar PDFs"
 desc = "Fusiona diverses pàgines d'un document PDF en una sola pàgina"
 tags = "disseny,organitzar,combinar,N-up,2-up,4-up,múltiples per pàgina,pàgines per full,dissenyar pàgines,mosaic,disposició en quadrícula,disseny multipàgina,combinar en pàgina,fulletó"
 title = "Disposició Multi-Pàgina"
-
-[home.pdfCommentAgent]
-desc = "Demana a la IA que anoti un PDF amb comentaris en notes adhesives segons la indicació"
-tags = "IA,agent,comentari,anotar,nota adhesiva,revisió,comentaris,notes"
-title = "Afegeix comentaris amb IA"
 
 [home.pdfOrganiser]
 tags = "organitzar,reordenar,canviar ordre,organitzar pàgines,ordenar,moure pàgines,suprimir pàgines,eliminar pàgines,gestió de pàgines,organitzador de pàgines,resequenciar"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "Passareu a ser membre de l'equip i perdreu l'accés de propie
 deselectAll = "Cap"
 selectAll = "Marca-ho tot"
 
-[pageEditor]
-dragPreviewAlt = "Arrossegant"
-filePosition = "Posició {{position}}"
-pageLabel = "Pàgina {{page}}"
-title = "Editor de pàgines"
-
-[pageEditor.actions]
-deletePage = "Suprimeix la pàgina"
-insertFileAfter = "Insereix un fitxer després"
-moveLeft = "Mou a l'esquerra"
-moveRight = "Mou a la dreta"
-rotateLeft = "Gira a l'esquerra"
-rotateRight = "Gira a la dreta"
-splitAfter = "Divideix després"
-
-[pageEditor.commands]
-addSplitAt = "Afegeix una divisió a la posició {{position}}"
-addSplits_one = "Afegeix {{count}} divisió"
-addSplits_other = "Afegeix {{count}} divisions"
-deletePages_one = "Suprimeix {{count}} pàgina"
-deletePages_other = "Suprimeix {{count}} pàgines"
-insertFiles_one = "Insereix {{count}} fitxer després de la pàgina {{page}}"
-insertFiles_other = "Insereix {{count}} fitxers després de la pàgina {{page}}"
-insertPageBreaks_one = "Insereix {{count}} salt de pàgina"
-insertPageBreaks_other = "Insereix {{count}} salts de pàgina"
-insertPageBreaksAll = "Insereix salts de pàgina després de totes les pàgines"
-removeAllSplits = "Elimina totes les divisions"
-removeSplitAt = "Elimina la divisió a la posició {{position}}"
-removeSplits_one = "Elimina {{count}} divisió"
-removeSplits_other = "Elimina {{count}} divisions"
-reorderPages = "Reordena les pàgines"
-rotatePageLeft = "Gira la pàgina a l'esquerra"
-rotatePageRight = "Gira la pàgina a la dreta"
-rotatePagesLeft_one = "Gira {{count}} pàgina a l'esquerra"
-rotatePagesLeft_other = "Gira {{count}} pàgines a l'esquerra"
-rotatePagesRight_one = "Gira {{count}} pàgina a la dreta"
-rotatePagesRight_other = "Gira {{count}} pàgines a la dreta"
-splitAllPages = "Divideix totes les pàgines"
-toggleSplits_one = "Commuta {{count}} posició de divisió"
-toggleSplits_other = "Commuta {{count}} posicions de divisió"
-
-[pageEditor.emptyState]
-body = "Afegeix fitxers per començar a editar pàgines"
-title = "No s'han carregat fitxers PDF"
-
-[pageEditor.fileDropdown]
-addFile = "Afegeix un fitxer"
-selectedCount = "{{selected}}/{{total}} fitxers seleccionats"
-untitled = "Sense títol"
-
-[pageEditor.toolbar]
-delete = "Suprimeix els seleccionats"
-redo = "Refés"
-rotateLeft = "Gira a l'esquerra els seleccionats"
-rotateRight = "Gira a la dreta els seleccionats"
-undo = "Desfés"
-
 [pageExtracter]
 title = "Extreu Pàgines"
 
@@ -6815,6 +6810,79 @@ title = "Intervals de pàgines"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → selecciona totes les pàgines"
 title = "Paraules clau especials"
+
+[pageTracks]
+blankPage = "Pàgina en blanc"
+deleteSelected = "Suprimeix les pàgines seleccionades"
+downloadAsOneFile = "Descarrega com un sol fitxer"
+downloadEachPage = "Descarrega cada pàgina individualment"
+downloadSelectedPages = "Descarrega les pàgines seleccionades"
+dragging_one = "{{count}} pàgina"
+dragging_other = "{{count}} pàgines"
+duplicateSelected = "Duplica les pàgines seleccionades"
+edited = "editat"
+emptyTrack = "No queden pàgines. Arrossega pàgines aquí o desa per tancar aquest fitxer."
+insertBlank = "Insereix una pàgina en blanc"
+insertBlankAfterSelected = "Insereix pàgines en blanc després de les pàgines seleccionades"
+moveLeft = "Mou a l'esquerra"
+moveRight = "Mou a la dreta"
+nextPage = "Pàgina següent"
+page = "Pàgina {{number}}"
+pageCount_one = "{{count}} pàgina"
+pageCount_other = "{{count}} pàgines"
+pagePosition = "Pàgina {{number}} de {{total}}"
+prevPage = "Pàgina anterior"
+readingPages = "S'estan llegint les pàgines..."
+redo = "Refés"
+rotateLeft = "Gira a l'esquerra"
+rotateRight = "Gira a la dreta"
+rotateSelectedLeft = "Gira les pàgines seleccionades a l'esquerra"
+rotateSelectedRight = "Gira les pàgines seleccionades a la dreta"
+saveAsOneFile = "Desa com un sol fitxer"
+saveChanges = "Desa els canvis a tots els fitxers"
+saveEachPage = "Desa cada pàgina individualment"
+saveSelectedPages = "Desa les pàgines seleccionades"
+saving = "S'està desant..."
+savingProgress = "S'està desant {{done}} de {{total}}"
+selectPage = "Selecciona la pàgina {{number}}"
+splitAfterSelected = "Divideix després de les pàgines seleccionades"
+splitHere = "Divideix aquí"
+undo = "Desfés"
+viewError = "No s'ha pogut renderitzar aquesta pàgina"
+viewPage = "Mostra la pàgina"
+zoomIn = "Apropa"
+zoomOut = "Allunya"
+
+[pageTracks.close]
+message = "Segur que vols tancar tots els fitxers?"
+unsaved = "Aquests fitxers tenen canvis sense desar."
+
+[pageTracks.delete]
+page = "Suprimeix la pàgina"
+
+[pageTracks.duplicate]
+page = "Duplica la pàgina"
+
+[pageTracks.empty]
+body = "Afegeix PDFs per desplegar-los en pistes de pàgines editables"
+title = "No s'han carregat fitxers PDF"
+
+[pageTracks.exportFailed]
+body = "No s'han pogut preparar els fitxers editats. Torna-ho a provar."
+title = "No s'ha pogut descarregar"
+
+[pageTracks.saveFailed]
+body = "Les teves edicions no s'han perdut. Torna a provar de desar."
+title = "No s'han pogut desar els canvis"
+
+[pageTracks.track]
+close = "Tanca el fitxer"
+collapse = "Replega"
+expand = "Desplega"
+rename = "Canvia el nom del fitxer"
+
+[pageTracks.wrap]
+label = "Ajusta les pàgines"
 
 [payg.activity]
 docs = "docs"
@@ -7144,24 +7212,6 @@ totalSeats_other = "Total ({{count}} seients)"
 [payment.upgradeTeam]
 title = "Actualitza a Team"
 
-[pdfCommentAgent]
-submit = "Genera comentaris"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Descriu sobre què hauria de comentar la IA"
-failed = "No s’han pogut generar els comentaris"
-tooLong = "La instrucció és massa llarga (màxim {{max}} caràcters)"
-
-[pdfCommentAgent.prompt]
-label = "Sobre què hauria de comentar la IA?"
-placeholder = "p. ex., marca qualsevol data ambigua i suggereix aclariments"
-
-[pdfCommentAgent.results]
-title = "PDF amb comentaris"
-
-[pdfCommentAgent.settings]
-title = "Instruccions dels comentaris"
-
 [pdfOrganiser]
 placeholder = "(p. ex. 1,3,2 o 4-8,2,10-12 o 2n-1)"
 tags = "duplex,parells,senars,ordenar,moure"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "Fes clic a qualsevol text, imatge o forma de la pàgina p
 ocrDocumentChanged = "El document ha canviat mentre s'executava l'OCR. Torna a executar l'OCR per incloure els darrers canvis."
 ocrInvalidResult = "L'OCR no ha retornat cap PDF. Torna-ho a provar."
 ocrNoLanguages = "No hi ha cap idioma d'OCR instal·lat al servidor."
+ocrProtected = "OCR encara no pot conservar la protecció d'aquest PDF. L'original protegit continua disponible per visualitzar-lo."
 ocrRunning = "S'està reconeixent el text..."
 ocrUnavailable = "L'OCR no està disponible en aquest servidor."
 oneImage = "Imatge"
@@ -7389,13 +7440,8 @@ pageNumber = "Pàgina {{page}}"
 renderFailed = "No s'ha pogut renderitzar la pàgina"
 
 [pdfTextEditor.password]
-cancel = "Cancel·la"
 incorrect = "Contrasenya incorrecta; torneu-ho a provar."
 label = "Contrasenya"
-open = "Obre"
-protected = "Aquest PDF està protegit amb contrasenya."
-protectedNamed = "\"{{fileName}}\" està protegit amb contrasenya."
-title = "Cal una contrasenya"
 
 [pdfTextEditor.rulers]
 guide = "Guia d'alineació a {{value}} {{unit}}; arrossegueu-la a un regle per eliminar-la"
@@ -7994,6 +8040,7 @@ before = "Defineix"
 title = "La connexió de Stirling no està configurada"
 
 [portal.accountLink.notice]
+loadFailed = "No s'ha pogut carregar el diàleg d'enllaç del compte."
 openFailed = "No s'ha pogut obrir el navegador. Obre Ús i facturació al servidor connectat per enllaçar un compte."
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "Límit de despesa mensual {{amount}}/mes. El processament es pausa en a
 limitNoCap = "Sense límit de despesa. El processament no es pausarà. Les factures s'emeten mensualment."
 
 [portal.billing.chip]
-invoices = "Factures"
-nav = "Seccions"
-payment = "Pagament"
 plan = "Pla"
 procurement = "Compres"
 usage = "Ús"
@@ -8178,9 +8222,22 @@ pdfs = "PDF processats"
 users = "Usuaris"
 
 [portal.billing.enterprise]
+active = "Acord actiu fins al {{date}}"
 cta = "Obtén un pressupost enterprise"
+included = "Inclòs a Enterprise"
+payment_pending = "Pagament pendent · accés fins al {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF per sobre del volum acordat"
+pdfsOver_other = "{{count}} PDFs per sobre del volum acordat"
+pdfsUsed_one = "{{count}} PDF processat"
+pdfsUsed_other = "{{count}} PDF processats"
+period = "Període de l'acord: {{start}} – {{end}}"
 sub = "Desplegament air-gapped, SCIM, residència de dades, SLA de disponibilitat i un acord a mida."
 title = "Executant Stirling en un entorn regulat?"
+trial = "Prova de {{days}} dies · acaba el {{date}}"
+usersAgreed = "{{used}} / {{agreed}} usuaris acordats"
+usersOver_one = "{{count}} usuari per sobre de la quantitat acordada"
+usersOver_other = "{{count}} usuaris per sobre de la quantitat acordada"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "No s'ha pogut iniciar el pagament"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "Compilacions natives per a la teva distribució."
-guideBtn = "Mostra les opcions d'instal·lació de Linux"
+downloadAppImage = "AppImage"
+downloadDeb = "Descarrega .deb (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "Hi ha compilacions AppImage, .deb i .rpm disponibles per a distribucions habituals."
 tagline = "Aplicació d'escriptori nativa per a la teva distribució"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "Censurar,ocultar,tapar,negre,marcador,ocult,censura automàtica,censura 
 title = "Censura"
 
 [redact.auto]
+caseSensitiveLabel = "Coincidència amb distinció entre majúscules i minúscules"
 colorLabel = "Color del quadre"
 convertPDFToImageLabel = "Converteix PDF a PDF-imatge"
 customPaddingLabel = "Farciment extra personalitzat"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "Selecciona fitxers al gestor de fitxers per redactar
 manual = "Manual"
 mode = "Mode"
 title = "Mètode de redacció"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Només fa coincidir text amb la mateixa capitalització. 'Secret' no coincidirà amb 'SECRET' quan estigui activat, i [A-Z] en una regex només coincideix amb majúscules."
+title = "Coincidència amb distinció entre majúscules i minúscules"
 
 [redact.tooltip.advanced.color]
 text = "Personalitzeu l'aparença dels quadres de redacció. El negre és l'estàndard, però podeu triar qualsevol color. El farciment afegeix espai addicional al voltant del text trobat."
@@ -11396,7 +11460,12 @@ text = "Especifica quines pàgines vols eliminar del teu PDF. Pots seleccionar p
 title = "Selecció de pàgines"
 
 [removePassword]
-desc = "Elimina la contrasenya del document PDF."
+appliesTo = "Definida en {{count}} de {{total}} PDF"
+keepBlank = "Deixa un camp en blanc per conservar aquesta contrasenya."
+notSet = "No definida"
+openWithReaderFirst = "Torna a obrir aquest PDF amb la seva contrasenya d'obertura abans d'eliminar només la contrasenya de permisos."
+selectiveHelp = "Introdueix la contrasenya actual per a cada protecció que vulguis eliminar. Un camp en blanc conserva aquesta contrasenya. Eliminar la contrasenya de permisos també elimina les restriccions d'acció."
+selectPasswords = "Contrasenyes que cal eliminar"
 submit = "Elimina la contrasenya"
 tags = "segur,desencripta,seguretat,eliminar contrasenya,suprimir contrasenya"
 title = "Eliminar Contrasenya"
@@ -11407,13 +11476,9 @@ failed = "S’ha produït un error en eliminar la contrasenya del PDF."
 [removePassword.password]
 label = "Contrasenya Actual"
 placeholder = "Introduïu la contrasenya actual"
-stepTitle = "Elimina Contrasenya"
 
 [removePassword.results]
 title = "PDF desxifrats"
-
-[removePassword.tooltip]
-description = "Eliminar la protecció amb contrasenya requereix la contrasenya que es va utilitzar per xifrar el PDF. Això desxifrarà el document i el farà accessible sense contrasenya."
 
 [reorganizePages]
 submit = "Reorganitza les pàgines"
@@ -11543,6 +11608,64 @@ m = "Metres (m)"
 mi = "Milles (mi)"
 mm = "Mil·límetres (mm)"
 yd = "Iardes (yd)"
+
+[runLocation]
+back = "Enrere"
+continue = "Continua"
+subtitle = "Tria on s'executa."
+title = "On vols executar Stirling?"
+
+[runLocation.choice.browser]
+description = "L'aplicació web."
+title = "Al teu navegador"
+
+[runLocation.choice.computer]
+description = "L'aplicació d'escriptori."
+title = "Al teu ordinador"
+
+[runLocation.choice.server]
+description = "Autoallotjat, per a un equip."
+title = "Al teu servidor"
+
+[runLocation.desktop]
+computerLabel = "El teu ordinador"
+download = "Descarrega per a {{platform}}"
+downloadAgain = "Torna a descarregar"
+guide = "Obre la guia d'instal·lació de {{platform}}"
+startedSubtitle = "Comprova la carpeta Baixades i obre l'instal·lador."
+startedTitle = "La descàrrega ha començat"
+subtitle = "Descarrega-la i obre-la."
+title = "Obtén l'aplicació d'escriptori"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (guia d'instal·lació)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "Copiat"
+copy = "Copia l'ordre"
+copyCompose = "Copia el fitxer compose"
+guide = "Guia d'instal·lació de {{method}}"
+methodLabel = "Executa'l amb"
+note = "A continuació, obre <url/> per acabar la configuració."
+subtitle = "Executa això al teu servidor i després obre-ho en un navegador."
+title = "Configura el teu servidor"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "Elimina elements potencialment nocius dels fitxers PDF."
@@ -12054,6 +12177,7 @@ title = "Espai de treball"
 loginIncomplete = "No s'ha pogut completar l'inici de sessió"
 noSaasServer = "No hi ha cap servidor SaaS configurat"
 noServer = "No hi ha cap servidor configurat"
+policyUnavailable = "No s'han pogut carregar els paràmetres d'inici de sessió de la teva organització."
 saasLoginFailed = "Ha fallat l'inici de sessió SaaS"
 saasLoginIncomplete = "No s'ha pogut completar l'inici de sessió SaaS"
 selfHostedLoginFailed = "Ha fallat l'inici de sessió al servidor allotjat pel vostre compte"
@@ -13563,7 +13687,9 @@ validUntrusted = "Vàlida, signant no verificat"
 
 [viewer]
 cannotPreviewFile = "No es pot previsualitzar el fitxer"
+copyRestricted = "La còpia està desactivada pels permisos d'aquest PDF."
 copyText = "Copia"
+coverPageView = "Mostra la portada per separat"
 disableColorFilter = "Desactiva el filtre de color"
 documentUpdated = "Document actualitzat"
 dualPageView = "Vista de dues pàgines"
@@ -13580,6 +13706,7 @@ noPdfProvided = "No s'ha proporcionat cap PDF"
 onlyPdfSupported = "Aquest format de fitxer no és compatible amb la previsualització."
 pageNavigation = "Navegació per pàgines"
 previousPage = "Pàgina anterior"
+readAloudFromHere = "Llegeix en veu alta des d'aquí"
 saveChangesErrorBody = "No s'ha pogut desar el document. Torneu-ho a provar."
 saveChangesErrorTitle = "No s'han pogut desar els canvis"
 singlePageView = "Vista d'una sola pàgina"
@@ -13640,6 +13767,7 @@ closeSidebar = "Tanca la barra lateral de comentaris"
 deleteAnnotationAndComment = "Suprimeix l’anotació i el comentari"
 deleteDescription = "Aquesta anotació té un comentari adjunt. Pots eliminar només el comentari de la barra lateral i mantenir l’anotació, o bé suprimir-ho tot."
 deleteTitle = "Eliminar l’anotació dels comentaris?"
+exportCsv = "Exporta com a CSV"
 goToLink = "Vés a l’enllaç"
 hint = "Afegeix comentaris amb les eines Comentari, Insereix text o Substitueix el text. Apareixeran aquí per pàgina."
 locateAnnotation = "Localitza al document"
@@ -13658,7 +13786,16 @@ typeInsertText = "Insereix text"
 typeReplaceText = "Substitueix el text"
 viewComment = "Mostra el comentari"
 
+[viewer.comments.csv]
+author = "Autor"
+comment = "Comentari"
+inReplyTo = "En resposta a"
+modifiedUtc = "Última modificació (UTC)"
+page = "Pàgina"
+thread = "Fil"
+
 [viewer.error]
+loadError = "No s'ha pogut carregar el PDF"
 noFileProvided = "Error: no s'ha proporcionat cap fitxer al visor"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "Text de la marca d'aigua"
 image = "Imatge"
 text = "Text"
 
+[workbench]
+dropFailedSingle = "No s'ha pogut afegir el teu fitxer"
+dropFailedSome = "No s'han pogut afegir {{failed}} dels teus fitxers"
+dropOverlay = "Deixa anar fitxers per afegir-los al banc de treball"
+
 [workbench.sessionRestore]
 none = "Els teus fitxers anteriors ja no s’emmagatzemen en aquest dispositiu."
 partial = "S’han restaurat {{restored}} de {{total}} fitxers. La resta ja no s’emmagatzemen en aquest dispositiu."
@@ -13915,16 +14057,14 @@ annotations = "Anotacions"
 applyRedactionsFirst = "Aplica primer les censures"
 closeAll = "Tanca tots els fitxers"
 closePdf = "Tanca el PDF"
-deleteSelected = "Suprimeix les pàgines seleccionades"
 deselectAll = "Desselecciona-ho tot"
 downloadAll = "Descarrega-ho tot"
+exitAnnotations = "Surt del mode d'anotació"
 exitRedaction = "Surt del mode de censura"
-exportAll = "Exporta el PDF"
-exportSelected = "Exporta les pàgines seleccionades"
 formFill = "Editor de formularis"
 hideToolbar = "Amaga la barra d'eines"
 moreActions = "Més accions"
-multiTool = "Eina múltiple"
+pageEditor = "Editor de pàgines"
 panMode = "Mode de desplaçament"
 print = "Imprimeix el PDF"
 readAloud = "Llegeix en veu alta"
@@ -13938,7 +14078,6 @@ rulerSettings = "Configuració de l'escala"
 save = "Desa"
 saveAll = "Desa-ho tot"
 saveAs = "Desa com a"
-saveChanges = "Desa els canvis"
 search = "Cerca al PDF"
 selectAll = "Selecciona-ho tot"
 selectByNumber = "Selecciona per números de pàgina"

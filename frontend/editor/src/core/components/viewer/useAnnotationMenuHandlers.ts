@@ -199,7 +199,7 @@ export function useAnnotationMenuHandlers({
     return obj.color || obj.strokeColor || "#000000";
   })();
   const strokeColor = obj?.strokeColor || obj?.color || "#000000";
-  const fillColor = obj?.color || obj?.fillColor || "#0000ff";
+  const fillColor = obj?.color || obj?.fillColor || "transparent";
   const backgroundColor =
     obj?.backgroundColor || obj?.fillColor || obj?.color || "#ffffff";
   const textColor = obj?.textColor || obj?.color || "#000000";
@@ -248,7 +248,7 @@ export function useAnnotationMenuHandlers({
 
       if (target === "stroke") {
         patch.strokeColor = color;
-        patch.color = obj?.color || "#0000ff";
+        patch.color = obj?.color || "transparent";
         patch.strokeWidth = currentWidth;
       } else if (target === "fill") {
         patch.color = color;

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { UnsavedChangesDialog } from "@app/components/shared/UnsavedChangesDialog";
@@ -13,6 +13,9 @@ const NavigationWarningModal = () => {
     navigationWarningHandlersRef,
   } = useNavigationGuard();
 
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+
   // Store pendingNavigation in a ref so async handlers always have the latest,
   // not a stale closure captured before an await.
   const pendingNavigationRef = useRef(pendingNavigation);
@@ -21,6 +24,7 @@ const NavigationWarningModal = () => {
   }, [pendingNavigation]);
 
   const handleKeepWorking = () => {
+    if (savingRef.current) return;
     cancelNavigation();
   };
 
@@ -37,6 +41,7 @@ const NavigationWarningModal = () => {
   };
 
   const handleDiscardChanges = async () => {
+    if (savingRef.current) return;
     const handlers = navigationWarningHandlersRef.current;
     if (handlers?.onDiscardAndContinue) {
       await handlers.onDiscardAndContinue();
@@ -45,6 +50,9 @@ const NavigationWarningModal = () => {
   };
 
   const handleApplyAndContinue = async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
     const handlers = navigationWarningHandlersRef.current;
     try {
       if (handlers?.onApplyAndContinue) {
@@ -53,6 +61,9 @@ const NavigationWarningModal = () => {
       finishAndNavigate();
     } catch (error) {
       console.error("Failed to apply changes before navigating:", error);
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
   };
 
@@ -77,6 +88,7 @@ const NavigationWarningModal = () => {
   return (
     <UnsavedChangesDialog
       opened={showNavigationWarning}
+      saving={saving}
       onKeepWorking={handleKeepWorking}
       onDiscard={handleDiscardChanges}
       onSave={hasApply ? handleApplyAndContinue : undefined}

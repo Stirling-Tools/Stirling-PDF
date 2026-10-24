@@ -58,7 +58,7 @@ export interface PanAPIWrapper {
 }
 
 export interface SelectionAPIWrapper {
-  copyToClipboard: () => void;
+  copyToClipboard: () => Promise<boolean>;
   getFormattedSelection: () => FormattedSelection[];
   selectAll: (totalPages: number) => Promise<boolean>;
   selectWordAt: (pageIndex: number, x: number, y: number) => boolean;
@@ -144,7 +144,6 @@ export interface SelectionState {
 
 export interface SpreadState {
   spreadMode: SpreadMode;
-  isDualPage: boolean;
 }
 
 export interface RotationState {

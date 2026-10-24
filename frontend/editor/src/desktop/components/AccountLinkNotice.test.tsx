@@ -8,6 +8,10 @@ import { handleHttpError } from "@app/services/httpErrorHandler";
 import { clearAccountLinkBlock } from "@app/services/accountLinkBlock";
 import type { ConnectionConfig } from "@app/services/connectionModeService";
 
+// The notice renders the linking modal through React.lazy; warming it here
+// keeps the first assertion from racing the chunk import.
+await import("@app/components/account-link/EditorLinkModal");
+
 const {
   auth,
   alert,

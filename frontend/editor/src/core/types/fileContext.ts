@@ -5,6 +5,11 @@
 import { PageOperation } from "@app/types/pageEditor";
 import { FileId, BaseFileMetadata } from "@app/types/file";
 import { generateId } from "@app/utils/generateId";
+import {
+  bindPdfAccess,
+  getPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfAccessService";
 import type { DiskUnavailableReason } from "@app/services/desktopFileLink";
 
 // Re-export FileId for convenience
@@ -31,6 +36,10 @@ export interface ProcessedFileMetadata {
   totalPages?: number;
   lastProcessed?: number;
   isEncrypted?: boolean;
+  /** Verified opening-password requirement; absence means it has not been checked. */
+  requiresOpeningPassword?: boolean;
+  /** PDFium could not parse the file; Repair may recover it on the server. */
+  isDamaged?: boolean;
   thumbnailUrl?: string;
   [key: string]: unknown;
 }
@@ -180,8 +189,12 @@ export function documentBytesReplaced(
   return previous.id === current.id && previous.key !== current.key;
 }
 
-// Create a StirlingFile from a regular File object
-export function createStirlingFile(file: File, id?: FileId): StirlingFile {
+/** Storage reads opt out of rebinding: reading a copy must not revoke access to the active bytes. */
+export function createStirlingFile(
+  file: File,
+  id?: FileId,
+  options?: { bindSessionAccess?: boolean },
+): StirlingFile {
   // If the file already has Stirling metadata and we aren't trying to override it,
   // return as–is. When a new id is requested we clone the File so we can embed
   // the fresh identifier without mutating the original object.
@@ -190,10 +203,12 @@ export function createStirlingFile(file: File, id?: FileId): StirlingFile {
       return file;
     }
 
+    const access = getPdfAccess(file);
     file = new File([file], file.name, {
       type: file.type,
       lastModified: file.lastModified,
     });
+    if (access) rememberPdfAccess(file, access);
   }
 
   const fileId = id || createFileId();
@@ -215,6 +230,7 @@ export function createStirlingFile(file: File, id?: FileId): StirlingFile {
     configurable: false,
   });
 
+  if (options?.bindSessionAccess !== false) bindPdfAccess(file, fileId);
   return file as StirlingFile;
 }
 
@@ -391,8 +407,6 @@ export interface FileContextActions {
     options?: {
       insertAfterPageId?: string;
       selectFiles?: boolean;
-      /** Suppress the duplicate modal while retaining a policy hold on encrypted bytes. */
-      skipAutomaticPasswordPrompt?: boolean;
       skipUploadTracking?: boolean;
       /**
        * Produced in-app rather than uploaded, which stops the policy auto-run enforcing an upload
@@ -474,6 +488,20 @@ export interface FileContextActions {
   scheduleCleanup: (fileId: FileId, delay?: number) => void;
   cleanupFile: (fileId: FileId) => void;
   openEncryptedUnlockPrompt: (fileId: FileId) => void;
+  /** Resolves false on cancellation or document closure; never exposes the credential. */
+  requestPdfOwnerAccess: (
+    fileId: FileId,
+    action: string,
+    preservationReason?: string,
+  ) => Promise<boolean>;
+  /** Creates a separate unprotected version after verifying owner access. */
+  createUnprotectedCopy: (fileId: FileId) => Promise<void>;
+  /** Authenticates preview bytes without adding a library record. Abort when the preview closes. */
+  unlockPreviewPdf: (
+    file: File,
+    password: string,
+    signal: AbortSignal,
+  ) => Promise<void>;
 }
 
 // File selectors (separate from actions to avoid re-renders)

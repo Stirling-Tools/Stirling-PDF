@@ -55,7 +55,9 @@ keepWorking = "Lanjutkan"
 loading = "Mengambil data..."
 loginAgreementAccept = "Setuju"
 loginAgreementDecline = "Tolak"
+loginAgreementLoadFailed = "Perjanjian login tidak dapat dimuat."
 loginAgreementProvider = "Pemberitahuan ini disediakan oleh administrator Anda, bukan Stirling PDF Inc."
+loginAgreementRetry = "Coba lagi"
 loginAgreementTitle = "Perjanjian Login"
 logOut = "Keluar"
 marginTooltip = "Jarak antara nomor halaman dan tepi halaman."
@@ -299,7 +301,6 @@ title = "Hasil Penomoran Halaman"
 
 [addPassword]
 desc = "Enkripsi dokumen PDF Anda dengan kata sandi."
-submit = "Enkripsi"
 tags = "enkripsi,kata sandi,kunci,amankan,lindungi,keamanan,enkripsi,pengamanan,rahasia,pribadi,batasi akses"
 title = "Tambahkan kata sandi"
 
@@ -311,17 +312,6 @@ label = "Panjang Kunci Enkripsi"
 
 [addPassword.error]
 failed = "Terjadi kesalahan saat mengenkripsi PDF."
-
-[addPassword.passwords]
-stepTitle = "Kata Sandi & Enkripsi"
-
-[addPassword.passwords.owner]
-label = "Kata Sandi Pemilik"
-placeholder = "Masukkan kata sandi pemilik"
-
-[addPassword.passwords.user]
-label = "Kata Sandi Pengguna"
-placeholder = "Masukkan kata sandi pengguna"
 
 [addPassword.results]
 title = "PDF terenkripsi"
@@ -1627,6 +1617,7 @@ title = "Perlu Mulai Ulang"
 [admin.settings.security]
 authentication = "Autentikasi"
 description = "Konfigurasikan autentikasi, perilaku login, dan kebijakan keamanan."
+pdfPermissions = "Izin PDF"
 title = "Keamanan"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "Nonaktifkan Perlindungan CSRF"
 [admin.settings.security.enableLogin]
 description = "Wajibkan pengguna masuk sebelum mengakses aplikasi"
 label = "Aktifkan Login"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Wajibkan kata sandi izin untuk tindakan yang dibatasi. Menonaktifkan ini tetap memerlukan kata sandi yang diperlukan untuk membuka PDF."
+label = "Patuhi izin PDF"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Pengaturan Lanjutan"
@@ -1938,9 +1933,6 @@ wrapUp = "Itu tadi tur admin! Anda telah melihat fitur enterprise yang menjadika
 [adminUserSettings]
 admin = "Administrator"
 title = "Pengaturan Kontrol Pengguna"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Arab"
@@ -3173,12 +3165,14 @@ unknown = "Tidak diketahui"
 
 [changePermissions]
 desc = "Ubah pembatasan dan izin dokumen."
+loading = "Memuat izin saat ini..."
 submit = "Ganti Perizinan"
 tags = "izin,pembatasan,hak,kontrol akses,izinkan,tolak,pencetakan,penyalinan,pengeditan,ubah izin,pengaturan keamanan,hak pengguna"
 title = "Ganti Perizinan"
 
 [changePermissions.error]
 failed = "Terjadi kesalahan saat mengubah izin PDF."
+readFailed = "Tidak dapat membaca izin PDF saat ini. Atur pembatasan secara manual sebelum menerapkan perubahan."
 
 [changePermissions.permissions.preventAssembly]
 label = "Pencegahan untuk penyusunan dokumen"
@@ -3219,21 +3213,16 @@ text = "Agar izin ini tidak dapat diubah, gunakan alat Tambah Kata Sandi untuk m
 [chat.actions]
 copy = "Salin pesan"
 
-[chat.emptyState]
-text = "Ajukan pertanyaan tentang dokumen Anda atau dapatkan bantuan dengan alat PDF."
-
-[chat.fab]
-close = "Tutup chat"
-open = "Buka asisten AI Stirling"
+[chat.dock]
+collapse = "Ciutkan chat"
+placeholder = "Tanyakan kepada Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Opsi agen Stirling"
-assistant = "Asisten AI"
 clearChat = "Hapus obrolan"
 
 [chat.input]
 disclaimer = "AI dapat membuat kesalahan. Pastikan untuk memverifikasi output sebelum membagikannya."
-placeholder = "Apa yang ingin Anda lakukan?"
 send = "Kirim pesan"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Konversi dokumen ini ke PDF"
 convertOne = "Konversi dokumen ini ke PDF"
 heading = "Mulai"
 mergeMany = "Gabungkan {{count}} dokumen ini menjadi 1"
-moreFiles = "+{{count}} lainnya"
 openFromComputer = "Buka dari komputer"
-removeFile = "Hapus {{name}}"
 splitOne = "Pisahkan dokumen ini"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Saya tidak dapat menemukan informasi yang diminta."
 processing = "Memproses ({{outcome}})..."
 unsupported_capability = "Kemampuan tidak didukung: {{capability}}"
 usage_limit_reached = "Anda telah mencapai batas penggunaan. Periksa opsi paket Anda untuk melanjutkan."
-
-[chat.toolsUsed]
-summary_one = "Menjalankan 1 alat"
-summary_other = "Menjalankan {{count}} alat"
-unknownTool = "Alat tidak dikenal"
 
 [classification.families]
 correspondence = "Korespondensi"
@@ -3649,6 +3631,7 @@ tooltip = "Pilih warna dari layar"
 hue = "Rona"
 saturation = "Saturasi dan kecerahan"
 title = "Pilih warna"
+transparent = "Transparan"
 
 [common]
 actions = "Tindakan"
@@ -3664,6 +3647,7 @@ continue = "Lanjut"
 copied = "Disalin!"
 copy = "Salin"
 copyCode = "Salin kode"
+copyFailed = "Penyalinan gagal"
 dismiss = "Tutup"
 done = "Selesai"
 enterValue = "Masukkan nilai"
@@ -3847,6 +3831,12 @@ unavailable = "ImageMagick tidak terpasang atau tidak diaktifkan pada server ini
 filesize = "Ukuran Berkas"
 quality = "Kualitas"
 title = "Metode Kompresi"
+
+[compress.noReduction]
+multiple = "Kompresi berhasil dijalankan, tetapi {{count}} dari {{total}} file tidak dapat dikompresi lebih lanjut."
+multipleAtLevel = "Kompresi pada level ini tidak menghasilkan peningkatan untuk {{count}} dari {{total}} file. Coba level kompresi yang lebih tinggi."
+single = "Kompresi berhasil dijalankan, tetapi file ini tidak dapat dikompresi lebih lanjut."
+singleAtLevel = "Kompresi pada level ini tidak menghasilkan peningkatan untuk file ini. Coba level kompresi yang lebih tinggi."
 
 [compress.settings]
 desiredSize = "Ukuran file yang diinginkan"
@@ -4295,6 +4285,13 @@ precision = "Gunakan input koordinat untuk penempatan yang presisi"
 resize = "Seret gagang sudut dan tepi untuk mengubah ukuran"
 title = "Cara Memangkas PDF"
 
+[damagedPdf]
+description = "PDF ini rusak dan tidak dapat dibuka."
+label = "Rusak"
+repair = "Perbaiki"
+repaired = "{{name}} telah diperbaiki"
+repairFailed = "Tidak dapat memperbaiki {{name}}"
+
 [database]
 backupCreated = "Cadangan database berhasil"
 fileName = "Nama Berkas"
@@ -4363,6 +4360,10 @@ title = "Diperbarui dari disk"
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\" berubah di disk. Ukurannya cukup besar sehingga memuat ulang akan memakan waktu, jadi versi di sini dibiarkan apa adanya."
 title = "File berubah di disk"
+
+[desktopPrivacy]
+blocked = "Administrator Anda mewajibkan dokumen tetap berada di perangkat ini. Fitur ini tidak tersedia."
+localFiles = "File lokal"
 
 [desktopUpdate]
 downloading = "Mengunduh pembaruan..."
@@ -4491,22 +4492,80 @@ description = "Pilih alat Edit Table of Contents untuk memuat ruang kerjanya."
 title = "Buka alat untuk mulai mengedit"
 
 [encryptedPdfUnlock]
-description = "PDF ini dilindungi sandi. Masukkan sandi agar Anda dapat melanjutkan bekerja dengannya."
-emptyResponse = "Penghapusan sandi tidak menghasilkan file."
+actionIgnored = "Pembatasan {{action}} diabaikan"
+actionUnlocked = "{{action}} dibuka untuk sesi ini"
+advanced = "Lanjutan"
+allowed = "Diizinkan"
+annotations = "Anotasi"
+authoriseAction = "PDF ini memerlukan izin untuk menggunakan {{action}}."
+changeOwnerPassword = "Ubah kata sandi izin"
+checkingPermissions = "Memeriksa izin PDF..."
+chooseOwnerPassword = "Pilih kata sandi lain"
+continue = "Lanjutkan"
+copyFailed = "Tidak dapat membuat salinan. PDF Anda tidak berubah."
+copying = "Menyalin konten"
+editing = "Mengedit"
+enterPassword = "Masukkan kata sandi"
+ignoredByServer = "Izin diabaikan oleh pengaturan server ini. Perlindungan PDF tidak berubah."
 incorrectPassword = "Sandi salah"
+inspectionFailed = "Tidak dapat memeriksa izin PDF ini. Coba lagi."
+lowQualityPrintUnsupported = "PDF ini hanya mengizinkan pencetakan berkualitas rendah, yang tidak didukung oleh penampil ini."
+lowResolutionOnly = "Resolusi rendah saja"
+manageProtection = "Kelola perlindungan"
 missingFile = "File yang dipilih tidak lagi tersedia."
+mixedProtection = "PDF ini memiliki pengaturan perlindungan terpisah. Proses satu per satu."
+newOwnerPassword = "Kata sandi izin baru"
+notRequired = "Tidak wajib"
+openingPassword = "Kata sandi untuk membuka"
+openPdf = "Buka PDF"
+ownerPassword = "Kata sandi izin"
+ownerRequired = "Masukkan kata sandi izin untuk melanjutkan."
+ownerTitle = "Masukkan kata sandi izin"
+passwordRetained = "Tetap tidak berubah"
+passwordsMustDiffer = "Kedua kata sandi harus berbeda."
+permissionsUnlocked = "Izin dibuka untuk sesi ini"
+prepareFailed = "Tidak dapat menyiapkan PDF terlindungi ini untuk diproses."
+printing = "Mencetak"
+printRestricted = "Pencetakan dibatasi. Verifikasi izin di Kelola perlindungan."
+protectedPdf = "PDF terlindungi"
+protectionRetained = "Perlindungan dipertahankan"
+protectionSaved = "Perlindungan disimpan"
+removePasswordHelp = "Buka Hapus Kata Sandi untuk memilih kata sandi yang akan dihapus."
+removeProtection = "Buat salinan tanpa perlindungan"
+replaceProtection = "Pengaturan ini menggantikan perlindungan PDF saat ini."
 required = "Masukkan sandi untuk melanjutkan."
-skip = "Lewati dulu"
-successBody = "Sandi berhasil dihapus."
-successBodyWithName = "Sandi dihapus dari {{fileName}}"
-successTitle = "Sandi dihapus"
+requiredStatus = "Wajib"
+requiredToApply = "Wajib untuk menerapkan perubahan"
+restoreFailed = "Tidak dapat mempertahankan perlindungan PDF. Tidak ada hasil tanpa perlindungan yang disimpan."
+restrictActions = "Batasi tindakan"
+restricted = "Dibatasi"
+restrictedActions = "tindakan yang dibatasi"
+restrictedOperation = "Tindakan ini memerlukan kata sandi izin."
+retainOwnerVerification = "Verifikasi kata sandi izin untuk mempertahankannya tanpa perubahan saat menghapus kata sandi pembuka. Ini tidak akan menghapusnya."
+saveProtection = "Simpan perlindungan"
+securityChangeFailed = "Tidak dapat mengubah perlindungan. Periksa kata sandi izin dan pengaturan keamanan baru."
+sessionDetails = "Dibuka untuk sesi ini. PDF tetap terlindungi."
+sessionDetailsLabel = "Tentang pembukaan kunci sesi"
+sessionFailed = "Tidak dapat membuka kunci PDF ini. Silakan coba lagi."
+sessionSuccessBody = "Perlindungan dipertahankan."
+sessionSuccessBodyWithName = "Perlindungan dipertahankan untuk {{fileName}}."
+sessionSuccessTitle = "PDF dibuka"
+sessionTitle = "Buka PDF"
+signedReadOnly = "PDF bertanda tangan ini dapat dilihat, tetapi tidak dapat diedit di sini."
 title = "Hapus sandi untuk melanjutkan"
+toolUnavailable = "Alat ini tidak mendukung PDF terenkripsi. Hapus kata sandi terlebih dahulu."
+toolUnavailableDetails = "Mengapa {{name}} tidak tersedia"
 unlock = "Buka & Lanjutkan"
 unlockAll = "Gunakan untuk semua ({{count}})"
 unlockAllPartialFail = "Kata sandi salah untuk: {{names}}"
 unlockAllSuccess_one = "Membuka kunci {{count}} file."
 unlockAllSuccess_other = "Membuka kunci {{count}} file."
+unlockedForSession = "Dibuka untuk sesi ini menggunakan kata sandi izin Anda."
 unlockPrompt = "Buka kunci PDF untuk melanjutkan"
+unprotectedCopyConsequence = "Salinan tidak akan memiliki kata sandi atau pembatasan. Dokumen asli tetap terlindungi."
+unsupportedTool = "Alat ini belum dapat mempertahankan perlindungan PDF ini."
+verifiedForSession = "Diverifikasi untuk sesi ini"
+verifyPermissions = "Verifikasi izin untuk sesi ini"
 viewerLocked = "PDF ini dilindungi kata sandi"
 viewerUnlock = "Buka kunci"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "Lihat di Penampil"
 closeFile = "Tutup file"
 
 [fileEditor]
-addFiles = "Tambahkan File"
 closedFile = "Menutup {{name}}"
 couldNotSave = "Tidak dapat menyimpan {{name}}"
-filesAdded_one = "Menambahkan {{count}} file"
-filesAdded_other = "Menambahkan {{count}} file"
 filesReordered_one = "File diurutkan ulang"
 filesReordered_other = "{{count}} file diurutkan ulang"
 loadedFromStorage_one = "Memuat {{count}} file dari penyimpanan"
 loadedFromStorage_other = "Memuat {{count}} file dari penyimpanan"
 loadFromStorageFailed = "Gagal memuat beberapa file dari penyimpanan"
 pinnedFile = "Menyematkan {{name}}"
-processFilesFailed = "Gagal memproses file"
 savedAndClosed = "Menyimpan dan menutup {{name}}"
 saveFailed = "Penyimpanan gagal"
 unpinnedFile = "Melepas sematan {{name}}"
 unzipping = "Mengekstrak ZIP {{name}}"
+
+[fileEditor.addCard]
+dropHint = "atau jatuhkan file di mana saja"
+fromComputer = "Unggah dari komputer"
+moreOptions = "Opsi unggah lainnya"
 
 [fileEditor.unzip]
 error = "Kesalahan saat mengekstrak ZIP {{name}}"
@@ -4729,7 +4789,6 @@ dataLostBody = "Browser ini kehilangan isi file ini. Unggah lagi untuk terus men
 dataLostTitle = "Data file tidak tersedia"
 downloadFailed = "Unduhan gagal"
 dropHint = "Buka file untuk memulai"
-dropToAdd = "Jatuhkan file untuk menambahkan"
 duplicateFailed = "Tidak dapat menggandakan file"
 expand = "Perluas bilah samping"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "Pindai ulang bidang"
 rescanFormFields = "Pindai ulang bidang formulir"
 save = "Simpan"
 saveShortcut = "Ctrl+S untuk menyimpan"
+saving = "Menyimpan..."
 selectOptionPlaceholder = "— pilih —"
 skippedEdits_one = "1 perubahan tidak dapat diterapkan:"
 skippedEdits_other = "{{count}} perubahan tidak dapat diterapkan:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "{{count}} lainnya tidak tercantum."
 unsavedChanges = "Perubahan belum disimpan"
 
 [formFill.create]
-commit = "Tambahkan {{count}} bidang ke PDF"
 empty = "Belum ada bidang yang digambar."
-failed = "Gagal menambahkan bidang"
 goToField = "Buka bidang ini"
 hint = "Pilih jenis bidang, lalu gambar di halaman."
 placing = "Gambar bidang {{type}} di halaman. Tekan Esc untuk berhenti."
@@ -5334,7 +5392,6 @@ modify = "Ubah"
 commit = "Simpan {{count}} perubahan"
 delete = "Hapus"
 empty = "PDF ini belum memiliki bidang formulir."
-failed = "Gagal menyimpan perubahan"
 groupSizeHint = "Gunakan Ukuran opsi"
 hint = "Pilih bidang untuk mengedit propertinya, seret di halaman, atau hapus."
 restore = "Pulihkan"
@@ -5732,11 +5789,6 @@ title = "Tumpuk PDF"
 desc = "Menggabungkan beberapa halaman dokumen PDF menjadi satu halaman"
 tags = "tata letak,susun,gabungkan,N-up,2-up,4-up,banyak per halaman,halaman per lembar,tata letak halaman,ubin,tata letak grid,tata letak multi-halaman,gabungkan di halaman,handout"
 title = "Tata Letak Multi-Halaman"
-
-[home.pdfCommentAgent]
-desc = "Minta AI memberi anotasi pada PDF dengan komentar catatan tempel berdasarkan prompt Anda"
-tags = "AI,agen,komentar,anotasi,catatan tempel,ulasan,umpan balik,catatan"
-title = "Tambahkan komentar AI"
 
 [home.pdfOrganiser]
 tags = "atur,susun ulang,urut ulang,susun halaman,sortir,pindahkan halaman,hapus halaman,hapus halaman,manajemen halaman,pengatur halaman,urutkan ulang"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "Anda akan menjadi anggota tim dan kehilangan akses pemilik."
 deselectAll = "Tidak ada"
 selectAll = "Centang Semua"
 
-[pageEditor]
-dragPreviewAlt = "Menyeret"
-filePosition = "Posisi {{position}}"
-pageLabel = "Halaman {{page}}"
-title = "Editor Halaman"
-
-[pageEditor.actions]
-deletePage = "Hapus Halaman"
-insertFileAfter = "Sisipkan File Setelahnya"
-moveLeft = "Pindahkan ke Kiri"
-moveRight = "Pindahkan ke Kanan"
-rotateLeft = "Putar ke Kiri"
-rotateRight = "Putar ke Kanan"
-splitAfter = "Pisahkan Setelahnya"
-
-[pageEditor.commands]
-addSplitAt = "Tambahkan pemisahan di posisi {{position}}"
-addSplits_one = "Tambahkan {{count}} pemisahan"
-addSplits_other = "Tambahkan {{count}} pemisahan"
-deletePages_one = "Hapus {{count}} halaman"
-deletePages_other = "Hapus {{count}} halaman"
-insertFiles_one = "Sisipkan {{count}} file setelah halaman {{page}}"
-insertFiles_other = "Sisipkan {{count}} file setelah halaman {{page}}"
-insertPageBreaks_one = "Sisipkan {{count}} pemisah halaman"
-insertPageBreaks_other = "Sisipkan {{count}} pemisah halaman"
-insertPageBreaksAll = "Sisipkan pemisah halaman setelah semua halaman"
-removeAllSplits = "Hapus semua pemisahan"
-removeSplitAt = "Hapus pemisahan di posisi {{position}}"
-removeSplits_one = "Hapus {{count}} pemisahan"
-removeSplits_other = "Hapus {{count}} pemisahan"
-reorderPages = "Urutkan ulang halaman"
-rotatePageLeft = "Putar halaman ke kiri"
-rotatePageRight = "Putar halaman ke kanan"
-rotatePagesLeft_one = "Putar {{count}} halaman ke kiri"
-rotatePagesLeft_other = "Putar {{count}} halaman ke kiri"
-rotatePagesRight_one = "Putar {{count}} halaman ke kanan"
-rotatePagesRight_other = "Putar {{count}} halaman ke kanan"
-splitAllPages = "Pisahkan semua halaman"
-toggleSplits_one = "Alihkan {{count}} posisi pemisahan"
-toggleSplits_other = "Alihkan {{count}} posisi pemisahan"
-
-[pageEditor.emptyState]
-body = "Tambahkan file untuk mulai mengedit halaman"
-title = "Tidak ada file PDF dimuat"
-
-[pageEditor.fileDropdown]
-addFile = "Tambah File"
-selectedCount = "{{selected}}/{{total}} file dipilih"
-untitled = "Tanpa judul"
-
-[pageEditor.toolbar]
-delete = "Hapus yang dipilih"
-redo = "Ulangi"
-rotateLeft = "Putar yang dipilih ke kiri"
-rotateRight = "Putar yang dipilih ke kanan"
-undo = "Urungkan"
-
 [pageExtracter]
 title = "Ekstrak Halaman"
 
@@ -6815,6 +6810,79 @@ title = "Rentang Halaman"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → memilih semua halaman"
 title = "Kata Kunci Khusus"
+
+[pageTracks]
+blankPage = "Halaman kosong"
+deleteSelected = "Hapus halaman yang dipilih"
+downloadAsOneFile = "Unduh sebagai satu file"
+downloadEachPage = "Unduh setiap halaman secara terpisah"
+downloadSelectedPages = "Unduh halaman yang dipilih"
+dragging_one = "{{count}} halaman"
+dragging_other = "{{count}} halaman"
+duplicateSelected = "Duplikatkan halaman yang dipilih"
+edited = "diedit"
+emptyTrack = "Tidak ada halaman tersisa. Seret halaman ke sini, atau simpan untuk menutup file ini."
+insertBlank = "Sisipkan halaman kosong"
+insertBlankAfterSelected = "Sisipkan halaman kosong setelah halaman yang dipilih"
+moveLeft = "Pindahkan ke kiri"
+moveRight = "Pindahkan ke kanan"
+nextPage = "Halaman berikutnya"
+page = "Halaman {{number}}"
+pageCount_one = "{{count}} halaman"
+pageCount_other = "{{count}} halaman"
+pagePosition = "Halaman {{number}} dari {{total}}"
+prevPage = "Halaman sebelumnya"
+readingPages = "Membaca halaman..."
+redo = "Ulangi"
+rotateLeft = "Putar ke kiri"
+rotateRight = "Putar ke kanan"
+rotateSelectedLeft = "Putar halaman yang dipilih ke kiri"
+rotateSelectedRight = "Putar halaman yang dipilih ke kanan"
+saveAsOneFile = "Simpan sebagai satu file"
+saveChanges = "Simpan perubahan ke semua file"
+saveEachPage = "Simpan setiap halaman secara terpisah"
+saveSelectedPages = "Simpan halaman yang dipilih"
+saving = "Menyimpan..."
+savingProgress = "Menyimpan {{done}} dari {{total}}"
+selectPage = "Pilih halaman {{number}}"
+splitAfterSelected = "Pisahkan setelah halaman yang dipilih"
+splitHere = "Pisahkan di sini"
+undo = "Urungkan"
+viewError = "Tidak dapat merender halaman ini"
+viewPage = "Lihat halaman"
+zoomIn = "Perbesar"
+zoomOut = "Perkecil"
+
+[pageTracks.close]
+message = "Apakah Anda yakin ingin menutup semua file?"
+unsaved = "File ini memiliki perubahan yang belum disimpan."
+
+[pageTracks.delete]
+page = "Hapus halaman"
+
+[pageTracks.duplicate]
+page = "Duplikatkan halaman"
+
+[pageTracks.empty]
+body = "Tambahkan PDF untuk membukanya menjadi trek halaman yang dapat diedit"
+title = "Tidak ada file PDF yang dimuat"
+
+[pageTracks.exportFailed]
+body = "File yang diedit tidak dapat disiapkan. Coba lagi."
+title = "Tidak dapat mengunduh"
+
+[pageTracks.saveFailed]
+body = "Editan Anda tidak hilang. Coba simpan lagi."
+title = "Tidak dapat menyimpan perubahan"
+
+[pageTracks.track]
+close = "Tutup file"
+collapse = "Ciutkan"
+expand = "Bentangkan"
+rename = "Ganti nama file"
+
+[pageTracks.wrap]
+label = "Bungkus halaman"
 
 [payg.activity]
 docs = "dokumen"
@@ -7144,24 +7212,6 @@ totalSeats_other = "Total ({{count}} kursi)"
 [payment.upgradeTeam]
 title = "Upgrade ke Team"
 
-[pdfCommentAgent]
-submit = "Hasilkan komentar"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Jelaskan hal yang harus dikomentari AI"
-failed = "Gagal menghasilkan komentar"
-tooLong = "Prompt terlalu panjang (maksimum {{max}} karakter)"
-
-[pdfCommentAgent.prompt]
-label = "Apa yang harus dikomentari AI?"
-placeholder = "mis. Tandai tanggal yang ambigu dan sarankan klarifikasi"
-
-[pdfCommentAgent.results]
-title = "PDF dengan komentar"
-
-[pdfCommentAgent.settings]
-title = "Instruksi komentar"
-
 [pdfOrganiser]
 placeholder = "(misalnya 1,3,2 atau 4-8,2,10-12 atau 2n-1)"
 tags = "dupleks,genap,ganjil,sortir,pindah"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "Klik teks, gambar, atau bentuk apa pun di halaman untuk m
 ocrDocumentChanged = "Dokumen berubah saat OCR sedang berjalan. Jalankan OCR lagi untuk menyertakan perubahan terbaru Anda."
 ocrInvalidResult = "OCR tidak mengembalikan PDF. Silakan coba lagi."
 ocrNoLanguages = "Tidak ada bahasa OCR yang terpasang di server."
+ocrProtected = "OCR belum dapat mempertahankan perlindungan PDF ini. Dokumen asli yang terlindungi tetap tersedia untuk dilihat."
 ocrRunning = "Mengenali teks..."
 ocrUnavailable = "OCR tidak tersedia di server ini."
 oneImage = "Gambar"
@@ -7389,13 +7440,8 @@ pageNumber = "Halaman {{page}}"
 renderFailed = "Gagal merender halaman"
 
 [pdfTextEditor.password]
-cancel = "Batal"
 incorrect = "Kata sandi salah - coba lagi."
 label = "Kata sandi"
-open = "Buka"
-protected = "PDF ini dilindungi kata sandi."
-protectedNamed = "\"{{fileName}}\" dilindungi kata sandi."
-title = "Kata sandi diperlukan"
 
 [pdfTextEditor.rulers]
 guide = "Panduan perataan di {{value}} {{unit}} - seret ke penggaris untuk menghapus"
@@ -7994,6 +8040,7 @@ before = "Atur"
 title = "Koneksi Stirling belum dikonfigurasi"
 
 [portal.accountLink.notice]
+loadFailed = "Dialog penautan akun tidak dapat dimuat."
 openFailed = "Tidak dapat membuka browser Anda. Buka Penggunaan & penagihan di server terhubung Anda untuk menautkan akun."
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "Batas pengeluaran bulanan {{amount}}/bln. Pemrosesan dijeda saat mencap
 limitNoCap = "Tanpa batas pengeluaran. Pemrosesan tidak akan dijeda. Faktur diterbitkan bulanan."
 
 [portal.billing.chip]
-invoices = "Faktur"
-nav = "Bagian"
-payment = "Pembayaran"
 plan = "Paket"
 procurement = "Pengadaan"
 usage = "Penggunaan"
@@ -8178,9 +8222,22 @@ pdfs = "PDF diproses"
 users = "Pengguna"
 
 [portal.billing.enterprise]
+active = "Perjanjian aktif hingga {{date}}"
 cta = "Dapatkan penawaran enterprise"
+included = "Termasuk dalam Enterprise"
+payment_pending = "Pembayaran tertunda · akses hingga {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDF"
+pdfsOver_one = "{{count}} PDF melebihi volume yang disepakati"
+pdfsOver_other = "{{count}} PDF melebihi volume yang disepakati"
+pdfsUsed_one = "{{count}} PDF diproses"
+pdfsUsed_other = "{{count}} PDF diproses"
+period = "Periode perjanjian: {{start}} – {{end}}"
 sub = "Deployment air-gapped, SCIM, residensi data, SLA uptime, dan perjanjian yang sesuai."
 title = "Menjalankan Stirling di lingkungan teregulasi?"
+trial = "Uji coba {{days}} hari · berakhir {{date}}"
+usersAgreed = "{{used}} / {{agreed}} pengguna yang disepakati"
+usersOver_one = "{{count}} pengguna melebihi jumlah yang disepakati"
+usersOver_other = "{{count}} pengguna melebihi jumlah yang disepakati"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Tidak dapat memulai checkout"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "Build native untuk distribusi Anda."
-guideBtn = "Lihat opsi instal Linux"
+downloadAppImage = "AppImage"
+downloadDeb = "Unduh .deb (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "Build AppImage, .deb, dan .rpm tersedia untuk distro umum."
 tagline = "Aplikasi desktop native untuk distro Anda"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "Redact,Sembunyikan,hitamkan,hitam,marker,tersembunyi,redact otomatis,red
 title = "Redaksi"
 
 [redact.auto]
+caseSensitiveLabel = "Pencocokan Peka Huruf Besar/Kecil"
 colorLabel = "Warna Kotak"
 convertPDFToImageLabel = "Konversi PDF ke PDF-Image"
 customPaddingLabel = "Padding Ekstra Kustom"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "Pilih file di pengelola file untuk meredaksi beberap
 manual = "Manual"
 mode = "Mode"
 title = "Metode Penyensoran"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Hanya cocokkan teks dengan kapitalisasi yang sama. 'Secret' tidak akan cocok dengan 'SECRET' saat diaktifkan, dan [A-Z] dalam regex hanya cocok dengan huruf besar."
+title = "Pencocokan Peka Huruf Besar/Kecil"
 
 [redact.tooltip.advanced.color]
 text = "Sesuaikan tampilan kotak penyensoran. Hitam adalah standar, tetapi Anda dapat memilih warna apa pun. Padding menambahkan ruang ekstra di sekitar teks yang ditemukan."
@@ -11396,7 +11460,12 @@ text = "Tentukan halaman mana yang akan dihapus dari PDF Anda. Anda dapat memili
 title = "Pemilihan Halaman"
 
 [removePassword]
-desc = "Menghapus perlindungan kata sandi dari dokumen PDF Anda."
+appliesTo = "Ditetapkan pada {{count}} dari {{total}} PDF"
+keepBlank = "Biarkan bidang kosong untuk mempertahankan kata sandi tersebut."
+notSet = "Tidak diatur"
+openWithReaderFirst = "Buka kembali PDF ini menggunakan kata sandi pembukanya sebelum hanya menghapus kata sandi izin."
+selectiveHelp = "Masukkan kata sandi saat ini untuk setiap perlindungan yang ingin Anda hapus. Bidang kosong akan mempertahankan kata sandi tersebut. Menghapus kata sandi izin juga akan menghapus pembatasan tindakan."
+selectPasswords = "Kata sandi yang akan dihapus"
 submit = "Hapus Kata Sandi"
 tags = "aman,Dekripsi,keamanan,buka kata sandi,hapus kata sandi"
 title = "Hapus kata sandi"
@@ -11407,13 +11476,9 @@ failed = "Terjadi kesalahan saat menghapus kata sandi dari PDF."
 [removePassword.password]
 label = "Kata Sandi Saat Ini"
 placeholder = "Masukkan kata sandi saat ini"
-stepTitle = "Hapus Kata Sandi"
 
 [removePassword.results]
 title = "PDF terdekripsi"
-
-[removePassword.tooltip]
-description = "Menghapus perlindungan kata sandi memerlukan kata sandi yang digunakan untuk mengenkripsi PDF. Ini akan mendekripsi dokumen, membuatnya dapat diakses tanpa kata sandi."
 
 [reorganizePages]
 submit = "Susun Ulang Halaman"
@@ -11543,6 +11608,64 @@ m = "Meter (m)"
 mi = "Mil (mi)"
 mm = "Milimeter (mm)"
 yd = "Yard (yd)"
+
+[runLocation]
+back = "Kembali"
+continue = "Lanjutkan"
+subtitle = "Pilih tempat menjalankannya."
+title = "Di mana Anda ingin menjalankan Stirling?"
+
+[runLocation.choice.browser]
+description = "Aplikasi web."
+title = "Di browser Anda"
+
+[runLocation.choice.computer]
+description = "Aplikasi desktop."
+title = "Di komputer Anda"
+
+[runLocation.choice.server]
+description = "Self-hosted, untuk tim."
+title = "Di server Anda"
+
+[runLocation.desktop]
+computerLabel = "Komputer Anda"
+download = "Unduh untuk {{platform}}"
+downloadAgain = "Unduh lagi"
+guide = "Buka panduan instalasi {{platform}}"
+startedSubtitle = "Periksa folder Downloads Anda, lalu buka installer."
+startedTitle = "Unduhan Anda telah dimulai"
+subtitle = "Unduh dan buka."
+title = "Dapatkan aplikasi desktop"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (panduan instalasi)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "Disalin"
+copy = "Salin perintah"
+copyCompose = "Salin file compose"
+guide = "Panduan instalasi {{method}}"
+methodLabel = "Jalankan dengan"
+note = "Lalu buka <url/> untuk menyelesaikan penyiapan."
+subtitle = "Jalankan ini di server Anda, lalu buka di browser."
+title = "Siapkan server Anda"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "Hapus elemen yang berpotensi berbahaya dari file PDF."
@@ -12054,6 +12177,7 @@ title = "Ruang kerja"
 loginIncomplete = "Gagal menyelesaikan login"
 noSaasServer = "Tidak ada server SaaS yang dikonfigurasi"
 noServer = "Tidak ada server yang dikonfigurasi"
+policyUnavailable = "Tidak dapat memuat pengaturan masuk organisasi Anda."
 saasLoginFailed = "Login SaaS gagal"
 saasLoginIncomplete = "Gagal menyelesaikan login SaaS"
 selfHostedLoginFailed = "Login self-hosted gagal"
@@ -13563,7 +13687,9 @@ validUntrusted = "Valid, penandatangan tidak terverifikasi"
 
 [viewer]
 cannotPreviewFile = "Tidak dapat menampilkan pratinjau file"
+copyRestricted = "Penyalinan dinonaktifkan oleh izin PDF ini."
 copyText = "Salin"
+coverPageView = "Tampilkan Halaman Sampul Secara Terpisah"
 disableColorFilter = "Nonaktifkan Filter Warna"
 documentUpdated = "Dokumen diperbarui"
 dualPageView = "Tampilan Dua Halaman"
@@ -13580,6 +13706,7 @@ noPdfProvided = "Tidak ada PDF yang diberikan"
 onlyPdfSupported = "Format file ini tidak didukung untuk pratinjau."
 pageNavigation = "Navigasi halaman"
 previousPage = "Halaman Sebelumnya"
+readAloudFromHere = "Bacakan dari sini"
 saveChangesErrorBody = "Dokumen tidak dapat disimpan. Coba lagi."
 saveChangesErrorTitle = "Tidak dapat menyimpan perubahan"
 singlePageView = "Tampilan Satu Halaman"
@@ -13640,6 +13767,7 @@ closeSidebar = "Tutup bilah sisi komentar"
 deleteAnnotationAndComment = "Hapus anotasi & komentar"
 deleteDescription = "Anotasi ini memiliki komentar terkait. Anda dapat menghapus hanya komentarnya dari bilah samping sambil mempertahankan anotasinya, atau menghapus semuanya."
 deleteTitle = "Hapus anotasi dari komentar?"
+exportCsv = "Ekspor sebagai CSV"
 goToLink = "Buka tautan"
 hint = "Tambahkan komentar dengan alat Komentar, Sisipkan Teks, atau Ganti Teks. Komentar akan muncul di sini per halaman."
 locateAnnotation = "Temukan di dokumen"
@@ -13658,7 +13786,16 @@ typeInsertText = "Sisipkan Teks"
 typeReplaceText = "Ganti Teks"
 viewComment = "Lihat komentar"
 
+[viewer.comments.csv]
+author = "Penulis"
+comment = "Komentar"
+inReplyTo = "Sebagai balasan untuk"
+modifiedUtc = "Terakhir diubah (UTC)"
+page = "Halaman"
+thread = "Utas"
+
 [viewer.error]
+loadError = "Gagal memuat PDF"
 noFileProvided = "Kesalahan: Tidak ada file yang diberikan ke penampil"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "Teks Tanda Air"
 image = "Gambar"
 text = "Teks"
 
+[workbench]
+dropFailedSingle = "File Anda tidak dapat ditambahkan"
+dropFailedSome = "{{failed}} file Anda tidak dapat ditambahkan"
+dropOverlay = "Letakkan file untuk menambahkannya ke meja kerja"
+
 [workbench.sessionRestore]
 none = "File Anda sebelumnya tidak lagi disimpan di perangkat ini."
 partial = "Memulihkan {{restored}} dari {{total}} file. Sisanya tidak lagi disimpan di perangkat ini."
@@ -13915,16 +14057,14 @@ annotations = "Anotasi"
 applyRedactionsFirst = "Terapkan redaksi terlebih dahulu"
 closeAll = "Tutup semua file"
 closePdf = "Tutup PDF"
-deleteSelected = "Hapus Halaman yang Dipilih"
 deselectAll = "Batalkan semua pilihan"
 downloadAll = "Unduh Semua"
+exitAnnotations = "Keluar dari mode anotasi"
 exitRedaction = "Keluar dari Mode Redaksi"
-exportAll = "Ekspor PDF"
-exportSelected = "Ekspor Halaman yang Dipilih"
 formFill = "Editor Formulir"
 hideToolbar = "Sembunyikan bilah alat"
 moreActions = "Tindakan lainnya"
-multiTool = "Multi-Alat"
+pageEditor = "Editor Halaman"
 panMode = "Mode Geser"
 print = "Cetak PDF"
 readAloud = "Baca Nyaring"
@@ -13938,7 +14078,6 @@ rulerSettings = "Pengaturan Skala"
 save = "Simpan"
 saveAll = "Simpan Semua"
 saveAs = "Simpan Sebagai"
-saveChanges = "Simpan Perubahan"
 search = "Cari PDF"
 selectAll = "Pilih Semua"
 selectByNumber = "Pilih berdasarkan Nomor Halaman"

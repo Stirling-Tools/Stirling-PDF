@@ -5,6 +5,7 @@ import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { stripBasePath } from "@app/constants/app";
 import { DOCS_PATH, HAS_DOCS } from "@app/routes/docsRoute";
 import { StartupPrompts } from "@app/components/startup/StartupPrompts";
+import { usePdfEngineWarmUp } from "@app/hooks/usePdfEngineWarmUp";
 
 // Their own chunks: the settings tree (admin sections, account, licence flows)
 // and the docs manifest are both large, and most sessions open neither.
@@ -36,6 +37,7 @@ function AppContent() {
 
 /** The editor's authenticated or login-disabled routes, including catch-all entries. */
 export function AppRoot() {
+  usePdfEngineWarmUp();
   return (
     <>
       <StartupPrompts />

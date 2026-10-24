@@ -6,7 +6,7 @@ import {
   ColorPicker as MantineColorPicker,
   Group,
 } from "@mantine/core";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -20,6 +20,13 @@ interface EyeDropper {
   open(): Promise<{ sRGBHex: string }>;
 }
 declare const EyeDropper: { new (): EyeDropper };
+
+// Mantine's dark-scheme checkerboard is near-black and vanishes on dark
+// surfaces; the light one reads as "transparent" in both schemes.
+const LIGHT_CHECKERBOARD = {
+  "--alpha-overlay-color": "var(--mantine-color-gray-3)",
+  "--alpha-overlay-bg": "var(--mantine-color-white)",
+} as CSSProperties;
 
 interface ColorControlProps {
   value: string;
@@ -72,7 +79,11 @@ export function ColorControl({
             disabled={disabled}
             aria-label={label}
           >
-            <ColorSwatch color={localColor} size={18} />
+            <ColorSwatch
+              color={localColor}
+              size={18}
+              style={LIGHT_CHECKERBOARD}
+            />
           </button>
         </Tooltip>
       </Popover.Target>
@@ -93,13 +104,34 @@ export function ColorControl({
               "#ff00ff",
               "#00ffff",
               "#ffa500",
-              "transparent",
             ]}
             swatchesPerRow={5}
             size="sm"
           />
-          {supportsEyeDropper && (
-            <Group justify="flex-end">
+          {/* Outside the picker's swatches: in hex format Mantine strips the
+              alpha channel, so a "transparent" swatch there emits #000000. */}
+          <Group justify="space-between">
+            <Tooltip label={t("colorPicker.transparent", "Transparent")}>
+              <ColorSwatch
+                component="button"
+                type="button"
+                color="transparent"
+                size={22}
+                aria-label={t("colorPicker.transparent", "Transparent")}
+                aria-pressed={localColor === "transparent"}
+                withShadow={false}
+                style={{
+                  ...LIGHT_CHECKERBOARD,
+                  cursor: "pointer",
+                  border: "1px solid var(--c-border-strong)",
+                }}
+                onClick={() => {
+                  setLocalColor("transparent");
+                  onChange("transparent");
+                }}
+              />
+            </Tooltip>
+            {supportsEyeDropper && (
               <Tooltip
                 label={t("color.eyeDropper.tooltip", "Pick colour from screen")}
               >
@@ -116,8 +148,8 @@ export function ColorControl({
                   <Icon name="pipette" size={16} />
                 </ActionIcon>
               </Tooltip>
-            </Group>
-          )}
+            )}
+          </Group>
         </Stack>
       </Popover.Dropdown>
     </Popover>

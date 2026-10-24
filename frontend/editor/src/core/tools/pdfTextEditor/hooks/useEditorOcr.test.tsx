@@ -4,6 +4,11 @@ import { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { useEditorOcr } from "@app/tools/pdfTextEditor/hooks/useEditorOcr";
 import type { FileId } from "@app/types/file";
+import {
+  bindPdfAccess,
+  clearPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfAccessService";
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
@@ -45,8 +50,9 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-function makeDoc(): EditorDocument {
+function makeDoc(encrypted = false): EditorDocument {
   return {
+    module: { FPDF_GetSecurityHandlerRevision: () => (encrypted ? 6 : -1) },
     pageCount: 0,
     loadedPages: () => [],
     dispose: vi.fn(),
@@ -70,9 +76,25 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-async function setup() {
+function protectSource() {
+  const file = new File(["protected source"], "scan.pdf");
+  rememberPdfAccess(file, {
+    password: "test-password",
+    encrypted: true,
+    signed: false,
+    ownerAuthenticated: true,
+    permissions: -4,
+    pageCount: 1,
+  });
+  bindPdfAccess(file, "source-id" as FileId);
+}
+
+async function setup(
+  doc = makeDoc(),
+  fileId: FileId | null = "source-id" as FileId,
+) {
   const store = new EditorStore();
-  await store.setDocument(makeDoc());
+  await store.setDocument(doc);
   const onComplete = vi.fn(async (_file: File, isCurrent: () => boolean) => {
     expect(isCurrent()).toBe(true);
   });
@@ -80,7 +102,7 @@ async function setup() {
     useEditorOcr({
       store,
       fileName: "scan.pdf",
-      fileId: "source-id" as FileId,
+      fileId,
       onComplete,
     }),
   );
@@ -90,6 +112,7 @@ async function setup() {
 describe("editor inline OCR", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearPdfAccess();
     mocks.enabled = true;
     mocks.locale = "en-GB";
     mocks.get.mockResolvedValue({ data: { languages: ["eng", "deu", "osd"] } });
@@ -111,6 +134,69 @@ describe("editor inline OCR", () => {
   });
 
   afterEach(() => vi.restoreAllMocks());
+
+  it.each(["session", "native"])(
+    "blocks protected %s documents before exporting or checking credits",
+    async (source) => {
+      if (source === "session") protectSource();
+      const { result, store, onComplete } = await setup(
+        makeDoc(source === "native"),
+        source === "native" ? null : ("source-id" as FileId),
+      );
+      expect(result.current.available).toBe(true);
+      expect(result.current.blockedReason).toContain("protection");
+      await act(() => result.current.runOcr());
+      expect(mocks.checkCredits).not.toHaveBeenCalled();
+      expect(mocks.exportPdf).not.toHaveBeenCalled();
+      expect(mocks.get).not.toHaveBeenCalled();
+      expect(mocks.post).not.toHaveBeenCalled();
+      expect(onComplete).not.toHaveBeenCalled();
+      expect(store.getState()).toMatchObject({
+        loading: false,
+        error: result.current.blockedReason,
+      });
+    },
+  );
+
+  it("blocks upload if protection is discovered during export", async () => {
+    mocks.exportPdf.mockImplementationOnce(async () => {
+      protectSource();
+      return { blob: new Blob(["%PDF-1.7"]), filename: "scan.pdf" };
+    });
+    const { result, store, onComplete } = await setup();
+    await act(() => result.current.runOcr());
+    expect(mocks.post).not.toHaveBeenCalled();
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(store.getState().error).toContain("protection");
+  });
+
+  it("rejects OCR output if source protection changes while the request is pending", async () => {
+    const response = deferred<{ data: Blob }>();
+    mocks.post.mockReturnValueOnce(response.promise);
+    const { result, store, onComplete } = await setup();
+    let pending!: Promise<void>;
+    act(() => {
+      pending = result.current.runOcr();
+    });
+    await waitFor(() => expect(mocks.post).toHaveBeenCalledTimes(1));
+    await act(async () => {
+      protectSource();
+      response.resolve({ data: new Blob(["%PDF-1.7"]) });
+      await pending;
+    });
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(store.getState()).toMatchObject({
+      loading: false,
+      error: expect.stringContaining("protection"),
+    });
+  });
+
+  it("updates the explanation when session access changes without a document reload", async () => {
+    const { result } = await setup();
+    expect(result.current.blockedReason).toBeNull();
+    act(protectSource);
+    expect(result.current.blockedReason).toContain("protection");
+  });
 
   it("posts the current editor bytes through the app client and applies the OCR PDF", async () => {
     mocks.locale = "de-DE";

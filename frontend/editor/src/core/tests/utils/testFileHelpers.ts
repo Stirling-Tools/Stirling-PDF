@@ -2,6 +2,7 @@
  * Test utilities for creating StirlingFile objects in tests
  */
 
+import { rememberPdfAccess } from "@app/services/pdfAccessService";
 import { StirlingFile, createStirlingFile } from "@app/types/fileContext";
 
 /**
@@ -13,6 +14,7 @@ export function createTestStirlingFile(
   type: string = "application/pdf",
 ): StirlingFile {
   const file = new File([content], name, { type });
+  rememberUnprotectedPdf(file);
   return createStirlingFile(file);
 }
 
@@ -26,4 +28,17 @@ export function createTestFilesWithId(
     ({ name, content = "test content", type = "application/pdf" }) =>
       createTestStirlingFile(name, content, type),
   );
+}
+
+/** Marks synthetic, unencrypted test bytes as already inspected at admission. */
+export function rememberUnprotectedPdf(file: File): File {
+  rememberPdfAccess(file, {
+    password: "",
+    encrypted: false,
+    signed: false,
+    ownerAuthenticated: false,
+    permissions: -4,
+    pageCount: 1,
+  });
+  return file;
 }

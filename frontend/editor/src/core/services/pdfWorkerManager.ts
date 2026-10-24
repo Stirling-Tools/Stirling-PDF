@@ -3,13 +3,28 @@
  *
  * Prevents infinite worker creation by managing PDF.js workers globally
  * and ensuring proper cleanup when operations complete.
+ *
+ * pdf.js is a 450 KB chunk most sessions never need, so it loads on first use
+ * even though the editor's startup graph reaches this module (upload
+ * classification, tool previews). The type-only import keeps the runtime edge
+ * dynamic.
  */
 
-import {
-  GlobalWorkerOptions,
-  getDocument,
-  PDFDocumentProxy,
-} from "pdfjs-dist/legacy/build/pdf.mjs";
+import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
+
+type PdfJsModule = typeof import("pdfjs-dist/legacy/build/pdf.mjs");
+
+let pdfJsPromise: Promise<PdfJsModule> | null = null;
+
+function loadPdfJs(): Promise<PdfJsModule> {
+  pdfJsPromise ??= import("pdfjs-dist/legacy/build/pdf.mjs").catch((cause) => {
+    // Drop the rejected promise so a later caller retries the chunk load
+    // instead of inheriting a cache that can never resolve.
+    pdfJsPromise = null;
+    throw cause;
+  });
+  return pdfJsPromise;
+}
 
 /** A document did not open inside the caller's `openTimeoutMs`. */
 export class PdfOpenTimeout extends Error {
@@ -25,11 +40,7 @@ class PDFWorkerManager {
   private destroyingDocuments = new WeakSet<PDFDocumentProxy>();
   private workerCount = 0;
   private maxWorkers = 10; // Limit concurrent workers
-  private isInitialized = false;
-
-  private constructor() {
-    this.initializeWorker();
-  }
+  private workerReady: Promise<void> | null = null;
 
   static getInstance(): PDFWorkerManager {
     if (!PDFWorkerManager.instance) {
@@ -38,18 +49,21 @@ class PDFWorkerManager {
     return PDFWorkerManager.instance;
   }
 
-  /**
-   * Initialize PDF.js worker once globally
-   */
-  private initializeWorker(): void {
-    if (!this.isInitialized) {
-      GlobalWorkerOptions.workerSrc = new URL(
-        "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-        import.meta.url,
-      ).toString();
-      (GlobalWorkerOptions as { docBaseUrl?: string }).docBaseUrl = undefined;
-      this.isInitialized = true;
-    }
+  private ensureWorker(): Promise<void> {
+    this.workerReady ??= loadPdfJs()
+      .then(({ GlobalWorkerOptions }) => {
+        GlobalWorkerOptions.workerSrc = new URL(
+          "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+          import.meta.url,
+        ).toString();
+        (GlobalWorkerOptions as { docBaseUrl?: string }).docBaseUrl = undefined;
+      })
+      .catch((cause) => {
+        // Same as loadPdfJs: a failed setup must be retryable on the next open.
+        this.workerReady = null;
+        throw cause;
+      });
+    return this.workerReady;
   }
 
   /**
@@ -88,43 +102,62 @@ class PDFWorkerManager {
       pdfData = data; // Pass through as-is
     }
 
-    const loadingTask = getDocument(
-      typeof pdfData === "string"
-        ? {
-            url: pdfData,
-            disableAutoFetch: options.disableAutoFetch ?? true,
-            disableStream: options.disableStream ?? true,
-            stopAtErrors: options.stopAtErrors ?? false,
-            verbosity: options.verbosity ?? 0,
-            // Suppress warnings about unimplemented widget types and other non-critical issues
-            isEvalSupported: false,
-          }
-        : {
-            ...pdfData,
-            disableAutoFetch: options.disableAutoFetch ?? true,
-            disableStream: options.disableStream ?? true,
-            stopAtErrors: options.stopAtErrors ?? false,
-            verbosity: options.verbosity ?? 0,
-            // Suppress warnings about unimplemented widget types and other non-critical issues
-            isEvalSupported: false,
-          },
-    );
-
+    // The deadline covers the first-use pdf.js import as well as the open: a cold
+    // module load that stalls must not leave the caller waiting past it. When it
+    // fires during the import, no loading task is created.
     const openTimeoutMs = options.openTimeoutMs;
     let timer: ReturnType<typeof setTimeout> | null = null;
+    let timedOut = false;
+    const deadline =
+      openTimeoutMs === undefined
+        ? null
+        : new Promise<never>((_, reject) => {
+            timer = setTimeout(() => {
+              timedOut = true;
+              reject(new PdfOpenTimeout(openTimeoutMs));
+            }, openTimeoutMs);
+          });
+
+    let loadingTask: ReturnType<PdfJsModule["getDocument"]> | null = null;
     try {
+      const prepare = (async () => {
+        const [{ getDocument }] = await Promise.all([
+          loadPdfJs(),
+          this.ensureWorker(),
+        ]);
+        if (timedOut && openTimeoutMs !== undefined) {
+          throw new PdfOpenTimeout(openTimeoutMs);
+        }
+        return getDocument(
+          typeof pdfData === "string"
+            ? {
+                url: pdfData,
+                disableAutoFetch: options.disableAutoFetch ?? true,
+                disableStream: options.disableStream ?? true,
+                stopAtErrors: options.stopAtErrors ?? false,
+                verbosity: options.verbosity ?? 0,
+                // Suppress warnings about unimplemented widget types and other non-critical issues
+                isEvalSupported: false,
+              }
+            : {
+                ...pdfData,
+                disableAutoFetch: options.disableAutoFetch ?? true,
+                disableStream: options.disableStream ?? true,
+                stopAtErrors: options.stopAtErrors ?? false,
+                verbosity: options.verbosity ?? 0,
+                // Suppress warnings about unimplemented widget types and other non-critical issues
+                isEvalSupported: false,
+              },
+        );
+      })();
+      loadingTask = await (deadline
+        ? Promise.race([prepare, deadline])
+        : prepare);
+
       const opened =
-        openTimeoutMs === undefined
+        deadline === null
           ? loadingTask.promise
-          : Promise.race([
-              loadingTask.promise,
-              new Promise<never>((_, reject) => {
-                timer = setTimeout(
-                  () => reject(new PdfOpenTimeout(openTimeoutMs)),
-                  openTimeoutMs,
-                );
-              }),
-            ]);
+          : Promise.race([loadingTask.promise, deadline]);
       const pdf = await opened;
       this.activeDocuments.add(pdf);
       this.workerCount++;

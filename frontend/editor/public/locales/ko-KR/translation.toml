@@ -55,7 +55,9 @@ keepWorking = "계속 작업"
 loading = "로딩 중..."
 loginAgreementAccept = "동의"
 loginAgreementDecline = "거부"
+loginAgreementLoadFailed = "로그인 동의서를 불러올 수 없습니다."
 loginAgreementProvider = "이 안내는 Stirling PDF Inc.가 아닌 귀하의 관리자에 의해 제공되었습니다."
+loginAgreementRetry = "다시 시도"
 loginAgreementTitle = "로그인 동의"
 logOut = "로그아웃"
 marginTooltip = "페이지 번호와 페이지 가장자리 사이의 거리입니다."
@@ -299,7 +301,6 @@ title = "페이지 번호 결과"
 
 [addPassword]
 desc = "PDF 문서를 비밀번호로 암호화합니다."
-submit = "암호화"
 tags = "암호화,비밀번호,잠금,보안,보호,보안,암호화,보호,기밀,비공개,접근 제한"
 title = "비밀번호 추가"
 
@@ -311,17 +312,6 @@ label = "암호화 키 길이"
 
 [addPassword.error]
 failed = "PDF를 암호화하는 동안 오류가 발생했습니다."
-
-[addPassword.passwords]
-stepTitle = "비밀번호 및 암호화"
-
-[addPassword.passwords.owner]
-label = "소유자 비밀번호"
-placeholder = "소유자 비밀번호 입력"
-
-[addPassword.passwords.user]
-label = "사용자 비밀번호"
-placeholder = "사용자 비밀번호 입력"
 
 [addPassword.results]
 title = "암호화된 PDF"
@@ -1627,6 +1617,7 @@ title = "재시작 필요"
 [admin.settings.security]
 authentication = "인증"
 description = "인증, 로그인 동작 및 보안 정책을 구성합니다."
+pdfPermissions = "PDF 권한"
 title = "보안"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "CSRF 보호 비활성화"
 [admin.settings.security.enableLogin]
 description = "애플리케이션에 액세스하기 전에 사용자가 로그인하도록 요구"
 label = "로그인 활성화"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "제한된 작업에는 권한 비밀번호를 요구합니다. 이 설정을 꺼도 PDF를 열 때 필요한 비밀번호는 계속 요구됩니다."
+label = "PDF 권한 준수"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "고급 설정"
@@ -1938,9 +1933,6 @@ wrapUp = "관리자 투어가 끝났습니다! Stirling PDF를 조직을 위한 
 [adminUserSettings]
 admin = "관리자"
 title = "사용자 제어 설정"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "아랍어"
@@ -3173,12 +3165,14 @@ unknown = "알 수 없음"
 
 [changePermissions]
 desc = "문서 제한 및 권한을 변경합니다."
+loading = "현재 권한을 불러오는 중..."
 submit = "권한 변경"
 tags = "권한,제한,권리,접근 제어,허용,거부,인쇄,복사,편집,권한 수정,보안 설정,사용자 권한"
 title = "권한 변경"
 
 [changePermissions.error]
 failed = "PDF 권한을 변경하는 동안 오류가 발생했습니다."
+readFailed = "이 PDF의 현재 권한을 읽을 수 없습니다. 변경 사항을 적용하기 전에 제한을 수동으로 설정하세요."
 
 [changePermissions.permissions.preventAssembly]
 label = "문서 조립 방지"
@@ -3219,21 +3213,16 @@ text = "이 권한을 변경할 수 없도록 하려면, 비밀번호 추가 도
 [chat.actions]
 copy = "메시지 복사"
 
-[chat.emptyState]
-text = "문서에 대해 질문하거나 PDF 도구에 대한 도움을 받아보세요."
-
-[chat.fab]
-close = "채팅 닫기"
-open = "Stirling AI assistant 열기"
+[chat.dock]
+collapse = "채팅 접기"
+placeholder = "Stirling Agent에게 질문"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling 에이전트 옵션"
-assistant = "AI 어시스턴트"
 clearChat = "채팅 지우기"
 
 [chat.input]
 disclaimer = "AI는 실수할 수 있습니다. 공유하기 전에 출력을 반드시 확인하세요."
-placeholder = "무엇을 하시겠습니까?"
 send = "메시지 보내기"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "이 문서를 PDF로 변환"
 convertOne = "이 문서를 PDF로 변환"
 heading = "시작하기"
 mergeMany = "이 문서 {{count}}개를 1개로 병합"
-moreFiles = "+{{count}}개 더"
 openFromComputer = "컴퓨터에서 열기"
-removeFile = "{{name}} 제거"
 splitOne = "이 문서 분할"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "요청한 정보를 찾을 수 없습니다."
 processing = "처리 중({{outcome}})..."
 unsupported_capability = "지원되지 않는 기능: {{capability}}"
 usage_limit_reached = "사용 한도에 도달했습니다. 계속하려면 플랜 옵션을 확인하세요."
-
-[chat.toolsUsed]
-summary_one = "도구 1개 실행함"
-summary_other = "도구 {{count}}개 실행함"
-unknownTool = "알 수 없는 도구"
 
 [classification.families]
 correspondence = "서신"
@@ -3649,6 +3631,7 @@ tooltip = "화면에서 색상 선택"
 hue = "색조"
 saturation = "채도 및 밝기"
 title = "색상 선택"
+transparent = "투명"
 
 [common]
 actions = "작업"
@@ -3664,6 +3647,7 @@ continue = "계속"
 copied = "복사됨!"
 copy = "복사"
 copyCode = "코드 복사"
+copyFailed = "복사 실패"
 dismiss = "닫기"
 done = "완료"
 enterValue = "값 입력"
@@ -3847,6 +3831,12 @@ unavailable = "이 서버에 ImageMagick이 설치되지 않았거나 활성화�
 filesize = "파일 크기"
 quality = "품질"
 title = "압축 방식"
+
+[compress.noReduction]
+multiple = "압축이 성공적으로 실행되었지만 {{total}}개 파일 중 {{count}}개는 더 이상 압축할 수 없습니다."
+multipleAtLevel = "이 수준의 압축은 {{total}}개 파일 중 {{count}}개에 개선 효과가 없었습니다. 더 높은 압축 수준을 시도하세요."
+single = "압축이 성공적으로 실행되었지만 이 파일은 더 이상 압축할 수 없습니다."
+singleAtLevel = "이 수준의 압축은 이 파일에 개선 효과가 없었습니다. 더 높은 압축 수준을 시도하세요."
 
 [compress.settings]
 desiredSize = "원하는 파일 크기"
@@ -4295,6 +4285,13 @@ precision = "정확한 위치 지정을 위해 좌표 입력 사용"
 resize = "모서리 및 가장자리 핸들을 드래그하여 크기 조절"
 title = "PDF 자르는 방법"
 
+[damagedPdf]
+description = "이 PDF는 손상되어 열 수 없습니다."
+label = "손상됨"
+repair = "복구"
+repaired = "{{name}} 복구됨"
+repairFailed = "{{name}} 복구 실패"
+
 [database]
 backupCreated = "데이터베이스 백업 성공"
 fileName = "파일 이름"
@@ -4363,6 +4360,10 @@ title = "디스크에서 업데이트됨"
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\"이(가) 디스크에서 변경되었습니다. 다시 로드하는 데 시간이 걸릴 만큼 크기 때문에 여기의 버전은 그대로 두었습니다."
 title = "디스크에서 파일 변경됨"
+
+[desktopPrivacy]
+blocked = "관리자가 문서를 이 장치에 유지하도록 요구합니다. 이 기능은 사용할 수 없습니다."
+localFiles = "로컬 파일"
 
 [desktopUpdate]
 downloading = "업데이트 다운로드 중..."
@@ -4491,22 +4492,80 @@ description = "목차 편집 도구를 선택하여 작업 공간을 불러오�
 title = "도구를 열어 편집 시작"
 
 [encryptedPdfUnlock]
-description = "이 PDF는 비밀번호로 보호되어 있습니다. 계속 작업하려면 비밀번호를 입력하세요."
-emptyResponse = "비밀번호 제거에서 파일이 생성되지 않았습니다."
+actionIgnored = "{{action}} 제한 무시됨"
+actionUnlocked = "이 세션에서 {{action}} 잠금 해제됨"
+advanced = "고급"
+allowed = "허용됨"
+annotations = "주석"
+authoriseAction = "이 PDF는 {{action}} 사용 권한이 필요합니다."
+changeOwnerPassword = "권한 비밀번호 변경"
+checkingPermissions = "PDF 권한 확인 중..."
+chooseOwnerPassword = "다른 비밀번호 선택"
+continue = "계속"
+copyFailed = "복사본을 만들 수 없습니다. PDF는 변경되지 않았습니다."
+copying = "콘텐츠 복사 중"
+editing = "편집"
+enterPassword = "비밀번호 입력"
+ignoredByServer = "이 서버 설정에서는 권한이 무시됩니다. PDF의 보호는 변경되지 않습니다."
 incorrectPassword = "비밀번호가 올바르지 않습니다"
+inspectionFailed = "이 PDF의 권한을 확인할 수 없습니다. 다시 시도하세요."
+lowQualityPrintUnsupported = "이 PDF는 저품질 인쇄만 허용하며, 이 뷰어는 이를 지원하지 않습니다."
+lowResolutionOnly = "저해상도만"
+manageProtection = "보호 관리"
 missingFile = "선택한 파일을 더 이상 사용할 수 없습니다."
+mixedProtection = "이 PDF들은 각각 별도의 보호 설정이 있습니다. 개별적으로 처리하세요."
+newOwnerPassword = "새 권한 비밀번호"
+notRequired = "필요하지 않음"
+openingPassword = "열기 비밀번호"
+openPdf = "PDF 열기"
+ownerPassword = "권한 비밀번호"
+ownerRequired = "계속하려면 권한 비밀번호를 입력하세요."
+ownerTitle = "권한 비밀번호 입력"
+passwordRetained = "변경 없이 유지됨"
+passwordsMustDiffer = "두 비밀번호는 서로 달라야 합니다."
+permissionsUnlocked = "이 세션에서 권한 잠금 해제됨"
+prepareFailed = "이 보호된 PDF를 처리할 준비를 할 수 없습니다."
+printing = "인쇄"
+printRestricted = "인쇄가 제한되어 있습니다. 보호 관리에서 권한을 확인하세요."
+protectedPdf = "보호된 PDF"
+protectionRetained = "보호 유지됨"
+protectionSaved = "보호 저장됨"
+removePasswordHelp = "제거할 비밀번호를 선택하려면 비밀번호 제거를 여세요."
+removeProtection = "보호되지 않은 복사본 만들기"
+replaceProtection = "이 설정은 PDF의 현재 보호를 대체합니다."
 required = "계속하려면 비밀번호를 입력하세요."
-skip = "나중에 건너뛰기"
-successBody = "비밀번호가 성공적으로 제거되었습니다."
-successBodyWithName = "{{fileName}}에서 비밀번호가 제거되었습니다"
-successTitle = "비밀번호 제거됨"
+requiredStatus = "필수"
+requiredToApply = "변경 사항을 적용하려면 필요"
+restoreFailed = "PDF 보호를 유지할 수 없습니다. 보호되지 않은 결과가 저장되지 않았습니다."
+restrictActions = "작업 제한"
+restricted = "제한됨"
+restrictedActions = "제한된 작업"
+restrictedOperation = "이 작업에는 권한 비밀번호가 필요합니다."
+retainOwnerVerification = "열기 비밀번호를 제거하면서 권한 비밀번호를 변경 없이 유지하려면 권한 비밀번호를 확인하세요. 이 작업은 권한 비밀번호를 제거하지 않습니다."
+saveProtection = "보호 저장"
+securityChangeFailed = "보호를 변경할 수 없습니다. 권한 비밀번호와 새 보안 설정을 확인하세요."
+sessionDetails = "이 세션에서 열립니다. PDF는 보호된 상태로 유지됩니다."
+sessionDetailsLabel = "세션 잠금 해제 정보"
+sessionFailed = "이 PDF의 잠금을 해제할 수 없습니다. 다시 시도하세요."
+sessionSuccessBody = "보호가 유지되었습니다."
+sessionSuccessBodyWithName = "{{fileName}}의 보호가 유지되었습니다."
+sessionSuccessTitle = "PDF 열림"
+sessionTitle = "PDF 열기"
+signedReadOnly = "이 서명된 PDF는 볼 수 있지만 여기에서 편집할 수 없습니다."
 title = "계속하려면 비밀번호 제거"
+toolUnavailable = "이 도구는 암호화된 PDF를 지원하지 않습니다. 먼저 비밀번호를 제거하세요."
+toolUnavailableDetails = "{{name}}을(를) 사용할 수 없는 이유"
 unlock = "잠금 해제 및 계속"
 unlockAll = "모두에 적용 ({{count}})"
 unlockAllPartialFail = "잘못된 비밀번호: {{names}}"
 unlockAllSuccess_one = "파일 {{count}}개 잠금 해제됨."
 unlockAllSuccess_other = "파일 {{count}}개 잠금 해제됨."
+unlockedForSession = "권한 비밀번호를 사용하여 이 세션에서 잠금 해제되었습니다."
 unlockPrompt = "계속하려면 PDF 잠금을 해제하세요"
+unprotectedCopyConsequence = "복사본에는 비밀번호나 제한이 없습니다. 원본은 보호된 상태로 유지됩니다."
+unsupportedTool = "이 도구는 아직 이 PDF의 보호를 유지할 수 없습니다."
+verifiedForSession = "이 세션에서 확인됨"
+verifyPermissions = "이 세션의 권한 확인"
 viewerLocked = "이 PDF는 암호로 보호되어 있습니다"
 viewerUnlock = "잠금 해제"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "뷰어에서 보기"
 closeFile = "파일 닫기"
 
 [fileEditor]
-addFiles = "파일 추가"
 closedFile = "{{name}} 닫힘"
 couldNotSave = "{{name}}을(를) 저장할 수 없습니다"
-filesAdded_one = "파일 {{count}}개 추가됨"
-filesAdded_other = "파일 {{count}}개 추가됨"
 filesReordered_one = "파일 순서가 변경됨"
 filesReordered_other = "파일 {{count}}개의 순서가 변경됨"
 loadedFromStorage_one = "저장소에서 파일 {{count}}개를 불러왔습니다"
 loadedFromStorage_other = "저장소에서 파일 {{count}}개를 불러왔습니다"
 loadFromStorageFailed = "저장소에서 일부 파일을 불러오지 못했습니다"
 pinnedFile = "{{name}} 고정됨"
-processFilesFailed = "파일을 처리하지 못했습니다"
 savedAndClosed = "{{name}} 저장 후 닫힘"
 saveFailed = "저장 실패"
 unpinnedFile = "{{name}} 고정 해제됨"
 unzipping = "{{name}} 압축 해제 중"
+
+[fileEditor.addCard]
+dropHint = "또는 어디에나 파일을 끌어다 놓기"
+fromComputer = "컴퓨터에서 업로드"
+moreOptions = "더 많은 업로드 옵션"
 
 [fileEditor.unzip]
 error = "{{name}} 압축 해제 중 오류"
@@ -4729,7 +4789,6 @@ dataLostBody = "이 브라우저에서 이 파일의 내용을 잃었습니다. 
 dataLostTitle = "파일 데이터를 사용할 수 없습니다"
 downloadFailed = "다운로드 실패"
 dropHint = "시작하려면 파일을 여세요"
-dropToAdd = "추가하려면 파일을 놓으세요"
 duplicateFailed = "파일을 복제할 수 없습니다"
 expand = "사이드바 펼치기"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "필드 재검색"
 rescanFormFields = "양식 필드 재검색"
 save = "저장"
 saveShortcut = "저장하려면 Ctrl+S"
+saving = "저장 중..."
 selectOptionPlaceholder = "— 선택 —"
 skippedEdits_one = "1개 변경 사항을 적용할 수 없습니다:"
 skippedEdits_other = "{{count}}개 변경 사항을 적용할 수 없습니다:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "{{count}}개가 더 있으며 목록에 표시되지 �
 unsavedChanges = "저장되지 않은 변경 사항"
 
 [formFill.create]
-commit = "{{count}}개 필드를 PDF에 추가"
 empty = "아직 그린 필드가 없습니다."
-failed = "필드 추가 실패"
 goToField = "이 필드로 이동"
 hint = "필드 유형을 선택한 다음 페이지에 그리세요."
 placing = "페이지에 {{type}} 필드를 그리세요. 중지하려면 Esc를 누르세요."
@@ -5334,7 +5392,6 @@ modify = "수정"
 commit = "{{count}}개 변경 사항 저장"
 delete = "삭제"
 empty = "이 PDF에는 아직 양식 필드가 없습니다."
-failed = "변경 사항 저장 실패"
 groupSizeHint = "옵션 크기 사용"
 hint = "필드를 선택하여 속성을 편집하거나, 페이지에서 드래그하거나, 삭제하세요."
 restore = "복원"
@@ -5732,11 +5789,6 @@ title = "PDF 오버레이"
 desc = "PDF 문서의 여러 페이지를 하나의 페이지로 병합"
 tags = "레이아웃,배치,결합,N-up,2-up,4-up,페이지당 여러 개,시트당 페이지,페이지 레이아웃,타일,그리드 레이아웃,다중 페이지 레이아웃,페이지에 결합,핸드아웃"
 title = "다중 페이지 레이아웃"
-
-[home.pdfCommentAgent]
-desc = "프롬프트를 바탕으로 AI가 PDF에 스티키 노트 댓글로 주석을 달도록 요청하세요"
-tags = "AI,에이전트,댓글,주석,스티키 노트,검토,피드백,노트"
-title = "AI 댓글 추가"
 
 [home.pdfOrganiser]
 tags = "정리,재배열,순서 변경,페이지 배치,정렬,페이지 이동,페이지 삭제,페이지 제거,페이지 관리,페이지 정리 도구,순서 재지정"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "팀 멤버가 되며 소유자 권한을 잃게 됩니다."
 deselectAll = "없음"
 selectAll = "모두 선택"
 
-[pageEditor]
-dragPreviewAlt = "드래그 중"
-filePosition = "위치 {{position}}"
-pageLabel = "{{page}}페이지"
-title = "페이지 편집기"
-
-[pageEditor.actions]
-deletePage = "페이지 삭제"
-insertFileAfter = "뒤에 파일 삽입"
-moveLeft = "왼쪽으로 이동"
-moveRight = "오른쪽으로 이동"
-rotateLeft = "왼쪽으로 회전"
-rotateRight = "오른쪽으로 회전"
-splitAfter = "뒤에서 분할"
-
-[pageEditor.commands]
-addSplitAt = "위치 {{position}}에 분할 추가"
-addSplits_one = "{{count}}개 분할 추가"
-addSplits_other = "{{count}}개 분할 추가"
-deletePages_one = "{{count}}개 페이지 삭제"
-deletePages_other = "{{count}}개 페이지 삭제"
-insertFiles_one = "{{page}}페이지 뒤에 {{count}}개 파일 삽입"
-insertFiles_other = "{{page}}페이지 뒤에 {{count}}개 파일 삽입"
-insertPageBreaks_one = "{{count}}개 페이지 나누기 삽입"
-insertPageBreaks_other = "{{count}}개 페이지 나누기 삽입"
-insertPageBreaksAll = "모든 페이지 뒤에 페이지 나누기 삽입"
-removeAllSplits = "모든 분할 제거"
-removeSplitAt = "위치 {{position}}의 분할 제거"
-removeSplits_one = "{{count}}개 분할 제거"
-removeSplits_other = "{{count}}개 분할 제거"
-reorderPages = "페이지 순서 변경"
-rotatePageLeft = "페이지 왼쪽으로 회전"
-rotatePageRight = "페이지 오른쪽으로 회전"
-rotatePagesLeft_one = "{{count}}개 페이지 왼쪽으로 회전"
-rotatePagesLeft_other = "{{count}}개 페이지 왼쪽으로 회전"
-rotatePagesRight_one = "{{count}}개 페이지 오른쪽으로 회전"
-rotatePagesRight_other = "{{count}}개 페이지 오른쪽으로 회전"
-splitAllPages = "모든 페이지 분할"
-toggleSplits_one = "{{count}}개 분할 위치 전환"
-toggleSplits_other = "{{count}}개 분할 위치 전환"
-
-[pageEditor.emptyState]
-body = "파일을 추가하여 페이지 편집을 시작하세요"
-title = "로드된 PDF 파일 없음"
-
-[pageEditor.fileDropdown]
-addFile = "파일 추가"
-selectedCount = "{{selected}}/{{total}}개 파일 선택됨"
-untitled = "제목 없음"
-
-[pageEditor.toolbar]
-delete = "선택 항목 삭제"
-redo = "다시 실행"
-rotateLeft = "선택 항목 왼쪽으로 회전"
-rotateRight = "선택 항목 오른쪽으로 회전"
-undo = "실행 취소"
-
 [pageExtracter]
 title = "페이지 추출"
 
@@ -6815,6 +6810,79 @@ title = "페이지 범위"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → 모든 페이지 선택"
 title = "특수 키워드"
+
+[pageTracks]
+blankPage = "빈 페이지"
+deleteSelected = "선택한 페이지 삭제"
+downloadAsOneFile = "하나의 파일로 다운로드"
+downloadEachPage = "각 페이지를 개별적으로 다운로드"
+downloadSelectedPages = "선택한 페이지 다운로드"
+dragging_one = "{{count}}페이지"
+dragging_other = "{{count}}페이지"
+duplicateSelected = "선택한 페이지 복제"
+edited = "편집됨"
+emptyTrack = "남은 페이지가 없습니다. 여기에 페이지를 끌어오거나, 저장하여 이 파일을 닫으세요."
+insertBlank = "빈 페이지 삽입"
+insertBlankAfterSelected = "선택한 페이지 뒤에 빈 페이지 삽입"
+moveLeft = "왼쪽으로 이동"
+moveRight = "오른쪽으로 이동"
+nextPage = "다음 페이지"
+page = "페이지 {{number}}"
+pageCount_one = "{{count}}페이지"
+pageCount_other = "{{count}}페이지"
+pagePosition = "{{total}}페이지 중 {{number}}페이지"
+prevPage = "이전 페이지"
+readingPages = "페이지 읽는 중..."
+redo = "다시 실행"
+rotateLeft = "왼쪽으로 회전"
+rotateRight = "오른쪽으로 회전"
+rotateSelectedLeft = "선택한 페이지를 왼쪽으로 회전"
+rotateSelectedRight = "선택한 페이지를 오른쪽으로 회전"
+saveAsOneFile = "하나의 파일로 저장"
+saveChanges = "모든 파일의 변경 사항 저장"
+saveEachPage = "각 페이지를 개별적으로 저장"
+saveSelectedPages = "선택한 페이지 저장"
+saving = "저장 중..."
+savingProgress = "{{total}}개 중 {{done}}개 저장 중"
+selectPage = "{{number}}페이지 선택"
+splitAfterSelected = "선택한 페이지 뒤에서 분할"
+splitHere = "여기서 분할"
+undo = "실행 취소"
+viewError = "이 페이지를 렌더링할 수 없습니다"
+viewPage = "페이지 보기"
+zoomIn = "확대"
+zoomOut = "축소"
+
+[pageTracks.close]
+message = "모든 파일을 닫으시겠습니까?"
+unsaved = "이 파일들에는 저장되지 않은 변경 사항이 있습니다."
+
+[pageTracks.delete]
+page = "페이지 삭제"
+
+[pageTracks.duplicate]
+page = "페이지 복제"
+
+[pageTracks.empty]
+body = "PDF를 추가하여 편집 가능한 페이지 트랙으로 펼치세요"
+title = "로드된 PDF 파일 없음"
+
+[pageTracks.exportFailed]
+body = "편집된 파일을 준비할 수 없습니다. 다시 시도하세요."
+title = "다운로드할 수 없음"
+
+[pageTracks.saveFailed]
+body = "편집 내용은 손실되지 않았습니다. 다시 저장해 보세요."
+title = "변경 사항을 저장할 수 없음"
+
+[pageTracks.track]
+close = "파일 닫기"
+collapse = "접기"
+expand = "펼치기"
+rename = "파일 이름 변경"
+
+[pageTracks.wrap]
+label = "페이지 줄바꿈"
 
 [payg.activity]
 docs = "문서"
@@ -7144,24 +7212,6 @@ totalSeats_other = "총계 ({{count}}개 시트)"
 [payment.upgradeTeam]
 title = "Team으로 업그레이드"
 
-[pdfCommentAgent]
-submit = "댓글 생성"
-
-[pdfCommentAgent.error]
-emptyPrompt = "AI가 댓글을 달 내용을 입력하세요"
-failed = "댓글 생성에 실패했습니다"
-tooLong = "프롬프트가 너무 깁니다(최대 {{max}}자)"
-
-[pdfCommentAgent.prompt]
-label = "AI가 무엇에 대해 댓글을 달아야 하나요?"
-placeholder = "예: 모호한 날짜를 표시하고 명확한 표현을 제안해 주세요"
-
-[pdfCommentAgent.results]
-title = "댓글이 추가된 PDF"
-
-[pdfCommentAgent.settings]
-title = "댓글 지침"
-
 [pdfOrganiser]
 placeholder = "(예: 1,3,2 또는 4-8,2,10-12 또는 2n-1)"
 tags = "양면,짝수,홀수,정렬,이동"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "페이지에서 텍스트, 이미지 또는 도형을 클
 ocrDocumentChanged = "OCR 실행 중 문서가 변경되었습니다. 최신 변경 사항을 포함하려면 OCR을 다시 실행하세요."
 ocrInvalidResult = "OCR이 PDF를 반환하지 않았습니다. 다시 시도하세요."
 ocrNoLanguages = "서버에 OCR 언어가 설치되어 있지 않습니다."
+ocrProtected = "OCR은 아직 이 PDF의 보호를 유지할 수 없습니다. 보호된 원본은 계속 볼 수 있습니다."
 ocrRunning = "텍스트 인식 중..."
 ocrUnavailable = "이 서버에서는 OCR을 사용할 수 없습니다."
 oneImage = "이미지"
@@ -7389,13 +7440,8 @@ pageNumber = "{{page}}페이지"
 renderFailed = "페이지를 렌더링하지 못했습니다"
 
 [pdfTextEditor.password]
-cancel = "취소"
 incorrect = "비밀번호가 올바르지 않습니다. 다시 시도하세요."
 label = "비밀번호"
-open = "열기"
-protected = "이 PDF는 비밀번호로 보호되어 있습니다."
-protectedNamed = "\"{{fileName}}\"은(는) 비밀번호로 보호되어 있습니다."
-title = "비밀번호 필요"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}}의 정렬 가이드 - 제거하려면 눈금자로 드래그"
@@ -7994,6 +8040,7 @@ before = "설정"
 title = "Stirling 연결이 구성되지 않음"
 
 [portal.accountLink.notice]
+loadFailed = "계정 연결 대화 상자를 불러올 수 없습니다."
 openFailed = "브라우저를 열 수 없습니다. 계정을 연결하려면 연결된 서버에서 사용량 및 결제를 여세요."
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "월간 지출 한도 {{amount}}/월. 한도에 도달하면 처리가 �
 limitNoCap = "지출 한도 없음. 처리가 일시 중지되지 않습니다. 청구서는 매월 발행됩니다."
 
 [portal.billing.chip]
-invoices = "청구서"
-nav = "섹션"
-payment = "결제"
 plan = "요금제"
 procurement = "구매"
 usage = "사용량"
@@ -8178,9 +8222,22 @@ pdfs = "처리된 PDF"
 users = "사용자"
 
 [portal.billing.enterprise]
+active = "{{date}}까지 계약 활성"
 cta = "Enterprise 견적 받기"
+included = "Enterprise에 포함됨"
+payment_pending = "결제 대기 중 · {{date}}까지 접근 가능"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "약정 수량 초과 {{count}} PDF"
+pdfsOver_other = "약정 수량 초과 {{count}} PDFs"
+pdfsUsed_one = "처리된 PDF {{count}}개"
+pdfsUsed_other = "{{count}}개의 PDF 처리됨"
+period = "계약 기간: {{start}} – {{end}}"
 sub = "Air-gapped 배포, SCIM, 데이터 레지던시, 가동 시간 SLA 및 이에 맞는 계약입니다."
 title = "규제 환경에서 Stirling을 실행 중이신가요?"
+trial = "{{days}}일 체험판 · {{date}} 종료"
+usersAgreed = "{{used}} / {{agreed}}명의 약정 사용자"
+usersOver_one = "약정 수량 초과 사용자 {{count}}명"
+usersOver_other = "약정 수량 초과 사용자 {{count}}명"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Checkout을 시작할 수 없음"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "사용 중인 배포판용 네이티브 빌드입니다."
-guideBtn = "Linux 설치 옵션 보기"
+downloadAppImage = "AppImage"
+downloadDeb = ".deb 다운로드 (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "일반적인 배포판용 AppImage, .deb 및 .rpm 빌드를 사용할 수 있습니다."
 tagline = "사용 중인 배포판용 네이티브 데스크톱 앱"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "가리기,숨기기,검게 칠하기,검정,마커,숨김,자동 가리�
 title = "가리기"
 
 [redact.auto]
+caseSensitiveLabel = "대소문자 구분 일치"
 colorLabel = "박스 색상"
 convertPDFToImageLabel = "PDF를 PDF-Image로 변환"
 customPaddingLabel = "사용자 지정 추가 여백"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "한 번에 여러 파일을 가리려면 파일 관�
 manual = "수동"
 mode = "모드"
 title = "가리기 방법"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "같은 대소문자의 텍스트만 일치시킵니다. 활성화하면 'Secret'은 'SECRET'과 일치하지 않으며, 정규식의 [A-Z]는 대문자에만 일치합니다."
+title = "대소문자 구분 일치"
 
 [redact.tooltip.advanced.color]
 text = "가리기 박스의 모양을 사용자 지정합니다. 기본은 검정색이지만 원하는 색을 선택할 수 있습니다. 여백은 찾은 텍스트 주변에 추가 공간을 제공합니다."
@@ -11396,7 +11460,12 @@ text = "PDF에서 제거할 페이지를 지정하세요. 개별 페이지, 범�
 title = "페이지 선택"
 
 [removePassword]
-desc = "PDF 문서에서 비밀번호 보호를 제거합니다."
+appliesTo = "{{total}}개 PDF 중 {{count}}개에 설정됨"
+keepBlank = "해당 암호를 유지하려면 필드를 비워 두세요."
+notSet = "설정되지 않음"
+openWithReaderFirst = "권한 암호만 제거하기 전에 열기 암호로 이 PDF를 다시 여세요."
+selectiveHelp = "제거하려는 각 보호에 대해 현재 암호를 입력하세요. 빈 필드는 해당 암호를 유지합니다. 권한 암호를 제거하면 작업 제한도 함께 제거됩니다."
+selectPasswords = "제거할 암호"
 submit = "비밀번호 제거"
 tags = "보안,암호 해제,보안,비밀번호 해제,비밀번호 삭제"
 title = "비밀번호 제거"
@@ -11407,13 +11476,9 @@ failed = "PDF에서 비밀번호를 제거하는 동안 오류가 발생했습�
 [removePassword.password]
 label = "현재 비밀번호"
 placeholder = "현재 비밀번호 입력"
-stepTitle = "비밀번호 제거"
 
 [removePassword.results]
 title = "복호화된 PDF"
-
-[removePassword.tooltip]
-description = "비밀번호 보호를 제거하려면 PDF를 암호화할 때 사용한 비밀번호가 필요합니다. 이렇게 하면 문서가 복호화되어 비밀번호 없이 접근할 수 있습니다."
 
 [reorganizePages]
 submit = "페이지 재정렬"
@@ -11543,6 +11608,64 @@ m = "미터(m)"
 mi = "마일(mi)"
 mm = "밀리미터(mm)"
 yd = "야드(yd)"
+
+[runLocation]
+back = "뒤로"
+continue = "계속"
+subtitle = "실행 위치를 선택하세요."
+title = "Stirling을 어디에서 실행하시겠습니까?"
+
+[runLocation.choice.browser]
+description = "웹 앱입니다."
+title = "브라우저에서"
+
+[runLocation.choice.computer]
+description = "데스크톱 앱입니다."
+title = "컴퓨터에서"
+
+[runLocation.choice.server]
+description = "팀을 위한 셀프 호스팅입니다."
+title = "서버에서"
+
+[runLocation.desktop]
+computerLabel = "내 컴퓨터"
+download = "{{platform}}용 다운로드"
+downloadAgain = "다시 다운로드"
+guide = "{{platform}} 설치 가이드 열기"
+startedSubtitle = "Downloads 폴더를 확인한 다음 설치 프로그램을 여세요."
+startedTitle = "다운로드가 시작되었습니다"
+subtitle = "다운로드한 후 여세요."
+title = "데스크톱 앱 받기"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (설치 가이드)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "복사됨"
+copy = "명령 복사"
+copyCompose = "compose 파일 복사"
+guide = "{{method}} 설치 가이드"
+methodLabel = "다음으로 실행"
+note = "그런 다음 <url/>을 열어 설정을 완료하세요."
+subtitle = "서버에서 실행한 다음 브라우저에서 여세요."
+title = "서버 설정"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "PDF 파일에서 잠재적으로 유해한 요소를 제거합니다."
@@ -12054,6 +12177,7 @@ title = "워크스페이스"
 loginIncomplete = "로그인을 완료하지 못했습니다"
 noSaasServer = "구성된 SaaS 서버가 없습니다"
 noServer = "구성된 서버가 없습니다"
+policyUnavailable = "조직의 로그인 설정을 불러올 수 없습니다."
 saasLoginFailed = "SaaS 로그인 실패"
 saasLoginIncomplete = "SaaS 로그인을 완료하지 못했습니다"
 selfHostedLoginFailed = "셀프 호스팅 로그인 실패"
@@ -13563,7 +13687,9 @@ validUntrusted = "유효함, 서명자 확인되지 않음"
 
 [viewer]
 cannotPreviewFile = "파일을 미리보기할 수 없습니다"
+copyRestricted = "이 PDF의 권한으로 인해 복사가 비활성화되어 있습니다."
 copyText = "복사"
+coverPageView = "표지 페이지 별도로 표시"
 disableColorFilter = "색상 필터 비활성화"
 documentUpdated = "문서가 업데이트됨"
 dualPageView = "두 페이지 보기"
@@ -13580,6 +13706,7 @@ noPdfProvided = "제공된 PDF가 없습니다"
 onlyPdfSupported = "이 파일 형식은 미리보기를 지원하지 않습니다."
 pageNavigation = "페이지 탐색"
 previousPage = "이전 페이지"
+readAloudFromHere = "여기서부터 소리 내어 읽기"
 saveChangesErrorBody = "문서를 저장할 수 없습니다. 다시 시도하세요."
 saveChangesErrorTitle = "변경 내용을 저장할 수 없습니다"
 singlePageView = "단일 페이지 보기"
@@ -13640,6 +13767,7 @@ closeSidebar = "댓글 사이드바 닫기"
 deleteAnnotationAndComment = "주석 및 댓글 삭제"
 deleteDescription = "이 주석에는 댓글이 연결되어 있습니다. 주석은 유지하고 사이드바에서 댓글만 제거하거나, 모두 삭제할 수 있습니다."
 deleteTitle = "댓글에서 주석을 제거하시겠습니까?"
+exportCsv = "CSV로 내보내기"
 goToLink = "링크로 이동"
 hint = "댓글, 텍스트 삽입, 텍스트 바꾸기 도구로 댓글을 추가하세요. 페이지별로 여기 표시됩니다."
 locateAnnotation = "문서에서 찾기"
@@ -13658,7 +13786,16 @@ typeInsertText = "텍스트 삽입"
 typeReplaceText = "텍스트 바꾸기"
 viewComment = "댓글 보기"
 
+[viewer.comments.csv]
+author = "작성자"
+comment = "댓글"
+inReplyTo = "답글 대상"
+modifiedUtc = "마지막 수정일 (UTC)"
+page = "페이지"
+thread = "스레드"
+
 [viewer.error]
+loadError = "PDF를 불러오지 못했습니다"
 noFileProvided = "오류: 뷰어에 제공된 파일이 없습니다"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "워터마크 텍스트"
 image = "이미지"
 text = "텍스트"
 
+[workbench]
+dropFailedSingle = "파일을 추가할 수 없습니다"
+dropFailedSome = "파일 중 {{failed}}개를 추가할 수 없습니다"
+dropOverlay = "워크벤치에 추가할 파일을 놓으세요"
+
 [workbench.sessionRestore]
 none = "이전 파일이 더 이상 이 장치에 저장되어 있지 않습니다."
 partial = "{{total}}개 파일 중 {{restored}}개를 복원했습니다. 나머지는 더 이상 이 장치에 저장되어 있지 않습니다."
@@ -13915,16 +14057,14 @@ annotations = "주석"
 applyRedactionsFirst = "먼저 가리기 적용"
 closeAll = "모든 파일 닫기"
 closePdf = "PDF 닫기"
-deleteSelected = "선택한 페이지 삭제"
 deselectAll = "모두 선택 해제"
 downloadAll = "모두 다운로드"
+exitAnnotations = "주석 모드 종료"
 exitRedaction = "가리기 모드 종료"
-exportAll = "PDF 내보내기"
-exportSelected = "선택한 페이지 내보내기"
 formFill = "양식 편집기"
 hideToolbar = "도구 모음 숨기기"
 moreActions = "추가 작업"
-multiTool = "멀티 도구"
+pageEditor = "페이지 편집기"
 panMode = "이동 모드"
 print = "PDF 인쇄"
 readAloud = "읽어주기"
@@ -13938,7 +14078,6 @@ rulerSettings = "축척 설정"
 save = "저장"
 saveAll = "모두 저장"
 saveAs = "다른 이름으로 저장"
-saveChanges = "변경 사항 저장"
 search = "PDF 검색"
 selectAll = "모두 선택"
 selectByNumber = "페이지 번호로 선택"

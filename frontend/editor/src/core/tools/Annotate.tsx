@@ -4,7 +4,9 @@ import { useTranslation } from "react-i18next";
 
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useNavigation } from "@app/contexts/NavigationContext";
-import { useAllFiles } from "@app/contexts/FileContext";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { getPdfAccess } from "@app/services/pdfAccessService";
 import { BaseToolProps } from "@app/types/tool";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
@@ -77,7 +79,11 @@ const Annotate = (_props: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectedTool, workbench, hasUnsavedChanges, setHasUnsavedChanges } =
     useNavigation();
-  const { files: allFiles } = useAllFiles();
+  const scopedFiles = useViewScopedFiles();
+  usePdfAccess(undefined);
+  const editableFiles = scopedFiles.filter(
+    (file) => !getPdfAccess(file)?.encrypted,
+  );
   const {
     signatureApiRef,
     annotationApiRef,
@@ -347,6 +353,7 @@ const Annotate = (_props: BaseToolProps) => {
   }, [activeFileIndex, activeTool, setPlacementMode, setSignatureConfig]);
 
   const activateAnnotationTool = (toolId: AnnotationToolId) => {
+    if (editableFiles.length === 0) return;
     // If leaving stamp tool, clean up placement mode
     if (activeTool === "stamp" && toolId !== "stamp") {
       setPlacementMode(false);
@@ -808,7 +815,7 @@ const Annotate = (_props: BaseToolProps) => {
   ]);
 
   const steps =
-    allFiles.length === 0
+    editableFiles.length === 0
       ? []
       : [
           {
@@ -852,7 +859,7 @@ const Annotate = (_props: BaseToolProps) => {
         ];
   return createToolFlow({
     files: {
-      selectedFiles: allFiles,
+      selectedFiles: editableFiles,
       isCollapsed: false,
     },
     steps,

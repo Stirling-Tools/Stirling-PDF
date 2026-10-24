@@ -59,6 +59,8 @@ interface SignatureActions {
 
 // Combined context interface
 interface SignatureContextValue extends SignatureState, SignatureActions {
+  /** The mounted Sign tool's Apply action; rejects when navigation must wait. */
+  applySignaturesRef: React.RefObject<(() => Promise<void>) | null>;
   signatureApiRef: React.RefObject<SignatureAPI | null>;
   annotationApiRef: React.RefObject<AnnotationAPI | null>;
   historyApiRef: React.RefObject<HistoryAPI | null>;
@@ -85,6 +87,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [state, setState] = useState<SignatureState>(initialState);
+  const applySignaturesRef = useRef<(() => Promise<void>) | null>(null);
   const signatureApiRef = useRef<SignatureAPI>(null);
   const annotationApiRef = useRef<AnnotationAPI>(null);
   const historyApiRef = useRef<HistoryAPI>(null);
@@ -115,8 +118,8 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
   const deactivateDrawMode = useCallback(() => {
     if (signatureApiRef.current) {
       signatureApiRef.current.deactivateTools();
-      setPlacementMode(false);
     }
+    setPlacementMode(false);
   }, [setPlacementMode]);
 
   const activateSignaturePlacementMode = useCallback(() => {
@@ -210,6 +213,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
 
   const contextValue: SignatureContextValue = {
     ...state,
+    applySignaturesRef,
     signatureApiRef,
     annotationApiRef,
     historyApiRef,

@@ -23,6 +23,7 @@ export const supportedLanguages: Record<string, string> = {
   "fa-IR": "فارسی",
   "fr-FR": "Français",
   "ga-IE": "Gaeilge",
+  "gl-ES": "Galego",
   "hi-IN": "हिंदी",
   "hr-HR": "Hrvatski",
   "hu-HU": "Magyar",

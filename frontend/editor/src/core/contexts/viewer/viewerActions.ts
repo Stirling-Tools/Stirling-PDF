@@ -32,7 +32,8 @@ export interface PanActions {
 }
 
 export interface SelectionActions {
-  copyToClipboard: () => void;
+  /** Resolves false when the document forbids copying or the clipboard write fails. */
+  copyToClipboard: () => Promise<boolean>;
   getFormattedSelection: () => FormattedSelection[] | null;
   selectAll: (totalPages: number) => Promise<boolean>;
   selectWordAt: (pageIndex: number, x: number, y: number) => boolean;
@@ -41,6 +42,10 @@ export interface SelectionActions {
 export interface SpreadActions {
   setSpreadMode: (mode: SpreadMode) => void;
   getSpreadMode: () => SpreadMode | null;
+  /**
+   * Dual page to single page, or back to the last dual pairing the user chose
+   * (cover page alone or not); pages 1-2 side by side until one is chosen.
+   */
   toggleSpreadMode: () => void;
 }
 
@@ -252,12 +257,9 @@ export function createViewerActions({
   };
 
   const selectionActions: SelectionActions = {
-    copyToClipboard: () => {
-      const api = registry.current.selection?.api;
-      if (api?.copyToClipboard) {
-        api.copyToClipboard();
-      }
-    },
+    copyToClipboard: () =>
+      registry.current.selection?.api?.copyToClipboard() ??
+      Promise.resolve(false),
     getFormattedSelection: () => {
       const api = registry.current.selection?.api;
       if (api?.getFormattedSelection) {

@@ -55,7 +55,9 @@ keepWorking = "واصل العمل"
 loading = "جارٍ التحميل..."
 loginAgreementAccept = "قبول"
 loginAgreementDecline = "رفض"
+loginAgreementLoadFailed = "تعذّر تحميل اتفاقية تسجيل الدخول."
 loginAgreementProvider = "يتم توفير هذا الإشعار من قِبل المسؤول لديك، وليس من قِبل Stirling PDF Inc."
+loginAgreementRetry = "إعادة المحاولة"
 loginAgreementTitle = "اتفاقية تسجيل الدخول"
 logOut = "تسجيل الخروج"
 marginTooltip = "المسافة بين رقم الصفحة وحافة الصفحة."
@@ -299,7 +301,6 @@ title = "نتائج ترقيم الصفحات"
 
 [addPassword]
 desc = "قم بتشفير مستند PDF بكلمة مرور."
-submit = "تشفير"
 tags = "تشفير,كلمة مرور,قفل,آمن,حماية,أمان,تشفير,حماية إضافية,سري,خاص,تقييد الوصول"
 title = "إضافة كلمة مرور"
 
@@ -311,17 +312,6 @@ label = "طول مفتاح التشفير"
 
 [addPassword.error]
 failed = "حدث خطأ أثناء تشفير PDF."
-
-[addPassword.passwords]
-stepTitle = "كلمات المرور والتشفير"
-
-[addPassword.passwords.owner]
-label = "كلمة مرور المالك"
-placeholder = "أدخل كلمة مرور المالك"
-
-[addPassword.passwords.user]
-label = "كلمة مرور المستخدم"
-placeholder = "أدخل كلمة مرور المستخدم"
 
 [addPassword.results]
 title = "ملفات PDF المشفرة"
@@ -1627,6 +1617,7 @@ title = "مطلوب إعادة تشغيل"
 [admin.settings.security]
 authentication = "المصادقة"
 description = "تهيئة المصادقة، وسلوك تسجيل الدخول، وسياسات الأمان."
+pdfPermissions = "أذونات PDF"
 title = "الأمان"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "تعطيل حماية CSRF"
 [admin.settings.security.enableLogin]
 description = "إلزام المستخدمين بتسجيل الدخول قبل الوصول إلى التطبيق"
 label = "تمكين تسجيل الدخول"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "اطلب كلمة مرور الأذونات للإجراءات المقيّدة. إيقاف هذا الخيار لا يزال يتطلب كلمات المرور اللازمة لفتح ملفات PDF."
+label = "الالتزام بأذونات PDF"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "إعدادات متقدمة"
@@ -1938,9 +1933,6 @@ wrapUp = "هذه هي جولة المسؤول! لقد شاهدت ميزات ente
 [adminUserSettings]
 admin = "مسؤول"
 title = "إعدادات التحكم في المستخدم"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "العربية"
@@ -3173,12 +3165,14 @@ unknown = "غير معروف"
 
 [changePermissions]
 desc = "غيّر قيود المستند وأذوناته."
+loading = "جارٍ تحميل الأذونات الحالية..."
 submit = "تغيير الأذونات"
 tags = "أذونات,قيود,حقوق,التحكم في الوصول,سماح,رفض,طباعة,نسخ,تحرير,تعديل الأذونات,إعدادات الأمان,حقوق المستخدم"
 title = "تغيير الأذونات"
 
 [changePermissions.error]
 failed = "حدث خطأ أثناء تغيير أذونات PDF."
+readFailed = "تعذّرت قراءة الأذونات الحالية لهذا PDF. عيّن القيود يدويًا قبل تطبيق التغييرات."
 
 [changePermissions.permissions.preventAssembly]
 label = "منع تجميع المستند"
@@ -3219,21 +3213,16 @@ text = "لجعل هذه الأذونات غير قابلة للتغيير، اس
 [chat.actions]
 copy = "نسخ الرسالة"
 
-[chat.emptyState]
-text = "اطرح سؤالًا حول مستنداتك أو احصل على مساعدة في أدوات PDF."
-
-[chat.fab]
-close = "إغلاق الدردشة"
-open = "فتح مساعد Stirling AI"
+[chat.dock]
+collapse = "طي الدردشة"
+placeholder = "اسأل Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "خيارات وكيل Stirling"
-assistant = "مساعد AI"
 clearChat = "مسح الدردشة"
 
 [chat.input]
 disclaimer = "قد يرتكب AI أخطاء. تأكد من التحقق من الناتج قبل مشاركته."
-placeholder = "ما الذي تريد فعله؟"
 send = "إرسال الرسالة"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "حوّل هذه المستندات إلى PDF"
 convertOne = "حوّل هذا المستند إلى PDF"
 heading = "ابدأ"
 mergeMany = "ادمج هذه {{count}} المستندات في واحد"
-moreFiles = "+{{count}} المزيد"
 openFromComputer = "افتح من الكمبيوتر"
-removeFile = "إزالة {{name}}"
 splitOne = "قسّم هذا المستند"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "تعذّر العثور على المعلومات المطلوبة.
 processing = "جارٍ المعالجة ({{outcome}})..."
 unsupported_capability = "إمكانية غير مدعومة: {{capability}}"
 usage_limit_reached = "لقد وصلت إلى حد الاستخدام. تحقق من خيارات خطتك للمتابعة."
-
-[chat.toolsUsed]
-summary_one = "تم تشغيل أداة واحدة"
-summary_other = "تم تشغيل عدد {{count}} من الأدوات"
-unknownTool = "أداة غير معروفة"
 
 [classification.families]
 correspondence = "المراسلات"
@@ -3649,6 +3631,7 @@ tooltip = "التقاط لون من الشاشة"
 hue = "تدرج اللون"
 saturation = "التشبع والسطوع"
 title = "اختر اللون"
+transparent = "شفاف"
 
 [common]
 actions = "الإجراءات"
@@ -3664,6 +3647,7 @@ continue = "متابعة"
 copied = "تم النسخ!"
 copy = "نسخ"
 copyCode = "نسخ الرمز"
+copyFailed = "فشل النسخ"
 dismiss = "تجاهل"
 done = "تم"
 enterValue = "أدخل قيمة"
@@ -3847,6 +3831,12 @@ unavailable = "لم يتم تثبيت ImageMagick على هذا الخادم أ�
 filesize = "حجم الملف"
 quality = "الجودة"
 title = "طريقة الضغط"
+
+[compress.noReduction]
+multiple = "تم الضغط بنجاح، ولكن لا يمكن ضغط {{count}} من أصل {{total}} من الملفات أكثر من ذلك."
+multipleAtLevel = "لم يحقق الضغط عند هذا المستوى أي تحسين لـ {{count}} من أصل {{total}} من الملفات. جرّب مستوى ضغط أعلى."
+single = "تم الضغط بنجاح، ولكن لا يمكن ضغط هذا الملف أكثر من ذلك."
+singleAtLevel = "لم يحقق الضغط عند هذا المستوى أي تحسين لهذا الملف. جرّب مستوى ضغط أعلى."
 
 [compress.settings]
 desiredSize = "حجم الملف المطلوب"
@@ -4295,6 +4285,13 @@ precision = "استخدم مدخلات الإحداثيات للتموضع ال�
 resize = "اسحب مقابض الزوايا والحواف لتغيير الحجم"
 title = "كيفية قص ملفات PDF"
 
+[damagedPdf]
+description = "ملف PDF هذا تالف ولا يمكن فتحه."
+label = "تالف"
+repair = "إصلاح"
+repaired = "تم إصلاح {{name}}"
+repairFailed = "تعذّر إصلاح {{name}}"
+
 [database]
 backupCreated = "تم إنشاء نسخة احتياطية لقاعدة البيانات بنجاح"
 fileName = "اسم الملف"
@@ -4363,6 +4360,10 @@ title = "تم التحديث من القرص"
 [desktopFileLink.tooLarge]
 body = "تغير \"{{name}}\" على القرص. حجمه كبير بما يكفي بحيث ستستغرق إعادة تحميله بعض الوقت، لذلك تُركت النسخة هنا كما هي."
 title = "تغير الملف على القرص"
+
+[desktopPrivacy]
+blocked = "يتطلب المسؤول أن تبقى المستندات على هذا الجهاز. هذه الميزة غير متاحة."
+localFiles = "الملفات المحلية"
 
 [desktopUpdate]
 downloading = "جارٍ تنزيل التحديث..."
@@ -4491,22 +4492,80 @@ description = "اختر أداة تحرير جدول المحتويات لتحم
 title = "افتح الأداة لبدء التحرير"
 
 [encryptedPdfUnlock]
-description = "هذا الملف محمي بكلمة مرور. أدخل كلمة المرور للمتابعة في العمل عليه."
-emptyResponse = "لم تنتج إزالة كلمة المرور ملفاً."
+actionIgnored = "تم تجاهل قيد {{action}}"
+actionUnlocked = "تم إلغاء قفل {{action}} لهذه الجلسة"
+advanced = "متقدم"
+allowed = "مسموح"
+annotations = "التعليقات التوضيحية"
+authoriseAction = "يتطلب هذا PDF إذنًا لاستخدام {{action}}."
+changeOwnerPassword = "تغيير كلمة مرور الأذونات"
+checkingPermissions = "جارٍ التحقق من أذونات PDF..."
+chooseOwnerPassword = "اختر كلمة مرور مختلفة"
+continue = "متابعة"
+copyFailed = "تعذّر إنشاء النسخة. لم يتغير ملف PDF الخاص بك."
+copying = "جارٍ نسخ المحتوى"
+editing = "التحرير"
+enterPassword = "أدخل كلمة المرور"
+ignoredByServer = "يتم تجاهل الأذونات بواسطة إعدادات هذا الخادم. لم تتغير حماية PDF."
 incorrectPassword = "كلمة مرور غير صحيحة"
+inspectionFailed = "تعذّر التحقق من أذونات هذا PDF. حاول مرة أخرى."
+lowQualityPrintUnsupported = "يسمح هذا PDF بالطباعة منخفضة الجودة فقط، وهو ما لا يدعمه هذا العارض."
+lowResolutionOnly = "دقة منخفضة فقط"
+manageProtection = "إدارة الحماية"
 missingFile = "الملف المحدد لم يعد متاحاً."
+mixedProtection = "تحتوي ملفات PDF هذه على إعدادات حماية منفصلة. عالجها بشكل فردي."
+newOwnerPassword = "كلمة مرور أذونات جديدة"
+notRequired = "غير مطلوب"
+openingPassword = "كلمة مرور الفتح"
+openPdf = "فتح PDF"
+ownerPassword = "كلمة مرور الأذونات"
+ownerRequired = "أدخل كلمة مرور الأذونات للمتابعة."
+ownerTitle = "أدخل كلمة مرور الأذونات"
+passwordRetained = "تم الإبقاء عليها دون تغيير"
+passwordsMustDiffer = "يجب أن تكون كلمتا المرور مختلفتين."
+permissionsUnlocked = "تم إلغاء قفل الأذونات لهذه الجلسة"
+prepareFailed = "تعذّر تجهيز هذا PDF المحمي للمعالجة."
+printing = "الطباعة"
+printRestricted = "الطباعة مقيّدة. تحقق من الأذونات في إدارة الحماية."
+protectedPdf = "PDF محمي"
+protectionRetained = "تم الإبقاء على الحماية"
+protectionSaved = "تم حفظ الحماية"
+removePasswordHelp = "افتح إزالة كلمة المرور لاختيار كلمات المرور التي تريد إزالتها."
+removeProtection = "إنشاء نسخة غير محمية"
+replaceProtection = "تستبدل هذه الإعدادات حماية PDF الحالية."
 required = "أدخل كلمة المرور للمتابعة."
-skip = "تخطَّ الآن"
-successBody = "تمت إزالة كلمة المرور بنجاح."
-successBodyWithName = "تمت إزالة كلمة المرور من {{fileName}}"
-successTitle = "تمت إزالة كلمة المرور"
+requiredStatus = "مطلوب"
+requiredToApply = "مطلوب لتطبيق التغييرات"
+restoreFailed = "تعذّر الحفاظ على حماية PDF. لم يتم حفظ أي نتيجة غير محمية."
+restrictActions = "تقييد الإجراءات"
+restricted = "مقيّد"
+restrictedActions = "الإجراءات المقيّدة"
+restrictedOperation = "يتطلب هذا الإجراء كلمة مرور الأذونات."
+retainOwnerVerification = "تحقق من كلمة مرور الأذونات للإبقاء عليها دون تغيير أثناء إزالة كلمة مرور الفتح. لن يؤدي ذلك إلى إزالتها."
+saveProtection = "حفظ الحماية"
+securityChangeFailed = "تعذّر تغيير الحماية. تحقق من كلمة مرور الأذونات وإعدادات الأمان الجديدة."
+sessionDetails = "مفتوح لهذه الجلسة. يبقى PDF محميًا."
+sessionDetailsLabel = "حول إلغاء القفل للجلسة"
+sessionFailed = "تعذّر إلغاء قفل هذا PDF. يُرجى المحاولة مرة أخرى."
+sessionSuccessBody = "تم الإبقاء على الحماية."
+sessionSuccessBodyWithName = "تم الإبقاء على الحماية لـ {{fileName}}."
+sessionSuccessTitle = "تم فتح PDF"
+sessionTitle = "فتح PDF"
+signedReadOnly = "يمكن عرض هذا PDF الموقّع، ولكن لا يمكن تحريره هنا."
 title = "أزل كلمة المرور للمتابعة"
+toolUnavailable = "لا تدعم هذه الأداة ملفات PDF المشفرة. أزل كلمة المرور أولًا."
+toolUnavailableDetails = "سبب عدم توفر {{name}}"
 unlock = "فتح القفل والمتابعة"
 unlockAll = "استخدم للكل ({{count}})"
 unlockAllPartialFail = "كلمة المرور غير صحيحة لـ: {{names}}"
 unlockAllSuccess_one = "تم إلغاء قفل ملف واحد."
 unlockAllSuccess_other = "تم إلغاء قفل {{count}} ملفات."
+unlockedForSession = "تم إلغاء القفل لهذه الجلسة باستخدام كلمة مرور الأذونات الخاصة بك."
 unlockPrompt = "افتح قفل PDF للمتابعة"
+unprotectedCopyConsequence = "لن تحتوي النسخة على كلمات مرور أو قيود. يبقى الأصل محميًا."
+unsupportedTool = "لا يمكن لهذه الأداة بعد الحفاظ على حماية هذا PDF."
+verifiedForSession = "تم التحقق لهذه الجلسة"
+verifyPermissions = "التحقق من الأذونات لهذه الجلسة"
 viewerLocked = "هذا ملف PDF محمي بكلمة مرور"
 viewerUnlock = "إلغاء القفل"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "عرض في العارض"
 closeFile = "إغلاق الملف"
 
 [fileEditor]
-addFiles = "إضافة ملفات"
 closedFile = "تم إغلاق {{name}}"
 couldNotSave = "تعذر حفظ {{name}}"
-filesAdded_one = "تمت إضافة {{count}} ملف"
-filesAdded_other = "تمت إضافة {{count}} ملفات"
 filesReordered_one = "تمت إعادة ترتيب الملف"
 filesReordered_other = "تمت إعادة ترتيب {{count}} ملفات"
 loadedFromStorage_one = "تم تحميل {{count}} ملف من التخزين"
 loadedFromStorage_other = "تم تحميل {{count}} ملفات من التخزين"
 loadFromStorageFailed = "فشل تحميل بعض الملفات من التخزين"
 pinnedFile = "تم تثبيت {{name}}"
-processFilesFailed = "فشل معالجة الملفات"
 savedAndClosed = "تم حفظ وإغلاق {{name}}"
 saveFailed = "فشل الحفظ"
 unpinnedFile = "تم إلغاء تثبيت {{name}}"
 unzipping = "جارٍ فك ضغط {{name}}"
+
+[fileEditor.addCard]
+dropHint = "أو أسقط الملفات في أي مكان"
+fromComputer = "رفع من الكمبيوتر"
+moreOptions = "المزيد من خيارات الرفع"
 
 [fileEditor.unzip]
 error = "خطأ أثناء فك ضغط {{name}}"
@@ -4729,7 +4789,6 @@ dataLostBody = "فقد هذا المتصفح محتويات هذا الملف. �
 dataLostTitle = "بيانات الملف غير متاحة"
 downloadFailed = "فشل التنزيل"
 dropHint = "افتح ملفات للبدء"
-dropToAdd = "أسقط الملفات للإضافة"
 duplicateFailed = "تعذّر تكرار الملف"
 expand = "توسيع الشريط الجانبي"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "إعادة فحص الحقول"
 rescanFormFields = "إعادة فحص حقول النموذج"
 save = "حفظ"
 saveShortcut = "Ctrl+S للحفظ"
+saving = "جارٍ الحفظ..."
 selectOptionPlaceholder = "— اختر —"
 skippedEdits_one = "تعذّر تطبيق تغيير واحد:"
 skippedEdits_other = "تعذّر تطبيق {{count}} تغييرات:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "{{count}} إضافية غير مدرجة."
 unsavedChanges = "تغييرات غير محفوظة"
 
 [formFill.create]
-commit = "إضافة {{count}} من الحقول إلى PDF"
 empty = "لم يتم رسم أي حقول بعد."
-failed = "فشل في إضافة الحقول"
 goToField = "الانتقال إلى هذا الحقل"
 hint = "اختر نوع الحقل، ثم ارسمه على الصفحة."
 placing = "ارسم حقل {{type}} على الصفحة. اضغط على Esc للتوقف."
@@ -5334,7 +5392,6 @@ modify = "تعديل"
 commit = "حفظ {{count}} من التغييرات"
 delete = "حذف"
 empty = "لا يحتوي ملف PDF هذا على أي حقول نموذج بعد."
-failed = "فشل في حفظ التغييرات"
 groupSizeHint = "استخدم حجم الخيار"
 hint = "حدد حقلًا لتعديل خصائصه، أو اسحبه على الصفحة، أو احذفه."
 restore = "استعادة"
@@ -5732,11 +5789,6 @@ title = "تراكب ملفات PDF"
 desc = "دمج صفحات متعددة من مستند PDF في صفحة واحدة"
 tags = "تخطيط,ترتيب,دمج,N-up,2-up,4-up,متعدد لكل صفحة,صفحات لكل ورقة,تخطيط الصفحات,تبليط,تخطيط شبكي,تخطيط متعدد الصفحات,دمج على الصفحة,نشرة"
 title = "تخطيط متعدد الصفحات"
-
-[home.pdfCommentAgent]
-desc = "اطلب من AI إضافة تعليقات على ملف PDF كملاحظات لاصقة بناءً على مطالبتك"
-tags = "AI,وكيل,تعليق,إضافة شروح,ملاحظة لاصقة,مراجعة,تعقيبات,ملاحظات"
-title = "أضف تعليقات بواسطة AI"
 
 [home.pdfOrganiser]
 tags = "تنظيم,إعادة ترتيب,إعادة ترتيب,ترتيب الصفحات,فرز,نقل الصفحات,حذف الصفحات,إزالة الصفحات,إدارة الصفحات,منظم الصفحات,إعادة التسلسل"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "ستصبح عضوًا في الفريق وستفقد وصول
 deselectAll = "لا شيء"
 selectAll = "تحديد الكل"
 
-[pageEditor]
-dragPreviewAlt = "جارٍ السحب"
-filePosition = "الموضع {{position}}"
-pageLabel = "الصفحة {{page}}"
-title = "محرر الصفحات"
-
-[pageEditor.actions]
-deletePage = "حذف الصفحة"
-insertFileAfter = "إدراج ملف بعد"
-moveLeft = "نقل لليسار"
-moveRight = "نقل لليمين"
-rotateLeft = "تدوير لليسار"
-rotateRight = "تدوير لليمين"
-splitAfter = "تقسيم بعد"
-
-[pageEditor.commands]
-addSplitAt = "إضافة تقسيم عند الموضع {{position}}"
-addSplits_one = "إضافة {{count}} تقسيم"
-addSplits_other = "إضافة {{count}} تقسيمات"
-deletePages_one = "حذف {{count}} صفحة"
-deletePages_other = "حذف {{count}} صفحات"
-insertFiles_one = "إدراج {{count}} ملف بعد الصفحة {{page}}"
-insertFiles_other = "إدراج {{count}} ملفات بعد الصفحة {{page}}"
-insertPageBreaks_one = "إدراج {{count}} فاصل صفحة"
-insertPageBreaks_other = "إدراج {{count}} فواصل صفحات"
-insertPageBreaksAll = "إدراج فواصل صفحات بعد كل الصفحات"
-removeAllSplits = "إزالة كل التقسيمات"
-removeSplitAt = "إزالة التقسيم عند الموضع {{position}}"
-removeSplits_one = "إزالة {{count}} تقسيم"
-removeSplits_other = "إزالة {{count}} تقسيمات"
-reorderPages = "إعادة ترتيب الصفحات"
-rotatePageLeft = "تدوير الصفحة لليسار"
-rotatePageRight = "تدوير الصفحة لليمين"
-rotatePagesLeft_one = "تدوير {{count}} صفحة لليسار"
-rotatePagesLeft_other = "تدوير {{count}} صفحات لليسار"
-rotatePagesRight_one = "تدوير {{count}} صفحة لليمين"
-rotatePagesRight_other = "تدوير {{count}} صفحات لليمين"
-splitAllPages = "تقسيم كل الصفحات"
-toggleSplits_one = "تبديل موضع {{count}} تقسيم"
-toggleSplits_other = "تبديل مواضع {{count}} تقسيمات"
-
-[pageEditor.emptyState]
-body = "أضف ملفات للبدء في تحرير الصفحات"
-title = "لم يتم تحميل ملفات PDF"
-
-[pageEditor.fileDropdown]
-addFile = "إضافة ملف"
-selectedCount = "تم تحديد {{selected}}/{{total}} من الملفات"
-untitled = "بدون عنوان"
-
-[pageEditor.toolbar]
-delete = "حذف المحدد"
-redo = "إعادة"
-rotateLeft = "تدوير المحدد لليسار"
-rotateRight = "تدوير المحدد لليمين"
-undo = "تراجع"
-
 [pageExtracter]
 title = "استخراج الصفحات"
 
@@ -6815,6 +6810,79 @@ title = "نطاقات الصفحات"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → يحدد كل الصفحات"
 title = "كلمات مفتاحية خاصة"
+
+[pageTracks]
+blankPage = "صفحة فارغة"
+deleteSelected = "حذف الصفحات المحددة"
+downloadAsOneFile = "تنزيل كملف واحد"
+downloadEachPage = "تنزيل كل صفحة بشكل منفرد"
+downloadSelectedPages = "تنزيل الصفحات المحددة"
+dragging_one = "{{count}} صفحة"
+dragging_other = "{{count}} صفحات"
+duplicateSelected = "تكرار الصفحات المحددة"
+edited = "تم تحريرها"
+emptyTrack = "لا توجد صفحات متبقية. اسحب الصفحات هنا، أو احفظ لإغلاق هذا الملف."
+insertBlank = "إدراج صفحة فارغة"
+insertBlankAfterSelected = "إدراج صفحات فارغة بعد الصفحات المحددة"
+moveLeft = "نقل إلى اليسار"
+moveRight = "نقل إلى اليمين"
+nextPage = "الصفحة التالية"
+page = "الصفحة {{number}}"
+pageCount_one = "{{count}} صفحة"
+pageCount_other = "{{count}} صفحات"
+pagePosition = "الصفحة {{number}} من {{total}}"
+prevPage = "الصفحة السابقة"
+readingPages = "جارٍ قراءة الصفحات..."
+redo = "إعادة"
+rotateLeft = "تدوير لليسار"
+rotateRight = "تدوير لليمين"
+rotateSelectedLeft = "تدوير الصفحات المحددة لليسار"
+rotateSelectedRight = "تدوير الصفحات المحددة لليمين"
+saveAsOneFile = "حفظ كملف واحد"
+saveChanges = "حفظ التغييرات في جميع الملفات"
+saveEachPage = "حفظ كل صفحة بشكل منفرد"
+saveSelectedPages = "حفظ الصفحات المحددة"
+saving = "جارٍ الحفظ..."
+savingProgress = "جارٍ حفظ {{done}} من {{total}}"
+selectPage = "تحديد الصفحة {{number}}"
+splitAfterSelected = "تقسيم بعد الصفحات المحددة"
+splitHere = "تقسيم هنا"
+undo = "تراجع"
+viewError = "تعذّر عرض هذه الصفحة"
+viewPage = "عرض الصفحة"
+zoomIn = "تكبير"
+zoomOut = "تصغير"
+
+[pageTracks.close]
+message = "هل أنت متأكد من أنك تريد إغلاق جميع الملفات؟"
+unsaved = "تحتوي هذه الملفات على تغييرات غير محفوظة."
+
+[pageTracks.delete]
+page = "حذف الصفحة"
+
+[pageTracks.duplicate]
+page = "تكرار الصفحة"
+
+[pageTracks.empty]
+body = "أضف ملفات PDF لتوسيعها إلى مسارات صفحات قابلة للتحرير"
+title = "لم يتم تحميل أي ملفات PDF"
+
+[pageTracks.exportFailed]
+body = "تعذّر تجهيز الملفات المحررة. حاول مرة أخرى."
+title = "تعذّر التنزيل"
+
+[pageTracks.saveFailed]
+body = "لم تُفقد تعديلاتك. حاول الحفظ مرة أخرى."
+title = "تعذّر حفظ التغييرات"
+
+[pageTracks.track]
+close = "إغلاق الملف"
+collapse = "طي"
+expand = "توسيع"
+rename = "إعادة تسمية الملف"
+
+[pageTracks.wrap]
+label = "التفاف الصفحات"
 
 [payg.activity]
 docs = "مستندات"
@@ -7144,24 +7212,6 @@ totalSeats_other = "الإجمالي ({{count}} مقاعد)"
 [payment.upgradeTeam]
 title = "الترقية إلى Team"
 
-[pdfCommentAgent]
-submit = "توليد التعليقات"
-
-[pdfCommentAgent.error]
-emptyPrompt = "يرجى وصف ما يجب أن يعلّق عليه AI"
-failed = "فشل توليد التعليقات"
-tooLong = "المطالبة طويلة جدًا (الحد الأقصى {{max}} حرفًا)"
-
-[pdfCommentAgent.prompt]
-label = "على ماذا ينبغي أن يعلّق AI؟"
-placeholder = "مثال: ضع إشارة على أي تواريخ مبهمة واقترح توضيحات"
-
-[pdfCommentAgent.results]
-title = "ملف PDF مع تعليقات"
-
-[pdfCommentAgent.settings]
-title = "تعليمات التعليق"
-
 [pdfOrganiser]
 placeholder = "(مثال: 1,3,2 أو 4-8,2,10-12 أو 2n-1)"
 tags = "مزدوج,زوجي,فردي,ترتيب,نقل"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "انقر أي نص أو صورة أو شكل على ال�
 ocrDocumentChanged = "تغيّر المستند أثناء تشغيل OCR. شغّل OCR مرة أخرى لتضمين أحدث تغييراتك."
 ocrInvalidResult = "لم يُرجع OCR ملف PDF. يُرجى المحاولة مرة أخرى."
 ocrNoLanguages = "لا توجد لغات OCR مثبتة على الخادم."
+ocrProtected = "لا يمكن لـ OCR بعد الحفاظ على حماية هذا PDF. يبقى الأصل المحمي متاحًا للعرض."
 ocrRunning = "جارٍ التعرف على النص..."
 ocrUnavailable = "OCR غير متاح على هذا الخادم."
 oneImage = "صورة"
@@ -7389,13 +7440,8 @@ pageNumber = "الصفحة {{page}}"
 renderFailed = "فشل عرض الصفحة"
 
 [pdfTextEditor.password]
-cancel = "إلغاء"
 incorrect = "كلمة المرور غير صحيحة - حاول مرة أخرى."
 label = "كلمة المرور"
-open = "فتح"
-protected = "هذا PDF محمي بكلمة مرور."
-protectedNamed = "\"{{fileName}}\" محمي بكلمة مرور."
-title = "كلمة المرور مطلوبة"
 
 [pdfTextEditor.rulers]
 guide = "دليل محاذاة عند {{value}} {{unit}} - اسحب إلى مسطرة للإزالة"
@@ -7994,6 +8040,7 @@ before = "عيّن"
 title = "لم يتم إعداد اتصال Stirling"
 
 [portal.accountLink.notice]
+loadFailed = "تعذّر تحميل مربع حوار ربط الحساب."
 openFailed = "تعذر فتح متصفحك. افتح الاستخدام والفوترة على خادمك المتصل لربط حساب."
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "حد الإنفاق الشهري {{amount}}/شهر. تتوقف المع
 limitNoCap = "لا يوجد حد للإنفاق. لن تتوقف المعالجة مؤقتًا. تُصدر الفواتير شهريًا."
 
 [portal.billing.chip]
-invoices = "الفواتير"
-nav = "الأقسام"
-payment = "الدفع"
 plan = "الخطة"
 procurement = "المشتريات"
 usage = "الاستخدام"
@@ -8178,9 +8222,22 @@ pdfs = "ملفات PDF المعالجة"
 users = "المستخدمون"
 
 [portal.billing.enterprise]
+active = "الاتفاقية نشطة حتى {{date}}"
 cta = "الحصول على عرض سعر للمؤسسات"
+included = "مضمّن في Enterprise"
+payment_pending = "الدفع معلّق · الوصول حتى {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} ملفات PDF"
+pdfsOver_one = "{{count}} ملف PDF فوق الحجم المتفق عليه"
+pdfsOver_other = "{{count}} ملفات PDF فوق الحجم المتفق عليه"
+pdfsUsed_one = "تمت معالجة {{count}} ملف PDF"
+pdfsUsed_other = "تمت معالجة {{count}} ملف PDF"
+period = "فترة الاتفاقية: {{start}} – {{end}}"
 sub = "نشر معزول عن الشبكة، SCIM، إقامة البيانات، اتفاقيات SLA لوقت التشغيل، واتفاقية مناسبة."
 title = "هل تشغّل Stirling في بيئة منظمة؟"
+trial = "تجربة لمدة {{days}} يوم · تنتهي في {{date}}"
+usersAgreed = "{{used}} / {{agreed}} من المستخدمين المتفق عليهم"
+usersOver_one = "{{count}} مستخدم فوق الكمية المتفق عليها"
+usersOver_other = "{{count}} مستخدمين فوق الكمية المتفق عليها"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "تعذر بدء الدفع"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "إصدارات أصلية لتوزيعتك."
-guideBtn = "عرض خيارات تثبيت Linux"
+downloadAppImage = "AppImage"
+downloadDeb = "تنزيل .deb (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "تتوفر إصدارات AppImage و.deb و.rpm للتوزيعات الشائعة."
 tagline = "تطبيق سطح مكتب أصلي لتوزيعتك"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "تنقيح,إخفاء,تعتيم,أسود,قلم تحديد,مخفي,ت�
 title = "تنقيح"
 
 [redact.auto]
+caseSensitiveLabel = "مطابقة حساسة لحالة الأحرف"
 colorLabel = "لون الصندوق"
 convertPDFToImageLabel = "تحويل PDF إلى PDF-Image"
 customPaddingLabel = "حشو إضافي مخصّص"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "حدد ملفات في مدير الملفات لت�
 manual = "يدوي"
 mode = "الوضع"
 title = "طريقة التنقيح"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "طابق النص بنفس حالة الأحرف فقط. لن تتم مطابقة 'Secret' مع 'SECRET' عند التمكين، و[A-Z] في regex يطابق الأحرف الكبيرة فقط."
+title = "مطابقة حساسة لحالة الأحرف"
 
 [redact.tooltip.advanced.color]
 text = "خصّص مظهر صناديق التنقيح. الأسود قياسي، ويمكنك اختيار أي لون. يضيف الحشو مساحة إضافية حول النص المعثور عليه."
@@ -11396,7 +11460,12 @@ text = "حدّد الصفحات التي تريد إزالتها من PDF. يم�
 title = "اختيار الصفحات"
 
 [removePassword]
-desc = "إزالة الحماية بكلمة مرور من مستند PDF الخاص بك."
+appliesTo = "تم تعيينه على {{count}} من {{total}} ملفات PDF"
+keepBlank = "اترك الحقل فارغًا للاحتفاظ بكلمة المرور هذه."
+notSet = "غير معيّن"
+openWithReaderFirst = "أعد فتح ملف PDF هذا باستخدام كلمة مرور الفتح الخاصة به قبل إزالة كلمة مرور الأذونات فقط."
+selectiveHelp = "أدخل كلمة المرور الحالية لكل حماية تريد إزالتها. الحقل الفارغ يحتفظ بكلمة المرور هذه. إزالة كلمة مرور الأذونات تزيل أيضًا قيود الإجراءات."
+selectPasswords = "كلمات المرور المراد إزالتها"
 submit = "إزالة كلمة المرور"
 tags = "تأمين,فك التشفير,أمان,إزالة كلمة المرور,حذف كلمة المرور"
 title = "إزالة كلمة المرور"
@@ -11407,13 +11476,9 @@ failed = "حدث خطأ أثناء إزالة كلمة المرور من PDF."
 [removePassword.password]
 label = "كلمة المرور الحالية"
 placeholder = "أدخل كلمة المرور الحالية"
-stepTitle = "إزالة كلمة المرور"
 
 [removePassword.results]
 title = "ملفات PDF مُفككة التشفير"
-
-[removePassword.tooltip]
-description = "إزالة حماية كلمة المرور تتطلب الكلمة المستخدمة لتشفير PDF. سيؤدي ذلك إلى فك تشفير المستند، مما يجعله متاحًا بدون كلمة مرور."
 
 [reorganizePages]
 submit = "إعادة تنظيم الصفحات"
@@ -11543,6 +11608,64 @@ m = "أمتار (m)"
 mi = "أميال (mi)"
 mm = "مليمترات (mm)"
 yd = "ياردات (yd)"
+
+[runLocation]
+back = "رجوع"
+continue = "متابعة"
+subtitle = "اختر مكان تشغيله."
+title = "أين تريد تشغيل Stirling؟"
+
+[runLocation.choice.browser]
+description = "تطبيق الويب."
+title = "في متصفحك"
+
+[runLocation.choice.computer]
+description = "تطبيق سطح المكتب."
+title = "على جهاز الكمبيوتر الخاص بك"
+
+[runLocation.choice.server]
+description = "مستضاف ذاتيًا، لفريق."
+title = "على خادمك"
+
+[runLocation.desktop]
+computerLabel = "جهاز الكمبيوتر الخاص بك"
+download = "تنزيل لـ {{platform}}"
+downloadAgain = "تنزيل مرة أخرى"
+guide = "افتح دليل تثبيت {{platform}}"
+startedSubtitle = "تحقق من مجلد التنزيلات، ثم افتح المثبّت."
+startedTitle = "بدأ التنزيل"
+subtitle = "قم بتنزيله وافتحه."
+title = "احصل على تطبيق سطح المكتب"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (دليل التثبيت)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "تم النسخ"
+copy = "نسخ الأمر"
+copyCompose = "نسخ ملف Compose"
+guide = "دليل تثبيت {{method}}"
+methodLabel = "شغّله باستخدام"
+note = "ثم افتح <url/> لإكمال الإعداد."
+subtitle = "شغّل هذا على خادمك، ثم افتحه في متصفح."
+title = "إعداد خادمك"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "إزالة العناصر المحتملة الضرر من ملفات PDF."
@@ -12054,6 +12177,7 @@ title = "مساحة العمل"
 loginIncomplete = "فشل إكمال تسجيل الدخول"
 noSaasServer = "لم يتم تكوين خادم SaaS"
 noServer = "لم يتم تكوين خادم"
+policyUnavailable = "تعذر تحميل إعدادات تسجيل الدخول الخاصة بمؤسستك."
 saasLoginFailed = "فشل تسجيل الدخول إلى SaaS"
 saasLoginIncomplete = "فشل إكمال تسجيل الدخول إلى SaaS"
 selfHostedLoginFailed = "فشل تسجيل الدخول المستضاف ذاتيًا"
@@ -13563,7 +13687,9 @@ validUntrusted = "صالح، لم يتم التحقق من الموقّع"
 
 [viewer]
 cannotPreviewFile = "لا يمكن معاينة الملف"
+copyRestricted = "تم تعطيل النسخ بواسطة أذونات ملف PDF هذا."
 copyText = "نسخ"
+coverPageView = "عرض صفحة الغلاف بشكل منفصل"
 disableColorFilter = "تعطيل مرشح الألوان"
 documentUpdated = "تم تحديث المستند"
 dualPageView = "عرض صفحتين"
@@ -13580,6 +13706,7 @@ noPdfProvided = "لم يتم توفير PDF"
 onlyPdfSupported = "تنسيق الملف هذا غير مدعوم للمعاينة."
 pageNavigation = "التنقل بين الصفحات"
 previousPage = "الصفحة السابقة"
+readAloudFromHere = "القراءة بصوت عالٍ من هنا"
 saveChangesErrorBody = "تعذّر حفظ المستند. حاول مرة أخرى."
 saveChangesErrorTitle = "تعذّر حفظ التغييرات"
 singlePageView = "عرض صفحة واحدة"
@@ -13640,6 +13767,7 @@ closeSidebar = "إغلاق الشريط الجانبي للتعليقات"
 deleteAnnotationAndComment = "حذف التعليق التوضيحي والتعليق"
 deleteDescription = "يحتوي هذا التعليق التوضيحي على تعليق مرفق. يمكنك إزالة التعليق فقط من الشريط الجانبي مع إبقاء التعليق التوضيحي، أو حذف كل شيء."
 deleteTitle = "إزالة التعليق التوضيحي من التعليقات؟"
+exportCsv = "تصدير كـ CSV"
 goToLink = "الانتقال إلى الرابط"
 hint = "ضع التعليقات باستخدام أدوات تعليق، إدراج نص، أو استبدال نص. ستظهر هنا بحسب الصفحة."
 locateAnnotation = "تحديد الموقع في المستند"
@@ -13658,7 +13786,16 @@ typeInsertText = "إدراج نص"
 typeReplaceText = "استبدال نص"
 viewComment = "عرض التعليق"
 
+[viewer.comments.csv]
+author = "المؤلف"
+comment = "تعليق"
+inReplyTo = "ردًا على"
+modifiedUtc = "آخر تعديل (UTC)"
+page = "الصفحة"
+thread = "سلسلة المحادثة"
+
 [viewer.error]
+loadError = "فشل تحميل PDF"
 noFileProvided = "خطأ: لم يتم توفير ملف للعارض"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "نص العلامة المائية"
 image = "صورة"
 text = "نص"
 
+[workbench]
+dropFailedSingle = "تعذرت إضافة ملفك"
+dropFailedSome = "تعذرت إضافة {{failed}} من ملفاتك"
+dropOverlay = "أفلت الملفات لإضافتها إلى مساحة العمل"
+
 [workbench.sessionRestore]
 none = "لم تعد ملفاتك السابقة مخزنة على هذا الجهاز."
 partial = "تمت استعادة {{restored}} من أصل {{total}} ملفات. لم يعد الباقي مخزنًا على هذا الجهاز."
@@ -13915,16 +14057,14 @@ annotations = "الشروح"
 applyRedactionsFirst = "طبّق التنقيحات أولاً"
 closeAll = "إغلاق كل الملفات"
 closePdf = "إغلاق PDF"
-deleteSelected = "حذف الصفحات المحددة"
 deselectAll = "إلغاء تحديد الكل"
 downloadAll = "تنزيل الكل"
+exitAnnotations = "الخروج من وضع التعليقات التوضيحية"
 exitRedaction = "إنهاء وضع التنقيح"
-exportAll = "تصدير PDF"
-exportSelected = "تصدير الصفحات المحددة"
 formFill = "محرر النماذج"
 hideToolbar = "إخفاء شريط الأدوات"
 moreActions = "مزيد من الإجراءات"
-multiTool = "الأداة المتعددة"
+pageEditor = "محرر الصفحات"
 panMode = "وضع التحريك"
 print = "طباعة PDF"
 readAloud = "قراءة بصوت عالٍ"
@@ -13938,7 +14078,6 @@ rulerSettings = "إعدادات المقياس"
 save = "حفظ"
 saveAll = "حفظ الكل"
 saveAs = "حفظ باسم"
-saveChanges = "حفظ التغييرات"
 search = "بحث في PDF"
 selectAll = "تحديد الكل"
 selectByNumber = "تحديد حسب أرقام الصفحات"

@@ -22,7 +22,7 @@ const HelpSection: React.FC<HelpSectionProps> = ({
   };
 
   return (
-    <Stack gap="lg">
+    <Stack gap="lg" data-tour="settings-tours">
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <Group justify="space-between" align="center">

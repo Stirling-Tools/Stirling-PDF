@@ -1,9 +1,16 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
 import type { FileId } from "@app/types/file";
+import { createStirlingFile } from "@app/types/fileContext";
+import {
+  clearPdfAccess,
+  getPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfAccessService";
 
 describe("FileLifecycleManager", () => {
+  afterEach(clearPdfAccess);
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -51,5 +58,32 @@ describe("FileLifecycleManager", () => {
     manager.updateStirlingFileStub(fileId, { isDirty: true });
 
     expect(filesRef.current.get(fileId)).toBe(original);
+  });
+
+  it("keeps session access across a rename without retaining access after cleanup", async () => {
+    const fileId = "protected-rename" as FileId;
+    const original = createStirlingFile(
+      new File(["encrypted bytes"], "old.pdf"),
+      fileId,
+    );
+    const access = {
+      password: "rename-test",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: true,
+      permissions: -4,
+      pageCount: 1,
+    };
+    rememberPdfAccess(original, access);
+    const filesRef = { current: new Map<FileId, File>([[fileId, original]]) };
+    const manager = new FileLifecycleManager(filesRef, vi.fn());
+    manager.updateStirlingFileStub(fileId, { name: "renamed.pdf" });
+    const renamed = filesRef.current.get(fileId);
+    expect(await renamed?.text()).toBe("encrypted bytes");
+    expect(getPdfAccess(renamed)).toEqual(access);
+    expect(getPdfAccess(fileId)).toEqual(access);
+    manager.cleanupAllFiles();
+    expect(getPdfAccess(renamed)).toBeUndefined();
+    expect(getPdfAccess(fileId)).toBeUndefined();
   });
 });

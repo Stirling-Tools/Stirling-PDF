@@ -1,97 +1,159 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { FileId } from "@app/types/file";
+import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
+import { createStirlingFile, type FileId } from "@app/types/fileContext";
+import {
+  clearPdfAccess,
+  forgetPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfAccessService";
 
-const mocks = vi.hoisted(() => ({
+const storage = vi.hoisted(() => ({
   loadFile: vi.fn(),
   updateThumbnail: vi.fn(),
-  updateStirlingFileStub: vi.fn(),
+}));
+const management = vi.hoisted(() => ({ updateStirlingFileStub: vi.fn() }));
+const selectors = vi.hoisted(() => ({ getFile: vi.fn() }));
+vi.mock("@app/contexts/IndexedDBContext", () => ({
+  useIndexedDB: () => storage,
+}));
+vi.mock("@app/contexts/FileContext", () => ({
+  useFileManagement: () => management,
+  useFileSelectors: () => selectors,
+}));
+vi.mock("@app/utils/thumbnailUtils", () => ({
   generateThumbnailForFile: vi.fn(),
 }));
 
-vi.mock("@app/contexts/IndexedDBContext", () => ({
-  useIndexedDB: () => ({
-    loadFile: mocks.loadFile,
-    updateThumbnail: mocks.updateThumbnail,
-  }),
-}));
-
-vi.mock("@app/contexts/FileContext", () => ({
-  useFileManagement: () => ({
-    updateStirlingFileStub: mocks.updateStirlingFileStub,
-  }),
-}));
-
-vi.mock("@app/utils/thumbnailUtils", () => ({
-  generateThumbnailForFile: (...args: unknown[]) =>
-    mocks.generateThumbnailForFile(...args),
-}));
-
-vi.mock("@app/services/localFolderContents", () => ({
-  readDiskFile: vi.fn(),
-}));
-
-const FILE_ID = "file-abc" as FileId;
-
-function storeFile(): File {
-  return new File([new Uint8Array(8)], "picture.png", { type: "image/png" });
-}
+const access = {
+  password: "secret",
+  encrypted: true,
+  signed: false,
+  ownerAuthenticated: true,
+  permissions: -4,
+  pageCount: 1,
+};
+const id = "protected-preview" as FileId;
+const thumbnail = "data:image/png;base64,cached";
 
 afterEach(() => {
-  vi.clearAllMocks();
+  cleanup();
+  clearPdfAccess();
+  vi.resetAllMocks();
+});
+
+describe("protected cached thumbnails", () => {
+  it("requires this session's unlock, and hides the preview again on close or logout", () => {
+    const file = createStirlingFile(new File(["encrypted"], "private.pdf"), id);
+    const { result } = renderHook(() =>
+      useLazyThumbnail(id, file.size, thumbnail, true),
+    );
+    expect(result.current).toBeUndefined();
+    expect(storage.loadFile).not.toHaveBeenCalled();
+    act(() => rememberPdfAccess(file, access));
+    expect(result.current).toBe(thumbnail);
+    act(() => forgetPdfAccess([id]));
+    expect(result.current).toBeUndefined();
+    act(() => rememberPdfAccess(file, access));
+    expect(result.current).toBe(thumbnail);
+    act(() => clearPdfAccess());
+    expect(result.current).toBeUndefined();
+  });
+
+  it("does not reuse the old row's preview when a different protected version replaces it", () => {
+    const initialProps: {
+      fileId: FileId;
+      encrypted: boolean;
+      url: string | undefined;
+    } = { fileId: id, encrypted: false, url: thumbnail };
+    const { result, rerender } = renderHook(
+      ({ fileId, encrypted, url }) =>
+        useLazyThumbnail(fileId, 42, url, encrypted),
+      { initialProps },
+    );
+    expect(result.current).toBe(thumbnail);
+    rerender({
+      fileId: "new-version" as FileId,
+      encrypted: true,
+      url: undefined,
+    });
+    expect(result.current).toBeUndefined();
+  });
+
+  it("starts thumbnail generation after unlocking when the locked row has no cache", async () => {
+    const file = createStirlingFile(new File(["encrypted"], "private.pdf"), id);
+    selectors.getFile.mockReturnValue(file);
+    const { generateThumbnailForFile } =
+      await import("@app/utils/thumbnailUtils");
+    vi.mocked(generateThumbnailForFile).mockResolvedValue(thumbnail);
+    const { result, rerender } = renderHook(() =>
+      useLazyThumbnail(id, file.size, undefined, true),
+    );
+    expect(storage.loadFile).not.toHaveBeenCalled();
+    act(() => rememberPdfAccess(file, access));
+    await waitFor(() => expect(result.current).toBe(thumbnail));
+    expect(storage.loadFile).not.toHaveBeenCalled();
+    management.updateStirlingFileStub = vi.fn();
+    await act(async () => rerender());
+    expect(generateThumbnailForFile).toHaveBeenCalledTimes(1);
+    expect(storage.updateThumbnail).toHaveBeenCalledWith(id, thumbnail, true);
+    act(() => clearPdfAccess());
+    expect(result.current).toBeUndefined();
+  });
 });
 
 describe("useLazyThumbnail gating", () => {
   it("queues no generation while the row is disabled", async () => {
     const { result } = renderHook(() =>
-      useLazyThumbnail(FILE_ID, 2048, undefined, false),
+      useLazyThumbnail(id, 2048, undefined, false, false),
     );
 
     await new Promise((resolve) => setTimeout(resolve, 20));
 
-    expect(mocks.loadFile).not.toHaveBeenCalled();
-    expect(mocks.generateThumbnailForFile).not.toHaveBeenCalled();
+    expect(storage.loadFile).not.toHaveBeenCalled();
+    expect(vi.mocked(generateThumbnailForFile)).not.toHaveBeenCalled();
     expect(result.current).toBeUndefined();
   });
 
   it("generates once when a disabled row becomes enabled", async () => {
-    mocks.loadFile.mockResolvedValue(storeFile());
-    mocks.generateThumbnailForFile.mockResolvedValue(
+    storage.loadFile.mockResolvedValue(new File(["image"], "image.png"));
+    vi.mocked(generateThumbnailForFile).mockResolvedValue(
       "data:image/png;base64,thumb",
     );
 
     const { result, rerender } = renderHook(
       ({ enabled }: { enabled: boolean }) =>
-        useLazyThumbnail(FILE_ID, 2048, undefined, enabled),
+        useLazyThumbnail(id, 2048, undefined, false, enabled),
       { initialProps: { enabled: false } },
     );
 
     await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(mocks.loadFile).not.toHaveBeenCalled();
+    expect(storage.loadFile).not.toHaveBeenCalled();
 
     rerender({ enabled: true });
 
     await waitFor(() => {
       expect(result.current).toBe("data:image/png;base64,thumb");
     });
-    expect(mocks.loadFile).toHaveBeenCalledTimes(1);
-    expect(mocks.generateThumbnailForFile).toHaveBeenCalledTimes(1);
-    expect(mocks.updateThumbnail).toHaveBeenCalledWith(
-      FILE_ID,
+    expect(storage.loadFile).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(generateThumbnailForFile)).toHaveBeenCalledTimes(1);
+    expect(storage.updateThumbnail).toHaveBeenCalledWith(
+      id,
       "data:image/png;base64,thumb",
+      false,
     );
   });
 
   it("does not regenerate after re-enabling a row that already ran", async () => {
-    mocks.loadFile.mockResolvedValue(storeFile());
-    mocks.generateThumbnailForFile.mockResolvedValue(
+    storage.loadFile.mockResolvedValue(new File(["image"], "image.png"));
+    vi.mocked(generateThumbnailForFile).mockResolvedValue(
       "data:image/png;base64,thumb",
     );
 
     const { result, rerender } = renderHook(
       ({ enabled }: { enabled: boolean }) =>
-        useLazyThumbnail(FILE_ID, 2048, undefined, enabled),
+        useLazyThumbnail(id, 2048, undefined, false, enabled),
       { initialProps: { enabled: true } },
     );
 
@@ -103,7 +165,7 @@ describe("useLazyThumbnail gating", () => {
     rerender({ enabled: true });
     await new Promise((resolve) => setTimeout(resolve, 20));
 
-    expect(mocks.loadFile).toHaveBeenCalledTimes(1);
-    expect(mocks.generateThumbnailForFile).toHaveBeenCalledTimes(1);
+    expect(storage.loadFile).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(generateThumbnailForFile)).toHaveBeenCalledTimes(1);
   });
 });
