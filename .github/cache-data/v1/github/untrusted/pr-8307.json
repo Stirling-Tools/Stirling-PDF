@@ -10149,33 +10149,33 @@
       "workflow_run_id": 38877262750
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/e2e-live-setup-uv-cache/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17/v6": {
-      "object": "sha256:a977506e0eb0b73dc93482a24c02da9ae73694ba7ac92c9bd2c5e940ae52e32c",
+      "object": "sha256:2eb253e39b888b43d26538004f75e5266014ecb61f3a2d5788285bbc2127ed29",
       "storage": "github-artifact",
-      "updated_at": "2026-10-18T07:29:23.526Z",
+      "updated_at": "2026-10-24T13:47:16.227Z",
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
-      "size": 44005162,
+      "size": 44038582,
       "parts": [
         {
           "index": 0,
-          "object": "sha256:6b89625815fa85cf7b87eabb7cc95d2f519f57013ca39c886627b71c7bf8ad08",
+          "object": "sha256:7f0241e776fd2ff528666d1b4071b8f92a6ab74f4b1086084ecaa947312dc0e7",
           "size": 25165824,
-          "artifact_id": 12128498772,
-          "artifact_name": "cache-untrusted-pr-8307-e2e-live-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--a977506e0eb0b73dc93482a24c02da9ae73694ba7-part-000000",
-          "workflow_run_id": 39106642268
+          "artifact_id": 12561817905,
+          "artifact_name": "cache-untrusted-pr-8307-e2e-live-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--2eb253e39b888b43d26538004f75e5266014ecb61-part-000000",
+          "workflow_run_id": 40095699853
         },
         {
           "index": 1,
-          "object": "sha256:587355db161038f1e8483c48c3e0772b78e21af2243faade9e400b8416ca23f8",
-          "size": 18839338,
-          "artifact_id": 12128862866,
-          "artifact_name": "cache-untrusted-pr-8307-e2e-live-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--a977506e0eb0b73dc93482a24c02da9ae73694ba7-part-000001",
-          "workflow_run_id": 39106642268
+          "object": "sha256:b83cf894bd46c413fe579396e91e0c124f82c94997f3cdf486cd44fcb9ee85fa",
+          "size": 18872758,
+          "artifact_id": 12562441050,
+          "artifact_name": "cache-untrusted-pr-8307-e2e-live-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--2eb253e39b888b43d26538004f75e5266014ecb61-part-000001",
+          "workflow_run_id": 40095699853
         }
       ],
-      "artifact_id": 12128498772,
-      "artifact_name": "cache-untrusted-pr-8307-e2e-live-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--a977506e0eb0b73dc93482a24c02da9ae73694ba7-part-000000",
-      "workflow_run_id": 39106642268
+      "artifact_id": 12561817905,
+      "artifact_name": "cache-untrusted-pr-8307-e2e-live-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--2eb253e39b888b43d26538004f75e5266014ecb61-part-000000",
+      "workflow_run_id": 40095699853
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/e2e-live-uv-python-dir/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17/v6": {
       "object": "sha256:db4167e05571c94b7bf2304b015629552b96c2a285f27c82a81c7f10447f5fbc",
@@ -17486,6 +17486,6 @@
   },
   "monitoring": {
     "window_started_at": "2026-10-24T12:58:09.315Z",
-    "writes": 32
+    "writes": 33
   }
 }
