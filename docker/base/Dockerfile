@@ -343,7 +343,7 @@ RUN mkdir -p /magick-export/usr/bin \
 
 
 # Stage 4: Build Python venv
-FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS python-venv-build
+FROM ubuntu:26.04@sha256:c098726dd9b9733f3e885f8de0ef375206a311b0a317eadc40d347b1115fb944 AS python-venv-build
 ARG TARGETPLATFORM
 ARG UNOSERVER_VERSION=3.7
 
@@ -379,7 +379,7 @@ RUN gcc -O2 -Wall -Wextra -Werror -o /usr/local/bin/lo-sandbox /src/lo-sandbox.c
 
 
 # Final runtime image - the actual base image
-FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e AS runtime
+FROM eclipse-temurin:27-jre@sha256:d6bfa738df69e8dec9061b3e26f2ae564d92ad169faa36086dcfa33f0a901d35 AS runtime
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -399,7 +399,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       # Core tools
-      ca-certificates tzdata tini bash fontconfig curl \
+      ca-certificates tzdata tini bash fontconfig curl libjemalloc2 \
       # ffmpeg disabled due to raised CVEs
       # ffmpeg \
       poppler-utils fontforge \
@@ -515,11 +515,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/lib/libreoffice/program/libdbu* \
            /usr/lib/libreoffice/program/libreport* 2>/dev/null || true; \
     \
-    rm -rf /usr/lib/python3.12/test \
-           /usr/lib/python3.12/idlelib \
-           /usr/lib/python3.12/tkinter \
-           /usr/lib/python3.12/lib2to3 \
-           /usr/lib/python3.12/pydoc_data; \
+    rm -rf /usr/lib/python3.14/test \
+           /usr/lib/python3.14/idlelib \
+           /usr/lib/python3.14/tkinter \
+           /usr/lib/python3.14/lib2to3 \
+           /usr/lib/python3.14/pydoc_data; \
     \
     rm -rf /usr/lib/python3/dist-packages/scipy \
            /usr/lib/python3/dist-packages/sympy \
