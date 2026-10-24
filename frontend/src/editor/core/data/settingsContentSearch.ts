@@ -168,20 +168,31 @@ let contentCacheLanguage: string | undefined;
 // content for the whole session. Cleared whenever a resource bundle lands.
 i18n.on("loaded", () => contentCache.clear());
 
-export function getSettingsSectionContent(key: string, t: TFunction): string[] {
+/**
+ * @param omitPrefixes translation subtrees to leave out — copy the section
+ *   only renders in some builds (General's account card).
+ */
+export function getSettingsSectionContent(
+  key: string,
+  t: TFunction,
+  omitPrefixes: readonly string[] = [],
+): string[] {
   if (contentCacheLanguage !== i18n.language) {
     contentCache.clear();
     contentCacheLanguage = i18n.language;
   }
-  const cached = contentCache.get(key);
+  const cacheKey = [key, ...omitPrefixes].join("|");
+  const cached = contentCache.get(cacheKey);
   if (cached) return cached;
 
-  const content = getTranslationPrefixesForNavKey(key).flatMap((prefix) =>
-    flattenTranslationStrings(
-      t(prefix, { returnObjects: true, defaultValue: {} }),
-    ),
-  );
-  contentCache.set(key, content);
+  const content = getTranslationPrefixesForNavKey(key)
+    .filter((prefix) => !omitPrefixes.includes(prefix))
+    .flatMap((prefix) =>
+      flattenTranslationStrings(
+        t(prefix, { returnObjects: true, defaultValue: {} }),
+      ),
+    );
+  contentCache.set(cacheKey, content);
   return content;
 }
 
@@ -194,10 +205,11 @@ export function findSettingsContentMatch(
   key: string,
   query: string,
   t: TFunction,
+  omitPrefixes?: readonly string[],
 ): string | null {
   const normalizedQuery = query.toLocaleLowerCase();
   return (
-    getSettingsSectionContent(key, t).find((text) =>
+    getSettingsSectionContent(key, t, omitPrefixes).find((text) =>
       text.toLocaleLowerCase().includes(normalizedQuery),
     ) ?? null
   );

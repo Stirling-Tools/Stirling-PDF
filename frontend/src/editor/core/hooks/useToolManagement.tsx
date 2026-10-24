@@ -36,12 +36,14 @@ interface ToolManagementResult {
   toolAvailability: ToolAvailabilityMap;
 }
 
-export const useToolManagement = (): ToolManagementResult => {
-  const [toolSelectedFileIds, setToolSelectedFileIds] = useState<FileId[]>([]);
-
+/**
+ * Whether each tool in the catalogue can run against the current backend.
+ * Needs only the tool registry and the endpoint query, so hosts without the
+ * editor's providers (the portal's search) can use it too.
+ */
+export const useToolAvailability = (): ToolAvailabilityMap => {
   const { allTools } = useToolRegistry();
   const baseRegistry = allTools;
-  const { preferences } = usePreferences();
   const isSaaSMode = useSaaSMode();
 
   const allEndpoints = useMemo(
@@ -157,6 +159,16 @@ export const useToolManagement = (): ToolManagementResult => {
     isToolAvailable,
     selfHostedOfflineIds,
   ]);
+
+  return toolAvailability;
+};
+
+export const useToolManagement = (): ToolManagementResult => {
+  const [toolSelectedFileIds, setToolSelectedFileIds] = useState<FileId[]>([]);
+
+  const { allTools: baseRegistry } = useToolRegistry();
+  const { preferences } = usePreferences();
+  const toolAvailability = useToolAvailability();
 
   const toolRegistry: Partial<ToolRegistry> = useMemo(() => {
     const availableToolRegistry: Partial<ToolRegistry> = {};
