@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+  <!-- Scale only, anchored at the origin: ChatPanel.css animates these paths in the mark's own 192x192 units. -->
+  <g transform="scale(0.125)">
+    <path class="stirling-thinking__path-right" d="M68.48 102.4 L184.73 6.45 L184.73 96.05 L68.48 192 Z" />
+    <path class="stirling-thinking__path-left" d="M7.26 95.83 L123.37 0 L123.37 89.5 L7.26 185.33 Z" />
+  </g>
+</svg>

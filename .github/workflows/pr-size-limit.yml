@@ -1,0 +1,52 @@
+name: PR size limit
+
+# Fails PRs from outside the team that change more than MAX_LINES lines. The rules live
+# in .github/scripts/pr-size.ts.
+# Enforced only when the PR_SIZE_BOT_LIVE repository variable is "true": until then it
+# warns in the check's log but never fails a PR, comments or labels it, and the daily
+# triage never closes one for size.
+# pull_request_target so a first-time contributor's PR is checked without approval; it
+# reads the diff through the API and never checks out the PR's code.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-size-limit-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check PR size
+    # No filtering by label: a skipped run on the same commit would pass a required check.
+    if: vars.CI_PROFILE != 'lite'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # actions/checkout
+      issues: write # label the PR
+      pull-requests: write # list the PR's files, comment on and label it
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
+
+      - name: Check out the scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+
+      - name: Check the PR size
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          LIVE: ${{ vars.PR_SIZE_BOT_LIVE == 'true' }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const { checkPullRequestSize } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/pr-size.ts`);
+            await checkPullRequestSize({ github, context, core, live: process.env.LIVE === "true" });

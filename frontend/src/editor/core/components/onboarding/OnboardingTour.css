@@ -1,0 +1,18 @@
+/* Glow effect for tour highlighted area */
+.tour-highlight-glow {
+  stroke: var(--mantine-primary-color-filled);
+  stroke-width: 3px;
+  rx: 8px;
+  ry: 8px;
+  filter: drop-shadow(0 0 10px var(--mantine-primary-color-filled));
+}
+
+/* RTL: mirror step indicator and controls in Reactour popovers */
+:root[dir="rtl"] .reactour__popover {
+  direction: rtl;
+}
+
+:root[dir="rtl"] .reactour__badge {
+  left: auto;
+  right: 16px;
+}

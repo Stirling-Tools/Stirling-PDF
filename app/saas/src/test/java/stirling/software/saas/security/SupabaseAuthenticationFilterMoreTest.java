@@ -233,6 +233,22 @@ class SupabaseAuthenticationFilterMoreTest {
             request.setRequestURI("/api/v1/something");
             assertThat(filter.shouldNotFilter(request)).isFalse();
         }
+
+        @Test
+        @DisplayName("GET percent-encoded api path is filtered")
+        void getEncodedApiPathFiltered() {
+            request.setMethod("GET");
+            request.setRequestURI("/%61pi/v1/info/load/all");
+            assertThat(filter.shouldNotFilter(request)).isFalse();
+        }
+
+        @Test
+        @DisplayName("GET percent-encoded actuator path is filtered")
+        void getEncodedActuatorPathFiltered() {
+            request.setMethod("GET");
+            request.setRequestURI("/%61ctuator/prometheus");
+            assertThat(filter.shouldNotFilter(request)).isFalse();
+        }
     }
 
     @Nested

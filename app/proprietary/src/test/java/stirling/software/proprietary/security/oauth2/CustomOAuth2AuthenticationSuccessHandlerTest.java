@@ -27,6 +27,8 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.savedrequest.SavedRequest;
 
+import jakarta.servlet.http.Cookie;
+
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.accountlink.EntitlementCache;
 import stirling.software.proprietary.model.UserLicenseSettings;
@@ -94,9 +96,120 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
 
         handler.onAuthenticationSuccess(request, response, authentication);
 
+        assertEquals("/auth/callback/tauri#access_token=jwt", response.getRedirectedUrl());
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            value = {
+                "'', '', '', /auth/callback#access_token=jwt",
+                "'', https://app.example.com, '', /auth/callback#access_token=jwt",
+                "https://pdf.example.com/, '', '',"
+                        + " https://pdf.example.com/auth/callback#access_token=jwt",
+                "https://api.example.com, https://app.example.com/, '',"
+                        + " https://app.example.com/auth/callback#access_token=jwt",
+                "https://example.com/pdf, '', '',"
+                        + " https://example.com/pdf/auth/callback#access_token=jwt",
+                "https://example.com/pdf, '', /pdf/auth/callback,"
+                        + " https://example.com/pdf/auth/callback#access_token=jwt"
+            },
+            emptyValue = "")
+    void postLoginRedirectUsesRedirectBaseUrlWhenSet(
+            String redirectBaseUrl, String frontendUrl, String cookiePath, String expected)
+            throws Exception {
+        UserService userService = mock(UserService.class);
+        JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
+        ApplicationProperties applicationProperties = new ApplicationProperties();
+        ApplicationProperties.Security.OAUTH2 oauth2Props =
+                applicationProperties.getSecurity().getOauth2();
+        oauth2Props.setRedirectBaseUrl(redirectBaseUrl);
+        applicationProperties.getSystem().setFrontendUrl(frontendUrl);
+
+        CustomOAuth2AuthenticationSuccessHandler handler =
+                new CustomOAuth2AuthenticationSuccessHandler(
+                        mock(LoginAttemptService.class),
+                        oauth2Props,
+                        userService,
+                        jwtService,
+                        mock(UserLicenseSettingsService.class),
+                        applicationProperties);
+
+        when(userService.usernameExistsIgnoreCase("user")).thenReturn(false);
+        when(userService.isUserDisabled("user")).thenReturn(false);
+        when(jwtService.isJwtEnabled()).thenReturn(true);
+        when(jwtService.generateToken(
+                        any(org.springframework.security.core.Authentication.class),
+                        org.mockito.Mockito.anyMap()))
+                .thenReturn("jwt");
+
+        DefaultOAuth2User oauthUser =
+                new DefaultOAuth2User(
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                        Map.of("sub", "provider-sub", "name", "user"),
+                        "name");
+        OAuth2AuthenticationToken authentication =
+                new OAuth2AuthenticationToken(oauthUser, oauthUser.getAuthorities(), "Microsoft");
+
+        // What Stirling sees behind a TLS-terminating proxy that sends no X-Forwarded-* headers.
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setContextPath("");
+        request.setScheme("http");
+        request.setServerName("hcrn-fs01");
+        request.setServerPort(8080);
+        if (!cookiePath.isEmpty()) {
+            request.setCookies(new Cookie(TauriOAuthUtils.SPA_REDIRECT_COOKIE, cookiePath));
+        }
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        assertEquals(expected, response.getRedirectedUrl());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"true", "false"})
+    void localPasswordAccountIsRefusedRegardlessOfAutoCreateUser(boolean autoCreateUser)
+            throws Exception {
+        LoginAttemptService loginAttemptService = mock(LoginAttemptService.class);
+        UserService userService = mock(UserService.class);
+        JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
+        UserLicenseSettingsService licenseSettingsService = mock(UserLicenseSettingsService.class);
+        ApplicationProperties properties = new ApplicationProperties();
+        ApplicationProperties.Security.OAUTH2 oauth2 = properties.getSecurity().getOauth2();
+        oauth2.setAutoCreateUser(autoCreateUser);
+        oauth2.setBlockRegistration(false);
+
+        when(userService.usernameExistsIgnoreCase("admin")).thenReturn(true);
+        when(userService.isUserDisabled("admin")).thenReturn(false);
+        when(userService.hasPassword("admin")).thenReturn(true);
+        when(userService.isSsoAuthenticationTypeByUsername("admin")).thenReturn(false);
+
+        CustomOAuth2AuthenticationSuccessHandler handler =
+                new CustomOAuth2AuthenticationSuccessHandler(
+                        loginAttemptService,
+                        oauth2,
+                        userService,
+                        jwtService,
+                        licenseSettingsService,
+                        properties);
+        DefaultOAuth2User principal =
+                new DefaultOAuth2User(
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                        Map.of("sub", "provider-sub", "name", "admin"),
+                        "name");
+        OAuth2AuthenticationToken authentication =
+                new OAuth2AuthenticationToken(principal, principal.getAuthorities(), "google");
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setContextPath("/stirling");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
         assertEquals(
-                "http://localhost:8080/auth/callback/tauri#access_token=jwt",
-                response.getRedirectedUrl());
+                "/stirling/logout?oAuth2AuthenticationErrorWeb=true", response.getRedirectedUrl());
+        verify(userService, never())
+                .processSSOPostLogin(anyString(), anyString(), anyString(), anyBoolean(), any());
+        verifyNoInteractions(jwtService);
     }
 
     @ParameterizedTest

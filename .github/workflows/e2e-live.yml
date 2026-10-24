@@ -41,7 +41,7 @@ jobs:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
 
@@ -91,6 +91,8 @@ jobs:
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        with:
+          version: 3.54.0
 
       - name: Install Playwright (chromium only)
         run: task e2e:install -- chromium
@@ -127,7 +129,7 @@ jobs:
         # ::warning:: annotations + a job summary; never fails the job.
         if: always()
         working-directory: frontend
-        run: npx tsx editor/scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
+        run: npx tsx scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
 
@@ -157,7 +159,7 @@ jobs:
 
       - name: Install uv
         if: always()
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           enable-cache: false
           cache-dependency-glob: |
@@ -175,7 +177,7 @@ jobs:
 
       - name: Upload e2e:live JaCoCo report
         if: always() && steps.live-coverage.outputs.report == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: jacoco-e2e-live-${{ github.run_id }}
           path: build/reports/jacoco/e2e-live/
@@ -185,7 +187,7 @@ jobs:
         # Picked up by the coverage-aggregate workflow via the
         # `jacoco-exec-*` artifact name pattern.
         if: always() && steps.live-coverage.outputs.report == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: jacoco-exec-e2e-live
           path: .test-state/playwright/jacoco.exec
@@ -224,7 +226,7 @@ jobs:
         # someone debugging "why is this function showing as covered"
         # can trace it back to the source dump.
         if: always() && steps.pw-frontend-coverage.outputs.summary == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: playwright-frontend-coverage
           path: |
@@ -241,7 +243,7 @@ jobs:
 
       - name: Upload backend log
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: backend-log-live-${{ github.run_id }}
           path: .test-state/playwright/backend.log
@@ -252,8 +254,8 @@ jobs:
         run: |
           echo "::group::Playwright output dirs"
           # Playwright anchors its default outputDir + HTML report to the
-          # nearest package.json, which is frontend/ (frontend/editor has
-          # none), so artifacts land under frontend/, not frontend/editor/.
+          # nearest package.json, which is frontend/ (frontend has
+          # none), so artifacts land under frontend/, not frontend/.
           ls -la frontend/playwright-report 2>/dev/null \
             || echo "no playwright-report at frontend/"
           ls -la frontend/test-results 2>/dev/null \
@@ -263,13 +265,13 @@ jobs:
 
       - name: Upload Playwright report + traces
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: playwright-report-live-${{ github.run_id }}
           # test-results/ holds the per-test trace.zip (with browser console
           # logs) + screenshots/video; playwright-report/ is the HTML report.
           # Both live under frontend/ (Playwright anchors them to the nearest
-          # package.json, which is frontend/; frontend/editor has none).
+          # package.json, which is frontend/; frontend has none).
           path: |
             frontend/playwright-report/
             frontend/test-results/

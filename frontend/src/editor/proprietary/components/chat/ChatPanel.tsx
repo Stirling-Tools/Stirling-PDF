@@ -1,0 +1,596 @@
+import {
+  useMemo,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  type FocusEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefCallback,
+} from "react";
+import { useMergedRef } from "@mantine/hooks";
+import {
+  preloadMarkdownRenderer,
+  renderMarkdown,
+} from "@editor/components/viewer/nonpdf/MarkdownRenderer";
+import { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
+import {
+  Collapse,
+  Group,
+  Paper,
+  ScrollArea,
+  Stack,
+  Text,
+  Textarea,
+} from "@mantine/core";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import {
+  useChat,
+  AiWorkflowPhase,
+  ChatRole,
+  isKnownEngineProgressDetail,
+  type AiWorkflowProgress,
+  type AnyEngineProgressDetail,
+} from "@editor/components/chat/ChatContext";
+import { formatRelativeTime } from "@editor/utils/timeUtils";
+import { useTranslatedToolCatalog } from "@editor/data/useTranslatedToolRegistry";
+import { StirlingLogoAnimated } from "@editor/components/agents/StirlingLogoAnimated";
+import { ChatQuickActions } from "@editor/components/chat/ChatQuickActions";
+import "@editor/components/chat/ChatPanel.css";
+
+type TranslateFn = TFunction;
+
+/** Resolver mapping a tool endpoint path to its translated display name. */
+type ToolNameResolver = (endpoint: string) => string | null;
+
+/**
+ * Look up a tool's translated name from the tool catalog. The catalog's {@code operationConfig}
+ * exposes the full API endpoint path for each tool, so we key the lookup on the exact path that
+ * arrives in SSE progress events — no string parsing.
+ */
+function useToolNameResolver(): ToolNameResolver {
+  const { allTools } = useTranslatedToolCatalog();
+  return useMemo(() => {
+    const nameByEndpoint = new Map<string, string>();
+    Object.values(allTools).forEach((tool) => {
+      const endpoint = tool.operationConfig?.endpoint;
+      if (typeof endpoint === "string") {
+        nameByEndpoint.set(endpoint, tool.name);
+      }
+    });
+    return (endpoint: string) => nameByEndpoint.get(endpoint) ?? null;
+  }, [allTools]);
+}
+
+/** Resolver mapping a tool endpoint path to its registry icon ReactNode. */
+type ToolIconResolver = (endpoint: string) => ReactNode | null;
+
+/**
+ * Look up a tool's icon ReactNode from the tool catalog, keyed by API endpoint path.
+ * Returns null when the endpoint is not found (use a generic fallback icon in that case).
+ */
+function useToolIconResolver(): ToolIconResolver {
+  const { allTools } = useTranslatedToolCatalog();
+  return useMemo(() => {
+    const iconByEndpoint = new Map<string, ReactNode>();
+    Object.values(allTools).forEach((tool) => {
+      const endpoint = tool.operationConfig?.endpoint;
+      if (typeof endpoint === "string") {
+        iconByEndpoint.set(endpoint, tool.icon);
+      }
+    });
+    return (endpoint: string) => iconByEndpoint.get(endpoint) ?? null;
+  }, [allTools]);
+}
+
+function formatProgress(
+  progress: AiWorkflowProgress,
+  t: TranslateFn,
+  resolveToolName: ToolNameResolver,
+): string {
+  if (progress.phase === AiWorkflowPhase.EXECUTING_TOOL && progress.tool) {
+    const tool = resolveToolName(progress.tool);
+    const hasSteps =
+      progress.stepIndex != null &&
+      progress.stepCount != null &&
+      progress.stepCount > 1;
+    if (tool) {
+      return hasSteps
+        ? t("chat.progress.executing_tool_step", {
+            tool,
+            step: progress.stepIndex,
+            total: progress.stepCount,
+          })
+        : t("chat.progress.executing_tool_single", { tool });
+    }
+    return hasSteps
+      ? t("chat.progress.executing_tool_generic_step", {
+          step: progress.stepIndex,
+          total: progress.stepCount,
+        })
+      : t("chat.progress.executing_tool_generic");
+  }
+  if (progress.phase === AiWorkflowPhase.ENGINE_PROGRESS) {
+    return formatEngineProgress(progress.engineDetail, t);
+  }
+  return t(`chat.progress.${progress.phase}`);
+}
+
+function formatEngineProgress(
+  detail: AnyEngineProgressDetail | undefined,
+  t: TranslateFn,
+): string {
+  if (!detail || !isKnownEngineProgressDetail(detail)) {
+    return t("chat.progress.processing");
+  }
+  switch (detail.phase) {
+    case "whole_doc_read_started":
+      return t("chat.progress.whole_doc_read_started");
+    case "whole_doc_slice_done": {
+      const percent =
+        detail.total > 0
+          ? Math.round((detail.completed / detail.total) * 100)
+          : 0;
+      return t("chat.progress.whole_doc_slice_done", { percent });
+    }
+    case "whole_doc_compression_round":
+      return t("chat.progress.whole_doc_compression_round");
+    case "whole_doc_read_done":
+      return t("chat.progress.whole_doc_read_done");
+  }
+}
+
+/**
+ * Phase-specific icon for a progress step: the tool's registry icon while a
+ * tool runs, or a generic glyph for the read/extract/think phases. Used for the
+ * right-hand "what it's doing" icon in the live indicator and for each row of
+ * the completed tool breakdown.
+ */
+function progressStepIcon(
+  progress: AiWorkflowProgress,
+  resolveToolIcon: ToolIconResolver,
+): ReactNode {
+  if (progress.phase === AiWorkflowPhase.EXECUTING_TOOL) {
+    const registryIcon = progress.tool ? resolveToolIcon(progress.tool) : null;
+    if (registryIcon) {
+      return <span className="chat-step-icon-scaled">{registryIcon}</span>;
+    }
+    return <Icon name="wrench" size={17} />;
+  }
+  if (
+    progress.phase === AiWorkflowPhase.EXTRACTING_CONTENT ||
+    progress.phase === AiWorkflowPhase.ENGINE_PROGRESS
+  ) {
+    return <Icon name="file-text" size={17} />;
+  }
+  return <Icon name="cloud" size={17} />;
+}
+
+/**
+ * Live progress indicator shown while the AI is working. One step at a time:
+ * our animated logo on the left, the current step's label shimmering in the
+ * middle, and the phase-specific icon (what it's doing right now) on the right.
+ * The latest event replaces the previous one in place — no growing list.
+ */
+function ProgressLogDisplay({
+  progressLog,
+  t,
+  resolveToolName,
+  resolveToolIcon,
+}: {
+  progressLog: AiWorkflowProgress[];
+  t: TranslateFn;
+  resolveToolName: ToolNameResolver;
+  resolveToolIcon: ToolIconResolver;
+}) {
+  const current =
+    progressLog.length > 0 ? progressLog[progressLog.length - 1] : null;
+  const label = current
+    ? formatProgress(current, t, resolveToolName)
+    : t("chat.progress.thinking");
+
+  return (
+    <div className="chat-progress-live">
+      <span className="chat-progress-live__logo">
+        <StirlingLogoAnimated size={18} />
+      </span>
+      <span className="chat-progress-live__label">{label}</span>
+      {current && (
+        <span className="chat-progress-live__phase-icon">
+          {progressStepIcon(current, resolveToolIcon)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function formatDuration(ms: number, t: TranslateFn): string {
+  const totalSeconds = Math.max(1, Math.round(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes === 0) {
+    return t("chat.progress.ranForSeconds", { count: totalSeconds });
+  }
+  if (seconds === 0) {
+    return t("chat.progress.ranForMinutes", { count: minutes });
+  }
+  return t("chat.progress.ranForMinutesSeconds", { minutes, seconds });
+}
+
+/**
+ * Collapsed "Ran for X seconds" control above each completed assistant turn.
+ * Expands to a numbered list of just the tools that actually ran — generic
+ * progress phases (analysing, thinking, reading the document, …) are omitted.
+ * When no tool ran, the duration shows as a plain label with nothing to expand.
+ */
+function CompletedProgressLogDropdown({
+  progressLog,
+  durationMs,
+  t,
+  resolveToolName,
+  resolveToolIcon,
+}: {
+  progressLog: AiWorkflowProgress[];
+  durationMs: number;
+  t: TranslateFn;
+  resolveToolName: ToolNameResolver;
+  resolveToolIcon: ToolIconResolver;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const label = formatDuration(durationMs, t);
+
+  const toolSteps = progressLog.filter(
+    (step) => step.phase === AiWorkflowPhase.EXECUTING_TOOL && step.tool,
+  );
+
+  // A purely conversational turn (no tools): just show the duration, nothing
+  // to expand.
+  if (toolSteps.length === 0) {
+    return (
+      <div className="chat-completed-log">
+        <Text size="xs" c="dimmed" className="chat-completed-log__static">
+          {label}
+        </Text>
+      </div>
+    );
+  }
+
+  return (
+    <div className="chat-completed-log">
+      <Button
+        type="button"
+        variant="tertiary"
+        hover={false}
+        className="chat-completed-log__toggle"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+      >
+        <Group gap={4} wrap="nowrap" align="center">
+          {expanded ? (
+            <Icon name="chevron-up" size={12} />
+          ) : (
+            <Icon name="chevron-down" size={12} />
+          )}
+          <Text size="xs" c="dimmed">
+            {label}
+          </Text>
+        </Group>
+      </Button>
+      <Collapse in={expanded}>
+        <ol className="chat-completed-log__tools">
+          {toolSteps.map((step, i) => {
+            const endpoint = step.tool ?? "";
+            const name = resolveToolName(endpoint) ?? endpoint;
+            return (
+              <li key={i} className="chat-completed-log__tool">
+                <span className="chat-completed-log__tool-num">{i + 1}</span>
+                <span className="chat-completed-log__tool-icon">
+                  {progressStepIcon(step, resolveToolIcon)}
+                </span>
+                <span className="chat-completed-log__tool-name">{name}</span>
+              </li>
+            );
+          })}
+        </ol>
+      </Collapse>
+    </div>
+  );
+}
+
+/**
+ * Narrows wrapped text to its longest line. Text that wraps keeps the full width
+ * on offer, so a shorter last line would leave a gap down the bubble's right side.
+ */
+function useShrinkWrap(content: string) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.width = "";
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const { width } = range.getBoundingClientRect();
+    if (width > 0) el.style.width = `${Math.ceil(width)}px`;
+  }, [content]);
+  return ref;
+}
+
+function ChatMessageBubble({
+  role,
+  content,
+  timestamp,
+  progressLog,
+  durationMs,
+  resolveToolName,
+  resolveToolIcon,
+  t,
+}: {
+  role: ChatRole;
+  content: string;
+  timestamp: number;
+  progressLog?: AiWorkflowProgress[];
+  durationMs?: number;
+  resolveToolName: ToolNameResolver;
+  resolveToolIcon: ToolIconResolver;
+  t: TranslateFn;
+}) {
+  const [copied, setCopied] = useState(false);
+  const userTextRef = useShrinkWrap(content);
+
+  function handleCopy() {
+    void navigator.clipboard.writeText(content).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
+  const actions = (
+    <div className="chat-message-actions">
+      <ActionIcon
+        type="button"
+        variant="tertiary"
+        className={`chat-message-action-btn${copied ? " chat-message-action-btn--active" : ""}`}
+        onClick={handleCopy}
+        title={t("chat.actions.copy", "Copy message")}
+        aria-label={t("chat.actions.copy", "Copy message")}
+      >
+        <Icon name="copy" size={13} />
+      </ActionIcon>
+      <span className="chat-message-timestamp">
+        {formatRelativeTime(timestamp, t)}
+      </span>
+    </div>
+  );
+
+  if (role === ChatRole.USER) {
+    return (
+      <div className="chat-message chat-message-user">
+        <div className="chat-message-user__inner">
+          <Paper
+            className="chat-bubble chat-bubble-user"
+            px="sm"
+            py="xs"
+            radius="md"
+          >
+            <Text
+              ref={userTextRef}
+              size="sm"
+              style={{ whiteSpace: "pre-wrap" }}
+            >
+              {content}
+            </Text>
+          </Paper>
+          {actions}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="chat-message chat-message-assistant">
+      <div className="chat-bubble-assistant">
+        {progressLog && progressLog.length > 0 && durationMs != null && (
+          <CompletedProgressLogDropdown
+            progressLog={progressLog}
+            durationMs={durationMs}
+            t={t}
+            resolveToolName={resolveToolName}
+            resolveToolIcon={resolveToolIcon}
+          />
+        )}
+        <Text size="sm" component="div">
+          {renderMarkdown(content)}
+        </Text>
+        {actions}
+      </div>
+    </div>
+  );
+}
+
+export interface ChatPanelProps {
+  /** False keeps only the composer on screen; the conversation stays mounted but inert. */
+  expanded: boolean;
+  /** Sits above the conversation and is hidden with it. */
+  header: ReactNode;
+  /** Attached to the message list's scroller, for a header above it to track its scroll. */
+  messagesRef: RefCallback<HTMLDivElement>;
+  onComposerFocus: (event: FocusEvent<HTMLTextAreaElement>) => void;
+}
+
+/** The conversation and its composer, laid out to sit under a header in a flex column. */
+export function ChatPanel({
+  expanded,
+  header,
+  messagesRef,
+  onComposerFocus,
+}: ChatPanelProps) {
+  const { t } = useTranslation();
+  const { messages, isLoading, progressLog, sendMessage } = useChat();
+  const resolveToolName = useToolNameResolver();
+  const resolveToolIcon = useToolIconResolver();
+  const [input, setInput] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useMergedRef(scrollRef, messagesRef);
+  // Tracks whether the user manually scrolled away from the bottom.
+  // A ref (not state) so scroll events don't cause re-renders.
+  const userScrolledUp = useRef(false);
+
+  // Open at the most recent message rather than wherever a collapsed, zero-height
+  // viewport left the scroll position.
+  useEffect(() => {
+    if (!expanded) return;
+    preloadMarkdownRenderer();
+    userScrolledUp.current = false;
+    requestAnimationFrame(() => {
+      const el = scrollRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    });
+  }, [expanded]);
+
+  // Attach a passive scroll listener to track whether the user has scrolled
+  // away from the bottom (breaks auto-scroll) or returned to it (re-latches).
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      userScrolledUp.current = distFromBottom > 50;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Scroll to the bottom when messages arrive or live progress steps update,
+  // unless the user has scrolled up (they're reading history).
+  // Scrolling back to the bottom resets the ref, so the next update re-latches.
+  //
+  // RAF defers the scroll until after the browser has laid out the new nodes,
+  // so scrollHeight is correct. Direct scrollTop assignment avoids the
+  // smooth-scroll interruption problem that occurs when SSE events arrive
+  // faster than a smooth animation can complete.
+  useEffect(() => {
+    if (!userScrolledUp.current) {
+      requestAnimationFrame(() => {
+        const el = scrollRef.current;
+        if (el) el.scrollTop = el.scrollHeight;
+      });
+    }
+  }, [messages, progressLog]);
+
+  const handleSend = (override?: string) => {
+    const text = (override ?? input).trim();
+    if (!text || isLoading) return;
+    setInput("");
+    sendMessage(text);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const showQuickActions = messages.length === 0 && !isLoading;
+  const disclaimerText = t(
+    "chat.input.disclaimer",
+    "AI can make mistakes. Be sure to verify the output before sharing.",
+  );
+
+  return (
+    <>
+      <div className="chat-panel" aria-hidden={!expanded} inert={!expanded}>
+        {header}
+        {showQuickActions && (
+          <div className="chat-panel-disclaimer chat-panel-disclaimer--banner">
+            <Icon
+              name="info"
+              size={18}
+              className="chat-panel-disclaimer__icon"
+            />
+            <span>{disclaimerText}</span>
+          </div>
+        )}
+
+        <ScrollArea className="chat-panel-messages" viewportRef={viewportRef}>
+          <Stack
+            gap="sm"
+            px="xs"
+            pt="sm"
+            className="chat-panel-messages__content"
+          >
+            {messages.map((msg) => (
+              <ChatMessageBubble
+                key={msg.id}
+                role={msg.role}
+                content={msg.content}
+                timestamp={msg.timestamp}
+                progressLog={msg.progressLog}
+                durationMs={msg.durationMs}
+                resolveToolName={resolveToolName}
+                resolveToolIcon={resolveToolIcon}
+                t={t}
+              />
+            ))}
+            {isLoading && (
+              <div className="chat-message chat-message-assistant">
+                <ProgressLogDisplay
+                  progressLog={progressLog}
+                  t={t}
+                  resolveToolName={resolveToolName}
+                  resolveToolIcon={resolveToolIcon}
+                />
+              </div>
+            )}
+          </Stack>
+        </ScrollArea>
+
+        {showQuickActions && (
+          <ChatQuickActions
+            heading={t("chat.quickActions.heading", "Get started")}
+            onAction={(text) => handleSend(text)}
+          />
+        )}
+
+        {!showQuickActions && (
+          <div className="chat-panel-disclaimer chat-panel-disclaimer--inline">
+            <span>{disclaimerText}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="chat-panel-input">
+        <Textarea
+          placeholder={t("chat.dock.placeholder", "Ask Stirling Agent")}
+          aria-label={t("chat.dock.placeholder", "Ask Stirling Agent")}
+          value={input}
+          onChange={(e) => setInput(e.currentTarget.value)}
+          onKeyDown={handleKeyDown}
+          onFocus={onComposerFocus}
+          autosize
+          minRows={1}
+          maxRows={4}
+          variant="unstyled"
+          classNames={{
+            root: "chat-panel-input__textarea",
+            input: "chat-panel-input__field",
+          }}
+        />
+        <ActionIcon
+          size="sm"
+          loading={isLoading}
+          onClick={() => handleSend()}
+          disabled={!input.trim() || isLoading}
+          aria-label={t("chat.input.send", "Send message")}
+        >
+          <Icon name="arrow-up" size={16} />
+        </ActionIcon>
+      </div>
+    </>
+  );
+}

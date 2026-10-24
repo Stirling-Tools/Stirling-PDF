@@ -91,7 +91,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
 
@@ -196,7 +196,7 @@ jobs:
       SIGN_BUNDLE: ${{ inputs.sign && (matrix.platform == 'macos-15' && secrets.APPLE_CERTIFICATE != '' || github.ref == 'refs/heads/main') }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
 
@@ -289,7 +289,7 @@ jobs:
       # Windows ARM64 runners have no preinstalled JDK 25; Microsoft provides an ARM64 build.
       - name: Set up JDK ${{ env.JAVA_VERSION }} (Windows ARM64)
         if: matrix.platform == 'windows-11-arm'
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: "microsoft"
@@ -297,6 +297,8 @@ jobs:
 
       - name: Setup Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        with:
+          version: 3.54.0
 
       - name: Build universal macOS JRE
         if: matrix.platform == 'macos-15'
@@ -439,7 +441,7 @@ jobs:
         env:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
-          cat > ./frontend/editor/src-tauri/tauri.windows.conf.json <<EOF
+          cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
           {
             "bundle": {
               "windows": {
@@ -498,7 +500,7 @@ jobs:
           SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
           CI: true
         with:
-          projectPath: ./frontend/editor
+          projectPath: ./frontend
           tauriScript: npx tauri
           # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
           # AppImage runs in its own continue-on-error step below so its
@@ -518,7 +520,7 @@ jobs:
           VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
           CI: true
         with:
-          projectPath: ./frontend/editor
+          projectPath: ./frontend
           tauriScript: npx tauri
           # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
           # AppImage runs in its own continue-on-error step below so its
@@ -547,7 +549,7 @@ jobs:
           VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
           CI: true
         with:
-          projectPath: ./frontend/editor
+          projectPath: ./frontend
           tauriScript: npx tauri
           args: >-
             --bundles appimage
@@ -561,7 +563,7 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          AI=$(find "$PWD/frontend/editor/src-tauri/target" -name "*.AppImage" | head -1)
+          AI=$(find "$PWD/frontend/src-tauri/target" -name "*.AppImage" | head -1)
           if [ -z "$AI" ]; then echo "No AppImage found - skipping"; exit 0; fi
           chmod +x "$AI"
           WORK=$(mktemp -d)
@@ -598,7 +600,7 @@ jobs:
         if: env.SIGN_BUNDLE == 'true' && matrix.platform == 'macos-15'
         run: |
           echo "🔍 Verifying notarization status..."
-          cd ./frontend/editor/src-tauri/target
+          cd ./frontend/src-tauri/target
           DMG_FILE=$(find . -name "*.dmg" | head -1)
           if [ -n "$DMG_FILE" ]; then
             echo "Found DMG: $DMG_FILE"
@@ -615,7 +617,7 @@ jobs:
           # Absolute dist path so the cd below can't break the copy targets.
           DIST="$GITHUB_WORKSPACE/dist"
           mkdir -p "$DIST"
-          cd ./frontend/editor/src-tauri/target
+          cd ./frontend/src-tauri/target
 
           # Find and rename artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
@@ -718,7 +720,7 @@ jobs:
           }
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: Stirling-PDF-${{ matrix.name }}
           path: ./dist/*
@@ -727,7 +729,7 @@ jobs:
       - name: Verify build artifacts
         shell: bash
         run: |
-          cd ./frontend/editor/src-tauri/target
+          cd ./frontend/src-tauri/target
 
           # Check for expected artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ] || [ "${{ matrix.platform }}" = "windows-11-arm" ]; then
@@ -758,7 +760,7 @@ jobs:
       - name: Test artifact sizes
         shell: bash
         run: |
-          cd ./frontend/editor/src-tauri/target
+          cd ./frontend/src-tauri/target
           echo "Artifact sizes for ${{ matrix.name }}:"
           find . -name "*.exe" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" -o -name "*.msi" | while read file; do
             if [ -f "$file" ]; then
@@ -805,7 +807,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
 
@@ -876,7 +878,7 @@ jobs:
       # Windows ARM64 runners have no preinstalled JDK 25; Microsoft provides an ARM64 build.
       - name: Set up JDK ${{ env.JAVA_VERSION }} (Windows ARM64)
         if: matrix.platform == 'windows-11-arm'
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: "microsoft"
@@ -884,6 +886,8 @@ jobs:
 
       - name: Setup Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        with:
+          version: 3.54.0
 
       - name: Prepare desktop build
         env:
@@ -913,7 +917,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
 
@@ -1006,7 +1010,7 @@ jobs:
     if: always()
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
 

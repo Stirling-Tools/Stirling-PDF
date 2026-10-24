@@ -96,7 +96,10 @@ class PaygWalletControllerTest {
                         prepaidBundleService,
                         new UserTeamResolver(memberRepo),
                         teamExtensionsRepository,
-                        fleetSeats);
+                        fleetSeats,
+                        org.mockito.Mockito.mock(
+                                stirling.software.saas.procurement.service
+                                        .EnterpriseEntitlementService.class));
     }
 
     /**

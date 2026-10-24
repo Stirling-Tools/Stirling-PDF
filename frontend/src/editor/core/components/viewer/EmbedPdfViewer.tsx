@@ -1,0 +1,2103 @@
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { useTranslation } from "react-i18next";
+import type { SpreadMode } from "@embedpdf/plugin-spread/react";
+import type { ZoomLevel } from "@embedpdf/plugin-zoom/react";
+import { Box, Center, Text, Stack } from "@mantine/core";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import {
+  useAllFiles,
+  useFileSelector,
+  useFileSelectors,
+  useFileActions,
+} from "@editor/contexts/FileContext";
+import { useFileWithUrl } from "@editor/hooks/useFileWithUrl";
+import { ZoomMode } from "@embedpdf/plugin-zoom/react";
+import type {
+  DocumentRestoreEvent,
+  DocumentRestoreRequest,
+} from "@editor/components/viewer/DocumentRestoreBridge";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { LocalEmbedPDF } from "@editor/components/viewer/LocalEmbedPDF";
+import { PdfProtectionStatus } from "@editor/components/viewer/PdfProtectionStatus";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { canPrintPdf } from "@editor/services/pdfPermissions";
+import { PdfPreviewUnlockGate } from "@editor/components/viewer/PdfPreviewUnlockGate";
+import { PdfViewerToolbar } from "@editor/components/viewer/PdfViewerToolbar";
+import { ThumbnailSidebar } from "@editor/components/viewer/ThumbnailSidebar";
+import { BookmarkSidebar } from "@editor/components/viewer/BookmarkSidebar";
+import { AttachmentSidebar } from "@editor/components/viewer/AttachmentSidebar";
+import { LayerSidebar } from "@editor/components/viewer/LayerSidebar";
+import {
+  useNavigationGuard,
+  useNavigationState,
+} from "@editor/contexts/NavigationContext";
+import { useSignature } from "@editor/contexts/SignatureContext";
+import { useRedaction } from "@editor/contexts/RedactionContext";
+import type { RedactionPendingTrackerAPI } from "@editor/components/viewer/RedactionPendingTracker";
+import type {
+  SignaturePreview,
+  SignatureOverlayAPI,
+} from "@editor/components/viewer/viewerTypes";
+import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
+import { rememberPlainPdfExport } from "@editor/services/pdfAccessService";
+import {
+  isStirlingFile,
+  getFormFillFileId,
+  type StirlingFile,
+  documentBytesReplaced,
+  type DocumentIdentity,
+} from "@editor/types/fileContext";
+import { useViewerWorkbenchBarButtons } from "@editor/components/viewer/useViewerWorkbenchBarButtons";
+import { StampPlacementOverlay } from "@editor/components/viewer/StampPlacementOverlay";
+import {
+  RulerOverlay,
+  type RulerOverlayHandle,
+} from "@editor/components/viewer/RulerOverlay";
+import { useWheelZoom } from "@editor/hooks/useWheelZoom";
+import { useFormFill } from "@editor/tools/formFill/FormFillContext";
+import { FormSaveBar } from "@editor/tools/formFill/FormSaveBar";
+import { useDocumentLoadWaiter } from "@editor/components/viewer/useDocumentLoadWaiter";
+import {
+  FORM_APPLY_EVENT,
+  type FormApplyDetail,
+} from "@editor/tools/formFill/formFillEvents";
+import { useViewerKeyCommand } from "@editor/hooks/useViewerKeyCommand";
+import { useMeasurementManager } from "@editor/hooks/useMeasurementManager";
+import { ScaleCalibrationDialog } from "@editor/components/viewer/ScaleCalibrationDialog";
+import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
+import { alert } from "@editor/components/toast";
+import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
+
+// ──────────────────────────────────────────────────────────────────────────────
+
+export interface EmbedPdfViewerProps {
+  onClose?: () => void;
+  previewFile?: File | null;
+  // ── Signature overlay pass-through (opt-in; all default off) ──────────────
+  signaturePreviews?: SignaturePreview[];
+  /** Submitted marks rendered separately from editable previews and excluded from submission. */
+  readOnlySignaturePreviews?: SignaturePreview[];
+  signaturePreviewsReadOnly?: boolean;
+  signaturePlacementMode?: boolean;
+  signaturePlacementData?: string;
+  signaturePlacementType?: "canvas" | "image" | "text";
+  onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
+  signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
+  /** Viewer is showing the pinned portfolio panel; don't render a second one. */
+  portfolioPinned?: boolean;
+}
+
+/** Cache identity of a document, not of the file holding it: a disk reload
+ *  replaces the bytes under an unchanged fileId, and an outline cached under the
+ *  id alone would then describe a document nobody is looking at. Preload keys are
+ *  matched against this, so both call sites must derive it the same way. */
+const documentCacheKey = (file: StirlingFile): string =>
+  `${file.fileId}|${file.quickKey}`;
+
+// Guards only; a restore completes on plugin events. A missed event costs a
+// wrong-scale frame after the hide cap, not a blank viewer until the other.
+const RESTORE_SETTLE_CAP_MS = 15_000;
+const HIDE_CAP_MS = 5_000;
+
+const findScrollableAncestor = (el: HTMLElement | null): HTMLElement | null => {
+  let node = el?.parentElement ?? null;
+  while (node) {
+    const style = getComputedStyle(node);
+    if (
+      node.scrollHeight > node.clientHeight + 5 &&
+      /auto|scroll/.test(style.overflowY)
+    ) {
+      return node;
+    }
+    node = node.parentElement;
+  }
+  return null;
+};
+
+const EmbedPdfViewerContent = ({
+  onClose,
+  previewFile,
+  signaturePreviews,
+  readOnlySignaturePreviews,
+  signaturePreviewsReadOnly,
+  signaturePlacementMode,
+  signaturePlacementData,
+  signaturePlacementType,
+  onSignaturePreviewsChange,
+  signatureOverlayApiRef,
+  portfolioPinned,
+  onPasswordRequired,
+}: EmbedPdfViewerProps & { onPasswordRequired?: () => void }) => {
+  const { t } = useTranslation();
+  const damagedRepair = useDamagedFileRepair();
+  const viewerRef = React.useRef<HTMLDivElement>(null);
+  const pdfContainerRef = useRef<HTMLDivElement>(null);
+  const [isViewerHovered, setIsViewerHovered] = React.useState(false);
+
+  const {
+    isThumbnailSidebarVisible,
+    toggleThumbnailSidebar,
+    isBookmarkSidebarVisible,
+    isAttachmentSidebarVisible,
+    isLayerSidebarVisible,
+    setHasLayers,
+    isCommentsSidebarVisible,
+    isSearchInterfaceVisible,
+    searchInterfaceActions,
+    zoomActions,
+    scrollActions,
+    panActions: _panActions,
+    rotationActions,
+    getScrollState,
+    getSpreadState,
+    getZoomState,
+    registerImmediateZoomUpdate,
+    getRotationState,
+    zoomRestorePendingRef,
+    notifyZoomRestoreSettled,
+    setAnnotationMode,
+    isAnnotationsVisible,
+    exportActions,
+    printActions,
+    selectionActions,
+    setApplyChanges,
+    applyChanges: viewerApplyChanges,
+    pdfRenderMode,
+    cyclePdfRenderMode,
+    setActiveFileIndex: _setActiveFileIndex,
+    activeFileId,
+    setActiveFileId,
+  } = useViewer();
+
+  const scrollState = getScrollState();
+  const rotationState = getRotationState();
+
+  // Track initial rotation to detect changes
+  const initialRotationRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (
+      initialRotationRef.current === null &&
+      rotationState.rotation !== undefined
+    ) {
+      initialRotationRef.current = rotationState.rotation;
+    }
+  }, [rotationState.rotation]);
+
+  // Get signature and annotation contexts
+  const {
+    applySignaturesRef,
+    signatureApiRef,
+    annotationApiRef,
+    historyApiRef,
+    signatureConfig,
+    isPlacementMode,
+    isApplyingSignatures,
+    signaturesApplied,
+  } = useSignature();
+
+  // Track whether there are unsaved annotation changes in this viewer session.
+  // This is our source of truth for navigation guards; it is set when the
+  // annotation history changes, and cleared after we successfully apply changes.
+  const hasAnnotationChangesRef = useRef(false);
+  // EmbedPDF can emit once from the saved undo stack before the saved file remounts.
+  // Ignore that stale update without suppressing future edits on the same instance.
+  // Save point for annotations: history edits before the last save stay
+  // undoable, but only edits after it make the document unsaved again.
+  const historyRevisionRef = useRef(0);
+  const savedHistoryRevisionRef = useRef(0);
+  const suppressHistoryDirtyRef = useRef(false);
+
+  // Scroll position preservation system
+  // We continuously track the last known good scroll position, so we always have it available
+  const lastKnownScrollPageRef = useRef<number>(1);
+  const pendingScrollRestoreRef = useRef<number | null>(null);
+  const scrollRestoreAttemptsRef = useRef<number>(0);
+
+  const pendingRotationRestoreRef = useRef<number | null>(null);
+  const pendingZoomRestoreRef = useRef<ZoomLevel | null>(null);
+  const pendingSpreadRestoreRef = useRef<SpreadMode | null>(null);
+  const [restoreRequest, setRestoreRequest] =
+    useState<DocumentRestoreRequest | null>(null);
+  const replacementLayoutReadyRef = useRef(false);
+  // From layout-ready; the scroll bridge can still hold the outgoing document's.
+  const replacementTotalPagesRef = useRef(0);
+  // Plugin scrolls the viewport has yet to apply on its next animation frame.
+  const pluginScrollsRef = useRef(0);
+  const restoreCapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The toolbar must not show the plugin's intermediate fit pass while a
+  // carried zoom lands, so the bridge publishes nothing until this settles.
+  const settleZoomRestore = useCallback(() => {
+    zoomRestorePendingRef.current = false;
+    notifyZoomRestoreSettled();
+  }, [zoomRestorePendingRef, notifyZoomRestoreSettled]);
+  // Reading position captured from the outgoing document: the page's node
+  // identifies the swap, the offsets restore the exact spot within the page.
+  const pendingScrollPositionRef = useRef<{
+    page: number;
+    offsetPx: number | null;
+    offsetFraction: number | null;
+    pageHeight: number | null;
+    element: HTMLElement | null;
+    scroller: HTMLElement | null;
+    expectSwap: boolean;
+  } | null>(null);
+  const pendingScrollSwappedRef = useRef(false);
+  // Content key of a just-saved file whose visual state the live document
+  // already shows: skip the reopen so a save cannot move the view.
+  const skipReloadContentKeyRef = useRef<string | null>(null);
+  const [restoreTick, setRestoreTick] = useState(0);
+  const [restorePending, setRestorePending] = useState(false);
+  const hiddenScrollerRef = useRef<HTMLElement | null>(null);
+  const hideCapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const swapTargetRef = useRef<number | null>(null);
+  const swapLayoutRef = useRef<string | null>(null);
+  // Activation and the replacement pages' React commit happen separately.
+  const documentSwappedRef = useRef(false);
+  const scrollIntentCleanupRef = useRef<(() => void) | null>(null);
+
+  const revealSwappedDocument = useCallback(() => {
+    if (hideCapTimerRef.current !== null) {
+      clearTimeout(hideCapTimerRef.current);
+      hideCapTimerRef.current = null;
+    }
+    const scroller = hiddenScrollerRef.current;
+    if (scroller) {
+      scroller.style.visibility = "";
+      hiddenScrollerRef.current = null;
+    }
+  }, []);
+
+  const detachScrollIntentListeners = useCallback(() => {
+    scrollIntentCleanupRef.current?.();
+    scrollIntentCleanupRef.current = null;
+  }, []);
+
+  const clearRestoreCap = useCallback(() => {
+    if (restoreCapTimerRef.current !== null) {
+      clearTimeout(restoreCapTimerRef.current);
+      restoreCapTimerRef.current = null;
+    }
+  }, []);
+
+  const clearPendingScrollRestore = useCallback(() => {
+    pendingScrollPositionRef.current = null;
+    detachScrollIntentListeners();
+    revealSwappedDocument();
+    setRestorePending(false);
+  }, [detachScrollIntentListeners, revealSwappedDocument]);
+
+  const finishScrollRestore = useCallback(() => {
+    pendingScrollRestoreRef.current = null;
+    scrollRestoreAttemptsRef.current = 0;
+    swapTargetRef.current = null;
+    swapLayoutRef.current = null;
+    clearPendingScrollRestore();
+  }, [clearPendingScrollRestore]);
+
+  const completeRestore = useCallback(() => {
+    clearRestoreCap();
+    documentSwappedRef.current = false;
+    replacementLayoutReadyRef.current = false;
+    replacementTotalPagesRef.current = 0;
+    pluginScrollsRef.current = 0;
+    setRestoreRequest(null);
+    finishScrollRestore();
+  }, [clearRestoreCap, finishScrollRestore]);
+
+  const abandonRestore = useCallback(() => {
+    pendingZoomRestoreRef.current = null;
+    pendingSpreadRestoreRef.current = null;
+    pendingRotationRestoreRef.current = null;
+    if (zoomRestorePendingRef.current) settleZoomRestore();
+    completeRestore();
+  }, [zoomRestorePendingRef, settleZoomRestore, completeRestore]);
+
+  const armRestoreCap = useCallback(() => {
+    clearRestoreCap();
+    restoreCapTimerRef.current = setTimeout(() => {
+      restoreCapTimerRef.current = null;
+      console.warn(
+        "[EmbedPdfViewer] Carried view state never settled on the replacement; showing it as is.",
+      );
+      abandonRestore();
+    }, RESTORE_SETTLE_CAP_MS);
+  }, [clearRestoreCap, abandonRestore]);
+
+  const attachScrollIntentListeners = useCallback(() => {
+    const scroller = pendingScrollPositionRef.current?.scroller;
+    if (!scroller || scrollIntentCleanupRef.current) return;
+    const release = () => finishScrollRestore();
+    const events = ["wheel", "touchstart", "pointerdown", "keydown"];
+    for (const name of events) {
+      scroller.addEventListener(name, release, { passive: true });
+    }
+    scrollIntentCleanupRef.current = () => {
+      for (const name of events) {
+        scroller.removeEventListener(name, release);
+      }
+    };
+  }, [finishScrollRestore]);
+
+  const hideSwappedDocument = useCallback(
+    (scroller: HTMLElement | null) => {
+      if (!scroller || hiddenScrollerRef.current === scroller) return;
+      revealSwappedDocument();
+      hiddenScrollerRef.current = scroller;
+      scroller.style.visibility = "hidden";
+      // Carried values keep landing after this reveal.
+      hideCapTimerRef.current = setTimeout(() => {
+        hideCapTimerRef.current = null;
+        revealSwappedDocument();
+        if (zoomRestorePendingRef.current) settleZoomRestore();
+      }, HIDE_CAP_MS);
+    },
+    [revealSwappedDocument, zoomRestorePendingRef, settleZoomRestore],
+  );
+
+  const queueScrollRestore = useCallback(
+    (page: number, expectSwap = false) => {
+      pendingScrollRestoreRef.current = page;
+      scrollRestoreAttemptsRef.current = 0;
+      pendingScrollSwappedRef.current = false;
+
+      const element = document.querySelector<HTMLElement>(
+        `[data-page-index="${page - 1}"]`,
+      );
+      const scroller = findScrollableAncestor(element);
+      if (!element || !scroller) {
+        pendingScrollPositionRef.current = null;
+        swapTargetRef.current = null;
+        swapLayoutRef.current = null;
+        documentSwappedRef.current = false;
+        return;
+      }
+      const scrollerTop = scroller.getBoundingClientRect().top;
+      const pageTopInContent =
+        element.getBoundingClientRect().top - scrollerTop + scroller.scrollTop;
+      const offsetPx = scroller.scrollTop - pageTopInContent;
+      const offsetFraction =
+        element.clientHeight > 0 ? offsetPx / element.clientHeight : 0;
+      pendingScrollPositionRef.current = {
+        page,
+        offsetPx,
+        offsetFraction,
+        pageHeight: element.clientHeight,
+        element,
+        scroller,
+        expectSwap,
+      };
+      setRestorePending(true);
+      armRestoreCap();
+      swapTargetRef.current = null;
+      swapLayoutRef.current = null;
+      documentSwappedRef.current = false;
+    },
+    [armRestoreCap],
+  );
+
+  const resolvePendingScrollPage = useCallback(() => {
+    const pending = pendingScrollPositionRef.current;
+    if (!pending) return null;
+    if (pending.expectSwap) {
+      // The ready pass resets the offset and fixes the page count.
+      if (!replacementLayoutReadyRef.current) return null;
+      // A clamped index can also exist in the outgoing document.
+      if (pending.element?.isConnected) return null;
+    }
+    const totalPages = pending.expectSwap
+      ? replacementTotalPagesRef.current
+      : getScrollState().totalPages;
+    if (totalPages < 1) return null;
+    const targetPage = Math.min(pending.page, totalPages);
+    const page = document.querySelector<HTMLElement>(
+      `[data-page-index="${targetPage - 1}"]`,
+    );
+    if (!page) return null;
+    pending.page = targetPage;
+    return page;
+  }, [getScrollState]);
+
+  const applyScrollNow = useCallback((): boolean => {
+    const pending = pendingScrollPositionRef.current;
+    if (
+      !pending ||
+      pending.offsetPx === null ||
+      pending.offsetFraction === null
+    ) {
+      finishScrollRestore();
+      return false;
+    }
+    const pageEl = resolvePendingScrollPage();
+    const scroller =
+      pending.scroller && pending.scroller.isConnected
+        ? pending.scroller
+        : findScrollableAncestor(pageEl);
+    if (!pageEl || !scroller) return false;
+    pending.scroller = scroller;
+
+    const layoutSignature = `${pageEl.clientHeight}|${scroller.scrollHeight}`;
+    const lastTarget = swapTargetRef.current;
+    if (
+      layoutSignature === swapLayoutRef.current &&
+      lastTarget !== null &&
+      Math.abs(scroller.scrollTop - lastTarget) <= 1
+    ) {
+      return true;
+    }
+    const heightChanged =
+      pending.pageHeight !== null &&
+      Math.abs(pageEl.clientHeight - pending.pageHeight) > 1;
+    const offset = heightChanged
+      ? pending.offsetFraction * pageEl.clientHeight
+      : pending.offsetPx;
+    const scrollerTop = scroller.getBoundingClientRect().top;
+    const pageTopInContent =
+      pageEl.getBoundingClientRect().top - scrollerTop + scroller.scrollTop;
+    const target = Math.max(0, pageTopInContent + offset);
+    swapLayoutRef.current = layoutSignature;
+    swapTargetRef.current = target;
+    scroller.scrollTop = target;
+    return true;
+  }, [finishScrollRestore, resolvePendingScrollPage]);
+
+  const applyPendingScrollPosition = useCallback((): boolean => {
+    const pending = pendingScrollPositionRef.current;
+    if (!pending) return false;
+
+    const pageEl = resolvePendingScrollPage();
+    if (!pageEl) return false;
+    if (!pendingScrollSwappedRef.current) {
+      if (!pending.scroller?.isConnected) {
+        pending.scroller = findScrollableAncestor(pageEl);
+      }
+      if (pending.expectSwap) {
+        hideSwappedDocument(pending.scroller);
+      }
+      attachScrollIntentListeners();
+    }
+    if (!applyScrollNow()) return false;
+    pendingScrollSwappedRef.current = true;
+    return true;
+  }, [
+    applyScrollNow,
+    hideSwappedDocument,
+    attachScrollIntentListeners,
+    resolvePendingScrollPage,
+  ]);
+
+  const formApplyInProgressRef = useRef(false);
+  const { waitForDocument, documentReady, documentFailed } =
+    useDocumentLoadWaiter();
+  const applyChangesInFlightRef = useRef<Promise<void> | null>(null);
+
+  // Get redaction context
+  const {
+    redactionsApplied,
+    setRedactionsApplied,
+    deactivateRedact,
+    setRedactionMode,
+  } = useRedaction();
+
+  // Resubscribing to history emits its current state as though an edit occurred.
+  const redactionsAppliedRef = useRef(redactionsApplied);
+  useLayoutEffect(() => {
+    redactionsAppliedRef.current = redactionsApplied;
+  }, [redactionsApplied]);
+
+  // Ref for redaction pending tracker API
+  const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
+
+  // Get current file from FileContext
+  const selectors = useFileSelectors();
+  const { actions } = useFileActions();
+  const { files: activeFiles } = useAllFiles();
+  const activeFilesRef = useRef(activeFiles);
+  activeFilesRef.current = activeFiles;
+  const activeFileIds = activeFiles.map((f) => f.fileId);
+
+  // Navigation guard for unsaved changes
+  const {
+    setHasUnsavedChanges,
+    registerUnsavedChangesChecker,
+    unregisterUnsavedChangesChecker,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
+  } = useNavigationGuard();
+
+  const { selectedTool } = useNavigationState();
+
+  useEffect(() => {
+    if (selectedTool !== "redact") {
+      setRedactionMode(false);
+      deactivateRedact();
+    }
+  }, [selectedTool, setRedactionMode, deactivateRedact]);
+
+  // Form fill context
+  const { fetchFields: fetchFormFields, setProviderMode } = useFormFill();
+
+  const isInAnnotationTool =
+    selectedTool === "sign" ||
+    selectedTool === "addText" ||
+    selectedTool === "addImage" ||
+    selectedTool === "annotate";
+  const isManualRedactMode = selectedTool === "redact";
+
+  // Live layer visibility is controlled via showBakedAnnotations CSS; unmounting
+  // AnnotationPlugin on visibility toggle destroys in-memory annotations.
+  const shouldEnableAnnotations = true;
+
+  // Enable redaction only when redaction tool is selected
+  const shouldEnableRedaction = selectedTool === "redact";
+
+  // FormFill tool mode — uses PDFBox backend for full-fidelity form handling
+  const isFormFillToolActive = (selectedTool as string) === "formFill";
+
+  // Form overlays are shown in BOTH modes:
+  // - Normal viewer: form overlays visible (PDFium WASM, frontend-only)
+  // - formFill tool: form overlays visible (PDFBox, backend)
+  const shouldEnableFormFill = true;
+
+  // Switch the provider when the tool mode changes
+  useEffect(() => {
+    setProviderMode(isFormFillToolActive ? "pdfbox" : "pdflib");
+  }, [isFormFillToolActive, setProviderMode]);
+
+  // Track previous annotation/redaction state to detect tool switches
+  const prevEnableAnnotationsRef = useRef(shouldEnableAnnotations);
+  const prevEnableRedactionRef = useRef(shouldEnableRedaction);
+
+  // Track scroll position whenever scrollState changes from the context
+  // This ensures we always have the most up-to-date position
+  useEffect(() => {
+    if (scrollState.currentPage > 0) {
+      lastKnownScrollPageRef.current = scrollState.currentPage;
+    }
+  }, [scrollState.currentPage]);
+
+  // Preserve scroll position when switching between annotation and redaction tools
+  // Using useLayoutEffect to capture synchronously before DOM updates
+  useLayoutEffect(() => {
+    const annotationsChanged =
+      prevEnableAnnotationsRef.current !== shouldEnableAnnotations;
+    const redactionChanged =
+      prevEnableRedactionRef.current !== shouldEnableRedaction;
+
+    if (annotationsChanged || redactionChanged) {
+      // Read scroll state directly AND use the tracked value - take whichever is valid
+      const currentScrollState = getScrollState();
+      const pageFromState = currentScrollState.currentPage;
+      const pageFromRef = lastKnownScrollPageRef.current;
+
+      // Use the current state if valid, otherwise fall back to tracked ref
+      const pageToRestore = pageFromState > 0 ? pageFromState : pageFromRef;
+
+      // An in-flight swap restore already carries the page; replacing it drops
+      // the swap gate and the carried zoom settles against the outgoing document.
+      const swapInFlight = pendingScrollPositionRef.current?.expectSwap;
+      if (pageToRestore > 0 && !swapInFlight) {
+        queueScrollRestore(pageToRestore);
+      }
+
+      prevEnableAnnotationsRef.current = shouldEnableAnnotations;
+      prevEnableRedactionRef.current = shouldEnableRedaction;
+    }
+  }, [shouldEnableAnnotations, shouldEnableRedaction, getScrollState]);
+
+  // Keep annotation mode enabled when entering placement tools without overriding manual toggles
+  useEffect(() => {
+    if (isInAnnotationTool) {
+      setAnnotationMode(true);
+    }
+  }, [isInAnnotationTool, setAnnotationMode]);
+  const isPlacementOverlayActive = Boolean(
+    isInAnnotationTool && isPlacementMode && signatureConfig,
+  );
+
+  const [signatureLineZoom, setSignatureLineZoom] = useState<number | null>(
+    null,
+  );
+  useEffect(() => {
+    if (selectedTool !== "sign") {
+      setSignatureLineZoom(null);
+      return;
+    }
+    setSignatureLineZoom(getZoomState()?.currentZoom ?? 1);
+    const unregister = registerImmediateZoomUpdate((percent) => {
+      setSignatureLineZoom(Math.max(percent / 100, 0.01));
+    });
+    return () => unregister?.();
+  }, [selectedTool, getZoomState, registerImmediateZoomUpdate]);
+
+  // Determine which file to display — use activeFileId (stable) not activeFileIndex (shifts on removal)
+  const currentFile = React.useMemo(() => {
+    if (previewFile) {
+      return previewFile;
+    } else if (activeFiles.length > 0) {
+      const byId = activeFileId
+        ? activeFiles.find(
+            (f) => isStirlingFile(f) && f.fileId === activeFileId,
+          )
+        : null;
+      return byId || activeFiles[0];
+    }
+    return null;
+  }, [previewFile, activeFiles, activeFileId]);
+
+  // Identity of the bytes: the viewer's mount key, its blob URL and form-fill
+  // state all have to turn over when a disk reload swaps the file under an
+  // unchanged fileId. Keep aligned with FormFill.
+  const currentFileId = React.useMemo(
+    () => getFormFillFileId(currentFile),
+    [currentFile],
+  );
+
+  // The workbench record to act on. Bare id, not the content key above: the
+  // consume/undo paths below pass it back as a FileId.
+  const currentFileStableId =
+    currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
+  const previousActiveFileIdsRef = useRef(activeFileIds);
+  // Follow removals, but do not overwrite a save's new id before its bytes enter FileContext.
+  useEffect(() => {
+    const previousActiveFileIds = previousActiveFileIdsRef.current;
+    previousActiveFileIdsRef.current = activeFileIds;
+    if (
+      !previewFile &&
+      currentFileStableId &&
+      currentFileStableId !== activeFileId &&
+      (!activeFileId || previousActiveFileIds.some((id) => id === activeFileId))
+    ) {
+      setActiveFileId(currentFileStableId);
+    }
+  }, [
+    previewFile,
+    currentFileStableId,
+    activeFileId,
+    activeFileIds,
+    setActiveFileId,
+  ]);
+  const fileWithUrl = useFileWithUrl(currentFile, currentFileId);
+
+  // Lineage root of the open document: saves and tool outputs add a child record,
+  // so mounting on the root keeps the engine alive across reloads.
+  const currentFileRootId = React.useMemo(() => {
+    if (previewFile) {
+      return `preview-${previewFile.name}|${previewFile.size}|${previewFile.lastModified}`;
+    }
+    if (currentFile && isStirlingFile(currentFile)) {
+      const stub = selectors.getStirlingFileStub(currentFile.fileId);
+      return stub?.originalFileId ?? stub?.id ?? currentFile.fileId;
+    }
+    return currentFileId;
+  }, [previewFile, currentFile, currentFileId, selectors]);
+
+  // Determine the effective file to display
+  const effectiveFile = React.useMemo(() => {
+    if (previewFile) {
+      // In preview mode, show the preview file
+      if (previewFile.size === 0) {
+        return null;
+      }
+      return { file: previewFile, url: null };
+    } else {
+      return fileWithUrl;
+    }
+  }, [previewFile, fileWithUrl]);
+
+  // Check if the current file is encrypted (gate the viewer to prevent PDFium crash)
+  const isStoredFileEncrypted = useFileSelector((s) =>
+    currentFile && isStirlingFile(currentFile)
+      ? s.files.byId[currentFile.fileId]?.processedFile?.isEncrypted === true
+      : false,
+  );
+  const pdfAccess = usePdfAccess(previewFile ?? currentFile);
+  const isCurrentFileEncrypted =
+    isStoredFileEncrypted || Boolean(pdfAccess?.encrypted);
+  const isCurrentFileLocked = isCurrentFileEncrypted && !pdfAccess;
+  const canPrint = !isCurrentFileLocked && canPrintPdf(pdfAccess);
+
+  const bookmarkCacheKey = React.useMemo(() => {
+    if (currentFile && isStirlingFile(currentFile)) {
+      return documentCacheKey(currentFile);
+    }
+
+    if (previewFile) {
+      const uniquePreviewId = `${previewFile.name}-${previewFile.size}-${previewFile.lastModified ?? "na"}`;
+      return `preview-${uniquePreviewId}`;
+    }
+
+    if (effectiveFile?.url) {
+      return effectiveFile.url;
+    }
+
+    if (effectiveFile?.file instanceof File) {
+      const fileObj = effectiveFile.file;
+      return `file-${fileObj.name}-${fileObj.size}-${fileObj.lastModified ?? "na"}`;
+    }
+
+    return undefined;
+  }, [currentFile, effectiveFile, previewFile]);
+
+  // Generate cache keys for all active files to enable preloading
+  const allBookmarkCacheKeys = React.useMemo(() => {
+    if (previewFile) {
+      return [bookmarkCacheKey].filter(Boolean) as string[];
+    }
+
+    return activeFiles
+      .map((file) =>
+        isStirlingFile(file) ? documentCacheKey(file) : undefined,
+      )
+      .filter(Boolean) as string[];
+  }, [activeFiles, previewFile, bookmarkCacheKey]);
+
+  useWheelZoom({
+    ref: viewerRef,
+    onZoomIn: zoomActions.zoomIn,
+    onZoomOut: zoomActions.zoomOut,
+  });
+
+  const viewerKeyCommand = useViewerKeyCommand();
+
+  const policyFileBadges = usePolicyFileBadges();
+  const policyEnforcing =
+    !!activeFileId &&
+    (policyFileBadges.get(activeFileId) ?? []).some((p) => p.enforcing);
+  // Use a ref so the keydown handler always reads the latest value without
+  // needing to be in the effect's dependency array.
+  const policyEnforcingRef = useRef(false);
+  policyEnforcingRef.current = policyEnforcing;
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isApplyingSignatures) return;
+      const mod = event.ctrlKey || event.metaKey;
+      const target = event.target as Element | null;
+      const isInTextInput =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      // Ctrl+P (print) must be intercepted
+      // whenever the viewer is mounted, even before the user has hovered over it.
+      // Ctrl+R (rotate) is intercepted only on desktop (Tauri), while on web it still falls through to browser refresh.
+      // Without this, the browser falls through to its native "print HTML page"
+      // or "reload page" behaviour.
+
+      if (mod) {
+        if (!isInTextInput) {
+          const wasOverridden = viewerKeyCommand(event);
+          if (!wasOverridden) {
+            switch (event.key) {
+              case "p":
+              case "P":
+                event.preventDefault();
+                if (!policyEnforcingRef.current && canPrint) {
+                  printActions.print();
+                }
+                return;
+              case "a":
+              case "A":
+                // Intercept unconditionally so the browser can't blanket-select the surrounding UI chrome.
+                event.preventDefault();
+                {
+                  const totalPages = getScrollState().totalPages;
+                  if (totalPages > 0) {
+                    void selectionActions.selectAll(totalPages);
+                  }
+                }
+                return;
+              case "=":
+              case "+":
+                event.preventDefault();
+                zoomActions.zoomIn();
+                return;
+              case "-":
+              case "_":
+                event.preventDefault();
+                zoomActions.zoomOut();
+                return;
+              case "0":
+                event.preventDefault();
+                zoomActions.requestZoom(ZoomMode.FitWidth);
+                return;
+            }
+          }
+        }
+      }
+
+      // All remaining shortcuts require the viewer to be hovered so they
+      // don't conflict with the rest of the UI when the viewer is mounted
+      // but not the active focus target.
+      if (!isViewerHovered) return;
+
+      // Modifier key shortcuts (Ctrl/Cmd + key)
+      if (mod) {
+        switch (event.key) {
+          case "f":
+          case "F":
+            event.preventDefault();
+            if (isSearchInterfaceVisible) {
+              window.dispatchEvent(new CustomEvent("refocus-search-input"));
+            } else {
+              searchInterfaceActions.open();
+            }
+            return;
+          case "s":
+          case "S":
+            // Ctrl+S: Save/apply changes
+            if (!event.shiftKey) {
+              event.preventDefault();
+              if (viewerApplyChanges) {
+                viewerApplyChanges();
+              }
+            }
+            return;
+
+          case "z":
+          case "Z":
+            // Ctrl+Z: Undo; Ctrl+Shift+Z: Redo
+            event.preventDefault();
+            if (event.shiftKey) {
+              historyApiRef.current?.redo?.();
+            } else {
+              historyApiRef.current?.undo?.();
+            }
+            return;
+          case "y":
+          case "Y":
+            // Ctrl+Y: Redo
+            event.preventDefault();
+            historyApiRef.current?.redo?.();
+            return;
+        }
+        return;
+      }
+
+      // Non-modifier shortcuts
+      switch (event.key) {
+        case "Home":
+          if (isInTextInput) return;
+          event.preventDefault();
+          scrollActions.scrollToFirstPage();
+          return;
+        case "End":
+          if (isInTextInput) return;
+          event.preventDefault();
+          scrollActions.scrollToLastPage();
+          return;
+        case "PageUp":
+        case "ArrowLeft":
+          if (isInTextInput || event.altKey) return;
+          event.preventDefault();
+          scrollActions.scrollToPreviousPage();
+          return;
+        case "PageDown":
+        case "ArrowRight":
+          if (isInTextInput || event.altKey) return;
+          event.preventDefault();
+          scrollActions.scrollToNextPage();
+          return;
+        case "Escape":
+          if (isSearchInterfaceVisible) {
+            event.preventDefault();
+            searchInterfaceActions.close();
+          }
+          return;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    isViewerHovered,
+    isSearchInterfaceVisible,
+    zoomActions,
+    searchInterfaceActions,
+    scrollActions,
+    printActions,
+    canPrint,
+    exportActions,
+    rotationActions,
+    historyApiRef,
+    viewerApplyChanges,
+    cyclePdfRenderMode,
+    viewerKeyCommand,
+    isApplyingSignatures,
+    selectionActions,
+    getScrollState,
+  ]);
+
+  // Accepting a disk reload swaps the bytes under an unchanged fileId, which
+  // remounts the inner viewer with a clean history but leaves these flags
+  // describing edits that no longer exist: every later disk change then reads as
+  // a conflict, and navigation keeps warning about work already discarded.
+  const documentIdentityRef = useRef<DocumentIdentity | null>(null);
+  useEffect(() => {
+    const previous = documentIdentityRef.current;
+    const current =
+      currentFileStableId && currentFileId
+        ? { id: currentFileStableId, key: currentFileId }
+        : null;
+    documentIdentityRef.current = current;
+
+    if (!documentBytesReplaced(previous, current)) return;
+
+    hasAnnotationChangesRef.current = false;
+    historyRevisionRef.current = 0;
+    savedHistoryRevisionRef.current = 0;
+    setHasUnsavedChanges(false);
+    setRedactionsApplied(false);
+  }, [
+    currentFileStableId,
+    currentFileId,
+    setHasUnsavedChanges,
+    setRedactionsApplied,
+  ]);
+
+  const previousSignaturesAppliedRef = useRef(signaturesApplied);
+  useEffect(() => {
+    const wasApplied = previousSignaturesAppliedRef.current;
+    previousSignaturesAppliedRef.current = signaturesApplied;
+    if (wasApplied || !signaturesApplied) return;
+    // Signature Apply saves through FileContext rather than the viewer save callback.
+    savedHistoryRevisionRef.current = historyRevisionRef.current;
+    hasAnnotationChangesRef.current = false;
+    setHasUnsavedChanges(false);
+  }, [signaturesApplied, setHasUnsavedChanges]);
+
+  // Watch the annotation history API to detect when the document becomes "dirty".
+  // We treat any change that makes the history undoable as unsaved changes until
+  // the user explicitly applies them via applyChanges.
+  useEffect(() => {
+    const historyApi = historyApiRef.current;
+    if (!historyApi || !historyApi.subscribe) {
+      return;
+    }
+
+    const updateHasChanges = (historyChanged: boolean) => {
+      const canUndo = historyApi.canUndo?.() ?? false;
+      if (!canUndo && savedHistoryRevisionRef.current === 0) {
+        historyRevisionRef.current = 0;
+        hasAnnotationChangesRef.current = false;
+        const hasPendingRedactions =
+          (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
+        if (!hasPendingRedactions && !redactionsAppliedRef.current) {
+          setHasUnsavedChanges(false);
+        }
+        return;
+      }
+      if (!historyChanged) return;
+      historyRevisionRef.current += 1;
+      if (suppressHistoryDirtyRef.current) return;
+      // A revision equal to the save point means the annotations match the
+      // exported bytes again (for example an undo that lands back on them).
+      const annotationDirty =
+        historyRevisionRef.current !== savedHistoryRevisionRef.current;
+      hasAnnotationChangesRef.current = annotationDirty;
+      if (annotationDirty) {
+        setHasUnsavedChanges(true);
+        return;
+      }
+      // Undo back to the saved state disarms the warning, but redactions keep
+      // their own claim on the flag.
+      const hasPendingRedactions =
+        (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
+      if (!hasPendingRedactions && !redactionsAppliedRef.current) {
+        setHasUnsavedChanges(false);
+      }
+    };
+
+    // Reconnecting after a permissions check emits the existing history, not a new edit.
+    let subscribing = true;
+    const unsubscribe = historyApi.subscribe(() => {
+      updateHasChanges(!subscribing);
+    });
+    subscribing = false;
+    return () => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
+  }, [historyApiRef.current, setHasUnsavedChanges, redactionTrackerRef]);
+
+  // Register checker for unsaved changes (annotations only for now)
+  useEffect(() => {
+    if (previewFile || isFormFillToolActive) {
+      return;
+    }
+
+    const checkForChanges = () => {
+      // Check for annotation history changes (using ref that's updated by useEffect)
+      const hasAnnotationChanges = hasAnnotationChangesRef.current;
+
+      // Check for pending redactions
+      const hasPendingRedactions =
+        (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
+
+      // Always consider applied redactions as unsaved until export
+      const hasAppliedRedactions = redactionsApplied;
+
+      return (
+        hasAnnotationChanges || hasPendingRedactions || hasAppliedRedactions
+      );
+    };
+
+    registerUnsavedChangesChecker(checkForChanges);
+
+    return () => {
+      unregisterUnsavedChangesChecker();
+    };
+  }, [
+    historyApiRef,
+    previewFile,
+    isFormFillToolActive,
+    registerUnsavedChangesChecker,
+    unregisterUnsavedChangesChecker,
+    isManualRedactMode,
+    redactionsApplied,
+  ]);
+
+  // Save changes - save annotations and redactions to file (overwrites active file)
+  const applyChanges = useCallback(async () => {
+    if (applyChangesInFlightRef.current) {
+      return applyChangesInFlightRef.current;
+    }
+
+    if (!currentFile || activeFileIds.length === 0) return;
+    const applySignatures = applySignaturesRef.current;
+
+    const saveChanges = async () => {
+      console.log(
+        "[Viewer] Applying changes - exporting PDF with annotations/redactions",
+      );
+
+      // Step 0: Commit any pending redactions before export
+      const hadPendingRedactions =
+        (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
+
+      // Mark redactions as applied BEFORE committing, so the button stays enabled during the save process
+      // This ensures the button doesn't become disabled when pendingCount becomes 0
+      if (hadPendingRedactions || redactionsApplied) {
+        setRedactionsApplied(true);
+      }
+
+      if (hadPendingRedactions) {
+        console.log("[Viewer] Committing pending redactions before export");
+        await redactionTrackerRef.current?.commitAllPending();
+      }
+
+      if (applySignatures) {
+        await applySignatures();
+        savedHistoryRevisionRef.current = historyRevisionRef.current;
+        hasAnnotationChangesRef.current = false;
+        setHasUnsavedChanges(false);
+        setRedactionsApplied(false);
+        return;
+      }
+
+      // Step 1: Export PDF with annotations using EmbedPDF
+      suppressHistoryDirtyRef.current = true;
+      const exportRevision = historyRevisionRef.current;
+      const arrayBuffer = await exportActions.saveAsCopy();
+      if (!arrayBuffer) {
+        throw new Error("Failed to export PDF");
+      }
+
+      // Step 2: Convert ArrayBuffer to File
+      const blob = new Blob([arrayBuffer], { type: "application/pdf" });
+      const filename = currentFile.name || "document.pdf";
+      const file = new File([blob], filename, { type: "application/pdf" });
+      rememberPlainPdfExport(currentFile, file);
+
+      // Step 3: Create StirlingFiles and stubs for version history
+      // Only consume the current file, not all active files
+      const currentFileId = currentFileStableId;
+      if (!currentFileId) throw new Error("Current file ID not found");
+
+      const parentStub = selectors.getStirlingFileStub(currentFileId);
+      if (!parentStub) throw new Error("Parent stub not found");
+
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
+        [file],
+        parentStub,
+        selectedTool ?? "multiTool",
+      );
+
+      // The live document already renders what was exported, and a reopen would
+      // reset the scroll, so the save must not reopen it.
+      const savedFile = stirlingFiles[0];
+      if (savedFile) {
+        skipReloadContentKeyRef.current = getFormFillFileId(savedFile);
+      }
+
+      // Track the new file ID so the viewer follows it after the list reorders
+      const newFileId = stubs[0]?.id;
+      if (newFileId) setActiveFileId(newFileId);
+
+      // Step 4: Consume only the current file (replace in context)
+      await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
+
+      // The exported bytes cover everything up to this revision; an edit that
+      // landed while the save was in flight stays unsaved.
+      savedHistoryRevisionRef.current = exportRevision;
+      hasAnnotationChangesRef.current =
+        historyRevisionRef.current !== exportRevision;
+      suppressHistoryDirtyRef.current = false;
+      setHasUnsavedChanges(hasAnnotationChangesRef.current);
+      setRedactionsApplied(false);
+    };
+
+    const savePromise = saveChanges()
+      .catch((error) => {
+        suppressHistoryDirtyRef.current = false;
+        console.error("Apply changes failed:", error);
+        alert({
+          title: t("viewer.saveChangesErrorTitle", "Could not save changes"),
+          body:
+            error instanceof Error && error.message
+              ? error.message
+              : t(
+                  "viewer.saveChangesErrorBody",
+                  "The document could not be saved. Try again.",
+                ),
+          alertType: "error",
+        });
+        throw error;
+      })
+      .finally(() => {
+        applyChangesInFlightRef.current = null;
+      });
+
+    applyChangesInFlightRef.current = savePromise;
+    return savePromise;
+  }, [
+    currentFile,
+    activeFiles,
+    exportActions,
+    applySignaturesRef,
+    actions,
+    selectors,
+    historyApiRef,
+    setHasUnsavedChanges,
+    setRedactionsApplied,
+    rotationState.rotation,
+    t,
+  ]);
+
+  // Apply form fill changes - reload the filled PDF into the viewer
+  const handleFormApply = useCallback(
+    async (filledBlob: Blob) => {
+      if (formApplyInProgressRef.current)
+        throw new Error("A form save is already in progress.");
+      if (!currentFile || activeFileIds.length === 0)
+        throw new Error("No PDF is open.");
+
+      formApplyInProgressRef.current = true;
+      let savedFileKey: string | null = null;
+      try {
+        console.log(
+          "[Viewer] Applying form fill changes - reloading filled PDF",
+        );
+
+        // Convert Blob to File
+        const filename = currentFile.name || "document.pdf";
+        const file = new File([filledBlob], filename, {
+          type: "application/pdf",
+        });
+        rememberPlainPdfExport(currentFile, file);
+
+        // Get current file info for creating the updated version
+        const currentFileId = currentFileStableId;
+        if (!currentFileId) throw new Error("Current file ID not found");
+
+        const parentStub = selectors.getStirlingFileStub(currentFileId);
+        if (!parentStub) throw new Error("Parent stub not found");
+
+        // Create StirlingFiles and stubs for version history
+        const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
+          [file],
+          parentStub,
+          selectedTool ?? "multiTool",
+        );
+
+        const newFileId = stubs[0]?.id;
+        savedFileKey = getFormFillFileId(stirlingFiles[0]);
+        if (!newFileId || !savedFileKey)
+          throw new Error("Saved file ID not found");
+        const loaded = waitForDocument(savedFileKey);
+
+        // Replace the current file in context
+        await Promise.all([
+          actions
+            .consumeFiles([currentFileId], stirlingFiles, stubs)
+            .then(() => {
+              // Selecting an unpersisted ID falls back to another open PDF and remounts the viewer.
+              setActiveFileId(newFileId);
+              return fetchFormFields(
+                stirlingFiles[0],
+                getFormFillFileId(stirlingFiles[0]) ?? undefined,
+              );
+            }),
+          loaded,
+        ]);
+
+        console.log("[Viewer] Form fill changes applied successfully");
+      } catch (error) {
+        if (savedFileKey) documentFailed(savedFileKey, error);
+        console.error("[Viewer] Apply form changes failed:", error);
+        throw error;
+      } finally {
+        formApplyInProgressRef.current = false;
+      }
+    },
+    [
+      currentFile,
+      currentFileStableId,
+      selectedTool,
+      fetchFormFields,
+      waitForDocument,
+      documentFailed,
+      setActiveFileId,
+      activeFiles,
+      actions,
+      selectors,
+      activeFileIds.length,
+      rotationState.rotation,
+    ],
+  );
+
+  useEffect(() => {
+    if (previewFile) return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<FormApplyDetail>).detail;
+      detail.complete(handleFormApply(detail.blob));
+    };
+    window.addEventListener(FORM_APPLY_EVENT, handler);
+    return () => window.removeEventListener(FORM_APPLY_EVENT, handler);
+  }, [handleFormApply, previewFile]);
+
+  // Apply layer visibility changes - reload the modified PDF into the viewer
+  const layerApplyInProgressRef = useRef(false);
+  const handleLayerApply = useCallback(
+    async (modifiedBlob: Blob) => {
+      if (layerApplyInProgressRef.current) return;
+      if (!currentFile || activeFileIds.length === 0) return;
+
+      layerApplyInProgressRef.current = true;
+      try {
+        const filename = currentFile.name || "document.pdf";
+        const file = new File([modifiedBlob], filename, {
+          type: "application/pdf",
+        });
+        rememberPlainPdfExport(currentFile, file);
+
+        const currentFileId = currentFileStableId;
+        if (!currentFileId) throw new Error("Current file ID not found");
+
+        const parentStub = selectors.getStirlingFileStub(currentFileId);
+        if (!parentStub) throw new Error("Parent stub not found");
+
+        const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
+          [file],
+          parentStub,
+          selectedTool ?? "multiTool",
+        );
+
+        const newFileId = stubs[0]?.id;
+        if (newFileId) setActiveFileId(newFileId);
+
+        await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
+      } catch (error) {
+        console.error("[Viewer] Apply layer changes failed:", error);
+      } finally {
+        layerApplyInProgressRef.current = false;
+      }
+    },
+    [
+      currentFile,
+      activeFiles,
+      actions,
+      selectors,
+      activeFileIds.length,
+      rotationState.rotation,
+    ],
+  );
+
+  // Discard pending redactions but save already-applied ones
+  // This is called when user clicks "Discard & Leave" - we want to:
+  // 1. NOT commit pending redaction marks (they get discarded)
+  // 2. Save the PDF with already-applied redactions (if any)
+  const discardAndSaveApplied = useCallback(async () => {
+    // Only save if there are applied redactions to preserve
+    if (!redactionsApplied || !currentFile || activeFileIds.length === 0) {
+      return;
+    }
+
+    try {
+      console.log(
+        "[Viewer] Discarding pending marks but saving applied redactions",
+      );
+
+      // Export PDF WITHOUT committing pending marks - this saves only applied redactions
+      const arrayBuffer = await exportActions.saveAsCopy();
+      if (!arrayBuffer) {
+        throw new Error("Failed to export PDF");
+      }
+
+      // Convert ArrayBuffer to File
+      const blob = new Blob([arrayBuffer], { type: "application/pdf" });
+      const filename = currentFile.name || "document.pdf";
+      const file = new File([blob], filename, { type: "application/pdf" });
+      rememberPlainPdfExport(currentFile, file);
+
+      // Create StirlingFiles and stubs for version history
+      const currentFileId = currentFileStableId;
+      if (!currentFileId) throw new Error("Current file ID not found");
+
+      const parentStub = selectors.getStirlingFileStub(currentFileId);
+      if (!parentStub) throw new Error("Parent stub not found");
+
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
+        [file],
+        parentStub,
+        selectedTool ?? "multiTool",
+      );
+
+      const newFileId = stubs[0]?.id;
+      if (newFileId) setActiveFileId(newFileId);
+
+      // Consume only the current file (replace in context)
+      await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
+
+      // Clear flags
+      hasAnnotationChangesRef.current = false;
+      setRedactionsApplied(false);
+    } catch (error) {
+      console.error("Failed to save applied redactions:", error);
+    }
+  }, [
+    redactionsApplied,
+    currentFile,
+    activeFiles,
+    activeFileIds.length,
+    exportActions,
+    actions,
+    selectors,
+    setRedactionsApplied,
+    rotationState.rotation,
+  ]);
+
+  // Register navigation warning handlers so the global modal can call our save/discard logic
+  useEffect(() => {
+    if (previewFile || isFormFillToolActive) return;
+
+    registerNavigationWarningHandlers({
+      onApplyAndContinue: async () => {
+        await applyChanges();
+      },
+      onDiscardAndContinue: async () => {
+        await discardAndSaveApplied();
+        const historyApi = historyApiRef.current;
+        if (historyApi?.canUndo) {
+          while (historyApi.canUndo()) {
+            historyApi.undo?.();
+          }
+        }
+        hasAnnotationChangesRef.current = false;
+        historyRevisionRef.current = 0;
+        savedHistoryRevisionRef.current = 0;
+      },
+    });
+    return () => unregisterNavigationWarningHandlers();
+  }, [
+    previewFile,
+    isFormFillToolActive,
+    applyChanges,
+    discardAndSaveApplied,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
+  ]);
+
+  // Veto the byte swap for a key whose visual state is already on screen.
+  const shouldSkipBytes = useCallback((stableKey: string) => {
+    const skipKey = skipReloadContentKeyRef.current;
+    if (skipKey && skipKey === stableKey) {
+      skipReloadContentKeyRef.current = null;
+      return true;
+    }
+    return false;
+  }, []);
+
+  // Carry the reading position across an in-place reload; a genuinely different
+  // document starts fresh.
+  const previousDocumentRef = useRef<{
+    root: string | null;
+    content: string | null;
+    encrypted: boolean;
+  } | null>(null);
+  useLayoutEffect(() => {
+    const root = currentFileRootId ?? null;
+    const content = currentFileId;
+    const encrypted = isCurrentFileEncrypted;
+    const previous = previousDocumentRef.current;
+    previousDocumentRef.current = { root, content, encrypted };
+
+    if (!previous || !root || !content) return;
+    if (previous.encrypted || encrypted) return;
+    if (previous.root !== root || previous.content === content) return;
+    // A save the live document already shows is not reopened (shouldSkipBytes),
+    // so no replacement would ever report back.
+    if (skipReloadContentKeyRef.current === content) return;
+
+    // Only a replacement already activated shows intermediate values; any
+    // earlier state is re-read rather than carried over.
+    const keepTargets = documentSwappedRef.current;
+    const page = getScrollState().currentPage || lastKnownScrollPageRef.current;
+    if (page > 0) {
+      // Captures the within-page offset and waits for the replacement node, so
+      // the restore cannot apply to the outgoing document.
+      queueScrollRestore(page, true);
+    }
+
+    if (!keepTargets || pendingRotationRestoreRef.current === null) {
+      pendingRotationRestoreRef.current = getRotationState().rotation ?? 0;
+    }
+
+    if (!keepTargets || pendingZoomRestoreRef.current === null) {
+      const zoom = getZoomState();
+      // Automatic re-evaluates against the unmounted shell; preserve the numeric scale.
+      const level =
+        zoom.level === ZoomMode.Automatic &&
+        typeof zoom.currentZoom === "number"
+          ? zoom.currentZoom
+          : (zoom.level ?? zoom.currentZoom);
+      if (level !== undefined && level !== null) {
+        pendingZoomRestoreRef.current = level;
+        zoomRestorePendingRef.current = true;
+      }
+    }
+
+    if (!keepTargets || pendingSpreadRestoreRef.current === null) {
+      pendingSpreadRestoreRef.current = getSpreadState().spreadMode ?? null;
+    }
+
+    armRestoreCap();
+    setRestoreTick((tick) => tick + 1);
+  }, [
+    currentFileRootId,
+    currentFileId,
+    isCurrentFileEncrypted,
+    getScrollState,
+    getRotationState,
+    getZoomState,
+    getSpreadState,
+    queueScrollRestore,
+    armRestoreCap,
+    zoomRestorePendingRef,
+  ]);
+  const replacementPagesMounted = useCallback(() => {
+    const pending = pendingScrollPositionRef.current;
+    if (!pending?.expectSwap) return true;
+    return resolvePendingScrollPage() !== null;
+  }, [resolvePendingScrollPage]);
+  // Restore scroll position after file replacement or tool switch
+  // Uses polling with retries to ensure the scroll succeeds
+  useEffect(() => {
+    if (pendingScrollRestoreRef.current === null) return;
+
+    const pageToRestore = pendingScrollRestoreRef.current;
+    // A tool output can take seconds to land, so retries are bounded by time,
+    // not a frame count.
+    const deadline = performance.now() + 30_000;
+    // The effect re-runs as the viewer's state settles; retire old chains so a
+    // stale fallback cannot clear the position the current chain just applied.
+    let cancelled = false;
+    // Frame-accurate retries: the replacement document paints its own top for
+    // as long as it takes to re-apply, so waiting whole intervals is visible.
+    const retry = () => {
+      if (cancelled) return;
+      scrollRestoreAttemptsRef.current++;
+      requestAnimationFrame(attemptScroll);
+    };
+
+    const finish = () => {
+      if (cancelled) return;
+      finishScrollRestore();
+    };
+
+    const attemptScroll = () => {
+      if (cancelled) return;
+      const currentState = getScrollState();
+      const targetPage = Math.min(pageToRestore, currentState.totalPages);
+      // A captured, finished or released restore is never snapped to the page top.
+      if (
+        pendingScrollPositionRef.current ||
+        pendingScrollRestoreRef.current === null
+      ) {
+        return;
+      }
+
+      // Only attempt if we have valid state (totalPages > 0 means PDF is loaded)
+      if (currentState.totalPages > 0 && targetPage > 0) {
+        scrollActions.scrollToPage(targetPage, "instant");
+
+        // Check if scroll succeeded after a brief delay
+        setTimeout(() => {
+          if (cancelled) return;
+          const afterState = getScrollState();
+          if (afterState.currentPage === targetPage) {
+            finish();
+          } else if (performance.now() < deadline) {
+            retry();
+          } else {
+            finish();
+          }
+        }, 50);
+      } else if (performance.now() < deadline) {
+        retry();
+      } else {
+        finish();
+      }
+    };
+
+    // Start on the next frame so the swapped document's DOM is favoured.
+    const timer = setTimeout(attemptScroll, 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [
+    restoreTick,
+    scrollState.totalPages,
+    scrollActions,
+    getScrollState,
+    finishScrollRestore,
+  ]);
+
+  const handleDocumentSwapped = useCallback((documentId: string) => {
+    documentSwappedRef.current = true;
+    replacementLayoutReadyRef.current = false;
+    replacementTotalPagesRef.current = 0;
+    pluginScrollsRef.current = 0;
+    const zoom = pendingZoomRestoreRef.current;
+    const spread = pendingSpreadRestoreRef.current;
+    const rotation = pendingRotationRestoreRef.current;
+    setRestoreRequest(
+      zoom === null && spread === null && rotation === null
+        ? null
+        : { documentId, zoom, spread, rotation },
+    );
+    setRestoreTick((tick) => tick + 1);
+  }, []);
+  const handleDocumentSwapFailed = useCallback(() => {
+    abandonRestore();
+  }, [abandonRestore]);
+
+  const maybeFinishRestore = useCallback(() => {
+    if (
+      pendingZoomRestoreRef.current !== null ||
+      pendingSpreadRestoreRef.current !== null ||
+      pendingRotationRestoreRef.current !== null
+    ) {
+      return;
+    }
+    if (pluginScrollsRef.current > 0) return;
+    const pending = pendingScrollPositionRef.current;
+    if (pending?.expectSwap) {
+      if (!documentSwappedRef.current) return;
+      if (!replacementLayoutReadyRef.current) return;
+      if (!pendingScrollSwappedRef.current) return;
+    }
+    completeRestore();
+  }, [completeRestore]);
+
+  const handleRestoreEvent = useCallback(
+    (event: DocumentRestoreEvent) => {
+      switch (event.type) {
+        case "zoom":
+          pendingZoomRestoreRef.current = null;
+          settleZoomRestore();
+          break;
+        case "spread":
+          pendingSpreadRestoreRef.current = null;
+          break;
+        case "rotation":
+          pendingRotationRestoreRef.current = null;
+          break;
+        case "layout-ready":
+          replacementLayoutReadyRef.current = true;
+          replacementTotalPagesRef.current = event.totalPages;
+          break;
+        case "layout-change":
+          break;
+        case "scroll-request": {
+          // Queued behind the viewport's own rAF callback: same frame, before paint.
+          if (!pendingScrollPositionRef.current) return;
+          pluginScrollsRef.current += 1;
+          const correct = (retry: boolean) => {
+            const scroller = pendingScrollPositionRef.current?.scroller;
+            const landed =
+              !scroller || Math.abs(scroller.scrollTop - event.top) <= 1;
+            if (!landed && retry) {
+              requestAnimationFrame(() => correct(false));
+              return;
+            }
+            pluginScrollsRef.current = Math.max(
+              0,
+              pluginScrollsRef.current - 1,
+            );
+            applyPendingScrollPosition();
+            maybeFinishRestore();
+          };
+          queueMicrotask(() => requestAnimationFrame(() => correct(true)));
+          return;
+        }
+      }
+      applyPendingScrollPosition();
+      maybeFinishRestore();
+    },
+    [settleZoomRestore, applyPendingScrollPosition, maybeFinishRestore],
+  );
+
+  useLayoutEffect(() => {
+    if (!restorePending) return;
+    if (pendingScrollRestoreRef.current === null) return;
+    if (!pendingScrollPositionRef.current) return;
+    if (!documentSwappedRef.current) return;
+    if (pendingScrollSwappedRef.current) return;
+    applyPendingScrollPosition();
+  });
+
+  const handleViewerPageLayout = useCallback(() => {
+    if (pendingScrollRestoreRef.current === null) return;
+    if (!pendingScrollPositionRef.current) return;
+    if (!replacementPagesMounted()) return;
+    applyPendingScrollPosition();
+    maybeFinishRestore();
+  }, [applyPendingScrollPosition, maybeFinishRestore, replacementPagesMounted]);
+
+  useEffect(() => abandonRestore, [abandonRestore]);
+  // Uses polling with retries to ensure the scroll succeeds
+  useEffect(() => {
+    if (pendingScrollRestoreRef.current === null) return;
+
+    const pageToRestore = pendingScrollRestoreRef.current;
+    const maxAttempts = 10;
+    const attemptInterval = 100; // ms between attempts
+
+    const attemptScroll = () => {
+      const currentState = getScrollState();
+      const targetPage = Math.min(pageToRestore, currentState.totalPages);
+
+      if (
+        pendingScrollPositionRef.current ||
+        pendingScrollRestoreRef.current === null
+      ) {
+        return;
+      }
+
+      // Only attempt if we have valid state (totalPages > 0 means PDF is loaded)
+      if (currentState.totalPages > 0 && targetPage > 0) {
+        scrollActions.scrollToPage(targetPage, "instant");
+
+        // Check if scroll succeeded after a brief delay
+        setTimeout(() => {
+          const afterState = getScrollState();
+          if (
+            afterState.currentPage === targetPage ||
+            scrollRestoreAttemptsRef.current >= maxAttempts
+          ) {
+            // Success or max attempts reached - clear pending
+            pendingScrollRestoreRef.current = null;
+            scrollRestoreAttemptsRef.current = 0;
+          } else {
+            // Scroll might not have worked, retry
+            scrollRestoreAttemptsRef.current++;
+            if (scrollRestoreAttemptsRef.current < maxAttempts) {
+              setTimeout(attemptScroll, attemptInterval);
+            } else {
+              // Give up after max attempts
+              pendingScrollRestoreRef.current = null;
+              scrollRestoreAttemptsRef.current = 0;
+            }
+          }
+        }, 100);
+      } else if (scrollRestoreAttemptsRef.current < maxAttempts) {
+        // PDF not ready yet, retry
+        scrollRestoreAttemptsRef.current++;
+        setTimeout(attemptScroll, attemptInterval);
+      } else {
+        // Give up after max attempts
+        pendingScrollRestoreRef.current = null;
+        scrollRestoreAttemptsRef.current = 0;
+      }
+    };
+
+    // Start attempting after initial delay to let PDF start loading
+    const timer = setTimeout(attemptScroll, 200);
+    return () => clearTimeout(timer);
+  }, [restoreTick, scrollState.totalPages, scrollActions, getScrollState]);
+
+  // Register applyChanges with ViewerContext so tools can access it directly
+  useEffect(() => {
+    setApplyChanges(applyChanges);
+    return () => {
+      setApplyChanges(null);
+    };
+  }, [applyChanges, setApplyChanges]);
+
+  // Ruler / measurement tool state is handled by the dedicated hook.
+  const rulerOverlayRef = useRef<RulerOverlayHandle | null>(null);
+
+  const {
+    isRulerActive,
+    setIsRulerActive,
+    pageMeasureScales,
+    customScale,
+    handleSetCustomScale,
+    isScaleCalibrationActive,
+    scaleCalibrationMeasurement,
+    startScaleCalibration,
+    cancelScaleCalibration,
+    handleScaleCalibrationMeasurement,
+    applyScaleCalibration,
+  } = useMeasurementManager({
+    currentFile,
+    effectiveFile,
+    rulerOverlayRef,
+  });
+
+  // Register workbench bar buttons for the viewer
+  useViewerWorkbenchBarButtons(
+    isRulerActive,
+    setIsRulerActive,
+    customScale,
+    handleSetCustomScale,
+    isScaleCalibrationActive,
+    startScaleCalibration,
+    cancelScaleCalibration,
+    currentFile,
+  );
+
+  // Auto-fetch form fields when a PDF is loaded in the viewer.
+  // In normal viewer mode, this uses PDFium WASM (frontend-only).
+  // In formFill tool mode, this uses PDFBox (backend).
+  const formFillFileIdRef = useRef<string | null>(null);
+  const formFillProviderRef = useRef(isFormFillToolActive);
+
+  // Generate a unique identifier for the current file to detect file changes
+  useEffect(() => {
+    const fileChanged = currentFileId !== formFillFileIdRef.current;
+    const providerChanged =
+      formFillProviderRef.current !== isFormFillToolActive;
+    formFillProviderRef.current = isFormFillToolActive;
+
+    if (fileChanged) {
+      console.log(
+        "[FormFill] File changed. Old:",
+        formFillFileIdRef.current,
+        "New:",
+        currentFileId,
+      );
+      formFillFileIdRef.current = currentFileId;
+      // NOTE: Don't call resetFormFill() here — fetchFormFields() handles
+      // clearing old state internally. Calling reset() before fetch() would
+      // double-increment fetchVersionRef, causing version mismatches when
+      // the effect re-fires before the async fetch completes.
+    }
+
+    if (
+      currentFile &&
+      !isCurrentFileEncrypted &&
+      !formApplyInProgressRef.current &&
+      (fileChanged || providerChanged)
+    ) {
+      console.log("[FormFill] Fetching form fields for:", currentFileId);
+      fetchFormFields(currentFile, currentFileId ?? undefined);
+    }
+  }, [
+    isFormFillToolActive,
+    currentFile,
+    currentFileId,
+    fetchFormFields,
+    isCurrentFileEncrypted,
+  ]);
+
+  const sidebarWidthRem = 15;
+  const commentsSidebarWidthRem = 15;
+  const totalRightMargin =
+    (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
+    (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
+    (isAttachmentSidebarVisible ? sidebarWidthRem : 0) +
+    (isLayerSidebarVisible ? sidebarWidthRem : 0) +
+    (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0);
+
+  return (
+    <Box
+      ref={viewerRef}
+      onMouseEnter={() => setIsViewerHovered(true)}
+      onMouseLeave={() => setIsViewerHovered(false)}
+      style={{
+        position: "relative",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        contain: "layout style paint",
+        pointerEvents: isApplyingSignatures ? "none" : undefined,
+      }}
+    >
+      {/* Close Button - Only show in preview mode */}
+      {onClose && previewFile && (
+        <ActionIcon
+          variant="secondary"
+          size="lg"
+          aria-label={t("common.close", "Close")}
+          style={{
+            position: "absolute",
+            top: "1rem",
+            right: "1rem",
+            zIndex: 1000,
+          }}
+          onClick={onClose}
+        >
+          <Icon name="x" />
+        </ActionIcon>
+      )}
+
+      {!effectiveFile ? (
+        <Center style={{ flex: 1 }}>
+          <Text c="var(--color-red-dark)">
+            {t(
+              "viewer.error.noFileProvided",
+              "Error: No file provided to viewer",
+            )}
+          </Text>
+        </Center>
+      ) : isCurrentFileLocked ? (
+        <Center style={{ flex: 1 }}>
+          <Stack align="center" gap="md">
+            <Icon name="lock" size={48} style={{ opacity: 0.5 }} />
+            <Text fw={500}>
+              {t(
+                "encryptedPdfUnlock.viewerLocked",
+                "This PDF is password-protected",
+              )}
+            </Text>
+            <Button
+              onClick={() => {
+                if (currentFile && isStirlingFile(currentFile)) {
+                  actions.openEncryptedUnlockPrompt(currentFile.fileId);
+                }
+              }}
+            >
+              {t("encryptedPdfUnlock.viewerUnlock", "Unlock")}
+            </Button>
+          </Stack>
+        </Center>
+      ) : (
+        <>
+          {currentFile && isStirlingFile(currentFile) && (
+            <PdfProtectionStatus key={currentFile.fileId} file={currentFile} />
+          )}
+          {/* EmbedPDF Viewer */}
+          <Box
+            ref={pdfContainerRef}
+            style={{
+              position: "relative",
+              flex: 1,
+              overflow: "hidden",
+              minHeight: 0,
+              minWidth: 0,
+              marginRight: `${totalRightMargin}rem`,
+              transition: "margin-right 0.3s ease",
+            }}
+          >
+            <LocalEmbedPDF
+              key={currentFileRootId || "no-file"}
+              shouldSkipBytes={shouldSkipBytes}
+              onPageLayout={handleViewerPageLayout}
+              onDocumentSwapped={handleDocumentSwapped}
+              onDocumentSwapFailed={handleDocumentSwapFailed}
+              onDocumentReady={documentReady}
+              onDocumentLoadFailed={documentFailed}
+              onPasswordRequired={onPasswordRequired}
+              onRepair={previewFile ? undefined : damagedRepair?.repair}
+              repairingFileId={damagedRepair?.repairingFileId}
+              restorePending={restorePending}
+              restoreRequest={restoreRequest}
+              onRestoreEvent={handleRestoreEvent}
+              pdfRenderMode={pdfRenderMode}
+              file={effectiveFile.file}
+              url={effectiveFile.url}
+              fileName={
+                previewFile
+                  ? previewFile.name
+                  : currentFile && isStirlingFile(currentFile)
+                    ? currentFile.name
+                    : effectiveFile?.file instanceof File
+                      ? effectiveFile.file.name
+                      : undefined
+              }
+              enableAnnotations={
+                shouldEnableAnnotations && !!pdfAccess && !pdfAccess.encrypted
+              }
+              isSignMode={selectedTool === "sign"}
+              showBakedAnnotations={isAnnotationsVisible}
+              enableRedaction={
+                shouldEnableRedaction && !!pdfAccess && !pdfAccess.encrypted
+              }
+              enableFormFill={
+                shouldEnableFormFill && !!pdfAccess && !pdfAccess.encrypted
+              }
+              formEditingActive={isFormFillToolActive}
+              isManualRedactionMode={isManualRedactMode}
+              signatureApiRef={signatureApiRef}
+              annotationApiRef={annotationApiRef}
+              historyApiRef={historyApiRef}
+              redactionTrackerRef={
+                redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>
+              }
+              fileId={currentFileId}
+              isCommentsSidebarVisible={isCommentsSidebarVisible}
+              commentsSidebarRightOffset={`${(isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0) + (isAttachmentSidebarVisible ? sidebarWidthRem : 0) + (isLayerSidebarVisible ? sidebarWidthRem : 0)}rem`}
+              onSignatureAdded={() => {
+                // Handle signature added - for debugging, enable console logs as needed
+                // Future: Handle signature completion
+              }}
+              signaturePreviews={signaturePreviews}
+              readOnlySignaturePreviews={readOnlySignaturePreviews}
+              signaturePreviewsReadOnly={signaturePreviewsReadOnly}
+              signaturePlacementMode={signaturePlacementMode}
+              signaturePlacementData={signaturePlacementData}
+              signaturePlacementType={signaturePlacementType}
+              onSignaturePreviewsChange={onSignaturePreviewsChange}
+              signatureOverlayApiRef={signatureOverlayApiRef}
+            />
+            {/* Floating save bar for form-filled PDFs (like Chrome/Firefox PDF viewers) */}
+            <FormSaveBar
+              file={currentFile ?? null}
+              isFormFillToolActive={isFormFillToolActive}
+              onApply={handleFormApply}
+              policyEnforcing={policyEnforcing}
+            />
+            <StampPlacementOverlay
+              containerRef={pdfContainerRef}
+              isActive={isPlacementOverlayActive}
+              signatureConfig={signatureConfig}
+              signatureLineZoom={signatureLineZoom}
+            />
+            <RulerOverlay
+              ref={rulerOverlayRef}
+              containerRef={pdfContainerRef}
+              isActive={isRulerActive}
+              pageMeasureScales={pageMeasureScales}
+              customScale={customScale}
+              isCalibrationActive={isScaleCalibrationActive}
+              onCalibrationMeasure={handleScaleCalibrationMeasurement}
+            />
+          </Box>
+          <ScaleCalibrationDialog
+            opened={!!scaleCalibrationMeasurement}
+            measurement={scaleCalibrationMeasurement}
+            defaultUnit={customScale?.unit ?? "m"}
+            onApplyScale={applyScaleCalibration}
+            onClose={cancelScaleCalibration}
+          />
+        </>
+      )}
+
+      {/* Bottom Toolbar Overlay */}
+      {effectiveFile && (
+        <div
+          className="pdf-viewer-toolbar-dock"
+          style={{
+            position: "fixed",
+            // Gutter matching the workbench rails, so the bar reads as a
+            // floating card rather than one welded to the viewport edge.
+            bottom: "0.5rem",
+            left: 0,
+            right: 0,
+            zIndex: 50,
+            display: "flex",
+            justifyContent: "center",
+            pointerEvents: "none",
+            background: "transparent",
+          }}
+        >
+          <div style={{ pointerEvents: "auto" }}>
+            <PdfViewerToolbar
+              currentPage={scrollState.currentPage}
+              totalPages={scrollState.totalPages}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Thumbnail Sidebar */}
+      <ThumbnailSidebar
+        visible={isThumbnailSidebarVisible}
+        onToggle={toggleThumbnailSidebar}
+        activeFileId={activeFileId}
+      />
+      <BookmarkSidebar
+        visible={isBookmarkSidebarVisible}
+        thumbnailVisible={isThumbnailSidebarVisible}
+        documentCacheKey={bookmarkCacheKey}
+        preloadCacheKeys={allBookmarkCacheKeys}
+      />
+      {!portfolioPinned && (
+        <AttachmentSidebar
+          visible={isAttachmentSidebarVisible}
+          thumbnailVisible={isThumbnailSidebarVisible}
+          bookmarkVisible={isBookmarkSidebarVisible}
+          documentCacheKey={bookmarkCacheKey}
+          preloadCacheKeys={allBookmarkCacheKeys}
+        />
+      )}
+      <LayerSidebar
+        visible={isLayerSidebarVisible}
+        rightOffset={
+          (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
+          (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
+          (isAttachmentSidebarVisible ? sidebarWidthRem : 0)
+        }
+        file={effectiveFile?.file ?? null}
+        documentCacheKey={bookmarkCacheKey}
+        onApplyLayers={handleLayerApply}
+        onLayersDetected={setHasLayers}
+      />
+    </Box>
+  );
+};
+
+const EmbedPdfViewer = (props: EmbedPdfViewerProps) => {
+  if (props.previewFile) {
+    return (
+      <PdfPreviewUnlockGate file={props.previewFile} onClose={props.onClose}>
+        {(onPasswordRequired) => (
+          <EmbedPdfViewerContent
+            {...props}
+            onPasswordRequired={onPasswordRequired}
+          />
+        )}
+      </PdfPreviewUnlockGate>
+    );
+  }
+  return <EmbedPdfViewerContent {...props} />;
+};
+
+export default EmbedPdfViewer;
