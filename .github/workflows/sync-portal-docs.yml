@@ -42,9 +42,18 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Checkout trusted setup-bot action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-setup-bot-action
+          sparse-checkout: .github/actions/setup-bot
+          persist-credentials: false
+
       - name: Setup GitHub App Bot
         id: setup-bot
-        uses: ./.github/actions/setup-bot
+        uses: ./trusted-setup-bot-action/.github/actions/setup-bot
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
