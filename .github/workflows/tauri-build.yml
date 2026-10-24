@@ -251,7 +251,7 @@ jobs:
         id: frontend-cache
         shell: bash
         env:
-          FRONTEND_DIST_CACHE_HIT: ${{ fromJSON(steps.cache.outputs.cache-results)['frontend-dist']['cache-hit'] }}
+          FRONTEND_DIST_CACHE_HIT: ${{ fromJSON(steps.cache.outputs.cache-results || '{"frontend-dist":{"cache-hit":false}}')['frontend-dist']['cache-hit'] }}
         run: |
           echo "frontend_dist_hit=$FRONTEND_DIST_CACHE_HIT" >> "$GITHUB_OUTPUT"
           echo "frontend-dist cache hit: $FRONTEND_DIST_CACHE_HIT"
@@ -859,7 +859,7 @@ jobs:
         id: frontend-cache
         shell: bash
         env:
-          FRONTEND_DIST_CACHE_HIT: ${{ fromJSON(steps.cache.outputs.cache-results)['frontend-dist']['cache-hit'] }}
+          FRONTEND_DIST_CACHE_HIT: ${{ fromJSON(steps.cache.outputs.cache-results || '{"frontend-dist":{"cache-hit":false}}')['frontend-dist']['cache-hit'] }}
         run: |
           echo "frontend_dist_hit=$FRONTEND_DIST_CACHE_HIT" >> "$GITHUB_OUTPUT"
           echo "frontend-dist cache hit: $FRONTEND_DIST_CACHE_HIT"

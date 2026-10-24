@@ -82,8 +82,8 @@ jobs:
           CACHE_READ_ONLY: ${{ steps.cache.outputs.read-only }}
           CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
           CACHE_ERROR: ${{ steps.cache.outputs.error }}
-          CACHE_HIT_GRADLE_CACHE: ${{ fromJSON(steps.cache.outputs.cache-results)['gradle-caches']['cache-hit'] }}
-          CACHE_HIT_GRADLE_WRAPPER: ${{ fromJSON(steps.cache.outputs.cache-results)['gradle-wrapper']['cache-hit'] }}
+          CACHE_HIT_GRADLE_CACHE: ${{ fromJSON(steps.cache.outputs.cache-results || '{"gradle-caches":{"cache-hit":false}}')['gradle-caches']['cache-hit'] }}
+          CACHE_HIT_GRADLE_WRAPPER: ${{ fromJSON(steps.cache.outputs.cache-results || '{"gradle-wrapper":{"cache-hit":false}}')['gradle-wrapper']['cache-hit'] }}
         shell: bash
         run: |
           echo "Fork: $CACHE_IS_FORK"
@@ -94,7 +94,7 @@ jobs:
           echo "cache_hit_gradle_cache: $CACHE_HIT_GRADLE_CACHE"
           echo "cache_hit_gradle_wrapper=$CACHE_HIT_GRADLE_WRAPPER" >> "$GITHUB_OUTPUT"
           echo "cache_hit_gradle_wrapper: $CACHE_HIT_GRADLE_WRAPPER"
-          echo '${{ toJSON(fromJSON(steps.cache.outputs.cache-results)) }}'
+          echo '${{ toJSON(fromJSON(steps.cache.outputs.cache-results || '{}')) }}'
 
       - name: Set up JDK ${{ inputs.java-version }}
         if: |
