@@ -444,7 +444,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Advance", "extract-image-scans");
         addEndpointToGroup("Advance", "repair");
         addEndpointToGroup("Advance", "auto-rename");
-        addEndpointToGroup("Advance", "scanner-effect");
         addEndpointToGroup("Advance", "overlay-pdf");
         // Backend-only endpoints
         addEndpointToGroup("Advance", "adjust-contrast");
@@ -585,7 +584,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Ghostscript", "compress-pdf");
         addEndpointToGroup("Ghostscript", "crop");
         addEndpointToGroup("Ghostscript", "replace-invert-pdf");
-        addEndpointToGroup("Ghostscript", "scanner-effect");
         addEndpointToGroup("Ghostscript", "pdf-to-vector");
         addEndpointToGroup("Ghostscript", "vector-to-pdf");
 

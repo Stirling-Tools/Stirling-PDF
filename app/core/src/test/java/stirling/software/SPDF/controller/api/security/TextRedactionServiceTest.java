@@ -2,7 +2,6 @@ package stirling.software.SPDF.controller.api.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -225,52 +224,6 @@ class TextRedactionServiceTest {
                         service.findTextToRedact(doc, new String[] {"KEEP"}, false, false);
                 assertFalse(keepStill.isEmpty(), "untargeted word KEEP must survive redaction");
             }
-        }
-    }
-
-    // ── inner data classes ───────────────────────────────────────────────────────────────────────
-
-    @Nested
-    @DisplayName("TextSegment / MatchRange data classes")
-    class DataClasses {
-
-        @Test
-        @DisplayName("TextSegment exposes its constructor values via accessors")
-        void textSegmentAccessors() {
-            PDFont font = helvetica();
-            TextRedactionService.TextSegment segment =
-                    new TextRedactionService.TextSegment(3, "Tj", "hello", 10, 15, font, 12f);
-
-            assertEquals(3, segment.getTokenIndex());
-            assertEquals("Tj", segment.getOperatorName());
-            assertEquals("hello", segment.getText());
-            assertEquals(10, segment.getStartPos());
-            assertEquals(15, segment.getEndPos());
-            assertSame(font, segment.getFont());
-            assertEquals(12f, segment.getFontSize());
-        }
-
-        @Test
-        @DisplayName("MatchRange exposes start and end positions")
-        void matchRangeAccessors() {
-            TextRedactionService.MatchRange range = new TextRedactionService.MatchRange(4, 9);
-            assertEquals(4, range.getStartPos());
-            assertEquals(9, range.getEndPos());
-        }
-
-        @Test
-        @DisplayName("MatchRange equality follows its data fields")
-        void matchRangeEquality() {
-            assertEquals(
-                    new TextRedactionService.MatchRange(1, 5),
-                    new TextRedactionService.MatchRange(1, 5));
-            assertNotEquals(
-                    new TextRedactionService.MatchRange(1, 5),
-                    new TextRedactionService.MatchRange(1, 6));
-        }
-
-        private void assertNotEquals(Object a, Object b) {
-            assertFalse(a.equals(b));
         }
     }
 }

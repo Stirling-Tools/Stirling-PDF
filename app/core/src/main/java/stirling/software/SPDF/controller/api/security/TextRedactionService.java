@@ -14,11 +14,8 @@ import java.util.stream.Collectors;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.springframework.stereotype.Service;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
@@ -218,24 +215,5 @@ class TextRedactionService {
                 }
             }
         }
-    }
-
-    @Data
-    @AllArgsConstructor
-    static class TextSegment {
-        private int tokenIndex;
-        private String operatorName;
-        private String text;
-        private int startPos;
-        private int endPos;
-        private PDFont font;
-        private float fontSize;
-    }
-
-    @Data
-    @AllArgsConstructor
-    static class MatchRange {
-        private int startPos;
-        private int endPos;
     }
 }

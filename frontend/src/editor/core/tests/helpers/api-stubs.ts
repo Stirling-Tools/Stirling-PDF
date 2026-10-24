@@ -69,7 +69,6 @@ const ALL_BACKEND_ENDPOINTS = [
   "annotate",
   "scanner-image-split",
   "edit-table-of-contents",
-  "scanner-effect",
   "auto-rename",
   "page-layout",
   "scale-pages",
