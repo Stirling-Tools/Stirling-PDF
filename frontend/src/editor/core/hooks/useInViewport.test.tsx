@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { useInViewport } from "@app/hooks/useInViewport";
+import { useInViewport } from "@editor/hooks/useInViewport";
 
 function entry(
   target: Element,

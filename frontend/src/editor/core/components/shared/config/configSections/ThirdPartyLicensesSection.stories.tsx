@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import ThirdPartyLicensesSection, {
   FrontendThirdPartyLicensesSection,
-} from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
+} from "@editor/components/shared/config/configSections/ThirdPartyLicensesSection";
 
 const meta = {
   title: "Shared/Config/ConfigSections/ThirdPartyLicensesSection",

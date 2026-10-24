@@ -1,8 +1,8 @@
 import {
   fitTokenAdvance,
   type TokenFit,
-} from "@app/tools/pdfTextEditor/util/lineLayout";
-import { measureAdvancePx } from "@app/tools/pdfTextEditor/util/textMetrics";
+} from "@editor/tools/pdfTextEditor/util/lineLayout";
+import { measureAdvancePx } from "@editor/tools/pdfTextEditor/util/textMetrics";
 
 export interface PaintToken {
   text: string;

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { PortalViewProviders } from "@portal/test/TestQueryProvider";
+import { PortalViewProviders } from "@processor/test/TestQueryProvider";
 
 /**
  * An unlinked instance has its own user limit, so inviting is a free-tier feature and nothing here
@@ -9,7 +9,7 @@ import { PortalViewProviders } from "@portal/test/TestQueryProvider";
  */
 const { connect } = vi.hoisted(() => ({ connect: vi.fn() }));
 
-vi.mock("@portal/hooks/useConnectGate", () => ({
+vi.mock("@processor/hooks/useConnectGate", () => ({
   useConnectGate: () => ({
     gated: true,
     loading: false,
@@ -31,20 +31,22 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("@portal/contexts/TierContext", () => ({
+vi.mock("@processor/contexts/TierContext", () => ({
   useTier: () => ({ tier: "pro" }),
 }));
-vi.mock("@app/auth", () => ({
+vi.mock("@editor/auth", () => ({
   getStoredToken: () => null,
   clearStoredToken: vi.fn(),
 }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => null,
   configureSupabase: vi.fn(),
 }));
-vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
+vi.mock("@processor/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 
-vi.mock("@portal/views/usersData", () => ({
+vi.mock("@processor/views/usersData", () => ({
   useUsersData: () => ({
     usersState: { data: null, loading: false, error: null },
     grantsState: { data: [], loading: false, error: null },
@@ -54,7 +56,7 @@ vi.mock("@portal/views/usersData", () => ({
   }),
 }));
 
-import { Users } from "@portal/views/Users";
+import { Users } from "@processor/views/Users";
 
 const INVITE_MODAL = "users.invite.title";
 

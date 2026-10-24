@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { countUnreducedOutputs } from "@app/hooks/tools/compress/useUnreducedOutputs";
-import type { FileId, StirlingFileStub } from "@app/types/fileContext";
+import { countUnreducedOutputs } from "@editor/hooks/tools/compress/useUnreducedOutputs";
+import type { FileId, StirlingFileStub } from "@editor/types/fileContext";
 
 const id = (value: string) => value as FileId;
 

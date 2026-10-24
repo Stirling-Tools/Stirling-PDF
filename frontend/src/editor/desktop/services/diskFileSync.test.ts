@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import type { DiskFileState } from "@app/services/desktopFileLink";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import type { DiskFileState } from "@editor/services/desktopFileLink";
 
 // The seam is a module-level const, so each behaviour is exercised by re-importing
 // the module under a fresh mock rather than by mutating a flag.
@@ -15,7 +15,7 @@ const diskState = vi.hoisted<{
   bytes: new Uint8Array([1, 2, 3]).buffer,
 }));
 
-vi.mock("@app/services/desktopFileLink", () => ({
+vi.mock("@editor/services/desktopFileLink", () => ({
   get desktopFileLinkingSupported() {
     return diskState.supported;
   },
@@ -29,7 +29,7 @@ const getStirlingFile = vi.hoisted(() =>
   vi.fn(async () => new File([new Uint8Array([9])], "report.pdf")),
 );
 
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { updateFileMetadata, deleteStirlingFile, getStirlingFile },
 }));
 
@@ -42,12 +42,14 @@ const downloadFileWithPolicy = vi.hoisted(() =>
     }),
   ),
 );
-vi.mock("@app/services/exportWithPolicy", () => ({ downloadFileWithPolicy }));
+vi.mock("@editor/services/exportWithPolicy", () => ({
+  downloadFileWithPolicy,
+}));
 
 const alertMock = vi.hoisted(() => vi.fn());
-vi.mock("@app/components/toast", () => ({ alert: alertMock }));
+vi.mock("@editor/components/toast", () => ({ alert: alertMock }));
 
-import { getDiskFileState } from "@app/services/desktopFileLink";
+import { getDiskFileState } from "@editor/services/desktopFileLink";
 import {
   syncLinkedFileFromDisk,
   hasDiskChanged,
@@ -62,7 +64,7 @@ import {
   beginSelfWrite,
   endSelfWrite,
   __resetSelfWrites,
-} from "@app/services/diskFileSync";
+} from "@editor/services/diskFileSync";
 
 function stub(overrides: Partial<StirlingFileStub> = {}): StirlingFileStub {
   return {

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ReviewSignatureStep } from "@app/components/tools/certSign/steps/ReviewSignatureStep";
-import type { SignRequestDetail } from "@app/types/signingSession";
+import { ReviewSignatureStep } from "@editor/components/tools/certSign/steps/ReviewSignatureStep";
+import type { SignRequestDetail } from "@editor/types/signingSession";
 
 const signRequest: SignRequestDetail = {
   sessionId: "session-1",

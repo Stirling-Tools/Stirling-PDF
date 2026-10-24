@@ -1,6 +1,6 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
 
 /** Locate a session grid; missing tables return null after a document reload. */
 export function locateTable(

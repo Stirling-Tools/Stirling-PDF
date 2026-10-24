@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import "@app/ui/NavItem.css";
+import "@editor/ui/NavItem.css";
 
 export type NavItemAccent = "blue" | "purple" | "green" | "amber" | "red";
 

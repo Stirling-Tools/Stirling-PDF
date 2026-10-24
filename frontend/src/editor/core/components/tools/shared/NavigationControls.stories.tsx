@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import NavigationControls from "@app/components/tools/shared/NavigationControls";
+import NavigationControls from "@editor/components/tools/shared/NavigationControls";
 
 const meta = {
   title: "ToolsShared/NavigationControls",

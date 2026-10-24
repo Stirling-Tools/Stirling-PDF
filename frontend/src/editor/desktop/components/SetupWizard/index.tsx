@@ -1,27 +1,27 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack, Text, Alert, Loader, Center } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { DesktopAuthLayout } from "@app/components/SetupWizard/DesktopAuthLayout";
-import { SaaSLoginScreen } from "@app/components/SetupWizard/SaaSLoginScreen";
-import { SaaSSignupScreen } from "@app/components/SetupWizard/SaaSSignupScreen";
-import { ServerSelectionScreen } from "@app/components/SetupWizard/ServerSelectionScreen";
-import { SelfHostedLoginScreen } from "@app/components/SetupWizard/SelfHostedLoginScreen";
+import { Button } from "@editor/ui/Button";
+import { DesktopAuthLayout } from "@editor/components/SetupWizard/DesktopAuthLayout";
+import { SaaSLoginScreen } from "@editor/components/SetupWizard/SaaSLoginScreen";
+import { SaaSSignupScreen } from "@editor/components/SetupWizard/SaaSSignupScreen";
+import { ServerSelectionScreen } from "@editor/components/SetupWizard/ServerSelectionScreen";
+import { SelfHostedLoginScreen } from "@editor/components/SetupWizard/SelfHostedLoginScreen";
 import {
   ServerConfig,
   SSOProviderConfig,
   connectionModeService,
-} from "@app/services/connectionModeService";
+} from "@editor/services/connectionModeService";
 import {
   AuthServiceError,
   authService,
   UserInfo,
-} from "@app/services/authService";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import { STIRLING_SAAS_URL } from "@app/constants/connection";
+} from "@editor/services/authService";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { STIRLING_SAAS_URL } from "@editor/constants/connection";
 import { listen } from "@tauri-apps/api/event";
-import "@app/auth/ui/auth.css";
-import { DisabledButtonWithTooltip } from "@app/components/shared/DisabledButtonWithTooltip";
+import "@editor/auth/ui/auth.css";
+import { DisabledButtonWithTooltip } from "@editor/components/shared/DisabledButtonWithTooltip";
 
 enum SetupStep {
   SaaSLogin,

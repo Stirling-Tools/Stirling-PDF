@@ -8,7 +8,7 @@ import {
   readOverlayText,
   refitEditedTokens,
   restoreCaretOffset,
-} from "@app/tools/pdfTextEditor/util/overlayPainter";
+} from "@editor/tools/pdfTextEditor/util/overlayPainter";
 
 const OPTS = { font: "normal 400 16px sans-serif", fontSizePx: 16 };
 

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BASE_PATH } from "@app/constants/app";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { buildMobileRouteUrl } from "@app/utils/mobileScannerUrl";
-import apiClient from "@app/services/apiClient";
+import { BASE_PATH } from "@editor/constants/app";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { buildMobileRouteUrl } from "@editor/utils/mobileScannerUrl";
+import apiClient from "@editor/services/apiClient";
 
 /**
  * Session lifecycle for phone-to-desktop transfer over the mobile-scanner

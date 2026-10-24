@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const h = vi.hoisted(() => ({ get: vi.fn() }));
-vi.mock("@app/services/apiClient", () => ({ default: { get: h.get } }));
+vi.mock("@editor/services/apiClient", () => ({ default: { get: h.get } }));
 
 import {
   fetchRootDestination,
   loginLandingMode,
-} from "@app/utils/loginLanding";
+} from "@editor/utils/loginLanding";
 
 function httpError(status: number) {
   return { isAxiosError: true, message: "http", response: { status } };

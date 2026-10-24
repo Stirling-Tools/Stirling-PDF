@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
 function makeCmd(type = "test"): Command {
   return { type, apply: vi.fn(), revert: vi.fn() };

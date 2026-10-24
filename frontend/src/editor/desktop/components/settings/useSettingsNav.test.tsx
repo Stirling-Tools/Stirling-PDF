@@ -4,9 +4,9 @@ import type { ReactElement } from "react";
 import {
   useSettingsNav,
   type SettingsNav,
-} from "@app/components/settings/useSettingsNav";
-import DesktopGeneralSection from "@app/components/shared/config/configSections/GeneralSection";
-import type { PreferencesSectionProps } from "@core/components/shared/config/configSections/preferences/PreferencesSection";
+} from "@editor/components/settings/useSettingsNav";
+import DesktopGeneralSection from "@editor/components/shared/config/configSections/GeneralSection";
+import type { PreferencesSectionProps } from "@editor-core/components/shared/config/configSections/preferences/PreferencesSection";
 
 const state = vi.hoisted(() => ({
   mode: "saas",
@@ -22,57 +22,63 @@ const state = vi.hoisted(() => ({
 const ProprietaryPreferences = vi.hoisted(
   () => (_props: { accountSlot?: string }) => null,
 );
-vi.mock("@proprietary/components/shared/config/configNavSections", () => ({
-  useConfigNavSections: (
-    _isAdmin: boolean,
-    _runningEE: boolean,
-    loginEnabled: boolean,
-  ) => [
-    {
-      id: "preferences",
-      title: "Preferences",
-      items: [
-        {
-          key: "general",
-          label: "Preferences",
-          // Stands in for proprietary's PreferencesSection and its account cards.
-          component: (
-            <ProprietaryPreferences
-              accountSlot={loginEnabled ? "account-cards" : undefined}
-            />
-          ),
-        },
-      ],
-    },
-    ...(state.workspace
-      ? [
+vi.mock(
+  "@editor-proprietary/components/shared/config/configNavSections",
+  () => ({
+    useConfigNavSections: (
+      _isAdmin: boolean,
+      _runningEE: boolean,
+      loginEnabled: boolean,
+    ) => [
+      {
+        id: "preferences",
+        title: "Preferences",
+        items: [
           {
-            id: "workspace",
-            title: "Workspace",
-            items: [
-              { key: "users", label: "Users", component: null },
-              { key: "plan", label: "Old plan", component: null },
-              { key: "adminPlan", label: "Old admin plan", component: null },
-            ],
+            key: "general",
+            label: "Preferences",
+            // Stands in for proprietary's PreferencesSection and its account cards.
+            component: (
+              <ProprietaryPreferences
+                accountSlot={loginEnabled ? "account-cards" : undefined}
+              />
+            ),
           },
-        ]
-      : []),
-  ],
-}));
-vi.mock("@app/components/shared/config/configSections/GeneralSection", () => ({
-  default: () => null,
-}));
-vi.mock("@app/components/ConnectionSettings", () => ({
+        ],
+      },
+      ...(state.workspace
+        ? [
+            {
+              id: "workspace",
+              title: "Workspace",
+              items: [
+                { key: "users", label: "Users", component: null },
+                { key: "plan", label: "Old plan", component: null },
+                { key: "adminPlan", label: "Old admin plan", component: null },
+              ],
+            },
+          ]
+        : []),
+    ],
+  }),
+);
+vi.mock(
+  "@editor/components/shared/config/configSections/GeneralSection",
+  () => ({
+    default: () => null,
+  }),
+);
+vi.mock("@editor/components/ConnectionSettings", () => ({
   ConnectionSettings: () => null,
 }));
-vi.mock("@app/components/shared/config/cloudConfigNavSections", () => ({
+vi.mock("@editor/components/shared/config/cloudConfigNavSections", () => ({
   createCloudTeamNavItem: () => ({
     key: "users",
     label: "Users",
     component: null,
   }),
 }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentMode: async () => {
       if (state.connectionFails)
@@ -82,7 +88,7 @@ vi.mock("@app/services/connectionModeService", () => ({
     subscribeToModeChanges: () => () => {},
   },
 }));
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: {
     subscribeToAuth: (listener: (status: string) => void) => {
       listener(state.authenticated ? "authenticated" : "unauthenticated");
@@ -90,22 +96,22 @@ vi.mock("@app/services/authService", () => ({
     },
   },
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({
     config: { isAdmin: true, enableLogin: state.loginEnabled },
   }),
 }));
-vi.mock("@app/auth/context", () => ({
+vi.mock("@editor/auth/context", () => ({
   useAuth: () => ({
     isAdmin: state.admin,
     user: { orgOwner: state.owner },
     loading: state.loading,
   }),
 }));
-vi.mock("@app/hooks/usePortalAccess", () => ({
+vi.mock("@editor/hooks/usePortalAccess", () => ({
   usePortalAccessState: () => ({ granted: false, settled: true }),
 }));
-vi.mock("@app/hooks/useRosterAvailable", () => ({
+vi.mock("@editor/hooks/useRosterAvailable", () => ({
   useRosterAvailable: () => state.roster,
 }));
 vi.mock("react-i18next", async (importOriginal) => ({
@@ -114,7 +120,7 @@ vi.mock("react-i18next", async (importOriginal) => ({
     t: (key: string, fallback?: string) => fallback ?? key,
   }),
 }));
-vi.mock("@app/platform/openExternal", () => ({ openExternal: vi.fn() }));
+vi.mock("@editor/platform/openExternal", () => ({ openExternal: vi.fn() }));
 
 beforeEach(() => {
   state.mode = "saas";

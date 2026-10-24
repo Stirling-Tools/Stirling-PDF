@@ -1,6 +1,6 @@
-import { useOptionalUpdateSeats } from "@app/contexts/UpdateSeatsContext";
-import { useOptionalLicense } from "@app/contexts/LicenseContext";
-import type { SeatManagement } from "@portal/api/seatManagement";
+import { useOptionalUpdateSeats } from "@editor/contexts/UpdateSeatsContext";
+import { useOptionalLicense } from "@editor/contexts/LicenseContext";
+import type { SeatManagement } from "@processor/api/seatManagement";
 
 /** Licence types sold with a seat count, i.e. the ones seats can be bought for.
  *  SERVER is the licence behind the plan the pricing page calls "Team". */

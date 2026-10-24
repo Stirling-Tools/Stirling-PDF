@@ -3,7 +3,7 @@ import { renderHook, act } from "@testing-library/react";
 import {
   useRedactParameters,
   defaultParameters,
-} from "@app/hooks/tools/redact/useRedactParameters";
+} from "@editor/hooks/tools/redact/useRedactParameters";
 
 describe("useRedactParameters", () => {
   test("should initialize with default parameters", () => {

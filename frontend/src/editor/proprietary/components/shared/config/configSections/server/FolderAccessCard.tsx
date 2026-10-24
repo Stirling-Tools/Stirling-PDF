@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Icon } from "@app/ui/Icon";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { Icon } from "@editor/ui/Icon";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
   Code,
@@ -11,12 +11,12 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import apiClient from "@app/services/apiClient";
-import type { ImpliedFolderRoot } from "@app/components/shared/config/configSections/server/serverSettings";
-import type { FolderAccessCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
+import { Button } from "@editor/ui/Button";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
+import apiClient from "@editor/services/apiClient";
+import type { ImpliedFolderRoot } from "@editor/components/shared/config/configSections/server/serverSettings";
+import type { FolderAccessCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
 
 /** The directories folder sources and outputs may touch. A security boundary. */
 export function FolderAccessCard({

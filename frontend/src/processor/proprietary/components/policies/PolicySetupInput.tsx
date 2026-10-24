@@ -1,25 +1,25 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, FormField, Select } from "@app/ui";
-import type { PolicySetupConfigProps } from "@app/components/policies/PolicySetupWizard";
-import { fetchSources, fetchSource } from "@portal/api/sources";
-import { fetchTriggers } from "@portal/api/pipelines";
-import { errorMessage } from "@portal/api/http";
-import { qk } from "@portal/queries/keys";
+import { Banner, Button, FormField, Select } from "@editor/ui";
+import type { PolicySetupConfigProps } from "@editor/components/policies/PolicySetupWizard";
+import { fetchSources, fetchSource } from "@processor/api/sources";
+import { fetchTriggers } from "@processor/api/pipelines";
+import { errorMessage } from "@processor/api/http";
+import { qk } from "@processor/queries/keys";
 import {
   PipelineInputTrigger,
   type WorkingInput,
-} from "@portal/components/pipelines/PipelineInputTrigger";
+} from "@processor/components/pipelines/PipelineInputTrigger";
 import {
   buildTriggerFor,
   parseTrigger,
-} from "@portal/components/pipelines/inputTriggerConfig";
-import { SourceModal } from "@portal/components/sources/SourceModal";
+} from "@processor/components/pipelines/inputTriggerConfig";
+import { SourceModal } from "@processor/components/sources/SourceModal";
 import {
   EDITOR_SOURCE_TYPE,
   isReadableSource,
-} from "@portal/components/sources/sourceTypes";
+} from "@processor/components/sources/sourceTypes";
 
 interface Props extends PolicySetupConfigProps {
   folderName?: string;

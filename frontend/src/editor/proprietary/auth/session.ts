@@ -3,6 +3,6 @@ export async function getAccessToken(): Promise<string | null> {
   // Dynamic import: the portal session module registers Supabase auth listeners
   // and would otherwise sit on the startup path of every build.
   const { getPortalSaasToken } =
-    await import("@app/portal/auth/portalSaasSession");
+    await import("@editor/portal/auth/portalSaasSession");
   return getPortalSaasToken();
 }

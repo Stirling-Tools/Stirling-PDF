@@ -1,20 +1,20 @@
 import { useEffect, useId, useState } from "react";
-import { Icon } from "@app/ui/Icon";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { Icon } from "@editor/ui/Icon";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { Badge, Group, Paper, Select, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import UpdateModal from "@app/components/shared/UpdateModal";
-import { updateService, UpdateSummary } from "@app/services/updateService";
-import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import type { SoftwareUpdatesCardProps } from "@app/components/shared/config/configSections/preferences/preferencesCardProps";
+import { Button } from "@editor/ui/Button";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import UpdateModal from "@editor/components/shared/UpdateModal";
+import { updateService, UpdateSummary } from "@editor/services/updateService";
+import { useFrontendVersionInfo } from "@editor/hooks/useFrontendVersionInfo";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import type { SoftwareUpdatesCardProps } from "@editor/components/shared/config/configSections/preferences/preferencesCardProps";
 import {
   AppVersionLabel,
   BackendVersionLabel,
   VersionMismatchMessage,
-} from "@app/components/shared/config/configSections/preferences/VersionLabels";
+} from "@editor/components/shared/config/configSections/preferences/VersionLabels";
 
 /**
  * Version information and the update check. The page decides whether this card

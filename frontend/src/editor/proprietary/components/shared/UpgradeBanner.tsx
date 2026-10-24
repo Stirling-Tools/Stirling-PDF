@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
-import { isAuthRoute } from "@core/constants/routes";
-import { useCheckout } from "@app/contexts/CheckoutContext";
-import { AppBanner } from "@app/components/shared/AppBanner";
+import { isAuthRoute } from "@editor-core/constants/routes";
+import { useCheckout } from "@editor/contexts/CheckoutContext";
+import { AppBanner } from "@editor/components/shared/AppBanner";
 import {
   SERVER_LICENSE_REQUEST_EVENT,
   type ServerLicenseRequestPayload,
@@ -11,9 +11,9 @@ import {
   type UpgradeBannerTestPayload,
   type UpgradeBannerTestScenario,
   UPGRADE_BANNER_ALERT_EVENT,
-} from "@core/constants/events";
-import { useServerExperience } from "@app/hooks/useServerExperience";
-import { isOnboardingCompleted } from "@core/components/onboarding/orchestrator/onboardingStorage";
+} from "@editor-core/constants/events";
+import { useServerExperience } from "@editor/hooks/useServerExperience";
+import { isOnboardingCompleted } from "@editor-core/components/onboarding/orchestrator/onboardingStorage";
 
 const FRIENDLY_LAST_SEEN_KEY = "upgradeBannerFriendlyLastShownAt";
 const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;

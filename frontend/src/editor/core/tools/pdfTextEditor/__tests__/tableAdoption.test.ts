@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { Page } from "@app/tools/pdfTextEditor/model/Page";
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
-import { adoptedTableModel } from "@app/tools/pdfTextEditor/util/tableAdoption";
-import { ImageObject } from "@app/tools/pdfTextEditor/model/ImageObject";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
+import { adoptedTableModel } from "@editor/tools/pdfTextEditor/util/tableAdoption";
+import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
 
-vi.mock("@app/tools/pdfTextEditor/commands/editTextHelpers", () => ({
+vi.mock("@editor/tools/pdfTextEditor/commands/editTextHelpers", () => ({
   measureObjSpanPt: () => null,
 }));
 

@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text } from "@mantine/core";
-import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import EmailPasswordForm from "@app/auth/ui/EmailPasswordForm";
-import DividerWithText from "@app/components/shared/DividerWithText";
-import { DesktopOAuthButtons } from "@app/components/SetupWizard/DesktopOAuthButtons";
-import { UserInfo } from "@app/services/authService";
-import { SSOProviderConfig } from "@app/services/connectionModeService";
-import "@app/auth/ui/auth.css";
+import LoginHeader from "@editor/routes/login/LoginHeader";
+import ErrorMessage from "@editor/auth/ui/ErrorMessage";
+import EmailPasswordForm from "@editor/auth/ui/EmailPasswordForm";
+import DividerWithText from "@editor/components/shared/DividerWithText";
+import { DesktopOAuthButtons } from "@editor/components/SetupWizard/DesktopOAuthButtons";
+import { UserInfo } from "@editor/services/authService";
+import { SSOProviderConfig } from "@editor/services/connectionModeService";
+import "@editor/auth/ui/auth.css";
 
 interface SelfHostedLoginScreenProps {
   serverUrl: string;

@@ -1,17 +1,17 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
-import { SetupWizard } from "@app/components/SetupWizard";
+import { SetupWizard } from "@editor/components/SetupWizard";
 
 const { getConfig } = vi.hoisted(() => ({ getConfig: vi.fn() }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: { getCurrentConfig: getConfig },
 }));
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: {},
   AuthServiceError: class extends Error {},
 }));
-vi.mock("@app/services/tauriBackendService", () => ({
+vi.mock("@editor/services/tauriBackendService", () => ({
   tauriBackendService: {},
 }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: async () => () => {} }));
@@ -27,7 +27,7 @@ vi.mock("@mantine/core", () => {
     Loader: () => <div>Loading</div>,
   };
 });
-vi.mock("@app/ui/Button", () => ({
+vi.mock("@editor/ui/Button", () => ({
   Button: ({
     children,
     onClick,
@@ -36,12 +36,12 @@ vi.mock("@app/ui/Button", () => ({
     onClick: () => void;
   }) => <button onClick={onClick}>{children}</button>,
 }));
-vi.mock("@app/components/SetupWizard/DesktopAuthLayout", () => ({
+vi.mock("@editor/components/SetupWizard/DesktopAuthLayout", () => ({
   DesktopAuthLayout: ({ children }: { children: ReactNode }) => (
     <div>{children}</div>
   ),
 }));
-vi.mock("@app/components/SetupWizard/SaaSLoginScreen", () => ({
+vi.mock("@editor/components/SetupWizard/SaaSLoginScreen", () => ({
   SaaSLoginScreen: ({
     onSkipSignIn,
     onSelfHostedClick,
@@ -58,16 +58,16 @@ vi.mock("@app/components/SetupWizard/SaaSLoginScreen", () => ({
     </div>
   ),
 }));
-vi.mock("@app/components/SetupWizard/SaaSSignupScreen", () => ({
+vi.mock("@editor/components/SetupWizard/SaaSSignupScreen", () => ({
   SaaSSignupScreen: () => null,
 }));
-vi.mock("@app/components/SetupWizard/ServerSelectionScreen", () => ({
+vi.mock("@editor/components/SetupWizard/ServerSelectionScreen", () => ({
   ServerSelectionScreen: () => null,
 }));
-vi.mock("@app/components/SetupWizard/SelfHostedLoginScreen", () => ({
+vi.mock("@editor/components/SetupWizard/SelfHostedLoginScreen", () => ({
   SelfHostedLoginScreen: () => null,
 }));
-vi.mock("@app/components/shared/DisabledButtonWithTooltip", () => ({
+vi.mock("@editor/components/shared/DisabledButtonWithTooltip", () => ({
   DisabledButtonWithTooltip: () => null,
 }));
 

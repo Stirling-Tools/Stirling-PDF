@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { PoliciesByKey, PolicyState } from "@app/types/policies";
+import type { PoliciesByKey, PolicyState } from "@editor/types/policies";
 
 // Which policies export-time enforcement picks up: the policy's own editor flag, not its scope.
 
 const loadPolicies = vi.fn<() => PoliciesByKey>();
-vi.mock("@app/services/policyStorage", () => ({
+vi.mock("@editor/services/policyStorage", () => ({
   loadPolicies: () => loadPolicies(),
 }));
 
@@ -17,7 +17,7 @@ let serverExternalOutput = false;
 const downloadPolicyOutput = vi.fn(
   async () => new Blob([], { type: output.type }),
 );
-vi.mock("@app/services/policyApi", () => ({
+vi.mock("@editor/services/policyApi", () => ({
   runStoredPolicy: (...args: Parameters<typeof runStoredPolicy>) =>
     runStoredPolicy(...args),
   // One output, so a run completes rather than throwing "produced no output" - which would abort
@@ -31,31 +31,31 @@ vi.mock("@app/services/policyApi", () => ({
   resolvePolicyRunTarget: () => "local",
 }));
 
-vi.mock("@app/components/policies/policyRunStore", () => ({
+vi.mock("@editor/components/policies/policyRunStore", () => ({
   recordRunStart: vi.fn(),
   isDispatched: () => false,
   markDispatched: vi.fn(),
   getPolicyRunOutcomes: () => ({}),
 }));
 // Run the queued task inline: the queue's own behaviour is not under test here.
-vi.mock("@app/components/policies/enforcementQueue", () => ({
+vi.mock("@editor/components/policies/enforcementQueue", () => ({
   runQueued: <T>(_meta: unknown, task: () => Promise<T>) => task(),
 }));
 const { updateToast } = vi.hoisted(() => ({ updateToast: vi.fn() }));
-vi.mock("@app/components/toast", () => ({
+vi.mock("@editor/components/toast", () => ({
   alert: () => "toast-1",
   updateToast,
   dismissToast: vi.fn(),
 }));
-vi.mock("@app/i18n", () => ({ default: { t: (key: string) => key } }));
+vi.mock("@editor/i18n", () => ({ default: { t: (key: string) => key } }));
 
 const dispatchPolicyFile = vi.hoisted(() =>
   vi.fn(() => new Promise<void>(() => {})),
 );
-vi.mock("@app/services/policyDispatch", () => ({ dispatchPolicyFile }));
-const { enforceExportPolicies } = await import("@app/services/policyExport");
+vi.mock("@editor/services/policyDispatch", () => ({ dispatchPolicyFile }));
+const { enforceExportPolicies } = await import("@editor/services/policyExport");
 const { recordRunStart } =
-  await import("@app/components/policies/policyRunStore");
+  await import("@editor/components/policies/policyRunStore");
 
 /** An active export-time policy as the local store holds it. */
 const exportPolicy = (over: Partial<PolicyState>): PolicyState => ({

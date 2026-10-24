@@ -1,18 +1,18 @@
 import { useCallback } from "react";
-import { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { PdfiumTextReader } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import {
   FPDF_ERR_PASSWORD,
   PdfiumOpenError,
-} from "@app/services/pdfiumService";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
+} from "@editor/services/pdfiumService";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import {
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfAccessService";
-import { assertPdfSessionEditable } from "@app/services/pdfSessionUnlock";
-import { readPdfiumAccess } from "@app/utils/pdfiumAccess";
+} from "@editor/services/pdfAccessService";
+import { assertPdfSessionEditable } from "@editor/services/pdfSessionUnlock";
+import { readPdfiumAccess } from "@editor/utils/pdfiumAccess";
 
 const EAGER_PAGE_LIMIT = 5;
 

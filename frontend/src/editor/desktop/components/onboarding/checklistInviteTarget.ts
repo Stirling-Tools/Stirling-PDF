@@ -1,12 +1,12 @@
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useSelfHostedAuth } from "@app/hooks/useSelfHostedAuth";
-import { useServerExperience } from "@app/hooks/useServerExperience";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useSelfHostedAuth } from "@editor/hooks/useSelfHostedAuth";
+import { useServerExperience } from "@editor/hooks/useServerExperience";
 import {
   useChecklistInviteTarget as useCloudInviteTarget,
   type ChecklistInviteTarget,
-} from "@cloud/components/onboarding/checklistInviteTarget";
+} from "@editor-cloud/components/onboarding/checklistInviteTarget";
 
-export type { ChecklistInviteTarget } from "@cloud/components/onboarding/checklistInviteTarget";
+export type { ChecklistInviteTarget } from "@editor-cloud/components/onboarding/checklistInviteTarget";
 
 /** Cloud team leaders invite from Users; self-hosted admins from People, once login
  * is on and they are still the server's only user. Guests are excluded by the Cloud
