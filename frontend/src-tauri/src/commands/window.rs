@@ -49,6 +49,10 @@ pub fn build_main_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 
     #[cfg(target_os = "windows")]
     let builder = builder
+        // Pinch magnification stays available window-wide; only the viewer
+        // surface suppresses it, in the frontend's capture-phase gesturestart
+        // handler. Must stay byte-identical to build_window's args (they share
+        // one user-data folder).
         .additional_browser_args("--enable-features=CertVerifierBuiltinFeature")
         .decorations(false);
 

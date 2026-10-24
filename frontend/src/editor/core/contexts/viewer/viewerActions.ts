@@ -112,6 +112,17 @@ interface ViewerActionDependencies {
   triggerImmediateZoomUpdate: (percent: number) => void;
 }
 
+// Mirror LocalEmbedPDF's ZoomPluginPackage bounds so button zoom and gesture
+// zoom share one range; the plugin clamps numeric levels again on the way in.
+const MIN_ZOOM = 0.2;
+const MAX_ZOOM = 5;
+// One click is a proportional step, matching how a pinch/wheel gesture scales,
+// rather than the plugin's fixed +0.1 absolute step (which crawls when zoomed in).
+const ZOOM_STEP_FACTOR = 1.25;
+
+const clampZoom = (value: number): number =>
+  Math.min(Math.max(value, MIN_ZOOM), MAX_ZOOM);
+
 export function createViewerActions({
   registry,
   getScrollState,
@@ -189,30 +200,34 @@ export function createViewerActions({
     },
   };
 
+  // The bridge reports `currentZoom` asynchronously, so a second click can still
+  // read the level the first one started from. Remember what the last click asked
+  // for and keep stepping from there until the bridge catches up.
+  let pendingZoom: { from: number; to: number } | null = null;
+
+  // A button step is a single commit. Animating it would re-request zoom on
+  // every frame and re-render the whole tile layer each time, which blanks the
+  // page mid-gesture; one commit matches how the wheel/pinch gesture lands.
+  const stepZoom = (direction: "in" | "out"): void => {
+    const api = registry.current.zoom?.api;
+    if (!api?.requestZoom) return;
+    const current = getZoomState().currentZoom;
+    const bridge = Number.isFinite(current) && current > 0 ? current : 1;
+    const base =
+      pendingZoom && pendingZoom.from === bridge ? pendingZoom.to : bridge;
+    const target =
+      direction === "in" ? base * ZOOM_STEP_FACTOR : base / ZOOM_STEP_FACTOR;
+    const level = clampZoom(target);
+    pendingZoom = { from: bridge, to: level };
+    api.requestZoom(level);
+  };
+
   const zoomActions: ZoomActions = {
     zoomIn: () => {
-      const api = registry.current.zoom?.api;
-      if (api?.zoomIn) {
-        const currentState = getZoomState();
-        const newPercent = Math.min(
-          Math.round(currentState.zoomPercent * 1.2),
-          300,
-        );
-        triggerImmediateZoomUpdate(newPercent);
-        api.zoomIn();
-      }
+      stepZoom("in");
     },
     zoomOut: () => {
-      const api = registry.current.zoom?.api;
-      if (api?.zoomOut) {
-        const currentState = getZoomState();
-        const newPercent = Math.max(
-          Math.round(currentState.zoomPercent / 1.2),
-          20,
-        );
-        triggerImmediateZoomUpdate(newPercent);
-        api.zoomOut();
-      }
+      stepZoom("out");
     },
     toggleMarqueeZoom: () => {
       const api = registry.current.zoom?.api;
@@ -223,12 +238,15 @@ export function createViewerActions({
     requestZoom: (level: ZoomLevel, center?: Point) => {
       const api = registry.current.zoom?.api;
       if (api?.requestZoom) {
+        // An explicit level supersedes any pending click step.
+        pendingZoom = null;
         api.requestZoom(level, center);
       }
     },
     setZoomLevel: (factor: number) => {
       const api = registry.current.zoom?.api;
       if (api?.requestZoom) {
+        pendingZoom = null;
         triggerImmediateZoomUpdate(Math.round(factor * 100));
         api.requestZoom(factor);
       }

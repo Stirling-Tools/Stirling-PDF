@@ -11,6 +11,7 @@ import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
 import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { useLocalPdfiumEngine } from "@editor/hooks/useLocalPdfiumEngine";
+import { useWheelDeltaNormalizer } from "@editor/hooks/useWheelDeltaNormalizer";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import {
@@ -27,7 +28,11 @@ import {
 import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
 import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
-import { ZoomPluginPackage, ZoomMode } from "@embedpdf/plugin-zoom/react";
+import {
+  ZoomPluginPackage,
+  ZoomMode,
+  ZoomGestureWrapper,
+} from "@embedpdf/plugin-zoom/react";
 import { InteractionManagerPluginPackage } from "@embedpdf/plugin-interaction-manager/react";
 import {
   SelectionLayer,
@@ -756,22 +761,30 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
           contain: "strict",
         }}
       >
-        <Scroller
-          documentId={documentId}
-          renderPage={({ width, height, pageIndex }) => (
-            <ViewerPage
-              key={`${documentId}-${pageIndex}`}
-              documentId={documentId}
-              pageIndex={pageIndex}
-              width={width}
-              height={height}
-              {...pageOptions}
-            />
-          )}
-        />
+        <WheelDeltaNormalizer documentId={documentId} />
+        <ZoomGestureWrapper documentId={documentId}>
+          <Scroller
+            documentId={documentId}
+            renderPage={({ width, height, pageIndex }) => (
+              <ViewerPage
+                key={`${documentId}-${pageIndex}`}
+                documentId={documentId}
+                pageIndex={pageIndex}
+                width={width}
+                height={height}
+                {...pageOptions}
+              />
+            )}
+          />
+        </ZoomGestureWrapper>
       </Viewport>
     </ViewerGlobalPointerProvider>
   );
+}
+
+function WheelDeltaNormalizer({ documentId }: { documentId: string }) {
+  useWheelDeltaNormalizer(documentId);
+  return null;
 }
 
 interface DocumentCommentsProps {
@@ -1391,9 +1404,9 @@ export function LocalEmbedPDF({
 
       // Register tiling plugin (depends on Render, Scroll, Viewport)
       createPluginRegistration(TilingPluginPackage, {
-        tileSize: 768,
+        tileSize: 1024,
         overlapPx: 5,
-        extraRings: 1,
+        extraRings: 2,
       }),
 
       // Register search plugin for text search
