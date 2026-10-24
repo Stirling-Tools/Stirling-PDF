@@ -1,4 +1,3 @@
-import type { Stripe } from "@stripe/stripe-js";
 import {
   getPortalSessionClient,
   ensurePortalSessionClient,
@@ -627,17 +626,6 @@ export async function fetchBundleQuotePdf(quoteId: number): Promise<Blob> {
  */
 export function getStripePublishableKey(): string {
   return import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "";
-}
-
-// Process-wide memoized Stripe.js loader, shared by the embedded-checkout modals so the SDK promise
-// is created once rather than per-modal. loadStripe is dynamically imported so its chunk only loads
-// when a checkout modal reaches its payment step.
-let stripePromise: Promise<Stripe | null> | null = null;
-export function loadStripeOnce(pk: string): Promise<Stripe | null> {
-  if (stripePromise === null) {
-    stripePromise = import("@stripe/stripe-js").then((m) => m.loadStripe(pk));
-  }
-  return stripePromise;
 }
 
 /**
