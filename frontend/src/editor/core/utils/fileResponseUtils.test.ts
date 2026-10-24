@@ -71,6 +71,30 @@ describe("fileResponseUtils", () => {
 
       expect(filename).toBe("Quarterly Report (EN) v2.pdf");
     });
+
+    test("should decode RFC 5987 filename* parameter", () => {
+      const contentDisposition =
+        "attachment; filename*=UTF-8''merged%20file.pdf";
+      const filename = getFilenameFromHeaders(contentDisposition);
+
+      expect(filename).toBe("merged file.pdf");
+    });
+
+    test("should prefer filename* over filename when both are present", () => {
+      const contentDisposition =
+        'attachment; filename="fallback.pdf"; filename*=UTF-8''merged%20file.pdf';
+      const filename = getFilenameFromHeaders(contentDisposition);
+
+      expect(filename).toBe("merged file.pdf");
+    });
+
+    test("should decode non-ASCII filename* values", () => {
+      const contentDisposition =
+        "attachment; filename*=UTF-8''%E6%8A%A5%E5%91%8A.pdf";
+      const filename = getFilenameFromHeaders(contentDisposition);
+
+      expect(filename).toBe("\u62a5\u544a.pdf");
+    });
   });
 
   describe("createFileFromApiResponse", () => {

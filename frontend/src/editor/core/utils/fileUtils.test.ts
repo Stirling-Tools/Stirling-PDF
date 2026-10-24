@@ -5,9 +5,69 @@ import {
   formatFileSize,
   detectNonPdfFileType,
   getFileFormats,
+  mimeTypeToExtension,
+  detectExtensionFromSignature,
 } from "@editor/utils/fileUtils";
 
 describe("fileUtils", () => {
+  describe("mimeTypeToExtension", () => {
+    it("maps common MIME types to extensions", () => {
+      expect(mimeTypeToExtension("application/pdf")).toBe("pdf");
+      expect(mimeTypeToExtension("image/jpeg")).toBe("jpg");
+      expect(mimeTypeToExtension("image/png")).toBe("png");
+      expect(mimeTypeToExtension("application/zip")).toBe("zip");
+    });
+
+    it("ignores parameters and casing", () => {
+      expect(mimeTypeToExtension("Application/PDF; charset=binary")).toBe(
+        "pdf",
+      );
+    });
+
+    it("returns empty string for unknown or empty input", () => {
+      expect(mimeTypeToExtension("application/x-unknown")).toBe("");
+      expect(mimeTypeToExtension("")).toBe("");
+    });
+  });
+
+  describe("detectExtensionFromSignature", () => {
+    it("detects PDF from its %PDF signature", async () => {
+      const blob = new Blob([
+        new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37]),
+      ]);
+      await expect(detectExtensionFromSignature(blob)).resolves.toBe("pdf");
+    });
+
+    it("detects ZIP, JPEG and PNG signatures", async () => {
+      await expect(
+        detectExtensionFromSignature(
+          new Blob([new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0x14, 0x00])]),
+        ),
+      ).resolves.toBe("zip");
+      await expect(
+        detectExtensionFromSignature(
+          new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10])]),
+        ),
+      ).resolves.toBe("jpg");
+      await expect(
+        detectExtensionFromSignature(
+          new Blob([
+            new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+          ]),
+        ),
+      ).resolves.toBe("png");
+    });
+
+    it("returns empty string for unknown or empty content", async () => {
+      await expect(
+        detectExtensionFromSignature(new Blob([new Uint8Array([1, 2, 3, 4])])),
+      ).resolves.toBe("");
+      await expect(
+        detectExtensionFromSignature(new Blob([])),
+      ).resolves.toBe("");
+    });
+  });
+
   it("classifies using existing PDF detection, stored protection and overlapping backend categories", () => {
     expect(
       getFileFormats({ name: "download", type: "application/pdf" }),
