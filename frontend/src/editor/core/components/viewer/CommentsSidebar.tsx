@@ -143,8 +143,8 @@ const TOOL_ICON_MAP: Record<string, IconName> = {
   inkHighlighter: "brush",
   square: "square",
   circle: "circle",
-  line: "polyline",
-  lineArrow: "polyline",
+  line: "slash",
+  lineArrow: "move-up-right",
   polyline: "polyline",
   polygon: "triangle",
   text: "type",
@@ -159,7 +159,8 @@ const TOOL_ICON_MAP: Record<string, IconName> = {
 function getIconByType(type: number | undefined): IconName {
   if (type === 1) return "message-square";
   if (type === 3) return "sticky-note";
-  if (type === 4 || type === 8) return "polyline";
+  if (type === 4) return "slash";
+  if (type === 8) return "polyline";
   if (type === 5) return "square";
   if (type === 6) return "circle";
   if (type === 7 || type === 8) return "triangle";

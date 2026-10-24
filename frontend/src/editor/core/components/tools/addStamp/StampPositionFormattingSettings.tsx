@@ -34,6 +34,13 @@ const StampPositionFormattingSettings = ({
 }: StampPositionFormattingSettingsProps) => {
   const { t } = useTranslation();
 
+  const sizeLabel =
+    parameters.stampType === "qr"
+      ? t("AddStampRequest.qrCodeSize", "QR Code Size")
+      : parameters.stampType !== "text"
+        ? t("AddStampRequest.imageSize", "Image Size")
+        : t("AddStampRequest.fontSize", "Font Size");
+
   return (
     <Stack gap="md" justify="space-between">
       {/* Position Grid - shown in automation settings */}
@@ -108,20 +115,9 @@ const StampPositionFormattingSettings = ({
             <Icon name="droplet" size="1.1rem" />
           </ActionIcon>
         </Tooltip>
-        <Tooltip
-          content={
-            parameters.stampType === "image"
-              ? t("AddStampRequest.imageSize", "Image Size")
-              : t("AddStampRequest.fontSize", "Font Size")
-          }
-          position="top"
-        >
+        <Tooltip content={sizeLabel} position="top">
           <ActionIcon
-            aria-label={
-              parameters.stampType === "image"
-                ? t("AddStampRequest.imageSize", "Image Size")
-                : t("AddStampRequest.fontSize", "Font Size")
-            }
+            aria-label={sizeLabel}
             variant={
               parameters._activePill === "fontSize" ? "primary" : "secondary"
             }
@@ -136,11 +132,7 @@ const StampPositionFormattingSettings = ({
       {/* Single slider bound to selected pill */}
       {parameters._activePill === "fontSize" && (
         <Stack gap="xs">
-          <Text className={styles.labelText}>
-            {parameters.stampType === "image"
-              ? t("AddStampRequest.imageSize", "Image Size")
-              : t("AddStampRequest.fontSize", "Font Size")}
-          </Text>
+          <Text className={styles.labelText}>{sizeLabel}</Text>
           <Group className={styles.sliderGroup} align="center">
             <NumberInput
               value={parameters.fontSize}
@@ -229,7 +221,7 @@ const StampPositionFormattingSettings = ({
         </Stack>
       )}
 
-      {parameters.stampType !== "image" && (
+      {parameters.stampType === "text" && (
         <ColorInput
           label={t("AddStampRequest.customColor", "Custom Text Color")}
           value={parameters.customColor}
