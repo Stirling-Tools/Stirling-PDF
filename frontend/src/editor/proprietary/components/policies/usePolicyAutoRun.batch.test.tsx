@@ -10,7 +10,14 @@ import type { ClassificationConfidence } from "@editor/types/fileContext";
  */
 
 const FILE_COUNT = 61;
-const TEST_TIMEOUT_MS = Number(process.env.TEST_TIMEOUT ?? 10000);
+const configuredTestTimeout = process.env.TEST_TIMEOUT?.trim();
+const parsedTestTimeout = Number(configuredTestTimeout);
+const TEST_TIMEOUT_MS =
+  configuredTestTimeout &&
+  Number.isFinite(parsedTestTimeout) &&
+  parsedTestTimeout > 0
+    ? parsedTestTimeout
+    : 10000;
 // A tiny mutable "workspace" the mocks share: the list of file stubs currently in
 // the workbench, mirrored into useAllFiles. consumeFiles mutates it in place
 // (input id → output id) exactly as the real silent reducer would.
