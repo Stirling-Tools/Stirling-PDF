@@ -23,6 +23,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import {
   ARTIFACT_TAG,
+  innermostMcid,
   readTagMarks,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
@@ -1073,7 +1074,7 @@ function readImage(
     bounds: ident ? localBounds : transformRect(transform, localBounds),
     matrix: ident ? localMatrix : composeAffine(transform, localMatrix),
     containerPtr,
-    mcid: [...tags].reverse().find((t) => t.mcid !== null)?.mcid ?? undefined,
+    mcid: innermostMcid(tags) ?? undefined,
     artifact: tags.some((t) => t.name === ARTIFACT_TAG) || undefined,
   });
 }
