@@ -1,0 +1,8 @@
+1. ImageMagick /
+    MagickCore
+   - Copyright (c) 1999 ImageMagick Studio LLC
+   - License: ImageMagick License (see IMAGEMAGICK-LICENSE.txt)
+
+2. Dual Text Codec
+   - Copyright (c) 2022 Dual Contributors
+   - License: BSD 3-Clause (see DUAL-BSD.txt) plus patent grant (full text in DUAL-PATENT.txt)
