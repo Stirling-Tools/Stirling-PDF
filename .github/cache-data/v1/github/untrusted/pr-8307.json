@@ -8808,25 +8808,25 @@
       "workflow_run_id": 38525576257
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/pre-commit-setup-uv-cache/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17/v6": {
-      "object": "sha256:34ce9139fa3fee8c162da3c02b9e26a2d5e7a474c843f095998cd293411ee3bb",
+      "object": "sha256:08645f194082aff1a1021ab27489db8d2bdc290fa3cc41498ad1f0fd7cf9d44c",
       "storage": "github-artifact",
-      "updated_at": "2026-10-18T06:59:37.416Z",
+      "updated_at": "2026-10-24T11:39:50.306Z",
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
-      "size": 22431797,
+      "size": 22333080,
       "parts": [
         {
           "index": 0,
-          "object": "sha256:34ce9139fa3fee8c162da3c02b9e26a2d5e7a474c843f095998cd293411ee3bb",
-          "size": 22431797,
-          "artifact_id": 12128098817,
-          "artifact_name": "cache-untrusted-pr-8307-pre-commit-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--34ce9139fa3fee8c162da3c02b9e26a2d5e7a47-part-000000",
-          "workflow_run_id": 39105894262
+          "object": "sha256:08645f194082aff1a1021ab27489db8d2bdc290fa3cc41498ad1f0fd7cf9d44c",
+          "size": 22333080,
+          "artifact_id": 12558459102,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--08645f194082aff1a1021ab27489db8d2bdc290-part-000000",
+          "workflow_run_id": 40090705449
         }
       ],
-      "artifact_id": 12128098817,
-      "artifact_name": "cache-untrusted-pr-8307-pre-commit-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--34ce9139fa3fee8c162da3c02b9e26a2d5e7a47-part-000000",
-      "workflow_run_id": 39105894262
+      "artifact_id": 12558459102,
+      "artifact_name": "cache-untrusted-pr-8307-pre-commit-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--08645f194082aff1a1021ab27489db8d2bdc290-part-000000",
+      "workflow_run_id": 40090705449
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/pre-commit-uv-python-dir/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17/v6": {
       "object": "sha256:14fabe1b83ed7d33014967f0489cd3cd58343ee2029cdc1a4898dcb69ff15ef2",
@@ -17469,7 +17469,7 @@
     }
   },
   "monitoring": {
-    "window_started_at": "2026-10-18T08:13:27.626Z",
-    "writes": 8
+    "window_started_at": "2026-10-24T11:39:50.306Z",
+    "writes": 1
   }
 }
