@@ -243,8 +243,8 @@ describe("generateThumbnailForFile — images", () => {
 
   it("reads a stored image's header without slicing it", async () => {
     const { generateImageThumbnail } =
-      await import("@app/utils/thumbnailUtils");
-    const { markStoredBlob } = await import("@app/utils/storedBlob");
+      await import("@editor/utils/thumbnailUtils");
+    const { markStoredBlob } = await import("@editor/utils/storedBlob");
     const { calls } = stubBitmapPipeline();
     const header = pngHeader(400, 300);
     const file = new File([header], "photo.png", { type: "image/png" });

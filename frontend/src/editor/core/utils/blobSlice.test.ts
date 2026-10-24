@@ -1,7 +1,7 @@
 import { Blob as NodeBlob } from "node:buffer";
 import { describe, expect, it, vi } from "vitest";
-import { readBlobSlice } from "@app/utils/blobSlice";
-import { markStoredBlob } from "@app/utils/storedBlob";
+import { readBlobSlice } from "@editor/utils/blobSlice";
+import { markStoredBlob } from "@editor/utils/storedBlob";
 
 const BYTES = Uint8Array.from({ length: 300_000 }, (_, i) => i % 251);
 

@@ -9,10 +9,10 @@ import "fake-indexeddb/auto";
  * name is also rewritten, and that must not land over newer bytes.
  */
 
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 
 const readBlobSlice = vi.hoisted(() => vi.fn());
-vi.mock("@app/utils/blobSlice", () => ({ readBlobSlice }));
+vi.mock("@editor/utils/blobSlice", () => ({ readBlobSlice }));
 
 const nativeGet = IDBObjectStore.prototype.get;
 
@@ -50,8 +50,8 @@ async function storeFiles(count: number) {
   vi.resetModules();
   const [{ fileStorage }, { createStirlingFile, createNewStirlingFileStub }] =
     await Promise.all([
-      import("@app/services/fileStorage"),
-      import("@app/types/fileContext"),
+      import("@editor/services/fileStorage"),
+      import("@editor/types/fileContext"),
     ]);
   const ids = [];
   for (let i = 0; i < count; i++) {

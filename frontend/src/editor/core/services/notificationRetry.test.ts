@@ -25,9 +25,9 @@ vi.mock("@editor/services/apiClient", () => ({
 
 // The real conversion, unless a test says the stored bytes cannot be read.
 const uploadableFile = vi.hoisted(() => vi.fn());
-vi.mock("@app/utils/uploadableFile", async (importOriginal) => {
+vi.mock("@editor/utils/uploadableFile", async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import("@app/utils/uploadableFile")>();
+    await importOriginal<typeof import("@editor/utils/uploadableFile")>();
   uploadableFile.mockImplementation(actual.uploadableFile);
   return { uploadableFile: (file: File) => uploadableFile(file) };
 });

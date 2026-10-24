@@ -1,4 +1,4 @@
-import { detachedFile } from "@app/utils/storedBlob";
+import { detachedFile } from "@editor/utils/storedBlob";
 
 /**
  * The File to put in a multipart body when the caller's File may have come back

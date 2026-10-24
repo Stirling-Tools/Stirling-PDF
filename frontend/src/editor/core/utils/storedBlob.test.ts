@@ -5,7 +5,7 @@ import {
   detachedFormData,
   isStoredBlob,
   markStoredBlob,
-} from "@app/utils/storedBlob";
+} from "@editor/utils/storedBlob";
 
 function pdf(name = "report.pdf"): File {
   return new File(["%PDF-1.7 body"], name, {

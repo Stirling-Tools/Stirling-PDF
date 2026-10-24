@@ -1,4 +1,4 @@
-import { isStoredBlob } from "@app/utils/storedBlob";
+import { isStoredBlob } from "@editor/utils/storedBlob";
 
 /**
  * Bytes `[start, end)` of `blob`, with `Blob.slice` index semantics, read

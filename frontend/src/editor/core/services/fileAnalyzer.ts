@@ -5,7 +5,7 @@ import { getPdfAccess } from "@editor/services/pdfAccessService";
 import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 
-import { readBlobSlice } from "@app/utils/blobSlice";
+import { readBlobSlice } from "@editor/utils/blobSlice";
 
 export class FileAnalyzer {
   private static readonly SIZE_THRESHOLDS = {

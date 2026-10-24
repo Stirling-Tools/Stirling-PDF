@@ -1,8 +1,8 @@
 import path from "node:path";
 import { readFileSync } from "node:fs";
 import type { Page, Route } from "@playwright/test";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { DATABASE_CONFIGS } from "@app/services/indexedDBManager";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { DATABASE_CONFIGS } from "@editor/services/indexedDBManager";
 
 /**
  * A Blob read back from IndexedDB must be read, never built over: Chromium can

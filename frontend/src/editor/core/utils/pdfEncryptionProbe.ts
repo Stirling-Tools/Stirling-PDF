@@ -1,4 +1,4 @@
-import { readBlobSlice } from "@app/utils/blobSlice";
+import { readBlobSlice } from "@editor/utils/blobSlice";
 
 const ENCRYPT_PROBE_BYTES = 64 * 1024;
 
