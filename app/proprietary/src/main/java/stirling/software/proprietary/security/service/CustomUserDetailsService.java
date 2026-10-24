@@ -40,25 +40,16 @@ public class CustomUserDetailsService implements UserDetailsService {
                     "Your account has been locked due to too many failed login attempts.");
         }
 
-        // TODO: Remove for SaaS - Handle legacy users without authenticationType (from versions <
-        // 1.3.0)
+        // Pre-1.3.0 users have no authenticationType. Back-fill it once rather than deriving it
+        // per read: MFA and SSO detection read the stored value, so a derived one leaves them
+        // broken for these users. A password means web auth; its absence means SSO.
         String authTypeStr = user.getAuthenticationType();
         if (authTypeStr == null || authTypeStr.isEmpty()) {
-            // Migrate legacy users by detecting authentication type based on password presence
-            AuthenticationType detectedType;
-            if (user.hasPassword()) {
-                // Users with passwords are likely traditional web authentication users
-                detectedType = AuthenticationType.WEB;
-            } else {
-                // Users without passwords are SSO users (OAuth2/SAML2/etc)
-                // Choose the appropriate SSO type based on what's enabled
-                detectedType = determinePreferredSSOType();
-            }
-
-            authTypeStr = detectedType.name();
-            // Update the user record to set the detected authentication type
+            AuthenticationType detectedType =
+                    user.hasPassword() ? AuthenticationType.WEB : determinePreferredSSOType();
             user.setAuthenticationType(detectedType);
             userRepository.save(user);
+            authTypeStr = detectedType.name();
         }
 
         AuthenticationType userAuthenticationType =
