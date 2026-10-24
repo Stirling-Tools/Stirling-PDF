@@ -48,6 +48,7 @@ security:
     useAsUsername: email # default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # specify the scopes for which the application will request permissions
     provider: google # set this to your OAuth Provider's name, e.g., 'google' or 'keycloak'
+    registrationId: # optional; overrides the provider name in redirect URIs. Defaults to 'provider' if empty.
     redirectBaseUrl: "" # optional public URL users open Stirling-PDF at, e.g. 'https://pdf.example.com' (include any context path). Set it when a reverse proxy (e.g. Azure App Proxy) hides https or the public host, so OAuth callbacks become <redirectBaseUrl>/login/oauth2/code/<provider>. Leave blank to build them from each request
   saml2:
     enabled: false # Only enabled for paid enterprise clients (enterpriseEdition.enabled must be true)

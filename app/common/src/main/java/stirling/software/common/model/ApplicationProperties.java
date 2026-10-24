@@ -1126,6 +1126,7 @@ public class ApplicationProperties {
             private String useAsUsername;
             private Collection<String> scopes = new ArrayList<>();
             private String provider;
+            private String registrationId;
             private Client client = new Client();
 
             // Opt-in public URL for OAuth2 callbacks; blank keeps building them from each request.
@@ -1140,6 +1141,15 @@ public class ApplicationProperties {
              * again afterwards.
              */
             private Boolean debugLogging = false;
+
+            public String getEffectiveRegistrationId() {
+                if (!ValidationUtils.isStringEmpty(registrationId)) {
+                    return registrationId
+                            .toLowerCase(Locale.ROOT)
+                            .replaceAll("[^a-z0-9\\-._~]", "-");
+                }
+                return provider;
+            }
 
             public void setScopes(String scopes) {
                 List<String> scopesList =
