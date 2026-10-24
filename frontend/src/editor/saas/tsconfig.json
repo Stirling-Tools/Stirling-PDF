@@ -14,13 +14,16 @@
         "../../editor/proprietary/portal/*",
         "../../editor/core/portal/*",
         "../../processor/saas/*",
+        "../../processor/cloud/*",
         "../../processor/proprietary/*"
       ],
       "@processor/*": [
         "../../processor/saas/*",
+        "../../processor/cloud/*",
         "../../processor/proprietary/*"
       ],
       "@processor-proprietary/*": ["../../processor/proprietary/*"],
+      "@processor-cloud/*": ["../../processor/cloud/*"],
       "@editor-cloud/*": ["../../editor/cloud/*"],
       "@editor-proprietary/*": ["../../editor/proprietary/*"],
       "@editor-core/*": ["../../editor/core/*"]
@@ -32,6 +35,7 @@
     "../../*.ts",
     "../../*.tsx",
     ".",
-    "../../processor/saas"
+    "../../processor/saas",
+    "../../processor/cloud"
   ]
 }

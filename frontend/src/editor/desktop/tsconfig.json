@@ -13,9 +13,15 @@
         "../../editor/cloud/portal/*",
         "../../editor/proprietary/portal/*",
         "../../editor/core/portal/*",
+        "../../processor/desktop/*",
         "../../processor/proprietary/*"
       ],
-      "@processor/*": ["../../processor/proprietary/*"],
+      "@processor/*": [
+        "../../processor/desktop/*",
+        "../../processor/proprietary/*"
+      ],
+      "@processor-proprietary/*": ["../../processor/proprietary/*"],
+      "@processor-cloud/*": ["../../processor/cloud/*"],
       "@editor-cloud/*": ["../../editor/cloud/*"],
       "@editor-proprietary/*": ["../../editor/proprietary/*"],
       "@editor-core/*": ["../../editor/core/*"]
@@ -27,6 +33,7 @@
     "../../*.ts",
     "../../*.tsx",
     "../core/setupTests.ts",
-    "."
+    ".",
+    "../../processor/desktop"
   ]
 }

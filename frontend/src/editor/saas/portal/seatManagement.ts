@@ -1,7 +1,3 @@
-import type { SeatManagement } from "@processor/api/seatManagement";
-
-/** SaaS: seats follow the subscription and change in billing, not the roster;
- *  UpdateSeatsProvider is not mounted here. */
-export function useSeatManagement(): SeatManagement {
-  return { available: false, busy: false, open: () => {} };
-}
+// Editor layers precede portal layers in @editor/portal, so without this the
+// proprietary admin implementation would win on SaaS.
+export * from "@processor-cloud/seatManagement";

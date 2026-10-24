@@ -20,7 +20,7 @@ import type { Team } from "@processor/api/teams";
 // project resolves @editor to proprietary and has no @saas alias, so the SaaS set is
 // reached by path; the self-hosted set uses the @editor-proprietary alias.
 // oxlint-disable-next-line no-restricted-imports
-import { usersCapabilities as saasCaps } from "../../../../editor/saas/portal/usersCapabilities";
+import { usersCapabilities as saasCaps } from "../../../cloud/usersCapabilities";
 import { usersCapabilities as selfHostedCaps } from "@editor-proprietary/portal/usersCapabilities";
 
 const MEMBER: Member = {

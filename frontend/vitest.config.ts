@@ -131,7 +131,10 @@ export default defineConfig({
         test: {
           name: "desktop",
           ...TEST_DEFAULTS,
-          include: ["src/editor/desktop/**/*.test.{ts,tsx}"],
+          include: [
+            "src/editor/desktop/**/*.test.{ts,tsx}",
+            "src/processor/desktop/**/*.test.{ts,tsx}",
+          ],
           environment: "jsdom",
           globals: true,
           setupFiles: ["./src/editor/core/setupTests.ts"],
@@ -151,12 +154,14 @@ export default defineConfig({
         test: {
           name: "saas",
           ...TEST_DEFAULTS,
-          // src/editor/saas = editor-saas layer; src/processor/saas = the portal's saas
-          // overrides (sibling to src/processor/proprietary). Both build under the saas flavor,
-          // so both resolve @processor via the saas cascade (tsconfig.saas.vite.json).
+          // src/editor/saas = editor-saas layer; src/processor/saas = the processor's
+          // saas overrides and src/processor/cloud = the hosted edition it shares with
+          // desktop. All build under the saas flavor, so all resolve @processor via the
+          // saas cascade (tsconfig.saas.vite.json).
           include: [
             "src/editor/saas/**/*.test.{ts,tsx}",
             "src/processor/saas/**/*.test.{ts,tsx}",
+            "src/processor/cloud/**/*.test.{ts,tsx}",
           ],
           environment: "jsdom",
           globals: true,
