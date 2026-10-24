@@ -267,7 +267,7 @@ jobs:
     if: |
       !cancelled() &&
       github.event_name == 'pull_request' &&
-      needs.files-changed.outputs.project == 'true' && false
+      needs.files-changed.outputs.project == 'true'
     needs: [files-changed]
     permissions:
       contents: read
