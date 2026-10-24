@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BASE_PATH } from "@editor/constants/app";
 
 type BackendStatus = "up" | "starting" | "down";
@@ -9,9 +9,81 @@ interface BackendProbeState {
   loading: boolean;
 }
 
+// Redirect chains mount this hook several times within a second; sharing one
+// flight (and its result briefly) avoids probing per mount. Manual retries
+// always run fresh and refresh the shared entry.
+let sharedProbe: Promise<BackendProbeState> | null = null;
+let sharedProbeAt = 0;
+const SHARED_PROBE_TTL_MS = 10_000;
+
+async function requestBackendState(): Promise<BackendProbeState> {
+  const statusUrl = `${BASE_PATH || ""}/api/v1/info/status`;
+  const loginUrl = `${BASE_PATH || ""}/api/v1/proprietary/ui-data/login`;
+
+  const next: BackendProbeState = {
+    status: "starting",
+    loginDisabled: false,
+    loading: false,
+  };
+
+  try {
+    const res = await fetch(statusUrl, { method: "GET", cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json().catch(() => null);
+      if (data && data.status === "UP") {
+        next.status = "up";
+        return next;
+      }
+      next.status = "starting";
+    } else if (res.status === 404 || res.status === 503) {
+      next.status = "starting";
+    } else {
+      next.status = "down";
+    }
+  } catch {
+    next.status = "down";
+  }
+
+  // Fallback: proprietary login endpoint to detect disabled login and backend availability
+  try {
+    const res = await fetch(loginUrl, { method: "GET", cache: "no-store" });
+    if (res.ok) {
+      next.status = "up";
+      const data = await res.json().catch(() => null);
+      if (data && data.enableLogin === false) {
+        next.loginDisabled = true;
+      }
+    } else if (res.status === 404) {
+      // Endpoint missing usually means login disabled
+      next.status = "up";
+      next.loginDisabled = true;
+    } else if (res.status === 503) {
+      next.status = "starting";
+    } else {
+      next.status = "down";
+    }
+  } catch {
+    // keep previous inferred state (down/starting)
+  }
+
+  return next;
+}
+
+function probeShared(): Promise<BackendProbeState> {
+  if (!sharedProbe || Date.now() - sharedProbeAt > SHARED_PROBE_TTL_MS) {
+    sharedProbeAt = Date.now();
+    sharedProbe = requestBackendState();
+  }
+  return sharedProbe;
+}
+
 /**
  * Lightweight backend probe that avoids global axios interceptors.
  * Used on auth screens to decide whether to show login, anonymous mode, or a backend-starting message.
+ *
+ * `probe()` resolves with the state it applied, or with `undefined` when a
+ * newer probe superseded it before it settled; callers get no answer rather
+ * than a stale status in that case.
  */
 export function useBackendProbe() {
   const [state, setState] = useState<BackendProbeState>({
@@ -20,64 +92,37 @@ export function useBackendProbe() {
     loading: true,
   });
 
+  // Probes can overlap (mount racing a manual retry, or two manual retries);
+  // only the newest call may apply its result, or a slow earlier response
+  // overwrites the fresh one with a stale status.
+  const requestSeq = useRef(0);
+
   const probe = useCallback(async () => {
-    const statusUrl = `${BASE_PATH || ""}/api/v1/info/status`;
-    const loginUrl = `${BASE_PATH || ""}/api/v1/proprietary/ui-data/login`;
-
-    const next: BackendProbeState = {
-      status: "starting",
-      loginDisabled: false,
-      loading: false,
-    };
-
-    try {
-      const res = await fetch(statusUrl, { method: "GET", cache: "no-store" });
-      if (res.ok) {
-        const data = await res.json().catch(() => null);
-        if (data && data.status === "UP") {
-          next.status = "up";
-          setState(next);
-          return next;
-        }
-        next.status = "starting";
-      } else if (res.status === 404 || res.status === 503) {
-        next.status = "starting";
-      } else {
-        next.status = "down";
-      }
-    } catch {
-      next.status = "down";
+    sharedProbeAt = Date.now();
+    sharedProbe = requestBackendState();
+    const seq = ++requestSeq.current;
+    const next = await sharedProbe;
+    if (seq !== requestSeq.current) {
+      // Superseded: the newest probe owns the state, and callers must not
+      // navigate on a stale status.
+      return undefined;
     }
-
-    // Fallback: proprietary login endpoint to detect disabled login and backend availability
-    try {
-      const res = await fetch(loginUrl, { method: "GET", cache: "no-store" });
-      if (res.ok) {
-        next.status = "up";
-        const data = await res.json().catch(() => null);
-        if (data && data.enableLogin === false) {
-          next.loginDisabled = true;
-        }
-      } else if (res.status === 404) {
-        // Endpoint missing usually means login disabled
-        next.status = "up";
-        next.loginDisabled = true;
-      } else if (res.status === 503) {
-        next.status = "starting";
-      } else {
-        next.status = "down";
-      }
-    } catch {
-      // keep previous inferred state (down/starting)
-    }
-
     setState(next);
     return next;
   }, []);
 
   useEffect(() => {
-    void probe();
-  }, [probe]);
+    let active = true;
+    const seq = requestSeq.current;
+    void probeShared().then((next) => {
+      if (active && seq === requestSeq.current) {
+        setState(next);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return {
     ...state,
