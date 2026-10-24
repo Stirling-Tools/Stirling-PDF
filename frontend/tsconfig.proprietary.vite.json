@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": ["./src/editor/proprietary/*", "./src/editor/core/*"],
+      "@app/portal/*": [
+        "./src/editor/proprietary/portal/*",
+        "./src/editor/core/portal/*",
+        "./src/processor/proprietary/*"
+      ],
+      "@portal/*": ["./src/processor/proprietary/*"],
+      "@proprietary/*": ["./src/editor/proprietary/*"],
+      "@core/*": ["./src/editor/core/*"]
+    }
+  },
+  "exclude": [
+    "src/editor/core/**/*.test.ts*",
+    "src/editor/core/**/*.spec.ts*",
+    "src/editor/desktop",
+    "src/editor/cloud"
+  ]
+}
