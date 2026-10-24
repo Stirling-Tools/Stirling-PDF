@@ -1,5 +1,6 @@
 package stirling.software.saas.service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.context.annotation.Profile;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.model.SupabaseUser;
 import stirling.software.saas.model.exception.UserNotFoundException;
 import stirling.software.saas.repository.SupabaseUserRepository;
@@ -29,6 +31,11 @@ public class SupabaseUserService {
                         () ->
                                 new UserNotFoundException(
                                         "Supabase user " + supabaseId + " not found"));
+    }
+
+    /** See {@link SupabaseUserRepository#findLinkedUser(UUID)}. */
+    public Optional<User> findLinkedUser(UUID supabaseId) {
+        return supabaseUserRepository.findLinkedUser(supabaseId);
     }
 
     public SupabaseUser createSupabaseUser(UUID supabaseId, String email, boolean isAnonymous) {
