@@ -50,11 +50,14 @@ export function useAppInitialization(): void {
       return;
     }
 
+    // Taken now, not when the batch's turn comes: an unmount meanwhile drops
+    // whatever useOpenedFile still holds.
+    const filePaths = consumeOpenedFilePaths();
+    if (filePaths.length === 0) {
+      return;
+    }
+
     const loadOpenedFiles = async () => {
-      const filePaths = consumeOpenedFilePaths();
-      if (filePaths.length === 0) {
-        return;
-      }
       try {
         const loadedFiles = (
           await Promise.all(
