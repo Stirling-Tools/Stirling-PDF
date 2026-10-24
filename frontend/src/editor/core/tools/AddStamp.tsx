@@ -109,8 +109,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       isVisible: hasFiles || hasResults,
       content: (
         <Stack gap="md" justify="space-between">
-          {/* Mode toggle: Quick grid vs Custom drag - only show for image stamps */}
-          {params.parameters.stampType === "image" && (
+          {params.parameters.stampType !== "text" && (
             <ButtonSelector
               value={quickPositionModeSelected ? "quick" : "custom"}
               onChange={(v: "quick" | "custom") => {
@@ -130,7 +129,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             />
           )}
 
-          {params.parameters.stampType === "image" &&
+          {params.parameters.stampType !== "text" &&
             customPositionModeSelected && (
               <div className={styles.informationContainer}>
                 <Text className={styles.informationText}>
@@ -141,7 +140,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 </Text>
               </div>
             )}
-          {params.parameters.stampType === "image" &&
+          {params.parameters.stampType !== "text" &&
             !customPositionModeSelected && (
               <div className={styles.informationContainer}>
                 <Text className={styles.informationText}>
@@ -163,7 +162,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           <ObscuredOverlay
             obscured={
               accordion.currentStep === AddStampStep.POSITION_FORMATTING &&
-              ((params.parameters.stampType === "text" &&
+              ((params.parameters.stampType !== "image" &&
                 params.parameters.stampText.trim().length === 0) ||
                 (params.parameters.stampType === "image" &&
                   !params.parameters.stampImage))
