@@ -49,4 +49,12 @@ export interface UsersBackend {
    * (gated off by `manageInvitations`); the proprietary impl rejects it.
    */
   cancelInvitation(invitationId: number): Promise<void>;
+  /**
+   * Give a member the team's allowance no longer covers a place (SaaS only). Answers "no_place"
+   * when the team is full and `replaceMemberId` does not name who steps aside.
+   */
+  makeActive?(
+    member: Member,
+    replaceMemberId?: string,
+  ): Promise<"activated" | "no_place">;
 }
