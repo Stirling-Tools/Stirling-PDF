@@ -1100,7 +1100,7 @@ description = "The SAML2 registration identifier"
 label = "Registration ID"
 
 [admin.settings.connections.ssoAutoLogin]
-description = "Automatically redirect to SSO login when authentication is required"
+description = "Automatically redirect to SSO login when authentication is required and exactly one provider is configured. Open /login?all to reach the sign-in form directly."
 enable = "Enable SSO Auto Login"
 label = "SSO Auto Login"
 
