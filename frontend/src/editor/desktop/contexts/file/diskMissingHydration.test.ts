@@ -1,15 +1,15 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { expectConsole } from "@editor/tests/failOnConsole";
 import type {
   FileContextState,
   StirlingFileStub,
-} from "@app/types/fileContext";
-import type { FileId, ToolOperation } from "@app/types/file";
+} from "@editor/types/fileContext";
+import type { FileId, ToolOperation } from "@editor/types/file";
 
 // A vanished original must not take unsaved work or version history with it:
 // only an unedited v1 passthrough holds nothing the disk file did not.
 
-vi.mock("@app/services/desktopFileLink", () => ({
+vi.mock("@editor/services/desktopFileLink", () => ({
   desktopFileLinkingSupported: true,
   getDiskFileState: vi.fn(async () => ({ availability: "gone" as const })),
   readFileFromDisk: vi.fn(async () => null),
@@ -17,17 +17,17 @@ vi.mock("@app/services/desktopFileLink", () => ({
 
 const getStirlingFile = vi.hoisted(() => vi.fn());
 const deleteStirlingFile = vi.hoisted(() => vi.fn(async () => undefined));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile,
     deleteStirlingFile,
     updateFileMetadata: vi.fn(async () => true),
   },
 }));
-vi.mock("@app/utils/thumbnailUtils", () => ({
+vi.mock("@editor/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata: () => new Promise(() => {}),
 }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 
 const LOST_PATH = "C:/docs/report.pdf";
 
@@ -59,7 +59,7 @@ beforeEach(() => {
 async function hydrate(stub: StirlingFileStub) {
   vi.resetModules();
   const { addStirlingFileStubs } =
-    await import("@app/contexts/file/fileActions");
+    await import("@editor/contexts/file/fileActions");
 
   const state = {
     files: { ids: [], byId: {} },

@@ -7,14 +7,20 @@ import {
 } from "react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { PdfPermissionFlag } from "@embedpdf/models";
-import AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
-import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
-import type { ToolFlowConfig } from "@app/components/tools/shared/createToolFlow";
-import type { AddPasswordFullParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
-import { defaultParameters } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
-import AddPassword from "@app/tools/AddPassword";
-import { createStirlingFile, type StirlingFile } from "@app/types/fileContext";
-import { clearPdfAccess, type PdfAccess } from "@app/services/pdfAccessService";
+import AddPasswordSettings from "@editor/components/tools/addPassword/AddPasswordSettings";
+import ChangePermissionsSettings from "@editor/components/tools/changePermissions/ChangePermissionsSettings";
+import type { ToolFlowConfig } from "@editor/components/tools/shared/createToolFlow";
+import type { AddPasswordFullParameters } from "@editor/hooks/tools/addPassword/useAddPasswordParameters";
+import { defaultParameters } from "@editor/hooks/tools/changePermissions/useChangePermissionsParameters";
+import AddPassword from "@editor/tools/AddPassword";
+import {
+  createStirlingFile,
+  type StirlingFile,
+} from "@editor/types/fileContext";
+import {
+  clearPdfAccess,
+  type PdfAccess,
+} from "@editor/services/pdfAccessService";
 
 const { selection, operation, flow, inspectAccess } = vi.hoisted(() => ({
   selection: { files: [] as StirlingFile[] },
@@ -32,26 +38,28 @@ const { selection, operation, flow, inspectAccess } = vi.hoisted(() => ({
   inspectAccess: vi.fn(),
 }));
 
-vi.mock("@app/components/tools/shared/createToolFlow", () => ({
+vi.mock("@editor/components/tools/shared/createToolFlow", () => ({
   createToolFlow: flow,
 }));
-vi.mock("@app/hooks/tools/shared/useViewScopedFiles", () => ({
+vi.mock("@editor/hooks/tools/shared/useViewScopedFiles", () => ({
   useViewScopedFiles: () => selection.files,
 }));
-vi.mock("@app/hooks/tools/addPassword/useAddPasswordOperation", () => ({
+vi.mock("@editor/hooks/tools/addPassword/useAddPasswordOperation", () => ({
   useAddPasswordOperation: () => operation,
 }));
-vi.mock("@app/hooks/useEndpointConfig", () => ({
+vi.mock("@editor/hooks/useEndpointConfig", () => ({
   useEndpointEnabled: () => ({ enabled: true, loading: false }),
 }));
-vi.mock("@app/components/tooltips/useAddPasswordTips", () => ({
+vi.mock("@editor/components/tooltips/useAddPasswordTips", () => ({
   useAddPasswordTips: () => ({}),
 }));
-vi.mock("@app/components/tooltips/useAddPasswordPermissionsTips", () => ({
+vi.mock("@editor/components/tooltips/useAddPasswordPermissionsTips", () => ({
   useAddPasswordPermissionsTips: () => ({}),
 }));
-vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
+vi.mock("@editor/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@editor/services/pdfAccessService")
+  >()),
   ensureLocalPdfAccess: inspectAccess,
 }));
 

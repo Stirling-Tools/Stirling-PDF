@@ -1,19 +1,19 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 
-import { FileId } from "@app/types/file";
+import { FileId } from "@editor/types/file";
 import {
   TrackSource,
   isSourcePage,
   sourcePageKey,
   trackSignature,
-} from "@app/components/pageTracks/types";
+} from "@editor/components/pageTracks/types";
 import {
   TrackEditorState,
   changedTrackIds,
   initialTrackEditorState,
   trackEditorReducer,
-} from "@app/components/pageTracks/trackWorkspaceReducer";
+} from "@editor/components/pageTracks/trackWorkspaceReducer";
 
 const A = "file-a" as FileId;
 const B = "file-b" as FileId;

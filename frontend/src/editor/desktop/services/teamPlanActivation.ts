@@ -1,4 +1,4 @@
-import { connectionModeService } from "@app/services/connectionModeService";
+import { connectionModeService } from "@editor/services/connectionModeService";
 
 /** Cloud purchases need no local activation when the desktop is connected directly to SaaS. */
 export async function requiresLocalTeamActivation(): Promise<boolean> {

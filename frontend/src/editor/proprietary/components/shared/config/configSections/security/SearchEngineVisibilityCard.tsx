@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
 import { Stack, Paper } from "@mantine/core";
-import type { PrivacyCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
+import type { PrivacyCardProps } from "@editor/components/shared/config/configSections/security/securityCardProps";
 
 /** Whether search engines are allowed to index this instance. */
 export function SearchEngineVisibilityCard({

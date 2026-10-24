@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@app/auth/UseSession";
-import { getAccessToken } from "@app/auth/session";
-import { supabase } from "@app/auth/supabase";
-import { useSaaSMode } from "@app/hooks/useSaaSMode";
-import type { AccountCreatedAt } from "@cloud/components/onboarding/accountCreatedAt";
+import { useAuth } from "@editor/auth/UseSession";
+import { getAccessToken } from "@editor/auth/session";
+import { supabase } from "@editor/auth/supabase";
+import { useSaaSMode } from "@editor/hooks/useSaaSMode";
+import type { AccountCreatedAt } from "@editor-cloud/components/onboarding/accountCreatedAt";
 
-export type { AccountCreatedAt } from "@cloud/components/onboarding/accountCreatedAt";
+export type { AccountCreatedAt } from "@editor-cloud/components/onboarding/accountCreatedAt";
 
 /** The desktop session is a bare JWT, so the creation date comes from Supabase.
  * Self-hosted accounts carry no creation date and resolve to null. */

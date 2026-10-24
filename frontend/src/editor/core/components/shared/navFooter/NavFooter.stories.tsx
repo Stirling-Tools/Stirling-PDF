@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Icon } from "@app/ui/Icon";
-import { NavItem } from "@app/ui/NavItem";
-import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
+import { Icon } from "@editor/ui/Icon";
+import { NavItem } from "@editor/ui/NavItem";
+import { NavFooter } from "@editor/components/shared/navFooter/NavFooter";
 
 /** Stands in for a CTA that has decided it has nothing to show. */
 function RendersNothing() {

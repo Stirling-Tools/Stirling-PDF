@@ -1,6 +1,6 @@
-import { apiClient } from "@portal/api/http";
-import type { CardAccent, CodeLang } from "@app/ui";
-import type { Tier } from "@portal/contexts/TierContext";
+import { apiClient } from "@processor/api/http";
+import type { CardAccent, CodeLang } from "@editor/ui";
+import type { Tier } from "@processor/contexts/TierContext";
 
 /*
  * Developer Docs. Two payloads back the surface: the left-hand nav tree and

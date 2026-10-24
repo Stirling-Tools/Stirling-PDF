@@ -1,7 +1,10 @@
 import path from "node:path";
 
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { uploadFiles, dismissTourTooltip } from "@app/tests/helpers/ui-helpers";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import {
+  uploadFiles,
+  dismissTourTooltip,
+} from "@editor/tests/helpers/ui-helpers";
 
 /**
  * Extended coverage for the Page Editor's duplicate affordances (issue #5443):

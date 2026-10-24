@@ -4,11 +4,11 @@ import {
   useAddPasswordParameters,
   defaultParameters,
   AddPasswordParametersHook,
-} from "@app/hooks/tools/addPassword/useAddPasswordParameters";
+} from "@editor/hooks/tools/addPassword/useAddPasswordParameters";
 import {
   defaultParameters as defaultChangePermissionsParameters,
   ChangePermissionsParameters,
-} from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
+} from "@editor/hooks/tools/changePermissions/useChangePermissionsParameters";
 
 describe("useAddPasswordParameters", () => {
   test("should initialize with default parameters", () => {

@@ -14,13 +14,15 @@ import {
   getPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
-import { PermissionsPasswordButton } from "@app/tools/pdfTextEditor/components/PermissionsPasswordButton";
+import { PermissionsPasswordButton } from "@editor/tools/pdfTextEditor/components/PermissionsPasswordButton";
 
-vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
-vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
+vi.mock("@editor/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@editor/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@editor/services/pdfAccessService")
+  >()),
   inspectLocalPdfAccess: vi.fn(),
 }));
 vi.mock("react-i18next", () => ({

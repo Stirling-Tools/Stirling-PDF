@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { http, HttpResponse } from "msw";
-import { Button } from "@app/ui";
-import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
+import { Button } from "@editor/ui";
+import { BundleCheckoutModal } from "@processor/components/billing/BundleCheckoutModal";
 import {
   prepaidWallet,
   subscribedWallet,
-} from "@portal/components/billing/walletFixtures";
-import "@portal/components/billing/billing.css";
+} from "@processor/components/billing/walletFixtures";
+import "@processor/components/billing/billing.css";
 
 const meta: Meta<typeof BundleCheckoutModal> = {
   title: "Portal/Billing/BundleCheckoutModal",

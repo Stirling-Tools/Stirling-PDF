@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
-import type { Wallet } from "@portal/api/billing";
-import { createPortalSession } from "@portal/billing/stripe";
+import type { Wallet } from "@processor/api/billing";
+import { createPortalSession } from "@processor/billing/stripe";
 
 /**
  * Opens the Stripe customer portal for the wallet's team. Card,

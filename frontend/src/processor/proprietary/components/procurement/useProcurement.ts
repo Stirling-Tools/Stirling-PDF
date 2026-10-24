@@ -1,10 +1,10 @@
-import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
+import { SaasSessionRequiredError } from "@editor/portal/auth/portalSaasSession";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { usePortalLinked } from "@app/portal/contexts/usePortalLinked";
-import { qk } from "@app/portal/queries/keys";
-import { toAsyncState } from "@app/portal/queries/adapters";
+import { usePortalLinked } from "@editor/portal/contexts/usePortalLinked";
+import { qk } from "@editor/portal/queries/keys";
+import { toAsyncState } from "@editor/portal/queries/adapters";
 import {
   acceptQuote,
   extendTrial,
@@ -20,7 +20,7 @@ import {
   type ProcurementSnapshot,
   type QuoteResult,
   type TrialSetupDetails,
-} from "@app/portal/api/procurement";
+} from "@editor/portal/api/procurement";
 
 export type ProcurementExtra =
   | null

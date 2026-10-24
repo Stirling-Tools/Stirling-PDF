@@ -1,8 +1,8 @@
 import { type RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
-import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
-import type { FlowPolicy } from "@portal/api/processorFlow";
+import { Button } from "@editor/ui";
+import { policyCategoryIcon } from "@editor/components/policies/policyCategoryIcon";
+import type { FlowPolicy } from "@processor/api/processorFlow";
 
 interface FlowPoliciesProps {
   policies: FlowPolicy[];

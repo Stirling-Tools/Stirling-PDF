@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FileDropdownMenu } from "@app/components/shared/FileDropdownMenu";
+import { FileDropdownMenu } from "@editor/components/shared/FileDropdownMenu";
 
 const viewOptionStyle: CSSProperties = {
   display: "flex",

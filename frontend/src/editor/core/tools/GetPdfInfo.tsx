@@ -1,27 +1,27 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { Stack, Divider, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { Button } from "@editor/ui/Button";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 import {
   useGetPdfInfoParameters,
   defaultParameters,
-} from "@app/hooks/tools/getPdfInfo/useGetPdfInfoParameters";
-import GetPdfInfoResults from "@app/components/tools/getPdfInfo/GetPdfInfoResults";
+} from "@editor/hooks/tools/getPdfInfo/useGetPdfInfoParameters";
+import GetPdfInfoResults from "@editor/components/tools/getPdfInfo/GetPdfInfoResults";
 import {
   useGetPdfInfoOperation,
   GetPdfInfoOperationHook,
-} from "@app/hooks/tools/getPdfInfo/useGetPdfInfoOperation";
-import GetPdfInfoReportView from "@app/components/tools/getPdfInfo/GetPdfInfoReportView";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+} from "@editor/hooks/tools/getPdfInfo/useGetPdfInfoOperation";
+import GetPdfInfoReportView from "@editor/components/tools/getPdfInfo/GetPdfInfoReportView";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import {
   useNavigationActions,
   useNavigationState,
-} from "@app/contexts/NavigationContext";
-import type { PdfInfoReportData } from "@app/types/getPdfInfo";
+} from "@editor/contexts/NavigationContext";
+import type { PdfInfoReportData } from "@editor/types/getPdfInfo";
 
 const CHAPTERS = [
   {

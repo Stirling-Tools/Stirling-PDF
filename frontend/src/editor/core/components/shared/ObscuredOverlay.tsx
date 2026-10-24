@@ -1,6 +1,6 @@
 import React from "react";
-import { Button } from "@app/ui/Button";
-import styles from "@app/components/shared/ObscuredOverlay/ObscuredOverlay.module.css";
+import { Button } from "@editor/ui/Button";
+import styles from "@editor/components/shared/ObscuredOverlay/ObscuredOverlay.module.css";
 
 type ObscuredOverlayProps = {
   obscured: boolean;

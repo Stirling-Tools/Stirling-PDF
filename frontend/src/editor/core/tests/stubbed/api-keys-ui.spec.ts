@@ -5,7 +5,7 @@ import {
   type Page,
   type Route,
 } from "@playwright/test";
-import { seedCookieConsent } from "@app/tests/helpers/api-stubs";
+import { seedCookieConsent } from "@editor/tests/helpers/api-stubs";
 
 /**
  * E2E coverage for the portal Infrastructure → API Keys tab (PR #6961:

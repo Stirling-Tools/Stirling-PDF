@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PipelineEditHeader } from "@portal/components/pipelines/PipelineEditHeader";
+import { PipelineEditHeader } from "@processor/components/pipelines/PipelineEditHeader";
 
 const meta: Meta<typeof PipelineEditHeader> = {
   title: "Portal/Pipelines/PipelineEditHeader",

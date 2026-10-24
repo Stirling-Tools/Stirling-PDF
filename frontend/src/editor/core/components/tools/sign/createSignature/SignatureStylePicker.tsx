@@ -1,12 +1,12 @@
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import {
   SIGNATURE_FONTS,
   type SignatureFont,
-} from "@app/components/tools/sign/createSignature/signatureStyles";
-import { ControlLabel } from "@app/components/tools/sign/createSignature/ControlLabel";
-import styles from "@app/components/tools/sign/createSignature/SignatureStylePicker.module.css";
+} from "@editor/components/tools/sign/createSignature/signatureStyles";
+import { ControlLabel } from "@editor/components/tools/sign/createSignature/ControlLabel";
+import styles from "@editor/components/tools/sign/createSignature/SignatureStylePicker.module.css";
 
 const PREVIEW_FONT_SIZE = 30;
 

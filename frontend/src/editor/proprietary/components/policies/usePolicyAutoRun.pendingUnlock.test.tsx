@@ -6,16 +6,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 
-vi.mock("@app/hooks/useAiEngineEnabled", () => ({
+vi.mock("@editor/hooks/useAiEngineEnabled", () => ({
   useAiEngineEnabled: () => false,
 }));
 const fileStubs: { id: string; name: string; derivedFromTool?: boolean }[] = [];
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs }),
   useFileManagement: () => ({ addFiles: vi.fn() }),
   useFileContext: () => ({ consumeFiles: vi.fn() }),
 }));
-vi.mock("@app/hooks/usePolicies", () => ({
+vi.mock("@editor/hooks/usePolicies", () => ({
   usePolicies: () => ({
     policies: {
       security: {
@@ -31,27 +31,27 @@ vi.mock("@app/hooks/usePolicies", () => ({
     },
   }),
 }));
-vi.mock("@app/services/policyApi", () => ({
+vi.mock("@editor/services/policyApi", () => ({
   runStoredPolicy: vi.fn(),
   getPolicyRun: vi.fn(),
   downloadPolicyOutput: vi.fn(),
   resolvePolicyRunTarget: () => "saas",
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: vi.fn(),
     getStirlingFileStub: vi.fn().mockResolvedValue(null),
   },
 }));
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: vi.fn() }),
 }));
 
-import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
-import { resetPolicyRuns } from "@app/components/policies/policyRunStore";
-import { setPendingUnlocks } from "@app/services/pendingUnlocks";
-import { runStoredPolicy } from "@app/services/policyApi";
-import { fileStorage } from "@app/services/fileStorage";
+import { usePolicyAutoRun } from "@editor/components/policies/usePolicyAutoRun";
+import { resetPolicyRuns } from "@editor/components/policies/policyRunStore";
+import { setPendingUnlocks } from "@editor/services/pendingUnlocks";
+import { runStoredPolicy } from "@editor/services/policyApi";
+import { fileStorage } from "@editor/services/fileStorage";
 
 const runStored = vi.mocked(runStoredPolicy);
 const getFile = vi.mocked(fileStorage.getStirlingFile);

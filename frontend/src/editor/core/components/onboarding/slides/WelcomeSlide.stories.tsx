@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import WelcomeSlide from "@app/components/onboarding/slides/WelcomeSlide";
+import WelcomeSlide from "@editor/components/onboarding/slides/WelcomeSlide";
 
 // WelcomeSlide is a slide-content factory (returns a SlideConfig), not
 // a component, so wrap it to render its `title`/`body` the way the real

@@ -1,8 +1,8 @@
-import { FileId, StirlingFileStub } from "@app/types/fileContext";
+import { FileId, StirlingFileStub } from "@editor/types/fileContext";
 import type {
   OpenDecision,
   ReconcilePort,
-} from "@core/contexts/file/storedFileReconciler";
+} from "@editor-core/contexts/file/storedFileReconciler";
 import {
   syncLinkedFileFromDisk,
   persistDiskUpdate,
@@ -17,22 +17,22 @@ import {
   notifyDiskTooLarge,
   notifyOpenFileDeleted,
   saveOrphanAsCopy,
-} from "@app/services/diskFileSync";
+} from "@editor/services/diskFileSync";
 import {
   getDiskFileState,
   type PresentDiskFileState,
-} from "@app/services/desktopFileLink";
-import { fileStorage } from "@app/services/fileStorage";
-import { sourcePathForFile } from "@app/services/fileImportPaths";
+} from "@editor/services/desktopFileLink";
+import { fileStorage } from "@editor/services/fileStorage";
+import { sourcePathForFile } from "@editor/services/fileImportPaths";
 import {
   hasLocalRecord,
   isPristineLocalPassthrough,
-} from "@app/services/pruneMissingRecentFiles";
+} from "@editor/services/pruneMissingRecentFiles";
 import {
   cancelDiskConflict,
   requestDiskConflictChoice,
-} from "@app/services/diskConflictPrompt";
-import { hasUnsavedWork } from "@app/services/unsavedWork";
+} from "@editor/services/diskConflictPrompt";
+import { hasUnsavedWork } from "@editor/services/unsavedWork";
 
 export type { OpenDecision, ReconcilePort };
 

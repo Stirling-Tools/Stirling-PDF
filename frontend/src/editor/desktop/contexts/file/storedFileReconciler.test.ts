@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 // The three hooks that carry a record's link to its disk original around the
 // app. They have no other home now, so a change here is a silent one.
@@ -8,12 +8,12 @@ import type { FileId } from "@app/types/file";
 const getDiskFileState = vi.hoisted(() => vi.fn());
 const getLeafStubsNamed = vi.hoisted(() => vi.fn());
 const getStirlingFile = vi.hoisted(() => vi.fn());
-vi.mock("@app/services/desktopFileLink", () => ({
+vi.mock("@editor/services/desktopFileLink", () => ({
   desktopFileLinkingSupported: true,
   getDiskFileState,
   readFileFromDisk: vi.fn(async () => null),
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile,
     deleteStirlingFile: vi.fn(),
@@ -21,16 +21,16 @@ vi.mock("@app/services/fileStorage", () => ({
     getLeafStubsNamed,
   },
 }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 
-import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { pendingFilePathMappings } from "@editor/services/pendingFilePathMappings";
+import { expectConsole } from "@editor/tests/failOnConsole";
 import {
   persistedSourceFields,
   inheritedSourceLink,
   sourceLinkForNewFile,
   storedCopiesForNewFiles,
-} from "@app/contexts/file/storedFileReconciler";
+} from "@editor/contexts/file/storedFileReconciler";
 
 const PATH = "C:/docs/report.pdf";
 let file: File;

@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
-import { TextInput } from "@app/components/shared/TextInput";
-import "@app/components/tools/toolPicker/ToolPicker.css";
-import { rankByFuzzy, idToWords } from "@app/utils/fuzzySearch";
-import { ToolId } from "@app/types/toolId";
+import { Icon } from "@editor/ui/Icon";
+import { ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
+import { TextInput } from "@editor/components/shared/TextInput";
+import "@editor/components/tools/toolPicker/ToolPicker.css";
+import { rankByFuzzy, idToWords } from "@editor/utils/fuzzySearch";
+import { ToolId } from "@editor/types/toolId";
 
 interface ToolSearchProps {
   value: string;

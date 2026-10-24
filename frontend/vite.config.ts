@@ -660,7 +660,7 @@ export default defineConfig(async ({ mode, command }) => {
       }),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
-    // so without this `@app/*` resolves in the app and fails in a worker.
+    // so without this `@editor/*` resolves in the app and fails in a worker.
     worker: {
       plugins: () => [tsconfigPaths({ projects: [tsconfigProject] })],
       // Worker sub-builds do not inherit the main build's output options, so

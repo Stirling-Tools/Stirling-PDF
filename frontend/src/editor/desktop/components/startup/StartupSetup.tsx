@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { StartupSetup as CoreStartupSetup } from "@core/components/startup/StartupSetup";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useSaaSMode } from "@app/hooks/useSaaSMode";
+import { StartupSetup as CoreStartupSetup } from "@editor-core/components/startup/StartupSetup";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useSaaSMode } from "@editor/hooks/useSaaSMode";
 
 /** DesktopConfigSync owns backend readiness; hosted accounts have no Spring setup. */
 export function StartupSetup({ children }: { children: ReactNode }) {

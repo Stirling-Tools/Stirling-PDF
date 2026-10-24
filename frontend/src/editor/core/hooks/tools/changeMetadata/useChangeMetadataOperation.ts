@@ -2,19 +2,19 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { TrappedStatus, CustomMetadataEntry } from "@app/types/metadata";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
+import { TrappedStatus, CustomMetadataEntry } from "@editor/types/metadata";
 import {
   validateChangeMetadataParameters,
   ChangeMetadataParameters,
   defaultParameters,
-} from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
+} from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
 
 const ENDPOINT = "/api/v1/misc/update-metadata" satisfies ToolEndpoint;
 type ChangeMetadataApiParams = ToolApiParams[typeof ENDPOINT];

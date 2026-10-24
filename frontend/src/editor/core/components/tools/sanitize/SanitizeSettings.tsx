@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   SanitizeParameters,
   defaultParameters,
-} from "@app/hooks/tools/sanitize/useSanitizeParameters";
+} from "@editor/hooks/tools/sanitize/useSanitizeParameters";
 
 interface SanitizeSettingsProps {
   parameters: SanitizeParameters;

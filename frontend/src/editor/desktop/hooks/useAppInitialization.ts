@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { useOpenedFile } from "@app/hooks/useOpenedFile";
-import { fileOpenService } from "@app/services/fileOpenService";
+import { useOpenedFile } from "@editor/hooks/useOpenedFile";
+import { fileOpenService } from "@editor/services/fileOpenService";
 import {
   useFileActions,
   useFileManagement,
   useFileSelectors,
-} from "@app/contexts/file/fileHooks";
-import { storedCopiesForNewFiles } from "@app/contexts/file/storedFileReconciler";
-import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
-import { captureDroppedFilePaths } from "@app/services/fileImportPaths";
-import { getDiskFileState } from "@app/services/desktopFileLink";
-import { diskLastModified } from "@app/services/diskFileSync";
-import { endLoadingLaunchFiles } from "@app/services/launchFiles";
+} from "@editor/contexts/file/fileHooks";
+import { storedCopiesForNewFiles } from "@editor/contexts/file/storedFileReconciler";
+import { pendingFilePathMappings } from "@editor/services/pendingFilePathMappings";
+import { captureDroppedFilePaths } from "@editor/services/fileImportPaths";
+import { getDiskFileState } from "@editor/services/desktopFileLink";
+import { diskLastModified } from "@editor/services/diskFileSync";
+import { endLoadingLaunchFiles } from "@editor/services/launchFiles";
 
 /**
  * App initialization hook
