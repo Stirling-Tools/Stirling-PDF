@@ -90,7 +90,7 @@ async function watchStoredBlobs(page: Page): Promise<void> {
           formsWithStored.add(this);
         }
         return (native as (...a: unknown[]) => void).apply(this, args);
-      } as FormData["append"];
+      };
     }
     const postsStored = (body: unknown): boolean =>
       body instanceof FormData && formsWithStored.has(body);

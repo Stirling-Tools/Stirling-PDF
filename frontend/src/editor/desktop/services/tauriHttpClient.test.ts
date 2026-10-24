@@ -12,7 +12,8 @@ const { fetchMock, detachMock } = vi.hoisted(() => ({
 }));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: fetchMock }));
 vi.mock("@editor/utils/storedBlob", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@editor/utils/storedBlob")>();
+  const actual =
+    await importOriginal<typeof import("@editor/utils/storedBlob")>();
   detachMock.mockImplementation(actual.detachedFormData);
   return { ...actual, detachedFormData: detachMock };
 });
