@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { FontCharset } from "@embedpdf/models";
-import { getLocalFontFallbackConfig } from "@app/services/pdfiumFontFallback";
+import { getLocalFontFallbackConfig } from "@editor/services/pdfiumFontFallback";
 
 describe("pdfiumFontFallback", () => {
   it("generates a self-hosted font fallback configuration without external CDN URLs", () => {

@@ -7,15 +7,15 @@ import {
   isIntegrationStep,
   newIntegrationStep,
   stepOperation,
-} from "@portal/components/pipelines/integrationStep";
+} from "@processor/components/pipelines/integrationStep";
 import {
   buildStepParameters,
   operationById,
-} from "@portal/components/policies/stepOperations";
+} from "@processor/components/policies/stepOperations";
 import {
   serializeToolStep,
   type WorkingToolStep,
-} from "@app/hooks/tools/shared/toolAutomation";
+} from "@editor/hooks/tools/shared/toolAutomation";
 
 describe("integration steps in a pipeline", () => {
   it("creates a step the backend will dispatch generically", () => {

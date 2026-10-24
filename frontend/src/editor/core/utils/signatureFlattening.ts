@@ -2,7 +2,7 @@ import {
   createBitmapImageObject,
   decodeImageDataUrl,
   type DecodedImage,
-} from "@app/utils/pdfiumBitmapUtils";
+} from "@editor/utils/pdfiumBitmapUtils";
 import {
   closeDocAndFreeBuffer,
   getPdfiumModule,
@@ -10,19 +10,19 @@ import {
   readEffectivePageBox,
   readUtf16,
   saveRawDocument,
-} from "@app/services/pdfiumService";
-import { generateThumbnailWithMetadata } from "@app/utils/thumbnailUtils";
+} from "@editor/services/pdfiumService";
+import { generateThumbnailWithMetadata } from "@editor/utils/thumbnailUtils";
 import {
   createChildStub,
   createProcessedFile,
-} from "@app/contexts/file/fileActions";
+} from "@editor/contexts/file/fileActions";
 import {
   createStirlingFile,
   FileId,
   StirlingFile,
   StirlingFileStub,
-} from "@app/types/fileContext";
-import type { SignatureAPI } from "@app/components/viewer/viewerTypes";
+} from "@editor/types/fileContext";
+import type { SignatureAPI } from "@editor/components/viewer/viewerTypes";
 
 interface MinimalFileContextSelectors {
   getAllFileIds: () => FileId[];

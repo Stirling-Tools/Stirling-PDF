@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
+import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useTranslation } from "react-i18next";
 import { SpreadMode } from "@embedpdf/plugin-spread/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useIsPhone } from "@app/hooks/useIsMobile";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import "@app/components/viewer/PdfViewerToolbar.css";
-import { Icon } from "@app/ui/Icon";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useIsPhone } from "@editor/hooks/useIsMobile";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import "@editor/components/viewer/PdfViewerToolbar.css";
+import { Icon } from "@editor/ui/Icon";
 
 // Sizing constants for the page number input
 const MIN_PAGE_DIGITS = 2;
@@ -57,6 +58,8 @@ export function PdfViewerToolbar({
   const [displayZoomPercent, setDisplayZoomPercent] = useState(
     () => zoomState.zoomPercent || 100,
   );
+
+  const [zoomLevel, setZoomLevel] = useState(() => zoomState.level);
   const [spreadMode, setSpreadMode] = useState(spreadState.spreadMode);
   const isDualPageActive = spreadMode !== SpreadMode.None;
   const isCoverPageActive = spreadMode === SpreadMode.Even;
@@ -80,19 +83,26 @@ export function PdfViewerToolbar({
     const unregister = registerImmediateZoomUpdate((percent) => {
       if (zoomRestorePendingRef.current) return;
       setDisplayZoomPercent(percent);
+      setZoomLevel(getZoomState().level);
     });
     if (!zoomRestorePendingRef.current) {
       setDisplayZoomPercent(zoomState.zoomPercent || 100);
+      setZoomLevel(zoomState.level);
     }
     return () => {
       unregister?.();
     };
   }, [
     registerImmediateZoomUpdate,
+    getZoomState,
     zoomState.zoomPercent,
+    zoomState.level,
     zoomRestorePendingRef,
     zoomRestoreSettledTick,
   ]);
+
+  const isFitWidthActive = zoomLevel === ZoomMode.FitWidth;
+  const isFitPageActive = zoomLevel === ZoomMode.FitPage;
 
   useEffect(() => {
     const unregister = registerImmediateSpreadUpdate((mode) => {
@@ -110,6 +120,14 @@ export function PdfViewerToolbar({
 
   const handleZoomIn = () => {
     zoomActions.zoomIn();
+  };
+
+  const handleFitWidth = () => {
+    zoomActions.requestZoom(ZoomMode.FitWidth);
+  };
+
+  const handleFitPage = () => {
+    zoomActions.requestZoom(ZoomMode.FitPage);
   };
 
   const handlePageNavigation = (page: number) => {
@@ -405,6 +423,36 @@ export function PdfViewerToolbar({
           >
             {displayZoomPercent}%
           </span>
+          <Tooltip
+            content={t("viewer.fitWidth", "Fit to width")}
+            position="top"
+            arrow
+          >
+            <ActionIcon
+              variant={isFitWidthActive ? "primary" : "tertiary"}
+              size={buttonSize}
+              onClick={handleFitWidth}
+              aria-label={t("viewer.fitWidth", "Fit to width")}
+              aria-pressed={isFitWidthActive}
+            >
+              <Icon name="arrow-left-right" size={18} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip
+            content={t("viewer.fitPage", "Fit to page")}
+            position="top"
+            arrow
+          >
+            <ActionIcon
+              variant={isFitPageActive ? "primary" : "tertiary"}
+              size={buttonSize}
+              onClick={handleFitPage}
+              aria-label={t("viewer.fitPage", "Fit to page")}
+              aria-pressed={isFitPageActive}
+            >
+              <Icon name="scan" size={18} />
+            </ActionIcon>
+          </Tooltip>
         </Group>
       )}
 
@@ -457,6 +505,22 @@ export function PdfViewerToolbar({
               onClick={handleZoomIn}
             >
               {t("viewer.zoomIn", "Zoom in")} ({displayZoomPercent}%)
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<Icon name="arrow-left-right" size={18} />}
+              rightSection={isFitWidthActive && <Icon name="check" size={16} />}
+              aria-current={isFitWidthActive || undefined}
+              onClick={handleFitWidth}
+            >
+              {t("viewer.fitWidth", "Fit to width")}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<Icon name="scan" size={18} />}
+              rightSection={isFitPageActive && <Icon name="check" size={16} />}
+              aria-current={isFitPageActive || undefined}
+              onClick={handleFitPage}
+            >
+              {t("viewer.fitPage", "Fit to page")}
             </Menu.Item>
 
             <Menu.Divider />

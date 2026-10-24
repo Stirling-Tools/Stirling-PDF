@@ -1,8 +1,8 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import i18n from "i18next";
 import { fetch } from "@tauri-apps/plugin-http";
-import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
-import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
+import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
+import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
 
 export type ConnectionMode = "saas" | "selfhosted" | "local";
 

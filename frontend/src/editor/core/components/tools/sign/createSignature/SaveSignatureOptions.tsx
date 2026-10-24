@@ -1,14 +1,14 @@
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import { Checkbox } from "@app/ui/Checkbox";
-import { FormField } from "@app/ui/FormField";
-import { Input } from "@app/ui/Input";
-import { Select } from "@app/ui/Select";
+import { Checkbox } from "@editor/ui/Checkbox";
+import { FormField } from "@editor/ui/FormField";
+import { Input } from "@editor/ui/Input";
+import { Select } from "@editor/ui/Select";
 import type {
   SaveChoice,
   SaveScope,
-} from "@app/components/tools/sign/createSignature/types";
-import styles from "@app/components/tools/sign/createSignature/SaveSignatureOptions.module.css";
+} from "@editor/components/tools/sign/createSignature/types";
+import styles from "@editor/components/tools/sign/createSignature/SaveSignatureOptions.module.css";
 
 export interface SaveOptionsState {
   enabled: boolean;

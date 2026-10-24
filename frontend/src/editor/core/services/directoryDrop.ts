@@ -1,4 +1,4 @@
-import type { PickedDirectory } from "@app/services/directoryPicker";
+import type { PickedDirectory } from "@editor/services/directoryPicker";
 
 export const canDropDirectory = false;
 

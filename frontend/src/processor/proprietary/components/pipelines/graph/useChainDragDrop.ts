@@ -8,7 +8,7 @@ import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/elemen
 import {
   NODE_WIDTH,
   reorderMany,
-} from "@portal/components/pipelines/graph/pipelineLayout";
+} from "@processor/components/pipelines/graph/pipelineLayout";
 
 /**
  * Drag-to-reorder for the pipeline chain.

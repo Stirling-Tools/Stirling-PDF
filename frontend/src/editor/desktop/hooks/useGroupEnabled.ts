@@ -1,12 +1,12 @@
 import { useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { fetchGroupEnabled } from "@app/api/config";
-import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
-import { qk } from "@app/query/keys";
-import { CONFIG_STALE_TIME } from "@app/query/staleTime";
-import type { GroupEnabledResult } from "@app/types/groupEnabled";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { fetchGroupEnabled } from "@editor/api/config";
+import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import { qk } from "@editor/query/keys";
+import { CONFIG_STALE_TIME } from "@editor/query/staleTime";
+import type { GroupEnabledResult } from "@editor/types/groupEnabled";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 
 const OFFLINE_REASON_FALLBACK =
   "Requires your Stirling-PDF server (currently offline)";

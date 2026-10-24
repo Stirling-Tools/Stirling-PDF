@@ -7,15 +7,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import { isAxiosError } from "axios";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useAuth } from "@app/auth/UseSession";
-import { useLicense } from "@app/contexts/LicenseContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useAuth } from "@editor/auth/UseSession";
+import { useLicense } from "@editor/contexts/LicenseContext";
 import {
   getSimulatedAdminUsage,
   getSimulatedWauResponse,
-} from "@app/testing/serverExperienceSimulations";
+} from "@editor/testing/serverExperienceSimulations";
 
 const SELF_REPORTED_ADMIN_KEY = "stirling-self-reported-admin";
 const FREE_TIER_LIMIT = 5;

@@ -2,18 +2,18 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   AddStampParameters,
   defaultParameters,
   validateAddStampParameters,
-} from "@app/components/tools/addStamp/useAddStampParameters";
+} from "@editor/components/tools/addStamp/useAddStampParameters";
 
 const ENDPOINT = "/api/v1/misc/add-stamp" satisfies ToolEndpoint;
 type AddStampApiParams = ToolApiParams[typeof ENDPOINT];

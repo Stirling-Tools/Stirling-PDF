@@ -11,17 +11,17 @@ const { fetchMock, detachMock } = vi.hoisted(() => ({
   detachMock: vi.fn(),
 }));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: fetchMock }));
-vi.mock("@app/utils/storedBlob", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@app/utils/storedBlob")>();
+vi.mock("@editor/utils/storedBlob", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@editor/utils/storedBlob")>();
   detachMock.mockImplementation(actual.detachedFormData);
   return { ...actual, detachedFormData: detachMock };
 });
-vi.mock("@app/services/documentPrivacyService", () => ({
+vi.mock("@editor/services/documentPrivacyService", () => ({
   enforceDocumentPrivacy: vi.fn().mockResolvedValue(false),
 }));
 
-import { create } from "@app/services/tauriHttpClient";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { create } from "@editor/services/tauriHttpClient";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 function okJson() {
   return {

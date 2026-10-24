@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { MultiSelect, Loader, Text, Stack, TextInput } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { InviteTeammateButton } from "@app/components/shared/InviteTeammateButton";
-import styles from "@app/components/shared/UserSelector.module.css";
-import { alert } from "@app/components/toast";
-import { fetchUsers } from "@app/api/users";
-import { useAuth } from "@app/auth/UseSession";
-import { qk } from "@app/query/keys";
-import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
+import { Icon } from "@editor/ui/Icon";
+import { InviteTeammateButton } from "@editor/components/shared/InviteTeammateButton";
+import styles from "@editor/components/shared/UserSelector.module.css";
+import { alert } from "@editor/components/toast";
+import { fetchUsers } from "@editor/api/users";
+import { useAuth } from "@editor/auth/UseSession";
+import { qk } from "@editor/query/keys";
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
 
 interface UserSelectorProps {
   value: number[];

@@ -1,11 +1,14 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { ShapeObject } from "@app/tools/pdfTextEditor/model/ShapeObject";
-import type { PageRuleSnapshot } from "@app/tools/pdfTextEditor/types";
-import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
+import type { PageRuleSnapshot } from "@editor/tools/pdfTextEditor/types";
+import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 interface PageInsertModule {
   FPDFPage_InsertObjectAtIndex?: (

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import { BaseToolProps } from "@app/types/tool";
-import { withBasePath } from "@app/constants/app";
+import { BaseToolProps } from "@editor/types/tool";
+import { withBasePath } from "@editor/constants/app";
 import { useTranslation } from "react-i18next";
 
 const SwaggerUI: React.FC<BaseToolProps> = () => {

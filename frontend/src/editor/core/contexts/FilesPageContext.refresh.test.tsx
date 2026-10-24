@@ -4,10 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   FilesPageProvider,
   useFilesPage,
-} from "@app/contexts/FilesPageContext";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FolderId, FolderRecord } from "@app/types/folder";
-import type { FileId } from "@app/types/file";
+} from "@editor/contexts/FilesPageContext";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FolderId, FolderRecord } from "@editor/types/folder";
+import type { FileId } from "@editor/types/file";
 
 const state = vi.hoisted(() => ({
   revision: 0,
@@ -20,41 +20,41 @@ const state = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { getAllStirlingFileStubs: () => state.read() },
 }));
-vi.mock("@app/services/serverStorageUpload", () => ({
+vi.mock("@editor/services/serverStorageUpload", () => ({
   uploadHistoryChain: vi.fn(),
 }));
-vi.mock("@app/services/folderSyncService", () => ({
+vi.mock("@editor/services/folderSyncService", () => ({
   folderSyncService: { bulkMoveFiles: vi.fn() },
 }));
-vi.mock("@app/services/fileSyncService", () => ({
+vi.mock("@editor/services/fileSyncService", () => ({
   reconcileServerFiles: async (files: StirlingFileStub[]) => files,
 }));
-vi.mock("@app/services/pruneMissingRecentFiles", () => ({
+vi.mock("@editor/services/pruneMissingRecentFiles", () => ({
   pruneMissingRecentFiles: async (files: StirlingFileStub[]) => files,
 }));
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ moveFilesToFolder: vi.fn() }),
   useIndexedDBRevision: () => state.revision,
 }));
-vi.mock("@app/contexts/FolderContext", () => ({
+vi.mock("@editor/contexts/FolderContext", () => ({
   useFolders: () => state.folders,
 }));
-vi.mock("@app/contexts/file/fileHooks", () => ({
+vi.mock("@editor/contexts/file/fileHooks", () => ({
   useFileActions: () => ({ actions: { updateStirlingFileStub: vi.fn() } }),
 }));
-vi.mock("@app/hooks/useDiskLinkReconcile", () => ({
+vi.mock("@editor/hooks/useDiskLinkReconcile", () => ({
   useDiskLinkReconcile: () => ({
     openFileIdsRef: { current: [] },
     onOpenFilesDetached: vi.fn(),
   }),
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { storageEnabled: false } }),
 }));
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ isAnonymous: true }),
 }));
 

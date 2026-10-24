@@ -1,19 +1,19 @@
-import type { executeAutomationSequence as CoreExecuteAutomationSequence } from "@core/utils/automationExecutor";
+import type { executeAutomationSequence as CoreExecuteAutomationSequence } from "@editor-core/utils/automationExecutor";
 export {
   executeToolOperation,
   executeToolOperationWithPrefix,
   processMultiFileResponse,
-} from "@core/utils/automationExecutor";
-import { getServerAutomationSession } from "@app/services/serverAutomationSession";
+} from "@editor-core/utils/automationExecutor";
+import { getServerAutomationSession } from "@editor/services/serverAutomationSession";
 import {
   submitServerPipeline,
   waitForServerPipeline,
   downloadServerPipelineOutput,
-} from "@app/services/serverPipeline";
-import type { BackendPipelineStep } from "@app/services/policyPipeline";
-import type { ToolId } from "@app/types/toolId";
-import { ToolType } from "@app/hooks/tools/shared/useToolOperation";
-import { objectToFormData } from "@app/hooks/tools/shared/toolApiMapping";
+} from "@editor/services/serverPipeline";
+import type { BackendPipelineStep } from "@editor/services/policyPipeline";
+import type { ToolId } from "@editor/types/toolId";
+import { ToolType } from "@editor/hooks/tools/shared/useToolOperation";
+import { objectToFormData } from "@editor/hooks/tools/shared/toolApiMapping";
 
 /** Desktop automation executes as one server pipeline, including locally available tools. */
 export const executeAutomationSequence: typeof CoreExecuteAutomationSequence =

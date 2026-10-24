@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { operationRouter } from "@app/services/operationRouter";
-import { tauriBackendService } from "@app/services/tauriBackendService";
+import { operationRouter } from "@editor/services/operationRouter";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
 
 /**
  * Desktop hook to detect if an operation will use cloud/SaaS backend

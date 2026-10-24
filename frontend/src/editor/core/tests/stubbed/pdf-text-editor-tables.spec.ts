@@ -1,5 +1,5 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import path from "path";
 
 // Drives the real PDFium object path: insert a bordered table, grow it by a row

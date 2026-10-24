@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SignControlsPanel from "@app/components/tools/certSign/panels/SignControlsPanel";
-import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import SignControlsPanel from "@editor/components/tools/certSign/panels/SignControlsPanel";
+import type { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
 
 const meta = {
   title: "CertSign/SignControlsPanel",

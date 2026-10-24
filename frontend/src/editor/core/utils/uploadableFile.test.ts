@@ -1,7 +1,7 @@
 import { Blob as NodeBlob, File as NodeFile } from "node:buffer";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { uploadableFile } from "@app/utils/uploadableFile";
-import { markStoredBlob } from "@app/utils/storedBlob";
+import { uploadableFile } from "@editor/utils/uploadableFile";
+import { markStoredBlob } from "@editor/utils/storedBlob";
 
 /** jsdom's Blob has no text(). */
 const textOf = (file: File) =>

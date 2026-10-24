@@ -1,17 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
+import { AddStampParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import { useThumbnailGeneration } from "@editor/hooks/useThumbnailGeneration";
 import {
   A4_ASPECT_RATIO,
   getFirstSelectedPage,
   getFontFamily,
   computeStampPreviewStyle,
   getAlphabetPreviewScale,
-} from "@app/components/tools/addStamp/StampPreviewUtils";
-import styles from "@app/components/tools/addStamp/StampPreview.module.css";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { Button } from "@app/ui/Button";
+} from "@editor/components/tools/addStamp/StampPreviewUtils";
+import styles from "@editor/components/tools/addStamp/StampPreview.module.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 
 type Props = {

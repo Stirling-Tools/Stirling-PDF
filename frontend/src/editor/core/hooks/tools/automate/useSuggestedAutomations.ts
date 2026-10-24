@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { SuggestedAutomation } from "@app/types/automation";
-import { SPLIT_METHODS } from "@app/constants/splitConstants";
+import { SuggestedAutomation } from "@editor/types/automation";
+import { SPLIT_METHODS } from "@editor/constants/splitConstants";
 
 export function useSuggestedAutomations(): SuggestedAutomation[] {
   const { t } = useTranslation();

@@ -1,26 +1,26 @@
-import { locateTable } from "@app/tools/pdfTextEditor/util/locateTable";
+import { locateTable } from "@editor/tools/pdfTextEditor/util/locateTable";
 import {
   RolledBackError,
   type Command,
-} from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
+} from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type {
   RowFill,
   TableModel,
-} from "@app/tools/pdfTextEditor/model/TableModel";
-import type { PageRect, RGBA } from "@app/tools/pdfTextEditor/types";
-import type { ScanColors } from "@app/tools/pdfTextEditor/util/scanSampling";
+} from "@editor/tools/pdfTextEditor/model/TableModel";
+import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
+import type { ScanColors } from "@editor/tools/pdfTextEditor/util/scanSampling";
 import {
   measureObjBoxPt,
   measureObjSpanPt,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   emitCellText,
   redrawGrid,
   removeObjects,
-} from "@app/tools/pdfTextEditor/commands/tableHelpers";
+} from "@editor/tools/pdfTextEditor/commands/tableHelpers";
 
 const FPDF_PAGEOBJ_IMAGE = 3;
 const FPDF_PAGEOBJ_FORM = 5;

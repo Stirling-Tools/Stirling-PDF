@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
-import { openApiUrl } from "@portal/api/externalUrl";
-import "@portal/views/Procurement.css";
+import { Button } from "@editor/ui";
+import { openApiUrl } from "@processor/api/externalUrl";
+import "@processor/views/Procurement.css";
 
 /**
  * The stage-specific views shown inside the procurement takeover modal once the agreement is signed:

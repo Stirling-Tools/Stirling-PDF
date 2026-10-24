@@ -1,18 +1,21 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { ImageObject } from "@app/tools/pdfTextEditor/model/ImageObject";
-import type { Affine } from "@app/tools/pdfTextEditor/types";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
+import type { Affine } from "@editor/tools/pdfTextEditor/types";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
   counterPageRotation,
   rotateObjectAbout,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { imageMatrixBounds } from "@app/tools/pdfTextEditor/model/affine";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { imageMatrixBounds } from "@editor/tools/pdfTextEditor/model/affine";
 import {
   embedBitmapImageOnPage,
   embedJpegImageOnPage,
-} from "@app/utils/pdfiumBitmapUtils";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/utils/pdfiumBitmapUtils";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 // Insert a decoded raster image onto a page at the given lower-left coordinate,
 // scaled to `(width, height)` PDF points.

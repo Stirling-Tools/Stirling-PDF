@@ -11,19 +11,19 @@ import {
   SegmentedControl,
   type SegmentedOption,
   useDataTableFilters,
-} from "@app/ui";
-import { formatRelativeTime } from "@app/utils/timeUtils";
+} from "@editor/ui";
+import { formatRelativeTime } from "@editor/utils/timeUtils";
 import type {
   FileRunEvent,
   FileRunEventScope,
-} from "@portal/api/fileRunEvents";
+} from "@processor/api/fileRunEvents";
 import {
   useFileRunEvents,
   useFileRunEventActions,
-} from "@portal/queries/fileRunEvents";
-import { useSources } from "@portal/queries/sources";
-import { buildFailureActionCells } from "@portal/components/failures/failureActionCells";
-import { outcomeOf } from "@portal/components/failures/failureOutcomes";
+} from "@processor/queries/fileRunEvents";
+import { useSources } from "@processor/queries/sources";
+import { buildFailureActionCells } from "@processor/components/failures/failureActionCells";
+import { outcomeOf } from "@processor/components/failures/failureOutcomes";
 
 /** The review queue: what a policy run or an editor tool needs a human to look at. */
 

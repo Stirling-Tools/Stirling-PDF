@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, CodeBlock, FormField, Input, Modal } from "@app/ui";
-import { createApiKey, type CreatedApiKey } from "@portal/api/infrastructure";
-import { errorMessage } from "@portal/api/http";
+import { Banner, Button, CodeBlock, FormField, Input, Modal } from "@editor/ui";
+import {
+  createApiKey,
+  type CreatedApiKey,
+} from "@processor/api/infrastructure";
+import { errorMessage } from "@processor/api/http";
 
 export function CreateKeyModal({
   open,

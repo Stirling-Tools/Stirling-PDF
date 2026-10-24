@@ -13,23 +13,25 @@ import { http, HttpResponse } from "msw";
 import {
   teamSaasHandlers,
   resetTeamSaasStore,
-} from "@portal/mocks/handlers/teamSaas";
+} from "@processor/mocks/handlers/teamSaas";
 
 // apiClient.local attaches a stored bearer + (transitively) touches the Supabase
 // client at import; stub both so the local transport stays hermetic. MSW
 // intercepts the relative /api/v1/team/* URLs regardless of the (absent) token.
-vi.mock("@app/auth", () => ({
+vi.mock("@editor/auth", () => ({
   getStoredToken: () => null,
   clearStoredToken: vi.fn(),
 }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => null,
   configureSupabase: vi.fn(),
 }));
-vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
+vi.mock("@processor/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 
 // The SaaS usersBackend lives under src/saas; the portal vitest project resolves
-// @app to proprietary (there's no @saas alias here), so the SaaS impl can only be
+// @editor to proprietary (there's no @saas alias here), so the SaaS impl can only be
 // exercised by importing it directly by path.
 // oxlint-disable-next-line no-restricted-imports
 import { usersBackend } from "../../../editor/saas/portal/usersBackend";

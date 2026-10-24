@@ -1,7 +1,7 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import type { Page } from "@playwright/test";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 
 // PDFium cannot parse this header, but the server's parser can; see generate-damaged-sample.py.
 const damaged = path.join(

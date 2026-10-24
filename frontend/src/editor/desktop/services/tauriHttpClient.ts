@@ -1,12 +1,12 @@
 /* oxlint-disable typescript/no-explicit-any -- Axios-compatible API requires matching axios's `any` signatures */
 import { fetch } from "@tauri-apps/plugin-http";
-import { enforceDocumentPrivacy } from "@app/services/documentPrivacyService";
+import { enforceDocumentPrivacy } from "@editor/services/documentPrivacyService";
 import {
   shouldUseFastLocalTransport,
   fetchViaLocalProxy,
   markFastTransportUnavailable,
-} from "@app/services/tauriLocalProxy";
-import { detachedFormData } from "@app/utils/storedBlob";
+} from "@editor/services/tauriLocalProxy";
+import { detachedFormData } from "@editor/utils/storedBlob";
 
 /**
  * Tauri HTTP Client - wrapper around Tauri's native HTTP client
@@ -39,7 +39,7 @@ export interface TauriHttpRequestConfig {
   skipAuthRedirect?: boolean;
   // Axios compatibility properties (ignored by Tauri HTTP)
   suppressErrorToast?: boolean;
-  accountLinkBlockContext?: import("@app/services/accountLinkBlock").AccountLinkBlockContext;
+  accountLinkBlockContext?: import("@editor/services/accountLinkBlock").AccountLinkBlockContext;
   cancelToken?: any;
   signal?: AbortSignal;
 }

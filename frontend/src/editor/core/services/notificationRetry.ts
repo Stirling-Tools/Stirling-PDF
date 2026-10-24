@@ -1,16 +1,16 @@
-import apiClient from "@app/services/apiClient";
-import { fileStorage } from "@app/services/fileStorage";
+import apiClient from "@editor/services/apiClient";
+import { fileStorage } from "@editor/services/fileStorage";
 import {
   indexedDBManager,
   type DatabaseConfig,
-} from "@app/services/indexedDBManager";
-import { zipFileService } from "@app/services/zipFileService";
+} from "@editor/services/indexedDBManager";
+import { zipFileService } from "@editor/services/zipFileService";
 import {
   REMOVE_PASSWORD_ENDPOINT,
   REPAIR_ENDPOINT,
-} from "@app/constants/toolEndpoints";
-import type { FileId } from "@app/types/file";
-import { uploadableFile } from "@app/utils/uploadableFile";
+} from "@editor/constants/toolEndpoints";
+import type { FileId } from "@editor/types/file";
+import { uploadableFile } from "@editor/utils/uploadableFile";
 
 /** What the bell needs to retry a reported failure. The server keeps none of it. */
 export interface RetryPayload {

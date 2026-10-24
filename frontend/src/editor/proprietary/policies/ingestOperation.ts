@@ -1,5 +1,8 @@
-import type { BidirectionalToolConfig } from "@app/hooks/tools/shared/toolOperationDescriptor";
-import type { IngestApiRequest, ToolEndpoint } from "@app/types/toolApiTypes";
+import type { BidirectionalToolConfig } from "@editor/hooks/tools/shared/toolOperationDescriptor";
+import type {
+  IngestApiRequest,
+  ToolEndpoint,
+} from "@editor/types/toolApiTypes";
 
 export const INGEST_ENDPOINT = "/api/v1/docparse/ingest" satisfies ToolEndpoint;
 export const INGEST_DEFAULTS = {

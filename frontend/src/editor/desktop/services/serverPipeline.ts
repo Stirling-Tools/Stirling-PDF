@@ -1,12 +1,12 @@
-import apiClient from "@app/services/apiClient";
-import { uploadableFile } from "@app/utils/uploadableFile";
+import apiClient from "@editor/services/apiClient";
+import { uploadableFile } from "@editor/utils/uploadableFile";
 import type {
   BackendPipelineStep,
   PolicyRunView,
-} from "@app/services/policyPipeline";
-import type { ServerAutomationSession } from "@app/services/serverAutomationSession";
-import { requireAutomationSession } from "@app/services/serverAutomationSession";
-import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
+} from "@editor/services/policyPipeline";
+import type { ServerAutomationSession } from "@editor/services/serverAutomationSession";
+import { requireAutomationSession } from "@editor/services/serverAutomationSession";
+import { dispatchPaygLimitReached } from "@editor/services/usageLimitBridge";
 
 /** Uploads a complete pipeline; its connected server executes and meters every step. */
 export async function submitServerPipeline(

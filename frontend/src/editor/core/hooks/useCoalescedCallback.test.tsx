@@ -1,8 +1,8 @@
 import { StrictMode } from "react";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { useCoalescedCallback } from "@app/hooks/useCoalescedCallback";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { useCoalescedCallback } from "@editor/hooks/useCoalescedCallback";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 /** Never settles, standing in for a hung storage-server fetch. */
 function pendingCallback() {

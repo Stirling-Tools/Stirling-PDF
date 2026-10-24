@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import type { AxiosRequestConfig } from "axios";
-import { expectConsole } from "@app/tests/failOnConsole";
-import { rememberUnprotectedPdf } from "@app/tests/utils/testFileHelpers";
-import type { StirlingFile } from "@app/types/fileContext";
+import { expectConsole } from "@editor/tests/failOnConsole";
+import { rememberUnprotectedPdf } from "@editor/tests/utils/testFileHelpers";
+import type { StirlingFile } from "@editor/types/fileContext";
 import {
   inspectLocalPdfAccess,
   clearPdfAccess,
@@ -13,17 +13,19 @@ import {
   forgetPdfAccess,
   setPdfAccessPolicy,
   type PdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
 // One bad file in a batch must come back named, with its error: the caller reports each one,
 // and it cannot derive the failure kind without the error the request threw.
 
 const post = vi.fn();
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { post: (...args: unknown[]) => post(...args) },
 }));
-vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
+vi.mock("@editor/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@editor/services/pdfAccessService")
+  >()),
   inspectLocalPdfAccess: vi.fn(),
 }));
 const inspectLocal = vi.mocked(inspectLocalPdfAccess);
@@ -37,13 +39,13 @@ const plainAccess: PdfAccess = {
 };
 
 // Mirrors the response body, so a 0-byte answer really does produce an empty output.
-vi.mock("@app/utils/toolResponseProcessor", () => ({
+vi.mock("@editor/utils/toolResponseProcessor", () => ({
   processResponse: (blob: Blob, files: { name: string }[]) =>
     Promise.resolve([new File([blob], `out-${files[0].name}`)]),
 }));
 
 const { useToolApiCalls } =
-  await import("@app/hooks/tools/shared/useToolApiCalls");
+  await import("@editor/hooks/tools/shared/useToolApiCalls");
 
 const file = (name: string, id: string): StirlingFile =>
   Object.assign(
@@ -166,7 +168,7 @@ describe("processFiles failure reporting", () => {
         honorOwnerPasswords: false,
       });
       const { preflightPdfOperation } =
-        await import("@app/services/pdfSessionUnlock");
+        await import("@editor/services/pdfSessionUnlock");
       const requestOwner = vi.fn().mockResolvedValue(false);
       const nextInput = Object.assign(output.outputFiles[0], {
         fileId: "output",

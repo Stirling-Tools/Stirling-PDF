@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ReorganizePagesSettings from "@app/components/tools/reorganizePages/ReorganizePagesSettings";
+import ReorganizePagesSettings from "@editor/components/tools/reorganizePages/ReorganizePagesSettings";
 import {
   defaultReorganizePagesParameters,
   ReorganizePagesParameters,
-} from "@app/hooks/tools/reorganizePages/useReorganizePagesParameters";
+} from "@editor/hooks/tools/reorganizePages/useReorganizePagesParameters";
 
 const meta: Meta<typeof ReorganizePagesSettings> = {
   title: "Tools/ReorganizePages/ReorganizePagesSettings",
