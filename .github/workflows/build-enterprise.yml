@@ -53,11 +53,11 @@ env:
     app/**/build.gradle
     gradle/**/*.gradle
   CARGO_FILES_TO_HASH: |
-    frontend/editor/src-tauri/**
-    frontend/editor/src-tauri/Cargo.toml
-    frontend/editor/src-tauri/Cargo.lock
+    frontend/src-tauri/**
+    frontend/src-tauri/Cargo.toml
+    frontend/src-tauri/Cargo.lock
   FRONTEND_DIST_FILES_TO_HASH: |
-    frontend/editor/src/**
+    frontend/src/editor/**
   UV_FILES_TO_HASH: |
     engine/.python-version
     engine/pyproject.toml
@@ -146,7 +146,7 @@ jobs:
           token: ${{ github.token }}
           multi-cache: |
             enterprise-frontend-dist:
-              path: frontend/editor/dist
+              path: frontend/dist
             enterprise-npm-cache:
               path: .cache/npm
             enterprise-gradle-caches:
@@ -469,7 +469,7 @@ jobs:
             enterprise-cargo-bin:
               path: .cache/cargo/bin
             enterprise-frontend-dist:
-              path: frontend/editor/dist
+              path: frontend/dist
             enterprise-npm-cache:
               path: .cache/npm
             enterprise-gradle-caches:
@@ -477,7 +477,7 @@ jobs:
             enterprise-gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
             enterprise-tauri-target:
-              path: frontend/editor/src-tauri/target
+              path: frontend/src-tauri/target
             enterprise-setup-uv-cache:
               path: .cache/setup-uv-cache
             enterprise-uv-python-dir:
@@ -493,6 +493,10 @@ jobs:
             enterprise-tauri-target=${{ hashFiles('frontend/package-lock.json') }}
             enterprise-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
             enterprise-uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}
+          exclude: |
+            frontend/src-tauri/target/debug/**
+            frontend/src-tauri/runtime/**
+            frontend/src-tauri/thumbnail-handler/target/**
 
       - name: Install uv
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0

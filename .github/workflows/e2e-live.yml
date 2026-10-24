@@ -64,7 +64,7 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           multi-cache: |
             e2e-frontend-dist:
-              path: frontend/editor/dist
+              path: frontend/dist
             e2e-npm-cache:
               path: .cache/npm
             e2e-gradle-caches:

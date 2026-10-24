@@ -87,7 +87,7 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           multi-cache: |
             e2e-subbed-frontend-dist:
-              path: frontend/editor/dist
+              path: frontend/dist
             e2e-subbed-npm-cache:
               path: .cache/npm
           key: |

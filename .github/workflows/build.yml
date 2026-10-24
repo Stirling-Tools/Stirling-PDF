@@ -89,12 +89,12 @@ jobs:
             ) }}
           CARGO_HASH_FILES: >-
             ${{ hashFiles(
-              'frontend/editor/src-tauri/**',
-              'frontend/editor/src-tauri/Cargo.toml',
-              'frontend/editor/src-tauri/Cargo.lock'
+              'frontend/src-tauri/**',
+              'frontend/src-tauri/Cargo.toml',
+              'frontend/src-tauri/Cargo.lock'
             ) }}
           FRONTEND_DIST_HASH_FILES: >-
-            ${{ hashFiles('frontend/editor/src/**') }}
+            ${{ hashFiles('frontend/src/editor/**') }}
           UV_HASH_FILES: >-
             ${{ hashFiles(
               'engine/.python-version',

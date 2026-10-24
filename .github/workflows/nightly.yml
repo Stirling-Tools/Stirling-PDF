@@ -42,7 +42,7 @@ jobs:
         id: hash
         env:
           NPM_HASH: ${{ hashFiles('frontend/package-lock.json') }}
-          FRONTEND_DIST_HASH: ${{ hashFiles('frontend/editor/src/**') }}
+          FRONTEND_DIST_HASH: ${{ hashFiles('frontend/src/editor/**') }}
         shell: bash
         run: |
           echo "npm_files_hash=$NPM_HASH" >> "$GITHUB_OUTPUT"
