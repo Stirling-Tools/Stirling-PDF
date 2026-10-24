@@ -1,35 +1,59 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Box,
   Center,
   Checkbox,
   Group,
   Paper,
-  ScrollArea,
   Stack,
   Text,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { formatFileSize } from "@editor/utils/fileUtils";
 import { renderMarkdown } from "@editor/components/viewer/nonpdf/MarkdownRenderer";
+import { NonPdfSearchBar } from "@editor/components/viewer/nonpdf/NonPdfSearchBar";
+import { highlightMatches } from "@editor/components/viewer/nonpdf/viewerSearch";
 
 interface TextViewerProps {
   file: File;
   isMarkdown: boolean;
 }
 
+const LINE_HEIGHT_PX = 22;
+
 export function TextViewer({ file, isMarkdown }: TextViewerProps) {
   const { t } = useTranslation();
   const [content, setContent] = useState<string | null>(null);
   const [showLineNumbers, setShowLineNumbers] = useState(!isMarkdown);
   const [renderMd, setRenderMd] = useState(isMarkdown);
+  const [query, setQuery] = useState("");
+  const [activeMatch, setActiveMatch] = useState(0);
+  const parentRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    setContent(null);
     file.text().then(setContent);
   }, [file]);
 
-  const lines = content?.split("\n") ?? [];
+  useEffect(() => {
+    setShowLineNumbers(!isMarkdown);
+    setRenderMd(isMarkdown);
+    setQuery("");
+    setActiveMatch(0);
+    if (parentRef.current) parentRef.current.scrollTop = 0;
+  }, [file, isMarkdown]);
+
+  const lines = useMemo(() => content?.split("\n") ?? [], [content]);
+
   const renderedMarkdown = useMemo(
     () =>
       content !== null && isMarkdown && renderMd
@@ -38,14 +62,77 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
     [content, isMarkdown, renderMd],
   );
 
+  const rowVirtualizer = useVirtualizer({
+    count: lines.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => LINE_HEIGHT_PX,
+    overscan: 30,
+  });
+
+  const deferredQuery = useDeferredValue(query);
+  const matchLines = useMemo(() => {
+    const needle = deferredQuery.trim().toLowerCase();
+    if (!needle) return [];
+    return lines.reduce<number[]>((matches, line, index) => {
+      if (line.toLowerCase().includes(needle)) matches.push(index);
+      return matches;
+    }, []);
+  }, [lines, deferredQuery]);
+  const scrolledMatchRef = useRef("");
+
+  useEffect(() => {
+    setActiveMatch(0);
+  }, [deferredQuery]);
+
+  useEffect(() => {
+    const key = `${deferredQuery}:${activeMatch}`;
+    if (scrolledMatchRef.current === key) return;
+    scrolledMatchRef.current = key;
+    const lineIndex = matchLines[activeMatch];
+    if (lineIndex !== undefined) {
+      rowVirtualizer.scrollToIndex(lineIndex, { align: "center" });
+    }
+  }, [activeMatch, deferredQuery, matchLines, rowVirtualizer]);
+
+  useEffect(() => {
+    if (renderedMarkdown !== null) return;
+    const focusSearch = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "f") {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", focusSearch);
+    return () => window.removeEventListener("keydown", focusSearch);
+  }, [renderedMarkdown]);
+
+  const stepMatch = (delta: number) => {
+    if (matchLines.length === 0) return;
+    setActiveMatch(
+      (activeMatch + delta + matchLines.length) % matchLines.length,
+    );
+  };
+
+  if (content === "") {
+    return (
+      <Center style={{ flex: 1 }}>
+        <Text c="dimmed" size="sm">
+          {t("viewer.nonPdf.emptyFile")}
+        </Text>
+      </Center>
+    );
+  }
+
   return (
-    <Stack gap={0} style={{ height: "100%", flex: 1 }}>
+    <Stack gap={0} style={{ height: "100%", flex: 1, minHeight: 0 }}>
       {/* Toolbar */}
       <Paper
         radius={0}
         px="sm"
         style={{
-          borderBottom: "1px solid var(--mantine-color-gray-2)",
+          borderBottom: "1px solid var(--c-border)",
+          backgroundColor: "var(--c-surface)",
           flexShrink: 0,
           minHeight: 44,
           display: "flex",
@@ -75,13 +162,33 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
               size="xs"
             />
           )}
+          {renderedMarkdown === null && (
+            <NonPdfSearchBar
+              query={query}
+              onQueryChange={setQuery}
+              totalMatches={matchLines.length}
+              activeMatch={activeMatch}
+              onNext={() => stepMatch(1)}
+              onPrevious={() => stepMatch(-1)}
+              inputRef={searchInputRef}
+            />
+          )}
         </Group>
       </Paper>
 
       {/* Content */}
-      <ScrollArea style={{ flex: 1 }} p="md">
+      <div
+        ref={parentRef}
+        style={{
+          flex: 1,
+          overflow: "auto",
+          position: "relative",
+          backgroundColor: "var(--c-bg)",
+          padding: renderedMarkdown !== null ? "1rem" : 0,
+        }}
+      >
         {content === null ? (
-          <Center>
+          <Center style={{ height: "100%" }}>
             <Text c="dimmed" size="sm">
               {t("viewer.nonPdf.loading")}
             </Text>
@@ -103,52 +210,67 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
             {renderedMarkdown}
           </Box>
         ) : (
-          <Box
-            component="pre"
+          <div
             style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
               fontFamily: "monospace",
               fontSize: "0.8rem",
-              lineHeight: 1.6,
-              margin: 0,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              display: "table",
-              width: "100%",
+              lineHeight: `${LINE_HEIGHT_PX}px`,
             }}
           >
-            {lines.map((line, idx) => (
-              <Box key={idx} component="div" style={{ display: "table-row" }}>
-                {showLineNumbers && (
-                  <Box
-                    component="span"
-                    style={{
-                      display: "table-cell",
-                      paddingRight: 16,
-                      paddingLeft: 4,
-                      textAlign: "right",
-                      color: "var(--c-text-muted)",
-                      userSelect: "none",
-                      borderRight: "1px solid var(--mantine-color-gray-2)",
-                      minWidth: `${String(lines.length).length + 1}ch`,
-                    }}
-                  >
-                    {idx + 1}
-                  </Box>
-                )}
-                <Box
-                  component="span"
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const line = lines[virtualRow.index];
+              return (
+                <div
+                  key={virtualRow.key}
+                  data-index={virtualRow.index}
+                  ref={rowVirtualizer.measureElement}
                   style={{
-                    display: "table-cell",
-                    paddingLeft: showLineNumbers ? 12 : 0,
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    transform: `translateY(${virtualRow.start}px)`,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    minHeight: `${LINE_HEIGHT_PX}px`,
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
                   }}
                 >
-                  {line || " "}
-                </Box>
-              </Box>
-            ))}
-          </Box>
+                  {showLineNumbers && (
+                    <span
+                      style={{
+                        paddingRight: 16,
+                        paddingLeft: 8,
+                        textAlign: "right",
+                        color: "var(--c-text-muted)",
+                        userSelect: "none",
+                        borderRight: "1px solid var(--c-border)",
+                        minWidth: `${String(lines.length).length + 2}ch`,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {virtualRow.index + 1}
+                    </span>
+                  )}
+                  <span
+                    style={{
+                      paddingLeft: showLineNumbers ? 12 : 8,
+                      flex: 1,
+                      color: "var(--c-text)",
+                    }}
+                  >
+                    {line ? highlightMatches(line, deferredQuery) : " "}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         )}
-      </ScrollArea>
+      </div>
     </Stack>
   );
 }

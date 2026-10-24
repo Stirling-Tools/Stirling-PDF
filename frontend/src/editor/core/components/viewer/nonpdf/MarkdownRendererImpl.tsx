@@ -5,6 +5,13 @@ import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 
+// The rendered page is a white sheet in both schemes, so syntax surfaces use
+// fixed light values instead of Mantine gray tokens that flip in dark mode.
+const SHEET_SURFACE = "#f1f3f5";
+const SHEET_BORDER = "#dee2e6";
+const SHEET_INK = "#212529";
+const SHEET_MUTED = "#495057";
+
 function CopyButton({ text }: { text: string }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
@@ -21,17 +28,13 @@ function CopyButton({ text }: { text: string }) {
         position: "absolute",
         top: 8,
         right: 8,
-        background: copied
-          ? "var(--mantine-color-green-0)"
-          : "var(--mantine-color-gray-0)",
-        border: "1px solid var(--mantine-color-gray-3)",
+        background: copied ? "#ebfbee" : "#ffffff",
+        border: `1px solid ${SHEET_BORDER}`,
         borderRadius: 3,
         cursor: "pointer",
         fontSize: "0.7em",
         padding: "2px 8px",
-        color: copied
-          ? "var(--mantine-color-green-7)"
-          : "var(--mantine-color-gray-7)",
+        color: copied ? "#1b5e20" : SHEET_MUTED,
       }}
     >
       {copied
@@ -50,7 +53,8 @@ const components: Components = {
       <div style={{ position: "relative", margin: "8px 0" }}>
         <pre
           style={{
-            background: "var(--mantine-color-gray-1)",
+            background: SHEET_SURFACE,
+            color: SHEET_INK,
             padding: "10px 52px 10px 14px",
             borderRadius: 4,
             overflowX: "auto",
@@ -80,9 +84,10 @@ const components: Components = {
   th: ({ children, style }) => (
     <th
       style={{
-        border: "1px solid var(--mantine-color-gray-3)",
+        border: `1px solid ${SHEET_BORDER}`,
         padding: "6px 10px",
-        background: "var(--mantine-color-gray-1)",
+        background: SHEET_SURFACE,
+        color: SHEET_INK,
         textAlign: "left",
         fontWeight: 600,
         whiteSpace: "nowrap",
@@ -95,7 +100,7 @@ const components: Components = {
   td: ({ children, style }) => (
     <td
       style={{
-        border: "1px solid var(--mantine-color-gray-3)",
+        border: `1px solid ${SHEET_BORDER}`,
         padding: "5px 10px",
         ...style,
       }}
