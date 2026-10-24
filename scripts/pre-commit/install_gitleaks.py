@@ -61,7 +61,7 @@ def cached_version() -> str | None:
     if not BIN.exists():
         return None
     try:
-        return subprocess.run([str(BIN), "version"], capture_output=True, text=True).stdout.strip()
+        return subprocess.run([str(BIN), "version"], capture_output=True, text=True, check=False).stdout.strip()
     except OSError:
         return None
 

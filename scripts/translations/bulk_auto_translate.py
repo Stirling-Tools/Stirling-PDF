@@ -90,7 +90,7 @@ def get_language_completion(locales_dir: Path, language: str) -> float | None:
 
         return (translated / total * 100) if total > 0 else 0.0
 
-    except Exception as e:
+    except (OSError, TypeError, KeyError, ValueError, tomllib.TOMLDecodeError) as e:
         print(f"Warning: Could not calculate completion for {language}: {e}")
         return None
 
@@ -142,6 +142,7 @@ def translate_language(
             cmd,
             capture_output=True,
             text=True,
+            check=False,
             timeout=timeout * 5,  # Overall timeout = 5x per-batch timeout
         )
 
@@ -162,8 +163,8 @@ def translate_language(
     except subprocess.TimeoutExpired:
         safe_print(f"[{language}] ✗ Timeout exceeded")
         return (language, False, "Timeout exceeded")
-    except Exception as e:
-        safe_print(f"[{language}] ✗ Error: {str(e)}")
+    except (OSError, TypeError, KeyError, ValueError, tomllib.TOMLDecodeError) as e:
+        safe_print(f"[{language}] ✗ Error: {e!s}")
         return (language, False, str(e))
 
 
