@@ -1,6 +1,7 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -14,14 +15,22 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.LoggerFactory;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import stirling.software.common.configuration.RuntimePathConfig;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 /**
  * Gap-coverage tests for {@link FileMonitor}, focusing on {@code isFileReadyForProcessing} branches
@@ -157,6 +166,69 @@ class FileMonitorMoreTest {
             // Now create the directory; the next tick should attempt re-registration.
             Files.createDirectories(missing);
             assertDoesNotThrow(monitor::trackFiles);
+        }
+
+        @Test
+        @DisplayName("a missing root is retried while another root is already registered")
+        void retriesMissingRootWithRegisteredRoot() throws IOException {
+            Path present = tempDir.resolve("present");
+            Path missing = tempDir.resolve("appears-later");
+            Files.createDirectories(present);
+
+            RuntimePathConfig config = mock(RuntimePathConfig.class);
+            when(config.getPipelineWatchedFoldersPaths())
+                    .thenReturn(List.of(present.toString(), missing.toString()));
+            FileMonitor monitor = new FileMonitor(p -> true, config);
+
+            Files.createDirectories(missing);
+            ReflectionTestUtils.setField(monitor, "nextRegistrationAttemptMs", 0L);
+            monitor.trackFiles();
+
+            Map<?, ?> registered =
+                    (Map<?, ?>) ReflectionTestUtils.getField(monitor, "path2KeyMapping");
+            assertNotNull(registered);
+            assertTrue(registered.containsKey(missing));
+        }
+
+        @Test
+        @DisplayName("a missing configured root warns once, not on every tick")
+        void warnsOnceWhileMissing() throws IOException {
+            Path missing = tempDir.resolve("not-mounted");
+            FileMonitor monitor = monitorWatching(missing, p -> true);
+
+            List<ILoggingEvent> events = captureTicks(monitor, 3);
+
+            assertEquals(
+                    1,
+                    events.stream().filter(e -> e.getLevel() == Level.WARN).count(),
+                    "a missing root must warn once and then retry quietly");
+        }
+
+        @Test
+        @DisplayName("an unconfigured monitor is silent")
+        void silentWithoutConfiguredRoots() throws IOException {
+            RuntimePathConfig config = mock(RuntimePathConfig.class);
+            when(config.getPipelineWatchedFoldersPaths()).thenReturn(List.of());
+            FileMonitor monitor = new FileMonitor(p -> true, config);
+
+            List<ILoggingEvent> events = captureTicks(monitor, 3);
+
+            assertTrue(events.stream().noneMatch(e -> e.getLevel() == Level.WARN));
+        }
+
+        private List<ILoggingEvent> captureTicks(FileMonitor monitor, int ticks) {
+            Logger logger = (Logger) LoggerFactory.getLogger(FileMonitor.class);
+            ListAppender<ILoggingEvent> appender = new ListAppender<>();
+            appender.start();
+            logger.addAppender(appender);
+            try {
+                for (int i = 0; i < ticks; i++) {
+                    assertDoesNotThrow(monitor::trackFiles);
+                }
+            } finally {
+                logger.detachAppender(appender);
+            }
+            return List.copyOf(appender.list);
         }
     }
 }
