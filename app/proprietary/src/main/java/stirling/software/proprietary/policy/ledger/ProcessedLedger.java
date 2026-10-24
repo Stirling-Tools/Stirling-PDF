@@ -108,6 +108,13 @@ public interface ProcessedLedger {
      */
     boolean allSettledDone(String identity);
 
+    /**
+     * Whether any policy still has this identity {@link ProcessedFileStatus#PROCESSING}.
+     * Cross-policy like {@link #allSettledDone}: a shared input is only safe to remove when nobody
+     * is reading it.
+     */
+    boolean inFlightAnywhere(String identity);
+
     /** Stamp presence for every identity a full-listing sweep observed. */
     void markSeen(String policyId, Collection<String> identities);
 

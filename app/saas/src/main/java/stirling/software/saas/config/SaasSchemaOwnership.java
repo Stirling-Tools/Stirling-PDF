@@ -113,6 +113,7 @@ public final class SaasSchemaOwnership {
                     "user_license_settings",
                     "org_owner",
                     "user_server_certificates",
+                    "webhook_deliveries",
                     "workflow_participants",
                     "workflow_sessions");
 
