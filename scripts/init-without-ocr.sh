@@ -488,7 +488,7 @@ start_unoserver_instance() {
     clear_stale_office_pipes
   fi
   # --user-installation is a plain path; unoserver 3.6 crashes if pre-wrapped as file://.
-  run_as_office_user "$UNOSERVER_BIN" \
+  run_as_office_user env ${OFFICE_LD_PRELOAD:+LD_PRELOAD="$OFFICE_LD_PRELOAD${LD_PRELOAD:+ $LD_PRELOAD}"} "$UNOSERVER_BIN" \
     --interface 127.0.0.1 \
     --port "$port" \
     --uno-port "$uno_port" \
@@ -1310,6 +1310,25 @@ for private_dir in /tmp/stirling-pdf "$STIRLING_FILE_STORE"; do
     chmod 700 "$private_dir" 2>/dev/null || true
   fi
 done
+
+# Blocks non-loopback connect(), but not DNS or calls bypassing the dynamic symbol.
+# Enabled by default; LIBREOFFICE_ALLOW_NETWORK=true opts out.
+OFFICE_GUARD_LIB="/usr/local/lib/stirling/soffice_no_network.so"
+OFFICE_LD_PRELOAD=""
+case "$(printf '%s' "${LIBREOFFICE_ALLOW_NETWORK:-false}" | tr '[:upper:]' '[:lower:]')" in
+  1|true|yes|on)
+    log "LibreOffice egress guard DISABLED (LIBREOFFICE_ALLOW_NETWORK=${LIBREOFFICE_ALLOW_NETWORK})"
+    ;;
+  *)
+    if [ -f "$OFFICE_GUARD_LIB" ]; then
+      OFFICE_LD_PRELOAD="$OFFICE_GUARD_LIB"
+      log "LibreOffice egress guard loaded ($OFFICE_GUARD_LIB): non-loopback connect() refused"
+    elif command_exists soffice || command_exists unoserver; then
+      log "WARNING: LibreOffice egress guard missing at $OFFICE_GUARD_LIB; conversions can reach the network"
+    fi
+    ;;
+esac
+export OFFICE_LD_PRELOAD
 
 # ---------- unoserver ----------
 # LibreOffice renders headless (SAL_USE_VCLPLUGIN=svp), so no X server is started: one running
