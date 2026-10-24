@@ -52,6 +52,14 @@ export function diskAvailabilityFields(
   };
 }
 
+/** When disk last wrote the file, for a File read from it now; the time of the
+ *  read when disk cannot say. */
+export function diskLastModified(state: DiskFileState): number {
+  return state.availability === "present" && state.modifiedMs
+    ? state.modifiedMs
+    : Date.now();
+}
+
 /** The fields a fresh disk read stamps onto the stub and the stored record. */
 export function diskBaseline(
   state: PresentDiskFileState,
