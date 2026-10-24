@@ -1,12 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { Page } from "@playwright/test";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import {
   installTauri,
   dismissModals,
   setDisk,
-} from "@app/tests/helpers/tauriDiskStub";
+} from "@editor/tests/helpers/tauriDiskStub";
 
 /** What opening a file from Explorer stores. Opening one again used to store
  *  another full copy of it every time, so the library grew by one duplicate

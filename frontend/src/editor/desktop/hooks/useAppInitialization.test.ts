@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const PATH = "C:/docs/report.pdf";
 const addFiles = vi.hoisted(() => vi.fn());
@@ -12,14 +12,14 @@ const storedCopiesForNewFiles = vi.hoisted(() => vi.fn());
 const getDiskFileState = vi.hoisted(() => vi.fn());
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn(async () => {}) }));
-vi.mock("@app/hooks/useOpenedFile", () => ({
+vi.mock("@editor/hooks/useOpenedFile", () => ({
   useOpenedFile: () => ({
     openedFilePaths: [PATH],
     loading: false,
     consumeOpenedFilePaths: () => [PATH],
   }),
 }));
-vi.mock("@app/services/fileOpenService", () => ({
+vi.mock("@editor/services/fileOpenService", () => ({
   fileOpenService: {
     readFileAsArrayBuffer: vi.fn(async () => ({
       fileName: "report.pdf",
@@ -27,26 +27,26 @@ vi.mock("@app/services/fileOpenService", () => ({
     })),
   },
 }));
-vi.mock("@app/contexts/file/fileHooks", () => ({
+vi.mock("@editor/contexts/file/fileHooks", () => ({
   useFileManagement: () => ({ addFiles }),
   useFileActions: () => ({
     actions: { addStirlingFileStubs, setSelectedFiles },
   }),
   useFileSelectors: () => ({ getSelectedStirlingFileStubs: selectedStubs }),
 }));
-vi.mock("@app/contexts/file/storedFileReconciler", () => ({
+vi.mock("@editor/contexts/file/storedFileReconciler", () => ({
   storedCopiesForNewFiles,
 }));
-vi.mock("@app/services/fileImportPaths", () => ({
+vi.mock("@editor/services/fileImportPaths", () => ({
   captureDroppedFilePaths: () => () => {},
 }));
-vi.mock("@app/services/desktopFileLink", () => ({
+vi.mock("@editor/services/desktopFileLink", () => ({
   desktopFileLinkingSupported: true,
   getDiskFileState,
   readFileFromDisk: vi.fn(async () => null),
 }));
 
-import { useAppInitialization } from "@app/hooks/useAppInitialization";
+import { useAppInitialization } from "@editor/hooks/useAppInitialization";
 
 const stub = (id: string) => ({ id: id as FileId }) as StirlingFileStub;
 
