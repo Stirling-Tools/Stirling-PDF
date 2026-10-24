@@ -57,17 +57,16 @@ tasks:
     # Off by default to keep local dev runs uninstrumented; CI flips it.
     env:
       STIRLING_BASE_PATH: '{{.BASE_DIR}}'
-      # Suppress the analytics opt-in modal that fires on first admin login.
-      # It renders a Mantine overlay that intercepts pointer events and blocks
-      # FirstLoginSlide from rendering, so the bootstrap spec times out waiting
-      # for the password-change prompt.
+      # Suppress the analytics opt-in modal that fires on admin login once
+      # setup is skipped. It renders a Mantine overlay that intercepts pointer
+      # events, so every live spec signed in as admin would time out behind it.
       SYSTEM_ENABLEANALYTICS: "false"
       # NOTE: SECURITY_INITIALLOGIN_USERNAME/PASSWORD are intentionally NOT set.
-      # The live-setup project's bootstrap spec performs the real first-login
-      # flow against the backend's default admin/stirling user, exercising the
-      # forced-password-change UI and leaving the DB at admin/adminadmin for
-      # the rest of the live suite. This is both real coverage of the first-
-      # login flow and a stronger seed than env-var-driven user creation.
+      # The live-setup project's bootstrap spec performs the real first-run
+      # setup against the backend's default admin/stirling user, setting the
+      # password on setup's account card and leaving the DB at admin/adminadmin
+      # for the rest of the live suite. This is both real coverage of the
+      # first-run flow and a stronger seed than env-var-driven user creation.
     cmds:
       # Wrapped in `bash -c` because Task's embedded shell (mvdan/sh) doesn't
       # support `&` + `$!` + `wait` reliably (gradle was never actually

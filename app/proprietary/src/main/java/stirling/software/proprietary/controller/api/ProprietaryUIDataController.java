@@ -188,6 +188,8 @@ public class ProprietaryUIDataController {
 
         data.setFirstTimeSetup(isFirstTimeSetup);
         data.setShowDefaultCredentials(showDefaultCredentials);
+        data.setDefaultSignIn(
+                showDefaultCredentials && !applicationProperties.getSystem().isSetupCompleted());
 
         OAUTH2 oauth = securityProps.getOauth2();
 
@@ -662,6 +664,14 @@ public class ProprietaryUIDataController {
         private boolean altLogin;
         private boolean firstTimeSetup;
         private boolean showDefaultCredentials;
+
+        /**
+         * The login page may sign in with the default admin login by itself: only before first-run
+         * setup is complete, while that login is still in use, so a set-up server never has a
+         * failed attempt counted against its admin.
+         */
+        private boolean defaultSignIn;
+
         private List<String> languages;
         private String defaultLocale;
     }

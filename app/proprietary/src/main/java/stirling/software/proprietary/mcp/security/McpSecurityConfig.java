@@ -24,6 +24,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.SupplierJwtDecoder;
 import org.springframework.security.oauth2.server.resource.OAuth2ProtectedResourceMetadata;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
@@ -234,6 +235,13 @@ public class McpSecurityConfig {
                         "mcp.auth.issuer-uri is not configured");
             };
         }
+        // Built on first use: issuer discovery is an HTTP call, and an issuer
+        // that is down or mistyped must not stop the whole server starting.
+        // Until it resolves, MCP requests get a 401 and the lookup is retried.
+        return new SupplierJwtDecoder(() -> buildIssuerDecoder(auth));
+    }
+
+    private NimbusJwtDecoder buildIssuerDecoder(ApplicationProperties.Mcp.Auth auth) {
         String jwksUri = auth.getJwksUri();
         NimbusJwtDecoder decoder =
                 jwksUri.isBlank()

@@ -24,6 +24,10 @@ import { BASE_PATH, withBasePath } from "@editor/constants/app";
 import { updateSupportedLanguages } from "@editor/i18n";
 import SpringLoginForm from "@editor/auth/ui/SpringLoginForm";
 import AuthDefaultCredentials from "@editor/auth/ui/AuthDefaultCredentials";
+import { SetupSignInScreen } from "@editor/components/serverSetup/SetupScreen";
+import { markSetupSignIn } from "@editor/components/serverSetup/setupSignInHandoff";
+import { DEFAULT_ADMIN_CREDENTIALS } from "@editor/auth/defaultCredentials";
+import { springAuth } from "@editor/auth/spring/springAuthClient";
 import { useSpringLogin } from "@editor/auth/ui/useSpringLogin";
 import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
 import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
@@ -68,14 +72,23 @@ export default function Login() {
   const backendProbe = useBackendProbe();
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
+  const [defaultSignInAllowed, setDefaultSignInAllowed] = useState(false);
+  const [loginConfigLoaded, setLoginConfigLoaded] = useState(false);
   const loginDisabled =
     backendProbe.loginDisabled === true || _enableLogin === false;
   const autoLoginAttempted = useRef(false);
+  const defaultSignInAttempted = useRef(false);
+  const [defaultSignIn, setDefaultSignIn] = useState<
+    "idle" | "signingIn" | "signedIn" | "failed"
+  >("idle");
   const autoLoginErrorRecorded = useRef(false);
 
   const AUTO_LOGIN_ATTEMPTS_KEY = "stirling_sso_auto_login_attempts";
   const AUTO_LOGIN_ERRORS_KEY = "stirling_sso_auto_login_errors";
   const AUTO_LOGIN_LOGOUT_KEY = "stirling_sso_auto_login_logged_out";
+  // A failed default sign-in counts against the admin's lockout, so a tab that
+  // has seen one fail never tries again.
+  const DEFAULT_SIGN_IN_FAILED_KEY = "stirling_default_sign_in_failed";
   const MAX_AUTO_LOGIN_ATTEMPTS = 2;
   const MAX_AUTO_LOGIN_ERRORS = 1;
 
@@ -172,6 +185,9 @@ export default function Login() {
       setSsoAutoLogin(Boolean(data.ssoAutoLogin));
       setIsFirstTimeSetup(data.firstTimeSetup ?? false);
       setShowDefaultCredentials(data.showDefaultCredentials ?? false);
+      // Only an explicit yes: a server too old to send it never gets the attempt.
+      setDefaultSignInAllowed(data.defaultSignIn === true);
+      setLoginConfigLoaded(true);
       // Apply language configuration from server
       if (data.languages || data.defaultLocale) {
         updateSupportedLanguages(data.languages, data.defaultLocale);
@@ -315,6 +331,52 @@ export default function Login() {
     hasSsoLoginError,
   ]);
 
+  // A server still in first-run setup on the default admin login signs in by
+  // itself: the credentials are printed on this page anyway, and setup's first
+  // card replaces them. The server decides; anything else gets the form.
+  const defaultSignInDue =
+    defaultSignIn === "idle" &&
+    defaultSignInAllowed &&
+    login.isUserPassAllowed &&
+    !hasSsoLoginError &&
+    !hasLogoutBlock() &&
+    !session &&
+    readSessionNumber(DEFAULT_SIGN_IN_FAILED_KEY) === 0;
+
+  useEffect(() => {
+    if (
+      !defaultSignInDue ||
+      defaultSignInAttempted.current ||
+      loading ||
+      session ||
+      backendProbe.status !== "up"
+    ) {
+      return;
+    }
+    defaultSignInAttempted.current = true;
+    setDefaultSignIn("signingIn");
+    void springAuth
+      .signInWithPassword({
+        email: DEFAULT_ADMIN_CREDENTIALS.username,
+        password: DEFAULT_ADMIN_CREDENTIALS.password,
+      })
+      .then(
+        ({ session: signedIn, error }) => {
+          if (error || !signedIn) {
+            writeSessionNumber(DEFAULT_SIGN_IN_FAILED_KEY, 1);
+            setDefaultSignIn("failed");
+            return;
+          }
+          markSetupSignIn();
+          setDefaultSignIn("signedIn");
+        },
+        () => {
+          writeSessionNumber(DEFAULT_SIGN_IN_FAILED_KEY, 1);
+          setDefaultSignIn("failed");
+        },
+      );
+  }, [defaultSignInDue, loading, session, backendProbe.status]);
+
   // Handle query params (email prefill, success messages, and session expiry)
   useEffect(() => {
     try {
@@ -410,6 +472,16 @@ export default function Login() {
     return <Navigate to={EDITOR_BASENAME} replace />;
   }
 
+  // Checked before the auth state and session: once signing in starts, this
+  // card stays up until the app takes over, so nothing flashes in between.
+  if (
+    defaultSignInDue ||
+    defaultSignIn === "signingIn" ||
+    defaultSignIn === "signedIn"
+  ) {
+    return <SetupSignInScreen />;
+  }
+
   // The form is only for visitors known to be signed out; splash until then.
   if (loading) {
     return <LoadingFallback />;
@@ -477,6 +549,12 @@ export default function Login() {
     );
   }
 
+  // Until the login settings arrive it is unknown whether this server signs
+  // in by itself, so the form would only flash up and vanish.
+  if (!loginConfigLoaded) {
+    return <LoadingFallback />;
+  }
+
   return (
     <AuthLayout>
       <SpringLoginForm
@@ -515,7 +593,10 @@ export default function Login() {
           ) : undefined
         }
         footer={
-          isFirstTimeSetup && showDefaultCredentials && isUserPassAllowed ? (
+          isFirstTimeSetup &&
+          showDefaultCredentials &&
+          isUserPassAllowed &&
+          defaultSignIn !== "failed" ? (
             <AuthDefaultCredentials />
           ) : undefined
         }
