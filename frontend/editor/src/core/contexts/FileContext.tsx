@@ -16,6 +16,7 @@ import {
   useReducer,
   useCallback,
   useEffect,
+  useEffectEvent,
   useLayoutEffect,
   useRef,
   useMemo,
@@ -26,6 +27,7 @@ import {
   FileContextSelectors,
   FileContextActionsValue,
   FileContextActions,
+  FileContextAction,
   FileId,
   StirlingFileStub,
   StirlingFile,
@@ -47,7 +49,9 @@ import {
   undoConsumeFiles,
   createFileActions,
   createChildStub,
+  createProcessedFile,
   generateProcessedFileMetadata,
+  hydrateMetadataFor,
 } from "@app/contexts/file/fileActions";
 import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
 import {
@@ -59,24 +63,34 @@ import {
   IndexedDBProvider,
   useIndexedDB,
 } from "@app/contexts/IndexedDBContext";
-import { onRecordUnreadable } from "@app/services/fileStorage";
+import { fileStorage, onRecordUnreadable } from "@app/services/fileStorage";
 import { useZipConfirmation } from "@app/hooks/useZipConfirmation";
 import ZipWarningModal from "@app/components/shared/ZipWarningModal";
 import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
 import { useTranslation } from "react-i18next";
+import {
+  inspectLocalPdfAccess,
+  bindPdfAccess,
+  clearPdfAccess,
+  forgetPdfAccess,
+  forgetPreviewPdfAccess,
+  getPdfAccess,
+  pdfAccessLifetime,
+  rememberPdfAccess,
+  type PdfAccess,
+} from "@app/services/pdfAccessService";
 import { alert } from "@app/components/toast";
-import { buildRemovePasswordFormData } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
-import type { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
-import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
-import apiClient from "@app/services/apiClient";
+import { hasPdfPermissionOverride } from "@app/services/pdfPermissions";
+
 import { reportFilesRemoved } from "@app/services/failureReporting";
 import {
   addPendingUnlocks,
   setPendingUnlocks,
 } from "@app/services/pendingUnlocks";
-import { processResponse } from "@app/utils/toolResponseProcessor";
-import { ToolOperation } from "@app/types/file";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
+import apiClient from "@app/services/apiClient";
+import { buildRemovePasswordFormData } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
+import { combineAbortSignals } from "@app/utils/combineAbortSignals";
 
 // Inner provider component that has access to IndexedDB
 function FileContextInner({
@@ -118,17 +132,180 @@ function FileContextInner({
   }
   const lifecycleManager = lifecycleManagerRef.current;
   const { t } = useTranslation();
-  const continueResolutions = useResolutionContinuation();
 
   const [encryptedQueue, setEncryptedQueue] = useState<FileId[]>([]);
   const [activeEncryptedFileId, setActiveEncryptedFileId] =
     useState<FileId | null>(null);
   const [unlockPassword, setUnlockPassword] = useState("");
   const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [openingInspection, setOpeningInspection] = useState<{
+    fileId: FileId;
+    error?: string;
+  } | null>(null);
+  const [inspectionAttempt, setInspectionAttempt] = useState(0);
   const [isUnlocking, setIsUnlocking] = useState(false);
-  const dismissedEncryptedFilesRef = useRef<Set<FileId>>(new Set());
-  const deferredEncryptedFilesRef = useRef<Set<FileId>>(new Set());
+  const [openingPasswordToRemove, setOpeningPasswordToRemove] = useState<
+    string | null
+  >(null);
+  const ownerRequests = useRef(
+    new Map<
+      FileId,
+      {
+        action: string;
+        preservationReason?: string;
+        promise: Promise<boolean>;
+        resolve: (allowed: boolean) => void;
+      }
+    >(),
+  );
   const observedFileIdsRef = useRef<Set<FileId>>(new Set());
+  const admissionResults = useRef(
+    new Map<FileId, Promise<boolean | StirlingFile>>(),
+  );
+  const pendingAdmissions = useRef(
+    new Map<
+      FileId,
+      {
+        stub: StirlingFileStub;
+        publishOnUnlock: boolean;
+        admitted: Promise<boolean | StirlingFile>;
+        resolve: (admitted: boolean | StirlingFile) => void;
+      }
+    >(),
+  );
+
+  const dispatchWithUnlock = useCallback((action: FileContextAction) => {
+    if (
+      action.type !== "ADD_FILES" &&
+      action.type !== "CONSUME_FILES" &&
+      action.type !== "UNDO_CONSUME_FILES"
+    ) {
+      dispatch(action);
+      return;
+    }
+    const ready: StirlingFileStub[] = [];
+    const locked: FileId[] = [];
+    const stubs =
+      action.type === "ADD_FILES"
+        ? action.payload.stirlingFileStubs
+        : action.type === "CONSUME_FILES"
+          ? action.payload.outputStirlingFileStubs
+          : action.payload.inputStirlingFileStubs;
+    for (const stub of stubs) {
+      if (!stub.processedFile?.isEncrypted || getPdfAccess(stub.id)) {
+        ready.push(stub);
+        continue;
+      }
+      if (pendingAdmissions.current.has(stub.id)) continue;
+      let resolve!: (admitted: boolean | StirlingFile) => void;
+      const admitted = new Promise<boolean | StirlingFile>((settle) => {
+        resolve = settle;
+      });
+      pendingAdmissions.current.set(stub.id, {
+        stub,
+        publishOnUnlock: action.type !== "CONSUME_FILES",
+        admitted,
+        resolve,
+      });
+      admissionResults.current.set(stub.id, admitted);
+      locked.push(stub.id);
+    }
+    if (locked.length) {
+      addPendingUnlocks(locked);
+      setEncryptedQueue((queue) => [...queue, ...locked]);
+    }
+    if (
+      action.type === "CONSUME_FILES" &&
+      stubs.some((stub) => pendingAdmissions.current.has(stub.id))
+    ) {
+      const sourceFileIds = Array.from(
+        new Set(
+          action.payload.inputFileIds.flatMap((id) => [
+            id,
+            ...(stateRef.current.files.byId[id]?.sourceFileIds ?? []),
+          ]),
+        ),
+      );
+      // A replacement is atomic: cancelling any output keeps the inputs available.
+      void Promise.all(
+        stubs.map(async (stub) => {
+          const pending = pendingAdmissions.current.get(stub.id);
+          const result = pending ? await pending.admitted : true;
+          const admittedStub = pending?.stub ?? stub;
+          return result !== false && filesRef.current.has(admittedStub.id)
+            ? admittedStub
+            : null;
+        }),
+      ).then((results) => {
+        const admitted = results.filter(
+          (stub): stub is StirlingFileStub =>
+            stub !== null && filesRef.current.has(stub.id),
+        );
+        if (admitted.length === results.length) {
+          dispatch({
+            ...action,
+            payload: { ...action.payload, outputStirlingFileStubs: admitted },
+          });
+        } else if (admitted.length) {
+          dispatch({
+            type: "ADD_FILES",
+            payload: {
+              stirlingFileStubs: admitted.map((stub) => ({
+                ...stub,
+                derivedFromTool: true,
+                sourceFileIds,
+              })),
+            },
+          });
+        }
+      });
+      return;
+    }
+    if (action.type === "UNDO_CONSUME_FILES") {
+      dispatch({
+        ...action,
+        payload: { ...action.payload, inputStirlingFileStubs: ready },
+      });
+    } else if (action.type === "CONSUME_FILES") {
+      dispatch({
+        ...action,
+        payload: { ...action.payload, outputStirlingFileStubs: ready },
+      });
+    } else if (ready.length)
+      dispatch({
+        ...action,
+        payload: { ...action.payload, stirlingFileStubs: ready },
+      });
+  }, []);
+
+  const awaitAdmissions = useCallback(async (files: StirlingFile[]) => {
+    const admitted = await Promise.all(
+      files.map(async (file) => {
+        const admitted = admissionResults.current.get(file.fileId);
+        const result = admitted ? await admitted : true;
+        admissionResults.current.delete(file.fileId);
+        return result === true ? file : result === false ? null : result;
+      }),
+    );
+    return admitted.filter(
+      (file): file is StirlingFile =>
+        file !== null && filesRef.current.get(file.fileId) === file,
+    );
+  }, []);
+
+  const cancelPendingAdmissions = useCallback((ids: readonly FileId[]) => {
+    for (const id of ids) {
+      ownerRequests.current.get(id)?.resolve(false);
+      ownerRequests.current.delete(id);
+      const pending = pendingAdmissions.current.get(id);
+      if (!pending) continue;
+      pendingAdmissions.current.delete(id);
+      filesRef.current.delete(id);
+      pending.resolve(false);
+    }
+    setEncryptedQueue((queue) => queue.filter((id) => !ids.includes(id)));
+    setActiveEncryptedFileId((id) => (id && ids.includes(id) ? null : id));
+  }, []);
 
   const enqueueEncryptedFiles = useCallback(
     (fileIds: FileId[]) => {
@@ -137,8 +314,6 @@ function FileContextInner({
         const existing = new Set(prevQueue);
         const next = [...prevQueue];
         for (const id of fileIds) {
-          if (dismissedEncryptedFilesRef.current.has(id)) continue;
-          if (deferredEncryptedFilesRef.current.has(id)) continue;
           if (id === activeEncryptedFileId) continue;
           if (existing.has(id)) continue;
           existing.add(id);
@@ -160,7 +335,8 @@ function FileContextInner({
         const stub = state.files.byId[id];
         if (
           (stub?.versionNumber ?? 1) <= 1 &&
-          stub?.processedFile?.isEncrypted
+          stub?.processedFile?.isEncrypted &&
+          !getPdfAccess(id)
         ) {
           newEncryptedIds.push(id);
         }
@@ -184,25 +360,19 @@ function FileContextInner({
   useEffect(() => {
     if (
       activeEncryptedFileId &&
-      !state.files.ids.includes(activeEncryptedFileId)
+      !state.files.ids.includes(activeEncryptedFileId) &&
+      !pendingAdmissions.current.has(activeEncryptedFileId)
     ) {
       setActiveEncryptedFileId(null);
     }
   }, [activeEncryptedFileId, state.files.ids]);
 
-  // Published so an upload policy holds off until the user has answered the prompt: running now
-  // would fail on a document they are about to decrypt, and leave a row about a version that no
-  // longer exists once they have.
+  // Upload policies wait for the prompt to settle; interactive credentials are not passed to automation.
   useEffect(() => {
-    const deferred = deferredEncryptedFilesRef.current;
-    for (const id of deferred) {
-      if (!state.files.byId[id]?.processedFile?.isEncrypted)
-        deferred.delete(id);
-    }
     setPendingUnlocks([
       ...(activeEncryptedFileId ? [activeEncryptedFileId] : []),
       ...encryptedQueue,
-      ...deferred,
+      ...pendingAdmissions.current.keys(),
     ]);
   }, [activeEncryptedFileId, encryptedQueue, state.files.byId]);
 
@@ -210,9 +380,14 @@ function FileContextInner({
   // for the rest of the session. Its own effect, so a change of prompt does not clear and re-set.
   useEffect(() => () => setPendingUnlocks([]), []);
 
+  const protectionOperation = useRef<AbortController | null>(null);
   useEffect(() => {
     setUnlockPassword("");
     setUnlockError(null);
+    setOpeningPasswordToRemove(null);
+    const cancellation = new AbortController();
+    protectionOperation.current = cancellation;
+    return () => cancellation.abort();
   }, [activeEncryptedFileId]);
 
   // Storage proved a file's bytes unreadable (WebKit losing a blob's backing
@@ -231,20 +406,48 @@ function FileContextInner({
   );
 
   const handleUnlockSkip = useCallback(() => {
+    protectionOperation.current?.abort();
     if (activeEncryptedFileId) {
-      dismissedEncryptedFilesRef.current.add(activeEncryptedFileId);
+      const ownerRequest = ownerRequests.current.get(activeEncryptedFileId);
+      ownerRequest?.resolve(false);
+      ownerRequests.current.delete(activeEncryptedFileId);
+      if (ownerRequest || getPdfAccess(activeEncryptedFileId)) {
+        setActiveEncryptedFileId(null);
+        return;
+      }
+      const pending = pendingAdmissions.current.get(activeEncryptedFileId);
+      if (pending) {
+        pendingAdmissions.current.delete(activeEncryptedFileId);
+        filesRef.current.delete(activeEncryptedFileId);
+        forgetPdfAccess([activeEncryptedFileId]);
+        pending.resolve(false);
+      } else {
+        lifecycleManager.removeFiles([activeEncryptedFileId], stateRef);
+      }
     }
     setActiveEncryptedFileId(null);
-  }, [activeEncryptedFileId]);
+  }, [activeEncryptedFileId, lifecycleManager]);
 
   const promptEncryptedUnlock = useCallback((fileId: FileId) => {
-    const stub = stateRef.current.files.byId[fileId];
-    if (!stub?.processedFile?.isEncrypted) {
-      return;
+    const stub =
+      pendingAdmissions.current.get(fileId)?.stub ??
+      stateRef.current.files.byId[fileId];
+    if (!stub) return;
+    if (!stub.processedFile?.isEncrypted) {
+      dispatch({
+        type: "UPDATE_FILE_RECORD",
+        payload: {
+          id: fileId,
+          updates: {
+            processedFile: {
+              ...stub.processedFile,
+              pages: stub.processedFile?.pages ?? [],
+              isEncrypted: true,
+            },
+          },
+        },
+      });
     }
-
-    dismissedEncryptedFilesRef.current.delete(fileId);
-    deferredEncryptedFilesRef.current.delete(fileId);
 
     setEncryptedQueue((prevQueue) => prevQueue.filter((id) => id !== fileId));
 
@@ -304,8 +507,6 @@ function FileContextInner({
         };
         /** Bytes and stub only, no thumbnail parse (see AddFileOptions). */
         skipMetadataHydration?: boolean;
-        /** An editor owns the prompt; encrypted library bytes still hold policies. */
-        skipAutomaticPasswordPrompt?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(
@@ -320,37 +521,25 @@ function FileContextInner({
         },
         stateRef,
         filesRef,
-        (action) => {
-          if (
-            options?.skipAutomaticPasswordPrompt &&
-            action.type === "ADD_FILES"
-          ) {
-            const encrypted = action.payload.stirlingFileStubs.filter(
-              (stub) => stub.processedFile?.isEncrypted,
-            );
-            for (const stub of encrypted) {
-              deferredEncryptedFilesRef.current.add(stub.id);
-            }
-            // Policies can observe the new records before this provider's effects run.
-            addPendingUnlocks(encrypted.map((stub) => stub.id));
-          }
-          dispatch(action);
-        },
+        dispatchWithUnlock,
         lifecycleManager,
         enablePersistence,
       );
 
-      // Auto-select the newly added files if requested
-      if (options?.selectFiles && stirlingFiles.length > 0) {
-        selectFiles(stirlingFiles);
-      }
       if (stirlingFiles.length > 0) {
         indexedDB?.bumpRevision?.();
       }
-
-      return stirlingFiles;
+      const admitted = await awaitAdmissions(stirlingFiles);
+      if (options?.selectFiles && admitted.length > 0) selectFiles(admitted);
+      return admitted;
     },
-    [enablePersistence, requestConfirmation, indexedDB],
+    [
+      enablePersistence,
+      requestConfirmation,
+      indexedDB,
+      dispatchWithUnlock,
+      awaitAdmissions,
+    ],
   );
 
   const addFilesWithOptions = useCallback(
@@ -377,22 +566,19 @@ function FileContextInner({
         },
         stateRef,
         filesRef,
-        dispatch,
+        dispatchWithUnlock,
         lifecycleManager,
         enablePersistence,
       );
 
-      if (options?.selectFiles && stirlingFiles.length > 0) {
-        selectFiles(stirlingFiles);
-      }
-
       if (stirlingFiles.length > 0) {
         indexedDB?.bumpRevision?.();
       }
-
-      return stirlingFiles;
+      const admitted = await awaitAdmissions(stirlingFiles);
+      if (options?.selectFiles && admitted.length > 0) selectFiles(admitted);
+      return admitted;
     },
-    [enablePersistence, indexedDB],
+    [enablePersistence, indexedDB, dispatchWithUnlock, awaitAdmissions],
   );
 
   const addStirlingFileStubsAction = useCallback(
@@ -406,18 +592,15 @@ function FileContextInner({
         options,
         stateRef,
         filesRef,
-        dispatch,
+        dispatchWithUnlock,
         lifecycleManager,
       );
 
-      // Auto-select the newly added files if requested
-      if (options?.selectFiles && result.length > 0) {
-        selectFiles(result);
-      }
-
-      return result;
+      const admitted = await awaitAdmissions(result);
+      if (options?.selectFiles && admitted.length > 0) selectFiles(admitted);
+      return admitted;
     },
-    [],
+    [dispatchWithUnlock, awaitAdmissions],
   );
 
   const reconcileOpenFilesAction = useCallback(
@@ -427,7 +610,10 @@ function FileContextInner({
   );
 
   // Action creators
-  const baseActions = useMemo(() => createFileActions(dispatch), []);
+  const baseActions = useMemo(
+    () => createFileActions(dispatchWithUnlock),
+    [dispatchWithUnlock],
+  );
 
   // Helper functions for pinned files
   const consumeFilesWrapper = useCallback(
@@ -437,22 +623,47 @@ function FileContextInner({
       outputStirlingFileStubs: StirlingFileStub[],
       options?: { silent?: boolean },
     ): Promise<FileId[]> => {
-      return consumeFiles(
+      for (const file of outputStirlingFiles) bindPdfAccess(file, file.fileId);
+      await consumeFiles(
         inputFileIds,
         outputStirlingFiles,
         outputStirlingFileStubs,
         filesRef,
-        dispatch,
+        dispatchWithUnlock,
         options,
       );
+      const admitted = await awaitAdmissions(outputStirlingFiles);
+      return admitted.map((file) => file.fileId);
     },
-    [],
+    [dispatchWithUnlock, awaitAdmissions],
   );
 
-  const runAutomaticPasswordRemoval = useCallback(
-    async (fileId: FileId, password: string): Promise<void> => {
+  const pendingMetadataHydrations = useRef(new Set<FileId>());
+  useEffect(() => {
+    for (const fileId of pendingMetadataHydrations.current) {
       const file = filesRef.current.get(fileId);
-      const parentStub = stateRef.current.files.byId[fileId];
+      if (!file) pendingMetadataHydrations.current.delete(fileId);
+      else if (state.files.byId[fileId]) {
+        pendingMetadataHydrations.current.delete(fileId);
+        hydrateMetadataFor(
+          fileId,
+          createStirlingFile(file, fileId),
+          stateRef,
+          lifecycleManager,
+        );
+      }
+    }
+  }, [state.files, lifecycleManager]);
+
+  const runSessionUnlock = useCallback(
+    async (
+      fileId: FileId,
+      password: string,
+      signal?: AbortSignal,
+    ): Promise<void> => {
+      const file = filesRef.current.get(fileId);
+      const pending = pendingAdmissions.current.get(fileId);
+      const parentStub = pending?.stub ?? stateRef.current.files.byId[fileId];
 
       if (!file || !parentStub) {
         throw new Error(
@@ -463,67 +674,298 @@ function FileContextInner({
         );
       }
 
-      const params: RemovePasswordParameters = { password };
-      const formData = buildRemovePasswordFormData(params, file);
-
-      const response = await apiClient.post(
-        "/api/v1/security/remove-password",
-        formData,
-        {
-          responseType: "blob",
-          suppressErrorToast: true, // Handle errors in modal UI instead of toast
-        },
-      );
-      const responseFiles = await processResponse(response.data, [file]);
-
-      const unlockedFile = responseFiles[0];
-      if (!unlockedFile) {
+      const access = await inspectLocalPdfAccess(file, password, signal);
+      if (signal?.aborted || filesRef.current.get(fileId) !== file) {
+        return;
+      }
+      if (
+        (ownerRequests.current.has(fileId) || getPdfAccess(file)?.encrypted) &&
+        !access.ownerAuthenticated
+      ) {
         throw new Error(
           t(
-            "encryptedPdfUnlock.emptyResponse",
-            "Password removal did not produce a file.",
+            "encryptedPdfUnlock.ownerRequired",
+            "Enter the permissions password to allow restricted actions.",
           ),
         );
       }
-
-      const processedMetadata =
-        await generateProcessedFileMetadata(unlockedFile);
-      const thumbnail = processedMetadata?.thumbnailUrl;
-
-      const operation: ToolOperation = {
-        toolId: "removePassword",
-        timestamp: Date.now(),
+      rememberPdfAccess(file, access);
+      bindPdfAccess(file, fileId);
+      const metadata =
+        password === ""
+          ? createProcessedFile(access.pageCount)
+          : await generateProcessedFileMetadata(file);
+      if (signal?.aborted || filesRef.current.get(fileId) !== file) return;
+      const updates: Partial<StirlingFileStub> = {
+        processedFile: {
+          ...metadata,
+          pages: metadata?.pages ?? [],
+          totalPages: access.pageCount,
+          isEncrypted: access.encrypted,
+          requiresOpeningPassword: access.requiresOpeningPassword,
+        },
+        ...(metadata?.thumbnailUrl !== undefined
+          ? { thumbnailUrl: metadata.thumbnailUrl }
+          : {}),
       };
-
-      const childStub = createChildStub(
-        parentStub,
-        operation,
-        unlockedFile,
-        thumbnail,
-        processedMetadata,
-      );
-      const stirlingUnlockedFile = createStirlingFile(
-        unlockedFile,
-        childStub.id,
-      );
-
-      await consumeFilesWrapper([fileId], [stirlingUnlockedFile], [childStub]);
-
-      // The modal is the remove-password tool by another door, so it resolves the same.
-      continueResolutions({
-        operation: "removePassword",
-        inputFileIds: [fileId],
-        outputs: [
-          { file: unlockedFile, fileId: childStub.id, sourceFileId: fileId },
-        ],
-      });
+      if (password === "") pendingMetadataHydrations.current.add(fileId);
+      if (pending) {
+        pending.stub = { ...parentStub, ...updates };
+        if (pending.publishOnUnlock)
+          dispatch({
+            type: "ADD_FILES",
+            payload: { stirlingFileStubs: [pending.stub] },
+          });
+      } else {
+        dispatch({
+          type: "UPDATE_FILE_RECORD",
+          payload: { id: fileId, updates },
+        });
+      }
+      pendingAdmissions.current.delete(fileId);
+      pending?.resolve(true);
+      ownerRequests.current.get(fileId)?.resolve(true);
+      ownerRequests.current.delete(fileId);
     },
-    [consumeFilesWrapper, continueResolutions, t],
+    [t],
   );
 
-  const handleUnlockSubmit = useCallback(async () => {
+  const inspectOpening = useEffectEvent(
+    (fileId: FileId, controller: AbortController) => {
+      if (getPdfAccess(fileId) || ownerRequests.current.has(fileId)) return;
+      const pending = pendingAdmissions.current.get(fileId);
+      const stub = pending?.stub ?? stateRef.current.files.byId[fileId];
+      if (!stub || stub.processedFile?.requiresOpeningPassword === true) return;
+      protectionOperation.current = controller;
+      setOpeningInspection({ fileId });
+      // Only the file being opened is parsed; library admission never allocates a PDF heap.
+      void runSessionUnlock(fileId, "", controller.signal)
+        .then(() => {
+          if (!controller.signal.aborted) {
+            setOpeningInspection(null);
+            setActiveEncryptedFileId(null);
+          }
+        })
+        .catch((error: unknown) => {
+          if (controller.signal.aborted) return;
+          if (error instanceof Error && "code" in error && error.code === 4) {
+            const processedFile = {
+              ...stub.processedFile,
+              pages: stub.processedFile?.pages ?? [],
+              requiresOpeningPassword: true,
+            };
+            if (pending) pending.stub = { ...pending.stub, processedFile };
+            else
+              dispatch({
+                type: "UPDATE_FILE_RECORD",
+                payload: { id: fileId, updates: { processedFile } },
+              });
+            if (enablePersistence)
+              void fileStorage
+                .updateFileMetadata(fileId, { requiresOpeningPassword: true })
+                .catch(() => {});
+            setOpeningInspection(null);
+          } else {
+            setOpeningInspection({
+              fileId,
+              error: t(
+                "encryptedPdfUnlock.inspectionFailed",
+                "Unable to check this PDF's permissions. Try again.",
+              ),
+            });
+          }
+        });
+    },
+  );
+
+  useEffect(() => {
     if (!activeEncryptedFileId) return;
-    if (!unlockPassword.trim()) {
+    const controller = new AbortController();
+    inspectOpening(activeEncryptedFileId, controller);
+    return () => controller.abort();
+  }, [activeEncryptedFileId, inspectionAttempt]);
+
+  const admitProtectionCopy = useCallback(
+    async (fileId: FileId, file: File, copy: File, copyAccess: PdfAccess) => {
+      const pending = pendingAdmissions.current.get(fileId);
+      const sourceStub = pending?.stub ?? stateRef.current.files.byId[fileId];
+      if (!sourceStub || filesRef.current.get(fileId) !== file) {
+        throw new Error(
+          t(
+            "encryptedPdfUnlock.missingFile",
+            "The selected file is no longer available.",
+          ),
+        );
+      }
+      rememberPdfAccess(copy, copyAccess);
+      const generatedMetadata = await generateProcessedFileMetadata(copy);
+      const metadata = {
+        ...generatedMetadata,
+        pages: generatedMetadata?.pages ?? [],
+        isEncrypted: copyAccess.encrypted,
+      };
+      if (filesRef.current.get(fileId) !== file) return;
+      const stub = createChildStub(
+        sourceStub,
+        { toolId: "removePassword", timestamp: Date.now() },
+        copy,
+        metadata?.thumbnailUrl,
+        metadata,
+      );
+      // An explicit copy must not inherit a save target that could overwrite the protected source.
+      stub.localFilePath = undefined;
+      stub.isDirty = undefined;
+      stub.diskSyncedSize = undefined;
+      stub.diskSyncedModifiedMs = undefined;
+      stub.blobUrl = undefined;
+      const output = createStirlingFile(copy, stub.id);
+      await consumeFiles(
+        [fileId],
+        [output],
+        [stub],
+        filesRef,
+        pending && !pending.publishOnUnlock ? () => {} : dispatchWithUnlock,
+      );
+      if (pending) pending.stub = stub;
+      pendingAdmissions.current.delete(fileId);
+      pending?.resolve(output);
+      indexedDB?.bumpRevision?.();
+    },
+    [t, dispatchWithUnlock, indexedDB],
+  );
+
+  const runUnprotectedCopy = useCallback(
+    async (fileId: FileId): Promise<void> => {
+      const access = getPdfAccess(fileId);
+      if (!access || !hasPdfPermissionOverride(access))
+        throw new Error(
+          t(
+            "encryptedPdfUnlock.ownerRequired",
+            "Enter the permissions password to continue.",
+          ),
+        );
+      const file = filesRef.current.get(fileId);
+      if (!file)
+        throw new Error(
+          t(
+            "encryptedPdfUnlock.missingFile",
+            "The selected file is no longer available.",
+          ),
+        );
+      const form = buildRemovePasswordFormData(
+        { password: access.password },
+        file,
+      );
+      form.set("removeAll", "true");
+      const response = await apiClient.post<Blob>(
+        "/api/v1/security/remove-password",
+        form,
+        { responseType: "blob", suppressErrorToast: true },
+      );
+      if (filesRef.current.get(fileId) !== file) return;
+      const copy = new File(
+        [response.data],
+        `${file.name.replace(/\.pdf$/i, "")}_unprotected.pdf`,
+        { type: "application/pdf" },
+      );
+      const copyAccess = await inspectLocalPdfAccess(
+        copy,
+        "",
+        pdfAccessLifetime(file),
+      );
+      if (copyAccess.encrypted)
+        throw new Error(
+          t(
+            "encryptedPdfUnlock.securityChangeFailed",
+            "Unable to change protection. Check the permissions password and the new security settings.",
+          ),
+        );
+      await admitProtectionCopy(fileId, file, copy, copyAccess);
+    },
+    [admitProtectionCopy, t],
+  );
+
+  const runUnprotectedCopyRef = useRef(runUnprotectedCopy);
+  runUnprotectedCopyRef.current = runUnprotectedCopy;
+
+  const handleRemoveOpeningPassword = useCallback(async () => {
+    if (!activeEncryptedFileId || isUnlocking || !unlockPassword) return;
+    const fileId = activeEncryptedFileId;
+    const file = filesRef.current.get(fileId);
+    if (!file) return;
+    setIsUnlocking(true);
+    setUnlockError(null);
+    const { signal, dispose } = combineAbortSignals([
+      pdfAccessLifetime(file),
+      ...(protectionOperation.current
+        ? [protectionOperation.current.signal]
+        : []),
+    ]);
+    try {
+      const access = await inspectLocalPdfAccess(file, unlockPassword, signal);
+      if (filesRef.current.get(fileId) !== file) return;
+      if (openingPasswordToRemove === null) {
+        if (!access.ownerAuthenticated) {
+          setOpeningPasswordToRemove(unlockPassword);
+          setUnlockPassword("");
+          return;
+        }
+      } else if (!access.ownerAuthenticated) {
+        throw new Error(
+          t(
+            "encryptedPdfUnlock.ownerRequired",
+            "Enter the permissions password to continue.",
+          ),
+        );
+      }
+      const form = buildRemovePasswordFormData(
+        { password: openingPasswordToRemove ?? unlockPassword },
+        file,
+      );
+      // Authentication retains the owner password; ownerPassword would select it for removal.
+      form.set("sourcePassword", access.password);
+      const response = await apiClient.post<Blob>(
+        "/api/v1/security/remove-password",
+        form,
+        { responseType: "blob", suppressErrorToast: true, signal },
+      );
+      if (filesRef.current.get(fileId) !== file) return;
+      const copy = new File(
+        [response.data],
+        `${file.name.replace(/\.pdf$/i, "")}_password_removed.pdf`,
+        { type: "application/pdf" },
+      );
+      const copyAccess = await inspectLocalPdfAccess(copy, "", signal);
+      await admitProtectionCopy(fileId, file, copy, copyAccess);
+      setActiveEncryptedFileId(null);
+    } catch (error) {
+      if (signal.aborted) return;
+      setUnlockError(
+        await handlePasswordError(
+          error,
+          t("encryptedPdfUnlock.incorrectPassword", "Incorrect password"),
+          t(
+            "removePassword.error.failed",
+            "An error occurred while removing the password from the PDF.",
+          ),
+        ),
+      );
+    } finally {
+      dispose();
+      setIsUnlocking(false);
+    }
+  }, [
+    activeEncryptedFileId,
+    isUnlocking,
+    unlockPassword,
+    openingPasswordToRemove,
+    admitProtectionCopy,
+    t,
+  ]);
+
+  const handleUnlockSubmit = useCallback(async () => {
+    if (!activeEncryptedFileId || isUnlocking) return;
+    if (unlockPassword.length === 0) {
       setUnlockError(
         t("encryptedPdfUnlock.required", "Enter the password to continue."),
       );
@@ -533,46 +975,49 @@ function FileContextInner({
     setIsUnlocking(true);
     setUnlockError(null);
     try {
-      await runAutomaticPasswordRemoval(
-        activeEncryptedFileId,
-        unlockPassword.trim(),
-      );
+      const requestedAction = ownerRequests.current.has(activeEncryptedFileId);
+      await runSessionUnlock(activeEncryptedFileId, unlockPassword);
       const fileName = stateRef.current.files.byId[activeEncryptedFileId]?.name;
-      alert({
-        alertType: "success",
-        title: t("encryptedPdfUnlock.successTitle", "Password removed"),
-        body: fileName
-          ? t("encryptedPdfUnlock.successBodyWithName", {
-              defaultValue: "Removed password from {{fileName}}",
-              fileName,
-            })
-          : t(
-              "encryptedPdfUnlock.successBody",
-              "Password removed successfully.",
-            ),
-        expandable: false,
-        isPersistentPopup: false,
-      });
-      dismissedEncryptedFilesRef.current.delete(activeEncryptedFileId);
+      if (!requestedAction)
+        alert({
+          alertType: "success",
+          title: getPdfAccess(activeEncryptedFileId)?.ownerAuthenticated
+            ? t(
+                "encryptedPdfUnlock.permissionsUnlocked",
+                "Permissions unlocked for this session",
+              )
+            : t("encryptedPdfUnlock.sessionSuccessTitle", "PDF opened"),
+          body: fileName
+            ? t("encryptedPdfUnlock.sessionSuccessBodyWithName", {
+                defaultValue: "Protection retained for {{fileName}}.",
+                fileName,
+              })
+            : t(
+                "encryptedPdfUnlock.sessionSuccessBody",
+                "Protection retained.",
+              ),
+          expandable: false,
+          isPersistentPopup: false,
+        });
       setActiveEncryptedFileId(null);
     } catch (error) {
       const errorMessage = await handlePasswordError(
         error,
         t("encryptedPdfUnlock.incorrectPassword", "Incorrect password"),
         t(
-          "removePassword.error.failed",
-          "An error occurred while removing the password from the PDF.",
+          "encryptedPdfUnlock.sessionFailed",
+          "Unable to verify this password. Please try again.",
         ),
       );
       setUnlockError(errorMessage);
     } finally {
       setIsUnlocking(false);
     }
-  }, [activeEncryptedFileId, unlockPassword, runAutomaticPasswordRemoval, t]);
+  }, [activeEncryptedFileId, unlockPassword, isUnlocking, runSessionUnlock, t]);
 
   const handleUnlockAll = useCallback(async () => {
     if (!activeEncryptedFileId) return;
-    const pw = unlockPassword.trim();
+    const pw = unlockPassword;
     if (!pw) {
       setUnlockError(
         t("encryptedPdfUnlock.required", "Enter the password to continue."),
@@ -589,8 +1034,7 @@ function FileContextInner({
 
     for (const fileId of allIds) {
       try {
-        await runAutomaticPasswordRemoval(fileId, pw);
-        dismissedEncryptedFilesRef.current.delete(fileId);
+        await runSessionUnlock(fileId, pw);
         successCount++;
       } catch {
         failedIds.push(fileId);
@@ -600,7 +1044,7 @@ function FileContextInner({
     if (successCount > 0) {
       alert({
         alertType: "success",
-        title: t("encryptedPdfUnlock.successTitle", "Password removed"),
+        title: t("encryptedPdfUnlock.sessionSuccessTitle", "PDF unlocked"),
         body: t("encryptedPdfUnlock.unlockAllSuccess", {
           defaultValue: "Unlocked {{count}} file(s).",
           count: successCount,
@@ -632,7 +1076,7 @@ function FileContextInner({
     activeEncryptedFileId,
     encryptedQueue,
     unlockPassword,
-    runAutomaticPasswordRemoval,
+    runSessionUnlock,
     t,
   ]);
 
@@ -647,11 +1091,11 @@ function FileContextInner({
         inputStirlingFileStubs,
         outputFileIds,
         filesRef,
-        dispatch,
+        dispatchWithUnlock,
         indexedDB,
       );
     },
-    [indexedDB],
+    [indexedDB, dispatchWithUnlock],
   );
 
   // File pinning functions - use StirlingFile directly
@@ -669,6 +1113,21 @@ function FileContextInner({
     [baseActions],
   );
 
+  const unlockPreviewPdf = useCallback<FileContextActions["unlockPreviewPdf"]>(
+    async (file, password, signal) => {
+      if (signal.aborted) return;
+      const access = await inspectLocalPdfAccess(file, password, signal);
+      if (signal.aborted) return;
+      const storedAccess = rememberPdfAccess(file, access);
+      signal.addEventListener(
+        "abort",
+        () => forgetPreviewPdfAccess(file, storedAccess),
+        { once: true },
+      );
+    },
+    [],
+  );
+
   // Complete actions object
   const actions = useMemo<FileContextActions>(
     () => ({
@@ -678,6 +1137,8 @@ function FileContextInner({
       addStirlingFileStubs: addStirlingFileStubsAction,
       reconcileOpenFiles: reconcileOpenFilesAction,
       removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
+        cancelPendingAdmissions(fileIds);
+        forgetPdfAccess(fileIds);
         // Remove from memory and cleanup resources
         lifecycleManager.removeFiles(fileIds, stateRef);
 
@@ -704,6 +1165,11 @@ function FileContextInner({
         dispatch({ type: "REORDER_FILES", payload: { orderedFileIds } });
       },
       clearAllFiles: async () => {
+        for (const request of ownerRequests.current.values())
+          request.resolve(false);
+        ownerRequests.current.clear();
+        cancelPendingAdmissions([...pendingAdmissions.current.keys()]);
+        clearPdfAccess();
         lifecycleManager.cleanupAllFiles();
         filesRef.current.clear();
         dispatch({ type: "RESET_CONTEXT" });
@@ -712,6 +1178,11 @@ function FileContextInner({
         // IndexedDB should only be cleared when explicitly requested by user
       },
       clearAllData: async () => {
+        for (const request of ownerRequests.current.values())
+          request.resolve(false);
+        ownerRequests.current.clear();
+        cancelPendingAdmissions([...pendingAdmissions.current.keys()]);
+        clearPdfAccess();
         // First clear all files from memory
         lifecycleManager.cleanupAllFiles();
         filesRef.current.clear();
@@ -738,6 +1209,31 @@ function FileContextInner({
       scheduleCleanup: (fileId: FileId, delay?: number) =>
         lifecycleManager.scheduleCleanup(fileId, delay, stateRef),
       openEncryptedUnlockPrompt: promptEncryptedUnlock,
+      requestPdfOwnerAccess: (fileId, action, preservationReason) => {
+        if (!filesRef.current.has(fileId)) return Promise.resolve(false);
+        if (
+          preservationReason
+            ? getPdfAccess(fileId)?.ownerAuthenticated
+            : hasPdfPermissionOverride(getPdfAccess(fileId))
+        )
+          return Promise.resolve(true);
+        const existing = ownerRequests.current.get(fileId);
+        if (existing) return existing.promise;
+        let resolve!: (allowed: boolean) => void;
+        const promise = new Promise<boolean>((settle) => {
+          resolve = settle;
+        });
+        ownerRequests.current.set(fileId, {
+          action,
+          preservationReason,
+          promise,
+          resolve,
+        });
+        promptEncryptedUnlock(fileId);
+        return promise;
+      },
+      createUnprotectedCopy: (fileId) => runUnprotectedCopyRef.current(fileId),
+      unlockPreviewPdf,
     }),
     [
       baseActions,
@@ -753,6 +1249,8 @@ function FileContextInner({
       indexedDB,
       enablePersistence,
       promptEncryptedUnlock,
+      unlockPreviewPdf,
+      cancelPendingAdmissions,
     ],
   );
 
@@ -782,13 +1280,14 @@ function FileContextInner({
   const actionsValue = useMemo<FileContextActionsValue>(
     () => ({
       actions,
-      dispatch,
+      dispatch: dispatchWithUnlock,
     }),
-    [actions],
+    [actions, dispatchWithUnlock],
   );
 
   const activeEncryptedStub = activeEncryptedFileId
-    ? state.files.byId[activeEncryptedFileId]
+    ? (pendingAdmissions.current.get(activeEncryptedFileId)?.stub ??
+      state.files.byId[activeEncryptedFileId])
     : undefined;
   const isUnlockModalOpen = Boolean(
     activeEncryptedFileId && activeEncryptedStub,
@@ -808,7 +1307,16 @@ function FileContextInner({
       mountedRef.current = false;
       // StrictMode can replay effects after files hydrate; only an actual unmount owns cleanup.
       queueMicrotask(() => {
-        if (!mountedRef.current) lifecycleManager.destroy();
+        if (!mountedRef.current) {
+          for (const request of ownerRequests.current.values())
+            request.resolve(false);
+          ownerRequests.current.clear();
+          for (const pending of pendingAdmissions.current.values())
+            pending.resolve(false);
+          pendingAdmissions.current.clear();
+          clearPdfAccess();
+          lifecycleManager.destroy();
+        }
       });
     };
   }, [lifecycleManager]);
@@ -825,15 +1333,53 @@ function FileContextInner({
           zipFileName={confirmationState.fileName}
         />
         <EncryptedPdfUnlockModal
+          sessionUnlock
+          preservationReason={
+            openingPasswordToRemove !== null
+              ? t(
+                  "encryptedPdfUnlock.retainOwnerVerification",
+                  "Verify the permissions password to keep it unchanged while removing the opening password. This will not remove it.",
+                )
+              : activeEncryptedFileId
+                ? ownerRequests.current.get(activeEncryptedFileId)
+                    ?.preservationReason
+                : undefined
+          }
+          ownerUnlock={
+            openingPasswordToRemove !== null ||
+            (!!activeEncryptedFileId &&
+              (ownerRequests.current.has(activeEncryptedFileId) ||
+                !!getPdfAccess(activeEncryptedFileId)))
+          }
+          actionLabel={
+            activeEncryptedFileId
+              ? ownerRequests.current.get(activeEncryptedFileId)?.action
+              : undefined
+          }
           opened={isUnlockModalOpen}
           fileName={activeEncryptedStub?.name}
           password={unlockPassword}
+          inspection={
+            openingInspection?.fileId === activeEncryptedFileId
+              ? {
+                  error: openingInspection.error,
+                  retry: () => setInspectionAttempt((attempt) => attempt + 1),
+                }
+              : undefined
+          }
           errorMessage={unlockError}
           isProcessing={isUnlocking}
           remainingCount={encryptedQueue.length}
           onPasswordChange={setUnlockPassword}
-          onUnlock={handleUnlockSubmit}
-          onUnlockAll={handleUnlockAll}
+          onUnlock={() =>
+            void (openingPasswordToRemove !== null
+              ? handleRemoveOpeningPassword()
+              : handleUnlockSubmit())
+          }
+          onRemovePassword={() => void handleRemoveOpeningPassword()}
+          onUnlockAll={
+            openingPasswordToRemove !== null ? undefined : handleUnlockAll
+          }
           onSkip={handleUnlockSkip}
         />
       </FileActionsContext.Provider>

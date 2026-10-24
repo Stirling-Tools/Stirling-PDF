@@ -1,5 +1,5 @@
 import React from "react";
-import { Stack } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 import {
   createToolSteps,
   ToolStepProvider,
@@ -15,6 +15,7 @@ import type { TooltipTip } from "@app/types/tips";
 import type { ExecuteDisabledReason } from "@app/hooks/tools/shared/toolOperationTypes";
 import classes from "@app/components/tools/shared/createToolFlow.module.css";
 import { ToolFileEligibility } from "@app/contexts/ToolFileEligibilityContext";
+import { PdfProtectionResult } from "@app/components/tools/shared/PdfProtectionResult";
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -70,11 +71,14 @@ export interface ExecuteButtonConfig {
 }
 
 export interface ReviewStepConfig<TParams = unknown> {
+  protectionSummary?: string | null;
   isVisible: boolean;
   operation: ToolOperationHook<TParams>;
   title: string;
   onFileClick?: (file: File) => void;
   onUndo?: () => void;
+  /** Rendered above the results, for an outcome the files alone do not explain. */
+  notice?: React.ReactNode;
   testId?: string;
 }
 
@@ -122,6 +126,7 @@ export function createToolFlow<TParams = unknown>(
             isCollapsed: config.files.isCollapsed,
             minFiles: config.files.minFiles,
             onCollapsedClick: config.files.onCollapsedClick,
+            showUnavailableFiles: !config.review.isVisible,
           })}
 
         {/* Middle Steps */}
@@ -193,13 +198,26 @@ export function createToolFlow<TParams = unknown>(
             );
           })()}
 
+        {!config.review.isVisible && config.review.operation.errorMessage && (
+          <Text role="alert" size="sm" c="var(--c-danger)">
+            {config.review.operation.errorMessage}
+          </Text>
+        )}
+
         {/* Review Step */}
+        {config.review.isVisible && (
+          <PdfProtectionResult
+            files={config.review.operation.files}
+            summary={config.review.protectionSummary}
+          />
+        )}
         {steps.createReviewStep({
           isVisible: config.review.isVisible,
           operation: config.review.operation,
           title: config.review.title,
           onFileClick: config.review.onFileClick,
           onUndo: config.review.onUndo,
+          notice: config.review.notice,
         })}
       </ToolStepProvider>
     </Stack>

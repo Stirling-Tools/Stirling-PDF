@@ -55,7 +55,9 @@ keepWorking = "തുടർന്നു പ്രവർത്തിക്കു�
 loading = "ലോഡ് ചെയ്യുന്നു..."
 loginAgreementAccept = "അംഗീകരിക്കുക"
 loginAgreementDecline = "നിരസിക്കുക"
+loginAgreementLoadFailed = "ലോഗിൻ കരാർ ലോഡ് ചെയ്യാനായില്ല."
 loginAgreementProvider = "ഈ അറിയിപ്പ് നിങ്ങളുടെ അഡ്മിനിസ്ട്രേറ്റർ നൽകുന്നതാണ്, Stirling PDF Inc. അല്ല."
+loginAgreementRetry = "വീണ്ടും ശ്രമിക്കുക"
 loginAgreementTitle = "ലോഗിൻ കരാർ"
 logOut = "ലോഗൗട്ട് ചെയ്യുക"
 marginTooltip = "പേജ് നമ്പറും പേജിന്റെ അരവുമുള്ള ദൂരം."
@@ -299,7 +301,6 @@ title = "പേജ് നമ്പർ ഫലങ്ങൾ"
 
 [addPassword]
 desc = "നിങ്ങളുടെ PDF ഡോക്യുമെന്റ് ഒരു പാസ്‌വേഡോടെ എൻക്രിപ്റ്റ് ചെയ്യുക."
-submit = "എൻക്രിപ്റ്റ് ചെയ്യുക"
 tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,access നിയന്ത്രിക്കുക"
 title = "പാസ്‌വേഡ് ചേർക്കുക"
 
@@ -311,17 +312,6 @@ label = "എൻക്രിപ്ഷൻ കീ നീളം"
 
 [addPassword.error]
 failed = "PDF എൻക്രിപ്റ്റ് ചെയ്യുന്നതിനിടെ പിശക് സംഭവിച്ചു."
-
-[addPassword.passwords]
-stepTitle = "പാസ്‌വേഡുകളും എൻക്രിപ്ഷനും"
-
-[addPassword.passwords.owner]
-label = "ഉടമയുടെ പാസ്‌വേഡ്"
-placeholder = "ഉടമയുടെ പാസ്‌വേഡ్ നൽകുക"
-
-[addPassword.passwords.user]
-label = "ഉപയോക്തൃ പാസ്‌വേഡ്"
-placeholder = "ഉപയോക്തൃ പാസ്‌വേഡ് നൽകുക"
 
 [addPassword.results]
 title = "എൻക്രിപ്റ്റ് ചെയ്ത PDFകൾ"
@@ -1627,6 +1617,7 @@ title = "റീസ്റ്റാർട്ട് ആവശ്യമാണ്"
 [admin.settings.security]
 authentication = "ഓതന്റിക്കേഷൻ"
 description = "ഓതന്റിക്കേഷൻ, ലോഗിൻ പെരുമാറ്റം, സുരക്ഷാ നയങ്ങൾ എന്നിവ ക്രമീകരിക്കുക."
+pdfPermissions = "PDF അനുമതികൾ"
 title = "സുരക്ഷ"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "CSRF സംരക്ഷണം അപ്രാപ്തമാക്ക�
 [admin.settings.security.enableLogin]
 description = "ആപ്ലിക്കേഷൻ ഉപയോഗിക്കുന്നതിന് മുൻപ് ഉപയോക്താക്കൾ ലോഗിൻ ചെയ്യണം"
 label = "ലോഗിൻ പ്രാപ്തമാക്കുക"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "നിയന്ത്രിത പ്രവർത്തനങ്ങൾക്ക് അനുമതികളുടെ പാസ്‌വേഡ് ആവശ്യമാണ്. ഇത് ഓഫ് ചെയ്താലും PDFs തുറക്കാൻ ആവശ്യമായ പാസ്‌വേഡുകൾ തുടർന്നും ആവശ്യമാണ്."
+label = "PDF അനുമതികൾ പാലിക്കുക"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "അഡ്വാൻസ്ഡ് സജ്ജീകരണങ്ങൾ"
@@ -1938,9 +1933,6 @@ wrapUp = "അഡ്മിൻ tour ഇതോടെ കഴിഞ്ഞു! Stirlin
 [adminUserSettings]
 admin = "അഡ്മിൻ"
 title = "ഉപയോക്തൃ നിയന്ത്രണ ക്രമീകരണങ്ങൾ"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "അറബിക്"
@@ -3173,12 +3165,14 @@ unknown = "അജ്ഞാതം"
 
 [changePermissions]
 desc = "ഡോക്യുമെന്റിന്റെ നിയന്ത്രണങ്ങളും അനുമതികളും മാറ്റുക."
+loading = "നിലവിലെ അനുമതികൾ ലോഡ് ചെയ്യുന്നു..."
 submit = "അനുമതികൾ മാറ്റുക"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,permissions മാറ്റുക,security settings,user rights"
 title = "അനുമതികൾ മാറ്റുക"
 
 [changePermissions.error]
 failed = "PDF അനുമതികൾ മാറ്റുന്നതിനിടെ പിശക് സംഭവിച്ചു."
+readFailed = "ഈ PDF-ന്റെ നിലവിലെ അനുമതികൾ വായിക്കാനായില്ല. മാറ്റങ്ങൾ പ്രയോഗിക്കുന്നതിന് മുമ്പ് നിയന്ത്രണങ്ങൾ മാനുവലായി സജ്ജമാക്കുക."
 
 [changePermissions.permissions.preventAssembly]
 label = "ഡോക്യുമെന്റിന്റെ അസംബ്ലി തടയുക"
@@ -3219,21 +3213,16 @@ text = "ഈ അനുമതികൾ മാറ്റാൻ പറ്റാത്
 [chat.actions]
 copy = "സന്ദേശം പകർത്തുക"
 
-[chat.emptyState]
-text = "നിങ്ങളുടെ documents-നെക്കുറിച്ച് ചോദ്യം ചോദിക്കുകയോ PDF tools സംബന്ധിച്ച സഹായം നേടുകയോ ചെയ്യുക."
-
-[chat.fab]
-close = "Chat അടയ്ക്കുക"
-open = "Stirling AI assistant തുറക്കുക"
+[chat.dock]
+collapse = "ചാറ്റ് ചുരുക്കുക"
+placeholder = "Stirling Agent-നോട് ചോദിക്കുക"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling ഏജന്റ് ഓപ്ഷനുകൾ"
-assistant = "AI അസിസ്റ്റന്റ്"
 clearChat = "ചാറ്റ് മായ്ക്കുക"
 
 [chat.input]
 disclaimer = "AI-ക്ക് തെറ്റുകൾ സംഭവിക്കാം. പങ്കിടുന്നതിന് മുമ്പ് output പരിശോധിക്കുക."
-placeholder = "താങ്കൾക്ക് എന്ത് ചെയ്യണമെന്നുണ്ട്?"
 send = "സന്ദേശം അയക്കുക"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "ഈ ഡോക്യുമെന്റുകൾ PDF ആക്ക�
 convertOne = "ഈ ഡോക്യുമെന്റ് PDF ആക്കി മാറ്റുക"
 heading = "തുടങ്ങാം"
 mergeMany = "ഈ {{count}} ഡോക്യുമെന്റുകൾ 1 ആയി സംയോജിപ്പിക്കുക"
-moreFiles = "+{{count}} കൂടി"
 openFromComputer = "കമ്പ്യൂട്ടറിൽ നിന്ന് തുറക്കുക"
-removeFile = "{{name}} നീക്കുക"
 splitOne = "ഈ ഡോക്യുമെന്റിനെ വിഭജിക്കുക"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "ആവശ്യപ്പെട്ട വിവരങ്ങൾ ക�
 processing = "പ്രോസസ്സ് ചെയ്യുന്നു ({{outcome}})..."
 unsupported_capability = "പിന്തുണയില്ലാത്ത ശേഷി: {{capability}}"
 usage_limit_reached = "നിങ്ങളുടെ usage limit എത്തി. തുടരണെങ്കിൽ plan options പരിശോധിക്കുക."
-
-[chat.toolsUsed]
-summary_one = "1 ടൂൾ പ്രവർത്തിപ്പിച്ചു"
-summary_other = "{{count}} ടൂളുകൾ പ്രവർത്തിപ്പിച്ചു"
-unknownTool = "അപരിചിത ടൂൾ"
 
 [classification.families]
 correspondence = "കത്തിടപാട്"
@@ -3649,6 +3631,7 @@ tooltip = "സ്ക്രീനിൽ നിന്ന് നിറം എടു
 hue = "ഹ്യൂ"
 saturation = "സാച്ചുറേഷനും തെളിച്ചവും"
 title = "നിറം തിരഞ്ഞെടുക്കുക"
+transparent = "സുതാര്യം"
 
 [common]
 actions = "പ്രവർത്തനങ്ങൾ"
@@ -3664,6 +3647,7 @@ continue = "തുടരുക"
 copied = "പകർത്തി!"
 copy = "പകർത്തുക"
 copyCode = "കോഡ് പകർത്തുക"
+copyFailed = "പകർത്തൽ പരാജയപ്പെട്ടു"
 dismiss = "ഒഴിവാക്കുക"
 done = "പൂർത്തിയായി"
 enterValue = "Value നൽകുക"
@@ -3847,6 +3831,12 @@ unavailable = "ImageMagick ഈ സെർവറിൽ ഇൻസ്റ്റാൾ
 filesize = "ഫയൽ വലിപ്പം"
 quality = "ഗുണനിലവാരം"
 title = "കംപ്രഷൻ രീതി"
+
+[compress.noReduction]
+multiple = "കംപ്രഷൻ വിജയകരമായി പ്രവർത്തിച്ചു, പക്ഷേ {{total}} ഫയലുകളിൽ {{count}} എണ്ണം ഇനി കൂടുതൽ കംപ്രസ് ചെയ്യാനാകില്ല."
+multipleAtLevel = "ഈ ലെവലിലെ കംപ്രഷൻ {{total}} ഫയലുകളിൽ {{count}} എണ്ണത്തിൽ മെച്ചപ്പെടുത്തൽ ഉണ്ടാക്കിയില്ല. ഉയർന്ന കംപ്രഷൻ ലെവൽ ശ്രമിക്കുക."
+single = "കംപ്രഷൻ വിജയകരമായി പ്രവർത്തിച്ചു, പക്ഷേ ഈ ഫയൽ ഇനി കൂടുതൽ കംപ്രസ് ചെയ്യാനാകില്ല."
+singleAtLevel = "ഈ ലെവലിലെ കംപ്രഷൻ ഈ ഫയലിൽ മെച്ചപ്പെടുത്തൽ ഉണ്ടാക്കിയില്ല. ഉയർന്ന കംപ്രഷൻ ലെവൽ ശ്രമിക്കുക."
 
 [compress.settings]
 desiredSize = "ആവശ്യമായ ഫയൽ വലുപ്പം"
@@ -4295,6 +4285,13 @@ precision = "തികച്ചും കൃത്യമായ സ്ഥാന�
 resize = "കോണുകളിലെയും അരികുകളിലെയും ഹാൻഡിലുകൾ ഡ്രാഗ് ചെയ്ത് വലിപ്പം മാറ്റുക"
 title = "PDFകൾ എങ്ങനെ ക്രോപ്പ് ചെയ്യാം"
 
+[damagedPdf]
+description = "ഈ PDF കേടായതിനാൽ തുറക്കാനാവില്ല."
+label = "കേടായത്"
+repair = "നന്നാക്കുക"
+repaired = "{{name}} നന്നാക്കി"
+repairFailed = "{{name}} നന്നാക്കാനായില്ല"
+
 [database]
 backupCreated = "ഡാറ്റാബേസ് ബാക്കപ്പ് വിജയകരം"
 fileName = "ഫയലിന്റെ പേര്"
@@ -4363,6 +4360,10 @@ title = "ഡിസ്കിൽ നിന്ന് അപ്ഡേറ്റ് �
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\" ഡിസ്കിൽ മാറ്റി. വീണ്ടും ലോഡ് ചെയ്യാൻ കുറച്ച് സമയം എടുക്കുംവിധം ഇത് വലുതാണ്, അതിനാൽ ഇവിടെയുള്ള പതിപ്പ് അതേപടി വിട്ടിരിക്കുന്നു."
 title = "ഫയൽ ഡിസ്കിൽ മാറ്റി"
+
+[desktopPrivacy]
+blocked = "ഡോക്യുമെന്റുകൾ ഈ ഉപകരണത്തിൽ തന്നെ തുടരണമെന്ന് നിങ്ങളുടെ അഡ്മിനിസ്ട്രേറ്റർ ആവശ്യപ്പെടുന്നു. ഈ ഫീച്ചർ ലഭ്യമല്ല."
+localFiles = "ലോകൽ ഫയലുകൾ"
 
 [desktopUpdate]
 downloading = "അപ്ഡേറ്റ് ഡൗൺലോഡ് ചെയ്യുന്നു..."
@@ -4491,22 +4492,80 @@ description = "വർക്ക്സ്പേസ് ലോഡ് ചെയ്യ
 title = "എഡിറ്റിങ്ങ് ആരംഭിക്കാൻ ടൂൾ തുറക്കുക"
 
 [encryptedPdfUnlock]
-description = "ഈ PDF പാസ്‌വേഡിലൂടെ സംരക്ഷിച്ചിരിക്കുന്നു. തുടരാൻ പാസ്‌വേഡ് നൽകുക."
-emptyResponse = "പാസ്‌വേഡ് നീക്കം ചെയ്തിട്ടും ഒരു ഫയൽ സൃഷ്ടിക്കപ്പെട്ടില്ല."
+actionIgnored = "{{action}} നിയന്ത്രണം അവഗണിച്ചു"
+actionUnlocked = "ഈ സെഷനായി {{action}} അൺലോക്ക് ചെയ്തു"
+advanced = "അഡ്വാൻസ്ഡ്"
+allowed = "അനുവദിച്ചു"
+annotations = "അനോട്ടേഷനുകൾ"
+authoriseAction = "{{action}} ഉപയോഗിക്കാൻ ഈ PDF-ന് അനുമതി ആവശ്യമാണ്."
+changeOwnerPassword = "അനുമതികളുടെ പാസ്‌വേഡ് മാറ്റുക"
+checkingPermissions = "PDF അനുമതികൾ പരിശോധിക്കുന്നു..."
+chooseOwnerPassword = "മറ്റൊരു പാസ്‌വേഡ് തിരഞ്ഞെടുക്കുക"
+continue = "തുടരുക"
+copyFailed = "പകർപ്പ് സൃഷ്ടിക്കാനായില്ല. നിങ്ങളുടെ PDF മാറ്റമില്ലാതെ തുടരുന്നു."
+copying = "ഉള്ളടക്കം പകർത്തുന്നു"
+editing = "എഡിറ്റിംഗ്"
+enterPassword = "പാസ്‌വേഡ് നൽകുക"
+ignoredByServer = "ഈ സെർവറിന്റെ ക്രമീകരണങ്ങൾ അനുമതികൾ അവഗണിക്കുന്നു. PDF-ന്റെ സംരക്ഷണം മാറ്റമില്ലാതെ തുടരുന്നു."
 incorrectPassword = "തെറ്റായ പാസ്‌വേഡ്"
+inspectionFailed = "ഈ PDF-ന്റെ അനുമതികൾ പരിശോധിക്കാനായില്ല. വീണ്ടും ശ്രമിക്കുക."
+lowQualityPrintUnsupported = "ഈ PDF കുറഞ്ഞ നിലവാരമുള്ള പ്രിന്റിംഗ് മാത്രം അനുവദിക്കുന്നു, ഇത് ഈ വ്യൂവർ പിന്തുണയ്ക്കുന്നില്ല."
+lowResolutionOnly = "കുറഞ്ഞ റെസല്യൂഷൻ മാത്രം"
+manageProtection = "സംരക്ഷണം നിയന്ത്രിക്കുക"
 missingFile = "തിരഞ്ഞെടുത്ത ഫയൽ ഇനി ലഭ്യമല്ല."
+mixedProtection = "ഈ PDFs-ന് വ്യത്യസ്ത സംരക്ഷണ ക്രമീകരണങ്ങളുണ്ട്. അവ ഓരോന്നായി പ്രോസസ് ചെയ്യുക."
+newOwnerPassword = "പുതിയ അനുമതികളുടെ പാസ്‌വേഡ്"
+notRequired = "ആവശ്യമില്ല"
+openingPassword = "തുറക്കാനുള്ള പാസ്‌വേഡ്"
+openPdf = "PDF തുറക്കുക"
+ownerPassword = "അനുമതികളുടെ പാസ്‌വേഡ്"
+ownerRequired = "തുടരാൻ അനുമതികളുടെ പാസ്‌വേഡ് നൽകുക."
+ownerTitle = "അനുമതികളുടെ പാസ്‌വേഡ് നൽകുക"
+passwordRetained = "മാറ്റമില്ലാതെ നിലനിർത്തി"
+passwordsMustDiffer = "രണ്ട് പാസ്‌വേഡുകളും വ്യത്യസ്തമായിരിക്കണം."
+permissionsUnlocked = "ഈ സെഷനായി അനുമതികൾ അൺലോക്ക് ചെയ്തു"
+prepareFailed = "ഈ സംരക്ഷിത PDF പ്രോസസ്സിംഗിനായി തയ്യാറാക്കാനായില്ല."
+printing = "പ്രിന്റിംഗ്"
+printRestricted = "പ്രിന്റിംഗ് നിയന്ത്രിച്ചിരിക്കുന്നു. സംരക്ഷണം നിയന്ത്രിക്കുക എന്നതിൽ അനുമതികൾ പരിശോധിക്കുക."
+protectedPdf = "സംരക്ഷിത PDF"
+protectionRetained = "സംരക്ഷണം നിലനിർത്തി"
+protectionSaved = "സംരക്ഷണം സംരക്ഷിച്ചു"
+removePasswordHelp = "ഏത് പാസ്‌വേഡുകൾ നീക്കണമെന്ന് തിരഞ്ഞെടുക്കാൻ പാസ്‌വേഡ് നീക്കംചെയ്യൽ തുറക്കുക."
+removeProtection = "സംരക്ഷണമില്ലാത്ത പകർപ്പ് സൃഷ്ടിക്കുക"
+replaceProtection = "ഈ ക്രമീകരണങ്ങൾ PDF-ന്റെ നിലവിലെ സംരക്ഷണം മാറ്റിസ്ഥാപിക്കും."
 required = "തുടരാൻ പാസ്‌വേഡ് നൽകുക."
-skip = "ഇപ്പോൾ ഒഴിവാക്കുക"
-successBody = "പാസ്‌വേഡ് വിജയകരമായി നീക്കി."
-successBodyWithName = "{{fileName}}-ൽ നിന്ന് പാസ്‌വേഡ് നീക്കി"
-successTitle = "പാസ്‌വേഡ് നീക്കി"
+requiredStatus = "ആവശ്യമാണ്"
+requiredToApply = "മാറ്റങ്ങൾ പ്രയോഗിക്കാൻ ആവശ്യമാണ്"
+restoreFailed = "PDF സംരക്ഷണം നിലനിർത്താനായില്ല. സംരക്ഷണമില്ലാത്ത ഫലം സംരക്ഷിച്ചിട്ടില്ല."
+restrictActions = "പ്രവർത്തനങ്ങൾ നിയന്ത്രിക്കുക"
+restricted = "നിയന്ത്രിതം"
+restrictedActions = "നിയന്ത്രിത പ്രവർത്തനങ്ങൾ"
+restrictedOperation = "ഈ പ്രവർത്തനത്തിന് അനുമതികളുടെ പാസ്‌വേഡ് ആവശ്യമാണ്."
+retainOwnerVerification = "തുറക്കാനുള്ള പാസ്‌വേഡ് നീക്കംചെയ്യുമ്പോൾ അനുമതികളുടെ പാസ്‌വേഡ് മാറ്റമില്ലാതെ നിലനിർത്താൻ അത് പരിശോധിക്കുക. ഇത് അത് നീക്കംചെയ്യില്ല."
+saveProtection = "സംരക്ഷണം സംരക്ഷിക്കുക"
+securityChangeFailed = "സംരക്ഷണം മാറ്റാനായില്ല. അനുമതികളുടെ പാസ്‌വേഡും പുതിയ സുരക്ഷാ ക്രമീകരണങ്ങളും പരിശോധിക്കുക."
+sessionDetails = "ഈ സെഷനായി തുറന്നിരിക്കുന്നു. PDF സംരക്ഷിതമായിത്തന്നെ തുടരുന്നു."
+sessionDetailsLabel = "സെഷൻ അൺലോക്കിംഗിനെക്കുറിച്ച്"
+sessionFailed = "ഈ PDF അൺലോക്ക് ചെയ്യാനായില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക."
+sessionSuccessBody = "സംരക്ഷണം നിലനിർത്തി."
+sessionSuccessBodyWithName = "{{fileName}}-ന് സംരക്ഷണം നിലനിർത്തി."
+sessionSuccessTitle = "PDF തുറന്നു"
+sessionTitle = "PDF തുറക്കുക"
+signedReadOnly = "ഈ സൈൻ ചെയ്ത PDF കാണാൻ കഴിയും, പക്ഷേ ഇവിടെ എഡിറ്റ് ചെയ്യാൻ കഴിയില്ല."
 title = "തുടരാൻ പാസ്‌വേഡ് നീക്കം ചെയ്യുക"
+toolUnavailable = "ഈ ടൂൾ എൻക്രിപ്റ്റ് ചെയ്ത PDFs പിന്തുണയ്ക്കുന്നില്ല. ആദ്യം പാസ്‌വേഡ് നീക്കുക."
+toolUnavailableDetails = "{{name}} ലഭ്യമല്ലാത്തതിന്റെ കാരണം"
 unlock = "അൺലോക്ക് ചെയ്ത് തുടരുക"
 unlockAll = "എല്ലാറ്റിനും ഉപയോഗിക്കുക ({{count}})"
 unlockAllPartialFail = "ഇവയ്ക്ക് തെറ്റായ പാസ്‌വേഡ്: {{names}}"
 unlockAllSuccess_one = "{{count}} file unlock ചെയ്തു."
 unlockAllSuccess_other = "{{count}} files unlock ചെയ്തു."
+unlockedForSession = "നിങ്ങളുടെ അനുമതികളുടെ പാസ്‌വേഡ് ഉപയോഗിച്ച് ഈ സെഷനായി അൺലോക്ക് ചെയ്തു."
 unlockPrompt = "തുടരാൻ PDF അൺലോക്ക് ചെയ്യുക"
+unprotectedCopyConsequence = "പകർപ്പിന് പാസ്‌വേഡുകളോ നിയന്ത്രണങ്ങളോ ഉണ്ടാകില്ല. ഒറിജിനൽ സംരക്ഷിതമായി തുടരും."
+unsupportedTool = "ഈ ടൂളിന് ഈ PDF-ന്റെ സംരക്ഷണം ഇപ്പോഴും നിലനിർത്താനാകില്ല."
+verifiedForSession = "ഈ സെഷനായി പരിശോധിച്ചു"
+verifyPermissions = "ഈ സെഷനായി അനുമതികൾ പരിശോധിക്കുക"
 viewerLocked = "ഈ PDF പാസ്‌വേഡ് സംരക്ഷിതമാണ്"
 viewerUnlock = "അൺലോക്ക് ചെയ്യുക"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "വ്യൂവറിൽ കാണുക"
 closeFile = "ഫയൽ അടയ്ക്കുക"
 
 [fileEditor]
-addFiles = "ഫയലുകൾ ചേർക്കുക"
 closedFile = "{{name}} അടച്ചു"
 couldNotSave = "{{name}} സംരക്ഷിക്കാനായില്ല"
-filesAdded_one = "{{count}} ഫയൽ ചേർത്തു"
-filesAdded_other = "{{count}} ഫയലുകൾ ചേർത്തു"
 filesReordered_one = "ഫയൽ പുനഃക്രമീകരിച്ചു"
 filesReordered_other = "{{count}} ഫയലുകൾ പുനഃക്രമീകരിച്ചു"
 loadedFromStorage_one = "സ്റ്റോറേജിൽ നിന്ന് {{count}} ഫയൽ ലോഡ് ചെയ്തു"
 loadedFromStorage_other = "സ്റ്റോറേജിൽ നിന്ന് {{count}} ഫയലുകൾ ലോഡ് ചെയ്തു"
 loadFromStorageFailed = "സ്റ്റോറേജിൽ നിന്ന് ചില ഫയലുകൾ ലോഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
 pinnedFile = "{{name}} പിൻ ചെയ്തു"
-processFilesFailed = "ഫയലുകൾ പ്രോസസ്സ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
 savedAndClosed = "{{name}} സംരക്ഷിച്ച് അടച്ചു"
 saveFailed = "സംരക്ഷണം പരാജയപ്പെട്ടു"
 unpinnedFile = "{{name}} പിൻ ഒഴിവാക്കി"
 unzipping = "{{name}} അൺസിപ്പ് ചെയ്യുന്നു"
+
+[fileEditor.addCard]
+dropHint = "അല്ലെങ്കിൽ ഫയലുകൾ എവിടെയും ഡ്രോപ്പ് ചെയ്യുക"
+fromComputer = "കമ്പ്യൂട്ടറിൽ നിന്ന് അപ്‌ലോഡ് ചെയ്യുക"
+moreOptions = "കൂടുതൽ അപ്‌ലോഡ് ഓപ്ഷനുകൾ"
 
 [fileEditor.unzip]
 error = "{{name}} അൺസിപ്പ് ചെയ്യുന്നതിൽ പിശക്"
@@ -4729,7 +4789,6 @@ dataLostBody = "ഈ browser ഈ file-ന്റെ contents നഷ്ടപ്പ
 dataLostTitle = "File data ലഭ്യമല്ല"
 downloadFailed = "ഡൗൺലോഡ് പരാജയപ്പെട്ടു"
 dropHint = "തുടങ്ങാൻ ഫയലുകൾ തുറക്കുക"
-dropToAdd = "ചേർക്കാൻ files drop ചെയ്യുക"
 duplicateFailed = "File duplicate ചെയ്യാനായില്ല"
 expand = "സൈഡ്ബാർ വിപുലീകരിക്കുക"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "ഫീൽഡുകൾ വീണ്ടും സ്കാൻ ച�
 rescanFormFields = "ഫോം ഫീൽഡുകൾ വീണ്ടും സ്കാൻ ചെയ്യുക"
 save = "സംരക്ഷിക്കുക"
 saveShortcut = "സേവ് ചെയ്യാൻ Ctrl+S"
+saving = "സംരക്ഷിക്കുന്നു..."
 selectOptionPlaceholder = "— തിരഞ്ഞെടുക്കുക —"
 skippedEdits_one = "1 മാറ്റം പ്രയോഗിക്കാൻ കഴിഞ്ഞില്ല:"
 skippedEdits_other = "{{count}} മാറ്റങ്ങൾ പ്രയോഗിക്കാൻ കഴിഞ്ഞില്ല:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "{{count}} എണ്ണം കൂടി പട്ടി�
 unsavedChanges = "സേവ് ചെയ്യാത്ത മാറ്റങ്ങൾ"
 
 [formFill.create]
-commit = "PDF-ലേക്ക് {{count}} ഫീൽഡ്(കൾ) ചേർക്കുക"
 empty = "ഇതുവരെ ഫീൽഡുകളൊന്നും വരച്ചിട്ടില്ല."
-failed = "ഫീൽഡുകൾ ചേർക്കുന്നതിൽ പരാജയപ്പെട്ടു"
 goToField = "ഈ ഫീൽഡിലേക്ക് പോകുക"
 hint = "ഒരു ഫീൽഡ് തരം തിരഞ്ഞെടുക്കുക, തുടർന്ന് അത് പേജിൽ വരയ്ക്കുക."
 placing = "പേജിൽ ഒരു {{type}} ഫീൽഡ് വരയ്ക്കുക. നിർത്താൻ Esc അമർത്തുക."
@@ -5334,7 +5392,6 @@ modify = "പരിഷ്കരിക്കുക"
 commit = "{{count}} മാറ്റം(ങ്ങൾ) സംരക്ഷിക്കുക"
 delete = "ഇല്ലാതാക്കുക"
 empty = "ഈ PDF-ൽ ഇതുവരെ ഫോം ഫീൽഡുകളൊന്നുമില്ല."
-failed = "മാറ്റങ്ങൾ സംരക്ഷിക്കുന്നതിൽ പരാജയപ്പെട്ടു"
 groupSizeHint = "ഓപ്ഷൻ വലുപ്പം ഉപയോഗിക്കുക"
 hint = "ഗുണങ്ങൾ എഡിറ്റ് ചെയ്യാൻ ഒരു ഫീൽഡ് തിരഞ്ഞെടുക്കുക, അത് പേജിൽ വലിച്ചിടുക, അല്ലെങ്കിൽ ഇല്ലാതാക്കുക."
 restore = "പുനഃസ്ഥാപിക്കുക"
@@ -5732,11 +5789,6 @@ title = "PDF-കൾ ഓവർലേ ചെയ്യുക"
 desc = "ഒരു PDF പ്രമാണത്തിന്റെ ഒന്നിലധികം പേജുകൾ ഒരൊറ്റ പേജിലേക്ക് ലയിപ്പിക്കുക"
 tags = "layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,പേജുകൾ layout ചെയ്യുക,tile,grid layout,multi-page layout,combine on page,handout"
 title = "മൾട്ടി-പേജ് ലേഔട്ട്"
-
-[home.pdfCommentAgent]
-desc = "നിങ്ങളുടെ പ്രോമ്പ്റ്റ് അടിസ്ഥാനമാക്കി സ്റ്റിക്കി-നോട്ട് കമന്റുകളോടെ PDF ആനോട്ടേറ്റ് ചെയ്യാൻ AIയോട് ചോദിക്കുക"
-tags = "AI,ഏജന്റ്,കമന്റ്,ആനോട്ടേറ്റ്,സ്റ്റിക്കി നോട്ട്,റിവ്യൂ,ഫീഡ്‌ബാക്ക്,കുറിപ്പുകൾ"
-title = "AI കമന്റുകൾ ചേർക്കുക"
 
 [home.pdfOrganiser]
 tags = "organize,rearrange,reorder,പേജുകൾ arrange ചെയ്യുക,sort,പേജുകൾ move ചെയ്യുക,പേജുകൾ delete ചെയ്യുക,പേജുകൾ remove ചെയ്യുക,page management,page organizer,resequence"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "നിങ്ങൾ ടീം അംഗമാകും, ഉട
 deselectAll = "ഒന്നുമില്ല"
 selectAll = "എല്ലാം തിരഞ്ഞെടുക്കുക"
 
-[pageEditor]
-dragPreviewAlt = "വലിച്ചിടുന്നു"
-filePosition = "സ്ഥാനം {{position}}"
-pageLabel = "പേജ് {{page}}"
-title = "പേജ് എഡിറ്റർ"
-
-[pageEditor.actions]
-deletePage = "പേജ് ഇല്ലാതാക്കുക"
-insertFileAfter = "ശേഷം ഫയൽ ചേർക്കുക"
-moveLeft = "ഇടത്തേക്ക് നീക്കുക"
-moveRight = "വലത്തേക്ക് നീക്കുക"
-rotateLeft = "ഇടത്തേക്ക് തിരിക്കുക"
-rotateRight = "വലത്തേക്ക് തിരിക്കുക"
-splitAfter = "ശേഷം വിഭജിക്കുക"
-
-[pageEditor.commands]
-addSplitAt = "സ്ഥാനം {{position}}-ൽ split ചേർക്കുക"
-addSplits_one = "{{count}} split ചേർക്കുക"
-addSplits_other = "{{count}} splits ചേർക്കുക"
-deletePages_one = "{{count}} പേജ് ഇല്ലാതാക്കുക"
-deletePages_other = "{{count}} പേജുകൾ ഇല്ലാതാക്കുക"
-insertFiles_one = "പേജ് {{page}}-ന് ശേഷം {{count}} ഫയൽ insert ചെയ്യുക"
-insertFiles_other = "പേജ് {{page}}-ന് ശേഷം {{count}} ഫയലുകൾ insert ചെയ്യുക"
-insertPageBreaks_one = "{{count}} page break insert ചെയ്യുക"
-insertPageBreaks_other = "{{count}} page breaks insert ചെയ്യുക"
-insertPageBreaksAll = "എല്ലാ പേജുകൾക്കും ശേഷം page breaks insert ചെയ്യുക"
-removeAllSplits = "എല്ലാ splits-ഉം നീക്കം ചെയ്യുക"
-removeSplitAt = "സ്ഥാനം {{position}}-ലെ split നീക്കം ചെയ്യുക"
-removeSplits_one = "{{count}} split നീക്കം ചെയ്യുക"
-removeSplits_other = "{{count}} splits നീക്കം ചെയ്യുക"
-reorderPages = "പേജുകൾ പുനഃക്രമീകരിക്കുക"
-rotatePageLeft = "പേജ് ഇടത്തേക്ക് rotate ചെയ്യുക"
-rotatePageRight = "പേജ് വലത്തേക്ക് rotate ചെയ്യുക"
-rotatePagesLeft_one = "{{count}} പേജ് ഇടത്തേക്ക് rotate ചെയ്യുക"
-rotatePagesLeft_other = "{{count}} പേജുകൾ ഇടത്തേക്ക് rotate ചെയ്യുക"
-rotatePagesRight_one = "{{count}} പേജ് വലത്തേക്ക് rotate ചെയ്യുക"
-rotatePagesRight_other = "{{count}} പേജുകൾ വലത്തേക്ക് rotate ചെയ്യുക"
-splitAllPages = "എല്ലാ പേജുകളും split ചെയ്യുക"
-toggleSplits_one = "{{count}} split position toggle ചെയ്യുക"
-toggleSplits_other = "{{count}} split positions toggle ചെയ്യുക"
-
-[pageEditor.emptyState]
-body = "പേജുകൾ എഡിറ്റ് ചെയ്യാൻ ഫയലുകൾ ചേർക്കുക"
-title = "PDF ഫയലുകൾ ലോഡ് ചെയ്തിട്ടില്ല"
-
-[pageEditor.fileDropdown]
-addFile = "ഫയൽ ചേർക്കുക"
-selectedCount = "{{selected}}/{{total}} ഫയലുകൾ തിരഞ്ഞെടുത്തു"
-untitled = "ശീർഷകമില്ലാത്തത്"
-
-[pageEditor.toolbar]
-delete = "തെരഞ്ഞെടുത്തത് ഇല്ലാതാക്കുക"
-redo = "റീഡോ"
-rotateLeft = "തെരഞ്ഞെടുത്തത് ഇടത്തോട്ട് തിരിക്കുക"
-rotateRight = "തെരഞ്ഞെടുത്തത് വലത്തോട്ട് തിരിക്കുക"
-undo = "അൺഡോ"
-
 [pageExtracter]
 title = "പേജുകൾ വേർതിരിച്ചെടുക്കുക"
 
@@ -6815,6 +6810,79 @@ title = "പേജ് പരിധികൾ"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → എല്ലാ പേജുകളും തിരഞ്ഞെടുക്കുന്നു"
 title = "പ്രത്യേക കീവേഡുകൾ"
+
+[pageTracks]
+blankPage = "ശൂന്യ പേജ്"
+deleteSelected = "തിരഞ്ഞെടുത്ത പേജുകൾ ഇല്ലാതാക്കുക"
+downloadAsOneFile = "ഒറ്റ ഫയലായി ഡൗൺലോഡ് ചെയ്യുക"
+downloadEachPage = "ഓരോ പേജും പ്രത്യേകം ഡൗൺലോഡ് ചെയ്യുക"
+downloadSelectedPages = "തിരഞ്ഞെടുത്ത പേജുകൾ ഡൗൺലോഡ് ചെയ്യുക"
+dragging_one = "{{count}} പേജ്"
+dragging_other = "{{count}} പേജുകൾ"
+duplicateSelected = "തിരഞ്ഞെടുത്ത പേജുകൾ ഡ്യൂപ്ലിക്കേറ്റ് ചെയ്യുക"
+edited = "എഡിറ്റ് ചെയ്തു"
+emptyTrack = "പേജുകളൊന്നും ബാക്കിയില്ല. പേജുകൾ ഇവിടെ വലിച്ചിടുക, അല്ലെങ്കിൽ ഈ ഫയൽ അടയ്ക്കാൻ സംരക്ഷിക്കുക."
+insertBlank = "ശൂന്യ പേജ് ചേർക്കുക"
+insertBlankAfterSelected = "തിരഞ്ഞെടുത്ത പേജുകൾക്ക് ശേഷം ശൂന്യ പേജുകൾ ചേർക്കുക"
+moveLeft = "ഇടത്തേക്ക് നീക്കുക"
+moveRight = "വലത്തേക്ക് നീക്കുക"
+nextPage = "അടുത്ത പേജ്"
+page = "പേജ് {{number}}"
+pageCount_one = "{{count}} പേജ്"
+pageCount_other = "{{count}} പേജുകൾ"
+pagePosition = "{{total}}-ൽ പേജ് {{number}}"
+prevPage = "മുമ്പത്തെ പേജ്"
+readingPages = "പേജുകൾ വായിക്കുന്നു..."
+redo = "വീണ്ടും ചെയ്യുക"
+rotateLeft = "ഇടത്തേക്ക് തിരിക്കുക"
+rotateRight = "വലത്തേക്ക് തിരിക്കുക"
+rotateSelectedLeft = "തിരഞ്ഞെടുത്ത പേജുകൾ ഇടത്തേക്ക് തിരിക്കുക"
+rotateSelectedRight = "തിരഞ്ഞെടുത്ത പേജുകൾ വലത്തേക്ക് തിരിക്കുക"
+saveAsOneFile = "ഒറ്റ ഫയലായി സംരക്ഷിക്കുക"
+saveChanges = "എല്ലാ ഫയലുകളിലേക്കും മാറ്റങ്ങൾ സംരക്ഷിക്കുക"
+saveEachPage = "ഓരോ പേജും പ്രത്യേകം സംരക്ഷിക്കുക"
+saveSelectedPages = "തിരഞ്ഞെടുത്ത പേജുകൾ സംരക്ഷിക്കുക"
+saving = "സംരക്ഷിക്കുന്നു..."
+savingProgress = "{{total}}-ൽ {{done}} സംരക്ഷിക്കുന്നു"
+selectPage = "പേജ് {{number}} തിരഞ്ഞെടുക്കുക"
+splitAfterSelected = "തിരഞ്ഞെടുത്ത പേജുകൾക്ക് ശേഷം വിഭജിക്കുക"
+splitHere = "ഇവിടെ വിഭജിക്കുക"
+undo = "പഴയപടിയാക്കുക"
+viewError = "ഈ പേജ് റെൻഡർ ചെയ്യാനായില്ല"
+viewPage = "പേജ് കാണുക"
+zoomIn = "സൂം ഇൻ"
+zoomOut = "സൂം ഔട്ട്"
+
+[pageTracks.close]
+message = "എല്ലാ ഫയലുകളും അടയ്ക്കണമെന്ന് ഉറപ്പാണോ?"
+unsaved = "ഈ ഫയലുകളിൽ സംരക്ഷിക്കാത്ത മാറ്റങ്ങളുണ്ട്."
+
+[pageTracks.delete]
+page = "പേജ് ഇല്ലാതാക്കുക"
+
+[pageTracks.duplicate]
+page = "പേജ് ഡ്യൂപ്ലിക്കേറ്റ് ചെയ്യുക"
+
+[pageTracks.empty]
+body = "PDFs ചേർത്ത് അവയെ എഡിറ്റ് ചെയ്യാവുന്ന പേജ് ട്രാക്കുകളായി വികസിപ്പിക്കുക"
+title = "PDF ഫയലുകളൊന്നും ലോഡ് ചെയ്തിട്ടില്ല"
+
+[pageTracks.exportFailed]
+body = "എഡിറ്റ് ചെയ്ത ഫയലുകൾ തയ്യാറാക്കാനായില്ല. വീണ്ടും ശ്രമിക്കുക."
+title = "ഡൗൺലോഡ് ചെയ്യാനായില്ല"
+
+[pageTracks.saveFailed]
+body = "നിങ്ങളുടെ എഡിറ്റുകൾ നഷ്ടപ്പെട്ടിട്ടില്ല. വീണ്ടും സംരക്ഷിക്കാൻ ശ്രമിക്കുക."
+title = "മാറ്റങ്ങൾ സംരക്ഷിക്കാനായില്ല"
+
+[pageTracks.track]
+close = "ഫയൽ അടയ്ക്കുക"
+collapse = "ചുരുക്കുക"
+expand = "വികസിപ്പിക്കുക"
+rename = "ഫയൽ പേരുമാറ്റുക"
+
+[pageTracks.wrap]
+label = "പേജുകൾ റാപ്പ് ചെയ്യുക"
 
 [payg.activity]
 docs = "ഡോക്യുമെന്റുകൾ"
@@ -7144,24 +7212,6 @@ totalSeats_other = "ആകെ ({{count}} സീറ്റുകൾ)"
 [payment.upgradeTeam]
 title = "Teamലേക്ക് അപ്‌ഗ്രേഡ് ചെയ്യുക"
 
-[pdfCommentAgent]
-submit = "കമന്റുകൾ സൃഷ്ടിക്കുക"
-
-[pdfCommentAgent.error]
-emptyPrompt = "AI എന്തിനെക്കുറിച്ച് കമന്റ് ചെയ്യണമെന്ന് ദയവായി വിവരിക്കുക"
-failed = "കമന്റുകൾ സൃഷ്ടിക്കൽ പരാജയപ്പെട്ടു"
-tooLong = "പ്രോമ്പ്റ്റ് വളരെ നീളമാണ് (പരമാവധി {{max}} അക്ഷരങ്ങൾ)"
-
-[pdfCommentAgent.prompt]
-label = "AI എന്തിനെക്കുറിച്ച് കമന്റ് ചെയ്യണം?"
-placeholder = "ഉദാ. ദ്വയാർഥമുള്ള തീയതികളെ ഫ്ലാഗ് ചെയ്ത് വ്യക്തതകൾ നിർദ്ദേശിക്കുക"
-
-[pdfCommentAgent.results]
-title = "കമന്റ് ചെയ്ത PDF"
-
-[pdfCommentAgent.settings]
-title = "കമന്റ് നിർദേശങ്ങൾ"
-
 [pdfOrganiser]
 placeholder = "(ഉദാ. 1,3,2 അല്ലെങ്കിൽ 4-8,2,10-12 അല്ലെങ്കിൽ 2n-1)"
 tags = "ഡ്യൂപ്ലെക്സ്,ഇരട്ട,ഒറ്റ,അടുക്കുക,നീക്കുക"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "ഇവിടെ edit ചെയ്യാൻ page-ലുള
 ocrDocumentChanged = "OCR പ്രവർത്തിക്കുമ്പോൾ ഡോക്യുമെന്റ് മാറി. നിങ്ങളുടെ ഏറ്റവും പുതിയ മാറ്റങ്ങൾ ഉൾപ്പെടുത്താൻ OCR വീണ്ടും പ്രവർത്തിപ്പിക്കുക."
 ocrInvalidResult = "OCR ഒരു PDF തിരികെ നൽകിയില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക."
 ocrNoLanguages = "സെർവറിൽ OCR ഭാഷകളൊന്നും ഇൻസ്റ്റാൾ ചെയ്തിട്ടില്ല."
+ocrProtected = "OCR-ന് ഈ PDF-ന്റെ സംരക്ഷണം ഇപ്പോഴും നിലനിർത്താനാകില്ല. സംരക്ഷിത ഒറിജിനൽ കാണുന്നതിനായി ലഭ്യമായി തുടരും."
 ocrRunning = "ടെക്സ്റ്റ് തിരിച്ചറിയുന്നു..."
 ocrUnavailable = "ഈ സെർവറിൽ OCR ലഭ്യമല്ല."
 oneImage = "ചിത്രം"
@@ -7389,13 +7440,8 @@ pageNumber = "പേജ് {{page}}"
 renderFailed = "പേജ് റെൻഡർ ചെയ്യാൻ പരാജയപ്പെട്ടു"
 
 [pdfTextEditor.password]
-cancel = "റദ്ദാക്കുക"
 incorrect = "തെറ്റായ പാസ്‌വേഡ് - വീണ്ടും ശ്രമിക്കുക."
 label = "പാസ്‌വേഡ്"
-open = "തുറക്കുക"
-protected = "ഈ PDF പാസ്‌വേഡ് ഉപയോഗിച്ച് സംരക്ഷിച്ചിരിക്കുന്നു."
-protectedNamed = "\"{{fileName}}\" പാസ്‌വേഡ് ഉപയോഗിച്ച് സംരക്ഷിച്ചിരിക്കുന്നു."
-title = "പാസ്‌വേഡ് ആവശ്യമാണ്"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}}ൽ alignment guide - നീക്കംചെയ്യാൻ rulerലേക്ക് വലിച്ചിടുക"
@@ -7994,6 +8040,7 @@ before = "സജ്ജമാക്കുക"
 title = "Stirling കണക്ഷൻ കോൺഫിഗർ ചെയ്തിട്ടില്ല"
 
 [portal.accountLink.notice]
+loadFailed = "അക്കൗണ്ട് ലിങ്കിംഗ് ഡയലോഗ് ലോഡ് ചെയ്യാനായില്ല."
 openFailed = "നിങ്ങളുടെ ബ്രൗസർ തുറക്കാനായില്ല. അക്കൗണ്ട് ലിങ്ക് ചെയ്യാൻ നിങ്ങളുടെ ബന്ധിപ്പിച്ച സർവറിൽ Usage & billing തുറക്കുക."
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "Monthly spend limit {{amount}}/mo. limit-ൽ processing pause ചെയ
 limitNoCap = "Spend limit ഇല്ല. Processing pause ചെയ്യില്ല. Invoices monthly post ചെയ്യും."
 
 [portal.billing.chip]
-invoices = "ഇൻവോയിസുകൾ"
-nav = "വിഭാഗങ്ങൾ"
-payment = "പേയ്മെന്റ്"
 plan = "പ്ലാൻ"
 procurement = "പ്രൊക്യൂർമെന്റ്"
 usage = "ഉപയോഗം"
@@ -8178,9 +8222,22 @@ pdfs = "പ്രോസസ് ചെയ്ത PDFs"
 users = "ഉപയോക്താക്കൾ"
 
 [portal.billing.enterprise]
+active = "{{date}} വരെ കരാർ സജീവമാണ്"
 cta = "Enterprise quote നേടുക"
+included = "Enterprise-ൽ ഉൾപ്പെടുത്തിയിരിക്കുന്നു"
+payment_pending = "പേയ്മെന്റ് തീർപ്പാക്കാനുണ്ട് · {{date}} വരെ ആക്‌സസ്"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "കരാറിലെ അളവിനേക്കാൾ {{count}} PDF അധികം"
+pdfsOver_other = "കരാറിലെ അളവിനേക്കാൾ {{count}} PDFs അധികം"
+pdfsUsed_one = "{{count}} PDF പ്രോസസ് ചെയ്തു"
+pdfsUsed_other = "{{count}} PDFs പ്രോസസ്സ് ചെയ്തു"
+period = "കരാർ കാലയളവ്: {{start}} – {{end}}"
 sub = "Air-gapped deployment, SCIM, data residency, uptime SLAs, കൂടാതെ പൊരുത്തപ്പെടുന്ന ഒരു കരാർ."
 title = "നിയന്ത്രിത അന്തരീക്ഷത്തിൽ Stirling പ്രവർത്തിപ്പിക്കുന്നുണ്ടോ?"
+trial = "{{days}} ദിവസത്തെ trial · അവസാനിക്കുന്നത് {{date}}"
+usersAgreed = "{{used}} / {{agreed}} കരാറിലുള്ള ഉപയോക്താക്കൾ"
+usersOver_one = "കരാറിലുള്ള അളവിനേക്കാൾ {{count}} ഉപയോക്താവ് അധികം"
+usersOver_other = "കരാറിലുള്ള അളവിനേക്കാൾ {{count}} ഉപയോക്താക്കൾ അധികം"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Checkout ആരംഭിക്കാനായില്ല"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "നിങ്ങളുടെ distribution-നുള്ള native builds."
-guideBtn = "Linux ഇൻസ്റ്റാൾ ഓപ്ഷനുകൾ കാണുക"
+downloadAppImage = "AppImage"
+downloadDeb = "Download .deb (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "സാധാരണ distros-നായി AppImage, .deb, .rpm builds ലഭ്യമാണ്."
 tagline = "നിങ്ങളുടെ distro-യ്ക്കുള്ള native desktop app"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "Redact,മറയ്ക്കുക,black out,കറുപ്പ്,marke
 title = "Redact"
 
 [redact.auto]
+caseSensitiveLabel = "കേസ് സെൻസിറ്റീവ് മാച്ചിംഗ്"
 colorLabel = "ബോക്സ് നിറം"
 convertPDFToImageLabel = "PDF-നെ PDF-Image ആയി മാറ്റുക"
 customPaddingLabel = "കസ്റ്റം അധിക പാഡിംഗ്"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "ഒരുമിച്ചു ഒന്നിലധി
 manual = "മാനുവൽ"
 mode = "മോഡ്"
 title = "റിഡാക്ഷൻ രീതി"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "അതേ കേസിലുള്ള ടെക്സ്റ്റ് മാത്രം പൊരുത്തപ്പെടുത്തുക. പ്രവർത്തനക്ഷമമാക്കിയാൽ 'Secret' എന്നത് 'SECRET' എന്നതുമായി പൊരുത്തപ്പെടില്ല, കൂടാതെ regex-ലെ [A-Z] വലിയക്ഷരങ്ങളുമായി മാത്രം പൊരുത്തപ്പെടും."
+title = "കേസ് സെൻസിറ്റീവ് മാച്ചിംഗ്"
 
 [redact.tooltip.advanced.color]
 text = "റിഡാക്ഷൻ ബോക്സുകളുടെ രൂപഭാവം ഇഷ്ടാനുസൃതമാക്കുക. ബ്ലാക്ക് സാധാരണമാണ്, പക്ഷേ നിങ്ങൾക്ക് ഏത് നിറവും തിരഞ്ഞെടുക്കാം. പാഡിംഗ് കണ്ടെത്തിയ ടെക്സ്റ്റിന്റെ ചുറ്റും അധിക സ്ഥലം നൽകും."
@@ -11396,7 +11460,12 @@ text = "നിങ്ങളുടെ PDF-ൽ നിന്ന് ഏത് പേ�
 title = "പേജ് തിരഞ്ഞെടുക്കൽ"
 
 [removePassword]
-desc = "നിങ്ങളുടെ PDF ഡോക്യുമെന്റിൽ നിന്ന് പാസ്‌വേഡ് സംരക്ഷണം നീക്കംചെയ്യുക."
+appliesTo = "{{total}} PDFs-ൽ {{count}} എണ്ണത്തിൽ സജ്ജമാക്കി"
+keepBlank = "ആ പാസ്‌വേഡ് നിലനിർത്താൻ ഒരു ഫീൽഡ് ശൂന്യമായി വിടുക."
+notSet = "സജ്ജമാക്കിയിട്ടില്ല"
+openWithReaderFirst = "അനുമതി പാസ്‌വേഡ് മാത്രം നീക്കം ചെയ്യുന്നതിന് മുമ്പ്, ഈ PDF അതിന്റെ തുറക്കൽ പാസ്‌വേഡ് ഉപയോഗിച്ച് വീണ്ടും തുറക്കുക."
+selectiveHelp = "നീക്കം ചെയ്യാൻ ആഗ്രഹിക്കുന്ന ഓരോ സംരക്ഷണത്തിനുമുള്ള നിലവിലെ പാസ്‌വേഡ് നൽകുക. ശൂന്യമായ ഫീൽഡ് ആ പാസ്‌വേഡ് നിലനിർത്തും. അനുമതി പാസ്‌വേഡ് നീക്കം ചെയ്യുന്നത് പ്രവർത്തന നിയന്ത്രണങ്ങളും നീക്കം ചെയ്യും."
+selectPasswords = "നീക്കം ചെയ്യേണ്ട പാസ്‌വേഡുകൾ"
 submit = "Password നീക്കംചെയ്യുക"
 tags = "സുരക്ഷിതം,ഡീക്രിപ്റ്റ്,സുരക്ഷ,പാസ്‌വേഡ് ഇല്ലാതാക്കുക,പാസ്‌വേഡ് നീക്കം ചെയ്യുക"
 title = "പാസ്‌വേഡ് നീക്കം ചെയ്യുക"
@@ -11407,13 +11476,9 @@ failed = "PDF-യിൽ നിന്ന് പാസ്‌വേഡ് നീക
 [removePassword.password]
 label = "നിലവിലെ പാസ്‌വേഡ്"
 placeholder = "നിലവിലെ പാസ്‌വേഡ് നൽകുക"
-stepTitle = "പാസ്‌വേഡ് നീക്കംചെയ്യുക"
 
 [removePassword.results]
 title = "ഡീക്രിപ്റ്റ് ചെയ്ത PDFകൾ"
-
-[removePassword.tooltip]
-description = "പാസ്‌വേഡ് സംരക്ഷണം നീക്കം ചെയ്യാൻ ആ PDF എൻക്രിപ്റ്റ് ചെയ്യാൻ ഉപയോഗിച്ച പാസ്‌വേഡ് ആവശ്യമാണ്. ഇത് ഡോക്യുമെന്റ് ഡിക്രിപ്റ്റ് ചെയ്യും; ഇനി പാസ്‌വേഡില്ലാതെ ആക്‌സസ് ചെയ്യാൻ കഴിയും."
 
 [reorganizePages]
 submit = "പേജുകൾ പുനഃസംഘടിപ്പിക്കുക"
@@ -11543,6 +11608,64 @@ m = "മീറ്റർ (m)"
 mi = "മൈൽ (mi)"
 mm = "മില്ലിമീറ്റർ (mm)"
 yd = "യാർഡ് (yd)"
+
+[runLocation]
+back = "പിന്നിലേക്ക്"
+continue = "തുടരുക"
+subtitle = "ഇത് എവിടെ പ്രവർത്തിക്കണമെന്ന് തിരഞ്ഞെടുക്കുക."
+title = "Stirling എവിടെ പ്രവർത്തിപ്പിക്കണം?"
+
+[runLocation.choice.browser]
+description = "വെബ് ആപ്പ്."
+title = "നിങ്ങളുടെ browser-ൽ"
+
+[runLocation.choice.computer]
+description = "ഡെസ്ക്ടോപ്പ് ആപ്പ്."
+title = "നിങ്ങളുടെ കമ്പ്യൂട്ടറിൽ"
+
+[runLocation.choice.server]
+description = "Self-hosted, ഒരു ടീമിനായി."
+title = "നിങ്ങളുടെ server-ൽ"
+
+[runLocation.desktop]
+computerLabel = "നിങ്ങളുടെ കമ്പ്യൂട്ടർ"
+download = "{{platform}}-നായി Download ചെയ്യുക"
+downloadAgain = "വീണ്ടും Download ചെയ്യുക"
+guide = "{{platform}} install guide തുറക്കുക"
+startedSubtitle = "നിങ്ങളുടെ Downloads ഫോൾഡർ പരിശോധിക്കുക, തുടർന്ന് installer തുറക്കുക."
+startedTitle = "നിങ്ങളുടെ download ആരംഭിച്ചു"
+subtitle = "ഇത് download ചെയ്ത് തുറക്കുക."
+title = "ഡെസ്ക്ടോപ്പ് ആപ്പ് നേടുക"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (install guide)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "പകർത്തി"
+copy = "കമാൻഡ് പകർത്തുക"
+copyCompose = "compose ഫയൽ പകർത്തുക"
+guide = "{{method}} install guide"
+methodLabel = "ഇതുപയോഗിച്ച് പ്രവർത്തിപ്പിക്കുക"
+note = "തുടർന്ന് സജ്ജീകരണം പൂർത്തിയാക്കാൻ <url/> തുറക്കുക."
+subtitle = "ഇത് നിങ്ങളുടെ server-ൽ പ്രവർത്തിപ്പിക്കുക, തുടർന്ന് browser-ൽ തുറക്കുക."
+title = "നിങ്ങളുടെ server സജ്ജീകരിക്കുക"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "PDF ഫയലുകളിൽ നിന്ന് സാധ്യതയുള്ള ഹാനികരമായ ഘടകങ്ങൾ നീക്കംചെയ്യുക."
@@ -12054,6 +12177,7 @@ title = "വർക്ക്‌സ്പേസ്"
 loginIncomplete = "ലോഗിൻ പൂർത്തിയാക്കാൻ പരാജയപ്പെട്ടു"
 noSaasServer = "SaaS സെർവർ ക്രമീകരിച്ചിട്ടില്ല"
 noServer = "സെർവർ ക്രമീകരിച്ചിട്ടില്ല"
+policyUnavailable = "നിങ്ങളുടെ സ്ഥാപനത്തിന്റെ sign-in ക്രമീകരണങ്ങൾ ലോഡ് ചെയ്യാൻ കഴിഞ്ഞില്ല."
 saasLoginFailed = "SaaS ലോഗിൻ പരാജയപ്പെട്ടു"
 saasLoginIncomplete = "SaaS ലോഗിൻ പൂർത്തിയാക്കാൻ പരാജയപ്പെട്ടു"
 selfHostedLoginFailed = "സ്വയം-ഹോസ്റ്റ് ചെയ്ത ലോഗിൻ പരാജയപ്പെട്ടു"
@@ -13563,7 +13687,9 @@ validUntrusted = "സാധുവാണ്, സൈനർ സ്ഥിരീക�
 
 [viewer]
 cannotPreviewFile = "ഫയൽ പ്രിവ്യൂ ചെയ്യാൻ കഴിയില്ല"
+copyRestricted = "ഈ PDF-ന്റെ അനുമതികൾ പ്രകാരം പകർത്തൽ പ്രവർത്തനരഹിതമാക്കിയിരിക്കുന്നു."
 copyText = "പകർത്തുക"
+coverPageView = "കവർ പേജ് പ്രത്യേകം കാണിക്കുക"
 disableColorFilter = "നിറ ഫിൽട്ടർ പ്രവർത്തനരഹിതമാക്കുക"
 documentUpdated = "പ്രമാണം അപ്‌ഡേറ്റ് ചെയ്തു"
 dualPageView = "രണ്ടുപേജ് ദൃശ്യം"
@@ -13580,6 +13706,7 @@ noPdfProvided = "PDF നൽകിയിട്ടില്ല"
 onlyPdfSupported = "ഈ file format preview-ക്കായി പിന്തുണയ്ക്കുന്നില്ല."
 pageNavigation = "പേജ് നാവിഗേഷൻ"
 previousPage = "മുൻപത്തെ പേജ്"
+readAloudFromHere = "ഇവിടെ നിന്ന് ശബ്ദമായി വായിക്കുക"
 saveChangesErrorBody = "ഡോക്യുമെന്റ് സംരക്ഷിക്കാൻ കഴിഞ്ഞില്ല. വീണ്ടും ശ്രമിക്കുക."
 saveChangesErrorTitle = "മാറ്റങ്ങൾ സംരക്ഷിക്കാൻ കഴിഞ്ഞില്ല"
 singlePageView = "ഒറ്റ പേജ് ദൃശ്യം"
@@ -13640,6 +13767,7 @@ closeSidebar = "അഭിപ്രായങ്ങളുടെ സൈഡ്‌ബ
 deleteAnnotationAndComment = "അനോട്ടേഷനും കമന്റും ഇല്ലാതാക്കുക"
 deleteDescription = "ഈ അനോട്ടേഷനോടൊപ്പം ഒരു കമന്റ് ചേർത്തിട്ടുണ്ട്. അനോട്ടേഷൻ നിലനിർത്തിക്കൊണ്ട് സൈഡ്‌ബാറിൽ നിന്ന് കമന്റ് മാത്രം നീക്കാനോ, അല്ലെങ്കിൽ എല്ലാം ഇല്ലാതാക്കാനോ കഴിയും."
 deleteTitle = "കമന്റുകളിൽ നിന്ന് അനോട്ടേഷൻ നീക്കാമോ?"
+exportCsv = "CSV ആയി Export ചെയ്യുക"
 goToLink = "ലിങ്കിലേക്ക് പോവുക"
 hint = "Comment, Insert Text, അല്ലെങ്കിൽ Replace Text ഉപകരണങ്ങൾ ഉപയോഗിച്ച് കമന്റുകൾ ചേർക്കുക. അവ ഓരോ പേജിനും ഇവിടെ പ്രത്യക്ഷപ്പെടും."
 locateAnnotation = "ഡോക്യുമെന്റിൽ കണ്ടെത്തുക"
@@ -13658,7 +13786,16 @@ typeInsertText = "ടെക്സ്റ്റ് ചേർക്കുക"
 typeReplaceText = "ടെക്സ്റ്റ് മാറ്റിസ്ഥാപിക്കുക"
 viewComment = "കമന്റ് കാണുക"
 
+[viewer.comments.csv]
+author = "രചയിതാവ്"
+comment = "അഭിപ്രായം"
+inReplyTo = "ഇതിന് മറുപടിയായി"
+modifiedUtc = "അവസാനം മാറ്റം വരുത്തിയത് (UTC)"
+page = "പേജ്"
+thread = "Thread"
+
 [viewer.error]
+loadError = "PDF ലോഡ് ചെയ്യാനായില്ല"
 noFileProvided = "പിശക്: Viewer-ിന് ഫയൽ നൽകിയിട്ടില്ല"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "വാട്ടർമാർക്ക് ടെക്സ്റ്റ്"
 image = "ഇമേജ്"
 text = "ടെക്സ്റ്റ്"
 
+[workbench]
+dropFailedSingle = "നിങ്ങളുടെ ഫയൽ ചേർക്കാനായില്ല"
+dropFailedSome = "നിങ്ങളുടെ ഫയലുകളിൽ {{failed}} എണ്ണം ചേർക്കാനായില്ല"
+dropOverlay = "ഫയലുകൾ workbench-ലേക്ക് ചേർക്കാൻ അവ drop ചെയ്യുക"
+
 [workbench.sessionRestore]
 none = "നിങ്ങളുടെ മുൻ ഫയലുകൾ ഈ device-ൽ ഇനി സംഭരിച്ചിട്ടില്ല."
 partial = "{{total}} ഫയലുകളിൽ {{restored}} പുനഃസ്ഥാപിച്ചു. ബാക്കിയുള്ളവ ഈ device-ൽ ഇനി സംഭരിച്ചിട്ടില്ല."
@@ -13915,16 +14057,14 @@ annotations = "അനോട്ടേഷനുകൾ"
 applyRedactionsFirst = "ആദ്യം റെഡാക്ഷനുകൾ പ്രയോഗിക്കുക"
 closeAll = "എല്ലാ ഫയലുകളും അടയ്ക്കുക"
 closePdf = "PDF അടയ്ക്കുക"
-deleteSelected = "തിരഞ്ഞെടുത്ത പേജുകൾ ഇല്ലാതാക്കുക"
 deselectAll = "എല്ലാം തിരഞ്ഞെടുക്കൽ ഒഴിവാക്കുക"
 downloadAll = "എല്ലാം ഡൗൺലോഡ് ചെയ്യുക"
+exitAnnotations = "അനോട്ടേഷൻ മോഡിൽ നിന്ന് പുറത്തുകടക്കുക"
 exitRedaction = "റെഡാക്ഷൻ മോഡിൽ നിന്ന് പുറത്തിറങ്ങുക"
-exportAll = "PDF എക്സ്പോർട്ട് ചെയ്യുക"
-exportSelected = "തിരഞ്ഞെടുത്ത പേജുകൾ എക്സ്പോർട്ട് ചെയ്യുക"
 formFill = "ഫോം എഡിറ്റർ"
 hideToolbar = "toolbar മറയ്ക്കുക"
 moreActions = "കൂടുതൽ പ്രവർത്തനങ്ങൾ"
-multiTool = "മൾട്ടി-ടൂൾ"
+pageEditor = "പേജ് എഡിറ്റർ"
 panMode = "പാൻ മോഡ്"
 print = "PDF അച്ചടിക്കുക"
 readAloud = "വായിച്ച് കേൾപ്പിക്കുക"
@@ -13938,7 +14078,6 @@ rulerSettings = "സ്കെയിൽ ക്രമീകരണങ്ങൾ"
 save = "സേവ്"
 saveAll = "എല്ലാം സേവ് ചെയ്യുക"
 saveAs = "പുതിയ പേരിൽ സേവ് ചെയ്യുക"
-saveChanges = "മാറ്റങ്ങൾ സേവ് ചെയ്യുക"
 search = "PDF തിരയുക"
 selectAll = "എല്ലാം തിരഞ്ഞെടുക്കുക"
 selectByNumber = "പേജ് നമ്പർ പ്രകാരം തിരഞ്ഞെടുക്കുക"

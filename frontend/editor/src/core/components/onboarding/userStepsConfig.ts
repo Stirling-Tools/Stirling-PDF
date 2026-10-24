@@ -1,6 +1,8 @@
 import type { StepType } from "@reactour/tour";
 import type { TFunction } from "i18next";
 import {
+  besideCentered,
+  insideBottom,
   revealPickerTool,
   waitForElement,
   waitForHighlightable,
@@ -69,7 +71,7 @@ export function createUserStepsConfig({
         "onboarding.allTools",
         "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools.",
       ),
-      position: "center",
+      position: besideCentered,
       padding: 0,
       action: () => {
         saveWorkbenchState();
@@ -83,7 +85,6 @@ export function createUserStepsConfig({
         "onboarding.selectCropTool",
         "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
       ),
-      position: "right",
       padding: 0,
       action: async () => {
         await revealPickerTool('[data-tour="tool-button-crop"]');
@@ -96,7 +97,7 @@ export function createUserStepsConfig({
         "onboarding.toolInterface",
         "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
       ),
-      position: "center",
+      position: besideCentered,
       padding: 0,
     },
     [TourStep.FILES_BUTTON]: {
@@ -106,20 +107,24 @@ export function createUserStepsConfig({
         "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on.",
       ),
       position: "right",
-      padding: 10,
+      padding: 4,
       actionAfter: () => openFilesModal(),
     },
     [TourStep.FILE_SOURCES]: {
-      selector: '[data-tour="files-modal"]',
+      selector: '[data-tour="file-sources"]',
+      highlightedSelectors: [
+        '[data-tour="file-sources"]',
+        '[data-tour="files-modal"] .files-page-view-tabs',
+      ],
       content: t(
         "onboarding.fileSources",
         "You can upload new files or access recent files from here. For the tour, we'll just use a sample file.",
       ),
-      position: "right",
-      padding: 0,
+      position: "bottom",
+      padding: 6,
       action: async () => {
-        await waitForElement('[data-tour="files-modal"]', 5000);
-        await waitForHighlightable('[data-tour="files-modal"]', 5000);
+        await waitForElement('[data-tour="file-sources"]', 5000);
+        await waitForHighlightable('[data-tour="file-sources"]', 5000);
       },
       actionAfter: () => {
         loadSampleFile();
@@ -132,7 +137,7 @@ export function createUserStepsConfig({
         "onboarding.workbench",
         "This is the <strong>Workbench</strong> - the main area where you view and edit your PDFs.",
       ),
-      position: "center",
+      position: insideBottom,
       padding: 0,
     },
     [TourStep.ACTIVE_FILES]: {
@@ -141,7 +146,7 @@ export function createUserStepsConfig({
         "onboarding.activeFiles",
         "The <strong>Active Files</strong> view shows all of the PDFs you have loaded into the tool.",
       ),
-      position: "center",
+      position: insideBottom,
       padding: 0,
       action: () => switchToActiveFiles(),
     },
@@ -151,8 +156,7 @@ export function createUserStepsConfig({
         "onboarding.fileCheckbox",
         "Files on the workbench are selected for processing. You can select multiple files for batch operations using the left files sidebar.",
       ),
-      position: "top",
-      padding: 10,
+      padding: 6,
     },
     [TourStep.CROP_SETTINGS]: {
       selector: '[data-tour="crop-settings"]',
@@ -160,8 +164,8 @@ export function createUserStepsConfig({
         "onboarding.cropSettings",
         "Now that we've selected the file we want crop, we can configure the <strong>Crop</strong> tool to choose the area that we want to crop the PDF to.",
       ),
-      position: "left",
-      padding: 10,
+      position: besideCentered,
+      padding: 6,
       action: () => modifyCropSettings(),
     },
     [TourStep.RUN_BUTTON]: {
@@ -171,7 +175,7 @@ export function createUserStepsConfig({
         "Once the tool has been configured, this button allows you to run the tool on all the selected PDFs.",
       ),
       position: "top",
-      padding: 10,
+      padding: 6,
       actionAfter: () => executeTool(),
     },
     [TourStep.RESULTS]: {
@@ -180,7 +184,7 @@ export function createUserStepsConfig({
         "onboarding.results",
         "After the tool has finished running, the <strong>Review</strong> step will show a preview of the results in this panel, and allow you to undo the operation or download the file. ",
       ),
-      position: "center",
+      position: besideCentered,
       padding: 0,
     },
     [TourStep.FILE_REPLACEMENT]: {
@@ -189,8 +193,7 @@ export function createUserStepsConfig({
         "onboarding.fileReplacement",
         "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools.",
       ),
-      position: "left",
-      padding: 10,
+      padding: 6,
     },
     [TourStep.PIN_BUTTON]: {
       selector: '[data-tour="file-card-pin"]',
@@ -199,22 +202,21 @@ export function createUserStepsConfig({
         "You can use the <strong>Pin</strong> button if you'd rather your files stay active after running tools on them.",
       ),
       position: "left",
-      padding: 10,
+      padding: 4,
       action: () => revealFileCardHoverMenu(),
       actionAfter: () => pinFile(),
     },
     [TourStep.WRAP_UP]: {
-      selector: '[data-tour="settings-modal"]',
+      selector: '[data-tour="settings-tours"]',
       content: t(
         "onboarding.wrapUp",
         "You're all set! You can replay this tour anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help.",
       ),
-      position: "center",
-      padding: 0,
+      padding: 6,
       action: async () => {
         openSettingsHelpSection();
-        await waitForElement('[data-tour="settings-modal"]', 5000);
-        await waitForHighlightable('[data-tour="settings-modal"]', 5000);
+        await waitForElement('[data-tour="settings-tours"]', 5000);
+        await waitForHighlightable('[data-tour="settings-tours"]', 5000);
       },
     },
   };

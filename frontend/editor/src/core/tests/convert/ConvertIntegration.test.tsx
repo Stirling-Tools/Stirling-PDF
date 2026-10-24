@@ -49,19 +49,6 @@ import {
 } from "@app/types/fileContext";
 import { MantineProvider } from "@mantine/core";
 
-// Mock axios (for static methods like CancelToken, isCancel)
-vi.mock("axios", () => ({
-  default: {
-    CancelToken: {
-      source: vi.fn(() => ({
-        token: "mock-cancel-token",
-        cancel: vi.fn(),
-      })),
-    },
-    isCancel: vi.fn(() => false),
-  },
-}));
-
 // Mock our apiClient service
 vi.mock("../../services/apiClient", () => ({
   default: {
@@ -79,8 +66,16 @@ vi.mock("../../services/apiClient", () => ({
 
 // Import the mocked apiClient
 import apiClient from "@app/services/apiClient";
+import {
+  inspectLocalPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfAccessService";
 import { notifyToolCompleted } from "@app/services/toolUsageTracker";
 const mockedApiClient = vi.mocked(apiClient, { deep: true });
+vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
+  inspectLocalPdfAccess: vi.fn(),
+}));
 
 // Usage-recommendation tracking would add its own posts to the apiClient spy.
 vi.mock("../../services/toolUsageTracker", () => ({
@@ -164,6 +159,14 @@ describe("Convert Tool Integration Tests", () => {
       "encrypted",
       "application/pdf",
     );
+    rememberPdfAccess(locked, {
+      password: "test",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: true,
+      permissions: -4,
+      pageCount: 1,
+    });
     const files = [locked, pdf];
     const customProcessor = vi.fn().mockResolvedValue({ files: [pdf] });
     const { result } = renderHook(
@@ -222,6 +225,17 @@ describe("Convert Tool Integration Tests", () => {
   });
 
   test("filters mixed inputs using current params and protection without consuming skipped files", async () => {
+    const thumbnail = {
+      thumbnail: "data:image/png;base64,fake-thumbnail",
+      pageCount: 1,
+    };
+    vi.spyOn(
+      thumbnailUtils,
+      "generateThumbnailPairWithMetadata",
+    ).mockResolvedValue({ unrotated: thumbnail, rotated: thumbnail });
+    vi.spyOn(thumbnailUtils, "generateThumbnailForFile").mockResolvedValue(
+      thumbnail.thumbnail,
+    );
     mockedApiClient.post.mockResolvedValue({
       data: new Blob(["output"]),
       headers: {},
@@ -247,6 +261,14 @@ describe("Convert Tool Integration Tests", () => {
       "encrypted",
       "application/pdf",
     );
+    rememberPdfAccess(locked, {
+      password: "test",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: true,
+      permissions: -4,
+      pageCount: 1,
+    });
     const files = [image, locked, pdf, svg];
     await act(async () => {
       result.current.context.dispatch({
@@ -314,6 +336,18 @@ describe("Convert Tool Integration Tests", () => {
     expect(fileStorage.persistVersionedOutputs).toHaveBeenCalledTimes(2);
     expect(result.current.convert.errorMessage).toBe("noValidFiles");
 
+    mockedApiClient.post.mockResolvedValueOnce({
+      data: new Blob(["protected output"], { type: "application/pdf" }),
+    });
+    vi.mocked(inspectLocalPdfAccess).mockResolvedValueOnce({
+      password: "",
+      encrypted: true,
+      ownerAuthenticated: false,
+      permissions: -4,
+      requiresOpeningPassword: false,
+      signed: false,
+      pageCount: 1,
+    });
     await act(async () => {
       await result.current.unlock.executeOperation({ password: "secret" }, [
         image,
@@ -321,12 +355,16 @@ describe("Convert Tool Integration Tests", () => {
       ]);
     });
     expect(mockedApiClient.post).toHaveBeenCalledTimes(3);
+    expect(inspectLocalPdfAccess).toHaveBeenCalledOnce();
     expect(mockedApiClient.post.mock.calls[2][0]).toBe(
       "/api/v1/security/remove-password",
     );
     expect(
       (mockedApiClient.post.mock.calls[2][1] as FormData).get("password"),
     ).toBe("secret");
+    expect(
+      (mockedApiClient.post.mock.calls[2][1] as FormData).get("sourcePassword"),
+    ).toBe("test");
     expect(
       (mockedApiClient.post.mock.calls[2][1] as FormData).getAll("fileInput"),
     ).toEqual([locked]);

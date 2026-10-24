@@ -55,7 +55,9 @@ keepWorking = "Continuați lucrul"
 loading = "Se încarcă..."
 loginAgreementAccept = "Acceptați"
 loginAgreementDecline = "Refuzați"
+loginAgreementLoadFailed = "Acordul de autentificare nu a putut fi încărcat."
 loginAgreementProvider = "Această notificare este furnizată de administratorul dvs., nu de Stirling PDF Inc."
+loginAgreementRetry = "Reîncercați"
 loginAgreementTitle = "Acord de autentificare"
 logOut = "Deconectare"
 marginTooltip = "Distanța dintre numărul paginii și marginea paginii."
@@ -299,7 +301,6 @@ title = "Rezultatele numerotării paginilor"
 
 [addPassword]
 desc = "Criptați documentul PDF cu o parolă."
-submit = "Criptează"
 tags = "criptează,parolă,blocare,securizat,protejează,securitate,criptare,protecție,confidențial,privat,restricționează accesul"
 title = "Adaugă parolă"
 
@@ -311,17 +312,6 @@ label = "Lungimea cheii de criptare"
 
 [addPassword.error]
 failed = "A apărut o eroare în timpul criptării PDF-ului."
-
-[addPassword.passwords]
-stepTitle = "Parole și criptare"
-
-[addPassword.passwords.owner]
-label = "Parola proprietarului"
-placeholder = "Introduceți parola proprietarului"
-
-[addPassword.passwords.user]
-label = "Parola utilizatorului"
-placeholder = "Introduceți parola utilizatorului"
 
 [addPassword.results]
 title = "PDF-uri criptate"
@@ -1627,6 +1617,7 @@ title = "Este necesară repornirea"
 [admin.settings.security]
 authentication = "Autentificare"
 description = "Configurați autentificarea, comportamentul de autentificare și politicile de securitate."
+pdfPermissions = "Permisiuni PDF"
 title = "Securitate"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "Dezactivează protecția CSRF"
 [admin.settings.security.enableLogin]
 description = "Solicită utilizatorilor să se autentifice înainte de a accesa aplicația"
 label = "Activează autentificarea"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Solicitați parola pentru permisiuni pentru acțiunile restricționate. Dezactivarea acestei opțiuni solicită în continuare parolele necesare pentru a deschide PDF-uri."
+label = "Respectați permisiunile PDF"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Setări avansate"
@@ -1938,9 +1933,6 @@ wrapUp = "Acesta a fost turul de administrare! Ați văzut funcțiile enterprise
 [adminUserSettings]
 admin = "Administrator"
 title = "Setări Control Utilizator"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Arabă"
@@ -3173,12 +3165,14 @@ unknown = "Necunoscut"
 
 [changePermissions]
 desc = "Modificați restricțiile și permisiunile documentului."
+loading = "Se încarcă permisiunile curente..."
 submit = "Schimbă Permisiunile"
 tags = "permisiuni,restricții,drepturi,control acces,permite,interzice,imprimare,copiere,editare,modifică permisiuni,setări securitate,drepturi utilizator"
 title = "Schimbă Permisiunile"
 
 [changePermissions.error]
 failed = "A apărut o eroare la modificarea permisiunilor PDF."
+readFailed = "Nu s-au putut citi permisiunile curente ale acestui PDF. Setați restricțiile manual înainte de a aplica modificările."
 
 [changePermissions.permissions.preventAssembly]
 label = "Previne asamblarea documentului"
@@ -3219,21 +3213,16 @@ text = "Pentru ca aceste permisiuni să nu poată fi schimbate, utilizați instr
 [chat.actions]
 copy = "Copiați mesajul"
 
-[chat.emptyState]
-text = "Puneți o întrebare despre documentele dvs. sau obțineți ajutor cu instrumentele PDF."
-
-[chat.fab]
-close = "Închide chatul"
-open = "Deschide asistentul Stirling AI"
+[chat.dock]
+collapse = "Restrângeți chatul"
+placeholder = "Întrebați Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Opțiuni agent Stirling"
-assistant = "Asistent AI"
 clearChat = "Goliți chatul"
 
 [chat.input]
 disclaimer = "AI poate face greșeli. Verificați rezultatul înainte de a-l partaja."
-placeholder = "Ce doriți să faceți?"
 send = "Trimiteți mesaj"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Convertiți aceste documente în PDF"
 convertOne = "Convertiți acest document în PDF"
 heading = "Pentru început"
 mergeMany = "Îmbinați aceste {{count}} documente într-unul"
-moreFiles = "+{{count}} în plus"
 openFromComputer = "Deschideți de pe computer"
-removeFile = "Eliminați {{name}}"
 splitOne = "Împărțiți acest document"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Nu am putut găsi informațiile solicitate."
 processing = "Se procesează ({{outcome}})..."
 unsupported_capability = "Capacitate neacceptată: {{capability}}"
 usage_limit_reached = "Ați atins limita de utilizare. Verificați opțiunile planului pentru a continua."
-
-[chat.toolsUsed]
-summary_one = "S-a rulat 1 instrument"
-summary_other = "S-au rulat {{count}} instrumente"
-unknownTool = "Instrument necunoscut"
 
 [classification.families]
 correspondence = "Corespondență"
@@ -3649,6 +3631,7 @@ tooltip = "Alegeți culoarea de pe ecran"
 hue = "Nuanță"
 saturation = "Saturație și luminozitate"
 title = "Alege culoarea"
+transparent = "Transparent"
 
 [common]
 actions = "Acțiuni"
@@ -3664,6 +3647,7 @@ continue = "Continuă"
 copied = "Copiat!"
 copy = "Copiați"
 copyCode = "Copiază codul"
+copyFailed = "Copierea a eșuat"
 dismiss = "Închide"
 done = "Gata"
 enterValue = "Introduceți valoare"
@@ -3847,6 +3831,12 @@ unavailable = "ImageMagick nu este instalat sau activat pe acest server"
 filesize = "Dimensiune Fișier"
 quality = "Calitate"
 title = "Metodă de comprimare"
+
+[compress.noReduction]
+multiple = "Compresia a rulat cu succes, dar {{count}} din {{total}} fișiere nu mai pot fi comprimate suplimentar."
+multipleAtLevel = "Compresia la acest nivel nu a adus nicio îmbunătățire pentru {{count}} din {{total}} fișiere. Încercați un nivel de compresie mai mare."
+single = "Compresia a rulat cu succes, dar acest fișier nu mai poate fi comprimat suplimentar."
+singleAtLevel = "Compresia la acest nivel nu a adus nicio îmbunătățire acestui fișier. Încercați un nivel de compresie mai mare."
 
 [compress.settings]
 desiredSize = "Dimensiunea dorită a fișierului"
@@ -4295,6 +4285,13 @@ precision = "Folosiți câmpurile de coordonate pentru poziționare precisă"
 resize = "Trageți de colțuri și margini pentru redimensionare"
 title = "Cum să decupați PDF-uri"
 
+[damagedPdf]
+description = "Acest PDF este deteriorat și nu poate fi deschis."
+label = "Deteriorat"
+repair = "Repară"
+repaired = "Reparat {{name}}"
+repairFailed = "Nu s-a putut repara {{name}}"
+
 [database]
 backupCreated = "Copierea de rezervă a bazei de date a reușit"
 fileName = "Nume Fișier"
@@ -4363,6 +4360,10 @@ title = "Actualizat de pe disc"
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\" s-a modificat pe disc. Este suficient de mare încât reîncărcarea va dura, așa că versiunea de aici a fost lăsată neschimbată."
 title = "Fișier modificat pe disc"
+
+[desktopPrivacy]
+blocked = "Administratorul dvs. solicită ca documentele să rămână pe acest dispozitiv. Această funcție nu este disponibilă."
+localFiles = "Fișiere locale"
 
 [desktopUpdate]
 downloading = "Se descarcă actualizarea..."
@@ -4491,22 +4492,80 @@ description = "Selectează instrumentul Edit Table of Contents pentru a încărc
 title = "Deschide instrumentul pentru a începe editarea"
 
 [encryptedPdfUnlock]
-description = "Acest PDF este protejat cu parolă. Introdu parola pentru a continua lucrul cu el."
-emptyResponse = "Eliminarea parolei nu a generat un fișier."
+actionIgnored = "Restricția {{action}} a fost ignorată"
+actionUnlocked = "{{action}} deblocat pentru această sesiune"
+advanced = "Avansat"
+allowed = "Permis"
+annotations = "Adnotări"
+authoriseAction = "Acest PDF necesită permisiune pentru a utiliza {{action}}."
+changeOwnerPassword = "Schimbați parola pentru permisiuni"
+checkingPermissions = "Se verifică permisiunile PDF..."
+chooseOwnerPassword = "Alegeți o parolă diferită"
+continue = "Continuați"
+copyFailed = "Nu s-a putut crea copia. PDF-ul dvs. nu a fost modificat."
+copying = "Se copiază conținutul"
+editing = "Editare"
+enterPassword = "Introduceți parola"
+ignoredByServer = "Permisiunile sunt ignorate de setările acestui server. Protecția PDF-ului nu a fost modificată."
 incorrectPassword = "Parolă incorectă"
+inspectionFailed = "Nu s-au putut verifica permisiunile acestui PDF. Încercați din nou."
+lowQualityPrintUnsupported = "Acest PDF permite doar imprimarea la calitate scăzută, pe care acest vizualizator nu o acceptă."
+lowResolutionOnly = "Doar rezoluție scăzută"
+manageProtection = "Gestionați protecția"
 missingFile = "Fișierul selectat nu mai este disponibil."
+mixedProtection = "Aceste PDF-uri au setări de protecție separate. Procesați-le individual."
+newOwnerPassword = "Parolă nouă pentru permisiuni"
+notRequired = "Nu este necesar"
+openingPassword = "Parolă de deschidere"
+openPdf = "Deschideți PDF"
+ownerPassword = "Parolă pentru permisiuni"
+ownerRequired = "Introduceți parola pentru permisiuni pentru a continua."
+ownerTitle = "Introduceți parola pentru permisiuni"
+passwordRetained = "Păstrată nemodificată"
+passwordsMustDiffer = "Cele două parole trebuie să fie diferite."
+permissionsUnlocked = "Permisiuni deblocate pentru această sesiune"
+prepareFailed = "Nu s-a putut pregăti acest PDF protejat pentru procesare."
+printing = "Imprimare"
+printRestricted = "Imprimarea este restricționată. Verificați permisiunile în Gestionați protecția."
+protectedPdf = "PDF protejat"
+protectionRetained = "Protecție păstrată"
+protectionSaved = "Protecție salvată"
+removePasswordHelp = "Deschideți Eliminare parolă pentru a alege parolele de eliminat."
+removeProtection = "Creați o copie neprotejată"
+replaceProtection = "Aceste setări înlocuiesc protecția curentă a PDF-ului."
 required = "Introdu parola pentru a continua."
-skip = "Sari peste deocamdată"
-successBody = "Parola a fost eliminată cu succes."
-successBodyWithName = "Parola a fost eliminată din {{fileName}}"
-successTitle = "Parolă eliminată"
+requiredStatus = "Necesar"
+requiredToApply = "Necesar pentru aplicarea modificărilor"
+restoreFailed = "Nu s-a putut păstra protecția PDF. Nu a fost salvat niciun rezultat neprotejat."
+restrictActions = "Restricționați acțiunile"
+restricted = "Restricționat"
+restrictedActions = "acțiuni restricționate"
+restrictedOperation = "Această acțiune necesită parola pentru permisiuni."
+retainOwnerVerification = "Verificați parola pentru permisiuni pentru a o păstra nemodificată în timp ce eliminați parola de deschidere. Aceasta nu o va elimina."
+saveProtection = "Salvați protecția"
+securityChangeFailed = "Nu s-a putut schimba protecția. Verificați parola pentru permisiuni și noile setări de securitate."
+sessionDetails = "Deschis pentru această sesiune. PDF-ul rămâne protejat."
+sessionDetailsLabel = "Despre deblocarea sesiunii"
+sessionFailed = "Nu s-a putut debloca acest PDF. Încercați din nou."
+sessionSuccessBody = "Protecție păstrată."
+sessionSuccessBodyWithName = "Protecție păstrată pentru {{fileName}}."
+sessionSuccessTitle = "PDF deschis"
+sessionTitle = "Deschideți PDF"
+signedReadOnly = "Acest PDF semnat poate fi vizualizat, dar nu poate fi editat aici."
 title = "Elimină parola pentru a continua"
+toolUnavailable = "Acest instrument nu acceptă PDF-uri criptate. Eliminați mai întâi parola."
+toolUnavailableDetails = "De ce {{name}} nu este disponibil"
 unlock = "Deblochează și continuă"
 unlockAll = "Utilizați pentru toate ({{count}})"
 unlockAllPartialFail = "Parolă greșită pentru: {{names}}"
 unlockAllSuccess_one = "Deblocat {{count}} fișier."
 unlockAllSuccess_other = "Deblocate {{count}} fișiere."
+unlockedForSession = "Deblocat pentru această sesiune folosind parola dvs. pentru permisiuni."
 unlockPrompt = "Deblochează PDF-ul pentru a continua"
+unprotectedCopyConsequence = "Copia nu va avea parole sau restricții. Originalul rămâne protejat."
+unsupportedTool = "Acest instrument nu poate păstra încă protecția acestui PDF."
+verifiedForSession = "Verificat pentru această sesiune"
+verifyPermissions = "Verificați permisiunile pentru această sesiune"
 viewerLocked = "Acest PDF este protejat cu parolă"
 viewerUnlock = "Deblochează"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "Vizualizați în Vizualizator"
 closeFile = "Închideți fișierul"
 
 [fileEditor]
-addFiles = "Adăugați fișiere"
 closedFile = "{{name}} închis"
 couldNotSave = "Nu s-a putut salva {{name}}"
-filesAdded_one = "S-a adăugat {{count}} fișier"
-filesAdded_other = "S-au adăugat {{count}} fișiere"
 filesReordered_one = "Fișier reordonat"
 filesReordered_other = "{{count}} fișiere reordonate"
 loadedFromStorage_one = "S-a încărcat {{count}} fișier din stocare"
 loadedFromStorage_other = "S-au încărcat {{count}} fișiere din stocare"
 loadFromStorageFailed = "Nu s-au putut încărca unele fișiere din stocare"
 pinnedFile = "{{name}} fixat"
-processFilesFailed = "Nu s-au putut procesa fișierele"
 savedAndClosed = "{{name}} salvat și închis"
 saveFailed = "Salvarea a eșuat"
 unpinnedFile = "{{name}} nefixat"
 unzipping = "Se dezarhivează {{name}}"
+
+[fileEditor.addCard]
+dropHint = "sau plasați fișierele oriunde"
+fromComputer = "Încărcați de pe computer"
+moreOptions = "Mai multe opțiuni de încărcare"
 
 [fileEditor.unzip]
 error = "Eroare la dezarhivarea {{name}}"
@@ -4729,7 +4789,6 @@ dataLostBody = "Acest browser a pierdut conținutul acestui fișier. Încărcaț
 dataLostTitle = "Datele fișierului nu sunt disponibile"
 downloadFailed = "Descărcarea a eșuat"
 dropHint = "Deschide fișiere pentru a începe"
-dropToAdd = "Plasați fișiere pentru a le adăuga"
 duplicateFailed = "Fișierul nu a putut fi duplicat"
 expand = "Extinde bara laterală"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "Rescanați câmpurile"
 rescanFormFields = "Rescanați câmpurile formularului"
 save = "Salvați"
 saveShortcut = "Ctrl+S pentru salvare"
+saving = "Se salvează..."
 selectOptionPlaceholder = "— selectați —"
 skippedEdits_one = "1 modificare nu a putut fi aplicată:"
 skippedEdits_other = "{{count}} modificări nu au putut fi aplicate:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "Încă {{count}} nu sunt listate."
 unsavedChanges = "Modificări nesalvate"
 
 [formFill.create]
-commit = "Adaugă {{count}} câmp(uri) în PDF"
 empty = "Nu a fost desenat încă niciun câmp."
-failed = "Nu s-au putut adăuga câmpurile"
 goToField = "Mergi la acest câmp"
 hint = "Alege un tip de câmp, apoi desenează-l pe pagină."
 placing = "Desenează un câmp {{type}} pe pagină. Apasă Esc pentru a opri."
@@ -5334,7 +5392,6 @@ modify = "Modifică"
 commit = "Salvează {{count}} modificare/modificări"
 delete = "Șterge"
 empty = "Acest PDF nu are încă niciun câmp de formular."
-failed = "Nu s-au putut salva modificările"
 groupSizeHint = "Folosește dimensiunea opțiunii"
 hint = "Selectează un câmp pentru a-i edita proprietățile, trage-l pe pagină sau șterge-l."
 restore = "Restaurează"
@@ -5732,11 +5789,6 @@ title = "Suprapune PDF-uri"
 desc = "Îmbină mai multe pagini ale unui document PDF într-o singură pagină"
 tags = "aspect,aranjare,combinare,N-up,2-up,4-up,mai multe pe pagină,pagini pe coală,aspect pagini,mozaic,aspect grilă,aspect multipagină,combină pe pagină,material distribuit"
 title = "Aspect Multi-Pagină"
-
-[home.pdfCommentAgent]
-desc = "Cere AI să adnoteze un PDF cu comentarii tip notițe adezive pe baza solicitării tale"
-tags = "AI,agent,comentariu,adnotare,notiță adezivă,revizuire,feedback,note"
-title = "Adaugă comentarii AI"
 
 [home.pdfOrganiser]
 tags = "organizare,rearanjare,reordonare,aranjare pagini,sortare,mutare pagini,ștergere pagini,eliminare pagini,gestionare pagini,organizator pagini,resecvențiere"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "Veți deveni membru al echipei și veți pierde accesul de pr
 deselectAll = "Niciunul"
 selectAll = "Bifează tot"
 
-[pageEditor]
-dragPreviewAlt = "Se trage"
-filePosition = "Poziția {{position}}"
-pageLabel = "Pagina {{page}}"
-title = "Editor de pagini"
-
-[pageEditor.actions]
-deletePage = "Șterge pagina"
-insertFileAfter = "Inserează fișier după"
-moveLeft = "Mută la stânga"
-moveRight = "Mută la dreapta"
-rotateLeft = "Rotește la stânga"
-rotateRight = "Rotește la dreapta"
-splitAfter = "Împarte după"
-
-[pageEditor.commands]
-addSplitAt = "Adaugă împărțire la poziția {{position}}"
-addSplits_one = "Adaugă {{count}} împărțire"
-addSplits_other = "Adaugă {{count}} împărțiri"
-deletePages_one = "Șterge {{count}} pagină"
-deletePages_other = "Șterge {{count}} pagini"
-insertFiles_one = "Inserează {{count}} fișier după pagina {{page}}"
-insertFiles_other = "Inserează {{count}} fișiere după pagina {{page}}"
-insertPageBreaks_one = "Inserează {{count}} sfârșit de pagină"
-insertPageBreaks_other = "Inserează {{count}} sfârșituri de pagină"
-insertPageBreaksAll = "Inserează sfârșituri de pagină după toate paginile"
-removeAllSplits = "Elimină toate împărțirile"
-removeSplitAt = "Elimină împărțirea de la poziția {{position}}"
-removeSplits_one = "Elimină {{count}} împărțire"
-removeSplits_other = "Elimină {{count}} împărțiri"
-reorderPages = "Reordonează paginile"
-rotatePageLeft = "Rotește pagina la stânga"
-rotatePageRight = "Rotește pagina la dreapta"
-rotatePagesLeft_one = "Rotește {{count}} pagină la stânga"
-rotatePagesLeft_other = "Rotește {{count}} pagini la stânga"
-rotatePagesRight_one = "Rotește {{count}} pagină la dreapta"
-rotatePagesRight_other = "Rotește {{count}} pagini la dreapta"
-splitAllPages = "Împarte toate paginile"
-toggleSplits_one = "Comută {{count}} poziție de împărțire"
-toggleSplits_other = "Comută {{count}} poziții de împărțire"
-
-[pageEditor.emptyState]
-body = "Adăugați fișiere pentru a începe editarea paginilor"
-title = "Nu au fost încărcate fișiere PDF"
-
-[pageEditor.fileDropdown]
-addFile = "Adaugă fișier"
-selectedCount = "{{selected}}/{{total}} fișiere selectate"
-untitled = "Fără titlu"
-
-[pageEditor.toolbar]
-delete = "Ștergeți selecția"
-redo = "Refaceți"
-rotateLeft = "Rotiți selecția la stânga"
-rotateRight = "Rotiți selecția la dreapta"
-undo = "Anulați"
-
 [pageExtracter]
 title = "Extrage Pagini"
 
@@ -6815,6 +6810,79 @@ title = "Intervale de pagini"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → selectează toate paginile"
 title = "Cuvinte cheie speciale"
+
+[pageTracks]
+blankPage = "Pagină goală"
+deleteSelected = "Ștergeți paginile selectate"
+downloadAsOneFile = "Descărcați ca un singur fișier"
+downloadEachPage = "Descărcați fiecare pagină individual"
+downloadSelectedPages = "Descărcați paginile selectate"
+dragging_one = "{{count}} pagină"
+dragging_other = "{{count}} pagini"
+duplicateSelected = "Duplicați paginile selectate"
+edited = "editat"
+emptyTrack = "Nu mai există pagini. Trageți pagini aici sau salvați pentru a închide acest fișier."
+insertBlank = "Inserați pagină goală"
+insertBlankAfterSelected = "Inserați pagini goale după paginile selectate"
+moveLeft = "Mutați la stânga"
+moveRight = "Mutați la dreapta"
+nextPage = "Pagina următoare"
+page = "Pagina {{number}}"
+pageCount_one = "{{count}} pagină"
+pageCount_other = "{{count}} pagini"
+pagePosition = "Pagina {{number}} din {{total}}"
+prevPage = "Pagina anterioară"
+readingPages = "Se citesc paginile..."
+redo = "Refă"
+rotateLeft = "Rotiți la stânga"
+rotateRight = "Rotiți la dreapta"
+rotateSelectedLeft = "Rotiți paginile selectate la stânga"
+rotateSelectedRight = "Rotiți paginile selectate la dreapta"
+saveAsOneFile = "Salvați ca un singur fișier"
+saveChanges = "Salvați modificările în toate fișierele"
+saveEachPage = "Salvați fiecare pagină individual"
+saveSelectedPages = "Salvați paginile selectate"
+saving = "Se salvează..."
+savingProgress = "Se salvează {{done}} din {{total}}"
+selectPage = "Selectați pagina {{number}}"
+splitAfterSelected = "Împărțiți după paginile selectate"
+splitHere = "Împărțiți aici"
+undo = "Anulați"
+viewError = "Nu s-a putut randa această pagină"
+viewPage = "Vizualizați pagina"
+zoomIn = "Măriți"
+zoomOut = "Micșorați"
+
+[pageTracks.close]
+message = "Sigur doriți să închideți toate fișierele?"
+unsaved = "Aceste fișiere au modificări nesalvate."
+
+[pageTracks.delete]
+page = "Ștergeți pagina"
+
+[pageTracks.duplicate]
+page = "Duplicați pagina"
+
+[pageTracks.empty]
+body = "Adăugați PDF-uri pentru a le extinde în piste de pagini editabile"
+title = "Nu au fost încărcate fișiere PDF"
+
+[pageTracks.exportFailed]
+body = "Fișierele editate nu au putut fi pregătite. Încercați din nou."
+title = "Nu s-a putut descărca"
+
+[pageTracks.saveFailed]
+body = "Editările dvs. nu au fost pierdute. Încercați să salvați din nou."
+title = "Nu s-au putut salva modificările"
+
+[pageTracks.track]
+close = "Închideți fișierul"
+collapse = "Restrângeți"
+expand = "Extindeți"
+rename = "Redenumiți fișierul"
+
+[pageTracks.wrap]
+label = "Încadrați paginile"
 
 [payg.activity]
 docs = "documente"
@@ -7144,24 +7212,6 @@ totalSeats_other = "Total ({{count}} locuri)"
 [payment.upgradeTeam]
 title = "Fă upgrade la Team"
 
-[pdfCommentAgent]
-submit = "Generează comentarii"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Te rugăm să descrii ce ar trebui să comenteze AI"
-failed = "Generarea comentariilor a eșuat"
-tooLong = "Promptul este prea lung (maximum {{max}} caractere)"
-
-[pdfCommentAgent.prompt]
-label = "Asupra a ce ar trebui să comenteze AI?"
-placeholder = "ex.: Marchează orice date ambigue și sugerează clarificări"
-
-[pdfCommentAgent.results]
-title = "PDF comentat"
-
-[pdfCommentAgent.settings]
-title = "Instrucțiuni pentru comentarii"
-
 [pdfOrganiser]
 placeholder = "(ex. 1,3,2 sau 4-8,2,10-12 sau 2n-1)"
 tags = "duplex,par,impar,sortează,mută"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "Fă clic pe orice text, imagine sau formă de pe pagină 
 ocrDocumentChanged = "Documentul s-a schimbat în timp ce OCR rula. Rulează OCR din nou pentru a include cele mai recente modificări."
 ocrInvalidResult = "OCR nu a returnat un PDF. Te rugăm să încerci din nou."
 ocrNoLanguages = "Nu sunt instalate limbi OCR pe server."
+ocrProtected = "OCR nu poate păstra încă protecția acestui PDF. Originalul protejat rămâne disponibil pentru vizualizare."
 ocrRunning = "Se recunoaște textul..."
 ocrUnavailable = "OCR nu este disponibil pe acest server."
 oneImage = "Imagine"
@@ -7389,13 +7440,8 @@ pageNumber = "Pagina {{page}}"
 renderFailed = "Nu s-a putut reda pagina"
 
 [pdfTextEditor.password]
-cancel = "Anulează"
 incorrect = "Parolă incorectă - încearcă din nou."
 label = "Parolă"
-open = "Deschide"
-protected = "Acest PDF este protejat prin parolă."
-protectedNamed = "„{{fileName}}” este protejat prin parolă."
-title = "Parolă necesară"
 
 [pdfTextEditor.rulers]
 guide = "Ghid de aliniere la {{value}} {{unit}} - trage-l pe o riglă pentru a-l elimina"
@@ -7994,6 +8040,7 @@ before = "Setează"
 title = "Conexiunea Stirling nu este configurată"
 
 [portal.accountLink.notice]
+loadFailed = "Dialogul de conectare a contului nu a putut fi încărcat."
 openFailed = "Nu s-a putut deschide browserul. Deschideți Utilizare și facturare pe serverul conectat pentru a asocia un cont."
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "Limită lunară de cheltuieli {{amount}}/lună. Procesarea se întrerup
 limitNoCap = "Fără limită de cheltuieli. Procesarea nu se va întrerupe. Facturile se emit lunar."
 
 [portal.billing.chip]
-invoices = "Facturi"
-nav = "Secțiuni"
-payment = "Plată"
 plan = "Plan"
 procurement = "Achiziții"
 usage = "Utilizare"
@@ -8178,9 +8222,22 @@ pdfs = "PDF-uri procesate"
 users = "Utilizatori"
 
 [portal.billing.enterprise]
+active = "Acord activ până la {{date}}"
 cta = "Obțineți o ofertă enterprise"
+included = "Inclus în Enterprise"
+payment_pending = "Plată în așteptare · acces până la {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDF-uri"
+pdfsOver_one = "{{count}} PDF peste volumul convenit"
+pdfsOver_other = "{{count}} PDF-uri peste volumul convenit"
+pdfsUsed_one = "{{count}} PDF procesat"
+pdfsUsed_other = "{{count}} PDF-uri procesate"
+period = "Perioada acordului: {{start}} – {{end}}"
 sub = "Implementare air-gapped, SCIM, rezidența datelor, SLA-uri de uptime și un acord pe măsură."
 title = "Rulați Stirling într-un mediu reglementat?"
+trial = "Perioadă de probă de {{days}} zile · se încheie la {{date}}"
+usersAgreed = "{{used}} / {{agreed}} utilizatori agreați"
+usersOver_one = "{{count}} utilizator peste cantitatea agreată"
+usersOver_other = "{{count}} utilizatori peste cantitatea agreată"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Nu s-a putut porni checkout-ul"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "Build-uri native pentru distribuția dvs."
-guideBtn = "Vedeți opțiunile de instalare Linux"
+downloadAppImage = "AppImage"
+downloadDeb = "Descarcă .deb (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "Build-uri AppImage, .deb și .rpm sunt disponibile pentru distribuțiile uzuale."
 tagline = "Aplicație desktop nativă pentru distribuția dvs."
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "Redactează,Ascunde,acoperă cu negru,negru,marker,ascuns,redactare auto
 title = "Redactează"
 
 [redact.auto]
+caseSensitiveLabel = "Potrivire cu diferențiere între majuscule și minuscule"
 colorLabel = "Culoarea casetei"
 convertPDFToImageLabel = "Convertește PDF în PDF-imagine"
 customPaddingLabel = "Spațiere suplimentară personalizată"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "Selectați fișiere în managerul de fișiere pentru
 manual = "Manual"
 mode = "Mod"
 title = "Metoda de redactare"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Potrivește doar textul cu aceeași capitalizare. „Secret” nu se va potrivi cu „SECRET” când este activat, iar [A-Z] într-un regex se potrivește doar cu majuscule."
+title = "Potrivire cu diferențiere între majuscule și minuscule"
 
 [redact.tooltip.advanced.color]
 text = "Personalizați aspectul casetelor de redactare. Negrul este standard, dar puteți alege orice culoare. Spațierea adaugă spațiu în jurul textului găsit."
@@ -11396,7 +11460,12 @@ text = "Specificați ce pagini să eliminați din PDF. Puteți selecta pagini in
 title = "Selectarea paginilor"
 
 [removePassword]
-desc = "Elimină protecția cu parolă din documentul PDF."
+appliesTo = "Setată pentru {{count}} din {{total}} PDF-uri"
+keepBlank = "Lăsați un câmp necompletat pentru a păstra parola respectivă."
+notSet = "Nesetat"
+openWithReaderFirst = "Redeschideți acest PDF folosind parola de deschidere înainte de a elimina doar parola pentru permisiuni."
+selectiveHelp = "Introduceți parola curentă pentru fiecare protecție pe care doriți să o eliminați. Un câmp necompletat păstrează acea parolă. Eliminarea parolei pentru permisiuni elimină și restricțiile de acțiune."
+selectPasswords = "Parole de eliminat"
 submit = "Elimină parola"
 tags = "securizează,Decriptează,securitate,elimină parola,șterge parola"
 title = "Elimină parola"
@@ -11407,13 +11476,9 @@ failed = "A apărut o eroare la eliminarea parolei din PDF."
 [removePassword.password]
 label = "Parola Curentă"
 placeholder = "Introduceți parola curentă"
-stepTitle = "Elimină Parola"
 
 [removePassword.results]
 title = "PDF-uri decriptate"
-
-[removePassword.tooltip]
-description = "Eliminarea protecției cu parolă necesită parola folosită pentru criptarea PDF-ului. Acest lucru va decripta documentul, făcându-l accesibil fără parolă."
 
 [reorganizePages]
 submit = "Reorganizați paginile"
@@ -11543,6 +11608,64 @@ m = "Metri (m)"
 mi = "Mile (mi)"
 mm = "Milimetri (mm)"
 yd = "Yarzi (yd)"
+
+[runLocation]
+back = "Înapoi"
+continue = "Continuă"
+subtitle = "Alegeți unde rulează."
+title = "Unde doriți să rulați Stirling?"
+
+[runLocation.choice.browser]
+description = "Aplicația web."
+title = "În browser"
+
+[runLocation.choice.computer]
+description = "Aplicația desktop."
+title = "Pe computer"
+
+[runLocation.choice.server]
+description = "Găzduită local, pentru o echipă."
+title = "Pe server"
+
+[runLocation.desktop]
+computerLabel = "Computerul dvs."
+download = "Descarcă pentru {{platform}}"
+downloadAgain = "Descarcă din nou"
+guide = "Deschide ghidul de instalare pentru {{platform}}"
+startedSubtitle = "Verificați folderul Descărcări, apoi deschideți instalatorul."
+startedTitle = "Descărcarea a început"
+subtitle = "Descărcați-o și deschideți-o."
+title = "Obțineți aplicația desktop"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (ghid de instalare)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "Copiat"
+copy = "Copiază comanda"
+copyCompose = "Copiază fișierul compose"
+guide = "Ghid de instalare {{method}}"
+methodLabel = "Rulează cu"
+note = "Apoi deschideți <url/> pentru a finaliza configurarea."
+subtitle = "Rulați aceasta pe server, apoi deschideți-o într-un browser."
+title = "Configurați serverul"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "Eliminați elementele potențial dăunătoare din fișierele PDF."
@@ -12054,6 +12177,7 @@ title = "Spațiu de lucru"
 loginIncomplete = "Nu s-a putut finaliza autentificarea"
 noSaasServer = "Nu este configurat niciun server SaaS"
 noServer = "Nu este configurat niciun server"
+policyUnavailable = "Nu s-au putut încărca setările de autentificare ale organizației dvs."
 saasLoginFailed = "Autentificarea SaaS a eșuat"
 saasLoginIncomplete = "Nu s-a putut finaliza autentificarea SaaS"
 selfHostedLoginFailed = "Autentificarea self-hosted a eșuat"
@@ -13563,7 +13687,9 @@ validUntrusted = "Valid, semnatar neverificat"
 
 [viewer]
 cannotPreviewFile = "Nu se poate previzualiza fișierul"
+copyRestricted = "Copierea este dezactivată de permisiunile acestui PDF."
 copyText = "Copiază"
+coverPageView = "Afișează pagina de copertă separat"
 disableColorFilter = "Dezactivați filtrul de culoare"
 documentUpdated = "Document actualizat"
 dualPageView = "Vizualizare cu două pagini"
@@ -13580,6 +13706,7 @@ noPdfProvided = "Nu a fost furnizat niciun PDF"
 onlyPdfSupported = "Acest format de fișier nu este acceptat pentru previzualizare."
 pageNavigation = "Navigare în pagină"
 previousPage = "Pagina anterioară"
+readAloudFromHere = "Citește cu voce tare de aici"
 saveChangesErrorBody = "Documentul nu a putut fi salvat. Încercați din nou."
 saveChangesErrorTitle = "Nu s-au putut salva modificările"
 singlePageView = "Vizualizare cu o singură pagină"
@@ -13640,6 +13767,7 @@ closeSidebar = "Închide bara laterală a comentariilor"
 deleteAnnotationAndComment = "Ștergeți adnotarea și comentariul"
 deleteDescription = "Această adnotare are un comentariu atașat. Puteți elimina doar comentariul din bara laterală păstrând adnotarea sau puteți șterge totul."
 deleteTitle = "Eliminați adnotarea din comentarii?"
+exportCsv = "Exportă ca CSV"
 goToLink = "Accesați linkul"
 hint = "Plasați comentarii folosind instrumentele Comentariu, Inserare text sau Înlocuire text. Ele vor apărea aici, pe pagini."
 locateAnnotation = "Localizați în document"
@@ -13658,7 +13786,16 @@ typeInsertText = "Inserare text"
 typeReplaceText = "Înlocuire text"
 viewComment = "Vizualizați comentariul"
 
+[viewer.comments.csv]
+author = "Autor"
+comment = "Comentariu"
+inReplyTo = "Ca răspuns la"
+modifiedUtc = "Ultima modificare (UTC)"
+page = "Pagină"
+thread = "Fir"
+
 [viewer.error]
+loadError = "Nu s-a putut încărca PDF-ul"
 noFileProvided = "Eroare: Nu a fost furnizat niciun fișier vizualizatorului"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "Text filigran"
 image = "Imagine"
 text = "Text"
 
+[workbench]
+dropFailedSingle = "Fișierul dvs. nu a putut fi adăugat"
+dropFailedSome = "{{failed}} dintre fișierele dvs. nu au putut fi adăugate"
+dropOverlay = "Plasați fișierele pentru a le adăuga în bancul de lucru"
+
 [workbench.sessionRestore]
 none = "Fișierele dvs. anterioare nu mai sunt stocate pe acest dispozitiv."
 partial = "S-au restaurat {{restored}} din {{total}} fișiere. Restul nu mai sunt stocate pe acest dispozitiv."
@@ -13915,16 +14057,14 @@ annotations = "Adnotări"
 applyRedactionsFirst = "Aplică mai întâi redactările"
 closeAll = "Închide toate fișierele"
 closePdf = "Închide PDF"
-deleteSelected = "Șterge paginile selectate"
 deselectAll = "Deselectează tot"
 downloadAll = "Descarcă tot"
+exitAnnotations = "Ieși din modul de adnotare"
 exitRedaction = "Ieși din modul de redactare"
-exportAll = "Exportă PDF"
-exportSelected = "Exportă paginile selectate"
 formFill = "Editor de formulare"
 hideToolbar = "Ascunde bara de instrumente"
 moreActions = "Mai multe acțiuni"
-multiTool = "Instrument multiplu"
+pageEditor = "Editor de pagini"
 panMode = "Mod panoramare"
 print = "Tipărește PDF"
 readAloud = "Citește cu voce tare"
@@ -13938,7 +14078,6 @@ rulerSettings = "Setări scară"
 save = "Salvează"
 saveAll = "Salvează tot"
 saveAs = "Salvează ca"
-saveChanges = "Salvează modificările"
 search = "Caută în PDF"
 selectAll = "Selectează tot"
 selectByNumber = "Selectează după numerele paginilor"

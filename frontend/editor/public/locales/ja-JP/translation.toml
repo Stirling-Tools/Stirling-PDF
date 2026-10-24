@@ -55,7 +55,9 @@ keepWorking = "作業を続ける"
 loading = "読込中..."
 loginAgreementAccept = "同意する"
 loginAgreementDecline = "同意しない"
+loginAgreementLoadFailed = "ログイン同意書を読み込めませんでした。"
 loginAgreementProvider = "この通知は Stirling PDF Inc. ではなく、お使いの管理者によって提供されています。"
+loginAgreementRetry = "再試行"
 loginAgreementTitle = "ログイン同意"
 logOut = "ログアウト"
 marginTooltip = "ページ番号とページ端との距離。"
@@ -299,7 +301,6 @@ title = "ページ番号の結果"
 
 [addPassword]
 desc = "パスワードで PDF 文書を暗号化します。"
-submit = "暗号化"
 tags = "暗号化,パスワード,ロック,安全,保護,セキュリティ,暗号化,保護措置,機密,非公開,アクセス制限"
 title = "パスワードの追加"
 
@@ -311,17 +312,6 @@ label = "暗号鍵長"
 
 [addPassword.error]
 failed = "PDF の暗号化中にエラーが発生しました。"
-
-[addPassword.passwords]
-stepTitle = "パスワードと暗号化"
-
-[addPassword.passwords.owner]
-label = "オーナーパスワード"
-placeholder = "オーナーパスワードを入力"
-
-[addPassword.passwords.user]
-label = "ユーザーパスワード"
-placeholder = "ユーザーパスワードを入力"
 
 [addPassword.results]
 title = "暗号化済み PDF"
@@ -1627,6 +1617,7 @@ title = "再起動が必要です"
 [admin.settings.security]
 authentication = "認証"
 description = "認証、ログイン動作、セキュリティポリシーを構成します。"
+pdfPermissions = "PDF 権限"
 title = "セキュリティ"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "CSRF 保護を無効化"
 [admin.settings.security.enableLogin]
 description = "アプリにアクセスする前にユーザーにログインを要求する"
 label = "ログインを有効化"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "制限された操作には権限パスワードを要求します。これをオフにしても、PDF を開くために必要なパスワードは引き続き要求されます。"
+label = "PDF 権限を尊重"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "詳細設定"
@@ -1938,9 +1933,6 @@ wrapUp = "これで管理者ツアーは終了です！組織向けに Stirling 
 [adminUserSettings]
 admin = "管理者"
 title = "ユーザー制御設定"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "アラビア語"
@@ -3173,12 +3165,14 @@ unknown = "不明"
 
 [changePermissions]
 desc = "文書の制限と権限を変更します。"
+loading = "現在の権限を読み込んでいます..."
 submit = "権限の変更"
 tags = "権限,制限,権利,アクセス制御,許可,拒否,印刷,コピー,編集,権限変更,セキュリティ設定,ユーザー権限"
 title = "権限の変更"
 
 [changePermissions.error]
 failed = "PDF の権限変更中にエラーが発生しました。"
+readFailed = "この PDF の現在の権限を読み取れませんでした。変更を適用する前に、制限を手動で設定してください。"
 
 [changePermissions.permissions.preventAssembly]
 label = "ドキュメントの組立を禁止"
@@ -3219,21 +3213,16 @@ text = "これらの権限を変更不可にするには、パスワード追加
 [chat.actions]
 copy = "メッセージをコピー"
 
-[chat.emptyState]
-text = "ドキュメントについて質問するか、PDF ツールのヘルプを取得してください。"
-
-[chat.fab]
-close = "チャットを閉じる"
-open = "Stirling AI アシスタントを開く"
+[chat.dock]
+collapse = "チャットを折りたたむ"
+placeholder = "Stirling Agent に質問"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling エージェントのオプション"
-assistant = "AI アシスタント"
 clearChat = "チャットをクリア"
 
 [chat.input]
 disclaimer = "AI は間違えることがあります。共有する前に必ず出力を確認してください。"
-placeholder = "何をしたいですか？"
 send = "メッセージを送信"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "これらを PDF に変換"
 convertOne = "これを PDF に変換"
 heading = "はじめる"
 mergeMany = "これらの {{count}} 件のドキュメントを1つに結合"
-moreFiles = "+{{count}} 件"
 openFromComputer = "コンピュータから開く"
-removeFile = "{{name}} を削除"
 splitOne = "このドキュメントを分割"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "リクエストされた情報が見つかりませんでした。"
 processing = "処理中（{{outcome}}）..."
 unsupported_capability = "未対応の機能: {{capability}}"
 usage_limit_reached = "使用上限に達しました。続行するにはプランオプションを確認してください。"
-
-[chat.toolsUsed]
-summary_one = "ツールを1件実行しました"
-summary_other = "ツールを{{count}}件実行しました"
-unknownTool = "不明なツール"
 
 [classification.families]
 correspondence = "通信文書"
@@ -3649,6 +3631,7 @@ tooltip = "画面から色を取得"
 hue = "色相"
 saturation = "彩度と明るさ"
 title = "色を選択"
+transparent = "透明"
 
 [common]
 actions = "操作"
@@ -3664,6 +3647,7 @@ continue = "続行"
 copied = "コピーしました！"
 copy = "コピー"
 copyCode = "コードをコピー"
+copyFailed = "コピーに失敗しました"
 dismiss = "閉じる"
 done = "完了"
 enterValue = "値を入力"
@@ -3847,6 +3831,12 @@ unavailable = "このサーバーに ImageMagick がインストールまたは�
 filesize = "ファイルサイズ"
 quality = "品質"
 title = "圧縮方式"
+
+[compress.noReduction]
+multiple = "圧縮は正常に実行されましたが、{{total}} ファイル中 {{count}} ファイルはこれ以上圧縮できません。"
+multipleAtLevel = "このレベルの圧縮では、{{total}} ファイル中 {{count}} ファイルに改善はありませんでした。より高い圧縮レベルをお試しください。"
+single = "圧縮は正常に実行されましたが、このファイルはこれ以上圧縮できません。"
+singleAtLevel = "このレベルの圧縮では、このファイルに改善はありませんでした。より高い圧縮レベルをお試しください。"
 
 [compress.settings]
 desiredSize = "目標ファイルサイズ"
@@ -4295,6 +4285,13 @@ precision = "座標入力で正確に位置指定"
 resize = "角と辺のハンドルをドラッグしてサイズ変更"
 title = "PDF を切り抜く方法"
 
+[damagedPdf]
+description = "この PDF は破損しているため、開けません。"
+label = "破損"
+repair = "修復"
+repaired = "{{name}} を修復しました"
+repairFailed = "{{name}} を修復できませんでした"
+
 [database]
 backupCreated = "データベースのバックアップに成功しました"
 fileName = "ファイル名"
@@ -4363,6 +4360,10 @@ title = "ディスクから更新されました"
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\" はディスク上で変更されました。再読み込みに時間がかかるほど大きいため、ここにあるバージョンはそのままにしています。"
 title = "ファイルがディスク上で変更されました"
+
+[desktopPrivacy]
+blocked = "管理者により、ドキュメントをこのデバイス上に保持することが要求されています。この機能は利用できません。"
+localFiles = "ローカルファイル"
 
 [desktopUpdate]
 downloading = "更新をダウンロード中..."
@@ -4491,22 +4492,80 @@ description = "目次編集ツールを選択してワークスペースを読�
 title = "ツールを開いて編集を開始"
 
 [encryptedPdfUnlock]
-description = "このPDFはパスワードで保護されています。作業を続けるにはパスワードを入力してください。"
-emptyResponse = "パスワードの削除でファイルが生成されませんでした。"
+actionIgnored = "{{action}} の制限を無視しました"
+actionUnlocked = "このセッションで {{action}} のロックを解除しました"
+advanced = "詳細"
+allowed = "許可済み"
+annotations = "注釈"
+authoriseAction = "この PDF で {{action}} を使用するには権限が必要です。"
+changeOwnerPassword = "権限パスワードを変更"
+checkingPermissions = "PDF 権限を確認しています..."
+chooseOwnerPassword = "別のパスワードを選択"
+continue = "続行"
+copyFailed = "コピーを作成できません。PDF は変更されていません。"
+copying = "コンテンツをコピーしています"
+editing = "編集"
+enterPassword = "パスワードを入力"
+ignoredByServer = "このサーバーの設定により権限は無視されます。PDF の保護は変更されていません。"
 incorrectPassword = "パスワードが違います"
+inspectionFailed = "この PDF の権限を確認できません。もう一度お試しください。"
+lowQualityPrintUnsupported = "この PDF は低品質印刷のみ許可していますが、このビューアーは対応していません。"
+lowResolutionOnly = "低解像度のみ"
+manageProtection = "保護を管理"
 missingFile = "選択したファイルは利用できません。"
+mixedProtection = "これらの PDF にはそれぞれ異なる保護設定があります。個別に処理してください。"
+newOwnerPassword = "新しい権限パスワード"
+notRequired = "不要"
+openingPassword = "開くためのパスワード"
+openPdf = "PDF を開く"
+ownerPassword = "権限パスワード"
+ownerRequired = "続行するには権限パスワードを入力してください。"
+ownerTitle = "権限パスワードを入力"
+passwordRetained = "変更せず保持"
+passwordsMustDiffer = "2 つのパスワードは異なる必要があります。"
+permissionsUnlocked = "このセッションで権限のロックを解除しました"
+prepareFailed = "この保護された PDF を処理用に準備できません。"
+printing = "印刷"
+printRestricted = "印刷が制限されています。保護の管理で権限を確認してください。"
+protectedPdf = "保護された PDF"
+protectionRetained = "保護を保持しました"
+protectionSaved = "保護を保存しました"
+removePasswordHelp = "削除するパスワードを選択するには、パスワード削除を開いてください。"
+removeProtection = "保護されていないコピーを作成"
+replaceProtection = "これらの設定は PDF の現在の保護を置き換えます。"
 required = "続行するにはパスワードを入力してください。"
-skip = "今はスキップ"
-successBody = "パスワードを削除しました。"
-successBodyWithName = "{{fileName}} からパスワードを削除しました"
-successTitle = "パスワードを削除しました"
+requiredStatus = "必須"
+requiredToApply = "変更の適用に必要"
+restoreFailed = "PDF の保護を保持できません。保護されていない結果は保存されませんでした。"
+restrictActions = "操作を制限"
+restricted = "制限あり"
+restrictedActions = "制限された操作"
+restrictedOperation = "この操作には権限パスワードが必要です。"
+retainOwnerVerification = "開くためのパスワードを削除しつつ権限パスワードを変更せず保持するには、権限パスワードを確認してください。これは権限パスワードを削除しません。"
+saveProtection = "保護を保存"
+securityChangeFailed = "保護を変更できません。権限パスワードと新しいセキュリティ設定を確認してください。"
+sessionDetails = "このセッションで開きます。PDF は保護されたままです。"
+sessionDetailsLabel = "セッションでのロック解除について"
+sessionFailed = "この PDF のロックを解除できません。もう一度お試しください。"
+sessionSuccessBody = "保護は保持されました。"
+sessionSuccessBodyWithName = "{{fileName}} の保護は保持されました。"
+sessionSuccessTitle = "PDF を開きました"
+sessionTitle = "PDF を開く"
+signedReadOnly = "この署名済み PDF は表示できますが、ここでは編集できません。"
 title = "続行するにはパスワードを削除"
+toolUnavailable = "このツールは暗号化された PDF に対応していません。先にパスワードを削除してください。"
+toolUnavailableDetails = "{{name}} が利用できない理由"
 unlock = "解除して続行"
 unlockAll = "すべてに適用（{{count}}）"
 unlockAllPartialFail = "パスワードが違います: {{names}}"
 unlockAllSuccess_one = "{{count}} 個のファイルのロックを解除しました。"
 unlockAllSuccess_other = "{{count}} 個のファイルのロックを解除しました。"
+unlockedForSession = "権限パスワードを使用して、このセッションでロックを解除しました。"
 unlockPrompt = "続行するにはPDFを解除"
+unprotectedCopyConsequence = "コピーにはパスワードや制限がありません。元のファイルは保護されたままです。"
+unsupportedTool = "このツールはまだこの PDF の保護を保持できません。"
+verifiedForSession = "このセッションで確認済み"
+verifyPermissions = "このセッションの権限を確認"
 viewerLocked = "この PDF はパスワードで保護されています"
 viewerUnlock = "ロック解除"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "ビューアで表示"
 closeFile = "ファイルを閉じる"
 
 [fileEditor]
-addFiles = "ファイルを追加"
 closedFile = "{{name}} を閉じました"
 couldNotSave = "{{name}} を保存できませんでした"
-filesAdded_one = "{{count}} 個のファイルを追加しました"
-filesAdded_other = "{{count}} 個のファイルを追加しました"
 filesReordered_one = "ファイルの順序を変更しました"
 filesReordered_other = "{{count}} 個のファイルの順序を変更しました"
 loadedFromStorage_one = "ストレージから {{count}} 個のファイルを読み込みました"
 loadedFromStorage_other = "ストレージから {{count}} 個のファイルを読み込みました"
 loadFromStorageFailed = "ストレージから一部のファイルを読み込めませんでした"
 pinnedFile = "{{name}} をピン留めしました"
-processFilesFailed = "ファイルの処理に失敗しました"
 savedAndClosed = "{{name}} を保存して閉じました"
 saveFailed = "保存に失敗しました"
 unpinnedFile = "{{name}} のピン留めを解除しました"
 unzipping = "{{name}} を解凍しています"
+
+[fileEditor.addCard]
+dropHint = "またはファイルをどこにでもドロップ"
+fromComputer = "コンピューターからアップロード"
+moreOptions = "その他のアップロードオプション"
 
 [fileEditor.unzip]
 error = "{{name}} の解凍中にエラーが発生しました"
@@ -4729,7 +4789,6 @@ dataLostBody = "このブラウザーはこのファイルの内容を失いま�
 dataLostTitle = "ファイルデータを利用できません"
 downloadFailed = "ダウンロードに失敗しました"
 dropHint = "開始するにはファイルを開いてください"
-dropToAdd = "ファイルをドロップして追加"
 duplicateFailed = "ファイルを複製できませんでした"
 expand = "サイドバーを展開"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "フィールドを再スキャン"
 rescanFormFields = "フォームフィールドを再スキャン"
 save = "保存"
 saveShortcut = "Ctrl+S で保存"
+saving = "保存しています..."
 selectOptionPlaceholder = "— 選択 —"
 skippedEdits_one = "1 件の変更を適用できませんでした:"
 skippedEdits_other = "{{count}} 件の変更を適用できませんでした:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "さらに {{count}} 件は表示されていません�
 unsavedChanges = "未保存の変更"
 
 [formFill.create]
-commit = "{{count}} 個のフィールドを PDF に追加"
 empty = "まだフィールドが描画されていません。"
-failed = "フィールドの追加に失敗しました"
 goToField = "このフィールドへ移動"
 hint = "フィールドの種類を選択し、ページ上に描画してください。"
 placing = "ページ上に {{type}} フィールドを描画します。停止するには Esc を押してください。"
@@ -5334,7 +5392,6 @@ modify = "変更"
 commit = "{{count}} 件の変更を保存"
 delete = "削除"
 empty = "この PDF にはまだフォームフィールドがありません。"
-failed = "変更の保存に失敗しました"
 groupSizeHint = "オプションサイズを使用"
 hint = "フィールドを選択してプロパティを編集するか、ページ上でドラッグするか、削除してください。"
 restore = "復元"
@@ -5732,11 +5789,6 @@ title = "PDFを重ね合わせ"
 desc = "PDFの複数のページを1ページに結合します。"
 tags = "レイアウト,配置,結合,N-up,2-up,4-up,1ページに複数,シートあたりページ数,ページレイアウト,タイル,グリッドレイアウト,複数ページレイアウト,ページ上で結合,配布資料"
 title = "マルチページレイアウト"
-
-[home.pdfCommentAgent]
-desc = "プロンプトに基づき、AI が PDF に付箋コメントで注釈を追加します"
-tags = "AI,エージェント,コメント,注釈,付箋,レビュー,フィードバック,メモ"
-title = "AI コメントを追加"
 
 [home.pdfOrganiser]
 tags = "整理,並べ替え,順序変更,ページ配置,ソート,ページ移動,ページ削除,ページ削除,ページ管理,page organizer,再シーケンス"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "あなたはチームメンバーになり、所有者アク�
 deselectAll = "なし"
 selectAll = "すべてチェック"
 
-[pageEditor]
-dragPreviewAlt = "ドラッグ中"
-filePosition = "位置 {{position}}"
-pageLabel = "ページ {{page}}"
-title = "ページエディタ"
-
-[pageEditor.actions]
-deletePage = "ページを削除"
-insertFileAfter = "後にファイルを挿入"
-moveLeft = "左へ移動"
-moveRight = "右へ移動"
-rotateLeft = "左に回転"
-rotateRight = "右に回転"
-splitAfter = "後で分割"
-
-[pageEditor.commands]
-addSplitAt = "位置 {{position}} に分割を追加"
-addSplits_one = "{{count}} 個の分割を追加"
-addSplits_other = "{{count}} 個の分割を追加"
-deletePages_one = "{{count}} ページを削除"
-deletePages_other = "{{count}} ページを削除"
-insertFiles_one = "{{count}} 個のファイルをページ {{page}} の後に挿入"
-insertFiles_other = "{{count}} 個のファイルをページ {{page}} の後に挿入"
-insertPageBreaks_one = "{{count}} 個の改ページを挿入"
-insertPageBreaks_other = "{{count}} 個の改ページを挿入"
-insertPageBreaksAll = "すべてのページの後に改ページを挿入"
-removeAllSplits = "すべての分割を削除"
-removeSplitAt = "位置 {{position}} の分割を削除"
-removeSplits_one = "{{count}} 個の分割を削除"
-removeSplits_other = "{{count}} 個の分割を削除"
-reorderPages = "ページを並べ替え"
-rotatePageLeft = "ページを左に回転"
-rotatePageRight = "ページを右に回転"
-rotatePagesLeft_one = "{{count}} ページを左に回転"
-rotatePagesLeft_other = "{{count}} ページを左に回転"
-rotatePagesRight_one = "{{count}} ページを右に回転"
-rotatePagesRight_other = "{{count}} ページを右に回転"
-splitAllPages = "すべてのページを分割"
-toggleSplits_one = "{{count}} 個の分割位置を切り替え"
-toggleSplits_other = "{{count}} 個の分割位置を切り替え"
-
-[pageEditor.emptyState]
-body = "ファイルを追加してページ編集を開始"
-title = "PDF ファイルが読み込まれていません"
-
-[pageEditor.fileDropdown]
-addFile = "ファイルを追加"
-selectedCount = "{{selected}}/{{total}} 個のファイルを選択済み"
-untitled = "無題"
-
-[pageEditor.toolbar]
-delete = "選択を削除"
-redo = "やり直す"
-rotateLeft = "選択を左回転"
-rotateRight = "選択を右回転"
-undo = "元に戻す"
-
 [pageExtracter]
 title = "ページの抽出"
 
@@ -6815,6 +6810,79 @@ title = "ページ範囲"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → すべてのページを選択"
 title = "特殊キーワード"
+
+[pageTracks]
+blankPage = "空白ページ"
+deleteSelected = "選択したページを削除"
+downloadAsOneFile = "1 つのファイルとしてダウンロード"
+downloadEachPage = "各ページを個別にダウンロード"
+downloadSelectedPages = "選択したページをダウンロード"
+dragging_one = "{{count}} ページ"
+dragging_other = "{{count}} ページ"
+duplicateSelected = "選択したページを複製"
+edited = "編集済み"
+emptyTrack = "ページが残っていません。ここにページをドラッグするか、保存してこのファイルを閉じてください。"
+insertBlank = "空白ページを挿入"
+insertBlankAfterSelected = "選択したページの後に空白ページを挿入"
+moveLeft = "左へ移動"
+moveRight = "右へ移動"
+nextPage = "次のページ"
+page = "ページ {{number}}"
+pageCount_one = "{{count}} ページ"
+pageCount_other = "{{count}} ページ"
+pagePosition = "{{total}} ページ中 {{number}} ページ"
+prevPage = "前のページ"
+readingPages = "ページを読み込んでいます..."
+redo = "やり直し"
+rotateLeft = "左に回転"
+rotateRight = "右に回転"
+rotateSelectedLeft = "選択したページを左に回転"
+rotateSelectedRight = "選択したページを右に回転"
+saveAsOneFile = "1 つのファイルとして保存"
+saveChanges = "すべてのファイルへの変更を保存"
+saveEachPage = "各ページを個別に保存"
+saveSelectedPages = "選択したページを保存"
+saving = "保存しています..."
+savingProgress = "{{total}} 件中 {{done}} 件を保存しています"
+selectPage = "ページ {{number}} を選択"
+splitAfterSelected = "選択したページの後で分割"
+splitHere = "ここで分割"
+undo = "元に戻す"
+viewError = "このページをレンダリングできませんでした"
+viewPage = "ページを表示"
+zoomIn = "拡大"
+zoomOut = "縮小"
+
+[pageTracks.close]
+message = "すべてのファイルを閉じてもよろしいですか？"
+unsaved = "これらのファイルには未保存の変更があります。"
+
+[pageTracks.delete]
+page = "ページを削除"
+
+[pageTracks.duplicate]
+page = "ページを複製"
+
+[pageTracks.empty]
+body = "PDF を追加すると、編集可能なページトラックに展開されます"
+title = "PDF ファイルが読み込まれていません"
+
+[pageTracks.exportFailed]
+body = "編集済みファイルを準備できませんでした。もう一度お試しください。"
+title = "ダウンロードできませんでした"
+
+[pageTracks.saveFailed]
+body = "編集内容は失われていません。もう一度保存してください。"
+title = "変更を保存できませんでした"
+
+[pageTracks.track]
+close = "ファイルを閉じる"
+collapse = "折りたたむ"
+expand = "展開"
+rename = "ファイル名を変更"
+
+[pageTracks.wrap]
+label = "ページを折り返す"
 
 [payg.activity]
 docs = "ドキュメント"
@@ -7144,24 +7212,6 @@ totalSeats_other = "合計 ({{count}} シート)"
 [payment.upgradeTeam]
 title = "Team にアップグレード"
 
-[pdfCommentAgent]
-submit = "コメントを生成"
-
-[pdfCommentAgent.error]
-emptyPrompt = "AI にコメントさせたい内容を記述してください"
-failed = "コメントの生成に失敗しました"
-tooLong = "プロンプトが長すぎます（最大 {{max}} 文字）"
-
-[pdfCommentAgent.prompt]
-label = "AI は何にコメントすべきですか？"
-placeholder = "例: あいまいな日付を指摘し、明確化を提案してください"
-
-[pdfCommentAgent.results]
-title = "コメント付き PDF"
-
-[pdfCommentAgent.settings]
-title = "コメントの指示"
-
 [pdfOrganiser]
 placeholder = "(例:1,3,2または4-8,2,10-12または2n-1)"
 tags = "両面,偶数,奇数,並べ替え,移動"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "ページ上のテキスト、画像、図形をクリッ
 ocrDocumentChanged = "OCRの実行中にドキュメントが変更されました。最新の変更を含めるには、OCRを再度実行してください。"
 ocrInvalidResult = "OCRがPDFを返しませんでした。もう一度お試しください。"
 ocrNoLanguages = "サーバーにOCR言語がインストールされていません。"
+ocrProtected = "OCR はまだこの PDF の保護を保持できません。保護された元のファイルは引き続き表示できます。"
 ocrRunning = "テキストを認識中..."
 ocrUnavailable = "このサーバーではOCRを利用できません。"
 oneImage = "画像"
@@ -7389,13 +7440,8 @@ pageNumber = "ページ {{page}}"
 renderFailed = "ページをレンダリングできませんでした"
 
 [pdfTextEditor.password]
-cancel = "キャンセル"
 incorrect = "パスワードが正しくありません - もう一度お試しください。"
 label = "パスワード"
-open = "開く"
-protected = "この PDF はパスワードで保護されています。"
-protectedNamed = "\"{{fileName}}\" はパスワードで保護されています。"
-title = "パスワードが必要です"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}} の配置ガイド - 削除するにはルーラー上にドラッグ"
@@ -7994,6 +8040,7 @@ before = "設定"
 title = "Stirling接続が設定されていません"
 
 [portal.accountLink.notice]
+loadFailed = "アカウント連携ダイアログを読み込めませんでした。"
 openFailed = "ブラウザーを開けませんでした。アカウントをリンクするには、接続済みサーバーで使用状況と請求を開いてください。"
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "月額利用上限 {{amount}}/月。上限に達すると処理が一�
 limitNoCap = "利用上限なし。処理は一時停止しません。請求書は毎月発行されます。"
 
 [portal.billing.chip]
-invoices = "請求書"
-nav = "セクション"
-payment = "支払い"
 plan = "プラン"
 procurement = "調達"
 usage = "使用状況"
@@ -8178,9 +8222,22 @@ pdfs = "処理済み PDF"
 users = "ユーザー"
 
 [portal.billing.enterprise]
+active = "契約は {{date}} まで有効"
 cta = "エンタープライズ見積もりを取得"
+included = "Enterprise に含まれます"
+payment_pending = "支払い保留中 · {{date}} までアクセス可能"
+pdfsAgreed = "{{used}} / {{agreed}} PDF"
+pdfsOver_one = "契約数量を {{count}} PDF 超過"
+pdfsOver_other = "契約数量を {{count}} PDF 超過"
+pdfsUsed_one = "{{count}} PDF を処理しました"
+pdfsUsed_other = "{{count}} 件のPDFを処理しました"
+period = "契約期間: {{start}} – {{end}}"
 sub = "エアギャップ展開、SCIM、データレジデンシー、稼働率 SLA、およびそれに対応する契約。"
 title = "規制された環境で Stirling を実行していますか？"
+trial = "{{days}}日間のトライアル · {{date}} に終了"
+usersAgreed = "契約ユーザー数: {{used}} / {{agreed}}"
+usersOver_one = "{{count}} ユーザーが契約数量を超過しています"
+usersOver_other = "{{count}} ユーザーが契約数量を超過しています"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "チェックアウトを開始できませんでした"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "お使いのディストリビューション向けのネイティブビルド。"
-guideBtn = "Linux インストールオプションを表示"
+downloadAppImage = "AppImage"
+downloadDeb = ".deb をダウンロード (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "一般的なディストロ向けに AppImage、.deb、.rpm ビルドを利用できます。"
 tagline = "お使いのディストロ向けネイティブデスクトップアプリ"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "墨消し,隠す,黒塗り,黒,マーカー,非表示,自動墨消し,�
 title = "墨消し"
 
 [redact.auto]
+caseSensitiveLabel = "大文字と小文字を区別する一致"
 colorLabel = "ボックスの色"
 convertPDFToImageLabel = "PDF を PDF-Image に変換"
 customPaddingLabel = "追加余白を指定"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "複数ファイルを一度に墨消しするには�
 manual = "手動"
 mode = "モード"
 title = "墨消し方法"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "同じ大文字・小文字のテキストのみ一致します。有効にすると 'Secret' は 'SECRET' と一致せず、正規表現の [A-Z] は大文字のみに一致します。"
+title = "大文字と小文字を区別する一致"
 
 [redact.tooltip.advanced.color]
 text = "墨消しボックスの見た目をカスタマイズします。標準は黒ですが、任意の色を選べます。余白は検出テキストの周囲に追加されるスペースです。"
@@ -11396,7 +11460,12 @@ text = "PDF から削除するページを指定します。個別ページ、�
 title = "ページ選択"
 
 [removePassword]
-desc = "PDFからパスワードの削除します。"
+appliesTo = "{{total}} 件中 {{count}} 件のPDFに設定されています"
+keepBlank = "そのパスワードを保持するには、フィールドを空白のままにしてください。"
+notSet = "未設定"
+openWithReaderFirst = "権限パスワードのみを削除する前に、このPDFを開くためのパスワードを使用して再度開いてください。"
+selectiveHelp = "削除したい各保護の現在のパスワードを入力してください。空白のフィールドはそのパスワードを保持します。権限パスワードを削除すると、操作制限も削除されます。"
+selectPasswords = "削除するパスワード"
 submit = "パスワードを削除"
 tags = "セキュア,復号,セキュリティ,パスワード解除,パスワード削除"
 title = "パスワードの削除"
@@ -11407,13 +11476,9 @@ failed = "PDF からパスワードを削除中にエラーが発生しました
 [removePassword.password]
 label = "現在のパスワード"
 placeholder = "現在のパスワードを入力"
-stepTitle = "パスワードの削除"
 
 [removePassword.results]
 title = "復号済み PDF"
-
-[removePassword.tooltip]
-description = "パスワード保護を解除するには、PDF の暗号化に使用されたパスワードが必要です。これによりドキュメントが復号され、パスワードなしでアクセスできるようになります。"
 
 [reorganizePages]
 submit = "ページを再構成"
@@ -11543,6 +11608,64 @@ m = "メートル (m)"
 mi = "マイル (mi)"
 mm = "ミリメートル (mm)"
 yd = "ヤード (yd)"
+
+[runLocation]
+back = "戻る"
+continue = "続行"
+subtitle = "実行場所を選択してください。"
+title = "Stirlingをどこで実行しますか？"
+
+[runLocation.choice.browser]
+description = "Webアプリ。"
+title = "ブラウザー内"
+
+[runLocation.choice.computer]
+description = "デスクトップアプリ。"
+title = "お使いのコンピューター上"
+
+[runLocation.choice.server]
+description = "チーム向けのセルフホスト。"
+title = "お使いのサーバー上"
+
+[runLocation.desktop]
+computerLabel = "お使いのコンピューター"
+download = "{{platform}} 用にダウンロード"
+downloadAgain = "もう一度ダウンロード"
+guide = "{{platform}} のインストールガイドを開く"
+startedSubtitle = "Downloadsフォルダーを確認し、インストーラーを開いてください。"
+startedTitle = "ダウンロードが開始されました"
+subtitle = "ダウンロードして開いてください。"
+title = "デスクトップアプリを入手"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (インストールガイド)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "コピーしました"
+copy = "コマンドをコピー"
+copyCompose = "composeファイルをコピー"
+guide = "{{method}} のインストールガイド"
+methodLabel = "実行方法"
+note = "その後、<url/> を開いてセットアップを完了してください。"
+subtitle = "これをサーバー上で実行し、その後ブラウザーで開いてください。"
+title = "サーバーをセットアップ"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "PDF ファイルから潜在的に有害な要素を削除します。"
@@ -12054,6 +12177,7 @@ title = "ワークスペース"
 loginIncomplete = "ログインを完了できませんでした"
 noSaasServer = "SaaS サーバーが設定されていません"
 noServer = "サーバーが設定されていません"
+policyUnavailable = "組織のサインイン設定を読み込めません。"
 saasLoginFailed = "SaaS ログインに失敗しました"
 saasLoginIncomplete = "SaaS ログインを完了できませんでした"
 selfHostedLoginFailed = "セルフホストのログインに失敗しました"
@@ -13563,7 +13687,9 @@ validUntrusted = "有効（署名者は未確認）"
 
 [viewer]
 cannotPreviewFile = "ファイルをプレビューできません"
+copyRestricted = "このPDFの権限によりコピーは無効になっています。"
 copyText = "コピー"
+coverPageView = "表紙ページを個別に表示"
 disableColorFilter = "カラーフィルターを無効化"
 documentUpdated = "ドキュメントが更新されました"
 dualPageView = "見開き表示"
@@ -13580,6 +13706,7 @@ noPdfProvided = "PDF が指定されていません"
 onlyPdfSupported = "このファイル形式はプレビューに対応していません。"
 pageNavigation = "ページ移動"
 previousPage = "前のページ"
+readAloudFromHere = "ここから読み上げ"
 saveChangesErrorBody = "ドキュメントを保存できませんでした。もう一度お試しください。"
 saveChangesErrorTitle = "変更を保存できませんでした"
 singlePageView = "単一ページ表示"
@@ -13640,6 +13767,7 @@ closeSidebar = "コメントのサイドバーを閉じる"
 deleteAnnotationAndComment = "注釈とコメントを削除"
 deleteDescription = "この注釈にはコメントが付いています。サイドバーからコメントのみを削除して注釈を残すか、すべて削除できます。"
 deleteTitle = "コメントから注釈を削除しますか？"
+exportCsv = "CSVとしてエクスポート"
 goToLink = "リンクへ移動"
 hint = "「コメント」「テキストを挿入」「テキストを置換」ツールでコメントを配置できます。ページごとにここに表示されます。"
 locateAnnotation = "ドキュメント内で表示"
@@ -13658,7 +13786,16 @@ typeInsertText = "テキストを挿入"
 typeReplaceText = "テキストを置換"
 viewComment = "コメントを表示"
 
+[viewer.comments.csv]
+author = "作成者"
+comment = "コメント"
+inReplyTo = "返信先"
+modifiedUtc = "最終更新日時 (UTC)"
+page = "ページ"
+thread = "スレッド"
+
 [viewer.error]
+loadError = "PDFの読み込みに失敗しました"
 noFileProvided = "エラー: ビューアにファイルが指定されていません"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "透かしテキスト"
 image = "画像"
 text = "テキスト"
 
+[workbench]
+dropFailedSingle = "ファイルを追加できませんでした"
+dropFailedSome = "{{failed}} 個のファイルを追加できませんでした"
+dropOverlay = "ファイルをドロップしてワークベンチに追加"
+
 [workbench.sessionRestore]
 none = "以前のファイルはこのデバイスに保存されていません。"
 partial = "{{total}} 件中 {{restored}} 件のファイルを復元しました。残りはこのデバイスに保存されていません。"
@@ -13915,16 +14057,14 @@ annotations = "注釈"
 applyRedactionsFirst = "先に墨消しを適用"
 closeAll = "すべてのファイルを閉じる"
 closePdf = "PDF を閉じる"
-deleteSelected = "選択したページを削除"
 deselectAll = "すべての選択を解除"
 downloadAll = "すべてダウンロード"
+exitAnnotations = "注釈モードを終了"
 exitRedaction = "墨消しモードを終了"
-exportAll = "PDF をエクスポート"
-exportSelected = "選択したページをエクスポート"
 formFill = "フォームエディター"
 hideToolbar = "ツールバーを非表示"
 moreActions = "その他のアクション"
-multiTool = "マルチツール"
+pageEditor = "ページエディター"
 panMode = "パンモード"
 print = "PDF を印刷"
 readAloud = "読み上げ"
@@ -13938,7 +14078,6 @@ rulerSettings = "縮尺設定"
 save = "保存"
 saveAll = "すべて保存"
 saveAs = "名前を付けて保存"
-saveChanges = "変更を保存"
 search = "PDF を検索"
 selectAll = "すべて選択"
 selectByNumber = "ページ番号で選択"

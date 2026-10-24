@@ -81,6 +81,10 @@ export interface AddPasswordRequest {
    */
   password?: string;
   /**
+   * Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.
+   */
+  preserveExisting?: boolean;
+  /**
    * Whether document assembly is prevented
    */
   preventAssembly?: boolean;
@@ -112,6 +116,10 @@ export interface AddPasswordRequest {
    * Whether faithful printing is prevented
    */
   preventPrintingFaithful?: boolean;
+  /**
+   * Credential for authenticating an existing protected source, separate from the new passwords. Omit to retain legacy add-password behaviour.
+   */
+  sourcePassword?: string;
 }
 export interface AddStampRequest {
   /**
@@ -916,12 +924,6 @@ export interface PDFExtractImagesRequest {
    */
   format?: "png" | "jpeg" | "gif";
 }
-export interface PDFPasswordRequest {
-  /**
-   * The password of the PDF file
-   */
-  password?: string;
-}
 export type PDFVerificationRequest = Record<string, never>;
 export interface PDFWithPageNums {
   /**
@@ -1223,6 +1225,10 @@ export interface RedactStyle {
 }
 export interface RedactPdfRequest {
   /**
+   * Whether matching is case-sensitive, for plain text and regex alike
+   */
+  caseSensitive?: boolean;
+  /**
    * Convert the redacted PDF to an image
    */
   convertPDFToImage?: boolean;
@@ -1256,6 +1262,28 @@ export interface RemoveBlankPagesRequest {
    * The percentage of white color on a page to consider it as blank
    */
   whitePercent?: number;
+}
+export interface RemovePasswordRequest {
+  /**
+   * Permissions password to remove. Supplying this field enables selective removal; leave blank to retain the permissions password.
+   */
+  ownerPassword?: string;
+  /**
+   * The password of the PDF file
+   */
+  password?: string;
+  /**
+   * Explicitly remove all passwords and restrictions, subject to the server owner-password policy. The password or sourcePassword authenticates the source; selective removal fields do not apply.
+   */
+  removeAll?: boolean;
+  /**
+   * Opening password to retain when removing only the permissions password. Supplying this field enables selective removal.
+   */
+  retainedOpeningPassword?: string;
+  /**
+   * Credential for opening the source, without selecting it for removal. Supplying this field enables selective removal; password then selects the opening password to remove and ownerPassword selects the permissions password to remove. Blank selection fields keep their passwords.
+   */
+  sourcePassword?: string;
 }
 export interface RenameAttachmentRequest {
   /**
@@ -1785,7 +1813,7 @@ export interface ToolApiParams {
   "/api/v1/security/redact": ManualRedactPdfRequest;
   "/api/v1/security/redact-execute": RedactExecuteRequest;
   "/api/v1/security/remove-cert-sign": SecurityRemoveCertSignRequest;
-  "/api/v1/security/remove-password": PDFPasswordRequest;
+  "/api/v1/security/remove-password": RemovePasswordRequest;
   "/api/v1/security/sanitize-pdf": SanitizePdfRequest;
   "/api/v1/security/timestamp-pdf": TimestampPdfRequest;
   "/api/v1/security/validate-compliance": SecurityValidateComplianceRequest;

@@ -26,6 +26,10 @@ import type {
 } from "@app/components/viewer/DocumentRestoreBridge";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
+import { PdfProtectionStatus } from "@app/components/viewer/PdfProtectionStatus";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { canPrintPdf } from "@app/services/pdfPermissions";
+import { PdfPreviewUnlockGate } from "@app/components/viewer/PdfPreviewUnlockGate";
 import { PdfViewerToolbar } from "@app/components/viewer/PdfViewerToolbar";
 import { ThumbnailSidebar } from "@app/components/viewer/ThumbnailSidebar";
 import { BookmarkSidebar } from "@app/components/viewer/BookmarkSidebar";
@@ -43,6 +47,7 @@ import type {
   SignatureOverlayAPI,
 } from "@app/components/viewer/viewerTypes";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
+import { rememberPlainPdfExport } from "@app/services/pdfAccessService";
 import {
   isStirlingFile,
   getFormFillFileId,
@@ -59,12 +64,17 @@ import {
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
-import { FORM_APPLY_EVENT } from "@app/tools/formFill/formFillEvents";
+import { useDocumentLoadWaiter } from "@app/components/viewer/useDocumentLoadWaiter";
+import {
+  FORM_APPLY_EVENT,
+  type FormApplyDetail,
+} from "@app/tools/formFill/formFillEvents";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
 import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
 import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { alert } from "@app/components/toast";
+import { useDamagedFileRepair } from "@app/contexts/DamagedFileRepairContext";
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -124,8 +134,10 @@ const EmbedPdfViewerContent = ({
   onSignaturePreviewsChange,
   signatureOverlayApiRef,
   portfolioPinned,
-}: EmbedPdfViewerProps) => {
+  onPasswordRequired,
+}: EmbedPdfViewerProps & { onPasswordRequired?: () => void }) => {
   const { t } = useTranslation();
+  const damagedRepair = useDamagedFileRepair();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
@@ -181,6 +193,7 @@ const EmbedPdfViewerContent = ({
 
   // Get signature and annotation contexts
   const {
+    applySignaturesRef,
     signatureApiRef,
     annotationApiRef,
     historyApiRef,
@@ -481,6 +494,8 @@ const EmbedPdfViewerContent = ({
   ]);
 
   const formApplyInProgressRef = useRef(false);
+  const { waitForDocument, documentReady, documentFailed } =
+    useDocumentLoadWaiter();
   const applyChangesInFlightRef = useRef<Promise<void> | null>(null);
 
   // Get redaction context
@@ -490,6 +505,12 @@ const EmbedPdfViewerContent = ({
     deactivateRedact,
     setRedactionMode,
   } = useRedaction();
+
+  // Resubscribing to history emits its current state as though an edit occurred.
+  const redactionsAppliedRef = useRef(redactionsApplied);
+  useLayoutEffect(() => {
+    redactionsAppliedRef.current = redactionsApplied;
+  }, [redactionsApplied]);
 
   // Ref for redaction pending tracker API
   const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
@@ -643,6 +664,26 @@ const EmbedPdfViewerContent = ({
   // consume/undo paths below pass it back as a FileId.
   const currentFileStableId =
     currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
+  const previousActiveFileIdsRef = useRef(activeFileIds);
+  // Follow removals, but do not overwrite a save's new id before its bytes enter FileContext.
+  useEffect(() => {
+    const previousActiveFileIds = previousActiveFileIdsRef.current;
+    previousActiveFileIdsRef.current = activeFileIds;
+    if (
+      !previewFile &&
+      currentFileStableId &&
+      currentFileStableId !== activeFileId &&
+      (!activeFileId || previousActiveFileIds.some((id) => id === activeFileId))
+    ) {
+      setActiveFileId(currentFileStableId);
+    }
+  }, [
+    previewFile,
+    currentFileStableId,
+    activeFileId,
+    activeFileIds,
+    setActiveFileId,
+  ]);
   const fileWithUrl = useFileWithUrl(currentFile, currentFileId);
 
   // Lineage root of the open document: saves and tool outputs add a child record,
@@ -672,11 +713,16 @@ const EmbedPdfViewerContent = ({
   }, [previewFile, fileWithUrl]);
 
   // Check if the current file is encrypted (gate the viewer to prevent PDFium crash)
-  const isCurrentFileEncrypted = useFileSelector((s) =>
+  const isStoredFileEncrypted = useFileSelector((s) =>
     currentFile && isStirlingFile(currentFile)
       ? s.files.byId[currentFile.fileId]?.processedFile?.isEncrypted === true
       : false,
   );
+  const pdfAccess = usePdfAccess(previewFile ?? currentFile);
+  const isCurrentFileEncrypted =
+    isStoredFileEncrypted || Boolean(pdfAccess?.encrypted);
+  const isCurrentFileLocked = isCurrentFileEncrypted && !pdfAccess;
+  const canPrint = !isCurrentFileLocked && canPrintPdf(pdfAccess);
 
   const bookmarkCacheKey = React.useMemo(() => {
     if (currentFile && isStirlingFile(currentFile)) {
@@ -735,20 +781,20 @@ const EmbedPdfViewerContent = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isApplyingSignatures) return;
       const mod = event.ctrlKey || event.metaKey;
+      const target = event.target as Element | null;
+      const isInTextInput =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
 
-      // Ctrl+P (print) must be intercepted unconditionally
+      // Ctrl+P (print) must be intercepted
       // whenever the viewer is mounted, even before the user has hovered over it.
       // Ctrl+R (rotate) is intercepted only on desktop (Tauri), while on web it still falls through to browser refresh.
       // Without this, the browser falls through to its native "print HTML page"
       // or "reload page" behaviour.
 
       if (mod) {
-        const target = event.target as Element;
-        const isInTextInput =
-          target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          (target as HTMLElement).isContentEditable;
-
         if (!isInTextInput) {
           const wasOverridden = viewerKeyCommand(event);
           if (!wasOverridden) {
@@ -756,7 +802,7 @@ const EmbedPdfViewerContent = ({
               case "p":
               case "P":
                 event.preventDefault();
-                if (!policyEnforcingRef.current) {
+                if (!policyEnforcingRef.current && canPrint) {
                   printActions.print();
                 }
                 return;
@@ -841,18 +887,24 @@ const EmbedPdfViewerContent = ({
       // Non-modifier shortcuts
       switch (event.key) {
         case "Home":
+          if (isInTextInput) return;
           event.preventDefault();
           scrollActions.scrollToFirstPage();
           return;
         case "End":
+          if (isInTextInput) return;
           event.preventDefault();
           scrollActions.scrollToLastPage();
           return;
         case "PageUp":
+        case "ArrowLeft":
+          if (isInTextInput || event.altKey) return;
           event.preventDefault();
           scrollActions.scrollToPreviousPage();
           return;
         case "PageDown":
+        case "ArrowRight":
+          if (isInTextInput || event.altKey) return;
           event.preventDefault();
           scrollActions.scrollToNextPage();
           return;
@@ -876,6 +928,7 @@ const EmbedPdfViewerContent = ({
     searchInterfaceActions,
     scrollActions,
     printActions,
+    canPrint,
     exportActions,
     rotationActions,
     historyApiRef,
@@ -934,18 +987,19 @@ const EmbedPdfViewerContent = ({
       return;
     }
 
-    const updateHasChanges = () => {
+    const updateHasChanges = (historyChanged: boolean) => {
       const canUndo = historyApi.canUndo?.() ?? false;
       if (!canUndo && savedHistoryRevisionRef.current === 0) {
         historyRevisionRef.current = 0;
         hasAnnotationChangesRef.current = false;
         const hasPendingRedactions =
           (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
-        if (!hasPendingRedactions && !redactionsApplied) {
+        if (!hasPendingRedactions && !redactionsAppliedRef.current) {
           setHasUnsavedChanges(false);
         }
         return;
       }
+      if (!historyChanged) return;
       historyRevisionRef.current += 1;
       if (suppressHistoryDirtyRef.current) return;
       // A revision equal to the save point means the annotations match the
@@ -961,27 +1015,27 @@ const EmbedPdfViewerContent = ({
       // their own claim on the flag.
       const hasPendingRedactions =
         (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
-      if (!hasPendingRedactions && !redactionsApplied) {
+      if (!hasPendingRedactions && !redactionsAppliedRef.current) {
         setHasUnsavedChanges(false);
       }
     };
 
-    const unsubscribe = historyApi.subscribe(updateHasChanges);
+    // Reconnecting after a permissions check emits the existing history, not a new edit.
+    let subscribing = true;
+    const unsubscribe = historyApi.subscribe(() => {
+      updateHasChanges(!subscribing);
+    });
+    subscribing = false;
     return () => {
       if (typeof unsubscribe === "function") {
         unsubscribe();
       }
     };
-  }, [
-    historyApiRef.current,
-    setHasUnsavedChanges,
-    redactionsApplied,
-    redactionTrackerRef,
-  ]);
+  }, [historyApiRef.current, setHasUnsavedChanges, redactionTrackerRef]);
 
   // Register checker for unsaved changes (annotations only for now)
   useEffect(() => {
-    if (previewFile) {
+    if (previewFile || isFormFillToolActive) {
       return;
     }
 
@@ -1009,6 +1063,7 @@ const EmbedPdfViewerContent = ({
   }, [
     historyApiRef,
     previewFile,
+    isFormFillToolActive,
     registerUnsavedChangesChecker,
     unregisterUnsavedChangesChecker,
     isManualRedactMode,
@@ -1022,6 +1077,7 @@ const EmbedPdfViewerContent = ({
     }
 
     if (!currentFile || activeFileIds.length === 0) return;
+    const applySignatures = applySignaturesRef.current;
 
     const saveChanges = async () => {
       console.log(
@@ -1040,8 +1096,16 @@ const EmbedPdfViewerContent = ({
 
       if (hadPendingRedactions) {
         console.log("[Viewer] Committing pending redactions before export");
-        redactionTrackerRef.current?.commitAllPending();
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await redactionTrackerRef.current?.commitAllPending();
+      }
+
+      if (applySignatures) {
+        await applySignatures();
+        savedHistoryRevisionRef.current = historyRevisionRef.current;
+        hasAnnotationChangesRef.current = false;
+        setHasUnsavedChanges(false);
+        setRedactionsApplied(false);
+        return;
       }
 
       // Step 1: Export PDF with annotations using EmbedPDF
@@ -1056,6 +1120,7 @@ const EmbedPdfViewerContent = ({
       const blob = new Blob([arrayBuffer], { type: "application/pdf" });
       const filename = currentFile.name || "document.pdf";
       const file = new File([blob], filename, { type: "application/pdf" });
+      rememberPlainPdfExport(currentFile, file);
 
       // Step 3: Create StirlingFiles and stubs for version history
       // Only consume the current file, not all active files
@@ -1122,6 +1187,7 @@ const EmbedPdfViewerContent = ({
     currentFile,
     activeFiles,
     exportActions,
+    applySignaturesRef,
     actions,
     selectors,
     historyApiRef,
@@ -1134,10 +1200,13 @@ const EmbedPdfViewerContent = ({
   // Apply form fill changes - reload the filled PDF into the viewer
   const handleFormApply = useCallback(
     async (filledBlob: Blob) => {
-      if (formApplyInProgressRef.current) return;
-      if (!currentFile || activeFileIds.length === 0) return;
+      if (formApplyInProgressRef.current)
+        throw new Error("A form save is already in progress.");
+      if (!currentFile || activeFileIds.length === 0)
+        throw new Error("No PDF is open.");
 
       formApplyInProgressRef.current = true;
+      let savedFileKey: string | null = null;
       try {
         console.log(
           "[Viewer] Applying form fill changes - reloading filled PDF",
@@ -1148,6 +1217,7 @@ const EmbedPdfViewerContent = ({
         const file = new File([filledBlob], filename, {
           type: "application/pdf",
         });
+        rememberPlainPdfExport(currentFile, file);
 
         // Get current file info for creating the updated version
         const currentFileId = currentFileStableId;
@@ -1164,20 +1234,43 @@ const EmbedPdfViewerContent = ({
         );
 
         const newFileId = stubs[0]?.id;
-        if (newFileId) setActiveFileId(newFileId);
+        savedFileKey = getFormFillFileId(stirlingFiles[0]);
+        if (!newFileId || !savedFileKey)
+          throw new Error("Saved file ID not found");
+        const loaded = waitForDocument(savedFileKey);
 
         // Replace the current file in context
-        await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
+        await Promise.all([
+          actions
+            .consumeFiles([currentFileId], stirlingFiles, stubs)
+            .then(() => {
+              // Selecting an unpersisted ID falls back to another open PDF and remounts the viewer.
+              setActiveFileId(newFileId);
+              return fetchFormFields(
+                stirlingFiles[0],
+                getFormFillFileId(stirlingFiles[0]) ?? undefined,
+              );
+            }),
+          loaded,
+        ]);
 
         console.log("[Viewer] Form fill changes applied successfully");
       } catch (error) {
+        if (savedFileKey) documentFailed(savedFileKey, error);
         console.error("[Viewer] Apply form changes failed:", error);
+        throw error;
       } finally {
         formApplyInProgressRef.current = false;
       }
     },
     [
       currentFile,
+      currentFileStableId,
+      selectedTool,
+      fetchFormFields,
+      waitForDocument,
+      documentFailed,
+      setActiveFileId,
       activeFiles,
       actions,
       selectors,
@@ -1187,15 +1280,14 @@ const EmbedPdfViewerContent = ({
   );
 
   useEffect(() => {
+    if (previewFile) return;
     const handler = (e: Event) => {
-      const blob = (e as CustomEvent).detail?.blob;
-      if (blob) {
-        handleFormApply(blob);
-      }
+      const detail = (e as CustomEvent<FormApplyDetail>).detail;
+      detail.complete(handleFormApply(detail.blob));
     };
     window.addEventListener(FORM_APPLY_EVENT, handler);
     return () => window.removeEventListener(FORM_APPLY_EVENT, handler);
-  }, [handleFormApply]);
+  }, [handleFormApply, previewFile]);
 
   // Apply layer visibility changes - reload the modified PDF into the viewer
   const layerApplyInProgressRef = useRef(false);
@@ -1210,6 +1302,7 @@ const EmbedPdfViewerContent = ({
         const file = new File([modifiedBlob], filename, {
           type: "application/pdf",
         });
+        rememberPlainPdfExport(currentFile, file);
 
         const currentFileId = currentFileStableId;
         if (!currentFileId) throw new Error("Current file ID not found");
@@ -1268,6 +1361,7 @@ const EmbedPdfViewerContent = ({
       const blob = new Blob([arrayBuffer], { type: "application/pdf" });
       const filename = currentFile.name || "document.pdf";
       const file = new File([blob], filename, { type: "application/pdf" });
+      rememberPlainPdfExport(currentFile, file);
 
       // Create StirlingFiles and stubs for version history
       const currentFileId = currentFileStableId;
@@ -1308,7 +1402,7 @@ const EmbedPdfViewerContent = ({
 
   // Register navigation warning handlers so the global modal can call our save/discard logic
   useEffect(() => {
-    if (previewFile) return;
+    if (previewFile || isFormFillToolActive) return;
 
     registerNavigationWarningHandlers({
       onApplyAndContinue: async () => {
@@ -1330,6 +1424,7 @@ const EmbedPdfViewerContent = ({
     return () => unregisterNavigationWarningHandlers();
   }, [
     previewFile,
+    isFormFillToolActive,
     applyChanges,
     discardAndSaveApplied,
     registerNavigationWarningHandlers,
@@ -1694,6 +1789,7 @@ const EmbedPdfViewerContent = ({
     isScaleCalibrationActive,
     startScaleCalibration,
     cancelScaleCalibration,
+    currentFile,
   );
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.
@@ -1726,6 +1822,7 @@ const EmbedPdfViewerContent = ({
     if (
       currentFile &&
       !isCurrentFileEncrypted &&
+      !formApplyInProgressRef.current &&
       (fileChanged || providerChanged)
     ) {
       console.log("[FormFill] Fetching form fields for:", currentFileId);
@@ -1790,7 +1887,7 @@ const EmbedPdfViewerContent = ({
             )}
           </Text>
         </Center>
-      ) : isCurrentFileEncrypted ? (
+      ) : isCurrentFileLocked ? (
         <Center style={{ flex: 1 }}>
           <Stack align="center" gap="md">
             <Icon name="lock" size={48} style={{ opacity: 0.5 }} />
@@ -1813,6 +1910,9 @@ const EmbedPdfViewerContent = ({
         </Center>
       ) : (
         <>
+          {currentFile && isStirlingFile(currentFile) && (
+            <PdfProtectionStatus key={currentFile.fileId} file={currentFile} />
+          )}
           {/* EmbedPDF Viewer */}
           <Box
             ref={pdfContainerRef}
@@ -1832,6 +1932,11 @@ const EmbedPdfViewerContent = ({
               onPageLayout={handleViewerPageLayout}
               onDocumentSwapped={handleDocumentSwapped}
               onDocumentSwapFailed={handleDocumentSwapFailed}
+              onDocumentReady={documentReady}
+              onDocumentLoadFailed={documentFailed}
+              onPasswordRequired={onPasswordRequired}
+              onRepair={previewFile ? undefined : damagedRepair?.repair}
+              repairingFileId={damagedRepair?.repairingFileId}
               restorePending={restorePending}
               restoreRequest={restoreRequest}
               onRestoreEvent={handleRestoreEvent}
@@ -1847,11 +1952,17 @@ const EmbedPdfViewerContent = ({
                       ? effectiveFile.file.name
                       : undefined
               }
-              enableAnnotations={shouldEnableAnnotations}
+              enableAnnotations={
+                shouldEnableAnnotations && !!pdfAccess && !pdfAccess.encrypted
+              }
               isSignMode={selectedTool === "sign"}
               showBakedAnnotations={isAnnotationsVisible}
-              enableRedaction={shouldEnableRedaction}
-              enableFormFill={shouldEnableFormFill}
+              enableRedaction={
+                shouldEnableRedaction && !!pdfAccess && !pdfAccess.encrypted
+              }
+              enableFormFill={
+                shouldEnableFormFill && !!pdfAccess && !pdfAccess.encrypted
+              }
               formEditingActive={isFormFillToolActive}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef}
@@ -1974,6 +2085,18 @@ const EmbedPdfViewerContent = ({
 };
 
 const EmbedPdfViewer = (props: EmbedPdfViewerProps) => {
+  if (props.previewFile) {
+    return (
+      <PdfPreviewUnlockGate file={props.previewFile} onClose={props.onClose}>
+        {(onPasswordRequired) => (
+          <EmbedPdfViewerContent
+            {...props}
+            onPasswordRequired={onPasswordRequired}
+          />
+        )}
+      </PdfPreviewUnlockGate>
+    );
+  }
   return <EmbedPdfViewerContent {...props} />;
 };
 

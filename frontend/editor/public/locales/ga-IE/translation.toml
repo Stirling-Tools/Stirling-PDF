@@ -55,7 +55,9 @@ keepWorking = "Lean ort ag obair"
 loading = "Á lódáil..."
 loginAgreementAccept = "Glac leis"
 loginAgreementDecline = "Diúltaigh"
+loginAgreementLoadFailed = "Níorbh fhéidir an comhaontú logála isteach a luchtú."
 loginAgreementProvider = "Soláthraíonn do riarthóir an fógra seo, ní Stirling PDF Inc."
+loginAgreementRetry = "Bain triail eile as"
 loginAgreementTitle = "Comhaontú Logála Isteach"
 logOut = "Logáil amach"
 marginTooltip = "Fad idir an uimhir leathanaigh agus imeall na leathanaigh."
@@ -299,7 +301,6 @@ title = "Torthaí Uimhreacha Leathanach"
 
 [addPassword]
 desc = "Criptigh do dhoiciméad PDF le focal faire."
-submit = "Criptigh"
 tags = "criptigh,pasfhocal,glasáil,slán,cosain,slándáil,criptiú,cosaint,rúnda,príobháideach,srian rochtain"
 title = "Cuir Pasfhocal leis"
 
@@ -311,17 +312,6 @@ label = "Fad Eochrach Criptiúcháin"
 
 [addPassword.error]
 failed = "Tharla earráid agus an PDF á chriptiú."
-
-[addPassword.passwords]
-stepTitle = "Focail Fhaire & Criptiú"
-
-[addPassword.passwords.owner]
-label = "Focal Faire an Úinéara"
-placeholder = "Iontráil focal faire an úinéara"
-
-[addPassword.passwords.user]
-label = "Focal Faire Úsáideora"
-placeholder = "Iontráil focal faire úsáideora"
 
 [addPassword.results]
 title = "PDFanna Criptithe"
@@ -1627,6 +1617,7 @@ title = "Athtosú de Dhíth"
 [admin.settings.security]
 authentication = "Fíordheimhniú"
 description = "Cumraigh fíordheimhniú, iompar logála isteach, agus polasaithe slándála."
+pdfPermissions = "Ceadanna PDF"
 title = "Slándáil"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "Díchumasaigh Cosaint CSRF"
 [admin.settings.security.enableLogin]
 description = "Éiligh ar úsáideoirí logáil isteach sula rochtain siad ar an bhfeidhmchlár"
 label = "Cumasaigh Logáil Isteach"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Éiligh an pasfhocal ceadanna le haghaidh gníomhartha srianta. Má mhúchtar é seo, beidh gá fós leis na pasfhocail atá riachtanach chun PDFs a oscailt."
+label = "Cloí le ceadanna PDF"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Socruithe Casta"
@@ -1938,9 +1933,6 @@ wrapUp = "Sin é an turas riaracháin! Tá na gnéithe enterprise feicthe agat a
 [adminUserSettings]
 admin = "Riarachán"
 title = "Socruithe Rialaithe Úsáideora"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Arabach"
@@ -3173,12 +3165,14 @@ unknown = "Anaithnid"
 
 [changePermissions]
 desc = "Athraigh srianta agus ceadanna an doiciméid."
+loading = "Ceadanna reatha á luchtú..."
 submit = "Athrú Ceadanna"
 tags = "ceadanna,srianta,cearta,rialú rochtana,ceadaigh,diúltaigh,priontáil,cóipeáil,eagarthóireacht,modhnaigh ceadanna,socruithe slándála,cearta úsáideora"
 title = "Athrú Ceadanna"
 
 [changePermissions.error]
 failed = "Tharla earráid agus ceadanna an PDF á n-athrú."
+readFailed = "Níorbh fhéidir ceadanna reatha an PDF seo a léamh. Socraigh na srianta de láimh sula gcuirtear athruithe i bhfeidhm."
 
 [changePermissions.permissions.preventAssembly]
 label = "Cosc a chur le chéile doiciméad"
@@ -3219,21 +3213,16 @@ text = "Chun na ceadanna seo a dhéanamh dodhéanta a athrú, úsáid an uirlis 
 [chat.actions]
 copy = "Cóipeáil teachtaireacht"
 
-[chat.emptyState]
-text = "Cuir ceist faoi do dhoiciméid nó faigh cabhair le huirlisí PDF."
-
-[chat.fab]
-close = "Dún comhrá"
-open = "Oscail cúntóir Stirling AI"
+[chat.dock]
+collapse = "Laghdaigh comhrá"
+placeholder = "Cuir ceist ar Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Roghanna gníomhaire Stirling"
-assistant = "Cúntóir AI"
 clearChat = "Glan comhrá"
 
 [chat.input]
 disclaimer = "Is féidir le AI botúin a dhéanamh. Bí cinnte an t-aschur a fhíorú sula roinneann tú é."
-placeholder = "Cad is mian leat a dhéanamh?"
 send = "Seol teachtaireacht"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Tiontaigh na doiciméid seo go PDF"
 convertOne = "Tiontaigh an doiciméad seo go PDF"
 heading = "Tosaigh"
 mergeMany = "Cumaisc na {{count}} doiciméid seo in 1"
-moreFiles = "+{{count}} eile"
 openFromComputer = "Oscail ón ríomhaire"
-removeFile = "Bain {{name}}"
 splitOne = "Roinn an doiciméad seo"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Níor éirigh liom an t-eolas iarrtha a fháil."
 processing = "Á phróiseáil ({{outcome}})..."
 unsupported_capability = "Cumas gan tacaíocht: {{capability}}"
 usage_limit_reached = "Tá do theorainn úsáide sroichte agat. Seiceáil do roghanna plean chun leanúint ar aghaidh."
-
-[chat.toolsUsed]
-summary_one = "Rith 1 uirlis"
-summary_other = "Rith {{count}} uirlisí"
-unknownTool = "Uirlis anaithnid"
 
 [classification.families]
 correspondence = "Comhfhreagras"
@@ -3649,6 +3631,7 @@ tooltip = "Roghnaigh dath ón scáileán"
 hue = "Lí"
 saturation = "Sáithiú agus gile"
 title = "Roghnaigh dath"
+transparent = "Trédhearcach"
 
 [common]
 actions = "Gníomhartha"
@@ -3664,6 +3647,7 @@ continue = "Lean ar aghaidh"
 copied = "Cóipeáilte!"
 copy = "Cóipeáil"
 copyCode = "Cóipeáil cód"
+copyFailed = "Theip ar chóipeáil"
 dismiss = "Ruaig"
 done = "Déanta"
 enterValue = "Iontráil luach"
@@ -3847,6 +3831,12 @@ unavailable = "Níl ImageMagick suiteáilte ná cumasaithe ar an bhfreastalaí s
 filesize = "Méid an Chomhaid"
 quality = "Cáilíocht"
 title = "Modh Comhbhrúite"
+
+[compress.noReduction]
+multiple = "D'éirigh leis an gcomhbhrú, ach ní féidir {{count}} de {{total}} comhad a chomhbhrú a thuilleadh."
+multipleAtLevel = "Níor chuir comhbhrú ag an leibhéal seo feabhas ar {{count}} de {{total}} comhad. Bain triail as leibhéal comhbhrúite níos airde."
+single = "D'éirigh leis an gcomhbhrú, ach ní féidir an comhad seo a chomhbhrú a thuilleadh."
+singleAtLevel = "Níor chuir comhbhrú ag an leibhéal seo feabhas ar an gcomhad seo. Bain triail as leibhéal comhbhrúite níos airde."
 
 [compress.settings]
 desiredSize = "Méid comhaid inmhianaithe"
@@ -4295,6 +4285,13 @@ precision = "Úsáid ionchuir chomhordanáidí chun suíomh cruinn a shocrú"
 resize = "Tarraing na hanlaí cúinne agus imeall chun méid a athrú"
 title = "Conas PDFanna a Bhearradh"
 
+[damagedPdf]
+description = "Tá an PDF seo millte agus ní féidir é a oscailt."
+label = "Millte"
+repair = "Deisigh"
+repaired = "Deisíodh {{name}}"
+repairFailed = "Níorbh fhéidir {{name}} a dheisiú"
+
 [database]
 backupCreated = "D'éirigh le cúltaca bunachar sonraí"
 fileName = "Ainm comhaid"
@@ -4363,6 +4360,10 @@ title = "Nuashonraithe ón diosca"
 [desktopFileLink.tooLarge]
 body = "D'athraigh \"{{name}}\" ar an diosca. Tá sé mór go leor go dtógfaidh sé tamall é a athlódáil, mar sin fágadh an leagan anseo mar atá."
 title = "D'athraigh comhad ar an diosca"
+
+[desktopPrivacy]
+blocked = "Éilíonn do riarthóir go bhfanfaidh doiciméid ar an ngléas seo. Níl an ghné seo ar fáil."
+localFiles = "Comhaid áitiúla"
 
 [desktopUpdate]
 downloading = "Nuashonrú á íoslódáil..."
@@ -4491,22 +4492,80 @@ description = "Roghnaigh an uirlis Cuir Clár Ábhair in Eagar chun a spás oibr
 title = "Oscail an uirlis chun eagarthóireacht a thosú"
 
 [encryptedPdfUnlock]
-description = "Tá an PDF seo cosanta le pasfhocal. Cuir isteach an pasfhocal ionas gur féidir leat leanúint ag obair leis."
-emptyResponse = "Níor tháirg baint an phasfhocail comhad."
+actionIgnored = "Neamhaird déanta de shrian {{action}}"
+actionUnlocked = "Díghlasáladh {{action}} don seisiún seo"
+advanced = "Ardroghanna"
+allowed = "Ceadaithe"
+annotations = "Nótaí"
+authoriseAction = "Teastaíonn cead ón PDF seo chun {{action}} a úsáid."
+changeOwnerPassword = "Athraigh pasfhocal ceadanna"
+checkingPermissions = "Ceadanna PDF á seiceáil..."
+chooseOwnerPassword = "Roghnaigh pasfhocal eile"
+continue = "Lean ar aghaidh"
+copyFailed = "Ní féidir an chóip a chruthú. Níl do PDF athraithe."
+copying = "Ábhar á chóipeáil"
+editing = "Eagarthóireacht"
+enterPassword = "Cuir isteach pasfhocal"
+ignoredByServer = "Déantar neamhaird de cheadanna de bharr shocruithe an fhreastalaí seo. Níl cosaint an PDF athraithe."
 incorrectPassword = "Pasfhocal mícheart"
+inspectionFailed = "Ní féidir ceadanna an PDF seo a sheiceáil. Bain triail eile as."
+lowQualityPrintUnsupported = "Ní cheadaíonn an PDF seo ach priontáil ar cháilíocht íseal, rud nach dtacaíonn an t-amharcóir seo leis."
+lowResolutionOnly = "Taifeach íseal amháin"
+manageProtection = "Bainistigh cosaint"
 missingFile = "Níl an comhad roghnaithe ar fáil a thuilleadh."
+mixedProtection = "Tá socruithe cosanta ar leith ag na PDFs seo. Próiseáil iad ceann ar cheann."
+newOwnerPassword = "Pasfhocal ceadanna nua"
+notRequired = "Níl gá leis"
+openingPassword = "Pasfhocal le hoscailt"
+openPdf = "Oscail PDF"
+ownerPassword = "Pasfhocal ceadanna"
+ownerRequired = "Cuir isteach an pasfhocal ceadanna chun leanúint ar aghaidh."
+ownerTitle = "Cuir isteach pasfhocal ceadanna"
+passwordRetained = "Fágtha gan athrú"
+passwordsMustDiffer = "Caithfidh an dá phasfhocal a bheith difriúil."
+permissionsUnlocked = "Ceadanna díghlasáilte don seisiún seo"
+prepareFailed = "Ní féidir an PDF cosanta seo a ullmhú le haghaidh próiseála."
+printing = "Priontáil"
+printRestricted = "Tá priontáil srianta. Fíoraigh ceadanna in Bainistigh cosaint."
+protectedPdf = "PDF cosanta"
+protectionRetained = "Cosaint coinnithe"
+protectionSaved = "Cosaint sábháilte"
+removePasswordHelp = "Oscail Bain Pasfhocal chun na pasfhocail atá le baint a roghnú."
+removeProtection = "Cruthaigh cóip gan chosaint"
+replaceProtection = "Tagann na socruithe seo in ionad chosaint reatha an PDF."
 required = "Cuir isteach an pasfhocal chun leanúint."
-skip = "Scipeáil faoi láthair"
-successBody = "Baineadh an pasfhocal go rathúil."
-successBodyWithName = "Baineadh pasfhocal ó {{fileName}}"
-successTitle = "Baineadh an pasfhocal"
+requiredStatus = "Riachtanach"
+requiredToApply = "Riachtanach chun athruithe a chur i bhfeidhm"
+restoreFailed = "Ní féidir cosaint PDF a chaomhnú. Níor sábháladh aon toradh gan chosaint."
+restrictActions = "Cuir srianta ar ghníomhartha"
+restricted = "Srianta"
+restrictedActions = "gníomhartha srianta"
+restrictedOperation = "Teastaíonn an pasfhocal ceadanna don ghníomh seo."
+retainOwnerVerification = "Fíoraigh an pasfhocal ceadanna chun é a choinneáil gan athrú agus an pasfhocal le hoscailt á bhaint. Ní bhainfear é."
+saveProtection = "Sábháil cosaint"
+securityChangeFailed = "Ní féidir cosaint a athrú. Seiceáil an pasfhocal ceadanna agus na socruithe slándála nua."
+sessionDetails = "Oscailte don seisiún seo. Fanann an PDF cosanta."
+sessionDetailsLabel = "Maidir le díghlasáil seisiúin"
+sessionFailed = "Ní féidir an PDF seo a dhíghlasáil. Bain triail eile as."
+sessionSuccessBody = "Cosaint coinnithe."
+sessionSuccessBodyWithName = "Cosaint coinnithe do {{fileName}}."
+sessionSuccessTitle = "PDF oscailte"
+sessionTitle = "Oscail PDF"
+signedReadOnly = "Is féidir an PDF sínithe seo a fheiceáil, ach ní féidir é a chur in eagar anseo."
 title = "Bain pasfhocal chun leanúint"
+toolUnavailable = "Ní thacaíonn an uirlis seo le PDFs criptithe. Bain an pasfhocal ar dtús."
+toolUnavailableDetails = "Cén fáth nach bhfuil {{name}} ar fáil"
 unlock = "Díghlasáil & Lean ar aghaidh"
 unlockAll = "Úsáid do gach ceann ({{count}})"
 unlockAllPartialFail = "Pasfhocal mícheart do: {{names}}"
 unlockAllSuccess_one = "Díghlasáladh {{count}} chomhad."
 unlockAllSuccess_other = "Díghlasáladh {{count}} comhad."
+unlockedForSession = "Díghlasáilte don seisiún seo le do phasfhocal ceadanna."
 unlockPrompt = "Díghlasáil PDF chun leanúint"
+unprotectedCopyConsequence = "Ní bheidh aon phasfhocail ná srianta ar an gcóip. Fanann an bhunchóip cosanta."
+unsupportedTool = "Ní féidir leis an uirlis seo cosaint an PDF seo a chaomhnú fós."
+verifiedForSession = "Fíoraithe don seisiún seo"
+verifyPermissions = "Fíoraigh ceadanna don seisiún seo"
 viewerLocked = "Tá an PDF seo cosanta le focal faire"
 viewerUnlock = "Díghlasáil"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "Féach san Amharcán"
 closeFile = "Dún comhad"
 
 [fileEditor]
-addFiles = "Cuir Comhaid Leis"
 closedFile = "Dúnadh {{name}}"
 couldNotSave = "Níorbh fhéidir {{name}} a shábháil"
-filesAdded_one = "Cuireadh {{count}} chomhad leis"
-filesAdded_other = "Cuireadh {{count}} chomhad leis"
 filesReordered_one = "Athordaíodh comhad"
 filesReordered_other = "Athordaíodh {{count}} chomhad"
 loadedFromStorage_one = "Luchtaíodh {{count}} chomhad ón stóráil"
 loadedFromStorage_other = "Luchtaíodh {{count}} chomhad ón stóráil"
 loadFromStorageFailed = "Theip ar roinnt comhad a luchtú ón stóráil"
 pinnedFile = "Pionnáladh {{name}}"
-processFilesFailed = "Theip ar chomhaid a phróiseáil"
 savedAndClosed = "Sábháladh agus dúnadh {{name}}"
 saveFailed = "Theip ar shábháil"
 unpinnedFile = "Díphionnáladh {{name}}"
 unzipping = "{{name}} á dhízipeáil"
+
+[fileEditor.addCard]
+dropHint = "nó scaoil comhaid áit ar bith"
+fromComputer = "Uaslódáil ón ríomhaire"
+moreOptions = "Tuilleadh roghanna uaslódála"
 
 [fileEditor.unzip]
 error = "Earráid agus {{name}} á dhízipeáil"
@@ -4729,7 +4789,6 @@ dataLostBody = "Chaill an brabhsálaí seo ábhar an chomhaid seo. Uaslódáil a
 dataLostTitle = "Níl sonraí comhaid ar fáil"
 downloadFailed = "Theip ar íoslódáil"
 dropHint = "Oscail comhaid chun tosú"
-dropToAdd = "Scaoil comhaid le cur leis"
 duplicateFailed = "Níorbh fhéidir an comhad a dhúbailt"
 expand = "Leathnaigh an barra taoibh"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "Athscan na réimsí"
 rescanFormFields = "Athscan réimsí an fhoirme"
 save = "Sábháil"
 saveShortcut = "Ctrl+S chun sábháil"
+saving = "Á shábháil..."
 selectOptionPlaceholder = "— roghnaigh —"
 skippedEdits_one = "Níorbh fhéidir 1 athrú a chur i bhfeidhm:"
 skippedEdits_other = "Níorbh fhéidir {{count}} athrú a chur i bhfeidhm:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "{{count}} eile nach bhfuil liostaithe."
 unsavedChanges = "Athruithe gan sábháil"
 
 [formFill.create]
-commit = "Cuir {{count}} réimse le PDF"
 empty = "Níor tarraingíodh aon réimse fós."
-failed = "Theip ar réimsí a chur leis"
 goToField = "Téigh go dtí an réimse seo"
 hint = "Roghnaigh cineál réimse, ansin tarraing ar an leathanach é."
 placing = "Tarraing réimse {{type}} ar an leathanach. Brúigh Esc chun stopadh."
@@ -5334,7 +5392,6 @@ modify = "Mionathraigh"
 commit = "Sábháil {{count}} athrú"
 delete = "Scrios"
 empty = "Níl aon réimsí foirme sa PDF seo fós."
-failed = "Theip ar athruithe a shábháil"
 groupSizeHint = "Úsáid Méid rogha"
 hint = "Roghnaigh réimse chun a airíonna a chur in eagar, tarraing ar an leathanach é, nó scrios é."
 restore = "Athchóirigh"
@@ -5732,11 +5789,6 @@ title = "Forleagan PDF"
 desc = "Cumaisc leathanaigh iolracha de dhoiciméad PDF isteach i leathanach amháin"
 tags = "leagan amach,socraigh,comhcheangail,N-up,2-up,4-up,iolrach in aghaidh leathanaigh,leathanaigh in aghaidh bileoige,leagan amach leathanaigh,tíl,leagan amach greille,leagan amach il-leathanach,comhcheangail ar leathanach,handout"
 title = "Leagan Amach Illeathanaigh"
-
-[home.pdfCommentAgent]
-desc = "Iarr ar AI PDF a anótáil le nótaí greamáin bunaithe ar do leid"
-tags = "AI,gníomhaire,trácht,anótáil,nóta greamáin,athbhreithniú,aiseolas,nótaí"
-title = "Cuir tráchtanna AI leis"
 
 [home.pdfOrganiser]
 tags = "eagraigh,athshocraigh,athordaigh,socraigh leathanaigh,sórtáil,bog leathanaigh,scrios leathanaigh,bain leathanaigh,bainistíocht leathanaigh,eagraí leathanaigh,athsheicheamhaigh"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "Beidh tú i do bhall foirne agus caillfidh tú rochtain úin�
 deselectAll = "Dada"
 selectAll = "Roghnaigh Gach Rud"
 
-[pageEditor]
-dragPreviewAlt = "Á tharraingt"
-filePosition = "Suíomh {{position}}"
-pageLabel = "Leathanach {{page}}"
-title = "Eagarthóir Leathanach"
-
-[pageEditor.actions]
-deletePage = "Scrios Leathanach"
-insertFileAfter = "Ionsáigh Comhad Ina Dhiaidh"
-moveLeft = "Bog Ar Chlé"
-moveRight = "Bog Ar Dheis"
-rotateLeft = "Rothlaigh Ar Chlé"
-rotateRight = "Rothlaigh Ar Dheis"
-splitAfter = "Scoilt Ina Dhiaidh"
-
-[pageEditor.commands]
-addSplitAt = "Cuir scoilt leis ag suíomh {{position}}"
-addSplits_one = "Cuir {{count}} scoilt leis"
-addSplits_other = "Cuir {{count}} scoilt leis"
-deletePages_one = "Scrios {{count}} leathanach"
-deletePages_other = "Scrios {{count}} leathanach"
-insertFiles_one = "Ionsáigh {{count}} chomhad i ndiaidh leathanach {{page}}"
-insertFiles_other = "Ionsáigh {{count}} chomhad i ndiaidh leathanach {{page}}"
-insertPageBreaks_one = "Ionsáigh {{count}} bhriseadh leathanaigh"
-insertPageBreaks_other = "Ionsáigh {{count}} bhriseadh leathanaigh"
-insertPageBreaksAll = "Ionsáigh bristeacha leathanaigh i ndiaidh gach leathanaigh"
-removeAllSplits = "Bain gach scoilt"
-removeSplitAt = "Bain scoilt ag suíomh {{position}}"
-removeSplits_one = "Bain {{count}} scoilt"
-removeSplits_other = "Bain {{count}} scoilt"
-reorderPages = "Athordaigh leathanaigh"
-rotatePageLeft = "Rothlaigh leathanach ar chlé"
-rotatePageRight = "Rothlaigh leathanach ar dheis"
-rotatePagesLeft_one = "Rothlaigh {{count}} leathanach ar chlé"
-rotatePagesLeft_other = "Rothlaigh {{count}} leathanach ar chlé"
-rotatePagesRight_one = "Rothlaigh {{count}} leathanach ar dheis"
-rotatePagesRight_other = "Rothlaigh {{count}} leathanach ar dheis"
-splitAllPages = "Roinn gach leathanach"
-toggleSplits_one = "Scoránaigh {{count}} suíomh scoilte"
-toggleSplits_other = "Scoránaigh {{count}} suíomh scoilte"
-
-[pageEditor.emptyState]
-body = "Cuir comhaid leis chun eagarthóireacht ar leathanaigh a thosú"
-title = "Níl aon chomhaid PDF lódáilte"
-
-[pageEditor.fileDropdown]
-addFile = "Cuir Comhad Leis"
-selectedCount = "{{selected}}/{{total}} chomhad roghnaithe"
-untitled = "Gan teideal"
-
-[pageEditor.toolbar]
-delete = "Scrios na roghnaithe"
-redo = "Athdhéan"
-rotateLeft = "Rothlaigh na roghnaithe go clé"
-rotateRight = "Rothlaigh na roghnaithe go deas"
-undo = "Cealaigh"
-
 [pageExtracter]
 title = "Leathanaigh Sliocht"
 
@@ -6815,6 +6810,79 @@ title = "Raonta Leathanach"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → roghnaíonn sé gach leathanach"
 title = "Eochairfhocail Speisialta"
+
+[pageTracks]
+blankPage = "Leathanach bán"
+deleteSelected = "Scrios leathanaigh roghnaithe"
+downloadAsOneFile = "Íoslódáil mar chomhad amháin"
+downloadEachPage = "Íoslódáil gach leathanach ina aonar"
+downloadSelectedPages = "Íoslódáil leathanaigh roghnaithe"
+dragging_one = "{{count}} leathanach"
+dragging_other = "{{count}} leathanach"
+duplicateSelected = "Dúblaigh leathanaigh roghnaithe"
+edited = "curtha in eagar"
+emptyTrack = "Níl aon leathanach fágtha. Tarraing leathanaigh anseo, nó sábháil chun an comhad seo a dhúnadh."
+insertBlank = "Ionsáigh leathanach bán"
+insertBlankAfterSelected = "Ionsáigh leathanaigh bhána i ndiaidh na leathanach roghnaithe"
+moveLeft = "Bog ar chlé"
+moveRight = "Bog ar dheis"
+nextPage = "An chéad leathanach eile"
+page = "Leathanach {{number}}"
+pageCount_one = "{{count}} leathanach"
+pageCount_other = "{{count}} leathanach"
+pagePosition = "Leathanach {{number}} as {{total}}"
+prevPage = "An leathanach roimhe seo"
+readingPages = "Leathanaigh á léamh..."
+redo = "Athdhéan"
+rotateLeft = "Rothlaigh ar chlé"
+rotateRight = "Rothlaigh ar dheis"
+rotateSelectedLeft = "Rothlaigh leathanaigh roghnaithe ar chlé"
+rotateSelectedRight = "Rothlaigh leathanaigh roghnaithe ar dheis"
+saveAsOneFile = "Sábháil mar chomhad amháin"
+saveChanges = "Sábháil athruithe ar gach comhad"
+saveEachPage = "Sábháil gach leathanach ina aonar"
+saveSelectedPages = "Sábháil leathanaigh roghnaithe"
+saving = "Á shábháil..."
+savingProgress = "{{done}} de {{total}} á shábháil"
+selectPage = "Roghnaigh leathanach {{number}}"
+splitAfterSelected = "Roinn i ndiaidh na leathanach roghnaithe"
+splitHere = "Roinn anseo"
+undo = "Cealaigh"
+viewError = "Níorbh fhéidir an leathanach seo a rindreáil"
+viewPage = "Féach ar leathanach"
+zoomIn = "Zúmáil isteach"
+zoomOut = "Zúmáil amach"
+
+[pageTracks.close]
+message = "An bhfuil tú cinnte gur mian leat gach comhad a dhúnadh?"
+unsaved = "Tá athruithe gan sábháil sna comhaid seo."
+
+[pageTracks.delete]
+page = "Scrios leathanach"
+
+[pageTracks.duplicate]
+page = "Dúblaigh leathanach"
+
+[pageTracks.empty]
+body = "Cuir PDFs leis chun iad a leathnú ina rianta leathanaigh ineagarthóireachta"
+title = "Níl aon chomhaid PDF luchtaithe"
+
+[pageTracks.exportFailed]
+body = "Níorbh fhéidir na comhaid curtha in eagar a ullmhú. Bain triail eile as."
+title = "Níorbh fhéidir íoslódáil"
+
+[pageTracks.saveFailed]
+body = "Níor cailleadh do chuid eagarthóireachtaí. Bain triail as sábháil arís."
+title = "Níorbh fhéidir athruithe a shábháil"
+
+[pageTracks.track]
+close = "Dún comhad"
+collapse = "Laghdaigh"
+expand = "Leathnaigh"
+rename = "Athainmnigh comhad"
+
+[pageTracks.wrap]
+label = "Timfhilleadh leathanaigh"
 
 [payg.activity]
 docs = "doiciméid"
@@ -7144,24 +7212,6 @@ totalSeats_other = "Iomlán ({{count}} suíochán)"
 [payment.upgradeTeam]
 title = "Uasghrádaigh go Foireann"
 
-[pdfCommentAgent]
-submit = "Gin tráchtanna"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Déan cur síos ar céard ba chóir don AI a thrácht air"
-failed = "Theip ar thráchtanna a ghiniúint"
-tooLong = "Tá an leid rófhada (uasmhéid {{max}} carachtar)"
-
-[pdfCommentAgent.prompt]
-label = "Cad ba chóir don AI trácht air?"
-placeholder = "m.sh. Brataigh aon dátaí débhríocha agus mol soiléirithe"
-
-[pdfCommentAgent.results]
-title = "PDF le tráchtanna"
-
-[pdfCommentAgent.settings]
-title = "Treoracha tráchtanna"
-
 [pdfOrganiser]
 placeholder = "(m.sh. 1,3,2 nó 4-8,2,10-12 nó 2n-1)"
 tags = "déphléacsacha, cothrom, corr, sórtáil, bogadh"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "Cliceáil aon téacs, íomhá nó cruth ar an leathanach 
 ocrDocumentChanged = "D’athraigh an doiciméad agus OCR ar siúl. Rith OCR arís chun na hathruithe is déanaí a chur san áireamh."
 ocrInvalidResult = "Níor thug OCR PDF ar ais. Bain triail eile as."
 ocrNoLanguages = "Níl aon teangacha OCR suiteáilte ar an bhfreastalaí."
+ocrProtected = "Ní féidir le OCR cosaint an PDF seo a chaomhnú fós. Tá an bhunchóip chosanta fós ar fáil le hamharc uirthi."
 ocrRunning = "Téacs á aithint..."
 ocrUnavailable = "Níl OCR ar fáil ar an bhfreastalaí seo."
 oneImage = "Íomhá"
@@ -7389,13 +7440,8 @@ pageNumber = "Leathanach {{page}}"
 renderFailed = "Theip ar leathanach a rindreáil"
 
 [pdfTextEditor.password]
-cancel = "Cealaigh"
 incorrect = "Pasfhocal mícheart - bain triail eile as."
 label = "Pasfhocal"
-open = "Oscail"
-protected = "Tá an PDF seo cosanta le pasfhocal."
-protectedNamed = "Tá \"{{fileName}}\" cosanta le pasfhocal."
-title = "Pasfhocal riachtanach"
 
 [pdfTextEditor.rulers]
 guide = "Treoir ailínithe ag {{value}} {{unit}} - tarraing ar rialóir chun í a bhaint"
@@ -7994,6 +8040,7 @@ before = "Socraigh"
 title = "Níl nasc Stirling cumraithe"
 
 [portal.accountLink.notice]
+loadFailed = "Níorbh fhéidir an dialóg nascadh cuntais a luchtú."
 openFailed = "Níorbh fhéidir do bhrabhsálaí a oscailt. Oscail Úsáid & billeáil ar do fhreastalaí ceangailte chun cuntas a nascadh."
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "Teorainn chaiteachais mhíosúil {{amount}}/mí. Stadann próiseáil ag
 limitNoCap = "Gan teorainn chaiteachais. Ní stadfaidh próiseáil. Eisítear sonraisc go míosúil."
 
 [portal.billing.chip]
-invoices = "Sonraisc"
-nav = "Rannáin"
-payment = "Íocaíocht"
 plan = "Plean"
 procurement = "Soláthar"
 usage = "Úsáid"
@@ -8178,9 +8222,22 @@ pdfs = "PDFanna próiseáilte"
 users = "Úsáideoirí"
 
 [portal.billing.enterprise]
+active = "Comhaontú gníomhach go dtí {{date}}"
 cta = "Faigh luachan enterprise"
+included = "San áireamh in Enterprise"
+payment_pending = "Íocaíocht ar feitheamh · rochtain go dtí {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF os cionn an toirte chomhaontaithe"
+pdfsOver_other = "{{count}} PDFs os cionn an toirte chomhaontaithe"
+pdfsUsed_one = "{{count}} PDF próiseáilte"
+pdfsUsed_other = "Próiseáladh {{count}} PDF"
+period = "Tréimhse an chomhaontaithe: {{start}} – {{end}}"
 sub = "Imscaradh air-gapped, SCIM, cónaitheacht sonraí, SLAanna aga fónaimh, agus comhaontú a oireann."
 title = "An bhfuil Stirling á rith agat i dtimpeallacht rialáilte?"
+trial = "Triail {{days}} lá · críochnaíonn sí {{date}}"
+usersAgreed = "{{used}} / {{agreed}} úsáideoir comhaontaithe"
+usersOver_one = "{{count}} úsáideoir os cionn na cainníochta comhaontaithe"
+usersOver_other = "{{count}} úsáideoir os cionn na cainníochta comhaontaithe"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Níorbh fhéidir checkout a thosú"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "Tógálacha dúchasacha do do dháileadh."
-guideBtn = "Féach roghanna suiteála Linux"
+downloadAppImage = "AppImage"
+downloadDeb = "Íoslódáil .deb (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "Tá tógálacha AppImage, .deb agus .rpm ar fáil do dháiltí coitianta."
 tagline = "Aip deisce dhúchasach do do distro"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "Redact,Folaigh,dubh amach,dubh,marcóir,folaithe,auto redact,manual reda
 title = "Ceil"
 
 [redact.auto]
+caseSensitiveLabel = "Meaitseáil Cásíogair"
 colorLabel = "Dath an Bhosca"
 convertPDFToImageLabel = "Tiontaigh PDF go PDF-Image"
 customPaddingLabel = "Stuáil Bhreise Chustaim"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "Roghnaigh comhaid sa bhainisteoir comhad chun comhai
 manual = "Láimhe"
 mode = "Mód"
 title = "Modh Ceilte"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Ná meaitseáil ach téacs sa chás céanna. Ní mheaitseálfaidh 'Secret' le 'SECRET' nuair atá sé cumasaithe, agus ní mheaitseálann [A-Z] in regex ach ceannlitreacha."
+title = "Meaitseáil Cásíogair"
 
 [redact.tooltip.advanced.color]
 text = "Saincheap cuma bhoscaí ceilte. Is é dubh an caighdeán, ach is féidir dath ar bith a roghnú. Cuireann stuáil spás breise timpeall ar an téacs aimsithe."
@@ -11396,7 +11460,12 @@ text = "Sonraigh cé na leathanaigh le baint as do PDF. Is féidir leat leathana
 title = "Roghnú Leathanach"
 
 [removePassword]
-desc = "Bain cosaint phasfhocal ó do dhoiciméad PDF."
+appliesTo = "Socraithe ar {{count}} as {{total}} PDF"
+keepBlank = "Fág réimse bán chun an pasfhocal sin a choinneáil."
+notSet = "Níor socraíodh"
+openWithReaderFirst = "Athoscail an PDF seo lena phasfhocal oscailte sula mbaintear an pasfhocal ceadanna amháin."
+selectiveHelp = "Cuir isteach an pasfhocal reatha do gach cosaint is mian leat a bhaint. Coinníonn réimse bán an pasfhocal sin. Nuair a bhaintear an pasfhocal ceadanna, baintear srianta gníomhaíochta freisin."
+selectPasswords = "Pasfhocail le baint"
 submit = "Bain Pasfhocal"
 tags = "slán, Díchriptiú, slándáil, Unpassword, scrios pasfhocal"
 title = "Bain pasfhocal"
@@ -11407,13 +11476,9 @@ failed = "Tharla earráid agus an focal faire á bhaint den PDF."
 [removePassword.password]
 label = "Pasfhocal reatha"
 placeholder = "Cuir isteach an focal faire reatha"
-stepTitle = "Bain Pasfhocal"
 
 [removePassword.results]
 title = "PDFanna Díchriptithe"
-
-[removePassword.tooltip]
-description = "Chun cosaint le focal faire a bhaint, tá gá leis an bhfocal faire a úsáideadh chun an PDF a chriptiú. Díchriptóidh sé seo an doiciméad, rud a fhágfaidh gur féidir leis a bheith inrochtana gan focal faire."
 
 [reorganizePages]
 submit = "Ath-eagraigh Leathanaigh"
@@ -11543,6 +11608,64 @@ m = "Méadair (m)"
 mi = "Mílte (mi)"
 mm = "Milliméadair (mm)"
 yd = "Slata (yd)"
+
+[runLocation]
+back = "Ar ais"
+continue = "Lean ar aghaidh"
+subtitle = "Roghnaigh cá rithfidh sé."
+title = "Cá bhfuil tú ag iarraidh Stirling a rith?"
+
+[runLocation.choice.browser]
+description = "An aip gréasáin."
+title = "I do bhrabhsálaí"
+
+[runLocation.choice.computer]
+description = "An aip deisce."
+title = "Ar do ríomhaire"
+
+[runLocation.choice.server]
+description = "Féin-óstáilte, d’fhoireann."
+title = "Ar do fhreastalaí"
+
+[runLocation.desktop]
+computerLabel = "Do ríomhaire"
+download = "Íoslódáil le haghaidh {{platform}}"
+downloadAgain = "Íoslódáil arís"
+guide = "Oscail treoir suiteála {{platform}}"
+startedSubtitle = "Seiceáil d’fhillteán Downloads, ansin oscail an suiteálaí."
+startedTitle = "Tá d’íoslódáil tosaithe"
+subtitle = "Íoslódáil é agus oscail é."
+title = "Faigh an aip deisce"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (treoir suiteála)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "Cóipeáilte"
+copy = "Cóipeáil ordú"
+copyCompose = "Cóipeáil comhad compose"
+guide = "Treoir suiteála {{method}}"
+methodLabel = "Rith é le"
+note = "Ansin oscail <url/> chun an socrú a chríochnú."
+subtitle = "Rith é seo ar do fhreastalaí, ansin oscail é i mbrabhsálaí."
+title = "Socraigh do fhreastalaí"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "Bain eilimintí a d’fhéadfadh a bheith dochrach as comhaid PDF."
@@ -12054,6 +12177,7 @@ title = "Spás Oibre"
 loginIncomplete = "Theip ar logáil isteach a chur i gcrích"
 noSaasServer = "Níl aon fhreastalaí SaaS cumraithe"
 noServer = "Níl aon fhreastalaí cumraithe"
+policyUnavailable = "Ní féidir socruithe logála isteach d’eagraíochta a lódáil."
 saasLoginFailed = "Theip ar logáil isteach SaaS"
 saasLoginIncomplete = "Theip ar logáil isteach SaaS a chur i gcrích"
 selfHostedLoginFailed = "Theip ar logáil isteach féinóstáilte"
@@ -13563,7 +13687,9 @@ validUntrusted = "Bailí, níor fíoraíodh aitheantas an tsínitheora"
 
 [viewer]
 cannotPreviewFile = "Ní féidir an comhad a réamhamharc."
+copyRestricted = "Tá cóipeáil díchumasaithe ag ceadanna an PDF seo."
 copyText = "Cóipeáil"
+coverPageView = "Taispeáin Leathanach Clúdaigh ar Leith"
 disableColorFilter = "Díchumasaigh Scagaire Datha"
 documentUpdated = "Nuashonraíodh an doiciméad"
 dualPageView = "Amharc Dhá Leathanach"
@@ -13580,6 +13706,7 @@ noPdfProvided = "Níor soláthraíodh PDF"
 onlyPdfSupported = "Ní thacaítear leis an bhformáid comhaid seo le haghaidh réamhamhairc."
 pageNavigation = "Nascleanúint leathanaigh"
 previousPage = "Leathanach Roimhe Seo"
+readAloudFromHere = "Léigh os ard as seo"
 saveChangesErrorBody = "Níorbh fhéidir an doiciméad a shábháil. Déan iarracht arís."
 saveChangesErrorTitle = "Níorbh fhéidir na hathruithe a shábháil"
 singlePageView = "Amharc Leathanach Aonair"
@@ -13640,6 +13767,7 @@ closeSidebar = "Dún barra taoibh na dtráchtanna"
 deleteAnnotationAndComment = "Scrios anótáil agus trácht"
 deleteDescription = "Tá trácht ceangailte leis an anótáil seo. Is féidir leat an trácht a bhaint den bharra taoibh agus an anótáil a choinneáil, nó gach rud a scriosadh."
 deleteTitle = "Bain an anótáil ó na tráchtanna?"
+exportCsv = "Easpórtáil mar CSV"
 goToLink = "Téigh go nasc"
 hint = "Cuir tráchtanna leis leis na huirlisí Trácht, Ionsáigh Téacs, nó Cuir Téacs in Ionad. Beidh siad le feiceáil anseo de réir leathanaigh."
 locateAnnotation = "Aimsigh sa doiciméad"
@@ -13658,7 +13786,16 @@ typeInsertText = "Ionsáigh Téacs"
 typeReplaceText = "Cuir Téacs in Ionad"
 viewComment = "Féach an trácht"
 
+[viewer.comments.csv]
+author = "Údar"
+comment = "Trácht"
+inReplyTo = "Mar fhreagra ar"
+modifiedUtc = "Athraithe go deireanach (UTC)"
+page = "Leathanach"
+thread = "Snáithe"
+
 [viewer.error]
+loadError = "Theip ar PDF a lódáil"
 noFileProvided = "Earráid: Níor cuireadh comhad ar fáil don amharcán"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "Téacs an Chomhartha Uisce"
 image = "Íomhá"
 text = "Téacs"
 
+[workbench]
+dropFailedSingle = "Níorbh fhéidir do chomhad a chur leis"
+dropFailedSome = "Níorbh fhéidir {{failed}} de do chuid comhad a chur leis"
+dropOverlay = "Scaoil comhaid chun iad a chur leis an mbinse oibre"
+
 [workbench.sessionRestore]
 none = "Níl do chomhaid roimhe seo stóráilte ar an ngléas seo a thuilleadh."
 partial = "Athchóiríodh {{restored}} as {{total}} chomhad. Níl an chuid eile stóráilte ar an ngléas seo a thuilleadh."
@@ -13915,16 +14057,14 @@ annotations = "Anótálacha"
 applyRedactionsFirst = "Cuir na ceiltí i bhfeidhm ar dtús"
 closeAll = "Dún gach comhad"
 closePdf = "Dún PDF"
-deleteSelected = "Scrios na leathanaigh roghnaithe"
 deselectAll = "Díroghnaigh uile"
 downloadAll = "Íoslódáil gach comhad"
+exitAnnotations = "Scoir den mhód anótála"
 exitRedaction = "Scoir de mhód ceilte"
-exportAll = "Easpórtáil PDF"
-exportSelected = "Easpórtáil na leathanaigh roghnaithe"
 formFill = "Eagarthóir Foirmeacha"
 hideToolbar = "Folaigh barra uirlisí"
 moreActions = "Tuilleadh gníomhartha"
-multiTool = "Il-uirlis"
+pageEditor = "Eagarthóir Leathanach"
 panMode = "Mód pánála"
 print = "Priontáil PDF"
 readAloud = "Léigh os ard"
@@ -13938,7 +14078,6 @@ rulerSettings = "Socruithe Scála"
 save = "Sábháil"
 saveAll = "Sábháil gach comhad"
 saveAs = "Sábháil mar"
-saveChanges = "Sábháil athruithe"
 search = "Cuardaigh PDF"
 selectAll = "Roghnaigh uile"
 selectByNumber = "Roghnaigh de réir uimhreacha leathanaigh"

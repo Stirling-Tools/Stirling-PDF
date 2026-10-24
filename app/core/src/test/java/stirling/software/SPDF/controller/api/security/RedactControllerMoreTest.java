@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -16,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +35,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.MockedStatic;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -43,8 +47,13 @@ import stirling.software.SPDF.model.api.security.RedactExecuteRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.jpdfium.exception.RedactUnverifiableException;
+import stirling.software.jpdfium.redact.PdfRedactor;
+import stirling.software.jpdfium.redact.RedactOptions;
+import stirling.software.jpdfium.redact.RedactResult;
 
 /**
  * End-to-end coverage tests for {@link RedactController} that drive the controller against real
@@ -217,6 +226,67 @@ class RedactControllerMoreTest {
         }
 
         @Test
+        @DisplayName("a page the engine could not verify fails the request instead of returning it")
+        void unverifiedPageFailsTheRequest() throws IOException {
+            byte[] bytes = singlePageTextPdf("public CONFIDENTIAL data");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("CONFIDENTIAL");
+            request.setRedactColor("#000000");
+
+            RedactResult unverified =
+                    new RedactResult(
+                            null,
+                            List.of(new RedactResult.PageResult(0, 1, -1)),
+                            0L,
+                            false,
+                            null,
+                            List.of(),
+                            List.of(),
+                            0,
+                            0,
+                            List.of());
+            try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                redactor.when(() -> PdfRedactor.redact(any(Path.class), any(RedactOptions.class)))
+                        .thenReturn(unverified);
+
+                assertThatThrownBy(() -> controller.redactPdf(request))
+                        .isInstanceOf(ToolFailedException.class)
+                        .hasMessageContaining("page 1")
+                        .satisfies(
+                                e ->
+                                        assertThat(((ToolFailedException) e).getErrorCode())
+                                                .isEqualTo("E077"));
+            }
+        }
+
+        @Test
+        @DisplayName("an engine that could not check its redaction fails the request, no fallback")
+        void unverifiableRedactionFailsTheRequest() throws IOException {
+            byte[] bytes = singlePageTextPdf("public CONFIDENTIAL data");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("CONFIDENTIAL");
+            request.setRedactColor("#000000");
+
+            try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                redactor.when(() -> PdfRedactor.redact(any(Path.class), any(RedactOptions.class)))
+                        .thenThrow(new RedactUnverifiableException("text page unavailable"));
+
+                assertThatThrownBy(() -> controller.redactPdf(request))
+                        .isInstanceOf(ToolFailedException.class)
+                        .satisfies(
+                                e ->
+                                        assertThat(((ToolFailedException) e).getErrorCode())
+                                                .isEqualTo("E083"));
+            }
+        }
+
+        @Test
         @DisplayName("no-match returns the original document unchanged and never reloads")
         void noMatchReturnsOriginal() throws IOException {
             byte[] bytes = singlePageTextPdf("nothing sensitive here");
@@ -252,6 +322,74 @@ class RedactControllerMoreTest {
             String text = pdfText(drainBody(response));
             assertThat(text).doesNotContain("111-22-3333");
             assertThat(text).doesNotContain("444-55-6666");
+        }
+
+        @Test
+        @DisplayName("matching ignores case unless caseSensitive is set")
+        void ignoresCaseByDefault() throws IOException {
+            byte[] bytes = singlePageTextPdf("ticket FS-01 and fs-02 here");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("[A-Z]{2}-\\d+");
+            request.setUseRegex(true);
+            request.setRedactColor("#000000");
+
+            String text = pdfText(drainBody(controller.redactPdf(request)));
+            assertThat(text).doesNotContain("FS-01");
+            assertThat(text).doesNotContain("fs-02");
+        }
+
+        @Test
+        @DisplayName("caseSensitive leaves text in another case in place")
+        void caseSensitive() throws IOException {
+            byte[] bytes = singlePageTextPdf("ticket FS-01 and fs-02 here");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("[A-Z]{2}-\\d+");
+            request.setUseRegex(true);
+            request.setCaseSensitive(true);
+            request.setRedactColor("#000000");
+
+            String text = pdfText(drainBody(controller.redactPdf(request)));
+            assertThat(text).doesNotContain("FS-01");
+            assertThat(text).contains("fs-02");
+        }
+
+        @Test
+        @DisplayName("JPDFium receives caseSensitive=false by default")
+        void jpdfiumIgnoresCaseByDefault() throws IOException {
+            assertThat(jpdfiumOptionsFor(null).caseSensitive()).isFalse();
+        }
+
+        @Test
+        @DisplayName("JPDFium receives caseSensitive=true when it is set")
+        void jpdfiumReceivesCaseSensitive() throws IOException {
+            assertThat(jpdfiumOptionsFor(true).caseSensitive()).isTrue();
+        }
+
+        /** The options the controller hands JPDFium; the call then fails so the fallback runs. */
+        private RedactOptions jpdfiumOptionsFor(Boolean caseSensitive) throws IOException {
+            byte[] bytes = singlePageTextPdf("ticket FS-01 and fs-02 here");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("[A-Z]{2}-\\d+");
+            request.setUseRegex(true);
+            request.setCaseSensitive(caseSensitive);
+            request.setRedactColor("#000000");
+
+            ArgumentCaptor<RedactOptions> options = ArgumentCaptor.forClass(RedactOptions.class);
+            try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                redactor.when(() -> PdfRedactor.redact(any(Path.class), options.capture()))
+                        .thenThrow(new IllegalStateException("native redaction unavailable"));
+                drainBody(controller.redactPdf(request));
+            }
+            return options.getValue();
         }
 
         @Test

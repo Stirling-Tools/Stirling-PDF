@@ -51,6 +51,31 @@ describe("usePageTracksShortcuts", () => {
     });
   });
 
+  it("duplicates the selection with Ctrl+D", () => {
+    const { dispatch } = setup(["a1", "a2"]);
+    press("d", { ctrlKey: true });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "duplicate",
+      pageIds: ["a1", "a2"],
+    });
+  });
+
+  it("duplicates the selection with Meta+D", () => {
+    const { dispatch } = setup(["a1", "a2"]);
+    press("d", { metaKey: true });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "duplicate",
+      pageIds: ["a1", "a2"],
+    });
+  });
+
+  it("leaves Ctrl+D to the browser when nothing is selected", () => {
+    const { dispatch } = setup([]);
+    const event = press("d", { ctrlKey: true });
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
+  });
+
   it("leaves keys typed into a field or a dialog alone", () => {
     const { dispatch } = setup(["a1"]);
     const input = document.createElement("input");

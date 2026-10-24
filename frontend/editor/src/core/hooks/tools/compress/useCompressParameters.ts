@@ -17,6 +17,9 @@ export interface CompressParameters extends BaseParameters {
   linearize: boolean;
 }
 
+export const MIN_COMPRESSION_LEVEL = 1;
+export const MAX_COMPRESSION_LEVEL = 9;
+
 export const defaultParameters: CompressParameters = {
   compressionLevel: 5,
   grayscale: false,
@@ -30,6 +33,18 @@ export const defaultParameters: CompressParameters = {
   linearize: false,
 };
 
+/**
+ * Whether a run with these parameters already used the strongest compression. File-size
+ * mode counts: the backend raises the level itself until it meets the target or hits the
+ * maximum, so a run that missed has already been through every level.
+ */
+export function usedStrongestCompression(params: CompressParameters): boolean {
+  return (
+    params.compressionMethod === "filesize" ||
+    params.compressionLevel >= MAX_COMPRESSION_LEVEL
+  );
+}
+
 export type CompressParametersHook = BaseParametersHook<CompressParameters>;
 
 /** Whether these parameters are complete enough to run. Shared by the tool's settings
@@ -37,7 +52,10 @@ export type CompressParametersHook = BaseParametersHook<CompressParameters>;
 export function validateCompressParameters(
   params: CompressParameters,
 ): boolean {
-  if (params.compressionLevel < 1 || params.compressionLevel > 9) {
+  if (
+    params.compressionLevel < MIN_COMPRESSION_LEVEL ||
+    params.compressionLevel > MAX_COMPRESSION_LEVEL
+  ) {
     return false;
   }
   // Filesize mode needs a target size; without one the request omits

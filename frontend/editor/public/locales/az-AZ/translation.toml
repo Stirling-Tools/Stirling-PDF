@@ -55,7 +55,9 @@ keepWorking = "İşə davam et"
 loading = "Yüklənir..."
 loginAgreementAccept = "Qəbul et"
 loginAgreementDecline = "İmtina et"
+loginAgreementLoadFailed = "Giriş razılaşması yüklənə bilmədi."
 loginAgreementProvider = "Bu bildiriş Stirling PDF Inc. tərəfindən deyil, administratorunuz tərəfindən təqdim edilib."
+loginAgreementRetry = "Yenidən cəhd et"
 loginAgreementTitle = "Giriş razılaşması"
 logOut = "Hesabdan çıx"
 marginTooltip = "Səhifə nömrəsi ilə səhifənin kənarı arasındakı məsafə."
@@ -299,7 +301,6 @@ title = "Səhifə nömrəsi nəticələri"
 
 [addPassword]
 desc = "PDF sənədinizi parolla şifrələyin."
-submit = "Şifrlə"
 tags = "şifrələ,parol,kilidlə,təhlükəsiz,qoru,təhlükəsizlik,şifrələmə,mühafizə,məxfi,özəl,girişi məhdudlaşdır"
 title = "Şifr Əlavə Et"
 
@@ -311,17 +312,6 @@ label = "Şifrələmə Açarının Uzunluğu"
 
 [addPassword.error]
 failed = "PDF-i şifrələyərkən xəta baş verdi."
-
-[addPassword.passwords]
-stepTitle = "Parollar və Şifrələmə"
-
-[addPassword.passwords.owner]
-label = "Sahib Parolu"
-placeholder = "Sahib parolunu daxil edin"
-
-[addPassword.passwords.user]
-label = "İstifadəçi Parolu"
-placeholder = "İstifadəçi parolunu daxil edin"
 
 [addPassword.results]
 title = "Şifrələnmiş PDF-lər"
@@ -1627,6 +1617,7 @@ title = "Yenidən başlatmaq tələb olunur"
 [admin.settings.security]
 authentication = "Autentifikasiya"
 description = "Autentifikasiya, giriş davranışı və təhlükəsizlik siyasətlərini konfiqurasiya edin."
+pdfPermissions = "PDF icazələri"
 title = "Təhlükəsizlik"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "CSRF mühafizəsini söndür"
 [admin.settings.security.enableLogin]
 description = "Tətbiqə daxil olmadan əvvəl istifadəçilərin giriş etməsini tələb et"
 label = "Girişi aktiv et"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Məhdudlaşdırılmış əməliyyatlar üçün icazələr parolunu tələb et. Bunu söndürmək PDF-ləri açmaq üçün lazım olan parolları yenə də tələb edir."
+label = "PDF icazələrinə riayət et"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Qabaqcıl Ayarlar"
@@ -1938,9 +1933,6 @@ wrapUp = "Admin turu budur! Stirling PDF-i təşkilatlar üçün güclü, fərdi
 [adminUserSettings]
 admin = "Admin"
 title = "İstifadəçi İdarəetmə Parametrləri"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Ərəb"
@@ -3173,12 +3165,14 @@ unknown = "Naməlum"
 
 [changePermissions]
 desc = "Sənəd məhdudiyyətlərini və icazələrini dəyişdirin."
+loading = "Cari icazələr yüklənir..."
 submit = "İcazələri Dəyişdir"
 tags = "icazələr,məhdudiyyətlər,hüquqlar,giriş nəzarəti,icazə ver,rədd et,çap,kopyalama,redaktə,dəyişdirmə icazələri,təhlükəsizlik parametrləri,istifadəçi hüquqları"
 title = "İcazələri Dəyişdir"
 
 [changePermissions.error]
 failed = "PDF icazələrini dəyişdirərkən xəta baş verdi."
+readFailed = "Bu PDF-in cari icazələri oxuna bilmədi. Dəyişiklikləri tətbiq etməzdən əvvəl məhdudiyyətləri əl ilə təyin edin."
 
 [changePermissions.permissions.preventAssembly]
 label = "Sənədin Yığılmasının Qarşısını Al"
@@ -3219,21 +3213,16 @@ text = "Bu icazələri dəyişdirilməz etmək üçün, Parol əlavə etmə alə
 [chat.actions]
 copy = "Mesajı kopyala"
 
-[chat.emptyState]
-text = "Sənədləriniz haqqında sual verin və ya PDF alətləri ilə bağlı kömək alın."
-
-[chat.fab]
-close = "Çatı bağla"
-open = "Stirling AI köməkçisini aç"
+[chat.dock]
+collapse = "Çatı yığ"
+placeholder = "Stirling Agent-dən soruşun"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling agent seçimləri"
-assistant = "AI köməkçisi"
 clearChat = "Söhbəti təmizlə"
 
 [chat.input]
 disclaimer = "AI səhv edə bilər. Paylaşmazdan əvvəl nəticəni yoxladığınızdan əmin olun."
-placeholder = "Nə etmək istəyirsiniz?"
 send = "Mesaj göndər"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Bu sənədləri PDF-ə çevir"
 convertOne = "Bu sənədi PDF-ə çevir"
 heading = "Başla"
 mergeMany = "Bu {{count}} sənədi 1-də birləşdir"
-moreFiles = "+{{count}} daha"
 openFromComputer = "Kompüterdən aç"
-removeFile = "{{name}} faylını sil"
 splitOne = "Bu sənədi böl"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Tələb olunan məlumatı tapa bilmədim."
 processing = "Emal edilir ({{outcome}})..."
 unsupported_capability = "Dəstəklənməyən imkan: {{capability}}"
 usage_limit_reached = "İstifadə limitinizə çatmısınız. Davam etmək üçün plan seçimlərinizi yoxlayın."
-
-[chat.toolsUsed]
-summary_one = "1 alət işə salındı"
-summary_other = "{{count}} alət işə salındı"
-unknownTool = "Naməlum alət"
 
 [classification.families]
 correspondence = "Yazışma"
@@ -3649,6 +3631,7 @@ tooltip = "Ekrandan rəng seç"
 hue = "Çalar"
 saturation = "Doyğunluq və parlaqlıq"
 title = "Rəng seçin"
+transparent = "Şəffaf"
 
 [common]
 actions = "Əməliyyatlar"
@@ -3664,6 +3647,7 @@ continue = "Davam et"
 copied = "Kopyalandı!"
 copy = "Kopyala"
 copyCode = "Kodu kopyala"
+copyFailed = "Kopyalama alınmadı"
 dismiss = "Bağla"
 done = "Bitdi"
 enterValue = "Dəyər daxil edin"
@@ -3847,6 +3831,12 @@ unavailable = "ImageMagick bu serverdə quraşdırılmayıb və ya aktiv deyil"
 filesize = "Fayl Ölçüsü"
 quality = "Keyfiyyət"
 title = "Sıxma metodu"
+
+[compress.noReduction]
+multiple = "Sıxılma uğurla icra olundu, lakin {{total}} fayldan {{count}}-i daha çox sıxıla bilmir."
+multipleAtLevel = "Bu səviyyədə sıxılma {{total}} fayldan {{count}}-də heç bir yaxşılaşma yaratmadı. Daha yüksək sıxılma səviyyəsini sınayın."
+single = "Sıxılma uğurla icra olundu, lakin bu fayl daha çox sıxıla bilmir."
+singleAtLevel = "Bu səviyyədə sıxılma bu faylda heç bir yaxşılaşma yaratmadı. Daha yüksək sıxılma səviyyəsini sınayın."
 
 [compress.settings]
 desiredSize = "İstənilən fayl ölçüsü"
@@ -4295,6 +4285,13 @@ precision = "Dəqiq yerləşdirmə üçün koordinat girişlərindən istifadə 
 resize = "Ölçünü dəyişmək üçün künc və kənar tutacaqlarını sürüşdürün"
 title = "PDF-ləri necə kəsmək olar"
 
+[damagedPdf]
+description = "Bu PDF zədələnib və açıla bilmir."
+label = "Zədələnmiş"
+repair = "Bərpa et"
+repaired = "{{name}} bərpa edildi"
+repairFailed = "{{name}} bərpa edilə bilmədi"
+
 [database]
 backupCreated = "Verilənlər bazasının ehtiyat nüsxəsi uğurla yaradıldı"
 fileName = "Fayl Adı"
@@ -4363,6 +4360,10 @@ title = "Diskdən yeniləndi"
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\" diskdə dəyişdirildi. Yenidən yüklənməsi bir qədər vaxt aparacaq qədər böyükdür, buna görə buradakı versiya olduğu kimi saxlanıldı."
 title = "Fayl diskdə dəyişdirildi"
+
+[desktopPrivacy]
+blocked = "Administratorunuz sənədlərin bu cihazda qalmasını tələb edir. Bu funksiya əlçatan deyil."
+localFiles = "Lokal fayllar"
 
 [desktopUpdate]
 downloading = "Yeniləmə endirilir..."
@@ -4491,22 +4492,80 @@ description = "İş sahəsini yükləmək üçün Mündəricatı Redaktə et al�
 title = "Redaktəyə başlamaq üçün aləti açın"
 
 [encryptedPdfUnlock]
-description = "Bu PDF parol ilə qorunur. Onunla işləməyə davam etmək üçün parolu daxil edin."
-emptyResponse = "Parolun silinməsi fayl yaratmadı."
+actionIgnored = "{{action}} məhdudiyyəti nəzərə alınmadı"
+actionUnlocked = "{{action}} bu sessiya üçün açıldı"
+advanced = "Təkmil"
+allowed = "İcazə verilib"
+annotations = "Annotasiyalar"
+authoriseAction = "Bu PDF {{action}} istifadəsi üçün icazə tələb edir."
+changeOwnerPassword = "İcazələr parolunu dəyiş"
+checkingPermissions = "PDF icazələri yoxlanılır..."
+chooseOwnerPassword = "Fərqli parol seçin"
+continue = "Davam et"
+copyFailed = "Kopya yaradıla bilmədi. PDF dəyişdirilməyib."
+copying = "Məzmun kopyalanır"
+editing = "Redaktə"
+enterPassword = "Parolu daxil edin"
+ignoredByServer = "İcazələr bu serverin ayarları tərəfindən nəzərə alınmır. PDF-in qorunması dəyişdirilməyib."
 incorrectPassword = "Yanlış parol"
+inspectionFailed = "Bu PDF-in icazələri yoxlanıla bilmədi. Yenidən cəhd edin."
+lowQualityPrintUnsupported = "Bu PDF yalnız aşağı keyfiyyətli çapa icazə verir, bu baxış vasitəsi isə bunu dəstəkləmir."
+lowResolutionOnly = "Yalnız aşağı çözünürlük"
+manageProtection = "Qorumanı idarə et"
 missingFile = "Seçilmiş fayl artıq mövcud deyil."
+mixedProtection = "Bu PDF-lərin ayrıca qoruma ayarları var. Onları ayrı-ayrılıqda emal edin."
+newOwnerPassword = "Yeni icazələr parolu"
+notRequired = "Tələb olunmur"
+openingPassword = "Açmaq üçün parol"
+openPdf = "PDF aç"
+ownerPassword = "İcazələr parolu"
+ownerRequired = "Davam etmək üçün icazələr parolunu daxil edin."
+ownerTitle = "İcazələr parolunu daxil edin"
+passwordRetained = "Dəyişmədən saxlanıldı"
+passwordsMustDiffer = "İki parol fərqli olmalıdır."
+permissionsUnlocked = "İcazələr bu sessiya üçün açıldı"
+prepareFailed = "Bu qorunan PDF emal üçün hazırlana bilmədi."
+printing = "Çap"
+printRestricted = "Çap məhdudlaşdırılıb. Qorumanı idarə et bölməsində icazələri yoxlayın."
+protectedPdf = "Qorunan PDF"
+protectionRetained = "Qoruma saxlanıldı"
+protectionSaved = "Qoruma saxlanıldı"
+removePasswordHelp = "Hansı parolları siləcəyinizi seçmək üçün Parolu sil bölməsini açın."
+removeProtection = "Qorunmayan kopya yarat"
+replaceProtection = "Bu ayarlar PDF-in cari qorumasını əvəz edir."
 required = "Davam etmək üçün parolu daxil edin."
-skip = "Hələlik ötür"
-successBody = "Parol uğurla silindi."
-successBodyWithName = "Parol {{fileName}} faylından silindi"
-successTitle = "Parol silindi"
+requiredStatus = "Tələb olunur"
+requiredToApply = "Dəyişiklikləri tətbiq etmək üçün tələb olunur"
+restoreFailed = "PDF qorumasını saxlamaq mümkün olmadı. Qorunmayan nəticə saxlanılmadı."
+restrictActions = "Əməliyyatları məhdudlaşdır"
+restricted = "Məhdudlaşdırılıb"
+restrictedActions = "məhdudlaşdırılmış əməliyyatlar"
+restrictedOperation = "Bu əməliyyat icazələr parolunu tələb edir."
+retainOwnerVerification = "Açma parolunu silərkən icazələr parolunu dəyişmədən saxlamaq üçün onu təsdiqləyin. Bu, onu silməyəcək."
+saveProtection = "Qorumanı saxla"
+securityChangeFailed = "Qoruma dəyişdirilə bilmədi. İcazələr parolunu və yeni təhlükəsizlik ayarlarını yoxlayın."
+sessionDetails = "Bu sessiya üçün açıqdır. PDF qorunmuş qalır."
+sessionDetailsLabel = "Sessiya açılması haqqında"
+sessionFailed = "Bu PDF açıla bilmədi. Lütfən, yenidən cəhd edin."
+sessionSuccessBody = "Qoruma saxlanıldı."
+sessionSuccessBodyWithName = "{{fileName}} üçün qoruma saxlanıldı."
+sessionSuccessTitle = "PDF açıldı"
+sessionTitle = "PDF aç"
+signedReadOnly = "Bu imzalanmış PDF-ə baxmaq olar, lakin burada redaktə edilə bilməz."
 title = "Davam etmək üçün şifrəni silin"
+toolUnavailable = "Bu alət şifrələnmiş PDF-ləri dəstəkləmir. Əvvəlcə parolu silin."
+toolUnavailableDetails = "{{name}} niyə əlçatan deyil"
 unlock = "Kilidi aç və davam et"
 unlockAll = "Hamısına tətbiq et ({{count}})"
 unlockAllPartialFail = "{{names}} üçün parol yanlışdır"
 unlockAllSuccess_one = "{{count}} faylın kilidi açıldı."
 unlockAllSuccess_other = "{{count}} faylın kilidi açıldı."
+unlockedForSession = "İcazələr parolunuzdan istifadə edilərək bu sessiya üçün açıldı."
 unlockPrompt = "Davam etmək üçün PDF-i açın"
+unprotectedCopyConsequence = "Kopyada heç bir parol və ya məhdudiyyət olmayacaq. Orijinal qorunmuş qalır."
+unsupportedTool = "Bu alət hələ bu PDF-in qorumasını saxlaya bilmir."
+verifiedForSession = "Bu sessiya üçün təsdiqləndi"
+verifyPermissions = "Bu sessiya üçün icazələri təsdiqlə"
 viewerLocked = "Bu PDF parolla qorunur"
 viewerUnlock = "Kilidi aç"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "Görüntüləyicidə bax"
 closeFile = "Faylı bağla"
 
 [fileEditor]
-addFiles = "Fayllar əlavə et"
 closedFile = "{{name}} bağlandı"
 couldNotSave = "{{name}} saxlana bilmədi"
-filesAdded_one = "{{count}} fayl əlavə edildi"
-filesAdded_other = "{{count}} fayl əlavə edildi"
 filesReordered_one = "Faylın sırası dəyişdirildi"
 filesReordered_other = "{{count}} faylın sırası dəyişdirildi"
 loadedFromStorage_one = "Yaddaşdan {{count}} fayl yükləndi"
 loadedFromStorage_other = "Yaddaşdan {{count}} fayl yükləndi"
 loadFromStorageFailed = "Bəzi faylları yaddaşdan yükləmək alınmadı"
 pinnedFile = "{{name}} sabitləndi"
-processFilesFailed = "Faylları emal etmək alınmadı"
 savedAndClosed = "{{name}} saxlanıldı və bağlandı"
 saveFailed = "Saxlama alınmadı"
 unpinnedFile = "{{name}} sabitlənmədən çıxarıldı"
 unzipping = "{{name}} arxivdən çıxarılır"
+
+[fileEditor.addCard]
+dropHint = "və ya faylları istənilən yerə buraxın"
+fromComputer = "Kompüterdən yüklə"
+moreOptions = "Daha çox yükləmə seçimi"
 
 [fileEditor.unzip]
 error = "{{name}} arxivdən çıxarılarkən xəta"
@@ -4729,7 +4789,6 @@ dataLostBody = "Bu brauzer bu faylın məzmununu itirib. Onunla işləməyə dav
 dataLostTitle = "Fayl məlumatı əlçatan deyil"
 downloadFailed = "Endirmə uğursuz oldu"
 dropHint = "Başlamaq üçün faylları açın"
-dropToAdd = "Əlavə etmək üçün faylları buraxın"
 duplicateFailed = "Fayl dublikatlana bilmədi"
 expand = "Yan paneli genişləndir"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "Sahələri yenidən skan et"
 rescanFormFields = "Forma sahələrini yenidən skan et"
 save = "Saxla"
 saveShortcut = "Saxlamaq üçün Ctrl+S"
+saving = "Saxlanılır..."
 selectOptionPlaceholder = "— seçin —"
 skippedEdits_one = "1 dəyişiklik tətbiq edilə bilmədi:"
 skippedEdits_other = "{{count}} dəyişiklik tətbiq edilə bilmədi:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "{{count}} əlavə qeyd göstərilmir."
 unsavedChanges = "Saxlanılmamış dəyişikliklər"
 
 [formFill.create]
-commit = "PDF-ə {{count}} sahə əlavə et"
 empty = "Hələ heç bir sahə çəkilməyib."
-failed = "Sahələri əlavə etmək alınmadı"
 goToField = "Bu sahəyə keç"
 hint = "Sahə növünü seçin, sonra onu səhifədə çəkin."
 placing = "Səhifədə {{type}} sahəsi çəkin. Dayandırmaq üçün Esc düyməsini basın."
@@ -5334,7 +5392,6 @@ modify = "Dəyişdir"
 commit = "{{count}} dəyişikliyi saxla"
 delete = "Sil"
 empty = "Bu PDF-də hələ forma sahələri yoxdur."
-failed = "Dəyişiklikləri saxlamaq alınmadı"
 groupSizeHint = "Seçim ölçüsündən istifadə edin"
 hint = "Xüsusiyyətlərini redaktə etmək üçün sahə seçin, onu səhifədə sürükləyin və ya silin."
 restore = "Bərpa et"
@@ -5732,11 +5789,6 @@ title = "Üst-Üstə Qoy"
 desc = "PDF-in birdən çox səhifəsini bir səhifədə birləşdir"
 tags = "düzən,tərtib et,birləşdir,N-up,2-up,4-up,səhifədə bir neçə,vərəq başına səhifələr,səhifə düzəni,kafel,tor düzəni,çoxsəhifəli düzən,səhifədə birləşdir,paylama materialı"
 title = "Çoxsəhifəli Tərtibat"
-
-[home.pdfCommentAgent]
-desc = "Sorğunuza əsasən AI-dan PDF-ə yapışqan qeyd şəklində şərhlər əlavə etməsini istəyin"
-tags = "AI,agent,şərh,annotasiya,yapışqan qeyd,baxış,rəylər,qeydlər"
-title = "AI şərhləri əlavə et"
 
 [home.pdfOrganiser]
 tags = "təşkil et,yenidən düz,yenidən sırala,səhifələri düz,çeşidlə,səhifələri köçür,səhifələri sil,səhifələri çıxar,səhifə idarəetməsi,səhifə təşkilatçısı,yenidən ardıcıllaşdır"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "Siz komanda üzvü olacaqsınız və sahib girişini itirəc�
 deselectAll = "Heç biri"
 selectAll = "Hamısını işarələ"
 
-[pageEditor]
-dragPreviewAlt = "Sürüklənir"
-filePosition = "Mövqe {{position}}"
-pageLabel = "Səhifə {{page}}"
-title = "Səhifə Redaktoru"
-
-[pageEditor.actions]
-deletePage = "Səhifəni sil"
-insertFileAfter = "Sonrasına fayl daxil et"
-moveLeft = "Sola köçür"
-moveRight = "Sağa köçür"
-rotateLeft = "Sola döndər"
-rotateRight = "Sağa döndər"
-splitAfter = "Sonrasından böl"
-
-[pageEditor.commands]
-addSplitAt = "{{position}} mövqeyində bölmə əlavə et"
-addSplits_one = "{{count}} bölmə əlavə et"
-addSplits_other = "{{count}} bölmə əlavə et"
-deletePages_one = "{{count}} səhifəni sil"
-deletePages_other = "{{count}} səhifəni sil"
-insertFiles_one = "{{page}} səhifəsindən sonra {{count}} fayl daxil et"
-insertFiles_other = "{{page}} səhifəsindən sonra {{count}} fayl daxil et"
-insertPageBreaks_one = "{{count}} səhifə fasiləsi daxil et"
-insertPageBreaks_other = "{{count}} səhifə fasiləsi daxil et"
-insertPageBreaksAll = "Bütün səhifələrdən sonra səhifə fasilələri daxil et"
-removeAllSplits = "Bütün bölmələri sil"
-removeSplitAt = "{{position}} mövqeyində bölməni sil"
-removeSplits_one = "{{count}} bölməni sil"
-removeSplits_other = "{{count}} bölməni sil"
-reorderPages = "Səhifələri yenidən sırala"
-rotatePageLeft = "Səhifəni sola döndər"
-rotatePageRight = "Səhifəni sağa döndər"
-rotatePagesLeft_one = "{{count}} səhifəni sola döndər"
-rotatePagesLeft_other = "{{count}} səhifəni sola döndər"
-rotatePagesRight_one = "{{count}} səhifəni sağa döndər"
-rotatePagesRight_other = "{{count}} səhifəni sağa döndər"
-splitAllPages = "Bütün səhifələri böl"
-toggleSplits_one = "{{count}} bölmə mövqeyini dəyiş"
-toggleSplits_other = "{{count}} bölmə mövqeyini dəyiş"
-
-[pageEditor.emptyState]
-body = "Səhifələrin redaktəsinə başlamaq üçün fayllar əlavə edin"
-title = "Heç bir PDF faylı yüklənməyib"
-
-[pageEditor.fileDropdown]
-addFile = "Fayl əlavə et"
-selectedCount = "{{selected}}/{{total}} fayl seçildi"
-untitled = "Adsız"
-
-[pageEditor.toolbar]
-delete = "Seçilənləri sil"
-redo = "Yenidən et"
-rotateLeft = "Seçilənləri sola fırlat"
-rotateRight = "Seçilənləri sağa fırlat"
-undo = "Geri al"
-
 [pageExtracter]
 title = "Səhifələri çıxar"
 
@@ -6815,6 +6810,79 @@ title = "Səhifə aralıqları"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → bütün səhifələri seçir"
 title = "Xüsusi açar sözlər"
+
+[pageTracks]
+blankPage = "Boş səhifə"
+deleteSelected = "Seçilmiş səhifələri sil"
+downloadAsOneFile = "Bir fayl kimi endir"
+downloadEachPage = "Hər səhifəni ayrıca endir"
+downloadSelectedPages = "Seçilmiş səhifələri endir"
+dragging_one = "{{count}} səhifə"
+dragging_other = "{{count}} səhifə"
+duplicateSelected = "Seçilmiş səhifələri dublikat et"
+edited = "redaktə edilib"
+emptyTrack = "Səhifə qalmayıb. Səhifələri buraya sürükləyin və ya bu faylı bağlamaq üçün saxlayın."
+insertBlank = "Boş səhifə daxil et"
+insertBlankAfterSelected = "Seçilmiş səhifələrdən sonra boş səhifələr daxil et"
+moveLeft = "Sola köçür"
+moveRight = "Sağa köçür"
+nextPage = "Növbəti səhifə"
+page = "Səhifə {{number}}"
+pageCount_one = "{{count}} səhifə"
+pageCount_other = "{{count}} səhifə"
+pagePosition = "Səhifə {{number}} / {{total}}"
+prevPage = "Əvvəlki səhifə"
+readingPages = "Səhifələr oxunur..."
+redo = "Yenidən et"
+rotateLeft = "Sola döndər"
+rotateRight = "Sağa döndər"
+rotateSelectedLeft = "Seçilmiş səhifələri sola döndər"
+rotateSelectedRight = "Seçilmiş səhifələri sağa döndər"
+saveAsOneFile = "Bir fayl kimi saxla"
+saveChanges = "Dəyişiklikləri bütün fayllara saxla"
+saveEachPage = "Hər səhifəni ayrıca saxla"
+saveSelectedPages = "Seçilmiş səhifələri saxla"
+saving = "Saxlanılır..."
+savingProgress = "{{total}}-dən {{done}} saxlanılır"
+selectPage = "Səhifə {{number}} seç"
+splitAfterSelected = "Seçilmiş səhifələrdən sonra böl"
+splitHere = "Buradan böl"
+undo = "Geri al"
+viewError = "Bu səhifə göstərilə bilmədi"
+viewPage = "Səhifəyə bax"
+zoomIn = "Yaxınlaşdır"
+zoomOut = "Uzaqlaşdır"
+
+[pageTracks.close]
+message = "Bütün faylları bağlamaq istədiyinizə əminsiniz?"
+unsaved = "Bu fayllarda saxlanılmamış dəyişikliklər var."
+
+[pageTracks.delete]
+page = "Səhifəni sil"
+
+[pageTracks.duplicate]
+page = "Səhifəni dublikat et"
+
+[pageTracks.empty]
+body = "PDF-ləri redaktə edilə bilən səhifə zolaqlarına genişləndirmək üçün əlavə edin"
+title = "Heç bir PDF faylı yüklənməyib"
+
+[pageTracks.exportFailed]
+body = "Redaktə edilmiş fayllar hazırlana bilmədi. Yenidən cəhd edin."
+title = "Endirmək mümkün olmadı"
+
+[pageTracks.saveFailed]
+body = "Düzəlişləriniz itirilməyib. Yenidən saxlamağa cəhd edin."
+title = "Dəyişikliklər saxlanıla bilmədi"
+
+[pageTracks.track]
+close = "Faylı bağla"
+collapse = "Yığ"
+expand = "Genişləndir"
+rename = "Faylın adını dəyiş"
+
+[pageTracks.wrap]
+label = "Səhifələri sətirə keçir"
 
 [payg.activity]
 docs = "sənədlər"
@@ -7144,24 +7212,6 @@ totalSeats_other = "Cəmi ({{count}} yer)"
 [payment.upgradeTeam]
 title = "Team-a yüksəlt"
 
-[pdfCommentAgent]
-submit = "Şərhləri yarat"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Zəhmət olmasa, AI-nın nəyi şərh etməli olduğunu təsvir edin"
-failed = "Şərhləri yaratmaq alınmadı"
-tooLong = "Sorğu çox uzundur (maksimum {{max}} simvol)"
-
-[pdfCommentAgent.prompt]
-label = "AI nəyi şərh etməlidir?"
-placeholder = "məs., Qeyri-müəyyən tarixləri qeyd edin və aydınlaşdırmalar təklif edin"
-
-[pdfCommentAgent.results]
-title = "Şərh edilmiş PDF"
-
-[pdfCommentAgent.settings]
-title = "Şərh təlimatları"
-
 [pdfOrganiser]
 placeholder = "(məs., 1,3,2 və ya 4-8,2,10-12 və ya 2n-1)"
 tags = "duplex,tək,cüt,sırala,yerini dəyiş"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "Burada redaktə etmək üçün səhifədə istənilən m�
 ocrDocumentChanged = "OCR işləyərkən sənəd dəyişdi. Son dəyişikliklərinizi daxil etmək üçün OCR-ni yenidən işə salın."
 ocrInvalidResult = "OCR PDF qaytarmadı. Yenidən cəhd edin."
 ocrNoLanguages = "Serverdə OCR dilləri quraşdırılmayıb."
+ocrProtected = "OCR hələ bu PDF-in qorumasını saxlaya bilmir. Qorunan orijinal baxış üçün əlçatan qalır."
 ocrRunning = "Mətn tanınır..."
 ocrUnavailable = "OCR bu serverdə əlçatan deyil."
 oneImage = "Şəkil"
@@ -7389,13 +7440,8 @@ pageNumber = "Səhifə {{page}}"
 renderFailed = "Səhifəni göstərmək alınmadı"
 
 [pdfTextEditor.password]
-cancel = "Ləğv et"
 incorrect = "Yanlış parol - yenidən cəhd edin."
 label = "Parol"
-open = "Aç"
-protected = "Bu PDF parolla qorunur."
-protectedNamed = "\"{{fileName}}\" parolla qorunur."
-title = "Parol tələb olunur"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}} mövqeyində düzləndirmə bələdçisi - silmək üçün xətkeşin üzərinə sürükləyin"
@@ -7994,6 +8040,7 @@ before = "Ayarla"
 title = "Stirling bağlantısı konfiqurasiya edilməyib"
 
 [portal.accountLink.notice]
+loadFailed = "Hesab əlaqələndirmə dialoqu yüklənə bilmədi."
 openFailed = "Brauzeriniz açıla bilmədi. Hesabı əlaqələndirmək üçün qoşulmuş serverinizdə İstifadə və hesablaşmanı açın."
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "Aylıq xərc limiti {{amount}}/ay. Limitə çatdıqda emal dayandırıl
 limitNoCap = "Xərc limiti yoxdur. Emal dayandırılmayacaq. Fakturalar aylıq göndərilir."
 
 [portal.billing.chip]
-invoices = "Fakturalar"
-nav = "Bölmələr"
-payment = "Ödəniş"
 plan = "Plan"
 procurement = "Satınalma"
 usage = "İstifadə"
@@ -8178,9 +8222,22 @@ pdfs = "Emal edilmiş PDF-lər"
 users = "İstifadəçilər"
 
 [portal.billing.enterprise]
+active = "Müqavilə {{date}} tarixinədək aktivdir"
 cta = "Enterprise təklifi alın"
+included = "Enterprise-ə daxildir"
+payment_pending = "Ödəniş gözlənilir · {{date}} tarixinədək giriş"
+pdfsAgreed = "{{used}} / {{agreed}} PDF"
+pdfsOver_one = "Razılaşdırılmış həcmdən {{count}} PDF artıq"
+pdfsOver_other = "Razılaşdırılmış həcmdən {{count}} PDF artıq"
+pdfsUsed_one = "{{count}} PDF emal edildi"
+pdfsUsed_other = "{{count}} PDF emal edildi"
+period = "Müqavilə müddəti: {{start}} – {{end}}"
 sub = "Air-gapped yerləşdirmə, SCIM, məlumat rezidentliyi, uptime SLA-ları və buna uyğun müqavilə."
 title = "Stirling-i tənzimlənən mühitdə işlədirsiniz?"
+trial = "{{days}} günlük sınaq · {{date}} tarixində bitir"
+usersAgreed = "{{used}} / {{agreed}} razılaşdırılmış istifadəçi"
+usersOver_one = "{{count}} istifadəçi razılaşdırılmış miqdardan artıqdır"
+usersOver_other = "{{count}} istifadəçi razılaşdırılmış miqdardan artıqdır"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Checkout başlatmaq mümkün olmadı"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "Distribusiyanız üçün native build-lər."
-guideBtn = "Linux quraşdırma seçimlərinə baxın"
+downloadAppImage = "AppImage"
+downloadDeb = ".deb endir (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "Ümumi distro-lar üçün AppImage, .deb və .rpm build-ləri mövcuddur."
 tagline = "Distro-nuz üçün native desktop tətbiqi"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "Məxfiləşdir, Gizlət, qaralt, qara, marker, gizli, avtomatik məxfil�
 title = "Məxfiləşdir"
 
 [redact.auto]
+caseSensitiveLabel = "Böyük-kiçik hərfə həssas uyğunlaşdırma"
 colorLabel = "Qutu rəngi"
 convertPDFToImageLabel = "PDF-i PDF-Image-ə çevir"
 customPaddingLabel = "Xüsusi əlavə boşluq"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "Birdən çox faylı birdən məxfiləşdirmək üç�
 manual = "Əl ilə"
 mode = "Rejim"
 title = "Məxfiləşdirmə üsulu"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Yalnız eyni hərf registrində olan mətn uyğunlaşdırılır. Aktiv olduqda 'Secret' 'SECRET' ilə uyğun gəlməyəcək və regex-də [A-Z] yalnız böyük hərflərlə uyğunlaşır."
+title = "Böyük-kiçik hərfə həssas uyğunlaşdırma"
 
 [redact.tooltip.advanced.color]
 text = "Məxfiləşdirmə qutularının görünüşünü fərdiləşdirin. Standart qara rəngdir, lakin istənilən rəngi seçə bilərsiniz. Boşluq tapılmış mətnin ətrafına əlavə sahə yaradır."
@@ -11396,7 +11460,12 @@ text = "PDF-dən hansı səhifələri siləcəyinizi göstərin. Ayrı-ayrı sə
 title = "Səhifə seçimi"
 
 [removePassword]
-desc = "PDF Sənədindən şifr qorumasını götür."
+appliesTo = "{{total}} PDF-dən {{count}} üçün təyin edilib"
+keepBlank = "Həmin parolu saxlamaq üçün sahəni boş buraxın."
+notSet = "Təyin edilməyib"
+openWithReaderFirst = "Yalnız icazələr parolunu silməzdən əvvəl bu PDF-i açma parolu ilə yenidən açın."
+selectiveHelp = "Silmək istədiyiniz hər bir qoruma üçün cari parolu daxil edin. Boş sahə həmin parolu saxlayır. İcazələr parolunun silinməsi əməl məhdudiyyətlərini də silir."
+selectPasswords = "Silinəcək parollar"
 submit = "Parolu sil"
 tags = "təhlükəsiz,deşifr,təhlükəsizlik,kodu aç,kodu sil"
 title = "Şifri Sil"
@@ -11407,13 +11476,9 @@ failed = "PDF-dən parolu silərkən xəta baş verdi."
 [removePassword.password]
 label = "Cari Şifr"
 placeholder = "Cari parolu daxil edin"
-stepTitle = "Şifri Sil"
 
 [removePassword.results]
 title = "Şifrəsi açılmış PDF-lər"
-
-[removePassword.tooltip]
-description = "Parol mühafizəsini silmək üçün PDF-i şifrələmək üçün istifadə olunan parol tələb olunur. Bu, sənədin şifrəsini açacaq və parolsuz əlçatan edəcək."
 
 [reorganizePages]
 submit = "Səhifələri yenidən düz"
@@ -11543,6 +11608,64 @@ m = "Metr (m)"
 mi = "Mil (mi)"
 mm = "Millimetr (mm)"
 yd = "Yard (yd)"
+
+[runLocation]
+back = "Geri"
+continue = "Davam et"
+subtitle = "Harada işləyəcəyini seçin."
+title = "Stirling-i harada işlətmək istəyirsiniz?"
+
+[runLocation.choice.browser]
+description = "Veb tətbiq."
+title = "Brauzerinizdə"
+
+[runLocation.choice.computer]
+description = "Desktop tətbiqi."
+title = "Kompüterinizdə"
+
+[runLocation.choice.server]
+description = "Komanda üçün self-hosted."
+title = "Serverinizdə"
+
+[runLocation.desktop]
+computerLabel = "Kompüteriniz"
+download = "{{platform}} üçün endir"
+downloadAgain = "Yenidən endir"
+guide = "{{platform}} quraşdırma bələdçisini açın"
+startedSubtitle = "Downloads qovluğunuzu yoxlayın, sonra quraşdırıcını açın."
+startedTitle = "Endirməniz başladı"
+subtitle = "Onu endirin və açın."
+title = "Desktop tətbiqini əldə edin"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (quraşdırma bələdçisi)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "Kopyalandı"
+copy = "Əmri kopyala"
+copyCompose = "Compose faylını kopyala"
+guide = "{{method}} quraşdırma bələdçisi"
+methodLabel = "Bununla işlət"
+note = "Sonra quraşdırmanı tamamlamaq üçün <url/> açın."
+subtitle = "Bunu serverinizdə işlədin, sonra brauzerdə açın."
+title = "Serverinizi qurun"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "PDF fayllarından potensial zərərli elementləri silin."
@@ -12054,6 +12177,7 @@ title = "İş sahəsi"
 loginIncomplete = "Girişi tamamlamaq alınmadı"
 noSaasServer = "SaaS server konfiqurasiya edilməyib"
 noServer = "Server konfiqurasiya edilməyib"
+policyUnavailable = "Təşkilatınızın daxilolma ayarlarını yükləmək mümkün olmadı."
 saasLoginFailed = "SaaS girişi alınmadı"
 saasLoginIncomplete = "SaaS girişini tamamlamaq alınmadı"
 selfHostedLoginFailed = "Öz serverində yerləşən giriş alınmadı"
@@ -13563,7 +13687,9 @@ validUntrusted = "Etibarlıdır, imzalayan təsdiqlənməyib"
 
 [viewer]
 cannotPreviewFile = "Faylın önizlənməsi mümkün deyil"
+copyRestricted = "Bu PDF-in icazələri kopyalamağı deaktiv edib."
 copyText = "Kopyala"
+coverPageView = "Üz qabığı səhifəsini ayrıca göstər"
 disableColorFilter = "Rəng filtrini söndür"
 documentUpdated = "Sənəd yeniləndi"
 dualPageView = "İki Səhifə Görünüşü"
@@ -13580,6 +13706,7 @@ noPdfProvided = "PDF təqdim edilməyib"
 onlyPdfSupported = "Bu fayl formatı önbaxış üçün dəstəklənmir."
 pageNavigation = "Səhifə naviqasiyası"
 previousPage = "Əvvəlki səhifə"
+readAloudFromHere = "Buradan ucadan oxu"
 saveChangesErrorBody = "Sənədi yadda saxlamaq mümkün olmadı. Yenidən cəhd edin."
 saveChangesErrorTitle = "Dəyişiklikləri yadda saxlamaq mümkün olmadı"
 singlePageView = "Tək Səhifə Görünüşü"
@@ -13640,6 +13767,7 @@ closeSidebar = "Şərhlər yan panelini bağla"
 deleteAnnotationAndComment = "Annotasiya və şərhi sil"
 deleteDescription = "Bu annotasiyaya qoşulmuş şərh var. Annotasiyanı saxlayaraq yalnız şərhi yan paneldən silə və ya hər ikisini silə bilərsiniz."
 deleteTitle = "Annotasiyanı şərhlərdən silək?"
+exportCsv = "CSV kimi ixrac et"
 goToLink = "Keçidə get"
 hint = "Şərhləri Şərh, Mətn əlavə et və ya Mətni əvəz et alətləri ilə yerləşdirin. Onlar burada səhifə üzrə görünəcək."
 locateAnnotation = "Sənəddə tap"
@@ -13658,7 +13786,16 @@ typeInsertText = "Mətn əlavə et"
 typeReplaceText = "Mətni əvəz et"
 viewComment = "Şərhi göstər"
 
+[viewer.comments.csv]
+author = "Müəllif"
+comment = "Şərh"
+inReplyTo = "Cavab olaraq"
+modifiedUtc = "Son dəyişdirilmə (UTC)"
+page = "Səhifə"
+thread = "Zəncir"
+
 [viewer.error]
+loadError = "PDF yüklənə bilmədi"
 noFileProvided = "Xəta: Görüntüləyiciyə fayl verilməyib"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "Filigran mətni"
 image = "Şəkil"
 text = "Yazı"
 
+[workbench]
+dropFailedSingle = "Faylınız əlavə edilə bilmədi"
+dropFailedSome = "Fayllarınızdan {{failed}} ədədi əlavə edilə bilmədi"
+dropOverlay = "Faylları iş sahəsinə əlavə etmək üçün buraya buraxın"
+
 [workbench.sessionRestore]
 none = "Əvvəlki fayllarınız artıq bu cihazda saxlanılmır."
 partial = "{{total}} fayldan {{restored}} bərpa edildi. Qalanları artıq bu cihazda saxlanılmır."
@@ -13915,16 +14057,14 @@ annotations = "Annotasiyalar"
 applyRedactionsFirst = "Əvvəlcə gizlətmələri tətbiq et"
 closeAll = "Bütün faylları bağla"
 closePdf = "PDF-i bağla"
-deleteSelected = "Seçilmiş səhifələri sil"
 deselectAll = "Hamısını seçmə"
 downloadAll = "Hamısını endir"
+exitAnnotations = "Annotasiya rejimindən çıx"
 exitRedaction = "Gizlətmə rejimindən çıx"
-exportAll = "PDF-i ixrac et"
-exportSelected = "Seçilmiş səhifələri ixrac et"
 formFill = "Forma Redaktoru"
 hideToolbar = "Alətlər panelini gizlət"
 moreActions = "Daha çox əməliyyat"
-multiTool = "Çoxfunksiyalı alət"
+pageEditor = "Səhifə redaktoru"
 panMode = "Sürüşdürmə rejimi"
 print = "PDF-i çap et"
 readAloud = "Səsləndir"
@@ -13938,7 +14078,6 @@ rulerSettings = "Miqyas ayarları"
 save = "Yadda saxla"
 saveAll = "Hamısını yadda saxla"
 saveAs = "Fərqli yadda saxla"
-saveChanges = "Dəyişiklikləri yadda saxla"
 search = "PDF-də axtar"
 selectAll = "Hamısını seç"
 selectByNumber = "Səhifə nömrələrinə görə seç"

@@ -426,13 +426,14 @@ export default function PageTracks() {
     [dispatch, selection.selectedIds],
   );
 
+  const duplicatePages = useCallback(
+    (pageIds: string[]) => dispatch({ type: "duplicate", pageIds }),
+    [dispatch],
+  );
+
   const duplicateSelection = useCallback(
-    () =>
-      dispatch({
-        type: "duplicate",
-        pageIds: Array.from(selection.selectedIds),
-      }),
-    [dispatch, selection.selectedIds],
+    () => duplicatePages(Array.from(selection.selectedIds)),
+    [duplicatePages, selection.selectedIds],
   );
 
   const splitAfterSelection = useCallback(
@@ -790,6 +791,12 @@ export default function PageTracks() {
   );
 
   const undo = useCallback(() => dispatch({ type: "undo" }), [dispatch]);
+  const inspectionLifetime = useRef(new AbortController());
+  useEffect(() => {
+    const cancellation = new AbortController();
+    inspectionLifetime.current = cancellation;
+    return () => cancellation.abort();
+  }, []);
   const redo = useCallback(() => dispatch({ type: "redo" }), [dispatch]);
   const saveNow = useCallback(() => {
     void save();
@@ -803,6 +810,7 @@ export default function PageTracks() {
     const lookup = {
       getStub: fileSelectors.getStirlingFileStub,
       getFile: fileSelectors.getFile,
+      signal: inspectionLifetime.current.signal,
     };
     const trackIds = workspace.order.filter(
       (id) => (workspace.tracks[id]?.pages.length ?? 0) > 0,
@@ -829,6 +837,7 @@ export default function PageTracks() {
       }
       return files;
     } catch (error) {
+      if (lookup.signal.aborted) return null;
       alertExportFailure(error, t);
       return null;
     }
@@ -840,6 +849,7 @@ export default function PageTracks() {
       const lookup = {
         getStub: fileSelectors.getStirlingFileStub,
         getFile: fileSelectors.getFile,
+        signal: inspectionLifetime.current.signal,
       };
       setDownloadingSelection(true);
       try {
@@ -861,6 +871,7 @@ export default function PageTracks() {
           await downloadFileWithPolicy({ data: file, filename: file.name });
         }
       } catch (error) {
+        if (lookup.signal.aborted) return;
         alertExportFailure(error, t);
       } finally {
         setDownloadingSelection(false);
@@ -1064,6 +1075,7 @@ export default function PageTracks() {
         onInsertBlank={insertBlank}
         onRotate={rotatePages}
         onDelete={deletePages}
+        onDuplicate={duplicatePages}
         onShiftPage={shiftPage}
         onClose={setCloseRequest}
       />

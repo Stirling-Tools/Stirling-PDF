@@ -161,6 +161,16 @@
     0 0 0 5px color-mix(in srgb, var(--c-primary) 22%, transparent);
 }
 
+/* While the action pill (or the checkbox/shift chips) is up, the tile must
+   outrank the invisible gap handles (z-index 5): the pill is wider than the
+   tile and overhangs into the gaps, and the z-index inside it cannot climb out
+   of the thumb box's hover-transform stacking context. */
+.tile:hover,
+.tile:focus-visible,
+.tile:has(:focus-visible) {
+  z-index: 6;
+}
+
 .tileDragging {
   opacity: 0.35;
 }
@@ -222,6 +232,14 @@
 .tileSelected .thumbBox:hover .thumb,
 .tileSelected .thumbBox:hover .thumbPending {
   box-shadow: var(--pt-selection-ring);
+}
+
+/* Selection owns the ring states, so keyboard focus needs its own cue on the
+   tile: without it a tabbed-to tile and an unfocused one look identical. */
+.tile:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
 }
 
 /*
@@ -322,7 +340,8 @@
 }
 
 .tile:hover .tileCheckbox,
-.tile:focus-within .tileCheckbox,
+.tile:focus-visible .tileCheckbox,
+.tile:has(:focus-visible) .tileCheckbox,
 .tileSelected .tileCheckbox {
   opacity: 1;
 }
@@ -354,7 +373,8 @@
 }
 
 .tile:hover .shiftButton,
-.tile:focus-within .shiftButton,
+.tile:focus-visible .shiftButton,
+.tile:has(:focus-visible) .shiftButton,
 .shiftButton[data-force-visible="true"] {
   opacity: 1;
   pointer-events: auto;
@@ -427,6 +447,9 @@
  * own transform, which centres it) so the controls keep their proportion to the
  * tile at every zoom instead of swamping a shrunken page. Anchored bottom-centre
  * so it stays put over the page while it scales.
+ *
+ * Wider than the tile, it overhangs the gaps on both sides; see the hovered
+ * tile's z-index for how those clicks stay reachable.
  */
 .tile .pagePill {
   gap: 0.25rem;
@@ -436,7 +459,10 @@
   transform-origin: center bottom;
 }
 
-/* CSS-hover driven visibility, matching the file cards in Active Files. */
+/* CSS-hover driven visibility, matching the file cards in Active Files. The
+   rows must not stay pinned after a pointer click: mouse clicks set focus but
+   not :focus-visible, so a clicked action hides again once the pointer leaves,
+   while keyboard focus keeps the row (and its buttons) reachable. */
 .tile [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
   opacity: 0;
   pointer-events: none;
@@ -444,7 +470,9 @@
 
 .tile:hover
   [data-hover-action-menu-mode="cssHover"][data-force-visible="false"],
-.tile:focus-within
+.tile:focus-visible
+  [data-hover-action-menu-mode="cssHover"][data-force-visible="false"],
+.tile:has(:focus-visible)
   [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
   opacity: 1;
   pointer-events: auto;

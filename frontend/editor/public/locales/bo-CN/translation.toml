@@ -55,7 +55,9 @@ keepWorking = "མུ་མཐུད་དུ་ལས་ཀ་བྱེད་�
 loading = "འཇུག་བཞིན་པ།"
 loginAgreementAccept = "དང་ལེན"
 loginAgreementDecline = "དང་ལེན་མེད"
+loginAgreementLoadFailed = "Login གྲོས་མཐུན་འཇུག་མ་ཐུབ།"
 loginAgreementProvider = "བརྡ་འཕྲིན་འདི་ནི་ཁྱེད་ཀྱི་དོ་དམ་པས་སྤྲོད་པ་ཡིན་པ་ལས Stirling PDF Inc. མིན།"
+loginAgreementRetry = "ཡང་བསྐྱར་ཚོད་ལྟ།"
 loginAgreementTitle = "ཐོ་འགོད་གྲོས་ཆིངས"
 logOut = "ཕྱིར་ཐོན།"
 marginTooltip = "ཤོག་ངོས་ཨང་གྲངས་དང་ཤོག་ངོས་ཀྱི་མཐའ་མཚམས་བར་ཐག་རིང་།"
@@ -299,7 +301,6 @@ title = "ཤོག་གྲངས་ཨང་གྲངས།"
 
 [addPassword]
 desc = "ཁྱེད་རང་གི་PDFཡིག་ཆ་དེ་གསང་ཚིག་གིས་གསང་བཟོ་བྱེད་དགོས།"
-submit = "གསང་བཟོ་བྱེད་པ།"
 tags = "གསང་སྡོམ,གསང་ཨང,ཟྭ,བདེ་འཇགས,སྲུང་སྐྱོབ,བདེ་འཇགས་རང་བཞིན,གསང་སྡོམ་བྱེད,སྲུང་བ,གསང་བ,སྒེར་གྱི,འཛུལ་སྤྱོད་ཚད་བཀག"
 title = "གསང་གྲངས་ཁ་སྣོན་བྱེད།"
 
@@ -311,17 +312,6 @@ label = "གསང་ཡིག་རིང་བའི་རིང་ཚད།"
 
 [addPassword.error]
 failed = "PDF གསང་བཟོ་བྱེད་སྐབས་ནོར་འཁྲུལ་བྱུང་ཡོད།"
-
-[addPassword.passwords]
-stepTitle = "གསང་གྲངས་དང་གསང་བཟོ།"
-
-[addPassword.passwords.owner]
-label = "བདག་པོའི་གསང་གྲངས།"
-placeholder = "བདག་པོའི་གསང་གྲངས་ནང་འཇུག་བྱེད་པ།"
-
-[addPassword.passwords.user]
-label = "སྤྱོད་མཁན་གྱི་གསང་གྲངས།"
-placeholder = "སྤྱོད་མཁན་གྱི་གསང་གྲངས་འཇུག་དགོས།"
 
 [addPassword.results]
 title = "གསང་བཟོ་བྱས་པའི་PDFs"
@@ -1627,6 +1617,7 @@ title = "བསྐྱར་དུ་འགོ་འཛུགས་དགོས�
 [admin.settings.security]
 authentication = "བདེན་དཔང་།"
 description = "བདེན་དཔང་དང་། ནང་འཇུག་བྱ་སྤྱོད། བདེ་འཇགས་སྲིད་ཇུས་བཅས་སྒྲིག་བཀོད་བྱེད་དགོས།"
+pdfPermissions = "PDF ཆོག་མཆན།"
 title = "ཉེན་སྲུང"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "CSRF སྲུང་སྐྱོབ།"
 [admin.settings.security.enableLogin]
 description = "མཉེན་ཆས་ལ་མ་འཛུལ་གོང་སྤྱོད་མཁན་ཚོས་ནང་འཛུལ་བྱེད་དགོས།"
 label = "ནང་འཇུག་ལྕོགས་ཅན་བཟོ་བ།"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "ཚད་བཀག་བྱ་སྤྱོད་ལ་ཆོག་མཆན་གསང་ཨང་དགོས་པར་བྱེད། འདི་སྒོ་བརྒྱབ་ཀྱང PDF ཁ་འབྱེད་དགོས་པའི་གསང་ཨང་ད་དུང་དགོས།"
+label = "PDF ཆོག་མཆན་ལ་བརྩི་སྲུང་བྱེད།"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "ཡར་ཐོན་ཅན་གྱི་སྒྲིག་སྟངས།"
@@ -1938,9 +1933,6 @@ wrapUp = "འདི་ནི admin སྐོར་སྐྱོད་ཡིན།
 [adminUserSettings]
 admin = "འཛིན་སྐྱོང་།"
 title = "སྤྱོད་མཁན་ཚོད་འཛིན་སྒྲིག་སྟངས།"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "ཨ་རབ་ཡིག"
@@ -3173,12 +3165,14 @@ unknown = "མི་ཤེས"
 
 [changePermissions]
 desc = "ཡིག་ཆའི་ཚད་བཀག་དང་ཆོག་མཆན་བསྒྱུར་བ།"
+loading = "མིག་སྔའི་ཆོག་མཆན་འཇུག་བཞིན..."
 submit = "འཕོ་འགྱུར།"
 tags = "ཆོག་མཆན,ཚད་བཀག,དབང་ཆ,འཛུལ་སྤྱོད་ཚོད་འཛིན,ཆོག,དགག,པར་འདེབས,འདྲ་བཤུས,རྩོམ་སྒྲིག,ཆོག་མཆན་བཟོ་བཅོས,བདེ་འཇགས་སྒྲིག་འགོད,སྤྱོད་མཁན་དབང་ཆ"
 title = "འཕོ་འགྱུར།"
 
 [changePermissions.error]
 failed = "PDF ཆོག་མཆན་བསྒྱུར་སྐབས་ནོར་འཁྲུལ་བྱུང་ཡོད།"
+readFailed = "PDF འདིའི་མིག་སྔའི་ཆོག་མཆན་ཀློག་མ་ཐུབ། འགྱུར་བ་སྤྱོད་སྔོན་ལ་ཚད་བཀག་ལག་ཐོག་ནས་སྒྲིག་དགོས།"
 
 [changePermissions.permissions.preventAssembly]
 label = "ཡིག་ཚགས་འདུ་འཛོམས་སྔོན་འགོག་བྱེད་པ།"
@@ -3219,21 +3213,16 @@ text = "ཆོག་མཆན་འདི་དག་འགྱུར་བ་མ
 [chat.actions]
 copy = "འཕྲིན་དོན་འདྲ་བཤུས"
 
-[chat.emptyState]
-text = "ཁྱེད་ཀྱི་ཡིག་ཆ་སྐོར་དྲི་བ་དྲིས། ཡང་ན PDF ལག་ཆར་རམ་འདེགས་ལེན།"
-
-[chat.fab]
-close = "chat ཁ་རྒྱག"
-open = "Stirling AI assistant ཁ་ཕྱེ།"
+[chat.dock]
+collapse = "Chat སྐུང་།"
+placeholder = "Stirling Agent ལ་དྲིས།"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling agent འདེམས་ཚན"
-assistant = "AI ལས་རོགས"
 clearChat = "གླེང་མོལ་བཤོལ"
 
 [chat.input]
 disclaimer = "AI ལ་ནོར་འཁྲུལ་ཡོང་སྲིད། མཉམ་སྤྱོད་མ་བྱས་གོང་འབྲས་བུ་ངེས་པར་ར་སྤྲོད་བྱོས།"
-placeholder = "གང་བྱེད་དགོས?"
 send = "འཕྲིན་དོན་གཏོང"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "ཡིག་ཆ་འདི་ཚོ་ PDF ལ་བསྒྱུ
 convertOne = "ཡིག་ཆ་འདི་ PDF ལ་བསྒྱུར"
 heading = "འགོ་སློང"
 mergeMany = "{{count}} ཡིག་ཆ་འདི་ཚོ་མཉམ་སྦྱོར་བྱས་ནས 1 བཟོ"
-moreFiles = "+{{count}} མང་བ"
 openFromComputer = "རྩིས་འཁོར་ནས་ཁ་ཕྱེ"
-removeFile = "{{name}} སྤོར"
 splitOne = "ཡིག་ཆ་འདི་བགར"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "འཚོལ་བཤེར་བྱས་པ་མ་ཐོབ།"
 processing = "བཟོ་སྒྲིག་བཞིན་པ ({{outcome}})..."
 unsupported_capability = "ཁྱབ་ཚད་རྒྱབ་སྐྱོར་མེད: {{capability}}"
 usage_limit_reached = "ཁྱེད་སྤྱོད་ཚད་ལ་སླེབས་ཟིན། མུ་མཐུད་ཆེད་ཁྱེད་ཀྱི plan འདེམས་ཚན་ཞིབ་བཤེར་བྱོས།"
-
-[chat.toolsUsed]
-summary_one = "ལག་ཆ་ 1 སྒྲུབ་ཟིན"
-summary_other = "ལག་ཆ་ {{count}} སྒྲུབ་ཟིན"
-unknownTool = "མི་ཤེས་པའི་ལག་ཆ་"
 
 [classification.families]
 correspondence = "འཕྲིན་འབྲེལ།"
@@ -3649,6 +3631,7 @@ tooltip = "བརྙན་ཡོལ་ནས་ཁ་དོག་འདེམས
 hue = "ཁ་དོག"
 saturation = "ཚད་ཁེངས་དང་གསལ་ཚད"
 title = "ཁ་དོག་འདེམས།"
+transparent = "དྭངས་གསལ།"
 
 [common]
 actions = "བྱ་སྤྱོད"
@@ -3664,6 +3647,7 @@ continue = "མུ་མཐུད"
 copied = "འདྲ་བཤུས་བྱས།"
 copy = "འདྲ་བཤུས།"
 copyCode = "Code འདྲ་བཤུས"
+copyFailed = "འདྲ་བཤུས་ཕམ་པ།"
 dismiss = "སྒོ་རྒྱག"
 done = "བགྱིས་པ"
 enterValue = "གྲངས་ཐང་ནང་འཇུག"
@@ -3847,6 +3831,12 @@ unavailable = "པར་རིས་མེ་ཇིག་དེ་སར་བ�
 filesize = "ཡིག་ཆའི་ཆེ་ཆུང་།"
 quality = "སྤུས་ཚད"
 title = "བསྡམས་སྒྲིལ་ཐབས་ལམ།"
+
+[compress.noReduction]
+multiple = "སྡུད་སྒྲིལ་ལེགས་པར་བྱས་ཟིན། འོན་ཀྱང་ཡིག་ཆ {{total}} ནས {{count}} དེ་ལས་མང་བར་སྡུད་སྒྲིལ་བྱ་མི་ཐུབ།"
+multipleAtLevel = "རིམ་པ་འདིའི་སྡུད་སྒྲིལ་གྱིས་ཡིག་ཆ {{total}} ནས {{count}} ལ་ལེགས་སྒྱུར་མ་བྱུང་། སྡུད་སྒྲིལ་རིམ་པ་མཐོ་བ་ཞིག་ཚོད་ལྟ་བྱོས།"
+single = "སྡུད་སྒྲིལ་ལེགས་པར་བྱས་ཟིན། འོན་ཀྱང་ཡིག་ཆ་འདི་དེ་ལས་མང་བར་སྡུད་སྒྲིལ་བྱ་མི་ཐུབ།"
+singleAtLevel = "རིམ་པ་འདིའི་སྡུད་སྒྲིལ་གྱིས་ཡིག་ཆ་འདི་ལ་ལེགས་སྒྱུར་མ་བྱུང་། སྡུད་སྒྲིལ་རིམ་པ་མཐོ་བ་ཞིག་ཚོད་ལྟ་བྱོས།"
 
 [compress.settings]
 desiredSize = "དགོས་མཁོའི་ཡིག་ཆའི་ཆེ་ཆུང"
@@ -4295,6 +4285,13 @@ precision = "ངེས་གཏན་གྱི་གནས་ཡུལ་ལ་�
 resize = "ཟུར་ཁུག་དང་མཐའ་མཚམས་ཀྱི་ལག་ཆ་དེ་ཚད་གཞི་ཆེ་རུ་གཏོང་བར་འདྲུད་རོགས།"
 title = "སོན་འདེབས་བྱེད་སྟངས།"
 
+[damagedPdf]
+description = "PDF འདི་སྐྱོན་ཤོར་ཡོད་པས་ཁ་ཕྱེ་མི་ཐུབ།"
+label = "སྐྱོན་ཤོར"
+repair = "ཉམས་གསོ"
+repaired = "{{name}} ཉམས་གསོ་བྱས་ཟིན།"
+repairFailed = "{{name}} ཉམས་གསོ་བྱེད་མ་ཐུབ།"
+
 [database]
 backupCreated = "གཞི་གྲངས་མཛོད་ཀྱི་རྒྱབ་རྟེན་ལེགས་འགྲུབ་བྱུང་བ།"
 fileName = "ཡིག་ཆའི་མིང་།"
@@ -4363,6 +4360,10 @@ title = "disk ནས་གསར་སྒྱུར་ཟིན"
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\" disk ཐོག་འགྱུར་ཟིན། དེ་ཆེ་བས་བསྐྱར་འཇུག་བྱེད་རྒྱུར་དུས་ཡུན་ཅུང་འགོར་བས། འདིར་ཡོད་པའི་པར་གཞི་དེ་སོར་བཞག་ཡོད།"
 title = "ཡིག་ཆ disk ཐོག་འགྱུར་ཟིན"
+
+[desktopPrivacy]
+blocked = "ཁྱེད་ཀྱི་དོ་དམ་པས་ཡིག་ཆ་འདི་སྒྲིག་ཆས་འདིའི་ནང་དུ་ཉར་དགོས་པར་བཀའ་བཏང་ཡོད། ཁྱད་ཆོས་འདི་སྤྱོད་མི་ཐུབ།"
+localFiles = "ས་གནས་ཡིག་ཆ།"
 
 [desktopUpdate]
 downloading = "གསར་སྒྱུར་ཕབ་ལེན་བཞིན་པ..."
@@ -4491,22 +4492,80 @@ description = "ལས་ཀའི་ས་ཁོངས་ལ་མངོན་�
 title = "སྒྲིག་ཆས་ཁ་ཕྱེས་ནས་རྩོམ་སྒྲིག་བྱེད་འགོ་ཚུགས།"
 
 [encryptedPdfUnlock]
-description = "PDF འདི་གསང་གྲངས་སྲུང་སྐྱོབ་བྱས་ཡོད། གསང་གྲངས་ནང་འཇུག་བྱས་ནས་མུ་མཐུད་དུ་དེ་དང་མཉམ་དུ་ལས་ཀ་བྱེད་ཐུབ།"
-emptyResponse = "གསང་གྲངས་ཕྱིར་འདོན་གྱིས་ཡིག་ཆ་ཞིག་བཟོས་མེད།"
+actionIgnored = "{{action}} ཚད་བཀག་སྣང་མེད་བྱས།"
+actionUnlocked = "{{action}} ཐེངས་འདིར་སྒོ་ཕྱེ་ཟིན།"
+advanced = "སྔོན་ཐོན།"
+allowed = "ཆོག"
+annotations = "མཆན་འགྲེལ།"
+authoriseAction = "PDF འདིས {{action}} སྤྱོད་པར་ཆོག་མཆན་དགོས།"
+changeOwnerPassword = "ཆོག་མཆན་གསང་ཨང་བསྒྱུར།"
+checkingPermissions = "PDF ཆོག་མཆན་ཞིབ་བཤེར་བཞིན..."
+chooseOwnerPassword = "གསང་ཨང་གཞན་ཞིག་འདེམས།"
+continue = "མུ་མཐུད།"
+copyFailed = "འདྲ་བཤུས་གསར་བཟོ་བྱ་མ་ཐུབ། ཁྱེད་ཀྱི PDF ལ་འགྱུར་བ་མེད།"
+copying = "ནང་དོན་འདྲ་བཤུས་བཞིན།"
+editing = "རྩོམ་སྒྲིག"
+enterPassword = "གསང་ཨང་ནང་འཇུག་བྱོས།"
+ignoredByServer = "Server འདིའི་སྒྲིག་འགོད་ཀྱིས་ཆོག་མཆན་སྣང་མེད་བྱས་ཡོད། PDF འདིའི་སྲུང་སྐྱོབ་ལ་འགྱུར་བ་མེད།"
 incorrectPassword = "གསང་གྲངས་ནོར་བ།"
+inspectionFailed = "PDF འདིའི་ཆོག་མཆན་ཞིབ་བཤེར་བྱ་མ་ཐུབ། ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
+lowQualityPrintUnsupported = "PDF འདིས་སྤུས་ཚད་དམའ་བའི་པར་འདེབས་ཁོ་ན་ཆོག་མཆན་སྤྲོད། Viewer འདིས་དེ་ལ་རྒྱབ་སྐྱོར་མི་བྱེད།"
+lowResolutionOnly = "Resolution དམའ་བ་ཁོ་ན།"
+manageProtection = "སྲུང་སྐྱོབ་དོ་དམ།"
 missingFile = "འདེམས་སྒྲུག་བྱས་པའི་ཡིག་ཆ་དེ་ད་ལྟ་མེད་པ་རེད།"
+mixedProtection = "PDF འདི་དག་ལ་སོ་སོའི་སྲུང་སྐྱོབ་སྒྲིག་འགོད་ཡོད། རེ་རེ་བཞིན་སྒྲུབ་དགོས།"
+newOwnerPassword = "ཆོག་མཆན་གསང་ཨང་གསར་པ།"
+notRequired = "དགོས་མིན།"
+openingPassword = "ཁ་འབྱེད་གསང་ཨང་།"
+openPdf = "PDF ཁ་འབྱེད།"
+ownerPassword = "ཆོག་མཆན་གསང་ཨང་།"
+ownerRequired = "མུ་མཐུད་བྱེད་པར་ཆོག་མཆན་གསང་ཨང་ནང་འཇུག་བྱོས།"
+ownerTitle = "ཆོག་མཆན་གསང་ཨང་ནང་འཇུག་བྱོས།"
+passwordRetained = "འགྱུར་མེད་དུ་ཉར་ཡོད།"
+passwordsMustDiffer = "གསང་ཨང་གཉིས་པོ་མི་འདྲ་དགོས།"
+permissionsUnlocked = "ཐེངས་འདིར་ཆོག་མཆན་སྒོ་ཕྱེ་ཟིན།"
+prepareFailed = "སྲུང་སྐྱོབ་ཡོད་པའི PDF འདི་སྒྲུབ་སྦྱོར་ཆེད་གྲ་སྒྲིག་བྱ་མ་ཐུབ།"
+printing = "པར་འདེབས།"
+printRestricted = "པར་འདེབས་ཚད་བཀག་ཡོད། སྲུང་སྐྱོབ་དོ་དམ་ནང་ཆོག་མཆན་ར་སྤྲོད་བྱོས།"
+protectedPdf = "སྲུང་སྐྱོབ་ཡོད་པའི PDF"
+protectionRetained = "སྲུང་སྐྱོབ་ཉར་ཡོད།"
+protectionSaved = "སྲུང་སྐྱོབ་ཉར་ཚགས་བྱས་ཟིན།"
+removePasswordHelp = "གསང་ཨང་གང་དག་འདོར་བ་འདེམས་པར་གསང་ཨང་འདོར་བ་ཁ་འབྱེད།"
+removeProtection = "སྲུང་སྐྱོབ་མེད་པའི་འདྲ་བཤུས་གསར་བཟོ།"
+replaceProtection = "སྒྲིག་འགོད་འདི་དག་གིས PDF འདིའི་མིག་སྔའི་སྲུང་སྐྱོབ་ཚབ་བྱེད།"
 required = "གསང་གྲངས་མུ་མཐུད་དེ་ནང་འཇུག་བྱེད་དགོས།"
-skip = "ད་ལྟ་མཆོང་།"
-successBody = "གསང་གྲངས་ལེགས་འགྲུབ་བྱུང་བ།"
-successBodyWithName = "{{fileName}} ནས་གསང་གྲངས་བསུབས་པ།"
-successTitle = "གསང་གྲངས་ཕྱིར་འཐེན་བྱས།"
+requiredStatus = "དགོས་པ།"
+requiredToApply = "འགྱུར་བ་སྤྱོད་པར་དགོས།"
+restoreFailed = "PDF སྲུང་སྐྱོབ་ཉར་སྲུང་བྱ་མ་ཐུབ། སྲུང་སྐྱོབ་མེད་པའི་འབྲས་བུ་ཉར་ཚགས་མ་བྱས།"
+restrictActions = "བྱ་སྤྱོད་ཚད་བཀག"
+restricted = "ཚད་བཀག་ཡོད།"
+restrictedActions = "ཚད་བཀག་བྱ་སྤྱོད།"
+restrictedOperation = "བྱ་སྤྱོད་འདིར་ཆོག་མཆན་གསང་ཨང་དགོས།"
+retainOwnerVerification = "ཁ་འབྱེད་གསང་ཨང་འདོར་སྐབས་ཆོག་མཆན་གསང་ཨང་འགྱུར་མེད་དུ་ཉར་བར་དེ་ར་སྤྲོད་བྱོས། འདིས་དེ་འདོར་མི་བྱེད།"
+saveProtection = "སྲུང་སྐྱོབ་ཉར་ཚགས།"
+securityChangeFailed = "སྲུང་སྐྱོབ་བསྒྱུར་མ་ཐུབ། ཆོག་མཆན་གསང་ཨང་དང་བདེ་འཇགས་སྒྲིག་འགོད་གསར་པ་ཞིབ་བཤེར་བྱོས།"
+sessionDetails = "ཐེངས་འདིར་ཁ་ཕྱེ་ཡོད། PDF དེ་སྲུང་སྐྱོབ་ཡོད་པར་གནས།"
+sessionDetailsLabel = "ཐེངས་འདིའི་སྒོ་འབྱེད་སྐོར།"
+sessionFailed = "PDF འདིའི་སྒོ་འབྱེད་མ་ཐུབ། ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
+sessionSuccessBody = "སྲུང་སྐྱོབ་ཉར་ཡོད།"
+sessionSuccessBodyWithName = "{{fileName}} ལ་སྲུང་སྐྱོབ་ཉར་ཡོད།"
+sessionSuccessTitle = "PDF ཁ་ཕྱེ་ཟིན།"
+sessionTitle = "PDF ཁ་འབྱེད།"
+signedReadOnly = "མིང་རྟགས་བཀོད་པའི PDF འདི་ལྟ་ཐུབ་ཀྱང་། འདིར་རྩོམ་སྒྲིག་བྱ་མི་ཐུབ།"
 title = "གསང་གྲངས་མུ་མཐུད་དེ་མེད་པར་བཟོས་པ།"
+toolUnavailable = "ལག་ཆ་འདིས་གསང་སྡོམ་བྱས་པའི PDF ལ་རྒྱབ་སྐྱོར་མི་བྱེད། སྔོན་ལ་གསང་ཨང་འདོར།"
+toolUnavailableDetails = "{{name}} སྤྱོད་མི་ཐུབ་པའི་རྒྱུ་མཚན།"
 unlock = "སྒོ་ཕྱེ་བ་དང་མུ་མཐུད་དུ་སྒོ་ཕྱེ་བ།"
 unlockAll = "ཚང་མར་སྤྱོད ({{count}})"
 unlockAllPartialFail = "གསང་ཨང་བདེན་མིན: {{names}}"
 unlockAllSuccess_one = "ཡིག་ཆ {{count}} སྒོ་ཕྱེ་ཟིན།"
 unlockAllSuccess_other = "ཡིག་ཆ {{count}} སྒོ་ཕྱེ་ཟིན།"
+unlockedForSession = "ཁྱེད་ཀྱི་ཆོག་མཆན་གསང་ཨང་སྤྱད་ནས་ཐེངས་འདིར་སྒོ་ཕྱེ་ཟིན།"
 unlockPrompt = "མུ་མཐུད་དུ་PDFཁ་ཕྱེ་ནས་མུ་མཐུད་དུ་སྒོ་ཕྱེ་དགོས།"
+unprotectedCopyConsequence = "འདྲ་བཤུས་ལ་གསང་ཨང་ངམ་ཚད་བཀག་མེད། མ་ཡིག་སྲུང་སྐྱོབ་ཡོད་པར་གནས།"
+unsupportedTool = "ལག་ཆ་འདིས་ད་ལྟ་ད་དུང PDF འདིའི་སྲུང་སྐྱོབ་ཉར་མི་ཐུབ།"
+verifiedForSession = "ཐེངས་འདིར་ར་སྤྲོད་ཟིན།"
+verifyPermissions = "ཐེངས་འདིར་ཆོག་མཆན་ར་སྤྲོད།"
 viewerLocked = "PDF འདི་ གསང་ཚིག་གིས་སྲུངས་པ"
 viewerUnlock = "ལྡེ་ཕྱེ"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "མཐོང་ཆས་ནང་ལྟ"
 closeFile = "ཡིག་ཆ་ཁ་རྒྱག"
 
 [fileEditor]
-addFiles = "ཡིག་ཆ་ཁ་སྣོན་བྱེད།"
 closedFile = "{{name}} སྒོ་བརྒྱབ་ཟིན"
 couldNotSave = "{{name}} ཉར་མ་ཐུབ"
-filesAdded_one = "ཡིག་ཆ {{count}} ཁ་སྣོན་བྱས"
-filesAdded_other = "ཡིག་ཆ {{count}} ཁ་སྣོན་བྱས"
 filesReordered_one = "ཡིག་ཆའི་གོ་རིམ་བསྐྱར་སྒྲིག་བྱས"
 filesReordered_other = "ཡིག་ཆ {{count}} ཡི་གོ་རིམ་བསྐྱར་སྒྲིག་བྱས"
 loadedFromStorage_one = "ཉར་སྣོད་ནས་ཡིག་ཆ {{count}} བླངས"
 loadedFromStorage_other = "ཉར་སྣོད་ནས་ཡིག་ཆ {{count}} བླངས"
 loadFromStorageFailed = "ཉར་སྣོད་ནས་ཡིག་ཆ་ཁ་ཤས་འཇུག་མ་ཐུབ"
 pinnedFile = "{{name}} གཏན་འཇགས་བྱས"
-processFilesFailed = "ཡིག་ཆ་སྒྲིག་གཅོད་མ་ཐུབ"
 savedAndClosed = "{{name}} ཉར་ནས་ཁ་བརྒྱབ"
 saveFailed = "ཉར་མ་ཐུབ"
 unpinnedFile = "{{name}} གཏན་འཇགས་ལས་བཏོན"
 unzipping = "{{name}} Unzipping བྱེད་བཞིན་པ"
+
+[fileEditor.addCard]
+dropHint = "ཡང་ན་ཡིག་ཆ་གང་སར་འཇོག"
+fromComputer = "Computer ནས་ཡར་སྐུར།"
+moreOptions = "ཡར་སྐུར་གདམ་ཚན་མང་བ།"
 
 [fileEditor.unzip]
 error = "{{name}} Unzipping སྐབས་ནོར་འཁྲུལ"
@@ -4729,7 +4789,6 @@ dataLostBody = "བཤེར་ཆས་འདིས་ཡིག་ཆ་འད�
 dataLostTitle = "ཡིག་ཆའི་གཞི་གྲངས་སྤྱོད་མི་ཐུབ"
 downloadFailed = "ཕབ་ལེན་མ་ཐུབ"
 dropHint = "འགོ་རྩོམ་བྱེད་པར་ཡིག་ཆ་ཁ་ཕྱེ"
-dropToAdd = "ཡིག་ཆ་དྲུད་འཇོག་བྱས་ནས་ཁ་སྣོན"
 duplicateFailed = "ཡིག་ཆ་འདྲ་བཤུས་བྱ་མ་ཐུབ"
 expand = "ཟུར་པང་རྒྱས"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "ས་ཁོངས་བསྐྱར་ཞིབ"
 rescanFormFields = "ཐོ་འགོད་ས་ཁོངས་བསྐྱར་ཞིབ"
 save = "སྲུངས"
 saveShortcut = "Ctrl+S སྤྱད་ནས་ཉར་ཚགས"
+saving = "ཉར་ཚགས་བཞིན..."
 selectOptionPlaceholder = "— འདེམས —"
 skippedEdits_one = "བཟོ་བཅོས་1 ལག་བསྟར་བྱ་མ་ཐུབ།"
 skippedEdits_other = "བཟོ་བཅོས་{{count}} ལག་བསྟར་བྱ་མ་ཐུབ།"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "ད་དུང་{{count}} ཐོ་འགོད་བ
 unsavedChanges = "ཉར་ཚགས་མ་བྱས་པའི་འགྱུར་བ"
 
 [formFill.create]
-commit = "PDF ལ་{{count}} ཡིག་ཚན་ཁ་སྣོན་བྱེད།"
 empty = "ད་དུང་ཡིག་ཚན་བྲིས་མེད།"
-failed = "ཡིག་ཚན་ཁ་སྣོན་བྱ་མ་ཐུབ།"
 goToField = "ཡིག་ཚན་འདིར་སྐྱོད།"
 hint = "ཡིག་ཚན་རིགས་ཤིག་འདེམས་ནས་དེ་ཤོག་ངོས་སུ་བྲིས།"
 placing = "ཤོག་ངོས་སུ་{{type}} ཡིག་ཚན་བྲིས། མཚམས་འཇོག་པར་Esc མནན།"
@@ -5334,7 +5392,6 @@ modify = "བཟོ་བཅོས།"
 commit = "བཟོ་བཅོས་{{count}} ཉར།"
 delete = "སུབ།"
 empty = "PDF འདིར་ད་དུང་འགེངས་ཤོག་ཡིག་ཚན་མེད།"
-failed = "བཟོ་བཅོས་ཉར་མ་ཐུབ།"
 groupSizeHint = "གདམ་གསེས་ཆེ་ཆུང་སྤྱོད།"
 hint = "ཡིག་ཚན་ཞིག་འདེམས་ནས་ཁྱད་ཆོས་རྩོམ་སྒྲིག་བྱེད་པའམ། ཤོག་ངོས་སུ་འདྲུད་པ། ཡང་ན་སུབ།"
 restore = "སླར་གསོ།"
@@ -5732,11 +5789,6 @@ title = "བཀབ་པའི་PDFs"
 desc = "PDFཡིག་ཆའི་ཤོག་ངོས་མང་པོ་ཤོག་ངོས་གཅིག་ལ་མཉམ་བསྲེས་བྱས།"
 tags = "layout,སྒྲིག,མཉམ་སྒྲིལ,N-up,2-up,4-up,ཤོག་ངོས་རེར་མང་པོ,ཤོག་བུ་རེར་ཤོག་ངོས,ཤོག་ངོས layout,tile,grid layout,ཤོག་ངོས་མང་པོའི layout,ཤོག་ངོས་ཐོག་མཉམ་སྒྲིལ,handout"
 title = "ཤོག་ངོས་མང་པོའི་བཀོད་སྒྲིག།"
-
-[home.pdfCommentAgent]
-desc = "AI ལ་ཞུ་བ་བྱས་ནས ཁྱེད་ཀྱི་སྙན་བཀོད་ལྟར PDF ལ་སྦྱར་མཆན་གྱི་མཆན་བཀོད་བསྣན"
-tags = "AI,agent,མཆན,མཆན་བཀོད,སྦྱར་མཆན,སྐྱར་ཞིབ,ལན་ལུང,མཆན"
-title = "AI མཆན་ཁ་སྣོན"
 
 [home.pdfOrganiser]
 tags = "སྒྲིག,བསྐྱར་སྒྲིག,གོ་རིམ་བསྐྱར་སྒྲིག,ཤོག་ངོས་སྒྲིག,རིམ་སྒྲིག,ཤོག་ངོས་སྤོ,ཤོག་ངོས་སུབ,ཤོག་ངོས་སུབ,ཤོག་ངོས་དོ་དམ,ཤོག་ངོས་སྒྲིག་ཆས,གོ་རིམ་བསྐྱར་སྒྲིག"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "ཁྱེད་ཚོགས་ཆུང་ཚོགས་མ�
 deselectAll = "མེད"
 selectAll = "ཚང་མ་འདེམས"
 
-[pageEditor]
-dragPreviewAlt = "འདྲུད་བཞིན"
-filePosition = "གནས་ས་ {{position}}"
-pageLabel = "ཤོག་ངོས་ {{page}}"
-title = "ཤོག་ངོས་རྩོམ་སྒྲིག་པ།"
-
-[pageEditor.actions]
-deletePage = "ཤོག་ངོས་སུབ"
-insertFileAfter = "རྗེས་སུ་ཡིག་ཆ་འཇུག"
-moveLeft = "གཡོན་དུ་སྤོ"
-moveRight = "གཡས་སུ་སྤོ"
-rotateLeft = "གཡོན་དུ་སྐོར"
-rotateRight = "གཡས་སུ་སྐོར"
-splitAfter = "རྗེས་སུ་བགོ"
-
-[pageEditor.commands]
-addSplitAt = "གནས་ས་ {{position}} ལ་བགོ་ཚེག་སྣོན"
-addSplits_one = "བགོ་ཚེག་ {{count}} སྣོན"
-addSplits_other = "བགོ་ཚེག་ {{count}} སྣོན"
-deletePages_one = "ཤོག་ངོས་ {{count}} སུབ"
-deletePages_other = "ཤོག་ངོས་ {{count}} སུབ"
-insertFiles_one = "ཤོག་ངོས་ {{page}} རྗེས་སུ་ཡིག་ཆ་ {{count}} འཇུག"
-insertFiles_other = "ཤོག་ངོས་ {{page}} རྗེས་སུ་ཡིག་ཆ་ {{count}} འཇུག"
-insertPageBreaks_one = "ཤོག་ངོས་ཆད་མཚམས་ {{count}} འཇུག"
-insertPageBreaks_other = "ཤོག་ངོས་ཆད་མཚམས་ {{count}} འཇུག"
-insertPageBreaksAll = "ཤོག་ངོས་ཚང་མའི་རྗེས་སུ་ཤོག་ངོས་ཆད་མཚམས་འཇུག"
-removeAllSplits = "བགོ་ཚེག་ཚང་མ་སུབ"
-removeSplitAt = "གནས་ས་ {{position}} ནས་བགོ་ཚེག་སུབ"
-removeSplits_one = "བགོ་ཚེག་ {{count}} སུབ"
-removeSplits_other = "བགོ་ཚེག་ {{count}} སུབ"
-reorderPages = "ཤོག་ངོས་གོ་རིམ་བསྐྱར་སྒྲིག"
-rotatePageLeft = "ཤོག་ངོས་གཡོན་དུ་སྐོར"
-rotatePageRight = "ཤོག་ངོས་གཡས་སུ་སྐོར"
-rotatePagesLeft_one = "ཤོག་ངོས་ {{count}} གཡོན་དུ་སྐོར"
-rotatePagesLeft_other = "ཤོག་ངོས་ {{count}} གཡོན་དུ་སྐོར"
-rotatePagesRight_one = "ཤོག་ངོས་ {{count}} གཡས་སུ་སྐོར"
-rotatePagesRight_other = "ཤོག་ངོས་ {{count}} གཡས་སུ་སྐོར"
-splitAllPages = "ཤོག་ངོས་ཚང་མ་བགོ"
-toggleSplits_one = "བགོ་ཚེག་གནས་ས་ {{count}} སྒོ་ཕྱེ/རྒྱག"
-toggleSplits_other = "བགོ་ཚེག་གནས་ས་ {{count}} སྒོ་ཕྱེ/རྒྱག"
-
-[pageEditor.emptyState]
-body = "ཤོག་ངོས་ཞུན་དག་འགོ་འཛུགས་བྱེད་པར་ཡིག་ཆ་ཁ་སྣོན"
-title = "PDF ཡིག་ཆ་མ་ཁ་འབྱེད"
-
-[pageEditor.fileDropdown]
-addFile = "ཡིག་ཆ་སྣོན"
-selectedCount = "ཡིག་ཆ་ {{selected}}/{{total}} བདམས་ཟིན"
-untitled = "ཁ་བྱང་མེད"
-
-[pageEditor.toolbar]
-delete = "འདེམས་པ་སུབ"
-redo = "བསྐྱར་བཟོ"
-rotateLeft = "འདེམས་པ་གཡོན་ཕྱར་བསྒྱིར"
-rotateRight = "འདེམས་པ་གཡས་ཕྱར་བསྒྱིར"
-undo = "ཕྱིར་འཐེན"
-
 [pageExtracter]
 title = "ཤོག་ངོས།"
 
@@ -6815,6 +6810,79 @@ title = "ཤོག་ངོས་ཁྱབ་ཁོངས།"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → ཤོག་ངོས་ཚང་མ་འདེམས་པ།"
 title = "དམིགས་བསལ་མིང་ཚིག།"
+
+[pageTracks]
+blankPage = "ཤོག་ངོས་སྟོང་པ།"
+deleteSelected = "བདམས་པའི་ཤོག་ངོས་སུབ།"
+downloadAsOneFile = "ཡིག་ཆ་གཅིག་ཏུ་ཕབ་ལེན།"
+downloadEachPage = "ཤོག་ངོས་རེ་རེ་བཞིན་ཕབ་ལེན།"
+downloadSelectedPages = "བདམས་པའི་ཤོག་ངོས་ཕབ་ལེན།"
+dragging_one = "{{count}} ཤོག་ངོས།"
+dragging_other = "{{count}} ཤོག་ངོས།"
+duplicateSelected = "བདམས་པའི་ཤོག་ངོས་འདྲ་བཟོ།"
+edited = "རྩོམ་སྒྲིག་བྱས་ཟིན།"
+emptyTrack = "ཤོག་ངོས་ལྷག་མེད། ཤོག་ངོས་འདིར་འདྲུད་དགོས། ཡང་ན་ཡིག་ཆ་འདི་སྒོ་རྒྱག་པར་ཉར་ཚགས་བྱོས།"
+insertBlank = "ཤོག་ངོས་སྟོང་པ་ནང་འཇུག"
+insertBlankAfterSelected = "བདམས་པའི་ཤོག་ངོས་རྗེས་སུ་ཤོག་ངོས་སྟོང་པ་ནང་འཇུག"
+moveLeft = "གཡོན་དུ་སྤོ།"
+moveRight = "གཡས་སུ་སྤོ།"
+nextPage = "ཤོག་ངོས་རྗེས་མ།"
+page = "ཤོག་ངོས {{number}}"
+pageCount_one = "{{count}} ཤོག་ངོས།"
+pageCount_other = "{{count}} ཤོག་ངོས།"
+pagePosition = "{{total}} ནས་ཤོག་ངོས {{number}}"
+prevPage = "ཤོག་ངོས་སྔ་མ།"
+readingPages = "ཤོག་ངོས་ཀློག་བཞིན..."
+redo = "ཡང་བསྐྱར་བྱེད།"
+rotateLeft = "གཡོན་དུ་སྐོར།"
+rotateRight = "གཡས་སུ་སྐོར།"
+rotateSelectedLeft = "བདམས་པའི་ཤོག་ངོས་གཡོན་དུ་སྐོར།"
+rotateSelectedRight = "བདམས་པའི་ཤོག་ངོས་གཡས་སུ་སྐོར།"
+saveAsOneFile = "ཡིག་ཆ་གཅིག་ཏུ་ཉར་ཚགས།"
+saveChanges = "ཡིག་ཆ་ཚང་མར་འགྱུར་བ་ཉར་ཚགས།"
+saveEachPage = "ཤོག་ངོས་རེ་རེ་བཞིན་ཉར་ཚགས།"
+saveSelectedPages = "བདམས་པའི་ཤོག་ངོས་ཉར་ཚགས།"
+saving = "ཉར་ཚགས་བཞིན..."
+savingProgress = "{{total}} ནས {{done}} ཉར་ཚགས་བཞིན།"
+selectPage = "ཤོག་ངོས {{number}} འདེམས།"
+splitAfterSelected = "བདམས་པའི་ཤོག་ངོས་རྗེས་སུ་ཁ་ཕྲལ།"
+splitHere = "འདིར་ཁ་ཕྲལ།"
+undo = "ཕྱིར་བསྡུ།"
+viewError = "ཤོག་ངོས་འདི་མངོན་འཆར་བྱ་མ་ཐུབ།"
+viewPage = "ཤོག་ངོས་ལྟ།"
+zoomIn = "ཆེར་སྐྱེད།"
+zoomOut = "ཆུང་སྐྱུང་།"
+
+[pageTracks.close]
+message = "ཁྱེད་རང་ཡིག་ཆ་ཚང་མ་སྒོ་རྒྱག་གཏན་འཁེལ་ཡིན་ནམ།"
+unsaved = "ཡིག་ཆ་འདི་དག་ལ་ཉར་ཚགས་མ་བྱས་པའི་འགྱུར་བ་ཡོད།"
+
+[pageTracks.delete]
+page = "ཤོག་ངོས་སུབ།"
+
+[pageTracks.duplicate]
+page = "ཤོག་ངོས་འདྲ་བཟོ།"
+
+[pageTracks.empty]
+body = "PDF ཁ་སྣོན་བྱས་ནས་དེ་དག་རྩོམ་སྒྲིག་ཆོག་པའི་ཤོག་ངོས་རྒྱུ་ལམ་དུ་རྒྱ་སྐྱེད་བྱོས།"
+title = "PDF ཡིག་ཆ་འཇུག་མེད།"
+
+[pageTracks.exportFailed]
+body = "རྩོམ་སྒྲིག་བྱས་པའི་ཡིག་ཆ་གྲ་སྒྲིག་བྱ་མ་ཐུབ། ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
+title = "ཕབ་ལེན་བྱ་མ་ཐུབ།"
+
+[pageTracks.saveFailed]
+body = "ཁྱེད་ཀྱི་རྩོམ་སྒྲིག་བརླག་མེད། ཡང་བསྐྱར་ཉར་ཚགས་ཚོད་ལྟ་བྱོས།"
+title = "འགྱུར་བ་ཉར་ཚགས་བྱ་མ་ཐུབ།"
+
+[pageTracks.track]
+close = "ཡིག་ཆ་སྒོ་རྒྱག"
+collapse = "སྐུང་།"
+expand = "རྒྱ་སྐྱེད།"
+rename = "ཡིག་ཆའི་མིང་བསྒྱུར།"
+
+[pageTracks.wrap]
+label = "ཤོག་ངོས་བཏུམ།"
 
 [payg.activity]
 docs = "ཡིག་ཆ"
@@ -7144,24 +7212,6 @@ totalSeats_other = "ཁྱོན (ས་ཆ་ {{count}})"
 [payment.upgradeTeam]
 title = "Team ལ་རིམ་སྤར"
 
-[pdfCommentAgent]
-submit = "མཆན་བཟོ"
-
-[pdfCommentAgent.error]
-emptyPrompt = "AI ག་ལ་མཆན་བཀོད་དགོས་ཞེས་གསལ་བཤད་བྱོས"
-failed = "མཆན་བཟོ་ཕམ"
-tooLong = "སྙན་བཀོད་མང་དྲགས་ (མང་མཐའ {{max}} ཡིག་འབྲུ)"
-
-[pdfCommentAgent.prompt]
-label = "AI ག་ལ་མཆན་བཀོད་དགོས?"
-placeholder = "དཔེར་ན་ མི་གསལ་པའི་ཚེས་གྲངས་ཚང་མར་རྟགས་བཀོད་ནས གསལ་བཤད་བསམ་འཆར་འདོན"
-
-[pdfCommentAgent.results]
-title = "མཆན་བཀོད་ཟིན་པའི PDF"
-
-[pdfCommentAgent.settings]
-title = "མཆན་ཁ་བཀོད"
-
 [pdfOrganiser]
 placeholder = "(དཔེར་ན། 1,3,2 ཡང་ན་ 4-8,2,10-12 ཡང་ན་ 2n-1)"
 tags = "གཉིས་ལྡན་གཉིས་ལྡན་གྱི་སྒྱུ་རྩལ།"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "ཤོག་ངོས་ཐོག་ཡི་གེ། �
 ocrDocumentChanged = "OCR གཡོག་སྐོར་སྐབས་ཡིག་ཆ་འགྱུར་འདུག ཁྱེད་ཀྱི་ཆེས་གསར་འགྱུར་བ་ཚུད་པར OCR ཡང་བསྐྱར་སྒྲུབ།"
 ocrInvalidResult = "OCR ཡིས་ PDF ཕྱིར་སྤྲད་མ་བྱུང་། ཡང་བསྐྱར་ཚོད་ལྟ་བྱེད།"
 ocrNoLanguages = "ཞབས་ཞུ་ཆས་ཐོག OCR སྐད་ཡིག་སྒྲིག་འཇུག་བྱས་མེད།"
+ocrProtected = "OCR གིས་ད་ལྟ་ད་དུང PDF འདིའི་སྲུང་སྐྱོབ་ཉར་མི་ཐུབ། སྲུང་སྐྱོབ་ཡོད་པའི་མ་ཡིག་ལྟ་ཆོག་པར་གནས་ཡོད།"
 ocrRunning = "ཡི་གེ་ངོས་འཛིན་བཞིན..."
 ocrUnavailable = "OCR ཞབས་ཞུ་ཆས་འདིར་སྤྱོད་མི་ཐུབ།"
 oneImage = "པར་རིས"
@@ -7389,13 +7440,8 @@ pageNumber = "ཤོག་ངོས་ {{page}}"
 renderFailed = "ཤོག་ངོས render བྱེད་ཕམ"
 
 [pdfTextEditor.password]
-cancel = "དོར"
 incorrect = "གསང་ཚིག་ནོར་འདུག - ཡང་བསྐྱར་ཚོད་ལྟ།"
 label = "གསང་ཚིག"
-open = "ཁ་ཕྱེ"
-protected = "PDF འདི་གསང་ཚིག་གིས་སྲུང་ཡོད།"
-protectedNamed = "\"{{fileName}}\" གསང་ཚིག་གིས་སྲུང་ཡོད།"
-title = "གསང་ཚིག་དགོས"
 
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}} ལ་སྙོམས་སྒྲིག་སྟོན་ཐིག - སུབ་པར ruler ཐོག་འདྲུད"
@@ -7994,6 +8040,7 @@ before = "སྒྲིག"
 title = "Stirling སྦྲེལ་མཐུད་སྒྲིག་མེད"
 
 [portal.accountLink.notice]
+loadFailed = "རྩིས་ཐོ་སྦྲེལ་བའི་གླེང་སྒྲོམ་འཇུག་མ་ཐུབ།"
 openFailed = "ཁྱེད་ཀྱི browser ཁ་ཕྱེ་མ་ཐུབ། རྩིས་ཐོ་སྦྲེལ་ཆེད་ཁྱེད་ཀྱི་སྦྲེལ་ཡོད server སྟེང Usage & billing ཁ་ཕྱེ།"
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "ཟླ་རེའི་སྤྱོད་འགྲོ་ཚད {{amoun
 limitNoCap = "སྤྱོད་འགྲོ་ཚད་མེད། ལས་སྒྲུབ་མཚམས་མི་འཇོག འཛིན་ཤོག་ཟླ་རེར་སྤེལ་ཡོང་།"
 
 [portal.billing.chip]
-invoices = "འཛིན་ཤོག"
-nav = "སྡེ་ཚན"
-payment = "དངུལ་སྤྲོད"
 plan = "འཆར་གཞི"
 procurement = "ཉོ་སྒྲུབ"
 usage = "སྤྱོད་ཚད"
@@ -8178,9 +8222,22 @@ pdfs = "PDFs ལས་སྒྲུབ་བྱས"
 users = "སྤྱོད་མཁན"
 
 [portal.billing.enterprise]
+active = "གྲོས་མཐུན་{{date}} བར་ནུས་ཡོད།"
 cta = "Enterprise རིན་འབབ་ལེན"
+included = "Enterprise ནང་ཚུད།"
+payment_pending = "སྤྲོད་དངུལ་སྒུག་བཞིན · {{date}} བར་སྤྱོད་ཆོག"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "གྲོས་མཐུན་བྱས་པའི་ཚད་ལས PDF {{count}} བརྒལ།"
+pdfsOver_other = "གྲོས་མཐུན་བྱས་པའི་ཚད་ལས PDFs {{count}} བརྒལ།"
+pdfsUsed_one = "PDF {{count}} སྒྲུབ་སྦྱོར་བྱས་ཟིན།"
+pdfsUsed_other = "{{count}} PDFs ལས་སྣོན་བྱས་པ"
+period = "གྲོས་མཐུན་དུས་ཡུན། {{start}} – {{end}}"
 sub = "Air-gapped སྤེལ་འཇོག, SCIM, གཞི་གྲངས་གནས་ཡུལ, uptime SLAs དང་མཐུན་པའི་གྲོས་མཐུན།"
 title = "སྒྲིག་སྲོལ་ཡོད་པའི་ཁོར་ཡུག་ནང Stirling སྒྲུབ་བཞིན་ཡོད་དམ།"
+trial = "ཉིན་{{days}} ཚོད་ལྟ · {{date}} ལ་མཇུག་སྒྲིལ"
+usersAgreed = "{{used}} / {{agreed}} གྲོས་མཐུན་སྤྱོད་མཁན"
+usersOver_one = "{{count}} སྤྱོད་མཁན་གྲོས་མཐུན་གྲངས་ཚད་ལས་བརྒལ"
+usersOver_other = "{{count}} སྤྱོད་མཁན་གྲོས་མཐུན་གྲངས་ཚད་ལས་བརྒལ"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "checkout འགོ་འཛུགས་མ་ཐུབ"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "ཁྱེད་ཀྱི distribution ཆེད་ཀྱི native builds།"
-guideBtn = "Linux སྒྲིག་འཇུག་གདམ་གསེས་ལྟ་བ"
+downloadAppImage = "AppImage"
+downloadDeb = ".deb ཕབ་ལེན (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "སྤྱིར་བཏང distros ལ AppImage, .deb དང .rpm builds ཡོད།"
 tagline = "ཁྱེད་ཀྱི distro ཆེད་ཀྱི native desktop app"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "འཕྲོ་བརླག སྦགས་པ་ནག་པོ། ན�
 title = "སྲུང་བརྩི་བྱེད་པ།"
 
 [redact.auto]
+caseSensitiveLabel = "ཡིག་ཆེན་ཡིག་ཆུང་དབྱེ་བའི་འཚོལ་མཐུན"
 colorLabel = "སྒམ་གྱི་ཁ་དོག།"
 convertPDFToImageLabel = "PDF PDF-Image ལ་སྒྱུར་བ།"
 customPaddingLabel = "སྔར་སྲོལ་གྱི་བང་རིམ་འཕར་མ།"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "ཡིག་ཆ་དོ་དམ་ཆས་ནང�
 manual = "ལག་བཟོས"
 mode = "ཐབས་ལམ།"
 title = "དཔེ་བཟོ་ཐབས་ལམ།"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "ཡིག་ཆེན་ཡིག་ཆུང་གཅིག་པའི་ཡིག་ཚིགས་ཁོ་ན་མཐུན་པར་བྱེད། འདི་སྤེལ་ནས་ཡོད་ཚེ 'Secret' དང 'SECRET' མི་མཐུན། regex ནང་གི [A-Z] ནི་ཡིག་ཆེན་ཁོ་ན་དང་མཐུན།"
+title = "ཡིག་ཆེན་ཡིག་ཆུང་དབྱེ་བའི་འཚོལ་མཐུན"
 
 [redact.tooltip.advanced.color]
 text = "ཉམས་རྒུད་ཀྱི་སྒྲོམ་གྱི་རྣམ་པ་ལ་སྒྱུར་བཅོས། ནག་པོ་ནི་ཚད་གཞི་ཡིན། འོན་ཀྱང་ཁྱེད་ཀྱིས་ཚོས་གཞི་གང་རུང་འདེམས་ཐུབ། བཀབ་སྦྱོར་གྱིས་རྙེད་པའི་ཡིག་ཆའི་མཐའ་འཁོར་དུ་ས་ཆ་ཁ་སྣོན་བྱེད།"
@@ -11396,7 +11460,12 @@ text = "ཁྱེད་རང་གི་PDFནས་ཤོག་ངོས་ག
 title = "ཤོག་ངོས་འདེམས་པ།"
 
 [removePassword]
-desc = "ཁྱེད་རང་གི་PDFཡིག་ཆ་ནས་གསང་གྲངས་སྲུང་སྐྱོབ་མེད་པར་བཟོ་དགོས།"
+appliesTo = "PDFs {{total}} ནས {{count}} ལ་སྒྲིག་ཡོད"
+keepBlank = "གསང་ཨང་དེ་ཉར་བར་ས་སྟོང་དུ་འཇོག"
+notSet = "སྒྲིག་མེད"
+openWithReaderFirst = "དབང་ཚད་གསང་ཨང་ཁོ་ན་མ་སུབ་པའི་སྔོན་ལ། PDF འདི་དེའི་ཁ་འབྱེད་གསང་ཨང་སྤྱད་ནས་བསྐྱར་དུ་ཁ་ཕྱེ།"
+selectiveHelp = "སུབ་འདོད་པའི་སྲུང་སྐྱོབ་རེ་རེའི་ད་ལྟའི་གསང་ཨང་ནང་འཇུག་བྱེད། ས་སྟོང་བཞག་ན་གསང་ཨང་དེ་ཉར་ཡོང། དབང་ཚད་གསང་ཨང་སུབ་ན་བྱ་སྤྱོད་ཚོད་འཛིན་ཡང་སུབ་ཡོང།"
+selectPasswords = "སུབ་རྒྱུའི་གསང་ཨང"
 submit = "གསང་གྲངས་སེལ་བ།"
 tags = "བདེ་འཇགས། གསང་རྙོག། བདེ་འཇགས་མེད་པ། གསང་ཚིག། གསང་གྲངས་བསུབས་པ།"
 title = "གསང་གྲངས་སེལ་བ།"
@@ -11407,13 +11476,9 @@ failed = "གསང་གྲངས་དེ་PDFནས་མེད་པར་�
 [removePassword.password]
 label = "ད་ལྟའི་གསང་གྲངས།"
 placeholder = "མིག་སྔའི་གསང་གྲངས་བླུགས།"
-stepTitle = "གསང་གྲངས་སེལ་བ།"
 
 [removePassword.results]
 title = "PDFs གསང་བཟོ་བྱས།"
-
-[removePassword.tooltip]
-description = "གསང་གྲངས་སྲུང་སྐྱོབ་མེད་པར་བཟོ་བར་PDFགསང་བཟོ་བྱེད་པར་བེད་སྤྱོད་བྱེད་པའི་གསང་གྲངས་དེ་དགོས། འདིས་ཡིག་ཆ་དེ་གསང་བཟོ་བྱས་ནས་གསང་གྲངས་མེད་པར་འཛུལ་ཐུབ།"
 
 [reorganizePages]
 submit = "ཤོག་ལྷེ་བསྐྱར་སྒྲིག་བྱེད་པ།"
@@ -11543,6 +11608,64 @@ m = "མི་ཊར (m)"
 mi = "མའིལ (mi)"
 mm = "མི་ལི་མི་ཊར (mm)"
 yd = "ཡཱརཌ (yd)"
+
+[runLocation]
+back = "ཕྱིར་ལོག"
+continue = "མུ་མཐུད"
+subtitle = "དེ་གང་དུ་འཁོར་སྐྱོད་བྱེད་པ་འདེམས།"
+title = "ཁྱེད་ཀྱིས Stirling གང་དུ་འཁོར་སྐྱོད་བྱ་འདོད་དམ།"
+
+[runLocation.choice.browser]
+description = "དྲ་ངོས་ཉེར་སྤྱོད།"
+title = "ཁྱེད་ཀྱི་བཤར་ཆས་ནང"
+
+[runLocation.choice.computer]
+description = "ཅོག་ངོས་ཉེར་སྤྱོད།"
+title = "ཁྱེད་ཀྱི་གློག་ཀླད་ཐོག"
+
+[runLocation.choice.server]
+description = "ཚོགས་པར་རང་གིས་གཉེར་སྐྱོང།"
+title = "ཁྱེད་ཀྱི་ཞབས་ཞུ་ཆས་ཐོག"
+
+[runLocation.desktop]
+computerLabel = "ཁྱེད་ཀྱི་གློག་ཀླད"
+download = "{{platform}} ལ་ཕབ་ལེན"
+downloadAgain = "ཡང་བསྐྱར་ཕབ་ལེན"
+guide = "{{platform}} སྒྲིག་འཇུག་ལམ་སྟོན་ཁ་ཕྱེ"
+startedSubtitle = "ཁྱེད་ཀྱི་ཕབ་ལེན་ཡིག་ཁུག་ལ་ཞིབ་བཤེར་བྱས་ནས། སྒྲིག་འཇུག་བྱ་རིམ་ཁ་ཕྱེ།"
+startedTitle = "ཁྱེད་ཀྱི་ཕབ་ལེན་འགོ་ཚུགས་ཟིན"
+subtitle = "དེ་ཕབ་ལེན་བྱས་ནས་ཁ་ཕྱེ།"
+title = "ཅོག་ངོས་ཉེར་སྤྱོད་ལེན"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (སྒྲིག་འཇུག་ལམ་སྟོན)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "འདྲ་བཤུས་བྱས་ཟིན"
+copy = "བཀའ་བརྡ་འདྲ་བཤུས"
+copyCompose = "compose ཡིག་ཆ་འདྲ་བཤུས"
+guide = "{{method}} སྒྲིག་འཇུག་ལམ་སྟོན"
+methodLabel = "འདིས་འཁོར་སྐྱོད་བྱེད"
+note = "དེ་ནས་སྒྲིག་འགོད་མཇུག་སྒྲིལ་བར <url/> ཁ་ཕྱེ།"
+subtitle = "འདི་ཁྱེད་ཀྱི་ཞབས་ཞུ་ཆས་ཐོག་འཁོར་སྐྱོད་བྱས་ནས། དེ་བཤར་ཆས་ནང་ཁ་ཕྱེ།"
+title = "ཁྱེད་ཀྱི་ཞབས་ཞུ་ཆས་སྒྲིག་འགོད"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "PDFཡིག་ཆ་ནས་གནོད་འཚེ་ཅན་གྱི་འབྱུང་བ་རྣམས་མེད་པར་བཟོ་དགོས།"
@@ -12054,6 +12177,7 @@ title = "ལས་ཀའི་ས་ཆ།"
 loginIncomplete = "login མཇུག་སྒྲིལ་མ་ཐུབ"
 noSaasServer = "SaaS server སྒྲིག་འགོད་བྱས་མེད"
 noServer = "server སྒྲིག་འགོད་བྱས་མེད"
+policyUnavailable = "ཁྱེད་ཀྱི་རྩ་འཛུགས་ཀྱི་ནང་འཛུལ་སྒྲིག་འགོད་འཇུག་ལེན་བྱེད་མ་ཐུབ།"
 saasLoginFailed = "SaaS login ཕམ་པ"
 saasLoginIncomplete = "SaaS login མཇུག་སྒྲིལ་མ་ཐུབ"
 selfHostedLoginFailed = "Self-hosted login ཕམ་པ"
@@ -13563,7 +13687,9 @@ validUntrusted = "ནུས་པ་ཡོད། མིང་རྟགས་པ�
 
 [viewer]
 cannotPreviewFile = "སྔོན་ལྟའི་ཡིག་འབྲུའི་ཡིག་ཚགས་བཟོ་མི་རུང་།"
+copyRestricted = "PDF འདིའི་དབང་ཚད་ཀྱིས་འདྲ་བཤུས་སྤྱོད་མི་ཆོག"
 copyText = "འདྲ་བཤུས།"
+coverPageView = "ཁ་ཤོག་ལོགས་སུ་སྟོན"
 disableColorFilter = "ཁ་དོག་འཚག་བཟོ་བར་བཀག"
 documentUpdated = "ཡིག་ཆ་གསར་སྒྱུར་བྱས་ཟིན།"
 dualPageView = "ཤོག་ངོས་གཉིས་ལྡན་གྱི་མཐོང་སྣང་།"
@@ -13580,6 +13706,7 @@ noPdfProvided = "PDF མཁོ་འདོན་བྱས་མེད།"
 onlyPdfSupported = "ཡིག་ཆའི་རྣམ་གཞག་འདི་སྔོན་ལྟར་རྒྱབ་སྐྱོར་མེད།"
 pageNavigation = "ཤོག་ངོས་འགྲུལ་སྟངས"
 previousPage = "ཤོག་ངོས་སྔོན་མ།"
+readAloudFromHere = "འདི་ནས་སྐད་ཆེན་པོས་ཀློག"
 saveChangesErrorBody = "ཡིག་ཆ་ཉར་ཚགས་མི་ཐུབ། སྐྱར་ཚོད་ལྟ་བྱེད།"
 saveChangesErrorTitle = "བསྒྱུར་བ་ཉར་ཚགས་མི་ཐུབ"
 singlePageView = "ཤོག་ངོས་གཅིག་པའི་མཐོང་སྣང་།"
@@ -13640,6 +13767,7 @@ closeSidebar = "མཆན་འགྲེལ་ཟུར་སྒྲོམ་ཁ�
 deleteAnnotationAndComment = "མཆན་དང་བསམ་བཀོད་ཀུན་སུབ"
 deleteDescription = "མཆན་འདི་ལ་བསམ་བཀོད་ཞིག་སྦྲེལ་ཡོད། ཟུར་ཁྲམ་ནས་བསམ་བཀོད་ཙམ་སུབ་ནས་མཆན་བཞག་ཡང་ན་ཀུན་སུབ་ཆོག"
 deleteTitle = "བསམ་བཀོད་ནས་མཆན་སུབ་དམ?"
+exportCsv = "CSV སྟངས་སུ་ཕྱིར་འདྲེན"
 goToLink = "འབྲེལ་མཐུད་ལ་འགྲོ"
 hint = "བསམ་བཀོད་ ཡིག་གེ་འཇུག ཡང་ན་ ཡིག་གེ་བརྗེ་བའི་ལག་ཆ་སྤྱད་ནས་བསམ་བཀོད་ཁ་སྣོན། དེ་ཚོ་ཤོག་ངོས་བཞིན་དུ་ན་འཆར་ར་ཡིན།"
 locateAnnotation = "ཡིག་ཆ་ནང་ས་གནས་འཚོལ"
@@ -13658,7 +13786,16 @@ typeInsertText = "ཡིག་གེ་འཇུག"
 typeReplaceText = "ཡིག་གེ་བརྗེ་བ"
 viewComment = "བསམ་བཀོད་ལྟ"
 
+[viewer.comments.csv]
+author = "རྩོམ་པ་པོ"
+comment = "མཆན"
+inReplyTo = "ལན་སྤྲོད་ཡུལ"
+modifiedUtc = "མཐའ་མཇུག་བཟོ་བཅོས (UTC)"
+page = "ཤོག་ངོས"
+thread = "གླེང་སྐུད"
+
 [viewer.error]
+loadError = "PDF འཇུག་ལེན་བྱེད་མ་ཐུབ"
 noFileProvided = "སྐྱོན: མཐོང་ཆས་ལ་ཡིག་ཆ་མ་བྱིན།"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "ཆུའི་མཚོན་རྟགས་ཡིག་གནས།"
 image = "པར་རིས"
 text = "ཡིག་གཞི"
 
+[workbench]
+dropFailedSingle = "ཁྱེད་ཀྱི་ཡིག་ཆ་ཁ་སྣོན་བྱེད་མ་ཐུབ"
+dropFailedSome = "ཁྱེད་ཀྱི་ཡིག་ཆ་{{failed}} ཁ་སྣོན་བྱེད་མ་ཐུབ"
+dropOverlay = "ཡིག་ཆ་ལས་སྟེགས་ལ་ཁ་སྣོན་བྱེད་པར་འདིར་དྲུད།"
+
 [workbench.sessionRestore]
 none = "ཁྱེད་ཀྱི་སྔོན་མའི་ཡིག་ཆ་རྣམས་སྒྲིག་ཆས་འདིའི་ཐོག་ད་ལྟ་ཉར་ཚགས་མེད།"
 partial = "ཡིག་ཆ་ {{total}} ནས་ {{restored}} སླར་གསོ་བྱས། ལྷག་མ་རྣམས་སྒྲིག་ཆས་འདིའི་ཐོག་ད་ལྟ་ཉར་ཚགས་མེད།"
@@ -13915,16 +14057,14 @@ annotations = "མཆན་བཀོད"
 applyRedactionsFirst = "དང་པོར སྦ་བཅོས་སྤྱོད"
 closeAll = "ཡིག་ཆ་ཚང་མ་ཁ་བསྡམས"
 closePdf = "PDF ཁ་བསྡམས"
-deleteSelected = "འདེམས་ཟིན་པའི་ཤོག་ངོས་བསུབ"
 deselectAll = "ཚང་མ་འདེམས་པ་བཤོལ"
 downloadAll = "ཚང་མ་ཕབ་ལེན"
+exitAnnotations = "མཆན་འགྲེལ་རྣམ་པ་ནས་ཕྱིར་འཐོན"
 exitRedaction = "སྦ་བཅོས་ཐབས་ལམ་ནས་ཕྱིར་ཐོན"
-exportAll = "PDF ཕྱིར་འདྲེན"
-exportSelected = "འདེམས་ཟིན་པའི་ཤོག་ངོས་ཕྱིར་འདྲེན"
 formFill = "འགེངས་ཤོག་རྩོམ་སྒྲིག་ཆས།"
 hideToolbar = "ལག་ཆའི་སྒྲོམ་སྦས།"
 moreActions = "བྱ་སྤྱོད་མང་བ།"
-multiTool = "སྣ་ཚོགས་ལག་ཆས"
+pageEditor = "ཤོག་ངོས་རྩོམ་སྒྲིག"
 panMode = "སྤོ་བཤུད་ཐབས་ལམ"
 print = "PDF དཔར་བསྐྲུན"
 readAloud = "སྒྲ་སྐད་ཀློག"
@@ -13938,7 +14078,6 @@ rulerSettings = "བསྡུར་ཚད་སྒྲིག་འགོད"
 save = "སྲུངས"
 saveAll = "ཚང་མ་སྲུངས"
 saveAs = "མིང་གསར་པས་སྲུངས"
-saveChanges = "བསྒྱུར་བ་སྲུངས"
 search = "PDF འཚོལ"
 selectAll = "ཚང་མ་འདེམས"
 selectByNumber = "ཤོག་ངོས་གྲངས་ཀྱིས་འདེམས"
