@@ -253,9 +253,11 @@ tasks:
     desc: "Generate OpenAPI docs"
     run: once
     cmds:
-      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:copySwaggerDoc"
+      # The springdoc and psxpaul exec-fork tasks cannot be serialized into the
+      # configuration cache, so OpenAPI generation opts out of it.
+      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:copySwaggerDoc --no-configuration-cache"
         platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:copySwaggerDoc
+      - cmd: ./gradlew :stirling-pdf:copySwaggerDoc --no-configuration-cache
         platforms: [linux, darwin]
     sources:
       - app/core/src/main/java/**/*.java
