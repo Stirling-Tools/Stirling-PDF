@@ -814,6 +814,14 @@ public class GeneralUtils {
         return text;
     }
 
+    /**
+     * Handles a single page number, open-start/open-end range, or n-function token.
+     *
+     * @param part the page token to parse
+     * @param totalPages maximum number of pages in the document
+     * @param offset page numbering offset (0 or 1)
+     * @return list of parsed 0-based or 1-based page numbers
+     */
     private List<Integer> handlePart(String part, int totalPages, int offset) {
         List<Integer> partResult = new ArrayList<>();
         String trimmedPart = part == null ? "" : part.trim();
@@ -836,15 +844,24 @@ public class GeneralUtils {
             // Process ranges only if it's not n-syntax
             // Limit -1 keeps empty parts, so a bare "-" is an invalid range, not an empty array.
             String[] rangeParts = trimmedPart.split("-", -1);
+            if (rangeParts.length != 2) {
+                log.debug("Invalid range: {}", trimmedPart);
+                return partResult;
+            }
             try {
-                int start = Integer.parseInt(rangeParts[0].trim());
-                int end =
-                        (rangeParts.length > 1 && !rangeParts[1].trim().isEmpty())
-                                ? Integer.parseInt(rangeParts[1].trim())
-                                : totalPages;
-                for (int i = start; i <= end; i++) {
-                    if (i >= 1 && i <= totalPages) {
-                        partResult.add(i - 1 + offset);
+                String firstPart = rangeParts[0].trim();
+                String secondPart = rangeParts[1].trim();
+                if (firstPart.isEmpty() && secondPart.isEmpty()) {
+                    return partResult;
+                }
+                int start = firstPart.isEmpty() ? 1 : Integer.parseInt(firstPart);
+                int end = secondPart.isEmpty() ? totalPages : Integer.parseInt(secondPart);
+                int firstPage = Math.max(start, 1);
+                int lastPage = Math.min(end, totalPages);
+                for (int i = firstPage; i <= lastPage; i++) {
+                    partResult.add(i - 1 + offset);
+                    if (i == lastPage) {
+                        break;
                     }
                 }
             } catch (NumberFormatException e) {
