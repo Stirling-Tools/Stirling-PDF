@@ -218,7 +218,7 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
     };
   }, [teamId, currency, devPreview, billingEmail]);
 
-  if (loading) {
+  if (loading || (liveCheckout && !stripe && !stripeFailed)) {
     return (
       <div className="upm-stripe-mount" data-state="loading">
         <div className="upm-stripe-mount__title">
@@ -297,15 +297,7 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
     );
   }
 
-  if (!stripe) {
-    return (
-      <div className="upm-stripe-mount" data-state="loading">
-        <div className="upm-stripe-mount__title">
-          {t("payg.checkout.connecting", "Connecting to Stripe…")}
-        </div>
-      </div>
-    );
-  }
+  if (!stripe) return null;
 
   return (
     <div className="upm-stripe-mount" data-state="live">

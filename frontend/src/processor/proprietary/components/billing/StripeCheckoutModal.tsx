@@ -418,7 +418,7 @@ export function StripeCheckoutModal({
                 {error}
               </Banner>
             )}
-            {publishableKey && stripeFailed && (
+            {stripeFailed && (
               <Banner
                 tone="danger"
                 title={t(
@@ -446,7 +446,7 @@ export function StripeCheckoutModal({
                   <Skeleton height="18rem" />
                 </div>
               )}
-            {publishableKey && stripe && clientSecret && (
+            {stripe && clientSecret && (
               <div className="portal-billing__checkout-embed">
                 <EmbeddedCheckoutProvider
                   stripe={stripe}
