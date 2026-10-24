@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.SplitTypes;
 import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
+import stirling.software.SPDF.utils.SplitOutputNames;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -103,9 +104,19 @@ public class SplitPdfBySectionsController {
                         }
                     }
                     return WebResponseUtils.pdfDocToWebResponse(
-                            mergedDoc, filename + ".pdf", tempFileManager);
+                            mergedDoc,
+                            SplitOutputNames.forRequest(request, 1).next(filename),
+                            tempFileManager);
                 }
             } else {
+                int sectionsPerSplitPage = horiz * verti;
+                int documentCount = 0;
+                for (int pageIndex = 0;
+                        pageIndex < sourceDocument.getNumberOfPages();
+                        pageIndex++) {
+                    documentCount += pagesToSplit.contains(pageIndex) ? sectionsPerSplitPage : 1;
+                }
+                SplitOutputNames names = SplitOutputNames.forRequest(request, documentCount);
                 TempFile zipTempFile = tempFileManager.createManagedTempFile(".zip");
                 try {
                     try (ZipOutputStream zipOut =
@@ -131,12 +142,12 @@ public class SplitPdfBySectionsController {
                                                     verti);
                                             int sectionNum = i * verti + j + 1;
                                             String entryName =
-                                                    filename
-                                                            + "_"
-                                                            + pageNum
-                                                            + "_"
-                                                            + sectionNum
-                                                            + ".pdf";
+                                                    names.next(
+                                                            filename
+                                                                    + "_"
+                                                                    + pageNum
+                                                                    + "_"
+                                                                    + sectionNum);
                                             saveDocToZip(subDoc, zipOut, entryName);
                                         } catch (IOException e) {
                                             log.error(
@@ -153,7 +164,7 @@ public class SplitPdfBySectionsController {
                                     LayerUtility subLayerUtility = new LayerUtility(subDoc);
                                     addPageToTarget(
                                             sourceDocument, pageIndex, subDoc, subLayerUtility);
-                                    String entryName = filename + "_" + pageNum + "_1.pdf";
+                                    String entryName = names.next(filename + "_" + pageNum + "_1");
                                     saveDocToZip(subDoc, zipOut, entryName);
                                 } catch (IOException e) {
                                     log.error("Error processing unsplit page {}", pageNum, e);

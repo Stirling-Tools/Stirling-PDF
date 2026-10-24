@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { SplitParameters } from "@editor/hooks/tools/split/useSplitParameters";
 import { METHOD_OPTIONS, SplitMethod } from "@editor/constants/splitConstants";
 import SplitSettings from "@editor/components/tools/split/SplitSettings";
+import SplitOutputNamingSettings from "@editor/components/tools/split/SplitOutputNamingSettings";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface SplitAutomationSettingsProps {
@@ -63,6 +64,14 @@ const SplitAutomationSettings = ({
             {t("split.steps.settings", "Settings")}
           </Text>
           <SplitSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+          <Text size="sm" fw={500}>
+            {t("split.steps.advanced", "Advanced Settings")}
+          </Text>
+          <SplitOutputNamingSettings
             parameters={parameters}
             onParameterChange={onParameterChange}
             disabled={disabled}

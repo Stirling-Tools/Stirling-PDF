@@ -44,10 +44,30 @@ type SectionsApiParams =
 type PosterApiParams =
   ToolApiParams[(typeof SPLIT_ENDPOINTS)[typeof SPLIT_METHODS.BY_POSTER]];
 
+const outputNamingToApiParams = ({
+  outputNaming,
+  outputNamePattern,
+  outputNames,
+}: SplitParameters): { outputNamePattern?: string; outputNames?: string } => {
+  if (outputNaming === "list") {
+    // Leading blank lines are kept: line N names output N, and a blank line keeps its default.
+    return outputNames.trim() ? { outputNames: outputNames.trimEnd() } : {};
+  }
+  if (outputNaming && outputNamePattern.trim()) {
+    return { outputNamePattern: outputNamePattern.trim() };
+  }
+  return {};
+};
+
 // Convert the tool's UI parameters into the request body for the routed endpoint.
 export const splitToApiParams = (
   parameters: SplitParameters,
-): SplitApiParams => {
+): SplitApiParams => ({
+  ...methodToApiParams(parameters),
+  ...outputNamingToApiParams(parameters),
+});
+
+const methodToApiParams = (parameters: SplitParameters): SplitApiParams => {
   // Use BY_PAGES as default if no method is selected
   const method = parameters.method || SPLIT_METHODS.BY_PAGES;
 
@@ -96,6 +116,13 @@ export const splitToApiParams = (
 // Reconstruct the tool's UI parameters from a stored request body. The step
 // carries no explicit method, so it is inferred from the fields present.
 export const splitFromApiParams = (
+  apiParams: SplitApiParams,
+): Partial<SplitParameters> => ({
+  ...methodFromApiParams(apiParams),
+  ...outputNamingFromApiParams(apiParams),
+});
+
+const methodFromApiParams = (
   apiParams: SplitApiParams,
 ): Partial<SplitParameters> => {
   if ("pageSize" in apiParams) {
@@ -162,6 +189,22 @@ export const splitFromApiParams = (
     pages: pages ?? defaultParameters.pages,
   };
 };
+
+// A preset's pattern is translated text, so a saved pattern cannot be told apart from a custom one.
+const outputNamingFromApiParams = ({
+  outputNamePattern,
+  outputNames,
+}: {
+  outputNamePattern?: string;
+  outputNames?: string;
+}): Pick<
+  SplitParameters,
+  "outputNaming" | "outputNamePattern" | "outputNames"
+> => ({
+  outputNaming: outputNames ? "list" : outputNamePattern ? "custom" : "",
+  outputNamePattern: outputNamePattern ?? "",
+  outputNames: outputNames ?? "",
+});
 
 // Static functions that can be used by both the hook and automation executor
 export const buildSplitFormData = (

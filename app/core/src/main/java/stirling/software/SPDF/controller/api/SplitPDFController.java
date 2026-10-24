@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.SplitPagesRequest;
+import stirling.software.SPDF.utils.SplitOutputNames;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -93,6 +94,7 @@ public class SplitPDFController {
                         pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
                 String baseFilename = GeneralUtils.removeExtension(file.getOriginalFilename());
+                SplitOutputNames names = SplitOutputNames.forRequest(request, pageNumbers.size());
                 try (ZipOutputStream zipOut =
                         new ZipOutputStream(Files.newOutputStream(outputTempFile.getPath()))) {
                     if (hasForm) {
@@ -101,10 +103,10 @@ public class SplitPDFController {
                         // path so the AcroForm (with only fields whose widgets remain on kept
                         // pages) is preserved.
                         writeSplitsViaPdfBox(
-                                sourceTempFile.getFile(), pageNumbers, baseFilename, zipOut);
+                                sourceTempFile.getFile(), pageNumbers, baseFilename, names, zipOut);
                     } else {
                         writeSplitsViaJpdfium(
-                                sourceTempFile.getFile(), pageNumbers, baseFilename, zipOut);
+                                sourceTempFile.getFile(), pageNumbers, baseFilename, names, zipOut);
                     }
                 }
             }
@@ -119,7 +121,11 @@ public class SplitPDFController {
     }
 
     private void writeSplitsViaJpdfium(
-            File source, List<Integer> pageNumbers, String baseFilename, ZipOutputStream zipOut)
+            File source,
+            List<Integer> pageNumbers,
+            String baseFilename,
+            SplitOutputNames names,
+            ZipOutputStream zipOut)
             throws IOException {
         try (PdfDocument sourceDoc = PdfDocument.open(source.toPath())) {
             int previousPageNumber = 0;
@@ -130,7 +136,10 @@ public class SplitPDFController {
                             PdfSplit.extractPageRange(sourceDoc, previousPageNumber, splitPoint)) {
                         splitDoc.save(splitTemp.getPath());
                     }
-                    writeEntry(zipOut, baseFilename, splitIndex + 1, splitTemp.getPath());
+                    writeEntry(
+                            zipOut,
+                            names.next(baseFilename + "_" + (splitIndex + 1)),
+                            splitTemp.getPath());
                 }
                 previousPageNumber = splitPoint + 1;
             }
@@ -138,7 +147,11 @@ public class SplitPDFController {
     }
 
     private void writeSplitsViaPdfBox(
-            File source, List<Integer> pageNumbers, String baseFilename, ZipOutputStream zipOut)
+            File source,
+            List<Integer> pageNumbers,
+            String baseFilename,
+            SplitOutputNames names,
+            ZipOutputStream zipOut)
             throws IOException {
         int previousPageNumber = 0;
         for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
@@ -156,21 +169,21 @@ public class SplitPDFController {
                     }
                 }
                 FormUtils.pruneOrphanedFormFields(splitDoc);
-                writeEntry(zipOut, baseFilename, splitIndex + 1, splitDoc);
+                writeEntry(zipOut, names.next(baseFilename + "_" + (splitIndex + 1)), splitDoc);
             }
         }
     }
 
-    private void writeEntry(ZipOutputStream zipOut, String baseFilename, int index, Path pdfPath)
+    private void writeEntry(ZipOutputStream zipOut, String entryName, Path pdfPath)
             throws IOException {
-        zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + index + ".pdf"));
+        zipOut.putNextEntry(new ZipEntry(entryName));
         Files.copy(pdfPath, zipOut);
         zipOut.closeEntry();
     }
 
-    private void writeEntry(ZipOutputStream zipOut, String baseFilename, int index, PDDocument doc)
+    private void writeEntry(ZipOutputStream zipOut, String entryName, PDDocument doc)
             throws IOException {
-        zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + index + ".pdf"));
+        zipOut.putNextEntry(new ZipEntry(entryName));
         doc.save(zipOut);
         zipOut.closeEntry();
     }

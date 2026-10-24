@@ -5,11 +5,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import stirling.software.common.model.api.PDFFile;
+import stirling.software.SPDF.model.api.SplitOutputNamingRequest;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class AutoSplitPdfRequest extends PDFFile {
+public class AutoSplitPdfRequest extends SplitOutputNamingRequest {
 
     @Schema(
             description =

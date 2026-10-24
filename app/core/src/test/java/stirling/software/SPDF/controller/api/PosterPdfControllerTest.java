@@ -163,6 +163,22 @@ class PosterPdfControllerTest {
         }
 
         @Test
+        @DisplayName("ZIP entry takes the naming pattern when one is given")
+        void zipEntryNamedFromPattern() throws Exception {
+            MockMultipartFile file = createRealPdf(1, "report.pdf");
+            PosterPdfRequest request = createRequest(file);
+            request.setOutputNamePattern("Print");
+            stubFactory(file);
+
+            ResponseEntity<Resource> response = controller.posterPdf(request);
+
+            try (ZipInputStream zis =
+                    new ZipInputStream(new ByteArrayInputStream(drainBody(response)))) {
+                assertThat(zis.getNextEntry().getName()).isEqualTo("Print 1.pdf");
+            }
+        }
+
+        @Test
         @DisplayName("ZIP entry is named <base>_poster.pdf")
         void zipEntryNamedAfterBase() throws Exception {
             MockMultipartFile file = createRealPdf(1, "report.pdf");

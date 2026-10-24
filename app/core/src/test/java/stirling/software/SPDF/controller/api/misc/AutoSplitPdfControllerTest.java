@@ -563,6 +563,21 @@ class AutoSplitPdfControllerTest {
         }
 
         @Test
+        @DisplayName("output takes the listed name over the default")
+        void outputNamedFromList() throws Exception {
+            byte[] pdf = docToBytes(simpleDoc(2));
+            wireRealTempFile();
+            when(pdfDocumentFactory.load(any(InputStream.class)))
+                    .thenAnswer(invocation -> loadFromStream(invocation.getArgument(0)));
+
+            AutoSplitPdfRequest req = request(pdf, false);
+            req.setOutputNames("Batch A");
+            ResponseEntity<Resource> response = controller.autoSplitPdf(req);
+
+            assertEquals(List.of("Batch A.pdf"), zipEntryNames(readResource(response.getBody())));
+        }
+
+        @Test
         @DisplayName("single-page PDF without QR yields one output PDF in the zip")
         void singlePageOneOutput() throws Exception {
             byte[] pdf = docToBytes(simpleDoc(1));

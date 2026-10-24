@@ -236,7 +236,10 @@ async def test_pdf_edit_agent_accepts_a_chain_that_lines_up(runtime: AppRuntime)
             rationale="Splitting fans out; rotate runs per file.",
         ),
         parameter_selector=RecordingParameterSelector(
-            [SplitPagesParams(page_numbers="all"), RotatePdfParams(angle=Angle(90))]
+            [
+                SplitPagesParams(page_numbers="all", output_name_pattern=None, output_names=None),
+                RotatePdfParams(angle=Angle(90)),
+            ]
         ),
     )
 
