@@ -1,3 +1,5 @@
+import { readBlobSlice } from "@editor/utils/blobSlice";
+
 const ENCRYPT_PROBE_BYTES = 64 * 1024;
 
 /** Binary decoding preserves bytes around the marker; the boundary excludes longer names. */
@@ -11,9 +13,9 @@ export function containsEncryptMarker(bytes: Uint8Array): boolean {
  */
 export async function looksEncryptedFromTrailer(file: Blob): Promise<boolean> {
   const tailStart = Math.max(0, file.size - ENCRYPT_PROBE_BYTES);
-  const tail = await file.slice(tailStart).arrayBuffer();
-  if (containsEncryptMarker(new Uint8Array(tail))) return true;
+  if (containsEncryptMarker(await readBlobSlice(file, tailStart))) return true;
   if (tailStart === 0) return false;
-  const head = await file.slice(0, ENCRYPT_PROBE_BYTES).arrayBuffer();
-  return containsEncryptMarker(new Uint8Array(head));
+  return containsEncryptMarker(
+    await readBlobSlice(file, 0, ENCRYPT_PROBE_BYTES),
+  );
 }

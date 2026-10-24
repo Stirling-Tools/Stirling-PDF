@@ -472,9 +472,16 @@ describe("confirmed-unreadable records", () => {
 
 /** A readable-blob substitute, for the rescue path: fake-indexeddb never returns
  *  Blob values, so a healthy legacy blob record is injected the same way a dead
- *  one is. */
-function substituteHealthyBlobOnRead(reads: number) {
+ *  one is. With `gate`, reading its bytes calls `onRead` and waits for the gate.
+ *  `stop` ends the substitution early. */
+function substituteHealthyBlobOnRead(
+  reads: number,
+  gate?: { open: Promise<void>; onRead: () => void },
+) {
   let remaining = reads;
+  const stop = () => {
+    remaining = 0;
+  };
   IDBObjectStore.prototype.get = function (
     this: IDBObjectStore,
     key: IDBValidKey | IDBKeyRange,
@@ -490,10 +497,17 @@ function substituteHealthyBlobOnRead(reads: number) {
         if (!value || injected || remaining === 0) return value;
         injected = true;
         remaining--;
-        return {
-          ...(value as object),
-          data: new Blob(["%PDF-1.7 stirling"], { type: "application/pdf" }),
-        };
+        const data = new Blob(["%PDF-1.7 stirling"], {
+          type: "application/pdf",
+        });
+        if (gate) {
+          const read = data.arrayBuffer.bind(data);
+          data.arrayBuffer = () => {
+            gate.onRead();
+            return gate.open.then(read);
+          };
+        }
+        return { ...(value as object), data };
       },
       set(target, prop, value) {
         Reflect.set(target, prop, value, target);
@@ -501,6 +515,7 @@ function substituteHealthyBlobOnRead(reads: number) {
       },
     });
   } as typeof IDBObjectStore.prototype.get;
+  return { stop };
 }
 
 /** The library must tell the truth per row: a record whose bytes are gone lists
@@ -541,6 +556,37 @@ describe("stub listings — data-lost auditing", () => {
     expect(
       (await fileStorage.getStirlingFileStub(id))?.dataUnavailable,
     ).toBeUndefined();
+  });
+
+  test("a rescue keeps what was written while it read the bytes", async () => {
+    localStorage.setItem("stirling.indexeddb.blobValuesUnsupported", "true");
+    const { fileStorage, store } = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    instrumentPut();
+    const id = await store("legacy.pdf");
+
+    let open = () => {};
+    let reading = () => {};
+    const reached = new Promise<void>((resolve) => (reading = resolve));
+    const substitution = substituteHealthyBlobOnRead(100, {
+      open: new Promise<void>((resolve) => (open = resolve)),
+      onRead: () => reading(),
+    });
+    await fileStorage.getStirlingFileStub(id);
+    await reached;
+    substitution.stop();
+
+    // The rescue holds its snapshot while the bytes are read; a rename lands now.
+    await fileStorage.updateFileMetadata(id, { name: "renamed.pdf" });
+    const putsBefore = putAttempts.length;
+    open();
+    await vi.waitFor(() =>
+      expect(putAttempts.length).toBeGreaterThan(putsBefore),
+    );
+
+    expect((await fileStorage.getStirlingFileStub(id))?.name).toBe(
+      "renamed.pdf",
+    );
   });
 });
 
