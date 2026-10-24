@@ -12,7 +12,11 @@ import {
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import SliderWithInput from "@app/components/shared/sliderWithInput/SliderWithInput";
 import { useTranslation } from "react-i18next";
-import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
+import {
+  CompressParameters,
+  MAX_COMPRESSION_LEVEL,
+  MIN_COMPRESSION_LEVEL,
+} from "@app/hooks/tools/compress/useCompressParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
 import { useGroupEnabled } from "@app/hooks/useGroupEnabled";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
@@ -67,8 +71,8 @@ const CompressSettings = ({
             value={parameters.compressionLevel}
             onChange={(value) => onParameterChange("compressionLevel", value)}
             disabled={disabled}
-            min={1}
-            max={9}
+            min={MIN_COMPRESSION_LEVEL}
+            max={MAX_COMPRESSION_LEVEL}
             step={1}
             suffix=""
           />

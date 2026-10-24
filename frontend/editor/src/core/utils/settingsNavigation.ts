@@ -1,36 +1,6 @@
 import { NavKey } from "@app/components/shared/config/types";
 import { stripBasePath, withBasePath } from "@app/constants/app";
 
-const ORIGIN_KEY = "stirling.settingsOrigin";
-
-/**
- * Record where the user is before they go to settings, so its Back control can
- * restore that URL by replacement. Recorded rather than inferred: history.go(-1)
- * is dropped by WebKit under load, and an entry made by pushState carries no
- * router key to tell "came from the editor" apart from "opened a deep link".
- * A no-op while already in settings, so tab switches keep the original origin.
- */
-export function rememberSettingsOrigin(): void {
-  const here = stripBasePath(window.location.pathname);
-  if (here.startsWith("/settings")) return;
-  try {
-    window.sessionStorage.setItem(ORIGIN_KEY, here + window.location.search);
-  } catch {
-    // Private mode or storage disabled: Back falls back to the editor.
-  }
-}
-
-/** The origin recorded by {@link rememberSettingsOrigin}, cleared on read. */
-export function takeSettingsOrigin(): string | null {
-  try {
-    const origin = window.sessionStorage.getItem(ORIGIN_KEY);
-    window.sessionStorage.removeItem(ORIGIN_KEY);
-    return origin;
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Go to the settings page from outside the router — modals, services, and
  * contexts that must keep working where no <Router> is mounted (portal unit
@@ -41,7 +11,6 @@ export function takeSettingsOrigin(): string | null {
  * @param anchor scroll to and highlight this control, by its slug
  */
 export function navigateToSettings(section?: NavKey, anchor?: string) {
-  rememberSettingsOrigin();
   const hash = anchor ? `#${encodeURIComponent(anchor)}` : "";
   const path = `/settings${section ? `/${section}` : ""}${hash}`;
   window.history.pushState({}, "", withBasePath(path));

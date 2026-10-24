@@ -43,11 +43,16 @@ public class McpServerController {
     private final ObjectMapper mapper;
     private final ApplicationProperties applicationProperties;
     private final Map<String, McpTool> toolsByName;
+    private final McpAnalytics analytics;
 
     public McpServerController(
-            ObjectMapper mapper, ApplicationProperties applicationProperties, List<McpTool> tools) {
+            ObjectMapper mapper,
+            ApplicationProperties applicationProperties,
+            List<McpTool> tools,
+            McpAnalytics analytics) {
         this.mapper = mapper;
         this.applicationProperties = applicationProperties;
+        this.analytics = analytics;
         this.toolsByName = new HashMap<>();
         for (McpTool tool : tools) {
             this.toolsByName.put(tool.name(), tool);
@@ -77,6 +82,7 @@ public class McpServerController {
             log.debug("Notification received: {}", sanitizeForLog(request.method()));
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
+        String sessionId = "initialize".equals(request.method()) ? analytics.startSession() : null;
         JsonRpcResponse response;
         try {
             response = dispatch(request);
@@ -91,6 +97,11 @@ public class McpServerController {
                             request.id(),
                             JsonRpcError.internalError(
                                     "Internal error handling " + request.method()));
+        }
+        if (sessionId != null) {
+            return ResponseEntity.ok()
+                    .header(McpAnalytics.SESSION_HEADER, sessionId)
+                    .body(response);
         }
         return ResponseEntity.ok(response);
     }
@@ -153,6 +164,7 @@ public class McpServerController {
                         ? requested
                         : PREFERRED_PROTOCOL_VERSION;
         result.put("protocolVersion", negotiated);
+        analytics.initialize(params, negotiated);
         ObjectNode caps = result.putObject("capabilities");
         caps.putObject("tools");
         ObjectNode info = result.putObject("serverInfo");
@@ -174,6 +186,7 @@ public class McpServerController {
             entry.set("annotations", t.annotations().toJson(mapper, t.title()));
             tools.add(entry);
         }
+        analytics.toolsList(List.copyOf(toolsByName.keySet()));
         return result;
     }
 
@@ -201,8 +214,19 @@ public class McpServerController {
         }
         JsonNode args = params.get("arguments");
         McpCallContext context = resolveContext();
-        ObjectNode toolResult = tool.call(args == null ? mapper.createObjectNode() : args, context);
-        return JsonRpcResponse.success(request.id(), toolResult);
+        long start = System.nanoTime();
+        ObjectNode toolResult = null;
+        RuntimeException failure = null;
+        try {
+            toolResult = tool.call(args == null ? mapper.createObjectNode() : args, context);
+            return JsonRpcResponse.success(request.id(), toolResult);
+        } catch (RuntimeException e) {
+            failure = e;
+            throw e;
+        } finally {
+            long durationMs = (System.nanoTime() - start) / 1_000_000;
+            analytics.toolCall(tool, args, durationMs, toolResult, failure);
+        }
     }
 
     private McpCallContext resolveContext() {

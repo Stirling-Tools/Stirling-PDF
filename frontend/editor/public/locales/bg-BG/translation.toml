@@ -55,7 +55,9 @@ keepWorking = "Продължи работа"
 loading = "Зареждане на..."
 loginAgreementAccept = "Приеми"
 loginAgreementDecline = "Откажи"
+loginAgreementLoadFailed = "Споразумението за вход не можа да бъде заредено."
 loginAgreementProvider = "Това уведомление е предоставено от вашия администратор, а не от Stirling PDF Inc."
+loginAgreementRetry = "Повторен опит"
 loginAgreementTitle = "Споразумение за влизане"
 logOut = "Изход"
 marginTooltip = "Разстоянието между номера на страницата и ръба на страницата."
@@ -299,7 +301,6 @@ title = "Резултати за номера на страници"
 
 [addPassword]
 desc = "Криптирайте вашия PDF документ с парола."
-submit = "Шифроване"
 tags = "криптиране,парола,заключване,сигурност,защита,сигурност,криптиране,предпазване,поверително,частно,ограничаване на достъпа"
 title = "Добавяне на парола"
 
@@ -311,17 +312,6 @@ label = "Дължина на ключа за криптиране"
 
 [addPassword.error]
 failed = "Възникна грешка при криптиране на PDF."
-
-[addPassword.passwords]
-stepTitle = "Пароли и криптиране"
-
-[addPassword.passwords.owner]
-label = "Парола на собственика"
-placeholder = "Въведете парола на собственика"
-
-[addPassword.passwords.user]
-label = "Потребителска парола"
-placeholder = "Въведете потребителска парола"
 
 [addPassword.results]
 title = "Криптирани PDF файлове"
@@ -1627,6 +1617,7 @@ title = "Изисква се рестарт"
 [admin.settings.security]
 authentication = "Удостоверяване"
 description = "Конфигурирайте удостоверяване, поведение при вход и политики за сигурност."
+pdfPermissions = "Разрешения за PDF"
 title = "Сигурност"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "Деактивирай CSRF защита"
 [admin.settings.security.enableLogin]
 description = "Изисквай потребителите да влизат преди достъп до приложението"
 label = "Активирай вход"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Изисквайте паролата за разрешенията за ограничени действия. Изключването на това все още изисква паролите, нужни за отваряне на PDF файлове."
+label = "Спазване на разрешенията на PDF"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Разширени настройки"
@@ -1938,9 +1933,6 @@ wrapUp = "Това беше администраторската обиколк�
 [adminUserSettings]
 admin = "Администратор"
 title = "Настройки за потребителски контрол"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Арабски"
@@ -3173,12 +3165,14 @@ unknown = "Неизвестно"
 
 [changePermissions]
 desc = "Променете ограниченията и разрешенията на документа."
+loading = "Зареждане на текущите разрешения..."
 submit = "Промяна на правата"
 tags = "разрешения,ограничения,права,контрол на достъпа,позволяване,забраняване,печат,копиране,редактиране,промяна на разрешения,настройки за сигурност,потребителски права"
 title = "Промяна на правата"
 
 [changePermissions.error]
 failed = "Възникна грешка при промяна на разрешенията на PDF."
+readFailed = "Не можаха да бъдат прочетени текущите разрешения на този PDF. Задайте ограниченията ръчно, преди да приложите промените."
 
 [changePermissions.permissions.preventAssembly]
 label = "Предотвратяване на сглобяването на документ"
@@ -3219,21 +3213,16 @@ text = "За да направите тези разрешения непром�
 [chat.actions]
 copy = "Копирайте съобщение"
 
-[chat.emptyState]
-text = "Задайте въпрос за вашите документи или получете помощ с PDF инструменти."
-
-[chat.fab]
-close = "Затваряне на чата"
-open = "Отваряне на Stirling AI асистента"
+[chat.dock]
+collapse = "Свиване на чата"
+placeholder = "Попитайте Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Опции на агента Stirling"
-assistant = "AI асистент"
 clearChat = "Изчистете чата"
 
 [chat.input]
 disclaimer = "AI може да допуска грешки. Не забравяйте да проверите резултата, преди да го споделите."
-placeholder = "Какво искате да направите?"
 send = "Изпратете съобщение"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Преобразувайте тези документи в PDF"
 convertOne = "Преобразувайте този документ в PDF"
 heading = "Първи стъпки"
 mergeMany = "Слейте тези {{count}} документа в 1"
-moreFiles = "+{{count}} още"
 openFromComputer = "Отворете от компютър"
-removeFile = "Премахнете {{name}}"
 splitOne = "Разделете този документ"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Не успях да намеря исканата информац
 processing = "Обработка ({{outcome}})..."
 unsupported_capability = "Неподдържана възможност: {{capability}}"
 usage_limit_reached = "Достигнахте лимита си за използване. Проверете опциите на плана си, за да продължите."
-
-[chat.toolsUsed]
-summary_one = "Изпълнен е 1 инструмент"
-summary_other = "Изпълнени са {{count}} инструмента"
-unknownTool = "Неизвестен инструмент"
 
 [classification.families]
 correspondence = "Кореспонденция"
@@ -3649,6 +3631,7 @@ tooltip = "Изберете цвят от екрана"
 hue = "Нюанс"
 saturation = "Наситеност и яркост"
 title = "Изберете цвят"
+transparent = "Прозрачно"
 
 [common]
 actions = "Действия"
@@ -3664,6 +3647,7 @@ continue = "Продължи"
 copied = "Копирано!"
 copy = "Копирай"
 copyCode = "Копирай кода"
+copyFailed = "Копирането е неуспешно"
 dismiss = "Отхвърли"
 done = "Готово"
 enterValue = "Въведете стойност"
@@ -3847,6 +3831,12 @@ unavailable = "ImageMagick не е инсталиран или активира�
 filesize = "Размер на файла"
 quality = "Качество"
 title = "Метод на компресиране"
+
+[compress.noReduction]
+multiple = "Компресирането приключи успешно, но {{count}} от {{total}} файла не могат да бъдат компресирани повече."
+multipleAtLevel = "Компресирането на това ниво не доведе до подобрение за {{count}} от {{total}} файла. Опитайте по-високо ниво на компресиране."
+single = "Компресирането приключи успешно, но този файл не може да бъде компресиран повече."
+singleAtLevel = "Компресирането на това ниво не доведе до подобрение за този файл. Опитайте по-високо ниво на компресиране."
 
 [compress.settings]
 desiredSize = "Желан размер на файла"
@@ -4295,6 +4285,13 @@ precision = "Използвайте координатите за прецизн
 resize = "Плъзнете ъгловите и страничните дръжки за преоразмеряване"
 title = "Как да изрязвате PDF-и"
 
+[damagedPdf]
+description = "Този PDF е повреден и не може да бъде отворен."
+label = "Повреден"
+repair = "Поправи"
+repaired = "Поправен {{name}}"
+repairFailed = "Не можа да се поправи {{name}}"
+
 [database]
 backupCreated = "Успешно архивиране на базата данни"
 fileName = "Име на файл"
@@ -4363,6 +4360,10 @@ title = "Актуализирано от диска"
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\" е променен на диска. Достатъчно голям е, че презареждането му ще отнеме време, затова версията тук е оставена непроменена."
 title = "Файлът е променен на диска"
+
+[desktopPrivacy]
+blocked = "Вашият администратор изисква документите да останат на това устройство. Тази функция не е налична."
+localFiles = "Локални файлове"
 
 [desktopUpdate]
 downloading = "Изтегляне на актуализация..."
@@ -4491,22 +4492,80 @@ description = "Изберете инструмента Edit Table of Contents, �
 title = "Отворете инструмента, за да започнете редакция"
 
 [encryptedPdfUnlock]
-description = "Този PDF е защитен с парола. Въведете паролата, за да продължите да работите с него."
-emptyResponse = "Премахването на паролата не създаде файл."
+actionIgnored = "Ограничението за {{action}} е игнорирано"
+actionUnlocked = "{{action}} е отключено за тази сесия"
+advanced = "Разширени"
+allowed = "Разрешено"
+annotations = "Анотации"
+authoriseAction = "Този PDF изисква разрешение за използване на {{action}}."
+changeOwnerPassword = "Промяна на паролата за разрешенията"
+checkingPermissions = "Проверка на разрешенията на PDF..."
+chooseOwnerPassword = "Изберете друга парола"
+continue = "Продължаване"
+copyFailed = "Не може да се създаде копието. Вашият PDF не е променен."
+copying = "Копиране на съдържание"
+editing = "Редактиране"
+enterPassword = "Въведете парола"
+ignoredByServer = "Разрешенията се игнорират от настройките на този сървър. Защитата на PDF не е променена."
 incorrectPassword = "Невалидна парола"
+inspectionFailed = "Не могат да бъдат проверени разрешенията на този PDF. Опитайте отново."
+lowQualityPrintUnsupported = "Този PDF позволява само печат с ниско качество, което този преглед не поддържа."
+lowResolutionOnly = "Само ниска разделителна способност"
+manageProtection = "Управление на защитата"
 missingFile = "Избраният файл вече не е наличен."
+mixedProtection = "Тези PDF файлове имат отделни настройки за защита. Обработете ги поотделно."
+newOwnerPassword = "Нова парола за разрешенията"
+notRequired = "Не се изисква"
+openingPassword = "Парола за отваряне"
+openPdf = "Отваряне на PDF"
+ownerPassword = "Парола за разрешенията"
+ownerRequired = "Въведете паролата за разрешенията, за да продължите."
+ownerTitle = "Въведете паролата за разрешенията"
+passwordRetained = "Запазена без промяна"
+passwordsMustDiffer = "Двете пароли трябва да са различни."
+permissionsUnlocked = "Разрешенията са отключени за тази сесия"
+prepareFailed = "Този защитен PDF не може да бъде подготвен за обработка."
+printing = "Печат"
+printRestricted = "Печатът е ограничен. Проверете разрешенията в Управление на защитата."
+protectedPdf = "Защитен PDF"
+protectionRetained = "Защитата е запазена"
+protectionSaved = "Защитата е запазена"
+removePasswordHelp = "Отворете Премахване на парола, за да изберете кои пароли да премахнете."
+removeProtection = "Създаване на незащитено копие"
+replaceProtection = "Тези настройки заменят текущата защита на PDF."
 required = "Въведете паролата, за да продължите."
-skip = "Пропусни засега"
-successBody = "Паролата е премахната успешно."
-successBodyWithName = "Паролата е премахната от {{fileName}}"
-successTitle = "Паролата е премахната"
+requiredStatus = "Изисква се"
+requiredToApply = "Изисква се за прилагане на промените"
+restoreFailed = "Защитата на PDF не може да бъде запазена. Не е записан незащитен резултат."
+restrictActions = "Ограничаване на действията"
+restricted = "Ограничено"
+restrictedActions = "ограничени действия"
+restrictedOperation = "Това действие изисква паролата за разрешенията."
+retainOwnerVerification = "Потвърдете паролата за разрешенията, за да я запазите без промяна, докато премахвате паролата за отваряне. Това няма да я премахне."
+saveProtection = "Запазване на защитата"
+securityChangeFailed = "Защитата не може да бъде променена. Проверете паролата за разрешенията и новите настройки за сигурност."
+sessionDetails = "Отворен за тази сесия. PDF остава защитен."
+sessionDetailsLabel = "Относно отключването за сесия"
+sessionFailed = "Този PDF не може да бъде отключен. Моля, опитайте отново."
+sessionSuccessBody = "Защитата е запазена."
+sessionSuccessBodyWithName = "Защитата е запазена за {{fileName}}."
+sessionSuccessTitle = "PDF е отворен"
+sessionTitle = "Отваряне на PDF"
+signedReadOnly = "Този подписан PDF може да бъде преглеждан, но не може да бъде редактиран тук."
 title = "Премахнете паролата, за да продължите"
+toolUnavailable = "Този инструмент не поддържа криптирани PDF файлове. Първо премахнете паролата."
+toolUnavailableDetails = "Защо {{name}} не е налично"
 unlock = "Отключи и продължи"
 unlockAll = "Използвайте за всички ({{count}})"
 unlockAllPartialFail = "Грешна парола за: {{names}}"
 unlockAllSuccess_one = "Отключен е {{count}} файл."
 unlockAllSuccess_other = "Отключени са {{count}} файла."
+unlockedForSession = "Отключено за тази сесия с вашата парола за разрешенията."
 unlockPrompt = "Отключете PDF, за да продължите"
+unprotectedCopyConsequence = "Копието няма да има пароли или ограничения. Оригиналът остава защитен."
+unsupportedTool = "Този инструмент все още не може да запази защитата на този PDF."
+verifiedForSession = "Потвърдено за тази сесия"
+verifyPermissions = "Потвърждаване на разрешенията за тази сесия"
 viewerLocked = "Този PDF е защитен с парола"
 viewerUnlock = "Отключване"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "Преглед във визуализатора"
 closeFile = "Затворете файла"
 
 [fileEditor]
-addFiles = "Добави файлове"
 closedFile = "Затворен {{name}}"
 couldNotSave = "Неуспешно записване на {{name}}"
-filesAdded_one = "Добавен {{count}} файл"
-filesAdded_other = "Добавени {{count}} файла"
 filesReordered_one = "Файлът е пренареден"
 filesReordered_other = "{{count}} файла са пренаредени"
 loadedFromStorage_one = "Зареден {{count}} файл от хранилището"
 loadedFromStorage_other = "Заредени {{count}} файла от хранилището"
 loadFromStorageFailed = "Неуспешно зареждане на някои файлове от хранилището"
 pinnedFile = "Закачен {{name}}"
-processFilesFailed = "Неуспешна обработка на файловете"
 savedAndClosed = "Записан и затворен {{name}}"
 saveFailed = "Записването е неуспешно"
 unpinnedFile = "Откачен {{name}}"
 unzipping = "Разархивиране на {{name}}"
+
+[fileEditor.addCard]
+dropHint = "или пуснете файлове където и да е"
+fromComputer = "Качване от компютър"
+moreOptions = "Още опции за качване"
 
 [fileEditor.unzip]
 error = "Грешка при разархивиране на {{name}}"
@@ -4729,7 +4789,6 @@ dataLostBody = "Този браузър изгуби съдържанието н
 dataLostTitle = "Данните на файла не са налични"
 downloadFailed = "Изтеглянето не бе успешно"
 dropHint = "Отворете файлове, за да започнете"
-dropToAdd = "Пуснете файлове за добавяне"
 duplicateFailed = "Файлът не можа да бъде дублиран"
 expand = "Разгъване на страничната лента"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "Пресканирайте полетата"
 rescanFormFields = "Пресканирайте полетата на формуляра"
 save = "Запазете"
 saveShortcut = "Ctrl+S за запазване"
+saving = "Запазване..."
 selectOptionPlaceholder = "— изберете —"
 skippedEdits_one = "1 промяна не можа да бъде приложена:"
 skippedEdits_other = "{{count}} промени не можаха да бъдат приложени:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "Още {{count}} не са показани."
 unsavedChanges = "Незапазени промени"
 
 [formFill.create]
-commit = "Добавяне на {{count}} поле(та) към PDF"
 empty = "Все още няма начертани полета."
-failed = "Неуспешно добавяне на полета"
 goToField = "Отидете на това поле"
 hint = "Изберете тип поле, след което го начертайте на страницата."
 placing = "Начертайте поле {{type}} на страницата. Натиснете Esc, за да спрете."
@@ -5334,7 +5392,6 @@ modify = "Промяна"
 commit = "Запазване на {{count}} промяна(и)"
 delete = "Изтриване"
 empty = "Този PDF все още няма полета на формуляр."
-failed = "Неуспешно запазване на промените"
 groupSizeHint = "Използвайте размер на опцията"
 hint = "Изберете поле, за да редактирате свойствата му, плъзнете го по страницата или го изтрийте."
 restore = "Възстановяване"
@@ -5732,11 +5789,6 @@ title = "Наслагване PDF-и"
 desc = "Слейте няколко страници от PDF документ в една страница"
 tags = "оформление,подреждане,комбиниране,N-up,2-up,4-up,няколко на страница,страници на лист,оформяне на страници,плочка,мрежово оформление,многостранично оформление,комбиниране на страница,раздавателен материал"
 title = "Оформление с няколко страници"
-
-[home.pdfCommentAgent]
-desc = "Помолете AI да анотира PDF с коментари тип лепящи бележки въз основа на вашата заявка"
-tags = "AI,агент,коментар,анотиране,лепяща бележка,преглед,обратна връзка,бележки"
-title = "Добавяне на AI коментари"
 
 [home.pdfOrganiser]
 tags = "организиране,пренареждане,преподреждане,подреждане на страници,сортиране,преместване на страници,изтриване на страници,премахване на страници,управление на страници,организатор на страници,преномериране на последователност"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "Ще станете член на екипа и ще загу
 deselectAll = "Нито един"
 selectAll = "Маркиране на всички"
 
-[pageEditor]
-dragPreviewAlt = "Плъзгане"
-filePosition = "Позиция {{position}}"
-pageLabel = "Страница {{page}}"
-title = "Редактор на страници"
-
-[pageEditor.actions]
-deletePage = "Изтриване на страница"
-insertFileAfter = "Вмъкване на файл след"
-moveLeft = "Преместване наляво"
-moveRight = "Преместване надясно"
-rotateLeft = "Завъртане наляво"
-rotateRight = "Завъртане надясно"
-splitAfter = "Разделяне след"
-
-[pageEditor.commands]
-addSplitAt = "Добави разделяне на позиция {{position}}"
-addSplits_one = "Добави {{count}} разделяне"
-addSplits_other = "Добави {{count}} разделяния"
-deletePages_one = "Изтрий {{count}} страница"
-deletePages_other = "Изтрий {{count}} страници"
-insertFiles_one = "Вмъкни {{count}} файл след страница {{page}}"
-insertFiles_other = "Вмъкни {{count}} файла след страница {{page}}"
-insertPageBreaks_one = "Вмъкни {{count}} прекъсване на страница"
-insertPageBreaks_other = "Вмъкни {{count}} прекъсвания на страница"
-insertPageBreaksAll = "Вмъкни прекъсвания на страница след всички страници"
-removeAllSplits = "Премахни всички разделяния"
-removeSplitAt = "Премахни разделянето на позиция {{position}}"
-removeSplits_one = "Премахни {{count}} разделяне"
-removeSplits_other = "Премахни {{count}} разделяния"
-reorderPages = "Пренареди страниците"
-rotatePageLeft = "Завърти страницата наляво"
-rotatePageRight = "Завърти страницата надясно"
-rotatePagesLeft_one = "Завърти {{count}} страница наляво"
-rotatePagesLeft_other = "Завърти {{count}} страници наляво"
-rotatePagesRight_one = "Завърти {{count}} страница надясно"
-rotatePagesRight_other = "Завърти {{count}} страници надясно"
-splitAllPages = "Раздели всички страници"
-toggleSplits_one = "Превключи {{count}} позиция за разделяне"
-toggleSplits_other = "Превключи {{count}} позиции за разделяне"
-
-[pageEditor.emptyState]
-body = "Добавете файлове, за да започнете редактиране на страници"
-title = "Няма заредени PDF файлове"
-
-[pageEditor.fileDropdown]
-addFile = "Добавяне на файл"
-selectedCount = "Избрани {{selected}}/{{total}} файла"
-untitled = "Без заглавие"
-
-[pageEditor.toolbar]
-delete = "Изтрийте избраните"
-redo = "Повторете"
-rotateLeft = "Завъртете избраните наляво"
-rotateRight = "Завъртете избраните надясно"
-undo = "Отменете"
-
 [pageExtracter]
 title = "Извличане на страници"
 
@@ -6815,6 +6810,79 @@ title = "Диапазони от страници"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → избира всички страници"
 title = "Специални ключови думи"
+
+[pageTracks]
+blankPage = "Празна страница"
+deleteSelected = "Изтриване на избраните страници"
+downloadAsOneFile = "Изтегляне като един файл"
+downloadEachPage = "Изтегляне на всяка страница поотделно"
+downloadSelectedPages = "Изтегляне на избраните страници"
+dragging_one = "{{count}} страница"
+dragging_other = "{{count}} страници"
+duplicateSelected = "Дублиране на избраните страници"
+edited = "редактирано"
+emptyTrack = "Няма останали страници. Плъзнете страници тук или запазете, за да затворите този файл."
+insertBlank = "Вмъкване на празна страница"
+insertBlankAfterSelected = "Вмъкване на празни страници след избраните страници"
+moveLeft = "Преместване наляво"
+moveRight = "Преместване надясно"
+nextPage = "Следваща страница"
+page = "Страница {{number}}"
+pageCount_one = "{{count}} страница"
+pageCount_other = "{{count}} страници"
+pagePosition = "Страница {{number}} от {{total}}"
+prevPage = "Предишна страница"
+readingPages = "Четене на страници..."
+redo = "Повторение"
+rotateLeft = "Завъртане наляво"
+rotateRight = "Завъртане надясно"
+rotateSelectedLeft = "Завъртане на избраните страници наляво"
+rotateSelectedRight = "Завъртане на избраните страници надясно"
+saveAsOneFile = "Запазване като един файл"
+saveChanges = "Запазване на промените във всички файлове"
+saveEachPage = "Запазване на всяка страница поотделно"
+saveSelectedPages = "Запазване на избраните страници"
+saving = "Запазване..."
+savingProgress = "Запазване на {{done}} от {{total}}"
+selectPage = "Избиране на страница {{number}}"
+splitAfterSelected = "Разделяне след избраните страници"
+splitHere = "Разделяне тук"
+undo = "Отмяна"
+viewError = "Тази страница не можа да бъде визуализирана"
+viewPage = "Преглед на страница"
+zoomIn = "Увеличаване"
+zoomOut = "Намаляване"
+
+[pageTracks.close]
+message = "Сигурни ли сте, че искате да затворите всички файлове?"
+unsaved = "Тези файлове имат незапазени промени."
+
+[pageTracks.delete]
+page = "Изтриване на страница"
+
+[pageTracks.duplicate]
+page = "Дублиране на страница"
+
+[pageTracks.empty]
+body = "Добавете PDF файлове, за да ги разгънете в редактируеми ленти със страници"
+title = "Няма заредени PDF файлове"
+
+[pageTracks.exportFailed]
+body = "Редактираните файлове не можаха да бъдат подготвени. Опитайте отново."
+title = "Неуспешно изтегляне"
+
+[pageTracks.saveFailed]
+body = "Вашите редакции не са изгубени. Опитайте да запазите отново."
+title = "Промените не можаха да бъдат запазени"
+
+[pageTracks.track]
+close = "Затваряне на файла"
+collapse = "Свиване"
+expand = "Разгъване"
+rename = "Преименуване на файла"
+
+[pageTracks.wrap]
+label = "Пренасяне на страниците"
 
 [payg.activity]
 docs = "документи"
@@ -7144,24 +7212,6 @@ totalSeats_other = "Общо ({{count}} места)"
 [payment.upgradeTeam]
 title = "Надграждане до Team"
 
-[pdfCommentAgent]
-submit = "Генериране на коментари"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Моля, опишете върху какво да коментира AI"
-failed = "Неуспешно генериране на коментари"
-tooLong = "Заявката е твърде дълга (максимум {{max}} знака)"
-
-[pdfCommentAgent.prompt]
-label = "Върху какво да коментира AI?"
-placeholder = "напр. Отбележете всички двусмислени дати и предложете уточнения"
-
-[pdfCommentAgent.results]
-title = "PDF с коментари"
-
-[pdfCommentAgent.settings]
-title = "Инструкции за коментиране"
-
 [pdfOrganiser]
 placeholder = "(напр. 1,3,2 или 4-8,2,10-12 или 2n-1)"
 tags = "дуплекс,четно,нечетно,сортиране,преместване"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "Щракнете върху текст, изображе�
 ocrDocumentChanged = "Документът беше променен, докато OCR се изпълняваше. Стартирайте OCR отново, за да включите последните си промени."
 ocrInvalidResult = "OCR не върна PDF. Моля, опитайте отново."
 ocrNoLanguages = "На сървъра няма инсталирани OCR езици."
+ocrProtected = "OCR все още не може да запази защитата на този PDF. Защитеният оригинал остава наличен за преглед."
 ocrRunning = "Разпознаване на текст..."
 ocrUnavailable = "OCR не е наличен на този сървър."
 oneImage = "Изображение"
@@ -7389,13 +7440,8 @@ pageNumber = "Страница {{page}}"
 renderFailed = "Неуспешно рендиране на страницата"
 
 [pdfTextEditor.password]
-cancel = "Отказ"
 incorrect = "Неправилна парола - опитайте отново."
 label = "Парола"
-open = "Отваряне"
-protected = "Този PDF е защитен с парола."
-protectedNamed = "\"{{fileName}}\" е защитен с парола."
-title = "Изисква се парола"
 
 [pdfTextEditor.rulers]
 guide = "Водач за подравняване при {{value}} {{unit}} - плъзнете върху линийка, за да премахнете"
@@ -7994,6 +8040,7 @@ before = "Задайте"
 title = "Stirling връзката не е конфигурирана"
 
 [portal.accountLink.notice]
+loadFailed = "Диалогът за свързване на акаунт не можа да бъде зареден."
 openFailed = "Браузърът ви не можа да бъде отворен. Отворете Употреба и фактуриране на свързания си сървър, за да свържете акаунт."
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "Месечен лимит за разходи {{amount}}/мес. Обр
 limitNoCap = "Без лимит за разходи. Обработката няма да спира на пауза. Фактурите се издават месечно."
 
 [portal.billing.chip]
-invoices = "Фактури"
-nav = "Раздели"
-payment = "Плащане"
 plan = "План"
 procurement = "Снабдяване"
 usage = "Употреба"
@@ -8178,9 +8222,22 @@ pdfs = "Обработени PDF файлове"
 users = "Потребители"
 
 [portal.billing.enterprise]
+active = "Споразумението е активно до {{date}}"
 cta = "Получете корпоративна оферта"
+included = "Включено в Enterprise"
+payment_pending = "Плащането е в изчакване · достъп до {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDF файла"
+pdfsOver_one = "{{count}} PDF над договорения обем"
+pdfsOver_other = "{{count}} PDF файла над договорения обем"
+pdfsUsed_one = "{{count}} обработен PDF"
+pdfsUsed_other = "{{count}} PDF файла обработени"
+period = "Период на споразумението: {{start}} – {{end}}"
 sub = "Изолирано внедряване, SCIM, местоположение на данните, SLA за време на работа и подходящо споразумение."
 title = "Използвате Stirling в регулирана среда?"
+trial = "{{days}}-дневен пробен период · приключва на {{date}}"
+usersAgreed = "{{used}} / {{agreed}} договорени потребители"
+usersOver_one = "{{count}} потребител над договореното количество"
+usersOver_other = "{{count}} потребители над договореното количество"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Checkout не можа да стартира"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "Нативни компилации за вашата дистрибуция."
-guideBtn = "Вижте опциите за инсталиране на Linux"
+downloadAppImage = "AppImage"
+downloadDeb = "Изтегляне на .deb (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "Налични са AppImage, .deb и .rpm компилации за популярни дистрибуции."
 tagline = "Нативно настолно приложение за вашата дистрибуция"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "Заличаване,Скриване,затъмняване,черно,
 title = "Заличаване"
 
 [redact.auto]
+caseSensitiveLabel = "Съвпадение с отчитане на регистъра"
 colorLabel = "Цвят на полето"
 convertPDFToImageLabel = "Конвертиране на PDF в PDF-Image"
 customPaddingLabel = "Персонализирано допълнително отстояние"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "Изберете файлове във файлов�
 manual = "Ръчен"
 mode = "Режим"
 title = "Метод на заличаване"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Съвпада само с текст със същия регистър. Когато е активирано, „Secret“ няма да съвпадне със „SECRET“, а [A-Z] в regex съвпада само с главни букви."
+title = "Съвпадение с отчитане на регистъра"
 
 [redact.tooltip.advanced.color]
 text = "Персонализирайте външния вид на полетата за заличаване. Черният е стандартен, но можете да изберете всеки цвят. Отстоянието добавя допълнително място около намерения текст."
@@ -11396,7 +11460,12 @@ text = "Посочете кои страници да бъдат премахн�
 title = "Избор на страници"
 
 [removePassword]
-desc = "Премахнете защитата с парола от вашия PDF документ."
+appliesTo = "Зададено за {{count}} от {{total}} PDF файла"
+keepBlank = "Оставете поле празно, за да запазите тази парола."
+notSet = "Не е зададено"
+openWithReaderFirst = "Отворете отново този PDF с паролата му за отваряне, преди да премахнете само паролата за разрешения."
+selectiveHelp = "Въведете текущата парола за всяка защита, която искате да премахнете. Празно поле запазва тази парола. Премахването на паролата за разрешения премахва и ограниченията за действия."
+selectPasswords = "Пароли за премахване"
 submit = "Премахване на парола"
 tags = "сигурно,декриптиране,сигурност,отмяна на парола,изтриване на парола"
 title = "Премахване на паролата"
@@ -11407,13 +11476,9 @@ failed = "Възникна грешка при премахването на п�
 [removePassword.password]
 label = "Текуща парола"
 placeholder = "Въведете текущата парола"
-stepTitle = "Премахване на парола"
 
 [removePassword.results]
 title = "Декриптирани PDF файлове"
-
-[removePassword.tooltip]
-description = "Премахването на защитата с парола изисква паролата, с която PDF е криптиран. Това ще декриптира документа и ще го направи достъпен без парола."
 
 [reorganizePages]
 submit = "Реорганизирай страниците"
@@ -11543,6 +11608,64 @@ m = "Метри (m)"
 mi = "Мили (mi)"
 mm = "Милиметри (mm)"
 yd = "Ярдове (yd)"
+
+[runLocation]
+back = "Назад"
+continue = "Продължи"
+subtitle = "Изберете къде да се изпълнява."
+title = "Къде искате да стартирате Stirling?"
+
+[runLocation.choice.browser]
+description = "Уеб приложението."
+title = "Във вашия браузър"
+
+[runLocation.choice.computer]
+description = "Настолното приложение."
+title = "На вашия компютър"
+
+[runLocation.choice.server]
+description = "Самостоятелно хоствано, за екип."
+title = "На вашия сървър"
+
+[runLocation.desktop]
+computerLabel = "Вашият компютър"
+download = "Изтегляне за {{platform}}"
+downloadAgain = "Изтегляне отново"
+guide = "Отваряне на ръководството за инсталиране за {{platform}}"
+startedSubtitle = "Проверете папката си „Изтегляния“, след което отворете инсталатора."
+startedTitle = "Изтеглянето започна"
+subtitle = "Изтеглете го и го отворете."
+title = "Вземете настолното приложение"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (ръководство за инсталиране)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "Копирано"
+copy = "Копиране на командата"
+copyCompose = "Копиране на compose файла"
+guide = "Ръководство за инсталиране с {{method}}"
+methodLabel = "Стартиране с"
+note = "След това отворете <url/>, за да завършите настройката."
+subtitle = "Стартирайте това на вашия сървър, след което го отворете в браузър."
+title = "Настройте вашия сървър"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "Премахнете потенциално вредни елементи от PDF файлове."
@@ -12054,6 +12177,7 @@ title = "Работно пространство"
 loginIncomplete = "Неуспешно завършване на входа"
 noSaasServer = "Няма конфигуриран SaaS сървър"
 noServer = "Няма конфигуриран сървър"
+policyUnavailable = "Не могат да се заредят настройките за вписване на вашата организация."
 saasLoginFailed = "Неуспешен вход в SaaS"
 saasLoginIncomplete = "Неуспешно завършване на входа в SaaS"
 selfHostedLoginFailed = "Неуспешен вход в самостоятелно хостван сървър"
@@ -13563,7 +13687,9 @@ validUntrusted = "Валиден, подписващият не е провер�
 
 [viewer]
 cannotPreviewFile = "Не може да се визуализира файлът"
+copyRestricted = "Копирането е деактивирано от разрешенията на този PDF."
 copyText = "Копирай"
+coverPageView = "Показване на корицата отделно"
 disableColorFilter = "Изключи цветови филтър"
 documentUpdated = "Документът е актуализиран"
 dualPageView = "Изглед: две страници"
@@ -13580,6 +13706,7 @@ noPdfProvided = "Не е предоставен PDF"
 onlyPdfSupported = "Този файлов формат не се поддържа за предварителен преглед."
 pageNavigation = "Навигация по страници"
 previousPage = "Предишна страница"
+readAloudFromHere = "Четене на глас оттук"
 saveChangesErrorBody = "Документът не можа да бъде записан. Опитайте отново."
 saveChangesErrorTitle = "Неуспешно записване на промените"
 singlePageView = "Изглед: една страница"
@@ -13640,6 +13767,7 @@ closeSidebar = "Затвори страничната лента с комент
 deleteAnnotationAndComment = "Изтриване на анотация и коментар"
 deleteDescription = "Тази анотация има прикачен коментар. Можете да премахнете само коментара от страничната лента и да запазите анотацията или да изтриете всичко."
 deleteTitle = "Да се премахне ли анотацията от коментарите?"
+exportCsv = "Експортиране като CSV"
 goToLink = "Към връзката"
 hint = "Добавяйте коментари с инструментите Коментар, Вмъкване на текст или Замяна на текст. Те ще се показват тук по страници."
 locateAnnotation = "Намиране в документа"
@@ -13658,7 +13786,16 @@ typeInsertText = "Вмъкване на текст"
 typeReplaceText = "Замяна на текст"
 viewComment = "Преглед на коментар"
 
+[viewer.comments.csv]
+author = "Автор"
+comment = "Коментар"
+inReplyTo = "В отговор на"
+modifiedUtc = "Последна промяна (UTC)"
+page = "Страница"
+thread = "Нишка"
+
 [viewer.error]
+loadError = "Неуспешно зареждане на PDF"
 noFileProvided = "Грешка: Не е подаден файл към визуализатора"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "Текст на водния знак"
 image = "Изображение"
 text = "Текст"
 
+[workbench]
+dropFailedSingle = "Вашият файл не можа да бъде добавен"
+dropFailedSome = "{{failed}} от вашите файлове не можаха да бъдат добавени"
+dropOverlay = "Пуснете файлове, за да ги добавите към работната област"
+
 [workbench.sessionRestore]
 none = "Предишните ви файлове вече не се съхраняват на това устройство."
 partial = "Възстановени са {{restored}} от {{total}} файла. Останалите вече не се съхраняват на това устройство."
@@ -13915,16 +14057,14 @@ annotations = "Анотации"
 applyRedactionsFirst = "Първо приложете заличаванията"
 closeAll = "Затваряне на всички файлове"
 closePdf = "Затваряне на PDF"
-deleteSelected = "Изтриване на избраните страници"
 deselectAll = "Премахване на избора от всички"
 downloadAll = "Изтегляне на всички"
+exitAnnotations = "Изход от режим на анотации"
 exitRedaction = "Изход от режим на заличаване"
-exportAll = "Експортиране на PDF"
-exportSelected = "Експортиране на избраните страници"
 formFill = "Редактор на формуляри"
 hideToolbar = "Скриване на лентата с инструменти"
 moreActions = "Още действия"
-multiTool = "Мултиинструмент"
+pageEditor = "Редактор на страници"
 panMode = "Режим на преместване"
 print = "Печат на PDF"
 readAloud = "Четене на глас"
@@ -13938,7 +14078,6 @@ rulerSettings = "Настройки на мащаба"
 save = "Запазване"
 saveAll = "Запазване на всички"
 saveAs = "Запазване като"
-saveChanges = "Запазване на промените"
 search = "Търсене в PDF"
 selectAll = "Избиране на всички"
 selectByNumber = "Избор по номера на страници"

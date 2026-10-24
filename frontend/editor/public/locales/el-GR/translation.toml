@@ -55,7 +55,9 @@ keepWorking = "Συνέχεια εργασίας"
 loading = "Φόρτωση..."
 loginAgreementAccept = "Αποδοχή"
 loginAgreementDecline = "Απόρριψη"
+loginAgreementLoadFailed = "Δεν ήταν δυνατή η φόρτωση της συμφωνίας σύνδεσης."
 loginAgreementProvider = "Αυτή η ειδοποίηση παρέχεται από τον διαχειριστή σας, όχι από την Stirling PDF Inc."
+loginAgreementRetry = "Δοκιμάστε ξανά"
 loginAgreementTitle = "Συμφωνία σύνδεσης"
 logOut = "Αποσύνδεση"
 marginTooltip = "Απόσταση μεταξύ του αριθμού σελίδας και του άκρου της σελίδας."
@@ -299,7 +301,6 @@ title = "Αποτελέσματα αρίθμησης σελίδων"
 
 [addPassword]
 desc = "Κρυπτογραφήστε το έγγραφο PDF με κωδικό πρόσβασης."
-submit = "Κρυπτογράφηση"
 tags = "κρυπτογράφηση,κωδικός πρόσβασης,κλείδωμα,ασφαλές,προστασία,ασφάλεια,κρυπτογράφηση,διασφάλιση,εμπιστευτικό,ιδιωτικό,περιορισμός πρόσβασης"
 title = "Προσθήκη κωδικού"
 
@@ -311,17 +312,6 @@ label = "Μήκος κλειδιού κρυπτογράφησης"
 
 [addPassword.error]
 failed = "Παρουσιάστηκε σφάλμα κατά την κρυπτογράφηση του PDF."
-
-[addPassword.passwords]
-stepTitle = "Κωδικοί πρόσβασης & κρυπτογράφηση"
-
-[addPassword.passwords.owner]
-label = "Κωδικός πρόσβασης ιδιοκτήτη"
-placeholder = "Εισαγάγετε τον κωδικό πρόσβασης ιδιοκτήτη"
-
-[addPassword.passwords.user]
-label = "Κωδικός πρόσβασης χρήστη"
-placeholder = "Εισαγάγετε τον κωδικό πρόσβασης χρήστη"
 
 [addPassword.results]
 title = "Κρυπτογραφημένα PDF"
@@ -1627,6 +1617,7 @@ title = "Απαιτείται επανεκκίνηση"
 [admin.settings.security]
 authentication = "Έλεγχος ταυτότητας"
 description = "Ρυθμίστε τον έλεγχο ταυτότητας, τη συμπεριφορά σύνδεσης και τις πολιτικές ασφάλειας."
+pdfPermissions = "Δικαιώματα PDF"
 title = "Ασφάλεια"
 
 [admin.settings.security.audit]
@@ -1674,6 +1665,10 @@ label = "Απενεργοποίηση προστασίας CSRF"
 [admin.settings.security.enableLogin]
 description = "Απαιτεί τη σύνδεση των χρηστών πριν την πρόσβαση στην εφαρμογή"
 label = "Ενεργοποίηση σύνδεσης"
+
+[admin.settings.security.honorOwnerPasswords]
+description = "Απαιτείται ο κωδικός πρόσβασης δικαιωμάτων για περιορισμένες ενέργειες. Η απενεργοποίηση αυτής της επιλογής εξακολουθεί να απαιτεί κωδικούς πρόσβασης που χρειάζονται για το άνοιγμα PDFs."
+label = "Τήρηση δικαιωμάτων PDF"
 
 [admin.settings.security.htmlUrlSecurity]
 advanced = "Προχωρημένες ρυθμίσεις"
@@ -1938,9 +1933,6 @@ wrapUp = "Αυτή ήταν η περιήγηση διαχειριστή! Είδ
 [adminUserSettings]
 admin = "Διαχειριστής"
 title = "Ρυθμίσεις ελέγχου χρήστη"
-
-[agents]
-stirling_name = "Stirling"
 
 [alphabetOptions]
 arabic = "Αραβικά"
@@ -3173,12 +3165,14 @@ unknown = "Άγνωστο"
 
 [changePermissions]
 desc = "Αλλαγή περιορισμών και δικαιωμάτων εγγράφου."
+loading = "Φόρτωση τρεχόντων δικαιωμάτων..."
 submit = "Αλλαγή δικαιωμάτων"
 tags = "δικαιώματα,περιορισμοί,δικαιώματα χρήσης,έλεγχος πρόσβασης,επιτρέπω,άρνηση,εκτύπωση,αντιγραφή,επεξεργασία,τροποποίηση δικαιωμάτων,ρυθμίσεις ασφαλείας,δικαιώματα χρήστη"
 title = "Αλλαγή δικαιωμάτων"
 
 [changePermissions.error]
 failed = "Παρουσιάστηκε σφάλμα κατά την αλλαγή δικαιωμάτων του PDF."
+readFailed = "Δεν ήταν δυνατή η ανάγνωση των τρεχόντων δικαιωμάτων αυτού του PDF. Ορίστε τους περιορισμούς χειροκίνητα πριν εφαρμόσετε αλλαγές."
 
 [changePermissions.permissions.preventAssembly]
 label = "Αποτροπή συναρμολόγησης εγγράφου"
@@ -3219,21 +3213,16 @@ text = "Για να καταστούν αυτά τα δικαιώματα μη �
 [chat.actions]
 copy = "Αντιγραφή μηνύματος"
 
-[chat.emptyState]
-text = "Κάντε μια ερώτηση για τα έγγραφά σας ή λάβετε βοήθεια με εργαλεία PDF."
-
-[chat.fab]
-close = "Κλείσιμο chat"
-open = "Άνοιγμα βοηθού Stirling AI"
+[chat.dock]
+collapse = "Σύμπτυξη συνομιλίας"
+placeholder = "Ρωτήστε το Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Επιλογές πράκτορα Stirling"
-assistant = "Βοηθός AI"
 clearChat = "Καθαρισμός συνομιλίας"
 
 [chat.input]
 disclaimer = "Το AI μπορεί να κάνει λάθη. Βεβαιωθείτε ότι επαληθεύετε το αποτέλεσμα πριν το κοινοποιήσετε."
-placeholder = "Τι θέλετε να κάνετε;"
 send = "Αποστολή μηνύματος"
 
 [chat.progress]
@@ -3264,9 +3253,7 @@ convertMany = "Μετατροπή αυτών των εγγράφων σε PDF"
 convertOne = "Μετατροπή αυτού του εγγράφου σε PDF"
 heading = "Ξεκινήστε"
 mergeMany = "Συγχώνευση αυτών των {{count}} εγγράφων σε 1"
-moreFiles = "+{{count}} ακόμη"
 openFromComputer = "Άνοιγμα από υπολογιστή"
-removeFile = "Αφαίρεση {{name}}"
 splitOne = "Διαχωρισμός αυτού του εγγράφου"
 
 [chat.responses]
@@ -3278,11 +3265,6 @@ not_found = "Δεν μπόρεσα να βρω τις ζητούμενες πλ�
 processing = "Επεξεργασία ({{outcome}})..."
 unsupported_capability = "Μη υποστηριζόμενη δυνατότητα: {{capability}}"
 usage_limit_reached = "Έχετε φτάσει το όριο χρήσης σας. Ελέγξτε τις επιλογές πλάνου σας για να συνεχίσετε."
-
-[chat.toolsUsed]
-summary_one = "Εκτελέστηκε 1 εργαλείο"
-summary_other = "Εκτελέστηκαν {{count}} εργαλεία"
-unknownTool = "Άγνωστο εργαλείο"
 
 [classification.families]
 correspondence = "Αλληλογραφία"
@@ -3649,6 +3631,7 @@ tooltip = "Επιλογή χρώματος από την οθόνη"
 hue = "Απόχρωση"
 saturation = "Κορεσμός και φωτεινότητα"
 title = "Επιλέξτε χρώμα"
+transparent = "Διαφανές"
 
 [common]
 actions = "Ενέργειες"
@@ -3664,6 +3647,7 @@ continue = "Συνέχεια"
 copied = "Αντιγράφηκε!"
 copy = "Αντιγραφή"
 copyCode = "Αντιγραφή κώδικα"
+copyFailed = "Η αντιγραφή απέτυχε"
 dismiss = "Παράβλεψη"
 done = "Τέλος"
 enterValue = "Εισαγάγετε τιμή"
@@ -3847,6 +3831,12 @@ unavailable = "Το ImageMagick δεν είναι εγκατεστημένο ή 
 filesize = "Μέγεθος αρχείου"
 quality = "Ποιότητα"
 title = "Μέθοδος συμπίεσης"
+
+[compress.noReduction]
+multiple = "Η συμπίεση ολοκληρώθηκε με επιτυχία, αλλά {{count}} από {{total}} αρχεία δεν μπορούν να συμπιεστούν περαιτέρω."
+multipleAtLevel = "Η συμπίεση σε αυτό το επίπεδο δεν επέφερε βελτίωση σε {{count}} από {{total}} αρχεία. Δοκιμάστε υψηλότερο επίπεδο συμπίεσης."
+single = "Η συμπίεση ολοκληρώθηκε με επιτυχία, αλλά αυτό το αρχείο δεν μπορεί να συμπιεστεί περαιτέρω."
+singleAtLevel = "Η συμπίεση σε αυτό το επίπεδο δεν επέφερε βελτίωση σε αυτό το αρχείο. Δοκιμάστε υψηλότερο επίπεδο συμπίεσης."
 
 [compress.settings]
 desiredSize = "Επιθυμητό μέγεθος αρχείου"
@@ -4295,6 +4285,13 @@ precision = "Χρησιμοποιήστε τα πεδία συντεταγμέν
 resize = "Σύρετε τις γωνίες και τα άκρα για αλλαγή μεγέθους"
 title = "Πώς να περικόψετε PDF"
 
+[damagedPdf]
+description = "Αυτό το PDF είναι κατεστραμμένο και δεν μπορεί να ανοίξει."
+label = "Κατεστραμμένο"
+repair = "Επιδιόρθωση"
+repaired = "Επιδιορθώθηκε το {{name}}"
+repairFailed = "Δεν ήταν δυνατή η επιδιόρθωση του {{name}}"
+
 [database]
 backupCreated = "Επιτυχής δημιουργία αντιγράφου ασφαλείας βάσης δεδομένων"
 fileName = "Όνομα αρχείου"
@@ -4363,6 +4360,10 @@ title = "Ενημερώθηκε από τον δίσκο"
 [desktopFileLink.tooLarge]
 body = "Το \"{{name}}\" άλλαξε στον δίσκο. Είναι αρκετά μεγάλο ώστε η επαναφόρτωσή του να πάρει λίγη ώρα, οπότε η έκδοση εδώ έμεινε ως έχει."
 title = "Το αρχείο άλλαξε στον δίσκο"
+
+[desktopPrivacy]
+blocked = "Ο διαχειριστής σας απαιτεί τα έγγραφα να παραμένουν σε αυτήν τη συσκευή. Αυτή η λειτουργία δεν είναι διαθέσιμη."
+localFiles = "Τοπικά αρχεία"
 
 [desktopUpdate]
 downloading = "Λήψη ενημέρωσης..."
@@ -4491,22 +4492,80 @@ description = "Επιλέξτε το εργαλείο Επεξεργασία Π�
 title = "Ανοίξτε το εργαλείο για να ξεκινήσετε την επεξεργασία"
 
 [encryptedPdfUnlock]
-description = "Αυτό το PDF είναι προστατευμένο με κωδικό. Εισαγάγετε τον κωδικό ώστε να συνεχίσετε να δουλεύετε με αυτό."
-emptyResponse = "Η αφαίρεση κωδικού δεν παρήγαγε αρχείο."
+actionIgnored = "Ο περιορισμός {{action}} αγνοήθηκε"
+actionUnlocked = "Το {{action}} ξεκλειδώθηκε για αυτήν την περίοδο λειτουργίας"
+advanced = "Σύνθετες επιλογές"
+allowed = "Επιτρέπεται"
+annotations = "Σχολιασμοί"
+authoriseAction = "Αυτό το PDF απαιτεί άδεια για τη χρήση του {{action}}."
+changeOwnerPassword = "Αλλαγή κωδικού πρόσβασης δικαιωμάτων"
+checkingPermissions = "Έλεγχος δικαιωμάτων PDF..."
+chooseOwnerPassword = "Επιλέξτε διαφορετικό κωδικό πρόσβασης"
+continue = "Συνέχεια"
+copyFailed = "Δεν είναι δυνατή η δημιουργία του αντιγράφου. Το PDF σας παραμένει αμετάβλητο."
+copying = "Αντιγραφή περιεχομένου"
+editing = "Επεξεργασία"
+enterPassword = "Εισαγάγετε κωδικό πρόσβασης"
+ignoredByServer = "Τα δικαιώματα αγνοούνται από τις ρυθμίσεις αυτού του server. Η προστασία του PDF παραμένει αμετάβλητη."
 incorrectPassword = "Λάθος κωδικός"
+inspectionFailed = "Δεν είναι δυνατός ο έλεγχος των δικαιωμάτων αυτού του PDF. Δοκιμάστε ξανά."
+lowQualityPrintUnsupported = "Αυτό το PDF επιτρέπει μόνο εκτύπωση χαμηλής ποιότητας, την οποία δεν υποστηρίζει αυτό το πρόγραμμα προβολής."
+lowResolutionOnly = "Μόνο χαμηλή ανάλυση"
+manageProtection = "Διαχείριση προστασίας"
 missingFile = "Το επιλεγμένο αρχείο δεν είναι πλέον διαθέσιμο."
+mixedProtection = "Αυτά τα PDFs έχουν ξεχωριστές ρυθμίσεις προστασίας. Επεξεργαστείτε τα μεμονωμένα."
+newOwnerPassword = "Νέος κωδικός πρόσβασης δικαιωμάτων"
+notRequired = "Δεν απαιτείται"
+openingPassword = "Κωδικός πρόσβασης για άνοιγμα"
+openPdf = "Άνοιγμα PDF"
+ownerPassword = "Κωδικός πρόσβασης δικαιωμάτων"
+ownerRequired = "Εισαγάγετε τον κωδικό πρόσβασης δικαιωμάτων για να συνεχίσετε."
+ownerTitle = "Εισαγάγετε κωδικό πρόσβασης δικαιωμάτων"
+passwordRetained = "Διατηρήθηκε αμετάβλητο"
+passwordsMustDiffer = "Οι δύο κωδικοί πρόσβασης πρέπει να είναι διαφορετικοί."
+permissionsUnlocked = "Τα δικαιώματα ξεκλειδώθηκαν για αυτήν την περίοδο λειτουργίας"
+prepareFailed = "Δεν είναι δυνατή η προετοιμασία αυτού του προστατευμένου PDF για επεξεργασία."
+printing = "Εκτύπωση"
+printRestricted = "Η εκτύπωση είναι περιορισμένη. Επαληθεύστε τα δικαιώματα στη Διαχείριση προστασίας."
+protectedPdf = "Προστατευμένο PDF"
+protectionRetained = "Η προστασία διατηρήθηκε"
+protectionSaved = "Η προστασία αποθηκεύτηκε"
+removePasswordHelp = "Ανοίξτε την Αφαίρεση κωδικού πρόσβασης για να επιλέξετε ποιους κωδικούς πρόσβασης θα αφαιρέσετε."
+removeProtection = "Δημιουργία μη προστατευμένου αντιγράφου"
+replaceProtection = "Αυτές οι ρυθμίσεις αντικαθιστούν την τρέχουσα προστασία του PDF."
 required = "Εισαγάγετε τον κωδικό για να συνεχίσετε."
-skip = "Παράλειψη προς το παρόν"
-successBody = "Η αφαίρεση κωδικού ολοκληρώθηκε."
-successBodyWithName = "Ο κωδικός αφαιρέθηκε από το {{fileName}}"
-successTitle = "Ο κωδικός αφαιρέθηκε"
+requiredStatus = "Απαιτείται"
+requiredToApply = "Απαιτείται για την εφαρμογή αλλαγών"
+restoreFailed = "Δεν είναι δυνατή η διατήρηση της προστασίας PDF. Δεν αποθηκεύτηκε μη προστατευμένο αποτέλεσμα."
+restrictActions = "Περιορισμός ενεργειών"
+restricted = "Περιορισμένο"
+restrictedActions = "περιορισμένες ενέργειες"
+restrictedOperation = "Αυτή η ενέργεια απαιτεί τον κωδικό πρόσβασης δικαιωμάτων."
+retainOwnerVerification = "Επαληθεύστε τον κωδικό πρόσβασης δικαιωμάτων για να τον διατηρήσετε αμετάβλητο κατά την αφαίρεση του κωδικού πρόσβασης ανοίγματος. Αυτό δεν θα τον αφαιρέσει."
+saveProtection = "Αποθήκευση προστασίας"
+securityChangeFailed = "Δεν είναι δυνατή η αλλαγή προστασίας. Ελέγξτε τον κωδικό πρόσβασης δικαιωμάτων και τις νέες ρυθμίσεις ασφαλείας."
+sessionDetails = "Ανοιχτό για αυτήν την περίοδο λειτουργίας. Το PDF παραμένει προστατευμένο."
+sessionDetailsLabel = "Σχετικά με το ξεκλείδωμα περιόδου λειτουργίας"
+sessionFailed = "Δεν είναι δυνατό το ξεκλείδωμα αυτού του PDF. Δοκιμάστε ξανά."
+sessionSuccessBody = "Η προστασία διατηρήθηκε."
+sessionSuccessBodyWithName = "Η προστασία διατηρήθηκε για το {{fileName}}."
+sessionSuccessTitle = "Το PDF άνοιξε"
+sessionTitle = "Άνοιγμα PDF"
+signedReadOnly = "Αυτό το υπογεγραμμένο PDF μπορεί να προβληθεί, αλλά δεν μπορεί να επεξεργαστεί εδώ."
 title = "Αφαιρέστε τον κωδικό για να συνεχίσετε"
+toolUnavailable = "Αυτό το εργαλείο δεν υποστηρίζει κρυπτογραφημένα PDFs. Αφαιρέστε πρώτα τον κωδικό πρόσβασης."
+toolUnavailableDetails = "Γιατί το {{name}} δεν είναι διαθέσιμο"
 unlock = "Ξεκλείδωμα & συνέχεια"
 unlockAll = "Χρήση για όλα ({{count}})"
 unlockAllPartialFail = "Λάθος κωδικός για: {{names}}"
 unlockAllSuccess_one = "Ξεκλειδώθηκε {{count}} αρχείο."
 unlockAllSuccess_other = "Ξεκλειδώθηκαν {{count}} αρχεία."
+unlockedForSession = "Ξεκλειδώθηκε για αυτήν την περίοδο λειτουργίας με χρήση του κωδικού πρόσβασης δικαιωμάτων σας."
 unlockPrompt = "Ξεκλειδώστε το PDF για να συνεχίσετε"
+unprotectedCopyConsequence = "Το αντίγραφο δεν θα έχει κωδικούς πρόσβασης ή περιορισμούς. Το πρωτότυπο παραμένει προστατευμένο."
+unsupportedTool = "Αυτό το εργαλείο δεν μπορεί ακόμα να διατηρήσει την προστασία αυτού του PDF."
+verifiedForSession = "Επαληθεύτηκε για αυτήν την περίοδο λειτουργίας"
+verifyPermissions = "Επαλήθευση δικαιωμάτων για αυτήν την περίοδο λειτουργίας"
 viewerLocked = "Αυτό το PDF είναι προστατευμένο με κωδικό"
 viewerUnlock = "Ξεκλείδωμα"
 
@@ -4597,22 +4656,23 @@ viewInViewer = "Προβολή στον προβολέα"
 closeFile = "Κλείσιμο αρχείου"
 
 [fileEditor]
-addFiles = "Προσθήκη αρχείων"
 closedFile = "Έκλεισε το {{name}}"
 couldNotSave = "Δεν ήταν δυνατή η αποθήκευση του {{name}}"
-filesAdded_one = "Προστέθηκε {{count}} αρχείο"
-filesAdded_other = "Προστέθηκαν {{count}} αρχεία"
 filesReordered_one = "Το αρχείο αναδιατάχθηκε"
 filesReordered_other = "{{count}} αρχεία αναδιατάχθηκαν"
 loadedFromStorage_one = "Φορτώθηκε {{count}} αρχείο από τον χώρο αποθήκευσης"
 loadedFromStorage_other = "Φορτώθηκαν {{count}} αρχεία από τον χώρο αποθήκευσης"
 loadFromStorageFailed = "Αποτυχία φόρτωσης ορισμένων αρχείων από τον χώρο αποθήκευσης"
 pinnedFile = "Καρφιτσώθηκε το {{name}}"
-processFilesFailed = "Αποτυχία επεξεργασίας αρχείων"
 savedAndClosed = "Αποθηκεύτηκε και έκλεισε το {{name}}"
 saveFailed = "Η αποθήκευση απέτυχε"
 unpinnedFile = "Ξεκαρφιτσώθηκε το {{name}}"
 unzipping = "Αποσυμπίεση του {{name}}"
+
+[fileEditor.addCard]
+dropHint = "ή αποθέστε αρχεία οπουδήποτε"
+fromComputer = "Μεταφόρτωση από υπολογιστή"
+moreOptions = "Περισσότερες επιλογές μεταφόρτωσης"
 
 [fileEditor.unzip]
 error = "Σφάλμα κατά την αποσυμπίεση του {{name}}"
@@ -4729,7 +4789,6 @@ dataLostBody = "Αυτός ο browser έχασε τα περιεχόμενα α�
 dataLostTitle = "Τα δεδομένα αρχείου δεν είναι διαθέσιμα"
 downloadFailed = "Η λήψη απέτυχε"
 dropHint = "Ανοίξτε αρχεία για να ξεκινήσετε"
-dropToAdd = "Αποθέστε αρχεία για προσθήκη"
 duplicateFailed = "Δεν ήταν δυνατή η δημιουργία αντιγράφου του αρχείου"
 expand = "Ανάπτυξη πλευρικής στήλης"
 googleDrive = "Google Drive"
@@ -5251,6 +5310,7 @@ rescanFields = "Επανασάρωση πεδίων"
 rescanFormFields = "Επανασάρωση πεδίων φόρμας"
 save = "Αποθήκευση"
 saveShortcut = "Ctrl+S για αποθήκευση"
+saving = "Αποθήκευση..."
 selectOptionPlaceholder = "— επιλογή —"
 skippedEdits_one = "Δεν ήταν δυνατή η εφαρμογή 1 αλλαγής:"
 skippedEdits_other = "Δεν ήταν δυνατή η εφαρμογή {{count}} αλλαγών:"
@@ -5258,9 +5318,7 @@ skippedEditsTruncated = "{{count}} ακόμη δεν εμφανίζονται."
 unsavedChanges = "Μη αποθηκευμένες αλλαγές"
 
 [formFill.create]
-commit = "Προσθήκη {{count}} πεδίου/πεδίων στο PDF"
 empty = "Δεν έχουν σχεδιαστεί πεδία ακόμη."
-failed = "Απέτυχε η προσθήκη πεδίων"
 goToField = "Μετάβαση σε αυτό το πεδίο"
 hint = "Επιλέξτε έναν τύπο πεδίου και, στη συνέχεια, σχεδιάστε τον στη σελίδα."
 placing = "Σχεδιάστε ένα πεδίο {{type}} στη σελίδα. Πατήστε Esc για διακοπή."
@@ -5334,7 +5392,6 @@ modify = "Τροποποίηση"
 commit = "Αποθήκευση {{count}} αλλαγής/αλλαγών"
 delete = "Διαγραφή"
 empty = "Αυτό το PDF δεν έχει ακόμη πεδία φόρμας."
-failed = "Απέτυχε η αποθήκευση αλλαγών"
 groupSizeHint = "Χρήση μεγέθους επιλογής"
 hint = "Επιλέξτε ένα πεδίο για να επεξεργαστείτε τις ιδιότητές του, σύρετέ το στη σελίδα ή διαγράψτε το."
 restore = "Επαναφορά"
@@ -5732,11 +5789,6 @@ title = "Επικάλυψη PDF"
 desc = "Συγχώνευση πολλαπλών σελίδων ενός εγγράφου PDF σε μία σελίδα"
 tags = "διάταξη,τακτοποίηση,συνδυασμός,N-up,2-up,4-up,πολλαπλά ανά σελίδα,σελίδες ανά φύλλο,διάταξη σελίδων,πλακίδιο,διάταξη πλέγματος,διάταξη πολλών σελίδων,συνδυασμός σε σελίδα,handout"
 title = "Διάταξη πολλαπλών σελίδων"
-
-[home.pdfCommentAgent]
-desc = "Ζητήστε από το AI να σχολιάσει ένα PDF με σημειώσεις-αυτοκόλλητα βάσει της προτροπής σας"
-tags = "AI,agent,σχόλιο,σχολιασμός,αυτοκόλλητο σημείωμα,αξιολόγηση,ανατροφοδότηση,σημειώσεις"
-title = "Προσθήκη σχολίων AI"
 
 [home.pdfOrganiser]
 tags = "οργάνωση,αναδιάταξη,αλλαγή σειράς,τακτοποίηση σελίδων,ταξινόμηση,μετακίνηση σελίδων,διαγραφή σελίδων,αφαίρεση σελίδων,διαχείριση σελίδων,οργανωτής σελίδων,επανασειρά"
@@ -6595,63 +6647,6 @@ yourCloudAccess = "Θα γίνετε μέλος ομάδας και θα χάσ�
 deselectAll = "Κανένα"
 selectAll = "Επιλογή όλων"
 
-[pageEditor]
-dragPreviewAlt = "Σύρσιμο"
-filePosition = "Θέση {{position}}"
-pageLabel = "Σελίδα {{page}}"
-title = "Επεξεργαστής σελίδων"
-
-[pageEditor.actions]
-deletePage = "Διαγραφή σελίδας"
-insertFileAfter = "Εισαγωγή αρχείου μετά"
-moveLeft = "Μετακίνηση αριστερά"
-moveRight = "Μετακίνηση δεξιά"
-rotateLeft = "Περιστροφή αριστερά"
-rotateRight = "Περιστροφή δεξιά"
-splitAfter = "Διαχωρισμός μετά"
-
-[pageEditor.commands]
-addSplitAt = "Προσθήκη διαχωρισμού στη θέση {{position}}"
-addSplits_one = "Προσθήκη {{count}} διαχωρισμού"
-addSplits_other = "Προσθήκη {{count}} διαχωρισμών"
-deletePages_one = "Διαγραφή {{count}} σελίδας"
-deletePages_other = "Διαγραφή {{count}} σελίδων"
-insertFiles_one = "Εισαγωγή {{count}} αρχείου μετά τη σελίδα {{page}}"
-insertFiles_other = "Εισαγωγή {{count}} αρχείων μετά τη σελίδα {{page}}"
-insertPageBreaks_one = "Εισαγωγή {{count}} αλλαγής σελίδας"
-insertPageBreaks_other = "Εισαγωγή {{count}} αλλαγών σελίδας"
-insertPageBreaksAll = "Εισαγωγή αλλαγών σελίδας μετά από όλες τις σελίδες"
-removeAllSplits = "Αφαίρεση όλων των διαχωρισμών"
-removeSplitAt = "Αφαίρεση διαχωρισμού στη θέση {{position}}"
-removeSplits_one = "Αφαίρεση {{count}} διαχωρισμού"
-removeSplits_other = "Αφαίρεση {{count}} διαχωρισμών"
-reorderPages = "Αλλαγή σειράς σελίδων"
-rotatePageLeft = "Περιστροφή σελίδας αριστερά"
-rotatePageRight = "Περιστροφή σελίδας δεξιά"
-rotatePagesLeft_one = "Περιστροφή {{count}} σελίδας αριστερά"
-rotatePagesLeft_other = "Περιστροφή {{count}} σελίδων αριστερά"
-rotatePagesRight_one = "Περιστροφή {{count}} σελίδας δεξιά"
-rotatePagesRight_other = "Περιστροφή {{count}} σελίδων δεξιά"
-splitAllPages = "Διαχωρισμός όλων των σελίδων"
-toggleSplits_one = "Εναλλαγή {{count}} θέσης διαχωρισμού"
-toggleSplits_other = "Εναλλαγή {{count}} θέσεων διαχωρισμού"
-
-[pageEditor.emptyState]
-body = "Προσθέστε αρχεία για να ξεκινήσετε την επεξεργασία σελίδων"
-title = "Δεν φορτώθηκαν αρχεία PDF"
-
-[pageEditor.fileDropdown]
-addFile = "Προσθήκη αρχείου"
-selectedCount = "Επιλέχθηκαν {{selected}}/{{total}} αρχεία"
-untitled = "Χωρίς τίτλο"
-
-[pageEditor.toolbar]
-delete = "Διαγραφή επιλεγμένων"
-redo = "Επανάληψη"
-rotateLeft = "Περιστροφή επιλεγμένων αριστερά"
-rotateRight = "Περιστροφή επιλεγμένων δεξιά"
-undo = "Αναίρεση"
-
 [pageExtracter]
 title = "Εξαγωγή σελίδων"
 
@@ -6815,6 +6810,79 @@ title = "Εύρη σελίδων"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → επιλέγει όλες τις σελίδες"
 title = "Ειδικές λέξεις-κλειδιά"
+
+[pageTracks]
+blankPage = "Κενή σελίδα"
+deleteSelected = "Διαγραφή επιλεγμένων σελίδων"
+downloadAsOneFile = "Λήψη ως ένα αρχείο"
+downloadEachPage = "Λήψη κάθε σελίδας ξεχωριστά"
+downloadSelectedPages = "Λήψη επιλεγμένων σελίδων"
+dragging_one = "{{count}} σελίδα"
+dragging_other = "{{count}} σελίδες"
+duplicateSelected = "Δημιουργία αντιγράφου επιλεγμένων σελίδων"
+edited = "επεξεργασμένο"
+emptyTrack = "Δεν απομένουν σελίδες. Σύρετε σελίδες εδώ ή αποθηκεύστε για να κλείσετε αυτό το αρχείο."
+insertBlank = "Εισαγωγή κενής σελίδας"
+insertBlankAfterSelected = "Εισαγωγή κενών σελίδων μετά τις επιλεγμένες σελίδες"
+moveLeft = "Μετακίνηση αριστερά"
+moveRight = "Μετακίνηση δεξιά"
+nextPage = "Επόμενη σελίδα"
+page = "Σελίδα {{number}}"
+pageCount_one = "{{count}} σελίδα"
+pageCount_other = "{{count}} σελίδες"
+pagePosition = "Σελίδα {{number}} από {{total}}"
+prevPage = "Προηγούμενη σελίδα"
+readingPages = "Ανάγνωση σελίδων..."
+redo = "Επανάληψη"
+rotateLeft = "Περιστροφή αριστερά"
+rotateRight = "Περιστροφή δεξιά"
+rotateSelectedLeft = "Περιστροφή επιλεγμένων σελίδων αριστερά"
+rotateSelectedRight = "Περιστροφή επιλεγμένων σελίδων δεξιά"
+saveAsOneFile = "Αποθήκευση ως ένα αρχείο"
+saveChanges = "Αποθήκευση αλλαγών σε όλα τα αρχεία"
+saveEachPage = "Αποθήκευση κάθε σελίδας ξεχωριστά"
+saveSelectedPages = "Αποθήκευση επιλεγμένων σελίδων"
+saving = "Αποθήκευση..."
+savingProgress = "Αποθήκευση {{done}} από {{total}}"
+selectPage = "Επιλογή σελίδας {{number}}"
+splitAfterSelected = "Διαχωρισμός μετά τις επιλεγμένες σελίδες"
+splitHere = "Διαχωρισμός εδώ"
+undo = "Αναίρεση"
+viewError = "Δεν ήταν δυνατή η απόδοση αυτής της σελίδας"
+viewPage = "Προβολή σελίδας"
+zoomIn = "Μεγέθυνση"
+zoomOut = "Σμίκρυνση"
+
+[pageTracks.close]
+message = "Είστε βέβαιοι ότι θέλετε να κλείσετε όλα τα αρχεία;"
+unsaved = "Αυτά τα αρχεία έχουν μη αποθηκευμένες αλλαγές."
+
+[pageTracks.delete]
+page = "Διαγραφή σελίδας"
+
+[pageTracks.duplicate]
+page = "Δημιουργία αντιγράφου σελίδας"
+
+[pageTracks.empty]
+body = "Προσθέστε PDFs για να τα αναπτύξετε σε επεξεργάσιμες σειρές σελίδων"
+title = "Δεν έχουν φορτωθεί αρχεία PDF"
+
+[pageTracks.exportFailed]
+body = "Δεν ήταν δυνατή η προετοιμασία των επεξεργασμένων αρχείων. Δοκιμάστε ξανά."
+title = "Δεν ήταν δυνατή η λήψη"
+
+[pageTracks.saveFailed]
+body = "Οι επεξεργασίες σας δεν έχουν χαθεί. Δοκιμάστε να αποθηκεύσετε ξανά."
+title = "Δεν ήταν δυνατή η αποθήκευση αλλαγών"
+
+[pageTracks.track]
+close = "Κλείσιμο αρχείου"
+collapse = "Σύμπτυξη"
+expand = "Ανάπτυξη"
+rename = "Μετονομασία αρχείου"
+
+[pageTracks.wrap]
+label = "Αναδίπλωση σελίδων"
 
 [payg.activity]
 docs = "έγγραφα"
@@ -7144,24 +7212,6 @@ totalSeats_other = "Σύνολο ({{count}} θέσεις)"
 [payment.upgradeTeam]
 title = "Αναβάθμιση σε Team"
 
-[pdfCommentAgent]
-submit = "Δημιουργία σχολίων"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Περιγράψτε τι πρέπει να σχολιάσει το AI"
-failed = "Αποτυχία δημιουργίας σχολίων"
-tooLong = "Η προτροπή είναι πολύ μεγάλη (μέγιστο {{max}} χαρακτήρων)"
-
-[pdfCommentAgent.prompt]
-label = "Σε τι πρέπει να σχολιάσει το AI;"
-placeholder = "π.χ. Επισημάνετε τυχόν ασαφείς ημερομηνίες και προτείνετε διευκρινίσεις"
-
-[pdfCommentAgent.results]
-title = "PDF με σχόλια"
-
-[pdfCommentAgent.settings]
-title = "Οδηγίες σχολιασμού"
-
 [pdfOrganiser]
 placeholder = "(π.χ. 1,3,2 ή 4-8,2,10-12 ή 2n-1)"
 tags = "duplex,ζυγός,μονός,ταξινόμηση,μετακίνηση"
@@ -7347,6 +7397,7 @@ nothingSelectedHint = "Κάντε click σε οποιοδήποτε κείμεν
 ocrDocumentChanged = "Το έγγραφο άλλαξε ενώ εκτελούνταν το OCR. Εκτελέστε ξανά το OCR για να συμπεριλάβετε τις πιο πρόσφατες αλλαγές σας."
 ocrInvalidResult = "Το OCR δεν επέστρεψε PDF. Δοκιμάστε ξανά."
 ocrNoLanguages = "Δεν υπάρχουν εγκατεστημένες γλώσσες OCR στον server."
+ocrProtected = "Το OCR δεν μπορεί ακόμα να διατηρήσει την προστασία αυτού του PDF. Το προστατευμένο πρωτότυπο παραμένει διαθέσιμο για προβολή."
 ocrRunning = "Αναγνώριση κειμένου..."
 ocrUnavailable = "Το OCR δεν είναι διαθέσιμο σε αυτόν τον server."
 oneImage = "Εικόνα"
@@ -7389,13 +7440,8 @@ pageNumber = "Σελίδα {{page}}"
 renderFailed = "Αποτυχία απόδοσης σελίδας"
 
 [pdfTextEditor.password]
-cancel = "Ακύρωση"
 incorrect = "Λανθασμένος κωδικός πρόσβασης - δοκιμάστε ξανά."
 label = "Κωδικός πρόσβασης"
-open = "Άνοιγμα"
-protected = "Αυτό το PDF προστατεύεται με κωδικό πρόσβασης."
-protectedNamed = "Το \"{{fileName}}\" προστατεύεται με κωδικό πρόσβασης."
-title = "Απαιτείται κωδικός πρόσβασης"
 
 [pdfTextEditor.rulers]
 guide = "Οδηγός ευθυγράμμισης στο {{value}} {{unit}} - σύρετε επάνω σε έναν χάρακα για αφαίρεση"
@@ -7994,6 +8040,7 @@ before = "Ορίστε"
 title = "Η σύνδεση Stirling δεν έχει ρυθμιστεί"
 
 [portal.accountLink.notice]
+loadFailed = "Δεν ήταν δυνατή η φόρτωση του παραθύρου σύνδεσης λογαριασμού."
 openFailed = "Δεν ήταν δυνατό το άνοιγμα του προγράμματος περιήγησής σας. Ανοίξτε τη Χρήση & χρέωση στον συνδεδεμένο διακομιστή σας για να συνδέσετε έναν λογαριασμό."
 
 [portal.accountLink.panel]
@@ -8117,9 +8164,6 @@ limit = "Μηνιαίο όριο δαπανών {{amount}}/μήνα. Η επεξ
 limitNoCap = "Χωρίς όριο δαπανών. Η επεξεργασία δεν θα παύει. Τα τιμολόγια εκδίδονται μηνιαία."
 
 [portal.billing.chip]
-invoices = "Τιμολόγια"
-nav = "Ενότητες"
-payment = "Πληρωμή"
 plan = "Πλάνο"
 procurement = "Προμήθειες"
 usage = "Χρήση"
@@ -8178,9 +8222,22 @@ pdfs = "PDFs που επεξεργάστηκαν"
 users = "Χρήστες"
 
 [portal.billing.enterprise]
+active = "Η συμφωνία είναι ενεργή έως {{date}}"
 cta = "Λήψη προσφοράς enterprise"
+included = "Περιλαμβάνεται στο Enterprise"
+payment_pending = "Εκκρεμεί πληρωμή · πρόσβαση έως {{date}}"
+pdfsAgreed = "{{used}} / {{agreed}} PDFs"
+pdfsOver_one = "{{count}} PDF πάνω από τον συμφωνημένο όγκο"
+pdfsOver_other = "{{count}} PDFs πάνω από τον συμφωνημένο όγκο"
+pdfsUsed_one = "{{count}} PDF επεξεργάστηκε"
+pdfsUsed_other = "Έγινε επεξεργασία {{count}} PDF"
+period = "Περίοδος συμφωνίας: {{start}} – {{end}}"
 sub = "Air-gapped ανάπτυξη, SCIM, τοποθεσία δεδομένων, uptime SLAs και αντίστοιχη συμφωνία."
 title = "Εκτελείτε το Stirling σε ρυθμιζόμενο περιβάλλον;"
+trial = "Δοκιμή {{days}} ημερών · λήγει {{date}}"
+usersAgreed = "{{used}} / {{agreed}} συμφωνημένοι χρήστες"
+usersOver_one = "{{count}} χρήστης πάνω από τη συμφωνημένη ποσότητα"
+usersOver_other = "{{count}} χρήστες πάνω από τη συμφωνημένη ποσότητα"
 
 [portal.billing.freePlan]
 checkoutErrorTitle = "Δεν ήταν δυνατή η έναρξη του checkout"
@@ -9163,7 +9220,9 @@ title = "Kubernetes"
 
 [portal.home.download.linux]
 detailBody = "Native builds για τη διανομή σας."
-guideBtn = "Προβολή επιλογών εγκατάστασης Linux"
+downloadAppImage = "AppImage"
+downloadDeb = "Λήψη .deb (Debian, Ubuntu)"
+downloadRpm = ".rpm (Fedora, RHEL)"
 note = "Διατίθενται AppImage, .deb και .rpm builds για κοινές διανομές."
 tagline = "Native εφαρμογή desktop για τη διανομή σας"
 title = "Linux"
@@ -11160,6 +11219,7 @@ tags = "Redact,απόκρυψη,μαύρισμα,μαύρο,μαρκαδόρος
 title = "Απόκρυψη"
 
 [redact.auto]
+caseSensitiveLabel = "Αντιστοίχιση με διάκριση πεζών-κεφαλαίων"
 colorLabel = "Χρώμα πλαισίου"
 convertPDFToImageLabel = "Μετατροπή PDF σε PDF-Image"
 customPaddingLabel = "Προσαρμοσμένο επιπλέον περιθώριο"
@@ -11194,6 +11254,10 @@ automaticDisabledTooltip = "Επιλέξτε αρχεία στη διαχείρ�
 manual = "Χειροκίνητη"
 mode = "Λειτουργία"
 title = "Μέθοδος απόκρυψης"
+
+[redact.tooltip.advanced.caseSensitive]
+text = "Αντιστοιχίστε μόνο κείμενο με την ίδια χρήση πεζών-κεφαλαίων. Το 'Secret' δεν θα ταιριάζει με το 'SECRET' όταν είναι ενεργοποιημένο, και το [A-Z] σε regex ταιριάζει μόνο με κεφαλαία."
+title = "Αντιστοίχιση με διάκριση πεζών-κεφαλαίων"
 
 [redact.tooltip.advanced.color]
 text = "Προσαρμόστε την εμφάνιση των πλαισίων απόκρυψης. Το μαύρο είναι τυπικό, αλλά μπορείτε να επιλέξετε οποιοδήποτε χρώμα. Το περιθώριο προσθέτει επιπλέον χώρο γύρω από το εντοπισμένο κείμενο."
@@ -11396,7 +11460,12 @@ text = "Καθορίστε ποιες σελίδες θα αφαιρεθούν �
 title = "Επιλογή σελίδων"
 
 [removePassword]
-desc = "Αφαίρεση προστασίας κωδικού από το έγγραφο PDF."
+appliesTo = "Ορίστηκε σε {{count}} από {{total}} PDF"
+keepBlank = "Αφήστε ένα πεδίο κενό για να διατηρήσετε αυτόν τον κωδικό πρόσβασης."
+notSet = "Δεν έχει οριστεί"
+openWithReaderFirst = "Ανοίξτε ξανά αυτό το PDF χρησιμοποιώντας τον κωδικό ανοίγματός του πριν αφαιρέσετε μόνο τον κωδικό πρόσβασης δικαιωμάτων."
+selectiveHelp = "Εισαγάγετε τον τρέχοντα κωδικό πρόσβασης για κάθε προστασία που θέλετε να αφαιρέσετε. Ένα κενό πεδίο διατηρεί αυτόν τον κωδικό πρόσβασης. Η αφαίρεση του κωδικού πρόσβασης δικαιωμάτων αφαιρεί επίσης τους περιορισμούς ενεργειών."
+selectPasswords = "Κωδικοί πρόσβασης προς αφαίρεση"
 submit = "Αφαίρεση κωδικού πρόσβασης"
 tags = "ασφάλεια,αποκρυπτογράφηση,ασφάλεια,αφαίρεση κωδικού,διαγραφή κωδικού"
 title = "Αφαίρεση κωδικού"
@@ -11407,13 +11476,9 @@ failed = "Παρουσιάστηκε σφάλμα κατά την αφαίρεσ
 [removePassword.password]
 label = "Τρέχων κωδικός"
 placeholder = "Εισαγάγετε τον τρέχοντα κωδικό πρόσβασης"
-stepTitle = "Αφαίρεση κωδικού"
 
 [removePassword.results]
 title = "Αποκρυπτογραφημένα PDF"
-
-[removePassword.tooltip]
-description = "Η κατάργηση προστασίας με κωδικό πρόσβασης απαιτεί τον κωδικό που χρησιμοποιήθηκε για την κρυπτογράφηση του PDF. Αυτό θα αποκρυπτογραφήσει το έγγραφο, καθιστώντας το προσβάσιμο χωρίς κωδικό."
 
 [reorganizePages]
 submit = "Αναδιοργάνωση σελίδων"
@@ -11543,6 +11608,64 @@ m = "Μέτρα (m)"
 mi = "Μίλια (mi)"
 mm = "Χιλιοστά (mm)"
 yd = "Γιάρδες (yd)"
+
+[runLocation]
+back = "Πίσω"
+continue = "Συνέχεια"
+subtitle = "Επιλέξτε πού θα εκτελείται."
+title = "Πού θέλετε να εκτελέσετε το Stirling;"
+
+[runLocation.choice.browser]
+description = "Η web εφαρμογή."
+title = "Στο πρόγραμμα περιήγησής σας"
+
+[runLocation.choice.computer]
+description = "Η εφαρμογή για υπολογιστή."
+title = "Στον υπολογιστή σας"
+
+[runLocation.choice.server]
+description = "Αυτοφιλοξενούμενο, για ομάδα."
+title = "Στον server σας"
+
+[runLocation.desktop]
+computerLabel = "Ο υπολογιστής σας"
+download = "Λήψη για {{platform}}"
+downloadAgain = "Λήψη ξανά"
+guide = "Άνοιγμα του οδηγού εγκατάστασης για {{platform}}"
+startedSubtitle = "Ελέγξτε τον φάκελο Λήψεις σας και μετά ανοίξτε το πρόγραμμα εγκατάστασης."
+startedTitle = "Η λήψη σας ξεκίνησε"
+subtitle = "Κατεβάστε το και ανοίξτε το."
+title = "Αποκτήστε την εφαρμογή για υπολογιστή"
+
+[runLocation.desktop.platform]
+linux = "Linux"
+mac = "Mac"
+windows = "Windows"
+
+[runLocation.desktop.target]
+linuxAppImage = "Linux · AppImage"
+linuxArm64 = "Linux · Arm (οδηγός εγκατάστασης)"
+linuxDeb = "Linux · .deb"
+linuxRpm = "Linux · .rpm"
+mac = "Mac"
+windowsArm64 = "Windows · Arm"
+windowsX64 = "Windows · x64"
+
+[runLocation.server]
+copied = "Αντιγράφηκε"
+copy = "Αντιγραφή εντολής"
+copyCompose = "Αντιγραφή αρχείου compose"
+guide = "Οδηγός εγκατάστασης {{method}}"
+methodLabel = "Εκτέλεση με"
+note = "Στη συνέχεια ανοίξτε το <url/> για να ολοκληρώσετε τη ρύθμιση."
+subtitle = "Εκτελέστε το στον server σας και μετά ανοίξτε το σε ένα πρόγραμμα περιήγησης."
+title = "Ρυθμίστε τον server σας"
+
+[runLocation.server.method]
+compose = "Docker Compose"
+docker = "Docker"
+kubernetes = "Kubernetes"
+manual = "Java (JAR)"
 
 [sanitize]
 desc = "Αφαιρέστε πιθανά επιβλαβή στοιχεία από αρχεία PDF."
@@ -12054,6 +12177,7 @@ title = "Χώρος εργασίας"
 loginIncomplete = "Αποτυχία ολοκλήρωσης σύνδεσης"
 noSaasServer = "Δεν έχει ρυθμιστεί server SaaS"
 noServer = "Δεν έχει ρυθμιστεί server"
+policyUnavailable = "Δεν είναι δυνατή η φόρτωση των ρυθμίσεων σύνδεσης του οργανισμού σας."
 saasLoginFailed = "Η σύνδεση SaaS απέτυχε"
 saasLoginIncomplete = "Αποτυχία ολοκλήρωσης σύνδεσης SaaS"
 selfHostedLoginFailed = "Η σύνδεση σε αυτο-φιλοξενούμενο server απέτυχε"
@@ -13563,7 +13687,9 @@ validUntrusted = "Έγκυρο, ο υπογράφων δεν έχει επαλη
 
 [viewer]
 cannotPreviewFile = "Δεν είναι δυνατή η προεπισκόπηση του αρχείου"
+copyRestricted = "Η αντιγραφή είναι απενεργοποιημένη από τα δικαιώματα αυτού του PDF."
 copyText = "Αντιγραφή"
+coverPageView = "Εμφάνιση εξωφύλλου ξεχωριστά"
 disableColorFilter = "Απενεργοποίηση φίλτρου χρώματος"
 documentUpdated = "Το έγγραφο ενημερώθηκε"
 dualPageView = "Προβολή διπλής σελίδας"
@@ -13580,6 +13706,7 @@ noPdfProvided = "Δεν δόθηκε PDF"
 onlyPdfSupported = "Αυτή η μορφή αρχείου δεν υποστηρίζεται για προεπισκόπηση."
 pageNavigation = "Πλοήγηση σελίδων"
 previousPage = "Προηγούμενη σελίδα"
+readAloudFromHere = "Ανάγνωση δυνατά από εδώ"
 saveChangesErrorBody = "Δεν ήταν δυνατή η αποθήκευση του εγγράφου. Δοκιμάστε ξανά."
 saveChangesErrorTitle = "Δεν ήταν δυνατή η αποθήκευση των αλλαγών"
 singlePageView = "Προβολή μίας σελίδας"
@@ -13640,6 +13767,7 @@ closeSidebar = "Κλείσιμο πλαϊνής γραμμής σχολίων"
 deleteAnnotationAndComment = "Διαγραφή επισήμανσης και σχολίου"
 deleteDescription = "Αυτή η επισήμανση έχει συνημμένο σχόλιο. Μπορείτε να καταργήσετε μόνο το σχόλιο από την πλευρική γραμμή διατηρώντας την επισήμανση ή να διαγράψετε τα πάντα."
 deleteTitle = "Κατάργηση επισήμανσης από τα σχόλια;"
+exportCsv = "Εξαγωγή ως CSV"
 goToLink = "Μετάβαση στον σύνδεσμο"
 hint = "Τοποθετήστε σχόλια με τα εργαλεία Σχόλιο, Εισαγωγή κειμένου ή Αντικατάσταση κειμένου. Θα εμφανίζονται εδώ ανά σελίδα."
 locateAnnotation = "Εντοπισμός στο έγγραφο"
@@ -13658,7 +13786,16 @@ typeInsertText = "Εισαγωγή κειμένου"
 typeReplaceText = "Αντικατάσταση κειμένου"
 viewComment = "Προβολή σχολίου"
 
+[viewer.comments.csv]
+author = "Συντάκτης"
+comment = "Σχόλιο"
+inReplyTo = "Σε απάντηση σε"
+modifiedUtc = "Τελευταία τροποποίηση (UTC)"
+page = "Σελίδα"
+thread = "Νήμα"
+
 [viewer.error]
+loadError = "Αποτυχία φόρτωσης PDF"
 noFileProvided = "Σφάλμα: Δεν δόθηκε αρχείο στον προβολέα"
 
 [viewer.formBar]
@@ -13905,6 +14042,11 @@ title = "Κείμενο υδατογραφήματος"
 image = "Εικόνα"
 text = "Κείμενο"
 
+[workbench]
+dropFailedSingle = "Το αρχείο σας δεν μπόρεσε να προστεθεί"
+dropFailedSome = "{{failed}} από τα αρχεία σας δεν μπόρεσαν να προστεθούν"
+dropOverlay = "Αποθέστε αρχεία για να τα προσθέσετε στον χώρο εργασίας"
+
 [workbench.sessionRestore]
 none = "Τα προηγούμενα αρχεία σας δεν αποθηκεύονται πλέον σε αυτήν τη συσκευή."
 partial = "Επαναφέρθηκαν {{restored}} από {{total}} αρχεία. Τα υπόλοιπα δεν αποθηκεύονται πλέον σε αυτήν τη συσκευή."
@@ -13915,16 +14057,14 @@ annotations = "Σχολιασμοί"
 applyRedactionsFirst = "Εφαρμόστε πρώτα τις αποκρύψεις"
 closeAll = "Κλείσιμο όλων των αρχείων"
 closePdf = "Κλείσιμο PDF"
-deleteSelected = "Διαγραφή επιλεγμένων σελίδων"
 deselectAll = "Αναίρεση επιλογής όλων"
 downloadAll = "Λήψη όλων"
+exitAnnotations = "Έξοδος από τη λειτουργία σχολιασμού"
 exitRedaction = "Έξοδος από λειτουργία απόκρυψης"
-exportAll = "Εξαγωγή PDF"
-exportSelected = "Εξαγωγή επιλεγμένων σελίδων"
 formFill = "Επεξεργαστής φορμών"
 hideToolbar = "Απόκρυψη toolbar"
 moreActions = "Περισσότερες ενέργειες"
-multiTool = "Πολυεργαλείο"
+pageEditor = "Επεξεργαστής σελίδων"
 panMode = "Λειτουργία μετακίνησης"
 print = "Εκτύπωση PDF"
 readAloud = "Ανάγνωση δυνατά"
@@ -13938,7 +14078,6 @@ rulerSettings = "Ρυθμίσεις κλίμακας"
 save = "Αποθήκευση"
 saveAll = "Αποθήκευση όλων"
 saveAs = "Αποθήκευση ως"
-saveChanges = "Αποθήκευση αλλαγών"
 search = "Αναζήτηση στο PDF"
 selectAll = "Επιλογή όλων"
 selectByNumber = "Επιλογή βάσει αριθμών σελίδων"

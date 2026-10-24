@@ -47,11 +47,19 @@ import {
   DocumentPermissionsState,
   PdfPermissionFlag,
 } from "@app/contexts/viewer/viewerBridges";
-import { SpreadMode } from "@embedpdf/plugin-spread/react";
 import {
   ViewerContext,
   type ViewerContextType,
 } from "@app/contexts/viewer/viewerContext";
+import type { SpreadMode } from "@embedpdf/plugin-spread/react";
+
+/**
+ * SpreadMode.None as a literal. This context sits at the app root, and a runtime
+ * import of any embedpdf module loads the whole viewer engine chunk, so
+ * importing the enum would put all of it on the initial load. `satisfies` keeps
+ * the literal checked against the library's own values.
+ */
+const SPREAD_NONE = "none" satisfies `${SpreadMode}` as SpreadMode;
 
 export { ViewerContext, useViewer } from "@app/contexts/viewer/viewerContext";
 export type { ViewerContextType } from "@app/contexts/viewer/viewerContext";
@@ -172,7 +180,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const {
     register: registerImmediateSpreadUpdate,
     trigger: triggerImmediateSpreadInternal,
-  } = useImmediateNotifier<[SpreadMode, boolean]>();
+  } = useImmediateNotifier<[SpreadMode]>();
   const {
     register: registerImmediatePanUpdate,
     trigger: triggerImmediatePanInternal,
@@ -197,8 +205,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   );
 
   const triggerImmediateSpreadUpdate = useCallback(
-    (mode: SpreadMode, isDualPage: boolean = mode !== SpreadMode.None) => {
-      triggerImmediateSpreadInternal(mode, isDualPage);
+    (mode: SpreadMode) => {
+      triggerImmediateSpreadInternal(mode);
     },
     [triggerImmediateSpreadInternal],
   );
@@ -323,8 +331,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const getSpreadState = useCallback((): SpreadState => {
     return (
       bridgeRefs.current.spread?.state || {
-        spreadMode: SpreadMode.None,
-        isDualPage: false,
+        spreadMode: SPREAD_NONE,
       }
     );
   }, []);
@@ -382,15 +389,15 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       bridgeRefs.current.permissions?.state || {
         isEncrypted: false,
         isOwnerUnlocked: false,
-        permissions: PdfPermissionFlag.AllowAll,
-        canPrint: true,
-        canModifyContents: true,
-        canCopyContents: true,
-        canModifyAnnotations: true,
-        canFillForms: true,
+        permissions: 0,
+        canPrint: false,
+        canModifyContents: false,
+        canCopyContents: false,
+        canModifyAnnotations: false,
+        canFillForms: false,
         canExtractForAccessibility: true,
-        canAssembleDocument: true,
-        canPrintHighQuality: true,
+        canAssembleDocument: false,
+        canPrintHighQuality: false,
       }
     );
   }, []);
@@ -400,13 +407,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     if (api?.hasPermission) {
       return api.hasPermission(flag);
     }
-    // Default: allow all permissions - warn in development
-    if (process.env.NODE_ENV === "development") {
-      console.warn(
-        "[ViewerContext] Permissions API not available, defaulting to allow",
-      );
-    }
-    return true;
+    return false;
   }, []);
 
   // Action handlers - call APIs directly

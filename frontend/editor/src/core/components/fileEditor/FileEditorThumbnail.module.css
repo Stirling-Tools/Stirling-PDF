@@ -156,6 +156,15 @@
   padding-top: 2px;
 }
 
+.unlockedIndicator {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: var(--file-name-line-height);
+  color: var(--c-text-muted);
+  pointer-events: auto;
+}
+
 .fileMeta {
   font-size: 11px;
   color: var(--c-text-muted);
@@ -196,6 +205,11 @@
   border-radius: 12px;
   z-index: 2;
   pointer-events: none;
+}
+
+/* The overlay ignores pointer events so clicks reach the card; Repair must not. */
+.damagedRepairButton {
+  pointer-events: auto;
 }
 
 .errorPill {

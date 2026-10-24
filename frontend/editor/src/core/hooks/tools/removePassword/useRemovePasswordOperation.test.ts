@@ -1,7 +1,15 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useRemovePasswordOperation } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
+import {
+  useRemovePasswordOperation,
+  removePasswordOperationConfig,
+} from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
 import type { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+import { createStirlingFile } from "@app/types/fileContext";
+import {
+  clearPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfAccessService";
 
 vi.mock("../shared/useToolOperation", async () => {
   const actual = await vi.importActual("../shared/useToolOperation"); // Need to keep ToolType etc.
@@ -56,8 +64,67 @@ describe("useRemovePasswordOperation", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clearPdfAccess();
     mockUseToolOperation.mockReturnValue(mockToolOperationReturn);
   });
+
+  function protectedFile(opening: boolean, owner: boolean) {
+    const file = createStirlingFile(
+      new File(["PDF"], "test.pdf", { type: "application/pdf" }),
+    );
+    rememberPdfAccess(file, {
+      password: opening ? "reader" : "",
+      encrypted: opening || owner,
+      requiresOpeningPassword: opening,
+      ownerAuthenticated: false,
+      signed: false,
+      permissions: 0,
+      pageCount: 1,
+    });
+    return file;
+  }
+
+  test.each([
+    { opening: false, owner: false, password: "", ownerPassword: null },
+    { opening: false, owner: true, password: "", ownerPassword: "owner" },
+    { opening: true, owner: true, password: "reader", ownerPassword: "owner" },
+  ])(
+    "omits known absent roles and submits unknown roles (opening=$opening, encrypted-owner=$owner)",
+    ({ opening, owner, password, ownerPassword }) => {
+      renderHook(() => useRemovePasswordOperation());
+      const form = getToolConfig().buildFormData(
+        { password: "reader", ownerPassword: "owner" },
+        protectedFile(opening, owner),
+      );
+      expect(form.get("password")).toBe(password);
+      expect(form.get("ownerPassword")).toBe(ownerPassword);
+    },
+  );
+
+  test.each(["opening", "owner", "both"] as const)(
+    "skips known absent %s passwords and lets the endpoint validate unknown roles",
+    async (remove) => {
+      const opening = protectedFile(true, false);
+      const owner = protectedFile(false, true);
+      const both = protectedFile(true, true);
+      const plain = protectedFile(false, false);
+      const params = {
+        password: remove === "owner" ? "" : "reader",
+        ownerPassword: remove === "opening" ? "" : "owner",
+      };
+      const { result } = renderHook(() => useRemovePasswordOperation());
+      await result.current.executeOperation(params, [
+        opening,
+        owner,
+        both,
+        plain,
+      ]);
+      expect(mockToolOperationReturn.executeOperation).toHaveBeenCalledWith(
+        params,
+        remove === "opening" ? [opening, both] : [opening, owner, both],
+      );
+    },
+  );
 
   test.each([
     {
@@ -92,6 +159,29 @@ describe("useRemovePasswordOperation", () => {
 
     // Verify password parameter
     expect(formData.get("password")).toBe(password);
+  });
+
+  test("legacy automation and unprotected-copy authentication retain owner credentials", () => {
+    const form = removePasswordOperationConfig.buildFormData(
+      { password: "owner" },
+      protectedFile(false, true),
+    );
+    expect(form.get("password")).toBe("owner");
+    expect(form.has("ownerPassword")).toBe(false);
+  });
+
+  test("retains selective owner removal through API parameter conversion", () => {
+    const parameters = { password: "", ownerPassword: "owner" };
+    const api = removePasswordOperationConfig.toApiParams!(parameters);
+    expect(removePasswordOperationConfig.fromApiParams!(api)).toEqual(
+      parameters,
+    );
+    const form = removePasswordOperationConfig.buildFormData(
+      parameters,
+      protectedFile(false, true),
+    );
+    expect(form.get("password")).toBe("");
+    expect(form.get("ownerPassword")).toBe("owner");
   });
 
   test("should use correct translation for error messages", () => {

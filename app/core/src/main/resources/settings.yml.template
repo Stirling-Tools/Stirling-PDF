@@ -11,6 +11,7 @@
 #############################################################################################################
 
 security:
+  honorOwnerPasswords: true # Require the permissions password for restricted PDF actions; opening passwords are always required.
   enableLogin: true # set to 'true' to enable login
   ssoAutoLogin: false
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
@@ -47,12 +48,14 @@ security:
     useAsUsername: email # default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # specify the scopes for which the application will request permissions
     provider: google # set this to your OAuth Provider's name, e.g., 'google' or 'keycloak'
+    redirectBaseUrl: "" # optional public URL users open Stirling-PDF at, e.g. 'https://pdf.example.com' (include any context path). Set it when a reverse proxy (e.g. Azure App Proxy) hides https or the public host, so OAuth callbacks become <redirectBaseUrl>/login/oauth2/code/<provider>. Leave blank to build them from each request
   saml2:
     enabled: false # Only enabled for paid enterprise clients (enterpriseEdition.enabled must be true)
     provider: "" # The name of your Provider
     autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     registrationId: stirling # The name of your Service Provider (SP) app name. Should match the name in the path for your SSO & SLO URLs
+    redirectBaseUrl: "" # optional public URL users open Stirling-PDF at, e.g. 'https://pdf.example.com' (include any context path). Overrides system.backendUrl for the SAML entity ID, ACS and logout URLs. Leave blank to use system.backendUrl
     idpMetadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata # The uri for your Provider's metadata
     idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml # The URL for initiating SSO. Provided by your Provider
     idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml # The URL for initiating SLO. Provided by your Provider
@@ -315,6 +318,8 @@ autoPipeline:
 ui:
   appNameNavbar: "" # custom app/brand name. NOTE: no longer shown in the navbar (the navbar renders the logo). It IS used as the browser tab title and as the TOTP/2FA issuer label in authenticator apps. Empty falls back to "Stirling PDF"
   languages: [] # If empty, all languages are enabled. To restrict to specific languages, use a whitelist like ["de_DE", "pl_PL", "sv_SE"]. Empty list or not restricting any languages will enable all available languages.
+  defaultToolPanelMode: sidebar # Default user preference: open the tool picker in 'sidebar' or 'fullscreen' mode
+  defaultStartupView: tools # Default user preference: first view on launch. Options: 'tools', 'read', or 'automate'
   defaultHideUnavailableTools: false # Default user preference: hide disabled tools instead of greying them out
   defaultHideUnavailableConversions: false # Default user preference: hide disabled conversion options instead of greying them out
   hideDisabledTools:

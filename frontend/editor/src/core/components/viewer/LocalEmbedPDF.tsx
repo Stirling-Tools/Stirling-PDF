@@ -10,9 +10,13 @@ import React, {
 import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
 import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
-import { usePdfiumEngine } from "@embedpdf/engines/react";
+import { useLocalPdfiumEngine } from "@app/hooks/useLocalPdfiumEngine";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import {
+  bindPdfViewerSource,
+  withPdfViewerAccess,
+} from "@app/components/viewer/pdfViewerAccess";
 import { useSignaturePreviewHistory } from "@app/hooks/signing/useSignaturePreviewHistory";
 
 // Import the essential plugins
@@ -51,7 +55,9 @@ import { HistoryPluginPackage } from "@embedpdf/plugin-history/react";
 import {
   AnnotationLayer,
   AnnotationPluginPackage,
+  useAnnotationCapability,
 } from "@embedpdf/plugin-annotation/react";
+import { LockModeType } from "@embedpdf/plugin-annotation";
 import type { AnnotationEvent } from "@embedpdf/plugin-annotation";
 import type { BoxedAnnotationRenderer } from "@embedpdf/plugin-annotation/react";
 import {
@@ -101,6 +107,14 @@ import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectio
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
 import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvents";
 import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
+import { PdfPasswordBridge } from "@app/components/viewer/PdfPasswordBridge";
+import { isStirlingFile } from "@app/types/fileContext";
+import type { FileId } from "@app/types/file";
+import { pdfAllows, canPrintPdf } from "@app/services/pdfPermissions";
+
+import { PdfPermissionFlag } from "@embedpdf/models";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
+
 import {
   DocumentRestoreBridge,
   type DocumentRestoreEvent,
@@ -115,8 +129,9 @@ import {
 import { RedactionAPIBridge } from "@app/components/viewer/RedactionAPIBridge";
 import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPermissionsAPIBridge";
 import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
+import { InitialDocumentLoadBridge } from "@app/components/viewer/InitialDocumentLoadBridge";
 import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
-import { getLocalFontFallbackConfig } from "@app/services/pdfiumFontFallback";
+import { useFontFallbackConfig } from "@app/hooks/useFontFallbackConfig";
 import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
 import { FormCreationInteractionLock } from "@app/tools/formFill/FormCreationInteractionLock";
@@ -179,6 +194,14 @@ interface LocalEmbedPDFProps {
   onDocumentSwapped?: (documentId: string) => void;
   /** Fires when the swap bridge fails to open or activate a replacement document. */
   onDocumentSwapFailed?: (error: unknown) => void;
+  /** Includes initial loads after a remount; keyed to the requested file's bytes. */
+  onDocumentReady?: (fileKey: string) => void;
+  /** Includes byte-read failures, engine errors and cancelled loads. */
+  onDocumentLoadFailed?: (fileKey: string, error: unknown) => void;
+  onPasswordRequired?: () => void;
+  /** Offered on the error screen when PDFium cannot parse the open file. */
+  onRepair?: (fileId: FileId) => void;
+  repairingFileId?: FileId | null;
   /** True while a view restore is in flight; gates the per-page layout hook. */
   restorePending?: boolean;
   restoreRequest?: DocumentRestoreRequest | null;
@@ -403,6 +426,8 @@ interface PageLayerOptions {
   enableFormFill: boolean;
   formEditingActive: boolean;
   enableAnnotations: boolean;
+  annotationsReadOnly: boolean;
+  canCopy: boolean;
   enableRedaction: boolean;
   showBakedAnnotations: boolean;
   onAnnotationMenuAnchor: (anchor: AnnotationMenuAnchor | null) => void;
@@ -436,7 +461,12 @@ function PageTiles({
   );
 }
 
-function PageTextSelection({ documentId, pageIndex }: PageLayerProps) {
+function PageTextSelection({
+  documentId,
+  pageIndex,
+  readOnly,
+  canCopy,
+}: PageLayerProps & { readOnly: boolean; canCopy: boolean }) {
   return (
     <>
       <div
@@ -451,7 +481,13 @@ function PageTextSelection({ documentId, pageIndex }: PageLayerProps) {
           documentId={documentId}
           pageIndex={pageIndex}
           background="var(--pdf-selection-bg)"
-          selectionMenu={(props) => <TextSelectionMenu {...props} />}
+          selectionMenu={(props) => (
+            <TextSelectionMenu
+              {...props}
+              readOnly={readOnly}
+              canCopy={canCopy}
+            />
+          )}
         />
       </div>
       <TextSelectionHandler documentId={documentId} pageIndex={pageIndex} />
@@ -590,6 +626,8 @@ function PageLayers({
   enableFormFill,
   formEditingActive,
   enableAnnotations,
+  annotationsReadOnly,
+  canCopy,
   enableRedaction,
   showBakedAnnotations,
   onAnnotationMenuAnchor,
@@ -605,7 +643,12 @@ function PageLayers({
         renderMode={pdfRenderMode}
       />
       <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
-      <PageTextSelection documentId={documentId} pageIndex={pageIndex} />
+      <PageTextSelection
+        documentId={documentId}
+        pageIndex={pageIndex}
+        readOnly={annotationsReadOnly}
+        canCopy={canCopy}
+      />
       <FormFillLayers
         enabled={enableFormFill}
         editing={formEditingActive}
@@ -638,7 +681,8 @@ function PageLayers({
       <LinkLayer
         documentId={documentId}
         pageIndex={pageIndex}
-        selectionActive={isAnnotationMode}
+        selectionActive={isAnnotationMode && !annotationsReadOnly}
+        readOnly={annotationsReadOnly}
       />
       {readOnlySignaturePreviews && (
         <SignaturePreviewLayer
@@ -732,7 +776,9 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
 
 interface DocumentCommentsProps {
   enabled: boolean;
+  readOnly: boolean;
   documentId: string;
+  fileName: string;
   authorName: string;
   visible: boolean;
   rightOffset: string;
@@ -740,7 +786,9 @@ interface DocumentCommentsProps {
 
 function DocumentComments({
   enabled,
+  readOnly,
   documentId,
+  fileName,
   authorName,
   visible,
   rightOffset,
@@ -749,12 +797,43 @@ function DocumentComments({
   return (
     <CommentAuthorProvider displayName={authorName}>
       <CommentsSidebar
+        key={documentId}
+        readOnly={readOnly}
         documentId={documentId}
+        fileName={fileName}
         visible={visible}
         rightOffset={rightOffset}
       />
     </CommentAuthorProvider>
   );
+}
+
+function AnnotationInteractionLock({
+  documentId,
+  readOnly,
+}: {
+  documentId: string;
+  readOnly: boolean;
+}) {
+  const { provides } = useAnnotationCapability();
+  useLayoutEffect(() => {
+    const scope = provides?.forDocument(documentId);
+    scope?.setLocked({
+      type: readOnly ? LockModeType.All : LockModeType.None,
+    });
+    if (readOnly) scope?.setActiveTool(null);
+  }, [provides, documentId, readOnly]);
+  return null;
+}
+
+function fileNameFromUrl(url: string): string {
+  const segment = url.split("/").pop()?.split("?")[0] ?? "";
+  try {
+    return decodeURIComponent(segment) || "document.pdf";
+  } catch {
+    // A stray "%" that is not an escape: keep the segment as written.
+    return segment || "document.pdf";
+  }
 }
 
 type EditingBridgesProps = Pick<
@@ -806,7 +885,8 @@ function EditingBridges({
       {redactionActive && <RedactionAPIBridge />}
       {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
       <SignatureAPIBridge ref={signatureApiRef} isSignMode={isSignMode} />
-      {redactionActive && <RedactionPendingTracker ref={redactionTrackerRef} />}
+      {/* Pending redactions must remain available to Save & Leave in other editing tools. */}
+      <RedactionPendingTracker ref={redactionTrackerRef} />
       {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
     </>
   );
@@ -844,12 +924,24 @@ export function LocalEmbedPDF({
   onPageLayout,
   onDocumentSwapped,
   onDocumentSwapFailed,
+  onDocumentReady,
+  onDocumentLoadFailed,
+  onPasswordRequired,
+  onRepair,
+  repairingFileId,
   restorePending = false,
   restoreRequest = null,
   onRestoreEvent,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
+  const [urlSource, setUrlSource] = useState<File | null>(null);
+  const pdfAccess = usePdfAccess(file ?? urlSource ?? fileId);
+  const permissionOverride =
+    pdfAccess?.ownerAuthenticated === true ||
+    (pdfAccess?.honorOwnerPasswords ?? config?.honorOwnerPasswords) === false;
+  const annotationsReadOnly =
+    !pdfAccess || pdfAccess.encrypted || !enableAnnotations;
   const [pdfUrl, setPdfUrl] = useState<string | null>(() => url ?? null);
   const [, setAnnotations] = useState<
     Array<{ id: string; pageIndex: number; rect: Rect }>
@@ -945,12 +1037,36 @@ export function LocalEmbedPDF({
   // FileContext produces new File object references for the same file content.
   const fileStableKey =
     fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
+  const loadOwnerRef = useRef<{ key: string | null; generation: number }>({
+    key: null,
+    generation: 0,
+  });
+  useEffect(() => {
+    const key = fileStableKey ?? url ?? null;
+    const generation = loadOwnerRef.current.generation + 1;
+    loadOwnerRef.current = { key, generation };
+    return () => {
+      // React may replay the effect for the same source. That is a retry, not a cancelled save.
+      queueMicrotask(() => {
+        if (
+          key &&
+          (loadOwnerRef.current.generation === generation ||
+            loadOwnerRef.current.key !== key)
+        ) {
+          onDocumentLoadFailed?.(
+            key,
+            new Error("The document load was cancelled."),
+          );
+        }
+      });
+    };
+  }, [fileStableKey, url, onDocumentLoadFailed]);
 
   // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
   const exportFileName = useMemo(() => {
     if (fileName) return fileName;
     if (file && "name" in file) return file.name;
-    if (url) return url.split("/").pop()?.split("?")[0] || "document.pdf";
+    if (url) return fileNameFromUrl(url);
     return "document.pdf";
   }, [fileStableKey, fileName, url]);
 
@@ -959,13 +1075,20 @@ export function LocalEmbedPDF({
   const [initialDocument, setInitialDocument] = useState<{
     buffer: ArrayBuffer;
     name: string;
+    fileKey: string;
+    password?: string;
+    honorOwnerPasswords?: boolean;
   } | null>(null);
   const [pendingDocument, setPendingDocument] = useState<{
     buffer: ArrayBuffer;
     name: string;
+    fileKey: string;
+    password?: string;
+    honorOwnerPasswords?: boolean;
   } | null>(null);
   const initialDocumentOpenedRef = useRef(false);
   const openedContentKeyRef = useRef<string | null>(null);
+  const openedPermissionOverrideRef = useRef(false);
   // Anchors survive deselection per annotation id, so a delete that happens
   // while no menu is open (keyboard, sidebar) still has somewhere to appear.
   const annotationAnchorsByIdRef = useRef<Map<string, AnnotationMenuAnchor>>(
@@ -1004,9 +1127,16 @@ export function LocalEmbedPDF({
   // Reads bytes on the main thread for the worker, and lands bytes plus URL in
   // one commit so the registry rebuilds once per replacement.
   useEffect(() => {
-    if (fileStableKey && shouldSkipBytes?.(fileStableKey)) {
+    const sourceKey = file ? fileStableKey : (url ?? null);
+    if (
+      sourceKey &&
+      openedPermissionOverrideRef.current === permissionOverride &&
+      (openedContentKeyRef.current === sourceKey ||
+        (file && shouldSkipBytes?.(sourceKey)))
+    ) {
       // The live document already shows this save; swapping the bytes would
       // reopen it and lose the scroll position for no visual gain.
+      openedContentKeyRef.current = sourceKey;
       return;
     }
     let cancelled = false;
@@ -1018,16 +1148,39 @@ export function LocalEmbedPDF({
     ) => {
       // A repeat run for the same content (a rename, a FileContext churn) must
       // not reopen the document.
-      if (!contentKey || openedContentKeyRef.current === contentKey) return;
+      if (
+        !contentKey ||
+        (openedContentKeyRef.current === contentKey &&
+          openedPermissionOverrideRef.current === permissionOverride)
+      )
+        return;
+      openedPermissionOverrideRef.current = permissionOverride;
       openedContentKeyRef.current = contentKey;
       if (!initialDocumentOpenedRef.current) {
         initialDocumentOpenedRef.current = true;
-        setInitialDocument({ buffer, name });
+        setInitialDocument({
+          buffer,
+          name,
+          fileKey: contentKey,
+          password: pdfAccess?.password,
+          honorOwnerPasswords:
+            pdfAccess?.honorOwnerPasswords ?? config?.honorOwnerPasswords,
+        });
         return;
       }
-      setPendingDocument({ buffer, name });
+      setPendingDocument({
+        buffer,
+        name,
+        fileKey: contentKey,
+        password: pdfAccess?.password,
+        honorOwnerPasswords:
+          pdfAccess?.honorOwnerPasswords ?? config?.honorOwnerPasswords,
+      });
     };
     const fail = (source: string) => (err: unknown) => {
+      if (cancelled) return;
+      const key = fileStableKey ?? url;
+      if (key) onDocumentLoadFailed?.(key, err);
       console.error(
         `[LocalEmbedPDF] Failed to read ${source} arrayBuffer:`,
         err,
@@ -1038,6 +1191,7 @@ export function LocalEmbedPDF({
         .arrayBuffer()
         .then((buf) => {
           if (cancelled) return;
+          bindPdfViewerSource(buf, file);
           objectUrl = URL.createObjectURL(file);
           const previous = publishedObjectUrlRef.current;
           publishedObjectUrlRef.current = objectUrl;
@@ -1051,9 +1205,20 @@ export function LocalEmbedPDF({
     } else if (url) {
       setPdfUrl(url);
       fetch(url)
-        .then((r) => r.arrayBuffer())
-        .then((buf) => {
-          if (!cancelled) openDocument(buf, exportFileName, url);
+        .then((r) => {
+          if (!r.ok) throw new Error("Unable to read PDF");
+          return r.blob();
+        })
+        .then(async (blob) => {
+          const source = new File([blob], exportFileName, {
+            type: "application/pdf",
+          });
+          const buf = await source.arrayBuffer();
+          if (!cancelled) {
+            bindPdfViewerSource(buf, source);
+            setUrlSource(source);
+            openDocument(buf, exportFileName, url);
+          }
         })
         .catch(fail("url"));
     } else {
@@ -1071,7 +1236,14 @@ export function LocalEmbedPDF({
         URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [file ? fileStableKey : null, url, shouldSkipBytes, exportFileName]);
+  }, [
+    file ? fileStableKey : null,
+    url,
+    shouldSkipBytes,
+    exportFileName,
+    permissionOverride,
+    onDocumentLoadFailed,
+  ]);
 
   useEffect(() => {
     // A pending revocation belongs to a previous mount of this effect; cancel
@@ -1091,27 +1263,45 @@ export function LocalEmbedPDF({
   }, []);
 
   const [swapAnnouncement, setSwapAnnouncement] = useState<string | null>(null);
+  const handleDocumentReady = useCallback(
+    (fileKey: string) => {
+      onDocumentReady?.(fileKey);
+    },
+    [onDocumentReady],
+  );
+  const handleDocumentLoadFailed = useCallback(
+    (fileKey: string, error: unknown) => {
+      onDocumentLoadFailed?.(fileKey, error);
+    },
+    [onDocumentLoadFailed],
+  );
 
   const handleDocumentSwapped = useCallback(
-    (documentId: string) => {
+    (documentId: string, fileKey: string) => {
+      onDocumentReady?.(fileKey);
       onDocumentSwapped?.(documentId);
-      setPendingDocument(null);
+      setPendingDocument((pending) =>
+        pending?.fileKey === fileKey ? null : pending,
+      );
       setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
       setTimeout(() => setSwapAnnouncement(null), 3000);
     },
-    [onDocumentSwapped, t],
+    [onDocumentReady, onDocumentSwapped, t],
   );
   const handleDocumentSwapFailed = useCallback(
-    (error: unknown) => {
+    (fileKey: string, error: unknown) => {
       // The outgoing document stays active; the replacement never landed.
       console.warn(
         "[LocalEmbedPDF] Replacement document failed to open:",
         error,
       );
-      onDocumentSwapFailed?.(error);
-      setPendingDocument(null);
+      onDocumentLoadFailed?.(fileKey, error);
+      if (fileKey === fileStableKey) onDocumentSwapFailed?.(error);
+      setPendingDocument((pending) =>
+        pending?.fileKey === fileKey ? null : pending,
+      );
     },
-    [onDocumentSwapFailed],
+    [onDocumentLoadFailed, onDocumentSwapFailed, fileStableKey],
   );
 
   useEffect(() => {
@@ -1122,20 +1312,20 @@ export function LocalEmbedPDF({
 
   // The registry is built from the viewer's first source; later bytes arrive
   // through DocumentSwapBridge, so no replacement may change that identity.
-  const urlDocumentSource = file ? null : pdfUrl;
-  const urlPluginsSource = useMemo(() => {
-    if (file || !urlDocumentSource) return null;
-    return { url: urlDocumentSource, name: exportFileName };
-  }, [!!file, urlDocumentSource, exportFileName]);
-
   // Create plugins configuration
   const plugins = useMemo(() => {
-    const initialSource = initialDocument ?? urlPluginsSource;
-    if (!initialSource) return [];
-    const initialDocuments: InitialDocumentOptions[] =
-      "buffer" in initialSource
-        ? [{ buffer: initialSource.buffer, name: initialSource.name }]
-        : [{ url: initialSource.url, name: initialSource.name }];
+    if (!initialDocument) return [];
+    const initialDocuments: InitialDocumentOptions[] = [
+      {
+        buffer: initialDocument.buffer,
+        name: initialDocument.name,
+        password: initialDocument.password,
+        permissions: {
+          enforceDocumentPermissions:
+            initialDocument.honorOwnerPasswords !== false,
+        },
+      },
+    ];
 
     // Calculate 3.5rem in pixels dynamically based on root font size
     const rootFontSize = parseFloat(
@@ -1157,7 +1347,8 @@ export function LocalEmbedPDF({
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
         withForms: !enableFormFill,
-        withAnnotations: !enableAnnotations, // Show baked annotations only when annotation layer is OFF; live layer visibility is controlled via CSS
+        // The overlay owns appearances in every mode, so access changes never rebuild the registry.
+        withAnnotations: false,
       }),
 
       // Register interaction manager (required for zoom and selection features)
@@ -1227,14 +1418,27 @@ export function LocalEmbedPDF({
 
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [initialDocument, urlPluginsSource, enableAnnotations]);
+  }, [initialDocument]);
 
-  const fontFallbackConfig = useMemo(() => getLocalFontFallbackConfig(), []);
+  const fontFallbackConfig = useFontFallbackConfig();
 
-  const { engine, isLoading, error } = usePdfiumEngine({
+  const {
+    engine: workerEngine,
+    isLoading,
+    error,
+  } = useLocalPdfiumEngine({
     wasmUrl: pdfiumWasmUrl,
     fontFallback: fontFallbackConfig,
   });
+  const engine = useMemo(
+    () => (workerEngine ? withPdfViewerAccess(workerEngine) : null),
+    [workerEngine],
+  );
+
+  useEffect(() => {
+    const key = fileStableKey ?? url;
+    if (error && key) onDocumentLoadFailed?.(key, error);
+  }, [error, fileStableKey, url, onDocumentLoadFailed]);
 
   const [engineTimeout, setEngineTimeout] = useState(false);
   useEffect(() => {
@@ -1291,7 +1495,28 @@ export function LocalEmbedPDF({
   }
 
   const hasInput = Boolean(file || url);
-  const isInputReady = Boolean(initialDocument || (!file && pdfUrl));
+  const isInputReady = Boolean(initialDocument);
+
+  // Checked before the loading screen: a rejected engine import leaves `engine`
+  // null, so the loader would otherwise hide the error forever.
+  if (error) {
+    return (
+      <Center h="100%" w="100%">
+        <Stack align="center" gap="md">
+          <div style={{ fontSize: "24px" }}>⚠️</div>
+          <Text c="red" size="sm">
+            {t(
+              "viewer.engineLoadError",
+              "Failed to initialize PDF viewer engine",
+            )}
+          </Text>
+          <Text c="dimmed" size="xs">
+            {error.message}
+          </Text>
+        </Stack>
+      </Center>
+    );
+  }
 
   if (isLoading || !engine || (hasInput && !isInputReady)) {
     return (
@@ -1318,32 +1543,13 @@ export function LocalEmbedPDF({
     );
   }
 
-  if (error) {
-    return (
-      <Center h="100%" w="100%">
-        <Stack align="center" gap="md">
-          <div style={{ fontSize: "24px" }}>⚠️</div>
-          <Text c="red" size="sm">
-            {t(
-              "viewer.engineLoadError",
-              "Failed to initialize PDF viewer engine",
-            )}
-          </Text>
-          <Text c="dimmed" size="xs">
-            {error.message}
-          </Text>
-        </Stack>
-      </Center>
-    );
-  }
-
   const handleInitialized = async (registry: PluginRegistry) => {
     // v2.0: Use registry.getPlugin() to access plugin APIs
     const annotationPlugin = registry.getPlugin("annotation");
     if (!annotationPlugin || !annotationPlugin.provides) return;
 
     const annotationApi = annotationPlugin.provides();
-    if (!annotationApi || !enableAnnotations) return;
+    if (!annotationApi) return;
 
     registerAnnotationTools(annotationApi);
 
@@ -1417,7 +1623,9 @@ export function LocalEmbedPDF({
     pdfRenderMode,
     enableFormFill,
     formEditingActive,
-    enableAnnotations,
+    enableAnnotations: true,
+    annotationsReadOnly,
+    canCopy: pdfAllows(pdfAccess, PdfPermissionFlag.CopyContents),
     enableRedaction,
     showBakedAnnotations,
     onAnnotationMenuAnchor: handleAnnotationMenuAnchor,
@@ -1460,6 +1668,11 @@ export function LocalEmbedPDF({
           plugins={plugins}
           onInitialized={handleInitialized}
         >
+          <InitialDocumentLoadBridge
+            fileKey={initialDocument?.fileKey ?? url ?? null}
+            onReady={handleDocumentReady}
+            onFailed={handleDocumentLoadFailed}
+          />
           <DocumentSwapBridge
             pending={pendingDocument}
             onSwapped={handleDocumentSwapped}
@@ -1472,7 +1685,9 @@ export function LocalEmbedPDF({
           />
           <ZoomAPIBridge />
           <ScrollAPIBridge />
-          <SelectionAPIBridge />
+          <SelectionAPIBridge
+            canCopy={pdfAllows(pdfAccess, PdfPermissionFlag.CopyContents)}
+          />
           <FormCreationInteractionLock />
           <PanAPIBridge />
           <SpreadAPIBridge />
@@ -1482,7 +1697,9 @@ export function LocalEmbedPDF({
           <EditingBridges
             enableAnnotations={enableAnnotations}
             enableRedaction={enableRedaction}
-            isManualRedactionMode={isManualRedactionMode}
+            isManualRedactionMode={
+              isManualRedactionMode && !annotationsReadOnly
+            }
             isSignMode={isSignMode}
             historyApiRef={historyApiRef}
             signatureApiRef={signatureApiRef}
@@ -1493,12 +1710,38 @@ export function LocalEmbedPDF({
             deletedAnnotationMenu={deletedAnnotationMenu}
             onDismissDeletedAnnotationMenu={dismissDeletedAnnotationMenu}
           />
-          <ExportAPIBridge />
+          <PdfPasswordBridge
+            fileId={file && isStirlingFile(file) ? file.fileId : undefined}
+            password={pdfAccess?.password}
+            onPasswordRequired={onPasswordRequired}
+          />
+          <ExportAPIBridge
+            originalFile={pdfAccess?.encrypted ? file : undefined}
+            disabled={pdfAccess?.encrypted && !file}
+          />
           <BookmarkAPIBridge />
           <AttachmentAPIBridge />
-          <PrintAPIBridge file={file} url={pdfUrl} fileName={fileName} />
-          <DocumentPermissionsAPIBridge />
+          <PrintAPIBridge
+            file={file}
+            url={pdfUrl}
+            fileName={fileName}
+            canPrint={canPrintPdf(pdfAccess)}
+          />
+          <DocumentPermissionsAPIBridge
+            isEncrypted={pdfAccess?.encrypted ?? true}
+            isOwnerUnlocked={pdfAccess?.ownerAuthenticated}
+            honorOwnerPasswords={pdfAccess?.honorOwnerPasswords}
+            permissions={pdfAccess?.permissions ?? 0}
+          />
           <DocumentReadyWrapper
+            onRepair={
+              onRepair && file && isStirlingFile(file)
+                ? () => onRepair(file.fileId)
+                : undefined
+            }
+            repairing={
+              !!file && isStirlingFile(file) && repairingFileId === file.fileId
+            }
             fallback={
               <Center style={{ height: "100%", width: "100%" }}>
                 <ToolLoadingFallback />
@@ -1507,13 +1750,19 @@ export function LocalEmbedPDF({
           >
             {(documentId) => (
               <>
+                <AnnotationInteractionLock
+                  documentId={documentId}
+                  readOnly={annotationsReadOnly}
+                />
                 <DocumentViewport
                   documentId={documentId}
                   pageOptions={pageOptions}
                 />
                 <DocumentComments
-                  enabled={enableAnnotations}
+                  enabled
+                  readOnly={annotationsReadOnly}
                   documentId={documentId}
+                  fileName={exportFileName}
                   authorName={commentAuthorName}
                   visible={isCommentsSidebarVisible}
                   rightOffset={commentsSidebarRightOffset}

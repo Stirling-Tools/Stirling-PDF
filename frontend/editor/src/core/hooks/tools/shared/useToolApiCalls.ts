@@ -9,6 +9,19 @@ import { isEmptyOutput } from "@app/services/errorUtils";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
 import type { StirlingFile, FileId } from "@app/types/fileContext";
 import { isSignupRequiredError } from "@app/utils/toolErrorHandler";
+import { combineAbortSignals } from "@app/utils/combineAbortSignals";
+import {
+  prepareUnlockedFile,
+  protectUnlockedResults,
+  changePdfSecurity,
+} from "@app/services/pdfSessionUnlock";
+import {
+  inspectLocalPdfAccess,
+  getPdfAccess,
+  rememberPdfAccess,
+  pdfAccessLifetime,
+  pdfAccessSessionLifetime,
+} from "@app/services/pdfAccessService";
 
 /** An input that did not survive the batch, with the error it failed on. */
 export interface FailedInput {
@@ -51,8 +64,12 @@ export const useToolApiCalls = <TParams = void>() => {
       const failedFiles: string[] = [];
       const total = validFiles.length;
 
-      // Create cancel token for this operation
-      cancelTokenRef.current = axios.CancelToken.source();
+      const cancellation = axios.CancelToken.source();
+      cancelTokenRef.current = cancellation;
+      const operationCancellation = cancellation.token.toAbortSignal();
+      const sessionLifetime = pdfAccessSessionLifetime();
+      const sourceLifetimes = validFiles.map(pdfAccessLifetime);
+      const outputsBySource = new Map<FileId, File[]>();
 
       // Params are the same for every file, so resolve the endpoint once. A null
       // endpoint means the tool has no backend call (e.g. client-side tools) and
@@ -79,13 +96,40 @@ export const useToolApiCalls = <TParams = void>() => {
         onProgress({ current: i + 1, total, currentFileName: file.name });
         onStatus(`Processing ${file.name} (${i + 1}/${total})`);
 
+        const sourceLifetime = sourceLifetimes[i];
+        const { signal: fileSignal, dispose } = combineAbortSignals([
+          operationCancellation,
+          sourceLifetime,
+        ]);
         try {
-          const formData = config.buildFormData(params, file);
+          cancellation.token.throwIfRequested();
+          sourceLifetime.throwIfAborted();
+          const workingFile = await prepareUnlockedFile(
+            file,
+            endpoint,
+            fileSignal,
+            cancellation.token,
+          );
+          const formData = config.buildFormData(params, workingFile);
           console.debug("[processFiles] POST", { endpoint, name: file.name });
-          const response = await apiClient.post(endpoint, formData, {
-            responseType: "blob",
-            cancelToken: cancelTokenRef.current?.token,
-          });
+          const response =
+            endpoint === "/api/v1/security/add-password" ||
+            endpoint === "/api/v1/security/remove-password"
+              ? {
+                  data: await changePdfSecurity(
+                    file,
+                    formData,
+                    endpoint,
+                    cancellation.token,
+                  ),
+                  status: 200,
+                  headers: undefined,
+                }
+              : await apiClient.post(endpoint, formData, {
+                  responseType: "blob",
+                  cancelToken: cancellation.token,
+                  signal: sourceLifetime,
+                });
           console.debug("[processFiles] Response OK", {
             name: file.name,
             status: response.status,
@@ -99,6 +143,35 @@ export const useToolApiCalls = <TParams = void>() => {
             config.responseHandler,
             config.preserveBackendFilename ? response.headers : undefined,
           );
+          if (
+            endpoint === "/api/v1/security/add-password" ||
+            endpoint === "/api/v1/security/remove-password"
+          ) {
+            const password =
+              endpoint === "/api/v1/security/remove-password"
+                ? formData.get("password")
+                  ? ""
+                  : String(formData.get("retainedOpeningPassword") ?? "")
+                : formData.has("keyLength")
+                  ? String(formData.get("password") ?? "")
+                  : (getPdfAccess(file)?.openingPassword ??
+                    String(
+                      formData.get("ownerPassword") ||
+                        getPdfAccess(file)?.password ||
+                        "",
+                    ));
+            for (const output of responseFiles) {
+              const access = await inspectLocalPdfAccess(
+                output,
+                password,
+                fileSignal,
+              );
+              cancellation.token.throwIfRequested();
+              if (fileSignal.aborted)
+                throw new axios.CanceledError("Operation cancelled");
+              rememberPdfAccess(output, access);
+            }
+          }
           // Guard: some endpoints may return an empty/0-byte file with 200
           const empty = isEmptyOutput(responseFiles);
           if (empty) {
@@ -118,7 +191,16 @@ export const useToolApiCalls = <TParams = void>() => {
             }
             continue;
           }
-          processedFiles.push(...responseFiles);
+          sourceLifetime.throwIfAborted();
+          const protectedFiles = await protectUnlockedResults(
+            responseFiles,
+            [file],
+            endpoint,
+          );
+          cancellation.token.throwIfRequested();
+          sourceLifetime.throwIfAborted();
+          processedFiles.push(...protectedFiles);
+          outputsBySource.set(file.fileId, protectedFiles);
           // record source id as successful
           successSourceIds.push(file.fileId);
           console.debug("[processFiles] Success", {
@@ -126,6 +208,13 @@ export const useToolApiCalls = <TParams = void>() => {
             produced: responseFiles.length,
           });
         } catch (error) {
+          if (cancellation.token.reason || sessionLifetime.aborted) {
+            throw new Error("Operation was cancelled", { cause: error });
+          }
+          if (sourceLifetime.aborted) {
+            unprocessedSourceIds.push(file.fileId);
+            continue;
+          }
           if (isSignupRequiredError(error)) {
             if (processedFiles.length === 0) throw error;
             unprocessedSourceIds.push(
@@ -133,7 +222,10 @@ export const useToolApiCalls = <TParams = void>() => {
             );
             break;
           }
-          if (axios.isCancel(error)) {
+          if (
+            axios.isCancel(error) ||
+            (error instanceof DOMException && error.name === "AbortError")
+          ) {
             throw new Error("Operation was cancelled", { cause: error });
           }
           console.error("[processFiles] Failed", { name: file.name, error });
@@ -145,10 +237,24 @@ export const useToolApiCalls = <TParams = void>() => {
           } catch (e) {
             console.debug("markFileError", e);
           }
+        } finally {
+          dispose();
         }
       }
 
+      // A completed source may be closed while another request is still running.
+      for (let i = 0; i < validFiles.length; i++) {
+        const id = validFiles[i].fileId;
+        if (!sourceLifetimes[i].aborted || !outputsBySource.has(id)) continue;
+        const outputs = new Set(outputsBySource.get(id));
+        for (let j = processedFiles.length - 1; j >= 0; j--)
+          if (outputs.has(processedFiles[j])) processedFiles.splice(j, 1);
+        successSourceIds.splice(successSourceIds.indexOf(id), 1);
+        unprocessedSourceIds.push(id);
+      }
+
       if (failedFiles.length > 0 && processedFiles.length === 0) {
+        if (failedInputs.length === 1) throw failedInputs[0].error;
         throw new Error(
           `Failed to process all files: ${failedFiles.join(", ")}`,
         );

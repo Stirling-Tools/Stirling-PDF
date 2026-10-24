@@ -76,7 +76,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
               {resolvedOpacityLabel}
             </Text>
             <Slider
-              min={10}
+              min={0}
               max={100}
               value={opacity}
               onChange={onOpacityChange}

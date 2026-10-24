@@ -18,6 +18,10 @@ import {
 import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { emitFallbackTextObject } from "@app/tools/pdfTextEditor/util/fallbackFont";
 import { emitDeviceFontTextObject } from "@app/tools/pdfTextEditor/util/deviceFontEmbed";
+import {
+  applyTagMarks,
+  type TagMark,
+} from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { nearestStandardFont } from "@app/tools/pdfTextEditor/util/fontFamily";
 import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
@@ -262,6 +266,9 @@ interface CreatedTextOptions {
   strokeWidth?: number;
   /** The run's on-page rotation (normalised cos/sin of its text matrix). */
   rotation?: { cos: number; sin: number };
+  // Required so every emit decides: a re-emit of existing text passes the
+  // run's tags, new content passes none.
+  tagMarks: readonly TagMark[];
   // Extra advance per glyph in PDF points - the source run's rendered
   // letter-spacing (Tc), inferred at read time.
   charSpacingPt?: number;
@@ -675,6 +682,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // Every successful emit funnels through here, so this is the one place to
     // re-apply the source run's ink state - new objects default to a flat fill.
     applyInkState(m, ptrs, opts);
+    applyTagMarks(m, opts.doc.docPtr, ptrs, opts.tagMarks);
     return ptrs;
   };
 
@@ -1479,6 +1487,7 @@ export function emitRunLines(opts: {
       fallbackFamily: opts.fallbackFamily,
       // Keep the run's rotation on re-emit (no-op for upright text).
       rotation: rot,
+      tagMarks: opts.run.tagMarks,
     });
     out.push({ ptrs, text, texts, x: origin.x, y: origin.y });
   }

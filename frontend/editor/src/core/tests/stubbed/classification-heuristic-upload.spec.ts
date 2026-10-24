@@ -1,6 +1,5 @@
 import path from "path";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 
 // A bulk upload must classify every file in the browser and group it - no file
 // may be stranded in "Other" by races between the upload wave and delivery.
@@ -59,32 +58,34 @@ test("a 10-file upload wave classifies every file into its group", async ({
     timeout: 120_000,
   });
 
-  await uploadFiles(
-    page,
-    [
-      "invoice_acme.pdf",
-      "bank_statement.pdf",
-      "purchase_order.pdf",
-      "nda_mutual.pdf",
-      "service_agreement.pdf",
-      "resume_jane_doe.pdf",
-      "cover_letter.pdf",
-      "offer_letter.pdf",
-      "generic_notes.pdf",
-      "spanish_contrato.pdf",
-    ].map((f) => path.join(FIXTURES, f)),
-  );
+  await page.getByTestId("files-button").click();
+  await page
+    .locator('[data-testid="file-input"]')
+    .setInputFiles(
+      [
+        "invoice_acme.pdf",
+        "bank_statement.pdf",
+        "purchase_order.pdf",
+        "nda_mutual.pdf",
+        "service_agreement.pdf",
+        "resume_jane_doe.pdf",
+        "cover_letter.pdf",
+        "offer_letter.pdf",
+        "generic_notes.pdf",
+        "spanish_contrato.pdf",
+      ].map((f) => path.join(FIXTURES, f)),
+    );
 
   const header = (name: string, count: number) =>
     page.getByRole("button", { name: `${name} ${count}`, exact: true });
 
-  // Unclassified files stay in Other until processing finishes; only generic notes remain.
-  await expect(header("Other", 1)).toBeVisible({ timeout: 150_000 });
-
-  // The Spanish lease is also classified as Legal.
-  await expect(header("Financial", 3)).toBeVisible();
-  await expect(header("HR", 3)).toBeVisible();
-  await expect(header("Legal", 3)).toBeVisible();
+  // Progressive admission can briefly show Other 1 before the full batch arrives.
+  await expect(async () => {
+    await expect(header("Financial", 3)).toBeVisible();
+    await expect(header("HR", 3)).toBeVisible();
+    await expect(header("Legal", 3)).toBeVisible();
+    await expect(header("Other", 1)).toBeVisible();
+  }).toPass({ timeout: 150_000 });
 
   // A filename can render in Recent, its group, or the viewer; any hit proves presence.
   await expect(page.getByText("generic_notes.pdf").first()).toBeVisible();

@@ -1,5 +1,5 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
@@ -26,6 +26,13 @@ vi.mock("@embedpdf/plugin-selection/react", () => ({
       getSelectedText: mockGetSelectedText,
       clear: mockClearSelection,
     },
+  }),
+}));
+
+const mockViewerCopy = vi.fn();
+vi.mock("@app/contexts/ViewerContext", () => ({
+  useViewer: () => ({
+    selectionActions: { copyToClipboard: mockViewerCopy },
   }),
 }));
 
@@ -98,6 +105,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe("TextSelectionMenu", () => {
   const defaultProps = {
+    canCopy: true,
     rect: { origin: { x: 100, y: 100 }, size: { width: 80, height: 20 } },
     menuWrapperProps: {
       style: {},
@@ -130,6 +138,59 @@ describe("TextSelectionMenu", () => {
         ],
       },
     ]);
+  });
+
+  test("explains why copying is disabled when document permissions deny extraction", async () => {
+    render(
+      <TestWrapper>
+        <TextSelectionMenu {...defaultProps} canCopy={false} />
+      </TestWrapper>,
+    );
+    const copy = screen.getByRole("button", { name: "Copy" });
+    expect(copy).toHaveAttribute("aria-disabled", "true");
+    expect(copy.querySelector("button")).toBeDisabled();
+    fireEvent.click(copy);
+    expect(mockViewerCopy).not.toHaveBeenCalled();
+    expect(mockCopyToClipboard).not.toHaveBeenCalled();
+    fireEvent.focus(copy);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "Copying is disabled by this PDF's permissions.",
+    );
+  });
+
+  test("confirms a copy only after the clipboard write succeeds", async () => {
+    mockViewerCopy.mockResolvedValue(true);
+    render(
+      <TestWrapper>
+        <TextSelectionMenu {...defaultProps} />
+      </TestWrapper>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
+    await waitFor(() =>
+      expect(mockAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          alertType: "neutral",
+          title: "Copied to clipboard",
+        }),
+      ),
+    );
+    expect(mockClearSelection).toHaveBeenCalledWith("doc-1");
+  });
+
+  test("reports a failed clipboard write and keeps the selection", async () => {
+    mockViewerCopy.mockResolvedValue(false);
+    render(
+      <TestWrapper>
+        <TextSelectionMenu {...defaultProps} />
+      </TestWrapper>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
+    await waitFor(() =>
+      expect(mockAlert).toHaveBeenCalledWith(
+        expect.objectContaining({ alertType: "error" }),
+      ),
+    );
+    expect(mockClearSelection).not.toHaveBeenCalled();
   });
 
   test("renders all 7 action buttons when selected", () => {
@@ -168,27 +229,6 @@ describe("TextSelectionMenu", () => {
     expect(
       screen.queryByRole("button", { name: "Copy" }),
     ).not.toBeInTheDocument();
-  });
-
-  test("calls copyToClipboard, clears selection, and triggers toast popup when Copy button is clicked", () => {
-    render(
-      <TestWrapper>
-        <TextSelectionMenu {...defaultProps} />
-      </TestWrapper>,
-    );
-
-    const copyBtn = screen.getByRole("button", { name: "Copy" });
-    fireEvent.click(copyBtn);
-
-    expect(mockCopyToClipboard).toHaveBeenCalledWith("doc-1");
-    expect(mockClearSelection).toHaveBeenCalledWith("doc-1");
-    expect(mockAlert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        alertType: "neutral",
-        title: "Copied to clipboard",
-        durationMs: 2000,
-      }),
-    );
   });
 
   test("creates HIGHLIGHT annotation, clears selection and opens Annotate UI when Highlight button is clicked", () => {

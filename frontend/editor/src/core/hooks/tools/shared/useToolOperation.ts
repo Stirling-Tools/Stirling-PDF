@@ -9,6 +9,11 @@ import { useFileContext } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { toolAcceptsFile } from "@app/utils/toolIOCompat";
+import {
+  prepareUnlockedFile,
+  protectUnlockedResults,
+  preflightPdfOperation,
+} from "@app/services/pdfSessionUnlock";
 import { useToolState } from "@app/hooks/tools/shared/useToolState";
 import {
   useToolApiCalls,
@@ -117,6 +122,7 @@ export const useToolOperation = <TParams>(
   const { actions: fileActions } = useFileContext();
   const { processFiles, cancelOperation: cancelApiCalls } =
     useToolApiCalls<TParams>();
+  const inspectionCancellation = useRef<AbortController | null>(null);
   const {
     generateThumbnails,
     createDownloadInfo,
@@ -236,6 +242,9 @@ export const useToolOperation = <TParams>(
         const stub = selectors.getStirlingFileStub(file.fileId);
         return stub ? policySourceIds(stub) : [file.fileId];
       });
+      const cancellation = new AbortController();
+      inspectionCancellation.current?.abort();
+      inspectionCancellation.current = cancellation;
       try {
         assertFilesNotBlocked(policyIds);
       } catch (error) {
@@ -321,12 +330,39 @@ export const useToolOperation = <TParams>(
 
       try {
         assertFilesNotBlocked(policyIds);
+        const permitted = await preflightPdfOperation(
+          validFiles,
+          runtimeEndpoint,
+          config.toolType !== ToolType.singleFile &&
+            config.operationType !== "extractPages",
+          (file) =>
+            fileActions.requestPdfOwnerAccess(
+              file.fileId,
+              t(`${config.operationType}.title`, config.operationType),
+            ),
+          cancellation.signal,
+          (file) =>
+            selectors.getStirlingFileStub(file.fileId)?.processedFile
+              ?.isEncrypted === true,
+        );
+        if (!permitted) return;
         let processedFiles: File[];
         let successSourceIds: FileId[] = [];
         let unprocessedSourceIds: FileId[] = [];
 
         // Use original files directly (no PDF metadata injection - history stored in IndexedDB)
-        const filesForAPI = extractFiles(validFiles);
+        const filesForAPI: File[] = [];
+        for (const file of validFiles) {
+          filesForAPI.push(
+            config.toolType === ToolType.singleFile
+              ? file
+              : await prepareUnlockedFile(
+                  file,
+                  runtimeEndpoint,
+                  cancellation.signal,
+                ),
+          );
+        }
 
         switch (config.toolType) {
           case ToolType.singleFile: {
@@ -456,6 +492,32 @@ export const useToolOperation = <TParams>(
               }
             }
             break;
+          }
+        }
+
+        if (config.toolType !== ToolType.singleFile) {
+          if (config.operationType === "extractPages") {
+            if (processedFiles.length !== validFiles.length)
+              throw new Error(
+                "Unable to match extracted pages to their protection source.",
+              );
+            const protectedFiles: File[] = [];
+            for (const [index, file] of processedFiles.entries()) {
+              protectedFiles.push(
+                ...(await protectUnlockedResults(
+                  [file],
+                  [validFiles[index]],
+                  runtimeEndpoint,
+                )),
+              );
+            }
+            processedFiles = protectedFiles;
+          } else {
+            processedFiles = await protectUnlockedResults(
+              processedFiles,
+              validFiles,
+              runtimeEndpoint,
+            );
           }
         }
 
@@ -743,6 +805,7 @@ export const useToolOperation = <TParams>(
           onToolRunComplete();
         }
       } catch (error) {
+        if (cancellation.signal.aborted) return;
         if (isSignupRequiredError(error)) {
           actions.setStatus("");
           return;
@@ -774,6 +837,8 @@ export const useToolOperation = <TParams>(
         actions.setError(errorMessage);
         actions.setStatus("");
       } finally {
+        if (inspectionCancellation.current === cancellation)
+          inspectionCancellation.current = null;
         window.removeEventListener(FILE_EVENTS.markError, errorListener);
         actions.setLoading(false);
         actions.setProgress(null);
@@ -804,6 +869,7 @@ export const useToolOperation = <TParams>(
   );
 
   const cancelOperation = useCallback(() => {
+    inspectionCancellation.current?.abort();
     cancelApiCalls();
     actions.setLoading(false);
     actions.setProgress(null);
@@ -820,6 +886,7 @@ export const useToolOperation = <TParams>(
   // Cleanup on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
+      inspectionCancellation.current?.abort();
       lastOperationRef.current = null;
     };
   }, []);

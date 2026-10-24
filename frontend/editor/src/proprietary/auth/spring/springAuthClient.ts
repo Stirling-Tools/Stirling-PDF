@@ -19,7 +19,6 @@ import { JWT_STORAGE_KEY } from "@app/auth/httpClient";
 import { type OAuthProvider } from "@app/auth/spring/oauthTypes";
 import { resetOAuthState } from "@app/auth/spring/oauthStorage";
 import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
-import { clearSupabaseSession } from "@app/auth/supabase/supabaseClient";
 import type {
   AuthUser as User,
   AuthSession as Session,
@@ -508,7 +507,16 @@ class SpringAuthClient {
    */
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
-      clearSupabaseSession();
+      // Avoid a static import: it would put the Supabase SDK on the startup path
+      // even for installs that never use it. The inner catch keeps a failed load
+      // from skipping the local cleanup below.
+      try {
+        const { clearSupabaseSession } =
+          await import("@app/auth/supabase/supabaseClient");
+        clearSupabaseSession();
+      } catch {
+        // Nothing loaded means nothing to clear.
+      }
       localStorage.removeItem("stirling.portalSaasOwner");
       sessionStorage.removeItem("stirling.portalConnect");
       Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i))

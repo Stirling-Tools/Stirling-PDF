@@ -18,6 +18,7 @@ import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId"
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useRedaction } from "@app/contexts/RedactionContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import {
   defaultParameters,
   RedactParameters,
@@ -25,10 +26,17 @@ import {
 import { MARKUP_ANNOTATION_COLORS } from "@app/components/viewer/annotationDefaults";
 import { alert } from "@app/components/toast";
 import { getExternalHref } from "@app/utils/externalUrl";
+import {
+  READ_ALOUD_FROM_SELECTION_EVENT,
+  glyphPositionRatio,
+  type ReadAloudFromSelectionDetail,
+} from "@app/components/viewer/readAloudFromSelection";
 import "@app/components/viewer/TextSelectionMenu.css";
 
 export type TextSelectionMenuProps = SelectionSelectionMenuProps & {
   documentId?: string;
+  readOnly?: boolean;
+  canCopy?: boolean;
 };
 
 export function TextSelectionMenu(props: TextSelectionMenuProps) {
@@ -47,6 +55,8 @@ function TextSelectionMenuInner({
   menuWrapperProps,
   placement,
   documentId,
+  readOnly = false,
+  canCopy = false,
 }: TextSelectionMenuProps & { documentId: string }) {
   const { t } = useTranslation();
   const { provides: selection } = useSelectionCapability();
@@ -62,6 +72,7 @@ function TextSelectionMenuInner({
     manualRedactColor,
   } = useRedaction();
   const { actions: navActions } = useNavigationActions();
+  const { selectionActions } = useViewer();
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{
@@ -117,17 +128,21 @@ function TextSelectionMenuInner({
     };
   }, [selected, showAbove]);
 
+  // Copies through the selection bridge rather than the plugin: the plugin
+  // writes only via navigator.clipboard, which does not exist over plain HTTP.
   const handleCopy = useCallback(() => {
-    if (documentId) {
-      selection?.copyToClipboard(documentId);
-      selection?.clear(documentId);
+    if (!documentId || !canCopy) return;
+    void selectionActions.copyToClipboard().then((copied) => {
+      if (copied) selection?.clear(documentId);
       alert({
-        alertType: "neutral",
-        title: t("common.copied", "Copied to clipboard"),
+        alertType: copied ? "neutral" : "error",
+        title: copied
+          ? t("common.copied", "Copied to clipboard")
+          : t("common.copyFailed", "Copy failed"),
         durationMs: 2000,
       });
-    }
-  }, [selection, documentId, t]);
+    });
+  }, [selectionActions, selection, documentId, t, canCopy]);
 
   const openAnnotateUi = useCallback(() => {
     handleToolSelectForced?.("annotate");
@@ -144,7 +159,7 @@ function TextSelectionMenuInner({
       color: string,
       blendMode?: PdfBlendMode,
     ) => {
-      if (!documentId) return;
+      if (!documentId || readOnly) return;
       const selections = selection?.getFormattedSelection(documentId) ?? [];
       if (!selections.length) return;
 
@@ -179,7 +194,14 @@ function TextSelectionMenuInner({
         apply();
       }
     },
-    [documentId, selection, annotationProvides, navActions, openAnnotateUi],
+    [
+      documentId,
+      selection,
+      annotationProvides,
+      navActions,
+      openAnnotateUi,
+      readOnly,
+    ],
   );
 
   const handleHighlight = useCallback(() => {
@@ -214,7 +236,7 @@ function TextSelectionMenuInner({
   const handleAddLink = useCallback(
     (url: string) => {
       const uri = url.trim();
-      if (!documentId || !uri) return;
+      if (!documentId || !uri || readOnly) return;
       // User input is untrusted: refuse URI schemes the viewer itself would
       // not open, so javascript: and friends cannot ride out in the PDF. The
       // original string is persisted verbatim once it passes the allowlist.
@@ -238,11 +260,55 @@ function TextSelectionMenuInner({
       navActions?.setHasUnsavedChanges(true);
       openAnnotateUi();
     },
-    [documentId, selection, annotationProvides, navActions, openAnnotateUi],
+    [
+      documentId,
+      selection,
+      annotationProvides,
+      navActions,
+      openAnnotateUi,
+      readOnly,
+    ],
   );
 
+  const canReadAloud =
+    typeof window !== "undefined" && "speechSynthesis" in window;
+
+  const handleReadAloudFromHere = useCallback(() => {
+    const state = selection?.getState(documentId);
+    if (!selection || !state?.selection) return;
+    const originalSelection = state.selection;
+    const { page, index } = originalSelection.start;
+    // The text task resolves asynchronously; a selection made in the meantime
+    // must not be the one read aloud and cleared.
+    const stillSelected = () =>
+      selection.getState(documentId).selection === originalSelection;
+    const dispatch = (selectedText: string) => {
+      if (!stillSelected()) return;
+      window.dispatchEvent(
+        new CustomEvent<ReadAloudFromSelectionDetail>(
+          READ_ALOUD_FROM_SELECTION_EVENT,
+          {
+            detail: {
+              pageNumber: page + 1,
+              selectedText,
+              approximatePosition: glyphPositionRatio(
+                state.geometry[page],
+                index,
+              ),
+            },
+          },
+        ),
+      );
+      selection.clear(documentId);
+    };
+    selection.getSelectedText(documentId).wait(
+      (texts) => dispatch(texts[0] ?? ""),
+      () => dispatch(""),
+    );
+  }, [selection, documentId]);
+
   const handleRedact = useCallback(() => {
-    if (!documentId) return;
+    if (!documentId || readOnly) return;
     const selections = selection?.getFormattedSelection(documentId) ?? [];
     for (const sel of selections) {
       annotationProvides?.createAnnotation(sel.pageIndex, {
@@ -275,6 +341,7 @@ function TextSelectionMenuInner({
     setLeftPanelView?.("toolContent");
     setPendingRedactActivation(true);
   }, [
+    readOnly,
     documentId,
     selection,
     annotationProvides,
@@ -301,128 +368,174 @@ function TextSelectionMenuInner({
         onMouseDown={(e) => e.preventDefault()}
       >
         <div className="embedpdf-text-selection-menu">
-          <Tooltip label={t("viewer.copyText", "Copy")} withArrow>
-            <button
-              type="button"
-              className="embedpdf-text-selection-btn"
-              onClick={handleCopy}
-              aria-label={t("viewer.copyText", "Copy")}
-            >
-              <Icon name="copy" size={20} />
-            </button>
-          </Tooltip>
-
-          <Tooltip label={t("annotation.highlight", "Highlight")} withArrow>
-            <button
-              type="button"
-              className="embedpdf-text-selection-btn"
-              onClick={handleHighlight}
-              aria-label={t("annotation.highlight", "Highlight")}
-            >
-              <Icon name="highlighter" size={20} />
-            </button>
-          </Tooltip>
-
-          <Tooltip label={t("annotation.strikeout", "Strikeout")} withArrow>
-            <button
-              type="button"
-              className="embedpdf-text-selection-btn"
-              onClick={handleStrikeout}
-              aria-label={t("annotation.strikeout", "Strikeout")}
-            >
-              <Icon name="strikethrough" size={20} />
-            </button>
-          </Tooltip>
-
-          <Tooltip label={t("annotation.underline", "Underline")} withArrow>
-            <button
-              type="button"
-              className="embedpdf-text-selection-btn"
-              onClick={handleUnderline}
-              aria-label={t("annotation.underline", "Underline")}
-            >
-              <Icon name="underline" size={20} />
-            </button>
-          </Tooltip>
-
-          <Tooltip label={t("annotation.squiggly", "Squiggly")} withArrow>
-            <button
-              type="button"
-              className="embedpdf-text-selection-btn"
-              onClick={handleSquiggly}
-              aria-label={t("annotation.squiggly", "Squiggly")}
-            >
-              <Icon name="line-squiggle" size={20} />
-            </button>
-          </Tooltip>
-
-          <Popover
-            opened={linkPopoverOpen}
-            onChange={setLinkPopoverOpen}
-            position={showAbove ? "top" : "bottom"}
+          <Tooltip
+            label={
+              canCopy
+                ? t("viewer.copyText", "Copy")
+                : t(
+                    "viewer.copyRestricted",
+                    "Copying is disabled by this PDF's permissions.",
+                  )
+            }
             withArrow
-            shadow="md"
-            transitionProps={{ duration: 0 }}
+            multiline
+            w={canCopy ? undefined : 260}
+            events={{ hover: true, focus: true, touch: false }}
           >
-            <Popover.Target>
+            <span
+              style={{ display: "inline-flex" }}
+              tabIndex={canCopy ? undefined : 0}
+              role={canCopy ? undefined : "button"}
+              aria-label={canCopy ? undefined : t("viewer.copyText", "Copy")}
+              aria-disabled={canCopy ? undefined : true}
+            >
               <button
                 type="button"
                 className="embedpdf-text-selection-btn"
-                onClick={() => setLinkPopoverOpen((o) => !o)}
-                aria-label={t("viewer.comments.addLink", "Add link")}
+                onClick={handleCopy}
+                disabled={!canCopy}
+                aria-label={t("viewer.copyText", "Copy")}
+                aria-hidden={!canCopy || undefined}
               >
-                <Tooltip
-                  label={t("viewer.comments.addLink", "Add link")}
-                  withArrow
-                  disabled={linkPopoverOpen}
-                >
-                  <span style={{ display: "inline-flex" }}>
-                    <Icon name="link" size={20} />
-                  </span>
-                </Tooltip>
+                <Icon name="copy" size={20} />
               </button>
-            </Popover.Target>
-            <Popover.Dropdown
-              onMouseDown={(e) => e.stopPropagation()}
-              style={{
-                backgroundColor: "var(--mantine-color-body)",
-                borderColor: "var(--mantine-color-default-border)",
-              }}
-            >
-              <Stack gap="xs" style={{ minWidth: 220 }}>
-                <TextInput
-                  placeholder="https://..."
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.currentTarget.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && linkUrl.trim()) {
-                      handleAddLink(linkUrl);
-                    }
-                  }}
-                  size="xs"
-                  autoFocus
-                />
-                <Button
-                  size="sm"
-                  disabled={!linkUrl.trim()}
-                  onClick={() => handleAddLink(linkUrl)}
-                >
-                  {t("viewer.comments.addLink", "Add link")}
-                </Button>
-              </Stack>
-            </Popover.Dropdown>
-          </Popover>
-
-          <Tooltip label={t("workbenchBar.redact", "Redact")} withArrow>
-            <button
-              type="button"
-              className="embedpdf-text-selection-btn"
-              onClick={handleRedact}
-              aria-label={t("workbenchBar.redact", "Redact")}
-            >
-              <Icon name="file-x" size={20} />
-            </button>
+            </span>
           </Tooltip>
+
+          {!readOnly && (
+            <>
+              <Tooltip label={t("annotation.highlight", "Highlight")} withArrow>
+                <button
+                  type="button"
+                  className="embedpdf-text-selection-btn"
+                  onClick={handleHighlight}
+                  aria-label={t("annotation.highlight", "Highlight")}
+                >
+                  <Icon name="highlighter" size={20} />
+                </button>
+              </Tooltip>
+
+              <Tooltip label={t("annotation.strikeout", "Strikeout")} withArrow>
+                <button
+                  type="button"
+                  className="embedpdf-text-selection-btn"
+                  onClick={handleStrikeout}
+                  aria-label={t("annotation.strikeout", "Strikeout")}
+                >
+                  <Icon name="strikethrough" size={20} />
+                </button>
+              </Tooltip>
+
+              <Tooltip label={t("annotation.underline", "Underline")} withArrow>
+                <button
+                  type="button"
+                  className="embedpdf-text-selection-btn"
+                  onClick={handleUnderline}
+                  aria-label={t("annotation.underline", "Underline")}
+                >
+                  <Icon name="underline" size={20} />
+                </button>
+              </Tooltip>
+
+              <Tooltip label={t("annotation.squiggly", "Squiggly")} withArrow>
+                <button
+                  type="button"
+                  className="embedpdf-text-selection-btn"
+                  onClick={handleSquiggly}
+                  aria-label={t("annotation.squiggly", "Squiggly")}
+                >
+                  <Icon name="line-squiggle" size={20} />
+                </button>
+              </Tooltip>
+
+              <Popover
+                opened={linkPopoverOpen}
+                onChange={setLinkPopoverOpen}
+                position={showAbove ? "top" : "bottom"}
+                withArrow
+                shadow="md"
+                transitionProps={{ duration: 0 }}
+              >
+                <Popover.Target>
+                  <button
+                    type="button"
+                    className="embedpdf-text-selection-btn"
+                    onClick={() => setLinkPopoverOpen((o) => !o)}
+                    aria-label={t("viewer.comments.addLink", "Add link")}
+                  >
+                    <Tooltip
+                      label={t("viewer.comments.addLink", "Add link")}
+                      withArrow
+                      disabled={linkPopoverOpen}
+                    >
+                      <span style={{ display: "inline-flex" }}>
+                        <Icon name="link" size={20} />
+                      </span>
+                    </Tooltip>
+                  </button>
+                </Popover.Target>
+                <Popover.Dropdown
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{
+                    backgroundColor: "var(--mantine-color-body)",
+                    borderColor: "var(--mantine-color-default-border)",
+                  }}
+                >
+                  <Stack gap="xs" style={{ minWidth: 220 }}>
+                    <TextInput
+                      placeholder="https://..."
+                      value={linkUrl}
+                      onChange={(e) => setLinkUrl(e.currentTarget.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && linkUrl.trim()) {
+                          handleAddLink(linkUrl);
+                        }
+                      }}
+                      size="xs"
+                      autoFocus
+                    />
+                    <Button
+                      size="sm"
+                      disabled={!linkUrl.trim()}
+                      onClick={() => handleAddLink(linkUrl)}
+                    >
+                      {t("viewer.comments.addLink", "Add link")}
+                    </Button>
+                  </Stack>
+                </Popover.Dropdown>
+              </Popover>
+
+              <Tooltip label={t("workbenchBar.redact", "Redact")} withArrow>
+                <button
+                  type="button"
+                  className="embedpdf-text-selection-btn"
+                  onClick={handleRedact}
+                  aria-label={t("workbenchBar.redact", "Redact")}
+                >
+                  <Icon name="file-x" size={20} />
+                </button>
+              </Tooltip>
+            </>
+          )}
+
+          {canReadAloud && (
+            <Tooltip
+              label={t("viewer.readAloudFromHere", "Read aloud from here")}
+              withArrow
+            >
+              <button
+                type="button"
+                className="embedpdf-text-selection-btn"
+                onClick={handleReadAloudFromHere}
+                aria-label={t(
+                  "viewer.readAloudFromHere",
+                  "Read aloud from here",
+                )}
+              >
+                <Icon name="volume-2" size={20} />
+              </button>
+            </Tooltip>
+          )}
         </div>
       </div>,
       document.body,
