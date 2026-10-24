@@ -89,11 +89,6 @@ export interface FolderAccessSettingsData {
   allowedFolderRoots?: string[];
 }
 
-export interface ImpliedFolderRoot {
-  path: string;
-  reason: string;
-}
-
 export interface McpAuthData {
   mode?: string;
   issuerUri?: string;
