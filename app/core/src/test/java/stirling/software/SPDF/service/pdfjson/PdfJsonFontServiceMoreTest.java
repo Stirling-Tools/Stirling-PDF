@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.List;
@@ -28,6 +29,8 @@ import stirling.software.common.util.TempFileManager;
  * (configured / unconfigured / rc!=0 / success) with a mocked ProcessExecutor.
  */
 class PdfJsonFontServiceMoreTest {
+
+    private static final byte[] CFF_HEADER = {1, 0, 4, 1};
 
     private TempFileManager tempFileManager;
     private ApplicationProperties applicationProperties;
@@ -334,7 +337,7 @@ class PdfJsonFontServiceMoreTest {
                                                 ProcessExecutor.Processes.CFF_CONVERTER))
                         .thenReturn(exec);
 
-                assertNull(service.convertCffProgramToTrueType(new byte[] {1, 2, 3}, null));
+                assertNull(service.convertCffProgramToTrueType(CFF_HEADER, null));
             }
         }
 
@@ -375,7 +378,7 @@ class PdfJsonFontServiceMoreTest {
                                                 ProcessExecutor.Processes.CFF_CONVERTER))
                         .thenReturn(exec);
 
-                byte[] out = service.convertCffProgramToTrueType(new byte[] {1, 2, 3}, null);
+                byte[] out = service.convertCffProgramToTrueType(CFF_HEADER, null);
                 assertNotNull(out);
                 assertEquals(3, out.length);
             }
@@ -453,7 +456,7 @@ class PdfJsonFontServiceMoreTest {
                                                 ProcessExecutor.Processes.CFF_CONVERTER))
                         .thenReturn(exec);
 
-                assertNull(service.convertCffUsingFontForge(new byte[] {1, 2, 3}));
+                assertNull(service.convertCffUsingFontForge(CFF_HEADER));
             }
         }
 
@@ -475,8 +478,85 @@ class PdfJsonFontServiceMoreTest {
                                                 ProcessExecutor.Processes.CFF_CONVERTER))
                         .thenReturn(exec);
 
-                assertNull(service.convertCffUsingFontForge(new byte[] {1, 2, 3}));
+                assertNull(service.convertCffUsingFontForge(CFF_HEADER));
             }
+        }
+
+        @Test
+        @DisplayName("input without a CFF header never reaches FontForge")
+        void nonCffInputRejected() throws Exception {
+            setField("fontForgeCffConverterAvailable", true);
+            setField("fontforgeCommand", "fontforge");
+
+            try (MockedStatic<ProcessExecutor> mocked = mockStatic(ProcessExecutor.class)) {
+                byte[] sfd = "SplineFontDB: 3.2\n".getBytes(StandardCharsets.US_ASCII);
+                assertNull(service.convertCffUsingFontForge(sfd));
+                assertNull(service.convertCffUsingFontForge(new byte[] {1, 0, 4}));
+                assertNull(service.convertCffUsingFontForge(new byte[] {1, 0, 4, 5}));
+                assertNull(service.convertCffUsingFontForge(new byte[] {1, 2, 3}));
+                assertNull(service.convertCffUsingFontForge(null));
+                mocked.verifyNoInteractions();
+                verifyNoInteractions(tempFileManager);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("isCffFontProgram")
+    class CffHeader {
+
+        @Test
+        @DisplayName("accepts CFF headers with hdrSize 4")
+        void acceptsHeaderSizeFour() {
+            assertTrue(service.isCffFontProgram(CFF_HEADER));
+            assertTrue(service.isCffFontProgram(new byte[] {1, 0, 4, 4, 0, 0}));
+        }
+
+        @Test
+        @DisplayName("accepts CFF headers with a larger hdrSize and a nonzero minor version")
+        void acceptsLargerHeaderSize() {
+            assertTrue(service.isCffFontProgram(new byte[] {1, 0, 5, 1, 0}));
+            assertTrue(service.isCffFontProgram(new byte[] {1, 1, 8, 2, 0, 0, 0, 0, 0}));
+        }
+
+        @Test
+        @DisplayName("rejects a major version other than 1")
+        void rejectsWrongMajorVersion() {
+            assertFalse(service.isCffFontProgram(new byte[] {2, 0, 5, 1, 0}));
+            assertFalse(service.isCffFontProgram(new byte[] {0, 0, 4, 1}));
+        }
+
+        @Test
+        @DisplayName("rejects an invalid hdrSize or offSize")
+        void rejectsInvalidSizes() {
+            assertFalse(service.isCffFontProgram(new byte[] {1, 0, 3, 1}));
+            assertFalse(service.isCffFontProgram(new byte[] {1, 0, 8, 1}));
+            assertFalse(service.isCffFontProgram(new byte[] {1, 0, 4, 0}));
+            assertFalse(service.isCffFontProgram(new byte[] {1, 0, 4, 5}));
+        }
+
+        @Test
+        @DisplayName("rejects FontForge SFD source text")
+        void rejectsSfd() {
+            assertFalse(
+                    service.isCffFontProgram(
+                            "SplineFontDB: 3.2\nFontName: X\n"
+                                    .getBytes(StandardCharsets.US_ASCII)));
+        }
+
+        @Test
+        @DisplayName("rejects empty, short and null input")
+        void rejectsShortInput() {
+            assertFalse(service.isCffFontProgram(new byte[0]));
+            assertFalse(service.isCffFontProgram(new byte[] {1, 0, 4}));
+            assertFalse(service.isCffFontProgram(null));
+        }
+
+        @Test
+        @DisplayName("rejects OpenType and TrueType wrappers")
+        void rejectsSfntWrappers() {
+            assertFalse(service.isCffFontProgram(new byte[] {'O', 'T', 'T', 'O', 0, 9, 0, 0}));
+            assertFalse(service.isCffFontProgram(new byte[] {0, 1, 0, 0, 0, 12}));
         }
     }
 
