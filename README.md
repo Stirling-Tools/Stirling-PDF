@@ -1,3 +1,5 @@
+English | [简体中文](./README.zh-CN.md)
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png" width="80" alt="Stirling PDF logo">
 </p>
