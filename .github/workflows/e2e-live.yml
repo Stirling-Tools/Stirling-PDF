@@ -5,9 +5,26 @@ name: Playwright E2E (live backend)
 # server.
 on:
   workflow_call:
+    inputs:
+      gradle-hash:
+        required: true
+        type: string
+      java-version:
+        required: false
+        default: "25"
+        type: string
+      uv-hash:
+        required: true
+        type: string
+      frontend-dist-hash:
+        required: true
+        type: string
 
 permissions:
   contents: read
+
+env:
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ inputs.java-version }}
 
 jobs:
   playwright-e2e-live:
@@ -16,43 +33,75 @@ jobs:
       deployment: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
+      UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
+      NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
+    permissions:
+      contents: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
+
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Restore cache Gradle User Home
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Checkout trusted Java action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-java-action
+          sparse-checkout: .github/actions/java
+          persist-credentials: false
 
-      - name: Set up JDK 25
-        uses: ./.github/actions/java
+      - name: Restore cache artifact
+        id: cache
+        uses: ./.github/actions/cache-the-planet
         with:
-          java-version: "25"
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          multi-cache: |
+            e2e-frontend-dist:
+              path: frontend/dist
+            e2e-npm-cache:
+              path: .cache/npm
+            e2e-gradle-caches:
+              path: .cache/gradle-java-${{ inputs.java-version }}/caches
+            e2e-gradle-wrapper:
+              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
+            e2e-live-setup-uv-cache:
+              path: .cache/setup-uv-cache
+            e2e-live-uv-python-dir:
+              path: .cache/uv-python-dir
+          key: |
+            e2e-gradle-caches=${{ inputs.gradle-hash }}
+            e2e-gradle-wrapper=${{ inputs.gradle-hash }}
+            e2e-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            e2e-frontend-dist=${{ inputs.frontend-dist-hash }}
+            e2e-live-setup-uv-cache=${{ inputs.uv-hash }}
+            e2e-live-uv-python-dir=${{ inputs.uv-hash }}
+          token: ${{ github.token }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - name: Set up JDK ${{ inputs.java-version }}
+        uses: ./trusted-java-action/.github/actions/java
         with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+          java-version: ${{ inputs.java-version }}
+
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
         with:
           version: 3.54.0
+
       - name: Install Playwright (chromium only)
         run: task e2e:install -- chromium
+
       - name: Build frontend (production bundle for vite preview)
         env:
           VITE_BUILD_FOR_PREVIEW: "1"
         run: task frontend:build
+
       - name: Run live E2E tests (chromium) with coverage
         id: live-tests
         env:
@@ -73,6 +122,7 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
         run: task e2e:live
+
       - name: Flag flaky tests
         # Runs regardless of the test outcome: a flaky test (passed on retry)
         # leaves the step green, so this is the only place it surfaces. Emits
@@ -82,6 +132,7 @@ jobs:
         run: npx tsx scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
+
       - name: Generate JaCoCo report from e2e:live .exec
         if: always()
         id: live-coverage
@@ -105,14 +156,17 @@ jobs:
             echo "::warning::No e2e:live .exec found at .test-state/playwright/jacoco.exec; skipping report"
             echo "report=false" >> "$GITHUB_OUTPUT"
           fi
+
       - name: Install uv
         if: always()
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
-          enable-cache: true
+          enable-cache: false
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
+          cache-local-path: .cache/setup-uv-cache
+
       - name: e2e:live coverage step summary
         if: always() && steps.live-coverage.outputs.report == 'true'
         run: |
@@ -120,6 +174,7 @@ jobs:
             --title "Playwright (live backend) JaCoCo coverage" \
             --jacoco "e2e-live=build/reports/jacoco/e2e-live/jacocoTestReport.xml" \
             --github-step-summary
+
       - name: Upload e2e:live JaCoCo report
         if: always() && steps.live-coverage.outputs.report == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -185,6 +240,7 @@ jobs:
           echo "::group::Spring Boot backend log (last 500 lines)"
           tail -500 .test-state/playwright/backend.log || echo "no backend log found"
           echo "::endgroup::"
+
       - name: Upload backend log
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -192,6 +248,7 @@ jobs:
           name: backend-log-live-${{ github.run_id }}
           path: .test-state/playwright/backend.log
           retention-days: 7
+
       - name: List Playwright output locations (debug)
         if: always()
         run: |
@@ -205,6 +262,7 @@ jobs:
             || echo "no test-results at frontend/"
           find . -name node_modules -prune -o -name 'trace.zip' -print 2>/dev/null || true
           echo "::endgroup::"
+
       - name: Upload Playwright report + traces
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

@@ -20,13 +20,62 @@ on:
 permissions:
   contents: read
 
+env:
+  JAVA_VERSION: 25
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
+  GRADLE_FILES_TO_HASH: |
+    gradle/wrapper/gradle-wrapper.properties
+    gradle/libs.versions.toml
+    buildSrc/**
+    settings.gradle
+    build.gradle
+    app/**/build.gradle
+    gradle/**/*.gradle
+  UV_FILES_TO_HASH: |
+    engine/.python-version
+    engine/pyproject.toml
+    engine/uv.lock
+
 jobs:
-  generated-models:
+  hash_pr:
+    name: Hash files
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     permissions:
       contents: read
+    outputs:
+      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
+      uv_files_hash: ${{ steps.hash.outputs.uv_files_hash}}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Hash Gradle and Cargo files
+        id: hash
+        env:
+          GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+          UV_HASH: ${{ hashFiles(env.UV_FILES_TO_HASH) }}
+        shell: bash
+        run: |
+          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
+          echo "uv_files_hash=$UV_HASH" >> "$GITHUB_OUTPUT"
+  generated-models:
+    runs-on: ubuntu-latest
+    needs: hash_pr
+    timeout-minutes: 20
+    permissions:
+      contents: write
       pull-requests: write
+    env:
+      UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
+      NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
@@ -36,43 +85,49 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Checkout trusted Java action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-java-action
+          sparse-checkout: .github/actions/java
+          persist-credentials: false
+
+      - name: Restore Gradle cache github-artifact
+        id: cache
+        uses: ./.github/actions/cache-the-planet
+        with:
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
+          multi-cache: |
+            models-npm-cache:
+              path: .cache/npm
+            models-gradle-caches:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+            models-gradle-wrapper:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+            models-setup-uv-cache:
+              path: .cache/setup-uv-cache
+          key: |
+            models-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            models-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            models-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            models-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
+
       - name: Install uv
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
-          enable-cache: true
+          enable-cache: false
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
-
-      - name: Restore cache Gradle User Home
-        if: inputs.use_shared_cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-
-      - name: Restore cache Gradle
-        if: inputs.use_shared_cache == false
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-generated-models-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          cache-local-path: .cache/setup-uv-cache
 
       - name: Set up JDK 25
-        uses: ./.github/actions/java
+        uses: ./trusted-java-action/.github/actions/java
         with:
           java-version: "25"
-
-      - name: Set up Node
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0

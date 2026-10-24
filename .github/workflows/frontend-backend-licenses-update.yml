@@ -18,6 +18,18 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  JAVA_VERSION: 25
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
+  GRADLE_FILES_TO_HASH: |
+    gradle/wrapper/gradle-wrapper.properties
+    gradle/libs.versions.toml
+    buildSrc/**
+    settings.gradle
+    build.gradle
+    app/**/build.gradle
+    gradle/**/*.gradle
+
 jobs:
   files-changed:
     name: detect what files changed
@@ -40,6 +52,32 @@ jobs:
         id: changes
         with:
           filters: .github/config/.files.yaml
+  hash_pr:
+    name: Hash files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Hash Gradle and Cargo files
+        id: hash
+        env:
+          GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+        shell: bash
+        run: |
+          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
 
   generate-frontend-license-report:
     # ci-bot, not bot-identity: this job runs on PRs too, and bot-identity is main-only.
@@ -81,13 +119,6 @@ jobs:
           path: base
           fetch-depth: 1
           persist-credentials: false
-
-      - name: Set up Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend dependencies
         working-directory: frontend
@@ -326,7 +357,7 @@ jobs:
       name: ci-bot
       deployment: false
     if: needs.files-changed.outputs.licenses-backend == 'true'
-    needs: files-changed
+    needs: [files-changed, hash_pr]
     name: Generate Backend License Report
     runs-on: ubuntu-latest
     permissions:
@@ -344,6 +375,15 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Checkout trusted Java action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-java-action
+          sparse-checkout: .github/actions/java
+          persist-credentials: false
+
       - name: Setup GitHub App Bot
         if: (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)) && github.actor != 'dependabot[bot]'
         id: setup-bot
@@ -352,18 +392,25 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
-      - name: Cache Gradle
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore Gradle cache github-artifact
+        id: cache
+        uses: ./.github/actions/cache-the-planet
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-license-report-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
+          multi-cache: |
+            backend-licences-gradle-caches:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+            backend-licences-gradle-wrapper:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+          key: |
+            backend-licences-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            backend-licences-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
 
-      - name: Set up JDK 25
-        uses: ./.github/actions/java
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: ./trusted-java-action/.github/actions/java
         with:
-          java-version: "25"
+          java-version: ${{ env.JAVA_VERSION }}
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0

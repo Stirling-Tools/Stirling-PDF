@@ -18,11 +18,45 @@ permissions:
   contents: read
 
 jobs:
-  playwright-all-browsers:
-    name: Playwright (stubbed, all browsers)
+  hash_pr:
+    name: Hash files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
+    outputs:
+      npm_files_hash: ${{ steps.hash.outputs.npm_files_hash }}
+      frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Hash Gradle and Cargo files
+        id: hash
+        env:
+          NPM_HASH: ${{ hashFiles('frontend/package-lock.json') }}
+          FRONTEND_DIST_HASH: ${{ hashFiles('frontend/src/editor/**') }}
+        shell: bash
+        run: |
+          echo "npm_files_hash=$NPM_HASH" >> "$GITHUB_OUTPUT"
+          echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH" >> "$GITHUB_OUTPUT"
+
+  playwright-all-browsers:
+    name: Playwright (stubbed, all browsers)
+    needs: hash_pr
+    permissions:
+      contents: write
     uses: ./.github/workflows/e2e-stubbed.yml
+    with:
+      frontend-dist-hash: ${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
+      npm-hash: ${{ needs.hash_pr.outputs.npm_files_hash }}
 
   # Whole-suite accessibility sweep. Pull requests only scan the stories they
   # touch (frontend-a11y.yml) because a full pass takes ~30 minutes; this covers
@@ -48,13 +82,6 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
@@ -87,7 +114,7 @@ jobs:
     name: Warm Tauri Rust cache
     if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
     with:

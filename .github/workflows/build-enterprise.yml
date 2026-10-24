@@ -37,15 +37,80 @@ on:
 permissions:
   contents: read
 
+env:
+  JAVA_VERSION: 25
+  UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
+  UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
+  NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
+  CARGO_HOME: ${{ github.workspace }}/.cache/cargo
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
+  GRADLE_FILES_TO_HASH: |
+    gradle/wrapper/gradle-wrapper.properties
+    gradle/libs.versions.toml
+    buildSrc/**
+    settings.gradle
+    build.gradle
+    app/**/build.gradle
+    gradle/**/*.gradle
+  CARGO_FILES_TO_HASH: |
+    frontend/src-tauri/**
+    frontend/src-tauri/Cargo.toml
+    frontend/src-tauri/Cargo.lock
+  FRONTEND_DIST_FILES_TO_HASH: |
+    frontend/src/editor/**
+  UV_FILES_TO_HASH: |
+    engine/.python-version
+    engine/pyproject.toml
+    engine/uv.lock
+
 jobs:
   pick:
     uses: ./.github/workflows/_runner-pick.yml
+
+  hash_pr:
+    name: Hash files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
+      cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash}}
+      frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
+      frontend_tauri_files_hash: ${{ steps.hash.outputs.frontend_tauri_files_hash }}
+      uv_files_hash: ${{ steps.hash.outputs.uv_files_hash }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Hash Gradle and Cargo files
+        id: hash
+        env:
+          GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+          CARGO_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+          FRONTEND_DIST_HASH: ${{ hashFiles(env.FRONTEND_DIST_FILES_TO_HASH) }}
+          FRONTEND_TAURI_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+          UV_HASH: ${{ hashFiles(env.UV_FILES_TO_HASH) }}
+        shell: bash
+        run: |
+          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
+          echo "cargo_files_hash=$CARGO_HASH" >> "$GITHUB_OUTPUT"
+          echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH" >> "$GITHUB_OUTPUT"
+          echo "frontend_tauri_files_hash=$FRONTEND_TAURI_HASH" >> "$GITHUB_OUTPUT"
+          echo "uv_files_hash=$UV_HASH" >> "$GITHUB_OUTPUT"
 
   playwright-e2e-enterprise:
     environment:
       name: ci-unsigned
       deployment: false
-    needs: pick
+    needs: [pick, hash_pr]
     # Skip on fork PRs / untrusted authors: they have no PREMIUM_KEY_ENTERPRISE,
     # so the suite can't boot premium and would fail. See the header comment.
     # GitHub reports the skipped reusable workflow as success.
@@ -64,41 +129,49 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Restore cache Gradle User Home
-        if: inputs.use_shared_cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Checkout trusted Java action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-java-action
+          sparse-checkout: .github/actions/java
+          persist-credentials: false
 
-      - name: Restore cache Gradle
-        if: inputs.use_shared_cache == false
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore cache artifact
+        id: cache
+        uses: ./.github/actions/cache-the-planet
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-playwright-e2e-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
+          multi-cache: |
+            enterprise-frontend-dist:
+              path: frontend/dist
+            enterprise-npm-cache:
+              path: .cache/npm
+            enterprise-gradle-caches:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+            enterprise-gradle-wrapper:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+          key: |
+            enterprise-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            enterprise-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            enterprise-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            enterprise-frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
 
-      - name: Set up JDK 25
-        uses: ./.github/actions/java
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: ./trusted-java-action/.github/actions/java
         with:
-          java-version: "25"
+          java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
         with:
           version: 3.54.0
+
       - name: Install Playwright (chromium only)
         run: task e2e:install -- chromium
+
       - name: Build frontend (needed for playwright's vite preview webServer)
         # Enterprise tests target :8080 (Spring Boot's bundled frontend), but
         # playwright's webServer config still launches `vite preview --port 5173`
@@ -150,6 +223,7 @@ jobs:
       - name: Bring up Keycloak (OAuth realm)
         working-directory: testing/compose
         run: docker compose -f docker-compose-keycloak-oauth.yml up -d --no-deps keycloak-oauth-db keycloak-oauth
+
       - name: Wait for Keycloak (OAuth) ready
         working-directory: testing/compose
         run: |
@@ -162,6 +236,7 @@ jobs:
           done
           docker compose -f docker-compose-keycloak-oauth.yml logs --tail=200 keycloak-oauth
           exit 1
+
       - name: Boot Stirling-PDF (frontend baked in, OAuth env)
         env:
           SECURITY_ENABLELOGIN: "true"
@@ -181,11 +256,13 @@ jobs:
           nohup ./gradlew :stirling-pdf:bootRun -PbuildWithFrontend=true > /tmp/backend.log 2>&1 &
           echo $! > /tmp/backend.pid
           wait_for_backend
+
       - name: Run enterprise OAuth Playwright tests
         id: oauth-tests
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-oauth.json
         run: task e2e:enterprise -- --grep "OAuth"
+
       - name: Stop backend + tear down OAuth Keycloak
         if: always()
         run: |
@@ -197,6 +274,7 @@ jobs:
       - name: Bring up Keycloak (SAML realm)
         working-directory: testing/compose
         run: docker compose -f docker-compose-keycloak-saml.yml up -d --no-deps keycloak-saml-db keycloak-saml
+
       - name: Wait for Keycloak (SAML) ready
         working-directory: testing/compose
         run: |
@@ -206,6 +284,7 @@ jobs:
           done
           docker compose -f docker-compose-keycloak-saml.yml logs --tail=200 keycloak-saml
           exit 1
+
       - name: Generate SAML SP certs + fetch Keycloak IdP cert
         # The .pem/.crt/.key files are gitignored (test-only certs); the
         # docker-based start-saml-test.sh generates them at runtime, so do
@@ -229,6 +308,7 @@ jobs:
           test -s saml-public-cert.crt
           test -s keycloak-saml-cert.pem
           echo "✓ SAML certs prepared"
+
       - name: Boot Stirling-PDF (frontend baked in, SAML env)
         env:
           SECURITY_ENABLELOGIN: "true"
@@ -256,11 +336,13 @@ jobs:
           nohup ./gradlew :stirling-pdf:bootRun -PbuildWithFrontend=true > /tmp/backend.log 2>&1 &
           echo $! > /tmp/backend.pid
           wait_for_backend
+
       - name: Run enterprise SAML Playwright tests
         id: saml-tests
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-saml.json
         run: task e2e:enterprise -- --grep "SAML"
+
       - name: Stop backend + tear down SAML Keycloak
         if: always()
         run: |
@@ -277,6 +359,7 @@ jobs:
         run: |
           rm -f app/core/configs/stirling-pdf-DB*.mv.db
           rm -rf app/core/configs/backup
+
       - name: Boot Stirling-PDF (frontend baked in, premium only)
         env:
           SECURITY_INITIALLOGIN_USERNAME: admin
@@ -288,22 +371,26 @@ jobs:
           nohup ./gradlew :stirling-pdf:bootRun -PbuildWithFrontend=true > /tmp/backend.log 2>&1 &
           echo $! > /tmp/backend.pid
           wait_for_backend
+
       - name: Run enterprise feature Playwright tests
         id: feature-tests
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-feature.json
         run: task e2e:enterprise -- --grep "Enterprise license"
+
       - name: Print backend log on failure
         if: failure()
         run: |
           echo "::group::Enterprise backend log"
           tail -500 /tmp/backend.log || true
           echo "::endgroup::"
+
       - name: Stop backend (final)
         if: always()
         run: |
           source /tmp/helpers.sh
           stop_backend
+
       - name: Flag flaky tests
         # Runs regardless of the test outcomes: a flaky test (passed on retry)
         # leaves its step green, so this is the only place it surfaces. Merges
@@ -317,6 +404,7 @@ jobs:
           "${{ github.workspace }}/frontend/playwright-report/results-oauth.json"
           "${{ github.workspace }}/frontend/playwright-report/results-saml.json"
           "${{ github.workspace }}/frontend/playwright-report/results-feature.json"
+
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -337,7 +425,7 @@ jobs:
     environment:
       name: ci-unsigned
       deployment: false
-    needs: [pick, playwright-e2e-enterprise]
+    needs: [pick, playwright-e2e-enterprise, hash_pr]
     # Nightly cron + manual dispatch only (heavy build), fork-gated for the licence secret.
     if: >-
       always() && needs.pick.outputs.is_fork != 'true'
@@ -363,21 +451,70 @@ jobs:
         uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
+
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Restore cache artifact
+        id: cache
+        uses: ./.github/actions/cache-the-planet
+        with:
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
+          multi-cache: |
+            enterprise-cargo-registry:
+              path: .cache/cargo/registry
+            enterprise-cargo-git:
+              path: .cache/cargo/git
+            enterprise-cargo-bin:
+              path: .cache/cargo/bin
+            enterprise-frontend-dist:
+              path: frontend/dist
+            enterprise-npm-cache:
+              path: .cache/npm
+            enterprise-gradle-caches:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+            enterprise-gradle-wrapper:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+            enterprise-tauri-target:
+              path: frontend/src-tauri/target
+            enterprise-setup-uv-cache:
+              path: .cache/setup-uv-cache
+            enterprise-uv-python-dir:
+              path: .cache/uv-python-dir
+          key: |
+            enterprise-gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            enterprise-gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            enterprise-cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            enterprise-cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            enterprise-cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            enterprise-npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            enterprise-frontend-dist=${{ hashFiles('frontend/package-lock.json') }}
+            enterprise-tauri-target=${{ hashFiles('frontend/package-lock.json') }}
+            enterprise-setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}
+            enterprise-uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}
+          exclude: |
+            frontend/src-tauri/target/debug/**
+            frontend/src-tauri/runtime/**
+            frontend/src-tauri/thumbnail-handler/target/**
+
       - name: Install uv
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
-          enable-cache: true
+          enable-cache: false
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
+          cache-local-path: .cache/setup-uv-cache
+
       - name: Install behave test deps
         run: |
           uv sync --project engine --locked --group cucumber
+
       - name: Build the multi-node image
         working-directory: testing/compose
         run: docker compose $MN_FILES build
+
       - name: Bring up the cluster and wait for both nodes healthy
         working-directory: testing/compose
         run: |
@@ -391,20 +528,25 @@ jobs:
           echo "::error::nodes did not become healthy"
           docker compose $MN_FILES logs --tail=200 stirling-1 stirling-2
           exit 1
+
       - name: Seed the cluster (teams, users, S3 connection, policy)
         working-directory: testing/compose
         run: docker compose $MN_FILES --profile seed run --rm seed
+
       - name: Run multi-node regression (implemented guarantees)
         working-directory: testing/cucumber
         # -e overrides behave.ini's exclusion of features/multinode; ~@known_gap skips any tracked-gap scenarios.
         run: uv run --project ../../engine --locked --group cucumber python -m behave features/multinode -e "features/enterprise" --tags="~@known_gap ~@destructive" --no-capture -f plain
+
       - name: Run multi-node failover (destructive)
         working-directory: testing/cucumber
         run: uv run --project ../../engine --locked --group cucumber python -m behave features/multinode -e "features/enterprise" --tags="@destructive ~@known_gap" --no-capture -f plain
+
       - name: Dump node logs on failure
         if: failure()
         working-directory: testing/compose
         run: docker compose $MN_FILES logs --tail=400 stirling-1 stirling-2
+
       - name: Tear down
         if: always()
         working-directory: testing/compose

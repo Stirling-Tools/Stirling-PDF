@@ -17,9 +17,22 @@ on:
         required: false
         type: string
         default: "false"
+      gradle-hash:
+        required: true
+        type: string
+      uv-hash:
+        required: true
+        type: string
+      java-version:
+        required: false
+        default: "25"
+        type: string
 
 permissions:
   contents: read
+
+env:
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ inputs.java-version }}
 
 jobs:
   docker-compose-tests:
@@ -29,9 +42,12 @@ jobs:
       deployment: false
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
+      UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
     permissions:
       actions: write
-      contents: read
+      contents: write
       checks: write
     strategy:
       fail-fast: false
@@ -55,20 +71,70 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # printVersion, copyJacocoAgent and jacocoReportFromExec still run
-      # Gradle on the host, so the dependency cache is still worth restoring.
-      - name: Restore cache Gradle User Home
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Checkout trusted Java action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-java-action
+          sparse-checkout: .github/actions/java
+          persist-credentials: false
 
-      - name: Set up JDK 25
-        uses: ./.github/actions/java
+      - name: Build multi-cache configuration
+        id: cache-config
+        shell: bash
+        run: |
+          if [[ "${{ matrix.image }}" == "fat" ]]; then
+            {
+              echo 'multi_cache<<EOF'
+              cat <<'CACHE'
+            gradle-caches:
+              path: .cache/gradle-java-${{ inputs.java-version }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
+            docker-compose-setup-uv-cache:
+              path: .cache/setup-uv-cache
+            docker-compose-uv-python-dir:
+              path: .cache/uv-python-dir
+          CACHE
+              echo 'EOF'
+              echo 'cache_key<<EOF'
+              echo 'gradle-caches=${{ inputs.gradle-hash }}'
+              echo 'gradle-wrapper=${{ inputs.gradle-hash }}'
+              echo 'docker-compose-setup-uv-cache=${{ inputs.uv-hash }}'
+              echo 'docker-compose-uv-python-dir=${{ inputs.uv-hash }}'
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo 'multi_cache<<EOF'
+              cat <<'CACHE'
+            gradle-caches:
+              path: .cache/gradle-java-${{ inputs.java-version }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
+          CACHE
+              echo 'EOF'
+              echo 'cache_key<<EOF'
+              echo 'gradle-caches=${{ inputs.gradle-hash }}'
+              echo 'gradle-wrapper=${{ inputs.gradle-hash }}'
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Restore Gradle cache github-artifact
+        id: cache
+        uses: ./.github/actions/cache-the-planet
         with:
-          java-version: "25"
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
+          multi-cache: ${{ steps.cache-config.outputs.multi_cache }}
+          key: ${{ steps.cache-config.outputs.cache_key }}
+
+      - name: Set up JDK ${{ inputs.java-version }}
+        uses: ./trusted-java-action/.github/actions/java
+        with:
+          java-version: ${{ inputs.java-version }}
 
       # When the PR changes the base image, test.sh builds it locally
       # (stirling-pdf-base:local) into the daemon image store. A buildx
@@ -100,10 +166,11 @@ jobs:
         if: matrix.cucumber
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
-          enable-cache: true
+          enable-cache: false
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
+          cache-local-path: .cache/setup-uv-cache
 
       - name: Install Cucumber and coverage dependencies
         if: matrix.cucumber

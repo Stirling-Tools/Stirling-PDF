@@ -96,6 +96,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Restore Gradle and npm BuildKit caches
+        if: inputs.docker-base-changed != 'true'
+        uses: ./.github/actions/cache-the-planet
+        with:
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
+          multi-cache: |
+            docker-buildkit-cache:
+              path: .cache/buildkit-${{ matrix.cache-scope }}-${{ matrix.platform }}
+          key: |
+            docker-buildkit-cache=${{ matrix.cache-scope }}-${{ matrix.platform }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle', 'frontend/package-lock.json', 'docker/embedded/Dockerfile*') }}
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
@@ -147,10 +159,10 @@ jobs:
           context: .
           file: ./${{ matrix.docker-rev }}
           push: false
-          # Read the cache the main-branch publish writes, never write it
-          # back: exporting the build stage (mode=max) took ~5 minutes per
-          # image and PR entries were evicted before the next PR read them.
-          cache-from: type=gha,scope=${{ matrix.cache-scope }}
+          cache-from: |
+            type=gha,scope=${{ matrix.cache-scope }}
+            type=local,src=.cache/buildkit-${{ matrix.cache-scope }}-${{ matrix.platform }}
+          cache-to: type=local,dest=.cache/buildkit-${{ matrix.cache-scope }}-${{ matrix.platform }}
           platforms: ${{ matrix.platform }}
           provenance: true
           sbom: true
