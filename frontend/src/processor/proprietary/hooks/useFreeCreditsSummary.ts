@@ -2,6 +2,7 @@ import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLink } from "@editor/portal/contexts/LinkContext";
+import { useKeyLinked } from "@editor/portal/hooks/useKeyLinked";
 import { walletQuery } from "@editor/portal/queries/wallet";
 import {
   readCachedCredits,
@@ -35,7 +36,9 @@ export function useFreeCreditsSummary(): NavFooterCredits | null {
   // per-observer, so differing retry or interval settings here would make the
   // behaviour depend on which reader happened to fetch.
   const isOwner = useAccountLinkOwner();
-  const canRead = isLinked && isOwner;
+  // The wallet is a cloud read; a key-linked server holds no cloud session to make it with.
+  const keyLinked = useKeyLinked();
+  const canRead = isLinked && isOwner && !keyLinked;
   const { data: wallet } = useQuery({
     ...walletQuery(isLinked),
     enabled: canRead,

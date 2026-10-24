@@ -121,11 +121,13 @@ public class SupabaseSecurityConfig {
                                         // authenticate with yet. Neither grants anything on its
                                         // own — /request records an intent a human must approve,
                                         // and /claim requires a secret only the instance that
-                                        // created the request has ever held.
+                                        // created the request has ever held. /keys/redeem is the
+                                        // same trade: the one-time key is the credential.
                                         .requestMatchers(
                                                 HttpMethod.POST,
                                                 "/api/v1/account-link/connect/request",
-                                                "/api/v1/account-link/connect/claim")
+                                                "/api/v1/account-link/connect/claim",
+                                                "/api/v1/account-link/keys/redeem")
                                         .permitAll()
                                         .requestMatchers(
                                                 req ->
