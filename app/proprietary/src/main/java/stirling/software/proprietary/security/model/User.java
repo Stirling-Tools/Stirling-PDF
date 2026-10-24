@@ -5,7 +5,11 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,6 +28,12 @@ import stirling.software.proprietary.model.Team;
         name = "users",
         // team_id backs Team.users joins, the admin roster fetch, and per-team user counts.
         indexes = @Index(name = "idx_users_team_id", columnList = "team_id"))
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "users")
+// Explicit region: the default EntityName##NaturalId contains '#' which the
+// caffeine-jcache provider cannot resolve (it concatenates the name into an
+// unquoted Typesafe Config path, where '#' starts a comment).
+@NaturalIdCache(region = "usersNaturalId")
 @NoArgsConstructor
 @Getter
 @Setter
@@ -37,6 +47,8 @@ public class User implements UserDetails, Serializable {
     @Column(name = "user_id")
     private Long id;
 
+    // Mutable: changeUsername renames users, so the natural-id mapping must follow renames.
+    @NaturalId(mutable = true)
     @Column(name = "username", unique = true)
     private String username;
 
@@ -87,6 +99,7 @@ public class User implements UserDetails, Serializable {
     @Column(name = "supabase_auth_id", unique = true)
     private UUID supabaseId;
 
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "users")
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<Authority> authorities = new HashSet<>();
 
@@ -94,6 +107,7 @@ public class User implements UserDetails, Serializable {
     @JoinColumn(name = "team_id")
     private Team team;
 
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "users")
     @ElementCollection
     @MapKeyColumn(name = "setting_key")
     @Column(name = "setting_value", columnDefinition = "text")
