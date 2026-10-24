@@ -7,7 +7,7 @@ ARG TARGETPLATFORM
 # Stage 1: Build and strip Calibre
 FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS calibre-build
 ARG TARGETPLATFORM
-ARG CALIBRE_VERSION=9.15.0
+ARG CALIBRE_VERSION=9.16.0
 ARG CALIBRE_STRIP_WEBENGINE=false
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
