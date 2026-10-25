@@ -225,16 +225,22 @@ public class McpToolCatalog {
         return methods.contains(RequestMethod.POST) || methods.contains(RequestMethod.PUT);
     }
 
-    private static String extractOpId(String pattern, OperationCategory category) {
+    static String extractOpId(String pattern, OperationCategory category) {
         if (category.urlPrefix() == null || !pattern.startsWith(category.urlPrefix())) {
             return null;
         }
         String tail = pattern.substring(category.urlPrefix().length());
-        if (tail.isBlank() || tail.contains("/") || tail.contains("{")) {
+        if (tail.isBlank() || tail.contains("{")) {
             // Skip nested paths and path-variable templates.
             return null;
         }
-        return tail;
+
+        if (category == OperationCategory.CONVERT) {
+            String[] parts = tail.split("/");
+            return parts.length == 2 ? parts[0] + "-to-" + parts[1] : null;
+        }
+
+        return tail.contains("/") ? null : tail;
     }
 
     private static String prettifyOpId(String id) {

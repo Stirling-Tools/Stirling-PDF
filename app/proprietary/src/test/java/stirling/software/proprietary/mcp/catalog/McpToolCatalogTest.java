@@ -1,8 +1,6 @@
 package stirling.software.proprietary.mcp.catalog;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -149,6 +147,30 @@ class McpToolCatalogTest {
 
         assertEquals("compress-pdf", catalog.findByOperationId("compress-pdf").orElseThrow().id());
         assertTrue(idsOf(catalog).contains("compress-pdf"));
+    }
+
+    @Test
+    void extractOpId_mapsConvertPathsToFromToIds() {
+        assertEquals(
+                "pdf-to-word",
+                McpToolCatalog.extractOpId("/api/v1/convert/pdf/word", OperationCategory.CONVERT));
+        assertEquals(
+                "img-to-pdf",
+                McpToolCatalog.extractOpId("/api/v1/convert/img/pdf", OperationCategory.CONVERT));
+
+        assertNull(
+                McpToolCatalog.extractOpId(
+                        "/api/v1/convert/pdf/text-editor/page/{jobId}/{pageNumber}",
+                        OperationCategory.CONVERT));
+    }
+
+    @Test
+    void extractOpId_singleSegmentCategoriesUnchanged() {
+        assertEquals(
+                "rotate-pdf",
+                McpToolCatalog.extractOpId("/api/v1/general/rotate-pdf", OperationCategory.PAGES));
+        assertNull(McpToolCatalog.extractOpId("/api/v1/misc/a/b", OperationCategory.MISC));
+        assertNull(McpToolCatalog.extractOpId("/api/v1/misc/{id}", OperationCategory.MISC));
     }
 
     private McpToolCatalog catalogWithEndpointsEnabled(ApplicationProperties props) {
