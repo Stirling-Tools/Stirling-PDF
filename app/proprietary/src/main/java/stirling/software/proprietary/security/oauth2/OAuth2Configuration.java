@@ -109,7 +109,7 @@ public class OAuth2Configuration {
                                 .clientId(keycloak.getClientId())
                                 .clientSecret(keycloak.getClientSecret())
                                 .scope(keycloak.getScopes())
-                                .userNameAttributeName(keycloak.getUseAsUsername().getName())
+                                .userNameAttributeName(userNameAttribute(keycloak))
                                 .clientName(keycloak.getClientName())
                                 .redirectUri(redirectUri(keycloak.getName()))
                                 .build())
