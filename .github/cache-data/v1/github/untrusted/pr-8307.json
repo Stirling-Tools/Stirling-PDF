@@ -4567,35 +4567,6 @@
       "artifact_name": "cache-untrusted-pr-8307-tauri-gradle-wrapper-windows-x64-fab4639ba26dcb9058ce348ab85b0504a7798bfeb48e118b1ca0d3d01f70f8ad-v6--157332f83a08dfcc06670080f92431c8687babbe1a-part-000000",
       "workflow_run_id": 40195376604
     },
-    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/valid-frontend-setup-uv-cache/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-cache-e3b6888c3c920824/v6": {
-      "object": "sha256:7c39a7fcfff36484e33cf6706239cc6d03d693a39027bdd8ec103d15eba14da0",
-      "storage": "github-artifact",
-      "updated_at": "2026-10-25T13:28:46.121Z",
-      "source": "Stirling-Tools/Stirling-PDF",
-      "created_by": "Ludy87",
-      "size": 44023963,
-      "parts": [
-        {
-          "index": 0,
-          "object": "sha256:036b9c168d0071db42862c4f351ad153c0d2c627e2e32adc8f3d3fa650b3169d",
-          "size": 25165824,
-          "artifact_id": 12600821556,
-          "artifact_name": "cache-untrusted-pr-8307-valid-frontend-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--7c39a7fcfff36484e33cf6706239cc6d03d-part-000000",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 1,
-          "object": "sha256:30aec857846ca813e4c3c05ea87b91fac0a66cffce9a8f09472324c6d514be5a",
-          "size": 18858139,
-          "artifact_id": 12600503386,
-          "artifact_name": "cache-untrusted-pr-8307-valid-frontend-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--7c39a7fcfff36484e33cf6706239cc6d03d-part-000001",
-          "workflow_run_id": 40195376604
-        }
-      ],
-      "artifact_id": 12600821556,
-      "artifact_name": "cache-untrusted-pr-8307-valid-frontend-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--7c39a7fcfff36484e33cf6706239cc6d03d-part-000000",
-      "workflow_run_id": 40195376604
-    },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/valid-frontend-uv-python-dir/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-cache-e3b6888c3c920824/v6": {
       "object": "sha256:fd7328201c7b856f60c895e4adab770c291074e86d38bc610c13268ed62d8623",
       "storage": "github-artifact",
@@ -7480,10 +7451,39 @@
       "artifact_id": 12601377842,
       "artifact_name": "cache-untrusted-pr-8307-valid-npm-cache-linux-x64-a8fd6ddbc08ac7a0ef4b565d3e2a7af9bc6772e28208168fe4f3921d84529186-v6--754b87cf9dad6e6d52b75d9ea4380f035d5a1c20f5684e691-part-000000",
       "workflow_run_id": 40198829798
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/valid-frontend-setup-uv-cache/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17/v6": {
+      "object": "sha256:04bf6353c8a3dd86660b777c6f7259a899230bbea01ed2694fdc7774f8eb9277",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-25T14:00:43.092Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 44033891,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:cdf1bd00c640776f834cbbd6af05ddb7225f5c675f7fae332af2aea63092fde3",
+          "size": 25165824,
+          "artifact_id": 12601307952,
+          "artifact_name": "cache-untrusted-pr-8307-valid-frontend-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--04bf6353c8a3dd86660b777c6f7259a8992-part-000000",
+          "workflow_run_id": 40198829798
+        },
+        {
+          "index": 1,
+          "object": "sha256:2fc8275c78f7ec38707ac907d089d8d66cf2daa60dd9e1e8d66e09dc2ba05173",
+          "size": 18868067,
+          "artifact_id": 12601981942,
+          "artifact_name": "cache-untrusted-pr-8307-valid-frontend-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--04bf6353c8a3dd86660b777c6f7259a8992-part-000001",
+          "workflow_run_id": 40198829798
+        }
+      ],
+      "artifact_id": 12601307952,
+      "artifact_name": "cache-untrusted-pr-8307-valid-frontend-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--04bf6353c8a3dd86660b777c6f7259a8992-part-000000",
+      "workflow_run_id": 40198829798
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-25T13:04:51.116Z",
-    "writes": 78
+    "writes": 79
   }
 }
