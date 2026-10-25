@@ -4748,10 +4748,39 @@
       "artifact_id": 12600278559,
       "artifact_name": "cache-untrusted-pr-8307-tauri-cargo-registry-windows-x64-ef043b03263322bb0218eb567e8088ef85c1aa0b3ffda4b685422471ebc61522-v6--7bf7aaf3e0f7c6c2b78a9fa1dde579c91cbbaf1649-part-000000",
       "workflow_run_id": 40195376604
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-frontend-dist/windows-x64/7cd164e52f041cf17f94581ef59bb7027c19837dba4ce5bb3b09a2b5aa67c25e-cache-e3b6888c3c920824/v6": {
+      "object": "sha256:9d1328932a4a258f9638d77e7d43eb3f087fd764a4fc6560f41a9fe0e7aee9ca",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-25T13:26:51.929Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 30063185,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:f62dcc502d0a8e72bdee30750eec6ad3f31b1d30d00986dced5e04fd86f2c20b",
+          "size": 25165824,
+          "artifact_id": 12600358507,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-frontend-dist-windows-x64-7cd164e52f041cf17f94581ef59bb7027c19837dba4ce5bb3b09a2b5aa67c25e-v6--9d1328932a4a258f9638d77e7d43eb3f087fd764a4f-part-000000",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 1,
+          "object": "sha256:cf4c250413ebf626522c47cb63a174a71e76dd71a30ac62df18d93d62e5d8558",
+          "size": 4897361,
+          "artifact_id": 12600313642,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-frontend-dist-windows-x64-7cd164e52f041cf17f94581ef59bb7027c19837dba4ce5bb3b09a2b5aa67c25e-v6--9d1328932a4a258f9638d77e7d43eb3f087fd764a4f-part-000001",
+          "workflow_run_id": 40195376604
+        }
+      ],
+      "artifact_id": 12600358507,
+      "artifact_name": "cache-untrusted-pr-8307-tauri-frontend-dist-windows-x64-7cd164e52f041cf17f94581ef59bb7027c19837dba4ce5bb3b09a2b5aa67c25e-v6--9d1328932a4a258f9638d77e7d43eb3f087fd764a4f-part-000000",
+      "workflow_run_id": 40195376604
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-25T13:04:51.116Z",
-    "writes": 54
+    "writes": 55
   }
 }
