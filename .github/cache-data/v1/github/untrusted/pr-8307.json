@@ -1942,10 +1942,31 @@
       "artifact_id": 12599676984,
       "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-x64-stirling-pdf-latest-linux-amd64-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--3d8b6513d18-part-000000",
       "workflow_run_id": 40195376604
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/pre-commit-setup-uv-cache/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17/v6": {
+      "object": "sha256:f40134de267ac6effa36168d2cced7817d5056769d8a98bf412840cb526969a5",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-25T13:11:05.019Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 21965058,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:f40134de267ac6effa36168d2cced7817d5056769d8a98bf412840cb526969a5",
+          "size": 21965058,
+          "artifact_id": 12600775345,
+          "artifact_name": "cache-untrusted-pr-8307-pre-commit-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--f40134de267ac6effa36168d2cced7817d50567-part-000000",
+          "workflow_run_id": 40195376604
+        }
+      ],
+      "artifact_id": 12600775345,
+      "artifact_name": "cache-untrusted-pr-8307-pre-commit-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--f40134de267ac6effa36168d2cced7817d50567-part-000000",
+      "workflow_run_id": 40195376604
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-25T13:04:51.116Z",
-    "writes": 10
+    "writes": 11
   }
 }
