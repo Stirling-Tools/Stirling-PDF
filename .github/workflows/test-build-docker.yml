@@ -107,8 +107,22 @@ jobs:
           multi-cache: |
             docker-buildkit-cache:
               path: .cache/buildkit-${{ matrix.cache-scope }}-${{ matrix.platform }}
-          key: |
-            docker-buildkit-cache=${{ matrix.cache-scope }}-${{ matrix.platform }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle', 'frontend/package-lock.json', 'docker/embedded/Dockerfile*') }}
+          key: >-
+            docker-buildkit-cache=${{ matrix.cache-scope }}-${{
+              matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64-v8'
+            }}-${{
+              hashFiles(
+                matrix.docker-rev,
+                'gradle/wrapper/gradle-wrapper.properties',
+                'gradle/libs.versions.toml',
+                'buildSrc/**',
+                'settings.gradle',
+                'build.gradle',
+                'app/**/build.gradle',
+                'gradle/**/*.gradle',
+                'frontend/package-lock.json'
+              )
+            }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
