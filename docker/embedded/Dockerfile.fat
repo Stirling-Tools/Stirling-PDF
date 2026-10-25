@@ -92,7 +92,9 @@ RUN apt-get update \
 # Stage 2b: AI engine. Built at its final path so the venv resolves after the copy, on uv's
 # managed CPython because the runtime base ships Python 3.12.
 FROM ghcr.io/astral-sh/uv:bookworm-slim@sha256:22334efe746f1b69217d455049b484d7b8cacfb2d5f42555580b62415a98e0a3 AS engine-build
-ENV UV_PYTHON_INSTALL_DIR=/opt/stirling-engine/python
+ENV PATH="/root/.local/bin:$PATH" \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_INSTALL_DIR=/opt/stirling-engine/python
 WORKDIR /opt/stirling-engine
 COPY engine/pyproject.toml engine/uv.lock ./
 # One layer: trimming in a second RUN would cache the untrimmed copy too, and this build
