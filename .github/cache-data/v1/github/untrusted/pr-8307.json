@@ -4626,10 +4626,71 @@
       "artifact_id": 12600293395,
       "artifact_name": "cache-untrusted-pr-8307-docker-compose-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--3d187cb1d5dc6cdbdf20e09f7a29fb3c22c-part-000000",
       "workflow_run_id": 40195376604
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/docker-compose-uv-python-dir/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17/v6": {
+      "object": "sha256:294d78c6ba3b51f41435cb335d1ec3b6e612c423343414dfd45a59b2712dafc5",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-25T13:25:48.890Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 140689019,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:aec519def0c83ae324a81b296819aa3daeb85071b08e4d1cac7ed13d175c0983",
+          "size": 25165824,
+          "artifact_id": 12600183700,
+          "artifact_name": "cache-untrusted-pr-8307-docker-compose-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--294d78c6ba3b51f41435cb335d1ec3b6e612-part-000000",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 1,
+          "object": "sha256:043867ebf88702ffaffb0b740618c2f6f3dbe683560b9be3b732618dbdc38b00",
+          "size": 25165824,
+          "artifact_id": 12600662878,
+          "artifact_name": "cache-untrusted-pr-8307-docker-compose-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--294d78c6ba3b51f41435cb335d1ec3b6e612-part-000001",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 2,
+          "object": "sha256:e8d95593e3fa8c14929179406452fad355e58056eaf483cde067260bfea47dab",
+          "size": 25165824,
+          "artifact_id": 12600802201,
+          "artifact_name": "cache-untrusted-pr-8307-docker-compose-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--294d78c6ba3b51f41435cb335d1ec3b6e612-part-000002",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 3,
+          "object": "sha256:a1ca4bed8b35b86f47219ff809515290cd86959a0e6c97963d739bf5782ca562",
+          "size": 25165824,
+          "artifact_id": 12600802205,
+          "artifact_name": "cache-untrusted-pr-8307-docker-compose-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--294d78c6ba3b51f41435cb335d1ec3b6e612-part-000003",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 4,
+          "object": "sha256:414dad861016d33797ede7f13991be2fea3388bb34b3bb4a939f7fafd25f8415",
+          "size": 25165824,
+          "artifact_id": 12600657728,
+          "artifact_name": "cache-untrusted-pr-8307-docker-compose-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--294d78c6ba3b51f41435cb335d1ec3b6e612-part-000004",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 5,
+          "object": "sha256:2a39592896abe139955b3a8f8bb55bd0ea01825427711828b8c34f1303594389",
+          "size": 14859899,
+          "artifact_id": 12600742476,
+          "artifact_name": "cache-untrusted-pr-8307-docker-compose-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--294d78c6ba3b51f41435cb335d1ec3b6e612-part-000005",
+          "workflow_run_id": 40195376604
+        }
+      ],
+      "artifact_id": 12600183700,
+      "artifact_name": "cache-untrusted-pr-8307-docker-compose-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--294d78c6ba3b51f41435cb335d1ec3b6e612-part-000000",
+      "workflow_run_id": 40195376604
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-25T13:04:51.116Z",
-    "writes": 52
+    "writes": 53
   }
 }
