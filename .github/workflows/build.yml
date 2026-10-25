@@ -270,7 +270,7 @@ jobs:
       needs.files-changed.outputs.project == 'true'
     needs: [files-changed]
     permissions:
-      contents: read
+      contents: write
       packages: read
     uses: ./.github/workflows/test-build-docker.yml
     with:
