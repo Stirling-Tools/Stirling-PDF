@@ -51,35 +51,19 @@ jobs:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           token: ${{ github.token }}
           multi-cache: |
-            valid-cargo-registry:
-              path: .cache/cargo/registry
-            valid-cargo-git:
-              path: .cache/cargo/git
-            valid-cargo-bin:
-              path: .cache/cargo/bin
             valid-frontend-dist:
               path: frontend/dist
             valid-npm-cache:
               path: .cache/npm
-            valid-tauri-target:
-              path: frontend/src-tauri/target
             valid-frontend-setup-uv-cache:
               path: .cache/setup-uv-cache
             valid-frontend-uv-python-dir:
               path: .cache/uv-python-dir
           key: |
-            valid-cargo-registry=${{ inputs.cargo-hash }}
-            valid-cargo-git=${{ inputs.cargo-hash }}
-            valid-cargo-bin=${{ inputs.cargo-hash }}
             valid-npm-cache=${{ inputs.npm-hash }}
             valid-frontend-dist=${{ inputs.frontend-dist-hash }}
-            valid-tauri-target=${{ inputs.frontend-dist-hash }}
             valid-frontend-setup-uv-cache=${{ inputs.uv-hash }}
             valid-frontend-uv-python-dir=${{ inputs.uv-hash }}
-          exclude: |
-            frontend/src-tauri/target/debug/**
-            frontend/src-tauri/runtime/**
-            frontend/src-tauri/thumbnail-handler/target/**
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
