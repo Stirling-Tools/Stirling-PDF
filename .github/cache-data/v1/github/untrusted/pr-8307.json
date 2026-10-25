@@ -3547,10 +3547,55 @@
       "artifact_id": 12599614887,
       "artifact_name": "cache-untrusted-pr-8307-models-gradle-wrapper-linux-x64-fab4639ba26dcb9058ce348ab85b0504a7798bfeb48e118b1ca0d3d01f70f8ad-v6--157332f83a08dfcc06670080f92431c8687babbe1a1-part-000000",
       "workflow_run_id": 40195376604
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/models-setup-uv-cache/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17/v6": {
+      "object": "sha256:ed99e2e15fd06b87c3dfdb4b415e8ccb434ed12a60267894a231a84189ffab13",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-25T13:15:16.041Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 81019901,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:adf61f32127dc8c7c50499638ab9731cf2dbbaf130b2ff9e018732a9b861f577",
+          "size": 25165824,
+          "artifact_id": 12600396828,
+          "artifact_name": "cache-untrusted-pr-8307-models-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--ed99e2e15fd06b87c3dfdb4b415e8ccb434ed12a602-part-000000",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 1,
+          "object": "sha256:583a1d10e319a8b7cd5ce764a485179b1a53a47e6b2a1fe78030c5c15e1018dd",
+          "size": 25165824,
+          "artifact_id": 12600541497,
+          "artifact_name": "cache-untrusted-pr-8307-models-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--ed99e2e15fd06b87c3dfdb4b415e8ccb434ed12a602-part-000001",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 2,
+          "object": "sha256:cc2034abe8bc38abeb28e227b2f9a7ecb952eb5fb6fa7984e992c31fc38fcc7d",
+          "size": 25165824,
+          "artifact_id": 12600237152,
+          "artifact_name": "cache-untrusted-pr-8307-models-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--ed99e2e15fd06b87c3dfdb4b415e8ccb434ed12a602-part-000002",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 3,
+          "object": "sha256:df320e3b249768e9374ec28586031233651a8c1e94ce1d7fb0653808b7436eaf",
+          "size": 5522429,
+          "artifact_id": 12600371938,
+          "artifact_name": "cache-untrusted-pr-8307-models-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--ed99e2e15fd06b87c3dfdb4b415e8ccb434ed12a602-part-000003",
+          "workflow_run_id": 40195376604
+        }
+      ],
+      "artifact_id": 12600396828,
+      "artifact_name": "cache-untrusted-pr-8307-models-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--ed99e2e15fd06b87c3dfdb4b415e8ccb434ed12a602-part-000000",
+      "workflow_run_id": 40195376604
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-25T13:04:51.116Z",
-    "writes": 27
+    "writes": 28
   }
 }
