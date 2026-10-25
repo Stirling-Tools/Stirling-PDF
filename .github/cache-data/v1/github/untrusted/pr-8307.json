@@ -2455,155 +2455,6 @@
       "artifact_name": "cache-untrusted-pr-8307-test-cargo-registry-macos-arm64-ef043b03263322bb0218eb567e8088ef85c1aa0b3ffda4b685422471ebc61522-v6--7298db616b8c403ff3d6688aef5396ce7f69777f0f9-part-000000",
       "workflow_run_id": 40195376604
     },
-    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/docker-buildkit-cache/linux-arm64/stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438/v6": {
-      "object": "sha256:1013cef2cd19fc21607b3aa30dc25fb18e13cf0625ba330dea406d3b7dfdfe7a",
-      "storage": "github-artifact",
-      "updated_at": "2026-10-25T13:16:11.757Z",
-      "source": "Stirling-Tools/Stirling-PDF",
-      "created_by": "Ludy87",
-      "size": 404206813,
-      "parts": [
-        {
-          "index": 0,
-          "object": "sha256:4ac7c684e9f9140fc7a84b8ec75efc63b2a578c68c340e00aa46feb0c6d2cf44",
-          "size": 25165824,
-          "artifact_id": 12599712770,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000000",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 1,
-          "object": "sha256:6f5aec934f70f4e15b74f6e78d3e6d5aeb3add1dc72cdeb9ba213e90884ea55f",
-          "size": 25165824,
-          "artifact_id": 12599937279,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000001",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 2,
-          "object": "sha256:88d4568353c5657e199fb29b62a31760f71efacdac65e09cb1a9684eb3765ed8",
-          "size": 25165824,
-          "artifact_id": 12599752680,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000002",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 3,
-          "object": "sha256:612e44e604aec3c67b243e1afbcbd4433ddc6a990ae443822f22dab0b5ed27d9",
-          "size": 25165824,
-          "artifact_id": 12599672911,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000003",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 4,
-          "object": "sha256:e416caf2277e0d9d0530005f63a6d154e21882b2714145b350532b708fb2f3ea",
-          "size": 25165824,
-          "artifact_id": 12599633075,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000004",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 5,
-          "object": "sha256:17e683459b0227c82521b187fc351c8b4dfbffe177e678b369b291eecac076a2",
-          "size": 25165824,
-          "artifact_id": 12599672917,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000005",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 6,
-          "object": "sha256:e07ba12924d19960cd77cef4842df49ed32cb8b72f1d456970670568c20e1c61",
-          "size": 25165824,
-          "artifact_id": 12599992340,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000006",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 7,
-          "object": "sha256:849a839ab2380626bd5d613ce89215d778d8f46f5280f0b15b6836089e0a38f4",
-          "size": 25165824,
-          "artifact_id": 12599608541,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000007",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 8,
-          "object": "sha256:faab6a65701172479fec7c007bca498528097b380ebfbcd248874af903e2d768",
-          "size": 25165824,
-          "artifact_id": 12599737763,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000008",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 9,
-          "object": "sha256:5a6e42befd431d80dabfb4d13637cf00d50bc21132f2a31fcfd2d124ae6aa0bb",
-          "size": 25165824,
-          "artifact_id": 12600037091,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000009",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 10,
-          "object": "sha256:09aeb788dfeb05e74faee500524baaa2d8c8cdf58a1446424bbeb967e96e197e",
-          "size": 25165824,
-          "artifact_id": 12599717686,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000010",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 11,
-          "object": "sha256:e03251da4923b6d9095b6672af1a61efdf8fdb2e6d689c25744695cc8806cd3d",
-          "size": 25165824,
-          "artifact_id": 12599777610,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000011",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 12,
-          "object": "sha256:2a9b4cd8bd66395b68f4d673f4bca3ae88845b0c6ed72480e75a343288896395",
-          "size": 25165824,
-          "artifact_id": 12599742799,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000012",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 13,
-          "object": "sha256:52ad0bade23ce5ce4880cab2360336940f03e5e5d01efae81def4312f4249123",
-          "size": 25165824,
-          "artifact_id": 12600017091,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000013",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 14,
-          "object": "sha256:e5ee0a4e347572e1730be392bcc67647480419e06bd65cf04409df0698bfbf4d",
-          "size": 25165824,
-          "artifact_id": 12599942398,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000014",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 15,
-          "object": "sha256:0b8633dc33a67d83ad379f79e488d3fa2d005b7646b6c0927764507c6d2b8427",
-          "size": 25165824,
-          "artifact_id": 12600047050,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000015",
-          "workflow_run_id": 40195376604
-        },
-        {
-          "index": 16,
-          "object": "sha256:0106672a0eb654884aac9282587e7cb274622d35482eb0e5a9aa4293d352a1b1",
-          "size": 1553629,
-          "artifact_id": 12599837577,
-          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000016",
-          "workflow_run_id": 40195376604
-        }
-      ],
-      "artifact_id": 12599712770,
-      "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-ultra-lite-linux-arm64-v8-db52cf0b3c4ab184c61427be4ac350542cebab1b4c6bcedac7d3fa354ba44438-v6--10-part-000000",
-      "workflow_run_id": 40195376604
-    },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/test-gradle-caches/macos-arm64/fab4639ba26dcb9058ce348ab85b0504a7798bfeb48e118b1ca0d3d01f70f8ad-cache-e3b6888c3c920824/v6": {
       "object": "sha256:1d774b9e83df00f82835c4cc8b3532274f79db532257dc6abf309d6a5816dfc7",
       "storage": "github-artifact",
@@ -3348,10 +3199,391 @@
       "artifact_id": 12600616595,
       "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-fat-linux-arm64-v8-5f505e17711f04903ec64f80963e3d3691aad81299296c03e4eb33a2bbdebc0d-v6--5b9e3d594-part-000000",
       "workflow_run_id": 40195376604
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/docker-buildkit-cache/linux-arm64/stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9/v6": {
+      "object": "sha256:7a20358057067d31f47d82ed0e4370620ec327305469e036d9c4769aae2b4653",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-25T13:19:01.241Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 1134497144,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:9df2dabc92a4966c83c52c50d7a35ecb820082af86e6fe8a60fd92ddf00ae496",
+          "size": 25165824,
+          "artifact_id": 12600082015,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000000",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 1,
+          "object": "sha256:77295228c57dd18d9ff00a22c3522160ac6ca09bb061f1d14b1279813b49b44f",
+          "size": 25165824,
+          "artifact_id": 12599747787,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000001",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 2,
+          "object": "sha256:80fa9d49a4569ce330e3bae5f41cc57d85f61f11909ff6764ac6116a6640715e",
+          "size": 25165824,
+          "artifact_id": 12599658023,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000002",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 3,
+          "object": "sha256:ae719b7be831d9c988aea15f2d0f13406ca2270900341a24c5946fd9d829fe55",
+          "size": 25165824,
+          "artifact_id": 12599927447,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000003",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 4,
+          "object": "sha256:98274cbb65da57b1ccd8eeeaec7b2b7bf790a6664f0a6e317b45b2310aa654d6",
+          "size": 25165824,
+          "artifact_id": 12599767819,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000004",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 5,
+          "object": "sha256:5313c8aba7e59d4bc9b3362cf79de556c0ed407d981bda7246bfcbcd77a8ac64",
+          "size": 25165824,
+          "artifact_id": 12599608669,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000005",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 6,
+          "object": "sha256:524bcd56f04f2dd062ab18e043af0df602350fd368a4c371886ef25123cbfe79",
+          "size": 25165824,
+          "artifact_id": 12599922545,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000006",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 7,
+          "object": "sha256:b255db769c33d37caa7e62d3a79f6c83b9537b26a09f58cd6d0a46f6ab1630ec",
+          "size": 25165824,
+          "artifact_id": 12599767829,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000007",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 8,
+          "object": "sha256:075a31649bd96f1898e4a7fd7f038e12ad5cc6052c661f47fada00d81010c35b",
+          "size": 25165824,
+          "artifact_id": 12599638291,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000008",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 9,
+          "object": "sha256:ce29d94d48f75e692d0567f3399c40f04a61a94dab6b96722a9ebd3e38dd9c69",
+          "size": 25165824,
+          "artifact_id": 12599658047,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000009",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 10,
+          "object": "sha256:fbe45d6bfb5483afa7e75642034a5d4f311e77c180b8e0c868344c87d7190757",
+          "size": 25165824,
+          "artifact_id": 12600032328,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000010",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 11,
+          "object": "sha256:8624f38236db6676cbfb6c16830c7f0d10d7714c89c1a6364e77a913f99a5716",
+          "size": 25165824,
+          "artifact_id": 12599802838,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000011",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 12,
+          "object": "sha256:c289b768b043a70eea3644c394c618f939a2decc5836e611b11a82cada93aae0",
+          "size": 25165824,
+          "artifact_id": 12600207597,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000012",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 13,
+          "object": "sha256:add28857d6e097fe13f13aaa9d888e6feeb3283ea5ccc4eb764fa6f9315d628d",
+          "size": 25165824,
+          "artifact_id": 12600641793,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000013",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 14,
+          "object": "sha256:b70a96f2285f9c724dada5e03ca5e2475f2674ea735c11b1d4c63154bd3506c5",
+          "size": 25165824,
+          "artifact_id": 12600506975,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000014",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 15,
+          "object": "sha256:5d9bdedc3370a8359cde719c37509a7d03fb6bb1f8d35847ca717b70612e6aec",
+          "size": 25165824,
+          "artifact_id": 12600671632,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000015",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 16,
+          "object": "sha256:ccee669aad52db896427f9bca09c8dcf7aa48fe35fb8c79684a48401600bf381",
+          "size": 25165824,
+          "artifact_id": 12600362234,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000016",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 17,
+          "object": "sha256:33ebc58d8332f8e83512edabc2f3cf3217070b44afe05305a4539c2e3ce79929",
+          "size": 25165824,
+          "artifact_id": 12600746286,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000017",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 18,
+          "object": "sha256:36fbbfb27e003f7e250cd06bc85ff76b41591a110797ff2a1d9c2a0d8e2f461f",
+          "size": 25165824,
+          "artifact_id": 12600576851,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000018",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 19,
+          "object": "sha256:287f0be54f04e72dfc50847be869f6acb49596210177a0283f9effa5b4d66f2d",
+          "size": 25165824,
+          "artifact_id": 12600512086,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000019",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 20,
+          "object": "sha256:e2acfb91a017f54281543dccaa15b00e8c67d166974f80b011bf04f8a92ba0f7",
+          "size": 25165824,
+          "artifact_id": 12600172667,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000020",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 21,
+          "object": "sha256:a5bd28c545c5acec305a2c9615b3a7c4a9f2d5f5ee3ed9ef5ed17765332b3b9f",
+          "size": 25165824,
+          "artifact_id": 12600527013,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000021",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 22,
+          "object": "sha256:29b21cd9f00ff6720b52bfdebaee087f904c9b2e86da50aa81249f80e2b7a8fd",
+          "size": 25165824,
+          "artifact_id": 12600172679,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000022",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 23,
+          "object": "sha256:65999b454a9720c75672b3a81aa1c7c3e1640e3eba995c103a56ce515fba5bca",
+          "size": 25165824,
+          "artifact_id": 12600756419,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000023",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 24,
+          "object": "sha256:06998cdac54f6c57a72894e6e93278e5bbdb709106984f19e7a8cc1928c810f6",
+          "size": 25165824,
+          "artifact_id": 12600766338,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000024",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 25,
+          "object": "sha256:61db07db9c181f4ea725948acb3bda17b5f891f6b485847996497a65bf09f2de",
+          "size": 25165824,
+          "artifact_id": 12600781357,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000025",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 26,
+          "object": "sha256:8fae08ca172a5cf70fa40ff8000226cf2e0d2bc939638414ee1dd0cb3012918b",
+          "size": 25165824,
+          "artifact_id": 12600691622,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000026",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 27,
+          "object": "sha256:d97b5c1da68d864d39cc84e0467fedff181f7f3d03410b10903ebc78eba5c661",
+          "size": 25165824,
+          "artifact_id": 12600756431,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000027",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 28,
+          "object": "sha256:5a55c95c6fbd3d2c9644892ffe2312a8d2280bbf57fb86d9c30638c6cf5f907a",
+          "size": 25165824,
+          "artifact_id": 12600586924,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000028",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 29,
+          "object": "sha256:e230c84fb59447ac104ff76620ab9d35c8993881b1e414479932f3056740cf16",
+          "size": 25165824,
+          "artifact_id": 12600442227,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000029",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 30,
+          "object": "sha256:81f705237fe122c3ddeb6fabed912db5517b505c6ecea44d9fb0211aec41f77f",
+          "size": 25165824,
+          "artifact_id": 12600512133,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000030",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 31,
+          "object": "sha256:6322e8e7fbef74358c3e5394c791fef7584c66ce3e9b41f17d37ab4ae2dc144f",
+          "size": 25165824,
+          "artifact_id": 12600756452,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000031",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 32,
+          "object": "sha256:c0de57a1e48528603a26fe64b2e585821992d489e9c7d451b235af3aaddb71f5",
+          "size": 25165824,
+          "artifact_id": 12600522042,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000032",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 33,
+          "object": "sha256:df1a775e72789a9c4fad1b1af147f93d73b29526437a1cdc3673837b166b5c0b",
+          "size": 25165824,
+          "artifact_id": 12600576920,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000033",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 34,
+          "object": "sha256:6d01aa8ddee58088c3a5466e31bafb2307a387b6f27298afce854a5ba88192f6",
+          "size": 25165824,
+          "artifact_id": 12600766377,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000034",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 35,
+          "object": "sha256:d4e67881c518e3636d31ca762010734a1d297be728a0f26f19fd5198e3ed4473",
+          "size": 25165824,
+          "artifact_id": 12600701573,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000035",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 36,
+          "object": "sha256:29ecf420f3bfe884d355d432d3b9ef6074686d212e587dbb207bf0e3d831145d",
+          "size": 25165824,
+          "artifact_id": 12600741527,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000036",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 37,
+          "object": "sha256:14e9ddca7eaf76b792ee6d0779117319e399fd3e49168935c65426dbfad63509",
+          "size": 25165824,
+          "artifact_id": 12600292449,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000037",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 38,
+          "object": "sha256:0d7ec679f169242c204b8b4b81f82bc92f84bed3baff10814857c216fba678b4",
+          "size": 25165824,
+          "artifact_id": 12600387395,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000038",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 39,
+          "object": "sha256:72a7c9afdd44c449e3e837f9c272dd19a6c10d05141d84aa55ced88cbe9f3145",
+          "size": 25165824,
+          "artifact_id": 12600227603,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000039",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 40,
+          "object": "sha256:be7e55a790b839e233965caeaa8254d83b3ddb2d6d14c5a1f5084033340d118d",
+          "size": 25165824,
+          "artifact_id": 12600212666,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000040",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 41,
+          "object": "sha256:37a5d0771fb62c5220e070c8abe0a8c74f8a8a2a4fbd098d678873f1f283ae50",
+          "size": 25165824,
+          "artifact_id": 12600641947,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000041",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 42,
+          "object": "sha256:05f06ae52148674eb2f1028c020313125190f41743d6358c635b50200d88fbeb",
+          "size": 25165824,
+          "artifact_id": 12600507151,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000042",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 43,
+          "object": "sha256:9ecec21e3af07f039369b05b4e86ce663deabe728507b113026ed44faf1fa48f",
+          "size": 25165824,
+          "artifact_id": 12600781490,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000043",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 44,
+          "object": "sha256:96b0d4b684e73edf7623a38a5e7402a59c18b800d63d9e06077a88f9e61d187b",
+          "size": 25165824,
+          "artifact_id": 12600701629,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000044",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 45,
+          "object": "sha256:3f079ac544406542cd37dfe83ff26e84cac3c37803dfb3e9fb951dad091499bc",
+          "size": 2035064,
+          "artifact_id": 12600691748,
+          "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000045",
+          "workflow_run_id": 40195376604
+        }
+      ],
+      "artifact_id": 12600082015,
+      "artifact_name": "cache-untrusted-pr-8307-docker-buildkit-cache-linux-arm64-stirling-pdf-latest-linux-arm64-v8-5bcd205c9586aa8b39fd6cc7c33020b0be3a3b7922250eaff4c41de611a32fc9-v6--7a2035-part-000000",
+      "workflow_run_id": 40195376604
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-25T13:04:51.116Z",
-    "writes": 35
+    "writes": 36
   }
 }
