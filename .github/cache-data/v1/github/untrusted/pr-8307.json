@@ -3473,10 +3473,39 @@
       "artifact_id": 12600372601,
       "artifact_name": "cache-untrusted-pr-8307-test-cargo-registry-windows-x64-ef043b03263322bb0218eb567e8088ef85c1aa0b3ffda4b685422471ebc61522-v6--7bf7aaf3e0f7c6c2b78a9fa1dde579c91cbbaf16496-part-000000",
       "workflow_run_id": 40195376604
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/backend-build-setup-uv-cache/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17/v6": {
+      "object": "sha256:055d3309b74dbcec6d10369958ee20ac536bbf086e392ee89e172e2ff832dda2",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-25T13:20:42.262Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 44004225,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:1f6bd8eed8afec8afbfaed601f34138e404eacb19027e04758f5b635011e8e68",
+          "size": 25165824,
+          "artifact_id": 12599604060,
+          "artifact_name": "cache-untrusted-pr-8307-backend-build-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--055d3309b74dbcec6d10369958ee20ac536b-part-000000",
+          "workflow_run_id": 40195376604
+        },
+        {
+          "index": 1,
+          "object": "sha256:10af7ea5f9c53a1ed81204f38b97f1d6f0feeb196f565b0a2ded3927e92607d7",
+          "size": 18838401,
+          "artifact_id": 12599678306,
+          "artifact_name": "cache-untrusted-pr-8307-backend-build-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--055d3309b74dbcec6d10369958ee20ac536b-part-000001",
+          "workflow_run_id": 40195376604
+        }
+      ],
+      "artifact_id": 12599604060,
+      "artifact_name": "cache-untrusted-pr-8307-backend-build-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--055d3309b74dbcec6d10369958ee20ac536b-part-000000",
+      "workflow_run_id": 40195376604
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-25T13:04:51.116Z",
-    "writes": 38
+    "writes": 39
   }
 }
