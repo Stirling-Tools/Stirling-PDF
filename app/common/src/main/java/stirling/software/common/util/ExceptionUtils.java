@@ -1332,7 +1332,7 @@ public class ExceptionUtils {
         LIBREOFFICE_REQUIRED(
                 "E082",
                 "error.libreOfficeRequired",
-                "LibreOffice must be installed to convert .{0} files to PDF. Install LibreOffice and ensure it is available on the system PATH."),
+                "LibreOffice must be installed to convert .{0} files. Install LibreOffice and ensure it is available on the system PATH."),
 
         // Validation errors
         INVALID_ARGUMENT("E070", "error.invalidArgument", "Invalid argument ''{0}'': {1}"),
