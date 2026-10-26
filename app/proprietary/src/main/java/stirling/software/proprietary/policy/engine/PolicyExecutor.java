@@ -26,6 +26,7 @@ import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.PipelineLimits;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
@@ -74,10 +75,9 @@ public class PolicyExecutor {
      * inputs} bind to named file fields and never enter the document stream.
      *
      * @throws InternalApiTimeoutException if a tool does not respond within its read timeout
-     * @throws IllegalArgumentException if the definition has more than {@code policies.maxSteps}
-     *     steps
-     * @throws IOException on a non-OK tool response, a missing supporting file, a step producing
-     *     more than {@code policies.maxFilesPerStep} files, or a read failure
+     * @throws PipelineLimits.LimitExceededException if the run breaks {@code policies.maxSteps} or
+     *     {@code policies.maxFilesPerStep}
+     * @throws IOException on a non-OK tool response, a missing supporting file, or a read failure
      */
     public PolicyExecutionResult execute(
             PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener)
@@ -104,7 +104,7 @@ public class PolicyExecutor {
         // Zero steps is a pure routing policy: inputs pass through unchanged and
         // are delivered to the policy's output destinations.
         List<PipelineStep> steps = definition.steps();
-        requireWithinStepLimit(steps, applicationProperties.getPolicies().getMaxSteps());
+        PipelineLimits.requireWithinStepLimit(steps.size(), applicationProperties.getPolicies());
 
         List<PipelineFile> currentFiles = new ArrayList<>();
         Map<String, List<Resource>> supportingFiles = inputs.supportingFiles();
@@ -123,8 +123,10 @@ public class PolicyExecutor {
                         "Pipeline step " + (i + 1) + " has no operation");
             }
             listener.onStepStart(i + 1, steps.size(), operation);
+            int consumedTempFiles = tempFiles.size();
             StepOutput stepResult = executeStep(step, currentFiles, supportingFiles, tempFiles);
             currentFiles = stepResult.files();
+            releaseTempFiles(tempFiles, consumedTempFiles);
             if (stepResult.report() != null) {
                 lastReport = stepResult.report();
                 lastReportTool = operation;
@@ -197,26 +199,16 @@ public class PolicyExecutor {
         return new StepOutput(files, report);
     }
 
-    static void requireWithinStepLimit(List<PipelineStep> steps, int maxSteps) {
-        if (maxSteps > 0 && steps.size() > maxSteps) {
-            throw new IllegalArgumentException(
-                    "A pipeline may have at most "
-                            + maxSteps
-                            + " steps; raise policies.maxSteps to allow more");
-        }
+    private void requireWithinFileLimit(PipelineStep step, List<PipelineFile> files) {
+        PipelineLimits.requireWithinFileLimit(
+                step.operation(), files.size(), applicationProperties.getPolicies());
     }
 
-    private void requireWithinFileLimit(PipelineStep step, List<PipelineFile> files)
-            throws IOException {
-        int maxFilesPerStep = applicationProperties.getPolicies().getMaxFilesPerStep();
-        if (maxFilesPerStep > 0 && files.size() > maxFilesPerStep) {
-            throw new IOException(
-                    "Step "
-                            + step.operation()
-                            + " produced more than "
-                            + maxFilesPerStep
-                            + " files; raise policies.maxFilesPerStep to allow more");
-        }
+    /** Deletes the {@code count} temp files added first. */
+    private static void releaseTempFiles(List<TempFile> tempFiles, int count) {
+        List<TempFile> released = tempFiles.subList(0, count);
+        released.forEach(TempFile::close);
+        released.clear();
     }
 
     private static Integer sharedOrigin(List<PipelineFile> files) {

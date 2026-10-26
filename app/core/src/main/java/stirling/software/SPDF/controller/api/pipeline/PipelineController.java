@@ -11,10 +11,12 @@ import java.util.zip.ZipOutputStream;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -31,6 +33,7 @@ import stirling.software.common.annotations.api.PipelineApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.PostHogService;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PipelineLimits;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -86,9 +89,10 @@ public class PipelineController {
 
         postHogService.captureEvent("pipeline_api_event", properties);
 
+        List<Resource> inputFiles = null;
         PipelineResult result = null;
         try {
-            List<Resource> inputFiles = processor.generateInputFiles(files);
+            inputFiles = processor.generateInputFiles(files);
             if (inputFiles == null || inputFiles.isEmpty()) {
                 return null;
             }
@@ -146,14 +150,17 @@ public class PipelineController {
                 zipTempFile.close();
                 throw e;
             }
+        } catch (PipelineLimits.LimitExceededException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
             log.error("Error handling data: ", e);
             return null;
         } finally {
-            // The response is a copy, so the step outputs are not needed any longer
+            // The response is a copy, so the uploads and step outputs are not needed any longer
             if (result != null) {
                 result.close();
             }
+            processor.deleteInputFiles(inputFiles);
         }
     }
 }

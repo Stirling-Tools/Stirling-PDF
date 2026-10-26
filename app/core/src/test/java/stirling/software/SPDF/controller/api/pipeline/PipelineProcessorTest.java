@@ -38,6 +38,7 @@ import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.ToolMetadataService;
+import stirling.software.common.util.PipelineLimits;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -184,7 +185,7 @@ class PipelineProcessorTest {
         config.setOperations(Collections.nCopies(3, operation("/api/v1/misc/compress")));
 
         assertThrows(
-                IllegalArgumentException.class,
+                PipelineLimits.LimitExceededException.class,
                 () ->
                         pipelineProcessor.runPipelineAgainstFiles(
                                 List.of(new MyFileByteArrayResource()), config));
@@ -206,7 +207,7 @@ class PipelineProcessorTest {
                 .thenAnswer(inv -> ResponseEntity.ok(tempFileResource(zip, "out.zip")));
 
         assertThrows(
-                IllegalArgumentException.class,
+                PipelineLimits.LimitExceededException.class,
                 () ->
                         pipelineProcessor.runPipelineAgainstFiles(
                                 List.of(new MyFileByteArrayResource()), config));
@@ -249,8 +250,7 @@ class PipelineProcessorTest {
     }
 
     @Test
-    void uploadsBelongToTheRunAndGoOnceTheFirstOperationHasRun(@TempDir Path tempDir)
-            throws Exception {
+    void uploadsOutliveTheRunUntilTheCallerDeletesThem(@TempDir Path tempDir) throws Exception {
         PipelineConfig config = new PipelineConfig();
         config.setOperations(List.of(operation("/api/v1/misc/compress")));
         stubAnyPdfOperation();
@@ -268,8 +268,14 @@ class PipelineProcessorTest {
         assertEquals("a.pdf", upload.getFilename());
 
         try (PipelineResult result = pipelineProcessor.runPipelineAgainstFiles(uploads, config)) {
-            assertFalse(upload.getTempFile().exists());
+            assertEquals(
+                    "out",
+                    result.getOutputFiles().get(0).getContentAsString(StandardCharsets.UTF_8));
         }
+        assertTrue(upload.getTempFile().exists());
+
+        pipelineProcessor.deleteInputFiles(uploads);
+
         try (Stream<Path> left = Files.list(tempDir)) {
             assertEquals(0, left.count());
         }

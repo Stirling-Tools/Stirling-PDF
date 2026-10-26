@@ -47,6 +47,7 @@ import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
+import stirling.software.common.util.PipelineLimits;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
@@ -372,7 +373,7 @@ class PolicyExecutorTest {
     }
 
     @Test
-    void closingTheResultReleasesEveryStepOutput() throws IOException {
+    void eachStepsOutputsGoOnceTheNextStepHasRunAndTheLastOnClose() throws IOException {
         when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
         TempFile rotated = tempFileManager.createManagedTempFile("internal-api");
@@ -387,10 +388,10 @@ class PolicyExecutorTest {
                                 new PipelineStep(COMPRESS, Map.of())),
                         PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
                         PolicyProgressListener.NOOP)) {
+            assertFalse(rotated.exists());
             assertTrue(result.files().get(0).exists());
         }
 
-        assertFalse(rotated.exists());
         assertFalse(compressed.exists());
     }
 
@@ -497,9 +498,9 @@ class PolicyExecutorTest {
         when(internalApiClient.post(eq(SPLIT), any()))
                 .thenAnswer(inv -> ResponseEntity.ok(zip("split.zip", pages)));
 
-        IOException failure =
+        PipelineLimits.LimitExceededException failure =
                 assertThrows(
-                        IOException.class,
+                        PipelineLimits.LimitExceededException.class,
                         () ->
                                 executor.execute(
                                         definition(new PipelineStep(SPLIT, Map.of())),

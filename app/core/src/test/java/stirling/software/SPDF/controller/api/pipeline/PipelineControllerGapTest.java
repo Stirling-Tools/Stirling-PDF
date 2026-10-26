@@ -41,11 +41,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.common.service.PostHogService;
+import stirling.software.common.util.PipelineLimits;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -244,6 +246,7 @@ class PipelineControllerGapTest {
             assertNotNull(controller.handleData(request(files, VALID_JSON)));
 
             verify(stepOutput).close();
+            verify(processor).deleteInputFiles(inputFiles);
         }
 
         @Test
@@ -370,6 +373,27 @@ class PipelineControllerGapTest {
             ResponseEntity<Resource> response = controller.handleData(request(files, VALID_JSON));
 
             assertNull(response);
+        }
+
+        @Test
+        @DisplayName("answers 400 with the setting to raise when the run breaks a limit")
+        void limitExceeded_isABadRequest() throws Exception {
+            MultipartFile[] files = oneFile();
+            List<Resource> inputFiles = List.of(namedResource("input.pdf", "in".getBytes()));
+            when(processor.generateInputFiles(files)).thenReturn(inputFiles);
+            when(processor.runPipelineAgainstFiles(any(), any()))
+                    .thenThrow(
+                            new PipelineLimits.LimitExceededException(
+                                    "raise policies.maxSteps to allow more"));
+
+            ResponseStatusException error =
+                    org.junit.jupiter.api.Assertions.assertThrows(
+                            ResponseStatusException.class,
+                            () -> controller.handleData(request(files, VALID_JSON)));
+
+            assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+            assertEquals("raise policies.maxSteps to allow more", error.getReason());
+            verify(processor).deleteInputFiles(inputFiles);
         }
 
         @Test

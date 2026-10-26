@@ -1,5 +1,6 @@
 package stirling.software.proprietary.policy.engine;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -12,6 +13,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.service.ToolChainValidator;
+import stirling.software.common.util.PipelineLimits;
 import stirling.software.proprietary.document.conditions.ConditionValidator;
 import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
 import stirling.software.proprietary.policy.asset.PolicyAssetStore;
@@ -209,7 +211,17 @@ public class PolicyValidator {
                                         new ToolChainValidator.Step(
                                                 step.operation(), step.parameters()))
                         .toList();
-        return toolChainValidator.validate(chain, sourceFormat);
+        List<ToolDiagnostic> diagnostics =
+                new ArrayList<>(toolChainValidator.validate(chain, sourceFormat));
+        ApplicationProperties.Policies policies = applicationProperties.getPolicies();
+        if (PipelineLimits.exceedsStepLimit(steps.size(), policies)) {
+            diagnostics.add(
+                    ToolDiagnostic.error(
+                            policies.getMaxSteps(),
+                            ToolDiagnostic.TOO_MANY_STEPS,
+                            PipelineLimits.stepLimitMessage(policies)));
+        }
+        return diagnostics;
     }
 
     /**
@@ -222,8 +234,7 @@ public class PolicyValidator {
      *     any step is invalid or references an inaccessible resource
      */
     public void validateSteps(List<PipelineStep> steps) {
-        PolicyExecutor.requireWithinStepLimit(
-                steps, applicationProperties.getPolicies().getMaxSteps());
+        PipelineLimits.requireWithinStepLimit(steps.size(), applicationProperties.getPolicies());
         for (PipelineStep step : steps) {
             for (PipelineStepValidator validator : stepValidators) {
                 validator.validate(step);

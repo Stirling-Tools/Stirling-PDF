@@ -32,6 +32,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.ToolMetadataService;
+import stirling.software.common.util.PipelineLimits;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
@@ -83,39 +84,27 @@ public class PipelineProcessor {
     }
 
     /**
-     * Runs the pipeline. Inputs backed by a managed temp file, such as those from {@link
-     * #generateInputFiles(MultipartFile[])}, belong to the run from here on, and the caller closes
-     * the returned result once it has read the outputs.
+     * Runs the pipeline. The inputs stay the caller's; the caller closes the returned result, which
+     * holds the outputs, once it has read them.
+     *
+     * @throws PipelineLimits.LimitExceededException if the run breaks {@code policies.maxSteps} or
+     *     {@code policies.maxFilesPerStep}
      */
     PipelineResult runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config)
             throws Exception {
+        PipelineLimits.requireWithinStepLimit(
+                config.getOperations().size(), applicationProperties.getPolicies());
         PipelineResult result = new PipelineResult();
-        for (Resource input : outputFiles) {
-            if (input instanceof InternalApiClient.TempFileResource upload) {
-                result.addTempFile(upload.getTempFile());
-            }
-        }
         // One pipeline execution = one automation run. Scope a run id so every tool sub-step
         // dispatched via InternalApiClient groups into a single charge on the SaaS billing side
         // (see AutomationRunContext); pipeline steps run synchronously on this thread.
         try (AutomationRunContext.Scope ignored =
                 AutomationRunContext.open(UUID.randomUUID().toString())) {
-            requireWithinStepLimit(config);
             return runPipelineAgainstFilesInternal(outputFiles, config, result);
         } catch (Exception e) {
             // The caller never receives the result, so release the earlier steps' outputs here
             result.close();
             throw e;
-        }
-    }
-
-    private void requireWithinStepLimit(PipelineConfig config) {
-        int maxSteps = applicationProperties.getPolicies().getMaxSteps();
-        if (maxSteps > 0 && config.getOperations().size() > maxSteps) {
-            throw new IllegalArgumentException(
-                    "A pipeline may have at most "
-                            + maxSteps
-                            + " operations; raise policies.maxSteps to allow more");
         }
     }
 
@@ -347,15 +336,8 @@ public class PipelineProcessor {
                     };
             newOutputFiles.add(outputResource);
         }
-        int maxFilesPerStep = applicationProperties.getPolicies().getMaxFilesPerStep();
-        if (maxFilesPerStep > 0 && newOutputFiles.size() > maxFilesPerStep) {
-            throw new IllegalArgumentException(
-                    "Operation "
-                            + operation
-                            + " produced more than "
-                            + maxFilesPerStep
-                            + " files; raise policies.maxFilesPerStep to allow more");
-        }
+        PipelineLimits.requireWithinFileLimit(
+                operation, newOutputFiles.size(), applicationProperties.getPolicies());
         return newOutputFiles;
     }
 
@@ -404,6 +386,10 @@ public class PipelineProcessor {
         return outputFiles;
     }
 
+    /**
+     * Copies the uploads to managed temp files; the caller passes the returned list to {@link
+     * #deleteInputFiles} once it no longer needs them.
+     */
     List<Resource> generateInputFiles(MultipartFile[] files) throws Exception {
         if (files == null || files.length == 0) {
             log.info("No files");
@@ -426,5 +412,17 @@ public class PipelineProcessor {
         }
         log.info("Files successfully loaded. Starting processing...");
         return outputFiles;
+    }
+
+    /** Deletes the copies made by {@link #generateInputFiles(MultipartFile[])}; null is a no-op. */
+    void deleteInputFiles(List<Resource> inputFiles) {
+        if (inputFiles == null) {
+            return;
+        }
+        for (Resource input : inputFiles) {
+            if (input instanceof InternalApiClient.TempFileResource upload) {
+                upload.getTempFile().close();
+            }
+        }
     }
 }

@@ -21,11 +21,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -155,6 +157,25 @@ class AiWorkflowServiceTest {
         assertEquals("file-1", result.getResultFiles().get(0).getFileId());
         assertEquals(1, ids.get());
         verify(internalApiClient, times(1)).post(eq(ROTATE_ENDPOINT), any());
+    }
+
+    @Test
+    void toolCallDeletesItsCopiesOfTheInputs() throws IOException {
+        stubOrchestrator(
+                """
+                {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
+                """
+                        .formatted(ROTATE_ENDPOINT));
+        when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(ROTATE_ENDPOINT)).thenReturn(false);
+        stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated-bytes", "rotated.pdf"));
+        stubFileStorage();
+
+        service.orchestrate(requestFor(pdf("input.pdf", "original-pdf-bytes"), "rotate 90"));
+
+        try (Stream<Path> left = Files.list(tempDir)) {
+            assertTrue(left.noneMatch(path -> path.toString().endsWith("ai-workflow")));
+        }
     }
 
     @Test

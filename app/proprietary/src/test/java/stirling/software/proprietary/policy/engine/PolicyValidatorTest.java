@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIOSource;
 import stirling.software.common.model.tool.ToolIOSpec;
@@ -350,6 +351,22 @@ class PolicyValidatorTest {
                                     ToolFormat.PDF,
                                     ToolArity.SISO,
                                     List.of())));
+
+    @Test
+    void diagnoseChainFlagsTheFirstStepPastTheLimit() {
+        props.getPolicies().setMaxSteps(2);
+        PipelineStep step = new PipelineStep("/api/v1/general/rotate-pdf", Map.of());
+
+        List<ToolDiagnostic> diagnostics = validator.diagnoseChain(List.of(step, step, step), null);
+
+        assertTrue(
+                diagnostics.contains(
+                        ToolDiagnostic.error(
+                                2,
+                                ToolDiagnostic.TOO_MANY_STEPS,
+                                "A pipeline may have at most 2 steps; raise policies.maxSteps to"
+                                        + " allow more")));
+    }
 
     @Test
     void refusesMoreStepsThanTheLimit() {

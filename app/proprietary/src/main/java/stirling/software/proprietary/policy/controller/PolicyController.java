@@ -801,7 +801,6 @@ public class PolicyController {
     private PolicyInputs toInputs(PolicyRunFiles files) throws IOException {
         List<Resource> primary = new ArrayList<>();
         Map<String, List<Resource>> supportingFiles = new LinkedHashMap<>();
-        PolicyInputs inputs = new PolicyInputs(primary, supportingFiles);
         try {
             if (files.getFileInput() != null) {
                 for (MultipartFile file : files.getFileInput()) {
@@ -820,15 +819,16 @@ public class PolicyController {
                 }
             }
         } catch (IOException | RuntimeException e) {
-            deleteUploads(inputs);
+            deleteUploads(new PolicyInputs(primary, supportingFiles));
             throw e;
         }
-        return inputs;
+        return new PolicyInputs(primary, supportingFiles);
     }
 
     /**
-     * Starts a run on spooled uploads and deletes them once it settles, or straight away if it
-     * never starts.
+     * Starts a run on spooled uploads and deletes them once it settles, or straight away if {@code
+     * start} throws. {@code start} must not throw once the run is submitted, or the uploads are
+     * deleted under it.
      */
     private static PolicyRunHandle startOnUploads(
             PolicyInputs uploads, Supplier<PolicyRunHandle> start) {

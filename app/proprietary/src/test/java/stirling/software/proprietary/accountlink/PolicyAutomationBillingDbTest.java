@@ -253,10 +253,15 @@ class PolicyAutomationBillingDbTest {
                 switch (operation) {
                     case SPLIT -> splitOutput();
                     case MERGE -> file("merged.bin", new byte[] {1, 2});
-                    default -> (Resource) body.getFirst("fileInput");
+                    default -> answerWith((Resource) body.getFirst("fileInput"));
                 };
         interceptor.afterCompletion(request, response, this, null);
         return ResponseEntity.ok(output);
+    }
+
+    /** Like InternalApiClient, a new file: the executor deletes a step's inputs once it has run. */
+    private static Resource answerWith(Resource input) throws IOException {
+        return file(input.getFilename(), input.getContentAsByteArray());
     }
 
     private static Resource splitOutput() throws IOException {
