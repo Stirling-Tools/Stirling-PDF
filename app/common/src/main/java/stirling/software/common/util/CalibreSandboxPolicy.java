@@ -149,8 +149,7 @@ final class CalibreSandboxPolicy {
         try {
             workDir = Files.createTempDirectory("calibre-sandbox-probe");
         } catch (IOException e) {
-            log.debug("Cannot create a dir for the Calibre sandbox probe: {}", e.getMessage());
-            return report(mode, Probe.UNKNOWN, List.of());
+            return report(mode, Probe.UNKNOWN, "no temp dir for the probe: " + e.getMessage());
         }
         Path stderr = workDir.resolve(PROBE_STDERR);
         try {
@@ -158,7 +157,7 @@ final class CalibreSandboxPolicy {
             List<String> confined =
                     confine(mode, probeCommand, workDir.toFile(), builder.environment());
             if (confined.equals(probeCommand)) {
-                return report(mode, Probe.UNKNOWN, List.of());
+                return report(mode, Probe.UNKNOWN, "the launcher could not be started");
             }
             builder.command(confined);
             builder.directory(workDir.toFile());
@@ -167,16 +166,20 @@ final class CalibreSandboxPolicy {
             Process process = builder.start();
             if (!process.waitFor(PROBE_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
                 process.destroyForcibly();
-                return report(mode, Probe.UNKNOWN, List.of());
+                return report(
+                        mode,
+                        Probe.UNKNOWN,
+                        "the probe did not finish within " + PROBE_TIMEOUT_SECONDS + "s");
             }
             List<String> errorLines =
                     Files.exists(stderr)
                             ? Files.readAllLines(stderr, StandardCharsets.UTF_8)
                             : List.of();
-            return report(mode, classifyProbe(process.exitValue(), errorLines), errorLines);
+            int exitCode = process.exitValue();
+            Probe probe = classifyProbe(exitCode, errorLines);
+            return report(mode, probe, describe(probe, exitCode, errorLines));
         } catch (IOException e) {
-            log.debug("Calibre sandbox probe could not run: {}", e.getMessage());
-            return report(mode, Probe.UNKNOWN, List.of());
+            return report(mode, Probe.UNKNOWN, "the probe could not run: " + e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;
@@ -207,15 +210,25 @@ final class CalibreSandboxPolicy {
         return exitCode == 0 ? Probe.ACTIVE : Probe.UNKNOWN;
     }
 
-    private static boolean report(Mode mode, Probe probe, List<String> errorLines) {
+    /** What the launcher said, or else the exit code and the last line Calibre wrote. */
+    private static String describe(Probe probe, int exitCode, List<String> errorLines) {
+        if (probe == Probe.REFUSED) {
+            return String.join("; ", launcherLines(errorLines));
+        }
+        String lastLine =
+                errorLines.stream()
+                        .map(String::strip)
+                        .filter(line -> !line.isEmpty())
+                        .reduce((first, second) -> second)
+                        .orElse("");
+        return "exit " + exitCode + (lastLine.isEmpty() ? "" : ": " + lastLine);
+    }
+
+    private static boolean report(Mode mode, Probe probe, String detail) {
         if (probe == Probe.ACTIVE) {
             log.info("Calibre sandbox active");
             return true;
         }
-        String detail =
-                probe == Probe.REFUSED
-                        ? String.join("; ", launcherLines(errorLines))
-                        : "the probe could not run";
         if (mode == Mode.REQUIRED) {
             log.error(
                     "Calibre sandbox is unavailable on this host ({}), so ebook conversion is"

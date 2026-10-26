@@ -328,6 +328,33 @@ class ConvertEbookToPDFControllerTest {
         }
 
         assertArrayEquals(sanitized, seenByCalibre.get());
+        Mockito.verify(tempFileManager).deleteTempDirectory(workingDir);
+    }
+
+    @Test
+    void convertEbookToPdf_rejectedDocxLeavesNoWorkDir() throws Exception {
+        when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
+        byte[] uploaded = "docx".getBytes(StandardCharsets.UTF_8);
+        when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
+        when(officeDocumentSanitizer.sanitize(uploaded, "docx"))
+                .thenThrow(new IOException("part could not be sanitized"));
+
+        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
+        request.setFileInput(
+                new MockMultipartFile("fileInput", "book.docx", "application/zip", uploaded));
+
+        Path workingDir = Files.createTempDirectory("ebook-convert-reject-test-");
+        when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
+
+        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+            assertThrows(IOException.class, () -> controller.convertEbookToPdf(request));
+
+            pe.verifyNoInteractions();
+        } finally {
+            deleteRecursively(workingDir);
+        }
+
+        Mockito.verify(tempFileManager).deleteTempDirectory(workingDir);
     }
 
     @Test

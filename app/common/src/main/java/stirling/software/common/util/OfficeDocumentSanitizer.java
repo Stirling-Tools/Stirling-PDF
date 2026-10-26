@@ -74,7 +74,9 @@ public class OfficeDocumentSanitizer {
     }
 
     /**
-     * The document with every external reference stripped from its relationship and ODF XML parts.
+     * The document with external references stripped from its relationship and ODF XML parts,
+     * except targets an admin has allowlisted. Returned unchanged, with no part inspected, when
+     * {@code system.disableSanitize} is set.
      *
      * @throws IOException when the input is empty, or a relationship or ODF XML part cannot be
      *     parsed; such a document is refused rather than passed on with that part unchanged
