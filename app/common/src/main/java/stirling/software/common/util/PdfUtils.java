@@ -373,38 +373,7 @@ public class PdfUtils {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             for (int page = 0; page < document.getNumberOfPages(); ++page) {
-                final int pageIndex = page;
-                BufferedImage bim;
-
-                // maxDPI is a safety ceiling for user-supplied values, not a target resolution
-                int renderDpi = PDF_TO_IMAGE_DPI;
-                ApplicationProperties properties =
-                        ApplicationContextProvider.getBean(ApplicationProperties.class);
-                if (properties != null && properties.getSystem() != null) {
-                    renderDpi = Math.min(renderDpi, properties.getSystem().getMaxDPI());
-                }
-                final int dpi = renderDpi;
-
-                try {
-                    bim =
-                            ExceptionUtils.handleOomRendering(
-                                    pageIndex + 1,
-                                    dpi,
-                                    () ->
-                                            pdfRenderer.renderImageWithDPI(
-                                                    pageIndex, dpi, ImageType.RGB));
-                } catch (IllegalArgumentException e) {
-                    if (e.getMessage() != null
-                            && e.getMessage().contains("Maximum size of image exceeded")) {
-                        throw ExceptionUtils.createIllegalArgumentException(
-                                "error.pageTooBigFor300Dpi",
-                                "PDF page {0} is too large to render at 300 DPI. The resulting image"
-                                        + " would exceed Java's maximum array size. Please use a lower DPI"
-                                        + " value for PDF-to-image conversion.",
-                                pageIndex + 1);
-                    }
-                    throw e;
-                }
+                BufferedImage bim = renderPageForImageCopy(pdfRenderer, page);
                 PDPage originalPage = document.getPage(page);
 
                 float width = originalPage.getMediaBox().getWidth();
@@ -422,6 +391,85 @@ public class PdfUtils {
             }
             return imageDocument;
         } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    /**
+     * Replaces one page's content, resources and annotations with an image of how it renders. The
+     * page object, its boxes and its rotation are kept, so outline entries and links that point at
+     * the page stay valid.
+     */
+    public void rasterisePageInPlace(PDDocument document, int pageIndex) throws IOException {
+        PDFRenderer pdfRenderer = new PDFRenderer(document);
+        pdfRenderer.setSubsamplingAllowed(true);
+        BufferedImage rendered = renderPageForImageCopy(pdfRenderer, pageIndex);
+
+        PDPage page = document.getPage(pageIndex);
+        // The renderer applies /Rotate; turn the image back so it sits in unrotated page space.
+        BufferedImage upright = rotateImage(rendered, -page.getRotation());
+        PDImageXObject image = LosslessFactory.createFromImage(document, upright);
+        rendered.flush();
+        upright.flush();
+
+        PDRectangle cropBox = page.getCropBox();
+        page.getCOSObject().removeItem(COSName.CONTENTS);
+        page.setResources(new PDResources());
+        page.setAnnotations(new ArrayList<>());
+        try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+            contentStream.drawImage(
+                    image,
+                    cropBox.getLowerLeftX(),
+                    cropBox.getLowerLeftY(),
+                    cropBox.getWidth(),
+                    cropBox.getHeight());
+        }
+    }
+
+    private BufferedImage rotateImage(BufferedImage source, int degrees) {
+        int quarterTurns = Math.floorMod(degrees / 90, 4);
+        if (quarterTurns == 0) {
+            return source;
+        }
+        boolean swap = quarterTurns % 2 == 1;
+        int width = swap ? source.getHeight() : source.getWidth();
+        int height = swap ? source.getWidth() : source.getHeight();
+        BufferedImage rotated = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = rotated.createGraphics();
+        graphics.translate(width / 2.0, height / 2.0);
+        graphics.rotate(Math.toRadians(quarterTurns * 90.0));
+        graphics.translate(-source.getWidth() / 2.0, -source.getHeight() / 2.0);
+        graphics.drawImage(source, 0, 0, null);
+        graphics.dispose();
+        return rotated;
+    }
+
+    private BufferedImage renderPageForImageCopy(PDFRenderer pdfRenderer, int pageIndex)
+            throws IOException {
+        // maxDPI is a safety ceiling for user-supplied values, not a target resolution
+        int renderDpi = PDF_TO_IMAGE_DPI;
+        ApplicationProperties properties =
+                ApplicationContextProvider.getBean(ApplicationProperties.class);
+        if (properties != null && properties.getSystem() != null) {
+            renderDpi = Math.min(renderDpi, properties.getSystem().getMaxDPI());
+        }
+        final int dpi = renderDpi;
+
+        try {
+            return ExceptionUtils.handleOomRendering(
+                    pageIndex + 1,
+                    dpi,
+                    () -> pdfRenderer.renderImageWithDPI(pageIndex, dpi, ImageType.RGB));
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage() != null
+                    && e.getMessage().contains("Maximum size of image exceeded")) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.pageTooBigFor300Dpi",
+                        "PDF page {0} is too large to render at 300 DPI. The resulting image"
+                                + " would exceed Java's maximum array size. Please use a lower DPI"
+                                + " value for PDF-to-image conversion.",
+                        pageIndex + 1);
+            }
             throw e;
         }
     }
