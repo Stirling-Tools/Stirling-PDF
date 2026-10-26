@@ -208,7 +208,8 @@ public abstract class CreateSignatureBase implements SignatureInterface {
                 ValidationTimeStamp validation = new ValidationTimeStamp(tsaUrl);
                 signedData = validation.addSignedTimeStamp(signedData);
             }
-            return signedData.getEncoded();
+            // getEncoded() emits BER with indefinite length; strict validators require DER.
+            return signedData.getEncoded("DER");
         } catch (GeneralSecurityException
                 | CMSException
                 | OperatorCreationException
