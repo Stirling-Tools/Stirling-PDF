@@ -410,7 +410,7 @@ describe("applyStructureEdits: adding figures", () => {
     mcid,
     alt,
     decorative: false,
-    newFigure: { after },
+    newElement: { type: "Figure" as const, after },
   });
   const documentKids = async (bytes: Uint8Array) =>
     (await elementBody(bytes, 9)).match(/\/K \[([^\]]*)\]/)![1];

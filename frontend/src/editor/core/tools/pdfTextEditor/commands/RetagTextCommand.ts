@@ -41,7 +41,7 @@ export class RetagTextCommand implements Command {
       );
     }
     if (this.previous === undefined) {
-      this.previous = doc.retaggedAs(structure.blockElement(this.mcid)!.key);
+      this.previous = structure.block(this.mcid)!.type;
     }
     doc.setRetag(this.pageIndex, this.mcid, this.to);
     doc.page(this.pageIndex).bumpRevision();

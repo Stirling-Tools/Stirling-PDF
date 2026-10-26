@@ -10,7 +10,7 @@ const KEY = "pdfTextEditor.inspector.accessibility";
 function tagShown(tag: TextTag): HTMLElement {
   render(
     <MantineProvider env="test">
-      <TextAccessibilitySection tag={tag} onRetag={vi.fn()} />
+      <TextAccessibilitySection tag={tag} onSetTag={vi.fn()} />
     </MantineProvider>,
   );
   return screen.getByTestId("pdf-editor-text-tag");
@@ -39,8 +39,14 @@ describe("TextAccessibilitySection", () => {
 
   it.each([
     [{ kind: "artifact" } as const, "artifactText"],
-    [{ kind: "untagged", documentTagged: true } as const, "untaggedBadge"],
-    [{ kind: "untagged", documentTagged: false } as const, "untaggedDocument"],
+    [
+      { kind: "untagged", documentTagged: true, taggable: false } as const,
+      "untaggedBadge",
+    ],
+    [
+      { kind: "untagged", documentTagged: false, taggable: false } as const,
+      "untaggedDocument",
+    ],
     [{ kind: "unknown" } as const, "unknownTag"],
   ])("explains text with no element (%o)", (tag, message) => {
     expect(tagShown(tag)).toHaveTextContent(`${KEY}.${message}`);
@@ -52,7 +58,7 @@ describe("TextAccessibilitySection", () => {
       <MantineProvider env="test">
         <TextAccessibilitySection
           tag={{ kind: "tagged", block: structureRole("P"), cannotRetag: null }}
-          onRetag={onRetag}
+          onSetTag={onRetag}
         />
       </MantineProvider>,
     );
@@ -72,7 +78,7 @@ describe("TextAccessibilitySection", () => {
             block: structureRole("Callout"),
             cannotRetag: null,
           }}
-          onRetag={vi.fn()}
+          onSetTag={vi.fn()}
         />
       </MantineProvider>,
     );

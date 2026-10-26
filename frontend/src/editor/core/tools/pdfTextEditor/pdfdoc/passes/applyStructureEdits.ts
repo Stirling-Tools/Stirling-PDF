@@ -12,7 +12,10 @@ import {
   plainObject,
 } from "@editor/tools/pdfTextEditor/pdfdoc/revision";
 import { ParentTreeWriter } from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
-import { addFigures } from "@editor/tools/pdfTextEditor/pdfdoc/passes/addFigures";
+import {
+  addElements,
+  noteId,
+} from "@editor/tools/pdfTextEditor/pdfdoc/passes/addElements";
 import { markDecorative } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markDecorative";
 import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
@@ -28,10 +31,10 @@ export interface StructureEdit {
   /** Turn the element's content into an artifact and drop the element, its /Alt with it. */
   decorative: boolean;
   /**
-   * Set when no element owns the content yet: add a Figure for it, after the
-   * element owning MCID `after` on the page (see NewFigure).
+   * Set when no element owns the content yet: add one of `type` for it, after
+   * the element owning MCID `after` on the page (see NewElement).
    */
-  newFigure?: { after: number | null };
+  newElement?: { type: StructureType; after: number | null };
 }
 
 export interface StructureEditFailure {
@@ -79,9 +82,9 @@ export async function applyStructureEdits(
   const bodies = new Map<number, string>();
   const failures: StructureEditFailure[] = [];
   const decorative = new Map<number, StructureEdit[]>();
-  const figures = edits.filter((edit) => edit.newFigure);
+  const added = edits.filter((edit) => edit.newElement);
   for (const edit of edits) {
-    if (edit.newFigure) continue;
+    if (edit.newElement) continue;
     const owner = elementFor(pdf, treeRoot, edit);
     if (typeof owner === "string") {
       failures.push({ edit, reason: owner });
@@ -108,21 +111,21 @@ export async function applyStructureEdits(
   }
 
   const parentTree = new ParentTreeWriter(pdf, treeRoot);
-  // Before the decorative marks, so a figure placed beside an element they
-  // drop keeps its place among the kids that remain.
-  const unplaced = await addFigures(
+  // Before the decorative marks, so an element placed beside one they drop
+  // keeps its place among the kids that remain.
+  const unplaced = await addElements(
     pdf,
     treeRoot,
-    figures.map((edit) => ({
+    added.map((edit) => ({
       ...edit,
+      ...edit.newElement!,
       alt: edit.alt ?? null,
-      after: edit.newFigure!.after,
     })),
     bodies,
     parentTree,
   );
   for (const [index, reason] of unplaced) {
-    failures.push({ edit: figures[index], reason });
+    failures.push({ edit: added[index], reason });
   }
   const { streams, failed } = await markDecorative(
     pdf,
@@ -164,9 +167,8 @@ function edited(
   }
   if (out !== null && edit.type) {
     out = setDictEntry(out, "S", `/${edit.type}`);
-    // PDF/UA-1 7.9 requires a Note to carry an ID, unique in the file as the object number is.
     if (out !== null && edit.type === "Note" && !pdf.valueSpan(out, "ID")) {
-      out = setDictEntry(out, "ID", `(note-${num})`);
+      out = setDictEntry(out, "ID", noteId(num));
     }
   }
   return out;

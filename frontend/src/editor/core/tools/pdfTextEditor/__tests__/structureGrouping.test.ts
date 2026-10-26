@@ -200,7 +200,7 @@ describe("textTag", () => {
   test("reads text in a file without a structure tree as untagged", async () => {
     expect(
       await tagOf(paragraphsPdf({ tagged: false }), "Introduction"),
-    ).toEqual({ kind: "untagged", documentTagged: false });
+    ).toEqual({ kind: "untagged", documentTagged: false, taggable: false });
   });
 });
 

@@ -77,7 +77,7 @@ export function SelectionInspector({
       {ACCESSIBILITY_EDITING && controller.textTag && (
         <TextAccessibilitySection
           tag={controller.textTag}
-          onRetag={controller.onRetagText}
+          onSetTag={controller.onSetTextTag}
         />
       )}
       {ACCESSIBILITY_EDITING && controller.imageAccessibility && (

@@ -944,39 +944,41 @@ describe("PageStructure: added figures", () => {
     block: { key: "paragraph", role: "P", type: "P" as const },
   };
 
-  test("takes an MCID above every slot, added figure and marked content", () => {
+  test("takes an MCID above every slot, added element and marked content", () => {
     const s = new PageStructure([paragraph], null, 5);
     expect(s.freeMcid(2)).toBe(5);
     expect(s.freeMcid(7)).toBe(8);
-    s.addFigure(5);
+    s.addElement(5, "Figure");
     expect(s.freeMcid(2)).toBe(6);
   });
 
-  test("lists added figures apart from edits to the file's elements", () => {
+  test("lists added elements apart from edits to the file's elements", () => {
     const s = new PageStructure(
       [{ ...paragraph, role: "Figure", type: "Figure" }],
       null,
       5,
     );
-    s.addFigure(5);
+    s.addElement(5, "Figure");
     s.setAlt(5, "Logo");
     s.setAlt(3, "Chart");
     expect(s.pendingEdits()).toEqual([
       { mcid: 3, alt: "Chart", decorative: false },
     ]);
-    expect(s.addedFigures()).toEqual([{ mcid: 5, alt: "Logo" }]);
+    expect(s.addedElements()).toEqual([
+      { mcid: 5, type: "Figure", alt: "Logo" },
+    ]);
     expect(() => s.setDecorative(5, true)).toThrow();
-    s.removeFigure(5);
-    expect(s.addedFigures()).toEqual([]);
+    s.removeElement(5);
+    expect(s.addedElements()).toEqual([]);
     expect(s.element(5)).toBeNull();
   });
 
   test("adds none where the page has no ParentTree array or is read-only", () => {
     expect(
-      new PageStructure([paragraph], null, 5).cannotAddFigure(),
+      new PageStructure([paragraph], null, 5).cannotAddElement(),
     ).toBeNull();
-    expect(new PageStructure([]).cannotAddFigure()).toBe("untagged");
-    expect(new PageStructure([], "encrypted", 5).cannotAddFigure()).toBe(
+    expect(new PageStructure([]).cannotAddElement()).toBe("untagged");
+    expect(new PageStructure([], "encrypted", 5).cannotAddElement()).toBe(
       "encrypted",
     );
   });
@@ -1058,7 +1060,7 @@ describe("TagImageCommand", () => {
     );
     history.undo(doc);
     expect(image.mcid).toBeNull();
-    expect(doc.structure(0).addedFigures()).toEqual([]);
+    expect(doc.structure(0).addedElements()).toEqual([]);
   });
 
   test("un-decorates an artifact, restoring the mark on undo", async () => {
@@ -1085,11 +1087,11 @@ describe("TagImageCommand", () => {
     history.execute(tagImage(image, "figure", "A logo"), doc);
     history.execute(tagImage(image, "artifact"), doc);
     expect(marks(doc, image)).toEqual([{ name: "Artifact", mcid: null }]);
-    expect(doc.structure(0).addedFigures()).toEqual([]);
+    expect(doc.structure(0).addedElements()).toEqual([]);
 
     history.undo(doc);
-    expect(doc.structure(0).addedFigures()).toEqual([
-      { mcid: 1, alt: "A logo" },
+    expect(doc.structure(0).addedElements()).toEqual([
+      { mcid: 1, type: "Figure", alt: "A logo" },
     ]);
   });
 

@@ -14,13 +14,16 @@ import type {
 } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type { TextTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 
-/** What the selected text is tagged as, and a picker to retag it where its block allows. */
+/**
+ * What the selected text is tagged as, and a picker to change it: retagging
+ * its block, or giving untagged text an element of its own.
+ */
 export function TextAccessibilitySection({
   tag,
-  onRetag,
+  onSetTag,
 }: {
   tag: TextTag;
-  onRetag: (type: StructureType) => void;
+  onSetTag: (type: StructureType) => void;
 }) {
   const { t } = useTranslation();
   const label = t("pdfTextEditor.inspector.accessibility.tagLabel", "Tag");
@@ -29,9 +32,14 @@ export function TextAccessibilitySection({
       <SectionLabel>
         {t("pdfTextEditor.inspector.accessibility.heading", "Accessibility")}
       </SectionLabel>
-      {tag.kind === "tagged" && tag.cannotRetag === null ? (
+      {pickable(tag) ? (
         <Field label={label}>
-          <TagPicker block={tag.block} onRetag={onRetag} label={label} />
+          <TagPicker
+            current={tag.kind === "tagged" ? tag.block : null}
+            placeholder={tagText(t, tag)}
+            onSetTag={onSetTag}
+            label={label}
+          />
         </Field>
       ) : (
         <StatRow
@@ -45,17 +53,27 @@ export function TextAccessibilitySection({
   );
 }
 
+function pickable(tag: TextTag): boolean {
+  if (tag.kind === "tagged") return tag.cannotRetag === null;
+  return tag.kind === "untagged" && tag.taggable;
+}
+
 function TagPicker({
-  block,
-  onRetag,
+  current,
+  placeholder,
+  onSetTag,
   label,
 }: {
-  block: StructureRole;
-  onRetag: (type: StructureType) => void;
+  /** Null for untagged text. */
+  current: StructureRole | null;
+  /** Shown when the current tag is not one the picker offers, such as a custom role. */
+  placeholder: string;
+  onSetTag: (type: StructureType) => void;
   label: string;
 }) {
   const { t } = useTranslation();
-  const offered = TEXT_BLOCK_TYPES.find((type) => type === block.type) ?? null;
+  const offered =
+    TEXT_BLOCK_TYPES.find((type) => type === current?.type) ?? null;
   return (
     <div data-testid="pdf-editor-text-tag-picker">
       <Select
@@ -65,11 +83,10 @@ function TagPicker({
           label: typeName(t, type),
         }))}
         value={offered}
-        // A tag the picker does not offer, such as a custom role, still shows.
-        placeholder={blockName(t, block)}
+        placeholder={placeholder}
         onChange={(value) => {
           const picked = TEXT_BLOCK_TYPES.find((type) => type === value);
-          if (picked) onRetag(picked);
+          if (picked) onSetTag(picked);
         }}
         aria-label={label}
       />

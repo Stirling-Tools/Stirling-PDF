@@ -158,16 +158,19 @@ export type RetagBlocker = "untagged" | "not-text" | ReadOnlyReason;
 /** The type the session has retagged a block as, by block key; null when it has not. */
 export type RetagLookup = (key: string) => StructureType | null;
 
-/** A Figure the session adds for content the file leaves untagged. */
-export interface AddedFigure {
+type AddedStructureElement = StructureElement & { type: StructureType };
+
+/** An element the session adds for content the file leaves untagged. */
+export interface AddedElement {
   mcid: number;
+  type: StructureType;
   /** The /Alt to save; null for none. */
   alt: string | null;
 }
 
 /**
  * The structure elements of one page plus the session's unsaved edits to
- * them, and the figures it adds. Edits are keyed by element rather than MCID,
+ * them, and the elements it adds. Edits are keyed by element rather than MCID,
  * so an element that owns several MCIDs has one description however it was
  * addressed.
  */
@@ -175,13 +178,13 @@ export class PageStructure {
   readonly elements: readonly StructureElement[];
   private readonly byMcid = new Map<number, StructureElement>();
   private readonly edits = new Map<StructureElement, StructureElementEdit>();
-  private readonly added = new Map<number, StructureElement>();
+  private readonly added = new Map<number, AddedStructureElement>();
 
   /** Why the save cannot write descriptions for this page, or null when it can. */
   readonly readOnly: ReadOnlyReason | null;
   /**
    * The length of the page's ParentTree array, so the first MCID it has no
-   * slot for; null when the page has no array to add a figure to.
+   * slot for; null when the page has no array to add an element to.
    */
   private readonly slotCount: number | null;
   private readonly retaggedAs: RetagLookup;
@@ -226,6 +229,8 @@ export class PageStructure {
    * page's content itself, as an LI holding only an Lbl and an LBody does.
    */
   blockElement(mcid: number): StructureElement | null {
+    const added = this.added.get(mcid);
+    if (added) return added;
     const key = this.element(mcid)?.block.key;
     return this.elements.find((el) => el.key === key) ?? null;
   }
@@ -287,11 +292,11 @@ export class PageStructure {
 
   /**
    * Mark or unmark decorative, keeping the description. Throws as setEdit
-   * does, and for an added figure, whose content is retagged instead.
+   * does, and for an added element, whose content is retagged instead.
    */
   setDecorative(mcid: number, decorative: boolean): void {
     if (this.added.has(mcid)) {
-      throw new Error(`MCID ${mcid} is an added figure`);
+      throw new Error(`MCID ${mcid} is an added element`);
     }
     this.setEdit(mcid, { mcid, alt: this.alt(mcid), decorative });
   }
@@ -304,22 +309,22 @@ export class PageStructure {
     else this.edits.delete(el);
   }
 
-  /** Edits to the file's elements; added figures are listed by addedFigures. */
+  /** Edits to the file's elements; added elements are listed by addedElements. */
   pendingEdits(): StructureElementEdit[] {
-    const added = new Set(this.added.values());
+    const added = new Set<StructureElement>(this.added.values());
     return [...this.edits]
       .filter(([el]) => !added.has(el))
       .map(([, edit]) => edit);
   }
 
-  /** Why untagged content on this page cannot be given a figure, or null when it can. */
-  cannotAddFigure(): DescriptionBlocker | null {
+  /** Why untagged content on this page cannot be given an element, or null when it can. */
+  cannotAddElement(): DescriptionBlocker | null {
     if (this.readOnly) return this.readOnly;
     return this.slotCount === null ? "untagged" : null;
   }
 
   /**
-   * An MCID no slot or added figure on the page uses, above `contentMax`: the
+   * An MCID no slot or added element on the page uses, above `contentMax`: the
    * highest MCID the page's content carries, -1 for none.
    */
   freeMcid(contentMax: number): number {
@@ -334,37 +339,52 @@ export class PageStructure {
     return this.added.has(mcid);
   }
 
-  /** Give the content `mcid` marks a new Figure. Throws when an element already owns it. */
-  addFigure(mcid: number): void {
+  /** Give the content `mcid` marks a new element. Throws when an element already owns it. */
+  addElement(mcid: number, type: StructureType): void {
     if (this.byMcid.has(mcid)) {
       throw new Error(`MCID ${mcid} already has an element`);
     }
-    const figure: StructureElement = {
-      role: "Figure",
-      type: "Figure",
+    this.putAdded(mcid, type);
+  }
+
+  /** Change the type of the element added for `mcid`. Throws when none was added. */
+  setAddedType(mcid: number, type: StructureType): void {
+    if (!this.added.has(mcid)) throw new Error(`MCID ${mcid} was not added`);
+    const edit = this.editFor(mcid);
+    this.removeElement(mcid);
+    this.putAdded(mcid, type);
+    if (edit) this.setEdit(mcid, edit);
+  }
+
+  private putAdded(mcid: number, type: StructureType): void {
+    const key = `added:${mcid}`;
+    const element: AddedStructureElement = {
+      role: type,
+      type,
       alt: null,
       actualText: null,
       mcids: [mcid],
       onlyMarkedContent: true,
-      key: `added:${mcid}`,
-      block: { key: `added:${mcid}`, role: "Figure", type: "Figure" },
+      key,
+      block: { key, role: type, type },
     };
-    this.added.set(mcid, figure);
-    this.byMcid.set(mcid, figure);
+    this.added.set(mcid, element);
+    this.byMcid.set(mcid, element);
   }
 
-  /** Drop an added figure and its description. */
-  removeFigure(mcid: number): void {
-    const figure = this.added.get(mcid);
-    if (!figure) return;
+  /** Drop an added element and its description. */
+  removeElement(mcid: number): void {
+    const element = this.added.get(mcid);
+    if (!element) return;
     this.added.delete(mcid);
     this.byMcid.delete(mcid);
-    this.edits.delete(figure);
+    this.edits.delete(element);
   }
 
-  addedFigures(): AddedFigure[] {
-    return [...this.added.keys()].map((mcid) => ({
+  addedElements(): AddedElement[] {
+    return [...this.added].map(([mcid, element]) => ({
       mcid,
+      type: element.type,
       alt: this.alt(mcid),
     }));
   }

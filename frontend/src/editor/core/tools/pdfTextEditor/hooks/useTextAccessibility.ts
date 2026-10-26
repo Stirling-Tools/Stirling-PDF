@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { RetagTextCommand } from "@editor/tools/pdfTextEditor/commands/RetagTextCommand";
+import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type {
   EditorStore,
@@ -10,7 +11,7 @@ import { textTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 
 /**
  * The tag of the selected text (null unless exactly one run and nothing else
- * is selected), and a way to retag it.
+ * is selected), and a way to change it.
  */
 export function useTextAccessibility(
   store: EditorStore,
@@ -35,19 +36,30 @@ export function useTextAccessibility(
     };
   }, [store, state.pages, selection]);
 
-  const retag = useCallback(
+  /** Retags the text's block, or gives untagged text an element of its own. */
+  const setTag = useCallback(
     (type: StructureType) => {
-      if (run?.mcid === undefined || tag?.kind !== "tagged") return;
-      store.dispatch(
-        new RetagTextCommand({
-          pageIndex: run.pageIndex,
-          mcid: run.mcid,
-          type,
-        }),
-      );
+      if (!run || !tag) return;
+      if (tag.kind === "tagged" && run.mcid !== undefined) {
+        store.dispatch(
+          new RetagTextCommand({
+            pageIndex: run.pageIndex,
+            mcid: run.mcid,
+            type,
+          }),
+        );
+      } else if (tag.kind === "untagged" && tag.taggable) {
+        store.dispatch(
+          new TagTextCommand({
+            pageIndex: run.pageIndex,
+            runId: run.id,
+            as: type,
+          }),
+        );
+      }
     },
     [store, run, tag],
   );
 
-  return { tag, retag };
+  return { tag, setTag };
 }

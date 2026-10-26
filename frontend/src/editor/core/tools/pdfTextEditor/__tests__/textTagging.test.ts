@@ -13,6 +13,7 @@ import {
   vi,
 } from "vitest";
 import { RetagTextCommand } from "@editor/tools/pdfTextEditor/commands/RetagTextCommand";
+import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
@@ -20,7 +21,14 @@ import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileSt
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
-import { textTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import {
+  buildClassicPdf,
+  streamBody,
+} from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
+import {
+  canTagText,
+  textTag,
+} from "@editor/tools/pdfTextEditor/util/textAccessibility";
 
 const TAGGED_SAMPLE = path.join(
   import.meta.dirname,
@@ -167,5 +175,137 @@ describe("retagging text", () => {
       ),
     ).toThrow();
     expect(doc.structureEdits()).toEqual([]);
+  });
+});
+
+function tagText(
+  doc: EditorDocument,
+  history: HistoryStack,
+  fragment: string,
+  as: StructureType,
+  pageIndex = PAGE,
+) {
+  const run = doc.page(pageIndex).runs.find((r) => r.text.includes(fragment))!;
+  history.execute(new TagTextCommand({ pageIndex, runId: run.id, as }), doc);
+  return run;
+}
+
+/** A tagged page: an H1, then a two-line paragraph its content leaves untagged. */
+function untaggedParagraphPdf(): Uint8Array {
+  return buildClassicPdf(
+    [
+      {
+        num: 1,
+        body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>",
+      },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+      {
+        num: 3,
+        body:
+          "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /StructParents 0 " +
+          "/Resources << /Font << /F1 5 0 R >> >> >>",
+      },
+      {
+        num: 4,
+        body: streamBody(
+          "",
+          "/H1 <</MCID 0>> BDC BT /F1 20 Tf 72 700 Td (Summary) Tj ET EMC\n" +
+            "BT /F1 12 Tf 72 670 Td (Sales rose in every region,) Tj ET\n" +
+            "BT /F1 12 Tf 72 656 Td (led by the new product line.) Tj ET\n",
+        ),
+      },
+      {
+        num: 5,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      {
+        num: 6,
+        body: "<< /Type /StructTreeRoot /K 7 0 R /ParentTree 9 0 R /ParentTreeNextKey 1 >>",
+      },
+      {
+        num: 7,
+        body: "<< /Type /StructElem /S /Document /P 6 0 R /K [8 0 R] >>",
+      },
+      {
+        num: 8,
+        body: "<< /Type /StructElem /S /H1 /P 7 0 R /Pg 3 0 R /K 0 >>",
+      },
+      { num: 9, body: "<< /Nums [0 [8 0 R]] >>" },
+    ],
+    1,
+  );
+}
+
+describe("tagging untagged text", () => {
+  test("tags the text, shows it, and saves it as a new element", async () => {
+    const doc = await openSample();
+    tagText(doc, new HistoryStack(), "Confidential", "P");
+    expect(shownTag(doc, "Confidential")).toBe("P");
+
+    const reopened = await EditorDocument.open(await savedBytes(doc));
+    opened.push(reopened);
+    PdfiumTextReader.populate(reopened, reopened.page(PAGE));
+    expect(shownTag(reopened, "Confidential")).toBe("P");
+  });
+
+  test("puts a new heading in the outline where the save puts it", async () => {
+    const doc = await openSample();
+    tagText(doc, new HistoryStack(), "Confidential", "H2");
+    const inSession = doc.headings()!.map((h) => h.type);
+    expect(inSession.at(-1)).toBe("H2");
+
+    const saved = await readFileStructure(await savedBytes(doc));
+    expect(
+      saved!.blocks.flatMap(({ type }) =>
+        type?.startsWith("H") ? [type] : [],
+      ),
+    ).toEqual(inSession);
+  });
+
+  test("removes the tag on undo", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    const run = tagText(doc, history, "Confidential", "P");
+    history.undo(doc);
+    expect(run.snapshot().mcid).toBeUndefined();
+    expect(shownTag(doc, "Confidential")).toBe("untagged");
+    expect(doc.structureEdits()).toEqual([]);
+  });
+
+  test("retags text it tagged before the save", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    tagText(doc, history, "Confidential", "P");
+    retag(doc, history, "Confidential", "Note");
+    expect(shownTag(doc, "Confidential")).toBe("Note");
+
+    history.undo(doc);
+    expect(shownTag(doc, "Confidential")).toBe("P");
+  });
+
+  test("refuses text marked as an artifact", async () => {
+    const doc = await openSample();
+    const header = runWith(doc, "Acme Corp");
+    expect(canTagText(doc, header.snapshot())).toBe(false);
+    expect(() => tagText(doc, new HistoryStack(), "Acme Corp", "P")).toThrow();
+  });
+
+  test("tags every line of a paragraph as one element", async () => {
+    const doc = await EditorDocument.open(untaggedParagraphPdf());
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(0));
+    tagText(doc, new HistoryStack(), "Sales rose", "P", 0);
+
+    const saved = await readFileStructure(await savedBytes(doc));
+    const elements = saved!.pages.get(0)!.elements;
+    expect(elements.map((el) => el.type)).toEqual(["H1", "P"]);
+    expect(elements[1].mcids.length).toBeGreaterThanOrEqual(1);
+
+    const reopened = await EditorDocument.open(await savedBytes(doc));
+    opened.push(reopened);
+    PdfiumTextReader.populate(reopened, reopened.page(0));
+    for (const run of reopened.page(0).runs) {
+      expect(textTag(reopened, run.snapshot()).kind).toBe("tagged");
+    }
   });
 });

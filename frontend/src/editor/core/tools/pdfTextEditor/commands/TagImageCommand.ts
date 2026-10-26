@@ -112,7 +112,7 @@ function retag(
   }
   if (from.kind === "figure") {
     marked(removeTagMark(m, objPtr, FIGURE_TAG));
-    structure.removeFigure(from.mcid);
+    structure.removeElement(from.mcid);
   }
   image.mcid = null;
   image.artifact = false;
@@ -126,7 +126,7 @@ function retag(
     marked(
       addTagMark(m, doc.docPtr, objPtr, { name: FIGURE_TAG, mcid: to.mcid }),
     );
-    structure.addFigure(to.mcid);
+    structure.addElement(to.mcid, FIGURE_TAG);
     if (to.alt !== null) structure.setAlt(to.mcid, to.alt);
     image.mcid = to.mcid;
   }

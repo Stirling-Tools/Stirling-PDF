@@ -18,9 +18,9 @@ import {
 } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type { DocumentHeading } from "@editor/tools/pdfTextEditor/util/headingOutline";
 import {
-  imagesInReadingOrder,
   precedingTaggedMcid,
-} from "@editor/tools/pdfTextEditor/util/figurePlacement";
+  taggedContentInReadingOrder,
+} from "@editor/tools/pdfTextEditor/util/elementPlacement";
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { prepareForEditing } from "@editor/tools/pdfTextEditor/pdfdoc/prepareForEditing";
@@ -199,17 +199,34 @@ export class EditorDocument {
   }
 
   /**
-   * The headings in reading order, the session's retags applied. Null when
-   * the file's structure tree could not be read, which leaves nothing to
-   * check them against.
+   * The headings in reading order, the session's retags and added elements
+   * applied. Null when the file's structure tree could not be read, which
+   * leaves nothing to check them against.
    */
   headings(): DocumentHeading[] | null {
     if (!this.fileStructure) return null;
-    return this.fileStructure.blocks.flatMap(
-      ({ key, type, pageIndex, mcids }) => {
-        const now = this.retaggedAs(key) ?? type;
-        return isHeadingType(now) ? [{ type: now, pageIndex, mcids }] : [];
-      },
+    const blocks = this.fileStructure.blocks.map(
+      ({ key, type, pageIndex, mcids }) => ({
+        key,
+        type: this.retaggedAs(key) ?? type,
+        pageIndex,
+        mcids,
+      }),
+    );
+    for (const [pageIndex, structure] of this.structureCache) {
+      for (const edit of this.addedElementEdits(pageIndex, structure)) {
+        const { type, after } = edit.newElement!;
+        const anchor = after === null ? null : structure.block(after)?.key;
+        blocks.splice(insertionPoint(blocks, pageIndex, anchor ?? null), 0, {
+          key: structure.block(edit.mcid)!.key,
+          type,
+          pageIndex,
+          mcids: [edit.mcid],
+        });
+      }
+    }
+    return blocks.flatMap(({ type, pageIndex, mcids }) =>
+      isHeadingType(type) ? [{ type, pageIndex, mcids }] : [],
     );
   }
 
@@ -228,6 +245,11 @@ export class EditorDocument {
     const blocker = structure.cannotRetag(mcid);
     if (blocker) throw new Error(`MCID ${mcid} cannot be retagged: ${blocker}`);
     const block = structure.blockElement(mcid)!;
+    // An added element is not in the file yet: its type is just changed.
+    if (structure.isAdded(block.mcids[0])) {
+      if (type !== null) structure.setAddedType(block.mcids[0], type);
+      return;
+    }
     if (type === null || type === block.type) {
       this.retags.delete(block.key);
     } else {
@@ -267,33 +289,44 @@ export class EditorDocument {
     return [
       ...[...this.structureCache].flatMap(([pageIndex, structure]) => [
         ...structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
-        ...this.addedFigureEdits(pageIndex, structure),
+        ...this.addedElementEdits(pageIndex, structure),
       ]),
       ...retags,
     ];
   }
 
   /**
-   * The page's added figures in reading order, so one placed after another
-   * finds it already in the tree. A figure whose image was deleted is left
-   * out: there is nothing left for it to describe.
+   * The page's added elements in reading order, so one placed after another
+   * finds it already in the tree. An element whose content was deleted is
+   * left out: there is nothing left for it to tag.
    */
-  private addedFigureEdits(
+  private addedElementEdits(
     pageIndex: number,
     structure: PageStructure,
   ): StructureEdit[] {
     const page = this.pageCache.get(pageIndex);
     if (!page) return [];
-    const figures = structure.addedFigures();
-    return imagesInReadingOrder(page).flatMap((image) => {
-      const figure = figures.find((f) => f.mcid === image.mcid);
-      if (!figure) return [];
+    const added = new Map(
+      structure.addedElements().map((element) => [element.mcid, element]),
+    );
+    return taggedContentInReadingOrder(page).flatMap((content) => {
+      const element = added.get(content.mcid);
+      if (!element) return [];
+      added.delete(content.mcid);
+      const preceding = precedingTaggedMcid(page, content);
+      // After the block, not an inline element inside it: content following a
+      // paragraph that ends in a link is not part of the link.
+      const after =
+        preceding === null
+          ? null
+          : (structure.blockElement(preceding)?.mcids[0] ?? preceding);
       return [
         {
           pageIndex,
-          ...figure,
+          mcid: element.mcid,
+          alt: element.alt,
           decorative: false,
-          newFigure: { after: precedingTaggedMcid(page, image) },
+          newElement: { type: element.type, after },
         },
       ];
     });
@@ -351,4 +384,28 @@ export class EditorDocument {
     closeDocAndFreeBuffer(this.module, this.docPtr);
     releaseScratch(this.module);
   }
+}
+
+/**
+ * Where an added element goes among `blocks`, as the save places it: after
+ * the block `anchor` names on its page, else before the page's first block,
+ * else before the next page's.
+ */
+function insertionPoint(
+  blocks: readonly { key: string; pageIndex: number | null }[],
+  pageIndex: number,
+  anchor: string | null,
+): number {
+  // Added keys repeat across pages; a file block spanning pages is listed
+  // under its first.
+  const onPage = blocks.findIndex(
+    (block) => block.key === anchor && block.pageIndex === pageIndex,
+  );
+  const at =
+    onPage >= 0 ? onPage : blocks.findIndex((block) => block.key === anchor);
+  if (at >= 0) return at + 1;
+  const next = blocks.findIndex(
+    (block) => block.pageIndex !== null && block.pageIndex >= pageIndex,
+  );
+  return next >= 0 ? next : blocks.length;
 }

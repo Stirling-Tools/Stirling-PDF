@@ -527,7 +527,7 @@ export function useToolbarController(
     imageReview: imageA11y.review,
     onSelectNextImageToReview: imageA11y.selectNextImage,
     textTag: textA11y.tag,
-    onRetagText: textA11y.retag,
+    onSetTextTag: textA11y.setTag,
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
     hasImageSelection: selection.imageIds.length > 0,
