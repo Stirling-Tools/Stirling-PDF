@@ -234,6 +234,13 @@ test.describe("PDF text editor - tagged documents", () => {
     await page.getByTestId("pdf-editor-image-description").fill("");
     await expect(badge).toBeVisible();
 
+    // Next shows the description of the image it picks, even with one selected.
+    await page.getByTestId("pdf-editor-tab-document").click();
+    await page.getByTestId("pdf-editor-document-accessibility-next").click();
+    await expect(
+      page.getByTestId("pdf-editor-image-description"),
+    ).toBeVisible();
+
     // Escape from the Document tab clears the selection and leaves the tab open.
     await page.getByTestId("pdf-editor-tab-document").click();
     await page.keyboard.press("Escape");

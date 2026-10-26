@@ -10,7 +10,7 @@ import type {
 function renderSection(
   accessibility: ImageAccessibility,
   {
-    review = { needsDescription: 0, untagged: 0 },
+    review = { needsDescription: 0, untagged: 0, untaggable: 0 },
     onSetDescription = vi.fn(),
     onSetDecorative = vi.fn(),
     onNext = vi.fn(),
@@ -141,7 +141,7 @@ describe("ImageAccessibilitySection", () => {
 
   it("moves on to the next image needing attention", () => {
     const { onNext } = renderSection(describable("Done"), {
-      review: { needsDescription: 1, untagged: 1 },
+      review: { needsDescription: 1, untagged: 1, untaggable: 0 },
     });
     fireEvent.click(screen.getByTestId(NEXT));
     expect(onNext).toHaveBeenCalledOnce();
@@ -151,43 +151,49 @@ describe("ImageAccessibilitySection", () => {
     [
       "only this one needs a description",
       describable(null),
-      { needsDescription: 1, untagged: 0 },
+      { needsDescription: 1, untagged: 0, untaggable: 0 },
       false,
     ],
     [
       "another needs a description",
       describable(null),
-      { needsDescription: 2, untagged: 0 },
+      { needsDescription: 2, untagged: 0, untaggable: 0 },
       true,
     ],
     [
-      "only this one is untagged",
+      "this one can't be tagged, nor can another",
       untagged,
-      { needsDescription: 0, untagged: 1 },
+      { needsDescription: 0, untagged: 0, untaggable: 2 },
       false,
+    ],
+    [
+      "this one can't be tagged, and another is untagged",
+      untagged,
+      { needsDescription: 0, untagged: 1, untaggable: 1 },
+      true,
     ],
     [
       "only this one is untagged, and can be tagged",
       taggable,
-      { needsDescription: 0, untagged: 1 },
+      { needsDescription: 0, untagged: 1, untaggable: 0 },
       false,
     ],
     [
       "another is untagged",
       describable("Done"),
-      { needsDescription: 0, untagged: 1 },
+      { needsDescription: 0, untagged: 1, untaggable: 0 },
       true,
     ],
     [
       "a decorative image, one elsewhere",
       { kind: "decorative", canUndecorate: false },
-      { needsDescription: 1, untagged: 0 },
+      { needsDescription: 1, untagged: 0, untaggable: 0 },
       true,
     ],
     [
       "nothing left",
       describable("Done"),
-      { needsDescription: 0, untagged: 0 },
+      { needsDescription: 0, untagged: 0, untaggable: 0 },
       false,
     ],
   ])(

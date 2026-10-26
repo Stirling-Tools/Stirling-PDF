@@ -75,21 +75,22 @@ export function useImageAccessibility(
     (): ImageReview =>
       store.document
         ? reviewImages(store.document, state.pages)
-        : { needsDescription: 0, untagged: 0 },
+        : { needsDescription: 0, untagged: 0, untaggable: 0 },
     [store, state.pages],
   );
 
-  const selectNextImage = useCallback(() => {
+  /** False when no image needs attention, leaving the selection alone. */
+  const selectNextImage = useCallback((): boolean => {
     // An image on a page not yet scrolled to would otherwise be skipped.
     ensureAllPagesRead(store);
     const doc = store.document;
-    if (!doc) return;
+    if (!doc) return false;
     const next = nextImageNeedingAttention(
       doc,
       store.getState().pages,
       store.selection.value.imageIds[0] ?? null,
     );
-    if (!next) return;
+    if (!next) return false;
     store.selection.selectImage(next.id);
     // A page read just now has no overlay until React commits it.
     window.requestAnimationFrame(() =>
@@ -97,6 +98,7 @@ export function useImageAccessibility(
         .querySelector(`[data-testid="pdf-editor-image-${next.id}"]`)
         ?.scrollIntoView({ block: "center", behavior: "smooth" }),
     );
+    return true;
   }, [store]);
 
   return {

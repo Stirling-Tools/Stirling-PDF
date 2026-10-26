@@ -180,14 +180,14 @@ export function ImageHandle({
       {attention && (
         <Tooltip
           label={
-            attention === "untagged"
+            attention === "needs-description"
               ? t(
-                  "pdfTextEditor.inspector.accessibility.untaggedBadge",
-                  "Not tagged",
-                )
-              : t(
                   "pdfTextEditor.inspector.accessibility.needsDescriptionBadge",
                   "No description",
+                )
+              : t(
+                  "pdfTextEditor.inspector.accessibility.untaggedBadge",
+                  "Not tagged",
                 )
           }
         >

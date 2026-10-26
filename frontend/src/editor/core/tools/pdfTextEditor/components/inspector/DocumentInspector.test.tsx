@@ -29,7 +29,11 @@ const NEXT = "pdf-editor-document-accessibility-next";
 
 describe("DocumentInspector accessibility review", () => {
   it("counts images missing descriptions and untagged ones, and moves to the next", () => {
-    const onNext = renderInspector({ needsDescription: 2, untagged: 1 });
+    const onNext = renderInspector({
+      needsDescription: 2,
+      untagged: 1,
+      untaggable: 0,
+    });
     expect(screen.getByTestId(SUMMARY)).toHaveTextContent(
       `${KEY}.missingDescriptions2${KEY}.untaggedImages1`,
     );
@@ -38,12 +42,20 @@ describe("DocumentInspector accessibility review", () => {
   });
 
   it("offers the next image while any is untagged", () => {
-    renderInspector({ needsDescription: 0, untagged: 1 });
+    renderInspector({ needsDescription: 0, untagged: 1, untaggable: 0 });
     expect(screen.getByTestId(NEXT)).toBeVisible();
   });
 
+  it("counts images that can't be tagged apart, without offering them", () => {
+    renderInspector({ needsDescription: 0, untagged: 0, untaggable: 2 });
+    expect(screen.getByTestId(SUMMARY)).toHaveTextContent(
+      `${KEY}.missingDescriptions0${KEY}.untaggedImages0${KEY}.untaggableImages2`,
+    );
+    expect(screen.queryByTestId(NEXT)).not.toBeInTheDocument();
+  });
+
   it("offers no next image once every image is dealt with", () => {
-    renderInspector({ needsDescription: 0, untagged: 0 });
+    renderInspector({ needsDescription: 0, untagged: 0, untaggable: 0 });
     expect(screen.getByTestId(SUMMARY)).toHaveTextContent(
       `${KEY}.missingDescriptions0${KEY}.untaggedImages0`,
     );

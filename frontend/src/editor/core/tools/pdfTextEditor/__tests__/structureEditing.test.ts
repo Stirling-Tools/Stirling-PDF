@@ -422,6 +422,7 @@ describe("reviewing images that need attention", () => {
     expect(reviewImages(doc, await pages(doc))).toEqual({
       needsDescription: 2,
       untagged: 0,
+      untaggable: 0,
     });
   });
 
@@ -480,6 +481,7 @@ describe("reviewing images that need attention", () => {
     expect(reviewImages(doc, read)).toEqual({
       needsDescription: 0,
       untagged: 1,
+      untaggable: 0,
     });
     expect(nextImageNeedingAttention(doc, read, null)?.id).toBe(inserted.id);
   });
@@ -494,6 +496,141 @@ describe("reviewing images that need attention", () => {
     expect(reviewImages(doc, read)).toEqual({
       needsDescription: 0,
       untagged: 0,
+      untaggable: 0,
+    });
+  });
+});
+
+/**
+ * An image drawn by each of three form XObjects: one the page marks as an
+ * artifact, one the page tags as a described Figure (MCID 0), and one whose
+ * form tags its own content, which the page's ParentTree cannot resolve.
+ */
+function formImagesPdf(): Uint8Array {
+  const draw = (y: number) => `q 20 0 0 20 10 ${y} cm /Im1 Do Q\n`;
+  const form = (num: number, content: string, extra = "") => ({
+    num,
+    body: streamBody(
+      `/Type /XObject /Subtype /Form /BBox [0 0 200 200]${extra} ` +
+        "/Resources << /XObject << /Im1 5 0 R >> >>",
+      content,
+    ),
+  });
+  return buildClassicPdf(
+    [
+      {
+        num: 1,
+        body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>",
+      },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+      {
+        num: 3,
+        body:
+          "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R /StructParents 0 " +
+          "/Resources << /XObject << /Fm1 10 0 R /Fm2 11 0 R /Fm3 12 0 R >> >> >>",
+      },
+      {
+        num: 4,
+        body: streamBody(
+          "",
+          "/Artifact BMC /Fm1 Do EMC\n/Figure <</MCID 0>> BDC /Fm2 Do EMC\n/Fm3 Do\n",
+        ),
+      },
+      {
+        num: 5,
+        body: streamBody(
+          "/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8",
+          "\x80",
+        ),
+      },
+      {
+        num: 6,
+        body: "<< /Type /StructTreeRoot /K 7 0 R /ParentTree 9 0 R /ParentTreeNextKey 2 >>",
+      },
+      {
+        num: 7,
+        body: "<< /Type /StructElem /S /Document /P 6 0 R /K [8 0 R] >>",
+      },
+      {
+        num: 8,
+        body: "<< /Type /StructElem /S /Figure /P 7 0 R /Pg 3 0 R /K 0 /Alt (A framed square) >>",
+      },
+      { num: 9, body: "<< /Nums [0 [8 0 R]] >>" },
+      form(10, draw(150)),
+      form(11, draw(100)),
+      form(12, `/Figure <</MCID 0>> BDC ${draw(50)}EMC\n`, " /StructParents 1"),
+    ],
+    1,
+  );
+}
+
+describe("images drawn by a form XObject", () => {
+  async function images(doc: EditorDocument) {
+    const page = doc.page(0);
+    PdfiumTextReader.populate(doc, page);
+    return page.images.map((img) => img.snapshot());
+  }
+
+  test("is decorative inside a form the page marks as an artifact", async () => {
+    const doc = await open(formImagesPdf());
+    const [artifact] = await images(doc);
+    expect(artifact).toMatchObject({ inForm: true, artifact: true });
+    expect(imageAccessibility(doc, artifact)).toEqual({
+      kind: "decorative",
+      canUndecorate: false,
+    });
+    expect(imageAttention(doc, artifact)).toBeNull();
+  });
+
+  test("takes the tag the page gives its form", async () => {
+    const doc = await open(formImagesPdf());
+    const [, figure] = await images(doc);
+    expect(figure).toMatchObject({ inForm: true, mcid: 0 });
+    expect(imageAccessibility(doc, figure)).toEqual({
+      kind: "describable",
+      description: "A framed square",
+      tagged: true,
+      canBeDecorative: true,
+    });
+  });
+
+  test("is untaggable when its form tags its own content", async () => {
+    const doc = await open(formImagesPdf());
+    const [, , owned] = await images(doc);
+    expect(owned.mcid).toBeUndefined();
+    expect(imageAttention(doc, owned)).toBe("untaggable");
+  });
+
+  test("counts an untaggable image apart, and Next passes it by", async () => {
+    const doc = await open(formImagesPdf());
+    const read = [
+      { pageIndex: 0, images: await images(doc) },
+    ] as PageSnapshot[];
+    expect(reviewImages(doc, read)).toEqual({
+      needsDescription: 0,
+      untagged: 0,
+      untaggable: 1,
+    });
+    expect(nextImageNeedingAttention(doc, read, null)).toBeNull();
+  });
+
+  test("saves the page's tag on its form as an artifact when marked decorative", async () => {
+    const doc = await open(formImagesPdf());
+    const [, figure] = await images(doc);
+    new HistoryStack().execute(
+      new SetDecorativeCommand({
+        pageIndex: 0,
+        mcid: figure.mcid!,
+        decorative: true,
+      }),
+      doc,
+    );
+
+    const reopened = await open(await savedBytes(doc));
+    const [, saved] = await images(reopened);
+    expect(imageAccessibility(reopened, saved)).toEqual({
+      kind: "decorative",
+      canUndecorate: false,
     });
   });
 });
@@ -718,7 +855,7 @@ describe("SetDecorativeCommand", () => {
       reviewImages(reopened, [
         { pageIndex: 0, images: [image] },
       ] as PageSnapshot[]),
-    ).toEqual({ needsDescription: 0, untagged: 0 });
+    ).toEqual({ needsDescription: 0, untagged: 0, untaggable: 0 });
   });
 });
 
@@ -1015,7 +1152,7 @@ describe("saving an added figure", () => {
     expect(images.filter((img) => img.artifact)).toHaveLength(2);
     expect(
       reviewImages(reopened, [{ pageIndex: 0, images }] as PageSnapshot[]),
-    ).toEqual({ needsDescription: 0, untagged: 0 });
+    ).toEqual({ needsDescription: 0, untagged: 0, untaggable: 0 });
     expect(tree(reopened)).toEqual(["Document", "A grey square"]);
   });
 

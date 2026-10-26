@@ -92,7 +92,10 @@ export interface ImageObjectSnapshot {
   matrix: Affine;
   /** Editor-only: see TextRunSnapshot.locked. */
   locked?: boolean;
-  /** The marked-content ID that ties the image into the structure tree. */
+  /**
+   * The page's marked-content ID that ties the image into the structure tree:
+   * for an image in a form XObject, the form's.
+   */
   mcid?: number;
   /** Marked as an artifact: decoration that assistive technology skips. */
   artifact?: boolean;

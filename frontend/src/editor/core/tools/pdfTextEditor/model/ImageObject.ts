@@ -15,7 +15,11 @@ export class ImageObject {
   dirty: boolean;
   /** Session-only lock; see TextRun.locked. */
   locked: boolean;
-  /** Changed by TagImageCommand, along with the object's marks. */
+  /**
+   * The page's MCID for the image: its own, or the form's for an image drawn
+   * by a form XObject. Changed by TagImageCommand, along with the object's
+   * marks.
+   */
   mcid: number | null;
   artifact: boolean;
 

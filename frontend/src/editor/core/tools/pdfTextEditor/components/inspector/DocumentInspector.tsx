@@ -106,6 +106,7 @@ function AccessibilitySection({
             )}
             value={review.untagged}
           />
+          <UntaggableRow count={review.untaggable} />
         </Stack>
         {pending > 0 && (
           <Button
@@ -123,6 +124,24 @@ function AccessibilitySection({
         )}
       </Stack>
     </Section>
+  );
+}
+
+/**
+ * Untagged images nothing here can tag, kept apart so the rows Next works
+ * through can reach zero. Absent in the usual file, which has none.
+ */
+function UntaggableRow({ count }: { count: number }) {
+  const { t } = useTranslation();
+  if (count === 0) return null;
+  return (
+    <StatRow
+      label={t(
+        "pdfTextEditor.inspector.accessibility.untaggableImages",
+        "Can't be tagged here",
+      )}
+      value={count}
+    />
   );
 }
 

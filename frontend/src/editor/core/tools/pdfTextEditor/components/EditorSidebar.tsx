@@ -90,6 +90,12 @@ export function EditorSidebar({
     return () => window.clearTimeout(id);
   }, [reviewingImages, tab, imageSelected, store]);
 
+  // Following the selection only catches one appearing, so moving from one
+  // selected image to the next would leave the new one's description hidden.
+  const selectNextImageToReview = () => {
+    if (controller.onSelectNextImageToReview()) setTab("selected");
+  };
+
   if (!state.hasDocument) {
     return (
       <Box p="md" style={{ flex: 1, overflow: "auto" }}>
@@ -162,7 +168,7 @@ export function EditorSidebar({
             onSetWidthMode={onSetWidthMode}
             onSetShowRulers={onSetShowRulers}
             imageReview={reviewingImages ? controller.imageReview : null}
-            onSelectNextImageToReview={controller.onSelectNextImageToReview}
+            onSelectNextImageToReview={selectNextImageToReview}
           />
         </Tabs.Panel>
       </Box>

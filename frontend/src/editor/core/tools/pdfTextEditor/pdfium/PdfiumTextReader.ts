@@ -444,7 +444,15 @@ function walkObjects(
       }
     } else if (type === FPDF_PAGEOBJ_IMAGE) {
       const indexId = [...path, i].join("-");
-      const img = readImage(m, page, objPtr, indexId, transform, containerPtr);
+      const img = readImage(
+        m,
+        page,
+        objPtr,
+        indexId,
+        transform,
+        containerPtr,
+        path,
+      );
       if (img) images.push(img);
     } else if (type === FPDF_PAGEOBJ_FORM && depth < MAX_DEPTH) {
       let formCount: number;
@@ -536,12 +544,26 @@ function getFormContainer(
   pagePtr: number,
   path: number[],
 ): number {
+  return formChain(m, pagePtr, path).at(-1)!;
+}
+
+/** The form objects the index path passes through, outermost first. */
+function formChain(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  path: number[],
+): number[] {
   const formModule = m as PdfiumWithForms;
-  let current = m.FPDFPage_GetObject(pagePtr, path[0]);
-  for (let i = 1; i < path.length; i++) {
-    current = formModule.FPDFFormObj_GetObject(current, path[i]);
+  const chain: number[] = [];
+  for (const index of path) {
+    const parent = chain.at(-1);
+    chain.push(
+      parent === undefined
+        ? m.FPDFPage_GetObject(pagePtr, index)
+        : formModule.FPDFFormObj_GetObject(parent, index),
+    );
   }
-  return current;
+  return chain;
 }
 
 // The ruling lines a path object draws.
@@ -1060,13 +1082,13 @@ function readImage(
   index: number | string,
   transform: Affine,
   containerPtr: number,
+  formPath: number[],
 ): ImageObject | null {
   const localBounds = readBounds(m, objPtr);
   if (!localBounds) return null;
   const localMatrix = readMatrix(m, objPtr);
   const ident = isIdentity(transform);
-  // A form XObject's MCIDs are not the page's, so only page-level images are tagged.
-  const tags = containerPtr === 0 ? readTagMarks(m, objPtr) : [];
+  const tags = imageTags(m, page.pagePtr, formPath, objPtr);
   return new ImageObject({
     id: `p${page.index}-i${index}`,
     pageIndex: page.index,
@@ -1074,7 +1096,30 @@ function readImage(
     bounds: ident ? localBounds : transformRect(transform, localBounds),
     matrix: ident ? localMatrix : composeAffine(transform, localMatrix),
     containerPtr,
-    mcid: innermostMcid(tags) ?? undefined,
-    artifact: tags.some((t) => t.name === ARTIFACT_TAG) || undefined,
+    mcid: tags.mcid ?? undefined,
+    artifact: tags.artifact || undefined,
   });
+}
+
+/**
+ * An image's tags as the page's structure tree sees them. PDFium gives an
+ * object in a form XObject only the marks in the form's content, whose MCIDs
+ * resolve against the form's own /StructParents, so the page's MCID is the
+ * one on the outermost form. An /Artifact at any level still makes the image
+ * one (ISO 32000-1 14.8.2.2).
+ */
+function imageTags(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  formPath: number[],
+  objPtr: number,
+): { mcid: number | null; artifact: boolean } {
+  const [onPage, ...inForms] = [...formChain(m, pagePtr, formPath), objPtr].map(
+    (ptr) => readTagMarks(m, ptr),
+  );
+  const formOwnsContent = inForms.flat().some((t) => t.mcid !== null);
+  return {
+    mcid: formOwnsContent ? null : innermostMcid(onPage),
+    artifact: [onPage, ...inForms].flat().some((t) => t.name === ARTIFACT_TAG),
+  };
 }

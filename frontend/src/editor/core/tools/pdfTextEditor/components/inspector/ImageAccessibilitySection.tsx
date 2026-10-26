@@ -11,6 +11,7 @@ import {
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import {
   attentionFor,
+  isActionable,
   type ImageAccessibility,
   type ImageReview,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
@@ -37,7 +38,7 @@ export function ImageAccessibilitySection({
   const othersPending =
     review.needsDescription +
     review.untagged -
-    (attentionFor(accessibility) ? 1 : 0);
+    (isActionable(attentionFor(accessibility)) ? 1 : 0);
   return (
     <Section testId="pdf-editor-image-accessibility">
       <SectionLabel info={<AccessibilityInfo />}>
