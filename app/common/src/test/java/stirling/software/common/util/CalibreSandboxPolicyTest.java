@@ -10,8 +10,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -22,11 +24,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import stirling.software.common.util.CalibreSandboxPolicy.Mode;
+import stirling.software.common.util.CalibreSandboxPolicy.Probe;
 
 class CalibreSandboxPolicyTest {
 
@@ -74,18 +78,17 @@ class CalibreSandboxPolicyTest {
     }
 
     @Test
-    void sandboxEnforcesByDefaultWhereItIsExpected() {
-        assertThat(CalibreSandboxPolicy.resolveMode(null, true)).isEqualTo(Mode.ENFORCE);
-        assertThat(CalibreSandboxPolicy.resolveMode(" ", true)).isEqualTo(Mode.ENFORCE);
-        assertThat(CalibreSandboxPolicy.resolveMode(null, false)).isEqualTo(Mode.UNSUPPORTED);
+    void sandboxIsRequiredByDefault() {
+        assertThat(CalibreSandboxPolicy.resolveMode(null)).isEqualTo(Mode.REQUIRED);
+        assertThat(CalibreSandboxPolicy.resolveMode(" ")).isEqualTo(Mode.REQUIRED);
+        assertThat(CalibreSandboxPolicy.resolveMode("disabled")).isEqualTo(Mode.REQUIRED);
     }
 
     @Test
-    void configuredModeIsHonouredAndUnknownValuesEnforce() {
-        assertThat(CalibreSandboxPolicy.resolveMode("off", true)).isEqualTo(Mode.OFF);
-        assertThat(CalibreSandboxPolicy.resolveMode("ENFORCE", true)).isEqualTo(Mode.ENFORCE);
-        assertThat(CalibreSandboxPolicy.resolveMode("required", false)).isEqualTo(Mode.REQUIRED);
-        assertThat(CalibreSandboxPolicy.resolveMode("disabled", true)).isEqualTo(Mode.ENFORCE);
+    void configuredModeIsHonoured() {
+        assertThat(CalibreSandboxPolicy.resolveMode("off")).isEqualTo(Mode.OFF);
+        assertThat(CalibreSandboxPolicy.resolveMode("ENFORCE")).isEqualTo(Mode.ENFORCE);
+        assertThat(CalibreSandboxPolicy.resolveMode("required")).isEqualTo(Mode.REQUIRED);
     }
 
     @Test
@@ -99,13 +102,11 @@ class CalibreSandboxPolicyTest {
     }
 
     @Test
-    void unconfinedModesLeaveTheCommandAlone() throws IOException {
-        for (Mode mode : List.of(Mode.OFF, Mode.UNSUPPORTED)) {
-            assertThat(
-                            CalibreSandboxPolicy.confine(
-                                    mode, command, workDir.toFile(), new HashMap<>()))
-                    .isEqualTo(command);
-        }
+    void offLeavesTheCommandAlone() throws IOException {
+        assertThat(
+                        CalibreSandboxPolicy.confine(
+                                Mode.OFF, command, workDir.toFile(), new HashMap<>()))
+                .isEqualTo(command);
     }
 
     @Test
@@ -169,7 +170,96 @@ class CalibreSandboxPolicyTest {
                 .isEqualTo(command);
     }
 
+    @Test
+    void probeClassifiesWhatTheLauncherReports() {
+        String landlock = "calibre-sandbox: landlock unavailable, refusing to run";
+        assertThat(CalibreSandboxPolicy.classifyProbe(0, List.of())).isEqualTo(Probe.ACTIVE);
+        assertThat(CalibreSandboxPolicy.classifyProbe(0, List.of(landlock)))
+                .isEqualTo(Probe.REFUSED);
+        assertThat(
+                        CalibreSandboxPolicy.classifyProbe(
+                                CalibreSandboxPolicy.LAUNCHER_REFUSED_EXIT_CODE, List.of(landlock)))
+                .isEqualTo(Probe.REFUSED);
+        assertThat(CalibreSandboxPolicy.classifyProbe(1, List.of())).isEqualTo(Probe.UNKNOWN);
+    }
+
+    private static final List<String> PROBE = List.of("ebook-convert", "--version");
+
+    @Test
+    void startupProbeRunsCalibreThroughTheLauncherAndCleansUp() {
+        try (MockedConstruction<ProcessBuilder> builders = calibre(0, "")) {
+            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.REQUIRED, PROBE)).isTrue();
+
+            ProcessBuilder builder = builders.constructed().getFirst();
+            verify(builder)
+                    .command(
+                            org.mockito.ArgumentMatchers.<List<String>>argThat(
+                                    cmd ->
+                                            cmd.subList(0, 3)
+                                                            .equals(
+                                                                    List.of(
+                                                                            "python3",
+                                                                            "-I",
+                                                                            LAUNCHER.toString()))
+                                                    && cmd.subList(cmd.size() - 2, cmd.size())
+                                                            .equals(PROBE)));
+            ArgumentCaptor<File> probeDir = ArgumentCaptor.forClass(File.class);
+            verify(builder).directory(probeDir.capture());
+            assertThat(probeDir.getValue()).doesNotExist();
+        }
+    }
+
+    @Test
+    void startupProbeRefusalDisablesCalibreOnlyUnderRequired() {
+        String refusal = "calibre-sandbox: landlock unavailable, filesystem unconfined\n";
+        try (MockedConstruction<ProcessBuilder> ignored =
+                calibre(CalibreSandboxPolicy.LAUNCHER_REFUSED_EXIT_CODE, refusal)) {
+            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.REQUIRED, PROBE)).isFalse();
+        }
+        try (MockedConstruction<ProcessBuilder> ignored = calibre(0, refusal)) {
+            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.ENFORCE, PROBE)).isTrue();
+        }
+    }
+
+    @Test
+    void startupProbeLaunchesNothingWhenTheSandboxIsOff() {
+        try (MockedConstruction<ProcessBuilder> builders = calibre(0, "")) {
+            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.OFF, PROBE)).isTrue();
+            assertThat(builders.constructed()).isEmpty();
+        }
+    }
+
+    @Test
+    void startupProbeThatDoesNotFinishIsNotActive() {
+        try (MockedConstruction<ProcessBuilder> builders = calibre(0, "", false)) {
+            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.REQUIRED, PROBE)).isFalse();
+
+            ArgumentCaptor<File> probeDir = ArgumentCaptor.forClass(File.class);
+            verify(builders.constructed().getFirst()).directory(probeDir.capture());
+            assertThat(probeDir.getValue()).doesNotExist();
+        }
+    }
+
+    @Test
+    void startupProbeWithoutPythonLaunchesNothing() {
+        checkProgramInstall.when(CheckProgramInstall::getAvailablePythonCommand).thenReturn(null);
+        try (MockedConstruction<ProcessBuilder> builders = calibre(0, "")) {
+            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.REQUIRED, PROBE)).isFalse();
+            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.ENFORCE, PROBE)).isTrue();
+            assertThat(builders.constructed()).allSatisfy(b -> verify(b, never()).start());
+        }
+    }
+
     private static MockedConstruction<ProcessBuilder> calibre(int exitCode, String stderr) {
+        return calibre(exitCode, stderr, true);
+    }
+
+    /**
+     * Stands in for the launcher: stderr arrives on the process's stream and, for callers that
+     * redirect it, in the file they named.
+     */
+    private static MockedConstruction<ProcessBuilder> calibre(
+            int exitCode, String stderr, boolean finishes) {
         return Mockito.mockConstruction(
                 ProcessBuilder.class,
                 (builder, context) -> {
@@ -180,9 +270,16 @@ class CalibreSandboxPolicyTest {
                             .thenReturn(
                                     new ByteArrayInputStream(
                                             stderr.getBytes(StandardCharsets.UTF_8)));
-                    when(process.waitFor(anyLong(), any(TimeUnit.class))).thenReturn(true);
+                    when(process.waitFor(anyLong(), any(TimeUnit.class))).thenReturn(finishes);
                     when(process.exitValue()).thenReturn(exitCode);
                     when(builder.environment()).thenReturn(new HashMap<>());
+                    when(builder.redirectError(any(File.class)))
+                            .thenAnswer(
+                                    invocation -> {
+                                        Files.writeString(
+                                                invocation.<File>getArgument(0).toPath(), stderr);
+                                        return builder;
+                                    });
                     when(builder.start()).thenReturn(process);
                 });
     }
@@ -203,8 +300,8 @@ class CalibreSandboxPolicyTest {
     }
 
     @Test
-    void bareInstallLaunchesCalibreUnchanged() throws Exception {
-        ProcessExecutor.setCalibreSandboxMode(Mode.UNSUPPORTED);
+    void offModeLaunchesCalibreUnchanged() throws Exception {
+        ProcessExecutor.setCalibreSandboxMode(Mode.OFF);
         try (MockedConstruction<ProcessBuilder> builders = calibre(0, "")) {
             runCalibre();
 
@@ -213,8 +310,7 @@ class CalibreSandboxPolicyTest {
     }
 
     @Test
-    void processExecutorDoesNotStartCalibreWhenTheRequiredSandboxNeedsMissingPython()
-            throws Exception {
+    void processExecutorDoesNotStartCalibreWithoutPython() throws Exception {
         ProcessExecutor.setCalibreSandboxMode(Mode.REQUIRED);
         checkProgramInstall.when(CheckProgramInstall::getAvailablePythonCommand).thenReturn(null);
         try (MockedConstruction<ProcessBuilder> builders = calibre(0, "")) {

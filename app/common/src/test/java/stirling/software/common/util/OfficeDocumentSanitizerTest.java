@@ -313,6 +313,43 @@ class OfficeDocumentSanitizerTest {
     }
 
     @Test
+    void sanitize_rejectsRelsPartWithDoctype() throws IOException {
+        String relsWithDoctype =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE Relationships>"
+                        + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+                        + "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\""
+                        + " Target=\"file:///etc/hostname\" TargetMode=\"External\"/>"
+                        + "</Relationships>";
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put(
+                "word/_rels/document.xml.rels", relsWithDoctype.getBytes(StandardCharsets.UTF_8));
+        byte[] docx = zip(entries);
+
+        assertThrows(IOException.class, () -> sanitizer.sanitize(docx, "docx"));
+    }
+
+    @Test
+    void sanitize_rejectsMalformedRelsPart() throws IOException {
+        String malformedRels =
+                "<Relationships><Relationship Id=\"rId1\" Target=\"file:///etc/hostname\""
+                        + " TargetMode=\"External\"";
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("word/_rels/document.xml.rels", malformedRels.getBytes(StandardCharsets.UTF_8));
+        byte[] docx = zip(entries);
+
+        assertThrows(IOException.class, () -> sanitizer.sanitize(docx, "docx"));
+    }
+
+    @Test
+    void sanitize_rejectsMalformedOdfPart() throws IOException {
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("content.xml", "<office:document-content>".getBytes(StandardCharsets.UTF_8));
+        byte[] odt = zip(entries);
+
+        assertThrows(IOException.class, () -> sanitizer.sanitize(odt, "odt"));
+    }
+
+    @Test
     void sanitize_corruptZipProducesSafeOutput() throws IOException {
         byte[] garbage = "this is not a zip file".getBytes(StandardCharsets.UTF_8);
         byte[] result = sanitizer.sanitize(garbage, "docx");

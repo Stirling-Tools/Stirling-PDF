@@ -107,16 +107,22 @@ public class ConvertOfficeController {
         }
 
         // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
-        if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
-            String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
-            String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
-            Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
-        } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
-            byte[] sanitized =
-                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
-            Files.write(inputPath, sanitized);
-        } else {
-            Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+        try {
+            if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
+                String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
+                String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
+                Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
+            } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
+                byte[] sanitized =
+                        officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
+                Files.write(inputPath, sanitized);
+            } else {
+                Files.copy(
+                        inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException e) {
+            FileUtils.deleteQuietly(workDir.toFile());
+            throw e;
         }
 
         Path libreOfficeProfile = null;

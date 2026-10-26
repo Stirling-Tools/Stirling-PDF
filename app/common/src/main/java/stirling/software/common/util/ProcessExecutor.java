@@ -212,6 +212,15 @@ public class ProcessExecutor {
         calibreSandboxMode = mode;
     }
 
+    /**
+     * Runs {@code probeCommand}, normally Calibre's version check, inside the Calibre sandbox and
+     * says whether Calibre may be offered on this host; the outcome is logged. False means the
+     * configured mode would let no conversion run.
+     */
+    public static boolean isCalibreSandboxUsable(List<String> probeCommand) {
+        return CalibreSandboxPolicy.probeAtStartup(calibreSandboxMode, probeCommand);
+    }
+
     private static Path profileTemplateFromEnvironment() {
         String template = System.getenv("STIRLING_LO_PROFILE_TEMPLATE");
         if (template == null || template.isBlank()) {

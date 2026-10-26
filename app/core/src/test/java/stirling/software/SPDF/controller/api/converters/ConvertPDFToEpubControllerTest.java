@@ -147,12 +147,14 @@ class ConvertPDFToEpubControllerTest {
             ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
-            assertEquals(13, command.size());
+            assertEquals(17, command.size());
             assertEquals("ebook-convert", command.get(0));
             assertEquals(expectedInput.toString(), command.get(1));
             assertEquals(expectedOutput.toString(), command.get(2));
             assertTrue(command.contains("--pdf-engine"));
-            assertTrue(command.contains("pdftohtml"));
+            assertTrue(command.contains("calibre"));
+            assertEquals("0", command.get(command.indexOf("--pdf-header-skip") + 1));
+            assertEquals("0", command.get(command.indexOf("--pdf-footer-skip") + 1));
             assertTrue(command.contains("--enable-heuristics"));
             assertTrue(command.contains("--insert-blank-line"));
             assertTrue(command.contains("--filter-css"));
@@ -243,7 +245,7 @@ class ConvertPDFToEpubControllerTest {
             assertTrue(command.contains("--output-profile"));
             assertTrue(command.contains(TargetDevice.KINDLE_EINK_TEXT.getCalibreProfile()));
             assertTrue(command.contains("--pdf-engine"));
-            assertTrue(command.contains("pdftohtml"));
+            assertTrue(command.contains("calibre"));
             assertTrue(command.contains("--filter-css"));
             assertTrue(
                     command.contains(
@@ -328,7 +330,7 @@ class ConvertPDFToEpubControllerTest {
             assertEquals(expectedInput.toString(), command.get(1));
             assertEquals(expectedOutput.toString(), command.get(2));
             assertTrue(command.contains("--pdf-engine"));
-            assertTrue(command.contains("pdftohtml"));
+            assertTrue(command.contains("calibre"));
             assertTrue(command.contains("--enable-heuristics"));
             assertTrue(command.contains("--insert-blank-line"));
             assertTrue(command.contains("--filter-css"));
