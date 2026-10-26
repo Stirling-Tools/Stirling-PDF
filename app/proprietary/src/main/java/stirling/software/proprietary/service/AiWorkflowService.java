@@ -403,6 +403,7 @@ public class AiWorkflowService {
             parameters = Map.of();
         }
 
+        PolicyExecutionResult result = null;
         try {
             List<Resource> inputFiles = toResources(filesById);
             PipelineDefinition definition =
@@ -410,7 +411,7 @@ public class AiWorkflowService {
                             null,
                             List.of(new PipelineStep(endpointPath, parameters)),
                             OutputSpec.inline());
-            PolicyExecutionResult result =
+            result =
                     policyExecutor.execute(
                             definition, PolicyInputs.of(inputFiles), stepProgress(listener));
             return new WorkflowState.Terminal(
@@ -434,6 +435,11 @@ public class AiWorkflowService {
             }
             log.error("Failed to execute tool {}: {}", endpointPath, e.getMessage(), e);
             return new WorkflowState.Terminal(cannotContinue(toolFailureMessage(endpointPath, e)));
+        } finally {
+            // The response refers to stored copies, so the step outputs are not needed any longer
+            if (result != null) {
+                result.close();
+            }
         }
     }
 
@@ -511,11 +517,12 @@ public class AiWorkflowService {
             pipelineSteps.add(new PipelineStep(endpointPath, parameters));
         }
 
+        PolicyExecutionResult result = null;
         try {
             List<Resource> inputFiles = toResources(filesById);
             PipelineDefinition definition =
                     new PipelineDefinition(summary, pipelineSteps, OutputSpec.inline());
-            PolicyExecutionResult result =
+            result =
                     policyExecutor.execute(
                             definition, PolicyInputs.of(inputFiles), stepProgress(listener));
 
@@ -563,6 +570,11 @@ public class AiWorkflowService {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
                     cannotContinue("Plan execution failed: " + e.getMessage()));
+        } finally {
+            // The response refers to stored copies, so the step outputs are not needed any longer
+            if (result != null) {
+                result.close();
+            }
         }
     }
 

@@ -88,7 +88,11 @@ class PolicyAutomationBillingDbTest {
         TempFileManager tempFiles = new TempFileManager(new TempFileRegistry(), properties);
         executor =
                 new PolicyExecutor(
-                        internalApiClient, metadata, tempFiles, JsonMapper.builder().build());
+                        internalApiClient,
+                        metadata,
+                        tempFiles,
+                        JsonMapper.builder().build(),
+                        new ApplicationProperties());
         interceptor =
                 new InstanceEntitlementInterceptor(
                         gate, entitlementCache, meterProvider, freeTierUsageService, tempFiles);

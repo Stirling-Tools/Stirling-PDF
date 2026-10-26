@@ -112,7 +112,11 @@ class AiWorkflowServiceTest {
 
         PolicyExecutor policyExecutor =
                 new PolicyExecutor(
-                        internalApiClient, toolMetadataService, tempFileManager, objectMapper);
+                        internalApiClient,
+                        toolMetadataService,
+                        tempFileManager,
+                        objectMapper,
+                        new ApplicationProperties());
         service =
                 new AiWorkflowService(
                         pdfDocumentFactory,

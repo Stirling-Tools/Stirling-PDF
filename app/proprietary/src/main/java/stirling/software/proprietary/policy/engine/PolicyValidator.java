@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.service.ToolChainValidator;
@@ -47,6 +48,7 @@ public class PolicyValidator {
     private final SourceStore sourceStore;
     private final PolicyAssetStore assetStore;
     private final ToolChainValidator toolChainValidator;
+    private final ApplicationProperties applicationProperties;
 
     /**
      * @throws IllegalArgumentException if the policy has more than one input or output, any facet's
@@ -216,10 +218,12 @@ public class PolicyValidator {
      * #validateOutput(OutputSpec)}: a step that dereferences an integration connection by id is
      * access-checked here or nowhere, since the worker thread that later runs it has no principal.
      *
-     * @throws IllegalArgumentException if any step is invalid or references an inaccessible
-     *     resource
+     * @throws IllegalArgumentException if there are more than {@code policies.maxSteps} steps, or
+     *     any step is invalid or references an inaccessible resource
      */
     public void validateSteps(List<PipelineStep> steps) {
+        PolicyExecutor.requireWithinStepLimit(
+                steps, applicationProperties.getPolicies().getMaxSteps());
         for (PipelineStep step : steps) {
             for (PipelineStepValidator validator : stepValidators) {
                 validator.validate(step);

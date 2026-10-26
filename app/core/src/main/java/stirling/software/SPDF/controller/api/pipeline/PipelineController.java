@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.pipeline;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
@@ -85,20 +86,22 @@ public class PipelineController {
 
         postHogService.captureEvent("pipeline_api_event", properties);
 
+        PipelineResult result = null;
         try {
             List<Resource> inputFiles = processor.generateInputFiles(files);
             if (inputFiles == null || inputFiles.isEmpty()) {
                 return null;
             }
-            PipelineResult result = processor.runPipelineAgainstFiles(inputFiles, config);
+            result = processor.runPipelineAgainstFiles(inputFiles, config);
             List<Resource> outputFiles = result.getOutputFiles();
             if (outputFiles != null && outputFiles.size() == 1) {
                 // If there is only one file, return it directly — stream without int-overflow
                 Resource singleFile = outputFiles.get(0);
                 TempFile singleTempFile = new TempFile(tempFileManager, ".out");
                 try {
-                    try (InputStream is = singleFile.getInputStream()) {
-                        is.transferTo(Files.newOutputStream(singleTempFile.getPath()));
+                    try (InputStream is = singleFile.getInputStream();
+                            OutputStream os = Files.newOutputStream(singleTempFile.getPath())) {
+                        is.transferTo(os);
                     }
                     log.info("Returning single file response...");
                     return WebResponseUtils.fileToWebResponse(
@@ -146,6 +149,11 @@ public class PipelineController {
         } catch (Exception e) {
             log.error("Error handling data: ", e);
             return null;
+        } finally {
+            // The response is a copy, so the step outputs are not needed any longer
+            if (result != null) {
+                result.close();
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -45,6 +46,7 @@ import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.common.service.PostHogService;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 import tools.jackson.databind.ObjectMapper;
@@ -223,6 +225,25 @@ class PipelineControllerGapTest {
                         new String(outBytes, StandardCharsets.UTF_8),
                         new String(is.readAllBytes(), StandardCharsets.UTF_8));
             }
+        }
+
+        @Test
+        @DisplayName("releases the step outputs once the response copy exists")
+        void singleOutput_releasesStepOutputs() throws Exception {
+            stubTempFiles();
+            MultipartFile[] files = oneFile();
+            List<Resource> inputFiles = List.of(namedResource("input.pdf", "in".getBytes()));
+            when(processor.generateInputFiles(files)).thenReturn(inputFiles);
+
+            TempFile stepOutput = mock(TempFile.class);
+            PipelineResult result = new PipelineResult();
+            result.setOutputFiles(List.of(namedResource("result.pdf", "out".getBytes())));
+            result.addTempFile(stepOutput);
+            when(processor.runPipelineAgainstFiles(any(), any())).thenReturn(result);
+
+            assertNotNull(controller.handleData(request(files, VALID_JSON)));
+
+            verify(stepOutput).close();
         }
 
         @Test
