@@ -237,7 +237,9 @@ public class McpToolCatalog {
 
         if (category == OperationCategory.CONVERT) {
             String[] parts = tail.split("/");
-            return parts.length == 2 ? parts[0] + "-to-" + parts[1] : null;
+            return parts.length == 2 && !parts[0].isEmpty() && !parts[1].isEmpty()
+                    ? parts[0] + "-to-" + parts[1]
+                    : null;
         }
 
         return tail.contains("/") ? null : tail;

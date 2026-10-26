@@ -162,6 +162,9 @@ class McpToolCatalogTest {
                 McpToolCatalog.extractOpId(
                         "/api/v1/convert/pdf/text-editor/page/{jobId}/{pageNumber}",
                         OperationCategory.CONVERT));
+        assertNull(McpToolCatalog.extractOpId("/api/v1/convert//pdf", OperationCategory.CONVERT));
+
+        assertNull(McpToolCatalog.extractOpId("/api/v1/convert/pdf/", OperationCategory.CONVERT));
     }
 
     @Test
