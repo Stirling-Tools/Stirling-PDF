@@ -49,7 +49,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.RequestUriUtils;
+import stirling.software.proprietary.security.configuration.PublicRouteRules;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.TeamService;
@@ -108,41 +108,28 @@ public class SupabaseSecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
-                        auth ->
-                                auth.requestMatchers(HttpMethod.OPTIONS, "/**")
-                                        .permitAll()
-                                        .requestMatchers(
-                                                "/actuator/health",
-                                                "/api/v1/config/**",
-                                                OpenAiAppsChallengeController.PATH)
-                                        .permitAll()
-                                        // Account-link connect handshake: an instance calls these
-                                        // before it holds any credential, so there is nothing to
-                                        // authenticate with yet. Neither grants anything on its
-                                        // own — /request records an intent a human must approve,
-                                        // and /claim requires a secret only the instance that
-                                        // created the request has ever held.
-                                        .requestMatchers(
-                                                HttpMethod.POST,
-                                                "/api/v1/account-link/connect/request",
-                                                "/api/v1/account-link/connect/claim")
-                                        .permitAll()
-                                        .requestMatchers(
-                                                req ->
-                                                        RequestUriUtils.isStaticResource(
-                                                                        req.getContextPath(),
-                                                                        req.getRequestURI())
-                                                                || RequestUriUtils
-                                                                        .isPublicAuthEndpoint(
-                                                                                req.getRequestURI(),
-                                                                                req
-                                                                                        .getContextPath())
-                                                                || RequestUriUtils.isFrontendRoute(
-                                                                        req.getContextPath(),
-                                                                        req.getRequestURI()))
-                                        .permitAll()
-                                        .anyRequest()
-                                        .authenticated())
+                        auth -> {
+                            auth.requestMatchers(HttpMethod.OPTIONS, "/**")
+                                    .permitAll()
+                                    .requestMatchers(
+                                            "/actuator/health",
+                                            "/api/v1/config/**",
+                                            OpenAiAppsChallengeController.PATH)
+                                    .permitAll()
+                                    // Account-link connect handshake: an instance calls these
+                                    // before it holds any credential, so there is nothing to
+                                    // authenticate with yet. Neither grants anything on its
+                                    // own — /request records an intent a human must approve,
+                                    // and /claim requires a secret only the instance that
+                                    // created the request has ever held.
+                                    .requestMatchers(
+                                            HttpMethod.POST,
+                                            "/api/v1/account-link/connect/request",
+                                            "/api/v1/account-link/connect/claim")
+                                    .permitAll();
+                            PublicRouteRules.apply(auth);
+                            auth.anyRequest().authenticated();
+                        })
                 .addFilterBefore(
                         new SupabaseAuthenticationFilter(
                                 teamService,

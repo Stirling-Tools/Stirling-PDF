@@ -230,6 +230,28 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsPublicBackendEndpoint_anchoredApiEntriesOnly() {
+        assertTrue(RequestUriUtils.isPublicBackendEndpoint("", "/api/v1/info/status"));
+        assertTrue(RequestUriUtils.isPublicBackendEndpoint("", "/api/v1/auth/login"));
+        assertTrue(RequestUriUtils.isPublicBackendEndpoint("", "/%61pi/v1/auth/login"));
+        assertTrue(RequestUriUtils.isPublicBackendEndpoint("/app", "/app/actuator/health"));
+        assertTrue(
+                RequestUriUtils.isPublicBackendEndpoint(
+                        "", "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f"));
+        assertFalse(RequestUriUtils.isPublicBackendEndpoint("", "/api/v1/info/load/all"));
+        assertFalse(RequestUriUtils.isPublicBackendEndpoint("", "/login"));
+        assertFalse(RequestUriUtils.isPublicBackendEndpoint("", "/%zz"));
+    }
+
+    @Test
+    void testIsPublicBackendEndpoint_callbackSubstringDoesNotOpenApi() {
+        // isPublicAuthEndpoint matches OAuth callbacks anywhere in the path
+        String apiPath = "/api/v1/ai/output/x/login/oauth2/code/";
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint(apiPath, ""));
+        assertFalse(RequestUriUtils.isPublicBackendEndpoint("", apiPath));
+    }
+
+    @Test
     void testIsPublicAuthEndpoint_shareLinkOtherApisStayProtected() {
         assertFalse(
                 RequestUriUtils.isPublicAuthEndpoint(

@@ -348,21 +348,10 @@ public class SecurityConfiguration {
                                             "remember-me")
                                     .alwaysRemember(false));
             http.authorizeHttpRequests(
-                    authz ->
-                            authz.requestMatchers(
-                                            req -> {
-                                                String uri = req.getRequestURI();
-                                                String contextPath = req.getContextPath();
-                                                return RequestUriUtils.isStaticResource(
-                                                                contextPath, uri)
-                                                        || RequestUriUtils.isPublicAuthEndpoint(
-                                                                uri, contextPath)
-                                                        || RequestUriUtils.isFrontendRoute(
-                                                                contextPath, uri);
-                                            })
-                                    .permitAll()
-                                    .anyRequest()
-                                    .authenticated());
+                    authz -> {
+                        PublicRouteRules.apply(authz);
+                        authz.anyRequest().authenticated();
+                    });
             // Handle User/Password Logins
             if (securityProperties.isUserPass()) {
                 // v2: Authentication is handled via API (/api/v1/auth/login), not form login

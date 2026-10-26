@@ -193,7 +193,32 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/saml2")
                 || trimmedUri.contains("/login/oauth2/code/") // Spring Security OAuth2 callback
                 || trimmedUri.contains("/oauth2/authorization/") // OAuth2 authorization endpoint
-                || trimmedUri.startsWith("/api/v1/auth/login")
+                || trimmedUri.startsWith("/health")
+                || trimmedUri.startsWith("/healthz")
+                || trimmedUri.startsWith("/liveness")
+                || trimmedUri.startsWith("/readiness")
+                || trimmedUri.startsWith("/v1/api-docs")
+                // Share-link SPA bootstrap; data APIs remain protected
+                || SHARE_LINK_PATTERN.matcher(trimmedUri).matches()
+                // Invite-accept SPA bootstrap; data APIs remain protected
+                || INVITE_LINK_PATTERN.matcher(trimmedUri).matches()
+                || isPublicBackendPath(trimmedUri);
+    }
+
+    /**
+     * The {@code /api/} and {@code /actuator/} endpoints anyone may call. Every entry is anchored
+     * at the start of the path, so unlike the page and callback entries of {@link
+     * #isPublicAuthEndpoint} none can match an unrelated handler further down the tree.
+     */
+    public static boolean isPublicBackendEndpoint(String contextPath, String requestURI) {
+        String trimmedUri = normalizeUriOrNull(contextPath, requestURI);
+        return trimmedUri != null
+                && (trimmedUri.startsWith("/api/v1/info/status")
+                        || isPublicBackendPath(trimmedUri));
+    }
+
+    private static boolean isPublicBackendPath(String trimmedUri) {
+        return trimmedUri.startsWith("/api/v1/auth/login")
                 || trimmedUri.startsWith("/api/v1/auth/refresh")
                 || trimmedUri.startsWith("/api/v1/auth/logout")
                 || trimmedUri.startsWith(
@@ -203,24 +228,14 @@ public class RequestUriUtils {
                         "/api/v1/ui-data/footer-info") // Public footer configuration
                 || trimmedUri.startsWith("/api/v1/invite/validate")
                 || trimmedUri.startsWith("/api/v1/invite/accept")
-                // Health Endpoints
                 || trimmedUri.startsWith("/actuator/health")
-                || trimmedUri.startsWith("/health")
-                || trimmedUri.startsWith("/healthz")
-                || trimmedUri.startsWith("/liveness")
-                || trimmedUri.startsWith("/readiness")
                 || trimmedUri.startsWith(
                         "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
                 || trimmedUri.startsWith("/api/v1/webhooks/")
-                || trimmedUri.startsWith("/v1/api-docs")
                 // Workflow participant endpoints - access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
-                // Share-link SPA bootstrap; data APIs remain protected
-                || SHARE_LINK_PATTERN.matcher(trimmedUri).matches()
                 // Share-link download; the service still demands login unless the link is public
-                || SHARE_LINK_API_PATTERN.matcher(trimmedUri).matches()
-                // Invite-accept SPA bootstrap; data APIs remain protected
-                || INVITE_LINK_PATTERN.matcher(trimmedUri).matches();
+                || SHARE_LINK_API_PATTERN.matcher(trimmedUri).matches();
     }
 
     public static String normalizeUri(String contextPath, String requestURI) {
