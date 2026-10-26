@@ -82,3 +82,24 @@ export interface StructureRole {
 export function structureRole(role: string): StructureRole {
   return { role, type: isStandardStructureType(role) ? role : null };
 }
+
+export type HeadingType = "H" | "H1" | "H2" | "H3" | "H4" | "H5" | "H6";
+
+const HEADING_LEVELS: Record<HeadingType, number | null> = {
+  H: null,
+  H1: 1,
+  H2: 2,
+  H3: 3,
+  H4: 4,
+  H5: 5,
+  H6: 6,
+};
+
+export function isHeadingType(type: StructureType | null): type is HeadingType {
+  return type !== null && Object.hasOwn(HEADING_LEVELS, type);
+}
+
+/** A numbered heading's level; null for H, whose level is its nesting. */
+export function headingLevel(type: HeadingType): number | null {
+  return HEADING_LEVELS[type];
+}

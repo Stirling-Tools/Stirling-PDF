@@ -17,6 +17,8 @@ function renderInspector(imageReview: ImageReview | null, onNext = vi.fn()) {
         onSetShowRulers={vi.fn()}
         imageReview={imageReview}
         onSelectNextImageToReview={onNext}
+        headingOutline={null}
+        onSelectHeading={vi.fn()}
       />
     </MantineProvider>,
   );

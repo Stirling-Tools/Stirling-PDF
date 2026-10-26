@@ -4,10 +4,15 @@ import {
   type StructureElement,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import {
+  isHeadingType,
   structureRole,
+  type HeadingType,
   type StructureRole,
 } from "@editor/tools/pdfTextEditor/model/structureTypes";
-import { ownsOnlyMarkedContent } from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
+import {
+  elementKids,
+  ownsOnlyMarkedContent,
+} from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
 import {
   RawPdf,
   referencedObject,
@@ -27,17 +32,35 @@ export interface FilePageStructure {
   slotCount: number | null;
 }
 
+/** A heading, and where its text is drawn. */
+export interface FileHeading {
+  type: HeadingType;
+  /** The first page drawing its text; null when it draws none. */
+  pageIndex: number | null;
+  /** Its MCIDs on that page, its inline elements' included. */
+  mcids: number[];
+}
+
+export interface FileStructure {
+  /**
+   * Every page with /StructParents, keyed by page index, its elements each
+   * listing only the MCIDs the page's ParentTree slots give it: the lookup
+   * the save addresses edits by. PDFium lists an element's MCIDs from every
+   * page with no page attached, so an element spanning a page break would
+   * claim another element's MCID there.
+   */
+  pages: Map<number, FilePageStructure>;
+  /** Every heading, in the tree's reading order. */
+  headings: FileHeading[];
+}
+
 /**
- * Every page with /StructParents, keyed by page index, its elements each
- * listing only the MCIDs the page's ParentTree slots give it: the lookup the
- * save addresses edits by. PDFium lists an element's MCIDs from every page
- * with no page attached, so an element spanning a page break would claim
- * another element's MCID there. Null when the file is untagged, cannot be
+ * The file's structure tree. Null when the file is untagged, cannot be
  * parsed, or is encrypted, whose strings would read as ciphertext.
  */
 export async function readFileStructure(
   bytes: Uint8Array,
-): Promise<Map<number, FilePageStructure> | null> {
+): Promise<FileStructure | null> {
   const pdf = await RawPdf.parse(bytes);
   if (!pdf || pdf.encrypted) return null;
   const catalog = pdf.objectBody(pdf.rootNum);
@@ -98,7 +121,55 @@ export async function readFileStructure(
       slotCount: items.length,
     });
   });
-  return byPage;
+  return {
+    pages: byPage,
+    headings: readHeadings(pdf, rootBody, nodeFor, byPage),
+  };
+}
+
+/**
+ * Headings in the depth-first /K order a reader follows. A heading's own
+ * kids are not searched: headings do not nest.
+ */
+function readHeadings(
+  pdf: RawPdf,
+  rootBody: string,
+  nodeFor: (num: number) => ElementNode | null,
+  pages: Map<number, FilePageStructure>,
+): FileHeading[] {
+  const drawn = new Map<string, { pageIndex: number; mcids: number[] }>();
+  for (const [pageIndex, page] of pages) {
+    for (const el of page.elements) {
+      const at = drawn.get(el.block.key) ?? { pageIndex, mcids: [] };
+      if (at.pageIndex === pageIndex) at.mcids.push(...el.mcids);
+      drawn.set(el.block.key, at);
+    }
+  }
+
+  const headings: FileHeading[] = [];
+  const seen = new Set<number>();
+  const visit = (body: string): void => {
+    for (const kid of elementKids(pdf, body) ?? []) {
+      const num = referencedObject(kid);
+      if (num === null || seen.has(num)) continue;
+      seen.add(num);
+      const node = nodeFor(num);
+      const kidBody = pdf.objectBody(num);
+      if (!node || !kidBody) continue;
+      if (isHeadingType(node.type)) {
+        const at = drawn.get(String(num));
+        headings.push({
+          type: node.type,
+          pageIndex: at?.pageIndex ?? null,
+          mcids: at ? [...at.mcids].sort((a, b) => a - b) : [],
+        });
+      } else {
+        visit(kidBody);
+      }
+    }
+  };
+  visit(rootBody);
+  return headings;
 }
 
 function readElement(

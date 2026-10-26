@@ -10,7 +10,8 @@ import type { StructureEdit } from "@editor/tools/pdfTextEditor/pdfdoc/passes/ap
 import { readPageStructure } from "@editor/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
 import {
   readFileStructure,
-  type FilePageStructure,
+  type FileHeading,
+  type FileStructure,
 } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import {
   imagesInReadingOrder,
@@ -36,8 +37,8 @@ export class EditorDocument {
   readonly openedBytes: Uint8Array;
   private readonly pageCache: Map<number, Page>;
   private readonly structureCache = new Map<number, PageStructure>();
-  /** Each page's elements from the file's own ParentTree; null when only PDFium's view is available. */
-  private readonly fileStructure: Map<number, FilePageStructure> | null;
+  /** The file's own structure tree; null when only PDFium's view is available. */
+  private readonly fileStructure: FileStructure | null;
   private readonly ownedFonts: Map<string, FontRef>;
   private _disposed: boolean;
   // Form-fill environment. Widgets with no appearance stream are drawn ONLY by
@@ -52,7 +53,7 @@ export class EditorDocument {
     module: WrappedPdfiumModule,
     docPtr: number,
     openedBytes: Uint8Array,
-    fileStructure: Map<number, FilePageStructure> | null,
+    fileStructure: FileStructure | null,
   ) {
     this.module = module;
     this.docPtr = docPtr;
@@ -176,10 +177,18 @@ export class EditorDocument {
         this.encrypted() ? "encrypted" : "unreadable",
       );
     }
-    const page = this.fileStructure.get(pageIndex);
+    const page = this.fileStructure.pages.get(pageIndex);
     if (!page) return new PageStructure([]);
     if (page.slotCount === null) return new PageStructure([], "unreadable");
     return new PageStructure(page.elements, null, page.slotCount);
+  }
+
+  /**
+   * The file's headings in reading order. Null when its structure tree could
+   * not be read, which leaves nothing to check them against.
+   */
+  headings(): readonly FileHeading[] | null {
+    return this.fileStructure?.headings ?? null;
   }
 
   /** True when the catalog marks the file as tagged (ISO 32000-1 14.7.1). */

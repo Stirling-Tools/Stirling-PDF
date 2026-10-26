@@ -260,7 +260,7 @@ function spanningPdf(slot0 = "8 0 R"): Uint8Array {
 
 describe("reading tags from the file's ParentTree", () => {
   test("gives each page's MCIDs to the element its ParentTree names", async () => {
-    const structure = (await readFileStructure(spanningPdf()))!;
+    const structure = (await readFileStructure(spanningPdf()))!.pages;
     const element = (
       type: string,
       alt: string | null,

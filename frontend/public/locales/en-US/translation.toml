@@ -7443,6 +7443,16 @@ customTag = "{{role}} (custom tag)"
 tagLabel = "Tag"
 unknownTag = "Can't be read here"
 
+[pdfTextEditor.inspector.accessibility.outline]
+empty = "Heading with no text"
+firstNotH1 = "First heading should be Heading 1"
+heading = "Headings"
+mixedNumbering = "Mixes numbered and unnumbered headings"
+none = "No headings"
+onPage = "Heading on page {{page}}"
+problems = "Heading problems"
+skippedLevel = "Skips a level after Heading {{previous}}"
+
 [pdfTextEditor.inspector.accessibility.tagName]
 annotation = "Annotation"
 article = "Article"

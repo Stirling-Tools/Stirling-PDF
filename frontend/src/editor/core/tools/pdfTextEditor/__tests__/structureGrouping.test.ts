@@ -241,7 +241,7 @@ describe("structureRole", () => {
 
 describe("reading blocks from the file", () => {
   test("resolves nested inline elements to their block", async () => {
-    const structure = (await readFileStructure(paragraphsPdf()))!;
+    const structure = (await readFileStructure(paragraphsPdf()))!.pages;
     const blocks = structure
       .get(0)!
       .elements.map((el) => [el.type, el.block.type, el.block.key]);
@@ -277,7 +277,7 @@ describe("reading blocks from the file", () => {
       ],
       1,
     );
-    const structure = (await readFileStructure(bytes))!;
+    const structure = (await readFileStructure(bytes))!.pages;
     expect(
       structure.get(0)!.elements.map(({ role, type }) => ({ role, type })),
     ).toEqual([
@@ -308,7 +308,7 @@ describe("reading blocks from the file", () => {
       ],
       1,
     );
-    const structure = (await readFileStructure(bytes))!;
+    const structure = (await readFileStructure(bytes))!.pages;
     expect(structure.get(0)!.elements[0].block.type).toBe("Span");
   });
 });

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
+import { useHeadingOutline } from "@editor/tools/pdfTextEditor/hooks/useHeadingOutline";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
@@ -77,7 +78,7 @@ export function EditorSidebar({
   const fontNote = useSelectedFontNote(state, selection);
 
   const editorDocument = store.document;
-  const reviewingImages = useMemo(
+  const reviewingAccessibility = useMemo(
     () => ACCESSIBILITY_EDITING && !!editorDocument?.isTagged(),
     [editorDocument],
   );
@@ -85,10 +86,13 @@ export function EditorSidebar({
   // Counts and Next cover only pages already read, which is just the first few
   // until the rest scroll into view.
   useEffect(() => {
-    if (!reviewingImages || (tab !== "document" && !imageSelected)) return;
+    if (!reviewingAccessibility || (tab !== "document" && !imageSelected)) {
+      return;
+    }
     const id = window.setTimeout(() => ensureAllPagesRead(store), 0);
     return () => window.clearTimeout(id);
-  }, [reviewingImages, tab, imageSelected, store]);
+  }, [reviewingAccessibility, tab, imageSelected, store]);
+  const headings = useHeadingOutline(store, state);
 
   // Following the selection only catches one appearing, so moving from one
   // selected image to the next would leave the new one's description hidden.
@@ -167,8 +171,10 @@ export function EditorSidebar({
             onSetGroupingMode={onSetGroupingMode}
             onSetWidthMode={onSetWidthMode}
             onSetShowRulers={onSetShowRulers}
-            imageReview={reviewingImages ? controller.imageReview : null}
+            imageReview={reviewingAccessibility ? controller.imageReview : null}
             onSelectNextImageToReview={selectNextImageToReview}
+            headingOutline={reviewingAccessibility ? headings.outline : null}
+            onSelectHeading={headings.selectHeading}
           />
         </Tabs.Panel>
       </Box>
