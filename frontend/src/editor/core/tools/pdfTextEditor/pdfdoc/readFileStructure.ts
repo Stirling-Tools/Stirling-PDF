@@ -1,4 +1,8 @@
-import type { StructureElement } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  containingBlock,
+  type StructureBlock,
+  type StructureElement,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
 import { ownsOnlyMarkedContent } from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
 import {
   RawPdf,
@@ -7,6 +11,11 @@ import {
 import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 
 type ElementInfo = Omit<StructureElement, "mcids">;
+
+interface ElementNode {
+  type: string;
+  block: StructureBlock;
+}
 
 /** One page's elements as its ParentTree array gives them. */
 export interface FilePageStructure {
@@ -34,9 +43,31 @@ export async function readFileStructure(
   if (treeRoot === null || !rootBody) return null;
   const roleMap = pdf.resolve(rootBody, "RoleMap");
 
+  const nodes = new Map<number, ElementNode | null>();
+  const nodeFor = (num: number): ElementNode | null => {
+    if (nodes.has(num)) return nodes.get(num)!;
+    // Set before recursing so a /P cycle ends as the top of the tree.
+    nodes.set(num, null);
+    const body = pdf.objectBody(num);
+    const s = body ? pdf.dictName(body, "S") : null;
+    if (!body || s === null) return null;
+    const type = applyRoleMap(pdf, roleMap, s);
+    const parentNum = pdf.dictRef(body, "P");
+    const parent = parentNum === null ? null : nodeFor(parentNum);
+    const node = {
+      type,
+      block: containingBlock({ key: String(num), type }, parent),
+    };
+    nodes.set(num, node);
+    return node;
+  };
+
   const infos = new Map<number, ElementInfo | null>();
   const infoFor = (num: number): ElementInfo | null => {
-    if (!infos.has(num)) infos.set(num, readElement(pdf, num, roleMap));
+    if (!infos.has(num)) {
+      const node = nodeFor(num);
+      infos.set(num, node && readElement(pdf, num, node));
+    }
     return infos.get(num)!;
   };
 
@@ -70,17 +101,16 @@ export async function readFileStructure(
 function readElement(
   pdf: RawPdf,
   num: number,
-  roleMap: string | null,
+  node: ElementNode,
 ): ElementInfo | null {
   const body = pdf.objectBody(num);
-  const type = body ? pdf.dictName(body, "S") : null;
-  if (!body || type === null) return null;
+  if (!body) return null;
   const text = (key: string): string | null => {
     const value = pdf.resolve(body, key);
     return value === null ? null : decodeTextString(value.trim());
   };
   return {
-    type: applyRoleMap(pdf, roleMap, type),
+    ...node,
     alt: text("Alt"),
     actualText: text("ActualText"),
     onlyMarkedContent: ownsOnlyMarkedContent(pdf, body),

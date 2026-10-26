@@ -154,18 +154,24 @@ describe("reading the structure tree", () => {
   test("lists each element with its type, description and MCIDs", async () => {
     const doc = await openSample();
     const elements = readPageStructure(doc.module, doc.page(0).pagePtr);
-    const element = (type: string, alt: string | null, mcids: number[]) => ({
+    const element = (
+      type: string,
+      alt: string | null,
+      mcids: number[],
+      key: string,
+    ) => ({
       type,
       alt,
       actualText: null,
       mcids,
       onlyMarkedContent: false,
+      block: { key, type },
     });
     expect(elements).toEqual([
-      element("Document", null, []),
-      element("H1", null, [0]),
-      element("P", null, [1]),
-      element("Figure", FIGURE_ALT, [2]),
+      element("Document", null, [], "0"),
+      element("H1", null, [0], "1"),
+      element("P", null, [1], "2"),
+      element("Figure", FIGURE_ALT, [2], "3"),
     ]);
   });
 
@@ -254,19 +260,28 @@ function spanningPdf(slot0 = "8 0 R"): Uint8Array {
 describe("reading tags from the file's ParentTree", () => {
   test("gives each page's MCIDs to the element its ParentTree names", async () => {
     const structure = (await readFileStructure(spanningPdf()))!;
-    const element = (type: string, alt: string | null, mcids: number[]) => ({
+    const element = (
+      type: string,
+      alt: string | null,
+      mcids: number[],
+      num: number,
+    ) => ({
       type,
       alt,
       actualText: null,
       mcids,
       onlyMarkedContent: true,
+      block: { key: String(num), type },
     });
     expect(structure.get(0)).toEqual({
-      elements: [element("Figure", "Chart", [0]), element("P", null, [5])],
+      elements: [
+        element("Figure", "Chart", [0], 8),
+        element("P", null, [5], 9),
+      ],
       slotCount: 6,
     });
     expect(structure.get(1)).toEqual({
-      elements: [element("P", null, [0])],
+      elements: [element("P", null, [0], 9)],
       slotCount: 1,
     });
   });
@@ -642,6 +657,7 @@ describe("PageStructure", () => {
     actualText: null,
     mcids: [3, 4],
     onlyMarkedContent: true,
+    block: { key: "figure", type: "Figure" },
   };
 
   test("holds one edit per element, whichever of its MCIDs addressed it", () => {
@@ -917,6 +933,7 @@ describe("PageStructure: added figures", () => {
     actualText: null,
     mcids: [3],
     onlyMarkedContent: true,
+    block: { key: "paragraph", type: "P" },
   };
 
   test("takes an MCID above every slot, added figure and marked content", () => {

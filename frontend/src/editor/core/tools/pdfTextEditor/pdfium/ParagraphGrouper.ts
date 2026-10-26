@@ -1,4 +1,8 @@
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import {
+  SAME_BLOCK,
+  type BlockKey,
+} from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
 import type {
   ParagraphLineSlot,
   TextRun,
@@ -23,7 +27,8 @@ export interface ParagraphInfo {
 }
 
 export class ParagraphGrouper {
-  static apply(page: Page): ParagraphInfo[] {
+  /** `blockKey` must be the one LineGrouper grouped the page's lines by. */
+  static apply(page: Page, blockKey: BlockKey = SAME_BLOCK): ParagraphInfo[] {
     const allLines = [...page.runs];
     const paragraphs: ParagraphInfo[] = [];
 
@@ -35,7 +40,7 @@ export class ParagraphGrouper {
         if (Math.abs(yDiff) > 0.5) return yDiff;
         return a.bounds.x - b.bounds.x;
       });
-      groupColumnLines(sorted, paragraphs);
+      groupColumnLines(sorted, blockKey, paragraphs);
     }
 
     // Fold member bounds + text into the representative and drop the member
@@ -245,7 +250,11 @@ function segmentColumns(lines: TextRun[]): TextRun[][] {
 
 // Sequentially group one column's already-sorted (top-to-bottom) lines into
 // paragraphs, appending each paragraph to `out`.
-function groupColumnLines(sorted: TextRun[], out: ParagraphInfo[]): void {
+function groupColumnLines(
+  sorted: TextRun[],
+  blockKey: BlockKey,
+  out: ParagraphInfo[],
+): void {
   let current: ParagraphInfo | null = null;
   let currentDeltas: number[] = [];
   let currentLeftEdge = 0;
@@ -282,7 +291,9 @@ function groupColumnLines(sorted: TextRun[], out: ParagraphInfo[]): void {
       deltaFromLeft >= -MARGIN_OUTDENT_LEFT &&
       deltaFromLeft <= MARGIN_INDENT_RIGHT;
 
-    if (sameFont && sameColor && lineHeightOk && leftOk) {
+    const sameBlock = blockKey(prev) === blockKey(line);
+
+    if (sameFont && sameColor && lineHeightOk && leftOk && sameBlock) {
       current.members.push(line);
       currentDeltas.push(baselineDelta);
       if (line.bounds.x < currentLeftEdge) currentLeftEdge = line.bounds.x;

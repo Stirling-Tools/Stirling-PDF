@@ -4,7 +4,11 @@ import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
 import { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import { LineGrouper } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
+import type { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  LineGrouper,
+  type BlockKey,
+} from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
 import { ParagraphGrouper } from "@editor/tools/pdfTextEditor/pdfium/ParagraphGrouper";
 import { PdfiumAnnotationReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumAnnotationReader";
 import { primeFontGlyphMap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
@@ -92,8 +96,9 @@ export class PdfiumTextReader {
       PdfiumAnnotationReader.populate(m, page);
       // LineGrouper always runs (merges per-glyph/per-word source objects into
       // one line).
-      LineGrouper.apply(page);
-      if (mode === "auto") ParagraphGrouper.apply(page);
+      const blockKey = structureBlockKey(doc, page.index);
+      LineGrouper.apply(page, blockKey);
+      if (mode === "auto") ParagraphGrouper.apply(page, blockKey);
       // Grouping is done.
       // One walk feeds both: each was reading the same characters with its
       // own WASM round-trips, doubling the cost of every page read.
@@ -484,6 +489,25 @@ function walkObjects(
       }
     }
   }
+}
+
+/**
+ * Keys a run by the structure block of its own MCID, keeping artifacts and
+ * untagged text apart from tagged text and from each other. The structure is
+ * read only once a run carries an MCID, so an untagged file pays nothing.
+ */
+function structureBlockKey(doc: EditorDocument, pageIndex: number): BlockKey {
+  let structure: PageStructure | null = null;
+  return (run) => {
+    const mcid = innermostMcid(run.tagMarks);
+    if (mcid !== null) {
+      structure ??= doc.structure(pageIndex);
+      const block = structure.block(mcid);
+      if (block) return `block:${block.key}`;
+    }
+    const artifact = run.tagMarks.some((tag) => tag.name === ARTIFACT_TAG);
+    return artifact ? "artifact" : "untagged";
+  };
 }
 
 /** Identity affine - the page-level transform. */

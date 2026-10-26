@@ -14,6 +14,83 @@ export interface StructureElement {
    * child elements, annotations or form XObject content.
    */
   onlyMarkedContent: boolean;
+  block: StructureBlock;
+}
+
+/**
+ * The block-level element content belongs to: the element itself, or for an
+ * inline one (a Link in a P, an Lbl in an LI) its nearest block ancestor.
+ * Text is grouped by block, so a link does not split its paragraph.
+ */
+export interface StructureBlock {
+  /** Distinguishes blocks within one read of the tree; not stable across reads. */
+  key: string;
+  type: string;
+}
+
+/**
+ * Elements that sit inside a block rather than being one: the inline-level
+ * types (ISO 32000-1 14.8.4.4, plus PDF 2.0's Em, Strong and Sub) and the
+ * two halves of a list item.
+ */
+const INLINE_TYPES = new Set([
+  "Span",
+  "Quote",
+  "Note",
+  "Reference",
+  "BibEntry",
+  "Code",
+  "Link",
+  "Annot",
+  "Ruby",
+  "RB",
+  "RT",
+  "RP",
+  "Warichu",
+  "WT",
+  "WP",
+  "Em",
+  "Strong",
+  "Sub",
+  "Lbl",
+  "LBody",
+]);
+
+/**
+ * Elements that hold blocks rather than text. An inline type placed directly
+ * in one is used as a block (a Code listing in a Sect), so it is its own.
+ */
+const GROUPING_TYPES = new Set([
+  "Document",
+  "DocumentFragment",
+  "Part",
+  "Art",
+  "Sect",
+  "Div",
+  "BlockQuote",
+  "Aside",
+  "NonStruct",
+  "Private",
+  "TOC",
+  "Index",
+  "L",
+  "Table",
+  "THead",
+  "TBody",
+  "TFoot",
+  "TR",
+]);
+
+/** The block an element belongs to, given itself as a block and its parent, null at the top of the tree. */
+export function containingBlock(
+  own: StructureBlock,
+  parent: { type: string; block: StructureBlock } | null,
+): StructureBlock {
+  const nested =
+    parent !== null &&
+    INLINE_TYPES.has(own.type) &&
+    !GROUPING_TYPES.has(parent.type);
+  return nested ? parent.block : own;
 }
 
 /** An unsaved change to an element, and the MCID the save addresses it by. */
@@ -86,6 +163,11 @@ export class PageStructure {
 
   element(mcid: number): StructureElement | null {
     return this.byMcid.get(mcid) ?? null;
+  }
+
+  /** The block the content `mcid` marks belongs to, or null when no element owns it. */
+  block(mcid: number): StructureBlock | null {
+    return this.element(mcid)?.block ?? null;
   }
 
   /** Why the content `mcid` marks cannot take a description, or null when it can. */
@@ -188,6 +270,7 @@ export class PageStructure {
       actualText: null,
       mcids: [mcid],
       onlyMarkedContent: true,
+      block: { key: `added:${mcid}`, type: "Figure" },
     };
     this.added.set(mcid, figure);
     this.byMcid.set(mcid, figure);
