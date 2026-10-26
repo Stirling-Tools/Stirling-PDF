@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.servlet.HandlerMapping;
 
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.proprietary.billing.BillingCategory;
@@ -73,6 +74,22 @@ class BillableOperationClassifierTest {
         // A real context-path deployment still classifies: /<ctx>/api/v1/ai/tools/** is AI.
         MockHttpServletRequest req = req("/stirling/api/v1/ai/tools/foo");
         req.setContextPath("/stirling");
+        assertEquals(BillingCategory.AI, BillableOperationClassifier.categorize(req, false));
+    }
+
+    @Test
+    void percentEncodedAiPathIsAi() {
+        assertEquals(
+                BillingCategory.AI,
+                BillableOperationClassifier.categorize(req("/api/v1/ai/%74ools/foo"), false));
+    }
+
+    @Test
+    void matchedHandlerPatternDecides() {
+        MockHttpServletRequest req = req("/api/v1/ai/%74ools/classify-and-label");
+        req.setAttribute(
+                HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,
+                "/api/v1/ai/tools/classify-and-label");
         assertEquals(BillingCategory.AI, BillableOperationClassifier.categorize(req, false));
     }
 

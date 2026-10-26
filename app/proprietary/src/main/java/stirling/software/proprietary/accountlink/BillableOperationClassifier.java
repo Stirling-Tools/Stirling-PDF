@@ -1,8 +1,11 @@
 package stirling.software.proprietary.accountlink;
 
+import org.springframework.web.servlet.HandlerMapping;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import stirling.software.common.service.InternalApiClient;
+import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.BillingCategoryClassifier;
 
@@ -44,17 +47,21 @@ public final class BillableOperationClassifier {
     }
 
     private static boolean isAiSurface(HttpServletRequest request) {
+        // The matched pattern classifies an escaped path (/api/v1/ai/%74ools/x) like the handler
+        // it reaches; the decoded path covers callers that run before handler mapping.
+        Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        if (pattern instanceof String matched) {
+            return matched.startsWith(AI_PATH_PREFIX);
+        }
         String uri = request.getRequestURI();
         if (uri == null) {
             return false;
         }
-        // Prefix-match the AI tool namespace (not a loose substring contains), stripping a
-        // deployment context path so /<ctx>/api/v1/ai/tools/** still classifies as AI.
-        String ctx = request.getContextPath();
-        String path =
-                ctx != null && !ctx.isEmpty() && uri.startsWith(ctx)
-                        ? uri.substring(ctx.length())
-                        : uri;
-        return path.startsWith(AI_PATH_PREFIX);
+        try {
+            return RequestUriUtils.normalizeUri(request.getContextPath(), uri)
+                    .startsWith(AI_PATH_PREFIX);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 }
