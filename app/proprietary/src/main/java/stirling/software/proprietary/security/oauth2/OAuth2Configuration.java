@@ -247,7 +247,7 @@ public class OAuth2Configuration {
                 : Optional.empty();
     }
 
-    private String userNameAttribute(Provider provider) {
+    String userNameAttribute(Provider provider) {
         return provider.getScopes().contains(OidcScopes.OPENID)
                 ? IdTokenClaimNames.SUB
                 : provider.getUseAsUsername().getName();

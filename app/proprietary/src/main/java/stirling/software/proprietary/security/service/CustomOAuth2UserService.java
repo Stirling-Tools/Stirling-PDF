@@ -134,7 +134,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
     }
 
     private OidcUserInfo fetchUserInfo(OidcUserRequest userRequest) {
-        DefaultOAuth2UserService fetcher = new DefaultOAuth2UserService();
+        DefaultOAuth2UserService fetcher = newUserInfoFetcher();
         AtomicReference<Map<String, Object>> attributes = new AtomicReference<>();
         fetcher.setAttributesConverter(
                 request ->
@@ -149,6 +149,10 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
         }
         Map<String, Object> claims = attributes.get();
         return (claims == null || claims.isEmpty()) ? null : new OidcUserInfo(claims);
+    }
+
+    DefaultOAuth2UserService newUserInfoFetcher() {
+        return new DefaultOAuth2UserService();
     }
 
     /**
