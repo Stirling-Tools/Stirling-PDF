@@ -7,6 +7,7 @@ import {
 } from "react";
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import { useImageAccessibility } from "@editor/tools/pdfTextEditor/hooks/useImageAccessibility";
+import { useTextAccessibility } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
 import { warmDocumentDeviceFonts } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import {
@@ -53,6 +54,7 @@ export function useToolbarController(
 ) {
   const sel = useSelectionActions(store);
   const imageA11y = useImageAccessibility(store, state, selection);
+  const textTag = useTextAccessibility(store, state, selection);
 
   const onToggleLock = useCallback(() => {
     const doc = store.document;
@@ -524,6 +526,7 @@ export function useToolbarController(
     onSetImageDecorative: imageA11y.setDecorative,
     imageReview: imageA11y.review,
     onSelectNextImageToReview: imageA11y.selectNextImage,
+    textTag,
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
     hasImageSelection: selection.imageIds.length > 0,

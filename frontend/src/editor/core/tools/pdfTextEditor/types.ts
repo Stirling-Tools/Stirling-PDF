@@ -83,6 +83,12 @@ export interface TextRunSnapshot {
   locked?: boolean;
   /** Box width the user set by resize, in PDF points; absent = follow the ink. */
   wrapWidthPt?: number;
+  /** The marked-content ID that ties the run's text into the structure tree. */
+  mcid?: number;
+  /** Marked as an artifact: content that assistive technology skips. */
+  artifact?: boolean;
+  /** Drawn by a form XObject, whose marks the editor does not read. */
+  inForm?: boolean;
 }
 
 export interface ImageObjectSnapshot {

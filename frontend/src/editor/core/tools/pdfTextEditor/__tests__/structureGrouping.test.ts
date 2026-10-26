@@ -18,6 +18,7 @@ import {
 import { structureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import { textTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import {
   buildClassicPdf,
   streamBody,
@@ -168,6 +169,33 @@ describe("grouping text by structure block", () => {
     const merged = runWith(texts, "Introduction");
     expect(merged).toContain("More text.");
     expect(merged).toContain("Second paragraph.");
+  });
+});
+
+describe("textTag", () => {
+  async function tagOf(bytes: Uint8Array, fragment: string) {
+    const doc = await EditorDocument.open(bytes);
+    opened.push(doc);
+    const page = doc.page(0);
+    PdfiumTextReader.populate(doc, page);
+    const run = page.runs.find((r) => r.text.includes(fragment))!;
+    return textTag(doc, run.snapshot());
+  }
+
+  test("gives text the block it belongs to", async () => {
+    const tagged = (role: string) => ({
+      kind: "tagged",
+      block: { role, type: role },
+    });
+    expect(await tagOf(paragraphsPdf(), "Introduction")).toEqual(tagged("H1"));
+    expect(await tagOf(paragraphsPdf(), "guide")).toEqual(tagged("P"));
+    expect(await tagOf(paragraphsPdf(), "Item")).toEqual(tagged("LI"));
+  });
+
+  test("reads text in a file without a structure tree as untagged", async () => {
+    expect(
+      await tagOf(paragraphsPdf({ tagged: false }), "Introduction"),
+    ).toEqual({ kind: "untagged", documentTagged: false });
   });
 });
 
