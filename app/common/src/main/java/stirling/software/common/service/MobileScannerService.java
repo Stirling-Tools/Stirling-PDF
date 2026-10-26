@@ -376,9 +376,19 @@ public class MobileScannerService {
      * so nothing else reclaims them.
      */
     private void deleteOrphanedDirectories(long now) {
+        if (!Files.isDirectory(tempDirectory)) {
+            return;
+        }
         List<Path> dirs;
         try (var paths = Files.list(tempDirectory)) {
-            dirs = paths.filter(Files::isDirectory).toList();
+            dirs =
+                    paths.filter(Files::isDirectory)
+                            .filter(
+                                    dir ->
+                                            SESSION_ID_VALIDATION_PATTERN
+                                                    .matcher(dir.getFileName().toString())
+                                                    .matches())
+                            .toList();
         } catch (IOException e) {
             log.warn("Failed to list mobile scanner temp directory", e);
             return;
