@@ -194,6 +194,17 @@ class ConvertPDFToOfficeTest {
     }
 
     @Test
+    void officeConvertWithoutOutputFormatIsBadRequest() throws Exception {
+        when(officeConversionService.replacesLibreOffice(null)).thenReturn(true);
+        PdfToWordRequest request = new PdfToWordRequest();
+        request.setFileInput(createPdfFile());
+
+        assertEquals(400, controller.processPdfToWord(request, null).getStatusCode().value());
+        Mockito.verify(officeConversionService, Mockito.never())
+                .convert(any(PDDocument.class), any(), any(), any());
+    }
+
+    @Test
     void processPdfToRTForTXT_txtUsesOfficeConvertWhenNotLegacy() throws Exception {
         when(officeConversionService.legacy(null)).thenReturn(false);
         MockMultipartFile pdfFile = createPdfFile();

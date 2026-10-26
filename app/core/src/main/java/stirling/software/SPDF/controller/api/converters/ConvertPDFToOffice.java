@@ -200,7 +200,7 @@ public class ConvertPDFToOffice {
             throws IOException {
         // Text reads any upload; every other format takes only an upload typed as a PDF.
         boolean pdf = MediaType.APPLICATION_PDF_VALUE.equals(input.getContentType());
-        if (!formats.contains(format) || !pdf && !"txt".equals(format)) {
+        if (format == null || !formats.contains(format) || !pdf && !"txt".equals(format)) {
             return ResponseEntity.badRequest().build();
         }
         TempFile out = tempFileManager.createManagedTempFile("." + format);
