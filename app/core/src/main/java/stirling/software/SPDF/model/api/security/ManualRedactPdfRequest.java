@@ -14,18 +14,25 @@ import stirling.software.common.model.api.security.RedactionArea;
 @EqualsAndHashCode(callSuper = true)
 public class ManualRedactPdfRequest extends PDFWithPageNums {
     @Schema(
-            description = "A list of areas that should be redacted",
+            description =
+                    "Areas to redact. The text and image content inside each area is removed from"
+                            + " the file and the area is painted; a page whose content cannot be"
+                            + " cut exactly at an area's edge is rasterized instead.",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private List<RedactionArea> redactions;
 
     @Schema(
-            description = "Convert the redacted PDF to an image",
+            description =
+                    "Rasterize every page of the output. The areas and pages are removed without"
+                            + " it; this also turns the rest of each page into an image.",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean convertPDFToImage;
 
     @Schema(
-            description = "The color used to fully redact certain pages",
+            description =
+                    "The color used to fill the pages listed in pageNumbers, which are wiped of"
+                            + " all content and annotations",
             defaultValue = "#000000",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String pageRedactionColor;

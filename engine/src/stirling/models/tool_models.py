@@ -697,14 +697,20 @@ class HtmlToPdfParams(ApiModel):
 
 class ImageBox(ApiModel):
     """
-    Rectangular areas to black out, each defined by a page number and bounding box coordinates.
+    Rectangular areas to redact, each defined by a page number and bounding box coordinates. The text and image pixels inside are removed from the file and the area is painted.
     """
 
     page_index: int = Field(..., description="0-indexed page number (first page = 0).")
     x1: float = Field(..., description="Left x coordinate of the redaction rectangle in PDF user-space points.")
     x2: float = Field(..., description="Right x coordinate of the redaction rectangle in PDF user-space points.")
-    y1: float = Field(..., description="Top y coordinate of the redaction rectangle in PDF user-space points.")
-    y2: float = Field(..., description="Bottom y coordinate of the redaction rectangle in PDF user-space points.")
+    y1: float = Field(
+        ...,
+        description="Y coordinate of one horizontal edge of the redaction rectangle in PDF user-space points (origin bottom-left).",
+    )
+    y2: float = Field(
+        ...,
+        description="Y coordinate of the other horizontal edge of the redaction rectangle in PDF user-space points.",
+    )
 
 
 class ColorType(StrEnum):
@@ -1293,7 +1299,7 @@ class RearrangePagesParams(ApiModel):
 
 class Strategy(StrEnum):
     """
-    Execution strategy hint for the redaction pipeline
+    AUTO removes the covered content of every redaction from the file; a page whose content cannot be cut exactly at a box edge is rasterized instead. OVERLAY_ONLY only paints boxes and leaves the covered text and images extractable. IMAGE_FINALIZE rasterizes every page.
     """
 
     auto = "AUTO"
@@ -1307,14 +1313,20 @@ class Style(ApiModel):
     """
 
     color: str = Field("#000000", description="Hex redaction box color")
-    convert_to_image: bool = Field(False, description="Rasterize output to prevent text extraction")
+    convert_to_image: bool = Field(
+        False,
+        description="Rasterize every page of the output. Redacted content is removed without it; this also turns the rest of each page into an image.",
+    )
     padding: float = Field(0, description="Extra padding around each box in points")
-    strategy: Strategy = Field(Strategy.auto, description="Execution strategy hint for the redaction pipeline")
+    strategy: Strategy = Field(
+        Strategy.auto,
+        description="AUTO removes the covered content of every redaction from the file; a page whose content cannot be cut exactly at a box edge is rasterized instead. OVERLAY_ONLY only paints boxes and leaves the covered text and images extractable. IMAGE_FINALIZE rasterizes every page.",
+    )
 
 
 class RedactionArea(ApiModel):
     """
-    A list of areas that should be redacted
+    Areas to redact. The text and image content inside each area is removed from the file and the area is painted; a page whose content cannot be cut exactly at an area's edge is rasterized instead.
     """
 
     color: str | None = Field(None, description="The color used to redact the specified area.")
@@ -1682,7 +1694,7 @@ class SvgToPdfParams(ApiModel):
 
 class TextRange(ApiModel):
     """
-    Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.
+    Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is removed from the file and boxed. Anchors work best when short and unique. They must appear verbatim in the document.
     """
 
     end_string: str = Field(
@@ -1811,19 +1823,20 @@ class AutoRotatePdfParams(ApiModel):
 
 class RedactExecuteParams(ApiModel):
     """
-    Unified redaction endpoint that accepts exact strings, regex patterns, and page numbers in a single request. Supports execution strategy hints. Input:PDF Output:PDF Type:SISO
+    Unified redaction endpoint that accepts exact strings, regex patterns, ranges, areas and page numbers in a single request. With the default AUTO strategy every redaction removes the covered content from the file; OVERLAY_ONLY only paints boxes over it. Input:PDF Output:PDF Type:SISO
     """
 
     image_boxes: list[ImageBox] | None = Field(
-        None, description="Rectangular areas to black out, each defined by a page number and bounding box coordinates."
+        None,
+        description="Rectangular areas to redact, each defined by a page number and bounding box coordinates. The text and image pixels inside are removed from the file and the area is painted.",
     )
     ranges: list[TextRange] | None = Field(
         None,
-        description="Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.",
+        description="Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is removed from the file and boxed. Anchors work best when short and unique. They must appear verbatim in the document.",
     )
     redact_image_pages: list[int] | None = Field(
         None,
-        description="1-indexed page numbers to redact all detected images from. Pass an empty list to redact images from every page. Omit or pass null to skip image redaction entirely.",
+        description="1-indexed page numbers to redact all detected images from. Each image is removed from the file and its area painted. Pass an empty list to redact images from every page. Omit or pass null to skip image redaction entirely.",
     )
     regex_patterns: list[str] | None = Field(
         None,
@@ -1835,22 +1848,32 @@ class RedactExecuteParams(ApiModel):
         description="Exact strings to find and black out. One entry per phrase to redact. Best for known names, identifiers, and specific text found in the document.",
     )
     wipe_pages: list[int] | None = Field(
-        None, description="1-indexed page numbers to wipe entirely (all content removed from those pages)."
+        None,
+        description="1-indexed page numbers to wipe entirely (all content and annotations removed from those pages).",
     )
 
 
 class RedactParams(ApiModel):
     """
-    This endpoint redacts content from a PDF file based on manually specified areas. Users can specify areas to redact and optionally convert the PDF to an image. Input:PDF Output:PDF Type:SISO
+    Redacts manually specified areas and whole pages. The text and images inside each area are removed from the file before the area is painted, and listed pages are wiped of all content. A page whose content cannot be cut exactly at an area's edge is rasterized. Optionally rasterizes every page. Input:PDF Output:PDF Type:SISO
     """
 
-    convert_pdf_to_image: bool = Field(False, description="Convert the redacted PDF to an image")
+    convert_pdf_to_image: bool = Field(
+        False,
+        description="Rasterize every page of the output. The areas and pages are removed without it; this also turns the rest of each page into an image.",
+    )
     page_numbers: str = Field(
         "all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
-    page_redaction_color: str = Field("#000000", description="The color used to fully redact certain pages")
-    redactions: list[RedactionArea] = Field(..., description="A list of areas that should be redacted")
+    page_redaction_color: str = Field(
+        "#000000",
+        description="The color used to fill the pages listed in pageNumbers, which are wiped of all content and annotations",
+    )
+    redactions: list[RedactionArea] = Field(
+        ...,
+        description="Areas to redact. The text and image content inside each area is removed from the file and the area is painted; a page whose content cannot be cut exactly at an area's edge is rasterized instead.",
+    )
 
 
 class Model(
