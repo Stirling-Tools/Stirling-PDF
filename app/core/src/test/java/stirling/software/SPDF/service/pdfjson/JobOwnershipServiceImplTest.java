@@ -107,9 +107,15 @@ class JobOwnershipServiceImplTest {
     // --- validateJobAccess tests ---
 
     @Test
-    void validateJobAccess_noUser_allowsAccess() {
+    void validateJobAccess_noUser_ownedKey_throwsSecurityException() {
         when(userService.getCurrentUsername()).thenReturn(null);
-        assertTrue(service.validateJobAccess("any:key"));
+        assertThrows(SecurityException.class, () -> service.validateJobAccess("alice:job1"));
+    }
+
+    @Test
+    void validateJobAccess_noUser_unownedKey_allowsAccess() {
+        when(userService.getCurrentUsername()).thenReturn(null);
+        assertTrue(service.validateJobAccess("job123"));
     }
 
     @Test
