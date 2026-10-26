@@ -54,7 +54,7 @@ export function useToolbarController(
 ) {
   const sel = useSelectionActions(store);
   const imageA11y = useImageAccessibility(store, state, selection);
-  const textTag = useTextAccessibility(store, state, selection);
+  const textA11y = useTextAccessibility(store, state, selection);
 
   const onToggleLock = useCallback(() => {
     const doc = store.document;
@@ -526,7 +526,8 @@ export function useToolbarController(
     onSetImageDecorative: imageA11y.setDecorative,
     imageReview: imageA11y.review,
     onSelectNextImageToReview: imageA11y.selectNextImage,
-    textTag,
+    textTag: textA11y.tag,
+    onRetagText: textA11y.retag,
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
     hasImageSelection: selection.imageIds.length > 0,

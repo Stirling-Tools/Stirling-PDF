@@ -75,7 +75,10 @@ export function SelectionInspector({
       )}
       {hasImageSelection && <ImageSection controller={controller} />}
       {ACCESSIBILITY_EDITING && controller.textTag && (
-        <TextAccessibilitySection tag={controller.textTag} />
+        <TextAccessibilitySection
+          tag={controller.textTag}
+          onRetag={controller.onRetagText}
+        />
       )}
       {ACCESSIBILITY_EDITING && controller.imageAccessibility && (
         <ImageAccessibilitySection

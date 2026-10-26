@@ -5,6 +5,8 @@ import type {
 
 /** One structure element as the page sees it, read once when the page is first asked about. */
 export interface StructureElement extends StructureRole {
+  /** The element's StructureBlock key: equal to `block.key` when it is a block itself. */
+  key: string;
   alt: string | null;
   actualText: string | null;
   /**
@@ -124,6 +126,38 @@ export type DescriptionBlocker = "untagged" | "not-figure" | ReadOnlyReason;
 /** Why content cannot be marked decorative. */
 export type DecorativeBlocker = DescriptionBlocker | "mixed-content";
 
+/**
+ * What a whole element's text can be retagged as. Lbl and Span belong inside
+ * another element, so they wait for tagging part of an element.
+ */
+export const TEXT_BLOCK_TYPES = [
+  "P",
+  "H1",
+  "H2",
+  "H3",
+  "H4",
+  "H5",
+  "H6",
+  "Quote",
+  "Note",
+  "Code",
+] as const satisfies readonly StructureType[];
+
+const RETAGGABLE_TYPES: ReadonlySet<StructureType> = new Set<StructureType>([
+  ...TEXT_BLOCK_TYPES,
+  "H",
+]);
+
+/**
+ * Why text cannot be retagged. "not-text" is a block holding more than text,
+ * such as a list item or table cell, whose retagging would break the
+ * structure around it.
+ */
+export type RetagBlocker = "untagged" | "not-text" | ReadOnlyReason;
+
+/** The type the session has retagged a block as, by block key; null when it has not. */
+export type RetagLookup = (key: string) => StructureType | null;
+
 /** A Figure the session adds for content the file leaves untagged. */
 export interface AddedFigure {
   mcid: number;
@@ -150,15 +184,18 @@ export class PageStructure {
    * slot for; null when the page has no array to add a figure to.
    */
   private readonly slotCount: number | null;
+  private readonly retaggedAs: RetagLookup;
 
   constructor(
     elements: readonly StructureElement[],
     readOnly: ReadOnlyReason | null = null,
     slotCount: number | null = null,
+    retaggedAs: RetagLookup = () => null,
   ) {
     this.elements = elements;
     this.readOnly = readOnly;
     this.slotCount = slotCount;
+    this.retaggedAs = retaggedAs;
     for (const el of elements) {
       for (const mcid of el.mcids) this.byMcid.set(mcid, el);
     }
@@ -172,9 +209,38 @@ export class PageStructure {
     return this.byMcid.get(mcid) ?? null;
   }
 
-  /** The block the content `mcid` marks belongs to, or null when no element owns it. */
+  /**
+   * The block the content `mcid` marks belongs to, as the session has
+   * retagged it; null when no element owns it.
+   */
   block(mcid: number): StructureBlock | null {
-    return this.element(mcid)?.block ?? null;
+    const block = this.element(mcid)?.block;
+    if (!block) return null;
+    const type = this.retaggedAs(block.key);
+    return type ? { key: block.key, role: type, type } : block;
+  }
+
+  /**
+   * The block element the content `mcid` marks belongs to, as this page lists
+   * it; null when no element owns the content or the block owns none of this
+   * page's content itself, as an LI holding only an Lbl and an LBody does.
+   */
+  blockElement(mcid: number): StructureElement | null {
+    const key = this.element(mcid)?.block.key;
+    return this.elements.find((el) => el.key === key) ?? null;
+  }
+
+  /** Why the block the text `mcid` marks belongs to cannot be retagged, or null when it can. */
+  cannotRetag(mcid: number): RetagBlocker | null {
+    if (!this.element(mcid)) return "untagged";
+    if (this.readOnly) return this.readOnly;
+    const block = this.blockElement(mcid);
+    if (!block) return "not-text";
+    // A custom role's meaning is unknown, and giving it a standard one is the fix.
+    if (block.type !== null && !RETAGGABLE_TYPES.has(block.type)) {
+      return "not-text";
+    }
+    return null;
   }
 
   /** Why the content `mcid` marks cannot take a description, or null when it can. */
@@ -280,6 +346,7 @@ export class PageStructure {
       actualText: null,
       mcids: [mcid],
       onlyMarkedContent: true,
+      key: `added:${mcid}`,
       block: { key: `added:${mcid}`, role: "Figure", type: "Figure" },
     };
     this.added.set(mcid, figure);

@@ -7420,6 +7420,7 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 cannotChange = "This image's accessibility can't be changed."
+cannotRetag = "This text's tag can't be changed."
 decorativeInfo = "Screen readers skip decorative images. Use it for borders, backgrounds and other images that carry no information."
 decorativeLabel = "Decorative image"
 description = "Image description"

@@ -1,48 +1,93 @@
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
+import { Select } from "@editor/ui/Select";
 import {
+  Field,
   Section,
   SectionLabel,
   StatRow,
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
-import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
+import { TEXT_BLOCK_TYPES } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import type {
+  StructureRole,
+  StructureType,
+} from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type { TextTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 
-/** What the selected text is tagged as. */
-export function TextAccessibilitySection({ tag }: { tag: TextTag }) {
+/** What the selected text is tagged as, and a picker to retag it where its block allows. */
+export function TextAccessibilitySection({
+  tag,
+  onRetag,
+}: {
+  tag: TextTag;
+  onRetag: (type: StructureType) => void;
+}) {
   const { t } = useTranslation();
+  const label = t("pdfTextEditor.inspector.accessibility.tagLabel", "Tag");
   return (
     <Section testId="pdf-editor-text-accessibility">
       <SectionLabel>
         {t("pdfTextEditor.inspector.accessibility.heading", "Accessibility")}
       </SectionLabel>
-      <StatRow
-        label={t("pdfTextEditor.inspector.accessibility.tagLabel", "Tag")}
-        value={<TagValue tag={tag} />}
-      />
+      {tag.kind === "tagged" && tag.cannotRetag === null ? (
+        <Field label={label}>
+          <TagPicker block={tag.block} onRetag={onRetag} label={label} />
+        </Field>
+      ) : (
+        <StatRow
+          label={label}
+          value={
+            <span data-testid="pdf-editor-text-tag">{tagText(t, tag)}</span>
+          }
+        />
+      )}
     </Section>
   );
 }
 
-function TagValue({ tag }: { tag: TextTag }) {
+function TagPicker({
+  block,
+  onRetag,
+  label,
+}: {
+  block: StructureRole;
+  onRetag: (type: StructureType) => void;
+  label: string;
+}) {
   const { t } = useTranslation();
-  const testId = "pdf-editor-text-tag";
-  if (tag.kind !== "tagged") {
-    return <span data-testid={testId}>{statusText(t, tag)}</span>;
-  }
-  const { role, type } = tag.block;
-  if (type === null) {
-    return (
-      <span data-testid={testId}>
-        {t(
-          "pdfTextEditor.inspector.accessibility.customTag",
-          "{{role}} (custom tag)",
-          { role },
-        )}
-      </span>
-    );
-  }
-  return <span data-testid={testId}>{typeName(t, type)}</span>;
+  const offered = TEXT_BLOCK_TYPES.find((type) => type === block.type) ?? null;
+  return (
+    <div data-testid="pdf-editor-text-tag-picker">
+      <Select
+        inputSize="sm"
+        options={TEXT_BLOCK_TYPES.map((type) => ({
+          value: type,
+          label: typeName(t, type),
+        }))}
+        value={offered}
+        // A tag the picker does not offer, such as a custom role, still shows.
+        placeholder={blockName(t, block)}
+        onChange={(value) => {
+          const picked = TEXT_BLOCK_TYPES.find((type) => type === value);
+          if (picked) onRetag(picked);
+        }}
+        aria-label={label}
+      />
+    </div>
+  );
+}
+
+function tagText(t: TFunction, tag: TextTag): string {
+  return tag.kind === "tagged" ? blockName(t, tag.block) : statusText(t, tag);
+}
+
+function blockName(t: TFunction, { role, type }: StructureRole): string {
+  if (type !== null) return typeName(t, type);
+  return t(
+    "pdfTextEditor.inspector.accessibility.customTag",
+    "{{role}} (custom tag)",
+    { role },
+  );
 }
 
 function statusText(

@@ -10,9 +10,13 @@ import type { StructureEdit } from "@editor/tools/pdfTextEditor/pdfdoc/passes/ap
 import { readPageStructure } from "@editor/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
 import {
   readFileStructure,
-  type FileHeading,
   type FileStructure,
 } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
+import {
+  isHeadingType,
+  type StructureType,
+} from "@editor/tools/pdfTextEditor/model/structureTypes";
+import type { DocumentHeading } from "@editor/tools/pdfTextEditor/util/headingOutline";
 import {
   imagesInReadingOrder,
   precedingTaggedMcid,
@@ -37,6 +41,15 @@ export class EditorDocument {
   readonly openedBytes: Uint8Array;
   private readonly pageCache: Map<number, Page>;
   private readonly structureCache = new Map<number, PageStructure>();
+  /**
+   * Unsaved retags by block key, each with the content the save addresses it
+   * by. Held here rather than per page: an element spanning a page break is
+   * one element.
+   */
+  private readonly retags = new Map<
+    string,
+    { pageIndex: number; mcid: number; type: StructureType }
+  >();
   /** The file's own structure tree; null when only PDFium's view is available. */
   private readonly fileStructure: FileStructure | null;
   private readonly ownedFonts: Map<string, FontRef>;
@@ -180,15 +193,47 @@ export class EditorDocument {
     const page = this.fileStructure.pages.get(pageIndex);
     if (!page) return new PageStructure([]);
     if (page.slotCount === null) return new PageStructure([], "unreadable");
-    return new PageStructure(page.elements, null, page.slotCount);
+    return new PageStructure(page.elements, null, page.slotCount, (key) =>
+      this.retaggedAs(key),
+    );
   }
 
   /**
-   * The file's headings in reading order. Null when its structure tree could
-   * not be read, which leaves nothing to check them against.
+   * The headings in reading order, the session's retags applied. Null when
+   * the file's structure tree could not be read, which leaves nothing to
+   * check them against.
    */
-  headings(): readonly FileHeading[] | null {
-    return this.fileStructure?.headings ?? null;
+  headings(): DocumentHeading[] | null {
+    if (!this.fileStructure) return null;
+    return this.fileStructure.blocks.flatMap(
+      ({ key, type, pageIndex, mcids }) => {
+        const now = this.retaggedAs(key) ?? type;
+        return isHeadingType(now) ? [{ type: now, pageIndex, mcids }] : [];
+      },
+    );
+  }
+
+  /** The type the session has retagged block `key` as; null when it has not. */
+  retaggedAs(key: string): StructureType | null {
+    return this.retags.get(key)?.type ?? null;
+  }
+
+  /**
+   * Retag the block the text `mcid` marks belongs to as `type`. Null, or the
+   * type it has in the file, drops the change. Throws when cannotRetag
+   * refuses it: a retag the save cannot write would fail every later save.
+   */
+  setRetag(pageIndex: number, mcid: number, type: StructureType | null): void {
+    const structure = this.structure(pageIndex);
+    const blocker = structure.cannotRetag(mcid);
+    if (blocker) throw new Error(`MCID ${mcid} cannot be retagged: ${blocker}`);
+    const block = structure.blockElement(mcid)!;
+    if (type === null || type === block.type) {
+      this.retags.delete(block.key);
+    } else {
+      // The save finds the element through content it owns itself.
+      this.retags.set(block.key, { pageIndex, mcid: block.mcids[0], type });
+    }
   }
 
   /** True when the catalog marks the file as tagged (ISO 32000-1 14.7.1). */
@@ -211,10 +256,21 @@ export class EditorDocument {
 
   /** Every unsaved structure edit, in the form the save pass takes. */
   structureEdits(): StructureEdit[] {
-    return [...this.structureCache].flatMap(([pageIndex, structure]) => [
-      ...structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
-      ...this.addedFigureEdits(pageIndex, structure),
-    ]);
+    const retags = [...this.retags.values()].map(
+      ({ pageIndex, mcid, type }) => ({
+        pageIndex,
+        mcid,
+        type,
+        decorative: false,
+      }),
+    );
+    return [
+      ...[...this.structureCache].flatMap(([pageIndex, structure]) => [
+        ...structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
+        ...this.addedFigureEdits(pageIndex, structure),
+      ]),
+      ...retags,
+    ];
   }
 
   /**

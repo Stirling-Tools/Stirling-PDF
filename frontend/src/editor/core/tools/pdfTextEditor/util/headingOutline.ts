@@ -2,11 +2,19 @@ import {
   headingLevel,
   type HeadingType,
 } from "@editor/tools/pdfTextEditor/model/structureTypes";
-import type { FileHeading } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import type {
   PageSnapshot,
   TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
+
+/** A heading as the document has it now: the file's, the session's retags applied. */
+export interface DocumentHeading {
+  type: HeadingType;
+  /** The first page drawing its text; null when it draws none. */
+  pageIndex: number | null;
+  /** Its MCIDs on that page. */
+  mcids: number[];
+}
 
 /**
  * What a checker reports against one heading (ISO 14289-1 7.4.2, Matterhorn
@@ -38,7 +46,7 @@ export interface HeadingOutline {
  * a checker would report. `pages` supplies the runs.
  */
 export function headingOutline(
-  headings: readonly FileHeading[],
+  headings: readonly DocumentHeading[],
   pages: readonly PageSnapshot[],
 ): HeadingOutline {
   let previous: number | null = null;
@@ -67,7 +75,7 @@ function issueAt(level: number, previous: number | null): HeadingIssue | null {
 }
 
 function runShowing(
-  heading: FileHeading,
+  heading: DocumentHeading,
   pages: readonly PageSnapshot[],
 ): TextRunSnapshot | null {
   if (heading.pageIndex === null) return null;

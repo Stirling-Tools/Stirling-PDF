@@ -183,13 +183,18 @@ describe("textTag", () => {
   }
 
   test("gives text the block it belongs to", async () => {
-    const tagged = (role: string) => ({
+    const tagged = (role: string, cannotRetag: string | null) => ({
       kind: "tagged",
       block: { role, type: role },
+      cannotRetag,
     });
-    expect(await tagOf(paragraphsPdf(), "Introduction")).toEqual(tagged("H1"));
-    expect(await tagOf(paragraphsPdf(), "guide")).toEqual(tagged("P"));
-    expect(await tagOf(paragraphsPdf(), "Item")).toEqual(tagged("LI"));
+    expect(await tagOf(paragraphsPdf(), "Introduction")).toEqual(
+      tagged("H1", null),
+    );
+    expect(await tagOf(paragraphsPdf(), "guide")).toEqual(tagged("P", null));
+    expect(await tagOf(paragraphsPdf(), "Item")).toEqual(
+      tagged("LI", "not-text"),
+    );
   });
 
   test("reads text in a file without a structure tree as untagged", async () => {

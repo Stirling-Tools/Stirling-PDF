@@ -4,14 +4,12 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import type { HeadingType } from "@editor/tools/pdfTextEditor/model/structureTypes";
-import {
-  readFileStructure,
-  type FileHeading,
-} from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
+import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import {
   headingOutline,
   issueCount,
+  type DocumentHeading,
 } from "@editor/tools/pdfTextEditor/util/headingOutline";
 
 const TAGGED_SAMPLE = path.join(
@@ -19,7 +17,7 @@ const TAGGED_SAMPLE = path.join(
   "../../../tests/test-fixtures/tagged-sample.pdf",
 );
 
-const heading = (type: HeadingType, mcid = 0): FileHeading => ({
+const heading = (type: HeadingType, mcid = 0): DocumentHeading => ({
   type,
   pageIndex: 0,
   mcids: [mcid],
@@ -91,13 +89,15 @@ describe("headingOutline", () => {
   });
 });
 
-describe("reading headings from the file", () => {
-  test("lists headings in reading order with the pages they are drawn on", async () => {
+describe("reading blocks from the file", () => {
+  test("lists blocks in reading order with the pages they are drawn on", async () => {
     const structure = await readFileStructure(
       new Uint8Array(await readFile(TAGGED_SAMPLE)),
     );
     expect(
-      structure!.headings.map(({ type, pageIndex }) => [type, pageIndex]),
+      structure!.blocks
+        .filter(({ type }) => type?.startsWith("H"))
+        .map(({ type, pageIndex }) => [type, pageIndex]),
     ).toEqual([
       ["H1", 0],
       ["H2", 1],

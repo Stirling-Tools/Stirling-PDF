@@ -4,9 +4,7 @@ import {
   type StructureElement,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import {
-  isHeadingType,
   structureRole,
-  type HeadingType,
   type StructureRole,
 } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
@@ -32,9 +30,10 @@ export interface FilePageStructure {
   slotCount: number | null;
 }
 
-/** A heading, and where its text is drawn. */
-export interface FileHeading {
-  type: HeadingType;
+/** A block element, and where its text is drawn. */
+export interface FileBlock extends StructureRole {
+  /** Its StructureBlock key. */
+  key: string;
   /** The first page drawing its text; null when it draws none. */
   pageIndex: number | null;
   /** Its MCIDs on that page, its inline elements' included. */
@@ -50,8 +49,8 @@ export interface FileStructure {
    * claim another element's MCID there.
    */
   pages: Map<number, FilePageStructure>;
-  /** Every heading, in the tree's reading order. */
-  headings: FileHeading[];
+  /** Every block element, in the tree's reading order. */
+  blocks: FileBlock[];
 }
 
 /**
@@ -123,20 +122,17 @@ export async function readFileStructure(
   });
   return {
     pages: byPage,
-    headings: readHeadings(pdf, rootBody, nodeFor, byPage),
+    blocks: readBlocks(pdf, rootBody, nodeFor, byPage),
   };
 }
 
-/**
- * Headings in the depth-first /K order a reader follows. A heading's own
- * kids are not searched: headings do not nest.
- */
-function readHeadings(
+/** Block elements in the depth-first /K order a reader follows. */
+function readBlocks(
   pdf: RawPdf,
   rootBody: string,
   nodeFor: (num: number) => ElementNode | null,
   pages: Map<number, FilePageStructure>,
-): FileHeading[] {
+): FileBlock[] {
   const drawn = new Map<string, { pageIndex: number; mcids: number[] }>();
   for (const [pageIndex, page] of pages) {
     for (const el of page.elements) {
@@ -146,7 +142,7 @@ function readHeadings(
     }
   }
 
-  const headings: FileHeading[] = [];
+  const blocks: FileBlock[] = [];
   const seen = new Set<number>();
   const visit = (body: string): void => {
     for (const kid of elementKids(pdf, body) ?? []) {
@@ -156,20 +152,22 @@ function readHeadings(
       const node = nodeFor(num);
       const kidBody = pdf.objectBody(num);
       if (!node || !kidBody) continue;
-      if (isHeadingType(node.type)) {
-        const at = drawn.get(String(num));
-        headings.push({
+      const key = String(num);
+      if (node.block.key === key) {
+        const at = drawn.get(key);
+        blocks.push({
+          key,
+          role: node.role,
           type: node.type,
           pageIndex: at?.pageIndex ?? null,
           mcids: at ? [...at.mcids].sort((a, b) => a - b) : [],
         });
-      } else {
-        visit(kidBody);
       }
+      visit(kidBody);
     }
   };
   visit(rootBody);
-  return headings;
+  return blocks;
 }
 
 function readElement(
@@ -185,6 +183,7 @@ function readElement(
   };
   return {
     ...node,
+    key: String(num),
     alt: text("Alt"),
     actualText: text("ActualText"),
     onlyMarkedContent: ownsOnlyMarkedContent(pdf, body),

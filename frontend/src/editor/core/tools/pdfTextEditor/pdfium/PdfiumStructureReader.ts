@@ -47,6 +47,7 @@ export function readPageStructure(
         mcids,
         // PDFium does not expose the kids' kinds; the fallback is read-only anyway.
         onlyMarkedContent: false,
+        key: String(out.length),
         block: containingBlock({ key: String(out.length), ...role }, parent),
       };
       out.push(element);

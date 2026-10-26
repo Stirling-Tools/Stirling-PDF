@@ -166,6 +166,7 @@ describe("reading the structure tree", () => {
       actualText: null,
       mcids,
       onlyMarkedContent: false,
+      key,
       block: { key, role: type, type },
     });
     expect(elements).toEqual([
@@ -273,6 +274,7 @@ describe("reading tags from the file's ParentTree", () => {
       actualText: null,
       mcids,
       onlyMarkedContent: true,
+      key: String(num),
       block: { key: String(num), role: type, type },
     });
     expect(structure.get(0)).toEqual({
@@ -660,6 +662,7 @@ describe("PageStructure", () => {
     actualText: null,
     mcids: [3, 4],
     onlyMarkedContent: true,
+    key: "figure",
     block: { key: "figure", role: "Figure", type: "Figure" as const },
   };
 
@@ -937,6 +940,7 @@ describe("PageStructure: added figures", () => {
     actualText: null,
     mcids: [3],
     onlyMarkedContent: true,
+    key: "paragraph",
     block: { key: "paragraph", role: "P", type: "P" as const },
   };
 

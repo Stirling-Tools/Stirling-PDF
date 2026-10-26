@@ -15,13 +15,16 @@ import { ParentTreeWriter } from "@editor/tools/pdfTextEditor/pdfdoc/markedConte
 import { addFigures } from "@editor/tools/pdfTextEditor/pdfdoc/passes/addFigures";
 import { markDecorative } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markDecorative";
 import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
+import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 
 /** A change to the structure element that owns marked content `mcid` on a page. */
 export interface StructureEdit {
   pageIndex: number;
   mcid: number;
-  /** The new /Alt; null removes it. */
-  alt: string | null;
+  /** The new /Alt; null removes it, absent leaves it. */
+  alt?: string | null;
+  /** The element's new /S. */
+  type?: StructureType;
   /** Turn the element's content into an artifact and drop the element, its /Alt with it. */
   decorative: boolean;
   /**
@@ -88,11 +91,12 @@ export async function applyStructureEdits(
       decorative.set(owner, [...(decorative.get(owner) ?? []), edit]);
       continue;
     }
-    const body = bodies.get(owner) ?? pdf.objectBody(owner)!;
-    const updated =
-      edit.alt === null
-        ? removeDictEntry(body, "Alt")
-        : setDictEntry(body, "Alt", encodeTextString(edit.alt));
+    const updated = edited(
+      pdf,
+      bodies.get(owner) ?? pdf.objectBody(owner)!,
+      edit,
+      owner,
+    );
     if (updated === null) {
       failures.push({
         edit,
@@ -109,7 +113,11 @@ export async function applyStructureEdits(
   const unplaced = await addFigures(
     pdf,
     treeRoot,
-    figures.map((edit) => ({ ...edit, after: edit.newFigure!.after })),
+    figures.map((edit) => ({
+      ...edit,
+      alt: edit.alt ?? null,
+      after: edit.newFigure!.after,
+    })),
     bodies,
     parentTree,
   );
@@ -137,6 +145,30 @@ export async function applyStructureEdits(
   ]);
   if (!out)
     throw fail("the file's cross-reference structure cannot be extended");
+  return out;
+}
+
+/** The element's body with `edit`'s /Alt and /S applied; null when it is not a dictionary. */
+function edited(
+  pdf: RawPdf,
+  body: string,
+  edit: StructureEdit,
+  num: number,
+): string | null {
+  let out: string | null = body;
+  if (edit.alt !== undefined) {
+    out =
+      edit.alt === null
+        ? removeDictEntry(out, "Alt")
+        : setDictEntry(out, "Alt", encodeTextString(edit.alt));
+  }
+  if (out !== null && edit.type) {
+    out = setDictEntry(out, "S", `/${edit.type}`);
+    // PDF/UA-1 7.9 requires a Note to carry an ID, unique in the file as the object number is.
+    if (out !== null && edit.type === "Note" && !pdf.valueSpan(out, "ID")) {
+      out = setDictEntry(out, "ID", `(note-${num})`);
+    }
+  }
   return out;
 }
 
