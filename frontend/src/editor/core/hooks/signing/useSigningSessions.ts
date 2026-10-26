@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
-import { fetchSigningSessions } from "@app/api/signing";
-import { qk } from "@app/query/keys";
-import { alert } from "@app/components/toast";
-import { SignRequestSummary, SessionSummary } from "@app/types/signingSession";
+import { useAuth } from "@editor/auth/UseSession";
+import { fetchSigningSessions } from "@editor/api/signing";
+import { qk } from "@editor/query/keys";
+import { alert } from "@editor/components/toast";
+import {
+  SignRequestSummary,
+  SessionSummary,
+} from "@editor/types/signingSession";
 
 const EMPTY_REQUESTS: SignRequestSummary[] = [];
 const EMPTY_SESSIONS: SessionSummary[] = [];

@@ -1,7 +1,7 @@
 /**
  * Demo-data seam: while enabled, apiClient answers from the portal's MSW
  * fixture handlers instead of the network. There is no service worker and no
- * request interception — only fetches made through @portal/api/http see
+ * request interception — only fetches made through @processor/api/http see
  * fixture data, and only while the flag is on. msw and the handlers/fixtures
  * chunk are loaded on first enable, so ordinary sessions never pay for them.
  *
@@ -9,7 +9,7 @@
  * tour visits renders populated, disable on finish/skip — views refetch real
  * data when they next mount.
  */
-import type { HttpRequestOptions } from "@portal/api/http";
+import type { HttpRequestOptions } from "@processor/api/http";
 
 type DemoResolver = (request: Request) => Promise<Response | undefined>;
 
@@ -21,7 +21,7 @@ export async function enablePortalDemoData(): Promise<void> {
   if (!resolver) {
     const [{ getResponse }, { handlers }] = await Promise.all([
       import("msw"),
-      import("@portal/mocks/handlers"),
+      import("@processor/mocks/handlers"),
     ]);
     resolver = (request) => getResponse(handlers, request);
   }

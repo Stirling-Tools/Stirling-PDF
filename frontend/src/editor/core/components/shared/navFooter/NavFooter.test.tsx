@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { cleanup, render } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
+import { NavFooter } from "@editor/components/shared/navFooter/NavFooter";
 
 /** The footer's tooltips need Mantine's theme context. */
 function withProviders(ui: React.ReactNode) {

@@ -4,23 +4,23 @@
  * its own AI escalation), so both take one bounded dispatch slot and record runs the same way.
  */
 
-import { fileStorage } from "@app/services/fileStorage";
+import { fileStorage } from "@editor/services/fileStorage";
 import {
   runStoredPolicy,
   resolvePolicyRunTarget,
-} from "@app/services/policyApi";
+} from "@editor/services/policyApi";
 import {
   acquireDispatchSlot,
   releaseDispatchSlot,
-} from "@app/components/policies/dispatchSemaphore";
+} from "@editor/components/policies/dispatchSemaphore";
 import {
   markDispatched,
   recordRunStart,
-} from "@app/components/policies/policyRunStore";
-import type { DispatchableFileId } from "@app/components/policies/policyLocalPass";
-import type { StirlingFile } from "@app/types/fileContext";
-import { extractErrorMessage } from "@app/utils/toolErrorHandler";
-import { generateId } from "@app/utils/generateId";
+} from "@editor/components/policies/policyRunStore";
+import type { DispatchableFileId } from "@editor/components/policies/policyLocalPass";
+import type { StirlingFile } from "@editor/types/fileContext";
+import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
+import { generateId } from "@editor/utils/generateId";
 
 /** Wait for an upload's bytes to land in IndexedDB (~5s): the stub surfaces in the
  *  file list before its bytes are committed, so an eager fetch would miss the file. */

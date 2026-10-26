@@ -1,19 +1,21 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PdfErrorCode } from "@embedpdf/models";
-import { createStirlingFile } from "@app/types/fileContext";
+import { createStirlingFile } from "@editor/types/fileContext";
 import {
   ensureLocalPdfAccess,
   getPdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 import {
   preflightPdfOperation,
   prepareUnlockedFile,
-} from "@app/services/pdfSessionUnlock";
+} from "@editor/services/pdfSessionUnlock";
 
-vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
-vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
+vi.mock("@editor/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@editor/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@editor/services/pdfAccessService")
+  >()),
   ensureLocalPdfAccess: vi.fn(),
 }));
 const inspect = vi.mocked(ensureLocalPdfAccess);

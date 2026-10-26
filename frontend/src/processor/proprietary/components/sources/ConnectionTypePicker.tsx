@@ -1,15 +1,15 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import {
   CONNECTION_CATEGORIES,
   searchConnectionTypes,
   type ConnectionCategory,
   type CreatableConnectionType,
-} from "@portal/components/sources/connectionTypes";
-import { BrandMark } from "@portal/components/BrandMarks";
-import "@portal/theme/surface.css";
-import "@portal/components/sources/connections.css";
+} from "@processor/components/sources/connectionTypes";
+import { BrandMark } from "@processor/components/BrandMarks";
+import "@processor/theme/surface.css";
+import "@processor/components/sources/connections.css";
 
 /**
  * Choose what to connect to.

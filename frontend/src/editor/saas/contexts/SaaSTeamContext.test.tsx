@@ -1,12 +1,15 @@
 import { it, expect, vi } from "vitest";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { expectConsole } from "@editor/tests/failOnConsole";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { SaaSTeamProvider, useSaaSTeam } from "@app/contexts/SaaSTeamContext";
+import {
+  SaaSTeamProvider,
+  useSaaSTeam,
+} from "@editor/contexts/SaaSTeamContext";
 
 const { get } = vi.hoisted(() => ({ get: vi.fn() }));
-vi.mock("@app/services/apiClient", () => ({ default: { get } }));
-vi.mock("@app/auth/teamSession", () => ({
+vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
+vi.mock("@editor/auth/teamSession", () => ({
   useTeamAuth: () => ({
     canUseTeams: true,
     refreshAfterMembershipChange: vi.fn(),

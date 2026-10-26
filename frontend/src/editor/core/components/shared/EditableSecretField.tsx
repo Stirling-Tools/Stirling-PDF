@@ -1,9 +1,9 @@
 import { useId, useState, useRef, useEffect } from "react";
 import { PasswordInput, Group, Tooltip, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import { Icon } from "@app/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { Icon } from "@editor/ui/Icon";
 interface EditableSecretFieldProps {
   label?: string;
   description?: string;

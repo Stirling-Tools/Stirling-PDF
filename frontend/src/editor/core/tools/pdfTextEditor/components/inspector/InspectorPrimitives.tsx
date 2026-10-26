@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Box, Group, NumberInput, Stack, Text, Tooltip } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 /** Shared layout atoms for the editor's properties inspector. */
 
 /** Uppercase section heading, optionally with a trailing control. */

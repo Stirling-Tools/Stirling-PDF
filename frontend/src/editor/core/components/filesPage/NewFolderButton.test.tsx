@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
-import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
+import { NewFolderButton } from "@editor/components/filesPage/NewFolderButton";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

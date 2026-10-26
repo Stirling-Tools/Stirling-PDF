@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { patchReadableStreamAsyncIterator } from "@app/utils/patchReadableStreamAsyncIterator";
+import { patchReadableStreamAsyncIterator } from "@editor/utils/patchReadableStreamAsyncIterator";
 
 /** Node implements the API, so remove it to exercise the shim, then restore. */
 const KEY: PropertyKey = Symbol.asyncIterator;

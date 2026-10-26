@@ -32,4 +32,34 @@ class EnterpriseEndpointFilterTest {
             assertEquals(404, revoked.getStatus());
         }
     }
+
+    @Test
+    void percentEncodedActuatorPathIsGatedLikeThePlainPath() throws Exception {
+        LicenseServiceInterface license = mock(LicenseServiceInterface.class);
+        when(license.isRunningProOrHigher()).thenReturn(false);
+        EnterpriseEndpointFilter filter = new EnterpriseEndpointFilter(license);
+
+        MockHttpServletRequest encoded =
+                new MockHttpServletRequest("GET", "/%61ctuator/prometheus");
+        MockHttpServletResponse blocked = new MockHttpServletResponse();
+        filter.doFilter(encoded, blocked, (req, res) -> res.setContentType("passed"));
+        assertEquals(404, blocked.getStatus());
+
+        MockHttpServletRequest health = new MockHttpServletRequest("GET", "/%61ctuator/health");
+        MockHttpServletResponse allowed = new MockHttpServletResponse();
+        filter.doFilter(health, allowed, (req, res) -> res.setContentType("passed"));
+        assertEquals("passed", allowed.getContentType());
+    }
+
+    @Test
+    void malformedEscapeIsRejected() throws Exception {
+        EnterpriseEndpointFilter filter =
+                new EnterpriseEndpointFilter(mock(LicenseServiceInterface.class));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        filter.doFilter(
+                new MockHttpServletRequest("GET", "/actuator/%zz"),
+                response,
+                (req, res) -> res.setContentType("passed"));
+        assertEquals(400, response.getStatus());
+    }
 }

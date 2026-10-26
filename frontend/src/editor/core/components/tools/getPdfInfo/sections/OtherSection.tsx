@@ -6,10 +6,10 @@ import type {
   PdfOtherInfo,
   PdfAttachmentInfo,
   PdfEmbeddedFileInfo,
-} from "@app/types/getPdfInfo";
-import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
-import ScrollableCodeBlock from "@app/components/tools/getPdfInfo/shared/ScrollableCodeBlock";
-import { pdfInfoAccordionStyles } from "@app/components/tools/getPdfInfo/shared/accordionStyles";
+} from "@editor/types/getPdfInfo";
+import SectionBlock from "@editor/components/tools/getPdfInfo/shared/SectionBlock";
+import ScrollableCodeBlock from "@editor/components/tools/getPdfInfo/shared/ScrollableCodeBlock";
+import { pdfInfoAccordionStyles } from "@editor/components/tools/getPdfInfo/shared/accordionStyles";
 
 interface OtherSectionProps {
   anchorId: string;

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
+import { useServerProcessingBlock } from "@editor/hooks/useServerProcessingBlock";
 
 describe("useServerProcessingBlock (core)", () => {
   // Pins the stub: a non-null reason here would disable folder processing on every

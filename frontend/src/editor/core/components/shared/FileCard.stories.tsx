@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import FileCard from "@app/components/shared/FileCard";
-import { FileContextProvider } from "@app/contexts/FileContext";
-import { StirlingFileStub, FileId } from "@app/types/fileContext";
+import FileCard from "@editor/components/shared/FileCard";
+import { FileContextProvider } from "@editor/contexts/FileContext";
+import { StirlingFileStub, FileId } from "@editor/types/fileContext";
 
 function makeFile(name: string, type = "application/pdf"): File {
   return new File(["%PDF-1.4 storybook fixture"], name, {

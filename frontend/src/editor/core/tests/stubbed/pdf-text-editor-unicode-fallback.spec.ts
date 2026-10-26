@@ -1,14 +1,14 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
-import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
+import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 import {
   downloadBytes,
   saveAndDownload,
   stashCurrentDocument,
   waitForReopenedPage,
-} from "@app/tests/stubbed/saveHelpers";
-import { waitForEditorReady } from "@app/tests/stubbed/editorReady";
+} from "@editor/tests/stubbed/saveHelpers";
+import { waitForEditorReady } from "@editor/tests/stubbed/editorReady";
 
 /** Client-side Unicode fallback font (Noto Sans, embedded on demand). */
 

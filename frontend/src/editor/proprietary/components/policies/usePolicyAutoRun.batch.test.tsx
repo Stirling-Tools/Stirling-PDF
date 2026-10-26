@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import type { ClassificationConfidence } from "@app/types/fileContext";
+import type { ClassificationConfidence } from "@editor/types/fileContext";
 
 /**
  * Batch integration test (61 files, Security then Classification) driving the real store + both
@@ -54,16 +54,16 @@ const securityRunOn = vi.hoisted(() => ({
   value: "upload" as "upload" | "export",
 }));
 
-vi.mock("@app/hooks/useAiEngineEnabled", () => ({
+vi.mock("@editor/hooks/useAiEngineEnabled", () => ({
   useAiEngineEnabled: () => true,
 }));
-vi.mock("@app/hooks/useClassificationEnabled", () => ({
+vi.mock("@editor/hooks/useClassificationEnabled", () => ({
   useClassificationEnabled: () => true,
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: {}, loading: false }),
 }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.workspace }),
   useFileManagement: () => ({
     addFiles: mocks.addFiles,
@@ -71,10 +71,10 @@ vi.mock("@app/contexts/FileContext", () => ({
   }),
   useFileContext: () => ({ consumeFiles: mocks.consumeFiles }),
 }));
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: mocks.bumpRevision }),
 }));
-vi.mock("@app/hooks/usePolicies", () => ({
+vi.mock("@editor/hooks/usePolicies", () => ({
   usePolicies: () => ({
     policies: {
       classification: {
@@ -101,14 +101,14 @@ vi.mock("@app/hooks/usePolicies", () => ({
     },
   }),
 }));
-vi.mock("@app/services/policyApi", () => ({
+vi.mock("@editor/services/policyApi", () => ({
   runStoredPolicy: mocks.runStoredPolicy,
   getPolicyRun: mocks.getPolicyRun,
   listPolicyRuns: mocks.listPolicyRuns,
   downloadPolicyOutput: mocks.downloadPolicyOutput,
   resolvePolicyRunTarget: () => "saas",
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: mocks.getStirlingFile,
     getStirlingFileStub: mocks.getStirlingFileStub,
@@ -116,27 +116,27 @@ vi.mock("@app/services/fileStorage", () => ({
     updateFileMetadata: mocks.updateFileMetadata,
   },
 }));
-vi.mock("@app/services/fileStubHelpers", () => ({
+vi.mock("@editor/services/fileStubHelpers", () => ({
   createStirlingFilesAndStubs: mocks.createStirlingFilesAndStubs,
 }));
-vi.mock("@app/services/fileClassification", () => ({
+vi.mock("@editor/services/fileClassification", () => ({
   // The AI import path (if ever reached) resolves labels from the output PDF.
   readClassificationLabelsFromFile: vi.fn().mockResolvedValue(["Invoice"]),
 }));
-vi.mock("@app/services/heuristic/heuristicClassification", () => ({
+vi.mock("@editor/services/heuristic/heuristicClassification", () => ({
   classifyFileHeuristically: (file: File) => mocks.classify(file),
 }));
-vi.mock("@app/services/automationMeter", () => ({
+vi.mock("@editor/services/automationMeter", () => ({
   meterAutomationRun: (payload: unknown) => mocks.meter(payload),
 }));
 
-import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
-import { usePolicyLocalPasses } from "@app/components/policies/usePolicyLocalPasses";
+import { usePolicyAutoRun } from "@editor/components/policies/usePolicyAutoRun";
+import { usePolicyLocalPasses } from "@editor/components/policies/usePolicyLocalPasses";
 import {
   usePolicyRuns,
   resetPolicyRuns,
-} from "@app/components/policies/policyRunStore";
-import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
+} from "@editor/components/policies/policyRunStore";
+import type { PolicyRunRecord } from "@editor/components/policies/policyRunStore";
 
 // Run idle callbacks immediately so the local-pass engine's batches start without timer waits.
 vi.stubGlobal("requestIdleCallback", (cb: () => void) => {

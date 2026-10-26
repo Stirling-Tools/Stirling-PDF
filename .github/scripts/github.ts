@@ -26,8 +26,6 @@ export type IssueRef = Repo & { issue_number: number };
 export interface PullData {
   mergeable: boolean | null;
   mergeable_state: string;
-  labels: { name: string }[];
-  head: { ref: string; repo: { full_name: string } | null };
 }
 
 /** The parts of github-script's `github` client these scripts call. */

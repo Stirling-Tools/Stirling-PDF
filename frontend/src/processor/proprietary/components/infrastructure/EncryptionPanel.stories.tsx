@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
 import { expect, userEvent, within } from "storybook/test";
-import { EncryptionPanel } from "@portal/components/infrastructure/EncryptionPanel";
+import { EncryptionPanel } from "@processor/components/infrastructure/EncryptionPanel";
 import type {
   EncryptionKeyInfo,
   MigrationStatus,
   StorageEncryptionStatus,
-} from "@portal/api/storageEncryption";
+} from "@processor/api/storageEncryption";
 // SectionHeader's styles live in infrastructure.css, which the panel loads too;
 // without it the stories render larger than the app does.
-import "@portal/components/infrastructure/infrastructure.css";
+import "@processor/components/infrastructure/infrastructure.css";
 
 const BASE = "/api/v1/admin/storage-encryption";
 

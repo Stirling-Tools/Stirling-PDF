@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HtmlViewer } from "@app/components/viewer/nonpdf/HtmlViewer";
+import { HtmlViewer } from "@editor/components/viewer/nonpdf/HtmlViewer";
 
 const sampleHtmlFile = new File(
   ["<html><body><h1>Sample document</h1><p>Preview content.</p></body></html>"],

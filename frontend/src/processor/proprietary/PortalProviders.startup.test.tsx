@@ -4,7 +4,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
-import { PortalProviders } from "@portal/PortalProviders";
+import { PortalProviders } from "@processor/PortalProviders";
 
 const h = vi.hoisted(() => ({
   get: vi.fn(),
@@ -22,56 +22,58 @@ vi.mock("react-i18next", () => ({
     i18n: { language: "en-US" },
   }),
 }));
-vi.mock("@app/auth", () => ({ useAuth: () => h.auth }));
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => h.auth }));
-vi.mock("@app/services/apiClient", () => ({ default: { get: h.get } }));
-vi.mock("@app/extensions/accountLogout", () => ({
+vi.mock("@editor/auth", () => ({ useAuth: () => h.auth }));
+vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => h.auth }));
+vi.mock("@editor/services/apiClient", () => ({ default: { get: h.get } }));
+vi.mock("@editor/extensions/accountLogout", () => ({
   useAccountLogout: () => vi.fn(),
 }));
-vi.mock("@app/contexts/LicenseContext", () => ({
+vi.mock("@editor/contexts/LicenseContext", () => ({
   LicenseProvider: ({ children }: { children: ReactNode }) => children,
   useLicense: () => ({ licenseInfo: null, loading: false }),
 }));
-vi.mock("@app/contexts/CheckoutContext", () => ({
+vi.mock("@editor/contexts/CheckoutContext", () => ({
   CheckoutProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@portal/contexts/TierContext", () => ({
+vi.mock("@processor/contexts/TierContext", () => ({
   TierProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@portal/contexts/LinkContext", () => ({
+vi.mock("@processor/contexts/LinkContext", () => ({
   LinkProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@portal/contexts/AccountLinkContext", () => ({
+vi.mock("@processor/contexts/AccountLinkContext", () => ({
   AccountLinkProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@processor/contexts/UIContext", () => ({
   UIProvider: ({ children }: { children: ReactNode }) => children,
   useUI: () => ({ linkModalOpen: false }),
 }));
-vi.mock("@portal/components/account-link/LinkAccountModal", () => ({
+vi.mock("@processor/components/account-link/LinkAccountModal", () => ({
   LinkAccountModalHost: () => null,
 }));
-vi.mock("@portal/components/account-link/ConnectCallbackHost", () => ({
+vi.mock("@processor/components/account-link/ConnectCallbackHost", () => ({
   ConnectCallbackHost: () => null,
 }));
-vi.mock("@portal/hooks/useFreeTierExhaustedPrompt", () => ({
+vi.mock("@processor/hooks/useFreeTierExhaustedPrompt", () => ({
   useFreeTierExhaustedPrompt: () => {},
 }));
-vi.mock("@portal/components/PortalChrome", () => ({
+vi.mock("@processor/components/PortalChrome", () => ({
   PortalChrome: () => <div>Processor</div>,
 }));
-vi.mock("@app/components/onboarding/StaticOnboardingSlide", () => ({
+vi.mock("@editor/components/onboarding/StaticOnboardingSlide", () => ({
   default: ({ slideId }: { slideId: string }) => (
     <div role="dialog" aria-label={slideId} />
   ),
 }));
-vi.mock("@app/hooks/useCookieConsentInitialization", () => ({
+vi.mock("@editor/hooks/useCookieConsentInitialization", () => ({
   useCookieConsentInitialization: () => {},
 }));
-vi.mock("@app/hooks/usePosthogTracking", () => ({
+vi.mock("@editor/hooks/usePosthogTracking", () => ({
   usePosthogTracking: () => {},
 }));
-vi.mock("@app/hooks/useScarfTracking", () => ({ useScarfTracking: () => {} }));
+vi.mock("@editor/hooks/useScarfTracking", () => ({
+  useScarfTracking: () => {},
+}));
 
 afterEach(cleanup);
 

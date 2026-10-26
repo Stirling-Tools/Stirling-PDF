@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from "vitest";
-import { refreshPlatformSession } from "@app/extensions/platformSessionBridge";
+import { refreshPlatformSession } from "@editor/extensions/platformSessionBridge";
 
 const state = vi.hoisted(() => ({
   mode: vi.fn(),
@@ -8,13 +8,13 @@ const state = vi.hoisted(() => ({
   expired: vi.fn(),
   verified: vi.fn(),
 }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentMode: state.mode,
     getServerConfig: async () => ({ url: "https://self.example.org" }),
   },
 }));
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: {
     refreshSupabaseToken: state.refresh,
     refreshToken: state.refresh,

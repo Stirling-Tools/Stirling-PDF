@@ -1,11 +1,11 @@
 import type {
   SaveResult,
   MultiFileSaveResult,
-} from "@core/services/localFileSaveService";
+} from "@editor-core/services/localFileSaveService";
 import i18n from "i18next";
-import { beginSelfWrite, endSelfWrite } from "@app/services/diskFileSync";
+import { beginSelfWrite, endSelfWrite } from "@editor/services/diskFileSync";
 export type { SaveResult, MultiFileSaveResult };
-import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
+import { assertFilesNotBlocked } from "@editor/services/policyFileGuard";
 
 /**
  * Save file data to a local filesystem path (Tauri desktop only)

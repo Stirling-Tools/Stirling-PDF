@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import KeyValueSection from "@app/components/tools/getPdfInfo/sections/KeyValueSection";
+import KeyValueSection from "@editor/components/tools/getPdfInfo/sections/KeyValueSection";
 
 const meta = {
   title: "Tools/GetPdfInfo/KeyValueSection",

@@ -2,14 +2,14 @@ import { StrictMode } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { AuthContext } from "@app/auth/context";
-import type { AuthContextValue, AuthUser } from "@app/auth/types";
+import { AuthContext } from "@editor/auth/context";
+import type { AuthContextValue, AuthUser } from "@editor/auth/types";
 import {
   configureSupabase,
   clearSupabaseSession,
-} from "@app/auth/supabase/supabaseClient";
-import { getPortalQueryClient } from "@app/portal/queryClient";
-import { AccountLinkSessionBoundary } from "@app/portal/components/account-link/AccountLinkSessionBoundary";
+} from "@editor/auth/supabase/supabaseClient";
+import { getPortalQueryClient } from "@editor/portal/queryClient";
+import { AccountLinkSessionBoundary } from "@editor/portal/components/account-link/AccountLinkSessionBoundary";
 
 const storageKey = "sb-boundary-reload-auth-token";
 const ownerKey = "stirling.portalSaasOwner";

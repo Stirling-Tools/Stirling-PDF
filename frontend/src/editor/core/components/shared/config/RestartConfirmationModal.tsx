@@ -1,8 +1,8 @@
 import { Modal, Text, Group, Stack } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { Icon } from "@editor/ui/Icon";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 interface RestartConfirmationModalProps {
   opened: boolean;

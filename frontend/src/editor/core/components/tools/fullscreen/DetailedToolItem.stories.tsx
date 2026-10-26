@@ -1,21 +1,21 @@
 import type React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import DetailedToolItem from "@app/components/tools/fullscreen/DetailedToolItem";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { NavigationProvider } from "@app/contexts/NavigationContext";
+import DetailedToolItem from "@editor/components/tools/fullscreen/DetailedToolItem";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { NavigationProvider } from "@editor/contexts/NavigationContext";
 import {
   ToolWorkflowProvider,
   useToolWorkflow,
-} from "@app/contexts/ToolWorkflowContext";
-import { HotkeyProvider } from "@app/contexts/HotkeyContext";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import type { ToolId } from "@app/types/toolId";
+} from "@editor/contexts/ToolWorkflowContext";
+import { HotkeyProvider } from "@editor/contexts/HotkeyContext";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import type { ToolId } from "@editor/types/toolId";
 import {
   ToolCategoryId,
   SubcategoryId,
   type ToolRegistryEntry,
-} from "@app/data/toolsTaxonomy";
+} from "@editor/data/toolsTaxonomy";
 
 // DetailedToolItem reads hotkeys/favourites/availability via useToolMeta, which
 // pulls from HotkeyContext, ToolWorkflowContext and AppConfigContext, so every

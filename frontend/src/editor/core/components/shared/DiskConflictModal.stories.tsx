@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { DiskConflictModal } from "@app/components/shared/DiskConflictModal";
+import { DiskConflictModal } from "@editor/components/shared/DiskConflictModal";
 
 /** The queued variant matters as much as the single one: a watcher burst can
  *  raise several at once, and the count is the only cue that more follow. */

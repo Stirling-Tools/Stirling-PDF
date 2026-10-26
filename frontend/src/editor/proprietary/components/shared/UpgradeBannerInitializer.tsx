@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useBanner } from "@app/contexts/BannerContext";
-import UpgradeBanner from "@app/components/shared/UpgradeBanner";
+import { useBanner } from "@editor/contexts/BannerContext";
+import UpgradeBanner from "@editor/components/shared/UpgradeBanner";
 
 export function UpgradeBannerInitializer() {
   const { setBanner } = useBanner();
