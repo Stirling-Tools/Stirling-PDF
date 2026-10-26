@@ -129,8 +129,9 @@ public class CertSignController {
     }
 
     /**
-     * Signs {@code input} into {@code output}. Failures propagate: nothing is written on failure,
-     * and catching them here would let the endpoint answer 200 with an empty PDF.
+     * Signs {@code input} into {@code output}. Failures propagate: {@code output} may hold partial
+     * bytes afterwards, and catching them here would let the endpoint answer 200 with an empty
+     * PDF.
      */
     public static void sign(
             CustomPDFDocumentFactory pdfDocumentFactory,
