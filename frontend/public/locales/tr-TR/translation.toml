@@ -1243,12 +1243,6 @@ description = "Klasör kaynaklarının ve klasör çıktılarının okuma ve yaz
 securityNote = "Klasör kaynaklarını ve çıktılarını tamamen devre dışı bırakmak için bunu boş bırakın. Stirling'in kendi yapılandırma dizini her zaman erişime kapalıdır."
 title = "Klasör Erişimi"
 
-[admin.settings.folderAccess.implied]
-description = "Stirling tarafından yönetilen bu dizinlere her zaman izin verilir ve burada değiştirilemez."
-serverStorage = "Sunucu dosya depolama"
-title = "Her zaman izinli"
-watchedFolder = "Pipeline izlenen klasör"
-
 [admin.settings.folderAccess.roots]
 add = "Ekle"
 empty = "İzin verilen klasör yok. Klasör kaynakları ve çıktıları şu anda devre dışı."
@@ -8535,10 +8529,10 @@ helperText = "Bu bağlantıyı kullanan adımlar yalnızca bu URL altındaki yol
 label = "Sunucu URL'si"
 
 [portal.connections.commonFields.email]
-label = "Email"
+label = "E-posta"
 
 [portal.connections.commonFields.host]
-label = "Host"
+label = "Sunucu"
 
 [portal.connections.commonFields.password]
 label = "Parola"
@@ -12832,9 +12826,9 @@ label = "Hedef Sayfa Boyutu"
 a3 = "A3 (297 × 420 mm)"
 a4 = "A4 (210 × 297 mm)"
 a5 = "A5 (148 × 210 mm)"
-legal = "Legal (8.5 × 14 in)"
-letter = "Letter (8.5 × 11 in)"
-tabloid = "Tabloid (11 × 17 in)"
+legal = "Legal (8,5 × 14 inç)"
+letter = "Letter (8,5 × 11 inç)"
+tabloid = "Tabloid (11 × 17 inç)"
 
 [split.poster.xFactor]
 description = "Her sayfanın bölüneceği sütun sayısı"
@@ -13460,7 +13454,7 @@ processor = "İşleyici"
 
 [users.columns]
 capabilities = "Yetenekler"
-email = "Email"
+email = "E-posta"
 person = "Kişi"
 role = "Rol"
 status = "Durum"
