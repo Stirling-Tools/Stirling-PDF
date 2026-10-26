@@ -3,6 +3,10 @@ import {
   type StructureBlock,
   type StructureElement,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  structureRole,
+  type StructureRole,
+} from "@editor/tools/pdfTextEditor/model/structureTypes";
 import { ownsOnlyMarkedContent } from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
 import {
   RawPdf,
@@ -12,8 +16,7 @@ import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString"
 
 type ElementInfo = Omit<StructureElement, "mcids">;
 
-interface ElementNode {
-  type: string;
+interface ElementNode extends StructureRole {
   block: StructureBlock;
 }
 
@@ -51,12 +54,12 @@ export async function readFileStructure(
     const body = pdf.objectBody(num);
     const s = body ? pdf.dictName(body, "S") : null;
     if (!body || s === null) return null;
-    const type = applyRoleMap(pdf, roleMap, s);
+    const role = structureRole(applyRoleMap(pdf, roleMap, s));
     const parentNum = pdf.dictRef(body, "P");
     const parent = parentNum === null ? null : nodeFor(parentNum);
     const node = {
-      type,
-      block: containingBlock({ key: String(num), type }, parent),
+      ...role,
+      block: containingBlock({ key: String(num), ...role }, parent),
     };
     nodes.set(num, node);
     return node;

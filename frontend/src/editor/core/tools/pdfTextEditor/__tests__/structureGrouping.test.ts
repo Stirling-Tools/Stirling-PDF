@@ -11,7 +11,11 @@ import {
   vi,
 } from "vitest";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import { containingBlock } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  containingBlock,
+  type StructureBlock,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
+import { structureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import {
@@ -168,23 +172,42 @@ describe("grouping text by structure block", () => {
 });
 
 describe("containingBlock", () => {
-  const p = { key: "p", type: "P" };
-  const sect = { key: "sect", type: "Sect" };
+  const block = (key: string, role: string): StructureBlock => ({
+    key,
+    ...structureRole(role),
+  });
+  const within = (parent: StructureBlock) => ({
+    type: parent.type,
+    block: parent,
+  });
+  const p = block("p", "P");
+  const sect = block("sect", "Sect");
 
   test("puts an inline element in its parent's block", () => {
-    expect(
-      containingBlock({ key: "link", type: "Link" }, { type: "P", block: p }),
-    ).toBe(p);
+    expect(containingBlock(block("link", "Link"), within(p))).toBe(p);
   });
 
   test("makes an inline element placed directly in a grouping element its own block", () => {
-    const code = { key: "code", type: "Code" };
-    expect(containingBlock(code, { type: "Sect", block: sect })).toBe(code);
+    const code = block("code", "Code");
+    expect(containingBlock(code, within(sect))).toBe(code);
   });
 
   test("keeps a block element its own block", () => {
-    const h2 = { key: "h2", type: "H2" };
-    expect(containingBlock(h2, { type: "Sect", block: sect })).toBe(h2);
+    const h2 = block("h2", "H2");
+    expect(containingBlock(h2, within(sect))).toBe(h2);
+  });
+
+  test("treats a custom role as a block that holds text", () => {
+    const custom = block("custom", "Callout");
+    expect(containingBlock(custom, within(p))).toBe(custom);
+    expect(containingBlock(block("span", "Span"), within(custom))).toBe(custom);
+  });
+});
+
+describe("structureRole", () => {
+  test("gives a standard type its type, and a custom role none", () => {
+    expect(structureRole("H3")).toEqual({ role: "H3", type: "H3" });
+    expect(structureRole("Callout")).toEqual({ role: "Callout", type: null });
   });
 });
 
@@ -201,6 +224,37 @@ describe("reading blocks from the file", () => {
       ["P", "P", "11"],
       ["Lbl", "LI", "13"],
       ["LBody", "LI", "13"],
+    ]);
+  });
+
+  test("reads a role the RoleMap leaves unmapped as custom", async () => {
+    const bytes = buildClassicPdf(
+      [
+        {
+          num: 1,
+          body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R >>",
+        },
+        { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+        {
+          num: 3,
+          body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 10 10] /StructParents 0 >>",
+        },
+        {
+          num: 6,
+          body: "<< /Type /StructTreeRoot /K [7 0 R 8 0 R] /ParentTree 9 0 R /RoleMap << /Heading1 /H1 >> >>",
+        },
+        { num: 7, body: "<< /Type /StructElem /S /Heading1 /P 6 0 R /K 0 >>" },
+        { num: 8, body: "<< /Type /StructElem /S /Callout /P 6 0 R /K 1 >>" },
+        { num: 9, body: "<< /Nums [0 [7 0 R 8 0 R]] >>" },
+      ],
+      1,
+    );
+    const structure = (await readFileStructure(bytes))!;
+    expect(
+      structure.get(0)!.elements.map(({ role, type }) => ({ role, type })),
+    ).toEqual([
+      { role: "H1", type: "H1" },
+      { role: "Callout", type: null },
     ]);
   });
 

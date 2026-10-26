@@ -6,6 +6,7 @@ import {
 import { descriptionCoalesceKey } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
+import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
   ARTIFACT_TAG,
   addTagMark,
@@ -17,7 +18,8 @@ import {
   type RetaggableTag,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 
-const FIGURE_TAG = "Figure";
+// Marked-content tags conventionally name the structure type they mark.
+const FIGURE_TAG: StructureType = "Figure";
 
 /**
  * Tag an image as a new Figure, or as an artifact, where retaggableTag allows.

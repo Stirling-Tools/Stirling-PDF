@@ -15,6 +15,9 @@ import {
   type RawPdf,
 } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
+import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
+
+const FIGURE: StructureType = "Figure";
 
 export interface NewFigure {
   pageIndex: number;
@@ -84,7 +87,7 @@ export async function addFigures(
       figure.alt === null ? "" : ` /Alt ${encodeTextString(figure.alt)}`;
     bodies.set(
       num,
-      `<< /Type /StructElem /S /Figure /P ${ref(pdf, place.parent)} ` +
+      `<< /Type /StructElem /S /${FIGURE} /P ${ref(pdf, place.parent)} ` +
         `/Pg ${ref(pdf, pageNum)} /K ${figure.mcid}${alt} >>`,
     );
     while (slots.length < figure.mcid) slots.push("null");

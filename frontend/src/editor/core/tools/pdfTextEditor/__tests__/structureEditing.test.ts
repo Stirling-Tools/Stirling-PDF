@@ -160,12 +160,13 @@ describe("reading the structure tree", () => {
       mcids: number[],
       key: string,
     ) => ({
+      role: type,
       type,
       alt,
       actualText: null,
       mcids,
       onlyMarkedContent: false,
-      block: { key, type },
+      block: { key, role: type, type },
     });
     expect(elements).toEqual([
       element("Document", null, [], "0"),
@@ -266,12 +267,13 @@ describe("reading tags from the file's ParentTree", () => {
       mcids: number[],
       num: number,
     ) => ({
+      role: type,
       type,
       alt,
       actualText: null,
       mcids,
       onlyMarkedContent: true,
-      block: { key: String(num), type },
+      block: { key: String(num), role: type, type },
     });
     expect(structure.get(0)).toEqual({
       elements: [
@@ -652,12 +654,13 @@ describe("images drawn by a form XObject", () => {
 
 describe("PageStructure", () => {
   const figure = {
-    type: "Figure",
+    role: "Figure",
+    type: "Figure" as const,
     alt: "old",
     actualText: null,
     mcids: [3, 4],
     onlyMarkedContent: true,
-    block: { key: "figure", type: "Figure" },
+    block: { key: "figure", role: "Figure", type: "Figure" as const },
   };
 
   test("holds one edit per element, whichever of its MCIDs addressed it", () => {
@@ -928,12 +931,13 @@ describe("saving a description", () => {
 
 describe("PageStructure: added figures", () => {
   const paragraph = {
-    type: "P",
+    role: "P",
+    type: "P" as const,
     alt: null,
     actualText: null,
     mcids: [3],
     onlyMarkedContent: true,
-    block: { key: "paragraph", type: "P" },
+    block: { key: "paragraph", role: "P", type: "P" as const },
   };
 
   test("takes an MCID above every slot, added figure and marked content", () => {
@@ -945,7 +949,11 @@ describe("PageStructure: added figures", () => {
   });
 
   test("lists added figures apart from edits to the file's elements", () => {
-    const s = new PageStructure([{ ...paragraph, type: "Figure" }], null, 5);
+    const s = new PageStructure(
+      [{ ...paragraph, role: "Figure", type: "Figure" }],
+      null,
+      5,
+    );
     s.addFigure(5);
     s.setAlt(5, "Logo");
     s.setAlt(3, "Chart");

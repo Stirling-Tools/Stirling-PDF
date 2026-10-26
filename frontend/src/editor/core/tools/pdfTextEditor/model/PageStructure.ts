@@ -1,7 +1,10 @@
+import type {
+  StructureRole,
+  StructureType,
+} from "@editor/tools/pdfTextEditor/model/structureTypes";
+
 /** One structure element as the page sees it, read once when the page is first asked about. */
-export interface StructureElement {
-  /** The element's /S after the /RoleMap: "Figure", "P", or an unmapped custom role. */
-  type: string;
+export interface StructureElement extends StructureRole {
   alt: string | null;
   actualText: string | null;
   /**
@@ -22,10 +25,9 @@ export interface StructureElement {
  * inline one (a Link in a P, an Lbl in an LI) its nearest block ancestor.
  * Text is grouped by block, so a link does not split its paragraph.
  */
-export interface StructureBlock {
+export interface StructureBlock extends StructureRole {
   /** Distinguishes blocks within one read of the tree; not stable across reads. */
   key: string;
-  type: string;
 }
 
 /**
@@ -33,7 +35,7 @@ export interface StructureBlock {
  * types (ISO 32000-1 14.8.4.4, plus PDF 2.0's Em, Strong and Sub) and the
  * two halves of a list item.
  */
-const INLINE_TYPES = new Set([
+const INLINE_TYPES: ReadonlySet<StructureType> = new Set<StructureType>([
   "Span",
   "Quote",
   "Note",
@@ -60,7 +62,7 @@ const INLINE_TYPES = new Set([
  * Elements that hold blocks rather than text. An inline type placed directly
  * in one is used as a block (a Code listing in a Sect), so it is its own.
  */
-const GROUPING_TYPES = new Set([
+const GROUPING_TYPES: ReadonlySet<StructureType> = new Set<StructureType>([
   "Document",
   "DocumentFragment",
   "Part",
@@ -81,16 +83,18 @@ const GROUPING_TYPES = new Set([
   "TR",
 ]);
 
-/** The block an element belongs to, given itself as a block and its parent, null at the top of the tree. */
+/**
+ * The block an element belongs to, given itself as a block and its parent,
+ * null at the top of the tree. A custom role is neither inline nor grouping:
+ * nothing says what it holds.
+ */
 export function containingBlock(
   own: StructureBlock,
-  parent: { type: string; block: StructureBlock } | null,
+  parent: { type: StructureType | null; block: StructureBlock } | null,
 ): StructureBlock {
-  const nested =
-    parent !== null &&
-    INLINE_TYPES.has(own.type) &&
-    !GROUPING_TYPES.has(parent.type);
-  return nested ? parent.block : own;
+  const inline = own.type !== null && INLINE_TYPES.has(own.type);
+  const grouping = parent?.type != null && GROUPING_TYPES.has(parent.type);
+  return parent !== null && inline && !grouping ? parent.block : own;
 }
 
 /** An unsaved change to an element, and the MCID the save addresses it by. */
@@ -106,7 +110,10 @@ export interface StructureElementEdit {
  * Types whose /Alt stands in for the content. On any other element it would
  * replace text a reader speaks, so a description there is refused.
  */
-const DESCRIBABLE_TYPES = new Set(["Figure", "Formula"]);
+const DESCRIBABLE_TYPES: ReadonlySet<StructureType> = new Set<StructureType>([
+  "Figure",
+  "Formula",
+]);
 
 /** Why the save cannot write descriptions for a page. */
 export type ReadOnlyReason = "encrypted" | "unreadable";
@@ -175,7 +182,9 @@ export class PageStructure {
     const el = this.element(mcid);
     if (!el) return "untagged";
     if (this.readOnly) return this.readOnly;
-    if (!DESCRIBABLE_TYPES.has(el.type)) return "not-figure";
+    if (el.type === null || !DESCRIBABLE_TYPES.has(el.type)) {
+      return "not-figure";
+    }
     return null;
   }
 
@@ -265,12 +274,13 @@ export class PageStructure {
       throw new Error(`MCID ${mcid} already has an element`);
     }
     const figure: StructureElement = {
+      role: "Figure",
       type: "Figure",
       alt: null,
       actualText: null,
       mcids: [mcid],
       onlyMarkedContent: true,
-      block: { key: `added:${mcid}`, type: "Figure" },
+      block: { key: `added:${mcid}`, role: "Figure", type: "Figure" },
     };
     this.added.set(mcid, figure);
     this.byMcid.set(mcid, figure);
