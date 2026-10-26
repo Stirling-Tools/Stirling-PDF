@@ -19,16 +19,26 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Service for handling mobile scanner file uploads and temporary storage. Files are stored
  * temporarily and automatically cleaned up after 10 minutes or upon retrieval.
+ *
+ * <p>The upload endpoints need no login, so storage is capped per file, per session and in total;
+ * uploads over a cap are rejected whole with {@link UploadLimitException}.
  */
 @Service
 @Slf4j
 public class MobileScannerService {
 
     private static final long SESSION_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+    static final long MAX_FILE_BYTES = 50L * 1024 * 1024; // 50 MB
+    static final long MAX_SESSION_BYTES = 500L * 1024 * 1024; // 500 MB
+    static final int MAX_FILES_PER_SESSION = 500;
+    static final long MAX_TOTAL_BYTES = 2L * 1024 * 1024 * 1024; // 2 GB
+    static final int MAX_ACTIVE_SESSIONS = 1000;
     private static final Pattern FILENAME_SANITIZE_PATTERN = Pattern.compile("[^a-zA-Z0-9._-]");
     private static final Pattern SESSION_ID_VALIDATION_PATTERN = Pattern.compile("[a-zA-Z0-9-]+");
     private static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("[.][^.]+$");
     private final Map<String, SessionData> activeSessions = new ConcurrentHashMap<>();
+    // Guards session creation and every SessionData byte/file count, so cap checks are atomic.
+    private final Object storageLock = new Object();
     private final Path tempDirectory;
 
     public MobileScannerService() throws IOException {
@@ -42,14 +52,22 @@ public class MobileScannerService {
     /**
      * Register a new session (called by desktop when QR code is generated)
      *
-     * @param sessionId Unique session identifier
+     * @param sessionId Unique session identifier; an existing session with this id is replaced and
+     *     its files deleted
      * @return SessionInfo with creation time and expiry
+     * @throws UploadLimitException if the live-session cap is reached
      */
     public SessionInfo createSession(String sessionId) {
         validateSessionId(sessionId);
 
         SessionData session = new SessionData(sessionId);
-        activeSessions.put(sessionId, session);
+        synchronized (storageLock) {
+            // Replacing the SessionData alone would leave the old files on disk and out of the
+            // totals; one locked section stops a concurrent upload from re-creating it in between.
+            deleteSession(sessionId);
+            ensureSessionCapacity();
+            activeSessions.put(sessionId, session);
+        }
 
         log.info("Created mobile scanner session: {}", sessionId);
         return new SessionInfo(
@@ -90,64 +108,117 @@ public class MobileScannerService {
      * @param sessionId Unique session identifier
      * @param files Files to upload
      * @throws IOException If file storage fails
+     * @throws UploadLimitException if the batch would exceed a storage cap; nothing is stored
      */
     public void uploadFiles(String sessionId, List<MultipartFile> files) throws IOException {
         validateSessionId(sessionId);
 
-        SessionData session =
-                activeSessions.computeIfAbsent(sessionId, id -> new SessionData(sessionId));
-
-        // Create session directory
-        Path sessionDir = getSafeSessionDirectory(sessionId);
-        Files.createDirectories(sessionDir);
-
-        // Save each file
-        for (MultipartFile file : files) {
-            if (file.isEmpty()) {
-                continue;
+        List<MultipartFile> nonEmpty = files.stream().filter(file -> !file.isEmpty()).toList();
+        long batchBytes = 0;
+        for (MultipartFile file : nonEmpty) {
+            if (file.getSize() > MAX_FILE_BYTES) {
+                throw new UploadLimitException("File exceeds the mobile upload size limit", false);
             }
+            batchBytes += file.getSize();
+        }
 
-            String originalFilename = file.getOriginalFilename();
-            if (originalFilename == null || originalFilename.isBlank()) {
-                originalFilename = "upload-" + System.currentTimeMillis();
+        SessionData session = reserve(sessionId, nonEmpty.size(), batchBytes);
+        int unstoredFiles = nonEmpty.size();
+        long unstoredBytes = batchBytes;
+        try {
+            Path sessionDir = getSafeSessionDirectory(sessionId);
+            Files.createDirectories(sessionDir);
+
+            for (MultipartFile file : nonEmpty) {
+                storeFile(session, sessionDir, file);
+                unstoredFiles--;
+                unstoredBytes -= file.getSize();
             }
+        } finally {
+            if (unstoredFiles > 0) {
+                synchronized (storageLock) {
+                    session.fileCount -= unstoredFiles;
+                    session.storedBytes -= unstoredBytes;
+                }
+            }
+        }
+        session.updateLastAccess();
+    }
 
-            // Sanitize filename
-            String safeFilename = sanitizeFilename(originalFilename);
-            Path filePath = sessionDir.resolve(safeFilename).normalize().toAbsolutePath();
+    /**
+     * Reserves room for a batch, creating the session if needed. Counts and bytes are added up
+     * front so concurrent uploads cannot both pass the same check.
+     */
+    private SessionData reserve(String sessionId, int fileCount, long bytes) {
+        synchronized (storageLock) {
+            SessionData session = activeSessions.get(sessionId);
+            int existingFiles = session == null ? 0 : session.fileCount;
+            long existingBytes = session == null ? 0 : session.storedBytes;
+            if (existingFiles + fileCount > MAX_FILES_PER_SESSION
+                    || existingBytes + bytes > MAX_SESSION_BYTES) {
+                throw new UploadLimitException("Session upload limit reached", false);
+            }
+            if (totalStoredBytes() + bytes > MAX_TOTAL_BYTES) {
+                throw new UploadLimitException("Mobile upload storage is full", true);
+            }
+            if (session == null) {
+                ensureSessionCapacity();
+                session = new SessionData(sessionId);
+                activeSessions.put(sessionId, session);
+            }
+            session.fileCount += fileCount;
+            session.storedBytes += bytes;
+            return session;
+        }
+    }
 
-            // Ensure resulting path stays within the session directory
+    private void storeFile(SessionData session, Path sessionDir, MultipartFile file)
+            throws IOException {
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            originalFilename = "upload-" + System.currentTimeMillis();
+        }
+
+        // Sanitize filename
+        String safeFilename = sanitizeFilename(originalFilename);
+        Path filePath = sessionDir.resolve(safeFilename).normalize().toAbsolutePath();
+
+        // Ensure resulting path stays within the session directory
+        if (!filePath.startsWith(sessionDir)) {
+            throw new IOException("Invalid filename");
+        }
+
+        // Handle duplicate filenames
+        int counter = 1;
+        while (Files.exists(filePath)) {
+            String nameWithoutExt = FILE_EXTENSION_PATTERN.matcher(safeFilename).replaceFirst("");
+            String ext =
+                    safeFilename.contains(".")
+                            ? safeFilename.substring(safeFilename.lastIndexOf('.'))
+                            : "";
+            safeFilename = nameWithoutExt + "-" + counter + ext;
+            filePath = sessionDir.resolve(safeFilename).normalize().toAbsolutePath();
             if (!filePath.startsWith(sessionDir)) {
                 throw new IOException("Invalid filename");
             }
-
-            // Handle duplicate filenames
-            int counter = 1;
-            while (Files.exists(filePath)) {
-                String nameWithoutExt =
-                        FILE_EXTENSION_PATTERN.matcher(safeFilename).replaceFirst("");
-                String ext =
-                        safeFilename.contains(".")
-                                ? safeFilename.substring(safeFilename.lastIndexOf('.'))
-                                : "";
-                safeFilename = nameWithoutExt + "-" + counter + ext;
-                filePath = sessionDir.resolve(safeFilename).normalize().toAbsolutePath();
-                if (!filePath.startsWith(sessionDir)) {
-                    throw new IOException("Invalid filename");
-                }
-                counter++;
-            }
-
-            file.transferTo(filePath);
-            session.addFile(new FileMetadata(safeFilename, file.getSize(), file.getContentType()));
-            log.info(
-                    "Uploaded file for session {}: {} ({} bytes)",
-                    sessionId,
-                    safeFilename,
-                    file.getSize());
+            counter++;
         }
 
-        session.updateLastAccess();
+        file.transferTo(filePath);
+        synchronized (storageLock) {
+            // A session deleted or replaced mid-upload no longer counts toward any cap, so a file
+            // written for it would sit on disk unaccounted for.
+            if (activeSessions.get(session.sessionId) != session) {
+                Files.deleteIfExists(filePath);
+                throw new IOException("Session was removed during upload");
+            }
+            session.addFile(new FileMetadata(safeFilename, file.getSize(), file.getContentType()));
+        }
+        log.info(
+                "Uploaded file for session {}: {} ({} bytes)",
+                session.sessionId,
+                safeFilename,
+                file.getSize());
     }
 
     /**
@@ -162,7 +233,9 @@ public class MobileScannerService {
             return List.of();
         }
         session.updateLastAccess();
-        return new ArrayList<>(session.getFiles());
+        synchronized (storageLock) {
+            return new ArrayList<>(session.getFiles());
+        }
     }
 
     /**
@@ -171,7 +244,8 @@ public class MobileScannerService {
      * @param sessionId Session identifier
      * @param filename Filename to retrieve
      * @return File path
-     * @throws IOException If file not found or session doesn't exist
+     * @throws IOException If file not found, already claimed by an earlier download, or session
+     *     doesn't exist
      */
     public Path getFile(String sessionId, String filename) throws IOException {
         SessionData session = activeSessions.get(sessionId);
@@ -185,7 +259,14 @@ public class MobileScannerService {
         }
 
         session.updateLastAccess();
-        session.markFileAsDownloaded(filename);
+        // Each file is served once. The file stays on disk while its download streams, and the
+        // desktop's overlapping polls would otherwise fetch it again.
+        synchronized (storageLock) {
+            if (session.isDownloaded(filename)) {
+                throw new IOException("File already downloaded: " + filename);
+            }
+            session.markFileAsDownloaded(filename);
+        }
         return filePath;
     }
 
@@ -204,7 +285,15 @@ public class MobileScannerService {
 
             // Check if all files have been downloaded - if so, delete the entire session
             SessionData session = activeSessions.get(sessionId);
-            if (session != null && session.allFilesDownloaded()) {
+            if (session == null) {
+                return;
+            }
+            boolean allDownloaded;
+            synchronized (storageLock) {
+                session.releaseFile(filename);
+                allDownloaded = session.allFilesDownloaded();
+            }
+            if (allDownloaded) {
                 deleteSession(sessionId);
                 log.info("All files downloaded - deleted session: {}", sessionId);
             }
@@ -219,37 +308,45 @@ public class MobileScannerService {
      * @param sessionId Session to delete
      */
     public void deleteSession(String sessionId) {
-        SessionData session = activeSessions.remove(sessionId);
-        if (session != null) {
-            try {
-                Path sessionDir = getSafeSessionDirectory(sessionId);
-                if (Files.exists(sessionDir)) {
-                    // Delete all files in session directory
-                    try (var paths = Files.walk(sessionDir)) {
-                        paths.sorted(
-                                        (a, b) ->
-                                                -a.compareTo(
-                                                        b)) // Reverse order to delete files before
-                                // directory
-                                .forEach(
-                                        path -> {
-                                            try {
-                                                Files.deleteIfExists(path);
-                                            } catch (IOException e) {
-                                                log.warn("Failed to delete file: {}", path, e);
-                                            }
-                                        });
-                    }
-                }
+        // Under the lock so no upload can re-create the session between removal and the walk.
+        synchronized (storageLock) {
+            SessionData session = activeSessions.remove(sessionId);
+            if (session != null) {
+                deleteSessionDirectory(sessionId);
                 log.info("Deleted session: {}", sessionId);
-            } catch (IllegalArgumentException e) {
-                log.warn(
-                        "Refused to delete session with invalid sessionId '{}': {}",
-                        sessionId,
-                        e.getMessage());
-            } catch (IOException e) {
-                log.error("Error deleting session directory: {}", sessionId, e);
+            } else if (sessionId != null
+                    && SESSION_ID_VALIDATION_PATTERN.matcher(sessionId).matches()) {
+                // A directory can outlive its entry (e.g. an earlier delete raced an upload).
+                deleteSessionDirectory(sessionId);
             }
+        }
+    }
+
+    private void deleteSessionDirectory(String sessionId) {
+        try {
+            Path sessionDir = getSafeSessionDirectory(sessionId);
+            if (Files.exists(sessionDir)) {
+                // Delete all files in session directory
+                try (var paths = Files.walk(sessionDir)) {
+                    paths.sorted((a, b) -> -a.compareTo(b)) // Reverse order to delete files before
+                            // directory
+                            .forEach(
+                                    path -> {
+                                        try {
+                                            Files.deleteIfExists(path);
+                                        } catch (IOException e) {
+                                            log.warn("Failed to delete file: {}", path, e);
+                                        }
+                                    });
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            log.warn(
+                    "Refused to delete session with invalid sessionId '{}': {}",
+                    sessionId,
+                    e.getMessage());
+        } catch (IOException e) {
+            log.error("Error deleting session directory: {}", sessionId, e);
         }
     }
 
@@ -270,6 +367,54 @@ public class MobileScannerService {
             log.info("Cleaning up {} expired mobile scanner sessions", expiredSessions.size());
             expiredSessions.forEach(this::deleteSession);
         }
+        deleteOrphanedDirectories(now);
+    }
+
+    /**
+     * Removes session directories with no live session: leftovers from a previous run (sessions are
+     * in memory only) or from a delete that could not remove every file. They count toward no cap,
+     * so nothing else reclaims them.
+     */
+    private void deleteOrphanedDirectories(long now) {
+        List<Path> dirs;
+        try (var paths = Files.list(tempDirectory)) {
+            dirs = paths.filter(Files::isDirectory).toList();
+        } catch (IOException e) {
+            log.warn("Failed to list mobile scanner temp directory", e);
+            return;
+        }
+        for (Path dir : dirs) {
+            String sessionId = dir.getFileName().toString();
+            try {
+                if (activeSessions.containsKey(sessionId)
+                        || now - Files.getLastModifiedTime(dir).toMillis() <= SESSION_TIMEOUT_MS) {
+                    continue;
+                }
+            } catch (IOException e) {
+                continue;
+            }
+            synchronized (storageLock) {
+                if (!activeSessions.containsKey(sessionId)) {
+                    log.info("Deleting orphaned mobile scanner directory: {}", sessionId);
+                    deleteSessionDirectory(sessionId);
+                }
+            }
+        }
+    }
+
+    private void ensureSessionCapacity() {
+        if (activeSessions.size() >= MAX_ACTIVE_SESSIONS) {
+            throw new UploadLimitException("Too many active mobile upload sessions", true);
+        }
+    }
+
+    // Caller must hold storageLock. Bounded by MAX_ACTIVE_SESSIONS, so a scan is cheap.
+    private long totalStoredBytes() {
+        long total = 0;
+        for (SessionData session : activeSessions.values()) {
+            total += session.storedBytes;
+        }
+        return total;
     }
 
     private void validateSessionId(String sessionId) {
@@ -401,13 +546,36 @@ public class MobileScannerService {
         }
     }
 
-    /** Session data tracking */
+    /** Thrown when an upload or new session would exceed a mobile scanner storage cap. */
+    public static class UploadLimitException extends RuntimeException {
+        private final boolean serverCapacity;
+
+        public UploadLimitException(String message, boolean serverCapacity) {
+            super(message);
+            this.serverCapacity = serverCapacity;
+        }
+
+        /**
+         * @return true if the server-wide cap was hit rather than a per-file or per-session one
+         */
+        public boolean isServerCapacity() {
+            return serverCapacity;
+        }
+    }
+
+    /** Session data tracking. Files and counters are guarded by {@code storageLock}. */
     private static class SessionData {
         private final String sessionId;
         private final List<FileMetadata> files = new ArrayList<>();
         private final Map<String, Boolean> downloadedFiles = new HashMap<>();
+        // Keyed by name rather than looked up in files: a name is reused once its file is deleted.
+        private final Map<String, Long> storedFileSizes = new HashMap<>();
         private final long createdAt;
         private long lastAccessTime;
+        // Includes bytes reserved for uploads still being written.
+        private long storedBytes;
+        // Every file accepted over the session's life; downloads do not give the slot back.
+        private int fileCount;
 
         public SessionData(String sessionId) {
             this.sessionId = sessionId;
@@ -418,10 +586,22 @@ public class MobileScannerService {
         public void addFile(FileMetadata file) {
             files.add(file);
             downloadedFiles.put(file.getFilename(), false);
+            storedFileSizes.put(file.getFilename(), file.getSize());
+        }
+
+        public void releaseFile(String filename) {
+            Long size = storedFileSizes.remove(filename);
+            if (size != null) {
+                storedBytes -= size;
+            }
         }
 
         public List<FileMetadata> getFiles() {
             return files;
+        }
+
+        public boolean isDownloaded(String filename) {
+            return Boolean.TRUE.equals(downloadedFiles.get(filename));
         }
 
         public void markFileAsDownloaded(String filename) {

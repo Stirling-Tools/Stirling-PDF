@@ -1,12 +1,15 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -34,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.MobileScannerService;
 import stirling.software.common.service.MobileScannerService.FileMetadata;
+import stirling.software.common.service.MobileScannerService.UploadLimitException;
 
 /**
  * REST controller for mobile scanner functionality. Allows mobile devices to upload scanned images
@@ -99,6 +103,7 @@ public class MobileScannerController {
             description = "Session created successfully",
             content = @Content(schema = @Schema(implementation = SessionInfoResponse.class)))
     @ApiResponse(responseCode = "400", description = "Invalid session ID")
+    @ApiResponse(responseCode = "503", description = "Too many active sessions")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
     public ResponseEntity<Map<String, Object>> createSession(
             @Parameter(description = "Session ID for QR code", required = true) @PathVariable
@@ -122,6 +127,8 @@ public class MobileScannerController {
 
             return ResponseEntity.ok(response);
 
+        } catch (UploadLimitException e) {
+            return limitExceeded(e);
         } catch (IllegalArgumentException e) {
             log.warn("Invalid session creation request: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -187,6 +194,8 @@ public class MobileScannerController {
             description = "Files uploaded successfully",
             content = @Content(schema = @Schema(implementation = UploadResponse.class)))
     @ApiResponse(responseCode = "400", description = "Invalid session ID or files")
+    @ApiResponse(responseCode = "413", description = "File or session size limit exceeded")
+    @ApiResponse(responseCode = "503", description = "Server-wide upload capacity reached")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
     @ApiResponse(responseCode = "500", description = "Upload failed")
     public ResponseEntity<Map<String, Object>> uploadFiles(
@@ -216,6 +225,8 @@ public class MobileScannerController {
             log.info("Mobile scanner upload: session={}, files={}", sessionId, files.size());
             return ResponseEntity.ok(response);
 
+        } catch (UploadLimitException e) {
+            return limitExceeded(e);
         } catch (IllegalArgumentException e) {
             log.warn("Invalid mobile scanner upload request: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -288,19 +299,17 @@ public class MobileScannerController {
         try {
             Path filePath = mobileScannerService.getFile(sessionId, filename);
 
-            // Read file into memory first, so we can delete it before sending
-            byte[] fileBytes = Files.readAllBytes(filePath);
-
             String contentType = Files.probeContentType(filePath);
             if (contentType == null) {
                 contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
             }
 
-            // Delete file immediately after reading into memory (server-side cleanup)
-            mobileScannerService.deleteFileAfterDownload(sessionId, filename);
-
-            // Serve from memory
-            Resource resource = new org.springframework.core.io.ByteArrayResource(fileBytes);
+            Resource resource =
+                    new DeleteAfterReadResource(
+                            filePath,
+                            () ->
+                                    mobileScannerService.deleteFileAfterDownload(
+                                            sessionId, filename));
 
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
@@ -340,6 +349,48 @@ public class MobileScannerController {
 
         return ResponseEntity.ok(
                 Map.of("success", true, "sessionId", sessionId, "message", "Session deleted"));
+    }
+
+    private ResponseEntity<Map<String, Object>> limitExceeded(UploadLimitException e) {
+        log.warn("Mobile scanner storage limit: {}", e.getMessage());
+        HttpStatus status =
+                e.isServerCapacity()
+                        ? HttpStatus.SERVICE_UNAVAILABLE
+                        : HttpStatus.CONTENT_TOO_LARGE;
+        return ResponseEntity.status(status).body(Map.of("error", e.getMessage()));
+    }
+
+    /**
+     * Streams a file from disk and runs {@code onClose} when the response stream is closed.
+     * Streaming keeps an unread download from pinning the whole file on the heap.
+     */
+    private static final class DeleteAfterReadResource extends FileSystemResource {
+        private final Runnable onClose;
+
+        DeleteAfterReadResource(Path path, Runnable onClose) {
+            super(path);
+            this.onClose = onClose;
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return new FilterInputStream(super.getInputStream()) {
+                private boolean closed;
+
+                @Override
+                public void close() throws IOException {
+                    if (closed) {
+                        return;
+                    }
+                    closed = true;
+                    try {
+                        super.close();
+                    } finally {
+                        onClose.run();
+                    }
+                }
+            };
+        }
     }
 
     // Response schemas for OpenAPI documentation
