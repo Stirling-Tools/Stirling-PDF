@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { allowConsole } from "@app/tests/failOnConsole";
+import { allowConsole } from "@editor/tests/failOnConsole";
 
 const session = vi.hoisted(() => ({ acceptedToken: null as string | null }));
-vi.mock("@app/portal/auth/portalSaasSession", () => ({
+vi.mock("@editor/portal/auth/portalSaasSession", () => ({
   getPortalSaasToken: () => Promise.resolve(session.acceptedToken),
 }));
 
-vi.mock("@app/services/apiClient", () => ({ default: {} }));
-vi.mock("@app/utils/protocolDetection", () => ({
+vi.mock("@editor/services/apiClient", () => ({ default: {} }));
+vi.mock("@editor/utils/protocolDetection", () => ({
   getCheckoutMode: () => "hosted",
 }));
 
@@ -80,7 +80,7 @@ it.each(["/", "/account-link/callback?state=untrusted"])(
   "does not capture or persist callback credentials when licensing boots at %s",
   async (path) => {
     window.history.replaceState({}, "", path + fragment);
-    ({ supabase: client } = await import("@app/services/supabaseClient"));
+    ({ supabase: client } = await import("@editor/services/supabaseClient"));
     expect(client).not.toBeNull();
     expect((await client!.auth.getSession()).data.session).toBeNull();
     expect(localStorage.getItem(storageKey)).toBeNull();
@@ -97,12 +97,12 @@ it("keeps license function requests independent of stored billing credentials", 
     user,
   });
   localStorage.setItem(storageKey, persisted);
-  ({ supabase: client } = await import("@app/services/supabaseClient"));
+  ({ supabase: client } = await import("@editor/services/supabaseClient"));
   expect((await client!.auth.getSession()).data.session).toBeNull();
   const { default: licenseService } =
-    await import("@app/services/licenseService");
+    await import("@editor/services/licenseService");
   const { createServerPlanCheckoutSession } =
-    await import("@app/services/serverPlanCheckout");
+    await import("@editor/services/serverPlanCheckout");
   await createServerPlanCheckoutSession({
     lookupKey: "selfhosted:enterpriseseat:monthly",
     serverQuantity: 1,
@@ -134,9 +134,9 @@ it("keeps license function requests independent of stored billing credentials", 
 it("uses only the validated owner session for Team checkout despite callback credentials", async () => {
   window.history.replaceState({}, "", "/" + fragment);
   session.acceptedToken = "validated-owner-token";
-  ({ supabase: client } = await import("@app/services/supabaseClient"));
+  ({ supabase: client } = await import("@editor/services/supabaseClient"));
   const { createServerPlanCheckoutSession } =
-    await import("@app/services/serverPlanCheckout");
+    await import("@editor/services/serverPlanCheckout");
   await createServerPlanCheckoutSession({
     lookupKey: "selfhosted:team:monthly",
     serverQuantity: 1,

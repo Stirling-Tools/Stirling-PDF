@@ -1,12 +1,12 @@
 import { Tooltip, Popover, Stack, Slider, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useState } from "react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import type { PdfAnnotationObject } from "@embedpdf/models";
-import type { AnnotationPatch } from "@app/components/viewer/viewerTypes";
-import { Icon } from "@app/ui/Icon";
+import type { AnnotationPatch } from "@editor/components/viewer/viewerTypes";
+import { Icon } from "@editor/ui/Icon";
 export type PropertiesAnnotationType = "text" | "note" | "shape";
 
 interface PropertiesPopoverProps {

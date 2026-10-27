@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { FreeLimitReachedModal } from "@app/components/shared/FreeLimitReachedModal";
-import { SpendCapReachedModal } from "@app/components/shared/SpendCapReachedModal";
+import { FreeLimitReachedModal } from "@editor/components/shared/FreeLimitReachedModal";
+import { SpendCapReachedModal } from "@editor/components/shared/SpendCapReachedModal";
 import {
   FREE_LIMIT_MODAL_EVENT,
   SPEND_CAP_MODAL_EVENT,
-} from "@app/components/usageLimitModals";
+} from "@editor/components/usageLimitModals";
 import {
   PAYG_LIMIT_REACHED_EVENT,
   type PaygLimitReachedDetail,
-} from "@app/services/usageLimitBridge";
+} from "@editor/services/usageLimitBridge";
 
 /**
  * Always-mounted host for the usage-limit warning modals. Mount once (in

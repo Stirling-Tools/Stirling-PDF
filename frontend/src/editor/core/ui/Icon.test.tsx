@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { render } from "@testing-library/react";
 
-import { Icon, isIconName, MISSING_ICON } from "@app/ui/Icon";
-import { ICONS, type IconName } from "@app/icons/icons";
-import { STROKE_WIDTH } from "@app/icons/icons.config";
+import { Icon, isIconName, MISSING_ICON } from "@editor/ui/Icon";
+import { ICONS, type IconName } from "@editor/icons/icons";
+import { STROKE_WIDTH } from "@editor/icons/icons.config";
 
 const names = Object.keys(ICONS) as IconName[];
 

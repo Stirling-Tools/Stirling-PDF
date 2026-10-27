@@ -9,28 +9,28 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
-import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
-import { fileStorage } from "@app/services/fileStorage";
-import { readStubClassificationLabels } from "@app/services/fileClassification";
-import { hasInFlightPolicyRuns } from "@app/components/policies/policyRunStore";
+import { useIndexedDB } from "@editor/contexts/IndexedDBContext";
+import { useClassificationEnabled } from "@editor/hooks/useClassificationEnabled";
+import { fileStorage } from "@editor/services/fileStorage";
+import { readStubClassificationLabels } from "@editor/services/fileClassification";
+import { hasInFlightPolicyRuns } from "@editor/components/policies/policyRunStore";
 import {
   getSidebarCategories,
   subscribeSidebarCategories,
-} from "@app/services/fileSidebarCategories";
-import { buildLabelGroups } from "@app/components/shared/fileSidebarGroupingLogic";
-import { scheduleIdle } from "@app/utils/scheduleIdle";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileSidebarGroup } from "@core/components/shared/fileSidebarGrouping";
+} from "@editor/services/fileSidebarCategories";
+import { buildLabelGroups } from "@editor/components/shared/fileSidebarGroupingLogic";
+import { scheduleIdle } from "@editor/utils/scheduleIdle";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileSidebarGroup } from "@editor-core/components/shared/fileSidebarGrouping";
 
 export type { FileSidebarGroup };
 // Pure grouping logic lives in a component-free module so tests don't drag in the picker's UI deps.
 export {
   buildLabelGroups,
   bucketStubsByLabel,
-} from "@app/components/shared/fileSidebarGroupingLogic";
+} from "@editor/components/shared/fileSidebarGroupingLogic";
 // The sidebar's group-picker button + modal (core renders a null stub).
-export { FileSidebarGroupControls } from "@app/components/shared/FileSidebarGroupControls";
+export { FileSidebarGroupControls } from "@editor/components/shared/FileSidebarGroupControls";
 
 /** Files read per effect pass, so a big library backfills over several ticks. */
 const BACKFILL_BATCH = 3;

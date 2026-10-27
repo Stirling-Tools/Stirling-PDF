@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import TimestampPdfSettings from "@app/components/tools/timestampPdf/TimestampPdfSettings";
-import { defaultParameters } from "@app/hooks/tools/timestampPdf/useTimestampPdfParameters";
+import TimestampPdfSettings from "@editor/components/tools/timestampPdf/TimestampPdfSettings";
+import { defaultParameters } from "@editor/hooks/tools/timestampPdf/useTimestampPdfParameters";
 
 const meta = {
   title: "Tools/TimestampPdf/TimestampPdfSettings",

@@ -14,36 +14,36 @@ import { withThemeByDataAttribute } from "@storybook/addon-themes";
 void React;
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TierProvider, type Tier } from "@portal/contexts/TierContext";
-import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
-import { UIProvider } from "@portal/contexts/UIContext";
-import { SuiProvider } from "@portal/theme/SuiProvider";
+import { TierProvider, type Tier } from "@processor/contexts/TierContext";
+import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
+import { ThemeProvider, useTheme } from "@processor/contexts/ThemeContext";
+import { UIProvider } from "@processor/contexts/UIContext";
+import { SuiProvider } from "@processor/theme/SuiProvider";
 import { MantineProvider } from "@mantine/core";
 import {
   mantineTheme as editorMantineTheme,
   editorCssVariablesResolver,
-} from "@core/theme/mantineTheme";
-import { handlers } from "@portal/mocks/handlers";
-import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
+} from "@editor-core/theme/mantineTheme";
+import { handlers } from "@processor/mocks/handlers";
+import { configureSupabase } from "@editor-proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 import { parse as parseToml } from "smol-toml";
-import { rtlLanguages, supportedLanguages } from "@core/i18n/languages";
+import { rtlLanguages, supportedLanguages } from "@editor-core/i18n/languages";
 
 import "@mantine/core/styles.css";
-import "@core/tokens/tokens.css";
-import "@core/theme/index.css";
+import "@editor-core/tokens/tokens.css";
+import "@editor-core/theme/index.css";
 // The editor's semantic token layer (--bg-surface, --onboarding-title, …).
 // The app reaches it through its style entry; without it here, components
 // styled on those variables render unthemed (e.g. transparent modal surfaces)
 // and axe measures contrast against colours the app never shows.
-import "@core/styles/theme.css";
-import "@core/tokens/base.css";
+import "@editor-core/styles/theme.css";
+import "@editor-core/tokens/base.css";
 // Portal element reset + typography. Scoped to .portal-scope in the app so it
 // can't leak into the editor; the decorator below adds that class around
 // portal stories only, mirroring how PortalApp mounts.
-import "@portal/theme/base.css";
+import "@processor/theme/base.css";
 
 // Storybook-only: bundle every shipped locale's TOML at build time via a ?raw
 // glob, so the toolbar language switcher can flip between all languages with no

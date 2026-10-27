@@ -1,15 +1,15 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import OnboardingModalSlide from "@app/components/onboarding/OnboardingModalSlide";
+import OnboardingModalSlide from "@editor/components/onboarding/OnboardingModalSlide";
 import {
   SLIDE_DEFINITIONS,
   type SlideId,
   type SlideFactoryParams,
-} from "@app/components/onboarding/onboardingFlowConfig";
+} from "@editor/components/onboarding/onboardingFlowConfig";
 import {
   DEFAULT_RUNTIME_STATE,
   type OnboardingRuntimeState,
-} from "@app/components/onboarding/orchestrator/onboardingConfig";
+} from "@editor/components/onboarding/orchestrator/onboardingConfig";
 
 /**
  * Every onboarding modal slide, rendered through the real

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { withViewTransition } from "@app/utils/viewTransition";
+import { withViewTransition } from "@editor/utils/viewTransition";
 
 // The stub carries only the field the helper reads, hence the cast through unknown.
 type MutableDoc = { startViewTransition?: unknown };

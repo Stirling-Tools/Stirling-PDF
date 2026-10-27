@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useLicense } from "@app/contexts/LicenseContext";
-import { usersBackend } from "@app/portal/usersBackend";
-import type { ServerPlan } from "@app/billing/serverPlan";
+import { useLicense } from "@editor/contexts/LicenseContext";
+import { usersBackend } from "@editor/portal/usersBackend";
+import type { ServerPlan } from "@editor/billing/serverPlan";
 
 /** Reads installed-plan details and the local roster; keyless Team also needs the roster for seat usage. */
 export function useServerPlan(enabled: boolean) {

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
-import { Tooltip } from "@app/ui/Tooltip";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { Tooltip } from "@editor/ui/Tooltip";
 
 const meta: Meta<typeof Tooltip> = {
   title: "Primitives/Tooltip",

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Sidebar } from "@portal/components/Sidebar";
+import { Sidebar } from "@processor/components/Sidebar";
 
 const meta: Meta<typeof Sidebar> = {
   title: "Portal/Shell/Sidebar",

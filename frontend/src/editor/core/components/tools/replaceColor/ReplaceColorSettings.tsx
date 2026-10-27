@@ -1,8 +1,8 @@
 import { useId } from "react";
 import { Stack, Text, Select, ColorInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ReplaceColorParameters } from "@app/hooks/tools/replaceColor/useReplaceColorParameters";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { ReplaceColorParameters } from "@editor/hooks/tools/replaceColor/useReplaceColorParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface ReplaceColorSettingsProps {
   parameters: ReplaceColorParameters;

@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Paper, Modal, Stack, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { ColorSwatchButton } from "@app/components/annotation/shared/ColorPicker";
-import PenSizeSelector from "@app/components/tools/sign/PenSizeSelector";
+import { Button } from "@editor/ui/Button";
+import { ColorSwatchButton } from "@editor/components/annotation/shared/ColorPicker";
+import PenSizeSelector from "@editor/components/tools/sign/PenSizeSelector";
 import SignaturePad from "signature_pad";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { trimCanvas } from "@app/utils/canvasImage";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { trimCanvas } from "@editor/utils/canvasImage";
 
 interface DrawingCanvasProps {
   selectedColor: string;

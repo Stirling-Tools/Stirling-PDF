@@ -1,11 +1,11 @@
-import { apiClient } from "@app/portal/api/http";
-import { getPortalSaasToken } from "@app/portal/auth/portalSaasSession";
-import type { Member } from "@app/portal/api/users";
+import { apiClient } from "@editor/portal/api/http";
+import { getPortalSaasToken } from "@editor/portal/auth/portalSaasSession";
+import type { Member } from "@editor/portal/api/users";
 import type {
   CloudOwnershipStatus,
   OwnershipStatus,
   OwnershipTransferAdapter,
-} from "@app/components/shared/ownership/OwnershipTransferModal";
+} from "@editor/components/shared/ownership/OwnershipTransferModal";
 
 const path = "/api/v1/ownership/handover";
 

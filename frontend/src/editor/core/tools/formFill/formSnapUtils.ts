@@ -1,5 +1,5 @@
 /** Alignment snapping in page pixel space (top-left origin); matched lines come back as guides. */
-import type { PixelRect } from "@app/tools/formFill/formCoordinateUtils";
+import type { PixelRect } from "@editor/tools/formFill/formCoordinateUtils";
 
 export const DEFAULT_SNAP_THRESHOLD = 6;
 

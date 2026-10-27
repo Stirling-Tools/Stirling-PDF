@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { WithOrgOwner } from "@portal/test/WithOrgOwner";
-import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
+import { WithOrgOwner } from "@processor/test/WithOrgOwner";
+import { LinkAccountFooterItem } from "@processor/components/LinkAccountFooterItem";
 
 const meta: Meta<typeof LinkAccountFooterItem> = {
   title: "Portal/LinkAccountFooterItem",

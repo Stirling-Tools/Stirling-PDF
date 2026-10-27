@@ -11,14 +11,14 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import {
   BookmarkNode,
   createBookmarkNode,
-} from "@app/utils/editTableOfContents";
+} from "@editor/utils/editTableOfContents";
 
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 interface BookmarkEditorProps {
   bookmarks: BookmarkNode[];
   onChange: (bookmarks: BookmarkNode[]) => void;

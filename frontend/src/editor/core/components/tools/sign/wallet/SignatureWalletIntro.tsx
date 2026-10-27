@@ -1,14 +1,14 @@
 import { useTranslation } from "react-i18next";
-import { EmptyState } from "@app/ui/EmptyState";
-import { Icon } from "@app/ui/Icon";
-import { OptionCard } from "@app/ui/OptionCard";
+import { EmptyState } from "@editor/ui/EmptyState";
+import { Icon } from "@editor/ui/Icon";
+import { OptionCard } from "@editor/ui/OptionCard";
 import {
   CREATE_TAB_ICONS,
   createTabLabel,
   createTabs,
-} from "@app/components/tools/sign/createSignature/createTabs";
-import type { CreateTab } from "@app/components/tools/sign/createSignature/types";
-import styles from "@app/components/tools/sign/wallet/SignatureWalletIntro.module.css";
+} from "@editor/components/tools/sign/createSignature/createTabs";
+import type { CreateTab } from "@editor/components/tools/sign/createSignature/types";
+import styles from "@editor/components/tools/sign/wallet/SignatureWalletIntro.module.css";
 
 interface SignatureWalletIntroProps {
   showPhone: boolean;

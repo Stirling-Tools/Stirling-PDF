@@ -1,24 +1,24 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import type { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { Icon } from "@editor/ui/Icon";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import type { BaseToolProps, ToolComponent } from "@editor/types/tool";
 import {
   useShowJSParameters,
   defaultParameters,
-} from "@app/hooks/tools/showJS/useShowJSParameters";
+} from "@editor/hooks/tools/showJS/useShowJSParameters";
 import {
   useShowJSOperation,
   type ShowJSOperationHook,
-} from "@app/hooks/tools/showJS/useShowJSOperation";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+} from "@editor/hooks/tools/showJS/useShowJSOperation";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import {
   useNavigationActions,
   useNavigationState,
-} from "@app/contexts/NavigationContext";
-import ShowJSView from "@app/components/tools/showJS/ShowJSView";
-import { useFileSelection } from "@app/contexts/file/fileHooks";
+} from "@editor/contexts/NavigationContext";
+import ShowJSView from "@editor/components/tools/showJS/ShowJSView";
+import { useFileSelection } from "@editor/contexts/file/fileHooks";
 
 const ShowJS = (props: BaseToolProps) => {
   const { t } = useTranslation();

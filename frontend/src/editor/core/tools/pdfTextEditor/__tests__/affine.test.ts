@@ -6,9 +6,9 @@ import {
   imageMatrixBounds,
   remapImageMatrix,
   transformRectAABB,
-} from "@app/tools/pdfTextEditor/model/affine";
-import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
-import type { Affine, PageRect } from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/model/affine";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import type { Affine, PageRect } from "@editor/tools/pdfTextEditor/types";
 
 const IDENTITY: Affine = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
 

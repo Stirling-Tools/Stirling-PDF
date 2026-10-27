@@ -1,8 +1,8 @@
-import { BaseParameters } from "@app/types/parameters";
+import { BaseParameters } from "@editor/types/parameters";
 import {
   useBaseParameters,
   BaseParametersHook,
-} from "@app/hooks/tools/shared/useBaseParameters";
+} from "@editor/hooks/tools/shared/useBaseParameters";
 import { useCallback } from "react";
 import {
   Rectangle,
@@ -12,9 +12,9 @@ import {
   createFullPDFCropArea,
   roundCropArea,
   isRectangle,
-} from "@app/utils/cropCoordinates";
-import { DEFAULT_CROP_AREA } from "@app/constants/cropConstants";
-import { validatePageNumbers } from "@app/utils/pageSelection";
+} from "@editor/utils/cropCoordinates";
+import { DEFAULT_CROP_AREA } from "@editor/constants/cropConstants";
+import { validatePageNumbers } from "@editor/utils/pageSelection";
 
 export interface CropParameters extends BaseParameters {
   cropArea: Rectangle;

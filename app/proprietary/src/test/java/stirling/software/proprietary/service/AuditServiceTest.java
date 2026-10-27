@@ -692,6 +692,16 @@ class AuditServiceTest {
         }
 
         @Test
+        @DisplayName("X-Forwarded-For without a first IP falls through")
+        void forwardedForWithoutFirstIp() {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.addHeader("X-Forwarded-For", ",");
+            request.setRemoteAddr("127.0.0.5");
+
+            assertThat(service.extractClientIp(request)).isEqualTo("127.0.0.5");
+        }
+
+        @Test
         @DisplayName("X-Real-IP used when no forwarded header")
         void realIp() {
             MockHttpServletRequest request = new MockHttpServletRequest();

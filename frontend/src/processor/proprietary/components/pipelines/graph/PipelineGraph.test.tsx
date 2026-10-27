@@ -5,12 +5,12 @@ import {
   render as baseRender,
   screen,
 } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import {
   PipelineGraph,
   type GraphSelection,
   type PipelineGraphProps,
-} from "@portal/components/pipelines/graph/PipelineGraph";
+} from "@processor/components/pipelines/graph/PipelineGraph";
 
 // The nodes and wires are built from the shared Mantine-backed controls, so they need the provider.
 const render = (ui: Parameters<typeof baseRender>[0]) =>
