@@ -49,6 +49,7 @@ import stirling.software.proprietary.service.MathAuditorOrchestrator;
 public class MathAuditorAgentController {
 
     private static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]");
+    private static final int MAX_TOLERANCE_SCALE = 20;
     private final MathAuditorOrchestrator orchestrator;
     private final AiFeatureGate aiFeatureGate;
 
@@ -82,7 +83,11 @@ public class MathAuditorAgentController {
         aiFeatureGate.requireMathAuditor();
 
         AiToolInputValidator.validatePdfUpload(fileInput);
-        if (tolerance.compareTo(BigDecimal.ZERO) < 0) {
+        // The tolerance is later expanded with toPlainString(), whose length grows with the
+        // exponent, so a value like 1E+500000000 would allocate gigabytes.
+        if (tolerance.signum() < 0
+                || tolerance.scale() > MAX_TOLERANCE_SCALE
+                || tolerance.scale() < -MAX_TOLERANCE_SCALE) {
             return ResponseEntity.badRequest().build();
         }
 

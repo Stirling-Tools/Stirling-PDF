@@ -63,6 +63,10 @@ public class GeneralUtils {
     private final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
     // Valid size units used for convertSizeToBytes validation and parsing
     private final Set<String> VALID_SIZE_UNITS = Set.of("B", "KB", "MB", "GB", "TB");
+    // Plain decimals only: BigDecimal also accepts exponents, and expanding something like
+    // 1E+300000000 to whole bytes takes minutes of CPU and gigabytes of heap.
+    private final Pattern SIZE_VALUE_PATTERN =
+            Pattern.compile("\\d{1,20}(\\.\\d{0,20})?|\\.\\d{1,20}");
 
     /*
      * Converts a MultipartFile to a regular File with improved performance and security.
@@ -574,7 +578,10 @@ public class GeneralUtils {
                 };
             }
         } catch (NumberFormatException e) {
-            log.warn("Failed to parse size string '{}': {}", sizeStr, e.getMessage());
+            log.warn(
+                    "Failed to parse size string '{}': {}",
+                    sizeStr.length() > 64 ? sizeStr.substring(0, 64) + "..." : sizeStr,
+                    e.getMessage());
             return null;
         }
     }
@@ -610,6 +617,9 @@ public class GeneralUtils {
     }
 
     private BigDecimal parseSizeValue(String value) {
+        if (!SIZE_VALUE_PATTERN.matcher(value).matches()) {
+            throw new NumberFormatException("Not a plain decimal size value");
+        }
         return new BigDecimal(value);
     }
 
