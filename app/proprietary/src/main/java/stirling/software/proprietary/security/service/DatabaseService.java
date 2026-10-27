@@ -580,6 +580,8 @@ public class DatabaseService implements DatabaseServiceInterface {
      * whitespace collapsed, so the checks see neither data nor anything hidden in a comment.
      */
     private String codeOnly(String sql) {
+        // TODO: I feel like this should re-evaluated.
+        // Passing around SQL like this, smells a bit when we have Hibernate/Critaria API.
         String blanked =
                 STRING_LITERAL_OR_COMMENT
                         .matcher(sql)
