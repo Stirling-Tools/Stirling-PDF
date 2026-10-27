@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -77,6 +78,10 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PolicyController")
 class PolicyControllerTest {
+
+    private static final String ADD_PASSWORD = "/api/v1/security/add-password";
+    private static final StepSecrets STEP_SECRETS =
+            StepSecrets.forSecrets(Map.of(ADD_PASSWORD, Set.of("password", "ownerPassword")));
 
     @Mock private PolicyRunner policyRunner;
     @Mock private PolicyRunRegistry runRegistry;
@@ -138,7 +143,8 @@ class PolicyControllerTest {
                         applicationProperties,
                         tempFileManager,
                         jobOwnershipService,
-                        jobStore);
+                        jobStore,
+                        STEP_SECRETS);
     }
 
     @Test
@@ -212,6 +218,15 @@ class PolicyControllerTest {
                 return sourceTypes;
             }
         };
+    }
+
+    private static PipelineStep addPasswordStep(String password) {
+        return new PipelineStep(ADD_PASSWORD, Map.of("password", password, "keyLength", 256));
+    }
+
+    private static Policy passwordPolicy(String id, String password) {
+        return new Policy(
+                id, "name", "owner", true, List.of(), List.of(addPasswordStep(password)), null, 1L);
     }
 
     private static PipelineDefinition definitionWithStep() {
@@ -386,6 +401,47 @@ class PolicyControllerTest {
             controller.run(requestWithStep(), "pol-1", new PolicyRunFiles());
 
             verify(assetResolver).resolve(eq(p), any());
+        }
+
+        @Test
+        @DisplayName("restores a test run's step passwords from the saved policy for an editor")
+        void restoresStepPasswordsForEditor() throws Exception {
+            applicationProperties.getSecurity().setEnableLogin(false); // editing allowed
+            Policy saved = passwordPolicy("pol-1", "Open-Sesame");
+            when(policyStore.get("pol-1")).thenReturn(Optional.of(saved));
+            when(policyAccessGuard.canAccess(saved)).thenReturn(true);
+            when(assetResolver.resolve(eq(saved), any())).thenAnswer(inv -> inv.getArgument(1));
+            when(policyRunner.runAdHoc(any(), any(), eq(PolicyProgressListener.NOOP)))
+                    .thenReturn(handle("run-1"));
+
+            controller.run(
+                    new AdHocRunRequest(
+                            "pipe", List.of(addPasswordStep(SecretMasker.REDACTED)), List.of()),
+                    "pol-1",
+                    new PolicyRunFiles());
+
+            ArgumentCaptor<PipelineDefinition> submitted =
+                    ArgumentCaptor.forClass(PipelineDefinition.class);
+            verify(policyRunner).runAdHoc(submitted.capture(), any(), any());
+            assertThat(submitted.getValue().steps().getFirst().parameters())
+                    .containsEntry("password", "Open-Sesame");
+        }
+
+        @Test
+        @DisplayName("refuses a masked step password rather than run it as the password")
+        void rejectsMaskedStepPasswordForMember() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
+            AdHocRunRequest copied =
+                    new AdHocRunRequest(
+                            "pipe", List.of(addPasswordStep(SecretMasker.REDACTED)), List.of());
+
+            assertThatThrownBy(() -> controller.run(copied, "pol-1", new PolicyRunFiles()))
+                    .isInstanceOfSatisfying(
+                            ResponseStatusException.class,
+                            e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
+            verify(policyStore, never()).get(any());
+            verify(policyRunner, never()).runAdHoc(any(), any(), any());
         }
     }
 
@@ -568,6 +624,41 @@ class PolicyControllerTest {
         }
 
         @Test
+        @DisplayName("saving the sentinel back keeps the stored step password")
+        void saveRestoresStepPasswords() {
+            applicationProperties.getSecurity().setEnableLogin(false);
+            Policy existing = passwordPolicy("p1", "Open-Sesame");
+            when(policyStore.get("p1")).thenReturn(Optional.of(existing));
+            when(policyAccessGuard.canAccess(existing)).thenReturn(true);
+            when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            ResponseEntity<Policy> response =
+                    controller.savePolicy(passwordPolicy("p1", SecretMasker.REDACTED));
+
+            ArgumentCaptor<Policy> stored = ArgumentCaptor.forClass(Policy.class);
+            verify(policyStore).save(stored.capture());
+            assertThat(stored.getValue().steps().getFirst().parameters())
+                    .containsEntry("password", "Open-Sesame");
+            assertThat(response.getBody().steps().getFirst().parameters())
+                    .containsEntry("password", SecretMasker.REDACTED);
+        }
+
+        @Test
+        @DisplayName("refuses a step password sentinel with no stored password behind it")
+        void rejectsUnrestorableStepPassword() {
+            applicationProperties.getSecurity().setEnableLogin(false);
+
+            assertThatThrownBy(
+                            () ->
+                                    controller.savePolicy(
+                                            passwordPolicy(null, SecretMasker.REDACTED)))
+                    .isInstanceOfSatisfying(
+                            ResponseStatusException.class,
+                            e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
+            verify(policyStore, never()).save(any());
+        }
+
+        @Test
         @DisplayName("forbidden when a non-manager saves any pipeline or policy")
         void forbidsSaveForNonManager() {
             applicationProperties.getSecurity().setEnableLogin(true);
@@ -742,6 +833,25 @@ class PolicyControllerTest {
             assertThat(read.output().options().get("secretAccessKey"))
                     .isEqualTo(SecretMasker.REDACTED);
             assertThat(read.output().options().get("bucket")).isEqualTo("outbox");
+        }
+
+        @Test
+        @DisplayName("step passwords are returned as the sentinel, even to a policy editor")
+        void readsMaskStepPasswords() {
+            applicationProperties.getSecurity().setEnableLogin(false); // editing allowed
+            Policy p = passwordPolicy("a", "Open-Sesame");
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+            when(policyAccessGuard.visibleFrom(policyStore)).thenReturn(List.of(p));
+
+            Policy read = controller.getPolicy("a").getBody();
+            Policy listed = controller.listPolicies().getFirst();
+
+            for (Policy policy : List.of(read, listed)) {
+                assertThat(policy.steps().getFirst().parameters())
+                        .containsEntry("password", SecretMasker.REDACTED)
+                        .containsEntry("keyLength", 256);
+            }
         }
 
         @Test
