@@ -120,7 +120,7 @@ class KeyLength(IntEnum):
 
 class AddPasswordParams(ApiModel):
     """
-    This endpoint adds password protection to a PDF file. Users can specify a set of permissions that should be applied to the file. Input:PDF Output:PDF_ENCRYPTED Type:SISO
+    This endpoint adds password protection to a PDF file. Users can specify a set of permissions that should be applied to the file. sourcePassword authenticates an existing protected source; preserveExisting changes permissions while retaining existing credentials. Omitting these options preserves the existing add-password behaviour. Input:PDF/PDF_ENCRYPTED Output:PDF_ENCRYPTED Type:SISO
     """
 
     key_length: KeyLength = Field(KeyLength.integer_256, description="The length of the encryption key")
@@ -130,6 +130,10 @@ class AddPasswordParams(ApiModel):
     )
     password: SecretStr | None = Field(
         None, description="The password to be added to the PDF file (Restricts the opening of the document itself.)"
+    )
+    preserve_existing: bool = Field(
+        False,
+        description="Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.",
     )
     prevent_assembly: bool = Field(False, description="Whether document assembly is prevented")
     prevent_extract_content: bool = Field(False, description="Whether content extraction is prevented")
@@ -141,6 +145,10 @@ class AddPasswordParams(ApiModel):
     prevent_modify_annotations: bool = Field(False, description="Whether modification of annotations is prevented")
     prevent_printing: bool = Field(False, description="Whether printing of the document is prevented")
     prevent_printing_faithful: bool = Field(False, description="Whether faithful printing is prevented")
+    source_password: SecretStr | None = Field(
+        None,
+        description="Credential for authenticating an existing protected source, separate from the new passwords. Omit to retain legacy add-password behaviour.",
+    )
 
 
 class Alphabet(StrEnum):
@@ -185,16 +193,17 @@ class Position1(IntEnum):
 
 class StampType(StrEnum):
     """
-    The stamp type (text or image)
+    The stamp type (text, image or qr)
     """
 
     text = "text"
     image = "image"
+    qr = "qr"
 
 
 class AddStampParams(ApiModel):
     """
-    This endpoint adds a stamp to a given PDF file. Users can specify the stamp type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO
+    This endpoint adds a stamp to a given PDF file. Users can specify the stamp type (text, image or qr), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO
     """
 
     alphabet: Alphabet = Field(Alphabet.roman, description="The selected alphabet of the stamp text")
@@ -219,8 +228,10 @@ class AddStampParams(ApiModel):
         description="Position for stamp placement based on a 1-9 grid (1: bottom-left, 2: bottom-center, 3: bottom-right, 4: middle-left, 5: middle-center, 6: middle-right, 7: top-left, 8: top-center, 9: top-right)",
     )
     rotation: float = Field(0, description="The rotation of the stamp in degrees")
-    stamp_text: str = Field("Stirling Software", description="The stamp text")
-    stamp_type: StampType = Field(..., description="The stamp type (text or image)")
+    stamp_text: str = Field(
+        "Stirling Software", description="The stamp text, or the QR code content when the stamp type is qr"
+    )
+    stamp_type: StampType = Field(..., description="The stamp type (text, image or qr)")
 
 
 class Alphabet1(StrEnum):
@@ -1310,10 +1321,26 @@ class RemovePagesParams(ApiModel):
 
 class RemovePasswordParams(ApiModel):
     """
-    This endpoint removes the password from a protected PDF file while preserving its document permissions. Users need to provide the existing password. Input:PDF/PDF_ENCRYPTED Output:PDF Type:SISO
+    This endpoint removes the password from a protected PDF file while preserving its document permissions. Users need to provide the existing password. Optional ownerPassword, sourcePassword or retainedOpeningPassword enable selective removal: nonempty password and ownerPassword select which passwords to remove; blank selections retain them. removeAll explicitly removes all protection, subject to the owner-password policy. Source and retained credentials never select removal. Input:PDF/PDF_ENCRYPTED Output:PDF Type:SISO
     """
 
+    owner_password: SecretStr | None = Field(
+        None,
+        description="Permissions password to remove. Supplying this field enables selective removal; leave blank to retain the permissions password.",
+    )
     password: SecretStr | None = Field(None, description="The password of the PDF file")
+    remove_all: bool = Field(
+        False,
+        description="Explicitly remove all passwords and restrictions, subject to the server owner-password policy. The password or sourcePassword authenticates the source; selective removal fields do not apply.",
+    )
+    retained_opening_password: SecretStr | None = Field(
+        None,
+        description="Opening password to retain when removing only the permissions password. Supplying this field enables selective removal.",
+    )
+    source_password: SecretStr | None = Field(
+        None,
+        description="Credential for opening the source, without selecting it for removal. Supplying this field enables selective removal; password then selects the opening password to remove and ownerPassword selects the permissions password to remove. Blank selection fields keep their passwords.",
+    )
 
 
 class RenameAttachmentParams(ApiModel):
