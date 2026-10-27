@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api.misc;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +13,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -297,12 +297,12 @@ public class MobileScannerController {
         }
 
         try {
+            // Resolved from the name, not the file: getFile claims the download, and nothing after
+            // the claim may fail before the resource is returned or the file is never released.
+            MediaType contentType =
+                    MediaTypeFactory.getMediaType(filename)
+                            .orElse(MediaType.APPLICATION_OCTET_STREAM);
             Path filePath = mobileScannerService.getFile(sessionId, filename);
-
-            String contentType = Files.probeContentType(filePath);
-            if (contentType == null) {
-                contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
-            }
 
             Resource resource =
                     new DeleteAfterReadResource(
@@ -312,7 +312,7 @@ public class MobileScannerController {
                                             sessionId, filename));
 
             return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
+                    .contentType(contentType)
                     .header(
                             HttpHeaders.CONTENT_DISPOSITION,
                             "attachment; filename=\"" + filename + "\"")

@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -262,6 +263,22 @@ class MobileScannerControllerTest {
             in.close();
         }
         verify(mobileScannerService, times(1)).deleteFileAfterDownload("test-session", "scan.jpg");
+    }
+
+    @Test
+    void downloadFile_contentTypeComesFromFilename(@TempDir Path dir) throws Exception {
+        enableMobileScanner();
+        Path jpg = Files.write(dir.resolve("scan.jpg"), new byte[] {1});
+        Path unknown = Files.write(dir.resolve("scan.zzz"), new byte[] {1});
+        when(mobileScannerService.getFile("test-session", "scan.jpg")).thenReturn(jpg);
+        when(mobileScannerService.getFile("test-session", "scan.zzz")).thenReturn(unknown);
+
+        assertEquals(
+                MediaType.IMAGE_JPEG,
+                controller.downloadFile("test-session", "scan.jpg").getHeaders().getContentType());
+        assertEquals(
+                MediaType.APPLICATION_OCTET_STREAM,
+                controller.downloadFile("test-session", "scan.zzz").getHeaders().getContentType());
     }
 
     @Test

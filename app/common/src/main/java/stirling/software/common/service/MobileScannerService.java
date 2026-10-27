@@ -1,6 +1,7 @@
 package stirling.software.common.service;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -188,9 +189,10 @@ public class MobileScannerService {
             throw new IOException("Invalid filename");
         }
 
-        // Handle duplicate filenames
+        // Handle duplicate filenames. createFile claims the name atomically, so concurrent uploads
+        // of the same name to one session cannot both pick it and overwrite each other.
         int counter = 1;
-        while (Files.exists(filePath)) {
+        while (!tryCreate(filePath)) {
             String nameWithoutExt = FILE_EXTENSION_PATTERN.matcher(safeFilename).replaceFirst("");
             String ext =
                     safeFilename.contains(".")
@@ -204,7 +206,12 @@ public class MobileScannerService {
             counter++;
         }
 
-        file.transferTo(filePath);
+        try {
+            file.transferTo(filePath);
+        } catch (IOException | RuntimeException e) {
+            Files.deleteIfExists(filePath);
+            throw e;
+        }
         synchronized (storageLock) {
             // A session deleted or replaced mid-upload no longer counts toward any cap, so a file
             // written for it would sit on disk unaccounted for.
@@ -219,6 +226,15 @@ public class MobileScannerService {
                 session.sessionId,
                 safeFilename,
                 file.getSize());
+    }
+
+    private static boolean tryCreate(Path filePath) throws IOException {
+        try {
+            Files.createFile(filePath);
+            return true;
+        } catch (FileAlreadyExistsException e) {
+            return false;
+        }
     }
 
     /**

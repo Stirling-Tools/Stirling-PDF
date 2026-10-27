@@ -649,6 +649,47 @@ class MobileScannerServiceTest {
             assertEquals(1L, storedBytes());
         }
 
+        @Test
+        @DisplayName("same-name uploads in flight together get distinct files and byte counts")
+        void concurrentSameNameUploads() throws IOException {
+            MultipartFile outer =
+                    new MockMultipartFile("file", "dup.jpg", "image/jpeg", new byte[] {1}) {
+                        @Override
+                        public void transferTo(Path dest) throws IOException {
+                            service.uploadFiles("same", List.of(sized("dup.jpg", 10)));
+                            Files.write(dest, new byte[] {1});
+                        }
+                    };
+
+            service.uploadFiles("same", List.of(outer));
+
+            assertEquals(
+                    List.of("dup-1.jpg", "dup.jpg"),
+                    service.getSessionFiles("same").stream()
+                            .map(FileMetadata::getFilename)
+                            .toList());
+            assertEquals(11L, storedBytes());
+            service.deleteFileAfterDownload("same", "dup.jpg");
+            assertEquals(10L, storedBytes());
+        }
+
+        @Test
+        @DisplayName("a failed write removes the file and its reservation")
+        void failedWriteRemovesFile() {
+            MultipartFile failing =
+                    new MockMultipartFile("file", "bad.jpg", "image/jpeg", new byte[] {1}) {
+                        @Override
+                        public void transferTo(Path dest) throws IOException {
+                            throw new IOException("disk full");
+                        }
+                    };
+
+            assertThrows(IOException.class, () -> service.uploadFiles("fail", List.of(failing)));
+
+            assertFalse(Files.exists(tempDir.resolve("fail").resolve("bad.jpg")));
+            assertEquals(0L, storedBytes());
+        }
+
         private void fillSession(String sessionId, long bytes) throws IOException {
             List<MultipartFile> files = new ArrayList<>();
             for (int i = 0; bytes > 0; i++) {
