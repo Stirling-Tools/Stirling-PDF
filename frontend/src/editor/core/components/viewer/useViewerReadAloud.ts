@@ -1,22 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { computeReadAloudHighlightRect } from "@app/components/viewer/readAloudHighlight";
+import { computeReadAloudHighlightRect } from "@editor/components/viewer/readAloudHighlight";
 import {
   READ_ALOUD_FROM_SELECTION_EVENT,
   findReadAloudStartIndex,
   type ReadAloudFromSelectionDetail,
-} from "@app/components/viewer/readAloudFromSelection";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useStopReadAloudOnNavigation } from "@app/components/viewer/useStopReadAloudOnNavigation";
+} from "@editor/components/viewer/readAloudFromSelection";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useStopReadAloudOnNavigation } from "@editor/components/viewer/useStopReadAloudOnNavigation";
 import {
   extractPageTextItemsForReadAloudFromDoc,
   openRawDocumentSafe,
   closeRawDocument,
   type ReadAloudTextItem,
-} from "@app/services/pdfiumService";
-import { createReadAloudDocSession } from "@app/components/viewer/readAloudDocSession";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { StirlingFile } from "@app/types/fileContext";
-import { ZINDEX } from "@app/constants/zIndex";
+} from "@editor/services/pdfiumService";
+import { createReadAloudDocSession } from "@editor/components/viewer/readAloudDocSession";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
+import { StirlingFile } from "@editor/types/fileContext";
+import { ZINDEX } from "@editor/constants/zIndex";
 
 type TextItemWithGeometry = ReadAloudTextItem;
 

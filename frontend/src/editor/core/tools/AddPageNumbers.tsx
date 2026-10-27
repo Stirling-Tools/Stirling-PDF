@@ -1,17 +1,17 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
 import {
   createToolFlow,
   type MiddleStepConfig,
-} from "@app/components/tools/shared/createToolFlow";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useAddPageNumbersParameters } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
-import { useAddPageNumbersOperation } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
-import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
-import AddPageNumbersPositionSettings from "@app/components/tools/addPageNumbers/AddPageNumbersPositionSettings";
-import AddPageNumbersAppearanceSettings from "@app/components/tools/addPageNumbers/AddPageNumbersAppearanceSettings";
+} from "@editor/components/tools/shared/createToolFlow";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
+import { useAddPageNumbersParameters } from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
+import { useAddPageNumbersOperation } from "@editor/components/tools/addPageNumbers/useAddPageNumbersOperation";
+import { useAccordionSteps } from "@editor/hooks/tools/shared/useAccordionSteps";
+import AddPageNumbersPositionSettings from "@editor/components/tools/addPageNumbers/AddPageNumbersPositionSettings";
+import AddPageNumbersAppearanceSettings from "@editor/components/tools/addPageNumbers/AddPageNumbersAppearanceSettings";
 
 const AddPageNumbers = ({
   onPreviewFile,

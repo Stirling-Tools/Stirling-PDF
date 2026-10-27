@@ -1,13 +1,13 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
-import { Icon } from "@app/ui/Icon";
-import { useNotifications } from "@app/hooks/useNotifications";
-import { useNotificationActions } from "@app/components/notifications/notificationActions";
-import { NotificationPanel } from "@app/components/notifications/NotificationPanel";
-import { useNotificationPasswordPrompt } from "@app/components/notifications/useNotificationPasswordPrompt";
-import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
-import "@app/components/notifications/NotificationBell.css";
+import { Button } from "@editor/ui";
+import { Icon } from "@editor/ui/Icon";
+import { useNotifications } from "@editor/hooks/useNotifications";
+import { useNotificationActions } from "@editor/components/notifications/notificationActions";
+import { NotificationPanel } from "@editor/components/notifications/NotificationPanel";
+import { useNotificationPasswordPrompt } from "@editor/components/notifications/useNotificationPasswordPrompt";
+import { useNotificationsAvailable } from "@editor/components/notifications/useNotificationsAvailable";
+import "@editor/components/notifications/NotificationBell.css";
 
 /** For the narrow layouts where the rail, which carries the bell, is off screen. */
 export function NotificationBell() {

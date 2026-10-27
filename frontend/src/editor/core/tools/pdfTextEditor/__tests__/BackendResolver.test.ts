@@ -3,30 +3,30 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 /** Regression coverage for `BackendResolver`'s HTTP transport. */
 
 // Mock apiClient BEFORE BackendResolver imports it.
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { post: vi.fn() },
 }));
 
 // Stub the document serializer so the prewarm path can produce PDF bytes
 // without a real PDFium file-writer.
-vi.mock("@app/tools/pdfTextEditor/pdfium/PdfiumSave", () => ({
+vi.mock("@editor/tools/pdfTextEditor/pdfium/PdfiumSave", () => ({
   PdfiumSave: { serialize: vi.fn(() => new Uint8Array([0, 1, 2, 3])) },
 }));
 
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import {
   BackendResolver,
   prewarmBackendCacheForPage,
   resetBackendResolverCaches,
   _clearBackendCacheForTests,
   _clearPrewarmGuardForTests,
-} from "@app/tools/pdfTextEditor/charcode/BackendResolver";
+} from "@editor/tools/pdfTextEditor/charcode/BackendResolver";
 import {
   primeFontGlyphMap,
   _clearCmapCacheForTests,
-} from "@app/tools/pdfTextEditor/charcode/CmapResolver";
-import { sha256Hex } from "@app/tools/pdfTextEditor/util/sha256";
-import type { ResolverContext } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
+} from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import { sha256Hex } from "@editor/tools/pdfTextEditor/util/sha256";
+import type { ResolverContext } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 
 const post = apiClient.post as unknown as ReturnType<typeof vi.fn>;
 

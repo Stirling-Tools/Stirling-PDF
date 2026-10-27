@@ -1,12 +1,12 @@
 import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
-import { useToast } from "@app/components/toast/ToastContext";
-import { ToastInstance, ToastLocation } from "@app/components/toast/types";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
-import "@app/components/toast/ToastRenderer.css";
+import { useToast } from "@editor/components/toast/ToastContext";
+import { ToastInstance, ToastLocation } from "@editor/components/toast/types";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import "@editor/components/toast/ToastRenderer.css";
 
-import { Icon, type IconName } from "@app/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 const locationToClass: Record<ToastLocation, string> = {
   "top-left": "toast-container--top-left",
   "top-right": "toast-container--top-right",

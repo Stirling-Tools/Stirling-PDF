@@ -1,8 +1,8 @@
-import { hasAcroForm } from "@app/utils/asciiBytes";
-import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
-import { readRawFormType } from "@app/services/pdfiumService";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
-import { PdfFileReader } from "@app/utils/pdfObjectReader";
+import { hasAcroForm } from "@editor/utils/asciiBytes";
+import { runPdfiumScan } from "@editor/services/pdfiumScanQueue";
+import { readRawFormType } from "@editor/services/pdfiumService";
+import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
+import { PdfFileReader } from "@editor/utils/pdfObjectReader";
 
 /**
  * True when the document may contain interactive form fields.

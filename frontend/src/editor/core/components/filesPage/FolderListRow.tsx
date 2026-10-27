@@ -1,10 +1,10 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { folderKind, type FolderRecord } from "@app/types/folder";
-import { getFileDate } from "@app/utils/fileUtils";
-import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
-import { FolderOriginBadge } from "@app/components/filesPage/FolderOriginBadge";
-import { findFolderIcon } from "@app/components/filesPage/folderIcons";
+import { folderKind, type FolderRecord } from "@editor/types/folder";
+import { getFileDate } from "@editor/utils/fileUtils";
+import { FolderThumbnail } from "@editor/components/filesPage/FolderThumbnail";
+import { FolderOriginBadge } from "@editor/components/filesPage/FolderOriginBadge";
+import { findFolderIcon } from "@editor/components/filesPage/folderIcons";
 
 interface FolderListRowProps extends HTMLAttributes<HTMLDivElement> {
   folder: FolderRecord;

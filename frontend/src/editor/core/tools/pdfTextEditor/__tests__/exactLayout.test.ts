@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildExactLines,
   type CharPositions,
-} from "@app/tools/pdfTextEditor/util/exactLayout";
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
+} from "@editor/tools/pdfTextEditor/util/exactLayout";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 
 /** Positions for `text` where every glyph advances by `advance` points. */
 function uniform(text: string, advance = 10): CharPositions {

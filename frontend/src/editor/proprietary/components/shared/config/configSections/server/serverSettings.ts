@@ -7,8 +7,8 @@
  * the general draft as `serverCertificate` - one hook and one GET fewer.
  */
 
-import type { ToolPanelMode } from "@app/constants/toolPanel";
-import type { StartupView } from "@app/services/preferencesService";
+import type { ToolPanelMode } from "@editor/constants/toolPanel";
+import type { StartupView } from "@editor/services/preferencesService";
 
 export interface GeneralSettingsData {
   ui: {
@@ -87,11 +87,6 @@ export interface StorageSharingSettingsData {
 /** Folder roots live in the `policies` section, not a folderAccess one. */
 export interface FolderAccessSettingsData {
   allowedFolderRoots?: string[];
-}
-
-export interface ImpliedFolderRoot {
-  path: string;
-  reason: string;
 }
 
 export interface McpAuthData {

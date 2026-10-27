@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { Icon } from "@editor/ui/Icon";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import {
   TextInput,
   NumberInput,
@@ -13,14 +13,14 @@ import {
   Group,
   Alert,
 } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import {
   AiEngineModels,
   MODEL_SUGGESTIONS,
   MASKED_SECRET,
-} from "@app/components/shared/config/configSections/aiEngineSettings";
-import type { AiCardProps } from "@app/components/shared/config/configSections/ai/aiCardProps";
+} from "@editor/components/shared/config/configSections/aiEngineSettings";
+import type { AiCardProps } from "@editor/components/shared/config/configSections/ai/aiCardProps";
 
 interface AiModelsCardProps extends AiCardProps {
   apiKeyDirty: boolean;

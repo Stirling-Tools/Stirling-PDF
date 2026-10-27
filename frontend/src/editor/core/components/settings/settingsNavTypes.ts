@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type {
   ConfigNavSection,
   NavKey,
-} from "@app/components/shared/config/types";
+} from "@editor/components/shared/config/types";
 
 /**
  * What the settings page needs to draw itself. Lives apart from the hook that

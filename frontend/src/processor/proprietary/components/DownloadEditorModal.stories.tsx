@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { DownloadEditorModal } from "@portal/components/DownloadEditorModal";
+import { DownloadEditorModal } from "@processor/components/DownloadEditorModal";
 
 const meta: Meta<typeof DownloadEditorModal> = {
   title: "Portal/DownloadEditorModal",

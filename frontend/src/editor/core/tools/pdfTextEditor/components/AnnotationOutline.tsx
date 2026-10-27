@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import type { AnnotationBox } from "@app/tools/pdfTextEditor/model/AnnotationBox";
-import type { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
-import "@app/tools/pdfTextEditor/components/AnnotationOutline.css";
+import type { AnnotationBox } from "@editor/tools/pdfTextEditor/model/AnnotationBox";
+import type { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import "@editor/tools/pdfTextEditor/components/AnnotationOutline.css";
 
 interface AnnotationOutlineProps {
   annotation: AnnotationBox;

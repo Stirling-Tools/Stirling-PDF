@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { FormField, Input, Select } from "@app/ui";
+import { FormField, Input, Select } from "@editor/ui";
 import {
   isFieldVisible,
   type ConnectionFieldDef,
   type CreatableConnectionType,
-} from "@portal/components/sources/connectionTypes";
-import "@portal/components/sources/connections.css";
+} from "@processor/components/sources/connectionTypes";
+import "@processor/components/sources/connections.css";
 
 /**
  * Renders whatever fields a connection type declares, rather than knowing any vendor's shape.

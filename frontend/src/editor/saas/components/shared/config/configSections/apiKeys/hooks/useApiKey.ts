@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { isAxiosError } from "axios";
-import apiClient from "@app/services/apiClient";
-import { useAuth } from "@app/auth/UseSession";
-import { isUserAnonymous } from "@app/auth/supabase";
+import apiClient from "@editor/services/apiClient";
+import { useAuth } from "@editor/auth/UseSession";
+import { isUserAnonymous } from "@editor/auth/supabase";
 
 type ApiKeyResponse = string | { apiKey?: string };
 

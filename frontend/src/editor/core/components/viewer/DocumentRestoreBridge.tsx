@@ -10,8 +10,8 @@ import {
   useViewportCapability,
   useViewportPlugin,
 } from "@embedpdf/plugin-viewport/react";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 
 /** View state captured from the outgoing document, addressed to its replacement. */
 export interface DocumentRestoreRequest {

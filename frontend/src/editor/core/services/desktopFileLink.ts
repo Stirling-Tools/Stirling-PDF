@@ -1,5 +1,5 @@
 // Seam for keeping desktop files 1:1 with disk. Non-desktop builds get this
-// no-op via @app alias order, so web/SaaS keep IndexedDB as sole truth.
+// no-op via @editor alias order, so web/SaaS keep IndexedDB as sole truth.
 
 export type DiskUnavailableReason = "permission" | "offline" | "unknown";
 

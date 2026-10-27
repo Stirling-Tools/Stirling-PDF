@@ -1,4 +1,4 @@
-import "@app/ui/Skeleton.css";
+import "@editor/ui/Skeleton.css";
 
 export interface SkeletonProps {
   /** Width as a CSS length (`100%`, `12rem`, …). Defaults to 100%. */

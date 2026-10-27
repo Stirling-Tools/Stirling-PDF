@@ -1,5 +1,5 @@
 import { Group, Text } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 
 /** Shared file identity for opening and managing a protected PDF. */
 export function ProtectedPdfFileCard({ fileName }: { fileName?: string }) {

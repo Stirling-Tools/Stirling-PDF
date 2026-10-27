@@ -13,9 +13,9 @@
  * mode, and a run result that can carry findings as well as files), not in a flag added here first.
  */
 
-import type { ClassificationConfidence } from "@app/types/fileContext";
-import type { PoliciesByKey } from "@app/types/policies";
-import { editorTriggerOf } from "@app/policies/runOn";
+import type { ClassificationConfidence } from "@editor/types/fileContext";
+import type { PoliciesByKey } from "@editor/types/policies";
+import { editorTriggerOf } from "@editor/policies/runOn";
 
 /** Key of the built-in Classification policy. */
 export const CLASSIFICATION_POLICY_KEY = "classification";

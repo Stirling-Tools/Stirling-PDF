@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import ScannerImageSplitSettings from "@app/components/tools/scannerImageSplit/ScannerImageSplitSettings";
-import { useScannerImageSplitParameters } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitParameters";
-import { useScannerImageSplitOperation } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useScannerImageSplitTips } from "@app/components/tooltips/useScannerImageSplitTips";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import ScannerImageSplitSettings from "@editor/components/tools/scannerImageSplit/ScannerImageSplitSettings";
+import { useScannerImageSplitParameters } from "@editor/hooks/tools/scannerImageSplit/useScannerImageSplitParameters";
+import { useScannerImageSplitOperation } from "@editor/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useScannerImageSplitTips } from "@editor/components/tooltips/useScannerImageSplitTips";
 
 const ScannerImageSplit = (props: BaseToolProps) => {
   const { t } = useTranslation();

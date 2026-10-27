@@ -1,11 +1,11 @@
-import { getFullMetadata } from "@app/services/pdfiumService";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { FileAnalyzer } from "@app/services/fileAnalyzer";
+import { getFullMetadata } from "@editor/services/pdfiumService";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
+import { FileAnalyzer } from "@editor/services/fileAnalyzer";
 import {
   TrappedStatus,
   CustomMetadataEntry,
   ExtractedPDFMetadata,
-} from "@app/types/metadata";
+} from "@editor/types/metadata";
 
 export interface MetadataExtractionResult {
   success: true;

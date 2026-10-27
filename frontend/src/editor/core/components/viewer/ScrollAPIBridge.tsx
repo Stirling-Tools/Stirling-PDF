@@ -1,8 +1,8 @@
 import { useLayoutEffect, useRef } from "react";
 import { useScroll } from "@embedpdf/plugin-scroll/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 
 /**
  * Connects the PDF scroll plugin to the shared ViewerContext.

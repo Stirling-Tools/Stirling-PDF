@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { fileOpenService } from "@app/services/fileOpenService";
+import { fileOpenService } from "@editor/services/fileOpenService";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import {
   beginLoadingLaunchFiles,
   endLoadingLaunchFiles,
   trackLaunchFilePop,
-} from "@app/services/launchFiles";
+} from "@editor/services/launchFiles";
 
 export function useOpenedFile() {
   const [openedFilePaths, setOpenedFilePaths] = useState<string[]>([]);

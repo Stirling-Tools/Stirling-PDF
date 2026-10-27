@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { Stack, Paper, Text, Group, Switch } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import type { AiEngineFeatures } from "@app/components/shared/config/configSections/aiEngineSettings";
-import type { AiCardProps } from "@app/components/shared/config/configSections/ai/aiCardProps";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import type { AiEngineFeatures } from "@editor/components/shared/config/configSections/aiEngineSettings";
+import type { AiCardProps } from "@editor/components/shared/config/configSections/ai/aiCardProps";
 
 interface FeatureSwitchProps {
   label: string;

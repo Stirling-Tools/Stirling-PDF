@@ -3,7 +3,7 @@ import {
   SCRATCH,
   releaseScratch,
   scratchPtr,
-} from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 
 function fakeModule() {

@@ -3,7 +3,7 @@ import type { StorybookConfig } from "@storybook/react-vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "../scripts/icons/svgrOptions.mts";
-// By path, not @app/*: this file runs in node, before the aliases exist.
+// By path, not @editor/*: this file runs in node, before the aliases exist.
 // oxlint-disable-next-line no-restricted-imports -- config runs before aliases exist
 import { usedIconsPlugin } from "../scripts/icons/usedIcons.vite.mts";
 
@@ -16,8 +16,8 @@ import { usedIconsPlugin } from "../scripts/icons/usedIcons.vite.mts";
  * src/processor/proprietary/docs/.
  */
 /**
- * Editor stories import via `@app/*` (proprietary→core fallback), `@core/*` and
- * `@proprietary/*`. Resolve them exactly the way the editor's own build does -
+ * Editor stories import via `@editor/*` (proprietary→core fallback), `@editor-core/*` and
+ * `@editor-proprietary/*`. Resolve them exactly the way the editor's own build does -
  * through vite-tsconfig-paths against the proprietary vite tsconfig - so the
  * shared Storybook can host editor components without duplicating the alias map
  * here. Built per pass: the main bundle and the worker bundle each need their own.
@@ -56,21 +56,24 @@ const config: StorybookConfig = {
   // intercept network calls the same way the dev portal does.
   staticDirs: ["../public"],
   viteFinal: async (config) => {
-    // Wire the @portal/* alias directly on the Storybook bundler so portal
+    // The auto-loaded app config's default publicDir is the same public/ that
+    // staticDirs copies.
+    config.publicDir = false;
+    // Wire the @processor/* alias directly on the Storybook bundler so portal
     // story imports resolve without needing the portal's vite config.
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
-      "@app/services/supabaseClient": resolve(
+      "@editor/services/supabaseClient": resolve(
         __dirname,
         "billingSupabaseClient.ts",
       ),
-      "@portal": resolve(__dirname, "../src/processor/proprietary"),
+      "@processor": resolve(__dirname, "../src/processor/proprietary"),
       // Direct layer aliases so .storybook config files (preview.tsx), which sit
       // outside src/ and so aren't covered by tsconfigPaths, can import layer
       // modules (e.g. the auth supabase client that moved into proprietary).
-      "@proprietary": resolve(__dirname, "../src/editor/proprietary"),
-      "@core": resolve(__dirname, "../src/editor/core"),
+      "@editor-proprietary": resolve(__dirname, "../src/editor/proprietary"),
+      "@editor-core": resolve(__dirname, "../src/editor/core"),
       // Public assets (e.g. the en-US translation TOML loaded ?raw by preview.tsx).
       // No src alias covers public/, so this lets the config use an alias rather
       // than a relative path.
@@ -94,7 +97,7 @@ const config: StorybookConfig = {
     // Scanned at startup rather than committed, so the gallery's "in use" view cannot go stale.
     config.plugins.push(usedIconsPlugin(resolve(__dirname, "../src")));
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`, so
-    // without this a worker importing @app/* fails to resolve while the same
+    // without this a worker importing @editor/* fails to resolve while the same
     // import works everywhere else. Mirrors editor/vite.config.ts.
     config.worker = {
       ...(config.worker ?? {}),

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Surface } from "@app/ui/Surface";
+import { Surface } from "@editor/ui/Surface";
 
 const meta: Meta<typeof Surface> = {
   title: "Primitives/Surface",

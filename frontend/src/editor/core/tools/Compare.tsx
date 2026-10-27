@@ -1,35 +1,35 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { Box, Group, Stack, Text, Modal } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 import {
   useCompareParameters,
   defaultParameters as compareDefaultParameters,
-} from "@app/hooks/tools/compare/useCompareParameters";
+} from "@editor/hooks/tools/compare/useCompareParameters";
 import {
   useCompareOperation,
   CompareOperationHook,
-} from "@app/hooks/tools/compare/useCompareOperation";
-import CompareWorkbenchView from "@app/components/tools/compare/CompareWorkbenchView";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import type { FileId } from "@app/types/file";
-import type { StirlingFile } from "@app/types/fileContext";
-import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
-import type { CompareWorkbenchData } from "@app/types/compare";
-import { getDefaultWorkbench } from "@app/types/workbench";
-import { truncateCenter } from "@app/utils/textUtils";
-import { registerPolicyFileUsage } from "@app/services/policyBlockRegistry";
+} from "@editor/hooks/tools/compare/useCompareOperation";
+import CompareWorkbenchView from "@editor/components/tools/compare/CompareWorkbenchView";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFile } from "@editor/types/fileContext";
+import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
+import type { CompareWorkbenchData } from "@editor/types/compare";
+import { getDefaultWorkbench } from "@editor/types/workbench";
+import { truncateCenter } from "@editor/utils/textUtils";
+import { registerPolicyFileUsage } from "@editor/services/policyBlockRegistry";
 import {
   FileSelectorPicker as PopoverFileSelector,
   FileSelectorResult,
-} from "@app/components/shared/FileSelectorPicker";
-import "@app/components/tools/compare/compareView.css";
+} from "@editor/components/shared/FileSelectorPicker";
+import "@editor/components/tools/compare/compareView.css";
 
 const CUSTOM_VIEW_ID = "compareWorkbenchView";
 const CUSTOM_WORKBENCH_ID = "custom:compareWorkbenchView" as const;

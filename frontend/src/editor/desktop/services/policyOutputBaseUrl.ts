@@ -1,5 +1,5 @@
-import { operationRouter } from "@app/services/operationRouter";
-import type { PolicyExecutionTarget } from "@app/services/policyPipeline";
+import { operationRouter } from "@editor/services/operationRouter";
+import type { PolicyExecutionTarget } from "@editor/services/policyPipeline";
 
 /**
  * Desktop: a policy run's outputs live on the backend that executed it.

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { authService } from "@app/services/authService";
-import { connectionModeService } from "@app/services/connectionModeService";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { authService } from "@editor/services/authService";
+import { connectionModeService } from "@editor/services/connectionModeService";
 
 export interface SelfHostedAuthState {
   isSelfHosted: boolean;

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Modal } from "@app/ui";
-import "@app/components/shared/FlowModal.css";
+import { Modal } from "@editor/ui";
+import "@editor/components/shared/FlowModal.css";
 
 /**
  * The shared Modal owns focus trapping, scroll locking and dismissal. This wrapper adds the

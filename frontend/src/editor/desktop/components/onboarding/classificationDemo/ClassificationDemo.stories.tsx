@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import OnboardingSlideShell, {
   type ShellButton,
-} from "@app/components/onboarding/OnboardingSlideShell";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
-import { BrandMark } from "@app/components/shared/BrandMark";
+} from "@editor/components/onboarding/OnboardingSlideShell";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { BrandMark } from "@editor/components/shared/BrandMark";
 import {
   ClassificationDemoBreakdown,
   ClassificationDemoChart,
   useSliceColours,
-} from "@app/components/onboarding/classificationDemo/ClassificationDemoChart";
+} from "@editor/components/onboarding/classificationDemo/ClassificationDemoChart";
 import {
   CategoryTicker,
   DefaultAppHero,
@@ -21,15 +21,15 @@ import {
   ProcessingCounts,
   ProcessingHero,
   useProcessingLabel,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSlides";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSlides";
 import {
   CLASSIFICATION_DEMO_BATCH_SIZE,
   mergeOutcomes,
   type ClassificationDemoGroupCount,
   type ClassificationDemoOutcome,
   type ClassificationDemoPhase,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSweep";
-import styles from "@app/components/onboarding/classificationDemo/classificationDemo.module.css";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSweep";
+import styles from "@editor/components/onboarding/classificationDemo/classificationDemo.module.css";
 
 interface WalkthroughArgs {
   /** PDFs "in the folder": what is left after the first 50 sizes the follow-up offer. */

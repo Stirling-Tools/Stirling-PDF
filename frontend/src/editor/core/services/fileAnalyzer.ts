@@ -1,4 +1,4 @@
-import { FileAnalysis, ProcessingStrategy } from "@app/types/processing";
+import { FileAnalysis, ProcessingStrategy } from "@editor/types/processing";
 import {
   getPdfiumModule,
   openRawDocumentSafe,
@@ -6,10 +6,10 @@ import {
   getRawPageCount,
   PdfiumOpenError,
   FPDF_ERR_PASSWORD,
-} from "@app/services/pdfiumService";
-import { getPdfAccess } from "@app/services/pdfAccessService";
-import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
+} from "@editor/services/pdfiumService";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
+import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
+import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
 
 export class FileAnalyzer {
   private static readonly SIZE_THRESHOLDS = {

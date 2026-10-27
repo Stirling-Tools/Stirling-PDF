@@ -8,11 +8,11 @@ const { signInWithPassword, signInWithOAuth } = vi.hoisted(() => ({
   signInWithOAuth: vi.fn(),
 }));
 
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => ({ auth: { signInWithPassword, signInWithOAuth } }),
 }));
 
-import { useSupabaseLogin } from "@app/auth/ui/useSupabaseLogin";
+import { useSupabaseLogin } from "@editor/auth/ui/useSupabaseLogin";
 
 describe("useSupabaseLogin (in-app account-link login)", () => {
   beforeEach(() => {

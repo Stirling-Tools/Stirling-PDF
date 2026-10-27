@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearch } from "@embedpdf/plugin-search/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 
 interface SearchResult {
   pageIndex: number;
