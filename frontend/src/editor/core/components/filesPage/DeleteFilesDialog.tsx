@@ -87,7 +87,7 @@ export function DeleteFilesDialog({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={t("filesPage.deleteFilesTitle", "Delete {{count}} file(s)?", {
+      title={t("filesPage.deleteFilesTitle", "Remove {{count}} file(s)?", {
         count: total,
       })}
       centered
@@ -99,7 +99,7 @@ export function DeleteFilesDialog({
             <Text size="sm">
               {t(
                 "filesPage.deleteFilesChoiceBody",
-                "Some of these files are saved both on this device and in the cloud. Where should they be deleted from?",
+                "Some of these files are saved both in your library and in the cloud. Where should they be removed from?",
               )}
             </Text>
             <Radio.Group
@@ -113,7 +113,7 @@ export function DeleteFilesDialog({
                   label={t("filesPage.deleteScope.device", "This device only")}
                   description={t(
                     "filesPage.deleteScope.deviceHint",
-                    "Removes the local copy. The cloud copy is kept.",
+                    "Removes it from your library on this device. The cloud copy is kept.",
                   )}
                 />
                 <Radio
@@ -122,7 +122,7 @@ export function DeleteFilesDialog({
                   label={t("filesPage.deleteScope.cloud", "Cloud only")}
                   description={t(
                     "filesPage.deleteScope.cloudHint",
-                    "Deletes from the server. A copy stays on this device.",
+                    "Removes it from the cloud. A copy stays in your library.",
                   )}
                 />
                 <Radio
@@ -131,7 +131,7 @@ export function DeleteFilesDialog({
                   label={t("filesPage.deleteScope.everywhere", "Everywhere")}
                   description={t(
                     "filesPage.deleteScope.everywhereHint",
-                    "Deletes the file from this device and the cloud.",
+                    "Removes it from your library and the cloud.",
                   )}
                 />
               </Stack>
@@ -142,12 +142,12 @@ export function DeleteFilesDialog({
             {cloudCount === 0
               ? t(
                   "filesPage.deleteFilesLocalBody",
-                  "Delete {{count}} file(s) from this device? This cannot be undone.",
+                  "Remove {{count}} file(s) from your library? This clears them from Stirling PDF, not from your computer.",
                   { count: total },
                 )
               : t(
                   "filesPage.deleteFilesCloudBody",
-                  "Delete {{count}} file(s) from the cloud? This cannot be undone.",
+                  "Remove {{count}} file(s) from the cloud? This can't be undone.",
                   { count: total },
                 )}
           </Text>
