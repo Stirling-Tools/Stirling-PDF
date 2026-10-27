@@ -69,7 +69,9 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
   const [hasAutoFilled, setHasAutoFilled] = useState(false);
   // Installs finish after the click that started them; the selection may have moved on.
   const valueRef = useRef(value);
-  valueRef.current = value;
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
   const displayNames = useMemo(
     () =>

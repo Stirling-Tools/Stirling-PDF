@@ -280,6 +280,11 @@ class OcrLanguageInstallerTest {
                 catalog.languages().stream().filter(e -> e.code().equals("eng")).findFirst().get();
         assertEquals(4113088, eng.sizeBytes());
         assertEquals(64, eng.sha256().length());
+        // tessdata keeps renamed models as git symlinks, which raw URLs serve as a few
+        // bytes naming the target; one of those is not a model.
+        for (CatalogEntry entry : catalog.languages()) {
+            assertTrue(entry.sizeBytes() > 100_000, entry.code() + " is a pointer, not a model");
+        }
     }
 
     private static String sha(byte[] bytes) {

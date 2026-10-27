@@ -68,7 +68,7 @@ describe("LanguagePicker", () => {
     );
     await waitFor(() => expect(onChange).toHaveBeenCalledWith(["fra"]));
     expect(
-      screen.queryByText(/download icon are added/),
+      screen.queryByText(/Languages showing a size are added/),
     ).not.toBeInTheDocument();
   });
 

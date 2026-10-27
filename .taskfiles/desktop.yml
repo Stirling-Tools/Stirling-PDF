@@ -48,6 +48,12 @@ tasks:
     cmds:
       - node frontend/scripts/fetch-tessdata.mjs app/core/src/main/resources/ocr/tessdata-fast-catalog.json frontend/src-tauri/tessdata eng
 
+  sign:mac-natives:
+    desc: "Sign the macOS native libraries inside the bundled backend jar"
+    platforms: [darwin]
+    cmds:
+      - bash scripts/sign-jar-natives-mac.sh src-tauri/libs "$APPLE_SIGNING_IDENTITY"
+
   provisioner:
     desc: "Build installer provisioner"
     platforms: [windows]
