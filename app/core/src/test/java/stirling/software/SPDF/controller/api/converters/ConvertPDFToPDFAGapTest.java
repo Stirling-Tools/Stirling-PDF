@@ -4,17 +4,16 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,13 +32,13 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationHighlight;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -597,6 +596,31 @@ class ConvertPDFToPDFAGapTest {
                 assertThat(document.getPage(0).hasContents()).isTrue();
             }
         }
+
+        @Test
+        @DisplayName("page text that uses the default fill stays black")
+        void textStaysBlack() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                invokeInstance(newController(), "addWhiteBackground", document);
+
+                assertThat(darkTextPixels(document)).isPositive();
+            }
+        }
+    }
+
+    /** Dark pixels where {@link #simplePdf()} draws its text, rendered at 72 dpi. */
+    private static int darkTextPixels(PDDocument document) throws IOException {
+        BufferedImage image = new PDFRenderer(document).renderImage(0);
+        int dark = 0;
+        for (int x = 100; x < 170; x++) {
+            for (int y = 132; y < 145; y++) {
+                int rgb = image.getRGB(x, y);
+                if (((rgb >> 16) & 0xff) < 90 && ((rgb >> 8) & 0xff) < 90 && (rgb & 0xff) < 90) {
+                    dark++;
+                }
+            }
+        }
+        return dark;
     }
 
     // =======================================================================================
@@ -1030,20 +1054,8 @@ class ConvertPDFToPDFAGapTest {
                         .extracting(PDAnnotation::getSubtype)
                         .containsExactly("Link");
 
-                String drawn = null;
-                Iterator<PDStream> streams = page.getContentStreams();
-                while (streams.hasNext()) {
-                    String content =
-                            new String(streams.next().toByteArray(), StandardCharsets.US_ASCII);
-                    if (content.contains(" re")) {
-                        drawn = content;
-                    }
-                }
-                assertThat(drawn).isNotNull();
-                int fill = drawn.indexOf(" re");
-                // The fill colour must not leak into the page content that follows
-                assertThat(drawn.lastIndexOf('q', fill)).isNotNegative();
-                assertThat(drawn.indexOf('Q', fill)).isGreaterThan(fill);
+                // The highlight colour must not carry into the page text drawn after it
+                assertThat(darkTextPixels(document)).isPositive();
             }
         }
 

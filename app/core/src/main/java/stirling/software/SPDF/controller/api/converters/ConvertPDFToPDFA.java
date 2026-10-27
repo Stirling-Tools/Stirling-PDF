@@ -2259,6 +2259,8 @@ public class ConvertPDFToPDFA {
             try (PDPageContentStream cs =
                     new PDPageContentStream(
                             doc, page, PDPageContentStream.AppendMode.PREPEND, true, true)) {
+                // Without the restore, page text that relies on the default fill is drawn white
+                cs.saveGraphicsState();
                 cs.setNonStrokingColor(Color.WHITE);
                 cs.addRect(
                         mediaBox.getLowerLeftX(),
@@ -2266,6 +2268,7 @@ public class ConvertPDFToPDFA {
                         mediaBox.getWidth(),
                         mediaBox.getHeight());
                 cs.fill();
+                cs.restoreGraphicsState();
             }
         }
     }
