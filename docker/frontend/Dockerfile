@@ -20,6 +20,7 @@ ARG VITE_INCLUDE_PORTAL=true
 ARG VITE_SUPABASE_URL=""
 # pragma: allowlist secret
 ARG VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=""
+ARG VITE_ACCESSIBILITY_EDITING=""
 
 # Build vite from editor/, output lands in dist/.
 RUN set -eu; \
@@ -27,6 +28,7 @@ RUN set -eu; \
     export STIRLING_FLAVOR="${STIRLING_FLAVOR}"; \
     if [ -n "${VITE_SUPABASE_URL}" ]; then export VITE_SUPABASE_URL="${VITE_SUPABASE_URL}"; fi; \
     if [ -n "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then export VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY="${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}"; fi; \
+    if [ -n "${VITE_ACCESSIBILITY_EDITING}" ]; then export VITE_ACCESSIBILITY_EDITING="${VITE_ACCESSIBILITY_EDITING}"; fi; \
     npx vite build editor --mode "${VITE_BUILD_MODE}"
 
 # Stage 2: nginx

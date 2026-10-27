@@ -20,8 +20,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import stirling.software.SPDF.service.pdfjson.JobOwnershipServiceImpl;
-import stirling.software.SPDF.service.pdfjson.NoOpJobOwnershipService;
+import stirling.software.SPDF.service.JobOwnershipServiceImpl;
+import stirling.software.SPDF.service.NoOpJobOwnershipService;
 import stirling.software.common.cluster.inprocess.InProcessClusterBackplane;
 import stirling.software.common.cluster.inprocess.InProcessJobStore;
 import stirling.software.common.cluster.inprocess.LocalDiskFileStore;

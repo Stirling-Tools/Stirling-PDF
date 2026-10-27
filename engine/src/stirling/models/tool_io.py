@@ -175,7 +175,6 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
     ToolEndpoint.EDIT_TABLE_OF_CONTENTS: ToolIOSpec(
         accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
     ),
-    ToolEndpoint.EDIT_TEXT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.MERGE_PDFS: ToolIOSpec(
         accepts=[ToolFormat.PDF, ToolFormat.IMAGE], produces=ToolFormat.PDF, arity=ToolArity.MISO
     ),
