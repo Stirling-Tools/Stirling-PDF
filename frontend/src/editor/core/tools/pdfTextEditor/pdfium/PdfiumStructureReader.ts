@@ -1,6 +1,6 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { readUtf16 } from "@app/services/pdfiumService";
-import type { StructureElement } from "@app/tools/pdfTextEditor/model/PageStructure";
+import { readUtf16 } from "@editor/services/pdfiumService";
+import type { StructureElement } from "@editor/tools/pdfTextEditor/model/PageStructure";
 
 type StringGetter = (el: number, buf: number, len: number) => number;
 
@@ -34,6 +34,8 @@ export function readPageStructure(
         alt: readString(m, el, m.FPDF_StructElement_GetAltText),
         actualText: readString(m, el, m.FPDF_StructElement_GetActualText),
         mcids,
+        // PDFium does not expose the kids' kinds; the fallback is read-only anyway.
+        onlyMarkedContent: false,
       });
       const kids = m.FPDF_StructElement_CountChildren(el);
       for (let i = 0; i < kids; i++) {

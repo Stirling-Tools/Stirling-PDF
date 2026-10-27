@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { ProcessingCache } from "@app/services/processingCache";
-import type { ProcessedFile } from "@app/types/processing";
+import { ProcessingCache } from "@editor/services/processingCache";
+import type { ProcessedFile } from "@editor/types/processing";
 
 function fileWithThumbs(thumbBytes: number, pages: number): ProcessedFile {
   return {

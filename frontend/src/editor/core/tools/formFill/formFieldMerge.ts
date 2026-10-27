@@ -2,7 +2,7 @@
  * The backend returns signature fields but cannot render their appearance; PDFium rasterises it
  * separately. Merge the two BY NAME, never concatenate, or the signature is listed twice.
  */
-import type { FormField } from "@app/tools/formFill/types";
+import type { FormField } from "@editor/tools/formFill/types";
 
 /** Copies each pdfium `appearanceDataUrl` onto the same-named backend field, appending unmatched ones. */
 export function mergeSignatureAppearances(

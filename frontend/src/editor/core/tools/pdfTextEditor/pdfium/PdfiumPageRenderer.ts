@@ -1,5 +1,5 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 
 // A display ratio above this buys no visible sharpness for a PDF preview and
 // doubles memory per step, so the raster stops following it there.

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SignatureAppearanceSettings from "@app/components/tools/certSign/SignatureAppearanceSettings";
+import SignatureAppearanceSettings from "@editor/components/tools/certSign/SignatureAppearanceSettings";
 import {
   CertSignParameters,
   defaultParameters,
-} from "@app/hooks/tools/certSign/useCertSignParameters";
+} from "@editor/hooks/tools/certSign/useCertSignParameters";
 
 const meta = {
   title: "Tools/CertSign/SignatureAppearanceSettings",

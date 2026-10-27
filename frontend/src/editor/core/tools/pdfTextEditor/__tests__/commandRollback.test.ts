@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
+import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import {
   RolledBackError,
   type Command,
-} from "@app/tools/pdfTextEditor/commands/Command";
+} from "@editor/tools/pdfTextEditor/commands/Command";
 import {
   HistoryStack,
   HistoryStepError,
-} from "@app/tools/pdfTextEditor/store/HistoryStack";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+} from "@editor/tools/pdfTextEditor/store/HistoryStack";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
 const doc = {} as EditorDocument;
 

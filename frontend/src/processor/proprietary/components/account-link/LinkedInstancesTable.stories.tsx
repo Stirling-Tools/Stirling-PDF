@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { LinkedInstanceRow } from "@portal/api/link";
-import { listInstances } from "@portal/mocks/link";
-import { LinkedInstancesTable } from "@portal/components/account-link/LinkedInstancesTable";
-import "@portal/views/AccountLink.css";
+import type { LinkedInstanceRow } from "@processor/api/link";
+import { listInstances } from "@processor/mocks/link";
+import { LinkedInstancesTable } from "@processor/components/account-link/LinkedInstancesTable";
+import "@processor/views/AccountLink.css";
 
 const meta: Meta<typeof LinkedInstancesTable> = {
   title: "Portal/AccountLink/LinkedInstancesTable",

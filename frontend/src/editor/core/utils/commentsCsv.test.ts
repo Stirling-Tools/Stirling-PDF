@@ -8,7 +8,7 @@ import {
   toCommentCsvThreads,
   toCsvCell,
   type CommentsCsvHeaders,
-} from "@app/utils/commentsCsv";
+} from "@editor/utils/commentsCsv";
 
 const BOM = "﻿";
 

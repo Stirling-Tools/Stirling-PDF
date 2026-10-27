@@ -3,8 +3,8 @@ import {
   detectSaveRisks,
   hasSaveRisks,
   describeSaveRisks,
-} from "@app/tools/pdfTextEditor/util/documentRisks";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+} from "@editor/tools/pdfTextEditor/util/documentRisks";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
 function mkDoc(opts: {
   signatures?: number;

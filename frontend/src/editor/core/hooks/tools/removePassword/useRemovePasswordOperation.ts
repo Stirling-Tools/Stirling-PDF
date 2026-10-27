@@ -1,22 +1,22 @@
 import { useTranslation } from "react-i18next";
-import type { StirlingFile } from "@app/types/fileContext";
-import { getPdfAccess } from "@app/services/pdfAccessService";
+import type { StirlingFile } from "@editor/types/fileContext";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
 import {
   useToolOperation,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   validateRemovePasswordParameters,
   RemovePasswordParameters,
   defaultParameters,
-} from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+} from "@editor/hooks/tools/removePassword/useRemovePasswordParameters";
 import {
   buildRemovePasswordFormData,
   removePasswordToApiParams,
   removePasswordFromApiParams,
   REMOVE_PASSWORD_ENDPOINT,
-} from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
+} from "@editor/hooks/tools/removePassword/buildRemovePasswordFormData";
 
 export const removePasswordOperationConfig = defineSingleFileTool({
   validateParams: validateRemovePasswordParameters,

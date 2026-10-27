@@ -1,6 +1,6 @@
 import { http, HttpResponse, delay } from "msw";
-import type { Tier } from "@portal/contexts/TierContext";
-import { apiKeysFor, auditLogFor } from "@portal/mocks/infrastructure";
+import type { Tier } from "@processor/contexts/TierContext";
+import { apiKeysFor, auditLogFor } from "@processor/mocks/infrastructure";
 
 function tierFrom(request: Request): Tier {
   const url = new URL(request.url);

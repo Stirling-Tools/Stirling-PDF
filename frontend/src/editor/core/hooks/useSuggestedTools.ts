@@ -1,10 +1,10 @@
 import { useMemo } from "react";
-import { useNavigationState } from "@app/contexts/NavigationContext";
-import { useToolNavigation } from "@app/hooks/useToolNavigation";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useToolRecommendations } from "@app/hooks/useToolRecommendations";
-import { isComingSoonTool } from "@app/data/toolsTaxonomy";
-import { isValidToolId, ToolId } from "@app/types/toolId";
+import { useNavigationState } from "@editor/contexts/NavigationContext";
+import { useToolNavigation } from "@editor/hooks/useToolNavigation";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useToolRecommendations } from "@editor/hooks/useToolRecommendations";
+import { isComingSoonTool } from "@editor/data/toolsTaxonomy";
+import { isValidToolId, ToolId } from "@editor/types/toolId";
 
 export interface SuggestedTool {
   id: ToolId;

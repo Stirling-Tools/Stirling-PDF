@@ -1,8 +1,8 @@
-import type { FileId } from "@app/types/file";
+import type { FileId } from "@editor/types/file";
 import type {
   FileContextState,
   StirlingFileStub,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 
 // Long tool sessions accumulate one stub per file and variant, each carrying
 // full-page data-URL thumbnails (~1.5MB each, rotated + unrotated). The display

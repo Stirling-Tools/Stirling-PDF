@@ -6,7 +6,7 @@
  * arguments and no context plumbing: the modal reads the live wallet itself to
  * fill in the usage figures.
  *
- *   import { openFreeLimitModal } from "@app/components/usageLimitModals";
+ *   import { openFreeLimitModal } from "@editor/components/usageLimitModals";
  *   openFreeLimitModal();
  */
 

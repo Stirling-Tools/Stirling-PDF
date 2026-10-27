@@ -2,16 +2,16 @@
  * FileContext reducer - Pure state management for file operations
  */
 
-import { FileId } from "@app/types/file";
+import { FileId } from "@editor/types/file";
 import {
   FileContextState,
   FileContextAction,
   StirlingFileStub,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 import {
   clearStubThumbnails,
   enforceThumbnailBudget,
-} from "@app/contexts/file/stubThumbnailBudget";
+} from "@editor/contexts/file/stubThumbnailBudget";
 
 // Initial state
 export const initialFileContextState: FileContextState = {

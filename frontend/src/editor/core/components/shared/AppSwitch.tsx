@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Dropdown } from "@app/ui";
-import { BrandMark } from "@app/components/shared/BrandMark";
+import { Dropdown } from "@editor/ui";
+import { BrandMark } from "@editor/components/shared/BrandMark";
 
 export type AppSwitchTarget = "editor" | "processor";
 

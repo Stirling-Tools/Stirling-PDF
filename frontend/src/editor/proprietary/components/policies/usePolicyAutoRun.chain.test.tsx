@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import type { PolicyState } from "@app/types/policies";
+import type { PolicyState } from "@editor/types/policies";
 
 // Two active file-producing upload policies, so the auto-run should CHAIN them: fire the first on
 // the upload, then the second on the first's output. A classification policy is also present to
@@ -22,12 +22,12 @@ const fileStubs: {
   derivedFromTool?: boolean;
   classificationLocked?: boolean;
 }[] = [];
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs }),
   useFileManagement: () => ({ addFiles: vi.fn() }),
   useFileContext: () => ({ consumeFiles: vi.fn() }),
 }));
-vi.mock("@app/hooks/usePolicies", () => ({
+vi.mock("@editor/hooks/usePolicies", () => ({
   usePolicies: () => ({
     policies: {
       security: {
@@ -68,31 +68,31 @@ vi.mock("@app/hooks/usePolicies", () => ({
     },
   }),
 }));
-vi.mock("@app/services/policyApi", () => ({
+vi.mock("@editor/services/policyApi", () => ({
   runStoredPolicy: vi.fn(),
   getPolicyRun: vi.fn(),
   downloadPolicyOutput: vi.fn(),
   resolvePolicyRunTarget: () => "saas",
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: vi.fn(),
     getStirlingFileStub: vi.fn().mockResolvedValue(null),
   },
 }));
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: vi.fn() }),
 }));
 
-import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
+import { usePolicyAutoRun } from "@editor/components/policies/usePolicyAutoRun";
 import {
   recordRunStart,
   updateRun,
   getRun,
   resetPolicyRuns,
-} from "@app/components/policies/policyRunStore";
-import { runStoredPolicy, getPolicyRun } from "@app/services/policyApi";
-import { fileStorage } from "@app/services/fileStorage";
+} from "@editor/components/policies/policyRunStore";
+import { runStoredPolicy, getPolicyRun } from "@editor/services/policyApi";
+import { fileStorage } from "@editor/services/fileStorage";
 
 const runStored = vi.mocked(runStoredPolicy);
 const getRunStatus = vi.mocked(getPolicyRun);

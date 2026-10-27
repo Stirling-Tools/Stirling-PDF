@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   formatAltText,
   parseAltText,
-} from "@app/components/tools/convert/ConvertToPdfUaSettings";
+} from "@editor/components/tools/convert/ConvertToPdfUaSettings";
 
 describe("PDF/UA alt-text wire format", () => {
   test("reads the key=description lines the report's keys produce", () => {

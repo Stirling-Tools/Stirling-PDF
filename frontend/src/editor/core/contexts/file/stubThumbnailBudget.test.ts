@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { FileId } from "@app/types/file";
+import type { FileId } from "@editor/types/file";
 import type {
   FileContextState,
   StirlingFileStub,
-} from "@app/types/fileContext";
-import { selectThumbnailEvictionIds } from "@app/contexts/file/lifecycle";
+} from "@editor/types/fileContext";
+import { selectThumbnailEvictionIds } from "@editor/contexts/file/lifecycle";
 
 const THUMB = (bytes: number) => `data:image/png;base64,${"a".repeat(bytes)}`;
 

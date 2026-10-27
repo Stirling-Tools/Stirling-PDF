@@ -1,7 +1,7 @@
 import {
   AnimatedCircleConfig,
   AnimatedSlideBackgroundProps,
-} from "@app/types/types";
+} from "@editor/types/types";
 
 /**
  * Unified circle background configuration used across all onboarding slides.

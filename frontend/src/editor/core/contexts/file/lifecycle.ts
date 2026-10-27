@@ -2,30 +2,30 @@
  * File lifecycle management - Resource cleanup and memory management
  */
 
-import { FileId } from "@app/types/file";
-import { releaseSharedDocumentWhenIdle } from "@app/services/pdfiumService";
-import { releaseDocumentBytes } from "@app/services/documentBytesCache";
+import { FileId } from "@editor/types/file";
+import { releaseSharedDocumentWhenIdle } from "@editor/services/pdfiumService";
+import { releaseDocumentBytes } from "@editor/services/documentBytesCache";
 import {
   forgetPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 import {
   FileContextAction,
   FileContextState,
   StirlingFileStub,
   ProcessedFilePage,
   createStirlingFile,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 import {
   forgetFile,
   noteFileSaved,
   persistedSourceFields,
-} from "@app/contexts/file/storedFileReconciler";
-import { selectThumbnailEvictionIds } from "@app/contexts/file/stubThumbnailBudget";
+} from "@editor/contexts/file/storedFileReconciler";
+import { selectThumbnailEvictionIds } from "@editor/contexts/file/stubThumbnailBudget";
 
 // Kept exported here for callers and tests that reach for it via the lifecycle.
-export { selectThumbnailEvictionIds } from "@app/contexts/file/stubThumbnailBudget";
+export { selectThumbnailEvictionIds } from "@editor/contexts/file/stubThumbnailBudget";
 
 const DEBUG = process.env.NODE_ENV === "development";
 
@@ -289,7 +289,7 @@ export class FileLifecycleManager {
     // hiccup must not stall it. Worst case the link reverts to its stored value.
     const linkUpdates = persistedSourceFields(updates);
     if (linkUpdates) {
-      void import("@app/services/fileStorage")
+      void import("@editor/services/fileStorage")
         .then(({ fileStorage }) =>
           fileStorage.updateFileMetadata(fileId, linkUpdates),
         )

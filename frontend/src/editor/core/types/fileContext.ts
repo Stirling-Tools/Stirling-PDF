@@ -2,15 +2,15 @@
  * Types for global file context management across views and tools
  */
 
-import { PageOperation } from "@app/types/pageEditor";
-import { FileId, BaseFileMetadata } from "@app/types/file";
-import { generateId } from "@app/utils/generateId";
+import { PageOperation } from "@editor/types/pageEditor";
+import { FileId, BaseFileMetadata } from "@editor/types/file";
+import { generateId } from "@editor/utils/generateId";
 import {
   bindPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfAccessService";
-import type { DiskUnavailableReason } from "@app/services/desktopFileLink";
+} from "@editor/services/pdfAccessService";
+import type { DiskUnavailableReason } from "@editor/services/desktopFileLink";
 
 // Re-export FileId for convenience
 export type { FileId };

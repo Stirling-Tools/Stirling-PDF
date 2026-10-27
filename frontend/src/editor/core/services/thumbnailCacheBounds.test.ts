@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ThumbnailGenerationService } from "@app/services/thumbnailGenerationService";
+import { ThumbnailGenerationService } from "@editor/services/thumbnailGenerationService";
 
 function makeService(): ThumbnailGenerationService {
   return new ThumbnailGenerationService(1);

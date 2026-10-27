@@ -1,5 +1,5 @@
-import { FileId } from "@app/types/file";
-import { createFileId } from "@app/types/fileContext";
+import { FileId } from "@editor/types/file";
+import { createFileId } from "@editor/types/fileContext";
 import {
   BlankTrackPage,
   PageSize,
@@ -10,7 +10,7 @@ import {
   emptyWorkspace,
   isSourcePage,
   trackSignature,
-} from "@app/components/pageTracks/types";
+} from "@editor/components/pageTracks/types";
 
 const MAX_HISTORY = 100;
 

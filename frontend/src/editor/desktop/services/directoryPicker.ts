@@ -6,7 +6,7 @@
 
 import { isTauri } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import type { PickedDirectory } from "@core/services/directoryPicker";
+import type { PickedDirectory } from "@editor-core/services/directoryPicker";
 export type { PickedDirectory };
 
 // The desktop bundle also runs as a plain web page in dev; only the actual

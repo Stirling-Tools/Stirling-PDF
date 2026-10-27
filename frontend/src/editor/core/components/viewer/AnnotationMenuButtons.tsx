@@ -1,10 +1,10 @@
 import { Tooltip, Popover, TextInput, Stack } from "@mantine/core";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui/Button";
-import type { FirstLinkTarget } from "@app/components/viewer/useAnnotationMenuHandlers";
-import "@app/components/viewer/TextSelectionMenu.css";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import type { FirstLinkTarget } from "@editor/components/viewer/useAnnotationMenuHandlers";
+import "@editor/components/viewer/TextSelectionMenu.css";
 
 export function DeleteButton({ onDelete }: { onDelete: () => void }) {
   const { t } = useTranslation();

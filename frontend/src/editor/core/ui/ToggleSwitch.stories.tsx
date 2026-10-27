@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ToggleSwitch } from "@app/ui/ToggleSwitch";
+import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
 
 const meta: Meta<typeof ToggleSwitch> = {
   title: "Primitives/ToggleSwitch",

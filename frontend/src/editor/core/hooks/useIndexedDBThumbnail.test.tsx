@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 const mocks = vi.hoisted(() => ({
   generateThumbnailForFile: vi.fn(),
@@ -9,26 +9,26 @@ const mocks = vi.hoisted(() => ({
   selectors: { getFile: () => null },
 }));
 
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => mocks.indexedDB,
 }));
 
-vi.mock("@app/utils/thumbnailUtils", () => ({
+vi.mock("@editor/utils/thumbnailUtils", () => ({
   generateThumbnailForFile: mocks.generateThumbnailForFile,
 }));
 
-vi.mock("@app/services/pdfPasswordStore", () => ({
+vi.mock("@editor/services/pdfPasswordStore", () => ({
   getPdfAccess: () => null,
 }));
 
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useFileManagement: () => ({
     updateStirlingFileStub: mocks.updateStirlingFileStub,
   }),
   useFileSelectors: () => mocks.selectors,
 }));
 
-import { useIndexedDBThumbnail } from "@app/hooks/useIndexedDBThumbnail";
+import { useIndexedDBThumbnail } from "@editor/hooks/useIndexedDBThumbnail";
 
 function makeStub(overrides: Partial<StirlingFileStub> = {}): StirlingFileStub {
   return {

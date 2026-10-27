@@ -3,7 +3,7 @@ import {
   CacheConfig,
   CacheEntry,
   CacheStats,
-} from "@app/types/processing";
+} from "@editor/types/processing";
 
 export class ProcessingCache {
   private cache = new Map<string, CacheEntry>();

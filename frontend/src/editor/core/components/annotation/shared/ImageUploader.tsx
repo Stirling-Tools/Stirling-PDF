@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { FileInput, Text, Stack, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { removeWhiteBackground } from "@app/utils/imageTransparency";
-import { alert } from "@app/components/toast";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { removeWhiteBackground } from "@editor/utils/imageTransparency";
+import { alert } from "@editor/components/toast";
 
 interface ImageUploaderProps {
   onImageChange: (file: File | null) => void;

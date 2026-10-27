@@ -1,19 +1,19 @@
-import i18n from "@app/i18n";
+import i18n from "@editor/i18n";
 import {
   isLocalProcessingOnly,
   requiresOffDeviceProcessing,
   documentPrivacyError,
-} from "@app/services/documentPrivacyService";
-import { authService } from "@app/services/authService";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
-import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
-import { STIRLING_SAAS_BACKEND_API_URL } from "@app/constants/connection";
+} from "@editor/services/documentPrivacyService";
+import { authService } from "@editor/services/authService";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
+import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import { STIRLING_SAAS_BACKEND_API_URL } from "@editor/constants/connection";
 import {
   CONVERSION_ENDPOINTS,
   ENDPOINT_NAMES,
-} from "@app/constants/convertConstants";
+} from "@editor/constants/convertConstants";
 
 export type ExecutionTarget = "local" | "remote";
 

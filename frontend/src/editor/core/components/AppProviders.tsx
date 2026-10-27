@@ -1,44 +1,44 @@
 import { ReactNode, useEffect, useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { createAppQueryClient } from "@app/query/queryClient";
-import { ThemeProvider } from "@app/components/shared/ThemeProvider";
-import { FileContextProvider } from "@app/contexts/FileContext";
-import { NavigationProvider } from "@app/contexts/NavigationContext";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { FilesModalProvider } from "@app/contexts/FilesModalContext";
-import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
-import { DamagedFileRepairProvider } from "@app/contexts/DamagedFileRepairContext";
-import { HotkeyProvider } from "@app/contexts/HotkeyContext";
-import { SidebarProvider } from "@app/contexts/SidebarContext";
+import { createAppQueryClient } from "@editor/query/queryClient";
+import { ThemeProvider } from "@editor/components/shared/ThemeProvider";
+import { FileContextProvider } from "@editor/contexts/FileContext";
+import { NavigationProvider } from "@editor/contexts/NavigationContext";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { FilesModalProvider } from "@editor/contexts/FilesModalContext";
+import { ToolWorkflowProvider } from "@editor/contexts/ToolWorkflowContext";
+import { DamagedFileRepairProvider } from "@editor/contexts/DamagedFileRepairContext";
+import { HotkeyProvider } from "@editor/contexts/HotkeyContext";
+import { SidebarProvider } from "@editor/contexts/SidebarContext";
 import {
   PreferencesProvider,
   usePreferences,
-} from "@app/contexts/PreferencesContext";
+} from "@editor/contexts/PreferencesContext";
 import {
   AppConfigProvider,
   AppConfigProviderProps,
   AppConfigRetryOptions,
   useAppConfig,
-} from "@app/contexts/AppConfigContext";
-import { WorkbenchBarProvider } from "@app/contexts/WorkbenchBarContext";
-import { ViewerProvider } from "@app/contexts/ViewerContext";
-import { SignatureProvider } from "@app/contexts/SignatureContext";
-import { SigningOverlayProvider } from "@app/contexts/SigningOverlayContext";
-import { AnnotationProvider } from "@app/contexts/AnnotationContext";
-import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
-import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
-import { BannerProvider } from "@app/contexts/BannerContext";
-import ErrorBoundary from "@app/components/shared/ErrorBoundary";
-import { useAppInitialization } from "@app/hooks/useAppInitialization";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
-import AppConfigLoader from "@app/components/shared/AppConfigLoader";
-import { UpdateStartupPopup } from "@app/components/shared/UpdateStartupPopup";
-import { RedactionProvider } from "@app/contexts/RedactionContext";
-import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
-import { FolderProvider } from "@app/contexts/FolderContext";
-import { WorkbenchSessionPersistence } from "@app/components/session/WorkbenchSessionPersistence";
-import { retireLegacyFolderWorker } from "@app/services/retireLegacyFolderWorker";
-import type { UserPreferences } from "@app/services/preferencesService";
+} from "@editor/contexts/AppConfigContext";
+import { WorkbenchBarProvider } from "@editor/contexts/WorkbenchBarContext";
+import { ViewerProvider } from "@editor/contexts/ViewerContext";
+import { SignatureProvider } from "@editor/contexts/SignatureContext";
+import { SigningOverlayProvider } from "@editor/contexts/SigningOverlayContext";
+import { AnnotationProvider } from "@editor/contexts/AnnotationContext";
+import { TourOrchestrationProvider } from "@editor/contexts/TourOrchestrationContext";
+import { AdminTourOrchestrationProvider } from "@editor/contexts/AdminTourOrchestrationContext";
+import { BannerProvider } from "@editor/contexts/BannerContext";
+import ErrorBoundary from "@editor/components/shared/ErrorBoundary";
+import { useAppInitialization } from "@editor/hooks/useAppInitialization";
+import { useLogoAssets } from "@editor/hooks/useLogoAssets";
+import AppConfigLoader from "@editor/components/shared/AppConfigLoader";
+import { UpdateStartupPopup } from "@editor/components/shared/UpdateStartupPopup";
+import { RedactionProvider } from "@editor/contexts/RedactionContext";
+import { FormFillProvider } from "@editor/tools/formFill/FormFillContext";
+import { FolderProvider } from "@editor/contexts/FolderContext";
+import { WorkbenchSessionPersistence } from "@editor/components/session/WorkbenchSessionPersistence";
+import { retireLegacyFolderWorker } from "@editor/services/retireLegacyFolderWorker";
+import type { UserPreferences } from "@editor/services/preferencesService";
 
 // Component to run app-level initialization (must be inside AppProviders for context access)
 function AppInitializer() {

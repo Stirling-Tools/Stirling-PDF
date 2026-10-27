@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { supabase } from "@app/auth/supabase";
-import { useAuth } from "@app/auth/UseSession";
-import { getPreferredCurrency } from "@app/utils/currencyDetection";
-import { stripeAmountToMajor } from "@app/utils/stripeCurrency";
+import { supabase } from "@editor/auth/supabase";
+import { useAuth } from "@editor/auth/UseSession";
+import { getPreferredCurrency } from "@editor/utils/currencyDetection";
+import { stripeAmountToMajor } from "@editor/utils/stripeCurrency";
 
 // Currency mapping
 const getCurrencySymbol = (currency: string): string => {
