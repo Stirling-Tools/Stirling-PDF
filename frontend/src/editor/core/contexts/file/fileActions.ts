@@ -746,7 +746,39 @@ export async function consumeFiles(
 }
 
 /**
+ * Restore each undone input as its chain's leaf in storage, before its outputs are
+ * deleted: the other order, interrupted, leaves a chain with no leaf, which nothing
+ * opens. isDirty rides along: a restored version that reads clean on the next open
+ * is reloaded from the disk copy the undone operation wrote, putting the undone
+ * bytes back for good. Throws if a stored input could not be restored; an input
+ * that was never stored has nothing to restore.
+ */
+async function restoreInputLeaves(stubs: StirlingFileStub[]): Promise<void> {
+  const restored = await Promise.all(
+    stubs.map((stub) =>
+      fileStorage.updateFileMetadata(stub.id, {
+        isLeaf: true,
+        ...(stub.isDirty ? { isDirty: true } : {}),
+      }),
+    ),
+  );
+  const unrestored = await Promise.all(
+    stubs.map(
+      async (stub, i) =>
+        !restored[i] &&
+        (await fileStorage.getStirlingFileStub(stub.id)) !== null,
+    ),
+  );
+  if (unrestored.some(Boolean)) {
+    throw new Error("Could not restore the original file in storage");
+  }
+}
+
+/**
  * Undoes a previous consumeFiles operation by restoring input files and removing output files (unless pinned)
+ *
+ * Rejects without changing the workspace when storage cannot restore an input, so
+ * the caller can keep its undo data and retry.
  */
 export async function undoConsumeFiles(
   inputFiles: File[],
@@ -780,6 +812,15 @@ export async function undoConsumeFiles(
   const backupFilesRef = new Map(filesRef.current);
 
   try {
+    // Mark restored files dirty if they have a local path (they now differ from disk).
+    const stubsWithDirtyMarked = inputStirlingFileStubs.map((stub) =>
+      stub.localFilePath ? { ...stub, isDirty: true } : stub,
+    );
+
+    // Storage first: a failure here throws before the workspace changes, so the
+    // caller keeps its undo data and a retry starts from a consistent state.
+    await restoreInputLeaves(stubsWithDirtyMarked);
+
     // Sync filesRef before dispatch — prevents bumpRevision re-renders from seeing stale output IDs with no File objects.
     outputFileIds.forEach((id) => filesRef.current.delete(id));
     inputFiles.forEach((file, index) => {
@@ -788,11 +829,6 @@ export async function undoConsumeFiles(
         filesRef.current.set(record.id, file);
       }
     });
-
-    // Mark restored files dirty if they have a local path (they now differ from disk).
-    const stubsWithDirtyMarked = inputStirlingFileStubs.map((stub) =>
-      stub.localFilePath ? { ...stub, isDirty: true } : stub,
-    );
 
     // Dispatch with filesRef and state.files.ids now in sync.
     dispatch({
@@ -803,23 +839,9 @@ export async function undoConsumeFiles(
       },
     });
 
-    // Restore isLeaf in IDB — modal reads IDB directly and misses files if isLeaf=false.
-    // isDirty rides along: the dispatch above only reaches memory, and a restored
-    // version that reads clean on the next open is reloaded from the disk copy the
-    // undone operation wrote, putting the undone bytes back for good.
-    const restored = await Promise.all(
-      stubsWithDirtyMarked.map((stub) =>
-        fileStorage.updateFileMetadata(stub.id, {
-          isLeaf: true,
-          ...(stub.isDirty ? { isDirty: true } : {}),
-        }),
-      ),
-    );
-
-    // Outputs go only once every input is a leaf again: deleting them first and
-    // being interrupted leaves a version chain with no leaf, which nothing opens.
-    // State is already consistent, so the deletes are fire-and-forget.
-    if (indexedDB && restored.every(Boolean)) {
+    // Every input is a leaf again, so deleting the outputs can no longer leave a
+    // chain without one. State is already consistent, so they are fire-and-forget.
+    if (indexedDB) {
       outputFileIds.forEach((fileId) => {
         indexedDB.deleteFile(fileId).catch((error) => {
           console.error(
@@ -831,11 +853,6 @@ export async function undoConsumeFiles(
           indexedDB.bumpRevision?.();
         });
       });
-    } else if (indexedDB) {
-      console.warn(
-        "📄 undoConsumeFiles: Keeping outputs in IDB, an input could not be restored as a leaf",
-      );
-      indexedDB.bumpRevision?.();
     }
 
     if (DEBUG)

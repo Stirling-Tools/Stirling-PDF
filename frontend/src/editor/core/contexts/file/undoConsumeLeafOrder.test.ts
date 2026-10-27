@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { expectConsole } from "@editor/tests/failOnConsole";
 import type { FileId, StirlingFileStub } from "@editor/types/fileContext";
 
 const updateFileMetadata = vi.fn();
+const getStirlingFileStub = vi.fn();
 
 vi.mock("@editor/services/fileStorage", () => ({
-  fileStorage: { updateFileMetadata },
+  fileStorage: { updateFileMetadata, getStirlingFileStub },
 }));
 
 const { undoConsumeFiles } = await import("@editor/contexts/file/fileActions");
@@ -16,14 +16,21 @@ const input = {
   isLeaf: false,
 } as StirlingFileStub;
 const outputId = "output" as FileId;
-let restoreSucceeds = true;
+const outputFile = new File(["out"], "output.pdf");
 
-const runUndo = async () => {
+const runUndo = async ({
+  restoreSucceeds,
+  inputStored = true,
+}: {
+  restoreSucceeds: boolean;
+  inputStored?: boolean;
+}) => {
   const calls: string[] = [];
   updateFileMetadata.mockImplementation(async (id: FileId) => {
     calls.push(`restore:${id}`);
     return restoreSucceeds;
   });
+  getStirlingFileStub.mockResolvedValue(inputStored ? input : null);
   const indexedDB = {
     saveFile: vi.fn(),
     deleteFile: vi.fn(async (id: FileId) => {
@@ -31,37 +38,54 @@ const runUndo = async () => {
     }),
     bumpRevision: vi.fn(),
   };
-  await undoConsumeFiles(
+  const filesRef = { current: new Map<FileId, File>([[outputId, outputFile]]) };
+  const dispatch = vi.fn();
+  const undone = undoConsumeFiles(
     [new File(["x"], input.name)],
     [input],
     [outputId],
-    { current: new Map<FileId, File>() },
-    vi.fn(),
+    filesRef,
+    dispatch,
     indexedDB,
   );
-  return { calls, indexedDB };
+  return { undone, calls, indexedDB, filesRef, dispatch };
 };
 
 describe("undoConsumeFiles — a chain always keeps a leaf", () => {
   beforeEach(() => {
     updateFileMetadata.mockReset();
-    restoreSucceeds = true;
+    getStirlingFileStub.mockReset();
   });
 
   it("restores the input as a leaf before deleting the output", async () => {
-    const { calls } = await runUndo();
+    const { undone, calls, dispatch } = await runUndo({
+      restoreSucceeds: true,
+    });
+    await undone;
 
     expect(calls).toEqual(["restore:input", "delete:output"]);
+    expect(dispatch).toHaveBeenCalledOnce();
   });
 
-  it("keeps the output when the input could not be restored", async () => {
-    expectConsole.warn(/Keeping outputs in IDB/);
-    restoreSucceeds = false;
+  it("rejects without touching the workspace when a stored input cannot be restored", async () => {
+    const { undone, calls, filesRef, dispatch } = await runUndo({
+      restoreSucceeds: false,
+    });
 
-    const { calls, indexedDB } = await runUndo();
-
+    await expect(undone).rejects.toThrow(/Could not restore/);
     expect(calls).toEqual(["restore:input"]);
-    expect(indexedDB.deleteFile).not.toHaveBeenCalled();
-    expect(indexedDB.bumpRevision).toHaveBeenCalled();
+    expect(dispatch).not.toHaveBeenCalled();
+    expect([...filesRef.current.keys()]).toEqual([outputId]);
+  });
+
+  it("proceeds when the input was never stored", async () => {
+    const { undone, calls, dispatch } = await runUndo({
+      restoreSucceeds: false,
+      inputStored: false,
+    });
+    await undone;
+
+    expect(calls).toEqual(["restore:input", "delete:output"]);
+    expect(dispatch).toHaveBeenCalledOnce();
   });
 });
