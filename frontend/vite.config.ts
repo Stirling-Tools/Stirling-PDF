@@ -4,6 +4,7 @@ import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path, { resolve } from "node:path";
+import sharp from "sharp";
 import { constants, brotliCompress, gzip } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -239,6 +240,47 @@ function isMarkdownPackage(pkg: string): boolean {
     MARKDOWN_PACKAGES.has(pkg) ||
     MARKDOWN_PACKAGE_PREFIXES.some((prefix) => pkg.startsWith(prefix))
   );
+}
+
+/**
+ * ViteImageOptimizer only sees bundled assets. viteStaticCopy writes its
+ * targets during writeBundle, after that pass, so copied brand PNGs need their
+ * own optimization step once the copy has landed.
+ */
+function optimizeCopiedImagesPlugin(): PluginOption {
+  let outDir = path.resolve(__dirname, "dist");
+  return {
+    name: "optimize-copied-images",
+    apply: "build",
+    configResolved(config) {
+      outDir = path.resolve(config.root, config.build.outDir);
+    },
+    async closeBundle() {
+      const logoDir = path.join(outDir, "modern-logo");
+      const entries = await fs
+        .readdir(logoDir, { withFileTypes: true })
+        .catch(() => []);
+      await Promise.all(
+        entries
+          .filter((entry) => entry.isFile() && entry.name.endsWith(".png"))
+          .map(async (entry) => {
+            const file = path.join(logoDir, entry.name);
+            const input = await fs.readFile(file);
+            const optimized = await sharp(input)
+              .png({
+                quality: 100,
+                palette: false,
+                compressionLevel: 9,
+                adaptiveFiltering: true,
+              })
+              .toBuffer();
+            if (optimized.length < input.length) {
+              await fs.writeFile(file, optimized);
+            }
+          }),
+      );
+    },
+  };
 }
 
 function compressStaticCopyPlugin(): PluginOption {
@@ -670,6 +712,7 @@ export default defineConfig(async ({ mode, command }) => {
               ]),
         ],
       }),
+      optimizeCopiedImagesPlugin(),
       ...(effectiveMode === "desktop" ? [] : [compressStaticCopyPlugin()]),
       prerenderOgPlugin({
         isSaas: effectiveMode === "saas",
