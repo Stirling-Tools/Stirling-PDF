@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CustomSearchLayer } from "@app/components/viewer/CustomSearchLayer";
+import { CustomSearchLayer } from "@editor/components/viewer/CustomSearchLayer";
 
 // CustomSearchLayer reads its highlight rects from the EmbedPDF search plugin
 // context (useSearch/useDocumentState). Outside a mounted PDFContext.Provider

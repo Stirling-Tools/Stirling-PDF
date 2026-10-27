@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AuditFiltersForm from "@app/components/shared/config/configSections/audit/AuditFiltersForm";
-import { AuditFilters } from "@app/services/auditService";
+import AuditFiltersForm from "@editor/components/shared/config/configSections/audit/AuditFiltersForm";
+import { AuditFilters } from "@editor/services/auditService";
 
 /**
  * Shared filter form for audit components: quick date presets, event type / user

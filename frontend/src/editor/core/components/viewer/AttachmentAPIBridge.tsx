@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useAttachmentCapability } from "@embedpdf/plugin-attachment/react";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import {
   AttachmentState,
   AttachmentAPIWrapper,
-} from "@app/contexts/viewer/viewerBridges";
+} from "@editor/contexts/viewer/viewerBridges";
 import { PdfAttachmentObject } from "@embedpdf/models";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 
 /**
  * Connects the PDF attachment plugin to the shared ViewerContext.

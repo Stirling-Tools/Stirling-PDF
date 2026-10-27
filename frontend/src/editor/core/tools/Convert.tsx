@@ -1,18 +1,18 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useAllFiles, useFileSelection } from "@app/contexts/FileContext";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
-import { detectFileExtension } from "@app/utils/fileUtils";
-import { isImageFormat } from "@app/utils/convertUtils";
+import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
+import { useAllFiles, useFileSelection } from "@editor/contexts/FileContext";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
+import { detectFileExtension } from "@editor/utils/fileUtils";
+import { isImageFormat } from "@editor/utils/convertUtils";
 
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
 
-import ConvertSettings from "@app/components/tools/convert/ConvertSettings";
+import ConvertSettings from "@editor/components/tools/convert/ConvertSettings";
 
-import { useConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
-import { useConvertOperation } from "@app/hooks/tools/convert/useConvertOperation";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
+import { useConvertOperation } from "@editor/hooks/tools/convert/useConvertOperation";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 
 const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();

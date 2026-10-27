@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 
@@ -50,7 +50,6 @@ async function openPdf(page: Page, file: PdfFile): Promise<void> {
 }
 
 async function openSample(page: Page): Promise<void> {
-  await page.route("**/encode-charcodes", (route) => route.abort());
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,

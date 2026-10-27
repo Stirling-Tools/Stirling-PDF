@@ -132,10 +132,11 @@ public class PolicyController {
                             + " in order asynchronously and returns a run id. Poll the run status"
                             + " endpoint and download outputs via /api/v1/general/files/{id}.")
     public ResponseEntity<JobResponse<Void>> run(
-            @RequestPart("json") PipelineDefinition definition,
+            @RequestPart("json") AdHocRunRequest request,
             @RequestParam(value = "policyId", required = false) String policyId,
             @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
+        PipelineDefinition definition = request.toDefinition();
         stampPolicyAudit(definition);
         requireRunnable(definition);
         validateAdHocRun(definition);
@@ -154,10 +155,11 @@ public class PolicyController {
                             + " starts and completes, then a terminal 'completed', 'failed',"
                             + " 'cancelled', or 'waiting' event carrying the final run view.")
     public SseEmitter runStream(
-            @RequestPart("json") PipelineDefinition definition,
+            @RequestPart("json") AdHocRunRequest request,
             @RequestParam(value = "policyId", required = false) String policyId,
             @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
+        PipelineDefinition definition = request.toDefinition();
         stampPolicyAudit(definition);
         requireRunnable(definition);
         validateAdHocRun(definition);

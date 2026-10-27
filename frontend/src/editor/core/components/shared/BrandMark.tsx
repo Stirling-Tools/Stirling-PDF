@@ -1,5 +1,5 @@
-import { Icon } from "@app/ui/Icon";
-import "@app/components/shared/BrandMark.css";
+import { Icon } from "@editor/ui/Icon";
+import "@editor/components/shared/BrandMark.css";
 
 interface BrandMarkProps {
   /** Height of the mark (CSS length). */

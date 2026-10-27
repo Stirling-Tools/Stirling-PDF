@@ -6,27 +6,27 @@ vi.mock("react-router-dom", () => ({
   useNavigate: vi.fn(),
 }));
 
-vi.mock("@app/contexts/ToolWorkflowContext", () => ({
+vi.mock("@editor/contexts/ToolWorkflowContext", () => ({
   useToolWorkflow: vi.fn(),
 }));
 
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationActions: vi.fn(),
 }));
 
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   ViewerContext: React.createContext(null),
 }));
 
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: vi.fn(),
 }));
 
-vi.mock("@app/contexts/file/fileHooks", () => ({
+vi.mock("@editor/contexts/file/fileHooks", () => ({
   useFileActions: vi.fn(),
 }));
 
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: vi.fn(() => ({
     portalAccess: false,
     isAdmin: false,
@@ -34,13 +34,13 @@ vi.mock("@app/auth/UseSession", () => ({
   })),
 }));
 
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getLeafStirlingFileStubs: vi.fn(),
   },
 }));
 
-vi.mock("@app/data/settingsSearchIndex", () => ({
+vi.mock("@editor/data/settingsSearchIndex", () => ({
   SETTINGS_SEARCH_INDEX: [
     {
       section: "email",
@@ -52,7 +52,7 @@ vi.mock("@app/data/settingsSearchIndex", () => ({
   ],
 }));
 
-vi.mock("@app/data/settingsSectionRegistry", () => ({
+vi.mock("@editor/data/settingsSectionRegistry", () => ({
   SETTINGS_SECTION_REGISTRY: [
     {
       key: "general",
@@ -84,7 +84,7 @@ vi.mock("@app/data/settingsSectionRegistry", () => ({
   ],
 }));
 
-vi.mock("@app/data/settingsContentSearch", () => ({
+vi.mock("@editor/data/settingsContentSearch", () => ({
   findSettingsContentMatch: vi.fn((section: string, query: string) => {
     if (query === "smtp" && (section === "general" || section === "email")) {
       return { section, query };
@@ -96,7 +96,7 @@ vi.mock("@app/data/settingsContentSearch", () => ({
   ),
 }));
 
-vi.mock("@app/data/processorSearchIndex", () => ({
+vi.mock("@editor/data/processorSearchIndex", () => ({
   PROCESSOR_SEARCH_INDEX: [
     {
       id: "users",
@@ -121,7 +121,7 @@ import {
   assembleSuperSearchGroups,
   rankProcessorResults,
   rankSettingsResults,
-} from "@app/hooks/useSuperSearch";
+} from "@editor/hooks/useSuperSearch";
 
 const t = ((key: string, fallback?: string) =>
   fallback ?? key) as unknown as TFunction;

@@ -1,20 +1,20 @@
-import { useServerPlan } from "@app/portal/hooks/useServerPlan";
-import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
+import { useServerPlan } from "@editor/portal/hooks/useServerPlan";
+import { ManageBillingButton } from "@editor/components/shared/ManageBillingButton";
 import { useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ServerLicenseSection } from "@app/portal/components/billing/ServerLicenseSection";
+import { ServerLicenseSection } from "@editor/portal/components/billing/ServerLicenseSection";
 import {
   useApplyLinkFacts,
   useLinkOptional,
-} from "@app/portal/contexts/LinkContext";
-import { useUI } from "@app/portal/contexts/UIContext";
-import { useConnectGate } from "@app/portal/hooks/useConnectGate";
-import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
-import { AccountConnectionNotice } from "@app/portal/components/account-link/AccountConnectionNotice";
-import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
-import { FreeTierPlanView } from "@app/portal/components/billing/FreeTierPlanView";
-import { Usage } from "@app/portal/views/Usage";
-import type { Wallet } from "@app/portal/api/billing";
+} from "@editor/portal/contexts/LinkContext";
+import { useUI } from "@editor/portal/contexts/UIContext";
+import { useConnectGate } from "@editor/portal/hooks/useConnectGate";
+import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
+import { AccountConnectionNotice } from "@editor/portal/components/account-link/AccountConnectionNotice";
+import { SaasSessionBanner } from "@editor/portal/components/account-link/SaasSessionBanner";
+import { FreeTierPlanView } from "@editor/portal/components/billing/FreeTierPlanView";
+import { Usage } from "@editor/portal/views/Usage";
+import type { Wallet } from "@editor/portal/api/billing";
 
 /**
  * The seam the SaaS build shadows: picks which usage page this instance has one of.

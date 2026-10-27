@@ -1,10 +1,10 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import { ServerSelection } from "@app/components/SetupWizard/ServerSelection";
-import { ServerConfig } from "@app/services/connectionModeService";
-import "@app/auth/ui/auth.css";
+import LoginHeader from "@editor/routes/login/LoginHeader";
+import ErrorMessage from "@editor/auth/ui/ErrorMessage";
+import { ServerSelection } from "@editor/components/SetupWizard/ServerSelection";
+import { ServerConfig } from "@editor/services/connectionModeService";
+import "@editor/auth/ui/auth.css";
 
 interface ServerSelectionScreenProps {
   onSelect: (config: ServerConfig) => void;

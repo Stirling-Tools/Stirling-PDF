@@ -1,22 +1,22 @@
 import React, { useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Group, Loader, Menu, Stack, Text, Tooltip } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import type { FileId } from "@app/types/file";
-import { FileDocIcon } from "@app/components/shared/FileDocIcon";
+import { Icon } from "@editor/ui/Icon";
+import type { FileId } from "@editor/types/file";
+import { FileDocIcon } from "@editor/components/shared/FileDocIcon";
 import {
   PolicyBadges,
   type FileItemPolicyRef,
-} from "@app/components/shared/PolicyBadges";
-import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
-import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
-import { useInViewport } from "@app/hooks/useInViewport";
-import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
-import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
-import { formatFileSize, IMAGE_EXTENSIONS } from "@app/utils/fileUtils";
-import "@app/components/shared/FileSidebarFileItem.css";
+} from "@editor/components/shared/PolicyBadges";
+import { getFileDocVariant } from "@editor/components/shared/filePreview/getFileTypeIcon";
+import { useLazyThumbnail } from "@editor/hooks/useLazyThumbnail";
+import { useInViewport } from "@editor/hooks/useInViewport";
+import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
+import { formatFileSize, IMAGE_EXTENSIONS } from "@editor/utils/fileUtils";
+import "@editor/components/shared/FileSidebarFileItem.css";
 
 export function getFileExtension(name: string): string {
   const parts = name.split(".");

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { FormField, Select } from "@app/ui";
+import { FormField, Select } from "@editor/ui";
 
 interface Props {
   external: boolean;

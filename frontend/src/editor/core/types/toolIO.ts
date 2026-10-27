@@ -8,7 +8,7 @@
  * `utils/toolIOCompat` for the compatibility rules that read this table.
  */
 
-import { type ToolEndpoint } from "@app/types/toolApiTypes";
+import { type ToolEndpoint } from "@editor/types/toolApiTypes";
 
 /** The kind of file a tool consumes or produces. `ANY` accepts or produces anything; `NONE` means no file at all. */
 export type ToolFormat =
@@ -452,11 +452,6 @@ export const TOOL_IO: ToolIOTable = {
   },
   "/api/v1/general/crop": { accepts: ["PDF"], produces: "PDF", arity: "SISO" },
   "/api/v1/general/edit-table-of-contents": {
-    accepts: ["PDF"],
-    produces: "PDF",
-    arity: "SISO",
-  },
-  "/api/v1/general/edit-text": {
     accepts: ["PDF"],
     produces: "PDF",
     arity: "SISO",

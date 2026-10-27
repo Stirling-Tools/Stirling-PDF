@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import EnterpriseRequiredBanner from "@app/components/shared/config/EnterpriseRequiredBanner";
+import EnterpriseRequiredBanner from "@editor/components/shared/config/EnterpriseRequiredBanner";
 
 /**
  * Banner explaining that an enterprise-only feature is running in demo mode.

@@ -1,7 +1,6 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import type { Route } from "@playwright/test";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import path from "path";
-import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
+import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 
 /** Regression for the mushroom-life.pdf "paragraph scramble" report. */
 
@@ -10,18 +9,14 @@ const MUSHROOM = path.join(
   "../test-fixtures/mushroom-life.pdf",
 );
 
-test("mid-line paragraph edit does not scramble unchanged words (cold backend, non-subset font)", async ({
+test("mid-line paragraph edit does not scramble unchanged words (non-subset font)", async ({
   page,
 }) => {
   test.setTimeout(120_000);
-  // Offline backend: every encode-charcodes call fails, so the emit path hits
-  // the cold-cache fallback - the exact condition that used to scramble.
-  await page.route("**/encode-charcodes", (route: Route) => route.abort());
-
   const errs: string[] = [];
   page.on("pageerror", (e) => errs.push(e.message));
 
-  await page.goto("/pdf-text-editor?charcodeStrategy=backend", {
+  await page.goto("/pdf-text-editor", {
     waitUntil: "domcontentloaded",
   });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({

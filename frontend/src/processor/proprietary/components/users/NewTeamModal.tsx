@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, FormField, Input, Modal } from "@app/ui";
-import { errorMessage } from "@portal/api/http";
-import { createTeam } from "@portal/api/teams";
-import "@portal/views/Users.css";
+import { Button, FormField, Input, Modal } from "@editor/ui";
+import { errorMessage } from "@processor/api/http";
+import { createTeam } from "@processor/api/teams";
+import "@processor/views/Users.css";
 
 interface NewTeamModalProps {
   open: boolean;

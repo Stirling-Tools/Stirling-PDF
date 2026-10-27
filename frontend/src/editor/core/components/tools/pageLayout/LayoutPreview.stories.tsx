@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import LayoutPreview from "@app/components/tools/pageLayout/LayoutPreview";
-import { defaultParameters } from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
+import LayoutPreview from "@editor/components/tools/pageLayout/LayoutPreview";
+import { defaultParameters } from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
 
 const meta = {
   title: "Tools/PageLayout/LayoutPreview",

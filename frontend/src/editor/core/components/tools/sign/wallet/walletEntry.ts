@@ -2,8 +2,8 @@ import type {
   SavedSignature,
   SavedSignaturePayload,
   SavedSignatureType,
-} from "@app/types/signature";
-import type { CreatedSignature } from "@app/components/tools/sign/createSignature/types";
+} from "@editor/types/signature";
+import type { CreatedSignature } from "@editor/components/tools/sign/createSignature/types";
 
 export const DRAFT_KEY = "draft";
 

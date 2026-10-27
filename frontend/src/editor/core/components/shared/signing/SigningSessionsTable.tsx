@@ -1,22 +1,22 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { DataTable, column } from "@app/ui/DataTable";
+import { Button } from "@editor/ui/Button";
+import { DataTable, column } from "@editor/ui/DataTable";
 import {
   DataTableFilterBar,
   useDataTableFilters,
-} from "@app/ui/DataTableFilterBar";
-import { Icon } from "@app/ui/Icon";
-import { Input } from "@app/ui/Input";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import type { StatusTone } from "@app/ui/StatusBadge";
+} from "@editor/ui/DataTableFilterBar";
+import { Icon } from "@editor/ui/Icon";
+import { Input } from "@editor/ui/Input";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import type { StatusTone } from "@editor/ui/StatusBadge";
 import {
   isSigningItemClosed,
   canReceiveSigningActivity,
   needsSignature,
   type SigningItem,
-} from "@app/utils/signingItems";
-import { signingStatus } from "@app/utils/signingStatus";
+} from "@editor/utils/signingItems";
+import { signingStatus } from "@editor/utils/signingStatus";
 
 type SessionRow = SigningItem & { unread?: boolean };
 

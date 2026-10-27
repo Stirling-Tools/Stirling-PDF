@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import "@app/ui/Tooltip.css";
+import "@editor/ui/Tooltip.css";
 
 export type TooltipPlacement = "top" | "bottom" | "left" | "right";
 
@@ -32,7 +32,7 @@ export interface TooltipProps {
 /**
  * Hover, focus and tap tooltip with no context dependencies, so it works in the
  * editor, the portal and the processor alike. The richer editor tooltip
- * (`@app/components/shared/Tooltip`) needs the sidebar, preferences and
+ * (`@editor/components/shared/Tooltip`) needs the sidebar, preferences and
  * app-config providers, which the portal does not mount; this matches its look.
  *
  * The bubble is portalled to the body and positioned fixed, because a tooltip

@@ -1,8 +1,8 @@
 import { Divider, Select, Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ReorganizePagesParameters } from "@app/hooks/tools/reorganizePages/useReorganizePagesParameters";
-import { getReorganizePagesModeData } from "@app/components/tools/reorganizePages/constants";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { ReorganizePagesParameters } from "@editor/hooks/tools/reorganizePages/useReorganizePagesParameters";
+import { getReorganizePagesModeData } from "@editor/components/tools/reorganizePages/constants";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 export default function ReorganizePagesSettings({
   parameters,

@@ -2,12 +2,12 @@ import { describe, it, expect } from "vitest";
 import {
   fileContextReducer,
   initialFileContextState,
-} from "@app/contexts/file/FileReducer";
+} from "@editor/contexts/file/FileReducer";
 import type {
   FileContextState,
   StirlingFileStub,
-} from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+} from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 function stub(
   id: string,

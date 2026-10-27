@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import {
   ActionIcon,
   Banner,
@@ -7,15 +7,15 @@ import {
   Card,
   Select,
   ToggleSwitch,
-} from "@app/ui";
-import { RoutingConditionEditor } from "@app/components/conditions/RoutingConditionEditor";
+} from "@editor/ui";
+import { RoutingConditionEditor } from "@editor/components/conditions/RoutingConditionEditor";
 import {
   classificationCondition,
   documentFieldCondition,
   requiresClassification,
-} from "@app/data/classificationConditions";
-import type { WireRoutingRule } from "@app/policies/types";
-import "@app/components/policies/RoutingRules.css";
+} from "@editor/data/classificationConditions";
+import type { WireRoutingRule } from "@editor/policies/types";
+import "@editor/components/policies/RoutingRules.css";
 
 export function blankRoutingRule(
   destinationId = "",

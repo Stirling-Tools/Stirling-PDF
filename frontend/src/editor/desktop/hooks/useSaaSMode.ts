@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { connectionModeService } from "@app/services/connectionModeService";
+import { connectionModeService } from "@editor/services/connectionModeService";
 
 /**
  * Returns whether the app is currently in SaaS connection mode.

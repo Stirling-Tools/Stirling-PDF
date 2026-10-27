@@ -1,6 +1,6 @@
 // Renders children only for a user with portal access; otherwise calls onForbidden.
 import { useEffect, type ReactNode } from "react";
-import { useAuth } from "@app/auth/context";
+import { useAuth } from "@editor/auth/context";
 
 export interface RequirePortalAccessProps {
   children: ReactNode;

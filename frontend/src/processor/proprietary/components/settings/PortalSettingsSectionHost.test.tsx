@@ -2,25 +2,25 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { PortalSettingsSectionHost } from "@portal/components/settings/PortalSettingsSectionHost";
-import { PortalRosterHost } from "@portal/components/settings/PortalRosterHost";
-import { useLinkOptional } from "@portal/contexts/LinkContext";
+import { PortalSettingsSectionHost } from "@processor/components/settings/PortalSettingsSectionHost";
+import { PortalRosterHost } from "@processor/components/settings/PortalRosterHost";
+import { useLinkOptional } from "@processor/contexts/LinkContext";
 import {
   clearAccountLinkBlock,
   reportFreeTierExhausted,
-} from "@app/services/accountLinkBlock";
-import { useUI } from "@app/portal/contexts/UIContext";
+} from "@editor/services/accountLinkBlock";
+import { useUI } from "@editor/portal/contexts/UIContext";
 
-vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+vi.mock("@editor/portal/hooks/useAccountLinkOwner", () => ({
   useAccountLinkOwner: () => true,
 }));
 
 const { fetchStatus } = vi.hoisted(() => ({ fetchStatus: vi.fn() }));
-vi.mock("@app/portal/api/link", () => ({ fetchStatus }));
-vi.mock("@app/portal/auth/saasSupabase", () => ({
+vi.mock("@editor/portal/api/link", () => ({ fetchStatus }));
+vi.mock("@editor/portal/auth/saasSupabase", () => ({
   isSaasSupabaseConfigured: true,
 }));
-vi.mock("@app/portal/components/account-link/LinkAccountModal", () => ({
+vi.mock("@editor/portal/components/account-link/LinkAccountModal", () => ({
   LinkAccountModalHost: () => {
     const { linkModalOpen, linkModalMode, closeLinkModal } = useUI();
     return linkModalOpen ? (
@@ -32,16 +32,16 @@ vi.mock("@app/portal/components/account-link/LinkAccountModal", () => ({
 }));
 
 vi.mock(
-  "@app/portal/components/account-link/AccountLinkSessionBoundary",
+  "@editor/portal/components/account-link/AccountLinkSessionBoundary",
   () => ({
     AccountLinkSessionBoundary: ({ children }: { children: ReactNode }) =>
       children,
   }),
 );
-vi.mock("@app/portal/components/account-link/SaasSessionBanner", () => ({
+vi.mock("@editor/portal/components/account-link/SaasSessionBanner", () => ({
   SaasSessionBanner: () => null,
 }));
-vi.mock("@app/portal/components/account-link/ConnectCallbackHost", () => ({
+vi.mock("@editor/portal/components/account-link/ConnectCallbackHost", () => ({
   ConnectCallbackHost: () => null,
 }));
 

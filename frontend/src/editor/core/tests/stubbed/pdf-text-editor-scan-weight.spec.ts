@@ -1,5 +1,5 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import path from "node:path";
 
 test.use({ autoGoto: false });
@@ -20,10 +20,6 @@ for (const dpi of [96, 150, 600]) {
     page,
   }) => {
     test.setTimeout(150_000);
-    await page.route(
-      "**/api/v1/general/pdf-text-editor/encode-charcodes",
-      (route) => route.fulfill({ status: 503, body: "unavailable" }),
-    );
     await page.goto("/pdf-text-editor", {
       waitUntil: "domcontentloaded",
       timeout: 60_000,

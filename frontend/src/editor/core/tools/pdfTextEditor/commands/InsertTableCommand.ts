@@ -1,14 +1,14 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
 import {
   uniformColumnEdges,
   uniformRowEdges,
-} from "@app/tools/pdfTextEditor/util/tableGeometry";
+} from "@editor/tools/pdfTextEditor/util/tableGeometry";
 import {
   redrawGrid,
   removeObjects,
-} from "@app/tools/pdfTextEditor/commands/tableHelpers";
+} from "@editor/tools/pdfTextEditor/commands/tableHelpers";
 
 const DEFAULT_LINE_WIDTH = 0.75;
 const DEFAULT_FONT_SIZE = 11;

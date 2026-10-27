@@ -3,7 +3,7 @@ import { act, render, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
-vi.mock("@app/services/processingFolderApi", () => ({
+vi.mock("@editor/services/processingFolderApi", () => ({
   CLASSIFY_OPERATION: "classify",
   classificationDefaults: (folderId: string) => ({
     folderId,
@@ -20,23 +20,23 @@ vi.mock("@app/services/processingFolderApi", () => ({
   saveProcessingFolder: vi.fn(),
   sweepProcessingFolder: vi.fn(),
 }));
-vi.mock("@app/hooks/useFileHandler", () => ({
+vi.mock("@editor/hooks/useFileHandler", () => ({
   useFileHandler: () => ({ addFiles: vi.fn() }),
 }));
-vi.mock("@app/services/processingRunDelivery", () => ({
+vi.mock("@editor/services/processingRunDelivery", () => ({
   currentRunIds: vi.fn().mockResolvedValue(new Set()),
   deliverSweepResults: vi.fn(),
 }));
 
-import { createAppQueryClient } from "@app/query/queryClient";
+import { createAppQueryClient } from "@editor/query/queryClient";
 import {
   deleteProcessingFolder,
   fetchProcessingFolders,
   saveProcessingFolder,
   type ProcessingFolder,
-} from "@app/services/processingFolderApi";
-import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
-import type { FolderRecord } from "@app/types/folder";
+} from "@editor/services/processingFolderApi";
+import { useProcessingFolders } from "@editor/hooks/useProcessingFolders";
+import type { FolderRecord } from "@editor/types/folder";
 
 const listFolders = vi.mocked(fetchProcessingFolders);
 const save = vi.mocked(saveProcessingFolder);

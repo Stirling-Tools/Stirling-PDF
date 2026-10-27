@@ -1,7 +1,7 @@
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { appendWord as sharedAppendWord } from "@app/utils/textDiff";
-import { PARAGRAPH_SENTINEL } from "@app/types/compare";
-import type { StirlingFile } from "@app/types/fileContext";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import { appendWord as sharedAppendWord } from "@editor/utils/textDiff";
+import { PARAGRAPH_SENTINEL } from "@editor/types/compare";
+import type { StirlingFile } from "@editor/types/fileContext";
 import type {
   PDFPageProxy,
   TextContent,
@@ -13,7 +13,7 @@ import type {
   CompareResultData,
   TokenBoundingBox,
   CompareParagraph,
-} from "@app/types/compare";
+} from "@editor/types/compare";
 
 export interface TokenMetadata {
   page: number;

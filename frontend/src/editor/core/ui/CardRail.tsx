@@ -4,8 +4,8 @@ import type {
   HTMLAttributes,
   ReactNode,
 } from "react";
-import type { StackGap } from "@app/ui/Stack";
-import "@app/ui/CardRail.css";
+import type { StackGap } from "@editor/ui/Stack";
+import "@editor/ui/CardRail.css";
 
 export interface CardRailProps extends HTMLAttributes<HTMLElement> {
   /** Token-aligned gap between items (maps to `--space-*`). */
