@@ -432,7 +432,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "extract-single-attachment");
         addEndpointToGroup("Other", "replace-invert-pdf");
         addEndpointToGroup("Other", "edit-table-of-contents");
-        addEndpointToGroup("Other", "text-editor-pdf");
         // Backend-only endpoints (not in frontend tool registry endpoints)
         addEndpointToGroup("Other", "add-image");
         addEndpointToGroup("Other", "compare");
@@ -565,7 +564,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "flatten");
         addEndpointToGroup("Java", "unlock-pdf-forms");
         addEndpointToGroup("Java", "validate-signature");
-        addEndpointToGroup("Java", "text-editor-pdf");
         addEndpointToGroup("Java", "edit-table-of-contents");
         addEndpointToGroup("Java", "pdf-to-epub");
         addEndpointToGroup("Java", "eml-to-pdf");
@@ -578,7 +576,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Javascript", "sign");
         addEndpointToGroup("Javascript", "compare");
         addEndpointToGroup("Javascript", "adjust-contrast");
-        addEndpointToGroup("Javascript", "text-editor-pdf");
 
         /* qpdf */
         addEndpointToGroup("qpdf", "repair");
