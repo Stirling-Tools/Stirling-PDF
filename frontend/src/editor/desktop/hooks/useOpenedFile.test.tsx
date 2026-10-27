@@ -9,19 +9,19 @@ const mocks = vi.hoisted(() => ({
   endLoading: vi.fn(),
 }));
 
-vi.mock("@app/services/fileOpenService", () => ({
+vi.mock("@editor/services/fileOpenService", () => ({
   fileOpenService: { getOpenedFiles: mocks.getOpenedFiles },
 }));
 vi.mock("@tauri-apps/api/webviewWindow", () => ({
   getCurrentWebviewWindow: () => ({ label: "main", listen: mocks.listen }),
 }));
-vi.mock("@app/services/launchFiles", () => ({
+vi.mock("@editor/services/launchFiles", () => ({
   trackLaunchFilePop: <T,>(pop: Promise<T>) => pop,
   beginLoadingLaunchFiles: mocks.beginLoading,
   endLoadingLaunchFiles: mocks.endLoading,
 }));
 
-import { useOpenedFile } from "@app/hooks/useOpenedFile";
+import { useOpenedFile } from "@editor/hooks/useOpenedFile";
 
 function deferred<T>() {
   let resolve!: (value: T) => void;

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { FileId } from "@app/types/file";
+import type { FileId } from "@editor/types/file";
 
 const mocks = vi.hoisted(() => ({
   openRawDocumentSafe: vi.fn(),
@@ -7,16 +7,16 @@ const mocks = vi.hoisted(() => ({
   renderPdfiumPageDataUrl: vi.fn(),
 }));
 
-vi.mock("@app/services/pdfiumService", () => ({
+vi.mock("@editor/services/pdfiumService", () => ({
   openRawDocumentSafe: mocks.openRawDocumentSafe,
   closeRawDocument: mocks.closeRawDocument,
 }));
 
-vi.mock("@app/utils/pdfiumPageRender", () => ({
+vi.mock("@editor/utils/pdfiumPageRender", () => ({
   renderPdfiumPageDataUrl: mocks.renderPdfiumPageDataUrl,
 }));
 
-import { ThumbnailGenerationService } from "@app/services/thumbnailGenerationService";
+import { ThumbnailGenerationService } from "@editor/services/thumbnailGenerationService";
 
 const fileId = (value: string): FileId => value as FileId;
 

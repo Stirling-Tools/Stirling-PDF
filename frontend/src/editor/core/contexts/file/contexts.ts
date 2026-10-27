@@ -8,7 +8,7 @@ import {
   FileContextSelectors,
   FileContextStateValue,
   FileContextActionsValue,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 
 /**
  * Subscription store for file state. The context VALUE is stable — consumers

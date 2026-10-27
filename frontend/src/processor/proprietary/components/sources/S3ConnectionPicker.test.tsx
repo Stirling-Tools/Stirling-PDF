@@ -6,7 +6,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
+import { S3ConnectionPicker } from "@processor/components/sources/S3ConnectionPicker";
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: MantineProvider });
@@ -20,7 +20,7 @@ vi.mock("react-i18next", () => ({
 
 const fetchS3Connections = vi.fn();
 const createIntegration = vi.fn();
-vi.mock("@portal/api/integrations", () => ({
+vi.mock("@processor/api/integrations", () => ({
   fetchIntegrations: () => fetchS3Connections(),
   // Custom-API authoring is a server decision; these tests assert the default view.
   fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),

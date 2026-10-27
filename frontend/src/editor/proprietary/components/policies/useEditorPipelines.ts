@@ -4,15 +4,15 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { loadPolicies, onPoliciesChange } from "@app/services/policyStorage";
-import { loadPolicyCatalog } from "@app/services/policyCatalog";
-import { editorTriggerOf, type PolicyRunOn } from "@app/policies/runOn";
+import { loadPolicies, onPoliciesChange } from "@editor/services/policyStorage";
+import { loadPolicyCatalog } from "@editor/services/policyCatalog";
+import { editorTriggerOf, type PolicyRunOn } from "@editor/policies/runOn";
 import {
   usePolicyRuns,
   isRunInFlight,
   type PolicyRunRecord,
-} from "@app/components/policies/policyRunStore";
-import type { PoliciesByKey } from "@app/types/policies";
+} from "@editor/components/policies/policyRunStore";
+import type { PoliciesByKey } from "@editor/types/policies";
 
 export interface EditorPipeline {
   policyKey: string;

@@ -4,6 +4,7 @@ import type {
 } from "@embedpdf/plugin-annotation";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
 import type { PdfAnnotationObject } from "@embedpdf/models";
+import { clickToClickLineHandler } from "@editor/components/viewer/clickToClickLineHandler";
 
 // LooseAnnotationTool bypasses strict Partial<T> defaults typing from the library:
 // EmbedPDF accepts extra runtime properties (borderWidth, textColor, finishOnDoubleClick,
@@ -419,4 +420,15 @@ export function registerAnnotationTools(
       borderWidth: 2,
     },
   });
+
+  // Line and arrow draw click-then-click as well as by dragging.
+  for (const id of ["line", "lineArrow"]) {
+    const tool = annotationApi.getTool?.(id);
+    if (tool?.pointerHandler) {
+      annotationApi.addTool({
+        ...tool,
+        pointerHandler: clickToClickLineHandler(tool.pointerHandler),
+      });
+    }
+  }
 }

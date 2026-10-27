@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Stack, Text, Group } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Modal } from "@app/ui/Modal";
-import { StatusBadge } from "@app/ui/StatusBadge";
+import { Button } from "@editor/ui/Button";
+import { Modal } from "@editor/ui/Modal";
+import { StatusBadge } from "@editor/ui/StatusBadge";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import type { SessionDetail } from "@app/types/signingSession";
-import "@app/components/shared/signing/signingDetail.css";
+import { Icon } from "@editor/ui/Icon";
+import type { SessionDetail } from "@editor/types/signingSession";
+import "@editor/components/shared/signing/signingDetail.css";
 
 interface SessionActionsPanelProps {
   session: SessionDetail;

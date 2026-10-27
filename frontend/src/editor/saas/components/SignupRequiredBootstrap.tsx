@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import OnboardingSlideShell, {
   ShellHero,
-} from "@app/components/onboarding/OnboardingSlideShell";
-import styles from "@app/components/SignupRequiredBootstrap.module.css";
+} from "@editor/components/onboarding/OnboardingSlideShell";
+import styles from "@editor/components/SignupRequiredBootstrap.module.css";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
-import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
-import type { PaygSignupRequiredDetail } from "@app/services/paygErrorInterceptor";
+import { useAuth } from "@editor/auth/UseSession";
+import { isSafePostLoginRedirect } from "@editor/services/postLoginRedirect";
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@editor/styles/zIndex";
+import type { PaygSignupRequiredDetail } from "@editor/services/paygErrorInterceptor";
 
 /** Opens one guest signup prompt for a Processor click or server account gate, preserving the return route. */
 export default function SignupRequiredBootstrap() {

@@ -5,7 +5,7 @@ import {
   RASTER_FORMAT_BGRA,
   releaseRaster,
   releaseRasterPool,
-} from "@app/tools/pdfTextEditor/pdfium/rasterPool";
+} from "@editor/tools/pdfTextEditor/pdfium/rasterPool";
 
 interface FakeOptions {
   /** Widths whose bitmap creation should fail, mimicking a refused handle. */

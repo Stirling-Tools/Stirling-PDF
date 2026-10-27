@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ConvertToEpubSettings from "@app/components/tools/convert/ConvertToEpubSettings";
+import ConvertToEpubSettings from "@editor/components/tools/convert/ConvertToEpubSettings";
 import {
   ConvertParameters,
   defaultParameters,
-} from "@app/hooks/tools/convert/useConvertParameters";
+} from "@editor/hooks/tools/convert/useConvertParameters";
 
 const meta: Meta<typeof ConvertToEpubSettings> = {
   title: "Tools/Convert/ConvertToEpubSettings",

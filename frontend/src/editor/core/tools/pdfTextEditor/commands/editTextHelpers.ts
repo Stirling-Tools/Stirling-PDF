@@ -1,12 +1,12 @@
-import { readUtf16 } from "@app/services/pdfiumService";
+import { readUtf16 } from "@editor/services/pdfiumService";
 import type {
   ParagraphLineSlot,
   TextRun,
-} from "@app/tools/pdfTextEditor/model/TextRun";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+} from "@editor/tools/pdfTextEditor/model/TextRun";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { RGBA } from "@app/tools/pdfTextEditor/types";
+import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 import {
   emitCharcodeEvent,
   findFontForChar,
@@ -14,16 +14,19 @@ import {
   setCharcodesOn,
   styleClassFromName,
   tryResolveCharcodes,
-} from "@app/tools/pdfTextEditor/charcode/charcodeRegistry";
-import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
-import { emitFallbackTextObject } from "@app/tools/pdfTextEditor/util/fallbackFont";
-import { emitDeviceFontTextObject } from "@app/tools/pdfTextEditor/util/deviceFontEmbed";
+} from "@editor/tools/pdfTextEditor/charcode/charcodeRegistry";
+import { getActiveCharcodeStrategy } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
+import { emitFallbackTextObject } from "@editor/tools/pdfTextEditor/util/fallbackFont";
+import { emitDeviceFontTextObject } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
   applyTagMarks,
   type TagMark,
-} from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-import { nearestStandardFont } from "@app/tools/pdfTextEditor/util/fontFamily";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { nearestStandardFont } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 // Remove a PAGE-level object and FREE its PDFium allocation.
 // `FPDFPage_RemoveObject` only detaches the object.

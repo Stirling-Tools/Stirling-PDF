@@ -1,9 +1,9 @@
 import {
   BaseParametersHook,
   useBaseParameters,
-} from "@app/hooks/tools/shared/useBaseParameters";
-import type { CompareMode } from "@app/types/compare";
-import type { FileId } from "@app/types/file";
+} from "@editor/hooks/tools/shared/useBaseParameters";
+import type { CompareMode } from "@editor/types/compare";
+import type { FileId } from "@editor/types/file";
 
 export const DEFAULT_PIXEL_DPI = 150;
 export const DEFAULT_PIXEL_THRESHOLD = 0.1;

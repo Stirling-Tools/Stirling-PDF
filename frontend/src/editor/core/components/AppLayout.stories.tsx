@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { AppLayout } from "@app/components/AppLayout";
-import { BannerProvider, useBanner } from "@app/contexts/BannerContext";
-import { NavigationProvider } from "@app/contexts/NavigationContext";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { AppBanner } from "@app/components/shared/AppBanner";
+import { AppLayout } from "@editor/components/AppLayout";
+import { BannerProvider, useBanner } from "@editor/contexts/BannerContext";
+import { NavigationProvider } from "@editor/contexts/NavigationContext";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { AppBanner } from "@editor/components/shared/AppBanner";
 
 const meta = {
   title: "Components/AppLayout",

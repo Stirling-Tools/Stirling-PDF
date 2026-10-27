@@ -2,15 +2,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const getPortalSaasToken = vi.fn();
-vi.mock("@portal/auth/portalSaasSession", () => ({
+vi.mock("@processor/auth/portalSaasSession", () => ({
   getPortalSaasToken: () => getPortalSaasToken(),
 }));
-vi.mock("@portal/api/saasApiBase", () => ({
+vi.mock("@processor/api/saasApiBase", () => ({
   saasApiBase: () => "https://saas.example",
 }));
 
-// Resolves to the SaaS override (src/portal-saas) via the @portal cascade.
-import { localBaseUrl, localAuthHeader } from "@portal/api/localBackend";
+// Resolves to the SaaS override (src/portal-saas) via the @processor cascade.
+import { localBaseUrl, localAuthHeader } from "@processor/api/localBackend";
 
 describe("localBackend (SaaS) — apiClient.local IS the SaaS backend", () => {
   afterEach(() => getPortalSaasToken.mockReset());

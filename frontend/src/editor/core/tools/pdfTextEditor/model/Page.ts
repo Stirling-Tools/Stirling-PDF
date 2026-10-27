@@ -1,11 +1,11 @@
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { ImageObject } from "@app/tools/pdfTextEditor/model/ImageObject";
-import type { ShapeObject } from "@app/tools/pdfTextEditor/model/ShapeObject";
-import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
-import type { AnnotationBox } from "@app/tools/pdfTextEditor/model/AnnotationBox";
-import type { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
+import type { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import type { AnnotationBox } from "@editor/tools/pdfTextEditor/model/AnnotationBox";
+import type { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { PageRuleSnapshot } from "@app/tools/pdfTextEditor/types";
+import type { PageRuleSnapshot } from "@editor/tools/pdfTextEditor/types";
 
 /** Wraps one PDFium page pointer. */
 export class Page {

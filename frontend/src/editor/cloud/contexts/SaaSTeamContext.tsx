@@ -6,8 +6,8 @@ import {
   ReactNode,
   useCallback,
 } from "react";
-import apiClient from "@app/services/apiClient";
-import { useTeamAuth } from "@app/auth/teamSession";
+import apiClient from "@editor/services/apiClient";
+import { useTeamAuth } from "@editor/auth/teamSession";
 
 /**
  * Shared (cloud) SaaS Team Context.
@@ -15,7 +15,7 @@ import { useTeamAuth } from "@app/auth/teamSession";
  * Provides team management for authenticated (non-anonymous) users. The
  * platform-specific auth bits — whether teams may be used at all, and how to
  * refresh derived auth state after a membership change — come from the
- * {@code @app/auth/teamSession} seam (Supabase web session on saas, authService
+ * {@code @editor/auth/teamSession} seam (Supabase web session on saas, authService
  * on desktop), keeping this context free of any platform auth coupling.
  */
 

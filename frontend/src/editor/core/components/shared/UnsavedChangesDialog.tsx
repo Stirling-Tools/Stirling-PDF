@@ -4,10 +4,10 @@
  */
 import { Modal, Text, Group, Stack, rem } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui/Button";
-import { IconBadge } from "@app/ui/IconBadge";
-import { Z_INDEX_TOAST } from "@app/styles/zIndex";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { IconBadge } from "@editor/ui/IconBadge";
+import { Z_INDEX_TOAST } from "@editor/styles/zIndex";
 
 export interface UnsavedChangesDialogProps {
   opened: boolean;

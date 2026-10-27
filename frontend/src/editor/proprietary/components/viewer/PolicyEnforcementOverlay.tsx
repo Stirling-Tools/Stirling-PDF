@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { Tooltip } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import {
   POLICY_IN_FLIGHT_STATUSES,
   type PolicyRunRecord,
-} from "@app/components/policies/policyRunStore";
-import { policyAccentVar } from "@app/components/policies/policyStatus";
-import { isEnforcedPolicy } from "@app/services/policyStorage";
-import { PolicyEnforcingOverlay } from "@app/components/shared/PolicyEnforcingOverlay";
-import "@app/components/shared/PolicyBadges.css";
+} from "@editor/components/policies/policyRunStore";
+import { policyAccentVar } from "@editor/components/policies/policyStatus";
+import { isEnforcedPolicy } from "@editor/services/policyStorage";
+import { PolicyEnforcingOverlay } from "@editor/components/shared/PolicyEnforcingOverlay";
+import "@editor/components/shared/PolicyBadges.css";
 
 interface Props {
   runs: PolicyRunRecord[];

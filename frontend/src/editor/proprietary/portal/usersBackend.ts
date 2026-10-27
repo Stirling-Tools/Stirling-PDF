@@ -1,16 +1,16 @@
-import type { UsersBackend } from "@portal/api/usersBackend";
+import type { UsersBackend } from "@processor/api/usersBackend";
 import {
   fetchAuthConfig,
   fetchUsers,
   inviteMember,
   removeMember,
-} from "@portal/api/users";
-import { fetchTeams, renameTeam } from "@portal/api/teams";
+} from "@processor/api/users";
+import { fetchTeams, renameTeam } from "@processor/api/teams";
 
 /**
  * Self-hosted (proprietary) build: the existing admin-endpoint calls, unchanged.
  * This is exactly the behaviour the Users page had before the seam existed - it
- * just re-exports the `@portal/api/{users,teams}` functions behind the contract.
+ * just re-exports the `@processor/api/{users,teams}` functions behind the contract.
  */
 export const usersBackend: UsersBackend = {
   fetchUsers,

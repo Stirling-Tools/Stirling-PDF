@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import { CapacityStage } from "@app/components/shared/stripeCheckout/stages/CapacityStage";
+import { CapacityStage } from "@editor/components/shared/stripeCheckout/stages/CapacityStage";
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));

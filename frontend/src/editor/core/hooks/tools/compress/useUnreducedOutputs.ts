@@ -1,10 +1,10 @@
 import { useCallback, useRef } from "react";
-import { useFileSelector } from "@app/contexts/FileContext";
+import { useFileSelector } from "@editor/contexts/FileContext";
 import type {
   FileId,
   StirlingFile,
   StirlingFileStub,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 
 export interface UnreducedOutputs {
   unreduced: number;

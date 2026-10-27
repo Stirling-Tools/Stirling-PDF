@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { TFunction } from "i18next";
-import { toolOperationLabel } from "@app/utils/toolOperationLabel";
-import type { ToolOperation } from "@app/types/file";
+import { toolOperationLabel } from "@editor/utils/toolOperationLabel";
+import type { ToolOperation } from "@editor/types/file";
 
 // Stands in for i18next: echoes the key so the assertions show which lookup ran.
 const t = ((key: string, fallback?: string) =>

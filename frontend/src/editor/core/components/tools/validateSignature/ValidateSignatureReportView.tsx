@@ -4,11 +4,11 @@ import { useTranslation } from "react-i18next";
 import type {
   SignatureValidationReportData,
   SignatureValidationReportEntry,
-} from "@app/types/validateSignature";
-import "@app/components/tools/validateSignature/reportView/styles.css";
-import ThumbnailPreview from "@app/components/tools/validateSignature/reportView/ThumbnailPreview";
-import FileSummaryHeader from "@app/components/tools/validateSignature/reportView/FileSummaryHeader";
-import SignatureSection from "@app/components/tools/validateSignature/reportView/SignatureSection";
+} from "@editor/types/validateSignature";
+import "@editor/components/tools/validateSignature/reportView/styles.css";
+import ThumbnailPreview from "@editor/components/tools/validateSignature/reportView/ThumbnailPreview";
+import FileSummaryHeader from "@editor/components/tools/validateSignature/reportView/FileSummaryHeader";
+import SignatureSection from "@editor/components/tools/validateSignature/reportView/SignatureSection";
 
 interface ValidateSignatureReportViewProps {
   data: SignatureValidationReportData;

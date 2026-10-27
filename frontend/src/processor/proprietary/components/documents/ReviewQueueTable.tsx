@@ -5,13 +5,13 @@ import {
   column,
   DataTable,
   type DataTableColumn,
-} from "@app/ui";
+} from "@editor/ui";
 import {
   classificationTone,
   DOCUMENT_STATUS_LABEL,
   DOCUMENT_STATUS_TONE,
   type ReviewDocument,
-} from "@portal/api/documents";
+} from "@processor/api/documents";
 
 interface ReviewQueueTableProps {
   documents: ReviewDocument[];

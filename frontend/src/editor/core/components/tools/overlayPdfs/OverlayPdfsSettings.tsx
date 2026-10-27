@@ -7,19 +7,19 @@ import {
   NumberInput,
   Divider,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { FilePicker } from "@app/ui/FilePicker";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Button } from "@editor/ui/Button";
+import { FilePicker } from "@editor/ui/FilePicker";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import {
   type OverlayPdfsParameters,
   type OverlayMode,
-} from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
-import { Icon } from "@app/ui/Icon";
-import { FilesModalContext } from "@app/contexts/FilesModalContext";
-import styles from "@app/components/tools/overlayPdfs/OverlayPdfsSettings.module.css";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+} from "@editor/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
+import { Icon } from "@editor/ui/Icon";
+import { FilesModalContext } from "@editor/contexts/FilesModalContext";
+import styles from "@editor/components/tools/overlayPdfs/OverlayPdfsSettings.module.css";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface OverlayPdfsSettingsProps {
   parameters: OverlayPdfsParameters;

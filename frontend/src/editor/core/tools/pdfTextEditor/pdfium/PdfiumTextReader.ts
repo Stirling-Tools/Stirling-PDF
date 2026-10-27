@@ -1,27 +1,31 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { ImageObject } from "@app/tools/pdfTextEditor/model/ImageObject";
-import { ShapeObject } from "@app/tools/pdfTextEditor/model/ShapeObject";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { LineGrouper } from "@app/tools/pdfTextEditor/pdfium/LineGrouper";
-import { ParagraphGrouper } from "@app/tools/pdfTextEditor/pdfium/ParagraphGrouper";
-import { PdfiumAnnotationReader } from "@app/tools/pdfTextEditor/pdfium/PdfiumAnnotationReader";
-import { primeFontGlyphMap } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
+import { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { LineGrouper } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
+import { ParagraphGrouper } from "@editor/tools/pdfTextEditor/pdfium/ParagraphGrouper";
+import { PdfiumAnnotationReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumAnnotationReader";
+import { primeFontGlyphMap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 import type {
   Affine,
   GroupingMode,
   PageRect,
   PageRuleSnapshot,
   RGBA,
-} from "@app/tools/pdfTextEditor/types";
-import { readUtf16 } from "@app/services/pdfiumService";
-import { registerEmbeddedFace } from "@app/tools/pdfTextEditor/util/embeddedFace";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/types";
+import { readUtf16 } from "@editor/services/pdfiumService";
+import { registerEmbeddedFace } from "@editor/tools/pdfTextEditor/util/embeddedFace";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import {
   ARTIFACT_TAG,
+  innermostMcid,
   readTagMarks,
-} from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 /** PDFium page-object type constants - mirrors `public/fpdf_edit.h`. */
 const FPDF_PAGEOBJ_TEXT = 1;
@@ -437,7 +441,15 @@ function walkObjects(
       }
     } else if (type === FPDF_PAGEOBJ_IMAGE) {
       const indexId = [...path, i].join("-");
-      const img = readImage(m, page, objPtr, indexId, transform, containerPtr);
+      const img = readImage(
+        m,
+        page,
+        objPtr,
+        indexId,
+        transform,
+        containerPtr,
+        path,
+      );
       if (img) images.push(img);
     } else if (type === FPDF_PAGEOBJ_FORM && depth < MAX_DEPTH) {
       let formCount: number;
@@ -529,12 +541,26 @@ function getFormContainer(
   pagePtr: number,
   path: number[],
 ): number {
+  return formChain(m, pagePtr, path).at(-1)!;
+}
+
+/** The form objects the index path passes through, outermost first. */
+function formChain(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  path: number[],
+): number[] {
   const formModule = m as PdfiumWithForms;
-  let current = m.FPDFPage_GetObject(pagePtr, path[0]);
-  for (let i = 1; i < path.length; i++) {
-    current = formModule.FPDFFormObj_GetObject(current, path[i]);
+  const chain: number[] = [];
+  for (const index of path) {
+    const parent = chain.at(-1);
+    chain.push(
+      parent === undefined
+        ? m.FPDFPage_GetObject(pagePtr, index)
+        : formModule.FPDFFormObj_GetObject(parent, index),
+    );
   }
-  return current;
+  return chain;
 }
 
 // The ruling lines a path object draws.
@@ -1035,13 +1061,13 @@ function readImage(
   index: number | string,
   transform: Affine,
   containerPtr: number,
+  formPath: number[],
 ): ImageObject | null {
   const localBounds = readBounds(m, objPtr);
   if (!localBounds) return null;
   const localMatrix = readMatrix(m, objPtr);
   const ident = isIdentity(transform);
-  // A form XObject's MCIDs are not the page's, so only page-level images are tagged.
-  const tags = containerPtr === 0 ? readTagMarks(m, objPtr) : [];
+  const tags = imageTags(m, page.pagePtr, formPath, objPtr);
   return new ImageObject({
     id: `p${page.index}-i${index}`,
     pageIndex: page.index,
@@ -1049,7 +1075,30 @@ function readImage(
     bounds: ident ? localBounds : transformRect(transform, localBounds),
     matrix: ident ? localMatrix : composeAffine(transform, localMatrix),
     containerPtr,
-    mcid: [...tags].reverse().find((t) => t.mcid !== null)?.mcid ?? undefined,
-    artifact: tags.some((t) => t.name === ARTIFACT_TAG) || undefined,
+    mcid: tags.mcid ?? undefined,
+    artifact: tags.artifact || undefined,
   });
+}
+
+/**
+ * An image's tags as the page's structure tree sees them. PDFium gives an
+ * object in a form XObject only the marks in the form's content, whose MCIDs
+ * resolve against the form's own /StructParents, so the page's MCID is the
+ * one on the outermost form. An /Artifact at any level still makes the image
+ * one (ISO 32000-1 14.8.2.2).
+ */
+function imageTags(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  formPath: number[],
+  objPtr: number,
+): { mcid: number | null; artifact: boolean } {
+  const [onPage, ...inForms] = [...formChain(m, pagePtr, formPath), objPtr].map(
+    (ptr) => readTagMarks(m, ptr),
+  );
+  const formOwnsContent = inForms.flat().some((t) => t.mcid !== null);
+  return {
+    mcid: formOwnsContent ? null : innermostMcid(onPage),
+    artifact: [onPage, ...inForms].flat().some((t) => t.name === ARTIFACT_TAG),
+  };
 }

@@ -1,8 +1,8 @@
 import type { CSSProperties } from "react";
 
-import { COLORLESS_CLASS } from "@app/icons/colorless";
-import { DEFAULT_SIZE, STROKE_WIDTH } from "@app/icons/icons.config";
-import { ICONS, type IconName } from "@app/icons/icons";
+import { COLORLESS_CLASS } from "@editor/icons/colorless";
+import { DEFAULT_SIZE, STROKE_WIDTH } from "@editor/icons/icons.config";
+import { ICONS, type IconName } from "@editor/icons/icons";
 
 export { DEFAULT_SIZE, ICONS, STROKE_WIDTH, type IconName };
 

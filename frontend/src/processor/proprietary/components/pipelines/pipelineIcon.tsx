@@ -4,8 +4,8 @@
 // pipeline that only stores its categoryId still resolves to the matching glyph.
 
 import type { ReactNode } from "react";
-import type { IconPickerOption } from "@app/ui";
-import { Icon, type IconName } from "@app/ui/Icon";
+import type { IconPickerOption } from "@editor/ui";
+import { Icon, type IconName } from "@editor/ui/Icon";
 
 // Every key resolves to a registry icon; "route" is the default.
 const ICONS: Record<string, IconName> = {

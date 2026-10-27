@@ -9,10 +9,10 @@ import {
   Box,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { formatFileSize, detectFileExtension } from "@app/utils/fileUtils";
-import { DraftRowKind } from "@app/hooks/tools/addAttachments/useAttachmentManager";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { formatFileSize, detectFileExtension } from "@editor/utils/fileUtils";
+import { DraftRowKind } from "@editor/hooks/tools/addAttachments/useAttachmentManager";
 
 export interface AttachmentRowProps {
   id: string;

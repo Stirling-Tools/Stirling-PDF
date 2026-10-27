@@ -1,16 +1,16 @@
 import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { EmptyState } from "@app/ui";
+import { EmptyState } from "@editor/ui";
 import type {
   FlowOutcome,
   FlowOutcomeKey,
   FlowPolicy,
   FlowSource,
-} from "@portal/api/processorFlow";
+} from "@processor/api/processorFlow";
 import {
   EDITOR_TYPE,
   OUTCOME_FILL,
-} from "@portal/components/processor-flow/flowTypes";
+} from "@processor/components/processor-flow/flowTypes";
 
 interface FlowSankeyProps {
   sources: FlowSource[];

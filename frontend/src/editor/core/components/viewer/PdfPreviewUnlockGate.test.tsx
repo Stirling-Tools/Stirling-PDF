@@ -9,13 +9,13 @@ import {
 import { MantineProvider } from "@mantine/core";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { ComponentProps } from "react";
-import { PdfPreviewUnlockGate } from "@app/components/viewer/PdfPreviewUnlockGate";
-import type EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
+import { PdfPreviewUnlockGate } from "@editor/components/viewer/PdfPreviewUnlockGate";
+import type EncryptedPdfUnlockModal from "@editor/components/shared/EncryptedPdfUnlockModal";
 import {
   clearPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
 vi.mock("react-i18next", () => {
   const t = (key: string, fallback?: string) => fallback ?? key;
@@ -23,16 +23,16 @@ vi.mock("react-i18next", () => {
 });
 
 const mock = vi.hoisted(() => ({ probe: vi.fn(), unlock: vi.fn() }));
-vi.mock("@app/utils/pdfEncryptionProbe", () => ({
+vi.mock("@editor/utils/pdfEncryptionProbe", () => ({
   looksEncryptedFromTrailer: mock.probe,
 }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useFileActions: () => ({ actions: { unlockPreviewPdf: mock.unlock } }),
 }));
-vi.mock("@app/components/tools/ToolLoadingFallback", () => ({
+vi.mock("@editor/components/tools/ToolLoadingFallback", () => ({
   default: () => <span>Checking PDF</span>,
 }));
-vi.mock("@app/components/shared/EncryptedPdfUnlockModal", () => ({
+vi.mock("@editor/components/shared/EncryptedPdfUnlockModal", () => ({
   default: (props: ComponentProps<typeof EncryptedPdfUnlockModal>) =>
     props.opened ? (
       <div role="dialog">

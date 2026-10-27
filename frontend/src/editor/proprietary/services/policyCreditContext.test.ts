@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
-import { policyCreditContext } from "@app/services/policyCreditContext";
+import { policyCreditContext } from "@editor/services/policyCreditContext";
 
-vi.mock("@app/services/policyStorage", () => ({
+vi.mock("@editor/services/policyStorage", () => ({
   loadPolicies: () => ({
     rotate: {
       backendId: "rotate-id",
@@ -22,7 +22,7 @@ vi.mock("@app/services/policyStorage", () => ({
     },
   }),
 }));
-vi.mock("@app/services/policyCatalog", () => ({
+vi.mock("@editor/services/policyCatalog", () => ({
   loadPolicyCatalog: () => ({ categories: [] }),
 }));
 

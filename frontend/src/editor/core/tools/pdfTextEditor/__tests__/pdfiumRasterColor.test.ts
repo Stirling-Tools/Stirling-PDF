@@ -7,10 +7,10 @@ import {
   getPdfiumModule,
   openRawDocumentSafe,
   resetPdfiumModule,
-} from "@app/services/pdfiumService";
-import { PdfiumPageRenderer } from "@app/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
+} from "@editor/services/pdfiumService";
+import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 
 // Renders coloured quadrants through the real wasm engine: the unit fakes
 // paint four bytes per pixel whatever format they are handed.

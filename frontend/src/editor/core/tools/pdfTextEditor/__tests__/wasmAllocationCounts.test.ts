@@ -4,9 +4,9 @@ import {
   measureObjBoxPt,
   measureObjRightEdgePt,
   measureObjSpanPt,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { setCharcodesOn } from "@app/tools/pdfTextEditor/charcode/charcodeRegistry";
-import { readObjFill } from "@app/tools/pdfTextEditor/commands/SetColourCommand";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { setCharcodesOn } from "@editor/tools/pdfTextEditor/charcode/charcodeRegistry";
+import { readObjFill } from "@editor/tools/pdfTextEditor/commands/SetColourCommand";
 
 interface Bounds {
   left: number;

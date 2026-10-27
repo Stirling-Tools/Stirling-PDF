@@ -1,14 +1,17 @@
 import i18n from "i18next";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { RGBA } from "@app/tools/pdfTextEditor/types";
-import { PdfiumTextWriter } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
-import { collectMemberPtrs } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { RGBA } from "@editor/tools/pdfTextEditor/types";
+import { PdfiumTextWriter } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
+import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import {
   setScanOverride,
   type ScanOverride,
-} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 
 export class SetColourCommand implements Command {
   readonly type = "set-colour";

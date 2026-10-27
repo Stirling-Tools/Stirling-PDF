@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { DiskLinkBadge } from "@app/components/filesPage/DiskLinkBadge";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import { DiskLinkBadge } from "@editor/components/filesPage/DiskLinkBadge";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 /** The healthy and never-on-disk cases are here because they must render nothing;
  *  a story is the cheapest way to keep that honest. */

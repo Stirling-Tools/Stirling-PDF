@@ -1,10 +1,10 @@
-import type { useLoginRequired } from "@app/hooks/useLoginRequired";
+import type { useLoginRequired } from "@editor/hooks/useLoginRequired";
 import type {
   ConnectionsSettingsData,
   LegalSettingsData,
   PrivacySettingsData,
   SecuritySettingsData,
-} from "@app/components/shared/config/configSections/security/securitySettingsTypes";
+} from "@editor/components/shared/config/configSections/security/securitySettingsTypes";
 
 export type GetDisabledStyles = ReturnType<
   typeof useLoginRequired

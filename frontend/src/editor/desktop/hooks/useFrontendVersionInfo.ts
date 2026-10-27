@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getVersion } from "@tauri-apps/api/app";
-import type { FrontendVersionInfo } from "@core/hooks/useFrontendVersionInfo";
-import { useSaaSMode } from "@app/hooks/useSaaSMode";
+import type { FrontendVersionInfo } from "@editor-core/hooks/useFrontendVersionInfo";
+import { useSaaSMode } from "@editor/hooks/useSaaSMode";
 
 export function useFrontendVersionInfo(
   backendVersion: string | undefined,

@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import { useDefaultApp } from "@app/hooks/useDefaultApp";
-import type { ChecklistSetupItem } from "@cloud/components/onboarding/checklistSetupItem";
+import { useDefaultApp } from "@editor/hooks/useDefaultApp";
+import type { ChecklistSetupItem } from "@editor-cloud/components/onboarding/checklistSetupItem";
 
 export type {
   ChecklistItem,
   ChecklistSetupItem,
-} from "@cloud/components/onboarding/checklistSetupItem";
+} from "@editor-cloud/components/onboarding/checklistSetupItem";
 
 export function useChecklistSetupItem(
   _markDone: (stepId: string) => void,
