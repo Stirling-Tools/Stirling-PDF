@@ -5,41 +5,42 @@ import {
   useRef,
   useSyncExternalStore,
 } from "react";
-import { useSelectionActions } from "@app/tools/pdfTextEditor/hooks/useSelectionActions";
-import { deriveToolbarState } from "@app/tools/pdfTextEditor/util/toolbarState";
-import { warmDocumentDeviceFonts } from "@app/tools/pdfTextEditor/util/fontCapability";
+import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
+import { useImageAccessibility } from "@editor/tools/pdfTextEditor/hooks/useImageAccessibility";
+import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
+import { warmDocumentDeviceFonts } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import {
   loadedLocalFonts,
   subscribeLocalFonts,
-} from "@app/tools/pdfTextEditor/util/localFonts";
+} from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
   ChangeZOrderCommand,
   type ZOrderMode,
-} from "@app/tools/pdfTextEditor/commands/ChangeZOrderCommand";
-import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextCommand";
-import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
-import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/commands/MoveTextRunCommand";
-import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/commands/SetImageTransformCommand";
-import { SetLockCommand } from "@app/tools/pdfTextEditor/commands/SetLockCommand";
-import { AlignParagraphLinesCommand } from "@app/tools/pdfTextEditor/commands/AlignParagraphLinesCommand";
+} from "@editor/tools/pdfTextEditor/commands/ChangeZOrderCommand";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
+import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
+import { SetImageTransformCommand } from "@editor/tools/pdfTextEditor/commands/SetImageTransformCommand";
+import { SetLockCommand } from "@editor/tools/pdfTextEditor/commands/SetLockCommand";
+import { AlignParagraphLinesCommand } from "@editor/tools/pdfTextEditor/commands/AlignParagraphLinesCommand";
 import {
   TransformImageObjectCommand,
   type ImageTransformMode,
-} from "@app/tools/pdfTextEditor/commands/TransformImageObjectCommand";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import type { EditorViewState } from "@app/tools/pdfTextEditor/store/EditorStore";
-import type { SelectionState } from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/commands/TransformImageObjectCommand";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import {
   isExternalImageEditSupported,
   startExternalImageEdit,
   type ExternalEditWatch,
-} from "@app/tools/pdfTextEditor/util/externalImageEdit";
+} from "@editor/tools/pdfTextEditor/util/externalImageEdit";
 import {
   decodeBytesForEmbed,
   decodeImageForEmbed,
   pickImageFile,
-} from "@app/tools/pdfTextEditor/util/imagePicking";
-import { readImageObjectPixels } from "@app/tools/pdfTextEditor/util/imagePixels";
+} from "@editor/tools/pdfTextEditor/util/imagePicking";
+import { readImageObjectPixels } from "@editor/tools/pdfTextEditor/util/imagePixels";
 
 type AlignMode = "left" | "center-h" | "right" | "top" | "middle-v" | "bottom";
 
@@ -51,6 +52,7 @@ export function useToolbarController(
   selection: SelectionState,
 ) {
   const sel = useSelectionActions(store);
+  const imageA11y = useImageAccessibility(store, state, selection);
 
   const onToggleLock = useCallback(() => {
     const doc = store.document;
@@ -517,6 +519,11 @@ export function useToolbarController(
     onReplaceImage,
     onEditImageExternally,
     externalEditSupported: isExternalImageEditSupported(),
+    imageAccessibility: imageA11y.accessibility,
+    onSetImageDescription: imageA11y.setDescription,
+    onSetImageDecorative: imageA11y.setDecorative,
+    imageReview: imageA11y.review,
+    onSelectNextImageToReview: imageA11y.selectNextImage,
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
     hasImageSelection: selection.imageIds.length > 0,

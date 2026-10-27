@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { usePreferences } from "@app/contexts/PreferencesContext";
-import { useOnboarding } from "@app/contexts/OnboardingContext";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { useOnboarding } from "@editor/contexts/OnboardingContext";
 
 const ONBOARDING_SESSION_BLOCK_KEY = "stirling-onboarding-session-active";
 

@@ -1,6 +1,6 @@
-import { StirlingFileStub } from "@app/types/fileContext";
-import { useIndexedDBThumbnail } from "@app/hooks/useIndexedDBThumbnail";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { useIndexedDBThumbnail } from "@editor/hooks/useIndexedDBThumbnail";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 
 export function useFileThumbnail(
   fileStub: StirlingFileStub | null | undefined,

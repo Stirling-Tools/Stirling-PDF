@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
 import { http, HttpResponse } from "msw";
-import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import { LicenseProvider } from "@app/contexts/LicenseContext";
+import { ManageBillingButton } from "@editor/components/shared/ManageBillingButton";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import { LicenseProvider } from "@editor/contexts/LicenseContext";
 
 /**
  * Button that opens the Stripe billing portal for the current license.

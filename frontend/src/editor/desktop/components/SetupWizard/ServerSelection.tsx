@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Stack, TextInput, Alert, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import {
   ServerConfig,
   SSOProviderConfig,
-} from "@app/services/connectionModeService";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { Icon } from "@app/ui/Icon";
+} from "@editor/services/connectionModeService";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { Icon } from "@editor/ui/Icon";
 interface ServerSelectionProps {
   onSelect: (config: ServerConfig) => void;
   loading: boolean;

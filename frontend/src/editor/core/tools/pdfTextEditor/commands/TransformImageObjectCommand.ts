@@ -1,7 +1,7 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Affine } from "@app/tools/pdfTextEditor/types";
-import { retargetClipPath } from "@app/tools/pdfTextEditor/util/objectTransform";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Affine } from "@editor/tools/pdfTextEditor/types";
+import { retargetClipPath } from "@editor/tools/pdfTextEditor/util/objectTransform";
 
 // Apply an in-place transform to an image: rotate by 90° (CW or CCW), flip
 // horizontally, or flip vertically.

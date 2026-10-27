@@ -1,11 +1,11 @@
 import React from "react";
 import { Trans } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import i18n from "@app/i18n";
-import { SlideConfig } from "@app/types/types";
-import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
-import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import i18n from "@editor/i18n";
+import { SlideConfig } from "@editor/types/types";
+import { UNIFIED_CIRCLE_CONFIG } from "@editor/components/onboarding/slides/unifiedBackgroundConfig";
+import styles from "@editor/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 
 interface AnalyticsChoiceSlideProps {
   analyticsError?: string | null;

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import "@app/components/shared/signing/signing.css";
+import "@editor/components/shared/signing/signing.css";
 
 /** Unread activity indicator with the same accessible description in every signing entry point. */
 export function SigningActivityDot({ className = "" }: { className?: string }) {

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import PageLayoutMarginsBordersSettings from "@app/components/tools/pageLayout/PageLayoutMarginsBordersSettings";
+import PageLayoutMarginsBordersSettings from "@editor/components/tools/pageLayout/PageLayoutMarginsBordersSettings";
 import {
   PageLayoutParameters,
   defaultParameters,
-} from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
+} from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
 
 const meta = {
   title: "Tools/PageLayout/PageLayoutMarginsBordersSettings",

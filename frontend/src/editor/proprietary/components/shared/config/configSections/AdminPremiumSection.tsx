@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { Trans, useTranslation } from "react-i18next";
 import {
   TextInput,
@@ -12,15 +12,15 @@ import {
   Alert,
   List,
 } from "@mantine/core";
-import { alert } from "@app/components/toast";
-import { Icon } from "@app/ui/Icon";
-import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
-import { useRestartServer } from "@app/components/shared/config/useRestartServer";
-import { useAdminSettings } from "@app/hooks/useAdminSettings";
-import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import { alert } from "@editor/components/toast";
+import { Icon } from "@editor/ui/Icon";
+import RestartConfirmationModal from "@editor/components/shared/config/RestartConfirmationModal";
+import { useRestartServer } from "@editor/components/shared/config/useRestartServer";
+import { useAdminSettings } from "@editor/hooks/useAdminSettings";
+import { useSettingsDirty } from "@editor/hooks/useSettingsDirty";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsStickyFooter";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
 
 interface PremiumSettingsData {
   key?: string;

@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
-import { useNavigationGuard } from "@app/contexts/NavigationContext";
-import { UnsavedChangesDialog } from "@app/components/shared/UnsavedChangesDialog";
+import { useNavigationGuard } from "@editor/contexts/NavigationContext";
+import { UnsavedChangesDialog } from "@editor/components/shared/UnsavedChangesDialog";
 
 const NavigationWarningModal = () => {
   const {

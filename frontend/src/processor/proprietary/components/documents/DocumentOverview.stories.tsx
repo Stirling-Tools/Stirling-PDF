@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { documentsFor } from "@portal/mocks/documents";
-import { DocumentOverview } from "@portal/components/documents/DocumentOverview";
-import "@portal/views/Documents.css";
+import { documentsFor } from "@processor/mocks/documents";
+import { DocumentOverview } from "@processor/components/documents/DocumentOverview";
+import "@processor/views/Documents.css";
 
 const DOC = documentsFor("pro")[0];
 

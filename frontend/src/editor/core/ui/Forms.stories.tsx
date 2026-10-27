@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FormField } from "@app/ui/FormField";
-import { Input } from "@app/ui/Input";
-import { Select } from "@app/ui/Select";
-import { Checkbox } from "@app/ui/Checkbox";
-import { RadioGroup } from "@app/ui/Radio";
-import { Slider } from "@app/ui/Slider";
-import { Stack } from "@app/ui/Stack";
-import { Inline } from "@app/ui/Inline";
+import { FormField } from "@editor/ui/FormField";
+import { Input } from "@editor/ui/Input";
+import { Select } from "@editor/ui/Select";
+import { Checkbox } from "@editor/ui/Checkbox";
+import { RadioGroup } from "@editor/ui/Radio";
+import { Slider } from "@editor/ui/Slider";
+import { Stack } from "@editor/ui/Stack";
+import { Inline } from "@editor/ui/Inline";
 
 function SearchIcon({ size = 14 }: { size?: number }) {
   return <Icon name="search" size={size} />;

@@ -1,9 +1,9 @@
-import type { StatusTone } from "@app/ui";
+import type { StatusTone } from "@editor/ui";
 import type {
   ApiKeyStatus,
   AuditCategory,
   AuditStatus,
-} from "@portal/api/infrastructure";
+} from "@processor/api/infrastructure";
 
 export const KEY_TONE: Record<ApiKeyStatus, StatusTone> = {
   active: "success",

@@ -1,7 +1,7 @@
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Logo } from "@app/ui/Logo";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Logo } from "@editor/ui/Logo";
 
 interface LoginHeaderProps {
   title: string;

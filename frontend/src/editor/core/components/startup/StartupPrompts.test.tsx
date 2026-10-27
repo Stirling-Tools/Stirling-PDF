@@ -22,13 +22,13 @@ import { MantineProvider } from "@mantine/core";
 import {
   AppConfigProvider,
   type AppConfig,
-} from "@app/contexts/AppConfigContext";
-import { AppLayout } from "@app/components/AppLayout";
-import { AppRoot } from "@app/components/layout/AppRoot";
-import { BannerProvider } from "@app/contexts/BannerContext";
-import type StaticOnboardingSlide from "@app/components/onboarding/StaticOnboardingSlide";
-import type { AccountData } from "@app/services/accountService";
-import type { useAuth } from "@app/auth/UseSession";
+} from "@editor/contexts/AppConfigContext";
+import { AppLayout } from "@editor/components/AppLayout";
+import { AppRoot } from "@editor/components/layout/AppRoot";
+import { BannerProvider } from "@editor/contexts/BannerContext";
+import type StaticOnboardingSlide from "@editor/components/onboarding/StaticOnboardingSlide";
+import type { AccountData } from "@editor/services/accountService";
+import type { useAuth } from "@editor/auth/UseSession";
 
 const h = vi.hoisted<{
   auth: Pick<ReturnType<typeof useAuth>, "user" | "loading" | "isAnonymous"> & {
@@ -50,27 +50,29 @@ const h = vi.hoisted<{
   logout: vi.fn(),
   tracking: vi.fn(),
 }));
-vi.mock("@app/pages/HomePage", () => ({ default: () => null }));
-vi.mock("@app/pages/SettingsPage", () => ({ default: () => null }));
-vi.mock("@app/components/docs/DocsPage", () => ({ default: () => null }));
-vi.mock("@app/components/shared/NavigationWarningModal", () => ({
+vi.mock("@editor/pages/HomePage", () => ({ default: () => null }));
+vi.mock("@editor/pages/SettingsPage", () => ({ default: () => null }));
+vi.mock("@editor/components/docs/DocsPage", () => ({ default: () => null }));
+vi.mock("@editor/components/shared/NavigationWarningModal", () => ({
   default: () => null,
 }));
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => h.auth }));
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => h.auth }));
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: h.get, post: h.post },
 }));
-vi.mock("@app/extensions/accountLogout", () => ({
+vi.mock("@editor/extensions/accountLogout", () => ({
   useAccountLogout: () => h.logout,
 }));
-vi.mock("@app/hooks/useCookieConsentInitialization", () => ({
+vi.mock("@editor/hooks/useCookieConsentInitialization", () => ({
   useCookieConsentInitialization: () => h.tracking(),
 }));
-vi.mock("@app/hooks/useScarfTracking", () => ({ useScarfTracking: () => {} }));
-vi.mock("@app/hooks/usePosthogTracking", () => ({
+vi.mock("@editor/hooks/useScarfTracking", () => ({
+  useScarfTracking: () => {},
+}));
+vi.mock("@editor/hooks/usePosthogTracking", () => ({
   usePosthogTracking: () => {},
 }));
-vi.mock("@app/components/onboarding/StaticOnboardingSlide", () => ({
+vi.mock("@editor/components/onboarding/StaticOnboardingSlide", () => ({
   default: ({
     slideId,
     params,

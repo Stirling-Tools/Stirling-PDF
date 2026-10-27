@@ -5,14 +5,14 @@ import {
   StackedBarChartProps,
   TooltipData,
   FractionData,
-} from "@app/types/charts";
-import { generateTooltipHTML } from "@app/components/shared/charts/stackedBarChart/StackedBarTooltip";
-import { createTooltipPositioner } from "@app/components/shared/charts/utils/tooltipUtils";
+} from "@editor/types/charts";
+import { generateTooltipHTML } from "@editor/components/shared/charts/stackedBarChart/StackedBarTooltip";
+import { createTooltipPositioner } from "@editor/components/shared/charts/utils/tooltipUtils";
 import {
   createRoundedRectPath,
   createScale,
-} from "@app/components/shared/charts/utils/d3Utils";
-import "@app/components/shared/charts/StackedBarChart.css";
+} from "@editor/components/shared/charts/utils/d3Utils";
+import "@editor/components/shared/charts/StackedBarChart.css";
 import { useTranslation } from "react-i18next";
 
 export default function StackedBarChart({

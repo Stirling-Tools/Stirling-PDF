@@ -1,20 +1,31 @@
-import type { StructureElement } from "@app/tools/pdfTextEditor/model/PageStructure";
-import { RawPdf, referencedObject } from "@app/tools/pdfTextEditor/pdfdoc/raw";
-import { decodeTextString } from "@app/tools/pdfTextEditor/pdfdoc/textString";
+import type { StructureElement } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import { ownsOnlyMarkedContent } from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
+import {
+  RawPdf,
+  referencedObject,
+} from "@editor/tools/pdfTextEditor/pdfdoc/raw";
+import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 
 type ElementInfo = Omit<StructureElement, "mcids">;
 
+/** One page's elements as its ParentTree array gives them. */
+export interface FilePageStructure {
+  elements: StructureElement[];
+  /** The array's length; null when the page names an entry that cannot be read. */
+  slotCount: number | null;
+}
+
 /**
- * Every page's structure elements, keyed by page index, each listing only the
- * MCIDs the page's ParentTree slots give it: the lookup the save addresses
- * edits by. PDFium lists an element's MCIDs from every page with no page
- * attached, so an element spanning a page break would claim another element's
- * MCID there. Null when the file is untagged, cannot be parsed, or is
- * encrypted, whose strings would read as ciphertext.
+ * Every page with /StructParents, keyed by page index, its elements each
+ * listing only the MCIDs the page's ParentTree slots give it: the lookup the
+ * save addresses edits by. PDFium lists an element's MCIDs from every page
+ * with no page attached, so an element spanning a page break would claim
+ * another element's MCID there. Null when the file is untagged, cannot be
+ * parsed, or is encrypted, whose strings would read as ciphertext.
  */
 export async function readFileStructure(
   bytes: Uint8Array,
-): Promise<Map<number, StructureElement[]> | null> {
+): Promise<Map<number, FilePageStructure> | null> {
   const pdf = await RawPdf.parse(bytes);
   if (!pdf || pdf.encrypted) return null;
   const catalog = pdf.objectBody(pdf.rootNum);
@@ -29,13 +40,16 @@ export async function readFileStructure(
     return infos.get(num)!;
   };
 
-  const byPage = new Map<number, StructureElement[]>();
+  const byPage = new Map<number, FilePageStructure>();
   pdf.pageNumbers().forEach((pageNum, pageIndex) => {
     const page = pdf.objectBody(pageNum);
     const key = page ? pdf.dictInt(page, "StructParents") : null;
-    const items =
-      key === null ? null : pdf.parentTreeArray(treeRoot, key)?.items;
-    if (!items) return;
+    if (key === null) return;
+    const items = pdf.parentTreeArray(treeRoot, key)?.items;
+    if (!items) {
+      byPage.set(pageIndex, { elements: [], slotCount: null });
+      return;
+    }
     const owned = new Map<number, StructureElement>();
     items.forEach((item, mcid) => {
       const num = referencedObject(item.text);
@@ -45,7 +59,10 @@ export async function readFileStructure(
       element.mcids.push(mcid);
       owned.set(num, element);
     });
-    byPage.set(pageIndex, [...owned.values()]);
+    byPage.set(pageIndex, {
+      elements: [...owned.values()],
+      slotCount: items.length,
+    });
   });
   return byPage;
 }
@@ -66,6 +83,7 @@ function readElement(
     type: applyRoleMap(pdf, roleMap, type),
     alt: text("Alt"),
     actualText: text("ActualText"),
+    onlyMarkedContent: ownsOnlyMarkedContent(pdf, body),
   };
 }
 

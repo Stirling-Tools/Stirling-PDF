@@ -7,14 +7,14 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useLegacySubscriptions } from "@app/hooks/useLegacySubscriptions";
-import type { LegacySubscription } from "@app/types/legacyBilling";
-import { createAppQueryClient } from "@app/query/queryClient";
-import { qk } from "@app/query/keys";
+import { useLegacySubscriptions } from "@editor/hooks/useLegacySubscriptions";
+import type { LegacySubscription } from "@editor/types/legacyBilling";
+import { createAppQueryClient } from "@editor/query/queryClient";
+import { qk } from "@editor/query/keys";
 import {
   resetTabVisibility,
   setTabHidden,
-} from "@app/tests/utils/tabVisibility";
+} from "@editor/tests/utils/tabVisibility";
 
 let client: QueryClient;
 
@@ -31,14 +31,14 @@ let authLoading = false;
 const fetchSubscriptions = vi.fn();
 const portal = vi.fn();
 const navigate = vi.fn();
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ user, loading: authLoading }),
 }));
-vi.mock("@app/services/legacyBilling", () => ({
+vi.mock("@editor/services/legacyBilling", () => ({
   fetchLegacySubscriptions: (...args: unknown[]) => fetchSubscriptions(...args),
   createLegacyPortalSession: () => portal(),
 }));
-vi.mock("@app/platform/openExternal", () => ({
+vi.mock("@editor/platform/openExternal", () => ({
   openExternal: (...args: unknown[]) => navigate(...args),
 }));
 const subscription: LegacySubscription = {

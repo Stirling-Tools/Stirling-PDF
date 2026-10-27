@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   ButtonToggle,
   ButtonToggleOption,
-} from "@app/components/shared/ButtonToggle";
+} from "@editor/components/shared/ButtonToggle";
 
 const meta: Meta<typeof ButtonToggle> = {
   title: "Shared/ButtonToggle",

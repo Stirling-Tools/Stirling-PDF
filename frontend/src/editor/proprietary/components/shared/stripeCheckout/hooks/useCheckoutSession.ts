@@ -1,20 +1,20 @@
 import { useCallback } from "react";
 import i18n from "i18next";
-import licenseService, { PlanTier } from "@app/services/licenseService";
+import licenseService, { PlanTier } from "@editor/services/licenseService";
 import {
   resyncExistingLicense,
   pollTeamCheckout,
-} from "@app/utils/licenseCheckoutUtils";
+} from "@editor/utils/licenseCheckoutUtils";
 import {
   createServerPlanCheckoutSession,
   type ServerPlanCheckoutRequest,
   type ServerPlanCheckoutSession,
-} from "@app/services/serverPlanCheckout";
-import { getCheckoutMode } from "@app/utils/protocolDetection";
+} from "@editor/services/serverPlanCheckout";
+import { getCheckoutMode } from "@editor/utils/protocolDetection";
 import {
   CheckoutState,
   PollingStatus,
-} from "@app/components/shared/stripeCheckout/types/checkout";
+} from "@editor/components/shared/stripeCheckout/types/checkout";
 
 /**
  * Mints the Stripe session a plan purchase is paid through. Injectable so a test can drive the

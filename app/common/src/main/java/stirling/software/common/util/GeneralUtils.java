@@ -45,7 +45,8 @@ public class GeneralUtils {
     private static final BigDecimal KIB = BigDecimal.valueOf(1024L);
     private static final BigDecimal LONG_MAX_DECIMAL = BigDecimal.valueOf(Long.MAX_VALUE);
 
-    private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
+    private final Set<String> DEFAULT_VALID_SCRIPTS =
+            Set.of("calibre_sandbox.py", "png_to_webp.py", "split_photos.py");
     private final Set<String> DEFAULT_VALID_PIPELINE =
             Set.of(
                     "OCR images.json",
@@ -58,7 +59,7 @@ public class GeneralUtils {
 
     // Extracted once per run. Rewriting a script while another request is exec-ing it
     // races wherever rename is not atomic, such as 9p or NFS bind mounts.
-    private final Map<String, Path> EXTRACTED_SCRIPTS = new ConcurrentHashMap<>();
+    private final Map<String, byte[]> BUNDLED_SCRIPTS = new ConcurrentHashMap<>();
     private final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
     // Valid size units used for convertSizeToBytes validation and parsing
     private final Set<String> VALID_SIZE_UNITS = Set.of("B", "KB", "MB", "GB", "TB");
@@ -1062,33 +1063,54 @@ public class GeneralUtils {
 
         if (!DEFAULT_VALID_SCRIPTS.contains(scriptName)) {
             throw new IllegalArgumentException(
-                    "scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
+                    "scriptName must be one of 'calibre_sandbox.py', 'png_to_webp.py' or"
+                            + " 'split_photos.py'");
         }
 
         Path scriptsDir = Path.of(InstallationPathConfig.getScriptsPath(), PYTHON_SCRIPTS_DIR);
         Path target = scriptsDir.resolve(scriptName);
 
-        Path cached = EXTRACTED_SCRIPTS.get(scriptName);
-        if (cached != null && Files.isRegularFile(cached)) {
-            return cached;
+        ClassPathResource res =
+                new ClassPathResource("static/" + PYTHON_SCRIPTS_DIR + "/" + scriptName);
+        byte[] bundled = bundledScript(scriptName, res);
+        if (holdsBundledScript(target, bundled)) {
+            return target;
         }
 
-        synchronized (EXTRACTED_SCRIPTS) {
-            cached = EXTRACTED_SCRIPTS.get(scriptName);
-            if (cached != null && Files.isRegularFile(cached)) {
-                return cached;
+        synchronized (BUNDLED_SCRIPTS) {
+            if (holdsBundledScript(target, bundled)) {
+                return target;
             }
-
             Files.createDirectories(scriptsDir);
-            ClassPathResource res =
-                    new ClassPathResource("static/" + PYTHON_SCRIPTS_DIR + "/" + scriptName);
-            if (!res.exists()) {
-                log.error("Resource not found: {}", res.getPath());
-                throw new IOException("Resource not found: " + res.getPath());
-            }
             copyResourceToFile(res, target);
-            EXTRACTED_SCRIPTS.put(scriptName, target);
             return target;
+        }
+    }
+
+    private byte[] bundledScript(String scriptName, ClassPathResource res) throws IOException {
+        byte[] cached = BUNDLED_SCRIPTS.get(scriptName);
+        if (cached != null) {
+            return cached;
+        }
+        if (!res.exists()) {
+            log.error("Resource not found: {}", res.getPath());
+            throw new IOException("Resource not found: " + res.getPath());
+        }
+        byte[] contents;
+        try (InputStream in = res.getInputStream()) {
+            contents = in.readAllBytes();
+        }
+        BUNDLED_SCRIPTS.putIfAbsent(scriptName, contents);
+        return BUNDLED_SCRIPTS.get(scriptName);
+    }
+
+    private boolean holdsBundledScript(Path target, byte[] bundled) {
+        try {
+            return Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)
+                    && Files.size(target) == bundled.length
+                    && Arrays.equals(Files.readAllBytes(target), bundled);
+        } catch (IOException e) {
+            return false;
         }
     }
 

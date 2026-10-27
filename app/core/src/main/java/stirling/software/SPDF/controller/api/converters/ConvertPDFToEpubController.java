@@ -157,11 +157,7 @@ public class ConvertPDFToEpubController {
             }
 
             if (result.getRc() != 0) {
-                String errorMessage = result.getMessages();
-                if (errorMessage == null || errorMessage.isBlank()) {
-                    errorMessage = "Calibre conversion failed";
-                }
-                throw new IllegalStateException(errorMessage);
+                throw new IllegalStateException("Calibre conversion failed");
             }
 
             if (!Files.exists(outputPath) || Files.size(outputPath) == 0L) {

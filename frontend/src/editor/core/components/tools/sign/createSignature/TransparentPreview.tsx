@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import styles from "@app/components/tools/sign/createSignature/TransparentPreview.module.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import styles from "@editor/components/tools/sign/createSignature/TransparentPreview.module.css";
 
 interface TransparentPreviewProps {
   src: string | null;

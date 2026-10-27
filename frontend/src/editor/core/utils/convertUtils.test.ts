@@ -9,7 +9,7 @@ import {
   getEndpointUrl,
   isConversionSupported,
   isImageFormat,
-} from "@app/utils/convertUtils";
+} from "@editor/utils/convertUtils";
 
 describe("convertUtils", () => {
   describe("getEndpointName", () => {

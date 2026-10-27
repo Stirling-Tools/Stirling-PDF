@@ -8,11 +8,11 @@ import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: fetchMock }));
-vi.mock("@app/services/documentPrivacyService", () => ({
+vi.mock("@editor/services/documentPrivacyService", () => ({
   enforceDocumentPrivacy: vi.fn().mockResolvedValue(false),
 }));
 
-import { create } from "@app/services/tauriHttpClient";
+import { create } from "@editor/services/tauriHttpClient";
 
 function okJson() {
   return {

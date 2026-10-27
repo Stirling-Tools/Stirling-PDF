@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useFolders } from "@app/contexts/FolderContext";
+import { useFolders } from "@editor/contexts/FolderContext";
 import {
   diskFolderId,
   pickFolderColor,
   type FolderId,
-} from "@app/types/folder";
+} from "@editor/types/folder";
 import {
   canListDirectory,
   listDirectory,
   type DiskFileEntry,
-} from "@app/services/localFolderContents";
+} from "@editor/services/localFolderContents";
 
 /** Reads mounted directories and ignores obsolete replies after navigation. */
 export function useDiskFolder(

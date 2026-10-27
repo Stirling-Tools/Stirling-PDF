@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { AppShell } from "@portal/components/AppShell";
-import { Home } from "@portal/views/Home";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { AppShell } from "@processor/components/AppShell";
+import { Home } from "@processor/views/Home";
 
 /**
  * The full shell (sidebar + mobile topbar/drawer + scrolling view column) with
