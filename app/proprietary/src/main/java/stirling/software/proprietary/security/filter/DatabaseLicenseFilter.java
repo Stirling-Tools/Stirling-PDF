@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.configuration.ee.DatabaseLicenseGuard;
 
 /** Restricts an unlicensed external database to reading, setup and account/licence recovery. */
@@ -36,7 +37,13 @@ public class DatabaseLicenseFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        String path = request.getRequestURI().substring(request.getContextPath().length());
+        String path;
+        try {
+            path = RequestUriUtils.normalizeUri(request.getContextPath(), request.getRequestURI());
+        } catch (IllegalArgumentException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
         if (!path.startsWith("/api/")
                 || Set.of("GET", "HEAD", "OPTIONS").contains(request.getMethod())
                 || path.startsWith("/api/v1/auth/")
