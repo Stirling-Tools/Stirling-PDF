@@ -158,6 +158,8 @@ public class SessionPersistentRegistry implements SessionRegistry {
             SessionEntity sessionEntity = sessionEntityOpt.get();
             sessionEntity.setLastRequest(Instant.now()); // Update lastRequest to the current date
             sessionRepository.save(sessionEntity);
+            // Registration can fail after startup; restored sessions only touch this path.
+            signalFirstUse();
         }
     }
 
