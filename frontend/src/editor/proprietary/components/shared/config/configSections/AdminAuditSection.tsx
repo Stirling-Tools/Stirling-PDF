@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from "react";
-import { SettingsEmptyState } from "@app/components/shared/config/SettingsEmptyState";
+import { SettingsEmptyState } from "@editor/components/shared/config/SettingsEmptyState";
 import { isAxiosError } from "axios";
 import {
   Tabs,
@@ -10,29 +10,29 @@ import {
   Accordion,
   Center,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import auditService, {
   AuditSystemStatus as AuditStatus,
-} from "@app/services/auditService";
-import AuditSystemStatus from "@app/components/shared/config/configSections/audit/AuditSystemStatus";
-import AuditStatsCards from "@app/components/shared/config/configSections/audit/AuditStatsCards";
+} from "@editor/services/auditService";
+import AuditSystemStatus from "@editor/components/shared/config/configSections/audit/AuditSystemStatus";
+import AuditStatsCards from "@editor/components/shared/config/configSections/audit/AuditStatsCards";
 
 // AuditChartsSection pulls in recharts (~200 kB gzip). It's only rendered when
 // the user expands the "Events Over Time" accordion on this page, so we keep
 // the rest of the audit page eager and lazy-load just the charts.
 const AuditChartsSection = lazy(
   () =>
-    import("@app/components/shared/config/configSections/audit/AuditChartsSection"),
+    import("@editor/components/shared/config/configSections/audit/AuditChartsSection"),
 );
-import AuditEventsTable from "@app/components/shared/config/configSections/audit/AuditEventsTable";
-import AuditExportSection from "@app/components/shared/config/configSections/audit/AuditExportSection";
-import AuditClearDataSection from "@app/components/shared/config/configSections/audit/AuditClearDataSection";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import EnterpriseRequiredBanner from "@app/components/shared/config/EnterpriseRequiredBanner";
-import { Icon } from "@app/ui/Icon";
+import AuditEventsTable from "@editor/components/shared/config/configSections/audit/AuditEventsTable";
+import AuditExportSection from "@editor/components/shared/config/configSections/audit/AuditExportSection";
+import AuditClearDataSection from "@editor/components/shared/config/configSections/audit/AuditClearDataSection";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import EnterpriseRequiredBanner from "@editor/components/shared/config/EnterpriseRequiredBanner";
+import { Icon } from "@editor/ui/Icon";
 
 type TimePeriod = "day" | "week" | "month";
 

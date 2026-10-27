@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
 import type { PdfAnnotationObject } from "@embedpdf/models";
-import { surfacesAnnotationSaveUi } from "@app/components/viewer/annotationSaveSurface";
+import { surfacesAnnotationSaveUi } from "@editor/components/viewer/annotationSaveSurface";
 
 function annotation(
   over: Partial<PdfAnnotationObject> & Pick<PdfAnnotationObject, "type">,

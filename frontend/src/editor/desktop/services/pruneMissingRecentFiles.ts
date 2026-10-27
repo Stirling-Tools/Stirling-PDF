@@ -1,18 +1,18 @@
-import { StirlingFileStub, FileId } from "@app/types/fileContext";
-import { fileStorage } from "@app/services/fileStorage";
+import { StirlingFileStub, FileId } from "@editor/types/fileContext";
+import { fileStorage } from "@editor/services/fileStorage";
 import {
   DiskUnavailableReason,
   desktopFileLinkingSupported,
   getDiskFileState,
-} from "@app/services/desktopFileLink";
+} from "@editor/services/desktopFileLink";
 import {
   detachedFields,
   diskAvailabilityFields,
-} from "@app/services/diskFileSync";
+} from "@editor/services/diskFileSync";
 import type {
   DetachedOpenFile,
   PruneOptions,
-} from "@core/services/pruneMissingRecentFiles";
+} from "@editor-core/services/pruneMissingRecentFiles";
 
 export type { DetachedOpenFile, PruneOptions };
 

@@ -1,4 +1,4 @@
-import { StirlingFileStub, FileId } from "@app/types/fileContext";
+import { StirlingFileStub, FileId } from "@editor/types/fileContext";
 
 // Seam for reconciling the file list against wherever its records came from.
 // Where IndexedDB is the only truth a stored record cannot have gone missing,

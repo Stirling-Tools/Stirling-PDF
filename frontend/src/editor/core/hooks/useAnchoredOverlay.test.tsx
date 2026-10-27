@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, act } from "@testing-library/react";
 import { useRef } from "react";
-import { useAnchoredOverlay } from "@app/hooks/useAnchoredOverlay";
+import { useAnchoredOverlay } from "@editor/hooks/useAnchoredOverlay";
 
 /** Drives requestAnimationFrame by hand so a queued frame can be inspected. */
 function installFrameControl() {

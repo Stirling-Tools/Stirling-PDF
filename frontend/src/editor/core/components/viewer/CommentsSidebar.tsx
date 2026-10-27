@@ -18,9 +18,9 @@ import {
   Modal,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon, type IconName } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
 import {
   getSidebarAnnotationsWithRepliesGroupedByPage,
@@ -33,22 +33,22 @@ import {
   type PdfTextAnnoObject,
   type Rect,
 } from "@embedpdf/models";
-import { useCommentAuthor } from "@app/contexts/CommentAuthorContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { registerCommentCommitFlush } from "@app/components/viewer/commentCommitFlush";
-import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
+import { useCommentAuthor } from "@editor/contexts/CommentAuthorContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useAnnotation as useAnnotationContext } from "@editor/contexts/AnnotationContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { registerCommentCommitFlush } from "@editor/components/viewer/commentCommitFlush";
+import { compareEntriesByVisualOrder } from "@editor/components/viewer/commentsSidebarOrder";
 import {
   buildCommentsCsv,
   commentsCsvFileName,
   getCommentDate,
   getCommentDisplayContent,
   toCommentCsvThreads,
-} from "@app/utils/commentsCsv";
-import { downloadTextAsFile } from "@app/utils/downloadUtils";
-import { SidebarBase } from "@app/components/viewer/SidebarBase";
+} from "@editor/utils/commentsCsv";
+import { downloadTextAsFile } from "@editor/utils/downloadUtils";
+import { SidebarBase } from "@editor/components/viewer/SidebarBase";
 
 /** PDF subtypes that are inherently standalone comment annotations (not linked to other annotations). */
 const STANDALONE_COMMENT_SUBTYPES = new Set([
@@ -144,8 +144,8 @@ const TOOL_ICON_MAP: Record<string, IconName> = {
   inkHighlighter: "brush",
   square: "square",
   circle: "circle",
-  line: "polyline",
-  lineArrow: "polyline",
+  line: "slash",
+  lineArrow: "move-up-right",
   polyline: "polyline",
   polygon: "triangle",
   text: "type",
@@ -160,7 +160,8 @@ const TOOL_ICON_MAP: Record<string, IconName> = {
 function getIconByType(type: number | undefined): IconName {
   if (type === 1) return "message-square";
   if (type === 3) return "sticky-note";
-  if (type === 4 || type === 8) return "polyline";
+  if (type === 4) return "slash";
+  if (type === 8) return "polyline";
   if (type === 5) return "square";
   if (type === 6) return "circle";
   if (type === 7 || type === 8) return "triangle";

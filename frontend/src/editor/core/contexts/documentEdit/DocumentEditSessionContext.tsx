@@ -12,7 +12,7 @@ import {
   sessionReducer,
   type SessionAction,
   type SessionState,
-} from "@app/contexts/documentEdit/sessionReducer";
+} from "@editor/contexts/documentEdit/sessionReducer";
 
 // Split deliberately: a component that only dispatches must not re-render when
 // the state changes, and a component that only reads must not re-render when a

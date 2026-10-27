@@ -1,4 +1,4 @@
-import { useEventCallback } from "@app/hooks/useEventCallback";
+import { useEventCallback } from "@editor/hooks/useEventCallback";
 import {
   Tooltip,
   Popover,
@@ -15,8 +15,8 @@ import {
   type CSSProperties,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 
 // safari and firefox do not support the eye dropper API, only edge, chrome and opera do.
 // the button is hidden in the UI if the API is not supported.

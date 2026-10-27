@@ -1,7 +1,7 @@
 /** Shared types for the PDF text editor. */
 
-import type { DisplayTransformData } from "@app/tools/pdfTextEditor/model/DisplayTransform";
-import type { AnnotationBox } from "@app/tools/pdfTextEditor/model/AnnotationBox";
+import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import type { AnnotationBox } from "@editor/tools/pdfTextEditor/model/AnnotationBox";
 
 export interface RGBA {
   r: number; // 0..255
@@ -92,10 +92,15 @@ export interface ImageObjectSnapshot {
   matrix: Affine;
   /** Editor-only: see TextRunSnapshot.locked. */
   locked?: boolean;
-  /** The marked-content ID that ties the image into the structure tree. */
+  /**
+   * The page's marked-content ID that ties the image into the structure tree:
+   * for an image in a form XObject, the form's.
+   */
   mcid?: number;
   /** Marked as an artifact: decoration that assistive technology skips. */
   artifact?: boolean;
+  /** Drawn by a form XObject, whose marks are not the page's to change. */
+  inForm?: boolean;
 }
 
 // One ruling line the page draws, with the ink needed to reproduce it: a table

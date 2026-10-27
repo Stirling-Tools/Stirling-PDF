@@ -10,14 +10,14 @@
  * fixtures can be deleted (or kept as test seeds).
  */
 
-import type { Tier } from "@portal/contexts/TierContext";
+import type { Tier } from "@processor/contexts/TierContext";
 import type {
   ApiKey,
   ApiKeysResponse,
   AuditEvent,
   AuditLogResponse,
   AuditSummary,
-} from "@portal/api/infrastructure";
+} from "@processor/api/infrastructure";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  API Keys                                                                 */

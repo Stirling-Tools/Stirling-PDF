@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { freeWallet } from "@app/billing/walletFixtures";
+import { freeWallet } from "@editor/billing/walletFixtures";
 
 const useWalletMock = vi.hoisted(() => vi.fn());
 
-vi.mock("@app/hooks/useWallet", () => ({
+vi.mock("@editor/hooks/useWallet", () => ({
   useWallet: useWalletMock,
 }));
 
@@ -20,7 +20,7 @@ vi.mock("react-i18next", () => ({
 import {
   FreeMeterPanel,
   useFreeSnapshot,
-} from "@app/components/shared/config/configSections/usageMeters";
+} from "@editor/components/shared/config/configSections/usageMeters";
 
 function LiveMeter() {
   return <FreeMeterPanel snap={useFreeSnapshot()} />;

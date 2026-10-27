@@ -2,7 +2,7 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import type { RedactionItem } from "@embedpdf/plugin-redaction";
-import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
+import { RedactionSelectionMenu } from "@editor/components/viewer/RedactionSelectionMenu";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
@@ -16,19 +16,19 @@ const setRedactionConfig = vi.fn();
 const setRedactionMode = vi.fn();
 const setToolAndWorkbench = vi.fn();
 
-vi.mock("@app/contexts/ToolWorkflowContext", () => ({
+vi.mock("@editor/contexts/ToolWorkflowContext", () => ({
   useToolWorkflow: () => ({ handleToolSelectForced, setLeftPanelView }),
 }));
 
-vi.mock("@app/contexts/RedactionContext", () => ({
+vi.mock("@editor/contexts/RedactionContext", () => ({
   useRedaction: () => ({ setRedactionConfig, setRedactionMode }),
 }));
 
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationActions: () => ({ actions: { setToolAndWorkbench } }),
 }));
 
-vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
+vi.mock("@editor/components/viewer/useActiveDocumentId", () => ({
   useActiveDocumentId: () => "doc-1",
 }));
 

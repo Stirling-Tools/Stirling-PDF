@@ -6,12 +6,12 @@ import React, {
   useState,
 } from "react";
 import { Box, Group, Stack, Text, ScrollArea, TextInput } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import "@app/components/tools/showJS/ShowJSView.css";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import "@editor/components/tools/showJS/ShowJSView.css";
 import { useTranslation } from "react-i18next";
-import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
 
 import {
   tokenizeToLines,
@@ -20,7 +20,7 @@ import {
   copyTextToClipboard,
   triggerDownload,
   type ShowJsToken,
-} from "@app/components/tools/showJS/utils";
+} from "@editor/components/tools/showJS/utils";
 
 interface ScriptData {
   scriptText: string;

@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { alert } from "@app/components/toast";
-import { useFileActions, useFileState } from "@app/contexts/FileContext";
+import { alert } from "@editor/components/toast";
+import { useFileActions, useFileState } from "@editor/contexts/FileContext";
 import {
   createChildStub,
   generateProcessedFileMetadata,
-} from "@app/contexts/file/fileActions";
-import { createStirlingFile, StirlingFileStub } from "@app/types/fileContext";
-import { FileId } from "@app/types/file";
+} from "@editor/contexts/file/fileActions";
+import {
+  createStirlingFile,
+  StirlingFileStub,
+} from "@editor/types/fileContext";
+import { FileId } from "@editor/types/file";
 import {
   PolicyBlockedError,
   assertFilesNotBlocked,
-} from "@app/services/policyFileGuard";
-import { TrackWorkspace } from "@app/components/pageTracks/types";
+} from "@editor/services/policyFileGuard";
+import { TrackWorkspace } from "@editor/components/pageTracks/types";
 import {
   buildTrackFile,
   policyIdsForTracks,
-} from "@app/components/pageTracks/buildTrackFile";
+} from "@editor/components/pageTracks/buildTrackFile";
 
 /**
  * The page editor is a page-level rework of the open documents, which is what

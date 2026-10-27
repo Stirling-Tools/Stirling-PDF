@@ -6,17 +6,17 @@ import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useRef, useCallback } from "react";
-import { Icon } from "@app/ui/Icon";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useRedaction } from "@app/contexts/RedactionContext";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
+import { Icon } from "@editor/ui/Icon";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useRedaction } from "@editor/contexts/RedactionContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import {
   defaultParameters,
   RedactParameters,
-} from "@app/hooks/tools/redact/useRedactParameters";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { useAnchoredOverlay } from "@app/hooks/useAnchoredOverlay";
-import "@app/components/viewer/TextSelectionMenu.css";
+} from "@editor/hooks/tools/redact/useRedactParameters";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import { useAnchoredOverlay } from "@editor/hooks/useAnchoredOverlay";
+import "@editor/components/viewer/TextSelectionMenu.css";
 
 export type { RedactionSelectionMenuProps };
 

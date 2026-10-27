@@ -1,21 +1,21 @@
 import { type TFunction } from "i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import React from "react";
 import {
   type ErasedToolParams,
   type ToolAutomationSettingsProps,
   ToolOperationConfig,
-} from "@app/hooks/tools/shared/toolOperationTypes";
-import { BaseToolProps } from "@app/types/tool";
-import { WorkbenchType } from "@app/types/workbench";
+} from "@editor/hooks/tools/shared/toolOperationTypes";
+import { BaseToolProps } from "@editor/types/tool";
+import { WorkbenchType } from "@editor/types/workbench";
 import {
   LinkToolId,
   RegularToolId,
   SuperToolId,
   ToolId,
   ToolKind,
-} from "@app/types/toolId";
-import { ProprietaryToolId } from "@app/types/proprietaryToolId";
+} from "@editor/types/toolId";
+import { ProprietaryToolId } from "@editor/types/proprietaryToolId";
 
 export enum SubcategoryId {
   AI = "ai",

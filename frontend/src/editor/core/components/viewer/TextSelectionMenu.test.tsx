@@ -1,7 +1,7 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
+import { TextSelectionMenu } from "@editor/components/viewer/TextSelectionMenu";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
 
 // Mock i18next
@@ -30,7 +30,7 @@ vi.mock("@embedpdf/plugin-selection/react", () => ({
 }));
 
 const mockViewerCopy = vi.fn();
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => ({
     selectionActions: { copyToClipboard: mockViewerCopy },
   }),
@@ -56,13 +56,13 @@ vi.mock("@embedpdf/plugin-redaction/react", () => ({
   }),
 }));
 
-vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
+vi.mock("@editor/components/viewer/useActiveDocumentId", () => ({
   useActiveDocumentId: () => "doc-1",
 }));
 
 const mockHandleToolSelectForced = vi.fn();
 const mockSetLeftPanelView = vi.fn();
-vi.mock("@app/contexts/ToolWorkflowContext", () => ({
+vi.mock("@editor/contexts/ToolWorkflowContext", () => ({
   useToolWorkflow: () => ({
     handleToolSelectForced: mockHandleToolSelectForced,
     setLeftPanelView: mockSetLeftPanelView,
@@ -72,7 +72,7 @@ vi.mock("@app/contexts/ToolWorkflowContext", () => ({
 const mockSetRedactionMode = vi.fn();
 const mockActivateRedact = vi.fn();
 const mockSetRedactionConfig = vi.fn();
-vi.mock("@app/contexts/RedactionContext", () => ({
+vi.mock("@editor/contexts/RedactionContext", () => ({
   useRedaction: () => ({
     setRedactionMode: mockSetRedactionMode,
     activateRedact: mockActivateRedact,
@@ -85,7 +85,7 @@ vi.mock("@app/contexts/RedactionContext", () => ({
 
 const mockSetToolAndWorkbench = vi.fn();
 const mockSetHasUnsavedChanges = vi.fn();
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationActions: () => ({
     actions: {
       setToolAndWorkbench: mockSetToolAndWorkbench,
@@ -95,7 +95,7 @@ vi.mock("@app/contexts/NavigationContext", () => ({
 }));
 
 const mockAlert = vi.fn();
-vi.mock("@app/components/toast", () => ({
+vi.mock("@editor/components/toast", () => ({
   alert: (options: unknown) => mockAlert(options),
 }));
 

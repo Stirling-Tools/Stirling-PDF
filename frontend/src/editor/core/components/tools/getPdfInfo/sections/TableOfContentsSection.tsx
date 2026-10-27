@@ -1,8 +1,8 @@
 import React from "react";
 import { Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import type { PdfTocEntry } from "@app/types/getPdfInfo";
-import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
+import type { PdfTocEntry } from "@editor/types/getPdfInfo";
+import SectionBlock from "@editor/components/tools/getPdfInfo/shared/SectionBlock";
 
 interface TableOfContentsSectionProps {
   anchorId: string;

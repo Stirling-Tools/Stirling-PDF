@@ -1,11 +1,11 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import ManualRedactionControls from "@app/components/tools/redact/ManualRedactionControls";
-import { alert } from "@app/components/toast";
-import { expectConsole } from "@app/tests/failOnConsole";
+import ManualRedactionControls from "@editor/components/tools/redact/ManualRedactionControls";
+import { alert } from "@editor/components/toast";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -36,7 +36,7 @@ const redaction: {
   applyChanges,
 };
 
-vi.mock("@app/contexts/RedactionContext", () => ({
+vi.mock("@editor/contexts/RedactionContext", () => ({
   useRedaction: () => ({
     activateManualRedact,
     commitAllPending,
@@ -53,7 +53,7 @@ vi.mock("@app/contexts/RedactionContext", () => ({
   }),
 }));
 
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => ({
     isAnnotationMode: redaction.isAnnotationMode,
     setAnnotationMode,
@@ -62,11 +62,11 @@ vi.mock("@app/contexts/ViewerContext", () => ({
   }),
 }));
 
-vi.mock("@app/contexts/SignatureContext", () => ({
+vi.mock("@editor/contexts/SignatureContext", () => ({
   useSignature: () => ({ signatureApiRef: { current: null } }),
 }));
 
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationGuard: () => ({
     showNavigationWarning: false,
     hasUnsavedChanges: redaction.annotationDirty,

@@ -1,10 +1,10 @@
 import { Tooltip, Popover, Stack, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import { Icon } from "@app/ui/Icon";
-import { useEventCallback } from "@app/hooks/useEventCallback";
-import { ValueSlider } from "@app/components/annotation/shared/ValueSlider";
-import { OPACITY_PRESETS } from "@app/components/annotation/shared/opacityPresets";
+import { Icon } from "@editor/ui/Icon";
+import { useEventCallback } from "@editor/hooks/useEventCallback";
+import { ValueSlider } from "@editor/components/annotation/shared/ValueSlider";
+import { OPACITY_PRESETS } from "@editor/components/annotation/shared/opacityPresets";
 
 interface OpacityControlProps {
   value: number; // 0-100

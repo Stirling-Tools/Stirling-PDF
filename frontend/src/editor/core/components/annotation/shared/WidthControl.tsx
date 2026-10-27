@@ -1,9 +1,9 @@
 import { Tooltip, Popover, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import { Icon } from "@app/ui/Icon";
-import { ValueSlider } from "@app/components/annotation/shared/ValueSlider";
-import { useEventCallback } from "@app/hooks/useEventCallback";
+import { Icon } from "@editor/ui/Icon";
+import { ValueSlider } from "@editor/components/annotation/shared/ValueSlider";
+import { useEventCallback } from "@editor/hooks/useEventCallback";
 
 interface WidthControlProps {
   value: number;

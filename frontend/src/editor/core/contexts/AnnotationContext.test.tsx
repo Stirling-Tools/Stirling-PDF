@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import {
   AnnotationProvider,
   useAnnotation,
-} from "@app/contexts/AnnotationContext";
-import type { AnnotationToolId } from "@app/components/viewer/viewerTypes";
+} from "@editor/contexts/AnnotationContext";
+import type { AnnotationToolId } from "@editor/components/viewer/viewerTypes";
 
 const consumerRenders = vi.fn();
 

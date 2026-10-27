@@ -1,4 +1,4 @@
-import "@app/ui/SectionDivider.css";
+import "@editor/ui/SectionDivider.css";
 
 export interface SectionDividerProps {
   /** Vertical margin in px. */

@@ -1,4 +1,4 @@
-import type { SelectionState } from "@app/tools/pdfTextEditor/types";
+import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 
 // Singleton "find highlight" state, kept off the SelectionState (which is used
 // for edit commands) so search highlights survive normal selection changes.

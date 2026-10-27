@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
@@ -13,16 +13,16 @@ import {
   Group,
   Anchor,
 } from "@mantine/core";
-import { alert } from "@app/components/toast";
-import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
-import { useRestartServer } from "@app/components/shared/config/useRestartServer";
-import { useAdminSettings } from "@app/hooks/useAdminSettings";
-import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
-import EditableSecretField from "@app/components/shared/EditableSecretField";
-import apiClient from "@app/services/apiClient";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import { alert } from "@editor/components/toast";
+import RestartConfirmationModal from "@editor/components/shared/config/RestartConfirmationModal";
+import { useRestartServer } from "@editor/components/shared/config/useRestartServer";
+import { useAdminSettings } from "@editor/hooks/useAdminSettings";
+import { useSettingsDirty } from "@editor/hooks/useSettingsDirty";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsStickyFooter";
+import EditableSecretField from "@editor/components/shared/EditableSecretField";
+import apiClient from "@editor/services/apiClient";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
 
 type MailSettingsData = {
   enabled?: boolean;

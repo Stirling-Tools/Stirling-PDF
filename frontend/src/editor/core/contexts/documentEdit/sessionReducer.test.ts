@@ -4,7 +4,7 @@ import {
   sessionReducer,
   type SessionAction,
   type SessionState,
-} from "@app/contexts/documentEdit/sessionReducer";
+} from "@editor/contexts/documentEdit/sessionReducer";
 
 function reduce(
   actions: SessionAction[],

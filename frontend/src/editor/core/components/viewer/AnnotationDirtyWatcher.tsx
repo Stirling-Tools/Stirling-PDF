@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useDocumentEditSession } from "@app/contexts/documentEdit/DocumentEditSessionContext";
+import { useDocumentEditSession } from "@editor/contexts/documentEdit/DocumentEditSessionContext";
 
 /**
  * The viewer watches the edit revision only to surface the Annotate panel, and

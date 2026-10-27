@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   flushCommentCommits,
   registerCommentCommitFlush,
-} from "@app/components/viewer/commentCommitFlush";
+} from "@editor/components/viewer/commentCommitFlush";
 
 describe("comment commit flush", () => {
   it("runs the registered sidebar flush until it unregisters", () => {

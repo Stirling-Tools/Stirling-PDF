@@ -2,18 +2,18 @@ import { useCallback, useMemo, useState } from "react";
 import {
   NotificationPanel,
   NOTIFICATIONS_PANEL_ID,
-} from "@app/components/notifications/NotificationPanel";
-import { useNotificationActions } from "@app/components/notifications/notificationActions";
-import { useNotificationPasswordPrompt } from "@app/components/notifications/useNotificationPasswordPrompt";
-import { useQuickNavToolReasons } from "@app/components/shared/quickNav/useQuickNavToolReasons";
-import { useSyncQuickNavAccount } from "@app/components/shared/quickNav/useSyncQuickNavAccount";
-import { useBrandFlourish } from "@app/components/easterEgg/useBrandFlourish";
-import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
+} from "@editor/components/notifications/NotificationPanel";
+import { useNotificationActions } from "@editor/components/notifications/notificationActions";
+import { useNotificationPasswordPrompt } from "@editor/components/notifications/useNotificationPasswordPrompt";
+import { useQuickNavToolReasons } from "@editor/components/shared/quickNav/useQuickNavToolReasons";
+import { useSyncQuickNavAccount } from "@editor/components/shared/quickNav/useSyncQuickNavAccount";
+import { useBrandFlourish } from "@editor/components/easterEgg/useBrandFlourish";
+import { useNotificationsAvailable } from "@editor/components/notifications/useNotificationsAvailable";
 import {
   useRegisterQuickNavView,
   type QuickNavToolReasons,
-} from "@app/contexts/QuickNavHostContext";
-import type { ToolId } from "@app/types/toolId";
+} from "@editor/contexts/QuickNavHostContext";
+import type { ToolId } from "@editor/types/toolId";
 
 export interface QuickNavHostBridgeProps {
   readerMode?: boolean;

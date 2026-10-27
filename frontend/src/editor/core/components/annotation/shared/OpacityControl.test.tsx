@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import type { ReactNode } from "react";
-import { OpacityControl } from "@app/components/annotation/shared/OpacityControl";
+import { OpacityControl } from "@editor/components/annotation/shared/OpacityControl";
 
 const wrapper = ({ children }: { children: ReactNode }) => (
   <MantineProvider env="test">{children}</MantineProvider>

@@ -1,9 +1,9 @@
 import { useCallback, useMemo } from "react";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import { TextInput, Textarea, Stack, Paper, Text, Group } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import type { GeneralCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import type { GeneralCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
 
 /** Pipeline directories and external tool paths, all under system.customPaths. */
 export function CustomPathsCard({

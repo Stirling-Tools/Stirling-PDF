@@ -1,13 +1,13 @@
 {
   // Extends the same tsconfig main.ts feeds to vite-tsconfig-paths, so the
   // alias map can't drift from the one Storybook actually bundles with, and
-  // stories are checked under that resolution (@app/* = proprietary -> core).
+  // stories are checked under that resolution (@editor/* = proprietary -> core).
   // The per-layer typecheck projects also cover story files, but each resolves
-  // @app/* its own way - not the way the single Storybook build renders them.
+  // @editor/* its own way - not the way the single Storybook build renders them.
   "extends": "../tsconfig.proprietary.vite.json",
   // main.ts loads the icon Vite plugins from scripts by their real .mts paths.
   "compilerOptions": { "allowImportingTsExtensions": true, "noEmit": true },
-  // Desktop stories resolve @app/* through the desktop cascade in main.ts, not the
+  // Desktop stories resolve @editor/* through the desktop cascade in main.ts, not the
   // proprietary one this project extends; typecheck:desktop already covers them.
   "exclude": ["../src/editor/desktop/**/*.stories.tsx"],
   "include": [

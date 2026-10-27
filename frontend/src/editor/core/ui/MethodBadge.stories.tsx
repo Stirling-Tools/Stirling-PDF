@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { MethodBadge, type HttpMethod } from "@app/ui/MethodBadge";
+import { MethodBadge, type HttpMethod } from "@editor/ui/MethodBadge";
 
 const meta: Meta<typeof MethodBadge> = {
   title: "Primitives/MethodBadge",

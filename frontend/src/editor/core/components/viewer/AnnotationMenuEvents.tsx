@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { surfacesAnnotationSaveUi } from "@app/components/viewer/annotationSaveSurface";
-import type { AnnotationMenuAnchor } from "@app/components/viewer/viewerTypes";
-import { useDocumentEditDispatch } from "@app/contexts/documentEdit/DocumentEditSessionContext";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import { surfacesAnnotationSaveUi } from "@editor/components/viewer/annotationSaveSurface";
+import type { AnnotationMenuAnchor } from "@editor/components/viewer/viewerTypes";
+import { useDocumentEditDispatch } from "@editor/contexts/documentEdit/DocumentEditSessionContext";
 
 interface AnnotationMenuEventsProps {
   /** Last on-screen anchor for an annotation, even after it was deselected. */

@@ -1,23 +1,26 @@
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { createStirlingFile, type StirlingFile } from "@app/types/fileContext";
+import {
+  createStirlingFile,
+  type StirlingFile,
+} from "@editor/types/fileContext";
 import {
   useAutoLoadFile,
   type EditorLoadState,
-} from "@app/tools/pdfTextEditor/hooks/useAutoLoadFile";
+} from "@editor/tools/pdfTextEditor/hooks/useAutoLoadFile";
 
 const files = vi.hoisted(() => ({
   selected: [] as StirlingFile[],
   all: [] as StirlingFile[],
 }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useFileSelection: () => ({ selectedFiles: files.selected }),
   useAllFiles: () => ({ files: files.all }),
 }));
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationState: () => ({ selectedTool: "pdfTextEditor" }),
 }));
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => ({ activeFileId: null }),
 }));
 beforeEach(() => {

@@ -3,13 +3,13 @@ import { renderHook } from "@testing-library/react";
 import {
   useRemovePasswordOperation,
   removePasswordOperationConfig,
-} from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
-import type { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
-import { createStirlingFile } from "@app/types/fileContext";
+} from "@editor/hooks/tools/removePassword/useRemovePasswordOperation";
+import type { RemovePasswordParameters } from "@editor/hooks/tools/removePassword/useRemovePasswordParameters";
+import { createStirlingFile } from "@editor/types/fileContext";
 import {
   clearPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
 vi.mock("../shared/useToolOperation", async () => {
   const actual = await vi.importActual("../shared/useToolOperation"); // Need to keep ToolType etc.
@@ -36,7 +36,7 @@ import {
   ToolOperationHook,
   ToolType,
   useToolOperation,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 
 describe("useRemovePasswordOperation", () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);

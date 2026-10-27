@@ -3,7 +3,7 @@ import { renderHook, act } from "@testing-library/react";
 import {
   defaultParameters,
   useSanitizeParameters,
-} from "@app/hooks/tools/sanitize/useSanitizeParameters";
+} from "@editor/hooks/tools/sanitize/useSanitizeParameters";
 
 describe("useSanitizeParameters", () => {
   test("should initialize with default parameters", () => {

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { CreateTab } from "@app/components/tools/sign/createSignature/types";
+import type { CreateTab } from "@editor/components/tools/sign/createSignature/types";
 
 type TabReadiness = Partial<Record<CreateTab, boolean>>;
 

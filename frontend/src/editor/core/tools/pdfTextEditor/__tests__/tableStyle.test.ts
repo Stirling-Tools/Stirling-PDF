@@ -1,11 +1,11 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
-import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
   headerDiffers,
   type StyledCell,
   styleOfCells,
-} from "@app/tools/pdfTextEditor/util/tableStyle";
+} from "@editor/tools/pdfTextEditor/util/tableStyle";
 
 // A cell whose text spans [left, right] inside a 100pt-wide cell at x=0.
 function cell(

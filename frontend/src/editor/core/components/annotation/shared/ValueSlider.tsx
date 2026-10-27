@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Slider } from "@mantine/core";
 import type { SliderProps } from "@mantine/core";
-import { useRenderCount } from "@app/hooks/useRenderCount";
+import { useRenderCount } from "@editor/hooks/useRenderCount";
 
 const RENDER_LABEL = "annotationValueSlider";
 

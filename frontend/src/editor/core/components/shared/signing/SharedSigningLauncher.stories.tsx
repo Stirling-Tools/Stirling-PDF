@@ -1,13 +1,13 @@
 import type React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
-import SharedSigningLauncher from "@app/components/shared/signing/SharedSigningLauncher";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { NavigationProvider } from "@app/contexts/NavigationContext";
-import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
-import type { SignRequestSummary } from "@app/types/signingSession";
+import SharedSigningLauncher from "@editor/components/shared/signing/SharedSigningLauncher";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { NavigationProvider } from "@editor/contexts/NavigationContext";
+import { ToolWorkflowProvider } from "@editor/contexts/ToolWorkflowContext";
+import type { SignRequestSummary } from "@editor/types/signingSession";
 
 /**
  * SharedSigningLauncher reads server config via AppConfigContext (whether

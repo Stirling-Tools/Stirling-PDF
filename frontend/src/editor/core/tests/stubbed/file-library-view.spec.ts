@@ -1,6 +1,9 @@
 import path from "path";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { dismissTourTooltip, uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import {
+  dismissTourTooltip,
+  uploadFiles,
+} from "@editor/tests/helpers/ui-helpers";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
