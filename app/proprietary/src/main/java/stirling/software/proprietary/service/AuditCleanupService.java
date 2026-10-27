@@ -54,15 +54,19 @@ public class AuditCleanupService {
     /**
      * Registers the daily retention sweep on the first recorded audit event. The first run happens
      * immediately so a restart cannot postpone cleanup past the retention window.
+     *
+     * <p>Fixed rate rather than fixed delay: the shared virtual-thread scheduler runs every
+     * fixed-delay task on its single scheduling thread, so a slow cleanup would delay the others.
      */
     public boolean ensureScheduled() {
-        return dailyCleanup.ensureFixedDelay(Duration.ofDays(1));
+        return dailyCleanup.ensureFixedRate(Duration.ofDays(1));
     }
 
     /** Persisted rows from before the restart still need a retention schedule. */
     @EventListener(ApplicationReadyEvent.class)
     public void armIfRowsExist() {
-        if (auditConfig.isEnabled() && auditRepository.count() > 0) {
+        if (auditConfig.isEnabled()
+                && auditRepository.findTopByOrderByTimestampDesc().isPresent()) {
             ensureScheduled();
         }
     }
