@@ -6,6 +6,7 @@ import java.nio.file.FileSystemException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
@@ -443,15 +444,35 @@ public class PipelineDirectoryProcessor {
         return outputFileName;
     }
 
-    private Path determineOutputPath(PipelineConfig config, Path dir) {
+    Path determineOutputPath(PipelineConfig config, Path dir) {
+        Path outputRoot = Path.of(finishedFoldersDir).toAbsolutePath().normalize();
+        String configured = config.getOutputDir();
+        if (configured == null || configured.isBlank()) {
+            return outputRoot;
+        }
         String outputDir =
                 WATCHED_FOLDERS_PATTERN
                         .matcher(
-                                config.getOutputDir()
+                                configured
                                         .replace("{outputFolder}", finishedFoldersDir)
                                         .replace("{folderName}", dir.toString()))
                         .replaceAll("");
-        return Path.of(outputDir).isAbsolute() ? Path.of(outputDir) : Path.of(".", outputDir);
+        Path resolved;
+        try {
+            resolved = Path.of(outputDir).toAbsolutePath().normalize();
+        } catch (InvalidPathException e) {
+            log.warn("Ignoring invalid outputDir '{}' in {}", configured, dir);
+            return outputRoot;
+        }
+        if (!resolved.startsWith(outputRoot)) {
+            log.warn(
+                    "Ignoring outputDir '{}' in {}: it resolves outside {}",
+                    configured,
+                    dir,
+                    outputRoot);
+            return outputRoot;
+        }
+        return resolved;
     }
 
     private void deleteOriginalFiles(List<File> filesToProcess, Path processingDir)
