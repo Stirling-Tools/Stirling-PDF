@@ -11,6 +11,9 @@ import {
   appendRevision,
   plainObject,
 } from "@editor/tools/pdfTextEditor/pdfdoc/revision";
+import { ParentTreeWriter } from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
+import { addFigures } from "@editor/tools/pdfTextEditor/pdfdoc/passes/addFigures";
+import { markDecorative } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markDecorative";
 import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 
 /** A change to the structure element that owns marked content `mcid` on a page. */
@@ -19,6 +22,13 @@ export interface StructureEdit {
   mcid: number;
   /** The new /Alt; null removes it. */
   alt: string | null;
+  /** Turn the element's content into an artifact and drop the element, its /Alt with it. */
+  decorative: boolean;
+  /**
+   * Set when no element owns the content yet: add a Figure for it, after the
+   * element owning MCID `after` on the page (see NewFigure).
+   */
+  newFigure?: { after: number | null };
 }
 
 export interface StructureEditFailure {
@@ -65,10 +75,17 @@ export async function applyStructureEdits(
 
   const bodies = new Map<number, string>();
   const failures: StructureEditFailure[] = [];
+  const decorative = new Map<number, StructureEdit[]>();
+  const figures = edits.filter((edit) => edit.newFigure);
   for (const edit of edits) {
+    if (edit.newFigure) continue;
     const owner = elementFor(pdf, treeRoot, edit);
     if (typeof owner === "string") {
       failures.push({ edit, reason: owner });
+      continue;
+    }
+    if (edit.decorative) {
+      decorative.set(owner, [...(decorative.get(owner) ?? []), edit]);
       continue;
     }
     const body = bodies.get(owner) ?? pdf.objectBody(owner)!;
@@ -85,12 +102,39 @@ export async function applyStructureEdits(
     }
     bodies.set(owner, updated);
   }
+
+  const parentTree = new ParentTreeWriter(pdf, treeRoot);
+  // Before the decorative marks, so a figure placed beside an element they
+  // drop keeps its place among the kids that remain.
+  const unplaced = await addFigures(
+    pdf,
+    treeRoot,
+    figures.map((edit) => ({ ...edit, after: edit.newFigure!.after })),
+    bodies,
+    parentTree,
+  );
+  for (const [index, reason] of unplaced) {
+    failures.push({ edit: figures[index], reason });
+  }
+  const { streams, failed } = await markDecorative(
+    pdf,
+    new Set(decorative.keys()),
+    bodies,
+    parentTree,
+  );
+  for (const [num, reason] of failed) {
+    for (const edit of decorative.get(num)!) failures.push({ edit, reason });
+  }
   if (failures.length > 0) throw new StructureEditError(failures);
 
-  const out = appendRevision(
-    pdf,
-    [...bodies].map(([num, body]) => ({ num, body: plainObject(body) })),
-  );
+  // Before `bodies` is read: it may merge an inline tree into one of them.
+  const parentTreeObjects = parentTree.objects(bodies);
+  if (!parentTreeObjects) throw fail("the ParentTree cannot be rewritten");
+  const out = appendRevision(pdf, [
+    ...[...bodies].map(([num, body]) => ({ num, body: plainObject(body) })),
+    ...streams,
+    ...parentTreeObjects,
+  ]);
   if (!out)
     throw fail("the file's cross-reference structure cannot be extended");
   return out;
