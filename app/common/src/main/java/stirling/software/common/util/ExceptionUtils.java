@@ -983,6 +983,14 @@ public class ExceptionUtils {
                 ErrorCode.COMBINED_IMAGE_TOO_LARGE.getCode());
     }
 
+    public static OutOfMemoryDpiException createEmbeddedImageTooLargeException(
+            long megapixels, long limitMegapixels) {
+        return new OutOfMemoryDpiException(
+                getMessage(ErrorCode.EMBEDDED_IMAGE_TOO_LARGE, megapixels, limitMegapixels),
+                null,
+                ErrorCode.EMBEDDED_IMAGE_TOO_LARGE.getCode());
+    }
+
     /**
      * Create an OutOfMemoryDpiException for memory/image size errors when rendering PDF images with
      * DPI. Handles OutOfMemoryError and related conditions (e.g., NegativeArraySizeException) that
@@ -1303,7 +1311,11 @@ public class ExceptionUtils {
         COMBINED_IMAGE_TOO_LARGE(
                 "E085",
                 "error.combinedImageTooLarge",
-                "Joining the pages into one image needs {0} megapixels, more than this server''s limit of {1} megapixels. Use a lower DPI or one image per page.");
+                "Joining the pages into one image needs {0} megapixels, more than this server''s limit of {1} megapixels. Use a lower DPI or one image per page."),
+        EMBEDDED_IMAGE_TOO_LARGE(
+                "E086",
+                "error.embeddedImageTooLarge",
+                "An image in this document needs {0} megapixels, more than this server''s limit of {1} megapixels.");
 
         private final String code;
         private final String messageKey;

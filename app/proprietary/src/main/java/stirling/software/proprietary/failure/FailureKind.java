@@ -241,16 +241,16 @@ public enum FailureKind {
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     /**
-     * A page's image at the requested resolution exceeded the server's image limit or ran the
-     * renderer out of memory. The page's size and the step's DPI decide it together, so one
-     * oversized page fails while its neighbours succeed.
+     * A page's image at the requested resolution, or an image embedded in the file, exceeded the
+     * server's image limit or ran the renderer out of memory. One oversized page or image fails
+     * while its neighbours succeed.
      */
     STEP_PAGE_TOO_LARGE(
             FailureStage.INTERNAL,
             FailureSeverity.ERROR,
             FailureRemedy.NEEDS_CONFIG_FIX,
             FailureScope.FILE,
-            errorCodes("E081", "E084", "E085"),
+            errorCodes("E081", "E084", "E085", "E086"),
             fallback(
                     "A page in this document was too large to render at the requested resolution."),
             global(VIEW_FILE, OWNER, SECONDARY),

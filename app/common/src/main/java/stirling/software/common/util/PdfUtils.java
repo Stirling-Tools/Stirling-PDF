@@ -95,6 +95,7 @@ public class PdfUtils {
         for (COSName name : resources.getXObjectNames()) {
             PDXObject object = resources.getXObject(name);
             if (object instanceof PDImageXObject image) {
+                ImageMemoryLimit.requireEmbeddedImageFits(image);
                 images.add(image.getImage());
             } else if (object instanceof PDFormXObject form) {
                 collectImages(form.getResources(), images, visited);
@@ -150,6 +151,7 @@ public class PdfUtils {
         return false;
     }
 
+    /** Whether the page draws an image XObject, directly or through forms; decodes no image. */
     public boolean hasImagesOnPage(PDPage page) throws IOException {
         return containsImage(
                 page.getResources(), Collections.newSetFromMap(new IdentityHashMap<>()));
@@ -283,7 +285,7 @@ public class PdfUtils {
                         totalHeight += dimension.height();
                     }
 
-                    ImageMemoryLimit.requireImageFits(maxWidth, totalHeight);
+                    ImageMemoryLimit.requireCombinedImageFits(maxWidth, totalHeight);
                     BufferedImage combined =
                             prepareImageForPdfToImage(maxWidth, (int) totalHeight, imageType);
                     Graphics g = combined.getGraphics();
