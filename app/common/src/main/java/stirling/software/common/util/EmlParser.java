@@ -39,7 +39,7 @@ public class EmlParser {
     private final int DEFAULT_MAX_ATTACHMENT_MB = 10;
     private final long MAX_SIZE_ESTIMATION_BYTES = 500L * 1024 * 1024; // 500MB
     private final int MAX_ATTACHMENTS = ZipBombGuard.MAX_ENTRIES;
-    private final int MAX_FILENAME_LENGTH = 255;
+    final int MAX_FILENAME_LENGTH = 255;
     private final int MAX_EXTENSION_LENGTH = 16; // including the dot
     private final int MAX_MSG_PROPERTY_STREAM_BYTES = 64 * 1024;
     private final String MSG_PROPERTY_STREAM_PREFIX = "__properties_version1.0";
@@ -155,22 +155,40 @@ public class EmlParser {
             content.setTextBody(NO_CONTENT_MESSAGE);
         }
 
+        // Embedding is capped like the archive readers; listing alone has no such limit. Counted
+        // before mapping so nothing is read for a message that will be rejected.
+        if (request != null && request.isIncludeAttachments()) {
+            int resourceCount =
+                    countResources(email.getEmbeddedImages())
+                            + countResources(email.getAttachments());
+            if (resourceCount > MAX_ATTACHMENTS) {
+                throw new IOException(
+                        "Email contains more than the maximum allowed "
+                                + MAX_ATTACHMENTS
+                                + " attachments");
+            }
+        }
+
         List<EmailAttachment> attachments = new ArrayList<>();
         attachments.addAll(mapResources(email.getEmbeddedImages(), request, true));
         attachments.addAll(mapResources(email.getAttachments(), request, false));
-        // Embedding is capped like the archive readers; listing alone has no such limit.
-        if (request != null
-                && request.isIncludeAttachments()
-                && attachments.size() > MAX_ATTACHMENTS) {
-            throw new IOException(
-                    "Email contains more than the maximum allowed "
-                            + MAX_ATTACHMENTS
-                            + " attachments");
-        }
         content.setAttachments(attachments);
         content.setAttachmentCount(attachments.size());
 
         return content;
+    }
+
+    private int countResources(List<AttachmentResource> resources) {
+        if (resources == null) {
+            return 0;
+        }
+        int count = 0;
+        for (AttachmentResource resource : resources) {
+            if (resource != null) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private List<EmailAttachment> mapResources(

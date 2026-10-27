@@ -178,12 +178,25 @@ public class PdfAttachmentHandler {
         int counter = nextCounters.getOrDefault(filename, 1);
         String uniqueName;
         do {
-            uniqueName = baseName + "_" + counter + extension;
+            String suffix = "_" + counter + extension;
+            uniqueName = fitWithSuffix(baseName, suffix);
             counter++;
         } while (existingNames.contains(uniqueName));
         nextCounters.put(filename, counter);
 
         return uniqueName;
+    }
+
+    /** Shortens the base so the suffixed name stays within the attachment name limit. */
+    private static String fitWithSuffix(String baseName, String suffix) {
+        int keep = EmlParser.MAX_FILENAME_LENGTH - suffix.length();
+        if (baseName.length() <= keep || keep < 1) {
+            return baseName + suffix;
+        }
+        if (Character.isHighSurrogate(baseName.charAt(keep - 1))) {
+            keep--;
+        }
+        return baseName.substring(0, keep) + suffix;
     }
 
     private static @NotNull PDRectangle calculateAnnotationRectangle(
