@@ -74,6 +74,33 @@ class PolicyOutputResolverTest {
                 () -> resolver.resolve(policy().withOutputIds(List.of(archive.id(), "missing"))));
     }
 
+    @Test
+    void aDestinationFromAnotherTeamIsRejectedAtRunTime() {
+        Source foreign =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Theirs",
+                                "folder",
+                                Map.of("directory", "/out"),
+                                true,
+                                "x",
+                                2L));
+        Policy teamed =
+                new Policy(
+                        "p1",
+                        "Pipeline",
+                        "owner",
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        List.of(foreign.id()),
+                        1L);
+
+        assertThrows(IllegalArgumentException.class, () -> resolver.resolve(teamed));
+    }
+
     private static Source folder(String name, String directory) {
         return new Source(
                 null, name, "folder", Map.of("directory", directory), true, "owner", null);

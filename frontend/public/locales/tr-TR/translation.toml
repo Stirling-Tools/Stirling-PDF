@@ -200,7 +200,7 @@ tags = "img,jpg,fotoğraf,resim"
 title = "Resim Ekle"
 
 [addImage.canvas]
-colorPickerTitle = "Choose stroke colour"
+colorPickerTitle = "Çizgi rengini seçin"
 
 [addImage.error]
 failed = "Resim PDF'e eklenirken bir hata oluştu."
@@ -258,7 +258,7 @@ placeDesc = "Resminizi eklemek için PDF'e tıklayın"
 configure = "Resmi Yapılandır"
 
 [addImage.text]
-colorLabel = "Text colour"
+colorLabel = "Metin rengi"
 fontLabel = "Yazı tipi"
 fontSizeLabel = "Yazı tipi boyutu"
 name = "Metin"
@@ -370,6 +370,11 @@ pageVars = "Sayfa Bilgileri"
 position = "Konum"
 positionAndFormatting = "Konum ve Biçimlendirme"
 preview = "Önizleme:"
+qrCode = "QR Kod"
+qrCodeSize = "QR Kod Boyutu"
+qrContent = "QR Kod İçeriği"
+qrContentDescription = "Kodlanacak metin veya bağlantı. @filename ve @page_number gibi dinamik değişkenler desteklenir."
+qrContentTooLong = "QR koda sığmayacak kadar uzun. İçeriği kısaltın."
 quickPosition = "Damgayı yerleştirmek için sayfada bir konum seçin."
 rotation = "Döndürme"
 selectedImageAlt = "Seçilen damga görseli"
@@ -414,7 +419,7 @@ tags = "metin,açıklama,etiket"
 title = "Metin Ekle"
 
 [addText.canvas]
-colorPickerTitle = "Choose stroke colour"
+colorPickerTitle = "Çizgi rengini seçin"
 
 [addText.error]
 failed = "PDF'ye metin eklenirken bir hata oluştu."
@@ -1238,12 +1243,6 @@ description = "Klasör kaynaklarının ve klasör çıktılarının okuma ve yaz
 securityNote = "Klasör kaynaklarını ve çıktılarını tamamen devre dışı bırakmak için bunu boş bırakın. Stirling'in kendi yapılandırma dizini her zaman erişime kapalıdır."
 title = "Klasör Erişimi"
 
-[admin.settings.folderAccess.implied]
-description = "Stirling tarafından yönetilen bu dizinlere her zaman izin verilir ve burada değiştirilemez."
-serverStorage = "Sunucu dosya depolama"
-title = "Her zaman izinli"
-watchedFolder = "Pipeline izlenen klasör"
-
 [admin.settings.folderAccess.roots]
 add = "Ekle"
 empty = "İzin verilen klasör yok. Klasör kaynakları ve çıktıları şu anda devre dışı."
@@ -1993,6 +1992,7 @@ insertText = "Metin Ekle"
 line = "Çizgi"
 lineArrow = "Ok"
 moreActions = "Diğer işlemler"
+multiClickShapeHint = "Bitirmek için çift tıklayın veya Enter tuşuna basın"
 noBackground = "Arka plan yok"
 note = "Not"
 notesStamps = "Notlar ve Damgalar"
@@ -3970,8 +3970,8 @@ warning = "⚠️ Uyarı: Bu işlem yeni API anahtarları oluşturur ve önceki 
 [config.mcp]
 description = "Model Context Protocol (MCP), Claude gibi AI asistanlarının Stirling PDF araçlarınızı doğrudan kullanmasını sağlar. Bir istemciyi bir kez bağlayın; asistanınız sizin adınıza belgeleri dönüştürebilir, düzenleyebilir, güvenceye alabilir ve işleyebilir."
 guestInfo = "Misafir kullanıcılar MCP istemcilerini bağlayamaz. MCP server'ı kullanmak ve AI asistanınızın sizin adınıza Stirling PDF araçlarını çalıştırmasını sağlamak için bir hesap oluşturun."
-navLabel = "MCP Server"
-tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
+navLabel = "MCP Sunucusu"
+tip = "Asistanınızın çalıştırdığı her işlem sizin hesabınız üzerinden yapılır ve tıpkı Stirling PDF'i doğrudan kullanmak gibi kullanımınıza sayılır."
 viewApiKeys = "API key'leri görüntüle"
 
 [config.mcp.copy]
@@ -6270,16 +6270,16 @@ approving = "İzin veriliyor..."
 decisionFailed = "Kararınız gönderilemedi. Lütfen tekrar deneyin."
 deny = "Reddet"
 denying = "Reddediliyor..."
-loadFailed = "This authorisation request is invalid or has expired. Close this tab and try connecting again from the app."
-loading = "Loading authorisation request..."
-missingId = "Missing authorisation request. Start the connection from your app and try again."
+loadFailed = "Bu yetkilendirme isteği geçersiz veya süresi dolmuş. Bu sekmeyi kapatın ve uygulamadan yeniden bağlanmayı deneyin."
+loading = "Yetkilendirme isteği yükleniyor..."
+missingId = "Yetkilendirme isteği eksik. Bağlantıyı uygulamanızdan başlatın ve tekrar deneyin."
 redirecting = "Uygulamaya geri döndürülüyorsunuz..."
 requesting = "{{app}} Stirling PDF hesabınıza erişmek istiyor"
 scopesIntro = "Bu, {{app}} uygulamasına şunları yapma izni verir:"
 signedInAs = "{{name}} olarak oturum açıldı"
 signInButton = "Devam etmek için oturum aç"
 signInPrompt = "Uygulamayı bağlamaya devam etmek için Stirling PDF hesabınızda oturum açın."
-title = "Authorise access"
+title = "Erişimi yetkilendir"
 unknownApp = "Üçüncü taraf bir uygulama"
 
 [oauthConsent.access]
@@ -6482,7 +6482,7 @@ title = "Stirling'e hoş geldiniz"
 addButton = "Ekle"
 createBody = "Belgeler üzerinde birlikte çalışın: ekip arkadaşları dosyaları, otomasyonları ve planınızı paylaşır. Ekibinizi oluşturmak için ilk üyeyi Email ile ekleyin."
 createTitle = "Ekibinizi oluşturun"
-inviteBody = "Everyone on your team shares files, automations and your plan. Add teammates by email and they'll get an invitation."
+inviteBody = "Ekibinizdeki herkes dosyaları, otomasyonları ve planınızı paylaşır. Takım arkadaşlarınızı e-posta ile ekleyin; kendilerine bir davet gönderilir."
 inviteTitle = "Ekibinize üye davet edin"
 
 [onboarding.saas.usage]
@@ -6938,7 +6938,7 @@ title = "Planınız yüklenemedi"
 [payg.free.cta]
 benefit1Body = "araçları zincirleyin, çalıştırmaları zamanlayın, toplu işlem yapın"
 benefit1Title = "Otomasyon pipeline'ları"
-benefit2Body = "summarise, classify, redact, AI-OCR"
+benefit2Body = "özetleme, sınıflandırma, sansürleme, AI-OCR"
 benefit2Title = "AI araçları"
 benefit3Body = "herhangi bir Stirling endpoint'ini programatik olarak çağırın"
 benefit3Title = "API erişimi"
@@ -7076,7 +7076,7 @@ noCap = "Limit yok"
 title = "Ödeme yönteminizi ekleyin"
 
 [payg.upgrade.help]
-aiBody = "summarise, classify, redact, AI-OCR"
+aiBody = "özetleme, sınıflandırma, sansürleme, AI-OCR"
 aiTitle = "AI araçları"
 apiBody = "herhangi bir Stirling endpoint'ine programatik erişim"
 apiTitle = "API çağrıları"
@@ -7186,7 +7186,7 @@ userTotal = "{{users}} kullanıcı"
 continue = "Devam et"
 description = "Lisans anahtarınızı ve makbuzları göndermek için bunu kullanacağız."
 emailLabel = "E-posta Adresi"
-emailPlaceholder = "your@email.com"
+emailPlaceholder = "siz@eposta.com"
 
 [payment.paymentStage]
 modalTitle = "Ödemeyi Tamamlayın - {{planName}}"
@@ -8529,10 +8529,10 @@ helperText = "Bu bağlantıyı kullanan adımlar yalnızca bu URL altındaki yol
 label = "Sunucu URL'si"
 
 [portal.connections.commonFields.email]
-label = "Email"
+label = "E-posta"
 
 [portal.connections.commonFields.host]
-label = "Host"
+label = "Sunucu"
 
 [portal.connections.commonFields.password]
 label = "Parola"
@@ -8689,8 +8689,8 @@ helperText = "Düz FTP kimlik bilgilerini ve dosyaları şifrelemeden gönderir;
 label = "Şifreleme"
 
 [portal.connections.types.ftp.fields.security.options]
-explicit = "FTPS (explicit / AUTH TLS)"
-implicit = "FTPS (implicit)"
+explicit = "FTPS (açık / AUTH TLS)"
+implicit = "FTPS (örtük)"
 none = "Yok (düz FTP)"
 
 [portal.connections.types.googlechat]
@@ -8821,7 +8821,7 @@ label = "Etki alanı"
 
 [portal.connections.types.smb.fields.share]
 label = "Paylaşım"
-placeholder = "documents"
+placeholder = "belgeler"
 
 [portal.connections.types.splunk]
 baseUrlPlaceholder = "https://your-splunk:8088"
@@ -10410,7 +10410,7 @@ posture_regulatedSub = "Her kategori — Uyumluluk, Saklama, Alım"
 qbr = "Üç aylık iş değerlendirmeleri"
 qbrSub = "SE'niz her çeyrek kullanım ve yol haritasını inceler"
 region = "Eyalet / bölge"
-regionPlaceholder = "California"
+regionPlaceholder = "Kaliforniya"
 running = "{{annual}} / yıl · {{years}} yıllık {{tcv}}"
 s1Sub = "Ekibiniz ve her yıl çalıştırmayı beklediğiniz PDF'ler."
 s1Title = "Ne kadar işlem yapacaksınız?"
@@ -10736,7 +10736,7 @@ label = "Değişiklik algılama"
 
 [portal.sources.types.folder.fields.identity.options]
 hash = "Dosya Metadata ve İçerik"
-stat = "Dosya Metadata"
+stat = "Dosya Meta Verisi"
 
 [portal.sources.types.folder.fields.mode]
 helperText = "İşlendikten sonra orijinal dosyaya ne olacağı. \"Sakla\", daha önce neleri işlediğini hatırlar; böylece bir dosya yalnızca gerçekten değiştiğinde yeniden işlenir."
@@ -11569,7 +11569,7 @@ rotateLeft = "Saat yönünün tersine döndür"
 rotateRight = "Saat yönünde döndür"
 selectRotation = "Döndürme Açısını Seçin (Saat yönünde)"
 submit = "Döndürmeyi Uygula"
-tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
+tags = "çevir,ters çevir,yönlendir,döndür,yön,yatay,dikey,90 derece,180 derece,saat yönü,saat yönünün tersi,yönü düzelt"
 title = "PDF Döndür"
 
 [rotate.error]
@@ -11671,7 +11671,7 @@ manual = "Java (JAR)"
 desc = "PDF dosyalarından potansiyel olarak zararlı öğeleri kaldırın."
 sanitizationResults = "Temizleme Sonuçları"
 submit = "PDF'i Temizle"
-tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
+tags = "temizle,arındır,kaldır,sanitize,betikleri kaldır,javascript kaldır,meta veri kaldır,meta veri sök,güvenlik,belgeyi temizle,gizli veriyi kaldır,gizlilik"
 title = "Temizle"
 
 [sanitize.error]
@@ -12826,9 +12826,9 @@ label = "Hedef Sayfa Boyutu"
 a3 = "A3 (297 × 420 mm)"
 a4 = "A4 (210 × 297 mm)"
 a5 = "A5 (148 × 210 mm)"
-legal = "Legal (8.5 × 14 in)"
-letter = "Letter (8.5 × 11 in)"
-tabloid = "Tabloid (11 × 17 in)"
+legal = "Legal (8,5 × 14 inç)"
+letter = "Letter (8,5 × 11 inç)"
+tabloid = "Tabloid (11 × 17 inç)"
 
 [split.poster.xFactor]
 description = "Her sayfanın bölüneceği sütun sayısı"
@@ -13170,7 +13170,7 @@ minutesAgo = "{{count}}dk önce"
 desc = "Güvenilir bir Time Stamp Authority (TSA) sunucusu kullanarak PDF'nize bir RFC 3161 belge zaman damgası ekleyin."
 results = "Zaman Damgası Sonuçları"
 submit = "Zaman Damgası Uygula"
-tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
+tags = "zaman damgası,RFC 3161,TSA,zaman damgası yetkilisi,belge zaman damgası,varlık kanıtı,zaman damgası belirteci,güvenilir zaman damgası,zaman damgası imzala,noter onayı"
 title = "PDF'yi Zaman Damgala"
 
 [timestampPdf.error]
@@ -13454,7 +13454,7 @@ processor = "İşleyici"
 
 [users.columns]
 capabilities = "Yetenekler"
-email = "Email"
+email = "E-posta"
 person = "Kişi"
 role = "Rol"
 status = "Durum"
@@ -13698,6 +13698,8 @@ enableSepiaFilter = "Sepya Filtresini Etkinleştir"
 engineLoadError = "PDF görüntüleyici motoru başlatılamadı"
 engineSlowWarning = "PDF motorunun başlatılması beklenenden uzun sürüyor. Lütfen tarayıcınızın WebAssembly ve Worker ayarlarını kontrol edin veya sayfayı yeniden yükleyin."
 firstPage = "İlk Sayfa"
+fitPage = "Sayfaya sığdır"
+fitWidth = "Genişliğe sığdır"
 lastPage = "Son Sayfa"
 loadingEngine = "PDF Engine yükleniyor..."
 moreOptions = "Daha fazla"
