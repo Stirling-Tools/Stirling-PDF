@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
 
@@ -94,6 +94,7 @@ jobs:
             VITE_INCLUDE_PORTAL=true
             VITE_SUPABASE_URL=${{ steps.config.outputs.supabase_url }}
             VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
+            VITE_ACCESSIBILITY_EDITING=true
           platforms: linux/amd64
 
       - name: Build and push AI engine image
