@@ -384,6 +384,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-markdown");
         addEndpointToGroup("Convert", "eml-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-epub");
+        addEndpointToGroup("Convert", "ebook-to-pdf");
         // Backend-only endpoints (not in frontend tool registry)
         addEndpointToGroup("Convert", "pdf-to-vector");
         addEndpointToGroup("Convert", "vector-to-pdf");
@@ -564,6 +565,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "text-editor-pdf");
         addEndpointToGroup("Java", "edit-table-of-contents");
         addEndpointToGroup("Java", "pdf-to-epub");
+        addEndpointToGroup("Java", "ebook-to-pdf");
         addEndpointToGroup("Java", "eml-to-pdf");
         addEndpointToGroup("Java", "handleData");
         addEndpointToGroup("Java", "form-detection");
@@ -649,6 +651,7 @@ public class EndpointConfiguration {
 
         // Calibre dependent endpoints
         addEndpointToGroup("Calibre", "pdf-to-epub");
+        addEndpointToGroup("Calibre", "ebook-to-pdf");
     }
 
     private void processEnvironmentConfigs() {

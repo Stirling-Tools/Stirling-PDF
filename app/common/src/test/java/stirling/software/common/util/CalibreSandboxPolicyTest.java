@@ -323,6 +323,17 @@ class CalibreSandboxPolicyTest {
     }
 
     @Test
+    void calibreExitingWithTheLauncherCodeIsAnOrdinaryFailure() throws Exception {
+        ProcessExecutor.setCalibreSandboxMode(Mode.ON);
+        try (MockedConstruction<ProcessBuilder> ignored =
+                calibre(CalibreSandboxPolicy.LAUNCHER_REFUSED_EXIT_CODE, "Traceback\n")) {
+            assertThatThrownBy(this::runCalibre)
+                    .isInstanceOf(IOException.class)
+                    .hasMessage("Calibre conversion failed with exit code 125");
+        }
+    }
+
+    @Test
     void calibreErrorOutputIsNotPutInTheExceptionMessage() throws Exception {
         ProcessExecutor.setCalibreSandboxMode(Mode.ON);
         String stderr =

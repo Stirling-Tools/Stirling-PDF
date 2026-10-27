@@ -556,7 +556,7 @@ public class ProcessExecutor {
             log.debug("Calibre output:\n{}", output);
             log.debug("Calibre error output:\n{}", errors);
         }
-        CalibreSandboxPolicy.checkLauncherOutcome(exitCode, errorLines);
+        CalibreSandboxPolicy.checkLauncherOutcome(errorLines);
         if (exitCode != 0) {
             log.warn("Calibre exited with code {}; its output is logged at debug level", exitCode);
             throw new IOException("Calibre conversion failed with exit code " + exitCode);

@@ -220,18 +220,18 @@ final class CalibreSandboxPolicy {
             return true;
         }
         log.error(
-                "Calibre sandbox is unavailable on this host ({}), so ebook conversion is disabled;"
-                        + " it needs Linux 5.13+ with Landlock and seccomp, and Python 3. Set {}=off"
-                        + " to run Calibre without it",
+                "Calibre did not run in its sandbox on this host ({}), so ebook conversion is"
+                        + " disabled; the sandbox needs Linux 5.13+ with Landlock and seccomp, and"
+                        + " Python 3. Set {}=off to run Calibre without it",
                 detail,
                 MODE_VARIABLE);
         return false;
     }
 
     /** Fails a job whose launcher refused to run it. */
-    static void checkLauncherOutcome(int exitCode, List<String> errorLines) throws IOException {
+    static void checkLauncherOutcome(List<String> errorLines) throws IOException {
         List<String> launcherLines = launcherLines(errorLines);
-        if (exitCode != LAUNCHER_REFUSED_EXIT_CODE && launcherLines.isEmpty()) {
+        if (launcherLines.isEmpty()) {
             return;
         }
         log.error(
