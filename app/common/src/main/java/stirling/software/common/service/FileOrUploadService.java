@@ -1,7 +1,8 @@
 package stirling.software.common.service;
 
-import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.*;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -21,18 +22,29 @@ public class FileOrUploadService {
         return Path.of(tempDirPath).resolve(fileId);
     }
 
-    public MultipartFile toMockMultipartFile(String name, byte[] data) throws IOException {
-        return new CustomMultipartFile(name, data);
+    /** Opens a fresh stream over the stored content on each call. */
+    @FunctionalInterface
+    public interface ContentSource {
+        InputStream open() throws IOException;
     }
 
-    // Custom implementation of MultipartFile
-    private static class CustomMultipartFile implements MultipartFile {
-        private final String name;
-        private final byte[] content;
+    /**
+     * Wraps stored content as a MultipartFile that reads it on demand, so large stored files reach
+     * consumers as a stream rather than being loaded into the heap up front.
+     */
+    public MultipartFile toStreamingMultipartFile(String name, long size, ContentSource source) {
+        return new StreamingMultipartFile(name, size, source);
+    }
 
-        public CustomMultipartFile(String name, byte[] content) {
+    private static class StreamingMultipartFile implements MultipartFile {
+        private final String name;
+        private final long size;
+        private final ContentSource source;
+
+        StreamingMultipartFile(String name, long size, ContentSource source) {
             this.name = name;
-            this.content = content;
+            this.size = size;
+            this.source = source;
         }
 
         @Override
@@ -52,27 +64,31 @@ public class FileOrUploadService {
 
         @Override
         public boolean isEmpty() {
-            return content == null || content.length == 0;
+            return size == 0;
         }
 
         @Override
         public long getSize() {
-            return content.length;
+            return size;
         }
 
         @Override
         public byte[] getBytes() throws IOException {
-            return content;
+            try (InputStream in = source.open()) {
+                return in.readAllBytes();
+            }
         }
 
         @Override
-        public java.io.InputStream getInputStream() throws IOException {
-            return new ByteArrayInputStream(content);
+        public InputStream getInputStream() throws IOException {
+            return source.open();
         }
 
         @Override
-        public void transferTo(java.io.File dest) throws IOException, IllegalStateException {
-            Files.write(dest.toPath(), content);
+        public void transferTo(File dest) throws IOException, IllegalStateException {
+            try (InputStream in = source.open()) {
+                Files.copy(in, dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
         }
     }
 }

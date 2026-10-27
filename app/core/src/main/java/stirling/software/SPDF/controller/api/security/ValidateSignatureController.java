@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.security;
 import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.PKIXCertPathBuilderResult;
@@ -107,7 +108,8 @@ public class ValidateSignatureController {
             }
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
+        try (InputStream in = file.getInputStream();
+                PDDocument document = pdfDocumentFactory.load(in)) {
             List<PDSignature> signatures = document.getSignatureDictionaries();
 
             // Detect content appended outside every signature's ByteRange (added after signing). A

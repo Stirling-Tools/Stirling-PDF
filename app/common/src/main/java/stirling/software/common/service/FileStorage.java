@@ -76,8 +76,8 @@ public class FileStorage {
 
     public MultipartFile retrieveFile(String fileId) throws IOException {
         enforceOwnership(fileId);
-        byte[] fileData = fileStore.retrieveBytes(fileId);
-        return fileOrUploadService.toMockMultipartFile(fileId, fileData);
+        return fileOrUploadService.toStreamingMultipartFile(
+                fileId, fileStore.size(fileId), () -> fileStore.retrieve(fileId));
     }
 
     public byte[] retrieveBytes(String fileId) throws IOException {

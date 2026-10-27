@@ -88,16 +88,18 @@ class FileStorageTest {
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
 
-        MultipartFile expectedFile = mock(MultipartFile.class);
-        when(fileOrUploadService.toMockMultipartFile(eq(fileId), eq(fileContent)))
-                .thenReturn(expectedFile);
+        when(fileOrUploadService.toStreamingMultipartFile(eq(fileId), anyLong(), any()))
+                .thenCallRealMethod();
 
         // Act
         MultipartFile result = fileStorage.retrieveFile(fileId);
 
         // Assert
-        assertSame(expectedFile, result);
-        verify(fileOrUploadService).toMockMultipartFile(eq(fileId), eq(fileContent));
+        assertEquals(fileContent.length, result.getSize());
+        try (InputStream in = result.getInputStream()) {
+            assertArrayEquals(fileContent, in.readAllBytes());
+        }
+        assertArrayEquals(fileContent, result.getBytes());
     }
 
     @Test

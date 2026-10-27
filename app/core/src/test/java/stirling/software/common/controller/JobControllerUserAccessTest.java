@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -112,7 +113,8 @@ class JobControllerUserAccessTest {
         when(users.getCurrentUsername()).thenReturn("source-owner");
         var response = controller.downloadFile(fileId);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertArrayEquals(OUTPUT, (byte[]) response.getBody());
+        assertArrayEquals(
+                OUTPUT, ((InputStreamResource) response.getBody()).getInputStream().readAllBytes());
         assertEquals(HttpStatus.OK, controller.getFileMetadata(fileId).getStatusCode());
         assertEquals(HttpStatus.OK, controller.getJobStatus(runId).getStatusCode());
     }
@@ -123,6 +125,7 @@ class JobControllerUserAccessTest {
         assertEquals("run", runId);
         var response = controller.downloadFile(fileId);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertArrayEquals(OUTPUT, (byte[]) response.getBody());
+        assertArrayEquals(
+                OUTPUT, ((InputStreamResource) response.getBody()).getInputStream().readAllBytes());
     }
 }

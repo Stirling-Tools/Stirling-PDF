@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -129,7 +130,7 @@ class JobControllerOwnershipTest {
         assertNull(body.get("internalSecret"));
         assertNull(body.get("filePath"));
         verify(stickyMissRecorder).recordStickyMiss();
-        verify(fileStorage, never()).retrieveBytes(FILE_ID);
+        verify(fileStorage, never()).retrieveInputStream(FILE_ID);
     }
 
     private static Stream<Arguments> downloadHappyPathScenarios() {
@@ -148,12 +149,13 @@ class JobControllerOwnershipTest {
         when(jobStore.get(JOB_ID))
                 .thenReturn(
                         entryPresent ? Optional.of(entryOwnedBy(ownerNodeId)) : Optional.empty());
-        when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
+        when(fileStorage.retrieveInputStream(FILE_ID))
+                .thenReturn(new ByteArrayInputStream("payload".getBytes()));
 
         ResponseEntity<?> response = makeController().downloadFile(FILE_ID);
 
         assertEquals(HttpStatus.OK, response.getStatusCode(), scenario);
-        verify(fileStorage).retrieveBytes(FILE_ID);
+        verify(fileStorage).retrieveInputStream(FILE_ID);
         verify(stickyMissRecorder, never()).recordStickyMiss();
     }
 
@@ -163,7 +165,8 @@ class JobControllerOwnershipTest {
         when(clusterBackplane.localNodeId()).thenReturn(LOCAL_NODE);
         when(taskManager.getJobResult(JOB_ID)).thenReturn(completedJobWithFile());
         when(jobStore.get(JOB_ID)).thenReturn(Optional.of(entryOwnedBy(LOCAL_NODE)));
-        when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
+        when(fileStorage.retrieveInputStream(FILE_ID))
+                .thenReturn(new ByteArrayInputStream("payload".getBytes()));
 
         ResponseEntity<?> response = makeController().getJobResult(JOB_ID);
 
@@ -222,7 +225,7 @@ class JobControllerOwnershipTest {
         assertEquals(PEER_NODE, body.get("ownedBy"));
         assertEquals(LOCAL_NODE, body.get("currentNode"));
         verify(stickyMissRecorder).recordStickyMiss();
-        verify(fileStorage, never()).retrieveBytes(FILE_ID);
+        verify(fileStorage, never()).retrieveInputStream(FILE_ID);
         if (endpoint == Endpoint.CANCEL_JOB) {
             verify(taskManager, never()).setError(JOB_ID, "Job was cancelled by user");
         }
@@ -256,24 +259,26 @@ class JobControllerOwnershipTest {
     @DisplayName("Single-instance install (no ClusterBackplane bean): no 410, no NPE")
     void singleInstance_noClusterBackplane_noGoneResponse() throws Exception {
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
-        when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
+        when(fileStorage.retrieveInputStream(FILE_ID))
+                .thenReturn(new ByteArrayInputStream("payload".getBytes()));
 
         ResponseEntity<?> response = makeController(null, jobStore).downloadFile(FILE_ID);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(fileStorage).retrieveBytes(FILE_ID);
+        verify(fileStorage).retrieveInputStream(FILE_ID);
     }
 
     @Test
     @DisplayName("Single-instance install (no JobStore bean): no 410, no NPE")
     void singleInstance_noJobStore_noGoneResponse() throws Exception {
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
-        when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
+        when(fileStorage.retrieveInputStream(FILE_ID))
+                .thenReturn(new ByteArrayInputStream("payload".getBytes()));
 
         ResponseEntity<?> response = makeController(clusterBackplane, null).downloadFile(FILE_ID);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(fileStorage).retrieveBytes(FILE_ID);
+        verify(fileStorage).retrieveInputStream(FILE_ID);
     }
 
     @Test
@@ -282,7 +287,8 @@ class JobControllerOwnershipTest {
         when(clusterBackplane.localNodeId()).thenReturn(LOCAL_NODE);
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
         when(jobStore.get(JOB_ID)).thenReturn(Optional.of(entryOwnedBy(LOCAL_NODE)));
-        when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
+        when(fileStorage.retrieveInputStream(FILE_ID))
+                .thenReturn(new ByteArrayInputStream("payload".getBytes()));
 
         JobController c = makeController();
         ReflectionTestUtils.setField(c, "stickyMissRecorder", null);
@@ -343,7 +349,7 @@ class JobControllerOwnershipTest {
         assertEquals(HttpStatus.GONE, response.getStatusCode());
         Map<?, ?> body = (Map<?, ?>) response.getBody();
         assertEquals(PEER_NODE, body.get("ownedBy"));
-        verify(fileStorage, never()).retrieveBytes(FILE_ID);
+        verify(fileStorage, never()).retrieveInputStream(FILE_ID);
     }
 
     @Test
@@ -392,7 +398,8 @@ class JobControllerOwnershipTest {
         when(clusterBackplane.localNodeId()).thenReturn(LOCAL_NODE);
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
         when(jobStore.get(JOB_ID)).thenReturn(Optional.of(entryOwnedBy(LOCAL_NODE)));
-        when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
+        when(fileStorage.retrieveInputStream(FILE_ID))
+                .thenReturn(new ByteArrayInputStream("payload".getBytes()));
 
         JobController c = makeController();
         c.downloadFile(FILE_ID);
@@ -410,12 +417,13 @@ class JobControllerOwnershipTest {
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
         when(jobStore.get(JOB_ID)).thenThrow(new RuntimeException("Valkey command timeout"));
         when(taskManager.getJobResult(JOB_ID)).thenReturn(completedJobWithFile());
-        when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
+        when(fileStorage.retrieveInputStream(FILE_ID))
+                .thenReturn(new ByteArrayInputStream("payload".getBytes()));
 
         ResponseEntity<?> response = makeController().downloadFile(FILE_ID);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(fileStorage).retrieveBytes(FILE_ID);
+        verify(fileStorage).retrieveInputStream(FILE_ID);
         verify(stickyMissRecorder, never()).recordStickyMiss();
     }
 
@@ -457,7 +465,7 @@ class JobControllerOwnershipTest {
         assertEquals("1", response.getHeaders().getFirst("Retry-After"));
         Map<?, ?> body = (Map<?, ?>) response.getBody();
         assertTrue(((String) body.get("message")).toLowerCase().contains("unavailable"));
-        verify(fileStorage, never()).retrieveBytes(FILE_ID);
+        verify(fileStorage, never()).retrieveInputStream(FILE_ID);
     }
 
     @Test
@@ -474,6 +482,6 @@ class JobControllerOwnershipTest {
         assertEquals("1", response.getHeaders().getFirst("Retry-After"));
         Map<?, ?> body = (Map<?, ?>) response.getBody();
         assertTrue(((String) body.get("message")).toLowerCase().contains("unavailable"));
-        verify(fileStorage, never()).retrieveBytes(FILE_ID);
+        verify(fileStorage, never()).retrieveInputStream(FILE_ID);
     }
 }
