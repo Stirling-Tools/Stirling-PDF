@@ -7211,6 +7211,11 @@ perSeatPeriod = "/seat/{{period}}"
 totalSeats_one = "Total ({{count}} seat)"
 totalSeats_other = "Total ({{count}} seats)"
 
+[payment.stripeLoadFailed]
+body = "Your browser could not reach Stripe. Turn off ad or script blockers for this site, check your connection, then try again."
+retry = "Try again"
+title = "Payment form could not load"
+
 [payment.upgradeTeam]
 title = "Upgrade to Team"
 
