@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FileHasher } from "@app/utils/fileHash";
+import { FileHasher } from "@editor/utils/fileHash";
 
 function makeFile(name = "test.pdf", content = "hello"): File {
   return new File([content], name, { type: "application/pdf" });
