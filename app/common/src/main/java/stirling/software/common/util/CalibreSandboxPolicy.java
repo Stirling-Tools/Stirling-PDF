@@ -17,28 +17,18 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Confines Calibre to its job directory with the launcher's Landlock and seccomp sandbox and a
- * scrubbed environment. Under the default {@link Mode#REQUIRED} a host without that sandbox gets no
- * Calibre: the startup probe disables its endpoint group, and a job the launcher refuses fails.
+ * scrubbed environment. The sandbox is Linux-only: it needs Linux 5.13+ with Landlock and seccomp,
+ * and Python 3, so Windows, macOS, Docker Desktop and older kernels cannot provide it. With the
+ * sandbox {@link Mode#ON}, the default, such a host gets no Calibre: the startup probe disables its
+ * endpoint group, and a job the launcher refuses fails.
  */
 @Slf4j
 final class CalibreSandboxPolicy {
 
-    /**
-     * {@code REQUIRED}, the default: confined, or not at all. {@code BEST_EFFORT}: confined where
-     * the host allows, otherwise Calibre runs unconfined and every such run is logged. {@code OFF}:
-     * never confined.
-     */
+    /** {@code ON}, the default: confined, or not at all. {@code OFF}: never confined. */
     enum Mode {
-        OFF("off"),
-        BEST_EFFORT("best-effort"),
-        REQUIRED("required");
-
-        /** Must match the value {@code calibre_sandbox.py} compares against. */
-        final String value;
-
-        Mode(String value) {
-            this.value = value;
-        }
+        ON,
+        OFF
     }
 
     enum Probe {
@@ -66,8 +56,7 @@ final class CalibreSandboxPolicy {
                     "LD_LIBRARY_PATH",
                     "FONTCONFIG_PATH",
                     "FONTCONFIG_FILE",
-                    "MALLOC_ARENA_MAX",
-                    MODE_VARIABLE);
+                    "MALLOC_ARENA_MAX");
 
     private static final List<String> ENV_ALLOWED_PREFIXES = List.of("LC_", "QT_", "QTWEBENGINE_");
 
@@ -81,36 +70,35 @@ final class CalibreSandboxPolicy {
     }
 
     /**
-     * Unset, blank and unrecognised values mean {@code REQUIRED}. That includes {@code enforce}: it
-     * reads as "enforce the sandbox", so it must never select the relaxed mode.
+     * Only {@code off} turns the sandbox off. {@code required} is the older name for {@code on};
+     * any other value, {@code enforce} included, means {@code on} and is logged, so an install
+     * still set to one learns why Calibre is disabled and how to turn the sandbox off.
      */
     static Mode resolveMode(String configured) {
         if (configured == null || configured.isBlank()) {
-            return Mode.REQUIRED;
+            return Mode.ON;
         }
         String value = configured.trim().toLowerCase(Locale.ROOT);
-        if (value.equals("enforce")) {
-            log.warn(
-                    "{}=enforce is treated as required; set {}={} to let Calibre run unconfined"
-                            + " where its sandbox is unavailable",
-                    MODE_VARIABLE,
-                    MODE_VARIABLE,
-                    Mode.BEST_EFFORT.value);
-        }
-        for (Mode mode : Mode.values()) {
-            if (mode.value.equals(value)) {
-                return mode;
+        return switch (value) {
+            case "off" -> Mode.OFF;
+            case "on", "required" -> Mode.ON;
+            default -> {
+                log.warn(
+                        "{}={} is not recognised, so the Calibre sandbox is on; set {}=off to run"
+                                + " Calibre without it",
+                        MODE_VARIABLE,
+                        value,
+                        MODE_VARIABLE);
+                yield Mode.ON;
             }
-        }
-        return Mode.REQUIRED;
+        };
     }
 
     /**
      * {@code command} wrapped in the launcher and confined to {@code workingDirectory}, with {@code
      * env} cut down to what Calibre needs and pointed into that directory. Without a working
-     * directory the job is refused in every mode; without Python to run the launcher it is refused
-     * under {@code REQUIRED} and runs unconfined under {@code BEST_EFFORT}. {@code OFF} returns the
-     * command unchanged.
+     * directory or Python to run the launcher the job is refused. {@code OFF} returns the command
+     * unchanged.
      */
     static List<String> confine(
             Mode mode, List<String> command, File workingDirectory, Map<String, String> env)
@@ -124,18 +112,13 @@ final class CalibreSandboxPolicy {
         }
         String python = CheckProgramInstall.getAvailablePythonCommand();
         if (python == null) {
-            if (mode == Mode.REQUIRED) {
-                log.error("Refusing to run Calibre: its sandbox needs Python, which is missing");
-                throw new IOException(REFUSED_MESSAGE);
-            }
-            log.error("Calibre is running unconfined because Python is not installed");
-            return command;
+            log.error("Refusing to run Calibre: its sandbox needs Python, which is missing");
+            throw new IOException(REFUSED_MESSAGE);
         }
         Path workDir = workingDirectory.toPath().toAbsolutePath().normalize();
         Path home = Files.createDirectories(workDir.resolve(HOME_DIR));
 
         env.keySet().removeIf(name -> !isEnvAllowed(name));
-        env.put(MODE_VARIABLE, mode.value);
         env.put("HOME", home.toString());
         for (String name : List.of("TMPDIR", "TMP", "TEMP", "XDG_RUNTIME_DIR")) {
             env.put(name, home.toString());
@@ -151,10 +134,10 @@ final class CalibreSandboxPolicy {
     }
 
     /**
-     * Whether Calibre may be offered: under {@code REQUIRED} only when {@code probeCommand} ran
-     * fully confined, otherwise always. Pass Calibre's own version check, so its install path is
-     * checked against the launcher's allowlist too. stderr goes to a file, not a pipe, so a stalled
-     * launcher cannot outlive the timeout.
+     * Whether Calibre may be offered: with the sandbox on, only when {@code probeCommand} ran fully
+     * confined. Pass Calibre's own version check, so its install path is checked against the
+     * launcher's allowlist too. stderr goes to a file, not a pipe, so a stalled launcher cannot
+     * outlive the timeout.
      */
     static boolean probeAtStartup(Mode mode, List<String> probeCommand) {
         if (mode == Mode.OFF) {
@@ -165,27 +148,20 @@ final class CalibreSandboxPolicy {
         try {
             workDir = Files.createTempDirectory("calibre-sandbox-probe");
         } catch (IOException e) {
-            return report(mode, Probe.UNKNOWN, "no temp dir for the probe: " + e.getMessage());
+            return report(Probe.UNKNOWN, "no temp dir for the probe: " + e.getMessage());
         }
         Path stderr = workDir.resolve(PROBE_STDERR);
         try {
             ProcessBuilder builder = new ProcessBuilder(probeCommand);
-            List<String> confined =
-                    confine(mode, probeCommand, workDir.toFile(), builder.environment());
-            if (confined.equals(probeCommand)) {
-                return report(mode, Probe.UNKNOWN, "the launcher could not be started");
-            }
-            builder.command(confined);
+            builder.command(confine(mode, probeCommand, workDir.toFile(), builder.environment()));
             builder.directory(workDir.toFile());
             builder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
             builder.redirectError(stderr.toFile());
             Process process = builder.start();
             if (!process.waitFor(PROBE_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                // Off Linux the launcher runs Calibre as a child rather than exec-ing into it.
                 process.descendants().forEach(ProcessHandle::destroyForcibly);
                 process.destroyForcibly();
                 return report(
-                        mode,
                         Probe.UNKNOWN,
                         "the probe did not finish within " + PROBE_TIMEOUT_SECONDS + "s");
             }
@@ -195,9 +171,9 @@ final class CalibreSandboxPolicy {
                             : List.of();
             int exitCode = process.exitValue();
             Probe probe = classifyProbe(exitCode, errorLines);
-            return report(mode, probe, describe(probe, exitCode, errorLines));
+            return report(probe, describe(probe, exitCode, errorLines));
         } catch (IOException e) {
-            return report(mode, Probe.UNKNOWN, "the probe could not run: " + e.getMessage());
+            return report(Probe.UNKNOWN, "the probe could not run: " + e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;
@@ -238,47 +214,30 @@ final class CalibreSandboxPolicy {
         return "exit " + exitCode + (lastLine.isEmpty() ? "" : ": " + lastLine);
     }
 
-    private static boolean report(Mode mode, Probe probe, String detail) {
+    private static boolean report(Probe probe, String detail) {
         if (probe == Probe.ACTIVE) {
             log.info("Calibre sandbox active");
             return true;
         }
-        if (mode == Mode.REQUIRED) {
-            log.error(
-                    "Calibre sandbox is unavailable on this host ({}), so ebook conversion is"
-                            + " disabled; it needs Linux 5.13+ with Landlock and seccomp, and"
-                            + " Python 3",
-                    detail);
-            return false;
-        }
-        log.warn(
-                "Calibre sandbox is unavailable on this host ({}); Calibre runs unconfined because"
-                        + " {}={}",
+        log.error(
+                "Calibre sandbox is unavailable on this host ({}), so ebook conversion is disabled;"
+                        + " it needs Linux 5.13+ with Landlock and seccomp, and Python 3. Set {}=off"
+                        + " to run Calibre without it",
                 detail,
-                MODE_VARIABLE,
-                mode.value);
-        return true;
+                MODE_VARIABLE);
+        return false;
     }
 
-    /**
-     * Fails a job whose launcher refused to run it. Under {@code BEST_EFFORT} the launcher runs the
-     * job anyway and only reports the gap, which is logged.
-     */
+    /** Fails a job whose launcher refused to run it. */
     static void checkLauncherOutcome(int exitCode, List<String> errorLines) throws IOException {
         List<String> launcherLines = launcherLines(errorLines);
-        if (launcherLines.isEmpty()) {
+        if (exitCode != LAUNCHER_REFUSED_EXIT_CODE && launcherLines.isEmpty()) {
             return;
         }
-        if (exitCode == LAUNCHER_REFUSED_EXIT_CODE) {
-            log.error(
-                    "Refusing to run Calibre: its sandbox is unavailable on this host: {}",
-                    String.join("; ", launcherLines));
-            throw new IOException(REFUSED_MESSAGE);
-        }
         log.error(
-                "Calibre ran without part of its sandbox: {}. Set {}=required to refuse such runs",
-                String.join("; ", launcherLines),
-                MODE_VARIABLE);
+                "Refusing to run Calibre: its sandbox is unavailable on this host: {}",
+                String.join("; ", launcherLines));
+        throw new IOException(REFUSED_MESSAGE);
     }
 
     private static List<String> launcherLines(List<String> errorLines) {

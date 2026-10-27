@@ -79,33 +79,26 @@ class CalibreSandboxPolicyTest {
     }
 
     @Test
-    void sandboxIsRequiredByDefault() {
-        assertThat(CalibreSandboxPolicy.resolveMode(null)).isEqualTo(Mode.REQUIRED);
-        assertThat(CalibreSandboxPolicy.resolveMode(" ")).isEqualTo(Mode.REQUIRED);
-        assertThat(CalibreSandboxPolicy.resolveMode("disabled")).isEqualTo(Mode.REQUIRED);
+    void sandboxIsOnByDefault() {
+        assertThat(CalibreSandboxPolicy.resolveMode(null)).isEqualTo(Mode.ON);
+        assertThat(CalibreSandboxPolicy.resolveMode(" ")).isEqualTo(Mode.ON);
     }
 
     @Test
-    void theRetiredEnforceValueFailsClosed() {
-        assertThat(CalibreSandboxPolicy.resolveMode("enforce")).isEqualTo(Mode.REQUIRED);
-        assertThat(CalibreSandboxPolicy.resolveMode("best_effort")).isEqualTo(Mode.REQUIRED);
-    }
-
-    @Test
-    void configuredModeIsHonoured() {
+    void onlyOffTurnsTheSandboxOff() {
         assertThat(CalibreSandboxPolicy.resolveMode("off")).isEqualTo(Mode.OFF);
-        assertThat(CalibreSandboxPolicy.resolveMode("BEST-EFFORT")).isEqualTo(Mode.BEST_EFFORT);
-        assertThat(CalibreSandboxPolicy.resolveMode("required")).isEqualTo(Mode.REQUIRED);
+        assertThat(CalibreSandboxPolicy.resolveMode(" OFF ")).isEqualTo(Mode.OFF);
+        for (String value : List.of("on", "required", "enforce", "best-effort", "disabled")) {
+            assertThat(CalibreSandboxPolicy.resolveMode(value)).as(value).isEqualTo(Mode.ON);
+        }
     }
 
     @Test
     void commandIsWrappedInTheLauncherAndConfinedToTheWorkingDirectory() throws IOException {
-        for (Mode mode : List.of(Mode.BEST_EFFORT, Mode.REQUIRED)) {
-            assertThat(
-                            CalibreSandboxPolicy.confine(
-                                    mode, command, workDir.toFile(), new HashMap<>()))
-                    .isEqualTo(confinedCommand);
-        }
+        assertThat(
+                        CalibreSandboxPolicy.confine(
+                                Mode.ON, command, workDir.toFile(), new HashMap<>()))
+                .isEqualTo(confinedCommand);
     }
 
     @Test
@@ -128,7 +121,7 @@ class CalibreSandboxPolicyTest {
         env.put("LC_ALL", "C.UTF-8");
         env.put("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu");
 
-        CalibreSandboxPolicy.confine(Mode.REQUIRED, command, workDir.toFile(), env);
+        CalibreSandboxPolicy.confine(Mode.ON, command, workDir.toFile(), env);
 
         String home = workDir.resolve(".calibre").toString();
         assertThat(env)
@@ -140,41 +133,28 @@ class CalibreSandboxPolicyTest {
                         Map.entry("XDG_RUNTIME_DIR", home),
                         Map.entry("PATH", "/usr/bin"),
                         Map.entry("LC_ALL", "C.UTF-8"),
-                        Map.entry("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu"),
-                        Map.entry(CalibreSandboxPolicy.MODE_VARIABLE, "required"));
+                        Map.entry("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu"));
         assertThat(Path.of(home)).isDirectory();
     }
 
     @Test
     void aJobWithoutAWorkingDirectoryIsRefused() {
         assertThatThrownBy(
-                        () ->
-                                CalibreSandboxPolicy.confine(
-                                        Mode.REQUIRED, command, null, new HashMap<>()))
+                        () -> CalibreSandboxPolicy.confine(Mode.ON, command, null, new HashMap<>()))
                 .isInstanceOf(IOException.class)
                 .hasMessageContaining("working directory");
     }
 
     @Test
-    void withoutPythonARequiredSandboxRefusesToRunCalibre() {
+    void withoutPythonCalibreIsRefused() {
         checkProgramInstall.when(CheckProgramInstall::getAvailablePythonCommand).thenReturn(null);
 
         assertThatThrownBy(
                         () ->
                                 CalibreSandboxPolicy.confine(
-                                        Mode.REQUIRED, command, workDir.toFile(), new HashMap<>()))
+                                        Mode.ON, command, workDir.toFile(), new HashMap<>()))
                 .isInstanceOf(IOException.class)
                 .hasMessage(CalibreSandboxPolicy.REFUSED_MESSAGE);
-    }
-
-    @Test
-    void withoutPythonABestEffortSandboxRunsCalibreUnconfined() throws IOException {
-        checkProgramInstall.when(CheckProgramInstall::getAvailablePythonCommand).thenReturn(null);
-
-        assertThat(
-                        CalibreSandboxPolicy.confine(
-                                Mode.BEST_EFFORT, command, workDir.toFile(), new HashMap<>()))
-                .isEqualTo(command);
     }
 
     @Test
@@ -195,7 +175,7 @@ class CalibreSandboxPolicyTest {
     @Test
     void startupProbeRunsCalibreThroughTheLauncherAndCleansUp() {
         try (MockedConstruction<ProcessBuilder> builders = calibre(0, "")) {
-            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.REQUIRED, PROBE)).isTrue();
+            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.ON, PROBE)).isTrue();
 
             ProcessBuilder builder = builders.constructed().getFirst();
             verify(builder)
@@ -217,14 +197,12 @@ class CalibreSandboxPolicyTest {
     }
 
     @Test
-    void startupProbeRefusalDisablesCalibreOnlyUnderRequired() {
-        String refusal = "calibre-sandbox: landlock unavailable, filesystem unconfined\n";
+    void startupProbeRefusalDisablesCalibre() {
         try (MockedConstruction<ProcessBuilder> ignored =
-                calibre(CalibreSandboxPolicy.LAUNCHER_REFUSED_EXIT_CODE, refusal)) {
-            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.REQUIRED, PROBE)).isFalse();
-        }
-        try (MockedConstruction<ProcessBuilder> ignored = calibre(0, refusal)) {
-            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.BEST_EFFORT, PROBE)).isTrue();
+                calibre(
+                        CalibreSandboxPolicy.LAUNCHER_REFUSED_EXIT_CODE,
+                        "calibre-sandbox: landlock unavailable, refusing to run\n")) {
+            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.ON, PROBE)).isFalse();
         }
     }
 
@@ -240,7 +218,7 @@ class CalibreSandboxPolicyTest {
     void startupProbeThatDoesNotFinishIsNotActive() {
         ProcessHandle calibreChild = mock(ProcessHandle.class);
         try (MockedConstruction<ProcessBuilder> builders = calibre(0, "", false, calibreChild)) {
-            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.REQUIRED, PROBE)).isFalse();
+            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.ON, PROBE)).isFalse();
             verify(calibreChild).destroyForcibly();
 
             ArgumentCaptor<File> probeDir = ArgumentCaptor.forClass(File.class);
@@ -253,8 +231,7 @@ class CalibreSandboxPolicyTest {
     void startupProbeWithoutPythonLaunchesNothing() {
         checkProgramInstall.when(CheckProgramInstall::getAvailablePythonCommand).thenReturn(null);
         try (MockedConstruction<ProcessBuilder> builders = calibre(0, "")) {
-            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.REQUIRED, PROBE)).isFalse();
-            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.BEST_EFFORT, PROBE)).isTrue();
+            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.ON, PROBE)).isFalse();
             assertThat(builders.constructed()).allSatisfy(b -> verify(b, never()).start());
         }
     }
@@ -301,7 +278,7 @@ class CalibreSandboxPolicyTest {
 
     @Test
     void processExecutorLaunchesCalibreConfined() throws Exception {
-        ProcessExecutor.setCalibreSandboxMode(Mode.REQUIRED);
+        ProcessExecutor.setCalibreSandboxMode(Mode.ON);
         try (MockedConstruction<ProcessBuilder> builders = calibre(0, "")) {
             runCalibre();
 
@@ -321,7 +298,7 @@ class CalibreSandboxPolicyTest {
 
     @Test
     void processExecutorDoesNotStartCalibreWithoutPython() throws Exception {
-        ProcessExecutor.setCalibreSandboxMode(Mode.REQUIRED);
+        ProcessExecutor.setCalibreSandboxMode(Mode.ON);
         checkProgramInstall.when(CheckProgramInstall::getAvailablePythonCommand).thenReturn(null);
         try (MockedConstruction<ProcessBuilder> builders = calibre(0, "")) {
             assertThatThrownBy(this::runCalibre)
@@ -334,11 +311,11 @@ class CalibreSandboxPolicyTest {
 
     @Test
     void launcherRefusalOnAKernelWithoutLandlockFailsTheJob() throws Exception {
-        ProcessExecutor.setCalibreSandboxMode(Mode.REQUIRED);
+        ProcessExecutor.setCalibreSandboxMode(Mode.ON);
         try (MockedConstruction<ProcessBuilder> ignored =
                 calibre(
                         CalibreSandboxPolicy.LAUNCHER_REFUSED_EXIT_CODE,
-                        "calibre-sandbox: landlock unavailable, filesystem unconfined\n")) {
+                        "calibre-sandbox: landlock unavailable, refusing to run\n")) {
             assertThatThrownBy(this::runCalibre)
                     .isInstanceOf(IOException.class)
                     .hasMessage(CalibreSandboxPolicy.REFUSED_MESSAGE);
@@ -346,17 +323,8 @@ class CalibreSandboxPolicyTest {
     }
 
     @Test
-    void partialConfinementUnderBestEffortStillConverts() throws Exception {
-        ProcessExecutor.setCalibreSandboxMode(Mode.BEST_EFFORT);
-        try (MockedConstruction<ProcessBuilder> ignored =
-                calibre(0, "calibre-sandbox: seccomp unavailable, network unconfined\n")) {
-            runCalibre();
-        }
-    }
-
-    @Test
     void calibreErrorOutputIsNotPutInTheExceptionMessage() throws Exception {
-        ProcessExecutor.setCalibreSandboxMode(Mode.REQUIRED);
+        ProcessExecutor.setCalibreSandboxMode(Mode.ON);
         String stderr =
                 "Could not find file missing.png in book\n"
                         + "Could not find file uuid-in-the-copy/"

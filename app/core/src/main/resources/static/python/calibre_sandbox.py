@@ -1,10 +1,15 @@
+"""Runs a command confined to one working directory with Landlock and seccomp.
+
+Linux only (5.13+). Where the sandbox cannot be applied, including every non-Linux host, it exits
+125 instead of running the command unconfined.
+"""
+
 import ctypes
 import errno
 import os
 import platform
 import stat
 import struct
-import subprocess
 import sys
 
 READ_ONLY = (
@@ -206,25 +211,18 @@ def main():
         print("usage: calibre_sandbox.py <working directory> <command...>", file=sys.stderr)
         return 2
     work_dir, command = sys.argv[1], sys.argv[2:]
-    # Must match CalibreSandboxPolicy.Mode.BEST_EFFORT; any other value refuses to run unconfined.
-    required = os.environ.get("STIRLING_CALIBRE_SANDBOX", "required") != "best-effort"
 
     if not LINUX:
-        print("calibre-sandbox: Landlock and seccomp need Linux, nothing confined", file=sys.stderr)
-        if required:
-            return 125
-        # Windows has no real exec: the caller would see this process exit before Calibre does.
-        return subprocess.run(command).returncode
+        print("calibre-sandbox: Landlock and seccomp need Linux, refusing to run", file=sys.stderr)
+        return 125
 
     call(libc.prctl, PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)
     if not confine_file_system(work_dir):
-        print("calibre-sandbox: landlock unavailable, filesystem unconfined", file=sys.stderr)
-        if required:
-            return 125
+        print("calibre-sandbox: landlock unavailable, refusing to run", file=sys.stderr)
+        return 125
     if not confine_network():
-        print("calibre-sandbox: seccomp unavailable, network unconfined", file=sys.stderr)
-        if required:
-            return 125
+        print("calibre-sandbox: seccomp unavailable, refusing to run", file=sys.stderr)
+        return 125
     os.execvp(command[0], command)
 
 
