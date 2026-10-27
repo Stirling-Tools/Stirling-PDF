@@ -1,5 +1,5 @@
 import type { AxiosInstance } from "axios";
-import { getBrowserId } from "@app/utils/browserIdentifier";
+import { getBrowserId } from "@editor/utils/browserIdentifier";
 
 export function setupApiInterceptors(client: AxiosInstance): void {
   // Add browser ID header for WAU tracking

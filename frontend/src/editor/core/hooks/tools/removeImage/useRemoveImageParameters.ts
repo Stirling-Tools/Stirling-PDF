@@ -1,5 +1,5 @@
-import { useBaseParameters } from "@app/hooks/tools/shared/useBaseParameters";
-import type { BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import { useBaseParameters } from "@editor/hooks/tools/shared/useBaseParameters";
+import type { BaseParametersHook } from "@editor/hooks/tools/shared/useBaseParameters";
 
 export type RemoveImageParameters = Record<string, never>;
 

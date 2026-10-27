@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { connectionModeService } from "@app/services/connectionModeService";
+import { connectionModeService } from "@editor/services/connectionModeService";
 
 /**
  * Like {@link useSaaSMode}, but starts pessimistically FALSE: it returns true

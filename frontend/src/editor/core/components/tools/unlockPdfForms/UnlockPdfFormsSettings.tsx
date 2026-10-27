@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { UnlockPdfFormsParameters } from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsParameters";
+import { UnlockPdfFormsParameters } from "@editor/hooks/tools/unlockPdfForms/useUnlockPdfFormsParameters";
 
 interface UnlockPdfFormsSettingsProps {
   parameters: UnlockPdfFormsParameters;

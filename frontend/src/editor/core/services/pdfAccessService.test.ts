@@ -10,13 +10,13 @@ import {
   inspectLocalPdfAccess,
   setPdfAccessPolicy,
   subscribePdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
-import { preflightPdfOperation } from "@app/services/pdfSessionUnlock";
-import { createStirlingFile } from "@app/types/fileContext";
-import apiClient from "@app/services/apiClient";
+import { preflightPdfOperation } from "@editor/services/pdfSessionUnlock";
+import { createStirlingFile } from "@editor/types/fileContext";
+import apiClient from "@editor/services/apiClient";
 
-vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@editor/services/apiClient", () => ({ default: { post: vi.fn() } }));
 
 const workers = vi.hoisted(
   () =>
@@ -30,7 +30,7 @@ const workers = vi.hoisted(
     }[],
 );
 
-vi.mock("@app/workers/pdfAccessWorker?worker", () => ({
+vi.mock("@editor/workers/pdfAccessWorker?worker", () => ({
   default: class {
     postMessage = vi.fn();
     terminate = vi.fn();
@@ -39,7 +39,7 @@ vi.mock("@app/workers/pdfAccessWorker?worker", () => ({
     }
   },
 }));
-vi.mock("@app/services/wasmPrecompiler", () => ({
+vi.mock("@editor/services/wasmPrecompiler", () => ({
   pdfiumWasmUrl: "/pdfium.wasm",
   pdfiumWasmModulePromise: Promise.resolve("precompiled-module"),
   startEagerWasmCompilation: vi.fn(),

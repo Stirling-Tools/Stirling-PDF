@@ -24,11 +24,11 @@
  */
 import React, { useState } from "react";
 import { Stack } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { useRenderCount } from "@app/hooks/useRenderCount";
-import { useWallet } from "@app/hooks/useWallet";
+import { useRenderCount } from "@editor/hooks/useRenderCount";
+import { useWallet } from "@editor/hooks/useWallet";
 // oxlint-disable-next-line no-restricted-imports
 import "./Payg.css";
 // oxlint-disable-next-line no-restricted-imports
@@ -41,7 +41,7 @@ import {
   FreeMeterPanel,
   useFreeSnapshot,
   type FreeSnapshot,
-} from "@app/components/shared/config/configSections/usageMeters";
+} from "@editor/components/shared/config/configSections/usageMeters";
 
 interface EditorPlanCardProps {
   /** Role pill text on the right. */

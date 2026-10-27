@@ -40,6 +40,9 @@ public class ProcessExecutor {
     private static volatile boolean libreOfficeSandboxed =
             Files.isExecutable(Path.of("/usr/local/lib/stirling/lo-sandbox"));
 
+    private static volatile CalibreSandboxPolicy.Mode calibreSandboxMode =
+            CalibreSandboxPolicy.configuredMode();
+
     // Made by the init script (create_office_profile_template in init-without-ocr.sh).
     private static final Path libreOfficeProfileTemplate = profileTemplateFromEnvironment();
     private final Semaphore semaphore;
@@ -185,7 +188,7 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getOcrMyPdfTimeoutMinutes();
-                                case CFF_CONVERTER -> 5L;
+                                case CFF_CONVERTER -> 1L;
                                 case FFMPEG ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -203,6 +206,10 @@ public class ProcessExecutor {
 
     static void setLibreOfficeSandboxed(boolean sandboxed) {
         libreOfficeSandboxed = sandboxed;
+    }
+
+    static void setCalibreSandboxMode(CalibreSandboxPolicy.Mode mode) {
+        calibreSandboxMode = mode;
     }
 
     private static Path profileTemplateFromEnvironment() {
@@ -321,6 +328,14 @@ public class ProcessExecutor {
             log.info("Running command: {}", String.join(" ", commandToRun));
             ProcessBuilder processBuilder = new ProcessBuilder(commandToRun);
             scrubEnvironment(processBuilder);
+            if (processType == Processes.CALIBRE) {
+                processBuilder.command(
+                        CalibreSandboxPolicy.confine(
+                                calibreSandboxMode,
+                                commandToRun,
+                                workingDirectory,
+                                processBuilder.environment()));
+            }
             if (processType == Processes.LIBRE_OFFICE && libreOfficeSandboxed) {
                 jobPolicy =
                         LibreOfficeSandboxPolicy.forCommand(commandToRun, libreOfficeWorkRoots)
@@ -366,7 +381,7 @@ public class ProcessExecutor {
                                                                     errorReader, 5_000_000))
                                                     != null) {
                                                 errorLines.add(line);
-                                                if (liveUpdates) log.info(line);
+                                                if (liveUpdates) logLiveLine(line);
                                             }
                                         } catch (InterruptedIOException e) {
                                             log.warn(
@@ -391,7 +406,7 @@ public class ProcessExecutor {
                                                                     outputReader, 5_000_000))
                                                     != null) {
                                                 outputLines.add(line);
-                                                if (liveUpdates) log.info(line);
+                                                if (liveUpdates) logLiveLine(line);
                                             }
                                         } catch (InterruptedIOException e) {
                                             log.warn(
@@ -455,6 +470,10 @@ public class ProcessExecutor {
             errorReaderThread.join();
             outputReaderThread.join();
 
+            if (processType == Processes.CALIBRE) {
+                return finishCalibreRun(exitCode, outputLines, errorLines);
+            }
+
             boolean isQpdf =
                     commandToRun != null
                             && !commandToRun.isEmpty()
@@ -511,6 +530,30 @@ public class ProcessExecutor {
             }
         }
         return new ProcessExecutorResult(exitCode, messages);
+    }
+
+    private void logLiveLine(String line) {
+        if (processType == Processes.CALIBRE) {
+            log.debug(line);
+        } else {
+            log.info(line);
+        }
+    }
+
+    private ProcessExecutorResult finishCalibreRun(
+            int exitCode, List<String> outputLines, List<String> errorLines) throws IOException {
+        String output = String.join("\n", outputLines);
+        String errors = String.join("\n", errorLines);
+        if (!liveUpdates) {
+            log.debug("Calibre output:\n{}", output);
+            log.debug("Calibre error output:\n{}", errors);
+        }
+        CalibreSandboxPolicy.checkLauncherOutcome(exitCode, errorLines);
+        if (exitCode != 0) {
+            log.warn("Calibre exited with code {}; its output is logged at debug level", exitCode);
+            throw new IOException("Calibre conversion failed with exit code " + exitCode);
+        }
+        return new ProcessExecutorResult(exitCode, output + errors);
     }
 
     private static final Set<String> LIBRE_OFFICE_ENV_ALLOWLIST =

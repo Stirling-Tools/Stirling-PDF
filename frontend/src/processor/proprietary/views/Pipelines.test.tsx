@@ -5,11 +5,14 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
-import type { PipelinesOverviewResponse, Policy } from "@portal/api/pipelines";
-import { parseSimplePolicy } from "@portal/api/policies";
-import { Pipelines } from "@portal/views/Pipelines";
+import type {
+  PipelinesOverviewResponse,
+  Policy,
+} from "@processor/api/pipelines";
+import { parseSimplePolicy } from "@processor/api/policies";
+import { Pipelines } from "@processor/views/Pipelines";
 
 /** The builder route: shows the draft handed in navigation state, so the Customise hand-off can be
  * asserted without rendering the real builder. */
@@ -44,7 +47,7 @@ vi.mock("react-i18next", () => ({
 const fetchPipelines = vi.fn();
 const fetchPipeline = vi.fn();
 const fetchPolicyPermissions = vi.fn();
-vi.mock("@portal/api/pipelines", () => ({
+vi.mock("@processor/api/pipelines", () => ({
   fetchTriggers: () => Promise.resolve([]),
   fetchPipelines: () => fetchPipelines(),
   fetchPipeline: (id: string) => fetchPipeline(id),
@@ -53,13 +56,14 @@ vi.mock("@portal/api/pipelines", () => ({
 
 // Spy the wizard's save without stubbing the rest of the module (parseSimplePolicy et al. stay real).
 const savePolicy = vi.fn();
-vi.mock("@portal/api/policies", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@portal/api/policies")>();
+vi.mock("@processor/api/policies", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@processor/api/policies")>();
   return { ...actual, savePolicy: (body: unknown) => savePolicy(body) };
 });
 
 const usePoliciesOverview = vi.fn();
-vi.mock("@portal/queries/policies", () => ({
+vi.mock("@processor/queries/policies", () => ({
   usePoliciesOverview: () => usePoliciesOverview(),
 }));
 

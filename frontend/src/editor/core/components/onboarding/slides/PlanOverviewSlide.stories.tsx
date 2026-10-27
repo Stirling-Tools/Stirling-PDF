@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import PlanOverviewSlide from "@app/components/onboarding/slides/PlanOverviewSlide";
-import type { LicenseNotice } from "@app/types/types";
+import PlanOverviewSlide from "@editor/components/onboarding/slides/PlanOverviewSlide";
+import type { LicenseNotice } from "@editor/types/types";
 
 interface PlanOverviewStageProps {
   isAdmin: boolean;

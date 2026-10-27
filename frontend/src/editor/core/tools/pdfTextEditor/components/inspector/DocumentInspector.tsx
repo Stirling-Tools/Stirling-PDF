@@ -1,23 +1,24 @@
 import { useState } from "react";
 import { Badge, Collapse, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import {
   Section,
   SectionLabel,
   StatRow,
-} from "@app/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+} from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import {
   analyzePageFonts,
   type PageFont,
-} from "@app/tools/pdfTextEditor/util/pageFonts";
-import { DocumentSettings } from "@app/tools/pdfTextEditor/components/inspector/DocumentSettings";
+} from "@editor/tools/pdfTextEditor/util/pageFonts";
+import { DocumentSettings } from "@editor/tools/pdfTextEditor/components/inspector/DocumentSettings";
 import type {
   GroupingMode,
   PageSnapshot,
   WidthMode,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
+import type { ImageReview } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 
 interface Props {
   pages: PageSnapshot[];
@@ -27,10 +28,18 @@ interface Props {
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
+  /** Images needing attention; null when there is nothing to review. */
+  imageReview: ImageReview | null;
+  onSelectNextImageToReview: () => void;
 }
 
 /** Facts about the open document. Nothing here acts on a selection. */
-export function DocumentInspector({ pages, ...settings }: Props) {
+export function DocumentInspector({
+  pages,
+  imageReview,
+  onSelectNextImageToReview,
+  ...settings
+}: Props) {
   const { t } = useTranslation();
   const runs = pages.reduce((n, p) => n + p.runs.length, 0);
   const images = pages.reduce((n, p) => n + p.images.length, 0);
@@ -55,9 +64,84 @@ export function DocumentInspector({ pages, ...settings }: Props) {
           />
         </Stack>
       </Section>
+      {imageReview && (
+        <AccessibilitySection
+          review={imageReview}
+          onNext={onSelectNextImageToReview}
+        />
+      )}
       <FontsSection pages={pages} />
       <DocumentSettings {...settings} />
     </Stack>
+  );
+}
+
+function AccessibilitySection({
+  review,
+  onNext,
+}: {
+  review: ImageReview;
+  onNext: () => void;
+}) {
+  const { t } = useTranslation();
+  const pending = review.needsDescription + review.untagged;
+  return (
+    <Section testId="pdf-editor-document-accessibility">
+      <SectionLabel>
+        {t("pdfTextEditor.inspector.accessibility.heading", "Accessibility")}
+      </SectionLabel>
+      <Stack gap="xs">
+        <Stack gap={4} data-testid="pdf-editor-document-accessibility-summary">
+          <StatRow
+            label={t(
+              "pdfTextEditor.inspector.accessibility.missingDescriptions",
+              "Missing descriptions",
+            )}
+            value={review.needsDescription}
+          />
+          <StatRow
+            label={t(
+              "pdfTextEditor.inspector.accessibility.untaggedImages",
+              "Untagged images",
+            )}
+            value={review.untagged}
+          />
+          <UntaggableRow count={review.untaggable} />
+        </Stack>
+        {pending > 0 && (
+          <Button
+            size="sm"
+            variant="secondary"
+            accent="neutral"
+            fullWidth
+            justify="start"
+            leftSection={<Icon name="arrow-right" size={20} />}
+            onClick={onNext}
+            data-testid="pdf-editor-document-accessibility-next"
+          >
+            {t("pdfTextEditor.inspector.accessibility.nextImage", "Next image")}
+          </Button>
+        )}
+      </Stack>
+    </Section>
+  );
+}
+
+/**
+ * Untagged images nothing here can tag, kept apart so the rows Next works
+ * through can reach zero. Absent in the usual file, which has none.
+ */
+function UntaggableRow({ count }: { count: number }) {
+  const { t } = useTranslation();
+  if (count === 0) return null;
+  return (
+    <StatRow
+      label={t(
+        "pdfTextEditor.inspector.accessibility.untaggableImages",
+        "Can't be tagged here",
+      )}
+      value={count}
+    />
   );
 }
 

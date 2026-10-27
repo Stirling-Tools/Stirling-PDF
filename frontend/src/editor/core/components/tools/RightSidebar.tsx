@@ -1,24 +1,24 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useSidebarContext } from "@app/contexts/SidebarContext";
-import { useIsMobile } from "@app/hooks/useIsMobile";
-import ToolPanel from "@app/components/tools/ToolPanel";
-import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
-import { EditorPipelinesPanel } from "@app/components/policies/EditorPipelinesPanel";
-import { ToolIcon } from "@app/components/shared/ToolIcon";
-import { ToolPanelHeader } from "@app/components/shared/ToolPanelHeader";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { withViewTransition } from "@app/utils/viewTransition";
-import { Icon } from "@app/ui/Icon";
-import { ToolId } from "@app/types/toolId";
-import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useSidebarContext } from "@editor/contexts/SidebarContext";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import ToolPanel from "@editor/components/tools/ToolPanel";
+import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
+import { EditorPipelinesPanel } from "@editor/components/policies/EditorPipelinesPanel";
+import { ToolIcon } from "@editor/components/shared/ToolIcon";
+import { ToolPanelHeader } from "@editor/components/shared/ToolPanelHeader";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { withViewTransition } from "@editor/utils/viewTransition";
+import { Icon } from "@editor/ui/Icon";
+import { ToolId } from "@editor/types/toolId";
+import type { ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
 import {
   FullscreenToolPanel,
   useIsFullscreenExpanded,
-} from "@app/components/tools/FullscreenToolPanel";
-import { useToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
-import "@app/components/tools/ToolPanel.css";
+} from "@editor/components/tools/FullscreenToolPanel";
+import { useToolPanelGeometry } from "@editor/hooks/tools/useToolPanelGeometry";
+import "@editor/components/tools/ToolPanel.css";
 
 /**
  * Right-side rail wrapping the tool panel, which is fixed open: what the rail

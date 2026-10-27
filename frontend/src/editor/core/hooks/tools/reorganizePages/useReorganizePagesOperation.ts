@@ -2,17 +2,17 @@ import { useTranslation } from "react-i18next";
 import {
   defineSingleFileTool,
   useToolOperation,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   ReorganizePagesParameters,
   defaultReorganizePagesParameters,
-} from "@app/hooks/tools/reorganizePages/useReorganizePagesParameters";
+} from "@editor/hooks/tools/reorganizePages/useReorganizePagesParameters";
 
 const ENDPOINT = "/api/v1/general/rearrange-pages" satisfies ToolEndpoint;
 type ReorganizePagesApiParams = ToolApiParams[typeof ENDPOINT];

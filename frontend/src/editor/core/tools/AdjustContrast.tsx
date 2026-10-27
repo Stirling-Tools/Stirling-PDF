@@ -1,15 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { useAdjustContrastParameters } from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
-import { useAdjustContrastOperation } from "@app/hooks/tools/adjustContrast/useAdjustContrastOperation";
-import AdjustContrastBasicSettings from "@app/components/tools/adjustContrast/AdjustContrastBasicSettings";
-import AdjustContrastColorSettings from "@app/components/tools/adjustContrast/AdjustContrastColorSettings";
-import AdjustContrastPreview from "@app/components/tools/adjustContrast/AdjustContrastPreview";
-import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
-import NavigationArrows from "@app/components/shared/filePreview/NavigationArrows";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { useAdjustContrastParameters } from "@editor/hooks/tools/adjustContrast/useAdjustContrastParameters";
+import { useAdjustContrastOperation } from "@editor/hooks/tools/adjustContrast/useAdjustContrastOperation";
+import AdjustContrastBasicSettings from "@editor/components/tools/adjustContrast/AdjustContrastBasicSettings";
+import AdjustContrastColorSettings from "@editor/components/tools/adjustContrast/AdjustContrastColorSettings";
+import AdjustContrastPreview from "@editor/components/tools/adjustContrast/AdjustContrastPreview";
+import { useAccordionSteps } from "@editor/hooks/tools/shared/useAccordionSteps";
+import NavigationArrows from "@editor/components/shared/filePreview/NavigationArrows";
 
 const AdjustContrast = (props: BaseToolProps) => {
   const { t } = useTranslation();

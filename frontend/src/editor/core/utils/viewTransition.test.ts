@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { withViewTransition } from "@app/utils/viewTransition";
+import { withViewTransition } from "@editor/utils/viewTransition";
 
 function setStartViewTransition(value: unknown): void {
   Object.defineProperty(document, "startViewTransition", {

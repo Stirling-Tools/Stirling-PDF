@@ -1,20 +1,20 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
-import { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { RawPdf, setDictEntry } from "@app/tools/pdfTextEditor/pdfdoc/raw";
+import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { RawPdf, setDictEntry } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   appendRevision,
   plainObject,
-} from "@app/tools/pdfTextEditor/pdfdoc/revision";
+} from "@editor/tools/pdfTextEditor/pdfdoc/revision";
 import {
   decodeTextString,
   encodeTextString,
-} from "@app/tools/pdfTextEditor/pdfdoc/textString";
+} from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 import {
   buildClassicPdf,
   streamBody,
-} from "@app/tools/pdfTextEditor/__tests__/pdfFixtures";
+} from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 const FIGURE = 8;
 

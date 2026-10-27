@@ -1,4 +1,4 @@
-import type { PolicyExecutionTarget } from "@app/services/policyPipeline";
+import type { PolicyExecutionTarget } from "@editor/services/policyPipeline";
 
 /**
  * Base URL for downloading a policy run's output file, given where the run

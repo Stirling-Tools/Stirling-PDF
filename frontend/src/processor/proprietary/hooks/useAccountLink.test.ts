@@ -8,24 +8,24 @@ const mocks = vi.hoisted(() => ({
   applyLinkFacts: vi.fn(),
   markStatusKnown: vi.fn(),
 }));
-vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+vi.mock("@editor/portal/hooks/useAccountLinkOwner", () => ({
   useAccountLinkOwner: () => mocks.isOwner,
 }));
-vi.mock("@app/portal/api/link", () => ({
+vi.mock("@editor/portal/api/link", () => ({
   fetchStatus: mocks.fetchStatus,
   unlinkInstance: mocks.unlinkInstance,
 }));
-vi.mock("@app/portal/auth/saasSupabase", () => ({
+vi.mock("@editor/portal/auth/saasSupabase", () => ({
   isSaasSupabaseConfigured: true,
 }));
-vi.mock("@app/portal/auth/accountLinkSession", () => ({
+vi.mock("@editor/portal/auth/accountLinkSession", () => ({
   clearAccountLinkSession: mocks.clearAccountLinkSession,
 }));
-vi.mock("@app/portal/contexts/LinkContext", () => ({
+vi.mock("@editor/portal/contexts/LinkContext", () => ({
   useApplyLinkFacts: () => mocks.applyLinkFacts,
   useLink: () => ({ markStatusKnown: mocks.markStatusKnown }),
 }));
-import { useAccountLink } from "@app/portal/hooks/useAccountLink";
+import { useAccountLink } from "@editor/portal/hooks/useAccountLink";
 
 beforeEach(() => {
   vi.clearAllMocks();

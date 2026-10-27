@@ -5,7 +5,7 @@ import type {
   McpSettingsData,
   StorageSharingSettingsData,
   UiDefaultsSettingsData,
-} from "@app/components/shared/config/configSections/server/serverSettings";
+} from "@editor/components/shared/config/configSections/server/serverSettings";
 
 /**
  * What every System card needs from the page that owns them. The six server

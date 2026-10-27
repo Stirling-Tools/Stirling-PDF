@@ -2,36 +2,39 @@ import {
   fetchPolicySources,
   routingDestinations,
   type PolicySource,
-} from "@app/services/policySources";
-import { usePolicyOutputModes } from "@app/hooks/usePolicyOutputModes";
+} from "@editor/services/policySources";
+import { usePolicyOutputModes } from "@editor/hooks/usePolicyOutputModes";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useFolders } from "@app/contexts/FolderContext";
-import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
-import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
-import { useDownloadsProcessing } from "@app/hooks/useDownloadsProcessing";
-import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
-import { canPickDirectory, pickDirectory } from "@app/services/directoryPicker";
-import { saveProcessingFolder } from "@app/services/processingFolderApi";
+import { useFolders } from "@editor/contexts/FolderContext";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
+import { useServerFolderBlock } from "@editor/hooks/useServerFolderBlock";
+import { useAiEngineEnabled } from "@editor/hooks/useAiEngineEnabled";
+import { useDownloadsProcessing } from "@editor/hooks/useDownloadsProcessing";
+import { useProcessingFolders } from "@editor/hooks/useProcessingFolders";
+import {
+  canPickDirectory,
+  pickDirectory,
+} from "@editor/services/directoryPicker";
+import { saveProcessingFolder } from "@editor/services/processingFolderApi";
 import {
   currentRunIds,
   deliverSweepResults,
-} from "@app/services/processingRunDelivery";
-import { folderKind, type FolderRecord } from "@app/types/folder";
-import type { PolicySetupResult } from "@app/policies/catalog";
+} from "@editor/services/processingRunDelivery";
+import { folderKind, type FolderRecord } from "@editor/types/folder";
+import type { PolicySetupResult } from "@editor/policies/catalog";
 import {
   mergeFolderSteps,
   type ProcessingFolderTarget,
-} from "@app/components/policies/processingFolderSetup";
-import { ProcessingFolderWizard } from "@app/components/policies/ProcessingFolderWizard";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
-import apiClient from "@app/services/apiClient";
-import { assemblePolicies } from "@app/policies/overview";
-import type { WirePolicy } from "@app/policies/types";
-import { extractErrorMessage } from "@app/utils/toolErrorHandler";
+} from "@editor/components/policies/processingFolderSetup";
+import { ProcessingFolderWizard } from "@editor/components/policies/ProcessingFolderWizard";
+import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
+import { HAS_PORTAL } from "@editor/routes/hasPortal";
+import apiClient from "@editor/services/apiClient";
+import { assemblePolicies } from "@editor/policies/overview";
+import type { WirePolicy } from "@editor/policies/types";
+import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
 
 interface ProcessingFolderSetupFlowProps {
   folder?: FolderRecord;

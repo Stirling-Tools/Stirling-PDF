@@ -5,7 +5,7 @@ import {
   isPageImage,
   opensAsTrack,
   toPdfName,
-} from "@app/components/pageTracks/trackFileKind";
+} from "@editor/components/pageTracks/trackFileKind";
 
 const file = (name: string, type = "") => ({ name, type });
 

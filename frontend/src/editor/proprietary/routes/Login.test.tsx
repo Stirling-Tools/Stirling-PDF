@@ -3,13 +3,13 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
-import Login from "@app/routes/Login";
-import { useAuth } from "@app/auth/UseSession";
-import { springAuth } from "@app/auth/spring/springAuthClient";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
-import apiClient from "@app/services/apiClient";
-import { configureSpringAuth } from "@app/auth/config";
+import Login from "@editor/routes/Login";
+import { useAuth } from "@editor/auth/UseSession";
+import { springAuth } from "@editor/auth/spring/springAuthClient";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
+import apiClient from "@editor/services/apiClient";
+import { configureSpringAuth } from "@editor/auth/config";
 
 // Mock i18n to return fallback text
 vi.mock("react-i18next", () => ({
@@ -26,7 +26,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 // Mock i18n module to avoid initialization
-vi.mock("@app/i18n", () => ({
+vi.mock("@editor/i18n", () => ({
   updateSupportedLanguages: vi.fn(),
   supportedLanguages: { "en-US": "English (US)" },
   rtlLanguages: [],
@@ -38,15 +38,15 @@ vi.mock("@app/i18n", () => ({
 }));
 
 // Mock useAuth hook
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: vi.fn(),
 }));
 
 // Mock springAuth; keep the real redirect-path helpers.
-vi.mock("@app/auth/spring/springAuthClient", async () => {
+vi.mock("@editor/auth/spring/springAuthClient", async () => {
   const actual = await vi.importActual<
-    typeof import("@app/auth/spring/springAuthClient")
-  >("@app/auth/spring/springAuthClient");
+    typeof import("@editor/auth/spring/springAuthClient")
+  >("@editor/auth/spring/springAuthClient");
   return {
     ...actual,
     springAuth: {
@@ -57,12 +57,12 @@ vi.mock("@app/auth/spring/springAuthClient", async () => {
 });
 
 // Mock useDocumentMeta
-vi.mock("@app/hooks/useDocumentMeta", () => ({
+vi.mock("@editor/hooks/useDocumentMeta", () => ({
   useDocumentMeta: vi.fn(),
 }));
 
 // Mock apiClient for provider list
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
@@ -77,7 +77,7 @@ const mockBackendProbeState = {
 };
 const mockProbe = vi.fn().mockResolvedValue(mockBackendProbeState);
 
-vi.mock("@app/hooks/useBackendProbe", () => ({
+vi.mock("@editor/hooks/useBackendProbe", () => ({
   useBackendProbe: () => ({
     ...mockBackendProbeState,
     probe: mockProbe,

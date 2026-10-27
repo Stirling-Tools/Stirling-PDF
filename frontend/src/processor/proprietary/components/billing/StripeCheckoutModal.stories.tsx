@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
-import { StripeCheckoutModal } from "@portal/components/billing/StripeCheckoutModal";
-import "@portal/components/billing/billing.css";
+import { StripeCheckoutModal } from "@processor/components/billing/StripeCheckoutModal";
+import "@processor/components/billing/billing.css";
 
 /**
  * Two-step "turn on the Processor" flow. Step 1 sets the monthly spend cap

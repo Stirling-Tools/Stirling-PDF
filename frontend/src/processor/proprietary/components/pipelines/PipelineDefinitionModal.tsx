@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { CodeBlock, Modal } from "@app/ui";
-import "@portal/components/pipelines/PipelineDefinitionModal.css";
+import { CodeBlock, Modal } from "@editor/ui";
+import "@processor/components/pipelines/PipelineDefinitionModal.css";
 
 export interface PipelineDefinitionModalProps {
   open: boolean;

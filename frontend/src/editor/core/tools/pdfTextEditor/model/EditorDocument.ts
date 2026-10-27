@@ -3,19 +3,23 @@ import {
   closeDocAndFreeBuffer,
   getPdfiumModule,
   openRawDocument,
-} from "@app/services/pdfiumService";
-import { Page } from "@app/tools/pdfTextEditor/model/Page";
+} from "@editor/services/pdfiumService";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import type { StructureEdit } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
+import { readPageStructure } from "@editor/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
 import {
-  PageStructure,
-  type StructureElement,
-} from "@app/tools/pdfTextEditor/model/PageStructure";
-import type { StructureEdit } from "@app/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
-import { readPageStructure } from "@app/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
-import { readFileStructure } from "@app/tools/pdfTextEditor/pdfdoc/readFileStructure";
-import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
-import { FontRef } from "@app/tools/pdfTextEditor/model/FontRef";
-import { prepareForEditing } from "@app/tools/pdfTextEditor/pdfdoc/prepareForEditing";
-import { releaseScratch } from "@app/tools/pdfTextEditor/util/wasmScratch";
+  readFileStructure,
+  type FilePageStructure,
+} from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
+import {
+  imagesInReadingOrder,
+  precedingTaggedMcid,
+} from "@editor/tools/pdfTextEditor/util/figurePlacement";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
+import { prepareForEditing } from "@editor/tools/pdfTextEditor/pdfdoc/prepareForEditing";
+import { releaseScratch } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 // Lifetime-managed PDFium document wrapper for the PDF text editor. - Opens a
 // raw PDFium document pointer from bytes.
@@ -33,7 +37,7 @@ export class EditorDocument {
   private readonly pageCache: Map<number, Page>;
   private readonly structureCache = new Map<number, PageStructure>();
   /** Each page's elements from the file's own ParentTree; null when only PDFium's view is available. */
-  private readonly fileStructure: Map<number, StructureElement[]> | null;
+  private readonly fileStructure: Map<number, FilePageStructure> | null;
   private readonly ownedFonts: Map<string, FontRef>;
   private _disposed: boolean;
   // Form-fill environment. Widgets with no appearance stream are drawn ONLY by
@@ -48,7 +52,7 @@ export class EditorDocument {
     module: WrappedPdfiumModule,
     docPtr: number,
     openedBytes: Uint8Array,
-    fileStructure: Map<number, StructureElement[]> | null,
+    fileStructure: Map<number, FilePageStructure> | null,
   ) {
     this.module = module;
     this.docPtr = docPtr;
@@ -158,18 +162,33 @@ export class EditorDocument {
   structure(pageIndex: number): PageStructure {
     const cached = this.structureCache.get(pageIndex);
     if (cached) return cached;
-    // PDFium's tree is the fallback, read-only: its MCIDs carry no page, so
-    // an edit made through it could land on the wrong element.
-    const structure = this.fileStructure
-      ? new PageStructure(this.fileStructure.get(pageIndex) ?? [])
-      : new PageStructure(
-          readPageStructure(this.module, this.page(pageIndex).pagePtr),
-          this.encrypted()
-            ? "the file is encrypted"
-            : "the file's tags could not be read for editing",
-        );
+    const structure = this.readStructure(pageIndex);
     this.structureCache.set(pageIndex, structure);
     return structure;
+  }
+
+  private readStructure(pageIndex: number): PageStructure {
+    // PDFium's tree is the fallback, read-only: its MCIDs carry no page, so
+    // an edit made through it could land on the wrong element.
+    if (!this.fileStructure) {
+      return new PageStructure(
+        readPageStructure(this.module, this.page(pageIndex).pagePtr),
+        this.encrypted() ? "encrypted" : "unreadable",
+      );
+    }
+    const page = this.fileStructure.get(pageIndex);
+    if (!page) return new PageStructure([]);
+    if (page.slotCount === null) return new PageStructure([], "unreadable");
+    return new PageStructure(page.elements, null, page.slotCount);
+  }
+
+  /** True when the catalog marks the file as tagged (ISO 32000-1 14.7.1). */
+  isTagged(): boolean {
+    try {
+      return this.module.FPDFCatalog_IsTagged(this.docPtr);
+    } catch {
+      return false;
+    }
   }
 
   private encrypted(): boolean {
@@ -183,9 +202,36 @@ export class EditorDocument {
 
   /** Every unsaved structure edit, in the form the save pass takes. */
   structureEdits(): StructureEdit[] {
-    return [...this.structureCache].flatMap(([pageIndex, structure]) =>
-      structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
-    );
+    return [...this.structureCache].flatMap(([pageIndex, structure]) => [
+      ...structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
+      ...this.addedFigureEdits(pageIndex, structure),
+    ]);
+  }
+
+  /**
+   * The page's added figures in reading order, so one placed after another
+   * finds it already in the tree. A figure whose image was deleted is left
+   * out: there is nothing left for it to describe.
+   */
+  private addedFigureEdits(
+    pageIndex: number,
+    structure: PageStructure,
+  ): StructureEdit[] {
+    const page = this.pageCache.get(pageIndex);
+    if (!page) return [];
+    const figures = structure.addedFigures();
+    return imagesInReadingOrder(page).flatMap((image) => {
+      const figure = figures.find((f) => f.mcid === image.mcid);
+      if (!figure) return [];
+      return [
+        {
+          pageIndex,
+          ...figure,
+          decorative: false,
+          newFigure: { after: precedingTaggedMcid(page, image) },
+        },
+      ];
+    });
   }
 
   registerOwnedFont(font: FontRef): void {

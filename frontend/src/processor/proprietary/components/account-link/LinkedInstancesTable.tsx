@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, EmptyState, Modal } from "@app/ui";
-import { ConnectedInstanceRow } from "@app/components/settings/ConnectedInstanceRow";
-import type { LinkedInstanceRow } from "@app/types/linkedInstance";
+import { Button, EmptyState, Modal } from "@editor/ui";
+import { ConnectedInstanceRow } from "@editor/components/settings/ConnectedInstanceRow";
+import type { LinkedInstanceRow } from "@editor/types/linkedInstance";
 
 interface Props {
   instances: LinkedInstanceRow[];

@@ -1,4 +1,4 @@
-import { StirlingFileStub } from "@app/types/fileContext";
+import { StirlingFileStub } from "@editor/types/fileContext";
 
 /** How a file stands relative to the original it was opened from. Derived
  *  rather than stored so every surface gets the same answer instead of

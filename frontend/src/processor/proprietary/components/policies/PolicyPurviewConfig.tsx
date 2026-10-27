@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { FormField, Input, Select } from "@app/ui";
-import { ConnectionPicker } from "@portal/components/sources/ConnectionPicker";
-import "@portal/views/Policies.css";
+import { FormField, Input, Select } from "@editor/ui";
+import { ConnectionPicker } from "@processor/components/sources/ConnectionPicker";
+import "@processor/views/Policies.css";
 
 /**
  * Configures the Purview labelling step: which tenant, and which label.

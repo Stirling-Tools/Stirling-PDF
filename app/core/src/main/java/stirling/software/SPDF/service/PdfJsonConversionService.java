@@ -2282,7 +2282,14 @@ public class PdfJsonConversionService {
             String webFormat = null;
             String pdfBase64 = null;
             String pdfFormat = null;
-            if (format != null && isCffFormat(format)) {
+            boolean labelledCff = format != null && isCffFormat(format);
+            boolean cffProgram = labelledCff && fontService.isCffFontProgram(data);
+            if (labelledCff && !cffProgram) {
+                log.warn(
+                        "Font program labelled {} has no CFF header; skipping CFF conversion",
+                        format);
+            }
+            if (cffProgram) {
                 log.debug(
                         "[FONT-DEBUG] Font is CFF format, attempting conversion. CFF conversion enabled: {}, method: {}",
                         fontService.isCffConversionEnabled(),

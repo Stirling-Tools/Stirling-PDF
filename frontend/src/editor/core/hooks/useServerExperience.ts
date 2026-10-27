@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 const SELF_REPORTED_ADMIN_KEY = "stirling-self-reported-admin";
 const FREE_TIER_LIMIT = 5;

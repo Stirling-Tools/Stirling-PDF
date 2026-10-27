@@ -1,17 +1,17 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { allowConsole } from "@app/tests/failOnConsole";
+import { allowConsole } from "@editor/tests/failOnConsole";
 import {
   FilesModalProvider,
   useFilesModalContext,
-} from "@app/contexts/FilesModalContext";
+} from "@editor/contexts/FilesModalContext";
 import {
   createNewStirlingFileStub,
   createStirlingFile,
   type FileId,
   type StirlingFile,
   type StirlingFileStub,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -32,10 +32,10 @@ const state = vi.hoisted(() => ({
   getStirlingFile: vi.fn(),
   apiGet: vi.fn(),
 }));
-vi.mock("@app/hooks/useFileHandler", () => ({
+vi.mock("@editor/hooks/useFileHandler", () => ({
   useFileHandler: () => ({ addFiles: state.addFiles }),
 }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useFileActions: () => ({
     actions: {
       addStirlingFileStubs: state.addStirlingFileStubs,
@@ -43,22 +43,24 @@ vi.mock("@app/contexts/FileContext", () => ({
     },
   }),
 }));
-vi.mock("@app/contexts/file/fileHooks", () => ({
+vi.mock("@editor/contexts/file/fileHooks", () => ({
   useFileContext: () => ({
     findFileId: () => "uploaded",
     selectors: { getSelectedStirlingFileStubs: () => [{ id: "already-open" }] },
   }),
 }));
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationActions: () => ({
     actions: { setWorkbench: state.setWorkbench },
   }),
   useNavigationState: () => ({ workbench: state.workbench }),
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { getStirlingFile: state.getStirlingFile },
 }));
-vi.mock("@app/services/apiClient", () => ({ default: { get: state.apiGet } }));
+vi.mock("@editor/services/apiClient", () => ({
+  default: { get: state.apiGet },
+}));
 
 beforeEach(() => {
   vi.clearAllMocks();

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button } from "@app/ui";
+import { Banner, Button } from "@editor/ui";
 import {
   teamSubscriptionChange,
   type PendingTeamChange,
-} from "@app/services/serverPlanCheckout";
-import { USERS_PER_BLOCK } from "@app/components/shared/stripeCheckout/utils/capacity";
+} from "@editor/services/serverPlanCheckout";
+import { USERS_PER_BLOCK } from "@editor/components/shared/stripeCheckout/utils/capacity";
 
 /** Keeps the current allowance separate from Stripe's scheduled renewal change. */
 export function TeamSubscriptionChange({ refreshKey }: { refreshKey: number }) {
