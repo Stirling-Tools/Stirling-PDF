@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -7,6 +7,11 @@ import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDoc
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
 import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
+import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
+import {
+  imageAttention,
+  type ImageAttention,
+} from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 import { ImageHandle } from "@editor/tools/pdfTextEditor/components/ImageHandle";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { ShapeHandle } from "@editor/tools/pdfTextEditor/components/ShapeHandle";
@@ -106,6 +111,15 @@ export function PageView({
   onFirstRendered,
 }: PageViewProps) {
   const { t } = useTranslation();
+  const imageAttentions = useMemo(() => {
+    const out = new Map<string, ImageAttention>();
+    if (!ACCESSIBILITY_EDITING) return out;
+    for (const image of page.images) {
+      const attention = imageAttention(document, image);
+      if (attention) out.set(image.id, attention);
+    }
+    return out;
+  }, [document, page]);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   // `raster` is the CSS layout size; the bitmap itself renders at deviceScale
@@ -379,6 +393,7 @@ export function PageView({
             onTransformCommit={(next) =>
               onTransformImage?.(page.pageIndex, image.id, next)
             }
+            attention={imageAttentions.get(image.id) ?? null}
           />
         ))}
         {/* Grid + empty-cell editors sit below the run overlays so filled

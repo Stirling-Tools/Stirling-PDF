@@ -219,7 +219,7 @@ public class PolicyExecutor {
         for (Map.Entry<String, Object> entry : step.parameters().entrySet()) {
             if (entry.getValue() instanceof List<?> list) {
                 if (containsStructuredElements(list)) {
-                    // These endpoints (e.g. /security/redact redactions, /general/edit-text edits)
+                    // These endpoints (e.g. /security/redact redactions) bind a list of
                     // bind a list of structured objects from a single JSON string field via a
                     // property editor, so pre-serialize the whole list.
                     body.add(entry.getKey(), objectMapper.writeValueAsString(list));

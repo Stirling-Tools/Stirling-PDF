@@ -210,34 +210,38 @@ class PolicyExecutorTest {
 
     @Test
     void structuredListParameterIsJsonEncodedAsSingleField() throws IOException {
-        String editText = "/api/v1/general/edit-text";
-        when(toolMetadataService.isMultiInput(editText)).thenReturn(false);
-        when(toolMetadataService.shouldUnpackZipResponse(editText)).thenReturn(false);
-        stubEndpoint(editText, pdf("edited", "edited.pdf"));
+        String redact = "/api/v1/security/redact";
+        when(toolMetadataService.isMultiInput(redact)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(redact)).thenReturn(false);
+        stubEndpoint(redact, pdf("edited", "edited.pdf"));
 
         // LinkedHashMap so the serialized key order is deterministic for the assertion below.
-        Map<String, Object> edit = new LinkedHashMap<>();
-        edit.put("find", "foo");
-        edit.put("replace", "bar");
+        Map<String, Object> redaction = new LinkedHashMap<>();
+        redaction.put("page", 1);
+        redaction.put("x", 10);
+        redaction.put("y", 20);
+        redaction.put("width", 100);
+        redaction.put("height", 50);
         Map<String, Object> params = new LinkedHashMap<>();
-        params.put("edits", List.of(edit));
-        params.put("useRegex", false);
+        params.put("redactions", List.of(redaction));
+        params.put("convertPDFToImage", false);
 
         executor.execute(
-                definition(new PipelineStep(editText, params)),
+                definition(new PipelineStep(redact, params)),
                 PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
                 PolicyProgressListener.NOOP);
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
                 ArgumentCaptor.forClass(MultiValueMap.class);
-        verify(internalApiClient).post(eq(editText), bodyCaptor.capture());
+        verify(internalApiClient).post(eq(redact), bodyCaptor.capture());
         MultiValueMap<String, Object> body = bodyCaptor.getValue();
 
-        List<Object> edits = body.get("edits");
-        assertNotNull(edits);
-        assertEquals(1, edits.size());
-        assertEquals("[{\"find\":\"foo\",\"replace\":\"bar\"}]", edits.get(0));
+        List<Object> redactions = body.get("redactions");
+        assertNotNull(redactions);
+        assertEquals(1, redactions.size());
+        assertEquals(
+                "[{\"page\":1,\"x\":10,\"y\":20,\"width\":100,\"height\":50}]", redactions.get(0));
     }
 
     @Test
