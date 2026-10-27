@@ -205,7 +205,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "incorrectPassword", "message", "Incorrect password"));
         }
-        if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
+        // Most account lookups match usernames case-insensitively and fail once two rows match,
+        // so a case variant of another account's name (including the internal API user) is taken.
+        Optional<User> holder = userService.findByUsernameIgnoreCase(newUsername);
+        if (holder.isPresent() && !holder.get().getId().equals(user.getId())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "usernameExists", "message", "Username already exists"));
         }

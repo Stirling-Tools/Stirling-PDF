@@ -205,6 +205,44 @@ class UserControllerTest {
         verify(loginAttemptService).resetAttempts("lockeduser");
     }
 
+    @Test
+    void changeUsernameRejectsCaseVariantOfAnotherAccount() throws Exception {
+        User caller = user(1L, "bob", true, null);
+        User internal = user(2L, "STIRLING-PDF-BACKEND-API-USER", true, null);
+        when(userService.isUsernameValid("stirling-pdf-backend-api-user")).thenReturn(true);
+        when(userService.findByUsername("bob")).thenReturn(Optional.of(caller));
+        when(userService.isPasswordCorrect(caller, "pw")).thenReturn(true);
+        when(userService.findByUsernameIgnoreCase("stirling-pdf-backend-api-user"))
+                .thenReturn(Optional.of(internal));
+
+        mockMvc.perform(
+                        post("/api/v1/user/change-username")
+                                .principal(auth("bob"))
+                                .param("currentPasswordChangeUsername", "pw")
+                                .param("newUsername", "stirling-pdf-backend-api-user"))
+                .andExpect(status().isConflict());
+
+        verify(userService, never()).changeUsername(any(), any());
+    }
+
+    @Test
+    void changeUsernameAllowsChangingCaseOfOwnName() throws Exception {
+        User caller = user(1L, "bob", true, null);
+        when(userService.isUsernameValid("Bob")).thenReturn(true);
+        when(userService.findByUsername("bob")).thenReturn(Optional.of(caller));
+        when(userService.isPasswordCorrect(caller, "pw")).thenReturn(true);
+        when(userService.findByUsernameIgnoreCase("Bob")).thenReturn(Optional.of(caller));
+
+        mockMvc.perform(
+                        post("/api/v1/user/change-username")
+                                .principal(auth("bob"))
+                                .param("currentPasswordChangeUsername", "pw")
+                                .param("newUsername", "Bob"))
+                .andExpect(status().isOk());
+
+        verify(userService).changeUsername(caller, "Bob");
+    }
+
     private static User user(long id, String username, boolean enabled, Team team) {
         User u = new User();
         u.setId(id);

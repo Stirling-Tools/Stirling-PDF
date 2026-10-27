@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -375,7 +376,7 @@ class UserServiceMoreTest {
     class SettingsAndSessions {
 
         @Test
-        @DisplayName("updateUserSettings replaces the settings map and exports")
+        @DisplayName("updateUserSettings writes preference keys and exports")
         void updateUserSettings() throws SQLException, UnsupportedProviderException {
             User u = user("p");
             when(userRepository.findByUsernameIgnoreCaseWithSettings("p"))
@@ -386,6 +387,24 @@ class UserServiceMoreTest {
             assertThat(u.getSettings()).containsEntry("theme", "dark");
             verify(userRepository).save(u);
             verify(databaseService).exportDatabase();
+        }
+
+        @Test
+        @DisplayName("updateUserSettings cannot clear or overwrite MFA state")
+        void updateUserSettingsKeepsMfaState() throws SQLException, UnsupportedProviderException {
+            User u = user("p");
+            u.setSettings(
+                    new HashMap<>(Map.of("mfaEnabled", "true", "mfaSecret", "original-secret")));
+            when(userRepository.findByUsernameIgnoreCaseWithSettings("p"))
+                    .thenReturn(Optional.of(u));
+
+            userService.updateUserSettings(
+                    "p", Map.of("mfaEnabled", "false", "mfaSecret", "attacker", "theme", "dark"));
+
+            assertThat(u.getSettings())
+                    .containsEntry("mfaEnabled", "true")
+                    .containsEntry("mfaSecret", "original-secret")
+                    .containsEntry("theme", "dark");
         }
 
         @Test

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -76,6 +77,9 @@ import stirling.software.proprietary.workflow.service.UserServerCertificateServi
 @Slf4j
 @RequiredArgsConstructor
 public class UserService implements UserServiceInterface {
+
+    private static final Set<String> SELF_SERVICE_SETTING_KEYS =
+            Set.of("emailNotifications", "theme", "language");
 
     private final UserRepository userRepository;
     private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
@@ -377,8 +381,13 @@ public class UserService implements UserServiceInterface {
             if (settingsMap == null) {
                 settingsMap = new HashMap<>();
             }
-            settingsMap.clear();
-            settingsMap.putAll(updates);
+            // The same map holds the MFA state, so only the self-service preference keys may be
+            // written, and nothing else is cleared.
+            for (Map.Entry<String, String> update : updates.entrySet()) {
+                if (SELF_SERVICE_SETTING_KEYS.contains(update.getKey())) {
+                    settingsMap.put(update.getKey(), update.getValue());
+                }
+            }
             user.setSettings(settingsMap);
             userRepository.save(user);
             databaseService.exportDatabase();
