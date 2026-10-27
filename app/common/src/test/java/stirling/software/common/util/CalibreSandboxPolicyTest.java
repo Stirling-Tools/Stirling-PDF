@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -237,8 +238,10 @@ class CalibreSandboxPolicyTest {
 
     @Test
     void startupProbeThatDoesNotFinishIsNotActive() {
-        try (MockedConstruction<ProcessBuilder> builders = calibre(0, "", false)) {
+        ProcessHandle calibreChild = mock(ProcessHandle.class);
+        try (MockedConstruction<ProcessBuilder> builders = calibre(0, "", false, calibreChild)) {
             assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.REQUIRED, PROBE)).isFalse();
+            verify(calibreChild).destroyForcibly();
 
             ArgumentCaptor<File> probeDir = ArgumentCaptor.forClass(File.class);
             verify(builders.constructed().getFirst()).directory(probeDir.capture());
@@ -265,7 +268,7 @@ class CalibreSandboxPolicyTest {
      * redirect it, in the file they named.
      */
     private static MockedConstruction<ProcessBuilder> calibre(
-            int exitCode, String stderr, boolean finishes) {
+            int exitCode, String stderr, boolean finishes, ProcessHandle... descendants) {
         return Mockito.mockConstruction(
                 ProcessBuilder.class,
                 (builder, context) -> {
@@ -278,6 +281,7 @@ class CalibreSandboxPolicyTest {
                                             stderr.getBytes(StandardCharsets.UTF_8)));
                     when(process.waitFor(anyLong(), any(TimeUnit.class))).thenReturn(finishes);
                     when(process.exitValue()).thenReturn(exitCode);
+                    when(process.descendants()).thenAnswer(invocation -> Stream.of(descendants));
                     when(builder.environment()).thenReturn(new HashMap<>());
                     when(builder.redirectError(any(File.class)))
                             .thenAnswer(

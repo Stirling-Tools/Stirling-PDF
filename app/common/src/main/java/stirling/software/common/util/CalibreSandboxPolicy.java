@@ -181,6 +181,8 @@ final class CalibreSandboxPolicy {
             builder.redirectError(stderr.toFile());
             Process process = builder.start();
             if (!process.waitFor(PROBE_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                // Off Linux the launcher runs Calibre as a child rather than exec-ing into it.
+                process.descendants().forEach(ProcessHandle::destroyForcibly);
                 process.destroyForcibly();
                 return report(
                         mode,
