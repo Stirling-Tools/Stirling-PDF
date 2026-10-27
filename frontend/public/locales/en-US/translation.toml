@@ -9147,6 +9147,10 @@ title = "Damaged document"
 description = "Your file has no content in it, so there was nothing for the run to work on."
 title = "Empty file"
 
+[portal.failures.kind.inputImageTooLarge]
+description = "An image in your file is larger than this server will process."
+title = "Image too large to process"
+
 [portal.failures.kind.inputPasswordProtected]
 description = "Your file is password protected, so the run could not read it."
 title = "Password-protected document"

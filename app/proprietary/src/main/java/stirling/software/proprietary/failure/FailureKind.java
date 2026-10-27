@@ -241,18 +241,33 @@ public enum FailureKind {
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     /**
-     * A page's image at the requested resolution, or an image embedded in the file, exceeded the
-     * server's image limit or ran the renderer out of memory. One oversized page or image fails
-     * while its neighbours succeed.
+     * A page's image at the requested resolution exceeded the server's image limit or ran the
+     * renderer out of memory. The page's size and the step's DPI decide it together, so one
+     * oversized page fails while its neighbours succeed.
      */
     STEP_PAGE_TOO_LARGE(
             FailureStage.INTERNAL,
             FailureSeverity.ERROR,
             FailureRemedy.NEEDS_CONFIG_FIX,
             FailureScope.FILE,
-            errorCodes("E081", "E084", "E085", "E086"),
+            errorCodes("E081", "E084", "E085"),
             fallback(
                     "A page in this document was too large to render at the requested resolution."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * An image embedded in the document is larger than the server's image limit. No step setting
+     * changes that: only a smaller image or a higher limit clears it.
+     */
+    INPUT_IMAGE_TOO_LARGE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_SERVER_FIX,
+            FailureScope.FILE,
+            errorCodes("E086"),
+            fallback("An image in this document is larger than this server can process."),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
