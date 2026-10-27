@@ -624,7 +624,7 @@ function FileContextInner({
       options?: { silent?: boolean },
     ): Promise<FileId[]> => {
       for (const file of outputStirlingFiles) bindPdfAccess(file, file.fileId);
-      await consumeFiles(
+      const outputIds = await consumeFiles(
         inputFileIds,
         outputStirlingFiles,
         outputStirlingFileStubs,
@@ -632,10 +632,14 @@ function FileContextInner({
         dispatchWithUnlock,
         options,
       );
+      // consumeFiles writes the new versions to IndexedDB behind the store's back,
+      // so bump the revision or revision-driven views (the file sidebar) keep
+      // showing the superseded stub.
+      if (outputIds.length > 0) indexedDB?.bumpRevision?.();
       const admitted = await awaitAdmissions(outputStirlingFiles);
       return admitted.map((file) => file.fileId);
     },
-    [dispatchWithUnlock, awaitAdmissions],
+    [indexedDB, dispatchWithUnlock, awaitAdmissions],
   );
 
   const pendingMetadataHydrations = useRef(new Set<FileId>());
@@ -1418,6 +1422,7 @@ export function FileContextProvider({
 
 // Export all hooks from the fileHooks module
 export {
+  useFileStore,
   useFileState,
   useFileActions,
   useFileSelector,
