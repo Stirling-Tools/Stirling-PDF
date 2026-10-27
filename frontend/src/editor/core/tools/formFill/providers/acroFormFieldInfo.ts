@@ -4,9 +4,9 @@
  * /MK/CA label plus /A, /AA /U action of push buttons. PDFium exposes neither,
  * so the form provider enriches its field list with this.
  */
-import type { ButtonAction } from "@app/tools/formFill/types";
-import { PdfFileReader } from "@app/utils/pdfObjectReader";
-import type { PdfValue } from "@app/utils/pdfObjectReader";
+import type { ButtonAction } from "@editor/tools/formFill/types";
+import { PdfFileReader } from "@editor/utils/pdfObjectReader";
+import type { PdfValue } from "@editor/utils/pdfObjectReader";
 
 export interface AcroFormFieldInfo {
   exportValues?: string[];

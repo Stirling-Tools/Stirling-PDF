@@ -9,8 +9,8 @@ import {
   PDFString,
 } from "@cantoo/pdf-lib";
 
-import { extractPageMeasureScales } from "@app/utils/pdfMeasurementExtraction";
-import { allowConsole } from "@app/tests/failOnConsole";
+import { extractPageMeasureScales } from "@editor/utils/pdfMeasurementExtraction";
+import { allowConsole } from "@editor/tests/failOnConsole";
 
 const toFile = async (bytes: Uint8Array, name: string): Promise<File> => {
   const file = new File([bytes as BlobPart], name, {

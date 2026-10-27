@@ -2,7 +2,7 @@ import {
   PdfFileReader,
   type PdfRef,
   type PdfValue,
-} from "@app/utils/pdfObjectReader";
+} from "@editor/utils/pdfObjectReader";
 
 export interface LayerInfo {
   id: string;

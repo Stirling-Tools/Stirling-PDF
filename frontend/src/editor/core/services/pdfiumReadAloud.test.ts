@@ -3,7 +3,7 @@ import {
   readAloudViewportTransform,
   sortReadAloudItems,
   type ReadAloudTextItem,
-} from "@app/services/pdfiumService";
+} from "@editor/services/pdfiumService";
 
 function word(
   str: string,

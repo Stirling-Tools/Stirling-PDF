@@ -1,5 +1,5 @@
 import path from "path";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 // Two OCG layers with the catalog inside a compressed object stream (built by
