@@ -182,18 +182,31 @@ export default function Login() {
   const isUserPassAllowed = login.isUserPassAllowed;
   const isSsoOnlyMode = !login.isUserPassAllowed;
 
+  const periodicProbeInFlight = useRef(false);
+
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
     if (backendProbe.status === "up" || backendProbe.loginDisabled) {
       return;
     }
     const tick = async () => {
-      const result = await backendProbe.probe();
-      if (result.status === "up") {
-        await refetch();
-        if (loginDisabled) {
-          navigate(EDITOR_BASENAME, { replace: true });
+      // A request slower than the interval must not be superseded by the next
+      // tick: superseded probes discard their result, so overlapping ticks
+      // could keep this screen loading while the backend is already up.
+      if (periodicProbeInFlight.current) {
+        return;
+      }
+      periodicProbeInFlight.current = true;
+      try {
+        const result = await backendProbe.probe();
+        if (result?.status === "up") {
+          await refetch();
+          if (loginDisabled) {
+            navigate(EDITOR_BASENAME, { replace: true });
+          }
         }
+      } finally {
+        periodicProbeInFlight.current = false;
       }
     };
     const intervalId = window.setInterval(() => {
@@ -427,7 +440,7 @@ export default function Login() {
   if (backendProbe.status !== "up" && !loginDisabled) {
     const handleRetry = async () => {
       const result = await backendProbe.probe();
-      if (result.status === "up") {
+      if (result?.status === "up") {
         await refetch();
         navigate("/", { replace: true });
       }

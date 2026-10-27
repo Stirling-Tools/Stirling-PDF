@@ -70,8 +70,12 @@ vi.mock("@editor/services/apiClient", () => ({
 }));
 
 const mockNavigate = vi.fn();
-const mockBackendProbeState = {
-  status: "up" as const,
+const mockBackendProbeState: {
+  status: "up" | "starting" | "down";
+  loginDisabled: boolean;
+  loading: boolean;
+} = {
+  status: "up",
   loginDisabled: false,
   loading: false,
 };
@@ -871,5 +875,47 @@ describe("Login", () => {
     expect(sessionStorage.getItem("stirling_post_login_path")).toBe(
       "/share/abc123",
     );
+  });
+
+  // While the backend is down the screen ticks every 5s; a status request
+  // slower than the interval must not have its successor start on top of it,
+  // because superseded probes discard their result and the screen could stay
+  // loading while the backend is already answering.
+  it("does not stack periodic probes while one is still running", async () => {
+    mockBackendProbeState.status = "starting";
+    mockBackendProbeState.loading = false;
+    mockProbe.mockReset();
+    let resolveProbe!: (value: typeof mockBackendProbeState) => void;
+    const pending = new Promise<typeof mockBackendProbeState>((resolve) => {
+      resolveProbe = resolve;
+    });
+    mockProbe.mockImplementation(() => pending);
+
+    vi.useFakeTimers();
+    try {
+      await act(async () => {
+        render(
+          <TestWrapper>
+            <BrowserRouter>
+              <Login />
+            </BrowserRouter>
+          </TestWrapper>,
+        );
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000);
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000);
+      });
+      expect(mockProbe).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        resolveProbe({ ...mockBackendProbeState, status: "starting" });
+        await pending;
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
