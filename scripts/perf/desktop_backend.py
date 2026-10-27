@@ -90,20 +90,31 @@ class Server:
 
     def start(self):
         java = self.args.java
-        cmd = [java, "-Xmx2g", *self.args.flags, "-DBROWSER_OPEN=false",
-               "-DSTIRLING_PDF_TAURI_MODE=true", "-Dlogging.file.name=stirling-pdf.log",
-               "-Dserver.port=0", "-Dserver.forward-headers-strategy=none",
-               "-Dsecurity.enableLogin=false", "-Dsecurity.csrfDisabled=true",
-               "-Dlogging.file.path=" + str(self.root / "logs"),
-               "-jar", self.args.jar]
+        cmd = [
+            java,
+            "-Xmx2g",
+            *self.args.flags,
+            "-DBROWSER_OPEN=false",
+            "-DSTIRLING_PDF_TAURI_MODE=true",
+            "-Dlogging.file.name=stirling-pdf.log",
+            "-Dserver.port=0",
+            "-Dserver.forward-headers-strategy=none",
+            "-Dsecurity.enableLogin=false",
+            "-Dsecurity.csrfDisabled=true",
+            "-Dlogging.file.path=" + str(self.root / "logs"),
+            "-jar",
+            self.args.jar,
+        ]
         env = os.environ.copy()
-        env.update({
-            "TAURI_PARENT_PID": "",
-            "STIRLING_PDF_CONFIG_DIR": str(self.root / "config"),
-            "STIRLING_PDF_LOG_DIR": str(self.root / "logs"),
-            "STIRLING_PDF_WORK_DIR": str(self.root / "work"),
-            "STIRLING_PDF_SHUTDOWN_FILE": str(self.stop_file),
-        })
+        env.update(
+            {
+                "TAURI_PARENT_PID": "",
+                "STIRLING_PDF_CONFIG_DIR": str(self.root / "config"),
+                "STIRLING_PDF_LOG_DIR": str(self.root / "logs"),
+                "STIRLING_PDF_WORK_DIR": str(self.root / "work"),
+                "STIRLING_PDF_SHUTDOWN_FILE": str(self.stop_file),
+            }
+        )
         env.pop("JAVA_TOOL_OPTIONS", None)
         env.pop("_JAVA_OPTIONS", None)
         for item in self.args.env:
@@ -125,7 +136,7 @@ class Server:
                 text = ""
             marker = "running on port: "
             if marker in text:
-                line = [l for l in text.splitlines() if marker in l][-1]
+                line = [entry for entry in text.splitlines() if marker in entry][-1]
                 self.port = int(line.split(marker, 1)[1].split()[0])
                 self.startup_seconds = time.monotonic() - start
                 return
@@ -154,7 +165,7 @@ def multipart(fields, file_field, file_path):
     boundary = "----stirlingperf" + uuid.uuid4().hex
     parts = []
     for key, value in fields.items():
-        parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"{key}\"\r\n\r\n{value}\r\n".encode())
+        parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{key}"\r\n\r\n{value}\r\n'.encode())
     data = Path(file_path).read_bytes()
     filename = Path(file_path).name
     suffix = Path(file_path).suffix.lower()
@@ -165,8 +176,10 @@ def multipart(fields, file_field, file_path):
         ".png": "image/png",
     }.get(suffix, "application/octet-stream")
     parts.append(
-        f"--{boundary}\r\nContent-Disposition: form-data; name=\"{file_field}\"; filename=\"{filename}\"\r\n"
-        f"Content-Type: {content_type}\r\n\r\n".encode() + data + b"\r\n"
+        f'--{boundary}\r\nContent-Disposition: form-data; name="{file_field}"; filename="{filename}"\r\n'
+        f"Content-Type: {content_type}\r\n\r\n".encode()
+        + data
+        + b"\r\n"
     )
     parts.append(f"--{boundary}--\r\n".encode())
     return boundary, b"".join(parts)
@@ -174,9 +187,12 @@ def multipart(fields, file_field, file_path):
 
 def one_request(conn, endpoint, body, boundary, timeout):
     conn.timeout = timeout
-    conn.request("POST", endpoint, body=body,
-                 headers={"Content-Type": "multipart/form-data; boundary=" + boundary,
-                          "Content-Length": str(len(body))})
+    conn.request(
+        "POST",
+        endpoint,
+        body=body,
+        headers={"Content-Type": "multipart/form-data; boundary=" + boundary, "Content-Length": str(len(body))},
+    )
     response = conn.getresponse()
     payload = response.read()
     return response.status, payload, response.getheader("Connection", "")
@@ -262,25 +278,31 @@ def main():
     boundary, body = multipart(fields, args.file_field, args.file)
     server = Server(args)
     try:
-        git_head = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL
-        ).strip()
+        git_head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL).strip()
         git_dirty = bool(
-            subprocess.check_output(
-                ["git", "status", "--porcelain"], text=True, stderr=subprocess.DEVNULL
-            ).strip()
+            subprocess.check_output(["git", "status", "--porcelain"], text=True, stderr=subprocess.DEVNULL).strip()
         )
     except (OSError, subprocess.CalledProcessError):
         git_head = None
         git_dirty = None
-    result = {"label": args.label, "java": args.java, "flags": args.flags, "env": args.env,
-              "endpoint": args.endpoint, "file": str(Path(args.file).resolve()),
-              "file_sha256": sha256_file(args.file),
-              "workers": args.workers, "duration_seconds": args.duration,
-              "requested": args.requests,
-              "platform": platform.platform(), "machine": platform.machine(),
-              "python": sys.version.split()[0], "git_head": git_head, "git_dirty": git_dirty,
-              "started_at": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
+    result = {
+        "label": args.label,
+        "java": args.java,
+        "flags": args.flags,
+        "env": args.env,
+        "endpoint": args.endpoint,
+        "file": str(Path(args.file).resolve()),
+        "file_sha256": sha256_file(args.file),
+        "workers": args.workers,
+        "duration_seconds": args.duration,
+        "requested": args.requests,
+        "platform": platform.platform(),
+        "machine": platform.machine(),
+        "python": sys.version.split()[0],
+        "git_head": git_head,
+        "git_dirty": git_dirty,
+        "started_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+    }
 
     try:
         server.start()
@@ -317,7 +339,8 @@ def main():
                 started = time.monotonic()
                 try:
                     status, payload, connection_header = one_request(
-                        conn, args.endpoint, body, boundary, args.request_timeout)
+                        conn, args.endpoint, body, boundary, args.request_timeout
+                    )
                     if status == 200:
                         local_ok += 1
                         local_bytes += len(payload)
@@ -365,8 +388,14 @@ def main():
             thread.start()
         while any(thread.is_alive() for thread in threads):
             cpu, rss, pids = tree_totals(server.proc.pid)
-            samples.append({"t": round(time.monotonic() - t0, 3), "cpu_seconds": round(cpu, 3),
-                            "rss_kb": rss, "processes": len(pids)})
+            samples.append(
+                {
+                    "t": round(time.monotonic() - t0, 3),
+                    "cpu_seconds": round(cpu, 3),
+                    "rss_kb": rss,
+                    "processes": len(pids),
+                }
+            )
             time.sleep(args.sample_interval)
         for thread in threads:
             thread.join()
@@ -385,11 +414,13 @@ def main():
             "heap_start": heap_start,
             "heap_end": heap_info(args.jcmd, server.proc.pid),
             "footprint_end": physical_footprint(server.proc.pid),
-            "latency_ms": {"p50": percentile(work["latencies"], 50),
-                           "p95": percentile(work["latencies"], 95),
-                           "p99": percentile(work["latencies"], 99),
-                           "max": max(work["latencies"]) if work["latencies"] else None,
-                           "count": len(work["latencies"])},
+            "latency_ms": {
+                "p50": percentile(work["latencies"], 50),
+                "p95": percentile(work["latencies"], 95),
+                "p99": percentile(work["latencies"], 99),
+                "max": max(work["latencies"]) if work["latencies"] else None,
+                "count": len(work["latencies"]),
+            },
         }
         result["samples"] = samples
 
@@ -398,10 +429,15 @@ def main():
         if args.idle_settle > 0:
             time.sleep(args.idle_settle)
         cpu_a, rss_a, _ = tree_totals(server.proc.pid)
-        checkpoints.append({"at_seconds": round(args.idle_settle, 1), "rss_kb": rss_a,
-                            "cpu_seconds": round(cpu_a, 3),
-                            "heap": heap_info(args.jcmd, server.proc.pid),
-                            "footprint": physical_footprint(server.proc.pid)})
+        checkpoints.append(
+            {
+                "at_seconds": round(args.idle_settle, 1),
+                "rss_kb": rss_a,
+                "cpu_seconds": round(cpu_a, 3),
+                "heap": heap_info(args.jcmd, server.proc.pid),
+                "footprint": physical_footprint(server.proc.pid),
+            }
+        )
         if args.idle_seconds > 0:
             idle_cpu0, _, _ = tree_totals(server.proc.pid)
             idle_t0 = time.monotonic()
@@ -409,19 +445,26 @@ def main():
             while time.monotonic() - idle_t0 < args.idle_seconds:
                 time.sleep(args.sample_interval)
                 cpu, rss, _ = tree_totals(server.proc.pid)
-                idle_samples.append({"t": round(time.monotonic() - idle_t0, 3),
-                                     "cpu_seconds": round(cpu - idle_cpu0, 3), "rss_kb": rss})
+                idle_samples.append(
+                    {"t": round(time.monotonic() - idle_t0, 3), "cpu_seconds": round(cpu - idle_cpu0, 3), "rss_kb": rss}
+                )
             idle_cpu1, rss_b, _ = tree_totals(server.proc.pid)
             idle_elapsed = time.monotonic() - idle_t0
-            checkpoints.append({"at_seconds": round(args.idle_settle + idle_elapsed, 1),
-                                "rss_kb": rss_b, "cpu_seconds": round(idle_cpu1, 3),
-                                "heap": heap_info(args.jcmd, server.proc.pid),
-                                "footprint": physical_footprint(server.proc.pid)})
+            checkpoints.append(
+                {
+                    "at_seconds": round(args.idle_settle + idle_elapsed, 1),
+                    "rss_kb": rss_b,
+                    "cpu_seconds": round(idle_cpu1, 3),
+                    "heap": heap_info(args.jcmd, server.proc.pid),
+                    "footprint": physical_footprint(server.proc.pid),
+                }
+            )
             result["idle"] = {
                 "elapsed_seconds": round(idle_elapsed, 3),
                 "cpu_seconds": round(idle_cpu1 - idle_cpu0, 3),
                 "cpu_percent_one_core": round((idle_cpu1 - idle_cpu0) * 100.0 / idle_elapsed, 4),
-                "rss_start_kb": rss_a, "rss_end_kb": rss_b,
+                "rss_start_kb": rss_a,
+                "rss_end_kb": rss_b,
                 "samples": idle_samples,
             }
         result["post_workload"] = checkpoints
