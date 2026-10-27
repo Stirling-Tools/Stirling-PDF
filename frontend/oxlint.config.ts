@@ -4,16 +4,16 @@ import { defineConfig, type OxlintGlobals } from "oxlint";
 // import scope. `no-restricted-imports` is repeated per scope on purpose:
 // oxlint REPLACES (does not merge) a rule across matching overrides, so each
 // scope must restate the full set of bans that apply to it.
-const APP_SOURCE = "editor/src/**/*.{js,mjs,jsx,ts,tsx}";
-const DESKTOP_SOURCE = "editor/src/desktop/**/*.{js,mjs,jsx,ts,tsx}";
-const CLOUD_SOURCE = "editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}";
+const APP_SOURCE = "src/**/*.{js,mjs,jsx,ts,tsx}";
+const DESKTOP_SOURCE = "src/editor/desktop/**/*.{js,mjs,jsx,ts,tsx}";
+const CLOUD_SOURCE = "src/editor/cloud/**/*.{js,mjs,jsx,ts,tsx}";
 
 // Shared import-ban building blocks -----------------------------------------
 
 const aliasOverRelative = {
   regex: "^\\.",
   message:
-    "Use a workspace alias (@app/* for editor, @portal/* for portal) instead of relative imports.",
+    "Use a workspace alias (@editor/* for editor, @processor/* for portal) instead of relative imports.",
 };
 const aliasOverSrc = {
   regex: "^src/",
@@ -22,20 +22,20 @@ const aliasOverSrc = {
 const noTauriOutsideDesktop = {
   regex: "^@tauri-apps/",
   message:
-    "Tauri APIs are desktop-only. Review frontend/editor/DeveloperGuide.md for structure advice.",
+    "Tauri APIs are desktop-only. Review frontend/DeveloperGuide.md for structure advice.",
 };
 const cloudNoTauri = {
   regex: "^@tauri-apps/",
   message:
-    "cloud/ must stay platform-portable. Tauri APIs are desktop-only — reach native features via an @app/* seam (e.g. @app/platform/openExternal).",
+    "cloud/ must stay platform-portable. Tauri APIs are desktop-only — reach native features via an @editor/* seam (e.g. @editor/platform/openExternal).",
 };
 const cloudNoSupabase = {
   regex: "^@supabase/",
   message:
-    "cloud/ must stay platform-portable. Reach Supabase via an @app/* seam (e.g. @app/auth/supabase, @app/auth/session) provided per-platform in saas/ and desktop/.",
+    "cloud/ must stay platform-portable. Reach Supabase via an @editor/* seam (e.g. @editor/auth/supabase, @editor/auth/session) provided per-platform in saas/ and desktop/.",
 };
 
-// Shared-DS Button/SegmentedControl/Chip family must come from @app/ui, not
+// Shared-DS Button/SegmentedControl/Chip family must come from @editor/ui, not
 // Mantine. (The raw-<button> ban from the ESLint config used
 // no-restricted-syntax, which oxlint does not implement, so it is dropped.)
 const mantineDsPaths = [
@@ -49,19 +49,19 @@ const mantineDsPaths = [
       "FileButton",
     ],
     message:
-      'Use the shared Button (@app/ui/Button) instead of the Mantine button family. variant=primary|secondary|tertiary, accent=default|neutral|brand|ai|premium|danger|success|warning; an icon-only button is `<Button leftSection={…} aria-label="…" />`. If no variant fits, extend the shared Button rather than importing Mantine.',
+      'Use the shared Button (@editor/ui/Button) instead of the Mantine button family. variant=primary|secondary|tertiary, accent=default|neutral|brand|ai|premium|danger|success|warning; an icon-only button is `<Button leftSection={…} aria-label="…" />`. If no variant fits, extend the shared Button rather than importing Mantine.',
   },
   {
     name: "@mantine/core",
     importNames: ["SegmentedControl"],
     message:
-      "Use the shared SegmentedControl (@app/ui/SegmentedControl) instead of Mantine's.",
+      "Use the shared SegmentedControl (@editor/ui/SegmentedControl) instead of Mantine's.",
   },
   {
     name: "@mantine/core",
     importNames: ["Chip", "Pill"],
     message:
-      "Use the shared Chip (@app/ui/Chip) instead of Mantine's Chip/Pill.",
+      "Use the shared Chip (@editor/ui/Chip) instead of Mantine's Chip/Pill.",
   },
 ];
 
@@ -90,11 +90,11 @@ export default defineConfig({
     "playwright-report",
     "storybook-static",
     "test-results",
-    "editor/dist",
-    "editor/public",
-    "editor/src-tauri",
-    "editor/playwright-report",
-    "editor/test-results",
+    "dist",
+    "public",
+    "src-tauri",
+    "playwright-report",
+    "test-results",
   ],
   rules: {
     "constructor-super": "error",
@@ -242,8 +242,6 @@ export default defineConfig({
       // Node globals for build scripts, config files, and Storybook config.
       files: [
         "scripts/**/*.{js,ts,mjs,mts}",
-        "editor/scripts/**/*.{js,ts,mjs,mts}",
-        "editor/*.config.{js,ts,mjs}",
         "*.config.{js,ts,mjs}",
         ".storybook/*.{js,ts,mjs,mts,tsx}",
       ],
@@ -285,7 +283,7 @@ export default defineConfig({
       // The cloud/ layer is the SHARED hosted/SaaS experience consumed by BOTH
       // the saas and desktop leaves, so it must stay platform-portable: no
       // Supabase or Tauri directly, and no raw fetch/localStorage/sessionStorage
-      // - those arrive via @app/* seams that each leaf provides for its own
+      // - those arrive via @editor/* seams that each leaf provides for its own
       // platform. window.location and import.meta.env are banned below via the
       // no-restricted-properties.
       files: [CLOUD_SOURCE],
@@ -307,17 +305,17 @@ export default defineConfig({
           {
             name: "fetch",
             message:
-              "cloud/ must not call raw fetch — use @app/services/apiClient so each platform supplies its own transport.",
+              "cloud/ must not call raw fetch — use @editor/services/apiClient so each platform supplies its own transport.",
           },
           {
             name: "localStorage",
             message:
-              "cloud/ must not touch localStorage — use an @app/* storage seam so desktop/web can differ.",
+              "cloud/ must not touch localStorage — use an @editor/* storage seam so desktop/web can differ.",
           },
           {
             name: "sessionStorage",
             message:
-              "cloud/ must not touch sessionStorage — use an @app/* storage seam so desktop/web can differ.",
+              "cloud/ must not touch sessionStorage — use an @editor/* storage seam so desktop/web can differ.",
           },
         ],
         "no-restricted-properties": [
@@ -326,7 +324,7 @@ export default defineConfig({
             object: "window",
             property: "location",
             message:
-              "cloud/ must not touch window.location - use an @app/* seam (e.g. @app/platform/openExternal) so desktop/web can differ.",
+              "cloud/ must not touch window.location - use an @editor/* seam (e.g. @editor/platform/openExternal) so desktop/web can differ.",
           },
           {
             // Property-only: import.meta.env's object is a MetaProperty, which
@@ -335,7 +333,7 @@ export default defineConfig({
             // never env). cloud/ has no other `.env` access today.
             property: "env",
             message:
-              "cloud/ must not read import.meta.env - config comes from @app/constants/app / @app/platform seams, not env.",
+              "cloud/ must not read import.meta.env - config comes from @editor/constants/app / @editor/platform seams, not env.",
           },
         ],
       },
@@ -349,12 +347,12 @@ export default defineConfig({
       // rules. Comes after the scoped bans above so it wins for these files;
       // desktop/cloud keep theirs.
       files: [
-        "editor/src/core/ui/**/*.{js,mjs,jsx,ts,tsx}",
+        "src/editor/core/ui/**/*.{js,mjs,jsx,ts,tsx}",
         "**/*.stories.{js,mjs,jsx,ts,tsx}",
         "**/*.test.{js,mjs,jsx,ts,tsx}",
-        "editor/src/core/components/shared/FileSelectorPicker.tsx",
-        "editor/src/core/components/filesPage/FileManagerView.tsx",
-        "editor/src/core/pages/HomePage.tsx",
+        "src/editor/core/components/shared/FileSelectorPicker.tsx",
+        "src/editor/core/components/filesPage/FileManagerView.tsx",
+        "src/editor/core/pages/HomePage.tsx",
       ],
       excludeFiles: [DESKTOP_SOURCE, CLOUD_SOURCE],
       rules: {
@@ -371,8 +369,8 @@ export default defineConfig({
       // are exempt from the shared-DS Mantine import ban; being desktop they also
       // keep the Tauri allowance.
       files: [
-        "editor/src/desktop/**/*.test.{js,mjs,jsx,ts,tsx}",
-        "editor/src/desktop/**/*.stories.{js,mjs,jsx,ts,tsx}",
+        "src/editor/desktop/**/*.test.{js,mjs,jsx,ts,tsx}",
+        "src/editor/desktop/**/*.stories.{js,mjs,jsx,ts,tsx}",
       ],
       rules: {
         "no-restricted-imports": [
@@ -387,8 +385,8 @@ export default defineConfig({
       // A provider stack nests one context per level in dependency order, so its
       // depth counts providers rather than measuring how hard the tree is to read.
       files: [
-        "editor/src/core/components/AppProviders.tsx",
-        "editor/src/portal/PortalProviders.tsx",
+        "src/editor/core/components/AppProviders.tsx",
+        "src/processor/proprietary/PortalProviders.tsx",
         ".storybook/preview.tsx",
       ],
       rules: {
@@ -397,9 +395,9 @@ export default defineConfig({
     },
     {
       // Circular-import detection across the editor app source (the import
-      // plugin resolves @app/* and the other tsconfig path aliases). Replaces
+      // plugin resolves @editor/* and the other tsconfig path aliases). Replaces
       // the previous dpdm pass.
-      files: ["editor/src/**/*.{ts,tsx}"],
+      files: ["src/**/*.{ts,tsx}"],
       rules: {
         "import/no-cycle": "error",
       },
