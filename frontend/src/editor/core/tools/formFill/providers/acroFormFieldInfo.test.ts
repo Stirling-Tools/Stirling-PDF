@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { readAcroFormFieldInfo } from "@app/tools/formFill/providers/acroFormFieldInfo";
+import { readAcroFormFieldInfo } from "@editor/tools/formFill/providers/acroFormFieldInfo";
 
 const fixtureBytes = (name: string): ArrayBuffer => {
   const bytes = readFileSync(

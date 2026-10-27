@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createReadAloudDocSession } from "@app/components/viewer/readAloudDocSession";
+import { createReadAloudDocSession } from "@editor/components/viewer/readAloudDocSession";
 
 function deferred<T>() {
   let resolve!: (value: T) => void;

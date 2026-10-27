@@ -1,7 +1,7 @@
 import type { PdfAttachmentObject } from "@embedpdf/models";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { PdfFileReader } from "@app/utils/pdfObjectReader";
-import type { PdfValue } from "@app/utils/pdfObjectReader";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
+import { PdfFileReader } from "@editor/utils/pdfObjectReader";
+import type { PdfValue } from "@editor/utils/pdfObjectReader";
 
 // Reads a portfolio's members from the file's own bytes. The viewer's attachment
 // capability only covers the open document, which stops being the portfolio.

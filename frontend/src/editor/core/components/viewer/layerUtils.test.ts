@@ -17,8 +17,8 @@ import { fileURLToPath } from "node:url";
 import {
   applyOCGVisibilityToPdf,
   collectLeafIds,
-} from "@app/components/viewer/layerUtils";
-import { extractLayers } from "@app/components/viewer/layerParser";
+} from "@editor/components/viewer/layerUtils";
+import { extractLayers } from "@editor/components/viewer/layerParser";
 import { PDFDocument, PDFName, PDFString } from "@cantoo/pdf-lib";
 
 function toBlob(bytes: Uint8Array): Blob {

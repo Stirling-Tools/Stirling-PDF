@@ -1,10 +1,10 @@
 /// <reference lib="webworker" />
 
-import { extractLayers } from "@app/components/viewer/layerParser";
+import { extractLayers } from "@editor/components/viewer/layerParser";
 import type {
   LayerParseRequest,
   LayerParseResponse,
-} from "@app/components/viewer/layerParser";
+} from "@editor/components/viewer/layerParser";
 
 declare const self: DedicatedWorkerGlobalScope;
 

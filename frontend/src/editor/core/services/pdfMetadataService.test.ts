@@ -5,7 +5,7 @@ import { describe, it, expect, vi } from "vitest";
 // The validity probe reads the blob's prefix, which setupTests stubs with fixed
 // bytes no parser can read; gate on the declared type instead so the extraction
 // path under test still runs.
-vi.mock("@app/services/fileAnalyzer", () => ({
+vi.mock("@editor/services/fileAnalyzer", () => ({
   FileAnalyzer: {
     isValidPDF: async (file: File) => file.type === "application/pdf",
   },
@@ -14,7 +14,7 @@ vi.mock("@app/services/fileAnalyzer", () => ({
 // PDFium loads through a precompiled module from wasmPrecompiler, which starts
 // its own fetch at import time; compile the real wasm here so the service
 // exercises PDFium instead of a fetch stub that lands too late.
-vi.mock("@app/services/wasmPrecompiler", async () => {
+vi.mock("@editor/services/wasmPrecompiler", async () => {
   const wasmPath = createRequire(import.meta.url).resolve(
     "@embedpdf/pdfium/pdfium.wasm",
   );
@@ -26,8 +26,8 @@ vi.mock("@app/services/wasmPrecompiler", async () => {
   };
 });
 
-import { extractPDFMetadata } from "@app/services/pdfMetadataService";
-import { TrappedStatus } from "@app/types/metadata";
+import { extractPDFMetadata } from "@editor/services/pdfMetadataService";
+import { TrappedStatus } from "@editor/types/metadata";
 import { PDFDocument, PDFName, PDFString } from "@cantoo/pdf-lib";
 
 describe("pdfMetadataService", () => {

@@ -10,7 +10,7 @@ import {
   padPkcs7,
   rc4,
   toHex,
-} from "@app/utils/pdfObjectReader";
+} from "@editor/utils/pdfObjectReader";
 
 const subtle = webcrypto.subtle;
 

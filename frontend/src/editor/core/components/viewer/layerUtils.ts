@@ -1,4 +1,4 @@
-import LayerParseWorker from "@app/workers/layerParseWorker?worker";
+import LayerParseWorker from "@editor/workers/layerParseWorker?worker";
 import {
   PdfFileReader,
   PdfStructureError,
@@ -9,14 +9,14 @@ import {
   type ObjectUpdate,
   type PdfRef,
   type PdfValue,
-} from "@app/utils/pdfObjectReader";
+} from "@editor/utils/pdfObjectReader";
 import type {
   LayerInfo,
   LayerParseRequest,
   LayerParseResponse,
-} from "@app/components/viewer/layerParser";
+} from "@editor/components/viewer/layerParser";
 
-export type { LayerInfo } from "@app/components/viewer/layerParser";
+export type { LayerInfo } from "@editor/components/viewer/layerParser";
 
 /**
  * Reads OCG layer info for the layers panel. The parse runs in a worker so a
