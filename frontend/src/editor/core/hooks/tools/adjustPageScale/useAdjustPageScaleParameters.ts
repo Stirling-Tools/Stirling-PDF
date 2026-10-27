@@ -1,0 +1,52 @@
+import { BaseParameters } from "@editor/types/parameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@editor/hooks/tools/shared/useBaseParameters";
+
+export enum PageSize {
+  KEEP = "KEEP",
+  A0 = "A0",
+  A1 = "A1",
+  A2 = "A2",
+  A3 = "A3",
+  A4 = "A4",
+  A5 = "A5",
+  A6 = "A6",
+  LETTER = "LETTER",
+  LEGAL = "LEGAL",
+}
+
+export type Orientation = "PORTRAIT" | "LANDSCAPE";
+
+export interface AdjustPageScaleParameters extends BaseParameters {
+  scaleFactor: number;
+  pageSize: PageSize;
+  orientation: Orientation;
+}
+
+export const defaultParameters: AdjustPageScaleParameters = {
+  scaleFactor: 1.0,
+  pageSize: PageSize.KEEP,
+  orientation: "PORTRAIT",
+};
+
+export type AdjustPageScaleParametersHook =
+  BaseParametersHook<AdjustPageScaleParameters>;
+
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateAdjustPageScaleParameters(
+  params: AdjustPageScaleParameters,
+): boolean {
+  return params.scaleFactor > 0;
+}
+
+export const useAdjustPageScaleParameters =
+  (): AdjustPageScaleParametersHook => {
+    return useBaseParameters({
+      defaultParameters,
+      endpointName: "scale-pages",
+      validateFn: validateAdjustPageScaleParameters,
+    });
+  };
