@@ -2,14 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { getVersion } from "@tauri-apps/api/app";
-import { SoftwareUpdatesCard } from "@app/components/shared/config/configSections/preferences/SoftwareUpdatesCard";
-import { useSaaSMode } from "@app/hooks/useSaaSMode";
-import { updateService } from "@app/services/updateService";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { SoftwareUpdatesCard } from "@editor/components/shared/config/configSections/preferences/SoftwareUpdatesCard";
+import { useSaaSMode } from "@editor/hooks/useSaaSMode";
+import { updateService } from "@editor/services/updateService";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 vi.mock("@tauri-apps/api/app", () => ({ getVersion: vi.fn() }));
-vi.mock("@app/hooks/useSaaSMode", () => ({ useSaaSMode: vi.fn() }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/hooks/useSaaSMode", () => ({ useSaaSMode: vi.fn() }));
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({
     config: {
       appVersion: "2.9.0",
@@ -19,10 +19,10 @@ vi.mock("@app/contexts/AppConfigContext", () => ({
     },
   }),
 }));
-vi.mock("@app/components/shared/UpdateModal", () => ({
+vi.mock("@editor/components/shared/UpdateModal", () => ({
   default: () => null,
 }));
-vi.mock("@app/ui/Icon", () => ({ Icon: () => null }));
+vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));

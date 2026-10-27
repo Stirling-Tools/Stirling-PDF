@@ -1,29 +1,32 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { Slider, Popover, Select } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { supportedLanguages } from "@app/i18n";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { supportedLanguages } from "@editor/i18n";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
-} from "@app/hooks/useWorkbenchBarButtons";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { SearchInterface } from "@app/components/viewer/SearchInterface";
-import ViewerAnnotationControls from "@app/components/viewer/ViewerAnnotationControls";
-import { useSidebarContext } from "@app/contexts/SidebarContext";
-import { useWorkbenchBarTooltipSide } from "@app/hooks/useWorkbenchBarTooltipSide";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+} from "@editor/hooks/useWorkbenchBarButtons";
+import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { SearchInterface } from "@editor/components/viewer/SearchInterface";
+import ViewerAnnotationControls from "@editor/components/viewer/ViewerAnnotationControls";
+import { useSidebarContext } from "@editor/contexts/SidebarContext";
+import { useWorkbenchBarTooltipSide } from "@editor/hooks/useWorkbenchBarTooltipSide";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import {
   useNavigationState,
   useNavigationGuard,
-} from "@app/contexts/NavigationContext";
-import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
-import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
-import { RulerScaleSettingsButton } from "@app/components/viewer/RulerScaleSettingsButton";
-import type { MeasureScale } from "@app/utils/measurementTypes";
-import type { StirlingFile } from "@app/types/fileContext";
+} from "@editor/contexts/NavigationContext";
+import {
+  useRedaction,
+  useRedactionMode,
+} from "@editor/contexts/RedactionContext";
+import { useViewerReadAloud } from "@editor/components/viewer/useViewerReadAloud";
+import { RulerScaleSettingsButton } from "@editor/components/viewer/RulerScaleSettingsButton";
+import type { MeasureScale } from "@editor/utils/measurementTypes";
+import type { StirlingFile } from "@editor/types/fileContext";
 
 export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,

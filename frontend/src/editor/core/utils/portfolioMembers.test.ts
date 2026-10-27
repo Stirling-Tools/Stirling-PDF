@@ -5,8 +5,8 @@ import { PDFDocument, PDFName } from "@cantoo/pdf-lib";
 import {
   readPortfolioMemberBytes,
   readPortfolioMembers,
-} from "@app/utils/portfolioMembers";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
+} from "@editor/utils/portfolioMembers";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
 
 const buildPdf = async (options: {
   collection: boolean;

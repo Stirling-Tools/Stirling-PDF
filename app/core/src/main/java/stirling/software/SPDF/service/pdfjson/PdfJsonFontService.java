@@ -193,6 +193,20 @@ public class PdfJsonFontService {
         return null;
     }
 
+    public boolean isCffFontProgram(byte[] fontBytes) {
+        if (fontBytes == null || fontBytes.length < 4) {
+            return false;
+        }
+        int majorVersion = fontBytes[0] & 0xFF;
+        int headerSize = fontBytes[2] & 0xFF;
+        int offsetSize = fontBytes[3] & 0xFF;
+        return majorVersion == 1
+                && headerSize >= 4
+                && headerSize <= fontBytes.length
+                && offsetSize >= 1
+                && offsetSize <= 4;
+    }
+
     private byte[] convertCffUsingPython(byte[] fontBytes, String toUnicode) {
         if (!pythonCffConverterAvailable) {
             log.debug("[FONT-DEBUG] Python CFF converter not available");
@@ -272,6 +286,10 @@ public class PdfJsonFontService {
     public byte[] convertCffUsingFontForge(byte[] fontBytes) {
         if (!fontForgeCffConverterAvailable) {
             log.debug("FontForge CFF converter not available");
+            return null;
+        }
+        if (!isCffFontProgram(fontBytes)) {
+            log.warn("Font program labelled as CFF has no CFF header; skipping FontForge");
             return null;
         }
 

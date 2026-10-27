@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AuditChartsSection from "@app/components/shared/config/configSections/audit/AuditChartsSection";
+import AuditChartsSection from "@editor/components/shared/config/configSections/audit/AuditChartsSection";
 
 /**
  * Dashboard of audit-log charts (events over time, by type, by user).

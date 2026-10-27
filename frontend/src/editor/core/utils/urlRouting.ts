@@ -2,16 +2,16 @@
  * URL routing utilities for tool navigation with registry support
  */
 
-import { ToolRoute } from "@app/types/navigation";
-import { ToolId, isValidToolId } from "@app/types/toolId";
-import { getDefaultWorkbench } from "@app/types/workbench";
+import { ToolRoute } from "@editor/types/navigation";
+import { ToolId, isValidToolId } from "@editor/types/toolId";
+import { getDefaultWorkbench } from "@editor/types/workbench";
 import {
   ToolRegistry,
   getToolWorkbench,
   getToolUrlPath,
-} from "@app/data/toolsTaxonomy";
-import { URL_TO_TOOL_MAP } from "@app/utils/urlMapping";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+} from "@editor/data/toolsTaxonomy";
+import { URL_TO_TOOL_MAP } from "@editor/utils/urlMapping";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 
 /**
  * An address as the router states it: app-relative, BASE_PATH already off.

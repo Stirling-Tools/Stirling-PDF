@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { expect, it } from "vitest";
-import { useSignaturePreviewHistory } from "@app/hooks/signing/useSignaturePreviewHistory";
-import type { SignaturePreview } from "@app/components/viewer/viewerTypes";
+import { useSignaturePreviewHistory } from "@editor/hooks/signing/useSignaturePreviewHistory";
+import type { SignaturePreview } from "@editor/components/viewer/viewerTypes";
 
 const signature: SignaturePreview = {
   id: "draft",

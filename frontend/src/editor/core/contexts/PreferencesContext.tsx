@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 import {
   preferencesService,
   UserPreferences,
-} from "@app/services/preferencesService";
+} from "@editor/services/preferencesService";
 
 interface PreferencesContextValue {
   preferences: UserPreferences;

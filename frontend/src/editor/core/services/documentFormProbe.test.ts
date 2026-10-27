@@ -3,19 +3,19 @@ import type { Mock } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-vi.mock("@app/services/pdfiumScanQueue", () => ({
+vi.mock("@editor/services/pdfiumScanQueue", () => ({
   runPdfiumScan: (task: () => Promise<unknown>) => task(),
 }));
 
-vi.mock("@app/services/pdfiumService", () => ({
+vi.mock("@editor/services/pdfiumService", () => ({
   readRawFormType: vi.fn(async () => 0),
 }));
 
-import { documentHasFormFields } from "@app/services/documentFormProbe";
-import { readRawFormType } from "@app/services/pdfiumService";
-import { hasAcroForm } from "@app/utils/asciiBytes";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
-import { PdfFileReader } from "@app/utils/pdfObjectReader";
+import { documentHasFormFields } from "@editor/services/documentFormProbe";
+import { readRawFormType } from "@editor/services/pdfiumService";
+import { hasAcroForm } from "@editor/utils/asciiBytes";
+import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
+import { PdfFileReader } from "@editor/utils/pdfObjectReader";
 
 // Copy into a fresh ArrayBuffer so fixture bytes never alias the module cache.
 const fixtureBytes = (name: string): ArrayBuffer =>

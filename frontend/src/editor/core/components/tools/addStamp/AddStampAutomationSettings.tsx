@@ -7,9 +7,9 @@
  */
 
 import { Stack } from "@mantine/core";
-import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
-import StampSetupSettings from "@app/components/tools/addStamp/StampSetupSettings";
-import StampPositionFormattingSettings from "@app/components/tools/addStamp/StampPositionFormattingSettings";
+import { AddStampParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
+import StampSetupSettings from "@editor/components/tools/addStamp/StampSetupSettings";
+import StampPositionFormattingSettings from "@editor/components/tools/addStamp/StampPositionFormattingSettings";
 
 interface AddStampAutomationSettingsProps {
   parameters: AddStampParameters;

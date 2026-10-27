@@ -11,22 +11,24 @@ const { openLinkModal, flags } = vi.hoisted(() => ({
   openLinkModal: vi.fn(),
   flags: { isAdmin: true, isLinked: false, orgOwner: true },
 }));
-vi.mock("@app/auth", () => ({
+vi.mock("@editor/auth", () => ({
   useAuth: () => ({ ...flags, user: { orgOwner: flags.orgOwner } }),
 }));
-vi.mock("@app/portal/contexts/LinkContext", () => ({ useLink: () => flags }));
+vi.mock("@editor/portal/contexts/LinkContext", () => ({
+  useLink: () => flags,
+}));
 
-vi.mock("@app/portal/contexts/UIContext", () => ({
+vi.mock("@editor/portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal }),
 }));
 
 import {
   clearAccountLinkBlock,
   reportFreeTierExhausted,
-} from "@app/services/accountLinkBlock";
-import { HttpError } from "@app/portal/api/http";
-import { reportAccountLinkBlock } from "@app/portal/services/accountLinkBlock";
-import { useFreeTierExhaustedPrompt } from "@app/portal/hooks/useFreeTierExhaustedPrompt";
+} from "@editor/services/accountLinkBlock";
+import { HttpError } from "@editor/portal/api/http";
+import { reportAccountLinkBlock } from "@editor/portal/services/accountLinkBlock";
+import { useFreeTierExhaustedPrompt } from "@editor/portal/hooks/useFreeTierExhaustedPrompt";
 
 function Probe({ enabled = true }: { enabled?: boolean }) {
   useFreeTierExhaustedPrompt(enabled);

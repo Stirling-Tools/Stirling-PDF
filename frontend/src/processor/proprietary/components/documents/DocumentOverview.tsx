@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { StatTile } from "@app/ui";
+import { StatTile } from "@editor/ui";
 import {
   DOCUMENT_STATUS_LABEL,
   type ReviewDocument,
-} from "@portal/api/documents";
+} from "@processor/api/documents";
 
 /** Key fields for the selected document - product, action, user, status. */
 export function DocumentOverview({ doc }: { doc: ReviewDocument }) {

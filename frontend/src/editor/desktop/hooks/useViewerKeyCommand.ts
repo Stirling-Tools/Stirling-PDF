@@ -1,4 +1,4 @@
-import { useViewer } from "@app/contexts/ViewerContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import { useCallback } from "react";
 
 export function useViewerKeyCommand(): (event: KeyboardEvent) => boolean {

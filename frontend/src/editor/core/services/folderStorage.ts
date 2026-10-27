@@ -11,11 +11,11 @@
  * are all the server's job now.
  */
 
-import { FolderId, FolderRecord, folderKind } from "@app/types/folder";
+import { FolderId, FolderRecord, folderKind } from "@editor/types/folder";
 import {
   indexedDBManager,
   DATABASE_CONFIGS,
-} from "@app/services/indexedDBManager";
+} from "@editor/services/indexedDBManager";
 
 /**
  * This cache is wiped and rewritten from the server's response on every sync, so a

@@ -1,5 +1,5 @@
 import type { UseQueryResult } from "@tanstack/react-query";
-import type { AsyncState } from "@portal/hooks/useAsync";
+import type { AsyncState } from "@processor/hooks/useAsync";
 
 /**
  * Adapt a query result to the {@link AsyncState} shape the views already use

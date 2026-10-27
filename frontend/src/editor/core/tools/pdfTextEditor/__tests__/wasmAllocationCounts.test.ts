@@ -3,8 +3,8 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
   measureObjRightEdgePt,
   measureObjSpanPt,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { setCharcodesOn } from "@app/tools/pdfTextEditor/charcode/charcodeRegistry";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { setCharcodesOn } from "@editor/tools/pdfTextEditor/charcode/charcodeRegistry";
 
 interface Bounds {
   left: number;

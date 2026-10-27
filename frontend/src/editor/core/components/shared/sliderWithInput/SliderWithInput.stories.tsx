@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SliderWithInput from "@app/components/shared/sliderWithInput/SliderWithInput";
+import SliderWithInput from "@editor/components/shared/sliderWithInput/SliderWithInput";
 
 /** Reproduces the compression "Quality" slider used in tool settings panels. */
 const meta: Meta<typeof SliderWithInput> = {

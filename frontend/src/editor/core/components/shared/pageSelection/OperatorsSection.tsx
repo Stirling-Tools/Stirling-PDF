@@ -1,8 +1,8 @@
 import { Text, Group, Divider } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import classes from "@app/components/shared/pageSelection/BulkSelectionPanel.module.css";
-import { LogicalOperator } from "@app/utils/bulkselection/selectionBuilders";
+import classes from "@editor/components/shared/pageSelection/BulkSelectionPanel.module.css";
+import { LogicalOperator } from "@editor/utils/bulkselection/selectionBuilders";
 
 interface OperatorsSectionProps {
   csvInput: string;

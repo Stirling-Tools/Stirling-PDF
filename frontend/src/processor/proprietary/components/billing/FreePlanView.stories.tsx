@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { http, HttpResponse } from "msw";
-import { BillingScreen } from "@app/billing";
-import { FreePlanView } from "@portal/components/billing/FreePlanView";
-import { freeWallet } from "@app/billing/walletFixtures";
-import type { Wallet } from "@app/billing/types";
-import "@portal/components/billing/billing.css";
+import { BillingScreen } from "@editor/billing";
+import { FreePlanView } from "@processor/components/billing/FreePlanView";
+import { freeWallet } from "@editor/billing/walletFixtures";
+import type { Wallet } from "@editor/billing/types";
+import "@processor/components/billing/billing.css";
 
 const meta: Meta<typeof FreePlanView> = {
   title: "Portal/Billing/FreePlanView",

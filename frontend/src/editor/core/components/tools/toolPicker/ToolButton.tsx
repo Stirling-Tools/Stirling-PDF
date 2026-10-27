@@ -1,28 +1,28 @@
 import React, { memo } from "react";
 import { Badge } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { ToolIcon } from "@app/components/shared/ToolIcon";
-import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
-import { useToolNavigation } from "@app/hooks/useToolNavigation";
-import { handleUnlessSpecialClick } from "@app/utils/clickHandlers";
-import FitText from "@app/components/shared/FitText";
-import { useHotkeys } from "@app/contexts/HotkeyContext";
-import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
-import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { ToolIcon } from "@editor/components/shared/ToolIcon";
+import { ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
+import { useToolNavigation } from "@editor/hooks/useToolNavigation";
+import { handleUnlessSpecialClick } from "@editor/utils/clickHandlers";
+import FitText from "@editor/components/shared/FitText";
+import { useHotkeys } from "@editor/contexts/HotkeyContext";
+import HotkeyDisplay from "@editor/components/hotkeys/HotkeyDisplay";
+import FavoriteStar from "@editor/components/tools/toolPicker/FavoriteStar";
 import {
   useToolWorkflowActions,
   useToolWorkflowData,
-} from "@app/contexts/ToolWorkflowContext";
-import type { ToolId } from "@app/types/toolId";
+} from "@editor/contexts/ToolWorkflowContext";
+import type { ToolId } from "@editor/types/toolId";
 import {
   getToolDisabledReason,
   resolveDisabledMessage,
-} from "@app/components/tools/fullscreen/shared";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { CloudBadge } from "@app/components/shared/CloudBadge";
-import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
+} from "@editor/components/tools/fullscreen/shared";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { CloudBadge } from "@editor/components/shared/CloudBadge";
+import { useWillUseCloud } from "@editor/hooks/useWillUseCloud";
 
 interface ToolButtonProps {
   id: ToolId;

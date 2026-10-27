@@ -1,5 +1,5 @@
-import { getPdfAccess } from "@app/services/pdfAccessService";
-import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
+import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
 
 export class FileAnalyzer {
   /** Admission hint only: never grants access. Authentication waits until the file is opened. */

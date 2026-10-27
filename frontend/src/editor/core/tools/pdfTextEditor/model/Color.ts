@@ -1,4 +1,4 @@
-import type { RGBA } from "@app/tools/pdfTextEditor/types";
+import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 
 export const BLACK: RGBA = { r: 0, g: 0, b: 0, a: 255 };
 export const WHITE: RGBA = { r: 255, g: 255, b: 255, a: 255 };

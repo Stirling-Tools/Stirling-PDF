@@ -1,6 +1,6 @@
 import { Stack, Text, Checkbox, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { FlattenParameters } from "@app/hooks/tools/flatten/useFlattenParameters";
+import { FlattenParameters } from "@editor/hooks/tools/flatten/useFlattenParameters";
 
 interface FlattenSettingsProps {
   parameters: FlattenParameters;

@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 
 test.describe("9. Add Password Tool", () => {
   test.beforeEach(async ({ page }) => {

@@ -7,7 +7,7 @@ const state = vi.hoisted(() => ({
   fetch: vi.fn(),
 }));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: state.fetch }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentConfig: async () => {
       if (state.loadError) throw new Error("Policy unavailable");
@@ -18,20 +18,20 @@ vi.mock("@app/services/connectionModeService", () => ({
     },
   },
 }));
-vi.mock("@app/services/tauriBackendService", () => ({
+vi.mock("@editor/services/tauriBackendService", () => ({
   tauriBackendService: { getBackendUrl: () => state.localUrl },
 }));
-vi.mock("@app/constants/connection", () => ({
+vi.mock("@editor/constants/connection", () => ({
   STIRLING_SAAS_BACKEND_API_URL: "https://cloud.test",
 }));
-vi.mock("@app/i18n", () => ({
+vi.mock("@editor/i18n", () => ({
   default: { t: (_key: string, fallback: string) => fallback },
 }));
-vi.mock("@app/services/tauriLocalProxy", () => ({
+vi.mock("@editor/services/tauriLocalProxy", () => ({
   shouldUseFastLocalTransport: () => false,
 }));
 
-import { create } from "@app/services/tauriHttpClient";
+import { create } from "@editor/services/tauriHttpClient";
 
 beforeEach(() => {
   state.restricted = true;

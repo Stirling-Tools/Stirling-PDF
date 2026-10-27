@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner } from "@app/ui";
-import type { Wallet } from "@portal/api/billing";
-import { StripeCheckoutModal } from "@portal/components/billing/StripeCheckoutModal";
-import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
+import { Banner } from "@editor/ui";
+import type { Wallet } from "@processor/api/billing";
+import { StripeCheckoutModal } from "@processor/components/billing/StripeCheckoutModal";
+import { BundleCheckoutModal } from "@processor/components/billing/BundleCheckoutModal";
 
 interface Props {
   wallet: Wallet;

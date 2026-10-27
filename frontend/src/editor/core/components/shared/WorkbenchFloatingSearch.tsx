@@ -1,6 +1,6 @@
-import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
-import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
-import "@app/components/shared/WorkbenchFloatingSearch.css";
+import SuperSearch from "@editor/components/shared/superSearch/SuperSearch";
+import { useEditorSearchScopes } from "@editor/hooks/useSuperSearch";
+import "@editor/components/shared/WorkbenchFloatingSearch.css";
 
 // The editor's global search, floated while no file is open (mirrors the
 // processor's PortalSearchBar). Renders only when the WorkbenchBar doesn't, so

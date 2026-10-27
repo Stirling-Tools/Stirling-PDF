@@ -1,9 +1,9 @@
 import { Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip } from "@app/ui/Tooltip";
-import UserSelector from "@app/components/shared/UserSelector";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/ui/Tooltip";
+import UserSelector from "@editor/components/shared/UserSelector";
 
 /** Updates the request's participants directly; sending the request is the commit point. */
 export function SigningParticipantPicker({

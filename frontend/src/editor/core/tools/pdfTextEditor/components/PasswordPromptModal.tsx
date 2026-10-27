@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
+import EncryptedPdfUnlockModal from "@editor/components/shared/EncryptedPdfUnlockModal";
 
 interface PasswordPromptModalProps {
   /** Non-null opens the modal; null keeps it closed. */

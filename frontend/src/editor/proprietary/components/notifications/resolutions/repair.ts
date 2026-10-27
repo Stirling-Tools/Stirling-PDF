@@ -2,12 +2,12 @@ import {
   repairDocuments,
   retryInputIds,
   retryWithFiles,
-} from "@app/services/notificationRetry";
-import type { FileId } from "@app/types/file";
+} from "@editor/services/notificationRetry";
+import type { FileId } from "@editor/types/file";
 import {
   asFile,
   type Resolution,
-} from "@app/components/notifications/resolutions/resolution";
+} from "@editor/components/notifications/resolutions/resolution";
 
 export const repair: Resolution = {
   actionId: "REPAIR",

@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { render, renderHook, screen } from "@testing-library/react";
-import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
-import { QuickNavRailNotifications } from "@app/components/shared/quickNav/QuickNavRailNotifications";
+import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
+import { QuickNavRailNotifications } from "@editor/components/shared/quickNav/QuickNavRailNotifications";
 
 const state = vi.hoisted(() => ({
   user: { id: "guest" } as { id: string } | null,
@@ -11,23 +11,23 @@ const state = vi.hoisted(() => ({
   subscribe: vi.fn(),
 }));
 
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => state }));
-vi.mock("@app/contexts/QuickNavHostContext", () => ({
+vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => state }));
+vi.mock("@editor/contexts/QuickNavHostContext", () => ({
   useQuickNavHost: () => state,
 }));
-vi.mock("@app/hooks/useNotifications", () => ({
+vi.mock("@editor/hooks/useNotifications", () => ({
   useNotifications: () => {
     state.subscribe();
     return { unreadCount: 0 };
   },
 }));
-vi.mock("@app/components/notifications/NotificationPanel", () => ({
+vi.mock("@editor/components/notifications/NotificationPanel", () => ({
   NOTIFICATIONS_PANEL_ID: "notifications",
 }));
-vi.mock("@app/components/shared/quickNav/QuickNavRailBase", () => ({
+vi.mock("@editor/components/shared/quickNav/QuickNavRailBase", () => ({
   RailButton: () => <button>Notifications</button>,
 }));
-vi.mock("@app/ui/Icon", () => ({ Icon: () => null }));
+vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
 
 beforeEach(() => {
   state.user = { id: "guest" };

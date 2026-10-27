@@ -1,15 +1,15 @@
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import OnboardingSlideShell, {
   ShellHero,
   type ShellButton,
-} from "@app/components/onboarding/OnboardingSlideShell";
-import { useSaasOnboardingState } from "@app/components/onboarding/useSaasOnboardingState";
+} from "@editor/components/onboarding/OnboardingSlideShell";
+import { useSaasOnboardingState } from "@editor/components/onboarding/useSaasOnboardingState";
 import {
   type SlideId,
   type ButtonAction,
   type ButtonDefinition,
-} from "@app/components/onboarding/saasOnboardingFlowConfig";
+} from "@editor/components/onboarding/saasOnboardingFlowConfig";
 
 interface SaasOnboardingModalProps {
   opened: boolean;

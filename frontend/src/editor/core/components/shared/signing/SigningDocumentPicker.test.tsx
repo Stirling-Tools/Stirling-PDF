@@ -2,11 +2,11 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { MantineProvider } from "@mantine/core";
 import { beforeEach, beforeAll, afterAll, expect, it, vi } from "vitest";
-import { SigningDocumentPicker } from "@app/components/shared/signing/SigningDocumentPicker";
+import { SigningDocumentPicker } from "@editor/components/shared/signing/SigningDocumentPicker";
 import {
   createNewStirlingFileStub,
   createStirlingFile,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 
 const state = vi.hoisted(() => ({
   open: vi.fn(),
@@ -19,26 +19,26 @@ vi.mock("react-i18next", () => ({
     t: (key: string, fallback?: string) => fallback ?? key,
   }),
 }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: state.stubs() }),
 }));
-vi.mock("@app/contexts/file/fileHooks", () => ({
+vi.mock("@editor/contexts/file/fileHooks", () => ({
   useFileSelectors: () => ({ getFiles: state.files }),
 }));
-vi.mock("@app/contexts/FilesModalContext", () => ({
+vi.mock("@editor/contexts/FilesModalContext", () => ({
   useFilesModalContext: () => ({ openFilesModal: state.open }),
 }));
-vi.mock("@app/hooks/useFileHandler", () => ({
+vi.mock("@editor/hooks/useFileHandler", () => ({
   useFileHandler: () => ({ addFiles: state.add }),
 }));
-vi.mock("@app/hooks/useFileThumbnail", () => ({
+vi.mock("@editor/hooks/useFileThumbnail", () => ({
   useFileThumbnail: () => ({
     thumbnail: null,
     isEncrypted: false,
     isGenerating: false,
   }),
 }));
-vi.mock("@app/components/shared/filePreview/DocumentThumbnail", () => ({
+vi.mock("@editor/components/shared/filePreview/DocumentThumbnail", () => ({
   default: () => null,
 }));
 
