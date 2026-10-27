@@ -82,9 +82,15 @@ public class JobOwnershipServiceImpl
     public boolean validateJobAccess(String scopedJobKey) {
         Optional<String> userId = getCurrentUserId();
 
-        // If no user authenticated, allow access (backwards compatibility)
         if (userId.isEmpty()) {
-            log.debug("No authentication required, allowing access to job: {}", scopedJobKey);
+            if (keyCarriesOwner(scopedJobKey)) {
+                log.warn(
+                        "Access denied: no authenticated user resolved for owned job key {}",
+                        scopedJobKey);
+                throw new SecurityException(
+                        "Access denied: You do not have permission to access this job");
+            }
+            log.debug("Unowned job key with no user, allowing access to job: {}", scopedJobKey);
             return true;
         }
 
@@ -115,5 +121,9 @@ public class JobOwnershipServiceImpl
             return scopedJobKey.substring(colonIndex + 1);
         }
         return scopedJobKey;
+    }
+
+    private boolean keyCarriesOwner(String scopedJobKey) {
+        return scopedJobKey != null && scopedJobKey.indexOf(':') > 0;
     }
 }

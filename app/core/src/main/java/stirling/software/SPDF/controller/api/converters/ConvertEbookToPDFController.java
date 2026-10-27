@@ -33,6 +33,7 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
@@ -50,6 +51,7 @@ public class ConvertEbookToPDFController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
+    private final OfficeDocumentSanitizer officeDocumentSanitizer;
 
     private boolean isCalibreEnabled() {
         return endpointConfiguration.isGroupEnabled("Calibre");
@@ -115,8 +117,14 @@ public class ConvertEbookToPDFController {
         Path inputPath = workingDirectory.resolve(baseName + "." + lowerExtension);
         Path outputPath = workingDirectory.resolve(baseName + ".pdf");
 
-        try (InputStream inputStream = inputFile.getInputStream()) {
-            Files.copy(inputStream, inputPath, StandardCopyOption.REPLACE_EXISTING);
+        if (officeDocumentSanitizer.isSanitizableExtension(lowerExtension)) {
+            Files.write(
+                    inputPath,
+                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), lowerExtension));
+        } else {
+            try (InputStream inputStream = inputFile.getInputStream()) {
+                Files.copy(inputStream, inputPath, StandardCopyOption.REPLACE_EXISTING);
+            }
         }
 
         List<String> command =
@@ -135,11 +143,7 @@ public class ConvertEbookToPDFController {
         }
 
         if (result.getRc() != 0) {
-            String errorMessage = result.getMessages();
-            if (errorMessage == null || errorMessage.isBlank()) {
-                errorMessage = "Calibre conversion failed";
-            }
-            throw new IllegalStateException(errorMessage);
+            throw new IllegalStateException("Calibre conversion failed");
         }
 
         if (!Files.exists(outputPath) || Files.size(outputPath) == 0L) {

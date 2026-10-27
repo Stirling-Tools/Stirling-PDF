@@ -437,10 +437,10 @@ policies:
   # security boundary. On a multi-user server EVERY authenticated user (not only team leaders) can
   # attach folder processing to directories under these roots - listing their contents and replacing
   # files in place - so only list directories all users may touch.
-  # Leave allowedFolderRoots empty (default) to disable folder sources/outputs,
-  # other than from directories that are always permitted like server file-storage and watched folders.
+  # Leave allowedFolderRoots empty (default) to disable folder sources/outputs.
   # List absolute directories to permit folder access within them.
-  # Stirling's own config directory is always off-limits, and folder access is always
+  # Stirling's own config directory, the server file-storage directory and the pipeline watched
+  # folders are always off-limits, even inside an allowed root, and folder access is always
   # disabled in SaaS mode.
   allowedFolderRoots: [] # e.g. ["/data/inbox", "/data/outbox"]
   scheduleSweepSeconds: 60 # How often (seconds) scheduled policies are checked for being due

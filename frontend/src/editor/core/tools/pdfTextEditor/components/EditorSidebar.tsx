@@ -7,6 +7,8 @@ import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelec
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
 import { analyzePageFonts } from "@editor/tools/pdfTextEditor/util/pageFonts";
+import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
   ScanHint,
   type ScanHintProps,
@@ -73,6 +75,26 @@ export function EditorSidebar({
   }, [hasSelection]);
 
   const fontNote = useSelectedFontNote(state, selection);
+
+  const editorDocument = store.document;
+  const reviewingImages = useMemo(
+    () => ACCESSIBILITY_EDITING && !!editorDocument?.isTagged(),
+    [editorDocument],
+  );
+  const imageSelected = controller.imageAccessibility !== null;
+  // Counts and Next cover only pages already read, which is just the first few
+  // until the rest scroll into view.
+  useEffect(() => {
+    if (!reviewingImages || (tab !== "document" && !imageSelected)) return;
+    const id = window.setTimeout(() => ensureAllPagesRead(store), 0);
+    return () => window.clearTimeout(id);
+  }, [reviewingImages, tab, imageSelected, store]);
+
+  // Following the selection only catches one appearing, so moving from one
+  // selected image to the next would leave the new one's description hidden.
+  const selectNextImageToReview = () => {
+    if (controller.onSelectNextImageToReview()) setTab("selected");
+  };
 
   if (!state.hasDocument) {
     return (
@@ -145,6 +167,8 @@ export function EditorSidebar({
             onSetGroupingMode={onSetGroupingMode}
             onSetWidthMode={onSetWidthMode}
             onSetShowRulers={onSetShowRulers}
+            imageReview={reviewingImages ? controller.imageReview : null}
+            onSelectNextImageToReview={selectNextImageToReview}
           />
         </Tabs.Panel>
       </Box>
