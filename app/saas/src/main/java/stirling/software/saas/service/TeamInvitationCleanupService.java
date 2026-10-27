@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -60,14 +60,22 @@ public class TeamInvitationCleanupService {
     public boolean ensureScheduled() {
         boolean marked = markExpiredTask.ensureCron(MARK_EXPIRED_CRON);
         boolean purged = purgeExpiredTask.ensureCron(PURGE_EXPIRED_CRON);
-        return marked && purged;
+        if (!marked || !purged) {
+            throw new IllegalStateException("invitation cleanup scheduler is not available");
+        }
+        return true;
     }
 
     /** Invitations persisted before the restart still need both sweeps. */
     @EventListener(ApplicationReadyEvent.class)
     public void armIfInvitationsExist() {
         if (invitationRepository.count() > 0) {
-            ensureScheduled();
+            try {
+                ensureScheduled();
+            } catch (IllegalStateException e) {
+                // Startup must not fail; the next invitation write retries the registration.
+                log.warn("Could not arm invitation cleanup at startup", e);
+            }
         }
     }
 

@@ -2,9 +2,11 @@ package stirling.software.saas.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -21,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.Trigger;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import stirling.software.common.model.enumeration.InvitationStatus;
@@ -139,6 +142,40 @@ class TeamInvitationCleanupServiceTest {
 
             assertThatCode(service::deleteOldExpiredInvitations).doesNotThrowAnyException();
             verify(invitationRepository, never()).deleteAll(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("scheduler registration")
+    class SchedulerRegistration {
+
+        @Test
+        @DisplayName("registers both sweeps")
+        void registersBothSweeps() {
+            service.ensureScheduled();
+
+            verify(scheduler, times(2)).schedule(any(Runnable.class), any(Trigger.class));
+        }
+
+        @Test
+        @DisplayName("fails the invitation operation when a sweep cannot be registered")
+        void registrationFailureThrows() {
+            when(scheduler.schedule(any(Runnable.class), any(Trigger.class)))
+                    .thenThrow(new IllegalStateException("scheduler down"));
+
+            assertThatThrownBy(service::ensureScheduled)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("invitation cleanup scheduler is not available");
+        }
+
+        @Test
+        @DisplayName("startup arming logs a failed registration instead of failing startup")
+        void startupFailureDoesNotThrow() {
+            when(invitationRepository.count()).thenReturn(1L);
+            when(scheduler.schedule(any(Runnable.class), any(Trigger.class)))
+                    .thenThrow(new IllegalStateException("scheduler down"));
+
+            assertThatCode(service::armIfInvitationsExist).doesNotThrowAnyException();
         }
     }
 }
