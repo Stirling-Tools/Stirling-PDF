@@ -14,6 +14,8 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { embedpdfFontFallbackPlugin } from "./scripts/embedpdfFontFallbackPatch.mts";
+// oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
+import { embedpdfScrollVisibilityPlugin } from "./scripts/embedpdfScrollVisibilityPatch.mts";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const gzipPromise = promisify(gzip);
@@ -579,6 +581,7 @@ export default defineConfig(async ({ mode, command }) => {
     },
     plugins: [
       embedpdfFontFallbackPlugin(),
+      embedpdfScrollVisibilityPlugin(),
       iconSvgr(),
       react(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
