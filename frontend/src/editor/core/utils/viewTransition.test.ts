@@ -26,6 +26,7 @@ function stubReducedMotion(reduced: boolean): void {
 afterEach(() => {
   delete doc.startViewTransition;
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe("withViewTransition", () => {
@@ -49,6 +50,34 @@ describe("withViewTransition", () => {
     await withViewTransition(update);
 
     expect(start).not.toHaveBeenCalled();
+    expect(update).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips the transition in WebKitGTK, where it crashes the app", async () => {
+    const start = stubApi();
+    stubReducedMotion(false);
+    vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/60.5 Safari/605.1.15",
+    );
+    const update = vi.fn();
+
+    await withViewTransition(update);
+
+    expect(start).not.toHaveBeenCalled();
+    expect(update).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the transition in Chromium on Linux", async () => {
+    const start = stubApi();
+    stubReducedMotion(false);
+    vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    );
+    const update = vi.fn();
+
+    await withViewTransition(update);
+
+    expect(start).toHaveBeenCalledTimes(1);
     expect(update).toHaveBeenCalledTimes(1);
   });
 
