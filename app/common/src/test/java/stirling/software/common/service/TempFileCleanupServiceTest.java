@@ -88,7 +88,7 @@ public class TempFileCleanupServiceTest {
         cleanupService.ensureScheduled();
 
         verify(scheduler, times(1))
-                .scheduleWithFixedDelay(
+                .scheduleAtFixedRate(
                         any(Runnable.class),
                         any(Instant.class),
                         org.mockito.ArgumentMatchers.eq(Duration.ofMinutes(30)));

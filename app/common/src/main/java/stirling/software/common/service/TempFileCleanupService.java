@@ -178,7 +178,7 @@ public class TempFileCleanupService {
                         .getTempFileManagement()
                         .getCleanupIntervalMinutes();
         Duration interval = Duration.ofMinutes(minutes);
-        return cleanupSweep.ensureFixedDelay(initialDelay, interval);
+        return cleanupSweep.ensureFixedRate(initialDelay, interval);
     }
 
     /** Periodic sweep, armed by {@link #ensureScheduled()}. */
