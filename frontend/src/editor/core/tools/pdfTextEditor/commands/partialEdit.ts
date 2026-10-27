@@ -732,7 +732,7 @@ export function applyPartialEditPlan(
       const origWidth = origBounds.right - origBounds.x;
       const modText = op.text;
       // Read the object's own font BEFORE we touch it, so a fallback re-emit
-      // can reuse the same embedded font via the charcode/backend path.
+      // can reuse the same embedded font via the charcode path.
       const modFontPtr = objFontPtr(m, ptr);
       setObjText(m, ptr, modText);
       if (Math.abs(offset) > 0.05) {
@@ -870,8 +870,7 @@ export function applyPartialEditPlan(
       // Heuristic: a working visible glyph is at least ~0.15 * fontSize wide.
       const nonWhitespaceLen = insertText.replace(/\s/g, "").length;
       const minExpected = nonWhitespaceLen * run.fontSize * 0.15;
-      // Skip the tofu retry when ALL returned ptrs came from the per-char
-      // backend emit branch in emitTextLine.
+      // Skip the tofu retry when every returned ptr is already verified.
       const allVerified =
         ptrs.length > 0 && ptrs.every((p) => isVerifiedPerCharPtr(p));
       if (

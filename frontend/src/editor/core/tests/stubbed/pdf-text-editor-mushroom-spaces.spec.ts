@@ -1,8 +1,7 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import type { Route } from "@playwright/test";
 import path from "path";
 
-// Regression for the mushroom-life.pdf reports (backend charcode strategy): 1.
+// Regression for the mushroom-life.pdf whitespace reports.
 
 const MUSHROOM = path.join(
   import.meta.dirname,
@@ -18,27 +17,10 @@ interface CharcodeEvent {
 test("mushroom first-line edits never reuse whitespace (no „) and keep the paragraph lines", async ({
   page,
 }) => {
-  // BUGGY backend: returns a charcode for every code point, even whitespace
-  // (space -> 0x20). The frontend must still refuse to reuse it.
-  await page.route("**/encode-charcodes", (route: Route) => {
-    let text = "";
-    try {
-      text = (route.request().postDataJSON() as { text?: string }).text ?? "";
-    } catch {
-      /* ignore */
-    }
-    const charcodes = Array.from(text).map((ch) => ch.codePointAt(0) ?? 0);
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ charcodes, missing: [] }),
-    });
-  });
-
   const errs: string[] = [];
   page.on("pageerror", (e) => errs.push(e.message));
 
-  await page.goto("/pdf-text-editor?charcodeStrategy=backend", {
+  await page.goto("/pdf-text-editor", {
     waitUntil: "domcontentloaded",
   });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
@@ -85,14 +67,7 @@ test("mushroom first-line edits never reuse whitespace (no „) and keep the par
   expect(before.lineCount).toBeGreaterThan(1);
   const id = before.id;
 
-  // Focus engages the backend prewarm; wait for it to complete so the cache
-  // is populated before the first keystroke.
-  const prewarm = page.waitForEvent("console", {
-    predicate: (m) => /\[charcode\] backend prewarm pageIdx=/.test(m.text()),
-    timeout: 30_000,
-  });
   await page.locator(`[data-testid="pdf-editor-run-${id}"]`).click();
-  await prewarm.catch(() => undefined);
 
   // MID-LINE replace: select a span that spans several words (so it includes
   // spaces) and replace it.

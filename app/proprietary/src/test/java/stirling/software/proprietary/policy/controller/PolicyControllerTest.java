@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -60,6 +61,7 @@ import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.PipelineValidation;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
@@ -70,6 +72,9 @@ import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.util.SecretMasker;
+
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PolicyController")
@@ -212,7 +217,11 @@ class PolicyControllerTest {
     }
 
     private static PipelineDefinition definitionWithStep() {
-        return new PipelineDefinition(
+        return requestWithStep().toDefinition();
+    }
+
+    private static AdHocRunRequest requestWithStep() {
+        return new AdHocRunRequest(
                 "pipe", List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)), List.of());
     }
 
@@ -247,10 +256,40 @@ class PolicyControllerTest {
                     .thenReturn(handle("run-1"));
 
             ResponseEntity<JobResponse<Void>> response =
-                    controller.run(definitionWithStep(), null, new PolicyRunFiles());
+                    controller.run(requestWithStep(), null, new PolicyRunFiles());
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
             assertThat(response.getBody().getJobId()).isEqualTo("run-1");
+        }
+
+        @Test
+        @DisplayName("never hands client-supplied routing to the engine")
+        void dropsClientSuppliedRouting() throws Exception {
+            // A routed destination is delivered without an access check, so a request must not be
+            // able to carry one. The app's mapper ignores unknown keys, as this one does.
+            JsonMapper mapper =
+                    JsonMapper.builder()
+                            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                            .build();
+            String json =
+                    """
+                    {"name": "pipe",
+                     "steps": [{"operation": "/api/v1/misc/compress-pdf"}],
+                     "routing": [{"rule": {"field": "document.extension", "operator": "matches-any",
+                                           "values": ["pdf"], "outputId": "unused"},
+                                  "destination": {"type": "s3", "options": {"connectionId": 1}}}]}
+                    """;
+            assertThat(mapper.readValue(json, PipelineDefinition.class).routing()).hasSize(1);
+            when(policyRunner.runAdHoc(any(), any(), eq(PolicyProgressListener.NOOP)))
+                    .thenReturn(handle("run-1"));
+
+            controller.run(
+                    mapper.readValue(json, AdHocRunRequest.class), null, new PolicyRunFiles());
+
+            ArgumentCaptor<PipelineDefinition> submitted =
+                    ArgumentCaptor.forClass(PipelineDefinition.class);
+            verify(policyRunner).runAdHoc(submitted.capture(), any(), any());
+            assertThat(submitted.getValue().routing()).isEmpty();
         }
 
         @Test
@@ -260,15 +299,53 @@ class PolicyControllerTest {
                     .thenReturn(handle("run-1"));
             when(sourceAccessGuard.currentTeamId()).thenReturn(3L);
 
-            controller.run(definitionWithStep(), null, new PolicyRunFiles());
+            controller.run(requestWithStep(), null, new PolicyRunFiles());
 
             verify(docCounter).record(EditorSource.counterKey(3L), 0L);
         }
 
         @Test
+        @DisplayName("deletes the uploaded files once the run settles")
+        void uploadsAreDeletedOnceTheRunSettles() throws Exception {
+            CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
+            ArgumentCaptor<PolicyInputs> inputs = ArgumentCaptor.forClass(PolicyInputs.class);
+            when(policyRunner.runAdHoc(any(), inputs.capture(), eq(PolicyProgressListener.NOOP)))
+                    .thenReturn(new PolicyRunHandle("run-1", completion));
+
+            controller.run(requestWithStep(), null, oneUpload());
+
+            File upload = inputs.getValue().primary().get(0).getFile();
+            assertThat(upload).exists();
+            completion.complete(null);
+            assertThat(upload).doesNotExist();
+        }
+
+        @Test
+        @DisplayName("deletes the uploaded files when the run cannot start")
+        void uploadsAreDeletedWhenTheRunCannotStart() throws Exception {
+            ArgumentCaptor<PolicyInputs> inputs = ArgumentCaptor.forClass(PolicyInputs.class);
+            when(policyRunner.runAdHoc(any(), inputs.capture(), eq(PolicyProgressListener.NOOP)))
+                    .thenThrow(new IllegalStateException("no licence"));
+
+            assertThatThrownBy(() -> controller.run(requestWithStep(), null, oneUpload()))
+                    .isInstanceOf(IllegalStateException.class);
+
+            assertThat(inputs.getValue().primary().get(0).getFile()).doesNotExist();
+        }
+
+        private PolicyRunFiles oneUpload() {
+            PolicyRunFiles files = new PolicyRunFiles();
+            files.setFileInput(
+                    List.of(
+                            new MockMultipartFile(
+                                    "fileInput", "a.pdf", "application/pdf", "pdf".getBytes())));
+            return files;
+        }
+
+        @Test
         @DisplayName("rejects a pipeline with no steps")
         void rejectsEmptyPipeline() {
-            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), List.of());
+            AdHocRunRequest empty = new AdHocRunRequest("pipe", List.of(), List.of());
 
             assertThatThrownBy(() -> controller.run(empty, null, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class)
@@ -283,16 +360,16 @@ class PolicyControllerTest {
         void rejectsUnauthorizedAdHocOutput() {
             // The confused-deputy guard: an S3 output referencing a connection the caller may not
             // use is validated here (principal present) and refused before any worker dispatch.
-            PipelineDefinition definition =
-                    new PipelineDefinition(
+            AdHocRunRequest request =
+                    new AdHocRunRequest(
                             "pipe",
                             List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)),
-                            new OutputSpec("s3", Map.of("connectionId", 999)));
+                            List.of(new OutputSpec("s3", Map.of("connectionId", 999))));
             doThrow(new IllegalArgumentException("unknown or inaccessible s3 connection"))
                     .when(policyValidator)
                     .validateOutput(any(), any());
 
-            assertThatThrownBy(() -> controller.run(definition, null, new PolicyRunFiles()))
+            assertThatThrownBy(() -> controller.run(request, null, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class)
                     .satisfies(
                             e ->
@@ -312,7 +389,7 @@ class PolicyControllerTest {
             when(policyRunner.runAdHoc(any(), any(), eq(PolicyProgressListener.NOOP)))
                     .thenReturn(handle("run-1"));
 
-            controller.run(definitionWithStep(), "pol-1", new PolicyRunFiles());
+            controller.run(requestWithStep(), "pol-1", new PolicyRunFiles());
 
             verify(assetResolver).resolve(eq(p), any());
         }
@@ -328,7 +405,7 @@ class PolicyControllerTest {
             when(policyRunner.runAdHoc(any(), any(), eq(PolicyProgressListener.NOOP)))
                     .thenReturn(handle("run-1"));
 
-            controller.run(definitionWithStep(), "pol-1", new PolicyRunFiles());
+            controller.run(requestWithStep(), "pol-1", new PolicyRunFiles());
 
             verify(assetResolver, never()).resolve(any(), any());
             verify(policyStore, never()).get(any());
@@ -346,7 +423,7 @@ class PolicyControllerTest {
             when(policyRunner.runAdHoc(any(), any(), eq(PolicyProgressListener.NOOP)))
                     .thenReturn(handle("run-1"));
 
-            controller.run(definitionWithStep(), "pol-1", new PolicyRunFiles());
+            controller.run(requestWithStep(), "pol-1", new PolicyRunFiles());
 
             verify(assetResolver).resolve(eq(p), any());
         }
@@ -362,7 +439,7 @@ class PolicyControllerTest {
             when(policyRunner.runAdHoc(any(), any(), any())).thenReturn(handle("run-2"));
 
             SseEmitter emitter =
-                    controller.runStream(definitionWithStep(), null, new PolicyRunFiles());
+                    controller.runStream(requestWithStep(), null, new PolicyRunFiles());
 
             assertThat(emitter).isNotNull();
         }
@@ -370,7 +447,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("rejects a pipeline with no steps")
         void rejectsEmpty() {
-            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), List.of());
+            AdHocRunRequest empty = new AdHocRunRequest("pipe", List.of(), List.of());
 
             assertThatThrownBy(() -> controller.runStream(empty, null, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class);
