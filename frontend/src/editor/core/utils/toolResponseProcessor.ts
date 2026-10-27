@@ -1,5 +1,5 @@
 // Note: This utility should be used with useToolResources for ZIP operations
-import { getFilenameFromHeaders } from "@app/utils/fileResponseUtils";
+import { getFilenameFromHeaders } from "@editor/utils/fileResponseUtils";
 
 export type ResponseHandler = (
   blob: Blob,

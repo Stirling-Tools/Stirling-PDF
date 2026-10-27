@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui";
-import type { LaidOutEdge } from "@portal/components/pipelines/graph/pipelineLayout";
-import { useEdgeDrop } from "@portal/components/pipelines/graph/useChainDragDrop";
-import "@portal/components/pipelines/graph/GraphEdge.css";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui";
+import type { LaidOutEdge } from "@processor/components/pipelines/graph/pipelineLayout";
+import { useEdgeDrop } from "@processor/components/pipelines/graph/useChainDragDrop";
+import "@processor/components/pipelines/graph/GraphEdge.css";
 
 /**
  * A note on the wire arriving at a node: why what flows in will not suit it.

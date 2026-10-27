@@ -15,9 +15,9 @@ import { http, HttpResponse } from "msw";
 import {
   getPortalQueryClient,
   resetPortalQueryClient,
-} from "@portal/queryClient";
-import { usePoliciesOverview } from "@portal/queries/policies";
-import { useProcessorFlow } from "@portal/queries/processorFlow";
+} from "@processor/queryClient";
+import { usePoliciesOverview } from "@processor/queries/policies";
+import { useProcessorFlow } from "@processor/queries/processorFlow";
 
 /**
  * Proves the two sharing properties the migration is for, at the hook level:
@@ -29,11 +29,11 @@ import { useProcessorFlow } from "@portal/queries/processorFlow";
  */
 
 // Keep apiClient.local's transport hermetic (no real token / Supabase at import).
-vi.mock("@app/auth", () => ({
+vi.mock("@editor/auth", () => ({
   getStoredToken: () => null,
   clearStoredToken: vi.fn(),
 }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => null,
   configureSupabase: vi.fn(),
 }));

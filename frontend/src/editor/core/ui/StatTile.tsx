@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import "@app/ui/StatTile.css";
+import "@editor/ui/StatTile.css";
 
 export type StatTileTone = "default" | "success" | "warning" | "danger";
 

@@ -10,8 +10,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
  *    because a face PDFium cannot author was reused anyway.
  */
 
-vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
-vi.mock("@app/tools/pdfTextEditor/pdfium/PdfiumSave", () => ({
+vi.mock("@editor/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@editor/tools/pdfTextEditor/pdfium/PdfiumSave", () => ({
   PdfiumSave: { serialize: vi.fn(() => new Uint8Array([0, 1, 2, 3])) },
 }));
 
@@ -23,8 +23,8 @@ import {
   _clearFontForCharCacheForTests,
   _clearFontNameCacheForTests,
   _clearReusableFontCacheForTests,
-} from "@app/tools/pdfTextEditor/charcode/BackendResolver";
-import type { ResolverContext } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
+} from "@editor/tools/pdfTextEditor/charcode/BackendResolver";
+import type { ResolverContext } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 
 const TEXT_PAGE = 555;
 

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { TextViewer } from "@app/components/viewer/nonpdf/TextViewer";
+import { TextViewer } from "@editor/components/viewer/nonpdf/TextViewer";
 
 const meta = {
   title: "Viewer/NonPdf/TextViewer",

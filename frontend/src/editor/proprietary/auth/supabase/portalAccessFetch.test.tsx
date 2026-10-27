@@ -4,7 +4,7 @@ import { useContext } from "react";
 
 const h = vi.hoisted(() => ({ apiBase: "/" }));
 
-vi.mock("@app/services/apiClientConfig", () => ({
+vi.mock("@editor/services/apiClientConfig", () => ({
   getApiBaseUrl: () => h.apiBase,
 }));
 
@@ -19,7 +19,7 @@ const sbSession = {
   },
 };
 
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => ({
     auth: {
       getSession: () => Promise.resolve({ data: { session: sbSession } }),
@@ -32,8 +32,8 @@ vi.mock("@app/auth/supabase/supabaseClient", () => ({
   }),
 }));
 
-import { SupabaseAuthProvider } from "@app/auth/supabase/UseSession";
-import { AuthContext } from "@app/auth/context";
+import { SupabaseAuthProvider } from "@editor/auth/supabase/UseSession";
+import { AuthContext } from "@editor/auth/context";
 
 function Probe() {
   const v = useContext(AuthContext);

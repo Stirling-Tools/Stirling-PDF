@@ -1,14 +1,14 @@
 import type { TFunction } from "i18next";
-import { PdfiumFont, PdfiumPage } from "@app/services/pdfiumDocBuilder";
-import { SignatureValidationSignature } from "@app/types/validateSignature";
-import { drawFieldBox } from "@app/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection";
-import { drawStatusBadge } from "@app/hooks/tools/validateSignature/outputtedPDFSections/StatusBadgeSection";
-import { computeSignatureStatus } from "@app/hooks/tools/validateSignature/utils/signatureStatus";
-import { formatDate } from "@app/hooks/tools/validateSignature/utils/pdfText";
+import { PdfiumFont, PdfiumPage } from "@editor/services/pdfiumDocBuilder";
+import { SignatureValidationSignature } from "@editor/types/validateSignature";
+import { drawFieldBox } from "@editor/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection";
+import { drawStatusBadge } from "@editor/hooks/tools/validateSignature/outputtedPDFSections/StatusBadgeSection";
+import { computeSignatureStatus } from "@editor/hooks/tools/validateSignature/utils/signatureStatus";
+import { formatDate } from "@editor/hooks/tools/validateSignature/utils/pdfText";
 import {
   colorPalette,
   statusKindToPdfColor,
-} from "@app/hooks/tools/validateSignature/utils/pdfPalette";
+} from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
 
 interface DrawSignatureSectionOptions {
   page: PdfiumPage;

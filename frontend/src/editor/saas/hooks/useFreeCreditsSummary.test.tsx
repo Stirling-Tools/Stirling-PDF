@@ -1,13 +1,13 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useFreeCreditsSummary } from "@app/hooks/useFreeCreditsSummary";
+import { useFreeCreditsSummary } from "@editor/hooks/useFreeCreditsSummary";
 
 const state = vi.hoisted(() => ({ isAnonymous: true, loading: false }));
 const wallet = vi.hoisted(() => vi.fn(() => ({ wallet: null })));
 const cacheWrite = vi.hoisted(() => vi.fn());
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => state }));
-vi.mock("@app/hooks/useWallet", () => ({ useWallet: wallet }));
-vi.mock("@app/services/navFooterCache", () => ({
+vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => state }));
+vi.mock("@editor/hooks/useWallet", () => ({ useWallet: wallet }));
+vi.mock("@editor/services/navFooterCache", () => ({
   readCachedCredits: () => ({ remaining: 1000, total: 1000 }),
   writeCachedCredits: cacheWrite,
 }));

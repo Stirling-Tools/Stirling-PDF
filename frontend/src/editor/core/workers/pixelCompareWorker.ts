@@ -13,8 +13,8 @@ import type {
   PixelCompareWorkerRequest,
   PixelCompareWorkerResponse,
   PixelCompareWorkerWarnings,
-} from "@app/types/compare";
-import { lossyEncodeOptions } from "@app/utils/canvasImageEncoding";
+} from "@editor/types/compare";
+import { lossyEncodeOptions } from "@editor/utils/canvasImageEncoding";
 
 declare const self: DedicatedWorkerGlobalScope;
 

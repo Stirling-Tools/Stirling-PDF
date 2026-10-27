@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { saasAppConfigService } from "@app/services/saasAppConfigService";
-import { connectionModeService } from "@app/services/connectionModeService";
-import type { AppConfig } from "@app/types/appConfig";
+import { saasAppConfigService } from "@editor/services/saasAppConfigService";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import type { AppConfig } from "@editor/types/appConfig";
 
 /**
  * The SaaS backend's app-config while in desktop SaaS mode, or null otherwise.

@@ -1,8 +1,8 @@
 import { Tooltip } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
+import { Icon } from "@editor/ui/Icon";
+import { policyCategoryIcon } from "@editor/components/policies/policyCategoryIcon";
 import { useTranslation } from "react-i18next";
-import "@app/components/shared/PolicyBadges.css";
+import "@editor/components/shared/PolicyBadges.css";
 
 /** A policy that has run on this file, used for the activity badges. */
 export interface FileItemPolicyRef {

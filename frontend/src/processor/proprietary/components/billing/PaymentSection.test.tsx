@@ -1,10 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import { PaymentSection } from "@portal/components/billing/PaymentSection";
-import { formatPeriodDate } from "@app/billing";
-import { freeWallet } from "@app/billing/walletFixtures";
+import { PaymentSection } from "@processor/components/billing/PaymentSection";
+import { formatPeriodDate } from "@editor/billing";
+import { freeWallet } from "@editor/billing/walletFixtures";
 
-vi.mock("@portal/api/billing", () => ({
+vi.mock("@processor/api/billing", () => ({
   fetchPaymentMethod: async () => ({ present: false }),
   fetchBillingDetails: async () => ({
     present: true,

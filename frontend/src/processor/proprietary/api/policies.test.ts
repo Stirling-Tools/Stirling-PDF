@@ -5,9 +5,9 @@ import {
   parseSimplePolicy,
   type PolicySetupResult,
   type WirePolicy,
-} from "@portal/api/policies";
-import { policyStep, policyStepToWire } from "@app/policies/operations";
-import type { Policy } from "@portal/api/pipelines";
+} from "@processor/api/policies";
+import { policyStep, policyStepToWire } from "@editor/policies/operations";
+import type { Policy } from "@processor/api/pipelines";
 import type { TFunction } from "i18next";
 
 const t = ((key: string) => key) as unknown as TFunction;

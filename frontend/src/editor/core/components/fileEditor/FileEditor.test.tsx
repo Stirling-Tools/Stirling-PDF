@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { expect, it, vi } from "vitest";
-import type { StirlingFile } from "@app/types/fileContext";
+import type { StirlingFile } from "@editor/types/fileContext";
 
 const virtualRows = vi.hoisted(() => vi.fn());
 const virtualState = vi.hoisted(() => ({ padTop: 0 }));
@@ -10,7 +10,7 @@ const stubs = vi.hoisted(() => [
   { id: "b", name: "b.pdf" } as unknown as StirlingFile,
 ]);
 
-vi.mock("@app/components/filesPage/useVirtualFileRows", () => ({
+vi.mock("@editor/components/filesPage/useVirtualFileRows", () => ({
   useVirtualFileRows: (...args: unknown[]) => {
     virtualRows(...args);
     return {
@@ -24,7 +24,7 @@ vi.mock("@app/components/filesPage/useVirtualFileRows", () => ({
   },
 }));
 
-vi.mock("@app/contexts/FileContext", () => {
+vi.mock("@editor/contexts/FileContext", () => {
   const selection = { selectedFileIds: [], setSelectedFiles: vi.fn() };
   const state = {
     files: { byId: {}, ids: [] },
@@ -50,34 +50,34 @@ vi.mock("@app/contexts/FileContext", () => {
     useFileSelection: () => selection,
   };
 });
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationActions: () => ({ actions: { setWorkbench: vi.fn() } }),
 }));
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => ({ setActiveFileIndex: vi.fn(), setActiveFileId: vi.fn() }),
 }));
-vi.mock("@app/contexts/ToolWorkflowContext", () => ({
+vi.mock("@editor/contexts/ToolWorkflowContext", () => ({
   useToolWorkflow: () => ({ selectedTool: undefined }),
 }));
-vi.mock("@app/hooks/usePolicyFileBadges", () => ({
+vi.mock("@editor/hooks/usePolicyFileBadges", () => ({
   usePolicyFileBadges: () => new Map(),
 }));
-vi.mock("@app/components/fileEditor/FileEditorThumbnail", () => ({
+vi.mock("@editor/components/fileEditor/FileEditorThumbnail", () => ({
   default: () => null,
 }));
-vi.mock("@app/components/fileEditor/AddFileCard", () => ({
+vi.mock("@editor/components/fileEditor/AddFileCard", () => ({
   default: () => null,
 }));
-vi.mock("@app/components/shared/FilePickerModal", () => ({
+vi.mock("@editor/components/shared/FilePickerModal", () => ({
   default: () => null,
 }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
-vi.mock("@app/services/exportWithPolicy", () => ({
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/services/exportWithPolicy", () => ({
   downloadFileWithPolicy: vi.fn(),
 }));
-vi.mock("@app/services/zipFileService", () => ({ zipFileService: {} }));
+vi.mock("@editor/services/zipFileService", () => ({ zipFileService: {} }));
 
-import FileEditor from "@app/components/fileEditor/FileEditor";
+import FileEditor from "@editor/components/fileEditor/FileEditor";
 
 it("virtualises the grid with the thumbnail card's own row pitch", () => {
   render(

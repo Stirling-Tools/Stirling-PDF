@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, expect, it, vi } from "vitest";
-import HomePage from "@app/pages/HomePage";
+import HomePage from "@editor/pages/HomePage";
 
 const state = vi.hoisted(() => ({
   mobile: false,
@@ -30,85 +30,87 @@ const state = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@app/hooks/useIsMobile", () => ({
+vi.mock("@editor/hooks/useIsMobile", () => ({
   useIsMobile: () => state.mobile,
   useIsTouch: () => false,
 }));
-vi.mock("@app/contexts/ToolWorkflowContext", () => ({
+vi.mock("@editor/contexts/ToolWorkflowContext", () => ({
   useToolWorkflow: () => state.workflow,
 }));
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationState: () => ({ workbench: state.workbench }),
   useNavigationActions: () => ({ actions: state.actions }),
   useNavigationGuard: () => ({ requestNavigation: vi.fn() }),
 }));
-vi.mock("@app/contexts/SidebarContext", () => ({
+vi.mock("@editor/contexts/SidebarContext", () => ({
   useSidebarContext: () => ({ sidebarRefs: {} }),
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: {} }),
 }));
-vi.mock("@app/contexts/PreferencesContext", () => ({
+vi.mock("@editor/contexts/PreferencesContext", () => ({
   usePreferences: () => ({ preferences: { defaultStartupView: "tools" } }),
 }));
-vi.mock("@app/contexts/file/fileHooks", () => ({
+vi.mock("@editor/contexts/file/fileHooks", () => ({
   useFileContext: () => ({ activeFiles: [] }),
 }));
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => ({
     searchInterfaceActions: {},
     setActiveFileIndex: vi.fn(),
   }),
 }));
-vi.mock("@app/contexts/TitleBarStripContext", () => ({
+vi.mock("@editor/contexts/TitleBarStripContext", () => ({
   useTitleBarStrip: () => ({ enabled: false }),
 }));
-vi.mock("@app/contexts/QuickNavHostContext", () => ({
+vi.mock("@editor/contexts/QuickNavHostContext", () => ({
   useQuickNavHost: () => null,
 }));
-vi.mock("@app/hooks/useDocumentMeta", () => ({ useDocumentMeta: vi.fn() }));
-vi.mock("@app/hooks/useBaseUrl", () => ({
+vi.mock("@editor/hooks/useDocumentMeta", () => ({ useDocumentMeta: vi.fn() }));
+vi.mock("@editor/hooks/useBaseUrl", () => ({
   useBaseUrl: () => "http://localhost",
 }));
-vi.mock("@app/hooks/signing/useOpenSigning", () => ({
+vi.mock("@editor/hooks/signing/useOpenSigning", () => ({
   useOpenSigning: vi.fn(),
 }));
-vi.mock("@app/hooks/useProcessingFolderCreation", () => ({
+vi.mock("@editor/hooks/useProcessingFolderCreation", () => ({
   useProcessingFolderCreation: () => ({ dialog: null }),
 }));
-vi.mock("@app/components/policies/usePoliciesEnabled", () => ({
+vi.mock("@editor/components/policies/usePoliciesEnabled", () => ({
   usePoliciesEnabled: () => false,
 }));
-vi.mock("@app/components/policies/PolicyAutoRunController", () => ({
+vi.mock("@editor/components/policies/PolicyAutoRunController", () => ({
   PolicyAutoRunController: () => null,
 }));
-vi.mock("@app/components/shared/quickNav/QuickNavHostBridge", () => ({
+vi.mock("@editor/components/shared/quickNav/QuickNavHostBridge", () => ({
   QuickNavHostBridge: () => null,
 }));
-vi.mock("@app/components/shared/signing/SignMenu", () => ({
+vi.mock("@editor/components/shared/signing/SignMenu", () => ({
   SignMenu: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@app/components/home/HomePageExtensions", () => ({
+vi.mock("@editor/components/home/HomePageExtensions", () => ({
   HomePageExtensions: () => null,
 }));
-vi.mock("@app/components/FileManager", () => ({ default: () => null }));
-vi.mock("@app/components/shared/FileSidebar", () => ({ default: () => null }));
-vi.mock("@app/components/shared/MobileUploadModal", () => ({
+vi.mock("@editor/components/FileManager", () => ({ default: () => null }));
+vi.mock("@editor/components/shared/FileSidebar", () => ({
   default: () => null,
 }));
-vi.mock("@app/components/viewer/readerRail/ReaderRail", () => ({
+vi.mock("@editor/components/shared/MobileUploadModal", () => ({
+  default: () => null,
+}));
+vi.mock("@editor/components/viewer/readerRail/ReaderRail", () => ({
   ReaderRail: () => null,
 }));
-vi.mock("@app/components/viewer/readerRail/ReaderSuperSearch", () => ({
+vi.mock("@editor/components/viewer/readerRail/ReaderSuperSearch", () => ({
   ReaderSuperSearch: () => null,
 }));
-vi.mock("@app/components/tools/RightSidebar", () => ({
+vi.mock("@editor/components/tools/RightSidebar", () => ({
   default: () => <aside aria-label="Tool panel" />,
 }));
-vi.mock("@app/contexts/FilesPageContext", () => ({
+vi.mock("@editor/contexts/FilesPageContext", () => ({
   FilesPageProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@app/components/layout/Workbench", () => ({
+vi.mock("@editor/components/layout/Workbench", () => ({
   default: function StatefulWorkbench() {
     const [view, setView] = useState("Signing sessions");
     const [draft, setDraft] = useState("");

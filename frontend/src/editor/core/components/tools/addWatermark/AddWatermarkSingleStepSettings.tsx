@@ -7,12 +7,12 @@
  */
 
 import { Stack } from "@mantine/core";
-import { AddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
-import WatermarkTypeSettings from "@app/components/tools/addWatermark/WatermarkTypeSettings";
-import WatermarkWording from "@app/components/tools/addWatermark/WatermarkWording";
-import WatermarkTextStyle from "@app/components/tools/addWatermark/WatermarkTextStyle";
-import WatermarkImageFile from "@app/components/tools/addWatermark/WatermarkImageFile";
-import WatermarkFormatting from "@app/components/tools/addWatermark/WatermarkFormatting";
+import { AddWatermarkParameters } from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
+import WatermarkTypeSettings from "@editor/components/tools/addWatermark/WatermarkTypeSettings";
+import WatermarkWording from "@editor/components/tools/addWatermark/WatermarkWording";
+import WatermarkTextStyle from "@editor/components/tools/addWatermark/WatermarkTextStyle";
+import WatermarkImageFile from "@editor/components/tools/addWatermark/WatermarkImageFile";
+import WatermarkFormatting from "@editor/components/tools/addWatermark/WatermarkFormatting";
 
 interface AddWatermarkSingleStepSettingsProps {
   parameters: AddWatermarkParameters;

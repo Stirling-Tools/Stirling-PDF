@@ -1,12 +1,12 @@
 import type {
   DownloadRequest,
   DownloadResult,
-} from "@core/services/downloadService";
-import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
+} from "@editor-core/services/downloadService";
+import { assertFilesNotBlocked } from "@editor/services/policyFileGuard";
 import {
   saveToLocalPath,
   showSaveDialog,
-} from "@app/services/localFileSaveService";
+} from "@editor/services/localFileSaveService";
 
 export type { DownloadRequest, DownloadResult };
 

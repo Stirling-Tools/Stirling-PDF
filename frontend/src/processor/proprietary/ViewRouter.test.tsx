@@ -2,22 +2,22 @@ import { describe, expect, it, vi } from "vitest";
 import { Suspense } from "react";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
-import { ViewRouter } from "@portal/ViewRouter";
-import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
+import { ViewRouter } from "@processor/ViewRouter";
+import { getAdminRouteExtensions } from "@editor/routes/adminRouteExtensions";
 
-vi.mock("@app/routes/hasPortal", () => ({ HAS_PORTAL: true }));
-vi.mock("@portal/PortalApp", () => ({ PortalApp: () => <ViewRouter /> }));
+vi.mock("@editor/routes/hasPortal", () => ({ HAS_PORTAL: true }));
+vi.mock("@processor/PortalApp", () => ({ PortalApp: () => <ViewRouter /> }));
 
-vi.mock("@portal/views/Home", () => ({ Home: () => <div>Home</div> }));
-vi.mock("@portal/views/Users", () => ({ Users: () => null }));
-vi.mock("@portal/views/Documents", () => ({ Documents: () => null }));
-vi.mock("@portal/views/Review", () => ({ Review: () => null }));
-vi.mock("@portal/views/Pipelines", () => ({ Pipelines: () => null }));
-vi.mock("@portal/views/PipelineBuilder", () => ({
+vi.mock("@processor/views/Home", () => ({ Home: () => <div>Home</div> }));
+vi.mock("@processor/views/Users", () => ({ Users: () => null }));
+vi.mock("@processor/views/Documents", () => ({ Documents: () => null }));
+vi.mock("@processor/views/Review", () => ({ Review: () => null }));
+vi.mock("@processor/views/Pipelines", () => ({ Pipelines: () => null }));
+vi.mock("@processor/views/PipelineBuilder", () => ({
   PipelineBuilder: () => null,
 }));
-vi.mock("@portal/views/Sources", () => ({ Sources: () => null }));
-vi.mock("@portal/views/Integrations", () => ({ Integrations: () => null }));
+vi.mock("@processor/views/Sources", () => ({ Sources: () => null }));
+vi.mock("@processor/views/Integrations", () => ({ Integrations: () => null }));
 
 function BillingLocation() {
   const { pathname, search, hash } = useLocation();

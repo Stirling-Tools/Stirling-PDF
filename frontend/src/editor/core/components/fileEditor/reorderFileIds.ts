@@ -1,4 +1,4 @@
-import { FileId } from "@app/types/fileContext";
+import { FileId } from "@editor/types/fileContext";
 
 /**
  * Swaps two file IDs in a list of file IDs.

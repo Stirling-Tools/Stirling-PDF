@@ -1,21 +1,21 @@
 import { useEffect, useRef } from "react";
-import { HttpError } from "@app/portal/api/http";
-import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
-import { clearAccountLinkBlock } from "@app/services/accountLinkBlock";
+import { HttpError } from "@editor/portal/api/http";
+import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
+import { clearAccountLinkBlock } from "@editor/services/accountLinkBlock";
 import { useLocation, useNavigate } from "react-router-dom";
-import { completeConnect, type ConnectPhase } from "@app/portal/api/link";
-import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
-import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
-import { clearAccountLinkSession } from "@app/portal/auth/accountLinkSession";
+import { completeConnect, type ConnectPhase } from "@editor/portal/api/link";
+import { ensureSaasSupabase } from "@editor/portal/auth/saasSupabase";
+import { getSupabaseClient } from "@editor/auth/supabase/supabaseClient";
+import { clearAccountLinkSession } from "@editor/portal/auth/accountLinkSession";
 import {
   isTerminalSaasAuthError,
   portalSaasSessionRestored,
-} from "@app/portal/auth/portalSaasSession";
-import type { PendingConnect } from "@app/portal/auth/pendingConnect";
-import { useAccountLinkContext } from "@app/portal/contexts/AccountLinkContext";
-import { useUI } from "@app/portal/contexts/UIContext";
-import { getPortalQueryClient } from "@app/portal/queryClient";
-import type { ConnectCallbackState } from "@app/portal/components/account-link/ConnectCallbackView";
+} from "@editor/portal/auth/portalSaasSession";
+import type { PendingConnect } from "@editor/portal/auth/pendingConnect";
+import { useAccountLinkContext } from "@editor/portal/contexts/AccountLinkContext";
+import { useUI } from "@editor/portal/contexts/UIContext";
+import { getPortalQueryClient } from "@editor/portal/queryClient";
+import type { ConnectCallbackState } from "@editor/portal/components/account-link/ConnectCallbackView";
 
 /** Tokens are consumed once and removed from router history before any network request. */
 export interface AccountLinkReturn {

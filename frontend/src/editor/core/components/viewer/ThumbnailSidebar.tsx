@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { Box, ScrollArea, Text } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { Icon } from "@app/ui/Icon";
-import "@app/components/viewer/SidebarBase.css";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { Icon } from "@editor/ui/Icon";
+import "@editor/components/viewer/SidebarBase.css";
 
 interface ThumbnailSidebarProps {
   visible: boolean;

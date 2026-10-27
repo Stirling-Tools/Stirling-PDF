@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
-import { Page } from "@app/tools/pdfTextEditor/model/Page";
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { LineGrouper } from "@app/tools/pdfTextEditor/pdfium/LineGrouper";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { LineGrouper } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
 
 let ptr = 5000;
 function mkRun(opts: {

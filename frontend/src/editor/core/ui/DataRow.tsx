@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import "@app/ui/DataRow.css";
+import "@editor/ui/DataRow.css";
 
 export interface DataRowProps {
   /** Left-aligned key. */

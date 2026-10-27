@@ -1,23 +1,23 @@
 import { Trans, useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import { FlowModal } from "@app/components/shared/FlowModal";
-import { StepModalHeader } from "@app/components/shared/StepModalHeader";
-import { Icon } from "@app/ui/Icon";
-import { useOwnershipTransfer } from "@app/components/shared/ownership/useOwnershipTransfer";
-import { ownershipErrorText } from "@app/components/shared/ownership/ownershipTransferErrors";
-import { OwnershipTransferAccounts } from "@app/components/shared/ownership/OwnershipTransferAccounts";
-import { OwnershipTransferMembership } from "@app/components/shared/ownership/OwnershipTransferMembership";
-import { OwnershipTransferReview } from "@app/components/shared/ownership/OwnershipTransferReview";
-import { OwnershipTransferActions } from "@app/components/shared/ownership/OwnershipTransferActions";
-import type { OwnershipTransferProps } from "@app/components/shared/ownership/ownershipTransfer.types";
-import "@app/components/shared/ownership/OwnershipTransferModal.css";
+import { Button } from "@editor/ui/Button";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import { FlowModal } from "@editor/components/shared/FlowModal";
+import { StepModalHeader } from "@editor/components/shared/StepModalHeader";
+import { Icon } from "@editor/ui/Icon";
+import { useOwnershipTransfer } from "@editor/components/shared/ownership/useOwnershipTransfer";
+import { ownershipErrorText } from "@editor/components/shared/ownership/ownershipTransferErrors";
+import { OwnershipTransferAccounts } from "@editor/components/shared/ownership/OwnershipTransferAccounts";
+import { OwnershipTransferMembership } from "@editor/components/shared/ownership/OwnershipTransferMembership";
+import { OwnershipTransferReview } from "@editor/components/shared/ownership/OwnershipTransferReview";
+import { OwnershipTransferActions } from "@editor/components/shared/ownership/OwnershipTransferActions";
+import type { OwnershipTransferProps } from "@editor/components/shared/ownership/ownershipTransfer.types";
+import "@editor/components/shared/ownership/OwnershipTransferModal.css";
 
 export type {
   CloudOwnershipStatus,
   OwnershipStatus,
   OwnershipTransferAdapter,
-} from "@app/components/shared/ownership/ownershipTransfer.types";
+} from "@editor/components/shared/ownership/ownershipTransfer.types";
 
 /** Mounted for one recipient. Dismissal cancels preparation but preserves a committed cloud step. */
 export function OwnershipTransferModal(props: OwnershipTransferProps) {

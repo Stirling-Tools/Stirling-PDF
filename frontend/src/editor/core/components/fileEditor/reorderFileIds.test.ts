@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { reorderFileIds } from "@app/components/fileEditor/reorderFileIds";
-import { FileId } from "@app/types/fileContext";
+import { reorderFileIds } from "@editor/components/fileEditor/reorderFileIds";
+import { FileId } from "@editor/types/fileContext";
 
 describe("reorderFileIds (pairwise swap)", () => {
   const ids: FileId[] = [

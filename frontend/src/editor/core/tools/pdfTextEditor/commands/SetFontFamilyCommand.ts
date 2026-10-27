@@ -1,22 +1,22 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
   cloneParagraphLineSlot,
   type ParagraphLineSlot,
   type TextRun,
-} from "@app/tools/pdfTextEditor/model/TextRun";
+} from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
   collectContainersByPtr,
   collectMemberPtrs,
   emitRunLines,
   planLineOrigins,
   removeMemberPtrs,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { deviceFontEmitCount } from "@app/tools/pdfTextEditor/util/deviceFontEmbed";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { deviceFontEmitCount } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
   setScanOverride,
   type ScanOverride,
-} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 
 // Re-emit a run's text in another family: PDFium has no SetFont accessor.
 // Device fonts embed when pre-warmed, else the nearest standard face.
@@ -197,7 +197,7 @@ export class SetFontFamilyCommand implements Command {
 
   private reinsertOriginals(
     m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-    page: import("@app/tools/pdfTextEditor/model/Page").Page,
+    page: import("@editor/tools/pdfTextEditor/model/Page").Page,
   ): void {
     for (const ptr of this.prevMemberPtrs) {
       if (!ptr) continue;

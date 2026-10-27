@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import type { ApiKey } from "@portal/api/infrastructure";
+import type { ApiKey } from "@processor/api/infrastructure";
 
 // Deterministic i18n: keys returned verbatim, so assertions are stable.
 vi.mock("react-i18next", () => ({
@@ -19,13 +19,13 @@ const { fetchApiKeys, revokeApiKey, createApiKey } = vi.hoisted(() => ({
   revokeApiKey: vi.fn(),
   createApiKey: vi.fn(),
 }));
-vi.mock("@portal/api/infrastructure", () => ({
+vi.mock("@processor/api/infrastructure", () => ({
   fetchApiKeys,
   revokeApiKey,
   createApiKey,
 }));
 
-import { ApiKeysTab } from "@portal/components/infrastructure/ApiKeysTab";
+import { ApiKeysTab } from "@processor/components/infrastructure/ApiKeysTab";
 
 const K = "portal.infrastructure.apiKeys";
 

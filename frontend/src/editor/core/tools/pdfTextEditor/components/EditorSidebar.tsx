@@ -1,26 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
-import { useSelectionGeometry } from "@app/tools/pdfTextEditor/hooks/useSelectionGeometry";
-import { DocumentInspector } from "@app/tools/pdfTextEditor/components/inspector/DocumentInspector";
-import { SelectionInspector } from "@app/tools/pdfTextEditor/components/inspector/SelectionInspector";
-import { analyzePageFonts } from "@app/tools/pdfTextEditor/util/pageFonts";
+import { Icon } from "@editor/ui/Icon";
+import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
+import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
+import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
+import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
+import { analyzePageFonts } from "@editor/tools/pdfTextEditor/util/pageFonts";
+import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
   ScanHint,
   type ScanHintProps,
-} from "@app/tools/pdfTextEditor/components/ScanHint";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
+} from "@editor/tools/pdfTextEditor/components/ScanHint";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type {
   EditorViewState,
   LoadProgress,
-} from "@app/tools/pdfTextEditor/store/EditorStore";
+} from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type {
   GroupingMode,
   SelectionState,
   WidthMode,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
 
 interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   store: EditorStore;
@@ -73,6 +75,26 @@ export function EditorSidebar({
   }, [hasSelection]);
 
   const fontNote = useSelectedFontNote(state, selection);
+
+  const editorDocument = store.document;
+  const reviewingImages = useMemo(
+    () => ACCESSIBILITY_EDITING && !!editorDocument?.isTagged(),
+    [editorDocument],
+  );
+  const imageSelected = controller.imageAccessibility !== null;
+  // Counts and Next cover only pages already read, which is just the first few
+  // until the rest scroll into view.
+  useEffect(() => {
+    if (!reviewingImages || (tab !== "document" && !imageSelected)) return;
+    const id = window.setTimeout(() => ensureAllPagesRead(store), 0);
+    return () => window.clearTimeout(id);
+  }, [reviewingImages, tab, imageSelected, store]);
+
+  // Following the selection only catches one appearing, so moving from one
+  // selected image to the next would leave the new one's description hidden.
+  const selectNextImageToReview = () => {
+    if (controller.onSelectNextImageToReview()) setTab("selected");
+  };
 
   if (!state.hasDocument) {
     return (
@@ -145,6 +167,8 @@ export function EditorSidebar({
             onSetGroupingMode={onSetGroupingMode}
             onSetWidthMode={onSetWidthMode}
             onSetShowRulers={onSetShowRulers}
+            imageReview={reviewingImages ? controller.imageReview : null}
+            onSelectNextImageToReview={selectNextImageToReview}
           />
         </Tabs.Panel>
       </Box>

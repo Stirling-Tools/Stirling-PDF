@@ -6,23 +6,23 @@ import {
   useFileState,
   useFileManagement,
   useFileActions,
-} from "@app/contexts/FileContext";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { zipFileService } from "@app/services/zipFileService";
-import { detectFileExtension } from "@app/utils/fileUtils";
-import FileEditorThumbnail from "@app/components/fileEditor/FileEditorThumbnail";
-import AddFileCard from "@app/components/fileEditor/AddFileCard";
-import FilePickerModal from "@app/components/shared/FilePickerModal";
-import { reorderFileIds } from "@app/components/fileEditor/reorderFileIds";
-import { FileId, StirlingFile } from "@app/types/fileContext";
-import { alert } from "@app/components/toast";
-import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import { useVirtualFileRows } from "@app/components/filesPage/useVirtualFileRows";
-import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
-import styles from "@app/components/fileEditor/FileEditor.module.css";
+} from "@editor/contexts/FileContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { zipFileService } from "@editor/services/zipFileService";
+import { detectFileExtension } from "@editor/utils/fileUtils";
+import FileEditorThumbnail from "@editor/components/fileEditor/FileEditorThumbnail";
+import AddFileCard from "@editor/components/fileEditor/AddFileCard";
+import FilePickerModal from "@editor/components/shared/FilePickerModal";
+import { reorderFileIds } from "@editor/components/fileEditor/reorderFileIds";
+import { FileId, StirlingFile } from "@editor/types/fileContext";
+import { alert } from "@editor/components/toast";
+import { downloadFileWithPolicy as downloadFile } from "@editor/services/exportWithPolicy";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
+import { useVirtualFileRows } from "@editor/components/filesPage/useVirtualFileRows";
+import type { FileItemPolicyRef } from "@editor/components/shared/PolicyBadges";
+import styles from "@editor/components/fileEditor/FileEditor.module.css";
 
 const EMPTY_POLICIES: FileItemPolicyRef[] = [];
 const DEFAULT_SUPPORTED_EXTENSIONS = ["pdf"];

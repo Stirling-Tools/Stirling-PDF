@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, EmptyState, Modal, Skeleton } from "@app/ui";
-import { useAsync } from "@portal/hooks/useAsync";
+import { Banner, Button, EmptyState, Modal, Skeleton } from "@editor/ui";
+import { useAsync } from "@processor/hooks/useAsync";
 import {
   fetchApiKeys,
   revokeApiKey,
   type ApiKey,
   type ApiKeysResponse,
-} from "@portal/api/infrastructure";
-import { errorMessage } from "@portal/api/http";
-import { ApiKeyCard } from "@portal/components/infrastructure/ApiKeyCard";
-import { CreateKeyModal } from "@portal/components/infrastructure/CreateKeyModal";
-import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
-import "@portal/components/infrastructure/infrastructure.css";
+} from "@processor/api/infrastructure";
+import { errorMessage } from "@processor/api/http";
+import { ApiKeyCard } from "@processor/components/infrastructure/ApiKeyCard";
+import { CreateKeyModal } from "@processor/components/infrastructure/CreateKeyModal";
+import { SectionHeader } from "@processor/components/infrastructure/SectionHeader";
+import "@processor/components/infrastructure/infrastructure.css";
 
 export function ApiKeysTab() {
   const { t } = useTranslation();

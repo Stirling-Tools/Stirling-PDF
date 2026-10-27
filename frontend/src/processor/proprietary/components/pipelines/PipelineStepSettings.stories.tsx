@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { ToolRegistry } from "@app/data/toolsTaxonomy";
-import type { WorkingToolStep } from "@app/hooks/tools/shared/toolAutomation";
-import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
+import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import type { WorkingToolStep } from "@editor/hooks/tools/shared/toolAutomation";
+import { PipelineStepSettings } from "@processor/components/pipelines/PipelineStepSettings";
 
 /** Stand-in for a tool's real automation settings UI. */
 function MockCompressSettings({

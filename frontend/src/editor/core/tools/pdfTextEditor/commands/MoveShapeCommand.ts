@@ -1,6 +1,6 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 
 /** Translate a vector shape by (dx, dy) in PDF page-space points. */
 export class MoveShapeCommand implements Command {

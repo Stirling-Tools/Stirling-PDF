@@ -5,10 +5,10 @@ import {
   glyphAt,
 } from "@embedpdf/plugin-selection/react";
 import { useDocumentState } from "@embedpdf/core/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { copyText } from "@app/utils/copyText";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import { copyText } from "@editor/utils/copyText";
 
 function isEditableTarget(target: EventTarget | null): boolean {
   return (

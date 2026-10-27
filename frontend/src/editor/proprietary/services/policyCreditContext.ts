@@ -1,10 +1,10 @@
-import { loadPolicies } from "@app/services/policyStorage";
-import { loadPolicyCatalog } from "@app/services/policyCatalog";
-import { editorTriggerOf } from "@app/policies/runOn";
+import { loadPolicies } from "@editor/services/policyStorage";
+import { loadPolicyCatalog } from "@editor/services/policyCatalog";
+import { editorTriggerOf } from "@editor/policies/runOn";
 import type {
   AccountLinkBlockContext,
   AccountLinkBlockSource,
-} from "@app/services/accountLinkBlock";
+} from "@editor/services/accountLinkBlock";
 
 /** Resolves user-facing pipeline details from the editor cache without delaying a failed request. */
 export function policyCreditContext(

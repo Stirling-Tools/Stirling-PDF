@@ -33,6 +33,35 @@ const CONTENT = [
   "",
 ].join("\n");
 
+const CHART_WIDTH = 120;
+const CHART_HEIGHT = 80;
+/** Revenue for four regions, as bar heights in pixels. */
+const BAR_HEIGHTS = [42, 30, 56, 22];
+
+/**
+ * RGB samples of a bar chart, top row first: four bars on a pair of axes over
+ * light gridlines, so the figure's description describes what it shows.
+ */
+function barChartPixels(): Uint8Array {
+  const pixels = new Uint8Array(CHART_WIDTH * CHART_HEIGHT * 3).fill(255);
+  const paint = (x: number, y: number, rgb: [number, number, number]) => {
+    pixels.set(rgb, (y * CHART_WIDTH + x) * 3);
+  };
+  const baseline = CHART_HEIGHT - 8;
+  for (let y = baseline - 15; y > 6; y -= 15) {
+    for (let x = 9; x < CHART_WIDTH - 6; x++) paint(x, y, [225, 225, 225]);
+  }
+  BAR_HEIGHTS.forEach((height, i) => {
+    const left = 16 + i * 26;
+    for (let y = baseline - height; y < baseline; y++) {
+      for (let x = left; x < left + 18; x++) paint(x, y, [59, 130, 246]);
+    }
+  });
+  for (let x = 8; x < CHART_WIDTH - 6; x++) paint(x, baseline, [90, 90, 90]);
+  for (let y = 6; y <= baseline; y++) paint(8, y, [90, 90, 90]);
+  return pixels;
+}
+
 async function main() {
   const doc = await PDFDocument.create();
   const ctx = doc.context;
@@ -42,23 +71,16 @@ async function main() {
   page.node.setFontDictionary(PDFName.of("F1"), regular.ref);
   page.node.setFontDictionary(PDFName.of("F2"), bold.ref);
 
-  // 2x2 RGB swatch: the figure only has to exist, not to look like anything.
-  const pixels = Uint8Array.from([
-    200, 60, 60, 60, 160, 60, 60, 60, 200, 220, 180, 40,
-  ]);
+  // Drawn at one pixel per point, matching the 120x80 box the content places it in.
   const image = ctx.register(
-    PDFRawStream.of(
-      ctx.obj({
-        Type: "XObject",
-        Subtype: "Image",
-        Width: 2,
-        Height: 2,
-        ColorSpace: "DeviceRGB",
-        BitsPerComponent: 8,
-        Length: pixels.length,
-      }),
-      pixels,
-    ),
+    ctx.flateStream(barChartPixels(), {
+      Type: "XObject",
+      Subtype: "Image",
+      Width: CHART_WIDTH,
+      Height: CHART_HEIGHT,
+      ColorSpace: "DeviceRGB",
+      BitsPerComponent: 8,
+    }),
   );
   page.node.setXObject(PDFName.of("Im1"), image);
 

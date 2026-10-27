@@ -1,11 +1,11 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SplitSettings from "@app/components/tools/split/SplitSettings";
-import { SPLIT_METHODS } from "@app/constants/splitConstants";
+import SplitSettings from "@editor/components/tools/split/SplitSettings";
+import { SPLIT_METHODS } from "@editor/constants/splitConstants";
 import {
   defaultParameters,
   SplitParameters,
-} from "@app/hooks/tools/split/useSplitParameters";
+} from "@editor/hooks/tools/split/useSplitParameters";
 
 const meta = {
   title: "Tools/Split/SplitSettings",

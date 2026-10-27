@@ -1,4 +1,4 @@
-import { DOWNLOAD_BASE_URL } from "@app/constants/downloads";
+import { DOWNLOAD_BASE_URL } from "@editor/constants/downloads";
 
 export interface UpdateSummary {
   latest_version: string | null;
