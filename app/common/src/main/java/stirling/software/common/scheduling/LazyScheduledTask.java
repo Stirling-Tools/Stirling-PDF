@@ -2,7 +2,6 @@ package stirling.software.common.scheduling;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
@@ -15,14 +14,16 @@ import lombok.extern.slf4j.Slf4j;
  * instead of an always-on {@code @Scheduled} registration at startup.
  *
  * <p>Thread-safe: schedule parameters belong to the first successful call, later calls only flip
- * the once-gate. A failed registration is logged and the gate reopens so a later call retries.
+ * the once-gate. Concurrent callers wait for an in-flight registration, so none reports success
+ * before the task is actually submitted. A failed registration is logged and the gate reopens so a
+ * later call retries.
  */
 @Slf4j
 public final class LazyScheduledTask {
 
     private final TaskScheduler scheduler;
     private final Runnable task;
-    private final AtomicBoolean scheduled = new AtomicBoolean();
+    private boolean scheduled;
 
     public LazyScheduledTask(TaskScheduler scheduler, Runnable task) {
         this.scheduler = scheduler;
@@ -58,13 +59,13 @@ public final class LazyScheduledTask {
         return submit(() -> scheduler.schedule(task, new CronTrigger(cronExpression)));
     }
 
-    private boolean submit(Runnable register) {
-        if (!scheduled.compareAndSet(false, true)) return true;
+    private synchronized boolean submit(Runnable register) {
+        if (scheduled) return true;
         try {
             register.run();
+            scheduled = true;
             return true;
         } catch (RuntimeException e) {
-            scheduled.set(false);
             log.warn("Failed to register scheduled task; a later call will retry", e);
             return false;
         }

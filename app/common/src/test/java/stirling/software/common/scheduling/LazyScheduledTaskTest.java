@@ -3,6 +3,7 @@ package stirling.software.common.scheduling;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -14,6 +15,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -137,6 +139,78 @@ class LazyScheduledTaskTest {
         lazy.ensureFixedDelay(Duration.ofMinutes(1));
 
         verify(scheduler, times(2))
+                .scheduleWithFixedDelay(
+                        any(Runnable.class), any(Instant.class), eq(Duration.ofMinutes(1)));
+    }
+
+    @Test
+    @DisplayName("a concurrent caller reports the in-flight registration failure and retries")
+    void concurrentCallersSeeFailure() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        doAnswer(
+                        invocation -> {
+                            entered.countDown();
+                            release.await(5, TimeUnit.SECONDS);
+                            throw new IllegalStateException("scheduler down");
+                        })
+                .when(scheduler)
+                .scheduleWithFixedDelay(
+                        any(Runnable.class), any(Instant.class), eq(Duration.ofMinutes(1)));
+        LazyScheduledTask lazy = new LazyScheduledTask(scheduler, () -> {});
+
+        try (ExecutorService pool = Executors.newFixedThreadPool(2)) {
+            Future<Boolean> first = pool.submit(() -> lazy.ensureFixedDelay(Duration.ofMinutes(1)));
+            assertThat(entered.await(5, TimeUnit.SECONDS)).isTrue();
+            Future<Boolean> second =
+                    pool.submit(() -> lazy.ensureFixedDelay(Duration.ofMinutes(1)));
+            release.countDown();
+
+            assertThat(first.get(5, TimeUnit.SECONDS)).isFalse();
+            assertThat(second.get(5, TimeUnit.SECONDS)).isFalse();
+        }
+
+        verify(scheduler, times(2))
+                .scheduleWithFixedDelay(
+                        any(Runnable.class), any(Instant.class), eq(Duration.ofMinutes(1)));
+    }
+
+    @Test
+    @DisplayName("a concurrent caller waits for a successful registration before reporting it")
+    void concurrentCallersWaitForSuccess() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        doAnswer(
+                        invocation -> {
+                            entered.countDown();
+                            release.await(5, TimeUnit.SECONDS);
+                            return null;
+                        })
+                .when(scheduler)
+                .scheduleWithFixedDelay(
+                        any(Runnable.class), any(Instant.class), eq(Duration.ofMinutes(1)));
+        LazyScheduledTask lazy = new LazyScheduledTask(scheduler, () -> {});
+
+        try (ExecutorService pool = Executors.newFixedThreadPool(2)) {
+            Future<Boolean> first = pool.submit(() -> lazy.ensureFixedDelay(Duration.ofMinutes(1)));
+            assertThat(entered.await(5, TimeUnit.SECONDS)).isTrue();
+            CountDownLatch secondStarted = new CountDownLatch(1);
+            Future<Boolean> second =
+                    pool.submit(
+                            () -> {
+                                secondStarted.countDown();
+                                return lazy.ensureFixedDelay(Duration.ofMinutes(1));
+                            });
+            assertThat(secondStarted.await(5, TimeUnit.SECONDS)).isTrue();
+
+            assertThat(second.isDone()).isFalse();
+            release.countDown();
+
+            assertThat(first.get(5, TimeUnit.SECONDS)).isTrue();
+            assertThat(second.get(5, TimeUnit.SECONDS)).isTrue();
+        }
+
+        verify(scheduler, times(1))
                 .scheduleWithFixedDelay(
                         any(Runnable.class), any(Instant.class), eq(Duration.ofMinutes(1)));
     }
