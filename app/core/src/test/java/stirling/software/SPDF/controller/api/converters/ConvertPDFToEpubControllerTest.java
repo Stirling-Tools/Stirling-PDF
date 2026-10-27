@@ -40,6 +40,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.OutputFormat;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.TargetDevice;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -65,11 +66,15 @@ class ConvertPDFToEpubControllerTest {
 
     @Mock private TempFileManager tempFileManager;
     @Mock private EndpointConfiguration endpointConfiguration;
+    @Mock private RuntimePathConfig runtimePathConfig;
+
+    private static final String CALIBRE_PATH = "/opt/calibre/ebook-convert";
 
     @InjectMocks private ConvertPDFToEpubController controller;
 
     @BeforeEach
     void setUp() throws Exception {
+        lenient().when(runtimePathConfig.getCalibrePath()).thenReturn(CALIBRE_PATH);
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
@@ -148,7 +153,7 @@ class ConvertPDFToEpubControllerTest {
 
             List<String> command = commandCaptor.getValue();
             assertEquals(17, command.size());
-            assertEquals("ebook-convert", command.get(0));
+            assertEquals(CALIBRE_PATH, command.get(0));
             assertEquals(expectedInput.toString(), command.get(1));
             assertEquals(expectedOutput.toString(), command.get(2));
             assertTrue(command.contains("--pdf-engine"));
@@ -326,7 +331,7 @@ class ConvertPDFToEpubControllerTest {
             ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
-            assertEquals("ebook-convert", command.get(0));
+            assertEquals(CALIBRE_PATH, command.get(0));
             assertEquals(expectedInput.toString(), command.get(1));
             assertEquals(expectedOutput.toString(), command.get(2));
             assertTrue(command.contains("--pdf-engine"));

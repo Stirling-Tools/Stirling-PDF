@@ -350,6 +350,15 @@ class OfficeDocumentSanitizerTest {
     }
 
     @Test
+    void sanitize_rejectsEntryNamedOutsideTheArchive() throws IOException {
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("../word/document.xml", "<w:document/>".getBytes(StandardCharsets.UTF_8));
+        byte[] docx = zip(entries);
+
+        assertThrows(IOException.class, () -> sanitizer.sanitize(docx, "docx"));
+    }
+
+    @Test
     void sanitize_corruptZipProducesSafeOutput() throws IOException {
         byte[] garbage = "this is not a zip file".getBytes(StandardCharsets.UTF_8);
         byte[] result = sanitizer.sanitize(garbage, "docx");

@@ -27,6 +27,7 @@ import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.Outpu
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.TargetDevice;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
@@ -51,11 +52,12 @@ public class ConvertPDFToEpubController {
 
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
+    private final RuntimePathConfig runtimePathConfig;
 
-    private static List<String> buildCalibreCommand(
+    private List<String> buildCalibreCommand(
             Path inputPath, Path outputPath, boolean detectChapters, TargetDevice targetDevice) {
         List<String> command = new ArrayList<>();
-        command.add("ebook-convert");
+        command.add(runtimePathConfig.getCalibrePath());
         command.add(inputPath.toString());
         command.add(outputPath.toString());
 

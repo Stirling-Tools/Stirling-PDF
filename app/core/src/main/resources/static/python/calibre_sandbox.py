@@ -4,6 +4,7 @@ import os
 import platform
 import stat
 import struct
+import subprocess
 import sys
 
 READ_ONLY = (
@@ -77,7 +78,8 @@ ARCHITECTURES = {
 }
 NR_IO_URING_SETUP, NR_IO_URING_ENTER, NR_IO_URING_REGISTER = 425, 426, 427
 
-libc = ctypes.CDLL(None, use_errno=True)
+LINUX = sys.platform.startswith("linux")
+libc = ctypes.CDLL(None, use_errno=True) if LINUX else None
 
 
 class RulesetAttr(ctypes.Structure):
@@ -206,6 +208,13 @@ def main():
     work_dir, command = sys.argv[1], sys.argv[2:]
     # Must match CalibreSandboxPolicy.Mode.BEST_EFFORT; any other value refuses to run unconfined.
     required = os.environ.get("STIRLING_CALIBRE_SANDBOX", "required") != "best-effort"
+
+    if not LINUX:
+        print("calibre-sandbox: Landlock and seccomp need Linux, nothing confined", file=sys.stderr)
+        if required:
+            return 125
+        # Windows has no real exec: the caller would see this process exit before Calibre does.
+        return subprocess.run(command).returncode
 
     call(libc.prctl, PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)
     if not confine_file_system(work_dir):

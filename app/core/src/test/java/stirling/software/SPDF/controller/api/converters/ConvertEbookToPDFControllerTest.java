@@ -39,6 +39,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.OfficeDocumentSanitizer;
@@ -67,11 +68,15 @@ class ConvertEbookToPDFControllerTest {
     @Mock private TempFileManager tempFileManager;
     @Mock private EndpointConfiguration endpointConfiguration;
     @Mock private OfficeDocumentSanitizer officeDocumentSanitizer;
+    @Mock private RuntimePathConfig runtimePathConfig;
+
+    private static final String CALIBRE_PATH = "/opt/calibre/ebook-convert";
 
     @InjectMocks private ConvertEbookToPDFController controller;
 
     @BeforeEach
     void setUp() throws Exception {
+        lenient().when(runtimePathConfig.getCalibrePath()).thenReturn(CALIBRE_PATH);
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
@@ -162,7 +167,7 @@ class ConvertEbookToPDFControllerTest {
 
             List<String> command = commandCaptor.getValue();
             assertEquals(6, command.size());
-            assertEquals("ebook-convert", command.get(0));
+            assertEquals(CALIBRE_PATH, command.get(0));
             assertEquals(expectedInput.toString(), command.get(1));
             assertEquals(expectedOutput.toString(), command.get(2));
             assertEquals("--embed-all-fonts", command.get(3));

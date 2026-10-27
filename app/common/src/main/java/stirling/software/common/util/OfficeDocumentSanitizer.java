@@ -78,8 +78,9 @@ public class OfficeDocumentSanitizer {
      * except targets an admin has allowlisted. Returned unchanged, with no part inspected, when
      * {@code system.disableSanitize} is set.
      *
-     * @throws IOException when the input is empty, or a relationship or ODF XML part cannot be
-     *     parsed; such a document is refused rather than passed on with that part unchanged
+     * @throws IOException when the input is empty, an entry is named outside the archive, or a
+     *     relationship or ODF XML part cannot be parsed; such a document is refused rather than
+     *     passed on with that part unchanged
      */
     public byte[] sanitize(byte[] documentBytes, String extension) throws IOException {
         if (documentBytes == null || documentBytes.length == 0) {
@@ -122,6 +123,8 @@ public class OfficeDocumentSanitizer {
                 }
                 zipOut.closeEntry();
             }
+        } catch (SecurityException e) {
+            throw new IOException("Office document has an unsafe entry name", e);
         }
         return out.toByteArray();
     }

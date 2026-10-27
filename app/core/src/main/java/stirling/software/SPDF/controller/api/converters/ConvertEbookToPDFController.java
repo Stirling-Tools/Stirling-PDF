@@ -28,6 +28,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
@@ -52,6 +53,7 @@ public class ConvertEbookToPDFController {
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
     private final OfficeDocumentSanitizer officeDocumentSanitizer;
+    private final RuntimePathConfig runtimePathConfig;
 
     private boolean isCalibreEnabled() {
         return endpointConfiguration.isGroupEnabled("Calibre");
@@ -196,7 +198,7 @@ public class ConvertEbookToPDFController {
             boolean includeTableOfContents,
             boolean includePageNumbers) {
         List<String> command = new ArrayList<>();
-        command.add("ebook-convert");
+        command.add(runtimePathConfig.getCalibrePath());
         command.add(inputPath.toString());
         command.add(outputPath.toString());
 
