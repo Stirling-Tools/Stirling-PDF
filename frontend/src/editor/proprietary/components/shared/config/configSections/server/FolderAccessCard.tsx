@@ -1,21 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { Icon } from "@editor/ui/Icon";
 import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
-import {
-  Code,
-  Divider,
-  Group,
-  Paper,
-  Stack,
-  Text,
-  TextInput,
-} from "@mantine/core";
+import { Code, Group, Paper, Stack, Text, TextInput } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import { useLoginRequired } from "@editor/hooks/useLoginRequired";
-import apiClient from "@editor/services/apiClient";
-import type { ImpliedFolderRoot } from "@editor/components/shared/config/configSections/server/serverSettings";
 import type { FolderAccessCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
 
 /** The directories folder sources and outputs may touch. A security boundary. */
@@ -30,36 +20,7 @@ export function FolderAccessCard({
   const { t } = useTranslation();
   const { getDisabledStyles } = useLoginRequired();
 
-  const [impliedRoots, setImpliedRoots] = useState<ImpliedFolderRoot[]>([]);
-
-  useEffect(() => {
-    if (!loginEnabled) return;
-    apiClient
-      .get<ImpliedFolderRoot[]>(
-        "/api/v1/admin/settings/policies/implied-folder-roots",
-      )
-      .then((res) => setImpliedRoots(res.data ?? []))
-      .catch(() => setImpliedRoots([]));
-  }, [loginEnabled]);
-
   const roots = settings.allowedFolderRoots ?? [];
-
-  const reasonLabel = (reason: string) => {
-    switch (reason) {
-      case "serverStorage":
-        return t(
-          "admin.settings.folderAccess.implied.serverStorage",
-          "Server file storage",
-        );
-      case "watchedFolder":
-        return t(
-          "admin.settings.folderAccess.implied.watchedFolder",
-          "Pipeline watched folder",
-        );
-      default:
-        return reason;
-    }
-  };
 
   const setRoots = useCallback(
     (next: string[]) => {
@@ -108,7 +69,7 @@ export function FolderAccessCard({
         <Text size="xs" c="dimmed">
           {t(
             "admin.settings.folderAccess.securityNote",
-            "Leave this empty to disable folder sources and outputs entirely. Stirling's own configuration directory is always off-limits, and folder access is always disabled in hosted (SaaS) mode.",
+            "Leave this empty to disable folder sources and outputs entirely. Stirling's own configuration directory, server file storage and the pipeline watched folders are always off-limits, and folder access is always disabled in hosted (SaaS) mode.",
           )}
         </Text>
 
@@ -166,45 +127,6 @@ export function FolderAccessCard({
             {t("admin.settings.folderAccess.roots.add", "Add")}
           </Button>
         </Group>
-
-        {impliedRoots.length > 0 && (
-          <>
-            <Divider />
-            <Group gap="xs" align="center">
-              <Text fw={500} size="sm">
-                {t(
-                  "admin.settings.folderAccess.implied.title",
-                  "Always allowed",
-                )}
-              </Text>
-              <InfoTooltip
-                label={t(
-                  "admin.settings.folderAccess.implied.description",
-                  "These Stirling-managed directories are always permitted and can't be changed here.",
-                )}
-              />
-            </Group>
-            <Stack gap="xs">
-              {impliedRoots.map((root) => (
-                <Group
-                  key={root.path}
-                  justify="space-between"
-                  wrap="nowrap"
-                  gap="xs"
-                  align="center"
-                >
-                  <Code style={{ wordBreak: "break-all" }}>{root.path}</Code>
-                  <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
-                    <Text size="xs" c="dimmed">
-                      {reasonLabel(root.reason)}
-                    </Text>
-                    <Icon name="lock" size="1rem" />
-                  </Group>
-                </Group>
-              ))}
-            </Stack>
-          </>
-        )}
       </Stack>
     </Paper>
   );
