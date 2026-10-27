@@ -1,0 +1,277 @@
+/**
+ * File lifecycle management - Resource cleanup and memory management
+ */
+
+import { FileId } from "@editor/types/file";
+import { releaseSharedDocumentWhenIdle } from "@editor/services/pdfiumService";
+import { releaseDocumentBytes } from "@editor/services/documentBytesCache";
+import {
+  forgetPdfAccess,
+  getPdfAccess,
+  rememberPdfAccess,
+} from "@editor/services/pdfAccessService";
+import {
+  FileContextAction,
+  FileContextState,
+  StirlingFileStub,
+  ProcessedFilePage,
+  createStirlingFile,
+} from "@editor/types/fileContext";
+import {
+  forgetFile,
+  noteFileSaved,
+  persistedSourceFields,
+} from "@editor/contexts/file/storedFileReconciler";
+
+const DEBUG = process.env.NODE_ENV === "development";
+
+/**
+ * Resource tracking and cleanup utilities
+ */
+export class FileLifecycleManager {
+  private cleanupTimers = new Map<string, number>();
+  private blobUrls = new Set<string>();
+  private fileGenerations = new Map<string, number>(); // Generation tokens to prevent stale cleanup
+
+  constructor(
+    private filesRef: React.RefObject<Map<FileId, File>>,
+    private dispatch: React.Dispatch<FileContextAction>,
+  ) {}
+
+  /**
+   * Track blob URLs for cleanup
+   */
+  trackBlobUrl = (url: string): void => {
+    // Only track actual blob URLs to avoid trying to revoke other schemes
+    if (url.startsWith("blob:")) {
+      this.blobUrls.add(url);
+    }
+  };
+
+  private revokeBlobUrl = (url: string): void => {
+    if (!url.startsWith("blob:")) return;
+    try {
+      URL.revokeObjectURL(url);
+    } catch {
+      // Ignore revocation errors.
+    }
+    this.blobUrls.delete(url);
+  };
+
+  /**
+   * Clean up resources for a specific file (with stateRef access for complete cleanup)
+   */
+  cleanupFile = (
+    fileId: FileId,
+    stateRef?: React.RefObject<FileContextState>,
+  ): void => {
+    forgetFile(fileId);
+    // Use comprehensive cleanup (same as removeFiles)
+    this.cleanupAllResourcesForFile(fileId, stateRef);
+
+    // Remove file from state
+    this.dispatch({ type: "REMOVE_FILES", payload: { fileIds: [fileId] } });
+  };
+
+  /**
+   * Clean up all files and resources
+   */
+  cleanupAllFiles = (): void => {
+    forgetPdfAccess([...this.filesRef.current.keys()]);
+    // Revoke all blob URLs
+    this.blobUrls.forEach((url) => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {
+        // Ignore revocation errors
+      }
+    });
+    this.blobUrls.clear();
+
+    // Clear all cleanup timers and generations
+    this.cleanupTimers.forEach((timer) => clearTimeout(timer));
+    this.cleanupTimers.clear();
+    this.fileGenerations.clear();
+
+    // No file survives teardown, so neither should its shared document.
+    releaseSharedDocumentWhenIdle();
+
+    // Clear files ref
+    this.filesRef.current.clear();
+  };
+
+  /**
+   * Schedule delayed cleanup for a file with generation token to prevent stale cleanup
+   */
+  scheduleCleanup = (
+    fileId: FileId,
+    delay: number = 30000,
+    stateRef?: React.RefObject<FileContextState>,
+  ): void => {
+    // Cancel existing timer
+    const existingTimer = this.cleanupTimers.get(fileId);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+      this.cleanupTimers.delete(fileId);
+    }
+
+    // If delay is negative, just cancel (don't reschedule)
+    if (delay < 0) {
+      return;
+    }
+
+    // Increment generation for this file to invalidate any pending cleanup
+    const currentGen = (this.fileGenerations.get(fileId) || 0) + 1;
+    this.fileGenerations.set(fileId, currentGen);
+
+    // Schedule new cleanup with generation token
+    const timer = window.setTimeout(() => {
+      // Check if this cleanup is still valid (file hasn't been re-added)
+      if (this.fileGenerations.get(fileId) === currentGen) {
+        this.cleanupFile(fileId, stateRef);
+      } else {
+        if (DEBUG)
+          console.log(
+            `🗂️ Skipped stale cleanup for file ${fileId} (generation mismatch)`,
+          );
+      }
+    }, delay);
+
+    this.cleanupTimers.set(fileId, timer);
+  };
+
+  /**
+   * Remove a file immediately with complete resource cleanup
+   */
+  removeFiles = (
+    fileIds: FileId[],
+    stateRef?: React.RefObject<FileContextState>,
+  ): void => {
+    fileIds.forEach((fileId) => {
+      forgetFile(fileId);
+      // Clean up all resources for this file
+      this.cleanupAllResourcesForFile(fileId, stateRef);
+    });
+
+    // Dispatch removal action once for all files (reducer only updates state)
+    this.dispatch({ type: "REMOVE_FILES", payload: { fileIds } });
+  };
+
+  /**
+   * Complete resource cleanup for a single file
+   */
+  private cleanupAllResourcesForFile = (
+    fileId: FileId,
+    stateRef?: React.RefObject<FileContextState>,
+  ): void => {
+    forgetPdfAccess([fileId]);
+    const file = this.filesRef.current.get(fileId);
+    this.filesRef.current.delete(fileId);
+
+    // Cancel cleanup timer and generation
+    const timer = this.cleanupTimers.get(fileId);
+    if (timer) {
+      clearTimeout(timer);
+      this.cleanupTimers.delete(fileId);
+    }
+    this.fileGenerations.delete(fileId);
+
+    // A scan queued before this removal can still open the document, so the
+    // release runs behind the queue. The byte cache entry is keyed by the file
+    // and cannot be reused once it leaves the workbench.
+    releaseSharedDocumentWhenIdle();
+    if (file) releaseDocumentBytes(file);
+
+    // Clean up blob URLs from file record if we have access to state
+    if (stateRef) {
+      const record = stateRef.current.files.byId[fileId];
+      if (record) {
+        // Clean up thumbnail blob URLs
+        if (record.thumbnailUrl) this.revokeBlobUrl(record.thumbnailUrl);
+
+        if (record.blobUrl) this.revokeBlobUrl(record.blobUrl);
+
+        // Clean up processed file thumbnails
+        if (record.processedFile?.pages) {
+          record.processedFile.pages.forEach((page: ProcessedFilePage) => {
+            if (page.thumbnail) this.revokeBlobUrl(page.thumbnail);
+          });
+        }
+      }
+    }
+  };
+
+  /**
+   * Update file record with race condition guards
+   */
+  updateStirlingFileStub = (
+    fileId: FileId,
+    updates: Partial<StirlingFileStub>,
+    stateRef?: React.RefObject<FileContextState>,
+  ): void => {
+    // Guard against updating removed files (race condition protection)
+    if (!this.filesRef.current.has(fileId)) {
+      if (DEBUG)
+        console.warn(
+          `🗂️ Attempted to update removed file (filesRef): ${fileId}`,
+        );
+      return;
+    }
+
+    // Additional state guard for rare race conditions
+    if (stateRef && !stateRef.current.files.byId[fileId]) {
+      if (DEBUG)
+        console.warn(`🗂️ Attempted to update removed file (state): ${fileId}`);
+      return;
+    }
+
+    // Tools name their output after the held File, not the stub, so a rename
+    // must replace it or the next tool run brings the old name back.
+    const held = this.filesRef.current.get(fileId);
+    if (held && updates.name !== undefined && updates.name !== held.name) {
+      const access = getPdfAccess(held);
+      const renamed = new File([held], updates.name, {
+        type: held.type,
+        lastModified: held.lastModified,
+      });
+      const renamedFile = createStirlingFile(renamed, fileId);
+      this.filesRef.current.set(fileId, renamedFile);
+      if (access) rememberPdfAccess(renamedFile, access);
+    }
+
+    this.dispatch({
+      type: "UPDATE_FILE_RECORD",
+      payload: { id: fileId, updates },
+    });
+
+    // Fire-and-forget: the dispatch above is what the UI reads, and a storage
+    // hiccup must not stall it. Worst case the link reverts to its stored value.
+    const linkUpdates = persistedSourceFields(updates);
+    if (linkUpdates) {
+      void import("@editor/services/fileStorage")
+        .then(({ fileStorage }) =>
+          fileStorage.updateFileMetadata(fileId, linkUpdates),
+        )
+        .catch((error) =>
+          console.error(
+            `[Lifecycle] Failed to persist disk link for ${fileId}:`,
+            error,
+          ),
+        );
+    }
+
+    noteFileSaved(fileId, updates, (patch) =>
+      this.dispatch({
+        type: "UPDATE_FILE_RECORD",
+        payload: { id: fileId, updates: patch },
+      }),
+    );
+  };
+
+  /**
+   * Cleanup on unmount
+   */
+  destroy = (): void => {
+    this.cleanupAllFiles();
+  };
+}
