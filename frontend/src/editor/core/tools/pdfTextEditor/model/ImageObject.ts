@@ -15,8 +15,13 @@ export class ImageObject {
   dirty: boolean;
   /** Session-only lock; see TextRun.locked. */
   locked: boolean;
-  readonly mcid: number | null;
-  readonly artifact: boolean;
+  /**
+   * The page's MCID for the image: its own, or the form's for an image drawn
+   * by a form XObject. Changed by TagImageCommand, along with the object's
+   * marks.
+   */
+  mcid: number | null;
+  artifact: boolean;
 
   constructor(
     init: ImageObjectSnapshot & {
@@ -45,6 +50,7 @@ export class ImageObject {
       locked: this.locked || undefined,
       mcid: this.mcid ?? undefined,
       artifact: this.artifact || undefined,
+      inForm: this.containerPtr !== 0 || undefined,
     };
   }
 }
