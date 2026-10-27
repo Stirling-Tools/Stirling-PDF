@@ -466,6 +466,7 @@ class FailureKindTest {
                             FailureKind.STEP_INTERRUPTED,
                             FailureKind.STEP_PAGE_TOO_LARGE,
                             FailureKind.INPUT_IMAGE_TOO_LARGE,
+                            FailureKind.INPUT_DECOMPRESSES_TOO_LARGE,
                             FailureKind.STEP_MISCONFIGURED);
         }
 

@@ -983,6 +983,13 @@ public class ExceptionUtils {
                 ErrorCode.COMBINED_IMAGE_TOO_LARGE.getCode());
     }
 
+    public static DecodedStreamTooLargeException createDecodedStreamTooLargeException(
+            long limitMegabytes) {
+        return new DecodedStreamTooLargeException(
+                getMessage(ErrorCode.DECODED_STREAM_TOO_LARGE, limitMegabytes),
+                ErrorCode.DECODED_STREAM_TOO_LARGE.getCode());
+    }
+
     public static OutOfMemoryDpiException createEmbeddedImageTooLargeException(
             long megapixels, long limitMegapixels) {
         return new OutOfMemoryDpiException(
@@ -1315,7 +1322,11 @@ public class ExceptionUtils {
         EMBEDDED_IMAGE_TOO_LARGE(
                 "E086",
                 "error.embeddedImageTooLarge",
-                "An image in this document needs {0} megapixels, more than this server''s limit of {1} megapixels.");
+                "An image in this document needs {0} megapixels, more than this server''s limit of {1} megapixels."),
+        DECODED_STREAM_TOO_LARGE(
+                "E087",
+                "error.decodedStreamTooLarge",
+                "Part of this document decompresses to more than this server''s limit of {0} MB.");
 
         private final String code;
         private final String messageKey;
@@ -1595,6 +1606,22 @@ public class ExceptionUtils {
     public static class EmlFormatException extends BaseValidationException {
         public EmlFormatException(String message, String errorCode) {
             super(message, errorCode);
+        }
+    }
+
+    /**
+     * A PDF stream decoded past {@code DecodedStreamLimit}. Unchecked on purpose: PDFBox catches an
+     * IOException from a content stream and draws the page blank, which would answer a refused
+     * decode with a successful, empty result.
+     */
+    public static class DecodedStreamTooLargeException extends RuntimeException
+            implements ErrorCodeProvider {
+        @Getter(onMethod_ = {@Override})
+        private final String errorCode;
+
+        public DecodedStreamTooLargeException(String message, String errorCode) {
+            super(message);
+            this.errorCode = errorCode;
         }
     }
 

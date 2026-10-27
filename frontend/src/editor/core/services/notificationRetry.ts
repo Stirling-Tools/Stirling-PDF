@@ -60,6 +60,7 @@ export const KIND_ERROR_CODES: Record<string, readonly string[]> = {
   STEP_INTERRUPTED: ["E053"],
   STEP_PAGE_TOO_LARGE: ["E081", "E084", "E085"],
   INPUT_IMAGE_TOO_LARGE: ["E086"],
+  INPUT_DECOMPRESSES_TOO_LARGE: ["E087"],
   STEP_MISCONFIGURED: ["E040", "E041", "E043", "E050", "E070", "E072"],
 };
 

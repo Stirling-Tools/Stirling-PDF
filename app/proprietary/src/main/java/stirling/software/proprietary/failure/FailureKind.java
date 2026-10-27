@@ -273,6 +273,22 @@ public enum FailureKind {
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     /**
+     * A stream in the document decompresses past the server's limit. Practically always a damaged
+     * or hostile file, so no repair is offered: repairing decompresses the same stream.
+     */
+    INPUT_DECOMPRESSES_TOO_LARGE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E087"),
+            fallback(
+                    "Part of this document decompresses to more data than this server can process."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
      * The step's settings, not the document, were refused: no OCR language, an unparseable page
      * size. Scoped to the policy, since every document it reaches fails identically until the step
      * is edited, and one incident says that best.
