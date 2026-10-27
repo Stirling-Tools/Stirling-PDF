@@ -302,7 +302,7 @@ public class WorkflowSessionService {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> metadataMap =
                         objectMapper.readValue(request.getWorkflowMetadata(), Map.class);
-                session.setWorkflowMetadata(metadataMap);
+                session.setWorkflowMetadata(WorkflowMetadataValidator.validate(metadataMap));
             } catch (JacksonException e) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
@@ -862,18 +862,11 @@ public class WorkflowSessionService {
         Map<String, Object> metadata = session.getWorkflowMetadata();
         if (metadata != null && !metadata.isEmpty()) {
             dto.setShowSignature(
-                    metadata.containsKey("showSignature")
-                            ? (Boolean) metadata.get("showSignature")
-                            : false);
-            dto.setPageNumber(
-                    metadata.containsKey("pageNumber")
-                            ? ((Number) metadata.get("pageNumber")).intValue()
-                            : null);
-            dto.setReason(metadata.containsKey("reason") ? (String) metadata.get("reason") : null);
-            dto.setLocation(
-                    metadata.containsKey("location") ? (String) metadata.get("location") : null);
-            dto.setShowLogo(
-                    metadata.containsKey("showLogo") ? (Boolean) metadata.get("showLogo") : false);
+                    WorkflowMetadataValidator.booleanValue(metadata, "showSignature", false));
+            dto.setPageNumber(WorkflowMetadataValidator.integerValue(metadata, "pageNumber"));
+            dto.setReason(WorkflowMetadataValidator.stringValue(metadata, "reason"));
+            dto.setLocation(WorkflowMetadataValidator.stringValue(metadata, "location"));
+            dto.setShowLogo(WorkflowMetadataValidator.booleanValue(metadata, "showLogo", false));
         } else {
             // Default values if no metadata
             dto.setShowSignature(false);
