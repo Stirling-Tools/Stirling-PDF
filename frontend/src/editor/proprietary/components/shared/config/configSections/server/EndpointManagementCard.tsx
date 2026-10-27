@@ -68,7 +68,6 @@ const commonEndpoints = [
   "rotate-pdf",
   "sanitize-pdf",
   "scale-pages",
-  "scanner-effect",
   "show-javascript",
   "sign",
   "split-by-size-or-count",
