@@ -4,8 +4,8 @@ import { createHash } from "node:crypto";
 
 import { sha256Hex } from "@editor/tools/pdfTextEditor/util/sha256";
 
-// The pure-JS SHA-256 fingerprints embedded font programs so the backend can
-// match the EXACT subset font a charcode request targets.
+// The pure-JS SHA-256 fingerprints embedded font programs by their exact
+// subset bytes.
 describe("sha256Hex", () => {
   it("matches the FIPS 180-4 vectors", () => {
     expect(sha256Hex(new Uint8Array(0))).toBe(

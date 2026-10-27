@@ -340,10 +340,6 @@ export interface ConvertEbookToPdfRequest {
 }
 export type ConvertPdfHtmlRequest = Record<string, never>;
 export type ConvertPdfMarkdownRequest = Record<string, never>;
-export type ConvertPdfTextEditorMetadataRequest = Record<string, never>;
-export interface ConvertPdfTextEditorRequest {
-  lightweight?: boolean;
-}
 export interface ConvertPdfToCbrRequest {
   /**
    * The DPI (Dots Per Inch) for rendering PDF pages as images
@@ -471,33 +467,6 @@ export interface EditTableOfContentsRequest {
    */
   replaceExisting?: boolean;
 }
-export interface EditTextRequest {
-  /**
-   * Ordered list of find/replace operations. Each replaces every occurrence on the selected pages, in order; later operations see the result of earlier ones (so 'foo'->'foos' then 'foos'->'bars' turns 'foo' into 'bars').
-   */
-  edits: EditTextOperation[];
-  /**
-   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
-   */
-  pageNumbers?: string;
-  /**
-   * Whether matches must be whole words (boundaries determined by non-word characters)
-   */
-  wholeWordSearch?: boolean;
-}
-/**
- * Ordered list of find/replace operations. Each replaces every occurrence on the selected pages, in order; later operations see the result of earlier ones (so 'foo'->'foos' then 'foos'->'bars' turns 'foo' into 'bars').
- */
-export interface EditTextOperation {
-  /**
-   * The literal text to find.
-   */
-  find: string;
-  /**
-   * The replacement text. May be empty to delete the matched text.
-   */
-  replace: string;
-}
 export interface EmlToPdfRequest {
   /**
    * Download HTML intermediate file instead of PDF
@@ -515,14 +484,6 @@ export interface EmlToPdfRequest {
    * Maximum attachment size in MB to include (default 10MB, range: 1-100)
    */
   maxAttachmentSizeMB?: number;
-}
-export interface EncodeCharcodesRequest {
-  fontName?: string;
-  fontSha256?: string;
-  locatorChar?: string;
-  pageIndex?: number;
-  pdfBase64?: string;
-  text?: string;
 }
 export type ExtractAttachmentsRequest = Record<string, never>;
 export interface ExtractHeaderRequest {
@@ -1619,15 +1580,12 @@ export type ToolEndpoint =
   | "/api/v1/convert/pdf/pdfa"
   | "/api/v1/convert/pdf/presentation"
   | "/api/v1/convert/pdf/text"
-  | "/api/v1/convert/pdf/text-editor"
-  | "/api/v1/convert/pdf/text-editor/metadata"
   | "/api/v1/convert/pdf/ua"
   | "/api/v1/convert/pdf/vector"
   | "/api/v1/convert/pdf/word"
   | "/api/v1/convert/pdf/xlsx"
   | "/api/v1/convert/pdf/xml"
   | "/api/v1/convert/svg/pdf"
-  | "/api/v1/convert/text-editor/pdf"
   | "/api/v1/convert/url/pdf"
   | "/api/v1/convert/vector/pdf"
   | "/api/v1/docparse/ingest"
@@ -1641,12 +1599,10 @@ export type ToolEndpoint =
   | "/api/v1/general/booklet-imposition"
   | "/api/v1/general/crop"
   | "/api/v1/general/edit-table-of-contents"
-  | "/api/v1/general/edit-text"
   | "/api/v1/general/extract-bookmarks"
   | "/api/v1/general/merge-pdfs"
   | "/api/v1/general/multi-page-layout"
   | "/api/v1/general/overlay-pdfs"
-  | "/api/v1/general/pdf-text-editor/encode-charcodes"
   | "/api/v1/general/pdf-to-single-page"
   | "/api/v1/general/rearrange-pages"
   | "/api/v1/general/remove-image-pdf"
@@ -1730,15 +1686,12 @@ export interface ToolApiParams {
   "/api/v1/convert/pdf/pdfa": PdfToPdfARequest;
   "/api/v1/convert/pdf/presentation": PdfToPresentationRequest;
   "/api/v1/convert/pdf/text": PdfToTextOrRTFRequest;
-  "/api/v1/convert/pdf/text-editor": ConvertPdfTextEditorRequest;
-  "/api/v1/convert/pdf/text-editor/metadata": ConvertPdfTextEditorMetadataRequest;
   "/api/v1/convert/pdf/ua": PdfToPdfUaRequest;
   "/api/v1/convert/pdf/vector": PdfVectorExportRequest;
   "/api/v1/convert/pdf/word": PdfToWordRequest;
   "/api/v1/convert/pdf/xlsx": PDFWithPageNums;
   "/api/v1/convert/pdf/xml": ConvertPdfXmlRequest;
   "/api/v1/convert/svg/pdf": SvgToPdfRequest;
-  "/api/v1/convert/text-editor/pdf": GeneralFile;
   "/api/v1/convert/url/pdf": UrlToPdfRequest;
   "/api/v1/convert/vector/pdf": PdfVectorExportRequest;
   "/api/v1/docparse/ingest": IngestApiRequest;
@@ -1752,12 +1705,10 @@ export interface ToolApiParams {
   "/api/v1/general/booklet-imposition": BookletImpositionRequest;
   "/api/v1/general/crop": CropPdfForm;
   "/api/v1/general/edit-table-of-contents": EditTableOfContentsRequest;
-  "/api/v1/general/edit-text": EditTextRequest;
   "/api/v1/general/extract-bookmarks": GeneralExtractBookmarksRequest;
   "/api/v1/general/merge-pdfs": MergePdfsRequest;
   "/api/v1/general/multi-page-layout": MergeMultiplePagesRequest;
   "/api/v1/general/overlay-pdfs": OverlayPdfsRequest;
-  "/api/v1/general/pdf-text-editor/encode-charcodes": EncodeCharcodesRequest;
   "/api/v1/general/pdf-to-single-page": GeneralPdfToSinglePageRequest;
   "/api/v1/general/rearrange-pages": RearrangePagesRequest;
   "/api/v1/general/remove-image-pdf": GeneralRemoveImagePdfRequest;
@@ -1842,15 +1793,12 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/convert/pdf/pdfa",
   "/api/v1/convert/pdf/presentation",
   "/api/v1/convert/pdf/text",
-  "/api/v1/convert/pdf/text-editor",
-  "/api/v1/convert/pdf/text-editor/metadata",
   "/api/v1/convert/pdf/ua",
   "/api/v1/convert/pdf/vector",
   "/api/v1/convert/pdf/word",
   "/api/v1/convert/pdf/xlsx",
   "/api/v1/convert/pdf/xml",
   "/api/v1/convert/svg/pdf",
-  "/api/v1/convert/text-editor/pdf",
   "/api/v1/convert/url/pdf",
   "/api/v1/convert/vector/pdf",
   "/api/v1/docparse/ingest",
@@ -1864,12 +1812,10 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/general/booklet-imposition",
   "/api/v1/general/crop",
   "/api/v1/general/edit-table-of-contents",
-  "/api/v1/general/edit-text",
   "/api/v1/general/extract-bookmarks",
   "/api/v1/general/merge-pdfs",
   "/api/v1/general/multi-page-layout",
   "/api/v1/general/overlay-pdfs",
-  "/api/v1/general/pdf-text-editor/encode-charcodes",
   "/api/v1/general/pdf-to-single-page",
   "/api/v1/general/rearrange-pages",
   "/api/v1/general/remove-image-pdf",
