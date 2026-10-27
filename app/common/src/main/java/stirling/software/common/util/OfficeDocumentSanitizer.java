@@ -169,7 +169,7 @@ public class OfficeDocumentSanitizer {
             if (isAdminAllowed(targetValue)) {
                 continue;
             }
-            log.warn(
+            log.debug(
                     "Stripping OOXML external relationship target: {}",
                     truncateForLog(targetValue));
             toRemove.add(node);
@@ -177,6 +177,7 @@ public class OfficeDocumentSanitizer {
         if (toRemove.isEmpty()) {
             return xmlBytes;
         }
+        log.warn("Stripping {} OOXML external relationship(s)", toRemove.size());
         for (Node n : toRemove) {
             n.getParentNode().removeChild(n);
         }
@@ -190,15 +191,16 @@ public class OfficeDocumentSanitizer {
         if (root == null) {
             return xmlBytes;
         }
-        boolean modified = stripExternalHrefs(root);
-        if (!modified) {
+        int stripped = stripExternalHrefs(root);
+        if (stripped == 0) {
             return xmlBytes;
         }
+        log.warn("Stripped {} ODF external href attribute(s)", stripped);
         return serializeDocument(doc);
     }
 
-    private boolean stripExternalHrefs(Node node) {
-        boolean modified = false;
+    private int stripExternalHrefs(Node node) {
+        int stripped = 0;
         if (node.getNodeType() == Node.ELEMENT_NODE) {
             NamedNodeMap attrs = node.getAttributes();
             List<String> hrefAttrsToRemove = new ArrayList<>();
@@ -221,7 +223,7 @@ public class OfficeDocumentSanitizer {
                 if (isAdminAllowed(value)) {
                     continue;
                 }
-                log.warn(
+                log.debug(
                         "Stripping ODF external href attribute ({}): {}",
                         name,
                         truncateForLog(value));
@@ -230,16 +232,14 @@ public class OfficeDocumentSanitizer {
             Element element = (Element) node;
             for (String attrName : hrefAttrsToRemove) {
                 element.removeAttribute(attrName);
-                modified = true;
+                stripped++;
             }
         }
         NodeList children = node.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
-            if (stripExternalHrefs(children.item(i))) {
-                modified = true;
-            }
+            stripped += stripExternalHrefs(children.item(i));
         }
-        return modified;
+        return stripped;
     }
 
     private boolean isExternalUrl(String url) {
