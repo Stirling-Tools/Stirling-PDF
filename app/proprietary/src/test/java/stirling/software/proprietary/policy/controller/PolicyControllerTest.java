@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -60,6 +61,7 @@ import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.PipelineValidation;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
@@ -300,6 +302,44 @@ class PolicyControllerTest {
             controller.run(requestWithStep(), null, new PolicyRunFiles());
 
             verify(docCounter).record(EditorSource.counterKey(3L), 0L);
+        }
+
+        @Test
+        @DisplayName("deletes the uploaded files once the run settles")
+        void uploadsAreDeletedOnceTheRunSettles() throws Exception {
+            CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
+            ArgumentCaptor<PolicyInputs> inputs = ArgumentCaptor.forClass(PolicyInputs.class);
+            when(policyRunner.runAdHoc(any(), inputs.capture(), eq(PolicyProgressListener.NOOP)))
+                    .thenReturn(new PolicyRunHandle("run-1", completion));
+
+            controller.run(requestWithStep(), null, oneUpload());
+
+            File upload = inputs.getValue().primary().get(0).getFile();
+            assertThat(upload).exists();
+            completion.complete(null);
+            assertThat(upload).doesNotExist();
+        }
+
+        @Test
+        @DisplayName("deletes the uploaded files when the run cannot start")
+        void uploadsAreDeletedWhenTheRunCannotStart() throws Exception {
+            ArgumentCaptor<PolicyInputs> inputs = ArgumentCaptor.forClass(PolicyInputs.class);
+            when(policyRunner.runAdHoc(any(), inputs.capture(), eq(PolicyProgressListener.NOOP)))
+                    .thenThrow(new IllegalStateException("no licence"));
+
+            assertThatThrownBy(() -> controller.run(requestWithStep(), null, oneUpload()))
+                    .isInstanceOf(IllegalStateException.class);
+
+            assertThat(inputs.getValue().primary().get(0).getFile()).doesNotExist();
+        }
+
+        private PolicyRunFiles oneUpload() {
+            PolicyRunFiles files = new PolicyRunFiles();
+            files.setFileInput(
+                    List.of(
+                            new MockMultipartFile(
+                                    "fileInput", "a.pdf", "application/pdf", "pdf".getBytes())));
+            return files;
         }
 
         @Test
