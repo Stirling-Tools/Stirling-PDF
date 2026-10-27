@@ -2,18 +2,18 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   AddPageNumbersParameters,
   defaultParameters,
   validateAddPageNumbersParameters,
-} from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
+} from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
 
 const ENDPOINT = "/api/v1/misc/add-page-numbers" satisfies ToolEndpoint;
 type AddPageNumbersApiParams = ToolApiParams[typeof ENDPOINT];

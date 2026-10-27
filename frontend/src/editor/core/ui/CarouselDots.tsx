@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
-import "@app/ui/CarouselDots.css";
+import "@editor/ui/CarouselDots.css";
 
 /** default = blue pill on light surfaces; onImage = white dots over dark photography. */
 export type CarouselDotsTone = "default" | "onImage";

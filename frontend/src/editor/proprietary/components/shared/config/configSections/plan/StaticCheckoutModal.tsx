@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
+import { SettingsFieldLabel } from "@editor/components/shared/config/SettingsFieldLabel";
 import {
   Modal,
   Text,
@@ -10,22 +10,22 @@ import {
   TextInput,
   Alert,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { EmailStage } from "@app/components/shared/stripeCheckout/stages/EmailStage";
-import { validateEmail } from "@app/components/shared/stripeCheckout/utils/checkoutUtils";
-import { getClickablePaperStyle } from "@app/components/shared/stripeCheckout/utils/cardStyles";
+import { Icon } from "@editor/ui/Icon";
+import { EmailStage } from "@editor/components/shared/stripeCheckout/stages/EmailStage";
+import { validateEmail } from "@editor/components/shared/stripeCheckout/utils/checkoutUtils";
+import { getClickablePaperStyle } from "@editor/components/shared/stripeCheckout/utils/cardStyles";
 import {
   STATIC_STRIPE_LINKS,
   buildStripeUrlWithEmail,
-} from "@app/constants/staticStripeLinks";
-import { alert } from "@app/components/toast";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import { useIsMobile } from "@app/hooks/useIsMobile";
-import licenseService from "@app/services/licenseService";
-import { useLicense } from "@app/contexts/LicenseContext";
+} from "@editor/constants/staticStripeLinks";
+import { alert } from "@editor/components/toast";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import licenseService from "@editor/services/licenseService";
+import { useLicense } from "@editor/contexts/LicenseContext";
 
 interface StaticCheckoutModalProps {
   opened: boolean;

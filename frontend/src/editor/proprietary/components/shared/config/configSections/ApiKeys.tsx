@@ -7,7 +7,7 @@ import RefreshModal from "./apiKeys/RefreshModal";
 // oxlint-disable-next-line no-restricted-imports
 import useApiKey from "./apiKeys/hooks/useApiKey";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 export default function ApiKeys() {
   const [copied, setCopied] = useState<string | null>(null);
   const [showRefreshModal, setShowRefreshModal] = useState(false);

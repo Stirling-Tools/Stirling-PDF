@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { useBackendHealth } from "@app/hooks/useBackendHealth";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useBackendHealth } from "@editor/hooks/useBackendHealth";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 /**
  * Desktop-only bridge that refetches the app config once the bundled backend

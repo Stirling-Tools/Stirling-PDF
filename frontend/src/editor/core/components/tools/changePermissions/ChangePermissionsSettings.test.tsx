@@ -1,9 +1,9 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
-import { defaultParameters } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
-import type { ChangePermissionsParameters } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
+import ChangePermissionsSettings from "@editor/components/tools/changePermissions/ChangePermissionsSettings";
+import { defaultParameters } from "@editor/hooks/tools/changePermissions/useChangePermissionsParameters";
+import type { ChangePermissionsParameters } from "@editor/hooks/tools/changePermissions/useChangePermissionsParameters";
 
 // Mock useTranslation with predictable return values
 const mockT = vi.fn((key: string) => `mock-${key}`);

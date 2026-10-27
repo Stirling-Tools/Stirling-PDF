@@ -1,4 +1,4 @@
-import type { IconBadgeAccent } from "@app/ui/IconBadge";
+import type { IconBadgeAccent } from "@editor/ui/IconBadge";
 
 /** Per-category icon accent — neutral (no tint background) across all categories. */
 export const ROW_ACCENT: Record<string, IconBadgeAccent> = {

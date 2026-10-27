@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import LegalSection from "@app/components/shared/config/configSections/LegalSection";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
+import LegalSection from "@editor/components/shared/config/configSections/LegalSection";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
 
 // Reads legal document links and the analytics flag via useAppConfig() (the
 // preview's own provider tree doesn't supply this — that's the portal

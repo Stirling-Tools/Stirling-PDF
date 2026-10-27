@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
 
 const meta = {
   title: "Shared/Config/PendingBadge",

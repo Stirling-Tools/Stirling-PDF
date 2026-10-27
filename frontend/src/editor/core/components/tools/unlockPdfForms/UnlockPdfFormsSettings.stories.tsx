@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import UnlockPdfFormsSettings from "@app/components/tools/unlockPdfForms/UnlockPdfFormsSettings";
-import { UnlockPdfFormsParameters } from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsParameters";
+import UnlockPdfFormsSettings from "@editor/components/tools/unlockPdfForms/UnlockPdfFormsSettings";
+import { UnlockPdfFormsParameters } from "@editor/hooks/tools/unlockPdfForms/useUnlockPdfFormsParameters";
 
 const defaultParameters: UnlockPdfFormsParameters = {};
 

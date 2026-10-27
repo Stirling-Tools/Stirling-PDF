@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ValidateSignatureSettings from "@app/components/tools/validateSignature/ValidateSignatureSettings";
-import { ValidateSignatureParameters } from "@app/hooks/tools/validateSignature/useValidateSignatureParameters";
+import ValidateSignatureSettings from "@editor/components/tools/validateSignature/ValidateSignatureSettings";
+import { ValidateSignatureParameters } from "@editor/hooks/tools/validateSignature/useValidateSignatureParameters";
 
 const meta = {
   title: "Tools/ValidateSignature/ValidateSignatureSettings",

@@ -1,10 +1,10 @@
-import { supabase } from "@app/auth/supabase";
-import type { AppSession } from "@cloud/auth/session";
+import { supabase } from "@editor/auth/supabase";
+import type { AppSession } from "@editor-cloud/auth/session";
 
 export type { AppSession };
 
 /**
- * SaaS (web) implementation of the @app/auth/session seam.
+ * SaaS (web) implementation of the @editor/auth/session seam.
  *
  * Reads the Supabase web session and returns its access token. Mirrors the
  * token lookup that apiClientSetup.getAuthHeaders performed previously.

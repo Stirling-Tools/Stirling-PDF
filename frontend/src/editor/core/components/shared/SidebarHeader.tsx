@@ -1,4 +1,4 @@
-import { Logo } from "@app/ui/Logo";
+import { Logo } from "@editor/ui/Logo";
 
 export interface SidebarHeaderProps {
   className?: string;

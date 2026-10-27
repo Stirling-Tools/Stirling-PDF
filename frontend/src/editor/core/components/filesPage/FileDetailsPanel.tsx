@@ -1,31 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge, Tooltip } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { FileId } from "@app/types/file";
-import type { FolderId, FolderRecord } from "@app/types/folder";
-import { StirlingFileStub } from "@app/types/fileContext";
-import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { FileId } from "@editor/types/file";
+import type { FolderId, FolderRecord } from "@editor/types/folder";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { formatFileSize, getFileDate } from "@editor/utils/fileUtils";
 import {
   downloadFileFromStorage,
   downloadMultipleFiles,
-} from "@app/utils/downloadUtils";
-import ShareManagementModal from "@app/components/shared/ShareManagementModal";
-import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
-import { fileStorage } from "@app/services/fileStorage";
-import { readStubClassificationLabels } from "@app/services/fileClassification";
-import { useLabelName } from "@app/data/labelDisplay";
-import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
+} from "@editor/utils/downloadUtils";
+import ShareManagementModal from "@editor/components/shared/ShareManagementModal";
+import { useSharingEnabled } from "@editor/hooks/useSharingEnabled";
+import { fileStorage } from "@editor/services/fileStorage";
+import { readStubClassificationLabels } from "@editor/services/fileClassification";
+import { useLabelName } from "@editor/data/labelDisplay";
+import { useClassificationEnabled } from "@editor/hooks/useClassificationEnabled";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import {
   VersionTimeline,
   DetailField,
-} from "@app/components/filesPage/VersionTimeline";
-import { FileDetailsActions } from "@app/components/filesPage/FileDetailsActions";
-import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
-import "@app/components/filesPage/FilesPage.css";
+} from "@editor/components/filesPage/VersionTimeline";
+import { FileDetailsActions } from "@editor/components/filesPage/FileDetailsActions";
+import { getFileOrigin } from "@editor/components/filesPage/fileOrigin";
+import "@editor/components/filesPage/FilesPage.css";
 
 interface FileDetailsPanelProps {
   /** Picker hosts choose a version without exposing workspace or library mutations. */

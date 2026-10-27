@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import type { TFunction } from "i18next";
-import type { SavedSignature } from "@app/types/signature";
+import type { SavedSignature } from "@editor/types/signature";
 import {
   draftSignatureActions,
   savedSignatureActions,
   type SavedActionContext,
-} from "@app/components/tools/sign/wallet/signatureTileActions";
+} from "@editor/components/tools/sign/wallet/signatureTileActions";
 
 const t = ((_key: string, fallback: string) =>
   fallback) as unknown as TFunction;

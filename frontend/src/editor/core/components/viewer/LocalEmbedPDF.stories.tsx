@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
+import { LocalEmbedPDF } from "@editor/components/viewer/LocalEmbedPDF";
 
 const meta = {
   title: "Viewer/LocalEmbedPDF",

@@ -3,11 +3,11 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import {
   resetTabVisibility,
   setTabHidden,
-} from "@app/tests/utils/tabVisibility";
+} from "@editor/tests/utils/tabVisibility";
 import type {
   AppNotification,
   FetchedNotifications,
-} from "@app/services/notifications";
+} from "@editor/services/notifications";
 
 /**
  * The bell is mounted several times over, so what is pinned here is that they share one read: one
@@ -16,7 +16,7 @@ import type {
 
 const fetchNotifications = vi.fn();
 
-vi.mock("@app/services/notifications", () => ({
+vi.mock("@editor/services/notifications", () => ({
   fetchNotifications: (...args: unknown[]) => fetchNotifications(...args),
 }));
 
@@ -24,7 +24,7 @@ vi.mock("@app/services/notifications", () => ({
 const hasLocalFile = vi.fn((_fileId: string) => Promise.resolve(true));
 const loadRetryPayload = vi.fn((_fileId: string) => Promise.resolve(null));
 
-vi.mock("@app/services/notificationRetry", () => ({
+vi.mock("@editor/services/notificationRetry", () => ({
   hasLocalFile: (fileId: string) => hasLocalFile(fileId),
   loadRetryPayload: (fileId: string) => loadRetryPayload(fileId),
 }));
@@ -33,7 +33,7 @@ const {
   useNotifications,
   refreshNotificationsNow,
   clearNotificationReadState,
-} = await import("@app/hooks/useNotifications");
+} = await import("@editor/hooks/useNotifications");
 
 /** A fetch result. Reviewer by default, so a test says nothing about filtering unless it means to. */
 function feed(

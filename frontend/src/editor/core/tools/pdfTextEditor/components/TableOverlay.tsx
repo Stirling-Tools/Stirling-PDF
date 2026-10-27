@@ -1,29 +1,29 @@
 import { useMemo, useRef, useState } from "react";
 import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import type { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
+import { Icon } from "@editor/ui/Icon";
+import type { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import type {
   PageRect,
   PageSnapshot,
   RGBA,
   TableCellStyle,
   TableSnapshot,
-} from "@app/tools/pdfTextEditor/types";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import { overlaps } from "@app/tools/pdfTextEditor/util/tableAdoption";
-import { detectTables } from "@app/tools/pdfTextEditor/util/tableDetection";
-import { ModifyTableCommand } from "@app/tools/pdfTextEditor/commands/ModifyTableCommand";
-import { FillTableCellCommand } from "@app/tools/pdfTextEditor/commands/FillTableCellCommand";
-import type { TableResize } from "@app/tools/pdfTextEditor/commands/ResizeTableCommand";
-import { ResizeTableCommand } from "@app/tools/pdfTextEditor/commands/ResizeTableCommand";
-import { MaterialiseTableCommand } from "@app/tools/pdfTextEditor/commands/MaterialiseTableCommand";
-import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
+} from "@editor/tools/pdfTextEditor/types";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import { overlaps } from "@editor/tools/pdfTextEditor/util/tableAdoption";
+import { detectTables } from "@editor/tools/pdfTextEditor/util/tableDetection";
+import { ModifyTableCommand } from "@editor/tools/pdfTextEditor/commands/ModifyTableCommand";
+import { FillTableCellCommand } from "@editor/tools/pdfTextEditor/commands/FillTableCellCommand";
+import type { TableResize } from "@editor/tools/pdfTextEditor/commands/ResizeTableCommand";
+import { ResizeTableCommand } from "@editor/tools/pdfTextEditor/commands/ResizeTableCommand";
+import { MaterialiseTableCommand } from "@editor/tools/pdfTextEditor/commands/MaterialiseTableCommand";
+import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import {
   pageCanvas,
   sampleTableColors,
-} from "@app/tools/pdfTextEditor/util/scanSampling";
+} from "@editor/tools/pdfTextEditor/util/scanSampling";
 
 // Edge handles live wholly OUTSIDE the grid, in a margin strip below it
 // (columns) or left of it (rows), the way a spreadsheet puts them in its

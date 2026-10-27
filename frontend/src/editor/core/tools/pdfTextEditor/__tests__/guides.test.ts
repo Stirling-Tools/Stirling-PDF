@@ -7,9 +7,9 @@ import {
   lineToGuide,
   rulerTicks,
   snapToGuides,
-} from "@app/tools/pdfTextEditor/util/guides";
-import type { Guide } from "@app/tools/pdfTextEditor/util/guides";
-import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
+} from "@editor/tools/pdfTextEditor/util/guides";
+import type { Guide } from "@editor/tools/pdfTextEditor/util/guides";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 
 // Pure geometry, pinned hard: ticks must stay readable at every zoom and
 // snapping must be deterministic - a flickering snap target is worse than none.

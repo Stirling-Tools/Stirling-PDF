@@ -6,22 +6,22 @@ import {
   listDirectory,
   readDiskFile,
   type DiskFileEntry,
-} from "@app/services/localFolderContents";
-import { classifyFileHeuristically } from "@app/services/heuristic/heuristicClassification";
-import { meterAutomationRun } from "@app/services/automationMeter";
+} from "@editor/services/localFolderContents";
+import { classifyFileHeuristically } from "@editor/services/heuristic/heuristicClassification";
+import { meterAutomationRun } from "@editor/services/automationMeter";
 import {
   getServerAutomationSession,
   requireAutomationSession,
-} from "@app/services/serverAutomationSession";
-import type { StirlingFile } from "@app/types/fileContext";
+} from "@editor/services/serverAutomationSession";
+import type { StirlingFile } from "@editor/types/fileContext";
 import type {
   HeuristicConfidence,
   HeuristicResult,
-} from "@app/services/heuristic/types";
-import { LABEL_FAMILIES } from "@app/data/classificationLabels";
-import { accentColor, accentCycleColor } from "@app/utils/accentColors";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+} from "@editor/services/heuristic/types";
+import { LABEL_FAMILIES } from "@editor/data/classificationLabels";
+import { accentColor, accentCycleColor } from "@editor/utils/accentColors";
+import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
 
 /** Names this run in the billing audit trail, so onboarding's sweep is distinguishable
  *  from classification on upload. */

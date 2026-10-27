@@ -8,8 +8,11 @@
  * revision, and a pass that turns out to be wrong can never destroy content
  * that was already there.
  */
-import { concatBytes, fromLatin1 } from "@app/tools/pdfTextEditor/pdfdoc/bytes";
-import type { RawPdf } from "@app/tools/pdfTextEditor/pdfdoc/raw";
+import {
+  concatBytes,
+  fromLatin1,
+} from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
+import type { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 
 export interface RevisionObject {
   num: number;

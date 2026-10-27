@@ -4,7 +4,7 @@
  * submission order and one failing scan does not wedge the queue.
  */
 import { describe, expect, it } from "vitest";
-import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
+import { runPdfiumScan } from "@editor/services/pdfiumScanQueue";
 
 describe("pdfiumScanQueue", () => {
   it("runs queued scans in submission order", async () => {

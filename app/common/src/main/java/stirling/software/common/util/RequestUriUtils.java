@@ -1,6 +1,9 @@
 package stirling.software.common.util;
 
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
+
+import org.springframework.web.util.UriUtils;
 
 public class RequestUriUtils {
 
@@ -22,11 +25,10 @@ public class RequestUriUtils {
     }
 
     public static boolean isStaticResource(String contextPath, String requestURI) {
-        if (requestURI == null) {
+        String normalizedUri = normalizeUriOrNull(contextPath, requestURI);
+        if (normalizedUri == null) {
             return false;
         }
-
-        String normalizedUri = stripContextPath(contextPath, requestURI);
 
         // API routes are never static except for the public status endpoint
         if (normalizedUri.startsWith("/api/")) {
@@ -96,11 +98,10 @@ public class RequestUriUtils {
     }
 
     public static boolean isFrontendRoute(String contextPath, String requestURI) {
-        if (requestURI == null) {
+        String normalizedUri = normalizeUriOrNull(contextPath, requestURI);
+        if (normalizedUri == null) {
             return false;
         }
-
-        String normalizedUri = stripContextPath(contextPath, requestURI);
 
         // APIs are never treated as frontend routes
         if (normalizedUri.startsWith("/api/")) {
@@ -180,11 +181,10 @@ public class RequestUriUtils {
      * @return true if the endpoint is public and doesn't require authentication
      */
     public static boolean isPublicAuthEndpoint(String requestURI, String contextPath) {
-        // Remove context path from URI to normalize path matching
-        String trimmedUri =
-                requestURI.startsWith(contextPath)
-                        ? requestURI.substring(contextPath.length())
-                        : requestURI;
+        String trimmedUri = normalizeUriOrNull(contextPath, requestURI);
+        if (trimmedUri == null) {
+            return false;
+        }
 
         // Public auth endpoints that don't require authentication
         return trimmedUri.startsWith("/login")
@@ -223,10 +223,30 @@ public class RequestUriUtils {
                 || INVITE_LINK_PATTERN.matcher(trimmedUri).matches();
     }
 
-    private static String stripContextPath(String contextPath, String requestURI) {
-        if (contextPath != null && !contextPath.isBlank() && requestURI.startsWith(contextPath)) {
-            return requestURI.substring(contextPath.length());
+    public static String normalizeUri(String contextPath, String requestURI) {
+        String decodedUri = UriUtils.decode(requestURI, StandardCharsets.UTF_8);
+        if (contextPath != null && !contextPath.isBlank()) {
+            String decodedContextPath = UriUtils.decode(contextPath, StandardCharsets.UTF_8);
+            if (decodedUri.startsWith(decodedContextPath)) {
+                return decodedUri.substring(decodedContextPath.length());
+            }
         }
-        return requestURI;
+        return decodedUri;
+    }
+
+    public static boolean isApiRequest(String contextPath, String requestURI) {
+        String normalizedUri = normalizeUriOrNull(contextPath, requestURI);
+        return normalizedUri == null || normalizedUri.startsWith("/api/");
+    }
+
+    private static String normalizeUriOrNull(String contextPath, String requestURI) {
+        if (requestURI == null) {
+            return null;
+        }
+        try {
+            return normalizeUri(contextPath, requestURI);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

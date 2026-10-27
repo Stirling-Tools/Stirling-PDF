@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { AnnotationTypeButtons } from "@app/components/viewer/AnnotationTypeButtons";
+import { AnnotationTypeButtons } from "@editor/components/viewer/AnnotationTypeButtons";
 
 const meta = {
   title: "Viewer/AnnotationTypeButtons",

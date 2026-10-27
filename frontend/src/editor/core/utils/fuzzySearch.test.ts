@@ -4,7 +4,7 @@ import {
   scoreMatch,
   minScoreForQuery,
   isFuzzyMatch,
-} from "@app/utils/fuzzySearch";
+} from "@editor/utils/fuzzySearch";
 
 describe("scoreMatch", () => {
   it("scores substring matches highest", () => {

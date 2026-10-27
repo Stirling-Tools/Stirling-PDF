@@ -3,9 +3,9 @@ import { type TFunction } from "i18next";
 import {
   type ConfigNavSection,
   type ConfigNavItem,
-} from "@core/components/shared/config/configNavSections";
-import Plan from "@app/components/shared/config/configSections/Plan";
-import TeamSection from "@app/components/shared/config/configSections/TeamSection";
+} from "@editor-core/components/shared/config/configNavSections";
+import Plan from "@editor/components/shared/config/configSections/Plan";
+import TeamSection from "@editor/components/shared/config/configSections/TeamSection";
 
 /**
  * Shared cloud config nav-section builders, composed by both the saas (web) and

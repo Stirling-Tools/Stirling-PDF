@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Button, Card, StatusBadge } from "@app/ui";
+import { Button, Card, StatusBadge } from "@editor/ui";
 import { useTranslation } from "react-i18next";
-import type { ApiKey } from "@portal/api/infrastructure";
+import type { ApiKey } from "@processor/api/infrastructure";
 import {
   KEY_LABEL,
   KEY_TONE,
-} from "@portal/components/infrastructure/infraFormat";
+} from "@processor/components/infrastructure/infraFormat";
 
 /** Collapsible row for a single API key: header summary + expandable detail grid. */
 export function ApiKeyCard({

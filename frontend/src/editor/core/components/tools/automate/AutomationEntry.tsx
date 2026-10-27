@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Group, Text, Menu, Box } from "@mantine/core";
-import { Button as SharedButton } from "@app/ui/Button";
-import { Icon, type IconName } from "@app/ui/Icon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { ToolIcon } from "@app/components/shared/ToolIcon";
-import { ToolRegistry } from "@app/data/toolsTaxonomy";
-import { ToolId } from "@app/types/toolId";
+import { Button as SharedButton } from "@editor/ui/Button";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { ToolIcon } from "@editor/components/shared/ToolIcon";
+import { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { ToolId } from "@editor/types/toolId";
 
 interface AutomationEntryProps {
   /** Optional title for the automation (usually for custom ones) */

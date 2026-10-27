@@ -9,11 +9,11 @@ import {
   folderKind,
   createFolderId,
   pickFolderColor,
-} from "@app/types/folder";
+} from "@editor/types/folder";
 import {
   indexedDBManager,
   DATABASE_CONFIGS,
-} from "@app/services/indexedDBManager";
+} from "@editor/services/indexedDBManager";
 
 /** Mirrors FolderService.MAX_FOLDER_DEPTH so virtual trees can't out-nest server ones. */
 const MAX_FOLDER_DEPTH = 64;

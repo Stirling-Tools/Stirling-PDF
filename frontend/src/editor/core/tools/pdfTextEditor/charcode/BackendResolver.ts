@@ -1,12 +1,15 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import type {
   CharcodeResolver,
   CharcodeResolveResult,
   ResolverContext,
-} from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
-import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
-import { getCachedFontProgramSha256 } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
+import { getActiveCharcodeStrategy } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
+import { getCachedFontProgramSha256 } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 /** Strategy 3: ask the Spring backend (PDFBox) to encode chars. */
 
@@ -158,7 +161,7 @@ function maybeAutoPrefetch(
   void (async () => {
     try {
       const { PdfiumSave } =
-        await import("@app/tools/pdfTextEditor/pdfium/PdfiumSave");
+        await import("@editor/tools/pdfTextEditor/pdfium/PdfiumSave");
       const doc = getEditorDocument();
       if (!doc) {
         if (typeof console !== "undefined") {
@@ -266,7 +269,7 @@ function maybeAutoPrefetch(
       // BackendResolver ↔ charcodeRegistry module init.
       try {
         const { emitCharcodeEvent } =
-          await import("@app/tools/pdfTextEditor/charcode/charcodeRegistry");
+          await import("@editor/tools/pdfTextEditor/charcode/charcodeRegistry");
         emitCharcodeEvent({
           strategy: getActiveCharcodeStrategy(),
           text: chars.join(""),
@@ -655,7 +658,7 @@ export async function prewarmBackendCacheForPage(
 
   try {
     const { PdfiumSave } =
-      await import("@app/tools/pdfTextEditor/pdfium/PdfiumSave");
+      await import("@editor/tools/pdfTextEditor/pdfium/PdfiumSave");
     const doc = getEditorDocument();
     if (!doc) return;
     const bytes = PdfiumSave.serialize(doc);
@@ -785,14 +788,14 @@ function pageIdxOfPagePtr(ctx: ResolverContext): number {
 }
 
 function getEditorDocument():
-  | import("@app/tools/pdfTextEditor/model/EditorDocument").EditorDocument
+  | import("@editor/tools/pdfTextEditor/model/EditorDocument").EditorDocument
   | null {
   // EditorStore.doc is TypeScript-private; the public surface is the
   // `document` getter. Always read through that.
   const w = window as unknown as {
     __editor_store?: {
       document?:
-        | import("@app/tools/pdfTextEditor/model/EditorDocument").EditorDocument
+        | import("@editor/tools/pdfTextEditor/model/EditorDocument").EditorDocument
         | null;
     };
   };
