@@ -174,6 +174,11 @@ public class OCRController {
             }
             // In-process Tesseract keeps the original pages, so it beats the CLI's raster output
             else if (isNativeTesseractEnabled()) {
+                // Skipped rather than refused, like the tesseract CLI path: the built-in
+                // "secure ingestion" automation sets both, and desktop has no OCRmyPDF.
+                if (Boolean.TRUE.equals(clean) || Boolean.TRUE.equals(cleanFinal)) {
+                    log.warn("clean/cleanFinal need unpaper, which only OCRmyPDF runs; skipped");
+                }
                 processWithNativeTesseract(
                         selectedLanguages,
                         new OcrOptions(
