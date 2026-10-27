@@ -87,6 +87,9 @@ export function useMobileTransferSession({
   const pollIntervalRef = useRef<number | null>(null);
   const timerIntervalRef = useRef<number | null>(null);
   const processedFiles = useRef<Set<string>>(new Set());
+  // The server serves each file once, so an overlapping poll would race the
+  // one already downloading and get a 404.
+  const pollInFlight = useRef(false);
 
   // The QR-code URL the phone opens. It must land on the public route under
   // the app's base path, otherwise the phone hits the auth-gated catch-all
@@ -136,7 +139,8 @@ export function useMobileTransferSession({
   }, [createSession]);
 
   const pollForFiles = useCallback(async () => {
-    if (!active) return;
+    if (!active || pollInFlight.current) return;
+    pollInFlight.current = true;
 
     try {
       const response = await apiClient.get(
@@ -193,6 +197,8 @@ export function useMobileTransferSession({
     } catch (err) {
       console.error("[useMobileTransferSession] polling failed:", err);
       setError(pollingErrorMessage);
+    } finally {
+      pollInFlight.current = false;
     }
   }, [active, sessionId, onFileReceived, pollingErrorMessage]);
 
