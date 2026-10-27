@@ -7,4 +7,5 @@
 export const WORKBENCH_SESSION_RESTORE: boolean = true;
 
 // Edit image descriptions and decorative markers in the PDF text editor.
-export const ACCESSIBILITY_EDITING: boolean = false;
+export const ACCESSIBILITY_EDITING: boolean =
+  import.meta.env.VITE_ACCESSIBILITY_EDITING === "true";
