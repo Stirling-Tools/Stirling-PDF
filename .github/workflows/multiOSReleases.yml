@@ -430,6 +430,10 @@ jobs:
             frontend/src-tauri/vendor/jemalloc/libjemalloc.dylib
           codesign --verify --strict frontend/src-tauri/vendor/jemalloc/libjemalloc.dylib
 
+      - name: Sign bundled JRE dylibs
+        if: matrix.platform == 'macos-15' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release')
+        run: frontend/scripts/strip-jre-natives.sh frontend/src-tauri/runtime/jre
+
       # Pre-flight: verify smctl can talk to DigiCert and sync cert before we sign.
       # Mirrors the setup from working public Tauri+KeyLocker repos (Labric, Meetily).
       # Without this, signCommand failures are opaque (Tauri captures but drops

@@ -99,6 +99,7 @@ tasks:
       - task: jlink:clean
       - cd src-tauri && cargo clean
       - rm -rf dist build
+      - rm -f src-tauri/vendor/jemalloc/libjemalloc.* src-tauri/vendor/jemalloc/.build
 
   # ============================================================
   # jemalloc — Build allocator preloaded by the backend
@@ -129,6 +130,8 @@ tasks:
     env:
       REQUIRED_JAVA: "{{.REQUIRED_JAVA}}"
     cmds:
+      - cmd: scripts/strip-jre-natives.sh src-tauri/runtime/jre
+        platforms: [darwin]
       - node scripts/verify-bundled-jre.mjs src-tauri/runtime/jre/release
 
   jlink:jar:
@@ -234,3 +237,4 @@ tasks:
       OUTPUT_DIR: src-tauri/runtime/jre
     cmds:
       - scripts/build-universal-mac-jre.sh
+      - scripts/strip-jre-natives.sh src-tauri/runtime/jre

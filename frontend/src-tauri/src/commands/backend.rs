@@ -1,5 +1,7 @@
 use tauri_plugin_shell::ShellExt;
 use tauri::Manager;
+#[cfg(any(target_os = "macos", target_os = "linux"))]
+use std::ffi::{OsStr, OsString};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::path::{Path, PathBuf};
@@ -14,20 +16,31 @@ const BACKEND_JVM_FLAGS: &[&str] = &[
     "-XX:+UseG1GC",
     "-XX:MaxGCPauseMillis=200",
     "-XX:G1HeapRegionSize=4m",
-    "-XX:G1PeriodicGCInterval=120000",
+    // G1's default young-gen ceiling (60% of 2 GB) lets the desktop backend
+    // commit ~1 GB during UI startup, then hold it until the next periodic GC.
+    "-XX:+UnlockExperimentalVMOptions",
+    "-XX:G1NewSizePercent=2",
+    "-XX:G1MaxNewSizePercent=10",
+    "-XX:G1PeriodicGCInterval=30000",
     "-XX:MinHeapFreeRatio=10",
     "-XX:MaxHeapFreeRatio=70",
     "-XX:+UseStringDeduplication",
     "-XX:+UseCompactObjectHeaders",
     "-XX:+ExplicitGCInvokesConcurrent",
+    // Desktop serves the SPA and has no public API consumers; keep the
+    // OpenAPI/Swagger endpoints out of the local sidecar.
+    "-Dspringdoc.api-docs.enabled=false",
+    "-Dspringdoc.swagger-ui.enabled=false",
 ];
 
 /// Aggressive page return for the native heap. Long desktop sessions keep
 /// native buffers alive between operations, so retaining free extents costs
-/// more than faulting them back in on the next allocation.
-
+/// more than faulting them back in on the next allocation. The thread cache
+/// stays enabled: jemalloc's tuning guide treats `tcache:false` as a
+/// last-resort memory saving because every allocation then takes the arena
+/// lock. Bounded per-thread caches cost a few hundred KB, not hundreds of MB.
 #[cfg(any(target_os = "macos", target_os = "linux"))]
-const DESKTOP_MALLOC_CONF: &str = "narenas:1,tcache:false,dirty_decay_ms:0,muzzy_decay_ms:0";
+const DESKTOP_MALLOC_CONF: &str = "narenas:1,dirty_decay_ms:0,muzzy_decay_ms:0";
 
 /// Mach-O builds default to the `je_` symbol prefix, which also renames the
 /// configuration variable; ELF builds keep the upstream name.
@@ -35,6 +48,11 @@ const DESKTOP_MALLOC_CONF: &str = "narenas:1,tcache:false,dirty_decay_ms:0,muzzy
 const JEMALLOC_CONF_ENV: &str = "JE_MALLOC_CONF";
 #[cfg(target_os = "linux")]
 const JEMALLOC_CONF_ENV: &str = "MALLOC_CONF";
+
+#[cfg(target_os = "macos")]
+const PRELOAD_ENV: &str = "DYLD_INSERT_LIBRARIES";
+#[cfg(target_os = "linux")]
+const PRELOAD_ENV: &str = "LD_PRELOAD";
 
 /// Resolves the bundled allocator. Windows has no dyld/LD_PRELOAD equivalent
 /// for the JVM, so those builds fall through to the platform allocator.
@@ -56,12 +74,29 @@ fn bundled_jemalloc(resource_dir: &Path) -> Option<PathBuf> {
     }
 }
 
-/// `STIRLING_USE_JEMALLOC=false` is the same escape hatch the container images
-/// expose, so support can rule the allocator out without a rebuild.
+/// `STIRLING_USE_JEMALLOC=false` lets support rule the allocator out without a
+/// rebuild. Any other value, including an unset variable, keeps the default.
 fn jemalloc_requested() -> bool {
-    !std::env::var("STIRLING_USE_JEMALLOC")
+    jemalloc_requested_from(std::env::var("STIRLING_USE_JEMALLOC").ok().as_deref())
+}
+
+fn jemalloc_requested_from(value: Option<&str>) -> bool {
+    !value
         .map(|value| value.eq_ignore_ascii_case("false"))
         .unwrap_or(false)
+}
+
+/// Keep a caller's explicit preload and append the bundled allocator. Replacing
+/// the value would silently drop whatever the user or a tracer put there.
+#[cfg(any(target_os = "macos", target_os = "linux"))]
+fn append_preload(existing: Option<&OsStr>, path: &Path) -> OsString {
+    let mut value = OsString::new();
+    if let Some(existing) = existing.filter(|value| !value.is_empty()) {
+        value.push(existing);
+        value.push(":");
+    }
+    value.push(path);
+    value
 }
 
 /// Removes shutdown markers left by previous sessions. The current path cannot
@@ -450,7 +485,8 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     sweep_stale_shutdown_files(&work_dir, &shutdown_file);
     *BACKEND_SHUTDOWN_FILE.lock().unwrap() = Some(shutdown_file.clone());
 
-    let jemalloc_path = if jemalloc_requested() {
+    let jemalloc_enabled = jemalloc_requested();
+    let jemalloc_path = if jemalloc_enabled {
         app.path()
             .resource_dir()
             .ok()
@@ -460,6 +496,9 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     };
     match &jemalloc_path {
         Some(path) => add_log(format!("🧠 Preloading jemalloc: {}", path.display())),
+        None if !jemalloc_enabled => {
+            add_log("🧠 jemalloc disabled by STIRLING_USE_JEMALLOC".to_string())
+        }
         None => add_log("🧠 jemalloc unavailable; using the platform allocator".to_string()),
     }
 
@@ -480,12 +519,8 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     let sidecar_command = match &jemalloc_path {
         Some(path) => sidecar_command
             .env(
-                if cfg!(target_os = "macos") {
-                    "DYLD_INSERT_LIBRARIES"
-                } else {
-                    "LD_PRELOAD"
-                },
-                path.as_os_str(),
+                PRELOAD_ENV,
+                append_preload(std::env::var_os(PRELOAD_ENV).as_deref(), path),
             )
             .env(
                 JEMALLOC_CONF_ENV,
@@ -719,7 +754,22 @@ pub fn cleanup_backend() {
 
 #[cfg(test)]
 mod tests {
-    use super::{find_stirling_jar, version_key};
+    use super::{find_stirling_jar, jemalloc_requested_from, version_key, BACKEND_JVM_FLAGS};
+
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    use super::{append_preload, bundled_jemalloc, DESKTOP_MALLOC_CONF};
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    use std::ffi::OsStr;
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    use std::path::Path;
+
+    #[test]
+    fn desktop_flags_disable_springdoc() {
+        assert!(BACKEND_JVM_FLAGS.contains(&"-Dspringdoc.api-docs.enabled=false"));
+        assert!(BACKEND_JVM_FLAGS.contains(&"-Dspringdoc.swagger-ui.enabled=false"));
+        assert!(BACKEND_JVM_FLAGS.contains(&"-XX:G1PeriodicGCInterval=30000"));
+        assert!(BACKEND_JVM_FLAGS.contains(&"-XX:G1MaxNewSizePercent=10"));
+    }
 
     #[test]
     fn version_key_orders_numerically_not_lexically() {
@@ -857,6 +907,74 @@ mod tests {
         let selected = find_stirling_jar(&dir).unwrap();
 
         assert_eq!(selected.file_name().unwrap(), "stirling-pdf-3.0.0-rc1.jar");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn jemalloc_disable_is_case_insensitive_and_opt_in_otherwise() {
+        assert!(!jemalloc_requested_from(Some("false")));
+        assert!(!jemalloc_requested_from(Some("FALSE")));
+        assert!(!jemalloc_requested_from(Some("False")));
+        assert!(jemalloc_requested_from(None));
+        assert!(jemalloc_requested_from(Some("true")));
+        assert!(jemalloc_requested_from(Some("")));
+    }
+
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    #[test]
+    fn allocator_conf_keeps_the_thread_cache() {
+        assert!(DESKTOP_MALLOC_CONF.contains("narenas:1"));
+        assert!(!DESKTOP_MALLOC_CONF.contains("tcache:false"));
+        assert!(!DESKTOP_MALLOC_CONF.contains("tcache_max"));
+    }
+
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    #[test]
+    fn preload_replaces_nothing_when_the_caller_has_no_value() {
+        assert_eq!(
+            append_preload(None, Path::new("/app/vendor/libjemalloc.dylib")),
+            OsStr::new("/app/vendor/libjemalloc.dylib")
+        );
+        assert_eq!(
+            append_preload(Some(OsStr::new("")), Path::new("/app/lib.so")),
+            OsStr::new("/app/lib.so")
+        );
+    }
+
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    #[test]
+    fn preload_keeps_an_existing_caller_value() {
+        assert_eq!(
+            append_preload(
+                Some(OsStr::new("/usr/lib/libprofiler.dylib")),
+                Path::new("/app/vendor/libjemalloc.dylib")
+            ),
+            OsStr::new("/usr/lib/libprofiler.dylib:/app/vendor/libjemalloc.dylib")
+        );
+    }
+
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    #[test]
+    fn bundled_jemalloc_requires_the_platform_file() {
+        let dir = std::env::temp_dir().join(format!(
+            "stirling-jemalloc-select-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let vendor = dir.join("vendor").join("jemalloc");
+        std::fs::create_dir_all(&vendor).unwrap();
+
+        assert_eq!(bundled_jemalloc(&dir), None);
+        let name = if cfg!(target_os = "macos") {
+            "libjemalloc.dylib"
+        } else {
+            "libjemalloc.so.2"
+        };
+        std::fs::write(vendor.join(name), b"").unwrap();
+        assert_eq!(bundled_jemalloc(&dir), Some(vendor.join(name)));
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
