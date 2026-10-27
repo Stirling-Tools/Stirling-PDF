@@ -176,10 +176,10 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 
 #### Environment Variables
 - All `VITE_*` variables must be declared in the appropriate committed env file:
-  - `frontend/editor/.env` — core and shared vars (base, loaded in every mode)
-  - `frontend/editor/.env.proprietary` — proprietary-only vars, e.g. the admin portal's SaaS/account-link keys (layered on top of `.env` in proprietary mode)
-  - `frontend/editor/.env.saas` — SaaS-only vars (layered on top of `.env` in SaaS mode)
-  - `frontend/editor/.env.desktop` — desktop (Tauri)-only vars (layered on top of `.env` in desktop mode)
+  - `frontend/.env` — core and shared vars (base, loaded in every mode)
+  - `frontend/.env.proprietary` — proprietary-only vars, e.g. the admin portal's SaaS/account-link keys (layered on top of `.env` in proprietary mode)
+  - `frontend/.env.saas` — SaaS-only vars (layered on top of `.env` in SaaS mode)
+  - `frontend/.env.desktop` — desktop (Tauri)-only vars (layered on top of `.env` in desktop mode)
 - These files are committed to Git and must not contain private keys
 - Local overrides (API keys, machine-specific settings) go in uncommitted sibling `.env.local` / `.env.saas.local` / `.env.desktop.local` files — Vite automatically layers them on top
 - Never use `|| 'hardcoded-fallback'` inline — put defaults in the committed env files
@@ -188,34 +188,34 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 - See `frontend/README.md#environment-variables` for full documentation
 
 #### Import Paths - CRITICAL
-**ALWAYS use `@app/*` for imports.** Do not use `@core/*` or `@proprietary/*` unless explicitly wrapping/extending a lower layer implementation.
+**ALWAYS use `@editor/*` for imports** (`@processor/*` in the processor app); both cascade through the build's layers. The `@<app>-<layer>` aliases (`@editor-core/*`, `@editor-proprietary/*`, `@editor-cloud/*`, `@processor-proprietary/*`) pin exactly `src/<app>/<layer>`: do not use them unless explicitly wrapping/extending a lower layer implementation.
 
-For a broader explanation of the frontend layering and override architecture, read @frontend/editor/DeveloperGuide.md
+For a broader explanation of the frontend layering and override architecture, read @frontend/DeveloperGuide.md
 
-Before touching colours or theming (tokens, dark mode, accent colours), read @frontend/editor/src/core/theme/README.md — it explains the palette/`--c-*` token system and the rule that literal colours live only in `primitives.css`.
+Before touching colours or theming (tokens, dark mode, accent colours), read @frontend/src/editor/core/theme/README.md — it explains the palette/`--c-*` token system and the rule that literal colours live only in `primitives.css`.
 
-Before adding or styling an icon, read @frontend/editor/src/core/icons/README.md — `<Icon name="…" />` comes from `@app/ui/Icon`, icon sources live as `.svg` files in `core/icons/svg/`, and inline `<svg>` in TS/TSX is linted out.
+Before adding or styling an icon, read @frontend/src/editor/core/icons/README.md — `<Icon name="…" />` comes from `@editor/ui/Icon`, icon sources live as `.svg` files in `core/icons/svg/`, and inline `<svg>` in TS/TSX is linted out.
 
 ```typescript
-// ✅ CORRECT - Use @app/* for all imports
-import { AppLayout } from "@app/components/AppLayout";
-import { useFileContext } from "@app/contexts/FileContext";
-import { FileContext } from "@app/contexts/FileContext";
+// ✅ CORRECT - Use @editor/* for all imports
+import { AppLayout } from "@editor/components/AppLayout";
+import { useFileContext } from "@editor/contexts/FileContext";
+import { FileContext } from "@editor/contexts/FileContext";
 
-// ❌ WRONG - Do not use @core/* or @proprietary/* in normal code
-import { AppLayout } from "@core/components/AppLayout";
-import { useFileContext } from "@proprietary/contexts/FileContext";
+// ❌ WRONG - Do not use @editor-core/* or @editor-proprietary/* in normal code
+import { AppLayout } from "@editor-core/components/AppLayout";
+import { useFileContext } from "@editor-proprietary/contexts/FileContext";
 ```
 
 **Only use explicit aliases when:**
 - Building layer-specific override that wraps a lower layer's component
-- Example: `import { AppProviders as CoreAppProviders } from "@core/components/AppProviders"` when creating proprietary/AppProviders.tsx that extends the core version
+- Example: `import { AppProviders as CoreAppProviders } from "@editor-core/components/AppProviders"` when creating proprietary/AppProviders.tsx that extends the core version
 
-The `@app/*` alias automatically resolves to the correct layer based on build target (core/proprietary/saas/desktop/cloud) and handles the fallback cascade — see "Frontend `cloud/` Layer" below for the full per-flavor order.
+The `@editor/*` alias automatically resolves to the correct layer based on build target (core/proprietary/saas/desktop/cloud) and handles the fallback cascade — see "Frontend `cloud/` Layer" below for the full per-flavor order.
 
 #### Frontend `cloud/` Layer
 
-`@app/*` resolves through a per-flavor cascade — first existing file wins (shadow/override):
+`@editor/*` resolves through a per-flavor cascade — first existing file wins (shadow/override):
 
 - **core** → core
 - **proprietary** → proprietary → core
@@ -231,9 +231,9 @@ What goes where:
 - **saas** — web-only: Supabase web auth, AuthCallback, avatar canvas, `window.location`.
 - **desktop** — Tauri-only: keyring authService, tauriHttpClient, native files/windows, backend routing.
 
-`cloud/` MUST NOT import `@supabase/*`, `@tauri-apps/*`, raw `fetch`, `window.location`, `localStorage`, `sessionStorage`, or `import.meta.env.VITE_*` (all enforced by the linter). It reaches platform-specific things only via `@app/*` seams: `services/apiClient`, `auth/session.getAccessToken`, `auth/supabase`, `platform/openExternal`, `services/billing`, `hooks/useSaaSMode` — each provided per-platform in `saas/` and `desktop/`.
+`cloud/` MUST NOT import `@supabase/*`, `@tauri-apps/*`, raw `fetch`, `window.location`, `localStorage`, `sessionStorage`, or `import.meta.env.VITE_*` (all enforced by the linter). It reaches platform-specific things only via `@editor/*` seams: `services/apiClient`, `auth/session.getAccessToken`, `auth/supabase`, `platform/openExternal`, `services/billing`, `hooks/useSaaSMode` — each provided per-platform in `saas/` and `desktop/`.
 
-Rule of thumb — **move, don't copy**: share via `cloud/`, override by shadowing the same `@app/*` path in a leaf (`saas/` or `desktop/`).
+Rule of thumb — **move, don't copy**: share via `cloud/`, override by shadowing the same `@editor/*` path in a leaf (`saas/` or `desktop/`).
 
 **Cloud feature flags on desktop.** The local `AppConfigContext` reads `/api/v1/config/app-config` from the LOCAL bundled backend, so cloud-only flags (`aiEngineEnabled`, `premiumEnabled`, …) are never seen on desktop. To read the cloud's view, use `useSaasAppConfig()` (`desktop/hooks/useSaasAppConfig.ts`, backed by the general `saasAppConfigService` — SaaS-mode-only, public endpoint, native HTTP, 5-min cache). It returns `null` outside SaaS mode, so cloud features stay off in local mode and the server keeps the on/off switch (no desktop release needed to flip a flag). In self-hosted mode the connected server's own `AppConfigContext` is the authority instead. Gate a feature behind a per-platform seam - e.g. `useAiEngineEnabled()` (core reads `useAppConfig()`, desktop reads `useAppConfig()` when signed in to a self-hosted server and `useSaasAppConfig()` otherwise) - rather than hardcoding the flag on.
 
@@ -243,7 +243,7 @@ Use this pattern for desktop-specific or proprietary-specific features WITHOUT r
 **How it works:**
 1. Core defines stub component (returns null or no-op)
 2. Desktop/proprietary overrides with same path/name
-3. Core imports via `@app/*` - higher layer "shadows" core in those builds
+3. Core imports via `@editor/*` - higher layer "shadows" core in those builds
 4. No `@ts-ignore`, no `isTauri()` checks, no runtime conditionals!
 
 **Example - Desktop-specific footer:**
@@ -262,7 +262,7 @@ export function WorkbenchBarFooterExtensions(_props: WorkbenchBarFooterExtension
 ```tsx
 // desktop/components/workbenchBar/WorkbenchBarFooterExtensions.tsx (real implementation)
 import { Box } from '@mantine/core';
-import { BackendHealthIndicator } from '@app/components/BackendHealthIndicator';
+import { BackendHealthIndicator } from '@editor/components/BackendHealthIndicator';
 
 interface WorkbenchBarFooterExtensionsProps {
   className?: string;
@@ -279,7 +279,7 @@ export function WorkbenchBarFooterExtensions({ className }: WorkbenchBarFooterEx
 
 ```tsx
 // core/components/shared/WorkbenchBar.tsx (usage - works in ALL builds)
-import { WorkbenchBarFooterExtensions } from '@app/components/workbenchBar/WorkbenchBarFooterExtensions';
+import { WorkbenchBarFooterExtensions } from '@editor/components/workbenchBar/WorkbenchBarFooterExtensions';
 
 export function WorkbenchBar() {
   return (
@@ -293,8 +293,8 @@ export function WorkbenchBar() {
 ```
 
 **Build resolution:**
-- **Core build**: `@app/*` → `core/*` → Gets stub (returns null)
-- **Desktop build**: `@app/*` → `desktop/*` → Gets real implementation (shadows core)
+- **Core build**: `@editor/*` → `core/*` → Gets stub (returns null)
+- **Desktop build**: `@editor/*` → `desktop/*` → Gets real implementation (shadows core)
 
 **Benefits:**
 - No runtime checks or feature flags
@@ -309,7 +309,7 @@ Frontend designed for **stateful document processing**:
 - No file reloading between tools - performance critical for large PDFs (up to 100GB+)
 
 #### FileContext - Central State Management
-**Location**: `frontend/editor/src/core/contexts/FileContext.tsx`
+**Location**: `frontend/src/editor/core/contexts/FileContext.tsx`
 - **Active files**: Currently loaded PDFs and their variants
 - **Tool navigation**: Current mode (viewer/pageEditor/fileEditor/toolName)
 - **Memory management**: PDF document cleanup, blob URL lifecycle, Web Worker management
@@ -334,7 +334,7 @@ Without cleanup: browser crashes with memory leaks.
 
 **Architecture**: Modular hook-based system with clear separation of concerns:
 
-- **useToolOperation** (`frontend/editor/src/core/hooks/tools/shared/useToolOperation.ts`): Main orchestrator hook
+- **useToolOperation** (`frontend/src/editor/core/hooks/tools/shared/useToolOperation.ts`): Main orchestrator hook
   - Coordinates all tool operations with consistent interface
   - Integrates with FileContext for operation tracking
   - Handles validation, error handling, and UI state management
@@ -422,7 +422,7 @@ return useToolOperation({
 ### Frontend Directory Structure
 The frontend is organized with a clear separation of concerns:
 
-- **`frontend/editor/src/core/`**: Main application code (shared, production-ready components)
+- **`frontend/src/editor/core/`**: Main application code (shared, production-ready components)
   - **`core/components/`**: React components organized by feature
     - `core/components/tools/`: Individual PDF tool implementations
     - `core/components/viewer/`: PDF viewer components
@@ -440,17 +440,17 @@ The frontend is organized with a clear separation of concerns:
   - **`core/data/`**: Static data (tool taxonomy, etc.)
   - **`core/services/`**: Business logic services (PDF processing, storage, etc.)
 
-- **`frontend/editor/src/desktop/`**: Desktop-specific (Tauri) code
-- **`frontend/editor/src/proprietary/`**: Proprietary/licensed features
-- **`frontend/editor/src-tauri/`**: Tauri (Rust) native desktop application code
-- **`frontend/editor/public/`**: Static assets served directly
+- **`frontend/src/editor/desktop/`**: Desktop-specific (Tauri) code
+- **`frontend/src/editor/proprietary/`**: Proprietary/licensed features
+- **`frontend/src-tauri/`**: Tauri (Rust) native desktop application code
+- **`frontend/public/`**: Static assets served directly
   - `public/locales/`: Translation JSON files
 
 ### Component Architecture
-- **Static Assets**: CSS, JS, and resources in `src/main/resources/static/` (legacy) + `frontend/editor/public/` (modern)
+- **Static Assets**: CSS, JS, and resources in `src/main/resources/static/` (legacy) + `frontend/public/` (modern)
 - **Internationalization**:
   - Backend: `messages_*.properties` files
-  - Frontend: JSON files in `frontend/editor/public/locales/` (converted from .properties)
+  - Frontend: JSON files in `frontend/public/locales/` (converted from .properties)
   - Conversion Script: `scripts/convert_properties_to_json.py`
 
 ### Configuration Modes
@@ -478,7 +478,7 @@ Never sleep in tests (`page.waitForTimeout`, `Thread.sleep`, etc.) - it causes f
 4. **Code Style**: Spotless enforces Google Java Format automatically (`task backend:format`)
 5. **Translations**:
    - Backend: Use helper scripts in `/scripts` for multi-language updates
-   - Frontend: Update JSON files in `frontend/editor/public/locales/` or use conversion script
+   - Frontend: Update JSON files in `frontend/public/locales/` or use conversion script
 6. **Documentation**: API docs auto-generated and available at `/swagger-ui/index.html`
 
 ## Frontend Architecture Status
@@ -496,7 +496,7 @@ Never sleep in tests (`page.waitForTimeout`, `Thread.sleep`, etc.) - it causes f
 ## Translation Rules
 
 - **CRITICAL**: Always update translations in `en-US` only - all other languages (including `en-GB`) are handled separately
-- Translation files are located in `frontend/editor/public/locales/`
+- Translation files are located in `frontend/public/locales/`
 - After changing any translation file, run `task pre-commit:fix`
 
 ## Important Notes
@@ -507,7 +507,7 @@ Never sleep in tests (`page.waitForTimeout`, `Thread.sleep`, etc.) - it causes f
   - **Backend**: Designed to be stateless - files are processed in memory/temp locations only
   - **Frontend**: Uses IndexedDB for client-side file storage and caching (with thumbnails)
 - **Security**: When `DOCKER_ENABLE_SECURITY=false`, security-related classes are excluded from compilation
-- **Import Paths**: ALWAYS use `@app/*` for imports - never use `@core/*` or `@proprietary/*` unless explicitly wrapping/extending a lower layer
+- **Import Paths**: ALWAYS use `@editor/*` for imports - never use `@editor-core/*` or `@editor-proprietary/*` unless explicitly wrapping/extending a lower layer
 - **FileContext**: All file operations MUST go through FileContext - never bypass with direct File handling
 - **Memory Management**: Manual cleanup required for PDF.js documents and blob URLs - don't remove cleanup code
 - **Tool Development**: New tools should follow `useToolOperation` hook pattern (see `useCompressOperation.ts`)
