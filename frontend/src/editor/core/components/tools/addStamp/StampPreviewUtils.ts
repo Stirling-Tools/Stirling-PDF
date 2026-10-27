@@ -150,7 +150,7 @@ export function computeStampPreviewStyle(
 
   // Compute content dimensions
   const heightPtsContent =
-    parameters.stampType === "image"
+    parameters.stampType !== "text"
       ? parameters.fontSize
       : parameters.fontSize * getAlphabetPreviewScale(parameters.alphabet);
   let widthPtsContent = heightPtsContent;
@@ -294,7 +294,7 @@ export function computeStampPreviewStyle(
       opacity: displayOpacity,
       transform: `rotate(${-parameters.rotation}deg)`,
       transformOrigin:
-        parameters.stampType === "image" ? "left bottom" : "center center",
+        parameters.stampType !== "text" ? "left bottom" : "center center",
       color: parameters.customColor,
       display: "flex",
       flexDirection: "column",

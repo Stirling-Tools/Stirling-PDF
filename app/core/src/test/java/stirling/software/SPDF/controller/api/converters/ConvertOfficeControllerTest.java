@@ -15,7 +15,9 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -235,6 +237,71 @@ class ConvertOfficeControllerTest {
                 pe.verifyNoInteractions();
                 Mockito.verify(officeToPdfService, Mockito.never())
                         .convert(any(Path.class), any(Path.class));
+            }
+        }
+
+        @Test
+        @DisplayName("a file the sanitizer refuses on the LibreOffice path leaves no work dir")
+        void refusedBySanitizerLeavesNoWorkDir() throws Exception {
+            when(officeToPdfService.handles("docx", null)).thenReturn(false);
+            when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
+            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
+            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
+                    .thenThrow(new IOException("part could not be sanitized"));
+            Set<Path> before = officeWorkDirs();
+
+            assertThatThrownBy(() -> controller.convertToPdf(docxFile("x".getBytes())))
+                    .isInstanceOf(IOException.class);
+
+            assertThat(officeWorkDirs()).isEqualTo(before);
+        }
+
+        @Test
+        @DisplayName("an unchecked failure before conversion leaves no work dir")
+        void uncheckedFailureLeavesNoWorkDir() throws Exception {
+            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
+            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
+                    .thenThrow(new SecurityException("unsafe entry"));
+            Set<Path> before = officeWorkDirs();
+
+            when(officeToPdfService.handles("docx", null)).thenReturn(false);
+            assertThatThrownBy(() -> controller.convertToPdf(docxFile("x".getBytes())))
+                    .isInstanceOf(SecurityException.class);
+            when(officeToPdfService.handles("docx", null)).thenReturn(true);
+            assertThatThrownBy(() -> controller.convertToPdf(docxFile("x".getBytes())))
+                    .isInstanceOf(SecurityException.class);
+
+            assertThat(officeWorkDirs()).isEqualTo(before);
+        }
+
+        @Test
+        @DisplayName("a failed LibreOffice run leaves no work dir")
+        void failedLibreOfficeRunLeavesNoWorkDir() throws Exception {
+            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
+            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
+            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
+                    .thenAnswer(inv -> inv.getArgument(0));
+            Set<Path> before = officeWorkDirs();
+
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                ProcessExecutorResult result = mockExecutor(pe, 3);
+                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
+                when(executor.runCommandWithOutputHandling(any(List.class))).thenReturn(result);
+
+                assertThatThrownBy(() -> controller.convertToPdf(docxFile("docx".getBytes())))
+                        .isInstanceOf(IllegalStateException.class);
+            }
+
+            assertThat(officeWorkDirs()).isEqualTo(before);
+        }
+
+        private Set<Path> officeWorkDirs() throws IOException {
+            try (var dirs =
+                    Files.newDirectoryStream(
+                            Path.of(System.getProperty("java.io.tmpdir")), "office2pdf_*")) {
+                Set<Path> found = new HashSet<>();
+                dirs.forEach(found::add);
+                return found;
             }
         }
 

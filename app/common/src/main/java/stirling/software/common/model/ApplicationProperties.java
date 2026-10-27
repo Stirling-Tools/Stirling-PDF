@@ -78,7 +78,6 @@ public class ApplicationProperties {
 
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
-    private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
     private FormDetection formDetection = new FormDetection();
     private Docparse docparse = new Docparse();
@@ -284,6 +283,19 @@ public class ApplicationProperties {
         private int runExpiryMinutes = 30;
 
         /**
+         * Most steps one pipeline or policy run may have, covering {@code
+         * /api/v1/pipeline/handleData} as well as policies; 0 = unlimited.
+         */
+        private int maxSteps = 50;
+
+        /**
+         * Most files one step of a pipeline or policy run may produce before the run is aborted; 0
+         * = unlimited. A step answering with a ZIP multiplies the files the next step is called on,
+         * so without a cap a few split steps fan out into millions of tool calls.
+         */
+        private int maxFilesPerStep = 10000;
+
+        /**
          * Whether a policy S3 source's custom endpoint may resolve to a loopback, link-local, or
          * private address. Off by default so a user-supplied endpoint cannot be pointed at internal
          * services (e.g. the cloud metadata address); enable for a self-hosted MinIO or other
@@ -328,46 +340,6 @@ public class ApplicationProperties {
         private boolean allowCustomApiIntegrations = true;
 
         private long webhookMaxBytes = 104857600L;
-    }
-
-    @Data
-    public static class PdfEditor {
-        private Cache cache = new Cache();
-        private FontNormalization fontNormalization = new FontNormalization();
-        private CffConverter cffConverter = new CffConverter();
-        private Type3 type3 = new Type3();
-        private String fallbackFont = "classpath:/static/fonts/NotoSans-Regular.ttf";
-
-        @Data
-        public static class Cache {
-            private long maxBytes = -1;
-            private int maxPercent = 20;
-        }
-
-        @Data
-        public static class FontNormalization {
-            private boolean enabled = false;
-        }
-
-        @Data
-        public static class CffConverter {
-            private boolean enabled = true;
-            private String method = "python";
-            private String pythonCommand = "/opt/venv/bin/python3";
-            private String pythonScript = "/scripts/convert_cff_to_ttf.py";
-            private String fontforgeCommand = "fontforge";
-        }
-
-        @Data
-        public static class Type3 {
-            private Library library = new Library();
-
-            @Data
-            public static class Library {
-                private boolean enabled = true;
-                private String index = "classpath:/type3/library/index.json";
-            }
-        }
     }
 
     @Data

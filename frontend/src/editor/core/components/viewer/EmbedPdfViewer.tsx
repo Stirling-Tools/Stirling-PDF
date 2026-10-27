@@ -473,7 +473,14 @@ const EmbedPdfViewerContent = ({
     if (!pending) return false;
 
     const pageEl = resolvePendingScrollPage();
-    if (!pageEl) return false;
+    if (!pageEl) {
+      // A carried page away from the replacement's top mounts only once the
+      // restore bridge scrolls to it; until then the replacement shows page 1.
+      if (pending.expectSwap && documentSwappedRef.current) {
+        hideSwappedDocument(pending.scroller);
+      }
+      return false;
+    }
     if (!pendingScrollSwappedRef.current) {
       if (!pending.scroller?.isConnected) {
         pending.scroller = findScrollableAncestor(pageEl);
@@ -1595,10 +1602,12 @@ const EmbedPdfViewerContent = ({
     const zoom = pendingZoomRestoreRef.current;
     const spread = pendingSpreadRestoreRef.current;
     const rotation = pendingRotationRestoreRef.current;
+    const pending = pendingScrollPositionRef.current;
+    const page = pending?.expectSwap ? pending.page : null;
     setRestoreRequest(
-      zoom === null && spread === null && rotation === null
+      zoom === null && spread === null && rotation === null && page === null
         ? null
-        : { documentId, zoom, spread, rotation },
+        : { documentId, zoom, spread, rotation, page },
     );
     setRestoreTick((tick) => tick + 1);
   }, []);
