@@ -213,9 +213,8 @@ public class ProcessExecutor {
     }
 
     /**
-     * Runs {@code probeCommand}, normally Calibre's version check, inside the Calibre sandbox and
-     * says whether Calibre may be offered on this host; the outcome is logged. False means the
-     * configured mode would let no conversion run.
+     * Runs {@code probeCommand}, normally Calibre's version check, through the Calibre sandbox,
+     * logs the outcome, and says whether the configured mode lets Calibre be offered on this host.
      */
     public static boolean isCalibreSandboxUsable(List<String> probeCommand) {
         return CalibreSandboxPolicy.probeAtStartup(calibreSandboxMode, probeCommand);

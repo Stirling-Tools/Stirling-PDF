@@ -111,7 +111,6 @@ public class ExternalAppDepConfig {
         }
     }
 
-    /** Calibre is only offered when its sandbox can be applied on this host. */
     private void disableCalibreUnlessConfined() {
         if (!endpointConfiguration.isGroupEnabled("Calibre")
                 || ProcessExecutor.isCalibreSandboxUsable(List.of(calibrePath, "--version"))) {

@@ -253,7 +253,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     /opt/calibre/ebook-convert /tmp/test.txt /tmp/test.epub; \
     rm -f /tmp/test.txt /tmp/test.epub; \
     \
-    # Verify pdftohtml (poppler) is available.
     pdftohtml -v >/dev/null 2>&1 && echo "pdftohtml OK" || { echo "ERROR: pdftohtml not found"; exit 1; }; \
     echo "=== Calibre stripped successfully ==="
 

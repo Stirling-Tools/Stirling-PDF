@@ -204,7 +204,8 @@ def main():
         print("usage: calibre_sandbox.py <working directory> <command...>", file=sys.stderr)
         return 2
     work_dir, command = sys.argv[1], sys.argv[2:]
-    required = os.environ.get("STIRLING_CALIBRE_SANDBOX", "required") != "enforce"
+    # Must match CalibreSandboxPolicy.Mode.BEST_EFFORT; any other value refuses to run unconfined.
+    required = os.environ.get("STIRLING_CALIBRE_SANDBOX", "required") != "best-effort"
 
     call(libc.prctl, PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)
     if not confine_file_system(work_dir):

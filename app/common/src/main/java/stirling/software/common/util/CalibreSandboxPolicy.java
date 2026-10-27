@@ -16,26 +16,31 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Calibre runs inside the launcher's Landlock and seccomp sandbox, confined to its job directory
- * with a scrubbed environment. Under the default {@link Mode#REQUIRED} a host that cannot provide
- * that sandbox gets no Calibre: the startup probe disables its endpoint group, and a job whose
- * launcher reports a gap is refused. {@code STIRLING_CALIBRE_SANDBOX} selects the other modes.
+ * Confines Calibre to its job directory with the launcher's Landlock and seccomp sandbox and a
+ * scrubbed environment. Under the default {@link Mode#REQUIRED} a host without that sandbox gets no
+ * Calibre: the startup probe disables its endpoint group, and a job the launcher refuses fails.
  */
 @Slf4j
 final class CalibreSandboxPolicy {
 
     /**
-     * {@code REQUIRED}, the default: confined, or not at all. {@code ENFORCE}: confined where the
-     * host allows, otherwise Calibre runs unconfined and every such run is logged. {@code OFF}:
+     * {@code REQUIRED}, the default: confined, or not at all. {@code BEST_EFFORT}: confined where
+     * the host allows, otherwise Calibre runs unconfined and every such run is logged. {@code OFF}:
      * never confined.
      */
     enum Mode {
-        OFF,
-        ENFORCE,
-        REQUIRED
+        OFF("off"),
+        BEST_EFFORT("best-effort"),
+        REQUIRED("required");
+
+        /** Must match the value {@code calibre_sandbox.py} compares against. */
+        final String value;
+
+        Mode(String value) {
+            this.value = value;
+        }
     }
 
-    /** What one launcher run showed about this host. */
     enum Probe {
         ACTIVE,
         REFUSED,
@@ -75,23 +80,36 @@ final class CalibreSandboxPolicy {
         return resolveMode(System.getenv(MODE_VARIABLE));
     }
 
-    /** Unset, blank and unrecognised values all mean {@code REQUIRED}. */
+    /**
+     * Unset, blank and unrecognised values mean {@code REQUIRED}. That includes {@code enforce}: it
+     * reads as "enforce the sandbox", so it must never select the relaxed mode.
+     */
     static Mode resolveMode(String configured) {
         if (configured == null || configured.isBlank()) {
             return Mode.REQUIRED;
         }
-        return switch (configured.trim().toLowerCase(Locale.ROOT)) {
-            case "off" -> Mode.OFF;
-            case "enforce" -> Mode.ENFORCE;
-            default -> Mode.REQUIRED;
-        };
+        String value = configured.trim().toLowerCase(Locale.ROOT);
+        if (value.equals("enforce")) {
+            log.warn(
+                    "{}=enforce is treated as required; set {}={} to let Calibre run unconfined"
+                            + " where its sandbox is unavailable",
+                    MODE_VARIABLE,
+                    MODE_VARIABLE,
+                    Mode.BEST_EFFORT.value);
+        }
+        for (Mode mode : Mode.values()) {
+            if (mode.value.equals(value)) {
+                return mode;
+            }
+        }
+        return Mode.REQUIRED;
     }
 
     /**
      * {@code command} wrapped in the launcher and confined to {@code workingDirectory}, with {@code
      * env} cut down to what Calibre needs and pointed into that directory. Without a working
      * directory the job is refused in every mode; without Python to run the launcher it is refused
-     * under {@code REQUIRED} and runs unconfined under {@code ENFORCE}. {@code OFF} returns the
+     * under {@code REQUIRED} and runs unconfined under {@code BEST_EFFORT}. {@code OFF} returns the
      * command unchanged.
      */
     static List<String> confine(
@@ -117,7 +135,7 @@ final class CalibreSandboxPolicy {
         Path home = Files.createDirectories(workDir.resolve(HOME_DIR));
 
         env.keySet().removeIf(name -> !isEnvAllowed(name));
-        env.put(MODE_VARIABLE, mode.name().toLowerCase(Locale.ROOT));
+        env.put(MODE_VARIABLE, mode.value);
         env.put("HOME", home.toString());
         for (String name : List.of("TMPDIR", "TMP", "TEMP", "XDG_RUNTIME_DIR")) {
             env.put(name, home.toString());
@@ -133,12 +151,10 @@ final class CalibreSandboxPolicy {
     }
 
     /**
-     * Runs {@code probeCommand} (Calibre's own version check, so its install path is covered by the
-     * launcher's allowlist) confined, and logs what the launcher reports, so a host whose kernel
-     * lacks Landlock or seccomp is visible at startup rather than in the first job's log. Whether
-     * Calibre may be offered: under {@code REQUIRED} only when the run was fully confined; the
-     * other modes always offer it and only log. stderr goes to a file so a stalled launcher cannot
-     * outlive the timeout.
+     * Whether Calibre may be offered: under {@code REQUIRED} only when {@code probeCommand} ran
+     * fully confined, otherwise always. Pass Calibre's own version check, so its install path is
+     * checked against the launcher's allowlist too. stderr goes to a file, not a pipe, so a stalled
+     * launcher cannot outlive the timeout.
      */
     static boolean probeAtStartup(Mode mode, List<String> probeCommand) {
         if (mode == Mode.OFF) {
@@ -198,11 +214,7 @@ final class CalibreSandboxPolicy {
         }
     }
 
-    /**
-     * A clean exit with nothing from the launcher is the only active outcome; the launcher exits
-     * with {@link #LAUNCHER_REFUSED_EXIT_CODE} when it cannot confine, and any other failure says
-     * nothing about the sandbox.
-     */
+    /** A non-zero exit that is not the launcher's own refusal says nothing about the sandbox. */
     static Probe classifyProbe(int exitCode, List<String> errorLines) {
         if (exitCode == LAUNCHER_REFUSED_EXIT_CODE || !launcherLines(errorLines).isEmpty()) {
             return Probe.REFUSED;
@@ -239,15 +251,16 @@ final class CalibreSandboxPolicy {
         }
         log.warn(
                 "Calibre sandbox is unavailable on this host ({}); Calibre runs unconfined because"
-                        + " {}=enforce",
+                        + " {}={}",
                 detail,
-                MODE_VARIABLE);
+                MODE_VARIABLE,
+                mode.value);
         return true;
     }
 
     /**
-     * Fails a job whose launcher refused to run it. Under {@code ENFORCE} the launcher runs the job
-     * anyway and only reports the gap, which is logged.
+     * Fails a job whose launcher refused to run it. Under {@code BEST_EFFORT} the launcher runs the
+     * job anyway and only reports the gap, which is logged.
      */
     static void checkLauncherOutcome(int exitCode, List<String> errorLines) throws IOException {
         List<String> launcherLines = launcherLines(errorLines);

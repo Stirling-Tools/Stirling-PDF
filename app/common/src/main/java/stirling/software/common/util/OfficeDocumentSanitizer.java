@@ -126,8 +126,8 @@ public class OfficeDocumentSanitizer {
         return out.toByteArray();
     }
 
-    // The converter's own parser is more lenient than this one, so a part it would still read
-    // but this one cannot inspect is refused rather than passed on.
+    // The converters' parsers accept parts this one rejects, so such a part could still carry
+    // references there.
     private byte[] sanitizeEntry(String entryName, byte[] entryBytes) throws IOException {
         String lower = entryName.toLowerCase(Locale.ROOT);
         try {

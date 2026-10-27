@@ -85,15 +85,21 @@ class CalibreSandboxPolicyTest {
     }
 
     @Test
+    void theRetiredEnforceValueFailsClosed() {
+        assertThat(CalibreSandboxPolicy.resolveMode("enforce")).isEqualTo(Mode.REQUIRED);
+        assertThat(CalibreSandboxPolicy.resolveMode("best_effort")).isEqualTo(Mode.REQUIRED);
+    }
+
+    @Test
     void configuredModeIsHonoured() {
         assertThat(CalibreSandboxPolicy.resolveMode("off")).isEqualTo(Mode.OFF);
-        assertThat(CalibreSandboxPolicy.resolveMode("ENFORCE")).isEqualTo(Mode.ENFORCE);
+        assertThat(CalibreSandboxPolicy.resolveMode("BEST-EFFORT")).isEqualTo(Mode.BEST_EFFORT);
         assertThat(CalibreSandboxPolicy.resolveMode("required")).isEqualTo(Mode.REQUIRED);
     }
 
     @Test
     void commandIsWrappedInTheLauncherAndConfinedToTheWorkingDirectory() throws IOException {
-        for (Mode mode : List.of(Mode.ENFORCE, Mode.REQUIRED)) {
+        for (Mode mode : List.of(Mode.BEST_EFFORT, Mode.REQUIRED)) {
             assertThat(
                             CalibreSandboxPolicy.confine(
                                     mode, command, workDir.toFile(), new HashMap<>()))
@@ -161,12 +167,12 @@ class CalibreSandboxPolicyTest {
     }
 
     @Test
-    void withoutPythonAnEnforcedSandboxRunsCalibreUnconfined() throws IOException {
+    void withoutPythonABestEffortSandboxRunsCalibreUnconfined() throws IOException {
         checkProgramInstall.when(CheckProgramInstall::getAvailablePythonCommand).thenReturn(null);
 
         assertThat(
                         CalibreSandboxPolicy.confine(
-                                Mode.ENFORCE, command, workDir.toFile(), new HashMap<>()))
+                                Mode.BEST_EFFORT, command, workDir.toFile(), new HashMap<>()))
                 .isEqualTo(command);
     }
 
@@ -217,7 +223,7 @@ class CalibreSandboxPolicyTest {
             assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.REQUIRED, PROBE)).isFalse();
         }
         try (MockedConstruction<ProcessBuilder> ignored = calibre(0, refusal)) {
-            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.ENFORCE, PROBE)).isTrue();
+            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.BEST_EFFORT, PROBE)).isTrue();
         }
     }
 
@@ -245,7 +251,7 @@ class CalibreSandboxPolicyTest {
         checkProgramInstall.when(CheckProgramInstall::getAvailablePythonCommand).thenReturn(null);
         try (MockedConstruction<ProcessBuilder> builders = calibre(0, "")) {
             assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.REQUIRED, PROBE)).isFalse();
-            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.ENFORCE, PROBE)).isTrue();
+            assertThat(CalibreSandboxPolicy.probeAtStartup(Mode.BEST_EFFORT, PROBE)).isTrue();
             assertThat(builders.constructed()).allSatisfy(b -> verify(b, never()).start());
         }
     }
@@ -336,8 +342,8 @@ class CalibreSandboxPolicyTest {
     }
 
     @Test
-    void partialConfinementUnderEnforceStillConverts() throws Exception {
-        ProcessExecutor.setCalibreSandboxMode(Mode.ENFORCE);
+    void partialConfinementUnderBestEffortStillConverts() throws Exception {
+        ProcessExecutor.setCalibreSandboxMode(Mode.BEST_EFFORT);
         try (MockedConstruction<ProcessBuilder> ignored =
                 calibre(0, "calibre-sandbox: seccomp unavailable, network unconfined\n")) {
             runCalibre();
