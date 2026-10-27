@@ -276,8 +276,14 @@ public class MobileScannerService {
 
         session.updateLastAccess();
         // Each file is served once. The file stays on disk while its download streams, and the
-        // desktop's overlapping polls would otherwise fetch it again.
+        // desktop's overlapping polls would otherwise fetch it again. Only stored names are served:
+        // on a case-insensitive filesystem another spelling would pass Files.exists but miss the
+        // claim and the byte accounting, and a name still being written exists only as a
+        // placeholder.
         synchronized (storageLock) {
+            if (!session.isStored(filename)) {
+                throw new IOException("File not found: " + filename);
+            }
             if (session.isDownloaded(filename)) {
                 throw new IOException("File already downloaded: " + filename);
             }
@@ -624,6 +630,10 @@ public class MobileScannerService {
 
         public List<FileMetadata> getFiles() {
             return files;
+        }
+
+        public boolean isStored(String filename) {
+            return storedFileSizes.containsKey(filename);
         }
 
         public boolean isDownloaded(String filename) {

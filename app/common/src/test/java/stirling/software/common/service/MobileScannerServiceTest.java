@@ -345,6 +345,16 @@ class MobileScannerServiceTest {
 
             assertDoesNotThrow(() -> service.getFile("c2", "a.txt"));
         }
+
+        @Test
+        @DisplayName("a file on disk that the session did not store is not served")
+        void unstoredFileNotServed() throws IOException {
+            service.uploadFiles("c3", List.of(file("a.txt", "x")));
+            Files.writeString(tempDir.resolve("c3").resolve("other.txt"), "y");
+
+            assertThrows(IOException.class, () -> service.getFile("c3", "other.txt"));
+            assertDoesNotThrow(() -> service.getFile("c3", "a.txt"));
+        }
     }
 
     @Nested
