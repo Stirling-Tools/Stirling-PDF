@@ -122,6 +122,7 @@ public class PolicyController {
     private final JobOwnershipService jobOwnershipService;
     // Shared job store: lets the run endpoints see runs that executed on other nodes.
     private final JobStore jobStore;
+    private final StepSecrets stepSecrets;
 
     @PostMapping(value = "/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -137,7 +138,7 @@ public class PolicyController {
             @RequestParam(value = "policyId", required = false) String policyId,
             @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
-        PipelineDefinition definition = request.toDefinition();
+        PipelineDefinition definition = withStoredStepSecrets(policyId, request.toDefinition());
         stampPolicyAudit(definition);
         requireRunnable(definition);
         validateAdHocRun(definition);
@@ -166,7 +167,7 @@ public class PolicyController {
             @RequestParam(value = "policyId", required = false) String policyId,
             @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
-        PipelineDefinition definition = request.toDefinition();
+        PipelineDefinition definition = withStoredStepSecrets(policyId, request.toDefinition());
         stampPolicyAudit(definition);
         requireRunnable(definition);
         validateAdHocRun(definition);
@@ -306,7 +307,8 @@ public class PolicyController {
         requirePolicyEditingAllowed();
         Policy owned =
                 ClassificationStepPlanner.ensureClassificationFirst(
-                        withStoredOutputSecrets(resolveOwnership(policy)));
+                        withStoredSecrets(resolveOwnership(policy)));
+        stepSecrets.requireUnmasked(owned.steps());
         // Snapshot the previous version before saving so supporting files this edit dropped can
         // be cleaned up once nothing references them.
         Policy previous =
@@ -325,7 +327,7 @@ public class PolicyController {
         // Re-sync trigger registrations now so a new/changed folder-watch policy starts being
         // watched immediately instead of after the next reconcile sweep.
         policyTriggerManager.notifyPoliciesChanged();
-        return ResponseEntity.ok(withMaskedOutputSecrets(saved));
+        return ResponseEntity.ok(withMaskedSecrets(saved));
     }
 
     @PutMapping("/order")
@@ -462,20 +464,25 @@ public class PolicyController {
                 policy.routingRules());
     }
 
-    /** Output secrets never leave the server: reads return the redaction sentinel instead. */
-    private static Policy withMaskedOutputSecrets(Policy policy) {
+    /**
+     * Output and step secrets never leave the server, even to a policy editor: reads return the
+     * redaction sentinel instead.
+     */
+    private Policy withMaskedSecrets(Policy policy) {
         return withOutput(
-                policy,
-                new OutputSpec(
-                        policy.output().type(), SecretMasker.mask(policy.output().options())));
+                        policy,
+                        new OutputSpec(
+                                policy.output().type(),
+                                SecretMasker.mask(policy.output().options())))
+                .withSteps(stepSecrets.mask(policy.steps()));
     }
 
     /**
-     * An edit that round-trips a masked read sends output secrets back as the sentinel; restore
-     * them from the stored policy so saving without re-typing keeps them (validation then runs
-     * against the real values).
+     * An edit that round-trips a masked read sends secrets back as the sentinel; restore them from
+     * the stored policy so saving without re-typing keeps them (validation then runs against the
+     * real values).
      */
-    private Policy withStoredOutputSecrets(Policy incoming) {
+    private Policy withStoredSecrets(Policy incoming) {
         if (incoming.id() == null || incoming.id().isBlank()) {
             return incoming;
         }
@@ -484,12 +491,15 @@ public class PolicyController {
                 .map(
                         existing ->
                                 withOutput(
-                                        incoming,
-                                        new OutputSpec(
-                                                incoming.output().type(),
-                                                SecretMasker.restoreRedacted(
-                                                        incoming.output().options(),
-                                                        existing.output().options()))))
+                                                incoming,
+                                                new OutputSpec(
+                                                        incoming.output().type(),
+                                                        SecretMasker.restoreRedacted(
+                                                                incoming.output().options(),
+                                                                existing.output().options())))
+                                        .withSteps(
+                                                stepSecrets.restore(
+                                                        incoming.steps(), existing.steps())))
                 .orElse(incoming);
     }
 
@@ -543,11 +553,11 @@ public class PolicyController {
             summary = "List policies",
             description =
                     "Lists the policies belonging to the caller's team. Secret-bearing output"
-                            + " options are returned as a redaction sentinel, never their stored"
-                            + " values.")
+                            + " options and step passwords are returned as a redaction sentinel,"
+                            + " never their stored values.")
     public List<Policy> listPolicies() {
         return policyAccessGuard.visibleFrom(policyStore).stream()
-                .map(PolicyController::withMaskedOutputSecrets)
+                .map(this::withMaskedSecrets)
                 .toList();
     }
 
@@ -591,14 +601,14 @@ public class PolicyController {
     @Operation(
             summary = "Get a policy by id",
             description =
-                    "Secret-bearing output options are returned as a redaction sentinel, never"
-                            + " their stored values; an edit that sends the sentinel back keeps"
-                            + " them.")
+                    "Secret-bearing output options and step passwords are returned as a"
+                            + " redaction sentinel, never their stored values; an edit that sends"
+                            + " the sentinel back keeps them.")
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyId) {
         return policyStore
                 .get(policyId)
                 .filter(this::accessiblePolicySurface)
-                .map(PolicyController::withMaskedOutputSecrets)
+                .map(this::withMaskedSecrets)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -784,14 +794,37 @@ public class PolicyController {
      * inaccessible policy leaves the run-supplied inputs untouched.
      */
     private PolicyInputs resolveStoredAssets(String policyId, PolicyInputs inputs) {
-        if (policyId == null || policyId.isBlank() || !policyEditingAllowed()) {
-            return inputs;
-        }
-        return policyStore
-                .get(policyId)
-                .filter(this::accessiblePolicySurface)
+        return testedPolicy(policyId)
                 .map(policy -> assetResolver.resolve(policy, inputs))
                 .orElse(inputs);
+    }
+
+    /**
+     * A test run sends the saved policy's steps as read, so their passwords arrive as the sentinel.
+     * Restore them under the same rule as its stored assets; a sentinel left over is rejected
+     * rather than run as the password.
+     */
+    private PipelineDefinition withStoredStepSecrets(
+            String policyId, PipelineDefinition requested) {
+        PipelineDefinition definition =
+                testedPolicy(policyId)
+                        .map(
+                                policy ->
+                                        new PipelineDefinition(
+                                                requested.name(),
+                                                stepSecrets.restore(
+                                                        requested.steps(), policy.steps()),
+                                                requested.outputs()))
+                        .orElse(requested);
+        stepSecrets.requireUnmasked(definition.steps());
+        return definition;
+    }
+
+    private Optional<Policy> testedPolicy(String policyId) {
+        if (policyId == null || policyId.isBlank() || !policyEditingAllowed()) {
+            return Optional.empty();
+        }
+        return policyStore.get(policyId).filter(this::accessiblePolicySurface);
     }
 
     /**
