@@ -1099,9 +1099,10 @@ public class AuditService {
         // Try X-Forwarded-For first (set by proxies/load balancers)
         String forwardedFor = request.getHeader("X-Forwarded-For");
         if (StringUtils.isNotBlank(forwardedFor)) {
-            // X-Forwarded-For can contain multiple IPs, take the first one (original client)
-            String[] ips = forwardedFor.split(",");
-            return ips[0].trim();
+            String first = forwardedFor.split(",", 2)[0].trim();
+            if (!first.isEmpty()) {
+                return first;
+            }
         }
 
         // Try X-Real-IP (used by some proxies)
