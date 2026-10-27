@@ -47,6 +47,7 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.LimitedPDFRenderer;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -305,7 +306,7 @@ public class AutoSplitPdfController {
             int totalPages = document.getNumberOfPages();
             log.info("PDF loaded, totalPages={}", totalPages);
 
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
 
             for (int page = 0; page < totalPages; ++page) {

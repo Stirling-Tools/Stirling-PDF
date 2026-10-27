@@ -51,6 +51,7 @@ import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.LimitedPDFRenderer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempDirectory;
@@ -256,7 +257,7 @@ public class AutoRotateController {
         final int renderDpi = dpi;
 
         try (TempDirectory tempDir = new TempDirectory(tempFileManager)) {
-            PDFRenderer renderer = new PDFRenderer(document);
+            PDFRenderer renderer = new LimitedPDFRenderer(document);
             renderer.setSubsamplingAllowed(true);
             // One reused path, deleted after every page: the images are throwaway input for
             // Tesseract, so a long document must not accumulate one file per page on disk.

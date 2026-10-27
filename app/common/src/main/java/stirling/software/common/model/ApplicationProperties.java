@@ -1338,6 +1338,7 @@ public class ApplicationProperties {
         private boolean stirlingOfficeConversion;
         private int maxDPI = 500;
         private int maxPdfaConversionPages = 20_000;
+        private int maxImageMegapixels;
         private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
