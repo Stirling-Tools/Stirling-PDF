@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.zip.ZipEntry;
@@ -38,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.SPDF.service.ocr.NativeTesseractService;
+import stirling.software.SPDF.service.ocr.OcrLanguageInstaller;
+import stirling.software.SPDF.service.ocr.OcrLanguages;
 import stirling.software.SPDF.service.ocr.OcrOptions;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
@@ -73,6 +74,7 @@ public class OCRController {
     private final EndpointConfiguration endpointConfiguration;
     private final RuntimePathConfig runtimePathConfig;
     private final NativeTesseractService nativeTesseract;
+    private final OcrLanguageInstaller languageInstaller;
 
     private boolean isOcrMyPdfEnabled() {
         return endpointConfiguration.isGroupEnabled("OCRmyPDF");
@@ -90,16 +92,7 @@ public class OCRController {
 
     /** Gets the list of available Tesseract languages from the tessdata directory */
     public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = runtimePathConfig.getTessDataPath();
-        File[] files = new File(tessdataDir).listFiles();
-        if (files == null) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(files)
-                .filter(file -> file.getName().endsWith(".traineddata"))
-                .map(file -> file.getName().replace(".traineddata", ""))
-                .filter(lang -> !"osd".equalsIgnoreCase(lang))
-                .toList();
+        return OcrLanguages.installed(runtimePathConfig.getTessDataPath());
     }
 
     @AutoJobPostMapping(
@@ -193,7 +186,7 @@ public class OCRController {
                         sidecarTextFile != null ? sidecarTextFile.getPath() : null);
                 log.info("In-process Tesseract processing completed successfully");
             }
-            // Use Tesseract only if OCRmyPDF is not available
+            // The tesseract CLI is the last resort: it rasterises every page
             else if (isTesseractEnabled()) {
                 processWithTesseract(
                         selectedLanguages,
@@ -378,6 +371,8 @@ public class OCRController {
             Path tempOutputFile,
             Path sidecarTextPath)
             throws IOException, InterruptedException {
+        // The desktop app ships without the orientation model and fetches it on first use.
+        if (options.rotatePages() && languageInstaller != null) languageInstaller.ensureOsd();
         try (TempDirectory tempDir = new TempDirectory(tempFileManager);
                 PDDocument document = pdfDocumentFactory.load(tempInputFile.toFile())) {
             String sidecar =

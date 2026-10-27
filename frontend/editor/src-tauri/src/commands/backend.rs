@@ -281,6 +281,38 @@ fn copy_dir_recursive(src: &Path, dest: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
+/// Copies the OCR languages bundled with the app into the user's tessdata folder. Copied rather
+/// than referenced because Tesseract reads one folder, and languages the user adds go there too.
+/// Existing files are left alone so a user's own copy is never replaced, which is why each copy
+/// lands under a temporary name first: an interrupted copy must not leave a truncated model that
+/// would then be kept forever.
+fn seed_tessdata(bundled: &Path, tessdata_dir: &Path) {
+    let Ok(entries) = std::fs::read_dir(bundled) else {
+        add_log(format!("⚠️ No bundled OCR languages in {}", bundled.display()));
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().and_then(|e| e.to_str()) != Some("traineddata") {
+            continue;
+        }
+        let Some(name) = path.file_name() else { continue };
+        let target = tessdata_dir.join(name);
+        if target.exists() {
+            continue;
+        }
+        let partial = target.with_extension("traineddata.part");
+        let copied = std::fs::copy(&path, &partial).and_then(|_| std::fs::rename(&partial, &target));
+        match copied {
+            Ok(_) => add_log(format!("🔤 Installed bundled OCR language {}", name.to_string_lossy())),
+            Err(e) => {
+                let _ = std::fs::remove_file(&partial);
+                add_log(format!("⚠️ Could not install {}: {}", name.to_string_lossy(), e))
+            }
+        }
+    }
+}
+
 // Create, configure and run the Java command to run Stirling-PDF JAR
 fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &PathBuf) -> Result<(), String> {
     // Get platform-specific application data directory for Tauri mode
@@ -300,6 +332,10 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     std::fs::create_dir_all(&work_dir).ok();
     std::fs::create_dir_all(&config_dir).ok();
     std::fs::create_dir_all(&tessdata_dir).ok();
+    match app.path().resource_dir() {
+        Ok(resource_dir) => seed_tessdata(&resource_dir.join("tessdata"), &tessdata_dir),
+        Err(e) => add_log(format!("⚠️ No resource directory, OCR languages not seeded: {}", e)),
+    }
 
     // Migrate legacy workspace content into the app data root before launch.
     if legacy_work_dir.exists() {
@@ -407,6 +443,14 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         .env("STIRLING_PDF_WORK_DIR", work_dir.to_str().unwrap())
         .env("TESSDATA_PREFIX", tessdata_dir.to_str().unwrap())
         .env("STIRLING_PDF_SHUTDOWN_FILE", shutdown_file.to_str().unwrap());
+    // TESSDATA_PREFIX now points at the app's own folder; the user's original setting is
+    // passed on so the backend can copy languages from a Tesseract they installed themselves.
+    let sidecar_command = match std::env::var("TESSDATA_PREFIX") {
+        Ok(system) if !system.is_empty() && Path::new(&system) != tessdata_dir.as_path() => {
+            sidecar_command.env("STIRLING_PDF_SYSTEM_TESSDATA", system)
+        }
+        _ => sidecar_command,
+    };
 
     add_log("⚙️ Starting backend with bundled JRE...".to_string());
 

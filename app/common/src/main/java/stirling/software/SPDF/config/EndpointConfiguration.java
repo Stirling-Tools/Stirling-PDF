@@ -262,13 +262,17 @@ public class EndpointConfiguration {
         }
     }
 
+    /**
+     * Undoes {@link #disableGroup}. A tool group's endpoints were never disabled with it, so they
+     * are left as they are; forcing them on would override an endpoint the admin removed.
+     */
     public void enableGroup(String group) {
         if (disabledGroups.remove(group)) {
             log.debug("Enabling group: {}", group);
         }
         groupDisableReasons.remove(group);
         Set<String> endpoints = endpointGroups.get(group);
-        if (endpoints != null) {
+        if (endpoints != null && !isToolGroup(group)) {
             endpoints.forEach(this::enableEndpoint);
         }
     }

@@ -65,6 +65,92 @@ class NativeTesseractServiceTest {
                         EndpointConfiguration.DisableReason.DEPENDENCY);
     }
 
+    @Test
+    void removingTheTesseractGroupSwitchesTheEngineOff(@TempDir Path tessdata) throws IOException {
+        Files.writeString(tessdata.resolve("eng.traineddata"), "placeholder");
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getEndpoints().setGroupsToRemove(List.of("tesseract"));
+        EndpointConfiguration endpoints = mock(EndpointConfiguration.class);
+        NativeTesseractService service = service(properties, tessdata.toString(), endpoints);
+
+        service.probe();
+
+        assertFalse(service.isAvailable());
+        verify(endpoints)
+                .disableGroup(
+                        NativeTesseractService.GROUP,
+                        EndpointConfiguration.DisableReason.DEPENDENCY);
+    }
+
+    @Test
+    void desktopWithNoLanguagesStaysAvailableSoOneCanBeAdded(@TempDir Path tessdata) {
+        System.setProperty("STIRLING_PDF_TAURI_MODE", "true");
+        try {
+            EndpointConfiguration endpoints = mock(EndpointConfiguration.class);
+            NativeTesseractService service = service(tessdata.toString(), endpoints);
+
+            service.probe();
+
+            assertEquals(NativeTesseractService.nativesPackaged(), service.isAvailable());
+        } finally {
+            System.clearProperty("STIRLING_PDF_TAURI_MODE");
+        }
+    }
+
+    @Test
+    void windowsNonAsciiPathsAreNamedRelativeToTheWorkingDirectory(@TempDir Path temp) {
+        // fopen on Windows cannot open "C:\Users\José\...", but can open it relative to a working
+        // directory inside the same profile.
+        Path profile = temp.resolve("Jos\u00e9");
+        Path appData = profile.resolve("AppData").resolve("Roaming").resolve("Stirling-PDF");
+        Path tessdata = appData.resolve("tessdata");
+        Path temporary = profile.resolve("AppData").resolve("Local").resolve("Temp");
+
+        assertEquals("tessdata", NativeTesseractService.nativePath(tessdata, appData, true));
+        assertEquals(
+                appData.relativize(temporary).toString(),
+                NativeTesseractService.nativePath(temporary, appData, true));
+        assertEquals(".", NativeTesseractService.nativePath(appData, appData, true));
+        // Elsewhere, and for ASCII paths, the absolute path is used as is.
+        assertEquals(
+                tessdata.toAbsolutePath().toString(),
+                NativeTesseractService.nativePath(tessdata, appData, false));
+        Path ascii = temp.resolve("ascii");
+        assertEquals(
+                ascii.toAbsolutePath().toString(),
+                NativeTesseractService.nativePath(ascii, appData, true));
+        // With no ASCII relative form there is nothing better than the absolute path.
+        assertEquals(
+                tessdata.toAbsolutePath().toString(),
+                NativeTesseractService.nativePath(tessdata, temp.resolve("other"), true));
+    }
+
+    @Test
+    void workersAreLimitedByMemoryOutsideTheHeap() {
+        long gb = 1L << 30;
+        long a4 = 2480L * 3508; // A4 at 300 dpi
+
+        // A 4 GB container with a 3 GB heap leaves 1 GB for native buffers, half of it in use.
+        assertEquals(5, NativeTesseractService.workerCount(100, a4, true, 3 * gb, 4 * gb, 8));
+        // A roomy desktop is limited by cores.
+        assertEquals(8, NativeTesseractService.workerCount(100, a4, true, 2 * gb, 16 * gb, 8));
+        // Never fewer than one, even with no memory to spare.
+        assertEquals(1, NativeTesseractService.workerCount(100, a4, true, 3 * gb, 3 * gb, 8));
+        assertEquals(2, NativeTesseractService.workerCount(2, a4, false, 2 * gb, 16 * gb, 8));
+    }
+
+    @Test
+    void largePagesRenderUnderThePixelCap() {
+        PDPage a0 = new PDPage(new PDRectangle(2384, 3370));
+
+        int dpi = NativeTesseractService.pageDpi(a0, 300);
+
+        assertTrue(dpi < 300);
+        long pixels = (long) (2384 / 72.0 * dpi) * (long) (3370 / 72.0 * dpi);
+        assertTrue(pixels <= NativeTesseractService.MAX_PAGE_PIXELS);
+        assertEquals(300, NativeTesseractService.pageDpi(new PDPage(PDRectangle.LETTER), 300));
+    }
+
     /**
      * Runs real recognition, so it needs this platform's natives on the classpath and
      * TESSDATA_PREFIX pointing at a folder with eng.traineddata; otherwise it is skipped.
@@ -242,6 +328,70 @@ class NativeTesseractServiceTest {
             }
         }
 
+        @Test
+        void pdfBoxRendersWhenTheParsersDisagreeOnPages(@TempDir Path work) throws Exception {
+            // The file handed to pdfium has one page; the document being changed has two.
+            Path onePage = work.resolve("one.pdf");
+            try (PDDocument single = scannedPage(0, 0, "STIRLING OCR WORKS")) {
+                single.save(onePage.toFile());
+            }
+            try (PDDocument alpha = scannedPage(0, 0, "ALPHA PAGE");
+                    PDDocument bravo = scannedPage(0, 0, "BRAVO PAGE");
+                    PDDocument document = new PDDocument()) {
+                document.importPage(alpha.getPage(0));
+                document.importPage(bravo.getPage(0));
+
+                String[] pages =
+                        service.ocrDocument(
+                                        onePage,
+                                        document,
+                                        List.of("eng"),
+                                        OcrOptions.DEFAULT,
+                                        DPI,
+                                        work)
+                                .split("\f");
+
+                assertTrue(pages[0].contains("ALPHA"), pages[0]);
+                assertTrue(pages[1].contains("BRAVO"), pages[1]);
+            }
+        }
+
+        @Test
+        void rotatePagesTurnsSidewaysPagesUpright(@TempDir Path work) throws Exception {
+            assumeTrue(Files.exists(Path.of(tessdata, "osd.traineddata")), "no osd.traineddata");
+            Outcome out =
+                    run(
+                            scannedPage(0, 90, fullPage()),
+                            new OcrOptions(false, false, true, false),
+                            work);
+
+            assertTrue(wordRecall(out.sidecar()) >= 0.9, out.sidecar());
+            try (PDDocument doc = out.reload()) {
+                // Content turned 90 degrees clockwise is corrected by turning it back.
+                assertEquals(270, doc.getPage(0).getRotation());
+            }
+        }
+
+        @Test
+        void textLayerFollowsACroppedPage(@TempDir Path work) throws Exception {
+            PDDocument document = scannedPage(0, 0, "STIRLING OCR WORKS");
+            PDPage page = document.getPage(0);
+            PDRectangle media = page.getMediaBox();
+            page.setCropBox(
+                    new PDRectangle(
+                            media.getLowerLeftX() + 36,
+                            media.getLowerLeftY() + 36,
+                            media.getWidth() - 72,
+                            media.getHeight() - 72));
+
+            Outcome out = run(document, OcrOptions.DEFAULT, work);
+
+            TextPosition first = firstPositionOf(out.reload(), "STIRLING");
+            float pointsPerPixel = 72f / DPI;
+            assertEquals(WORD_X * pointsPerPixel - 36, first.getX(), 8, "x of STIRLING");
+            assertEquals(WORD_BASELINE * pointsPerPixel - 36, first.getY(), 8, "y of STIRLING");
+        }
+
         /** Saves {@code source}, OCRs it the way the controller does and returns the result. */
         private Outcome run(PDDocument source, OcrOptions options, Path work) throws Exception {
             Path in = work.resolve("in.pdf");
@@ -344,9 +494,14 @@ class NativeTesseractServiceTest {
 
     private static NativeTesseractService service(
             String tessdata, EndpointConfiguration endpoints) {
+        return service(new ApplicationProperties(), tessdata, endpoints);
+    }
+
+    private static NativeTesseractService service(
+            ApplicationProperties properties, String tessdata, EndpointConfiguration endpoints) {
         RuntimePathConfig paths = mock(RuntimePathConfig.class);
         when(paths.getTessDataPath()).thenReturn(tessdata);
-        return new NativeTesseractService(new ApplicationProperties(), paths, endpoints);
+        return new NativeTesseractService(properties, paths, endpoints);
     }
 
     private static int pixel(PIX pix, int x, int y) {

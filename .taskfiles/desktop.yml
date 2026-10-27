@@ -40,6 +40,13 @@ tasks:
       - task: ":frontend:prepare"
         vars: { MODE: desktop }
       - provisioner
+      - tessdata
+
+  tessdata:
+    desc: "Fetch the OCR languages bundled with the desktop app"
+    dir: ..
+    cmds:
+      - node frontend/editor/scripts/fetch-tessdata.mjs app/core/src/main/resources/ocr/tessdata-fast-catalog.json frontend/editor/src-tauri/tessdata eng
 
   provisioner:
     desc: "Build installer provisioner"

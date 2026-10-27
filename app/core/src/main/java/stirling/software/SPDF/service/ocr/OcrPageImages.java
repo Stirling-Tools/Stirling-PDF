@@ -48,6 +48,34 @@ final class OcrPageImages {
         return gray;
     }
 
+    /** A PDFBox render: greyscale stays 8 bpp, anything else becomes 32 bpp RGB. */
+    static PIX fromImage(BufferedImage image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        boolean gray = image.getType() == BufferedImage.TYPE_BYTE_GRAY;
+        PIX pix = pixCreate(width, height, gray ? 8 : 32);
+        if (pix == null) return null;
+        int wpl = pixGetWpl(pix);
+        IntPointer data = pixGetData(pix);
+        int[] words = new int[wpl];
+        byte[] grayRow = gray ? new byte[width] : null;
+        int[] argbRow = gray ? null : new int[width];
+        for (int y = 0; y < height; y++) {
+            if (gray) {
+                Arrays.fill(words, 0);
+                image.getRaster().getDataElements(0, y, width, 1, grayRow);
+                for (int x = 0; x < width; x++) {
+                    words[x >> 2] |= (grayRow[x] & 0xff) << (24 - 8 * (x & 3));
+                }
+            } else {
+                image.getRGB(0, y, width, 1, argbRow, 0, width);
+                for (int x = 0; x < width; x++) words[x] = argbRow[x] << 8;
+            }
+            data.position((long) y * wpl).put(words, 0, wpl);
+        }
+        return pix;
+    }
+
     static PIX grayPix(byte[] gray, int width, int height) {
         PIX pix = pixCreate(width, height, 8);
         if (pix == null) return null;
@@ -119,8 +147,7 @@ final class OcrPageImages {
 
     /**
      * Picks the encoding OCRmyPDF would: 1-bit for black-and-white pages, greyscale JPEG for grey
-     * ones, colour JPEG otherwise. Rasterising text-only pages as colour JPEG made force-OCR output
-     * larger than its input.
+     * ones, colour JPEG otherwise, so a rasterised text page stays smaller than its source.
      */
     static Encoded encode(BufferedImage image) throws IOException {
         int width = image.getWidth();

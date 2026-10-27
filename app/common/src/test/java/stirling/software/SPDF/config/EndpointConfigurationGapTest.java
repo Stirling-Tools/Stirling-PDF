@@ -240,6 +240,19 @@ class EndpointConfigurationGapTest {
         }
 
         @Test
+        @DisplayName("re-enabling a tool group keeps an endpoint the admin removed")
+        void enableToolGroupKeepsRemovedEndpoint() {
+            applicationProperties.getEndpoints().setToRemove(List.of("ocr-pdf"));
+            EndpointConfiguration config = buildDefault();
+            config.disableGroup("TesseractNative", DisableReason.DEPENDENCY);
+
+            config.enableGroup("TesseractNative");
+
+            assertTrue(config.isGroupEnabled("TesseractNative"));
+            assertFalse(config.isEndpointEnabled("ocr-pdf"));
+        }
+
+        @Test
         @DisplayName("a functional group with one disabled endpoint is not enabled")
         void functionalGroupWithDisabledEndpoint() {
             EndpointConfiguration config = buildDefault();
