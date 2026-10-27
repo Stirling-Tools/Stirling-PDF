@@ -269,4 +269,46 @@ class DatabaseServiceTest {
         boolean result = databaseService.importDatabaseFromUI(script);
         assertThat(result).isTrue();
     }
+
+    @Test
+    void validateSqlContentAcceptsVeryLongStringLiteral() throws IOException {
+        String longValue = "{\"k\":\"" + "x".repeat(500_000) + "\",\"q\":\"it''s FILE_READ(\"}";
+        Path script = tempDir.resolve("long-literal.sql");
+        Files.writeString(
+                script,
+                "INSERT INTO \"PUBLIC\".\"AUDIT_EVENTS\"(\"ID\", \"DATA\") VALUES(1, '"
+                        + longValue
+                        + "');\n");
+
+        ReflectionTestUtils.invokeMethod(databaseService, "validateSqlContent", script);
+    }
+
+    @Test
+    void validateSqlContentAcceptsSemicolonsAndCommentMarkersInsideStrings() throws IOException {
+        Path script = tempDir.resolve("punctuated-literal.sql");
+        Files.writeString(
+                script,
+                "INSERT INTO \"PUBLIC\".\"AUDIT_EVENTS\"(\"ID\", \"DATA\") VALUES(1, '"
+                        + "WHEREAS; the parties -- agree /* that */ it''s fine; FILE_READ(x)"
+                        + "');\n");
+
+        ReflectionTestUtils.invokeMethod(databaseService, "validateSqlContent", script);
+    }
+
+    @Test
+    void validateSqlContentRejectsDeniedCodeAfterVeryLongStringLiteral() throws IOException {
+        Path script = tempDir.resolve("long-literal-then-alias.sql");
+        Files.writeString(
+                script,
+                "INSERT INTO \"PUBLIC\".\"AUDIT_EVENTS\"(\"ID\", \"DATA\") VALUES(1, '"
+                        + "x".repeat(500_000)
+                        + "');\n"
+                        + "CREATE ALIAS EXEC FOR \"java.lang.Runtime.exec\";\n");
+
+        assertThatThrownBy(
+                        () ->
+                                ReflectionTestUtils.invokeMethod(
+                                        databaseService, "validateSqlContent", script))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }
