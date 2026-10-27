@@ -73,6 +73,7 @@ jobs:
         env:
           VITE_BUILD_FOR_PREVIEW: "1"
           VITE_INCLUDE_PORTAL: "true"
+          VITE_ACCESSIBILITY_EDITING: "true"
         run: task frontend:build:proprietary
       - name: Run stubbed E2E tests (${{ matrix.browser }} ${{ matrix.shard }})
         if: matrix.suite != 'desktop'
