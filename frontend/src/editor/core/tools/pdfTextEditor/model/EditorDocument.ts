@@ -5,9 +5,13 @@ import {
   openRawDocument,
 } from "@editor/services/pdfiumService";
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
-import { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  PageStructure,
+  isInlineType,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureEdit } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
 import { readPageStructure } from "@editor/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
+import { carriedMcids } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
   readFileStructure,
   type FileStructure,
@@ -224,6 +228,19 @@ export class EditorDocument {
           mcids: [edit.mcid],
         });
       }
+      for (const edit of this.cutEdits(pageIndex, structure)) {
+        const { type, from, before } = edit.cut!;
+        if (isInlineType(type)) continue;
+        const owner = structure.element(from[0])!.block.key;
+        const at = blocks.findIndex((block) => block.key === owner);
+        const after = before === null ? 0 : 1;
+        blocks.splice(at < 0 ? blocks.length : at + after, 0, {
+          key: structure.block(edit.mcid)!.key,
+          type,
+          pageIndex,
+          mcids: [edit.mcid],
+        });
+      }
     }
     return blocks.flatMap(({ type, pageIndex, mcids }) =>
       isHeadingType(type) ? [{ type, pageIndex, mcids }] : [],
@@ -244,17 +261,19 @@ export class EditorDocument {
     const structure = this.structure(pageIndex);
     const blocker = structure.cannotRetag(mcid);
     if (blocker) throw new Error(`MCID ${mcid} cannot be retagged: ${blocker}`);
+    const block = structure.element(mcid)!.block;
     // An added element is not in the file yet: its type is just changed.
-    if (structure.isAdded(mcid)) {
-      if (type !== null) structure.setAddedType(mcid, type);
+    const added = structure.addedBlockMcid(block.key);
+    if (added !== null) {
+      if (type !== null) structure.setAddedType(added, type);
       return;
     }
-    // The save climbs from the element owning `mcid` to this same block.
-    const block = structure.element(mcid)!.block;
     if (type === null || type === block.type) {
       this.retags.delete(block.key);
     } else {
-      this.retags.set(block.key, { pageIndex, mcid, type });
+      // The save climbs from the element owning this to the same block.
+      const address = structure.fileMcid(mcid)!;
+      this.retags.set(block.key, { pageIndex, mcid: address, type });
     }
   }
 
@@ -290,6 +309,7 @@ export class EditorDocument {
       ...[...this.structureCache].flatMap(([pageIndex, structure]) => [
         ...structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
         ...this.addedElementEdits(pageIndex, structure),
+        ...this.cutEdits(pageIndex, structure),
       ]),
       ...retags,
     ];
@@ -321,6 +341,36 @@ export class EditorDocument {
           alt: element.alt,
           decorative: false,
           newElement: { type: element.type, after },
+        },
+      ];
+    });
+  }
+
+  /**
+   * The page's cuts, in the order made. One whose text was since deleted is
+   * left out, and a part before or after it that was deleted is not kept.
+   */
+  private cutEdits(
+    pageIndex: number,
+    structure: PageStructure,
+  ): StructureEdit[] {
+    const page = this.pageCache.get(pageIndex);
+    const cuts = structure.cutElements();
+    if (!page || cuts.length === 0) return [];
+    const carried = carriedMcids(this.module, page.pagePtr);
+    return cuts.flatMap(({ mcid, type, alt, cut }) => {
+      if (!carried.has(mcid)) return [];
+      const kept = (part: number | null) =>
+        part !== null && carried.has(part) ? part : null;
+      const before = kept(cut.before);
+      const after = kept(cut.after);
+      return [
+        {
+          pageIndex,
+          mcid,
+          alt,
+          decorative: false,
+          cut: { type, from: cut.from, before, after },
         },
       ];
     });

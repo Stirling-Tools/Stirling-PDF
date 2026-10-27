@@ -16,9 +16,11 @@ import {
   addElements,
   noteId,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/addElements";
+import { cutElements } from "@editor/tools/pdfTextEditor/pdfdoc/passes/cutElements";
 import { markDecorative } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markDecorative";
 import { StructureNodes } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
 import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
+import type { ContentCut } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 
 /** A change to the structure element that owns marked content `mcid` on a page. */
@@ -39,6 +41,8 @@ export interface StructureEdit {
    * the element owning MCID `after` on the page (see NewElement).
    */
   newElement?: { type: StructureType; after: number | null };
+  /** Set when the content was cut out of an element's: give it one of `type` (see cutElements). */
+  cut?: ContentCut & { type: StructureType };
 }
 
 export interface StructureEditFailure {
@@ -83,13 +87,18 @@ export async function applyStructureEdits(
   const treeRoot = catalog ? pdf.dictRef(catalog, "StructTreeRoot") : null;
   if (treeRoot === null) throw fail("the file has no structure tree");
 
-  const nodes = new StructureNodes(pdf, pdf.objectBody(treeRoot) ?? "");
   const bodies = new Map<number, string>();
+  const nodes = new StructureNodes(
+    pdf,
+    pdf.objectBody(treeRoot) ?? "",
+    (num) => bodies.get(num) ?? pdf.objectBody(num),
+  );
   const failures: StructureEditFailure[] = [];
   const decorative = new Map<number, StructureEdit[]>();
   const added = edits.filter((edit) => edit.newElement);
+  const cuts = edits.filter((edit) => edit.cut);
   for (const edit of edits) {
-    if (edit.newElement) continue;
+    if (edit.newElement || edit.cut) continue;
     const owner = elementFor(pdf, treeRoot, edit);
     if (typeof owner === "string") {
       failures.push({ edit, reason: owner });
@@ -113,6 +122,22 @@ export async function applyStructureEdits(
   }
 
   const parentTree = new ParentTreeWriter(pdf, treeRoot);
+  // After the retags, which address elements by the MCIDs a cut can take
+  // from them, and before the added elements, which may be placed beside a cut.
+  const uncut = await cutElements(
+    pdf,
+    cuts.map((edit) => ({
+      ...edit,
+      type: edit.cut!.type,
+      alt: edit.alt ?? null,
+      cut: edit.cut!,
+    })),
+    bodies,
+    parentTree,
+  );
+  for (const [index, reason] of uncut) {
+    failures.push({ edit: cuts[index], reason });
+  }
   // Before the decorative marks, so an element placed beside one they drop
   // keeps its place among the kids that remain.
   const unplaced = await addElements(

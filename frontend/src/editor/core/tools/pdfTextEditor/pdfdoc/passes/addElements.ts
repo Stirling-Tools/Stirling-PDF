@@ -10,11 +10,13 @@ import {
   type PageSites,
 } from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
 import {
+  indirectRef,
   referencedObject,
   setDictEntry,
   type RawPdf,
 } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import type { StructureNodes } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
+import { unusedObjectNumber } from "@editor/tools/pdfTextEditor/pdfdoc/revision";
 import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 
@@ -55,7 +57,6 @@ export async function addElements(
   const failed = new Map<number, string>();
   const body = (num: number) => bodies.get(num) ?? pdf.objectBody(num);
   const sites = new Map<number, Promise<PageSites | null>>();
-  let nextNum = pdf.highestObjectNumber + 1;
 
   for (const [index, element] of elements.entries()) {
     const pageNum = pdf.pageNumberAt(element.pageIndex);
@@ -77,20 +78,20 @@ export async function addElements(
 
     const place = placement(pdf, body, treeRoot, nodes, slots, element.after);
     const parent = body(place.parent);
-    const joined = parent ? withKid(pdf, parent, place, nextNum) : null;
+    const num = unusedObjectNumber(pdf, bodies);
+    const joined = parent ? withKid(pdf, parent, place, num) : null;
     if (!joined) {
       failed.set(index, "its parent element cannot be read");
       continue;
     }
-    const num = nextNum++;
     bodies.set(place.parent, joined);
     const alt =
       element.alt === null ? "" : ` /Alt ${encodeTextString(element.alt)}`;
     const id = element.type === "Note" ? ` /ID ${noteId(num)}` : "";
     bodies.set(
       num,
-      `<< /Type /StructElem /S /${element.type} /P ${ref(pdf, place.parent)} ` +
-        `/Pg ${ref(pdf, pageNum)} /K ${element.mcid}${alt}${id} >>`,
+      `<< /Type /StructElem /S /${element.type} /P ${indirectRef(pdf, place.parent)} ` +
+        `/Pg ${indirectRef(pdf, pageNum)} /K ${element.mcid}${alt}${id} >>`,
     );
     while (slots.length < element.mcid) slots.push("null");
     slots[element.mcid] = `${num} 0 R`;
@@ -147,10 +148,6 @@ function withKid(
 function insertionIndex(count: number, at: number, before: boolean): number {
   if (at < 0) return count;
   return before ? at : at + 1;
-}
-
-function ref(pdf: RawPdf, num: number): string {
-  return `${num} ${pdf.generationOf(num)} R`;
 }
 
 /**

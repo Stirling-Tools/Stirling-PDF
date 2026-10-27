@@ -95,9 +95,13 @@ export function containingBlock(
   own: StructureBlock,
   parent: { type: StructureType | null; block: StructureBlock } | null,
 ): StructureBlock {
-  const inline = own.type !== null && INLINE_TYPES.has(own.type);
+  const inline = own.type !== null && isInlineType(own.type);
   const grouping = parent?.type != null && GROUPING_TYPES.has(parent.type);
   return parent !== null && inline && !grouping ? parent.block : own;
+}
+
+export function isInlineType(type: StructureType): boolean {
+  return INLINE_TYPES.has(type);
 }
 
 /** An unsaved change to an element, and the MCID the save addresses it by. */
@@ -127,10 +131,7 @@ export type DescriptionBlocker = "untagged" | "not-figure" | ReadOnlyReason;
 /** Why content cannot be marked decorative. */
 export type DecorativeBlocker = DescriptionBlocker | "mixed-content";
 
-/**
- * What a whole element's text can be retagged as. Lbl and Span belong inside
- * another element, so they wait for tagging part of an element.
- */
+/** What a whole element's text can be retagged as. Lbl and Span only tag part of one (TEXT_RANGE_TYPES). */
 export const TEXT_BLOCK_TYPES = [
   "P",
   "H1",
@@ -139,6 +140,25 @@ export const TEXT_BLOCK_TYPES = [
   "H4",
   "H5",
   "H6",
+  "Quote",
+  "Note",
+  "Code",
+] as const satisfies readonly StructureType[];
+
+/**
+ * What part of an element's text can be tagged as: an inline type joins the
+ * element, and any other splits the element around it.
+ */
+export const TEXT_RANGE_TYPES = [
+  "P",
+  "H1",
+  "H2",
+  "H3",
+  "H4",
+  "H5",
+  "H6",
+  "Lbl",
+  "Span",
   "Quote",
   "Note",
   "Code",
@@ -161,6 +181,39 @@ export type RetagLookup = (key: string) => StructureType | null;
 
 type AddedStructureElement = StructureElement & { type: StructureType };
 
+/**
+ * Text the session cut out of an element into a new one. An inline type
+ * joins the element it was cut from; any other splits it, the cut becoming
+ * a sibling.
+ */
+export interface ContentCut {
+  /**
+   * The MCIDs the text was cut from, in reading order: consecutive kids of
+   * one element. All of their content is in the cut but for the parts
+   * `before` and `after` mark.
+   */
+  from: readonly number[];
+  /**
+   * The MCID of the content cut from that is read before the cut: the first
+   * of `from`, or one the cut gave it. Null when there is none.
+   */
+  before: number | null;
+  /** As `before`, for the content read after the cut, and the last of `from`. */
+  after: number | null;
+}
+
+/** The MCIDs a cut gave to the content it was cut from. */
+function givenMcids(cut: ContentCut): number[] {
+  return [cut.before, cut.after].filter(
+    (mcid): mcid is number => mcid !== null && !cut.from.includes(mcid),
+  );
+}
+
+/** An element the session cut out of another's text. */
+export interface CutElement extends AddedElement {
+  cut: ContentCut;
+}
+
 /** An element the session adds for content the file leaves untagged. */
 export interface AddedElement {
   mcid: number;
@@ -180,6 +233,12 @@ export class PageStructure {
   private readonly byMcid = new Map<number, StructureElement>();
   private readonly edits = new Map<StructureElement, StructureElementEdit>();
   private readonly added = new Map<number, AddedStructureElement>();
+  /** By the new element's MCID, in the order made: a later cut can take text from an earlier one. */
+  private readonly cuts = new Map<
+    number,
+    { cut: ContentCut; owner: StructureElement }
+  >();
+  private readonly fileElements: ReadonlySet<StructureElement>;
 
   /** Why the save cannot write descriptions for this page, or null when it can. */
   readonly readOnly: ReadOnlyReason | null;
@@ -200,6 +259,7 @@ export class PageStructure {
     this.readOnly = readOnly;
     this.slotCount = slotCount;
     this.retaggedAs = retaggedAs;
+    this.fileElements = new Set(elements);
     for (const el of elements) {
       for (const mcid of el.mcids) this.byMcid.set(mcid, el);
     }
@@ -316,11 +376,17 @@ export class PageStructure {
    * highest MCID the page's content carries, -1 for none.
    */
   freeMcid(contentMax: number): number {
+    const used = [...this.added.keys(), ...this.cutGivenMcids()];
     return Math.max(
       this.slotCount ?? 0,
       contentMax + 1,
-      ...[...this.added.keys()].map((mcid) => mcid + 1),
+      ...used.map((mcid) => mcid + 1),
     );
+  }
+
+  /** The MCIDs cuts gave to content read before or after them. */
+  private cutGivenMcids(): number[] {
+    return [...this.cuts.values()].flatMap(({ cut }) => givenMcids(cut));
   }
 
   isAdded(mcid: number): boolean {
@@ -335,17 +401,37 @@ export class PageStructure {
     this.putAdded(mcid, type);
   }
 
-  /** Change the type of the element added for `mcid`. Throws when none was added. */
-  setAddedType(mcid: number, type: StructureType): void {
-    if (!this.added.has(mcid)) throw new Error(`MCID ${mcid} was not added`);
-    const edit = this.editFor(mcid);
-    this.removeElement(mcid);
+  /**
+   * Give the text `cut` takes from an element its own element of `type`,
+   * the content it took now marked `mcid`. Throws when `mcid` already has an
+   * element or no element owns the content it was cut from.
+   */
+  addCut(mcid: number, type: StructureType, cut: ContentCut): void {
+    const owner = this.element(cut.from[0]);
+    if (!owner)
+      throw new Error(`No structure element owns MCID ${cut.from[0]}`);
+    if (this.byMcid.has(mcid)) {
+      throw new Error(`MCID ${mcid} already has an element`);
+    }
+    this.cuts.set(mcid, { cut, owner });
     this.putAdded(mcid, type);
-    if (edit) this.setEdit(mcid, edit);
+    for (const given of givenMcids(cut)) this.byMcid.set(given, owner);
   }
 
-  private putAdded(mcid: number, type: StructureType): void {
+  /** Change the type of the element added for `mcid`. Throws when none was added. */
+  setAddedType(mcid: number, type: StructureType): void {
+    const previous = this.added.get(mcid);
+    if (!previous) throw new Error(`MCID ${mcid} was not added`);
+    const edit = this.edits.get(previous);
+    this.edits.delete(previous);
+    const element = this.putAdded(mcid, type);
+    if (edit) this.edits.set(element, edit);
+  }
+
+  private putAdded(mcid: number, type: StructureType): AddedStructureElement {
     const key = `added:${mcid}`;
+    const owner = this.cuts.get(mcid)?.owner;
+    const own = { key, role: type, type };
     const element: AddedStructureElement = {
       role: type,
       type,
@@ -354,26 +440,62 @@ export class PageStructure {
       mcids: [mcid],
       onlyMarkedContent: true,
       key,
-      block: { key, role: type, type },
+      block: owner ? containingBlock(own, owner) : own,
     };
     this.added.set(mcid, element);
     this.byMcid.set(mcid, element);
+    return element;
   }
 
-  /** Drop an added element and its description. */
+  /** Drop an added element, its description, and the cut it was made by. */
   removeElement(mcid: number): void {
     const element = this.added.get(mcid);
     if (!element) return;
     this.added.delete(mcid);
     this.byMcid.delete(mcid);
     this.edits.delete(element);
+    const cut = this.cuts.get(mcid)?.cut;
+    this.cuts.delete(mcid);
+    for (const given of cut ? givenMcids(cut) : []) this.byMcid.delete(given);
   }
 
+  /** Elements added for untagged content; cutElements lists the rest. */
   addedElements(): AddedElement[] {
-    return [...this.added].map(([mcid, element]) => ({
-      mcid,
-      type: element.type,
-      alt: this.alt(mcid),
+    return [...this.added.keys()]
+      .filter((mcid) => !this.cuts.has(mcid))
+      .map((mcid) => this.addedElement(mcid));
+  }
+
+  /** Elements cut from others' text, in the order they were cut. */
+  cutElements(): CutElement[] {
+    return [...this.cuts].map(([mcid, { cut }]) => ({
+      ...this.addedElement(mcid),
+      cut,
     }));
+  }
+
+  private addedElement(mcid: number): AddedElement {
+    return { mcid, type: this.added.get(mcid)!.type, alt: this.alt(mcid) };
+  }
+
+  /** The MCID of the element the session added that is block `key`; null for a block the file has. */
+  addedBlockMcid(key: string): number | null {
+    for (const [mcid, element] of this.added) {
+      if (element.key === key && element.block.key === key) return mcid;
+    }
+    return null;
+  }
+
+  /**
+   * An MCID the file's own tree resolves to the element holding `mcid`'s
+   * content, or for text cut into an inline element, to the element it was
+   * cut from. Null for text in an element the session added.
+   */
+  fileMcid(mcid: number): number | null {
+    const cut = this.cuts.get(mcid);
+    const el = cut ? cut.owner : this.element(mcid);
+    if (!el) return null;
+    if (this.fileElements.has(el)) return el.mcids[0];
+    return cut ? this.fileMcid(el.mcids[0]) : null;
   }
 }

@@ -38,9 +38,16 @@ export class StructureNodes {
   private readonly nodes = new Map<number, ElementNode | null>();
   private readonly roleMap: string | null;
 
+  /**
+   * `body` reads an object as the caller has it, so a pass that adds elements
+   * can resolve them; by default, as the file has it. An element is read
+   * once, when first asked about.
+   */
   constructor(
     private readonly pdf: RawPdf,
     treeRootBody: string,
+    private readonly body: (num: number) => string | null = (num) =>
+      pdf.objectBody(num),
   ) {
     this.roleMap = pdf.resolve(treeRootBody, "RoleMap");
   }
@@ -50,7 +57,7 @@ export class StructureNodes {
     if (this.nodes.has(num)) return this.nodes.get(num)!;
     // Set before recursing so a /P cycle ends as the top of the tree.
     this.nodes.set(num, null);
-    const body = this.pdf.objectBody(num);
+    const body = this.body(num);
     const s = body ? this.pdf.dictName(body, "S") : null;
     if (!body || s === null) return null;
     const role = structureRole(this.applyRoleMap(s));

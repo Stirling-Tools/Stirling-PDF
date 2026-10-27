@@ -90,6 +90,12 @@ export const SCRATCH = {
   tagName: key(),
   tagNameLen: key(),
   tagMcid: key(),
+  splitMatrix: key(),
+  splitOriginX: key(),
+  splitOriginY: key(),
+  splitFontSize: key(),
+  splitColour: key(),
+  splitStrokeWidth: key(),
 } as const;
 
 /** Structural minimum: any wrapper that exposes PDFium's wasm allocator. */
