@@ -17,6 +17,7 @@ import {
   noteId,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/addElements";
 import { markDecorative } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markDecorative";
+import { StructureNodes } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
 import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 
@@ -26,7 +27,10 @@ export interface StructureEdit {
   mcid: number;
   /** The new /Alt; null removes it, absent leaves it. */
   alt?: string | null;
-  /** The element's new /S. */
+  /**
+   * The new /S of the block the element belongs to: the element itself when
+   * it is one, else the block an inline element such as a Span sits in.
+   */
   type?: StructureType;
   /** Turn the element's content into an artifact and drop the element, its /Alt with it. */
   decorative: boolean;
@@ -79,6 +83,7 @@ export async function applyStructureEdits(
   const treeRoot = catalog ? pdf.dictRef(catalog, "StructTreeRoot") : null;
   if (treeRoot === null) throw fail("the file has no structure tree");
 
+  const nodes = new StructureNodes(pdf, pdf.objectBody(treeRoot) ?? "");
   const bodies = new Map<number, string>();
   const failures: StructureEditFailure[] = [];
   const decorative = new Map<number, StructureEdit[]>();
@@ -94,12 +99,9 @@ export async function applyStructureEdits(
       decorative.set(owner, [...(decorative.get(owner) ?? []), edit]);
       continue;
     }
-    const updated = edited(
-      pdf,
-      bodies.get(owner) ?? pdf.objectBody(owner)!,
-      edit,
-      owner,
-    );
+    const target = edit.type ? nodes.blockOf(owner) : owner;
+    const body = bodies.get(target) ?? pdf.objectBody(target);
+    const updated = body === null ? null : edited(pdf, body, edit, target);
     if (updated === null) {
       failures.push({
         edit,
@@ -107,7 +109,7 @@ export async function applyStructureEdits(
       });
       continue;
     }
-    bodies.set(owner, updated);
+    bodies.set(target, updated);
   }
 
   const parentTree = new ParentTreeWriter(pdf, treeRoot);
@@ -116,6 +118,7 @@ export async function applyStructureEdits(
   const unplaced = await addElements(
     pdf,
     treeRoot,
+    nodes,
     added.map((edit) => ({
       ...edit,
       ...edit.newElement!,

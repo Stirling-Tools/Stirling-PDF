@@ -11,13 +11,18 @@ import {
 
 /**
  * The document's heading outline, null when its structure tree could not be
- * read, and a way to select a heading on the page.
+ * read or `shown` is false, and a way to select a heading on the page. The
+ * outline is rebuilt on every page change, so it is left unbuilt while hidden.
  */
-export function useHeadingOutline(store: EditorStore, state: EditorViewState) {
+export function useHeadingOutline(
+  store: EditorStore,
+  state: EditorViewState,
+  shown: boolean,
+) {
   const outline = useMemo((): HeadingOutline | null => {
-    const headings = store.document?.headings();
+    const headings = shown ? store.document?.headings() : null;
     return headings ? headingOutline(headings, state.pages) : null;
-  }, [store, state.pages]);
+  }, [store, state.pages, shown]);
 
   /** Selects the run showing heading `index`, reading its page first. */
   const selectHeading = useCallback(

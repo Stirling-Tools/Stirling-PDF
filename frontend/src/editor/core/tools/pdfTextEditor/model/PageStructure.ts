@@ -34,8 +34,9 @@ export interface StructureBlock extends StructureRole {
 
 /**
  * Elements that sit inside a block rather than being one: the inline-level
- * types (ISO 32000-1 14.8.4.4, plus PDF 2.0's Em, Strong and Sub) and the
- * two halves of a list item.
+ * types (ISO 32000-1 14.8.4.4, plus PDF 2.0's Em, Strong and Sub), the two
+ * halves of a list item, and NonStruct, whose content is processed as if it
+ * were its parent's (14.8.4.2).
  */
 const INLINE_TYPES: ReadonlySet<StructureType> = new Set<StructureType>([
   "Span",
@@ -58,6 +59,7 @@ const INLINE_TYPES: ReadonlySet<StructureType> = new Set<StructureType>([
   "Sub",
   "Lbl",
   "LBody",
+  "NonStruct",
 ]);
 
 /**
@@ -73,7 +75,6 @@ const GROUPING_TYPES: ReadonlySet<StructureType> = new Set<StructureType>([
   "Div",
   "BlockQuote",
   "Aside",
-  "NonStruct",
   "Private",
   "TOC",
   "Index",
@@ -223,26 +224,13 @@ export class PageStructure {
     return type ? { key: block.key, role: type, type } : block;
   }
 
-  /**
-   * The block element the content `mcid` marks belongs to, as this page lists
-   * it; null when no element owns the content or the block owns none of this
-   * page's content itself, as an LI holding only an Lbl and an LBody does.
-   */
-  blockElement(mcid: number): StructureElement | null {
-    const added = this.added.get(mcid);
-    if (added) return added;
-    const key = this.element(mcid)?.block.key;
-    return this.elements.find((el) => el.key === key) ?? null;
-  }
-
   /** Why the block the text `mcid` marks belongs to cannot be retagged, or null when it can. */
   cannotRetag(mcid: number): RetagBlocker | null {
-    if (!this.element(mcid)) return "untagged";
+    const el = this.element(mcid);
+    if (!el) return "untagged";
     if (this.readOnly) return this.readOnly;
-    const block = this.blockElement(mcid);
-    if (!block) return "not-text";
     // A custom role's meaning is unknown, and giving it a standard one is the fix.
-    if (block.type !== null && !RETAGGABLE_TYPES.has(block.type)) {
+    if (el.block.type !== null && !RETAGGABLE_TYPES.has(el.block.type)) {
       return "not-text";
     }
     return null;

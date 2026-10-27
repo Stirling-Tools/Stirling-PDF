@@ -491,3 +491,79 @@ describe("applyStructureEdits: adding figures", () => {
     ]);
   });
 });
+
+describe("applyStructureEdits: blocks", () => {
+  // Document 9 holds a P (10) whose text is all in a Span (13), then a list
+  // (14) of one item (15). The page also draws MCID 2, which no element owns.
+  function blocksPdf(): Uint8Array {
+    return buildClassicPdf(
+      objects("<< /Nums [0 [13 0 R 15 0 R]] >>")
+        .map((obj) => {
+          switch (obj.num) {
+            case 5:
+              return {
+                num: 5,
+                body: streamBody(
+                  "",
+                  "/Span <</MCID 0>> BDC 0 0 10 10 re f EMC /LI <</MCID 1>> BDC 0 0 5 5 re f EMC " +
+                    "/P <</MCID 2>> BDC 0 0 2 2 re f EMC",
+                ),
+              };
+            case 9:
+              return {
+                num: 9,
+                body: "<< /Type /StructElem /S /Document /P 7 0 R /K [10 0 R 14 0 R] >>",
+              };
+            case 10:
+              return {
+                num: 10,
+                body: "<< /Type /StructElem /S /P /P 9 0 R /K 13 0 R >>",
+              };
+            default:
+              return obj;
+          }
+        })
+        .concat([
+          {
+            num: 13,
+            body: "<< /Type /StructElem /S /Span /P 10 0 R /Pg 3 0 R /K 0 >>",
+          },
+          {
+            num: 14,
+            body: "<< /Type /StructElem /S /L /P 9 0 R /K 15 0 R >>",
+          },
+          {
+            num: 15,
+            body: "<< /Type /StructElem /S /LI /P 14 0 R /Pg 3 0 R /K 1 >>",
+          },
+        ]),
+      1,
+    );
+  }
+  const added = (after: number) => ({
+    pageIndex: 0,
+    mcid: 2,
+    decorative: false,
+    newElement: { type: "P" as const, after },
+  });
+  const documentKids = async (bytes: Uint8Array) =>
+    (await elementBody(bytes, 9)).match(/\/K \[([^\]]*)\]/)![1];
+
+  test("retags the paragraph a Span's text sits in", async () => {
+    const out = await applyStructureEdits(blocksPdf(), [
+      { pageIndex: 0, mcid: 0, type: "H2", decorative: false },
+    ]);
+    expect(await elementBody(out, 10)).toContain("/S /H2");
+    expect(await elementBody(out, 13)).toContain("/S /Span");
+  });
+
+  test("places an element after the paragraph, not inside it beside the Span", async () => {
+    const out = await applyStructureEdits(blocksPdf(), [added(0)]);
+    expect(await documentKids(out)).toBe("10 0 R 16 0 R 14 0 R");
+  });
+
+  test("places an element after a list, not among its items", async () => {
+    const out = await applyStructureEdits(blocksPdf(), [added(1)]);
+    expect(await documentKids(out)).toBe("10 0 R 14 0 R 16 0 R");
+  });
+});

@@ -92,7 +92,11 @@ export function EditorSidebar({
     const id = window.setTimeout(() => ensureAllPagesRead(store), 0);
     return () => window.clearTimeout(id);
   }, [reviewingAccessibility, tab, imageSelected, store]);
-  const headings = useHeadingOutline(store, state);
+  const headings = useHeadingOutline(
+    store,
+    state,
+    reviewingAccessibility && tab === "document",
+  );
 
   // Following the selection only catches one appearing, so moving from one
   // selected image to the next would leave the new one's description hidden.
@@ -173,7 +177,7 @@ export function EditorSidebar({
             onSetShowRulers={onSetShowRulers}
             imageReview={reviewingAccessibility ? controller.imageReview : null}
             onSelectNextImageToReview={selectNextImageToReview}
-            headingOutline={reviewingAccessibility ? headings.outline : null}
+            headingOutline={headings.outline}
             onSelectHeading={headings.selectHeading}
           />
         </Tabs.Panel>

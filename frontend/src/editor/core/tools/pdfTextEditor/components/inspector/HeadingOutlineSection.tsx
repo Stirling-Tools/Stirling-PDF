@@ -122,9 +122,9 @@ function OutlineRow({
 
 function IssueText({ text, testId }: { text: string; testId: string }) {
   return (
-    <Group gap={4} wrap="nowrap" c="yellow.8" data-testid={testId}>
+    <Group gap={4} wrap="nowrap" c="var(--c-warning)" data-testid={testId}>
       <Icon name="triangle-alert" size={14} style={{ flexShrink: 0 }} />
-      <Text size="xs" c="yellow.8">
+      <Text size="xs" c="var(--c-warning)">
         {text}
       </Text>
     </Group>

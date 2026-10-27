@@ -14,6 +14,7 @@ import {
   setDictEntry,
   type RawPdf,
 } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
+import type { StructureNodes } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
 import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 
@@ -24,8 +25,8 @@ export interface NewElement {
   alt: string | null;
   /**
    * The MCID of the content the element reads after: it goes after the
-   * element owning that, or before the element owning the page's first tagged
-   * content when null or unowned.
+   * block holding that, or before the block holding the page's first tagged
+   * content when null or unowned (see StructureNodes.placementSibling).
    */
   after: number | null;
 }
@@ -46,6 +47,7 @@ interface Placement {
 export async function addElements(
   pdf: RawPdf,
   treeRoot: number,
+  nodes: StructureNodes,
   elements: readonly NewElement[],
   bodies: Map<number, string>,
   parentTree: ParentTreeWriter,
@@ -73,7 +75,7 @@ export async function addElements(
       continue;
     }
 
-    const place = placement(pdf, body, treeRoot, slots, element.after);
+    const place = placement(pdf, body, treeRoot, nodes, slots, element.after);
     const parent = body(place.parent);
     const joined = parent ? withKid(pdf, parent, place, nextNum) : null;
     if (!joined) {
@@ -97,7 +99,7 @@ export async function addElements(
 }
 
 /**
- * Beside the element owning MCID `after`; else before the element owning the
+ * After the block holding MCID `after`; else before the block holding the
  * page's first tagged content; else last in the document's top element, for a
  * page with no tagged content.
  */
@@ -105,12 +107,17 @@ function placement(
   pdf: RawPdf,
   body: (num: number) => string | null,
   treeRoot: number,
+  nodes: StructureNodes,
   slots: readonly string[],
   after: number | null,
 ): Placement {
+  // Text read after a paragraph that ends in a link is not part of the link,
+  // nor of the paragraph.
   const beside = (owner: number | null, before: boolean): Placement | null => {
-    const parent = owner === null ? null : pdf.dictRef(body(owner) ?? "", "P");
-    return parent === null ? null : { parent, sibling: owner, before };
+    const sibling = owner === null ? null : nodes.placementSibling(owner);
+    const parent =
+      sibling === null ? null : pdf.dictRef(body(sibling) ?? "", "P");
+    return parent === null ? null : { parent, sibling, before };
   };
   const anchor = after === null ? null : referencedObject(slots[after] ?? "");
   const first = slots

@@ -1,12 +1,5 @@
-import {
-  containingBlock,
-  type StructureBlock,
-  type StructureElement,
-} from "@editor/tools/pdfTextEditor/model/PageStructure";
-import {
-  structureRole,
-  type StructureRole,
-} from "@editor/tools/pdfTextEditor/model/structureTypes";
+import type { StructureElement } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import type { StructureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
   elementKids,
   ownsOnlyMarkedContent,
@@ -15,13 +8,13 @@ import {
   RawPdf,
   referencedObject,
 } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
+import {
+  StructureNodes,
+  type ElementNode,
+} from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
 import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 
 type ElementInfo = Omit<StructureElement, "mcids">;
-
-interface ElementNode extends StructureRole {
-  block: StructureBlock;
-}
 
 /** One page's elements as its ParentTree array gives them. */
 export interface FilePageStructure {
@@ -66,26 +59,8 @@ export async function readFileStructure(
   const treeRoot = catalog ? pdf.dictRef(catalog, "StructTreeRoot") : null;
   const rootBody = treeRoot === null ? null : pdf.objectBody(treeRoot);
   if (treeRoot === null || !rootBody) return null;
-  const roleMap = pdf.resolve(rootBody, "RoleMap");
-
-  const nodes = new Map<number, ElementNode | null>();
-  const nodeFor = (num: number): ElementNode | null => {
-    if (nodes.has(num)) return nodes.get(num)!;
-    // Set before recursing so a /P cycle ends as the top of the tree.
-    nodes.set(num, null);
-    const body = pdf.objectBody(num);
-    const s = body ? pdf.dictName(body, "S") : null;
-    if (!body || s === null) return null;
-    const role = structureRole(applyRoleMap(pdf, roleMap, s));
-    const parentNum = pdf.dictRef(body, "P");
-    const parent = parentNum === null ? null : nodeFor(parentNum);
-    const node = {
-      ...role,
-      block: containingBlock({ key: String(num), ...role }, parent),
-    };
-    nodes.set(num, node);
-    return node;
-  };
+  const nodes = new StructureNodes(pdf, rootBody);
+  const nodeFor = (num: number) => nodes.node(num);
 
   const infos = new Map<number, ElementInfo | null>();
   const infoFor = (num: number): ElementInfo | null => {
@@ -182,27 +157,12 @@ function readElement(
     return value === null ? null : decodeTextString(value.trim());
   };
   return {
-    ...node,
+    role: node.role,
+    type: node.type,
+    block: node.block,
     key: String(num),
     alt: text("Alt"),
     actualText: text("ActualText"),
     onlyMarkedContent: ownsOnlyMarkedContent(pdf, body),
   };
-}
-
-/** Follow /RoleMap (ISO 32000-1 14.8.4) until a type it does not remap. */
-function applyRoleMap(
-  pdf: RawPdf,
-  roleMap: string | null,
-  type: string,
-): string {
-  let current = type;
-  const seen = new Set<string>();
-  while (roleMap && !seen.has(current)) {
-    seen.add(current);
-    const mapped = pdf.dictName(roleMap, current);
-    if (mapped === null) break;
-    current = mapped;
-  }
-  return current;
 }

@@ -10,7 +10,10 @@ import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
   addTagMark,
   highestMcid,
+  innermostMcid,
+  readTagMarks,
   removeTagMark,
+  type TagMark,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { canTagText } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 
@@ -38,12 +41,16 @@ export class TagTextCommand implements Command {
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.runs.find((r) => r.id === this.runId);
-    const ptrs = run ? collectMemberPtrs(run) : [];
+    const members = run ? collectMemberPtrs(run) : [];
+    // Only the untagged objects: an artifact bullet beside the text stays one.
+    const ptrs = members.filter(
+      (ptr) => readTagMarks(doc.module, ptr).length === 0,
+    );
     if (
       !run ||
       !canTagText(doc, run.snapshot()) ||
-      ptrs.length === 0 ||
-      ptrs.includes(0)
+      members.includes(0) ||
+      ptrs.length === 0
     ) {
       throw new RolledBackError(
         new Error(
@@ -76,16 +83,18 @@ export class TagTextCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.runs.find((r) => r.id === this.runId);
     if (!run) return;
-    untag(doc, run, this.as);
+    untag(doc, run, { name: this.as, mcid: this.mcid });
     doc.structure(this.pageIndex).removeElement(this.mcid);
     page.markDirty();
     page.markNeedsGenerate();
   }
 }
 
-function untag(doc: EditorDocument, run: TextRun, name: string): void {
+function untag(doc: EditorDocument, run: TextRun, tag: TagMark): void {
   for (const ptr of collectMemberPtrs(run)) {
-    removeTagMark(doc.module, ptr, name);
+    if (innermostMcid(readTagMarks(doc.module, ptr)) === tag.mcid) {
+      removeTagMark(doc.module, ptr, tag.name);
+    }
   }
   run.tagMarks = [];
 }

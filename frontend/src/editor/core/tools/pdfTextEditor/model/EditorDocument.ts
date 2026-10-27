@@ -244,17 +244,17 @@ export class EditorDocument {
     const structure = this.structure(pageIndex);
     const blocker = structure.cannotRetag(mcid);
     if (blocker) throw new Error(`MCID ${mcid} cannot be retagged: ${blocker}`);
-    const block = structure.blockElement(mcid)!;
     // An added element is not in the file yet: its type is just changed.
-    if (structure.isAdded(block.mcids[0])) {
-      if (type !== null) structure.setAddedType(block.mcids[0], type);
+    if (structure.isAdded(mcid)) {
+      if (type !== null) structure.setAddedType(mcid, type);
       return;
     }
+    // The save climbs from the element owning `mcid` to this same block.
+    const block = structure.element(mcid)!.block;
     if (type === null || type === block.type) {
       this.retags.delete(block.key);
     } else {
-      // The save finds the element through content it owns itself.
-      this.retags.set(block.key, { pageIndex, mcid: block.mcids[0], type });
+      this.retags.set(block.key, { pageIndex, mcid, type });
     }
   }
 
@@ -305,21 +305,15 @@ export class EditorDocument {
     structure: PageStructure,
   ): StructureEdit[] {
     const page = this.pageCache.get(pageIndex);
-    if (!page) return [];
     const added = new Map(
       structure.addedElements().map((element) => [element.mcid, element]),
     );
+    if (!page || added.size === 0) return [];
     return taggedContentInReadingOrder(page).flatMap((content) => {
       const element = added.get(content.mcid);
       if (!element) return [];
       added.delete(content.mcid);
-      const preceding = precedingTaggedMcid(page, content);
-      // After the block, not an inline element inside it: content following a
-      // paragraph that ends in a link is not part of the link.
-      const after =
-        preceding === null
-          ? null
-          : (structure.blockElement(preceding)?.mcids[0] ?? preceding);
+      const after = precedingTaggedMcid(page, content);
       return [
         {
           pageIndex,

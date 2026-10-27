@@ -63,7 +63,7 @@ function retag(
   const run = runWith(doc, fragment);
   const mcid = run.snapshot().mcid!;
   history.execute(new RetagTextCommand({ pageIndex: PAGE, mcid, type }), doc);
-  return { run, key: doc.structure(PAGE).blockElement(mcid)!.key };
+  return { run, key: doc.structure(PAGE).block(mcid)!.key };
 }
 
 function shownTag(doc: EditorDocument, fragment: string) {
@@ -155,7 +155,7 @@ describe("retagging text", () => {
     const structure = doc.structure(PAGE);
     const link = structure.elements.find((el) => el.type === "Link")!;
     expect(structure.cannotRetag(link.mcids[0])).toBeNull();
-    expect(structure.blockElement(link.mcids[0])?.type).toBe("P");
+    expect(structure.block(link.mcids[0])?.type).toBe("P");
   });
 
   test("retags a custom role, giving it a standard meaning", async () => {

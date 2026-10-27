@@ -1,5 +1,6 @@
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { innermostMcid } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 /** Cluster adjacent text runs on a page into "line groups". */
 export interface LineGroupInfo {
@@ -75,6 +76,16 @@ function isBulletLead(run: TextRun): boolean {
   return BULLET_GLYPHS.test(run.text) && run.bounds.width <= run.fontSize;
 }
 
+/**
+ * The block a line's text belongs to, or null while it holds only bullets. A
+ * bullet decides nothing: producers commonly leave it untagged, or mark it an
+ * artifact, beside an item they tag.
+ */
+function lineBlock(members: TextRun[], blockKey: BlockKey): string | null {
+  const text = members.find((member) => !isBulletLead(member));
+  return text ? blockKey(text) : null;
+}
+
 // Sort one container's runs top-to-bottom / left-to-right and merge
 // same-baseline, close-together runs into line groups.
 function groupPartitionIntoLines(
@@ -117,7 +128,9 @@ function groupPartitionIntoLines(
     const minNegGap = 0.25 * Math.max(ref.fontSize, 4);
     const close = gap <= effMaxGap && gap >= -minNegGap;
 
-    const sameBlock = blockKey(run) === blockKey(ref);
+    const block = lineBlock(current.members, blockKey);
+    const sameBlock =
+      isBulletLead(run) || block === null || blockKey(run) === block;
 
     if (sameLine && close && sameBlock) {
       current.members.push(run);
@@ -176,6 +189,12 @@ export class LineGrouper {
         ];
         group.representative.mergedFromCharStarts = [0];
         continue;
+      }
+      // A bullet with no tag of its own would otherwise make a tagged item
+      // read as untagged, and its text lose its tag when re-emitted.
+      const text = group.members.find((member) => !isBulletLead(member));
+      if (text && innermostMcid(group.representative.tagMarks) === null) {
+        group.representative.tagMarks = text.tagMarks;
       }
       // Snapshot per-member texts and bounds BEFORE we mutate the
       // representative.

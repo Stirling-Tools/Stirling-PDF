@@ -19,6 +19,13 @@ import { structureRole } from "@editor/tools/pdfTextEditor/model/structureTypes"
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { textTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import { RetagTextCommand } from "@editor/tools/pdfTextEditor/commands/RetagTextCommand";
+import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
+import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
+import { readTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
+import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import {
   buildClassicPdf,
   streamBody,
@@ -315,5 +322,119 @@ describe("reading blocks from the file", () => {
     );
     const structure = (await readFileStructure(bytes))!.pages;
     expect(structure.get(0)!.elements[0].block.type).toBe("Span");
+  });
+});
+
+// As Chrome tags: each element's text inside a NonStruct, list bullets drawn
+// outside any element or as artifacts, and one loose line with no tag at all.
+const CHROME_CONTENT =
+  "/NonStruct <</MCID 0>> BDC BT /F1 20 Tf 72 700 Td (Introduction) Tj ET EMC\n" +
+  "/NonStruct <</MCID 1>> BDC BT /F1 12 Tf 72 670 Td (Body text.) Tj ET EMC\n" +
+  "BT /F1 12 Tf 72 640 Td (\\267) Tj ET\n" +
+  "/NonStruct <</MCID 2>> BDC BT /F1 12 Tf 84 640 Td (First item) Tj ET EMC\n" +
+  "/Artifact BMC BT /F1 12 Tf 72 620 Td (\\267) Tj ET EMC\n" +
+  "/NonStruct <</MCID 3>> BDC BT /F1 12 Tf 84 620 Td (Second item) Tj ET EMC\n" +
+  "/Artifact BMC BT /F1 12 Tf 72 560 Td (\\267) Tj ET EMC\n" +
+  "BT /F1 12 Tf 84 560 Td (Loose item) Tj ET\n";
+
+function chromePdf(): Uint8Array {
+  const element = (num: number, s: string, parent: number, k: string) => ({
+    num,
+    body: `<< /Type /StructElem /S /${s} /P ${parent} 0 R /Pg 3 0 R /K ${k} >>`,
+  });
+  return buildClassicPdf(
+    [
+      {
+        num: 1,
+        body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>",
+      },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+      {
+        num: 3,
+        body:
+          "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /StructParents 0 " +
+          "/Resources << /Font << /F1 5 0 R >> >> >>",
+      },
+      { num: 4, body: streamBody("", CHROME_CONTENT) },
+      {
+        num: 5,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      {
+        num: 6,
+        body: "<< /Type /StructTreeRoot /K 7 0 R /ParentTree 20 0 R /ParentTreeNextKey 1 >>",
+      },
+      element(7, "Document", 6, "[8 0 R 10 0 R 12 0 R]"),
+      element(8, "H1", 7, "9 0 R"),
+      element(9, "NonStruct", 8, "0"),
+      element(10, "P", 7, "11 0 R"),
+      element(11, "NonStruct", 10, "1"),
+      element(12, "L", 7, "[13 0 R 15 0 R]"),
+      element(13, "LI", 12, "14 0 R"),
+      element(14, "NonStruct", 13, "2"),
+      element(15, "LI", 12, "16 0 R"),
+      element(16, "NonStruct", 15, "3"),
+      { num: 20, body: "<< /Nums [0 [9 0 R 11 0 R 14 0 R 16 0 R]] >>" },
+    ],
+    1,
+  );
+}
+
+describe("Chrome-style tagging", () => {
+  async function openChrome() {
+    const doc = await EditorDocument.open(chromePdf());
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(0));
+    const run = (fragment: string) =>
+      doc.page(0).runs.find((r) => r.text.includes(fragment))!;
+    const tagOf = (fragment: string) => {
+      const tag = textTag(doc, run(fragment).snapshot());
+      return tag.kind === "tagged" ? tag.block.type : tag.kind;
+    };
+    return { doc, run, tagOf };
+  }
+
+  test("reads text inside a NonStruct as its parent's", async () => {
+    const { doc, tagOf } = await openChrome();
+    expect(tagOf("Introduction")).toBe("H1");
+    expect(tagOf("Body text.")).toBe("P");
+    expect(doc.headings()).toEqual([{ type: "H1", pageIndex: 0, mcids: [0] }]);
+  });
+
+  test("keeps a list bullet with its item, however the bullet is tagged", async () => {
+    const { run, tagOf } = await openChrome();
+    expect(run("First item").text).toContain("\u2022");
+    expect(run("Second item").text).toContain("\u2022");
+    expect(tagOf("First item")).toBe("LI");
+    expect(tagOf("Second item")).toBe("LI");
+  });
+
+  test("retags the heading through the NonStruct holding its text", async () => {
+    const { doc, run } = await openChrome();
+    new HistoryStack().execute(
+      new RetagTextCommand({
+        pageIndex: 0,
+        mcid: run("Introduction").snapshot().mcid!,
+        type: "H2",
+      }),
+      doc,
+    );
+    const { blob } = await exportToBlob(doc, "chrome.pdf");
+    const pdf = (await RawPdf.parse(new Uint8Array(await blob.arrayBuffer())))!;
+    expect(pdf.dictName(pdf.objectBody(8)!, "S")).toBe("H2");
+    expect(pdf.dictName(pdf.objectBody(9)!, "S")).toBe("NonStruct");
+  });
+
+  test("tags untagged text without tagging the artifact bullet beside it", async () => {
+    const { doc, run } = await openChrome();
+    const loose = run("Loose item");
+    new HistoryStack().execute(
+      new TagTextCommand({ pageIndex: 0, runId: loose.id, as: "P" }),
+      doc,
+    );
+    const marks = collectMemberPtrs(loose).map((ptr) =>
+      readTagMarks(doc.module, ptr).map((tag) => tag.name),
+    );
+    expect(marks).toEqual([["Artifact"], ["P"]]);
   });
 });
