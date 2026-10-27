@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import BookmarkEditor from "@app/components/tools/editTableOfContents/BookmarkEditor";
-import { createBookmarkNode } from "@app/utils/editTableOfContents";
+import BookmarkEditor from "@editor/components/tools/editTableOfContents/BookmarkEditor";
+import { createBookmarkNode } from "@editor/utils/editTableOfContents";
 
 const meta = {
   title: "Tools/EditTableOfContents/BookmarkEditor",

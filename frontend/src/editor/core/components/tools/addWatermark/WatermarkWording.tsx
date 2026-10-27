@@ -1,8 +1,8 @@
 import React from "react";
 import { Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
-import { removeEmojis } from "@app/utils/textUtils";
+import { AddWatermarkParameters } from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
+import { removeEmojis } from "@editor/utils/textUtils";
 
 interface WatermarkWordingProps {
   parameters: AddWatermarkParameters;

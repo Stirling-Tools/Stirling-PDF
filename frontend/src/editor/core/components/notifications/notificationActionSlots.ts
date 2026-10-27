@@ -1,7 +1,7 @@
 import type {
   NotificationActionOffer,
   NotificationActionSlot,
-} from "@app/services/notifications";
+} from "@editor/services/notifications";
 
 // The server says what an action does and what it has earned; this turns that into an order.
 

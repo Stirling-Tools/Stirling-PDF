@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ConfigureSignatureDefaultsStep } from "@app/components/shared/signing/steps/ConfigureSignatureDefaultsStep";
-import { SignatureSettings } from "@app/components/tools/certSign/SignatureSettingsInput";
+import { ConfigureSignatureDefaultsStep } from "@editor/components/shared/signing/steps/ConfigureSignatureDefaultsStep";
+import { SignatureSettings } from "@editor/components/tools/certSign/SignatureSettingsInput";
 
 const meta = {
   title: "Shared/Signing/Steps/ConfigureSignatureDefaultsStep",

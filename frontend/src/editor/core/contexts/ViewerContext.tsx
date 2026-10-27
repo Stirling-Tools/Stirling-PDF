@@ -7,25 +7,25 @@ import React, {
   useRef,
   useCallback,
 } from "react";
-import { useNavigation } from "@app/contexts/NavigationContext";
+import { useNavigation } from "@editor/contexts/NavigationContext";
 import {
   useFileIndex,
   useFileSelector,
   useFileSelectors,
-} from "@app/contexts/FileContext";
-import { isStirlingFile } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import { enforceExportPolicies } from "@app/services/policyExport";
+} from "@editor/contexts/FileContext";
+import { isStirlingFile } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import { enforceExportPolicies } from "@editor/services/policyExport";
 import { useTranslation } from "react-i18next";
-import { alert } from "@app/components/toast";
+import { alert } from "@editor/components/toast";
 import {
   preferencesService,
   type PdfRenderMode,
-} from "@app/services/preferencesService";
+} from "@editor/services/preferencesService";
 import {
   createViewerActions,
   type PrintActions,
-} from "@app/contexts/viewer/viewerActions";
+} from "@editor/contexts/viewer/viewerActions";
 import {
   BridgeRef,
   BridgeApiMap,
@@ -46,13 +46,13 @@ import {
   AttachmentState,
   DocumentPermissionsState,
   PdfPermissionFlag,
-} from "@app/contexts/viewer/viewerBridges";
+} from "@editor/contexts/viewer/viewerBridges";
 import {
   ViewerContext,
   type ViewerContextType,
   ViewerActiveFileContext,
   type ViewerActiveFileType,
-} from "@app/contexts/viewer/viewerContext";
+} from "@editor/contexts/viewer/viewerContext";
 import type { SpreadMode } from "@embedpdf/plugin-spread/react";
 
 /**
@@ -68,11 +68,11 @@ export {
   useViewer,
   ViewerActiveFileContext,
   useViewerActiveFile,
-} from "@app/contexts/viewer/viewerContext";
+} from "@editor/contexts/viewer/viewerContext";
 export type {
   ViewerContextType,
   ViewerActiveFileType,
-} from "@app/contexts/viewer/viewerContext";
+} from "@editor/contexts/viewer/viewerContext";
 
 function useImmediateNotifier<Args extends unknown[]>() {
   const callbacksRef = useRef(new Set<(...args: Args) => void>());

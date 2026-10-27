@@ -9,8 +9,8 @@ import {
   vi,
 } from "vitest";
 import { setupServer } from "msw/node";
-import { linkHandlers } from "@portal/mocks/handlers/link";
-import { resetLinkStore } from "@portal/mocks/link";
+import { linkHandlers } from "@processor/mocks/handlers/link";
+import { resetLinkStore } from "@processor/mocks/link";
 
 // Mock the shared Supabase client used by apiClient.saas. The team-wide
 // /instances + /instances/:id/revoke calls go to SaaS now (auto-attached
@@ -20,7 +20,7 @@ const { getSession } = vi.hoisted(() => ({
     data: { session: { access_token: "supabase_jwt_test" } },
   }),
 }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => ({ auth: { getSession } }),
   configureSupabase: vi.fn(),
 }));
@@ -36,7 +36,7 @@ import {
   fetchStatus,
   revokeInstance,
   unlinkInstance,
-} from "@portal/api/link";
+} from "@processor/api/link";
 
 const server = setupServer(...linkHandlers);
 

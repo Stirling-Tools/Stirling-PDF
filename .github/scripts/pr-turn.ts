@@ -1,32 +1,24 @@
-// Keeps waiting-on-author current. pr-turn-labels.yml runs it as each event happens, and
-// the daily triage re-checks every ready PR that has the label, because the review relay
-// does not always run: a conflicted PR has no merge ref to run it on. This file owns
-// waiting-on-author and no other label.
+// Keeps waiting-on-author current. The daily triage adds and removes it from each ready
+// PR's history, because no event a review raises can label a fork's PR: GitHub runs it
+// from the fork, so it waits for a maintainer to approve the run, and fails outright
+// once the PR conflicts. pr-turn-labels.yml removes it as soon as the author responds,
+// from events that run without approval. This file owns waiting-on-author and no other
+// label.
 //
 // The author's turn starts with a changes-requested review from someone who can push, or
 // the label added by hand. It ends when the author pushes, comments, replies to a review,
 // re-requests review or marks the PR ready, when someone who can push approves, when a
 // changes-requested review is dismissed, or when the label is removed.
 
-import { type Core, type GitHubClient, type IssueRef, isNotFound, LABELS, type PullData, type Repo, removeLabel } from "./github.ts";
+import { type Core, type GitHubClient, type IssueRef, LABELS, type Repo, removeLabel } from "./github.ts";
 
-/** The parts of a github-script `context.payload` the turn events carry. */
+/** The parts of a github-script `context.payload` the author's responses carry. */
 export interface TurnPayload {
   sender?: { login: string };
   pull_request?: { number: number; user: { login: string } };
   issue?: { number: number; user: { login: string }; pull_request?: unknown };
   comment?: { user: { login: string } };
-  workflow_run?: { event: string; display_title: string; head_branch: string; head_repository: { full_name: string } };
 }
-
-export interface TurnChange {
-  number: number;
-  add: boolean;
-}
-
-// Must match the run-name and the events in pr-review-events.yml.
-const REVIEW_RUN_TITLE = /^Review on #(\d+)$/;
-const RELAYED_EVENTS = ["pull_request_review", "pull_request_review_comment"];
 
 // Reviews come from `reviews`, not the timeline: a reply to a review thread is a review
 // of its own, and the timeline leaves those out.
@@ -164,53 +156,30 @@ async function latestTimelineMove(github: GitHubClient, repo: Repo, number: numb
  * Whether the PR is waiting on its author. Read from the PR's history rather than the
  * event at hand, so runs that overlap, arrive late or are re-run all agree.
  */
-export async function authorHasTurn(github: GitHubClient, { owner, repo }: Repo, number: number): Promise<boolean> {
+async function authorHasTurn(github: GitHubClient, { owner, repo }: Repo, number: number, labelled: boolean): Promise<boolean> {
   const page = await github.graphql<ReviewsPage>(REVIEWS_QUERY, { owner, repo, number });
   const pr = page.repository.pullRequest;
   if (pr === null) return false;
   const author = pr.author?.login;
-  const fromReviews = pr.reviews.nodes.flatMap((review) => move(review.submittedAt, reviewTurn(review, author, pr.headRefOid)));
+  const fromReviews = latestMove(pr.reviews.nodes.flatMap((review) => move(review.submittedAt, reviewTurn(review, author, pr.headRefOid))));
+  // Without the label, each time it went on it came off again later, so only a review
+  // can have given the author the turn.
+  if (!labelled && fromReviews?.turn !== "author") return false;
   const fromTimeline = await latestTimelineMove(github, { owner, repo }, number, author);
-  return latestMove(fromTimeline === null ? fromReviews : [...fromReviews, fromTimeline])?.turn === "author";
+  return latestMove([fromReviews, fromTimeline].filter((latest) => latest !== null))?.turn === "author";
 }
 
-async function relayedPull(github: GitHubClient, repo: Repo, run: NonNullable<TurnPayload["workflow_run"]>) {
-  const match = REVIEW_RUN_TITLE.exec(run.display_title);
-  if (!RELAYED_EVENTS.includes(run.event) || !match) return null;
-  const number = Number(match[1]);
-  const pull = await github.rest.pulls.get({ ...repo, pull_number: number }).then(
-    ({ data }): PullData | null => data,
-    (error: unknown) => {
-      if (isNotFound(error)) return null;
-      throw error;
-    },
-  );
-  // Any PR can name a run, by editing pr-review-events.yml or adding a workflow of the
-  // same name, so the title is only trusted for the PR the run was built from.
-  const builtFrom = pull?.head.repo?.full_name === run.head_repository.full_name && pull.head.ref === run.head_branch;
-  return builtFrom ? { number, pull } : null;
-}
-
-/** How the triggering event moves waiting-on-author, or null when it does not. */
-export async function turnChangeForEvent(
-  github: GitHubClient,
-  { repo, payload }: { repo: Repo; payload: TurnPayload },
-): Promise<TurnChange | null> {
+/** The PR whose author the triggering event shows responding, or null. */
+export function answeredPull(payload: TurnPayload): number | null {
   if (payload.pull_request) {
     const { number, user } = payload.pull_request;
-    return payload.sender?.login === user.login ? { number, add: false } : null;
+    return payload.sender?.login === user.login ? number : null;
   }
-  if (payload.issue) {
-    const { number, user, pull_request } = payload.issue;
-    return pull_request && payload.comment?.user.login === user.login ? { number, add: false } : null;
-  }
-  const relayed = payload.workflow_run ? await relayedPull(github, repo, payload.workflow_run) : null;
-  if (relayed === null) return null;
-  const add = await authorHasTurn(github, repo, relayed.number);
-  const labelled = relayed.pull.labels.some((label) => label.name === LABELS.waitingOnAuthor);
-  return add === labelled ? null : { number: relayed.number, add };
+  const { issue, comment } = payload;
+  return issue?.pull_request && comment?.user.login === issue.user.login ? issue.number : null;
 }
 
+/** pr-turn-labels.yml's entry point: hands the turn back as soon as the author responds. */
 export async function updateTurnLabel({
   github,
   context,
@@ -220,23 +189,20 @@ export async function updateTurnLabel({
   context: { repo: Repo; payload: TurnPayload };
   core: Pick<Core, "info">;
 }) {
-  const change = await turnChangeForEvent(github, context);
-  if (change === null) return;
-  const issue = { ...context.repo, issue_number: change.number };
-  if (change.add) {
-    await github.rest.issues.addLabels({ ...issue, labels: [LABELS.waitingOnAuthor] });
-  } else {
-    await removeLabel(github, issue, LABELS.waitingOnAuthor);
-  }
-  core.info(`#${change.number}: ${change.add ? "+" : "-"}${LABELS.waitingOnAuthor}`);
+  const number = answeredPull(context.payload);
+  if (number === null) return;
+  await removeLabel(github, { ...context.repo, issue_number: number }, LABELS.waitingOnAuthor);
+  core.info(`#${number}: -${LABELS.waitingOnAuthor}`);
 }
 
 /**
- * Removes waiting-on-author from a PR whose history says the turn has moved on. Returns
- * whether the label was stale; changes nothing unless `live`.
+ * Adds or removes waiting-on-author to match the PR's history, given whether it carries
+ * the label now. Returns whether the PR is waiting on its author; changes nothing unless
+ * `live`.
  */
-export async function clearStaleTurnLabel(github: GitHubClient, issue: IssueRef, live: boolean) {
-  if (await authorHasTurn(github, issue, issue.issue_number)) return false;
-  if (live) await removeLabel(github, issue, LABELS.waitingOnAuthor);
-  return true;
+export async function syncTurnLabel(github: GitHubClient, issue: IssueRef, labelled: boolean, live: boolean) {
+  const waiting = await authorHasTurn(github, issue, issue.issue_number, labelled);
+  if (live && waiting && !labelled) await github.rest.issues.addLabels({ ...issue, labels: [LABELS.waitingOnAuthor] });
+  if (live && !waiting && labelled) await removeLabel(github, issue, LABELS.waitingOnAuthor);
+  return waiting;
 }

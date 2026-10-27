@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { PdfLibLink, extractLinksFromPage } from "@app/utils/pdfLinkUtils";
+import { PdfLibLink, extractLinksFromPage } from "@editor/utils/pdfLinkUtils";
 
 export type { PdfLibLink };
 

@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const SAAS_URL = "https://api.saas.test";
 
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: {
     isAuthenticated: vi.fn().mockResolvedValue(true),
     awaitRefreshIfInProgress: vi.fn().mockResolvedValue(undefined),
@@ -17,7 +17,7 @@ vi.mock("@app/services/authService", () => ({
 
 // NB: vi.mock factories are hoisted above top-level consts, so they must use
 // literals (not SAAS_URL/LOCAL_URL) to avoid a TDZ ReferenceError.
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentConfig: vi
       .fn()
@@ -28,33 +28,33 @@ vi.mock("@app/services/connectionModeService", () => ({
       .mockResolvedValue({ url: "https://api.saas.test" }),
   },
 }));
-vi.mock("@app/constants/connection", () => ({
+vi.mock("@editor/constants/connection", () => ({
   STIRLING_SAAS_BACKEND_API_URL: "https://api.saas.test",
 }));
-vi.mock("@app/services/tauriBackendService", () => ({
+vi.mock("@editor/services/tauriBackendService", () => ({
   tauriBackendService: {
     isOnline: true,
     getBackendUrl: () => "http://localhost:62994",
   },
 }));
-vi.mock("@app/services/endpointAvailabilityService", () => ({
+vi.mock("@editor/services/endpointAvailabilityService", () => ({
   endpointAvailabilityService: {
     isEndpointSupportedLocally: vi.fn().mockResolvedValue(true),
     isEndpointSupportedOnSaaS: vi.fn().mockResolvedValue(true),
   },
 }));
-vi.mock("@app/services/selfHostedServerMonitor", () => ({
+vi.mock("@editor/services/selfHostedServerMonitor", () => ({
   selfHostedServerMonitor: { getSnapshot: vi.fn(() => ({ status: "online" })) },
 }));
-vi.mock("@app/i18n", () => ({
+vi.mock("@editor/i18n", () => ({
   default: { t: (_k: string, fallback: string) => fallback || _k },
 }));
 
-import { operationRouter } from "@app/services/operationRouter";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { authService } from "@app/services/authService";
-import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
-import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
+import { operationRouter } from "@editor/services/operationRouter";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { authService } from "@editor/services/authService";
+import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
 
 beforeEach(() => {
   vi.mocked(connectionModeService.getCurrentConfig).mockResolvedValue({

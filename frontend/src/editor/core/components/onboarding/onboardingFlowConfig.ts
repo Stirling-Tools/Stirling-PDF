@@ -1,20 +1,20 @@
-import WelcomeSlide from "@app/components/onboarding/slides/WelcomeSlide";
-import ProcessorIntroSlide from "@app/components/onboarding/slides/ProcessorIntroSlide";
-import DesktopInstallSlide from "@app/components/onboarding/slides/DesktopInstallSlide";
-import SecurityCheckSlide from "@app/components/onboarding/slides/SecurityCheckSlide";
-import PlanOverviewSlide from "@app/components/onboarding/slides/PlanOverviewSlide";
-import ServerLicenseSlide from "@app/components/onboarding/slides/ServerLicenseSlide";
-import FirstLoginSlide from "@app/components/onboarding/slides/FirstLoginSlide";
-import TourOverviewSlide from "@app/components/onboarding/slides/TourOverviewSlide";
-import AnalyticsChoiceSlide from "@app/components/onboarding/slides/AnalyticsChoiceSlide";
-import MFASetupSlide from "@app/components/onboarding/slides/MFASetupSlide";
-import { LicenseNotice } from "@app/types/types";
+import WelcomeSlide from "@editor/components/onboarding/slides/WelcomeSlide";
+import ProcessorIntroSlide from "@editor/components/onboarding/slides/ProcessorIntroSlide";
+import DesktopInstallSlide from "@editor/components/onboarding/slides/DesktopInstallSlide";
+import SecurityCheckSlide from "@editor/components/onboarding/slides/SecurityCheckSlide";
+import PlanOverviewSlide from "@editor/components/onboarding/slides/PlanOverviewSlide";
+import ServerLicenseSlide from "@editor/components/onboarding/slides/ServerLicenseSlide";
+import FirstLoginSlide from "@editor/components/onboarding/slides/FirstLoginSlide";
+import TourOverviewSlide from "@editor/components/onboarding/slides/TourOverviewSlide";
+import AnalyticsChoiceSlide from "@editor/components/onboarding/slides/AnalyticsChoiceSlide";
+import MFASetupSlide from "@editor/components/onboarding/slides/MFASetupSlide";
+import { LicenseNotice } from "@editor/types/types";
 import type {
   OSOption,
   ButtonDefinition as ButtonDefinitionBase,
   HeroDefinition as HeroDefinitionBase,
   SlideDefinition as SlideDefinitionBase,
-} from "@app/components/onboarding/onboardingSlideTypes";
+} from "@editor/components/onboarding/onboardingSlideTypes";
 
 export type { OSOption };
 

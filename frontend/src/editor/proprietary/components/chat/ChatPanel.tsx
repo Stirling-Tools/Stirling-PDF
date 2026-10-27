@@ -13,7 +13,7 @@ import { useMergedRef } from "@mantine/hooks";
 import {
   preloadMarkdownRenderer,
   renderMarkdown,
-} from "@app/components/viewer/nonpdf/MarkdownRenderer";
+} from "@editor/components/viewer/nonpdf/MarkdownRenderer";
 import { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import {
@@ -25,9 +25,9 @@ import {
   Text,
   Textarea,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
 import {
   useChat,
   AiWorkflowPhase,
@@ -35,12 +35,12 @@ import {
   isKnownEngineProgressDetail,
   type AiWorkflowProgress,
   type AnyEngineProgressDetail,
-} from "@app/components/chat/ChatContext";
-import { formatRelativeTime } from "@app/utils/timeUtils";
-import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
-import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
-import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
-import "@app/components/chat/ChatPanel.css";
+} from "@editor/components/chat/ChatContext";
+import { formatRelativeTime } from "@editor/utils/timeUtils";
+import { useTranslatedToolCatalog } from "@editor/data/useTranslatedToolRegistry";
+import { StirlingLogoAnimated } from "@editor/components/agents/StirlingLogoAnimated";
+import { ChatQuickActions } from "@editor/components/chat/ChatQuickActions";
+import "@editor/components/chat/ChatPanel.css";
 
 type TranslateFn = TFunction;
 

@@ -1,5 +1,5 @@
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 
 /** Cluster adjacent text runs on a page into "line groups". */
 export interface LineGroupInfo {

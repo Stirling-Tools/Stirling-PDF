@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { overlayLiveFields } from "@app/components/shared/FileSidebar";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import { overlayLiveFields } from "@editor/components/shared/FileSidebar";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 const stub = (overrides: Partial<StirlingFileStub>): StirlingFileStub =>
   ({ id: "f1", name: "a.pdf", size: 1, ...overrides }) as StirlingFileStub;

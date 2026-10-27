@@ -1,4 +1,4 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 
 /** A signing certificate held on a hardware source (Windows store or PKCS#11 token). */
 export interface HardwareCertificateInfo {

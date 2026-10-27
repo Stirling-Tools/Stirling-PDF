@@ -1,9 +1,9 @@
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useEffect } from "react";
 import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 interface CertificateTypeSettingsProps {
   parameters: CertSignParameters;

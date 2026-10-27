@@ -1,9 +1,9 @@
-import { useHotkeys } from "@app/contexts/HotkeyContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
-import { ToolId } from "@app/types/toolId";
-import type { ToolAvailabilityMap } from "@app/hooks/useToolManagement";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useHotkeys } from "@editor/contexts/HotkeyContext";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
+import { ToolId } from "@editor/types/toolId";
+import type { ToolAvailabilityMap } from "@editor/hooks/useToolManagement";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 export const getItemClasses = (isDetailed: boolean): string => {
   return isDetailed ? "tool-panel__fullscreen-item--detailed" : "";

@@ -1,19 +1,19 @@
 import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import { alert } from "@app/components/toast";
-import { setupApiInterceptors as coreSetup } from "@core/services/apiClientSetup";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import { createBackendNotReadyError } from "@app/constants/backendErrors";
-import { operationRouter } from "@app/services/operationRouter";
-import { authService } from "@app/services/authService";
-import { getAccessToken } from "@app/auth/session";
-import { connectionModeService } from "@app/services/connectionModeService";
+import { alert } from "@editor/components/toast";
+import { setupApiInterceptors as coreSetup } from "@editor-core/services/apiClientSetup";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { createBackendNotReadyError } from "@editor/constants/backendErrors";
+import { operationRouter } from "@editor/services/operationRouter";
+import { authService } from "@editor/services/authService";
+import { getAccessToken } from "@editor/auth/session";
+import { connectionModeService } from "@editor/services/connectionModeService";
 import {
   STIRLING_SAAS_URL,
   STIRLING_SAAS_BACKEND_API_URL,
-} from "@app/constants/connection";
-import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
-import i18n from "@app/i18n";
-import { requireAutomationSession } from "@app/services/serverAutomationSession";
+} from "@editor/constants/connection";
+import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
+import i18n from "@editor/i18n";
+import { requireAutomationSession } from "@editor/services/serverAutomationSession";
 
 /**
  * Auth headers for raw fetch() calls (the AI SSE stream) — desktop variant.

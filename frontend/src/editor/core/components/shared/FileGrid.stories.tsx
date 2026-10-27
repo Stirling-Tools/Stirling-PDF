@@ -1,9 +1,9 @@
 import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import FileGrid from "@app/components/shared/FileGrid";
-import { FileContextProvider } from "@app/contexts/FileContext";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import FileGrid from "@editor/components/shared/FileGrid";
+import { FileContextProvider } from "@editor/contexts/FileContext";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 /**
  * FileGrid renders FileCard entries, which call useFileThumbnail ->

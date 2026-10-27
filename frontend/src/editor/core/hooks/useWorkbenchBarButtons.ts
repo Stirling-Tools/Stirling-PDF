@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from "react";
-import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
+import { useWorkbenchBar } from "@editor/contexts/WorkbenchBarContext";
 import {
   WorkbenchBarAction,
   WorkbenchBarButtonConfig,
-} from "@app/types/workbenchBar";
+} from "@editor/types/workbenchBar";
 
 export interface WorkbenchBarButtonWithAction extends WorkbenchBarButtonConfig {
   onClick?: WorkbenchBarAction;

@@ -3,18 +3,20 @@ const { clearSupabaseSession, clearQueries } = vi.hoisted(() => ({
   clearSupabaseSession: vi.fn(),
   clearQueries: vi.fn(),
 }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({ clearSupabaseSession }));
-vi.mock("@app/portal/queryClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
+  clearSupabaseSession,
+}));
+vi.mock("@editor/portal/queryClient", () => ({
   getPortalQueryClient: () => ({ clear: clearQueries }),
 }));
 import {
   bindAccountLinkSession,
   clearAccountLinkSession,
-} from "@app/portal/auth/accountLinkSession";
+} from "@editor/portal/auth/accountLinkSession";
 import {
   readPendingConnect,
   rememberConnect,
-} from "@app/portal/auth/pendingConnect";
+} from "@editor/portal/auth/pendingConnect";
 
 const pending = {
   ownerId: "owner",

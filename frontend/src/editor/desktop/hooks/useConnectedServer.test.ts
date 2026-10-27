@@ -13,18 +13,18 @@ const {
   subscribeToAuthMock: vi.fn(),
 }));
 
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCachedMode: getCachedModeMock,
     getCurrentMode: getCurrentModeMock,
     subscribeToModeChanges: subscribeToModeChangesMock,
   },
 }));
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: { subscribeToAuth: subscribeToAuthMock },
 }));
 
-import { useConnectedServer } from "@app/hooks/useConnectedServer";
+import { useConnectedServer } from "@editor/hooks/useConnectedServer";
 
 /** subscribeToAuth replays the current status on subscribe, as the real service does. */
 function withAuthStatus(status: string, userInfo: unknown = null) {

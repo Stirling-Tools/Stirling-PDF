@@ -1,22 +1,22 @@
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
-import { useConfigNavSections as useProprietaryConfigNavSections } from "@proprietary/components/shared/config/configNavSections";
+import { useConfigNavSections as useProprietaryConfigNavSections } from "@editor-proprietary/components/shared/config/configNavSections";
 import {
   ConfigNavSection,
   extendPreferences,
-} from "@core/components/shared/config/configNavSections";
-import { ConnectionSettings } from "@app/components/ConnectionSettings";
-import DesktopGeneralSection from "@app/components/shared/config/configSections/GeneralSection";
-import { createCloudTeamNavItem } from "@app/components/shared/config/cloudConfigNavSections";
-import { BillingSettingsSection } from "@app/components/settings/BillingSettingsSection";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { authService } from "@app/services/authService";
-import { useAuth } from "@app/auth/context";
+} from "@editor-core/components/shared/config/configNavSections";
+import { ConnectionSettings } from "@editor/components/ConnectionSettings";
+import DesktopGeneralSection from "@editor/components/shared/config/configSections/GeneralSection";
+import { createCloudTeamNavItem } from "@editor/components/shared/config/cloudConfigNavSections";
+import { BillingSettingsSection } from "@editor/components/settings/BillingSettingsSection";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { authService } from "@editor/services/authService";
+import { useAuth } from "@editor/auth/context";
 
 export type {
   ConfigNavSection,
   ConfigNavItem,
-} from "@core/components/shared/config/configNavSections";
+} from "@editor-core/components/shared/config/configNavSections";
 
 /**
  * Hook version of desktop config nav sections with proper i18n support

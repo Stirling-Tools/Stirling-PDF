@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
-import type { SpringLoginState } from "@app/auth/ui/useSpringLogin";
-import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
-import "@app/auth/ui/auth.css";
+import SpringLoginForm from "@editor/auth/ui/SpringLoginForm";
+import type { SpringLoginState } from "@editor/auth/ui/useSpringLogin";
+import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import "@editor/auth/ui/auth.css";
 
 /** Builds a mock useSpringLogin() state; stories override just the fields they need. */
 function mockState(

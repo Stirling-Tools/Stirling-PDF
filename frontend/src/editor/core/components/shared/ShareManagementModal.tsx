@@ -18,19 +18,19 @@ import {
   ScrollArea,
   Select,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
-import apiClient from "@app/services/apiClient";
-import { absoluteWithBasePath } from "@app/constants/app";
-import { alert } from "@app/components/toast";
-import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import { fileStorage } from "@app/services/fileStorage";
-import { useFileActions } from "@app/contexts/FileContext";
+import apiClient from "@editor/services/apiClient";
+import { absoluteWithBasePath } from "@editor/constants/app";
+import { alert } from "@editor/components/toast";
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import { fileStorage } from "@editor/services/fileStorage";
+import { useFileActions } from "@editor/contexts/FileContext";
 
 interface ShareLinkResponse {
   token: string;

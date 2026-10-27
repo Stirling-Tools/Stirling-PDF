@@ -6,10 +6,10 @@ import {
   Switch,
   Group,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip } from "@app/ui/Tooltip";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/ui/Tooltip";
 import { useTranslation } from "react-i18next";
 
 export interface SignatureSettings {
