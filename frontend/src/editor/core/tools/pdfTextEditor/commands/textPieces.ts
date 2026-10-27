@@ -7,6 +7,11 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { writeUtf16 } from "@editor/services/pdfiumService";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { RGBA } from "@editor/tools/pdfTextEditor/types";
+import {
+  readObjFill,
+  readObjStroke,
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
 import {
   addTagMark,
   type TagMark,
@@ -23,8 +28,8 @@ export interface TextSource {
   font: number;
   size: number;
   matrix: Float32Array;
-  fill: number[] | null;
-  stroke: number[] | null;
+  fill: RGBA | null;
+  stroke: RGBA | null;
   strokeWidth: number | null;
   renderMode: number;
 }
@@ -46,34 +51,13 @@ export function readTextSource(
   if (!font || !matrix || !m.FPDFTextObj_GetFontSize(objPtr, sizePtr)) {
     return null;
   }
-  const rgba = scratchPtr(m, SCRATCH.splitColour, 16);
-  const channels = () =>
-    [0, 1, 2, 3].map((i) => m.pdfium.getValue(rgba + i * 4, "i32"));
-  const fill = m.FPDFPageObj_GetFillColor(
-    objPtr,
-    rgba,
-    rgba + 4,
-    rgba + 8,
-    rgba + 12,
-  )
-    ? channels()
-    : null;
-  const stroke = m.FPDFPageObj_GetStrokeColor(
-    objPtr,
-    rgba,
-    rgba + 4,
-    rgba + 8,
-    rgba + 12,
-  )
-    ? channels()
-    : null;
   const width = scratchPtr(m, SCRATCH.splitStrokeWidth, 4);
   return {
     font,
     size: m.pdfium.getValue(sizePtr, "float"),
     matrix,
-    fill,
-    stroke,
+    fill: readObjFill(m, objPtr),
+    stroke: readObjStroke(m, objPtr),
     strokeWidth: m.FPDFPageObj_GetStrokeWidth(objPtr, width)
       ? m.pdfium.getValue(width, "float")
       : null,
@@ -156,8 +140,11 @@ export function addTextPiece(
   matrix[4] = origin.x;
   matrix[5] = origin.y;
   writeMatrix(m, ptr, matrix);
-  if (source.fill) m.FPDFPageObj_SetFillColor(ptr, ...rgba(source.fill));
-  if (source.stroke) m.FPDFPageObj_SetStrokeColor(ptr, ...rgba(source.stroke));
+  const { fill, stroke } = source;
+  if (fill) m.FPDFPageObj_SetFillColor(ptr, fill.r, fill.g, fill.b, fill.a);
+  if (stroke) {
+    m.FPDFPageObj_SetStrokeColor(ptr, stroke.r, stroke.g, stroke.b, stroke.a);
+  }
   if (source.strokeWidth !== null) {
     m.FPDFPageObj_SetStrokeWidth(ptr, source.strokeWidth);
   }
@@ -223,8 +210,4 @@ function setText(m: WrappedPdfiumModule, objPtr: number, text: string) {
   } finally {
     m.pdfium.wasmExports.free(buf);
   }
-}
-
-function rgba(channels: number[]): [number, number, number, number] {
-  return [channels[0], channels[1], channels[2], channels[3]];
 }
