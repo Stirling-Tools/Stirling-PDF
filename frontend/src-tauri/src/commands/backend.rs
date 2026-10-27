@@ -621,21 +621,12 @@ fn run_stirling_pdf_jar(
             "⚠️ Backend (PID: {}) spawned after the shutdown gave up; cleaning it up",
             pid
         ));
-        let spawned = std::thread::Builder::new()
-            .name("backend-late-cleanup".to_string())
-            .spawn(move || {
-                let outcome = shutdown_backend(
-                    instance,
-                    BACKEND_STOP_GRACE,
-                    BACKEND_KILL_GRACE,
-                    BACKEND_STOP_POLL,
-                );
-                log_shutdown(pid, &outcome);
-            });
-        if let Err(error) = spawned {
+        // The app exits as soon as this returns, so a cleanup worker would be
+        // cut short before its grace period elapsed. The child still has to go.
+        if let Err(error) = instance.process.kill() {
             add_log(format!(
-                "❌ Could not start the late-backend cleanup worker: {}",
-                error
+                "❌ Kill of late backend PID {} failed: {}",
+                pid, error
             ));
         }
     }
