@@ -351,6 +351,24 @@ class ConvertPDFToOfficeMoreTest {
         }
 
         @Test
+        @DisplayName("an invalid format is still a 400 when pdf-to-rtf is disabled")
+        void invalidFormatIsBadRequestWhenRtfRemoved() throws Exception {
+            when(endpointConfiguration.isEndpointEnabled("pdf-to-rtf")).thenReturn(false);
+
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+                for (String format : new String[] {"docx", null}) {
+                    assertEquals(
+                            HttpStatus.BAD_REQUEST,
+                            controller
+                                    .processPdfToRTForTXT(textRequest(format), null)
+                                    .getStatusCode(),
+                            String.valueOf(format));
+                }
+                mockedFactory.verifyNoInteractions();
+            }
+        }
+
+        @Test
         @DisplayName("text endpoint no longer serves the Word and XML formats")
         void textEndpointRejectsOtherOfficeFormats() throws Exception {
             try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {

@@ -102,7 +102,8 @@ public class ConvertPDFToOffice {
         String outputFormat = request.getOutputFormat();
         boolean plainText = "txt".equals(outputFormat);
         // The interceptor only sees pdf-to-text; RTF has its own key, which removal must honour.
-        if (!plainText && !endpointConfiguration.isEndpointEnabled("pdf-to-rtf")) {
+        // Other formats are left to the 400 below.
+        if ("rtf".equals(outputFormat) && !endpointConfiguration.isEndpointEnabled("pdf-to-rtf")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This endpoint is disabled");
         }
         // Legacy text came from PDFBox, not LibreOffice, so it never needs the fallback.
