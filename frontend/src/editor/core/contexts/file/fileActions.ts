@@ -746,7 +746,6 @@ export async function consumeFiles(
 }
 
 /**
-/**
  * Undoes a previous consumeFiles operation by restoring input files and removing output files (unless pinned)
  */
 export async function undoConsumeFiles(
@@ -804,8 +803,23 @@ export async function undoConsumeFiles(
       },
     });
 
-    // IDB cleanup fire-and-forget — state is already consistent when bumpRevision fires.
-    if (indexedDB) {
+    // Restore isLeaf in IDB — modal reads IDB directly and misses files if isLeaf=false.
+    // isDirty rides along: the dispatch above only reaches memory, and a restored
+    // version that reads clean on the next open is reloaded from the disk copy the
+    // undone operation wrote, putting the undone bytes back for good.
+    const restored = await Promise.all(
+      stubsWithDirtyMarked.map((stub) =>
+        fileStorage.updateFileMetadata(stub.id, {
+          isLeaf: true,
+          ...(stub.isDirty ? { isDirty: true } : {}),
+        }),
+      ),
+    );
+
+    // Outputs go only once every input is a leaf again: deleting them first and
+    // being interrupted leaves a version chain with no leaf, which nothing opens.
+    // State is already consistent, so the deletes are fire-and-forget.
+    if (indexedDB && restored.every(Boolean)) {
       outputFileIds.forEach((fileId) => {
         indexedDB.deleteFile(fileId).catch((error) => {
           console.error(
@@ -817,27 +831,12 @@ export async function undoConsumeFiles(
           indexedDB.bumpRevision?.();
         });
       });
+    } else if (indexedDB) {
+      console.warn(
+        "📄 undoConsumeFiles: Keeping outputs in IDB, an input could not be restored as a leaf",
+      );
+      indexedDB.bumpRevision?.();
     }
-
-    // Restore isLeaf in IDB — modal reads IDB directly and misses files if isLeaf=false.
-    // isDirty rides along: the dispatch above only reaches memory, and a restored
-    // version that reads clean on the next open is reloaded from the disk copy the
-    // undone operation wrote, putting the undone bytes back for good.
-    await Promise.all(
-      stubsWithDirtyMarked.map((stub) =>
-        fileStorage
-          .updateFileMetadata(stub.id, {
-            isLeaf: true,
-            ...(stub.isDirty ? { isDirty: true } : {}),
-          })
-          .catch((error) => {
-            console.warn(
-              `📄 undoConsumeFiles: Failed to restore isLeaf for ${stub.id}:`,
-              error,
-            );
-          }),
-      ),
-    );
 
     if (DEBUG)
       console.log(

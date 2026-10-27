@@ -118,6 +118,23 @@ function writeStallDeadlineMs(size: number): number {
   return WRITE_STALL_BASE_MS + Math.ceil(size / WRITE_STALL_BYTES_PER_MS);
 }
 
+/** Inputs a versioned run may hide, given which outputs were stored. An input
+ *  needs one of its own outputs (by parentFileId) stored; an input no output
+ *  names as its parent needs any output stored. */
+function supersededInputIds(
+  inputFileIds: FileId[],
+  outputStubs: StirlingFileStub[],
+  stored: boolean[],
+): FileId[] {
+  const anyStored = stored.some(Boolean);
+  return inputFileIds.filter((inputId) => {
+    const own = outputStubs.flatMap((stub, i) =>
+      stub.parentFileId === inputId ? [stored[i]] : [],
+    );
+    return own.length > 0 ? own.some(Boolean) : anyStored;
+  });
+}
+
 /** This engine loses Blob values, remembered per browser: session-scoped, each
  *  reload re-decides optimistically and writes more files it will lose. */
 const BLOB_VALUES_UNSUPPORTED_KEY = "stirling.indexeddb.blobValuesUnsupported";
@@ -1332,8 +1349,9 @@ class FileStorageService {
   }
 
   /**
-   * Persist output files as versions of their inputs: mark each input non-leaf (unless the
-   * outputs are v1 originals, i.e. nothing was versioned) and store each output with its stub.
+   * Persist output files as versions of their inputs: store each output with its stub, then mark
+   * non-leaf each input whose replacement was stored (unless the outputs are v1 originals, i.e.
+   * nothing was versioned). A failed output write is logged, not thrown, and leaves its input a leaf.
    * This is the durable half of {@link consumeFiles}, shared so a versioned result can be written
    * even when the input isn't in the active workspace (e.g. a policy run recovered after a reload).
    * Storage-only callers must bump the IndexedDB revision afterwards so the file views re-read;
@@ -1350,30 +1368,33 @@ class FileStorageService {
       );
     }
 
-    const allV1 = outputStirlingFileStubs.every(
-      (stub) => stub.versionNumber === 1,
-    );
-    if (!allV1) {
-      await Promise.all(
-        inputFileIds.map((fileId) =>
-          this.markFileAsProcessed(fileId).catch((error) => {
-            // Best-effort: a missing/locked input shouldn't block storing the outputs.
-            console.warn(`Failed to mark file ${fileId} as processed:`, error);
-          }),
-        ),
-      );
-    }
-
-    await Promise.all(
+    // Outputs before inputs: listings show only leaves, so hiding an input whose
+    // replacement never lands (a failed write, or the app killed in between)
+    // leaves a version chain nothing can open. An extra leaf is the safe failure.
+    const stored = await Promise.all(
       outputStirlingFiles.map((file, i) =>
-        this.storeStirlingFile(file, outputStirlingFileStubs[i]).catch(
-          (error) =>
+        this.storeStirlingFile(file, outputStirlingFileStubs[i]).then(
+          () => true,
+          (error) => {
             console.error(
               "Failed to persist output file to storage:",
               file.name,
               error,
-            ),
+            );
+            return false;
+          },
         ),
+      ),
+    );
+
+    const allV1 = outputStirlingFileStubs.every(
+      (stub) => stub.versionNumber === 1,
+    );
+    if (allV1) return;
+
+    await Promise.all(
+      supersededInputIds(inputFileIds, outputStirlingFileStubs, stored).map(
+        (fileId) => this.markFileAsProcessed(fileId),
       ),
     );
   }
