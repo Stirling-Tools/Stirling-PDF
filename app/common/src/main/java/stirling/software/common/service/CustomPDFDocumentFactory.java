@@ -6,8 +6,13 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -17,6 +22,9 @@ import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
@@ -687,11 +695,75 @@ public class CustomPDFDocumentFactory {
     }
 
     private PDDocument maybePostProcess(PDDocument doc, boolean readOnly) throws IOException {
+        rejectInflatedPageCount(doc);
         if (!readOnly) {
             pdfMetadataService.setDefaultMetadata(doc);
             removePassword(doc);
         }
         return doc;
+    }
+
+    /**
+     * Refuses a document whose page tree declares more pages than it holds. {@code
+     * getNumberOfPages()} returns the root /Count as written in the file, and tools size page lists
+     * and per-page loops from it.
+     */
+    static void rejectInflatedPageCount(PDDocument doc) throws IOException {
+        COSDictionary root =
+                doc.getDocumentCatalog().getCOSObject().getCOSDictionary(COSName.PAGES);
+        if (root == null) {
+            return;
+        }
+        int declared = root.getInt(COSName.COUNT, 0);
+        if (declared <= 0) {
+            return;
+        }
+        long actual = countPages(root, declared);
+        if (actual < declared) {
+            throw ExceptionUtils.createPdfCorruptedException(
+                    "while reading the page tree",
+                    new IOException(
+                            "Page tree declares "
+                                    + declared
+                                    + " pages but contains only "
+                                    + actual));
+        }
+    }
+
+    /**
+     * Counts leaf pages the way {@code PDPageTree.get} resolves them, visiting each intermediate
+     * node once, and stops as soon as {@code stopAt} is reached.
+     */
+    private static long countPages(COSDictionary root, long stopAt) {
+        Set<COSDictionary> visitedNodes = Collections.newSetFromMap(new IdentityHashMap<>());
+        Deque<COSDictionary> pending = new ArrayDeque<>();
+        pending.push(root);
+        long pages = 0;
+        while (!pending.isEmpty()) {
+            COSDictionary node = pending.pop();
+            boolean isTreeNode =
+                    COSName.PAGES.equals(node.getCOSName(COSName.TYPE))
+                            || node.containsKey(COSName.KIDS);
+            if (!isTreeNode) {
+                if (++pages >= stopAt) {
+                    return pages;
+                }
+                continue;
+            }
+            if (!visitedNodes.add(node)) {
+                continue;
+            }
+            COSArray kids = node.getCOSArray(COSName.KIDS);
+            if (kids == null) {
+                continue;
+            }
+            for (int i = kids.size() - 1; i >= 0; i--) {
+                if (kids.getObject(i) instanceof COSDictionary kid) {
+                    pending.push(kid);
+                }
+            }
+        }
+        return pages;
     }
 
     private static void removePassword(PDDocument document) throws IOException {
