@@ -70,6 +70,7 @@ ARG BUILD_PORTAL=true
 ARG VITE_SUPABASE_URL=""
 ARG VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=""
 ARG VITE_SAAS_API_URL=""
+ARG VITE_ACCESSIBILITY_EDITING=""
 
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
@@ -79,6 +80,7 @@ RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo li
     if [ -z "${VITE_SUPABASE_URL}" ]; then unset VITE_SUPABASE_URL; fi; \
     if [ -z "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then unset VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY; fi; \
     if [ -z "${VITE_SAAS_API_URL}" ]; then unset VITE_SAAS_API_URL; fi; \
+    if [ -z "${VITE_ACCESSIBILITY_EDITING}" ]; then unset VITE_ACCESSIBILITY_EDITING; fi; \
     STIRLING_FLAVOR=${STIRLING_FLAVOR} \
     gradle clean build \
       -PbuildWithFrontend=true \
