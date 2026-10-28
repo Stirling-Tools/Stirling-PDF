@@ -50,7 +50,7 @@ jobs:
     # so the suite can't boot premium and would fail. See the header comment.
     # GitHub reports the skipped reusable workflow as success.
     if: needs.pick.outputs.is_fork != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
       PREMIUM_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
