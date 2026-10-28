@@ -38,6 +38,7 @@ const ALL_BACKEND_ENDPOINTS = [
   "pdf-to-word",
   "file-to-pdf",
   "pdf-to-text",
+  "pdf-to-rtf",
   "pdf-to-html",
   "pdf-to-xml",
   "pdf-to-csv",
