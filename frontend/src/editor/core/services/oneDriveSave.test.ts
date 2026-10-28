@@ -34,6 +34,16 @@ function sent(): Record<string, FormDataEntryValue> {
   return Object.fromEntries(form.entries());
 }
 
+function failure(status: number) {
+  return new AxiosError("failed", "ERR", undefined, undefined, {
+    status,
+    statusText: "Failed",
+    data: {},
+    headers: {},
+    config: { headers: new AxiosHeaders() },
+  });
+}
+
 function conflict(code?: string) {
   return new AxiosError("conflict", "ERR", undefined, undefined, {
     status: 409,
@@ -104,6 +114,26 @@ describe("saveToOneDrive", () => {
 
   it("asks to reconnect when the account needs to sign in again", async () => {
     post.mockRejectedValue(conflict());
+
+    await expect(
+      saveToOneDrive(file, { kind: "replace", origin }),
+    ).rejects.toMatchObject({ code: "reconnect" });
+  });
+
+  it("tells a lost connection apart from a server failure", async () => {
+    post.mockRejectedValueOnce(new AxiosError("Network Error", "ERR_NETWORK"));
+    await expect(
+      saveToOneDrive(file, { kind: "replace", origin }),
+    ).rejects.toMatchObject({ code: "network" });
+
+    post.mockRejectedValueOnce(failure(502));
+    await expect(
+      saveToOneDrive(file, { kind: "replace", origin }),
+    ).rejects.toMatchObject({ code: "server" });
+  });
+
+  it("asks to reconnect when the server rejects the account", async () => {
+    post.mockRejectedValue(failure(401));
 
     await expect(
       saveToOneDrive(file, { kind: "replace", origin }),

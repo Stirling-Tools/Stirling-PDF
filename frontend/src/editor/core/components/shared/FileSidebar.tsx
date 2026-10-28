@@ -7,7 +7,8 @@ import React, {
   forwardRef,
   type RefCallback,
 } from "react";
-import { Loader, Tooltip } from "@mantine/core";
+import { Loader, Menu, Tooltip } from "@mantine/core";
+import { useNavigate } from "react-router-dom";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { NavSurface } from "@editor/ui/NavSurface";
 import { Button } from "@editor/ui/Button";
@@ -75,7 +76,10 @@ import { useToolEligibleFileIds } from "@editor/contexts/ToolFileEligibilityCont
 import { useWorkbenchFileDrop } from "@editor/components/layout/useWorkbenchFileDrop";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
 import "@editor/components/shared/FileSidebar.css";
-import { useOneDriveSave } from "@editor/hooks/useOneDriveSave";
+import {
+  CONNECTED_ACCOUNTS_SETTINGS_PATH,
+  useOneDriveSave,
+} from "@editor/hooks/useOneDriveSave";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
 const SIDEBAR_WIDTH = "var(--sidebar-w)";
@@ -253,29 +257,51 @@ function LibraryHeader({
       >
         <Icon name="search" size={"1rem"} />
       </ActionIcon>
-      {cloudPickers.map((picker) => (
+      {cloudPickers.length === 0 ? (
         <ActionIcon
-          key={picker.id}
           variant="quiet"
-          className="file-sidebar-section-btn file-sidebar-section-btn-drive"
-          onClick={() => onCloudPick(picker)}
-          title={picker.actionLabel}
-          aria-label={picker.actionLabel}
-          data-testid={picker.testId}
+          className="file-sidebar-section-btn file-sidebar-section-btn-add"
+          data-testid="pdf-library-add-files"
+          onClick={onAddFiles}
+          title={t("fileSidebar.addFiles", "Add files")}
+          aria-label={t("fileSidebar.addFiles", "Add files")}
         >
-          <Icon name={picker.icon} size={16} />
+          <Icon name="plus" size={"1rem"} />
         </ActionIcon>
-      ))}
-      <ActionIcon
-        variant="quiet"
-        className="file-sidebar-section-btn file-sidebar-section-btn-add"
-        data-testid="pdf-library-add-files"
-        onClick={onAddFiles}
-        title={t("fileSidebar.addFiles", "Add files")}
-        aria-label={t("fileSidebar.addFiles", "Add files")}
-      >
-        <Icon name="plus" size={"1rem"} />
-      </ActionIcon>
+      ) : (
+        <Menu position="bottom-end" withinPortal shadow="md" width={220}>
+          <Menu.Target>
+            <ActionIcon
+              variant="quiet"
+              className="file-sidebar-section-btn file-sidebar-section-btn-add"
+              data-testid="pdf-library-add-files"
+              title={t("fileSidebar.addFiles", "Add files")}
+              aria-label={t("fileSidebar.addFiles", "Add files")}
+            >
+              <Icon name="plus" size={"1rem"} />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<Icon name="file-up" size={16} />}
+              onClick={onAddFiles}
+              data-testid="pdf-library-add-from-computer"
+            >
+              {t("fileSidebar.openFromComputer", "Open from computer")}
+            </Menu.Item>
+            {cloudPickers.map((picker) => (
+              <Menu.Item
+                key={picker.id}
+                leftSection={<Icon name={picker.icon} size={16} />}
+                onClick={() => onCloudPick(picker)}
+                data-testid={picker.testId}
+              >
+                {picker.actionLabel}
+              </Menu.Item>
+            ))}
+          </Menu.Dropdown>
+        </Menu>
+      )}
     </div>
   );
 }
@@ -510,6 +536,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     const { config } = useAppConfig();
     const cloudPickers = useCloudFilePickers();
+    const navigate = useNavigate();
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const damagedRepair = useDamagedFileRepair();
@@ -745,6 +772,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       },
       [oneDriveSave, stubById],
     );
+    const handleOpenInOneDrive = useCallback(
+      (fileId: FileId) => {
+        const stub = stubById(fileId);
+        if (stub) oneDriveSave.openInOneDrive(stub);
+      },
+      [oneDriveSave, stubById],
+    );
     const handleSaveToOneDriveFolder = useCallback(
       (fileId: FileId) => {
         const stub = stubById(fileId);
@@ -879,9 +913,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         body: failedPicker.error,
         expandable: false,
         durationMs: 8000,
+        ...(failedPicker.reconnectNeeded
+          ? {
+              buttonText: t("oneDriveSave.reconnect", "Reconnect"),
+              buttonCallback: () => navigate(CONNECTED_ACCOUNTS_SETTINGS_PATH),
+            }
+          : {}),
       });
       failedPicker.clearError();
-    }, [failedPicker]);
+    }, [failedPicker, navigate, t]);
 
     const handleFileClick = useCallback(
       async (fileId: FileId) => {
@@ -1137,6 +1177,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
           isUploadedToCloud={fileOrigin === "cloud"}
           hasOneDriveOrigin={Boolean(stub.cloudOrigin)}
+          oneDriveName={stub.cloudOrigin?.name}
+          onOpenInOneDrive={
+            stub.cloudOrigin?.webUrl ? handleOpenInOneDrive : undefined
+          }
           savingToOneDrive={oneDriveSave.saving === stub.id}
           onSaveToOneDrive={
             oneDriveSave.available ? handleSaveToOneDrive : undefined

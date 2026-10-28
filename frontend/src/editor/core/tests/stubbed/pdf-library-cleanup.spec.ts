@@ -59,21 +59,13 @@ test.describe("PDF Library cleanup", () => {
     await expect(page.getByTestId("google-drive-button")).toHaveCount(0);
   });
 
-  test("shows the Google Drive button beside the add button", async ({
-    page,
-  }) => {
+  test("offers Google Drive from the add menu", async ({ page }) => {
     await stubGoogleDriveConfigured(page);
     await page.goto("/editor");
-    const drive = page.getByTestId("google-drive-button");
-    await expect(drive).toBeVisible();
-
-    const driveBox = await drive.boundingBox();
-    const addBox = await page
-      .getByTestId("pdf-library-add-files")
-      .boundingBox();
-    expect(driveBox).not.toBeNull();
-    expect(addBox).not.toBeNull();
-    expect(driveBox!.y).toBeCloseTo(addBox!.y, 0);
-    expect(addBox!.x - (driveBox!.x + driveBox!.width)).toBeLessThan(12);
+    await page.getByTestId("pdf-library-add-files").click();
+    await expect(page.getByTestId("google-drive-button")).toBeVisible();
+    await expect(
+      page.getByTestId("pdf-library-add-from-computer"),
+    ).toBeVisible();
   });
 });

@@ -5,7 +5,11 @@ import type {
 import { absoluteWithBasePath } from "@editor/constants/app";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
 import { generateId } from "@editor/utils/generateId";
-import { fetchAccessToken } from "@editor/services/connectedAccountsService";
+import { isAxiosError } from "axios";
+import {
+  fetchAccessToken,
+  isPopupBlocked,
+} from "@editor/services/connectedAccountsService";
 import type { AppConfig } from "@editor/types/appConfig";
 import { rememberCloudOrigin } from "@editor/services/cloudOrigin";
 
@@ -641,4 +645,24 @@ export function acceptToExtensions(accept?: string): string[] {
     .split(",")
     .map((part) => part.trim().toLowerCase())
     .filter((part) => part.startsWith("."));
+}
+
+export type OneDriveFailure =
+  | "popupBlocked"
+  | "reconnect"
+  | "network"
+  | "server";
+
+export function classifyOneDriveFailure(
+  error: unknown,
+): OneDriveFailure | null {
+  if (isPopupBlocked(error)) return "popupBlocked";
+  if (isAxiosError(error)) {
+    const status = error.response?.status;
+    if (status === undefined) return "network";
+    if (status === 401 || status === 403 || status === 409) return "reconnect";
+    return "server";
+  }
+  if (error instanceof TypeError) return "network";
+  return null;
 }
