@@ -31,6 +31,7 @@ import { fileStorage } from "@editor/services/fileStorage";
 import { zipFileService } from "@editor/services/zipFileService";
 import { FileAnalyzer } from "@editor/services/fileAnalyzer";
 import { trackPdfUploaded } from "@editor/services/analytics";
+import { cloudOriginOf } from "@editor/services/cloudOrigin";
 import {
   reportBulkAddProgress,
   clearBulkAddProgress,
@@ -550,6 +551,8 @@ export async function addFiles(
       }
 
       Object.assign(fileStub, await sourceLinkForNewFile(file));
+      const cloudOrigin = cloudOriginOf(file);
+      if (cloudOrigin) fileStub.cloudOrigin = cloudOrigin;
 
       // Store insertion position if provided
       if (options.insertAfterPageId !== undefined) {

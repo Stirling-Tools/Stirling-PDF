@@ -1,0 +1,176 @@
+import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { alert, dismissToast } from "@editor/components/toast";
+import { useFileActions } from "@editor/contexts/FileContext";
+import {
+  ensureConnectedAccount,
+  useConnectedAccounts,
+} from "@editor/hooks/useConnectedAccounts";
+import { useOneDrivePicker } from "@editor/hooks/useOneDrivePicker";
+import { fileStorage } from "@editor/services/fileStorage";
+import { getOneDrivePickerService } from "@editor/services/oneDrivePickerService";
+import {
+  copyName,
+  OneDriveSaveError,
+  saveToOneDrive,
+  type OneDriveSaveTarget,
+} from "@editor/services/oneDriveSave";
+import { openExternal } from "@editor/platform/openExternal";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+
+export interface OneDriveSave {
+  available: boolean;
+  saving: FileId | null;
+  save: (stub: StirlingFileStub) => Promise<void>;
+  saveCopy: (stub: StirlingFileStub) => Promise<void>;
+  saveToFolder: (stub: StirlingFileStub) => Promise<void>;
+}
+
+export function useOneDriveSave(): OneDriveSave {
+  const { t, i18n } = useTranslation();
+  const { actions } = useFileActions();
+  const connected = useConnectedAccounts();
+  const picker = useOneDrivePicker();
+  const [saving, setSaving] = useState<FileId | null>(null);
+  const available = picker.isEnabled && connected.available("microsoft");
+
+  const run = useCallback(
+    async (stub: StirlingFileStub, target: OneDriveSaveTarget) => {
+      const file = await fileStorage.getStirlingFile(stub.id);
+      if (!file) {
+        alert({
+          alertType: "error",
+          title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
+          body: t(
+            "fileSidebar.dataLostBody",
+            "This browser lost this file's contents. Upload it again to keep working with it.",
+          ),
+          expandable: false,
+        });
+        return;
+      }
+      setSaving(stub.id);
+      try {
+        const origin = await saveToOneDrive(file, target);
+        actions.updateStirlingFileStub(stub.id, { cloudOrigin: origin });
+        await fileStorage.updateFileMetadata(stub.id, { cloudOrigin: origin });
+        alert({
+          alertType: "success",
+          title: t("oneDriveSave.saved", "Saved to OneDrive"),
+          body: origin.name,
+          expandable: false,
+          durationMs: 5000,
+          ...(origin.webUrl
+            ? {
+                buttonText: t("oneDriveSave.open", "Open in OneDrive"),
+                buttonCallback: () => void openExternal(origin.webUrl!),
+              }
+            : {}),
+        });
+      } catch (error) {
+        const code = error instanceof OneDriveSaveError ? error.code : "failed";
+        const copyTarget =
+          code === "conflict" && target.kind === "replace"
+            ? target.origin
+            : null;
+        const toastId: string = alert({
+          alertType: "error",
+          title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
+          body:
+            code === "conflict"
+              ? t(
+                  "oneDriveSave.conflict",
+                  "Someone changed this file in OneDrive after you opened it. Save your version as a copy instead.",
+                )
+              : code === "reconnect"
+                ? t(
+                    "provider.onedrive.errors.reconnect",
+                    "Your Microsoft account needs to sign in again. Reconnect it in Settings > Connected accounts.",
+                  )
+                : t(
+                    "provider.onedrive.errors.unreachable",
+                    "Couldn't reach OneDrive. Check your connection and try again.",
+                  ),
+          expandable: false,
+          ...(copyTarget
+            ? {
+                isPersistentPopup: true,
+                buttonText: t("oneDriveSave.saveCopy", "Save a copy"),
+                buttonCallback: () => {
+                  dismissToast(toastId);
+                  void run(stub, {
+                    kind: "copy",
+                    origin: copyTarget,
+                    name: copyName(copyTarget.name),
+                  });
+                },
+              }
+            : {}),
+        });
+      } finally {
+        setSaving(null);
+      }
+    },
+    [actions, t],
+  );
+
+  const save = useCallback(
+    async (stub: StirlingFileStub) => {
+      const origin = stub.cloudOrigin;
+      if (origin) await run(stub, { kind: "replace", origin });
+    },
+    [run],
+  );
+
+  const saveCopy = useCallback(
+    async (stub: StirlingFileStub) => {
+      const origin = stub.cloudOrigin;
+      if (origin)
+        await run(stub, {
+          kind: "copy",
+          origin,
+          name: copyName(origin.name),
+        });
+    },
+    [run],
+  );
+
+  const saveToFolder = useCallback(
+    async (stub: StirlingFileStub) => {
+      const { account } = await ensureConnectedAccount(
+        "microsoft",
+        connected.connect,
+      );
+      if (!account || account.personal) return;
+      const folder = await getOneDrivePickerService().pickFolder(
+        {
+          locale: i18n?.language,
+          labels: {
+            title: t(
+              "oneDriveSave.chooseFolder",
+              "Choose a OneDrive folder to save to",
+            ),
+            close: t("close", "Close"),
+            loading: t(
+              "provider.onedrive.pickerLoading",
+              "Connecting to OneDrive…",
+            ),
+          },
+        },
+        { accountId: account.id },
+      );
+      if (!folder) return;
+      await run(stub, {
+        kind: "folder",
+        accountId: account.id,
+        driveId: folder.driveId,
+        folderId: folder.folderId,
+        name: stub.name,
+      });
+    },
+    [connected.connect, i18n?.language, run, t],
+  );
+
+  return { available, saving, save, saveCopy, saveToFolder };
+}

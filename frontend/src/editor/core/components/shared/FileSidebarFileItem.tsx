@@ -144,6 +144,11 @@ export interface FileItemProps {
   canSaveToCloud?: boolean;
   /** File already lives on the server - shows a cloud badge + "Update" label. */
   isUploadedToCloud?: boolean;
+  onSaveToOneDrive?: (fileId: FileId) => void;
+  onSaveCopyToOneDrive?: (fileId: FileId) => void;
+  onSaveToOneDriveFolder?: (fileId: FileId) => void;
+  hasOneDriveOrigin?: boolean;
+  savingToOneDrive?: boolean;
   /** Open the version-history modal. Only shown when hasVersionHistory. */
   onVersionHistory?: (fileId: FileId) => void;
   /** Whether this file has more than one version (drives the menu item). */
@@ -163,10 +168,12 @@ function FileMenuItem({
   color,
   onClick,
   children,
+  testId,
 }: {
   disabledReason?: React.ReactNode;
   icon: React.ReactNode;
   color?: string;
+  testId?: string;
   onClick: (e: React.MouseEvent) => void;
   children: React.ReactNode;
 }) {
@@ -184,6 +191,7 @@ function FileMenuItem({
           disabled={Boolean(disabledReason)}
           color={color}
           leftSection={icon}
+          data-testid={testId}
           onClick={(e) => {
             e.stopPropagation();
             onClick(e);
@@ -224,6 +232,11 @@ export const FileItem = React.memo(function FileItem({
   onSaveToCloud,
   canSaveToCloud = false,
   isUploadedToCloud = false,
+  onSaveToOneDrive,
+  onSaveCopyToOneDrive,
+  onSaveToOneDriveFolder,
+  hasOneDriveOrigin = false,
+  savingToOneDrive = false,
   onVersionHistory,
   hasVersionHistory = false,
 }: FileItemProps) {
@@ -558,6 +571,56 @@ export const FileItem = React.memo(function FileItem({
                     </FileMenuItem>
                   );
                 })()}
+
+              {hasOneDriveOrigin && onSaveToOneDrive && (
+                <FileMenuItem
+                  disabledReason={
+                    savingToOneDrive
+                      ? t("oneDriveSave.saving", "Saving to OneDrive…")
+                      : blockedReason(
+                          t("oneDriveSave.save", "Save to OneDrive"),
+                        )
+                  }
+                  icon={<Icon name="onedrive" size={16} />}
+                  onClick={() => onSaveToOneDrive(fileId)}
+                  testId="file-save-onedrive"
+                >
+                  {t("oneDriveSave.save", "Save to OneDrive")}
+                </FileMenuItem>
+              )}
+              {hasOneDriveOrigin && onSaveCopyToOneDrive && (
+                <FileMenuItem
+                  disabledReason={
+                    savingToOneDrive
+                      ? t("oneDriveSave.saving", "Saving to OneDrive…")
+                      : blockedReason(t("oneDriveSave.saveCopy", "Save a copy"))
+                  }
+                  icon={<Icon name="copy-plus" size={16} />}
+                  onClick={() => onSaveCopyToOneDrive(fileId)}
+                  testId="file-save-onedrive-copy"
+                >
+                  {t(
+                    "oneDriveSave.saveCopyToOneDrive",
+                    "Save a copy to OneDrive",
+                  )}
+                </FileMenuItem>
+              )}
+              {onSaveToOneDriveFolder && (
+                <FileMenuItem
+                  disabledReason={
+                    savingToOneDrive
+                      ? t("oneDriveSave.saving", "Saving to OneDrive…")
+                      : blockedReason(
+                          t("oneDriveSave.saveToFolder", "Save to OneDrive…"),
+                        )
+                  }
+                  icon={<Icon name="folder-up" size={16} />}
+                  onClick={() => onSaveToOneDriveFolder(fileId)}
+                  testId="file-save-onedrive-folder"
+                >
+                  {t("oneDriveSave.saveToFolder", "Save to OneDrive…")}
+                </FileMenuItem>
+              )}
 
               {hasVersionHistory && onVersionHistory && (
                 <FileMenuItem

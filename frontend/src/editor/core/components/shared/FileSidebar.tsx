@@ -75,6 +75,7 @@ import { useToolEligibleFileIds } from "@editor/contexts/ToolFileEligibilityCont
 import { useWorkbenchFileDrop } from "@editor/components/layout/useWorkbenchFileDrop";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
 import "@editor/components/shared/FileSidebar.css";
+import { useOneDriveSave } from "@editor/hooks/useOneDriveSave";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
 const SIDEBAR_WIDTH = "var(--sidebar-w)";
@@ -725,6 +726,33 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [allFileStubs, warnDataUnavailable, t],
     );
 
+    const oneDriveSave = useOneDriveSave();
+    const stubById = useCallback(
+      (fileId: FileId) => allFileStubs.find((s) => s.id === fileId),
+      [allFileStubs],
+    );
+    const handleSaveToOneDrive = useCallback(
+      (fileId: FileId) => {
+        const stub = stubById(fileId);
+        if (stub) void oneDriveSave.save(stub);
+      },
+      [oneDriveSave, stubById],
+    );
+    const handleSaveCopyToOneDrive = useCallback(
+      (fileId: FileId) => {
+        const stub = stubById(fileId);
+        if (stub) void oneDriveSave.saveCopy(stub);
+      },
+      [oneDriveSave, stubById],
+    );
+    const handleSaveToOneDriveFolder = useCallback(
+      (fileId: FileId) => {
+        const stub = stubById(fileId);
+        if (stub) void oneDriveSave.saveToFolder(stub);
+      },
+      [oneDriveSave, stubById],
+    );
+
     const handleDuplicate = useCallback(
       async (fileId: FileId) => {
         const stub = allFileStubs.find((s) => s.id === fileId);
@@ -1108,6 +1136,17 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onSaveToCloud={handleSaveToCloud}
           canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
           isUploadedToCloud={fileOrigin === "cloud"}
+          hasOneDriveOrigin={Boolean(stub.cloudOrigin)}
+          savingToOneDrive={oneDriveSave.saving === stub.id}
+          onSaveToOneDrive={
+            oneDriveSave.available ? handleSaveToOneDrive : undefined
+          }
+          onSaveCopyToOneDrive={
+            oneDriveSave.available ? handleSaveCopyToOneDrive : undefined
+          }
+          onSaveToOneDriveFolder={
+            oneDriveSave.available ? handleSaveToOneDriveFolder : undefined
+          }
           onVersionHistory={handleVersionHistory}
           hasVersionHistory={(stub.versionNumber ?? 1) > 1}
           primaryLabel={
