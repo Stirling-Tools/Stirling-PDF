@@ -134,6 +134,30 @@ class MobileScannerServiceTest {
         }
 
         @Test
+        @DisplayName("an expired session's files are not listed or served before the sweep")
+        void expiredSessionHidesFiles() throws IOException {
+            service.createSession("gone");
+            service.uploadFiles("gone", List.of(file("a.txt", "x")));
+            forceCreatedAt("gone", System.currentTimeMillis() - (20 * 60 * 1000L));
+
+            assertTrue(service.getSessionFiles("gone").isEmpty());
+            assertThrows(IOException.class, () -> service.getFile("gone", "a.txt"));
+        }
+
+        @Test
+        @DisplayName("isLiveSession is true only for created, unexpired sessions")
+        void isLiveSession() {
+            service.createSession("live");
+            service.createSession("dead");
+            forceCreatedAt("dead", System.currentTimeMillis() - (20 * 60 * 1000L));
+
+            assertTrue(service.isLiveSession("live"));
+            assertFalse(service.isLiveSession("dead"));
+            assertFalse(service.isLiveSession("never"));
+            assertFalse(service.isLiveSession(null));
+        }
+
+        @Test
         @DisplayName("reads do not push the expiry back")
         void readsDoNotExtendExpiry() throws IOException {
             long expiresAt = service.createSession("fixed").getExpiresAt();
@@ -411,6 +435,7 @@ class MobileScannerServiceTest {
             service.createSession("d1");
             service.uploadFiles("d1", List.of(file("a.txt", "x"), file("b.txt", "y")));
 
+            service.getFile("d1", "a.txt");
             service.deleteFileAfterDownload("d1", "a.txt");
 
             assertFalse(Files.exists(tempDir.resolve("d1").resolve("a.txt")));
@@ -429,6 +454,30 @@ class MobileScannerServiceTest {
             assertNotNull(service.validateSession("d2"));
             assertTrue(service.getSessionFiles("d2").isEmpty());
             assertFalse(Files.exists(tempDir.resolve("d2").resolve("only.txt")));
+        }
+
+        @Test
+        @DisplayName("leaves an unclaimed file alone, such as a new upload to a re-created id")
+        void ignoresUnclaimedFile() throws IOException {
+            service.createSession("d4");
+            service.uploadFiles("d4", List.of(file("a.txt", "x")));
+
+            service.deleteFileAfterDownload("d4", "a.txt");
+
+            assertTrue(Files.exists(tempDir.resolve("d4").resolve("a.txt")));
+            assertEquals(1, service.getSessionFiles("d4").size());
+        }
+
+        @Test
+        @DisplayName("a released claim makes the file downloadable again")
+        void releasedClaimAllowsRetry() throws IOException {
+            service.createSession("d5");
+            service.uploadFiles("d5", List.of(file("a.txt", "x")));
+            service.getFile("d5", "a.txt");
+
+            service.releaseDownloadClaim("d5", "a.txt");
+
+            assertDoesNotThrow(() -> service.getFile("d5", "a.txt"));
         }
 
         @Test
@@ -634,8 +683,10 @@ class MobileScannerServiceTest {
         void reusedFilenameReleasesOwnSize() throws IOException {
             service.createSession("r");
             service.uploadFiles("r", List.of(sized("a.jpg", MAX_FILE), file("keep.txt", "x")));
+            service.getFile("r", "a.jpg");
             service.deleteFileAfterDownload("r", "a.jpg");
             service.uploadFiles("r", List.of(sized("a.jpg", 10)));
+            service.getFile("r", "a.jpg");
             service.deleteFileAfterDownload("r", "a.jpg");
 
             assertEquals(1L, storedBytes());
@@ -673,6 +724,19 @@ class MobileScannerServiceTest {
                     assertThrows(UploadLimitException.class, () -> service.createSession("new"));
             assertTrue(e.isServerCapacity());
             assertDoesNotThrow(() -> service.createSession("s0"));
+        }
+
+        @Test
+        @DisplayName("expired sessions stop holding the caps before the sweep runs")
+        void expiredSessionsFreeCaps() throws IOException {
+            fillServer();
+            for (int i = 0; i < 4; i++) {
+                forceCreatedAt("fill-" + i, System.currentTimeMillis() - (20 * 60 * 1000L));
+            }
+            service.createSession("other");
+
+            assertDoesNotThrow(() -> service.uploadFiles("other", List.of(file("a.txt", "x"))));
+            assertFalse(Files.exists(tempDir.resolve("fill-0")));
         }
 
         @Test
@@ -730,6 +794,7 @@ class MobileScannerServiceTest {
                             .map(FileMetadata::getFilename)
                             .toList());
             assertEquals(11L, storedBytes());
+            service.getFile("same", "dup.jpg");
             service.deleteFileAfterDownload("same", "dup.jpg");
             assertEquals(10L, storedBytes());
         }

@@ -87,9 +87,9 @@ export function useMobileTransferSession({
   const pollIntervalRef = useRef<number | null>(null);
   const timerIntervalRef = useRef<number | null>(null);
   const processedFiles = useRef<Set<string>>(new Set());
-  // The server serves each file once, so an overlapping poll would race the
-  // one already downloading and get a 404.
-  const pollInFlight = useRef(false);
+  // Files are served once, so an overlapping poll would get a 404. Keyed by
+  // session so a poll still running for a replaced session doesn't block the new one.
+  const pollInFlight = useRef<string | null>(null);
 
   // The QR-code URL the phone opens. It must land on the public route under
   // the app's base path, otherwise the phone hits the auth-gated catch-all
@@ -139,12 +139,14 @@ export function useMobileTransferSession({
   }, [createSession]);
 
   const pollForFiles = useCallback(async () => {
-    if (!active || pollInFlight.current) return;
-    pollInFlight.current = true;
+    if (!active || pollInFlight.current === sessionId) return;
+    pollInFlight.current = sessionId;
 
     try {
+      // Timeouts keep one stalled request from stopping polling for good.
       const response = await apiClient.get(
         `/api/v1/mobile-scanner/files/${sessionId}`,
+        { timeout: 30_000 },
       );
       if (!response.status || response.status !== 200) {
         throw new Error("Failed to check for files");
@@ -162,7 +164,7 @@ export function useMobileTransferSession({
         try {
           const downloadResponse = await apiClient.get(
             `/api/v1/mobile-scanner/download/${sessionId}/${fileMetadata.filename}`,
-            { responseType: "blob" },
+            { responseType: "blob", timeout: 300_000 },
           );
 
           if (downloadResponse.status === 200) {
@@ -187,7 +189,7 @@ export function useMobileTransferSession({
       console.error("[useMobileTransferSession] polling failed:", err);
       setError(pollingErrorMessage);
     } finally {
-      pollInFlight.current = false;
+      if (pollInFlight.current === sessionId) pollInFlight.current = null;
     }
   }, [active, sessionId, onFileReceived, pollingErrorMessage]);
 

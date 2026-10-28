@@ -21,9 +21,8 @@ import lombok.extern.slf4j.Slf4j;
  * Service for handling mobile scanner file uploads and temporary storage. Files are stored
  * temporarily and automatically cleaned up after 10 minutes or upon retrieval.
  *
- * <p>Uploads need no login, so they only go to sessions a desktop created, a session expires a
- * fixed time after creation however often it is read, and storage is capped per file, per session
- * and in total; uploads over a cap are rejected whole with {@link UploadLimitException}.
+ * <p>Uploads need no login, so they only go to sessions a desktop created, sessions expire a fixed
+ * time after creation, and storage is capped; a batch over a cap is rejected whole.
  */
 @Service
 @Slf4j
@@ -35,11 +34,13 @@ public class MobileScannerService {
     static final int MAX_FILES_PER_SESSION = 500;
     static final long MAX_TOTAL_BYTES = 2L * 1024 * 1024 * 1024; // 2 GB
     static final int MAX_ACTIVE_SESSIONS = 1000;
+    // A whole session's worth of files plus room for the multipart part headers.
+    public static final long MAX_UPLOAD_REQUEST_BYTES = MAX_SESSION_BYTES + 1024 * 1024;
     private static final Pattern FILENAME_SANITIZE_PATTERN = Pattern.compile("[^a-zA-Z0-9._-]");
     private static final Pattern SESSION_ID_VALIDATION_PATTERN = Pattern.compile("[a-zA-Z0-9-]+");
     private static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("[.][^.]+$");
     private final Map<String, SessionData> activeSessions = new ConcurrentHashMap<>();
-    // Guards session creation and every SessionData byte/file count, so cap checks are atomic.
+    // Guards session create/delete and every SessionData count, so cap checks are atomic.
     private final Object storageLock = new Object();
     private final Path tempDirectory;
 
@@ -64,8 +65,7 @@ public class MobileScannerService {
 
         SessionData session = new SessionData(sessionId);
         synchronized (storageLock) {
-            // Replacing the SessionData alone would leave the old files on disk and out of the
-            // totals; one locked section stops a concurrent upload from re-creating it in between.
+            // Replacing only the entry would orphan the old session's files.
             deleteSession(sessionId);
             ensureSessionCapacity();
             activeSessions.put(sessionId, session);
@@ -146,15 +146,17 @@ public class MobileScannerService {
      */
     private SessionData reserve(String sessionId, int fileCount, long bytes) {
         synchronized (storageLock) {
-            // Uploads never create sessions: only the logged-in desktop can, so an anonymous
-            // client cannot open storage for itself.
-            SessionData session = activeSessions.get(sessionId);
-            if (session == null || session.isExpired(System.currentTimeMillis())) {
+            // Only the logged-in desktop creates sessions.
+            SessionData session = liveSession(sessionId);
+            if (session == null) {
                 throw new IllegalArgumentException("Session not found or expired");
             }
             if (session.fileCount + fileCount > MAX_FILES_PER_SESSION
                     || session.storedBytes + bytes > MAX_SESSION_BYTES) {
                 throw new UploadLimitException("Session upload limit reached", false);
+            }
+            if (totalStoredBytes() + bytes > MAX_TOTAL_BYTES) {
+                deleteExpiredSessions(System.currentTimeMillis());
             }
             if (totalStoredBytes() + bytes > MAX_TOTAL_BYTES) {
                 throw new UploadLimitException("Mobile upload storage is full", true);
@@ -172,7 +174,6 @@ public class MobileScannerService {
             originalFilename = "upload-" + System.currentTimeMillis();
         }
 
-        // Sanitize filename
         String safeFilename = sanitizeFilename(originalFilename);
         Path filePath = sessionDir.resolve(safeFilename).normalize().toAbsolutePath();
 
@@ -181,8 +182,8 @@ public class MobileScannerService {
             throw new IOException("Invalid filename");
         }
 
-        // Handle duplicate filenames. createFile claims the name atomically, so concurrent uploads
-        // of the same name to one session cannot both pick it and overwrite each other.
+        // Handle duplicate filenames. createFile claims a name atomically, so concurrent
+        // same-name uploads cannot share a path.
         int counter = 1;
         while (!tryCreate(filePath)) {
             String nameWithoutExt = FILE_EXTENSION_PATTERN.matcher(safeFilename).replaceFirst("");
@@ -205,8 +206,7 @@ public class MobileScannerService {
             throw e;
         }
         synchronized (storageLock) {
-            // A session deleted or replaced mid-upload no longer counts toward any cap, so a file
-            // written for it would sit on disk unaccounted for.
+            // Deleted or replaced mid-upload: the file would count toward no cap.
             if (activeSessions.get(session.sessionId) != session) {
                 Files.deleteIfExists(filePath);
                 throw new IOException("Session was removed during upload");
@@ -236,7 +236,7 @@ public class MobileScannerService {
      * @return List of file metadata, or empty list if session doesn't exist
      */
     public List<FileMetadata> getSessionFiles(String sessionId) {
-        SessionData session = activeSessions.get(sessionId);
+        SessionData session = liveSession(sessionId);
         if (session == null) {
             return List.of();
         }
@@ -255,7 +255,7 @@ public class MobileScannerService {
      *     doesn't exist
      */
     public Path getFile(String sessionId, String filename) throws IOException {
-        SessionData session = activeSessions.get(sessionId);
+        SessionData session = liveSession(sessionId);
         if (session == null) {
             throw new IOException("Session not found: " + sessionId);
         }
@@ -265,11 +265,8 @@ public class MobileScannerService {
             throw new IOException("File not found: " + filename);
         }
 
-        // Each file is served once. The file stays on disk while its download streams, and the
-        // desktop's overlapping polls would otherwise fetch it again. Only stored names are served:
-        // on a case-insensitive filesystem another spelling would pass Files.exists but miss the
-        // claim and the byte accounting, and a name still being written exists only as a
-        // placeholder.
+        // Served once, as the file stays on disk while it streams. Checking the stored name rather
+        // than the disk also rejects other spellings on case-insensitive filesystems.
         synchronized (storageLock) {
             if (!session.isStored(filename)) {
                 throw new IOException("File not found: " + filename);
@@ -293,12 +290,16 @@ public class MobileScannerService {
         try {
             Path filePath = getSafeFilePath(sessionId, filename);
             SessionData session = activeSessions.get(sessionId);
-            if (session != null) {
-                // Released before the file is deleted: while it is still on disk no new upload can
-                // take its name, so the release cannot drop a newer file's entry.
-                synchronized (storageLock) {
-                    session.releaseFile(filename);
+            if (session == null) {
+                return;
+            }
+            synchronized (storageLock) {
+                // Unclaimed means the id was re-created mid-download and the name is a new file.
+                if (!session.isDownloaded(filename)) {
+                    return;
                 }
+                // Released while the file is still on disk, so no new upload can reuse the name.
+                session.releaseFile(filename);
             }
             Files.deleteIfExists(filePath);
             log.info("Deleted file after download: {}/{}", sessionId, filename);
@@ -308,13 +309,30 @@ public class MobileScannerService {
     }
 
     /**
+     * Makes a claimed file downloadable again after a download that did not send all of it.
+     *
+     * @param sessionId Session identifier
+     * @param filename Filename whose claim is dropped
+     */
+    public void releaseDownloadClaim(String sessionId, String filename) {
+        SessionData session = activeSessions.get(sessionId);
+        if (session == null) {
+            return;
+        }
+        synchronized (storageLock) {
+            if (session.isDownloaded(filename)) {
+                session.unmarkDownloaded(filename);
+            }
+        }
+    }
+
+    /**
      * Deletes a session and all its files
      *
      * @param sessionId Session to delete
      */
     public void deleteSession(String sessionId) {
-        // Under the lock so createSession cannot register the id again between removal and the
-        // walk, which would delete the new session's files.
+        // Locked so createSession cannot re-register the id before the walk deletes its files.
         synchronized (storageLock) {
             SessionData session = activeSessions.remove(sessionId);
             if (session != null) {
@@ -332,10 +350,9 @@ public class MobileScannerService {
         try {
             Path sessionDir = getSafeSessionDirectory(sessionId);
             if (Files.exists(sessionDir)) {
-                // Delete all files in session directory
                 try (var paths = Files.walk(sessionDir)) {
-                    paths.sorted((a, b) -> -a.compareTo(b)) // Reverse order to delete files before
-                            // directory
+                    // Deepest first, so each directory is empty when its turn comes.
+                    paths.sorted((a, b) -> -a.compareTo(b))
                             .forEach(
                                     path -> {
                                         try {
@@ -360,27 +377,26 @@ public class MobileScannerService {
     @Scheduled(fixedRate = 5 * 60 * 1000)
     public void cleanupExpiredSessions() {
         long now = System.currentTimeMillis();
-        List<String> expiredSessions = new ArrayList<>();
-
-        activeSessions.forEach(
-                (sessionId, session) -> {
-                    if (session.isExpired(now)) {
-                        expiredSessions.add(sessionId);
-                    }
-                });
-
-        if (!expiredSessions.isEmpty()) {
-            log.info("Cleaning up {} expired mobile scanner sessions", expiredSessions.size());
-            expiredSessions.forEach(this::deleteSession);
+        synchronized (storageLock) {
+            deleteExpiredSessions(now);
         }
         deleteOrphanedDirectories(now);
     }
 
-    /**
-     * Removes session directories with no live session: leftovers from a previous run (sessions are
-     * in memory only) or from a delete that could not remove every file. They count toward no cap,
-     * so nothing else reclaims them.
-     */
+    // Caller must hold storageLock.
+    private void deleteExpiredSessions(long now) {
+        List<String> expired =
+                activeSessions.entrySet().stream()
+                        .filter(entry -> entry.getValue().isExpired(now))
+                        .map(Map.Entry::getKey)
+                        .toList();
+        if (!expired.isEmpty()) {
+            log.info("Cleaning up {} expired mobile scanner sessions", expired.size());
+            expired.forEach(this::deleteSession);
+        }
+    }
+
+    /** Removes session directories with no live session, such as those left before a restart. */
     private void deleteOrphanedDirectories(long now) {
         if (!Files.isDirectory(tempDirectory)) {
             return;
@@ -418,10 +434,27 @@ public class MobileScannerService {
         }
     }
 
+    // Caller must hold storageLock. Expired sessions are purged first so they stop holding the
+    // caps before the next sweep.
     private void ensureSessionCapacity() {
+        if (activeSessions.size() >= MAX_ACTIVE_SESSIONS) {
+            deleteExpiredSessions(System.currentTimeMillis());
+        }
         if (activeSessions.size() >= MAX_ACTIVE_SESSIONS) {
             throw new UploadLimitException("Too many active mobile upload sessions", true);
         }
+    }
+
+    /**
+     * @return true if uploads to this session would be accepted, ignoring storage caps
+     */
+    public boolean isLiveSession(String sessionId) {
+        return sessionId != null && liveSession(sessionId) != null;
+    }
+
+    private SessionData liveSession(String sessionId) {
+        SessionData session = activeSessions.get(sessionId);
+        return session == null || session.isExpired(System.currentTimeMillis()) ? null : session;
     }
 
     // Caller must hold storageLock. Bounded by MAX_ACTIVE_SESSIONS, so a scan is cheap.
@@ -584,7 +617,6 @@ public class MobileScannerService {
         private final String sessionId;
         private final List<FileMetadata> files = new ArrayList<>();
         private final Map<String, Boolean> downloadedFiles = new HashMap<>();
-        // Keyed by name rather than looked up in files: a name is reused once its file is deleted.
         private final Map<String, Long> storedFileSizes = new HashMap<>();
         private final long createdAt;
         // Includes bytes reserved for uploads still being written.
@@ -628,8 +660,11 @@ public class MobileScannerService {
             downloadedFiles.put(filename, true);
         }
 
-        // Fixed from creation: reads must not extend it, or an anonymous poller could keep a
-        // session's files on disk indefinitely.
+        public void unmarkDownloaded(String filename) {
+            downloadedFiles.put(filename, false);
+        }
+
+        // Fixed at creation, so polling cannot keep a session alive.
         public long expiresAt() {
             return createdAt + SESSION_TIMEOUT_MS;
         }

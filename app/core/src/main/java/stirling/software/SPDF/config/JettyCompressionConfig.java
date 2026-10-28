@@ -13,12 +13,9 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Keeps {@code server.compression} to response compression only.
  *
- * <p>On Jetty 12.1, Spring Boot implements that property with a {@link CompressionHandler} whose
- * request-decompression rules are left empty, which Jetty treats as "inflate every {@code
- * Content-Encoding: gzip} request body on every path". Inflation happens before any size limit sees
- * the body, so a few MB on the wire can become a multi-GB upload, and proxy body limits only see
- * the compressed size. No Stirling-PDF client compresses request bodies, so decompression is turned
- * off everywhere; compressed bodies reach the application as their raw bytes.
+ * <p>On Jetty, Spring Boot's {@link CompressionHandler} leaves its request-decompression rules
+ * empty, so every compressed request body is inflated before any size limit sees it: a few MB on
+ * the wire can become gigabytes. No Stirling-PDF client compresses request bodies.
  */
 @Configuration
 public class JettyCompressionConfig {

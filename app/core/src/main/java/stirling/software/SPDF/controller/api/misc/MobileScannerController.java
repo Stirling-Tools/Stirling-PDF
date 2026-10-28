@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.misc;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -299,8 +300,7 @@ public class MobileScannerController {
         }
 
         try {
-            // Resolved from the name, not the file: getFile claims the download, and nothing after
-            // the claim may fail before the resource is returned or the file is never released.
+            // From the name, not the file: nothing after getFile's claim may throw.
             MediaType contentType =
                     MediaTypeFactory.getMediaType(filename)
                             .orElse(MediaType.APPLICATION_OCTET_STREAM);
@@ -309,9 +309,8 @@ public class MobileScannerController {
             Resource resource =
                     new DeleteAfterReadResource(
                             filePath,
-                            () ->
-                                    mobileScannerService.deleteFileAfterDownload(
-                                            sessionId, filename));
+                            () -> mobileScannerService.deleteFileAfterDownload(sessionId, filename),
+                            () -> mobileScannerService.releaseDownloadClaim(sessionId, filename));
 
             return ResponseEntity.ok()
                     .contentType(contentType)
@@ -363,21 +362,53 @@ public class MobileScannerController {
     }
 
     /**
-     * Streams a file from disk and runs {@code onClose} when the response stream is closed.
-     * Streaming keeps an unread download from pinning the whole file on the heap.
+     * Streams a file from disk, so an unread download does not pin it on the heap. When the stream
+     * closes it runs {@code onFullRead} if the whole file was read, otherwise {@code
+     * onPartialRead}, so a failed or ranged download leaves the file to be fetched again.
      */
     private static final class DeleteAfterReadResource extends FileSystemResource {
-        private final Runnable onClose;
+        private final Runnable onFullRead;
+        private final Runnable onPartialRead;
 
-        DeleteAfterReadResource(Path path, Runnable onClose) {
+        DeleteAfterReadResource(Path path, Runnable onFullRead, Runnable onPartialRead) {
             super(path);
-            this.onClose = onClose;
+            this.onFullRead = onFullRead;
+            this.onPartialRead = onPartialRead;
         }
 
         @Override
         public InputStream getInputStream() throws IOException {
             return new FilterInputStream(super.getInputStream()) {
+                private boolean reachedEnd;
                 private boolean closed;
+
+                @Override
+                public int read() throws IOException {
+                    int b = super.read();
+                    reachedEnd |= b == -1;
+                    return b;
+                }
+
+                @Override
+                public int read(byte[] buffer, int offset, int length) throws IOException {
+                    int n = super.read(buffer, offset, length);
+                    reachedEnd |= n == -1;
+                    return n;
+                }
+
+                @Override
+                public long transferTo(OutputStream out) throws IOException {
+                    // Copies through read() so reaching the end is seen; delegating would bypass
+                    // it.
+                    long total = 0;
+                    byte[] buffer = new byte[8192];
+                    int n;
+                    while ((n = read(buffer, 0, buffer.length)) != -1) {
+                        out.write(buffer, 0, n);
+                        total += n;
+                    }
+                    return total;
+                }
 
                 @Override
                 public void close() throws IOException {
@@ -388,7 +419,7 @@ public class MobileScannerController {
                     try {
                         super.close();
                     } finally {
-                        onClose.run();
+                        (reachedEnd ? onFullRead : onPartialRead).run();
                     }
                 }
             };

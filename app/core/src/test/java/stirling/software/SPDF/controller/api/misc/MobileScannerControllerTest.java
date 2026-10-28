@@ -266,6 +266,37 @@ class MobileScannerControllerTest {
     }
 
     @Test
+    void downloadFile_partialReadReleasesClaimInsteadOfDeleting(@TempDir Path dir)
+            throws Exception {
+        enableMobileScanner();
+        Path file = Files.write(dir.resolve("scan.jpg"), new byte[] {1, 2, 3});
+        when(mobileScannerService.getFile("test-session", "scan.jpg")).thenReturn(file);
+
+        ResponseEntity<Resource> response = controller.downloadFile("test-session", "scan.jpg");
+        try (InputStream in = response.getBody().getInputStream()) {
+            in.read();
+        }
+
+        verify(mobileScannerService).releaseDownloadClaim("test-session", "scan.jpg");
+        verify(mobileScannerService, never()).deleteFileAfterDownload(any(), any());
+    }
+
+    @Test
+    void downloadFile_transferToCountsAsFullRead(@TempDir Path dir) throws Exception {
+        enableMobileScanner();
+        Path file = Files.write(dir.resolve("scan.jpg"), new byte[] {1, 2, 3});
+        when(mobileScannerService.getFile("test-session", "scan.jpg")).thenReturn(file);
+
+        ResponseEntity<Resource> response = controller.downloadFile("test-session", "scan.jpg");
+        try (InputStream in = response.getBody().getInputStream()) {
+            in.transferTo(java.io.OutputStream.nullOutputStream());
+        }
+
+        verify(mobileScannerService).deleteFileAfterDownload("test-session", "scan.jpg");
+        verify(mobileScannerService, never()).releaseDownloadClaim(any(), any());
+    }
+
+    @Test
     void downloadFile_contentTypeComesFromFilename(@TempDir Path dir) throws Exception {
         enableMobileScanner();
         Path jpg = Files.write(dir.resolve("scan.jpg"), new byte[] {1});

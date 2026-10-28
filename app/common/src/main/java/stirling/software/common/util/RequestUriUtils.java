@@ -209,8 +209,7 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/healthz")
                 || trimmedUri.startsWith("/liveness")
                 || trimmedUri.startsWith("/readiness")
-                // The phone that scans the QR code has no credentials; the desktop's session,
-                // listing and download calls stay behind login.
+                // The phone's mobile-scanner calls; it has no credentials
                 || trimmedUri.startsWith("/api/v1/mobile-scanner/validate-session/")
                 || trimmedUri.startsWith("/api/v1/mobile-scanner/upload/")
                 || trimmedUri.startsWith("/api/v1/webhooks/")
