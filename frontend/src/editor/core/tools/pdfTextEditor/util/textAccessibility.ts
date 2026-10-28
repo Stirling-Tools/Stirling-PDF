@@ -5,7 +5,13 @@ import type {
   RetagBlocker,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { innermostMcid } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import type { TextRunSnapshot } from "@editor/tools/pdfTextEditor/types";
+import type {
+  DocumentHeading,
+  HeadingText,
+} from "@editor/tools/pdfTextEditor/util/headingOutline";
 
 /** How a run's text is tagged. */
 export type TextTag =
@@ -81,4 +87,35 @@ export function innerTags(
       return [{ key: element.key, text, start, end, role, ...options }];
     },
   );
+}
+
+/**
+ * The run and range showing a heading cut from a run's text. Runs carrying
+ * `partOf` are tried first, since reading a run's marks walks its objects.
+ */
+export function locateHeading(
+  doc: EditorDocument,
+  heading: DocumentHeading,
+): HeadingText | null {
+  if (heading.pageIndex === null) return null;
+  const pageIndex = heading.pageIndex;
+  const runs = doc.page(pageIndex).runs;
+  const likely = (run: TextRun) =>
+    heading.partOf?.includes(innermostMcid(run.tagMarks) ?? -1) ?? false;
+  const ordered = [
+    ...runs.filter(likely),
+    ...runs.filter((run) => !likely(run)),
+  ];
+  for (const run of ordered) {
+    const stretch = elementStretches(doc, pageIndex, run.id).find((s) =>
+      s.element.mcids.includes(heading.mcids[0]),
+    );
+    if (stretch) {
+      return {
+        runId: run.id,
+        range: { start: stretch.start, end: stretch.end },
+      };
+    }
+  }
+  return null;
 }

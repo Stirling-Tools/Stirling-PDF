@@ -75,6 +75,11 @@ export function HeadingOutlineSection({
   );
 }
 
+function headingText({ run, range }: OutlineEntry): string {
+  if (!run) return "";
+  return range ? run.text.slice(range.start, range.end) : run.text;
+}
+
 function OutlineRow({
   entry,
   onSelect,
@@ -84,7 +89,7 @@ function OutlineRow({
 }) {
   const { t } = useTranslation();
   const label =
-    entry.run?.text.replace(/\s+/g, " ").trim() ||
+    headingText(entry).replace(/\s+/g, " ").trim() ||
     (entry.pageIndex === null
       ? t(
           "pdfTextEditor.inspector.accessibility.outline.empty",

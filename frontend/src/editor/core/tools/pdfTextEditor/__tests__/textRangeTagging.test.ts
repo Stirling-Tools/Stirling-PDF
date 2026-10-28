@@ -26,7 +26,10 @@ import {
   TEXT_RANGE_TYPES,
   type StructureElement,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
-import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
+import {
+  isHeadingType,
+  type StructureType,
+} from "@editor/tools/pdfTextEditor/model/structureTypes";
 import { elementKids } from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
 import {
   RawPdf,
@@ -39,7 +42,10 @@ import {
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
+import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
+import { headingOutline } from "@editor/tools/pdfTextEditor/util/headingOutline";
+import { locateHeading } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import {
   buildClassicPdf,
   streamBody,
@@ -143,6 +149,13 @@ function tagRange(
 async function savedBytes(doc: EditorDocument): Promise<Uint8Array> {
   const { blob } = await exportToBlob(doc, "cut.pdf");
   return new Uint8Array(await blob.arrayBuffer());
+}
+
+async function savedHeadings(doc: EditorDocument): Promise<string[]> {
+  const structure = await readFileStructure(await savedBytes(doc));
+  return structure!.blocks.flatMap(({ type }) =>
+    type && isHeadingType(type) ? [type] : [],
+  );
 }
 
 /** Each MCID's text on page 0, its objects read in page order. */
@@ -254,6 +267,40 @@ describe("tagging part of an element's text", () => {
     expect(kidsOf(pdf, 7)).toEqual(["/H1", "/P", "/H2", "/P", "/P"]);
     expect(kidsOf(pdf, 10)).toEqual(["2"]);
     expect(kidsOf(pdf, kidNamed(pdf, 7, "H2"))).toEqual(["4"]);
+  });
+
+  test("outlines two headings cut from one paragraph as the save orders them", async () => {
+    const doc = await open(cutPdf());
+    const history = new HistoryStack();
+    tagRange(doc, history, "Methods", "H2");
+    tagRange(doc, history, "sampled", "H3");
+    expect(doc.headings()!.map((h) => h.type)).toEqual(["H1", "H2", "H3"]);
+    expect(await savedHeadings(doc)).toEqual(["H1", "H2", "H3"]);
+  });
+
+  test("outlines the part of a split heading read after the cut", async () => {
+    const doc = await open(cutPdf());
+    doc.setRetag(0, 1, "H2");
+    tagRange(doc, new HistoryStack(), "every", "P");
+    expect(doc.headings()!.map((h) => h.type)).toEqual(["H1", "H2", "H2"]);
+    expect(await savedHeadings(doc)).toEqual(["H1", "H2", "H2"]);
+  });
+
+  test("finds the text of a heading cut from a run", async () => {
+    const doc = await open(cutPdf());
+    tagRange(doc, new HistoryStack(), "Methods", "H2");
+    const { entries } = headingOutline(
+      doc.headings()!,
+      [
+        {
+          pageIndex: 0,
+          runs: doc.page(0).runs.map((r) => r.snapshot()),
+        } as PageSnapshot,
+      ],
+      (heading) => locateHeading(doc, heading),
+    );
+    const { run, range } = entries[1];
+    expect(run!.text.slice(range!.start, range!.end)).toBe("Methods");
   });
 
   test("splits a paragraph in two around a heading in its middle", async () => {

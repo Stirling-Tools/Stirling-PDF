@@ -8,6 +8,7 @@ import {
   headingOutline,
   type HeadingOutline,
 } from "@editor/tools/pdfTextEditor/util/headingOutline";
+import { locateHeading } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 
 /**
  * The document's heading outline, null when its structure tree could not be
@@ -20,22 +21,29 @@ export function useHeadingOutline(
   shown: boolean,
 ) {
   const outline = useMemo((): HeadingOutline | null => {
-    const headings = shown ? store.document?.headings() : null;
-    return headings ? headingOutline(headings, state.pages) : null;
+    const doc = shown ? store.document : null;
+    const headings = doc?.headings();
+    return doc && headings
+      ? headingOutline(headings, state.pages, (h) => locateHeading(doc, h))
+      : null;
   }, [store, state.pages, shown]);
 
   /** Selects the run showing heading `index`, reading its page first. */
   const selectHeading = useCallback(
     (index: number) => {
-      const headings = store.document?.headings();
+      const doc = store.document;
+      const headings = doc?.headings();
       const pageIndex = headings?.[index]?.pageIndex;
-      if (!headings || pageIndex == null) return;
+      if (!doc || !headings || pageIndex == null) return;
       ensurePageRead(store, pageIndex);
-      const { run } = headingOutline(headings, store.getState().pages).entries[
-        index
-      ];
+      const { run, range } = headingOutline(
+        headings,
+        store.getState().pages,
+        (h) => locateHeading(doc, h),
+      ).entries[index];
       if (!run) return;
       store.selection.selectOne(run.id);
+      if (range) store.selection.setTextRange(run.id, range);
       // A page read just now has no overlay until React commits it.
       window.requestAnimationFrame(() =>
         document

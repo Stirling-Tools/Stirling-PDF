@@ -4,6 +4,7 @@ import {
 } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type {
   PageSnapshot,
+  TextRange,
   TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 
@@ -14,6 +15,14 @@ export interface DocumentHeading {
   pageIndex: number | null;
   /** Its MCIDs on that page. */
   mcids: number[];
+  /** Set when its text was cut from a run's: MCIDs that run likely carries. */
+  partOf?: number[];
+}
+
+/** Where a heading whose text is part of a run's is shown. */
+export interface HeadingText {
+  runId: string;
+  range: TextRange;
 }
 
 /**
@@ -32,6 +41,8 @@ export interface OutlineEntry {
   pageIndex: number | null;
   /** The run showing the heading; null until its page has been read, or when it draws no text. */
   run: TextRunSnapshot | null;
+  /** The part of the run's text that is the heading's; null for all of it. */
+  range: TextRange | null;
   issue: HeadingIssue | null;
 }
 
@@ -43,11 +54,13 @@ export interface HeadingOutline {
 
 /**
  * The headings in reading order, each with the run showing it and the issue
- * a checker would report. `pages` supplies the runs.
+ * a checker would report. `pages` supplies the runs, and `locate` finds a
+ * heading set `partOf` within them.
  */
 export function headingOutline(
   headings: readonly DocumentHeading[],
   pages: readonly PageSnapshot[],
+  locate: (heading: DocumentHeading) => HeadingText | null = () => null,
 ): HeadingOutline {
   let previous: number | null = null;
   const entries = headings.map((heading): OutlineEntry => {
@@ -56,7 +69,7 @@ export function headingOutline(
       type: heading.type,
       level,
       pageIndex: heading.pageIndex,
-      run: runShowing(heading, pages),
+      ...runShowing(heading, pages, locate),
       issue: null,
     };
     if (level === null) return entry;
@@ -77,14 +90,22 @@ function issueAt(level: number, previous: number | null): HeadingIssue | null {
 function runShowing(
   heading: DocumentHeading,
   pages: readonly PageSnapshot[],
-): TextRunSnapshot | null {
-  if (heading.pageIndex === null) return null;
-  const runs = pages.find((p) => p.pageIndex === heading.pageIndex)?.runs;
-  return (
-    runs?.find(
-      (run) => run.mcid !== undefined && heading.mcids.includes(run.mcid),
-    ) ?? null
+  locate: (heading: DocumentHeading) => HeadingText | null,
+): { run: TextRunSnapshot | null; range: TextRange | null } {
+  const runs =
+    heading.pageIndex === null
+      ? undefined
+      : pages.find((p) => p.pageIndex === heading.pageIndex)?.runs;
+  if (!runs) return { run: null, range: null };
+  const text = heading.partOf ? locate(heading) : null;
+  if (text) {
+    const run = runs.find((r) => r.id === text.runId) ?? null;
+    return { run, range: run && text.range };
+  }
+  const run = runs.find(
+    (r) => r.mcid !== undefined && heading.mcids.includes(r.mcid),
   );
+  return { run: run ?? null, range: null };
 }
 
 /** Headings carrying an issue, the document-wide mixed numbering counted once. */

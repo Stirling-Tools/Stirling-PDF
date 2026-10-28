@@ -28,6 +28,7 @@ const entry = (
   level,
   pageIndex: 1,
   run: text === null ? null : ({ id: text, text } as TextRunSnapshot),
+  range: null,
   issue,
 });
 

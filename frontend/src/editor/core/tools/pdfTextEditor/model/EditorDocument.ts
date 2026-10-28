@@ -209,7 +209,7 @@ export class EditorDocument {
    */
   headings(): DocumentHeading[] | null {
     if (!this.fileStructure) return null;
-    const blocks = this.fileStructure.blocks.map(
+    const blocks: OutlineBlock[] = this.fileStructure.blocks.map(
       ({ key, type, pageIndex, mcids }) => ({
         key,
         type: this.retaggedAs(key) ?? type,
@@ -229,21 +229,14 @@ export class EditorDocument {
         });
       }
       for (const edit of this.cutEdits(pageIndex, structure)) {
-        const { type, from, before } = edit.cut!;
-        if (type === null || isInlineType(type)) continue;
-        const owner = structure.element(from[0])!.block.key;
-        const at = blocks.findIndex((block) => block.key === owner);
-        const after = before === null ? 0 : 1;
-        blocks.splice(at < 0 ? blocks.length : at + after, 0, {
-          key: structure.block(edit.mcid)!.key,
-          type,
-          pageIndex,
-          mcids: [edit.mcid],
-        });
+        const owner = structure.element(edit.cut!.from[0])!.block.key;
+        applyCut(blocks, pageIndex, edit, owner, structure);
       }
     }
-    return blocks.flatMap(({ type, pageIndex, mcids }) =>
-      isHeadingType(type) ? [{ type, pageIndex, mcids }] : [],
+    return blocks.flatMap(({ type, pageIndex, mcids, partOf }) =>
+      isHeadingType(type)
+        ? [{ type, pageIndex, mcids, ...(partOf && { partOf }) }]
+        : [],
     );
   }
 
@@ -433,6 +426,75 @@ export class EditorDocument {
     this.ownedFonts.clear();
     closeDocAndFreeBuffer(this.module, this.docPtr);
     releaseScratch(this.module);
+  }
+}
+
+interface OutlineBlock {
+  key: string;
+  /** Null for an untyped block. */
+  type: StructureType | null;
+  pageIndex: number | null;
+  /** In reading order. */
+  mcids: number[];
+  partOf?: number[];
+}
+
+/**
+ * Change `blocks` as cutElements changes the tree for `edit`: an inline or
+ * removed cut stays in its owner; any other splits the owner around it, the
+ * owner keeping what is read before, a block of the owner's type taking what
+ * is read after. Must stay in step with cutElements.
+ */
+function applyCut(
+  blocks: OutlineBlock[],
+  pageIndex: number,
+  edit: StructureEdit,
+  ownerKey: string,
+  structure: PageStructure,
+): void {
+  const { type, from, before, after } = edit.cut!;
+  // By MCID before key: a split owner's key stays on only one of its parts.
+  let at = blocks.findIndex(
+    (block) => block.pageIndex === pageIndex && block.mcids.includes(from[0]),
+  );
+  if (at < 0) at = blocks.findIndex((block) => block.key === ownerKey);
+  const owner = blocks.at(at);
+  const first = owner?.mcids.indexOf(from[0]) ?? -1;
+  const last = owner?.mcids.indexOf(from.at(-1)!) ?? -1;
+  const read = owner
+    ? [...owner.mcids.slice(0, first), ...(before === null ? [] : [before])]
+    : [];
+  const later = owner
+    ? [...(after === null ? [] : [after]), ...owner.mcids.slice(last + 1)]
+    : [];
+
+  if (type === null || isInlineType(type)) {
+    if (owner && first >= 0) owner.mcids = [...read, edit.mcid, ...later];
+    return;
+  }
+  const cut: OutlineBlock = {
+    key: structure.block(edit.mcid)!.key,
+    type,
+    pageIndex,
+    mcids: [edit.mcid],
+  };
+  if (!owner || first < 0 || last < 0) {
+    blocks.splice(at < 0 ? blocks.length : at + 1, 0, cut);
+    return;
+  }
+  cut.partOf = [...owner.mcids, ...read, ...later];
+  if (read.length === 0 && later.length === 0) {
+    blocks[at] = { ...cut, key: owner.key };
+  } else if (read.length === 0) {
+    owner.mcids = later;
+    blocks.splice(at, 0, cut);
+  } else if (later.length === 0) {
+    owner.mcids = read;
+    blocks.splice(at + 1, 0, cut);
+  } else {
+    owner.mcids = read;
+    const rest = { ...owner, key: `${owner.key}:rest`, mcids: later };
+    blocks.splice(at + 1, 0, cut, rest);
   }
 }
 
