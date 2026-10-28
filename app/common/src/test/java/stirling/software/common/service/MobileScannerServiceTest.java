@@ -145,16 +145,19 @@ class MobileScannerServiceTest {
         }
 
         @Test
-        @DisplayName("isLiveSession is true only for created, unexpired sessions")
-        void isLiveSession() {
+        @DisplayName("remainingSessionBytes reports a live session's room and -1 otherwise")
+        void remainingSessionBytes() throws IOException {
             service.createSession("live");
+            service.uploadFiles("live", List.of(file("a.txt", "xyz")));
             service.createSession("dead");
             forceCreatedAt("dead", System.currentTimeMillis() - (20 * 60 * 1000L));
 
-            assertTrue(service.isLiveSession("live"));
-            assertFalse(service.isLiveSession("dead"));
-            assertFalse(service.isLiveSession("never"));
-            assertFalse(service.isLiveSession(null));
+            assertEquals(
+                    MobileScannerService.MAX_SESSION_BYTES - 3,
+                    service.remainingSessionBytes("live"));
+            assertEquals(-1, service.remainingSessionBytes("dead"));
+            assertEquals(-1, service.remainingSessionBytes("never"));
+            assertEquals(-1, service.remainingSessionBytes(null));
         }
 
         @Test

@@ -34,8 +34,6 @@ public class MobileScannerService {
     static final int MAX_FILES_PER_SESSION = 500;
     static final long MAX_TOTAL_BYTES = 2L * 1024 * 1024 * 1024; // 2 GB
     static final int MAX_ACTIVE_SESSIONS = 1000;
-    // A whole session's worth of files plus room for the multipart part headers.
-    public static final long MAX_UPLOAD_REQUEST_BYTES = MAX_SESSION_BYTES + 1024 * 1024;
     private static final Pattern FILENAME_SANITIZE_PATTERN = Pattern.compile("[^a-zA-Z0-9._-]");
     private static final Pattern SESSION_ID_VALIDATION_PATTERN = Pattern.compile("[a-zA-Z0-9-]+");
     private static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("[.][^.]+$");
@@ -446,10 +444,16 @@ public class MobileScannerService {
     }
 
     /**
-     * @return true if uploads to this session would be accepted, ignoring storage caps
+     * @return bytes the session can still accept, or -1 if it does not exist or has expired
      */
-    public boolean isLiveSession(String sessionId) {
-        return sessionId != null && liveSession(sessionId) != null;
+    public long remainingSessionBytes(String sessionId) {
+        if (sessionId == null) {
+            return -1;
+        }
+        synchronized (storageLock) {
+            SessionData session = liveSession(sessionId);
+            return session == null ? -1 : MAX_SESSION_BYTES - session.storedBytes;
+        }
     }
 
     private SessionData liveSession(String sessionId) {

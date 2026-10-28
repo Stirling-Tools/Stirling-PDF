@@ -233,6 +233,14 @@ class RequestUriUtilsTest {
                 RequestUriUtils.isPublicAuthEndpoint(
                         "/api/v1/mobile-scanner/download/abc/a.jpg", ""));
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/session/abc", ""));
+        // Anything beyond a bare session id stays protected, whatever the firewall allows.
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/upload/abc/../../files/abc", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/upload/abc/extra", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/upload/", ""));
     }
 
     @Test

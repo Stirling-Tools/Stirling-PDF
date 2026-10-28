@@ -32,6 +32,8 @@ import stirling.software.common.util.RequestUriUtils;
 public class MobileScannerUploadFilter extends OncePerRequestFilter {
 
     private static final String UPLOAD_PREFIX = "/api/v1/mobile-scanner/upload/";
+    // Room for the multipart boundaries and part headers on top of the file bytes.
+    private static final long MULTIPART_OVERHEAD_BYTES = 1024 * 1024;
 
     private final MobileScannerService mobileScannerService;
     private final ApplicationProperties applicationProperties;
@@ -53,7 +55,8 @@ public class MobileScannerUploadFilter extends OncePerRequestFilter {
         String path =
                 RequestUriUtils.normalizeUri(request.getContextPath(), request.getRequestURI());
         String sessionId = path.substring(UPLOAD_PREFIX.length());
-        if (!mobileScannerService.isLiveSession(sessionId)) {
+        long remaining = mobileScannerService.remainingSessionBytes(sessionId);
+        if (remaining < 0) {
             reject(response, HttpStatus.BAD_REQUEST, "Session not found or expired");
             return;
         }
@@ -62,7 +65,7 @@ public class MobileScannerUploadFilter extends OncePerRequestFilter {
             reject(response, HttpStatus.LENGTH_REQUIRED, "Content-Length is required");
             return;
         }
-        if (length > MobileScannerService.MAX_UPLOAD_REQUEST_BYTES) {
+        if (length > remaining + MULTIPART_OVERHEAD_BYTES) {
             reject(response, HttpStatus.CONTENT_TOO_LARGE, "Session upload limit reached");
             return;
         }

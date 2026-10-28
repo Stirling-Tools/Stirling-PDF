@@ -19,6 +19,9 @@ import stirling.software.common.service.MobileScannerService;
 
 class MobileScannerUploadFilterTest {
 
+    private static final long ROOM = 10L * 1024 * 1024;
+    private static final long OVERHEAD = 1024 * 1024;
+
     private final MobileScannerService service = mock(MobileScannerService.class);
     private final ApplicationProperties properties = new ApplicationProperties();
     private final FilterChain chain = mock(FilterChain.class);
@@ -28,7 +31,8 @@ class MobileScannerUploadFilterTest {
     @BeforeEach
     void setUp() {
         properties.getSystem().setEnableMobileScanner(true);
-        when(service.isLiveSession("live")).thenReturn(true);
+        when(service.remainingSessionBytes(any())).thenReturn(-1L);
+        when(service.remainingSessionBytes("live")).thenReturn(ROOM);
     }
 
     @Test
@@ -48,12 +52,16 @@ class MobileScannerUploadFilterTest {
     }
 
     @Test
-    void rejectsBodyLargerThanASessionCanHold() throws Exception {
-        MockHttpServletResponse response =
-                run(upload("live", MobileScannerService.MAX_UPLOAD_REQUEST_BYTES + 1));
+    void rejectsBodyLargerThanTheSessionsRemainingRoom() throws Exception {
+        MockHttpServletResponse response = run(upload("live", ROOM + OVERHEAD + 1));
 
         assertEquals(413, response.getStatus());
         verify(chain, never()).doFilter(any(), any());
+    }
+
+    @Test
+    void allowsMultipartOverheadOnTopOfTheRemainingRoom() throws Exception {
+        assertEquals(200, run(upload("live", ROOM + OVERHEAD)).getStatus());
     }
 
     @Test
