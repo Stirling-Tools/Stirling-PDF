@@ -40,6 +40,7 @@ public class ConnectedAccountController {
 
     static final String CALLBACK_PATH = "/api/v1/connected-accounts/callback/";
     private static final String NONCE_COOKIE = "stirling_connect_nonce";
+    private static final String CONNECT_FAILED = "The account could not be connected.";
     private static final String PERSONAL_MICROSOFT_TENANT = "9188040d-6c67-4c5b-b112-36a304b66dad";
 
     private final ConnectedAccountService service;
@@ -92,13 +93,23 @@ public class ConnectedAccountController {
             @CookieValue(name = NONCE_COOKIE, required = false) String nonce) {
         ResponseCookie clearNonce =
                 ResponseCookie.from(NONCE_COOKIE, "").path("/").maxAge(Duration.ZERO).build();
+        String providerId = "unknown";
         String status;
         String message;
         try {
             CloudProvider cloud = provider(provider);
+            providerId = cloud.id();
             if (error != null) {
                 status = "access_denied".equals(error) ? "cancelled" : "error";
-                message = errorDescription != null ? errorDescription : error;
+                message =
+                        "cancelled".equals(status)
+                                ? "Sign-in was cancelled."
+                                : "The provider refused the sign-in.";
+                log.info(
+                        "{} sign-in refused: {} {}",
+                        providerId,
+                        forLog(error),
+                        forLog(errorDescription));
             } else if (code == null || state == null) {
                 status = "error";
                 message = "The sign-in response was incomplete.";
@@ -108,12 +119,12 @@ public class ConnectedAccountController {
                 message = "Connected " + (account.getEmail() == null ? "" : account.getEmail());
             }
         } catch (IllegalArgumentException | IllegalStateException | IOException e) {
-            log.warn("Connecting a {} account failed: {}", provider, e.getMessage());
+            log.warn("Connecting a {} account failed: {}", providerId, forLog(e.getMessage()));
             status = "error";
-            message = e.getMessage();
+            message = CONNECT_FAILED;
         } catch (ResponseStatusException e) {
             status = "error";
-            message = e.getReason();
+            message = CONNECT_FAILED;
         }
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clearNonce.toString())
@@ -121,7 +132,7 @@ public class ConnectedAccountController {
                 .contentType(MediaType.TEXT_HTML)
                 .body(
                         callbackPage(
-                                provider,
+                                providerId,
                                 status,
                                 message,
                                 publicBaseUrl() + "/settings/connectedAccounts"));
@@ -147,6 +158,10 @@ public class ConnectedAccountController {
                     : configured;
         }
         return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+    }
+
+    private static String forLog(String value) {
+        return value == null ? "" : value.replaceAll("[\\r\\n\\t]", "_");
     }
 
     private static CloudProvider provider(String id) {
