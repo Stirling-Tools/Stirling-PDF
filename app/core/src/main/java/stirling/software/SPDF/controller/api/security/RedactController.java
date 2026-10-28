@@ -99,11 +99,9 @@ public class RedactController {
             operationId = "redactPdfManual",
             summary = "Redacts areas and pages in a PDF document",
             description =
-                    "Redacts manually specified areas and whole pages. Text at least half inside"
-                            + " an area, and the images under it, are removed from the file before"
-                            + " the area is painted, and listed pages are wiped of all content. A"
-                            + " page that cannot be redacted this way is rasterized instead."
-                            + " Optionally rasterizes every page.")
+                    "This endpoint redacts content from a PDF file based on manually specified"
+                            + " areas. Users can specify areas to redact and optionally convert the PDF to an"
+                            + " image.")
     public ResponseEntity<Resource> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
 
@@ -313,10 +311,8 @@ public class RedactController {
             operationId = "redactExecute",
             summary = "Execute a unified redaction plan on a PDF",
             description =
-                    "Unified redaction endpoint that accepts exact strings, regex patterns, ranges,"
-                            + " areas and page numbers in a single request. With the default AUTO"
-                            + " strategy every redaction removes the covered content from the file;"
-                            + " OVERLAY_ONLY only paints boxes over it.")
+                    "Unified redaction endpoint that accepts exact strings, regex patterns, and"
+                            + " page numbers in a single request. Supports execution strategy hints.")
     public ResponseEntity<Resource> executeRedaction(@ModelAttribute RedactExecuteRequest request)
             throws IOException {
 

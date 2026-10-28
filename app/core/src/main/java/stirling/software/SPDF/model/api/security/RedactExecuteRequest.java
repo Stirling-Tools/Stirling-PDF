@@ -31,31 +31,25 @@ public class RedactExecuteRequest extends PDFFile {
 
     @Schema(
             description =
-                    "1-indexed page numbers to wipe entirely (all content and annotations removed"
-                            + " from those pages).")
+                    "1-indexed page numbers to wipe entirely (all content removed from those pages).")
     private List<Integer> wipePages = new ArrayList<>();
 
     @Schema(
             description =
                     "Text ranges to redact by specifying a start and end anchor phrase. All"
-                            + " content between the two phrases (inclusive) is removed from the"
-                            + " file and boxed. Anchors work best when short and unique. They must"
-                            + " appear verbatim in the document.")
+                            + " content between the two phrases (inclusive) is redacted. Anchors"
+                            + " work best when short and unique. They must appear"
+                            + " verbatim in the document.")
     private List<TextRange> ranges = new ArrayList<>();
 
     @Schema(
             description =
-                    "Rectangular areas to redact, each defined by a page number and bounding box"
-                            + " coordinates. The text and image pixels inside are removed from the"
-                            + " file and the area is painted.")
+                    "Rectangular areas to black out, each defined by a page number and bounding box coordinates.")
     private List<ImageBox> imageBoxes = new ArrayList<>();
 
     @Schema(
             description =
-                    "1-indexed page numbers to redact all detected images from. Each image is"
-                            + " removed from the file and its area painted. Pass an empty list to"
-                            + " redact images from every page. Omit or pass null to skip image"
-                            + " redaction entirely.")
+                    "1-indexed page numbers to redact all detected images from. Pass an empty list to redact images from every page. Omit or pass null to skip image redaction entirely.")
     private List<Integer> redactImagePages;
 
     @Schema(description = "Redaction style options")
@@ -96,8 +90,7 @@ public class RedactExecuteRequest extends PDFFile {
                     float x1,
             @Schema(
                             description =
-                                    "Y coordinate of one horizontal edge of the redaction rectangle"
-                                            + " in PDF user-space points (origin bottom-left).",
+                                    "Top y coordinate of the redaction rectangle in PDF user-space points.",
                             requiredMode = Schema.RequiredMode.REQUIRED)
                     float y1,
             @Schema(
@@ -107,8 +100,7 @@ public class RedactExecuteRequest extends PDFFile {
                     float x2,
             @Schema(
                             description =
-                                    "Y coordinate of the other horizontal edge of the redaction"
-                                            + " rectangle in PDF user-space points.",
+                                    "Bottom y coordinate of the redaction rectangle in PDF user-space points.",
                             requiredMode = Schema.RequiredMode.REQUIRED)
                     float y2) {}
 
@@ -129,21 +121,13 @@ public class RedactExecuteRequest extends PDFFile {
                 defaultValue = "0")
         private float padding = 0f;
 
-        @Schema(
-                description =
-                        "Rasterize every page of the output. Redacted content is removed without"
-                                + " it; this also turns the rest of each page into an image.",
-                defaultValue = "false")
+        @Schema(description = "Rasterize output to prevent text extraction", defaultValue = "false")
         private boolean convertToImage = false;
 
         @Schema(
                 description =
-                        "AUTO removes the covered content of every redaction from the file (text"
-                                + " counts when at least half of it is inside a box); a page that"
-                                + " cannot be redacted this way is rasterized instead."
-                                + " OVERLAY_ONLY only paints boxes and leaves"
-                                + " the covered text and images extractable. IMAGE_FINALIZE"
-                                + " rasterizes every page.",
+                        "Execution strategy hint for the redaction pipeline. OVERLAY_ONLY only draws"
+                                + " boxes and leaves the covered content in the file.",
                 defaultValue = "AUTO")
         private RedactionStrategy strategy = RedactionStrategy.AUTO;
     }

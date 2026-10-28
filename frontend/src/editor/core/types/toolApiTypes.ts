@@ -656,7 +656,7 @@ export interface IntegrationPurviewReadLabelRequest {
 export type ListAttachmentsRequest = Record<string, never>;
 export interface ManualRedactPdfRequest {
   /**
-   * Rasterize every page of the output. The areas and pages are removed without it; this also turns the rest of each page into an image.
+   * Convert the redacted PDF to an image
    */
   convertPDFToImage?: boolean;
   /**
@@ -664,16 +664,16 @@ export interface ManualRedactPdfRequest {
    */
   pageNumbers?: string;
   /**
-   * The color used to fill the pages listed in pageNumbers, which are wiped of all content and annotations
+   * The color used to fully redact certain pages
    */
   pageRedactionColor?: string;
   /**
-   * Areas to redact. Text at least half inside an area, and the image content under it, is removed from the file and the area is painted; a page that cannot be redacted this way is rasterized instead.
+   * A list of areas that should be redacted
    */
   redactions: RedactionArea[];
 }
 /**
- * Areas to redact. Text at least half inside an area, and the image content under it, is removed from the file and the area is painted; a page that cannot be redacted this way is rasterized instead.
+ * A list of areas that should be redacted
  */
 export interface RedactionArea {
   /**
@@ -1139,15 +1139,15 @@ export interface RearrangePagesRequest {
 }
 export interface RedactExecuteRequest {
   /**
-   * Rectangular areas to redact, each defined by a page number and bounding box coordinates. The text and image pixels inside are removed from the file and the area is painted.
+   * Rectangular areas to black out, each defined by a page number and bounding box coordinates.
    */
   imageBoxes?: ImageBox[];
   /**
-   * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is removed from the file and boxed. Anchors work best when short and unique. They must appear verbatim in the document.
+   * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.
    */
   ranges?: TextRange[];
   /**
-   * 1-indexed page numbers to redact all detected images from. Each image is removed from the file and its area painted. Pass an empty list to redact images from every page. Omit or pass null to skip image redaction entirely.
+   * 1-indexed page numbers to redact all detected images from. Pass an empty list to redact images from every page. Omit or pass null to skip image redaction entirely.
    */
   redactImagePages?: number[];
   /**
@@ -1160,12 +1160,12 @@ export interface RedactExecuteRequest {
    */
   textValues?: string[];
   /**
-   * 1-indexed page numbers to wipe entirely (all content and annotations removed from those pages).
+   * 1-indexed page numbers to wipe entirely (all content removed from those pages).
    */
   wipePages?: number[];
 }
 /**
- * Rectangular areas to redact, each defined by a page number and bounding box coordinates. The text and image pixels inside are removed from the file and the area is painted.
+ * Rectangular areas to black out, each defined by a page number and bounding box coordinates.
  */
 export interface ImageBox {
   /**
@@ -1181,16 +1181,16 @@ export interface ImageBox {
    */
   x2: number;
   /**
-   * Y coordinate of one horizontal edge of the redaction rectangle in PDF user-space points (origin bottom-left).
+   * Top y coordinate of the redaction rectangle in PDF user-space points.
    */
   y1: number;
   /**
-   * Y coordinate of the other horizontal edge of the redaction rectangle in PDF user-space points.
+   * Bottom y coordinate of the redaction rectangle in PDF user-space points.
    */
   y2: number;
 }
 /**
- * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is removed from the file and boxed. Anchors work best when short and unique. They must appear verbatim in the document.
+ * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.
  */
 export interface TextRange {
   /**
@@ -1211,7 +1211,7 @@ export interface RedactStyle {
    */
   color?: string;
   /**
-   * Rasterize every page of the output. Redacted content is removed without it; this also turns the rest of each page into an image.
+   * Rasterize output to prevent text extraction
    */
   convertToImage?: boolean;
   /**
@@ -1219,7 +1219,7 @@ export interface RedactStyle {
    */
   padding?: number;
   /**
-   * AUTO removes the covered content of every redaction from the file (text counts when at least half of it is inside a box); a page that cannot be redacted this way is rasterized instead. OVERLAY_ONLY only paints boxes and leaves the covered text and images extractable. IMAGE_FINALIZE rasterizes every page.
+   * Execution strategy hint for the redaction pipeline. OVERLAY_ONLY only draws boxes and leaves the covered content in the file.
    */
   strategy?: "AUTO" | "OVERLAY_ONLY" | "IMAGE_FINALIZE";
 }
