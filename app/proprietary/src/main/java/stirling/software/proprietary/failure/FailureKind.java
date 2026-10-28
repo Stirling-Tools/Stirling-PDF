@@ -92,10 +92,6 @@ public enum FailureKind {
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
-    /**
-     * The format checks a tool runs before it reads anything: a PDF tool handed a .docx, a comic
-     * reader handed something that is not the archive it names.
-     */
     INPUT_RIGHTS_MANAGED(
             FailureStage.INPUT,
             FailureSeverity.ERROR,
@@ -109,6 +105,10 @@ public enum FailureKind {
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
+    /**
+     * The format checks a tool runs before it reads anything: a PDF tool handed a .docx, a comic
+     * reader handed something that is not the archive it names.
+     */
     INPUT_WRONG_TYPE(
             FailureStage.INPUT,
             FailureSeverity.ERROR,
