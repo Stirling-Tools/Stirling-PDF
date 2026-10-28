@@ -55,6 +55,22 @@ public abstract class CloudDriveContract<L extends CloudLocation, F extends Clou
     }
 
     @Test
+    void deliveryGivesUpWhenEveryNameIsTaken() throws Exception {
+        put("Out", "busy.pdf", "original");
+        for (int i = 1; i < 100; i++) {
+            put("Out", "busy (" + i + ").pdf", "original");
+        }
+
+        assertThrows(
+                IOException.class,
+                () ->
+                        sink.deliver(
+                                new OutputDelivery("run-1", POLICY),
+                                List.of(named("new", "busy.pdf")),
+                                new OutputSpec(type(), options("Out", Map.of()))));
+    }
+
+    @Test
     void withoutAModeOriginalsAreKept() throws Exception {
         put("Inbox", "a.pdf", "first");
 
