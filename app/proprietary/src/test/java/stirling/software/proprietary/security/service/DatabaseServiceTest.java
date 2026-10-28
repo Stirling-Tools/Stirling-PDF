@@ -296,6 +296,36 @@ class DatabaseServiceTest {
     }
 
     @Test
+    void validateSqlContentAcceptsQuotedNamesAndOtherH2Syntax() throws IOException {
+        Path script = tempDir.resolve("h2-syntax.sql");
+        Files.writeString(
+                script,
+                "// it's an H2 line comment; with a semicolon\n"
+                        + "CREATE CACHED TABLE \"PUBLIC\".\"O'Brien\"(\"a;b\" INT, \"c\"\"d\" INT);\n"
+                        + "CREATE TABLE A$$B(ID INT);\n"
+                        + "INSERT INTO \"PUBLIC\".\"O'Brien\" VALUES(1, 2);\n"
+                        + "INSERT INTO A$$B VALUES(1);\n"
+                        + "INSERT INTO \"PUBLIC\".\"AUDIT_EVENTS\"(\"ID\", \"DATA\") VALUES(1, $$it's; fine$$);\n");
+
+        ReflectionTestUtils.invokeMethod(databaseService, "validateSqlContent", script);
+    }
+
+    @Test
+    void validateSqlContentRejectsStatementsH2ScriptDoesNotWrite() throws IOException {
+        for (String statement : List.of("SELECT 1;\n", "SET MODE MySQL;\n")) {
+            Path script = tempDir.resolve("unexpected-statement.sql");
+            Files.writeString(script, statement);
+
+            assertThatThrownBy(
+                            () ->
+                                    ReflectionTestUtils.invokeMethod(
+                                            databaseService, "validateSqlContent", script))
+                    .as(statement)
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Test
     void validateSqlContentRejectsDeniedCodeAfterVeryLongStringLiteral() throws IOException {
         Path script = tempDir.resolve("long-literal-then-alias.sql");
         Files.writeString(
