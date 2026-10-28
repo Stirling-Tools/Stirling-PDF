@@ -745,6 +745,11 @@ public class CustomPDFDocumentFactory {
                     COSName.PAGES.equals(node.getCOSName(COSName.TYPE))
                             || node.containsKey(COSName.KIDS);
             if (!isTreeNode) {
+                // get() gives an untyped leaf /Type /Page but throws on any other type
+                COSName type = node.getCOSName(COSName.TYPE);
+                if (type != null && !COSName.PAGE.equals(type)) {
+                    continue;
+                }
                 if (++pages >= stopAt) {
                     return pages;
                 }

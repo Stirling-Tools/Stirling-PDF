@@ -77,6 +77,35 @@ class CustomPDFDocumentFactoryPageTreeTest {
     }
 
     @Test
+    void refusesACountThatIncludesANonPageLeaf() throws Exception {
+        try (PDDocument document = withPages(1)) {
+            COSDictionary root = root(document);
+            COSDictionary annotation = new COSDictionary();
+            annotation.setItem(COSName.TYPE, COSName.ANNOT);
+            root.getCOSArray(COSName.KIDS).add(annotation);
+            root.setInt(COSName.COUNT, 2);
+
+            assertThatThrownBy(() -> CustomPDFDocumentFactory.rejectInflatedPageCount(document))
+                    .isInstanceOf(PdfCorruptedException.class);
+        }
+    }
+
+    @Test
+    void countsAnUntypedLeafAsAPage() throws Exception {
+        try (PDDocument document = withPages(1)) {
+            COSDictionary root = root(document);
+            COSDictionary untyped = new COSDictionary();
+            untyped.setItem(COSName.MEDIA_BOX, new PDPage().getMediaBox().getCOSArray());
+            root.getCOSArray(COSName.KIDS).add(untyped);
+            root.setInt(COSName.COUNT, 2);
+
+            assertThatCode(() -> CustomPDFDocumentFactory.rejectInflatedPageCount(document))
+                    .doesNotThrowAnyException();
+            assertThatCode(() -> document.getPage(1)).doesNotThrowAnyException();
+        }
+    }
+
+    @Test
     void acceptsALeafListedTwiceWhenTheCountAgrees() throws Exception {
         try (PDDocument document = withPages(1)) {
             COSDictionary root = root(document);
