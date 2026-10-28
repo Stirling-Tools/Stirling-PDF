@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +44,11 @@ import stirling.software.jpdfium.model.Rect;
 import stirling.software.jpdfium.text.PdfTextExtractor;
 import stirling.software.jpdfium.text.TextChar;
 
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+
 /**
  * Box-shaped redaction: areas, whole pages, found text blocks and image boxes. Every box ends with
  * the content under it removed from the file or its page rasterised. Only callers that asked for a
@@ -56,10 +63,9 @@ class ManualRedactionService {
     private static final float REDACTION_WIDTH_REDUCTION_FACTOR = 0.9f;
     // Found-text blocks run from the baseline to about cap height; reach the descenders too.
     private static final float TEXT_REMOVAL_MARGIN_MULTIPLIER = 0.25f;
-    // Points a glyph may touch a box edge by before it counts as still under the box.
-    private static final float OVERLAP_TOLERANCE = 0.25f;
     // Fully transparent: JPDFium clears the region without painting it.
     private static final int UNPAINTED = 0x00000000;
+    private static final ObjectMapper JSON = JsonMapper.builder().build();
 
     private final TempFileManager tempFileManager;
 
@@ -293,28 +299,15 @@ class ManualRedactionService {
 
     private boolean clearPage(PdfDocument nativeDocument, int pageIndex, List<Box> boxes) {
         try {
-            List<TextChar> crossed = new ArrayList<>();
-            for (TextChar character :
-                    PdfTextExtractor.extractPage(nativeDocument, pageIndex).chars()) {
-                if (isGlyph(character)
-                        && overlapsAny(character, boxes)
-                        && !insideAny(character, boxes)) {
-                    crossed.add(character);
-                }
-            }
             try (PdfPage page = nativeDocument.page(pageIndex)) {
-                // JPDFium removes a glyph only when the rectangle covers all of it, so a box
-                // edge through a letter would leave it in place. Clear each such letter by its
-                // own box first, unpainted: the whole letter goes, the drawn box stays as drawn.
-                for (TextChar character : crossed) {
-                    page.redactRegion(
-                            new Rect(
-                                    character.x(),
-                                    character.y(),
-                                    character.width(),
-                                    character.height()),
-                            UNPAINTED,
-                            true);
+                // JPDFium keeps a letter a rectangle covers less than half of, and can refuse a
+                // rectangle whose edge lands in the spacing beside a letter. Clear each letter a
+                // box reaches by its own cell first, unpainted: the whole letter goes, the drawn
+                // box stays as drawn. Farthest first, so no clearing reaches into a letter that
+                // is still there.
+                List<Glyph> reached = reachedBy(glyphs(nativeDocument, page, pageIndex), boxes);
+                for (int i = reached.size() - 1; i >= 0; i--) {
+                    page.redactRegion(reached.get(i).cell(), UNPAINTED, true);
                 }
                 for (Box box : boxes) {
                     PDRectangle r = box.rect();
@@ -343,6 +336,105 @@ class ManualRedactionService {
         }
     }
 
+    /**
+     * A letter with the spacing after it: its ink box, widened to the right up to where the next
+     * letter on the line starts. A box edge in that spacing still counts as reaching the letter.
+     */
+    private record Glyph(TextChar ink, float right) {
+        Rect cell() {
+            return new Rect(ink.x(), ink.y(), right - ink.x(), ink.height());
+        }
+
+        boolean reaches(float x0, float y0, float x1, float y1) {
+            return ink.x() < x1 && right > x0 && ink.y() < y1 && ink.y() + ink.height() > y0;
+        }
+    }
+
+    private static List<Glyph> glyphs(PdfDocument nativeDocument, PdfPage page, int pageIndex) {
+        List<TextChar> chars = PdfTextExtractor.extractPage(nativeDocument, pageIndex).chars();
+        Map<Integer, float[]> origins = origins(page.extractCharPositionsJson());
+        List<Glyph> glyphs = new ArrayList<>();
+        for (int i = 0; i < chars.size(); i++) {
+            TextChar character = chars.get(i);
+            if (!isGlyph(character)) {
+                continue;
+            }
+            float right = character.x() + character.width();
+            float[] origin = origins.get(character.index());
+            float[] next = i + 1 < chars.size() ? origins.get(chars.get(i + 1).index()) : null;
+            if (origin != null
+                    && next != null
+                    && Math.abs(next[1] - origin[1]) < 0.01f
+                    && next[0] > origin[0]) {
+                // Capped at one em, so a gap to text further along the baseline is not taken.
+                right = Math.max(right, Math.min(next[0], origin[0] + character.fontSize()));
+            }
+            glyphs.add(new Glyph(character, right));
+        }
+        return glyphs;
+    }
+
+    /** Each character's text origin, keyed by its index; empty if JPDFium's JSON is unusable. */
+    private static Map<Integer, float[]> origins(String json) {
+        Map<Integer, float[]> origins = new HashMap<>();
+        try {
+            for (JsonNode node : JSON.readTree(json)) {
+                if (node.has("i") && node.has("ox") && node.has("oy")) {
+                    origins.put(
+                            node.get("i").asInt(),
+                            new float[] {
+                                (float) node.get("ox").asDouble(), (float) node.get("oy").asDouble()
+                            });
+                }
+            }
+        } catch (JacksonException e) {
+            log.warn("[redact] character origins unavailable: {}", e.getMessage());
+            origins.clear();
+        }
+        return origins;
+    }
+
+    /**
+     * The letters a box reaches without covering, and the ones clearing those would reach in turn
+     * (a letter that overhangs its neighbour's cell), in the order found.
+     */
+    private static List<Glyph> reachedBy(List<Glyph> glyphs, List<Box> boxes) {
+        Set<Glyph> reached = new LinkedHashSet<>();
+        for (Glyph glyph : glyphs) {
+            if (!insideAny(glyph.ink(), boxes) && reachesAny(glyph, boxes)) {
+                reached.add(glyph);
+            }
+        }
+        List<Glyph> order = new ArrayList<>(reached);
+        for (int i = 0; i < order.size(); i++) {
+            Rect cleared = order.get(i).cell();
+            for (Glyph glyph : glyphs) {
+                if (!reached.contains(glyph)
+                        && !insideAny(glyph.ink(), boxes)
+                        && glyph.reaches(
+                                cleared.x(),
+                                cleared.y(),
+                                cleared.x() + cleared.width(),
+                                cleared.y() + cleared.height())) {
+                    reached.add(glyph);
+                    order.add(glyph);
+                }
+            }
+        }
+        return order;
+    }
+
+    private static boolean reachesAny(Glyph glyph, List<Box> boxes) {
+        for (Box box : boxes) {
+            PDRectangle r = box.rect();
+            if (glyph.reaches(
+                    r.getLowerLeftX(), r.getLowerLeftY(), r.getUpperRightX(), r.getUpperRightY())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static boolean isGlyph(TextChar character) {
         return !character.isWhitespace() && !character.isNewline();
     }
@@ -350,11 +442,10 @@ class ManualRedactionService {
     private static boolean insideAny(TextChar character, List<Box> boxes) {
         for (Box box : boxes) {
             PDRectangle r = box.rect();
-            if (character.x() >= r.getLowerLeftX() - OVERLAP_TOLERANCE
-                    && character.x() + character.width() <= r.getUpperRightX() + OVERLAP_TOLERANCE
-                    && character.y() >= r.getLowerLeftY() - OVERLAP_TOLERANCE
-                    && character.y() + character.height()
-                            <= r.getUpperRightY() + OVERLAP_TOLERANCE) {
+            if (character.x() >= r.getLowerLeftX()
+                    && character.x() + character.width() <= r.getUpperRightX()
+                    && character.y() >= r.getLowerLeftY()
+                    && character.y() + character.height() <= r.getUpperRightY()) {
                 return true;
             }
         }
@@ -364,10 +455,10 @@ class ManualRedactionService {
     private static boolean overlapsAny(TextChar character, List<Box> boxes) {
         for (Box box : boxes) {
             PDRectangle r = box.rect();
-            if (character.x() < r.getUpperRightX() - OVERLAP_TOLERANCE
-                    && character.x() + character.width() > r.getLowerLeftX() + OVERLAP_TOLERANCE
-                    && character.y() < r.getUpperRightY() - OVERLAP_TOLERANCE
-                    && character.y() + character.height() > r.getLowerLeftY() + OVERLAP_TOLERANCE) {
+            if (character.x() < r.getUpperRightX()
+                    && character.x() + character.width() > r.getLowerLeftX()
+                    && character.y() < r.getUpperRightY()
+                    && character.y() + character.height() > r.getLowerLeftY()) {
                 return true;
             }
         }
