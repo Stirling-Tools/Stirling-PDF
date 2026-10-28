@@ -40,9 +40,15 @@ export async function saveToOneDrive(
   const form = new FormData();
   form.append("fileInput", file);
   if (target.kind === "replace") {
+    if (!target.origin.eTag) {
+      throw new OneDriveSaveError(
+        "conflict",
+        "The OneDrive version of this file is unknown, so it was not replaced.",
+      );
+    }
     form.append("driveId", target.origin.driveId);
     form.append("itemId", target.origin.itemId);
-    if (target.origin.eTag) form.append("eTag", target.origin.eTag);
+    form.append("eTag", target.origin.eTag);
   } else if (target.kind === "copy") {
     if (!target.origin.parentId) {
       throw new OneDriveSaveError(
