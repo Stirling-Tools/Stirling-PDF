@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
@@ -99,6 +100,10 @@ export function useOneDrivePicker(): UseOneDrivePickerReturn {
                 "Choose files from OneDrive",
               ),
               close: t("close", "Close"),
+              loading: t(
+                "provider.onedrive.pickerLoading",
+                "Connecting to OneDrive…",
+              ),
             },
           },
           account && !account.personal ? { accountId: account.id } : undefined,
@@ -116,6 +121,19 @@ export function useOneDrivePicker(): UseOneDrivePickerReturn {
               "provider.onedrive.errors.popupBlocked",
               "Your browser blocked the Microsoft sign-in window. Allow pop-ups for this site and try again.",
             ),
+          );
+        } else if (isAxiosError(err)) {
+          const status = err.response?.status;
+          setError(
+            status === 401 || status === 403 || status === 409
+              ? t(
+                  "provider.onedrive.errors.reconnect",
+                  "Your Microsoft account needs to sign in again. Reconnect it in Settings > Connected accounts.",
+                )
+              : t(
+                  "provider.onedrive.errors.unreachable",
+                  "Couldn't reach OneDrive. Check your connection and try again.",
+                ),
           );
         } else {
           setError(
