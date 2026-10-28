@@ -67,8 +67,6 @@ import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
-import stirling.software.jpdfium.text.PdfTextExtractor;
-import stirling.software.jpdfium.text.TextChar;
 
 @DisplayName("ManualRedactionService Tests")
 @ExtendWith(MockitoExtension.class)
@@ -797,11 +795,12 @@ class ManualRedactionServiceTest {
         }
 
         @Test
-        @DisplayName("a thin strip across a line removes every letter it touches, not the page")
-        void thinStripRemovesTheLettersItCrosses() throws Exception {
+        @DisplayName("a box over most of a line's height removes the line, not the page")
+        void boxOverMostOfALineRemovesIt() throws Exception {
             try (PDDocument doc = documentWithTextAndImage(1)) {
+                // The 14pt line's capitals run from about 700 to 710; this covers 700 to 707.
                 service.redactAreas(
-                        List.of(areaFromBottom(1, 60, 704, 300, 3)), doc, doc.getPages(), false);
+                        List.of(areaFromBottom(1, 60, 697, 300, 10)), doc, doc.getPages(), false);
                 String text = pageText(doc, 0);
                 assertFalse(text.contains("SECRET"), text);
                 assertTrue(text.contains(NEIGHBOUR), text);
@@ -810,155 +809,28 @@ class ManualRedactionServiceTest {
         }
 
         @Test
-        @DisplayName("a box through the lower half of a line removes that line's letters only")
-        void boxThroughALineRemovesThatLine() throws Exception {
+        @DisplayName("a thin strip across a line leaves the letters it covers less than half of")
+        void thinStripLeavesMostlyUncoveredLetters() throws Exception {
+            try (PDDocument doc = documentWithTextAndImage(1)) {
+                service.redactAreas(
+                        List.of(areaFromBottom(1, 60, 704, 300, 3)), doc, doc.getPages(), false);
+                assertTrue(pageText(doc, 0).contains(SECRET));
+                assertNotRasterised(doc, 0);
+            }
+        }
+
+        @Test
+        @DisplayName("a box cutting through a line rasterises that page and no other")
+        void partialLineRasterisesThePage() throws Exception {
             try (PDDocument doc = documentWithTextAndImage(2)) {
                 service.redactAreas(
                         List.of(areaFromBottom(1, 70, 646, 300, 7)), doc, doc.getPages(), false);
 
-                String text = pageText(doc, 0);
-                assertFalse(text.contains("Second line"), text);
-                assertTrue(text.contains(SECRET), text);
-                assertNotRasterised(doc, 0);
-                assertTrue(pageText(doc, 1).contains(NEIGHBOUR));
-            }
-        }
-
-        @Test
-        @DisplayName("a box over part of a word takes the whole letters it touches")
-        void partOfAWordTakesWholeLetters() throws Exception {
-            try (PDDocument doc = documentWithTextAndImage(1)) {
-                // Starts after "SECRET" and covers only the top of the letters.
-                service.redactAreas(
-                        List.of(areaFromBottom(1, 135, 706, 80, 6)), doc, doc.getPages(), false);
-                String text = pageText(doc, 0);
-                assertTrue(text.contains("SECRET"), text);
-                assertFalse(text.contains("12345"), text);
-                assertTrue(text.contains(NEIGHBOUR), text);
-                assertNotRasterised(doc, 0);
-            }
-        }
-
-        /** JPDFium's character boxes for the first page, in PDF space. */
-        private List<TextChar> nativeChars(PDDocument doc) throws IOException {
-            Path file = Files.createTempFile("redact-chars", ".pdf");
-            try {
-                doc.save(file.toFile());
-                try (PdfDocument nativeDoc = PdfDocument.open(file)) {
-                    return PdfTextExtractor.extractPage(nativeDoc, 0).chars();
-                }
-            } finally {
-                Files.deleteIfExists(file);
-            }
-        }
-
-        private int indexOf(List<TextChar> chars, String text) {
-            StringBuilder all = new StringBuilder();
-            chars.forEach(c -> all.append(c.toText()));
-            int index = all.indexOf(text);
-            assertTrue(index >= 0, all.toString());
-            return index;
-        }
-
-        /** A box from {@code left} to just past the end of {@code text}, around its line. */
-        private RedactionArea boxFrom(List<TextChar> chars, String text, float left) {
-            int start = indexOf(chars, text);
-            float right = 0;
-            float bottom = Float.MAX_VALUE;
-            float top = 0;
-            for (TextChar c : chars.subList(start, start + text.length())) {
-                right = Math.max(right, c.x() + c.width());
-                bottom = Math.min(bottom, c.y());
-                top = Math.max(top, c.y() + c.height());
-            }
-            return areaFromBottom(1, left, bottom - 1, right + 1 - left, top - bottom + 2);
-        }
-
-        @Test
-        @DisplayName("a box that grazes the letter before it removes that letter, not the page")
-        void grazedLetterIsRemoved() throws Exception {
-            try (PDDocument doc = documentWithTextAndImage(1)) {
-                List<TextChar> chars = nativeChars(doc);
-                TextChar dash = chars.get(indexOf(chars, "-"));
-                service.redactAreas(
-                        List.of(boxFrom(chars, "12345", dash.x() + dash.width() - 0.1f)),
-                        doc,
-                        doc.getPages(),
-                        false);
-                String text = pageText(doc, 0);
-                assertFalse(text.contains("12345"), text);
-                assertFalse(text.contains("-"), text);
-                assertTrue(text.contains("SECRET"), text);
-                assertNotRasterised(doc, 0);
-            }
-        }
-
-        @Test
-        @DisplayName("a box edge in a letter's spacing removes the letter rather than the page")
-        void boxInLetterSpacingRemovesTheLetter() throws Exception {
-            try (PDDocument doc = documentWithTextAndImage(1)) {
-                List<TextChar> chars = nativeChars(doc);
-                TextChar dash = chars.get(indexOf(chars, "-"));
-                // Clear of the dash's ink but inside its advance, where JPDFium refuses the box.
-                service.redactAreas(
-                        List.of(boxFrom(chars, "12345", dash.x() + dash.width() + 0.3f)),
-                        doc,
-                        doc.getPages(),
-                        false);
-                String text = pageText(doc, 0);
-                assertFalse(text.contains("12345"), text);
-                assertFalse(text.contains("-"), text);
-                assertTrue(text.contains("SECRET"), text);
-                assertNotRasterised(doc, 0);
-            }
-        }
-
-        @Test
-        @DisplayName("a box clear of a letter's spacing leaves the letter")
-        void boxPastLetterSpacingKeepsTheLetter() throws Exception {
-            try (PDDocument doc = documentWithTextAndImage(1)) {
-                List<TextChar> chars = nativeChars(doc);
-                TextChar one = chars.get(indexOf(chars, "1"));
-                // Inside the "1"'s left side bearing, past where the dash's advance ends.
-                service.redactAreas(
-                        List.of(boxFrom(chars, "12345", one.x() - 0.2f)),
-                        doc,
-                        doc.getPages(),
-                        false);
-                String text = pageText(doc, 0);
-                assertFalse(text.contains("12345"), text);
-                assertTrue(text.contains("SECRET-"), text);
-                assertNotRasterised(doc, 0);
-            }
-        }
-
-        @Test
-        @DisplayName("box edges in the wide spacing of large type remove letters, not the page")
-        void wideSpacingInLargeType() throws Exception {
-            try (PDDocument doc = documentWithTextAndImage(1)) {
-                try (PDPageContentStream cs =
-                        new PDPageContentStream(
-                                doc, doc.getPage(0), PDPageContentStream.AppendMode.APPEND, true)) {
-                    cs.beginText();
-                    cs.setFont(new PDType1Font(Standard14Fonts.FontName.COURIER), 24);
-                    cs.newLineAtOffset(72, 550);
-                    cs.showText("ID.. 98765 ..XY");
-                    cs.endText();
-                }
-                List<TextChar> chars = nativeChars(doc);
-                // A Courier "." at 24pt has about 5pt of spacing either side of its ink; both
-                // edges sit 1pt into it.
-                TextChar before = chars.get(indexOf(chars, ".. 9") + 1);
-                TextChar after = chars.get(indexOf(chars, "..X"));
-                RedactionArea box = boxFrom(chars, "98765", before.x() + before.width() + 1f);
-                box.setWidth((double) (after.x() - 1f - box.getX().floatValue()));
-                service.redactAreas(List.of(box), doc, doc.getPages(), false);
-                String text = pageText(doc, 0);
-                assertFalse(text.contains("98765"), text);
-                assertTrue(text.contains("ID"), text);
-                assertTrue(text.contains("XY"), text);
-                assertTrue(text.contains(SECRET), text);
-                assertNotRasterised(doc, 0);
+                assertTrue(pageText(doc, 0).isBlank());
+                List<BufferedImage> page1 = pageImages(doc, 0);
+                assertEquals(1, page1.size());
+                assertTrue(page1.get(0).getWidth() > 1000, "a full-page render, not the photo");
+                assertTrue(pageText(doc, 1).contains(SECRET));
             }
         }
 

@@ -138,9 +138,10 @@ public class RedactExecuteRequest extends PDFFile {
 
         @Schema(
                 description =
-                        "AUTO removes the covered content of every redaction from the file; a page"
-                                + " whose content cannot be cut exactly at a box edge is"
-                                + " rasterized instead. OVERLAY_ONLY only paints boxes and leaves"
+                        "AUTO removes the covered content of every redaction from the file (text"
+                                + " counts when at least half of it is inside a box); a page that"
+                                + " cannot be redacted this way is rasterized instead."
+                                + " OVERLAY_ONLY only paints boxes and leaves"
                                 + " the covered text and images extractable. IMAGE_FINALIZE"
                                 + " rasterizes every page.",
                 defaultValue = "AUTO")
