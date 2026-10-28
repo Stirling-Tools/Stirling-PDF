@@ -140,19 +140,9 @@ public class PdfUtils {
     }
 
     /**
-     * Renders every page of a PDF to images in a managed temp file: one image when {@code
-     * singleImage} (a multi-frame TIFF, or all pages stacked vertically for other formats),
-     * otherwise a zip holding one {@code <filename>_<page>.<ext>} entry per page. Output goes to
-     * disk because a long document at high DPI can produce more than the 2 GB a Java array holds.
-     *
-     * <p>The caller owns the returned file: close it, or hand it to {@link
-     * WebResponseUtils#fileToWebResponse}, which deletes it once the response has been written. On
-     * failure the file is deleted before the exception propagates.
-     *
-     * @param imageType an ImageIO format name such as {@code PNG} or {@code JPG}
-     * @throws IllegalArgumentException if {@code dpi} exceeds {@code system.maxDPI}, a page is too
-     *     large to render at it, or the stacked single image would exceed the size one image can
-     *     hold
+     * Renders the pages to a temp file (one image, or a zip of one per page) rather than memory,
+     * since the output can pass 2 GB. The caller must close it or hand it to {@link
+     * WebResponseUtils#fileToWebResponse}; on failure it is already deleted.
      */
     public TempFile convertFromPdf(
             CustomPDFDocumentFactory pdfDocumentFactory,
