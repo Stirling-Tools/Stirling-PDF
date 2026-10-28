@@ -787,28 +787,53 @@ class ManualRedactionServiceTest {
             }
         }
 
+        /** The 8x8 photo is still the only image, so the page was not rasterised. */
+        private void assertNotRasterised(PDDocument doc, int pageIndex) throws IOException {
+            List<BufferedImage> images = pageImages(doc, pageIndex);
+            assertEquals(1, images.size());
+            assertEquals(8, images.get(0).getWidth());
+        }
+
         @Test
-        @DisplayName("a thin strip across a line, which JPDFium accepts, still rasterises")
-        void thinStripRasterisesThePage() throws Exception {
+        @DisplayName("a thin strip across a line removes every letter it touches, not the page")
+        void thinStripRemovesTheLettersItCrosses() throws Exception {
             try (PDDocument doc = documentWithTextAndImage(1)) {
                 service.redactAreas(
                         List.of(areaFromBottom(1, 60, 704, 300, 3)), doc, doc.getPages(), false);
-                assertTrue(pageText(doc, 0).isBlank());
+                String text = pageText(doc, 0);
+                assertFalse(text.contains("SECRET"), text);
+                assertTrue(text.contains(NEIGHBOUR), text);
+                assertNotRasterised(doc, 0);
             }
         }
 
         @Test
-        @DisplayName("a box cutting through a line rasterises that page and no other")
-        void partialLineRasterisesThePage() throws Exception {
+        @DisplayName("a box through the lower half of a line removes that line's letters only")
+        void boxThroughALineRemovesThatLine() throws Exception {
             try (PDDocument doc = documentWithTextAndImage(2)) {
                 service.redactAreas(
                         List.of(areaFromBottom(1, 70, 646, 300, 7)), doc, doc.getPages(), false);
 
-                assertTrue(pageText(doc, 0).isBlank());
-                List<BufferedImage> page1 = pageImages(doc, 0);
-                assertEquals(1, page1.size());
-                assertTrue(page1.get(0).getWidth() > 1000, "a full-page render, not the photo");
-                assertTrue(pageText(doc, 1).contains(SECRET));
+                String text = pageText(doc, 0);
+                assertFalse(text.contains("Second line"), text);
+                assertTrue(text.contains(SECRET), text);
+                assertNotRasterised(doc, 0);
+                assertTrue(pageText(doc, 1).contains(NEIGHBOUR));
+            }
+        }
+
+        @Test
+        @DisplayName("a box over part of a word takes the whole letters it touches")
+        void partOfAWordTakesWholeLetters() throws Exception {
+            try (PDDocument doc = documentWithTextAndImage(1)) {
+                // Starts after "SECRET" and covers only the top of the letters.
+                service.redactAreas(
+                        List.of(areaFromBottom(1, 135, 706, 80, 6)), doc, doc.getPages(), false);
+                String text = pageText(doc, 0);
+                assertTrue(text.contains("SECRET"), text);
+                assertFalse(text.contains("12345"), text);
+                assertTrue(text.contains(NEIGHBOUR), text);
+                assertNotRasterised(doc, 0);
             }
         }
 

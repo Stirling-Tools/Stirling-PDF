@@ -58,6 +58,8 @@ class ManualRedactionService {
     private static final float TEXT_REMOVAL_MARGIN_MULTIPLIER = 0.25f;
     // Points a glyph may touch a box edge by before it counts as still under the box.
     private static final float OVERLAP_TOLERANCE = 0.25f;
+    // Fully transparent: JPDFium clears the region without painting it.
+    private static final int UNPAINTED = 0x00000000;
 
     private final TempFileManager tempFileManager;
 
@@ -291,7 +293,29 @@ class ManualRedactionService {
 
     private boolean clearPage(PdfDocument nativeDocument, int pageIndex, List<Box> boxes) {
         try {
+            List<TextChar> crossed = new ArrayList<>();
+            for (TextChar character :
+                    PdfTextExtractor.extractPage(nativeDocument, pageIndex).chars()) {
+                if (isGlyph(character)
+                        && overlapsAny(character, boxes)
+                        && !insideAny(character, boxes)) {
+                    crossed.add(character);
+                }
+            }
             try (PdfPage page = nativeDocument.page(pageIndex)) {
+                // JPDFium removes a glyph only when the rectangle covers all of it, so a box
+                // edge through a letter would leave it in place. Clear each such letter by its
+                // own box first, unpainted: the whole letter goes, the drawn box stays as drawn.
+                for (TextChar character : crossed) {
+                    page.redactRegion(
+                            new Rect(
+                                    character.x(),
+                                    character.y(),
+                                    character.width(),
+                                    character.height()),
+                            UNPAINTED,
+                            true);
+                }
                 for (Box box : boxes) {
                     PDRectangle r = box.rect();
                     page.redactRegion(
@@ -304,23 +328,37 @@ class ManualRedactionService {
                             true);
                 }
             }
-            // JPDFium takes a glyph only when the box holds its centre, and its audit lets a thin
-            // strip across a line through with every glyph still in place.
+            // JPDFium's own audit can pass with glyphs still under a box, so check again.
             for (TextChar character :
                     PdfTextExtractor.extractPage(nativeDocument, pageIndex).chars()) {
-                if (!character.isWhitespace()
-                        && !character.isNewline()
-                        && overlapsAny(character, boxes)) {
+                if (isGlyph(character) && overlapsAny(character, boxes)) {
                     log.warn("[redact] page {}: text still overlaps a box", pageIndex + 1);
                     return false;
                 }
             }
             return true;
         } catch (JPDFiumException e) {
-            // Typically a box edge through a line of text: the audit refuses a partial glyph.
             log.warn("[redact] page {}: {}", pageIndex + 1, e.getMessage());
             return false;
         }
+    }
+
+    private static boolean isGlyph(TextChar character) {
+        return !character.isWhitespace() && !character.isNewline();
+    }
+
+    private static boolean insideAny(TextChar character, List<Box> boxes) {
+        for (Box box : boxes) {
+            PDRectangle r = box.rect();
+            if (character.x() >= r.getLowerLeftX() - OVERLAP_TOLERANCE
+                    && character.x() + character.width() <= r.getUpperRightX() + OVERLAP_TOLERANCE
+                    && character.y() >= r.getLowerLeftY() - OVERLAP_TOLERANCE
+                    && character.y() + character.height()
+                            <= r.getUpperRightY() + OVERLAP_TOLERANCE) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean overlapsAny(TextChar character, List<Box> boxes) {
