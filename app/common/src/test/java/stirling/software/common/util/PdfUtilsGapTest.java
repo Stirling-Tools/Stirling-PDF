@@ -8,6 +8,13 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
 
@@ -19,16 +26,19 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 /**
@@ -40,6 +50,22 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 class PdfUtilsGapTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @TempDir Path tempDir;
+
+    private TempFileManager tempFileManager;
+
+    @BeforeEach
+    void setUpTempFileManager() {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getSystem().getTempFileManagement().setBaseTmpDir(tempDir.toString());
+        tempFileManager = new TempFileManager(new TempFileRegistry(), props);
+    }
+
+    private static byte[] readAndDelete(TempFile output) throws IOException {
+        try (output) {
+            return Files.readAllBytes(output.getPath());
+        }
+    }
 
     // ---- helpers ------------------------------------------------------------
 
@@ -118,8 +144,17 @@ class PdfUtilsGapTest {
             when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(1));
 
             byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory, bytes, "png", ImageType.RGB, true, 72, "doc", true);
+                    readAndDelete(
+                            PdfUtils.convertFromPdf(
+                                    pdfDocumentFactory,
+                                    tempFileManager,
+                                    bytes,
+                                    "png",
+                                    ImageType.RGB,
+                                    true,
+                                    72,
+                                    "doc",
+                                    true));
 
             assertNotNull(out);
             assertTrue(out.length > 0);
@@ -137,15 +172,17 @@ class PdfUtilsGapTest {
             when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(2));
 
             byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            bytes,
-                            "jpg",
-                            ImageType.RGB,
-                            true,
-                            72,
-                            "doc",
-                            false);
+                    readAndDelete(
+                            PdfUtils.convertFromPdf(
+                                    pdfDocumentFactory,
+                                    tempFileManager,
+                                    bytes,
+                                    "jpg",
+                                    ImageType.RGB,
+                                    true,
+                                    72,
+                                    "doc",
+                                    false));
 
             assertNotNull(out);
             assertTrue(out.length > 0);
@@ -161,15 +198,17 @@ class PdfUtilsGapTest {
             when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(2));
 
             byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            bytes,
-                            "tiff",
-                            ImageType.RGB,
-                            true,
-                            72,
-                            "doc",
-                            true);
+                    readAndDelete(
+                            PdfUtils.convertFromPdf(
+                                    pdfDocumentFactory,
+                                    tempFileManager,
+                                    bytes,
+                                    "tiff",
+                                    ImageType.RGB,
+                                    true,
+                                    72,
+                                    "doc",
+                                    true));
 
             assertNotNull(out);
             assertTrue(out.length > 0);
@@ -182,21 +221,110 @@ class PdfUtilsGapTest {
             when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(2));
 
             byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            bytes,
-                            "png",
-                            ImageType.RGB,
-                            false,
-                            72,
-                            "myfile",
-                            true);
+                    readAndDelete(
+                            PdfUtils.convertFromPdf(
+                                    pdfDocumentFactory,
+                                    tempFileManager,
+                                    bytes,
+                                    "png",
+                                    ImageType.RGB,
+                                    false,
+                                    72,
+                                    "myfile",
+                                    true));
 
             assertNotNull(out);
             assertTrue(out.length > 0);
             // ZIP local-file-header magic "PK\003\004".
             assertEquals('P', out[0]);
             assertEquals('K', out[1]);
+        }
+
+        @Test
+        @DisplayName("multiple-images mode streams a per-page zip to a managed temp file")
+        void zipIsFileBacked() throws Exception {
+            byte[] bytes = simplePdfBytes();
+            when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(2));
+
+            TempFile output =
+                    PdfUtils.convertFromPdf(
+                            pdfDocumentFactory,
+                            tempFileManager,
+                            bytes,
+                            "PNG",
+                            ImageType.RGB,
+                            false,
+                            72,
+                            "myfile",
+                            true);
+            Path zip = output.getPath();
+            try (output) {
+                assertEquals(tempDir, zip.getParent());
+                List<String> entries = new ArrayList<>();
+                try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zip))) {
+                    for (ZipEntry entry; (entry = zis.getNextEntry()) != null; ) {
+                        entries.add(entry.getName());
+                        assertNotNull(ImageIO.read(zis), entry.getName() + " is not an image");
+                    }
+                }
+                assertEquals(List.of("myfile_1.png", "myfile_2.png"), entries);
+            }
+            assertFalse(Files.exists(zip));
+        }
+
+        @Test
+        @DisplayName("a failed conversion leaves no temp file behind")
+        void failureDeletesTempFile() throws Exception {
+            byte[] bytes = simplePdfBytes();
+            when(pdfDocumentFactory.load(bytes)).thenThrow(new IOException("unreadable"));
+
+            assertThrows(
+                    IOException.class,
+                    () ->
+                            PdfUtils.convertFromPdf(
+                                    pdfDocumentFactory,
+                                    tempFileManager,
+                                    bytes,
+                                    "PNG",
+                                    ImageType.RGB,
+                                    false,
+                                    72,
+                                    "doc",
+                                    true));
+            try (Stream<Path> left = Files.list(tempDir)) {
+                assertEquals(0, left.count());
+            }
+        }
+
+        @Test
+        @DisplayName("single-image mode rejects a stack too tall for one image before allocating")
+        void stackedImageTooLargeThrows() throws Exception {
+            byte[] bytes = simplePdfBytes();
+            // 11 pages of 14400 x 14400 px at 72 DPI stack to about 2.28 billion pixels
+            PDDocument doc = new PDDocument();
+            for (int i = 0; i < 11; i++) {
+                doc.addPage(new PDPage(new PDRectangle(14400f, 14400f)));
+            }
+            when(pdfDocumentFactory.load(bytes)).thenReturn(doc);
+
+            IllegalArgumentException e =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () ->
+                                    PdfUtils.convertFromPdf(
+                                            pdfDocumentFactory,
+                                            tempFileManager,
+                                            bytes,
+                                            "PNG",
+                                            ImageType.RGB,
+                                            true,
+                                            72,
+                                            "doc",
+                                            true));
+            assertTrue(e.getMessage().contains("Choose multiple images"), e.getMessage());
+            try (Stream<Path> left = Files.list(tempDir)) {
+                assertEquals(0, left.count());
+            }
         }
 
         @Test
@@ -209,6 +337,7 @@ class PdfUtilsGapTest {
                     () ->
                             PdfUtils.convertFromPdf(
                                     pdfDocumentFactory,
+                                    tempFileManager,
                                     bytes,
                                     "png",
                                     ImageType.RGB,
@@ -225,15 +354,17 @@ class PdfUtilsGapTest {
             when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(1));
 
             byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            bytes,
-                            "png",
-                            ImageType.RGB,
-                            true,
-                            72,
-                            "doc",
-                            false);
+                    readAndDelete(
+                            PdfUtils.convertFromPdf(
+                                    pdfDocumentFactory,
+                                    tempFileManager,
+                                    bytes,
+                                    "png",
+                                    ImageType.RGB,
+                                    true,
+                                    72,
+                                    "doc",
+                                    false));
 
             assertNotNull(out);
             assertTrue(out.length > 0);

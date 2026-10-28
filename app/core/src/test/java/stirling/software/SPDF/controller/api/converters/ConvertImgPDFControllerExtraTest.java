@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -27,8 +26,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
@@ -39,14 +36,13 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.WebResponseUtils;
 
 /**
- * Extra branch coverage for {@link ConvertImgPDFController#convertToImage} not exercised by the
- * existing tests: the null-result logging branch, the octet-stream media-type fallback, and the
- * webp-with-Python path that produces no output files. The Python/ProcessExecutor boundary is
- * mocked so no interpreter or external binary ever runs.
+ * Coverage for the webp-with-Python path of {@link ConvertImgPDFController#convertToImage} that
+ * produces no output files. The Python/ProcessExecutor boundary is mocked so no interpreter or
+ * external binary ever runs.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -95,52 +91,6 @@ class ConvertImgPDFControllerExtraTest {
     }
 
     @Nested
-    @DisplayName("non-webp branches")
-    class NonWebp {
-
-        @Test
-        @DisplayName("null render result still produces a single-image response")
-        void nullResultStillResponds() throws Exception {
-            byte[] pdfBytes = tinyPdfBytes(1);
-            ConvertToImageRequest request = baseRequest(pdfBytes, "png");
-
-            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
-                    .thenReturn(tinyDocument(1));
-
-            @SuppressWarnings("unchecked")
-            ResponseEntity<byte[]> expected = Mockito.mock(ResponseEntity.class);
-
-            try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
-
-                // Null bytes hit the "resultant bytes is null" log branch but still respond.
-                pu.when(
-                                () ->
-                                        PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
-                                                eq("PNG"),
-                                                eq(ImageType.RGB),
-                                                eq(true),
-                                                eq(72),
-                                                any(String.class),
-                                                eq(false)))
-                        .thenReturn(null);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.bytesToWebResponse(
-                                                any(), any(String.class), any(MediaType.class)))
-                        .thenReturn(expected);
-
-                ResponseEntity<?> response = controller.convertToImage(request);
-
-                assertThat(response).isSameAs(expected);
-            }
-        }
-    }
-
-    @Nested
     @DisplayName("webp-with-Python branch")
     class WebpWithPython {
 
@@ -165,6 +115,8 @@ class ConvertImgPDFControllerExtraTest {
             java.util.List<Integer> pageOrder = java.util.List.of(0);
             Path scriptPath = Path.of("png_to_webp.py");
 
+            TempFile rendered = Mockito.mock(TempFile.class);
+
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
                     MockedStatic<CheckProgramInstall> cpi =
                             Mockito.mockStatic(CheckProgramInstall.class);
@@ -175,6 +127,7 @@ class ConvertImgPDFControllerExtraTest {
                                 () ->
                                         PdfUtils.convertFromPdf(
                                                 eq(pdfDocumentFactory),
+                                                eq(tempFileManager),
                                                 any(byte[].class),
                                                 eq("png"),
                                                 any(ImageType.class),
@@ -182,7 +135,7 @@ class ConvertImgPDFControllerExtraTest {
                                                 anyInt(),
                                                 any(String.class),
                                                 anyBoolean()))
-                        .thenReturn("png-image".getBytes());
+                        .thenReturn(rendered);
                 gu.when(
                                 () ->
                                         GeneralUtils.parsePageList(
@@ -201,6 +154,7 @@ class ConvertImgPDFControllerExtraTest {
                         .isInstanceOf(IOException.class)
                         .hasMessageContaining("No WebP files were created");
             }
+            Mockito.verify(rendered).close();
         }
     }
 }

@@ -9,6 +9,8 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -27,9 +29,11 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
@@ -46,6 +50,23 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
  * multi-frame TIFF input path of imageToPdf.
  */
 class PdfUtilsMoreTest {
+
+    @TempDir Path tempDir;
+
+    private TempFileManager tempFileManager;
+
+    @BeforeEach
+    void setUpTempFileManager() {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getSystem().getTempFileManagement().setBaseTmpDir(tempDir.toString());
+        tempFileManager = new TempFileManager(new TempFileRegistry(), props);
+    }
+
+    private static byte[] readAndDelete(TempFile output) throws IOException {
+        try (output) {
+            return Files.readAllBytes(output.getPath());
+        }
+    }
 
     // ---- helpers ------------------------------------------------------------
 
@@ -220,8 +241,17 @@ class PdfUtilsMoreTest {
                         .thenReturn(propsWithMaxDpi(200));
 
                 byte[] out =
-                        PdfUtils.convertFromPdf(
-                                factory, bytes, "png", ImageType.RGB, true, 72, "doc", true);
+                        readAndDelete(
+                                PdfUtils.convertFromPdf(
+                                        factory,
+                                        tempFileManager,
+                                        bytes,
+                                        "png",
+                                        ImageType.RGB,
+                                        true,
+                                        72,
+                                        "doc",
+                                        true));
                 assertThat(out).isNotEmpty();
             }
         }
@@ -243,6 +273,7 @@ class PdfUtilsMoreTest {
                         () ->
                                 PdfUtils.convertFromPdf(
                                         factory,
+                                        tempFileManager,
                                         bytes,
                                         "png",
                                         ImageType.RGB,
@@ -265,8 +296,17 @@ class PdfUtilsMoreTest {
             when(factory.load(bytes)).thenReturn(doc);
 
             byte[] out =
-                    PdfUtils.convertFromPdf(
-                            factory, bytes, "png", ImageType.RGB, true, 36, "doc", true);
+                    readAndDelete(
+                            PdfUtils.convertFromPdf(
+                                    factory,
+                                    tempFileManager,
+                                    bytes,
+                                    "png",
+                                    ImageType.RGB,
+                                    true,
+                                    36,
+                                    "doc",
+                                    true));
             assertThat(out).isNotEmpty();
         }
 
@@ -282,8 +322,17 @@ class PdfUtilsMoreTest {
             when(factory.load(bytes)).thenReturn(doc);
 
             byte[] out =
-                    PdfUtils.convertFromPdf(
-                            factory, bytes, "png", ImageType.RGB, true, 36, "doc", true);
+                    readAndDelete(
+                            PdfUtils.convertFromPdf(
+                                    factory,
+                                    tempFileManager,
+                                    bytes,
+                                    "png",
+                                    ImageType.RGB,
+                                    true,
+                                    36,
+                                    "doc",
+                                    true));
             assertThat(out).isNotEmpty();
         }
     }
