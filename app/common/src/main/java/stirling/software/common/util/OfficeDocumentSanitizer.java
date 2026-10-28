@@ -73,6 +73,15 @@ public class OfficeDocumentSanitizer {
         return OOXML_EXTENSIONS.contains(lower) || ODF_EXTENSIONS.contains(lower);
     }
 
+    /**
+     * The document with external references stripped from its relationship and ODF XML parts,
+     * except targets an admin has allowlisted. Returned unchanged, with no part inspected, when
+     * {@code system.disableSanitize} is set.
+     *
+     * @throws IOException when the input is empty, an entry is named outside the archive, or a
+     *     relationship or ODF XML part cannot be parsed; such a document is refused rather than
+     *     passed on with that part unchanged
+     */
     public byte[] sanitize(byte[] documentBytes, String extension) throws IOException {
         if (documentBytes == null || documentBytes.length == 0) {
             throw new IOException("Office document input is empty or null");
@@ -114,11 +123,15 @@ public class OfficeDocumentSanitizer {
                 }
                 zipOut.closeEntry();
             }
+        } catch (SecurityException e) {
+            throw new IOException("Office document has an unsafe entry name", e);
         }
         return out.toByteArray();
     }
 
-    private byte[] sanitizeEntry(String entryName, byte[] entryBytes) {
+    // The converters' parsers accept parts this one rejects, so such a part could still carry
+    // references there.
+    private byte[] sanitizeEntry(String entryName, byte[] entryBytes) throws IOException {
         String lower = entryName.toLowerCase(Locale.ROOT);
         try {
             if (lower.endsWith(".rels")) {
@@ -127,14 +140,9 @@ public class OfficeDocumentSanitizer {
             if (isOdfXmlPart(lower)) {
                 return sanitizeOdfXml(entryBytes);
             }
-        } catch (ParserConfigurationException
-                | SAXException
-                | IOException
-                | TransformerException e) {
-            log.warn(
-                    "Failed to parse XML part '{}' for sanitization, leaving as-is: {}",
-                    entryName,
-                    e.getMessage());
+        } catch (ParserConfigurationException | SAXException | TransformerException e) {
+            throw new IOException(
+                    "Office document part '" + entryName + "' could not be sanitized", e);
         }
         return entryBytes;
     }

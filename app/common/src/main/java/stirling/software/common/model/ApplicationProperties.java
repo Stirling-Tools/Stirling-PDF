@@ -283,6 +283,19 @@ public class ApplicationProperties {
         private int runExpiryMinutes = 30;
 
         /**
+         * Most steps one pipeline or policy run may have, covering {@code
+         * /api/v1/pipeline/handleData} as well as policies; 0 = unlimited.
+         */
+        private int maxSteps = 50;
+
+        /**
+         * Most files one step of a pipeline or policy run may produce before the run is aborted; 0
+         * = unlimited. A step answering with a ZIP multiplies the files the next step is called on,
+         * so without a cap a few split steps fan out into millions of tool calls.
+         */
+        private int maxFilesPerStep = 10000;
+
+        /**
          * Whether a policy S3 source's custom endpoint may resolve to a loopback, link-local, or
          * private address. Off by default so a user-supplied endpoint cannot be pointed at internal
          * services (e.g. the cloud metadata address); enable for a self-hosted MinIO or other
