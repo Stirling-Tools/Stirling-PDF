@@ -579,6 +579,120 @@ describe("table commands (fake PDFium)", () => {
     expect(page.tables[0].cellRuns[1][0]).toBe(page.runs[0].id);
   });
 
+  it("deletes the selected middle row while preserving the final row and grid", () => {
+    const insert = new InsertTableCommand({
+      pageIndex: 0,
+      x: 100,
+      y: 700,
+      width: 300,
+      height: 120,
+      rows: 4,
+      cols: 1,
+    });
+    insert.apply(doc);
+    const tableId = insert.insertedTableId!;
+    new FillTableCellCommand({ tableId, row: 0, col: 0, text: "A" }).apply(doc);
+    new FillTableCellCommand({ tableId, row: 1, col: 0, text: "M" }).apply(doc);
+    new FillTableCellCommand({ tableId, row: 2, col: 0, text: "Z" }).apply(doc);
+
+    const model = page.tables[0];
+    const del = new ModifyTableCommand({
+      tableId,
+      op: "delete-row",
+      index: 1,
+    });
+    del.apply(doc);
+
+    expect(model.rows).toBe(3);
+    expect(model.rowEdges).toEqual([700, 670, 640, 610]);
+    expect(page.runs.map((run) => run.text)).toEqual(["A", "Z"]);
+    expect(model.hLinePtrs).toHaveLength(model.rows + 1);
+    expect(model.vLinePtrs).toHaveLength(model.cols + 1);
+  });
+
+  it.each([
+    ["first body row", 1, ["B", "C"]],
+    ["last body row", 3, ["A", "B"]],
+  ] as const)(
+    "deletes the %s and preserves row order",
+    (_name, index, remaining) => {
+      const insert = new InsertTableCommand({
+        pageIndex: 0,
+        x: 100,
+        y: 700,
+        width: 300,
+        height: 120,
+        rows: 4,
+        cols: 1,
+      });
+      insert.apply(doc);
+      const tableId = insert.insertedTableId!;
+      for (const [row, text] of ["H", "A", "B", "C"].entries()) {
+        new FillTableCellCommand({ tableId, row, col: 0, text }).apply(doc);
+      }
+
+      new ModifyTableCommand({ tableId, op: "delete-row", index }).apply(doc);
+
+      expect(page.runs.map((run) => run.text)).toEqual(["H", ...remaining]);
+      expect(page.tables[0].rowEdges).toHaveLength(4);
+      expect(page.tables[0].hLinePtrs).toHaveLength(page.tables[0].rows + 1);
+      expect(page.tables[0].vLinePtrs).toHaveLength(2);
+    },
+  );
+
+  it("deletes consecutive body rows without corrupting the remaining geometry", () => {
+    const insert = new InsertTableCommand({
+      pageIndex: 0,
+      x: 100,
+      y: 700,
+      width: 300,
+      height: 150,
+      rows: 5,
+      cols: 1,
+    });
+    insert.apply(doc);
+    const tableId = insert.insertedTableId!;
+    for (const [row, text] of ["H", "A", "B", "C", "D"].entries()) {
+      new FillTableCellCommand({ tableId, row, col: 0, text }).apply(doc);
+    }
+
+    const model = page.tables[0];
+    new ModifyTableCommand({ tableId, op: "delete-row", index: 1 }).apply(doc);
+    new ModifyTableCommand({ tableId, op: "delete-row", index: 1 }).apply(doc);
+
+    expect(page.runs.map((run) => run.text)).toEqual(["H", "C", "D"]);
+    expect(model.rowEdges).toEqual([700, 670, 640, 610]);
+    expect(model.hLinePtrs).toHaveLength(model.rows + 1);
+    expect(model.vLinePtrs).toHaveLength(model.cols + 1);
+  });
+
+  it("shrinks a vertical merge when deleting its anchor row", () => {
+    const insert = new InsertTableCommand({
+      pageIndex: 0,
+      x: 100,
+      y: 700,
+      width: 300,
+      height: 120,
+      rows: 4,
+      cols: 1,
+    });
+    insert.apply(doc);
+    const tableId = insert.insertedTableId!;
+    new FillTableCellCommand({ tableId, row: 1, col: 0, text: "merged" }).apply(
+      doc,
+    );
+    const model = page.tables[0];
+    model.cellSpans[1][0] = { rowSpan: 2, colSpan: 1 };
+
+    new ModifyTableCommand({ tableId, op: "delete-row", index: 1 }).apply(doc);
+
+    expect(model.rows).toBe(3);
+    expect(model.spanAt(1, 0)).toEqual({ rowSpan: 1, colSpan: 1 });
+    expect(model.runsAt(1, 0)).toHaveLength(1);
+    expect(page.runs.map((run) => run.text)).toEqual(["merged"]);
+    expect(model.hLinePtrs).toHaveLength(model.rows + 1);
+  });
+
   it("round-trips through the history stack (insert, fill, add-row)", () => {
     const history = new HistoryStack();
     const insert = new InsertTableCommand({
