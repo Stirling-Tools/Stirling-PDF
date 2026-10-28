@@ -39,8 +39,8 @@ public class ConnectionLookup {
             IntegrationType type,
             String label,
             Set<String> perUseKeys,
-            String owner) {
-        User acting = actingUser(owner);
+            String pipelineOwner) {
+        User acting = actingUser(pipelineOwner);
 
         long connectionId = connectionId(options, label);
         IntegrationConfig connection =
@@ -85,8 +85,10 @@ public class ConnectionLookup {
         return null;
     }
 
-    private User actingUser(String owner) {
-        return owner != null ? userService.findByUsername(owner).orElse(null) : currentUser();
+    private User actingUser(String pipelineOwner) {
+        return pipelineOwner != null
+                ? userService.findByUsername(pipelineOwner).orElse(null)
+                : currentUser();
     }
 
     private boolean usableBy(User user, IntegrationConfig connection) {
