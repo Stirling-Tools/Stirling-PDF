@@ -423,7 +423,16 @@ function EditableTable({
   const { t } = useTranslation();
   const box = rectToCss(table.bounds, transform, scale, page.height);
   const [drag, setDrag] = useState<DragState | null>(null);
+  const [selectedRow, setSelectedRow] = useState(() =>
+    table.rows > 1 ? table.rows - 1 : 0,
+  );
   const origin = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    setSelectedRow((row) =>
+      table.rows > 1 ? Math.min(Math.max(1, row), table.rows - 1) : 0,
+    );
+  }, [table.rows]);
 
   // Client-space pointer delta -> raw-PDF delta. invert() is affine, so the
   // translation cancels and the handler needs no container origin.
@@ -508,12 +517,15 @@ function EditableTable({
       op === "add-row"
         ? table.rows
         : op === "delete-row"
-          ? table.rows - 1
+          ? selectedRow
           : op === "add-col"
             ? table.cols
             : table.cols - 1;
     if ((op === "delete-row" || op === "delete-col") && index < 1) return;
     mutate(new ModifyTableCommand({ tableId: table.id, op, index }));
+    if (op === "delete-row") {
+      setSelectedRow((row) => Math.min(Math.max(1, row), table.rows - 2));
+    }
   };
 
   const emptyCells = table.cells.filter((c) => c.runIds.length === 0);
@@ -672,6 +684,7 @@ function EditableTable({
               orientation="horizontal"
               offset={d.active && drag ? drag.dy : 0}
               guide={box.width}
+              onSelect={() => setSelectedRow(Math.max(1, i - 1))}
               style={{
                 top: fy * box.height - GRAB / 2,
                 left: -MARGIN,
@@ -877,6 +890,7 @@ function DragArea({
   offset,
   style,
   active,
+  onSelect,
   onStart,
   onMove,
   onEnd,
@@ -892,6 +906,7 @@ function DragArea({
   offset: number;
   style: React.CSSProperties;
   active: boolean;
+  onSelect?: () => void;
   onStart: (x: number, y: number, alt: boolean) => void;
   onMove: (x: number, y: number) => void;
   onEnd: () => void;
@@ -911,6 +926,7 @@ function DragArea({
         e.preventDefault();
         // The stage clears the selection on any press that reaches it.
         e.stopPropagation();
+        onSelect?.();
         e.currentTarget.setPointerCapture(e.pointerId);
         onStart(e.clientX, e.clientY, e.altKey);
       }}
