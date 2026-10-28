@@ -42,6 +42,7 @@ import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { useAuth } from "@editor/auth/UseSession";
 import { useFileThumbnail } from "@editor/hooks/useFileThumbnail";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { useRightsManagedPdf } from "@editor/hooks/useRightsManagedPdf";
 import { Tooltip as StirlingTooltip } from "@editor/components/shared/Tooltip";
 import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
 import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
@@ -106,6 +107,9 @@ const FileEditorThumbnail = ({
     [activeFiles, file.id],
   );
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
+  const rightsManaged = useRightsManagedPdf(actualFile);
+  const isRightsManaged =
+    rightsManaged.status === "locked" || rightsManaged.status === "opened";
 
   const isZipFile = zipFileService.isZipFileStub(file);
 
@@ -174,8 +178,10 @@ const FileEditorThumbnail = ({
 
   const pageLabel = useMemo(
     () =>
-      pageCount > 0 ? `${pageCount} ${pageCount === 1 ? "Page" : "Pages"}` : "",
-    [pageCount],
+      pageCount > 0 && !isRightsManaged
+        ? `${pageCount} ${pageCount === 1 ? "Page" : "Pages"}`
+        : "",
+    [pageCount, isRightsManaged],
   );
 
   const dateLabel = useMemo(() => {
@@ -744,11 +750,11 @@ const FileEditorThumbnail = ({
           <span className={styles.fileNameText}>
             <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
           </span>
-          {pdfAccess?.encrypted && (
+          {isRightsManaged ? (
             <StirlingTooltip
               content={t(
-                "encryptedPdfUnlock.sessionSuccessBody",
-                "Unlocked for this session. Password protection is retained.",
+                "rightsManagedPdf.title",
+                "Protected by Microsoft Purview",
               )}
               position="top"
               maxWidth={230}
@@ -758,15 +764,41 @@ const FileEditorThumbnail = ({
                 className={styles.unlockedIndicator}
                 role="img"
                 aria-label={t(
-                  "encryptedPdfUnlock.sessionSuccessTitle",
-                  "PDF unlocked",
+                  "rightsManagedPdf.title",
+                  "Protected by Microsoft Purview",
                 )}
                 tabIndex={0}
                 data-no-select
+                data-testid="rights-managed-badge"
               >
-                <Icon name="lock-open" size={14} />
+                <Icon name="shield" size={14} />
               </span>
             </StirlingTooltip>
+          ) : (
+            pdfAccess?.encrypted && (
+              <StirlingTooltip
+                content={t(
+                  "encryptedPdfUnlock.sessionSuccessBody",
+                  "Unlocked for this session. Password protection is retained.",
+                )}
+                position="top"
+                maxWidth={230}
+                arrow
+              >
+                <span
+                  className={styles.unlockedIndicator}
+                  role="img"
+                  aria-label={t(
+                    "encryptedPdfUnlock.sessionSuccessTitle",
+                    "PDF unlocked",
+                  )}
+                  tabIndex={0}
+                  data-no-select
+                >
+                  <Icon name="lock-open" size={14} />
+                </span>
+              </StirlingTooltip>
+            )
           )}
           <PolicyBadges policies={policies} className={styles.fileNameBadges} />
         </p>

@@ -121,6 +121,7 @@ export interface FileItemProps {
   isToolSkipped?: boolean;
   thumbnailUrl?: string;
   isEncrypted?: boolean;
+  isRightsManaged?: boolean;
   onClick: (fileId: FileId) => void;
   onEyeClick: (fileId: FileId, e: React.MouseEvent) => void;
   /** Policies that have run on this file — rendered as small shield badges. */
@@ -219,6 +220,7 @@ export const FileItem = React.memo(function FileItem({
   isToolSkipped = false,
   dataUnavailable,
   isDamaged = false,
+  isRightsManaged = false,
   onRepair,
   thumbnailUrl,
   isEncrypted,
@@ -416,6 +418,28 @@ export const FileItem = React.memo(function FileItem({
                   aria-label={t("oneDriveSave.fromOneDrive", "From OneDrive")}
                 >
                   <Icon name="onedrive" size={"0.85rem"} />
+                </span>
+              </Tooltip>
+            )}
+            {isRightsManaged && (
+              <Tooltip
+                label={t(
+                  "rightsManagedPdf.title",
+                  "Protected by Microsoft Purview",
+                )}
+                withArrow
+                position="top"
+              >
+                <span
+                  className="file-sidebar-cloud-badge"
+                  data-no-select
+                  data-testid="rights-managed-badge"
+                  aria-label={t(
+                    "rightsManagedPdf.title",
+                    "Protected by Microsoft Purview",
+                  )}
+                >
+                  <Icon name="shield" size={"0.85rem"} />
                 </span>
               </Tooltip>
             )}

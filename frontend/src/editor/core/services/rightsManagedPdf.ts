@@ -86,6 +86,7 @@ export class RightsManagementError extends Error {
 }
 
 const detections = new WeakMap<Blob, Promise<boolean>>();
+const detectedIds = new Set<string>();
 let thumbnails = new WeakMap<OpenedRightsManagedPdf, string>();
 let openedByFile = new WeakMap<Blob, OpenedRightsManagedPdf>();
 const filesById = new Map<string, Blob>();
@@ -163,13 +164,38 @@ async function detect(file: Blob): Promise<boolean> {
   );
 }
 
+function fileIdOf(file: Blob): string | undefined {
+  const fileId = (file as { fileId?: unknown }).fileId;
+  return typeof fileId === "string" ? fileId : undefined;
+}
+
+function recordDetection(file: Blob, isProtected: boolean): void {
+  const fileId = fileIdOf(file);
+  if (!fileId || !isProtected || detectedIds.has(fileId)) return;
+  detectedIds.add(fileId);
+  publish();
+}
+
 export function isMicrosoftProtectedPdf(file: Blob): Promise<boolean> {
   let pending = detections.get(file);
   if (!pending) {
     pending = detect(file).catch(() => false);
     detections.set(file, pending);
   }
+  void pending.then((isProtected) => recordDetection(file, isProtected));
   return pending;
+}
+
+export function isKnownRightsManagedPdf(fileId: string): boolean {
+  return detectedIds.has(fileId) || filesById.has(fileId);
+}
+
+export function rightsManagedSaveBlocked(
+  file: Blob | string | null | undefined,
+): boolean {
+  return (
+    getOpenedRightsManagedPdf(file)?.protection.permissions.export === false
+  );
 }
 
 export function getOpenedRightsManagedPdf(
@@ -235,6 +261,7 @@ export function forgetRightsManagedPdfs(ids: readonly string[]): void {
     const file = filesById.get(id);
     if (file) openedByFile.delete(file);
     filesById.delete(id);
+    detectedIds.delete(id);
   }
   publish();
 }
@@ -243,6 +270,7 @@ export function clearRightsManagedPdfs(): void {
   openedByFile = new WeakMap();
   thumbnails = new WeakMap();
   filesById.clear();
+  detectedIds.clear();
   publish();
 }
 

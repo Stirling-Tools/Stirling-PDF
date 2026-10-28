@@ -27,6 +27,7 @@ export default function WorkbenchBarDesktopActions({
   saveAsIconName,
   onPrint,
   printDisabledReason,
+  downloadDisabledReason,
   onExport,
   onClose,
   enforcingProgress,
@@ -73,12 +74,12 @@ export default function WorkbenchBarDesktopActions({
             hover={false}
             className="workbench-bar-action-icon"
             onClick={() => onExport()}
-            disabled={exportDisabled}
+            disabled={exportDisabled || Boolean(downloadDisabledReason)}
             aria-label={downloadLabel}
           >
             <Icon name={downloadIconName} size="1rem" />
           </ActionIcon>,
-          tooltipFor(downloadLabel),
+          tooltipFor(downloadDisabledReason ?? downloadLabel),
         )}
 
       {showsFileActions &&
@@ -89,12 +90,14 @@ export default function WorkbenchBarDesktopActions({
             hover={false}
             className="workbench-bar-action-icon"
             onClick={() => onExport(true)}
-            disabled={exportDisabled}
+            disabled={exportDisabled || Boolean(downloadDisabledReason)}
             aria-label={t("workbenchBar.saveAs", "Save As")}
           >
             <Icon name={saveAsIconName} size="1rem" />
           </ActionIcon>,
-          tooltipFor(t("workbenchBar.saveAs", "Save As")),
+          tooltipFor(
+            downloadDisabledReason ?? t("workbenchBar.saveAs", "Save As"),
+          ),
         )}
 
       {/* Separator: export group | close */}

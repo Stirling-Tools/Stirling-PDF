@@ -74,7 +74,7 @@ export function RightsManagedPdfBanner({
     ],
     facts,
     actions:
-      protection.owner && !permissions.owner
+      restricted && protection.owner && !permissions.owner
         ? [
             {
               label: t("protection.emailOwner", "Email the owner"),
