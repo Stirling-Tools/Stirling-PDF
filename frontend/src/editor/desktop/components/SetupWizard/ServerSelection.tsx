@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { Stack, TextInput, Alert, Text } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
+// Native HTTP, same as connectionModeService.testConnection — the webview's fetch
+// is subject to CORS and, on Linux, WebKitGTK's separate TLS trust store (#7385).
+import { fetch } from "@tauri-apps/plugin-http";
 import {
   ServerConfig,
   SSOProviderConfig,
