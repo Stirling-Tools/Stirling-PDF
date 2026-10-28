@@ -25,6 +25,7 @@ export interface PdfAccess {
   honorOwnerPasswords?: boolean;
   permissions: number;
   encryptionRevision?: number;
+  rightsManaged?: boolean;
   pageCount: number;
 }
 

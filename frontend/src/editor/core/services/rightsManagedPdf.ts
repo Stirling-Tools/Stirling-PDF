@@ -9,6 +9,7 @@ import { PdfPermissionFlag } from "@editor/contexts/viewer/viewerBridges";
 
 export const MICROSOFT_PROTECTION_SUBTYPE = "MicrosoftIRMServices";
 const PROTECTION_HEADER = "x-stirling-protection";
+const STRUCTURAL_PARSE_LIMIT = 64 * 1024 * 1024;
 const MARKER = new TextEncoder().encode(`/${MICROSOFT_PROTECTION_SUBTYPE}`);
 const SCAN_WINDOW = 8 * 1024 * 1024;
 
@@ -155,7 +156,11 @@ async function detect(file: Blob): Promise<boolean> {
   const header = new TextDecoder().decode(
     await file.slice(0, 16).arrayBuffer(),
   );
-  return header.startsWith("%PDF-2") && catalogNamesMicrosoftPayload(file);
+  return (
+    header.startsWith("%PDF-2") &&
+    file.size <= STRUCTURAL_PARSE_LIMIT &&
+    catalogNamesMicrosoftPayload(file)
+  );
 }
 
 export function isMicrosoftProtectedPdf(file: Blob): Promise<boolean> {
@@ -264,6 +269,7 @@ export function accessForProtection(
     signed: false,
     ownerAuthenticated: false,
     honorOwnerPasswords: true,
+    rightsManaged: true,
     permissions,
     pageCount: 0,
   };

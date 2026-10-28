@@ -24,6 +24,7 @@ import {
   protectUnlockedResults,
 } from "@editor/services/pdfSessionUnlock";
 import { PdfPermissionFlag } from "@editor/contexts/viewer/viewerBridges";
+import { pdfAllows } from "@editor/services/pdfPermissions";
 
 vi.mock("@editor/services/apiClient", () => ({
   default: { post: vi.fn(), get: vi.fn() },
@@ -148,6 +149,16 @@ describe("Microsoft Purview detection", () => {
     ).resolves.toBe(true);
   });
 
+  it("does not parse a very large file's structure on the main thread", async () => {
+    const bytes = await wrapper("MicrosoftIRMServices", {
+      objectStreams: true,
+      version: "2.0",
+    });
+    const file = new File([bytes], "huge.pdf");
+    Object.defineProperty(file, "size", { value: 65 * 1024 * 1024 });
+    await expect(isMicrosoftProtectedPdf(file)).resolves.toBe(false);
+  });
+
   it("does not claim another vendor's encrypted payload", async () => {
     const file = new File([await wrapper("AcmeDRM")], "a.pdf");
     await expect(isMicrosoftProtectedPdf(file)).resolves.toBe(false);
@@ -207,6 +218,15 @@ describe("opening a protected PDF", () => {
     expect(error.code).toBe("no_permissions");
     expect(error.owner).toBe("alice@contoso.com");
     expect(getOpenedRightsManagedPdf(original)).toBeUndefined();
+  });
+
+  it("keeps Purview rights when the server ignores owner passwords", () => {
+    const access = {
+      ...accessForProtection(protection({ edit: false, print: false })),
+      honorOwnerPasswords: false,
+    };
+    expect(pdfAllows(access, PdfPermissionFlag.Print)).toBe(false);
+    expect(pdfAllows(access, PdfPermissionFlag.ModifyContents)).toBe(false);
   });
 
   it("maps edit and comment rights onto PDF permission flags", () => {
