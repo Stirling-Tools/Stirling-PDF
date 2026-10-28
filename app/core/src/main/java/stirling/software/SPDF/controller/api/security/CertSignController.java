@@ -348,8 +348,15 @@ public class CertSignController {
                 PEMDecryptorProvider decProv =
                         new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
                 pkInfo = pemEncryptedKeyPair.decryptKeyPair(decProv).getPrivateKeyInfo();
+            } else if (pemObject instanceof PEMKeyPair pemKeyPair) {
+                pkInfo = pemKeyPair.getPrivateKeyInfo();
+            } else if (pemObject instanceof PrivateKeyInfo privateKeyInfo) {
+                pkInfo = privateKeyInfo;
             } else {
-                pkInfo = ((PEMKeyPair) pemObject).getPrivateKeyInfo();
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "PEM private key - file does not contain a private key");
             }
             return converter.getPrivateKey(pkInfo);
         }

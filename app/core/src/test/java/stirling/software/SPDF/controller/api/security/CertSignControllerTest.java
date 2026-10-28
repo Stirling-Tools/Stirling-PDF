@@ -388,4 +388,62 @@ class CertSignControllerTest {
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
     }
+
+    @Test
+    void testSignPdfWithUnencryptedPkcs8PemKey() throws Exception {
+        ResponseEntity<Resource> response =
+                signWithPemKey("test-key-pkcs8.pem", readResource("certs/test-key-pkcs8.pem"));
+
+        assertNotNull(response.getBody());
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void testSignPdfWithTraditionalRsaPemKey() throws Exception {
+        ResponseEntity<Resource> response =
+                signWithPemKey(
+                        "test-key-traditional.pem", readResource("certs/test-key-traditional.pem"));
+
+        assertNotNull(response.getBody());
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void testSignPdfWithCertificateAsPemKeyThrowsError() {
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> signWithPemKey("test-cert.pem", pemCertBytes));
+
+        assertTrue(exception.getMessage().contains("PEM private key"));
+    }
+
+    private ResponseEntity<Resource> signWithPemKey(String keyFileName, byte[] keyFileBytes)
+            throws Exception {
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes));
+        request.setCertType("PEM");
+        request.setPrivateKeyFile(
+                new MockMultipartFile(
+                        "privateKeyFile", keyFileName, "application/x-pem-file", keyFileBytes));
+        request.setCertFile(
+                new MockMultipartFile(
+                        "certFile", "test-cert.pem", "application/x-pem-file", pemCertBytes));
+        request.setPassword("password");
+        request.setShowSignature(false);
+        request.setReason("test");
+        request.setLocation("test");
+        request.setName("tester");
+        request.setPageNumber(1);
+        request.setShowLogo(false);
+        return certSignController.signPDFWithCert(request, httpRequest);
+    }
+
+    private static byte[] readResource(String path) throws java.io.IOException {
+        try (InputStream is = new ClassPathResource(path).getInputStream()) {
+            return is.readAllBytes();
+        }
+    }
 }
