@@ -9,6 +9,7 @@ import apiClient from "@editor/services/apiClient";
 import axios, { type CancelToken } from "axios";
 import i18n from "i18next";
 import {
+  fetchRightsManagementStatus,
   getOpenedRightsManagedPdf,
   isMicrosoftProtectedPdf,
   protectLikeOriginal,
@@ -89,11 +90,29 @@ async function ensureAccessUnlessDamaged(
   }
 }
 
-function supportsRightsManaged(endpoint: string | undefined): boolean {
+export function supportsRightsManaged(endpoint: string | undefined): boolean {
   return (
     supportsSessionUnlock(endpoint) &&
     endpoint !== "/api/v1/security/add-password" &&
     endpoint !== "/api/v1/security/remove-password"
+  );
+}
+
+async function unopenedRightsManagedMessage(): Promise<string> {
+  const status = await fetchRightsManagementStatus();
+  if (!status.available)
+    return i18n.t(
+      "rightsManagedPdf.unavailable",
+      "This server cannot open Microsoft Purview protected PDFs. Ask your administrator to turn it on, or open the file in a Microsoft 365 app.",
+    );
+  if (!status.accounts.some((account) => account.status === "CONNECTED"))
+    return i18n.t(
+      "rightsManagedPdf.signInFirst",
+      "Sign in with Microsoft in the viewer to open this Microsoft Purview protected PDF, then run the tool again.",
+    );
+  return i18n.t(
+    "rightsManagedPdf.openFirst",
+    "Open this Microsoft Purview protected PDF in the viewer first, then run the tool again.",
   );
 }
 
@@ -119,18 +138,13 @@ async function preflightRightsManaged(
     throw new Error(
       i18n.t(
         "rightsManagedPdf.mixedProtection",
-        "Process Microsoft Purview protected PDFs one at a time.",
+        "Process Microsoft Purview protected PDFs one at a time. Protected files: {{files}}.",
+        { files: protectedFiles.map((file) => file.name).join(", ") },
       ),
     );
   for (const file of protectedFiles) {
     const opened = getOpenedRightsManagedPdf(file);
-    if (!opened)
-      throw new Error(
-        i18n.t(
-          "rightsManagedPdf.openFirst",
-          "Open this Microsoft Purview protected PDF in the viewer first, then run the tool again.",
-        ),
-      );
+    if (!opened) throw new Error(await unopenedRightsManagedMessage());
     if (!opened.protection.permissions.edit)
       throw new Error(
         i18n.t(

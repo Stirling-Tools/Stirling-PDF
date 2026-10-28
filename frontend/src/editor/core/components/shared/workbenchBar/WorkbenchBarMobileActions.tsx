@@ -18,6 +18,7 @@ export default function WorkbenchBarMobileActions({
   saveAsIconName,
   onPrint,
   printDisabledReason,
+  downloadDisabledReason,
   onExport,
   onClose,
 }: WorkbenchBarActionsProps) {
@@ -57,8 +58,9 @@ export default function WorkbenchBarMobileActions({
         {showFileActions && (
           <Menu.Item
             leftSection={<Icon name={downloadIconName} size="1.1rem" />}
-            disabled={exportDisabled}
+            disabled={exportDisabled || Boolean(downloadDisabledReason)}
             onClick={() => void onExport()}
+            title={downloadDisabledReason}
           >
             {downloadLabel}
           </Menu.Item>
@@ -66,8 +68,9 @@ export default function WorkbenchBarMobileActions({
         {showFileActions && saveAsIconName && (
           <Menu.Item
             leftSection={<Icon name={saveAsIconName} size="1.1rem" />}
-            disabled={exportDisabled}
+            disabled={exportDisabled || Boolean(downloadDisabledReason)}
             onClick={() => void onExport(true)}
+            title={downloadDisabledReason}
           >
             {t("workbenchBar.saveAs", "Save As")}
           </Menu.Item>

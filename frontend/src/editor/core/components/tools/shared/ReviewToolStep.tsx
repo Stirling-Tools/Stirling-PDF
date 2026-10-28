@@ -14,6 +14,7 @@ import { saveOperationResults } from "@editor/services/operationResultsSaveServi
 import { useFileActions, useFileSelectors } from "@editor/contexts/FileContext";
 import i18n from "@editor/i18n";
 import {
+  getOpenedRightsManagedPdf,
   getRightsManagedThumbnail,
   rightsManagedPdfRevision,
   subscribeRightsManagedPdfs,
@@ -86,6 +87,8 @@ function ReviewStepContent<TParams = unknown>({
       file,
       thumbnail: getRightsManagedThumbnail(file) ?? operation.thumbnails[index],
     })) || [];
+  const rightsManagedOutput =
+    operation.files?.some((file) => getOpenedRightsManagedPdf(file)) ?? false;
 
   const handleDownload = async () => {
     if (!operation.downloadUrl) return;
@@ -193,7 +196,7 @@ function ReviewStepContent<TParams = unknown>({
         </Button>
       )}
 
-      <SuggestedToolsSection />
+      <SuggestedToolsSection rightsManaged={rightsManagedOutput} />
     </Stack>
   );
 }

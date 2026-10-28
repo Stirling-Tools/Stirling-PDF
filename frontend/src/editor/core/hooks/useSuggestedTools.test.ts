@@ -32,19 +32,32 @@ const mockNavigation = vi.mocked(useNavigationState);
 const mockWorkflow = vi.mocked(useToolWorkflow);
 
 /** A tool that can actually open, so it survives the availability filter. */
-function entry(name: string): ToolRegistryEntry {
+function entry(
+  name: string,
+  operationConfig?: Partial<NonNullable<ToolRegistryEntry["operationConfig"]>>,
+): ToolRegistryEntry {
   return {
     name,
     icon: null,
     component: (() => null) as unknown as ToolRegistryEntry["component"],
+    operationConfig,
   } as ToolRegistryEntry;
 }
 
 const REGISTRY: Partial<Record<ToolId, ToolRegistryEntry>> = {
-  compress: entry("Compress"),
-  convert: entry("Convert"),
-  sanitize: entry("Sanitize"),
-  split: entry("Split"),
+  compress: entry("Compress", { endpoint: "/api/v1/misc/compress-pdf" }),
+  convert: entry("Convert", {
+    endpoint: () => "/api/v1/convert/pdf/img",
+    endpoints: ["/api/v1/convert/pdf/img"],
+  }),
+  sanitize: entry("Sanitize", { endpoint: "/api/v1/security/sanitize-pdf" }),
+  split: entry("Split", {
+    endpoint: () => "/api/v1/general/split-pages",
+    endpoints: [
+      "/api/v1/general/split-pages",
+      "/api/v1/general/split-by-size-or-count",
+    ],
+  }),
   ocr: entry("OCR"),
   addPassword: entry("Add Password"),
   merge: entry("Merge"),
@@ -73,6 +86,7 @@ function setup(
   recommendations: { toolKey: string; score: number }[] | null,
   selectedTool: ToolId | null = null,
   toolAvailability: ToolAvailabilityMap = {},
+  rightsManaged = false,
 ) {
   mockRecommendations.mockReturnValue({ recommendations });
   mockNavigation.mockReturnValue({ selectedTool } as ReturnType<
@@ -84,7 +98,9 @@ function setup(
     toolAvailability,
   } as unknown as ReturnType<typeof useToolWorkflow>);
 
-  return renderHook(() => useSuggestedTools()).result.current.map((t) => t.id);
+  return renderHook(() =>
+    useSuggestedTools({ rightsManaged }),
+  ).result.current.map((t) => t.id);
 }
 
 describe("useSuggestedTools", () => {
@@ -160,6 +176,13 @@ describe("useSuggestedTools", () => {
         { toolKey: "merge", score: 4 },
       ]),
     ).toEqual(["multiTool", "merge", "compress", "convert"]);
+  });
+
+  it("only suggests tools that keep Microsoft Purview protection for a protected result", () => {
+    expect(setup([{ toolKey: "rotate", score: 9 }], null, {}, true)).toEqual([
+      "compress",
+      "split",
+    ]);
   });
 
   it("does not repeat a ranked tool that is also in the curated list", () => {

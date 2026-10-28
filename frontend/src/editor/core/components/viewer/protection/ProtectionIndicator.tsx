@@ -58,10 +58,10 @@ function ColorDot({ color }: { color?: string | null }) {
 function FactRow({
   label,
   value,
-  danger,
+  restricted,
   override,
 }: ProtectionFact & {
-  danger?: boolean;
+  restricted?: boolean;
   override?: ProtectionRight["override"];
 }) {
   return (
@@ -86,10 +86,18 @@ function FactRow({
             </ActionIcon>
           </Tooltip>
         )}
+        {restricted && (
+          <Icon
+            name="lock"
+            size={12}
+            aria-hidden
+            style={{ color: "var(--c-text-muted)", flexShrink: 0 }}
+          />
+        )}
         <Text
           size="sm"
           ta="right"
-          c={danger ? "var(--c-danger)" : undefined}
+          c={restricted ? "var(--c-text-muted)" : undefined}
           style={{ overflowWrap: "anywhere" }}
         >
           {value}
@@ -130,6 +138,9 @@ export function ProtectionIndicator({
         <ColorDot color={protection.color} />
         <Text size="sm" fw={600} truncate style={{ minWidth: 0 }}>
           {protection.title}
+        </Text>
+        <Text size="sm" c="dimmed" aria-hidden>
+          ·
         </Text>
         <Text size="sm" c="dimmed" truncate style={{ minWidth: 0, flex: 1 }}>
           {protection.summary}
@@ -204,7 +215,7 @@ export function ProtectionIndicator({
             <FactRow
               key={right.name}
               label={right.name}
-              danger={!right.allowed && !right.override}
+              restricted={!right.allowed && !right.override}
               override={right.override}
               value={
                 right.value ??

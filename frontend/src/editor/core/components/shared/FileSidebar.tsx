@@ -15,7 +15,11 @@ import { NavSurface } from "@editor/ui/NavSurface";
 import { Button } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { useFileState, useFileActions } from "@editor/contexts/file/fileHooks";
+import {
+  useFileState,
+  useFileActions,
+  useFileSelectors,
+} from "@editor/contexts/file/fileHooks";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import {
   useCloudFilePickers,
@@ -83,6 +87,8 @@ import {
 } from "@editor/hooks/useOneDriveSave";
 import {
   getRightsManagedThumbnail,
+  isKnownRightsManagedPdf,
+  isMicrosoftProtectedPdf,
   rightsManagedPdfRevision,
   subscribeRightsManagedPdfs,
 } from "@editor/services/rightsManagedPdf";
@@ -550,6 +556,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const navigate = useNavigate();
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
+    const fileSelectors = useFileSelectors();
+    useEffect(() => {
+      for (const file of fileSelectors.getFiles(state.files.ids)) {
+        if (file.type === "application/pdf" || /\.pdf$/i.test(file.name))
+          void isMicrosoftProtectedPdf(file);
+      }
+    }, [fileSelectors, state.files.ids]);
     const damagedRepair = useDamagedFileRepair();
     const { actions: navActions } = useNavigationActions();
     const { workbench: currentWorkbench } = useNavigationState();
@@ -1173,6 +1186,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           isViewedInViewer={isViewedInViewer}
           thumbnailUrl={thumbnailUrl}
           isEncrypted={isEncryptedFile}
+          isRightsManaged={isKnownRightsManagedPdf(stub.id)}
           onClick={handleFileClick}
           onEyeClick={handleEyeClick}
           dataUnavailable={dataUnavailable}

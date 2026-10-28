@@ -158,7 +158,7 @@ export function RightsManagedPdfPanel({
         maw={440}
         data-testid="rights-managed-pdf-panel"
       >
-        <Icon name="shield-check" size={40} />
+        <Icon name={error ? "shield-alert" : "shield"} size={40} />
         <Title order={4} ta="center">
           {t("rightsManagedPdf.title", "Protected by Microsoft Purview")}
         </Title>
@@ -222,6 +222,15 @@ export function RightsManagedPdfPanel({
           <Group gap="sm" justify="center">
             <Button onClick={() => void openExternal(`mailto:${error.owner}`)}>
               {t("protection.emailOwner", "Email the owner")}
+            </Button>
+            <Button variant="secondary" onClick={() => void open(accountId)}>
+              {t("rightsManagedPdf.tryAgain", "Try again")}
+            </Button>
+          </Group>
+        ) : error?.reconnect && connectedAccounts.length > 0 ? (
+          <Group gap="sm" justify="center">
+            <Button onClick={() => void connectThenOpen()} loading={busy}>
+              {t("rightsManagedPdf.signInAgain", "Sign in again")}
             </Button>
             <Button variant="secondary" onClick={() => void open(accountId)}>
               {t("rightsManagedPdf.tryAgain", "Try again")}
