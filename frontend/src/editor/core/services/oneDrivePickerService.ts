@@ -75,6 +75,7 @@ class OneDrivePickerService {
     | typeof import("@azure/msal-browser").InteractionRequiredAuthError
     | null = null;
   private open = false;
+  private pending: { key: string; promise: Promise<void> } | null = null;
   private graphUrl = DEFAULT_GRAPH_URL;
 
   async initialize(config: OneDriveConfig): Promise<void> {
@@ -83,6 +84,16 @@ class OneDrivePickerService {
     if (this.app && this.appKey === key) {
       return;
     }
+    if (this.pending?.key !== key) {
+      const promise = this.createApp(config, key).finally(() => {
+        if (this.pending?.promise === promise) this.pending = null;
+      });
+      this.pending = { key, promise };
+    }
+    return this.pending.promise;
+  }
+
+  private async createApp(config: OneDriveConfig, key: string): Promise<void> {
     const msal = await import("@azure/msal-browser");
     this.interactionRequired = msal.InteractionRequiredAuthError;
     this.app = await msal.createStandardPublicClientApplication({
