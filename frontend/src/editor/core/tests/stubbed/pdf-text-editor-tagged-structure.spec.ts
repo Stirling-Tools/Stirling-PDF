@@ -141,22 +141,30 @@ async function saveAndReopen(page: import("@playwright/test").Page) {
   );
 }
 
+async function openFixture(page: import("@playwright/test").Page) {
+  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+    timeout: 15_000,
+  });
+  await page
+    .locator('[data-testid="pdf-editor-file-input"]')
+    .setInputFiles(FIXTURE);
+  await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect
+    .poll(() => page.evaluate(RUN_ID, "product line"), { timeout: 30_000 })
+    .not.toBeNull();
+}
+
+// `[data-testid^="pdf-editor-image-"]` also matches the hidden file input.
+const IMAGE = '[data-testid^="pdf-editor-image-p"]';
+const PNG = path.join(import.meta.dirname, "../test-fixtures/sample.png");
+
 test.describe("PDF text editor - tagged documents", () => {
   test("edited text stays in the structure tree", async ({ page }) => {
     test.setTimeout(120_000);
-    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-      timeout: 15_000,
-    });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(FIXTURE);
-    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
-      timeout: 30_000,
-    });
-    await expect
-      .poll(() => page.evaluate(RUN_ID, "product line"), { timeout: 30_000 })
-      .not.toBeNull();
+    await openFixture(page);
 
     expect(await page.evaluate(AUDIT)).toEqual({
       untaggedText: 0,
@@ -185,5 +193,148 @@ test.describe("PDF text editor - tagged documents", () => {
     expect(saved.untaggedText).toBe(0);
     expect(saved.contentMcids).toEqual(saved.treeMcids);
     expect(saved.contentMcids).toEqual(expect.arrayContaining([0, 1, 2]));
+  });
+
+  test("an image's description is edited in the inspector and saved", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+
+    await page.locator(IMAGE).first().click();
+    const field = page.getByTestId("pdf-editor-image-description");
+    await expect(field).toHaveValue("Bar chart of revenue by region");
+
+    await field.fill("Revenue by region, third quarter");
+    await saveAndReopen(page);
+
+    await page.locator(IMAGE).first().click();
+    await expect(page.getByTestId("pdf-editor-image-description")).toHaveValue(
+      "Revenue by region, third quarter",
+    );
+  });
+
+  test("an image without a description is flagged and reached from the document summary", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+    const image = page.locator(IMAGE).first();
+    const imageId = (await image.getAttribute("data-testid"))!.replace(
+      "pdf-editor-image-",
+      "",
+    );
+    const badge = page.getByTestId(`pdf-editor-image-attention-${imageId}`);
+    const summary = page.getByTestId(
+      "pdf-editor-document-accessibility-summary",
+    );
+    await expect(badge).toBeHidden();
+
+    await image.click();
+    await page.getByTestId("pdf-editor-image-description").fill("");
+    await expect(badge).toBeVisible();
+
+    // Next shows the description of the image it picks, even with one selected.
+    await page.getByTestId("pdf-editor-tab-document").click();
+    await page.getByTestId("pdf-editor-document-accessibility-next").click();
+    await expect(
+      page.getByTestId("pdf-editor-image-description"),
+    ).toBeVisible();
+
+    // Escape from the Document tab clears the selection and leaves the tab open.
+    await page.getByTestId("pdf-editor-tab-document").click();
+    await page.keyboard.press("Escape");
+    await expect(summary).toHaveText(
+      /Missing descriptions\s*1\s*Untagged images\s*0/,
+    );
+
+    await page.getByTestId("pdf-editor-document-accessibility-next").click();
+    const field = page.getByTestId("pdf-editor-image-description");
+    await expect(field).toHaveValue("");
+    await field.fill("Revenue by region");
+    await expect(badge).toBeHidden();
+
+    await page.getByTestId("pdf-editor-tab-document").click();
+    await expect(summary).toHaveText(
+      /Missing descriptions\s*0\s*Untagged images\s*0/,
+    );
+    await expect(
+      page.getByTestId("pdf-editor-document-accessibility-next"),
+    ).toBeHidden();
+  });
+
+  test("an image inserted into a tagged document is flagged, then tagged by describing it", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+    const images = page.locator(IMAGE);
+    await expect(images).toHaveCount(1);
+
+    await page
+      .locator('[data-testid="pdf-editor-image-input"]')
+      .setInputFiles(PNG);
+    await expect(images).toHaveCount(2);
+    const untagged = page.locator(
+      '[data-testid^="pdf-editor-image-attention-"][data-attention="untagged"]',
+    );
+    await expect(untagged).toHaveCount(1);
+
+    await page.getByTestId("pdf-editor-tab-document").click();
+    await page.keyboard.press("Escape");
+    const summary = page.getByTestId(
+      "pdf-editor-document-accessibility-summary",
+    );
+    await expect(summary).toHaveText(
+      /Missing descriptions\s*0\s*Untagged images\s*1/,
+    );
+
+    await images.nth(1).click();
+    await page.getByTestId("pdf-editor-image-description").fill("A red square");
+    await expect(untagged).toHaveCount(0);
+    await saveAndReopen(page);
+
+    await page.locator(IMAGE).nth(1).click();
+    await expect(page.getByTestId("pdf-editor-image-description")).toHaveValue(
+      "A red square",
+    );
+  });
+
+  test("an image marked decorative saves as decoration, and can be described again", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openFixture(page);
+
+    await page.locator(IMAGE).first().click();
+    const decorative = page.getByTestId("pdf-editor-image-decorative");
+    await expect(decorative).not.toBeChecked();
+    // The styled box hides its input, so the click goes to the label.
+    await page
+      .getByTestId("pdf-editor-image-accessibility")
+      .getByText("Decorative image", { exact: true })
+      .click();
+    await expect(decorative).toBeChecked();
+    await expect(page.getByTestId("pdf-editor-image-description")).toBeHidden();
+    await saveAndReopen(page);
+
+    await page.locator(IMAGE).first().click();
+    await expect(decorative).toBeChecked();
+    await expect(page.getByTestId("pdf-editor-image-description")).toBeHidden();
+
+    await page
+      .getByTestId("pdf-editor-image-accessibility")
+      .getByText("Decorative image", { exact: true })
+      .click();
+    await expect(decorative).not.toBeChecked();
+    const field = page.getByTestId("pdf-editor-image-description");
+    await expect(field).toHaveValue("");
+    await field.fill("Revenue by region");
+    await saveAndReopen(page);
+
+    await page.locator(IMAGE).first().click();
+    await expect(page.getByTestId("pdf-editor-image-description")).toHaveValue(
+      "Revenue by region",
+    );
   });
 });
