@@ -33,6 +33,7 @@ import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
+import stirling.software.proprietary.storage.model.api.StoredFileResponse;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.provider.StoredObject;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
@@ -531,6 +532,55 @@ class FileStorageServiceTest {
 
         verify(storedFileRepository, never()).sumStorageBytesByOwner(any());
         verify(storedFileRepository, never()).sumStorageBytesTotal();
+    }
+
+    @Test
+    void updateFileResponse_staleRevision_rejectsWithoutStoring() throws IOException {
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        existing.setStorageKey("key-written-by-other-device");
+        when(storedFileRepository.findByIdAndOwnerWithShares(100L, owner))
+                .thenReturn(Optional.of(existing));
+        MockMultipartFile newFile =
+                new MockMultipartFile("file", "a.pdf", "application/pdf", new byte[] {1});
+
+        assertThatThrownBy(
+                        () ->
+                                service.updateFileResponse(
+                                        owner, 100L, newFile, null, null, "stale-revision"))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isEqualTo(409);
+        verify(storageProvider, never()).store(any(), any());
+    }
+
+    @Test
+    void updateFileResponse_currentRevision_storesAndReturnsNewRevision() throws IOException {
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        existing.setStorageKey("old-key");
+        String currentRevision = FileStorageService.revisionOf(existing);
+        when(storedFileRepository.findByIdAndOwnerWithShares(100L, owner))
+                .thenReturn(Optional.of(existing));
+        when(storageProvider.store(any(), any()))
+                .thenReturn(
+                        StoredObject.builder()
+                                .storageKey("new-key")
+                                .originalFilename("a.pdf")
+                                .contentType("application/pdf")
+                                .sizeBytes(1L)
+                                .build());
+        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        MockMultipartFile newFile =
+                new MockMultipartFile("file", "a.pdf", "application/pdf", new byte[] {1});
+
+        StoredFileResponse response =
+                service.updateFileResponse(owner, 100L, newFile, null, null, currentRevision);
+
+        assertThat(response.getRevision())
+                .isNotNull()
+                .isNotEqualTo(currentRevision)
+                .isEqualTo(FileStorageService.revisionOf(existing));
     }
 
     // -------------------------------------------------------------------------

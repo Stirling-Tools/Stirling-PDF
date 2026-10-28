@@ -1,6 +1,7 @@
 package stirling.software.proprietary.storage.service;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -378,9 +379,39 @@ public class FileStorageService {
             MultipartFile file,
             MultipartFile historyBundle,
             MultipartFile auditLog) {
+        return updateFileResponse(owner, fileId, file, historyBundle, auditLog, null);
+    }
+
+    /**
+     * Replaces the stored content. With a non-null {@code baseRevision} the write is rejected with
+     * 409 Conflict, before anything is stored, unless the file is still at that revision.
+     */
+    public StoredFileResponse updateFileResponse(
+            User owner,
+            Long fileId,
+            MultipartFile file,
+            MultipartFile historyBundle,
+            MultipartFile auditLog,
+            String baseRevision) {
         StoredFile existing = getOwnedFile(owner, fileId);
+        if (baseRevision != null && !baseRevision.equals(revisionOf(existing))) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "File was changed by another session");
+        }
         StoredFile updated = replaceFile(owner, existing, file, historyBundle, auditLog);
         return buildResponse(updated, owner);
+    }
+
+    /**
+     * Derived from the storage key, which every replace assigns afresh. Hashed so the response does
+     * not reveal where the bytes live.
+     */
+    static String revisionOf(StoredFile file) {
+        String storageKey = file.getStorageKey();
+        if (storageKey == null) {
+            return null;
+        }
+        return UUID.nameUUIDFromBytes(storageKey.getBytes(StandardCharsets.UTF_8)).toString();
     }
 
     public List<StoredFileResponse> listAccessibleFileResponses(User user) {
@@ -489,6 +520,7 @@ public class FileStorageService {
                 .accessRole(accessRole)
                 .createdAt(file.getCreatedAt())
                 .updatedAt(file.getUpdatedAt())
+                .revision(revisionOf(file))
                 .sharedWithUsers(sharedWithUsers)
                 .sharedUsers(sharedUsers)
                 .shareLinks(shareLinks)
