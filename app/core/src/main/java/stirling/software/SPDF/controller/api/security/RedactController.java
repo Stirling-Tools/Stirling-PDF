@@ -99,11 +99,11 @@ public class RedactController {
             operationId = "redactPdfManual",
             summary = "Redacts areas and pages in a PDF document",
             description =
-                    "Redacts manually specified areas and whole pages. Text at least half inside"
-                            + " an area, and the images under it, are removed from the file before"
-                            + " the area is painted, and listed pages are wiped of all content. A"
-                            + " page that cannot be redacted this way is rasterized instead."
-                            + " Optionally rasterizes every page.")
+                    "Redacts manually specified areas and whole pages. The text and images under"
+                            + " each area are removed from the file before the area is painted, a"
+                            + " letter the area only partly covers with them, and listed pages are"
+                            + " wiped of all content. A page that cannot be redacted this way is"
+                            + " rasterized instead. Optionally rasterizes every page.")
     public ResponseEntity<Resource> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
 

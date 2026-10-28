@@ -668,12 +668,12 @@ export interface ManualRedactPdfRequest {
    */
   pageRedactionColor?: string;
   /**
-   * Areas to redact. Text at least half inside an area, and the image content under it, is removed from the file and the area is painted; a page that cannot be redacted this way is rasterized instead.
+   * Areas to redact. The text and image content under each area is removed from the file, a letter the area only partly covers with it, and the area is painted; a page that cannot be redacted this way is rasterized instead.
    */
   redactions: RedactionArea[];
 }
 /**
- * Areas to redact. Text at least half inside an area, and the image content under it, is removed from the file and the area is painted; a page that cannot be redacted this way is rasterized instead.
+ * Areas to redact. The text and image content under each area is removed from the file, a letter the area only partly covers with it, and the area is painted; a page that cannot be redacted this way is rasterized instead.
  */
 export interface RedactionArea {
   /**
@@ -1219,7 +1219,7 @@ export interface RedactStyle {
    */
   padding?: number;
   /**
-   * AUTO removes the covered content of every redaction from the file (text counts when at least half of it is inside a box); a page that cannot be redacted this way is rasterized instead. OVERLAY_ONLY only paints boxes and leaves the covered text and images extractable. IMAGE_FINALIZE rasterizes every page.
+   * AUTO removes the covered content of every redaction from the file, including any letter a box only partly covers; a page that cannot be redacted this way is rasterized instead. OVERLAY_ONLY only paints boxes and leaves the covered text and images extractable. IMAGE_FINALIZE rasterizes every page.
    */
   strategy?: "AUTO" | "OVERLAY_ONLY" | "IMAGE_FINALIZE";
 }
