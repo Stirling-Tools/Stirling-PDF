@@ -14,12 +14,12 @@ vi.mock("@editor/contexts/AppConfigContext", () => ({
 const {
   latestConnectedAccounts,
   refreshConnectedAccounts,
-  resetConnectedAccountsForTests,
+  clearConnectedAccounts,
 } = await import("@editor/hooks/useConnectedAccounts");
 
 describe("refreshConnectedAccounts", () => {
   beforeEach(() => {
-    resetConnectedAccountsForTests();
+    clearConnectedAccounts();
     fetchConnectedAccounts.mockReset();
   });
 
@@ -34,5 +34,23 @@ describe("refreshConnectedAccounts", () => {
     await refreshConnectedAccounts();
 
     expect(latestConnectedAccounts()).toEqual(accounts);
+  });
+
+  it("drops the previous user's accounts and ignores their late reply", async () => {
+    let answer: (value: unknown) => void = () => undefined;
+    fetchConnectedAccounts.mockReturnValueOnce(
+      new Promise((resolve) => {
+        answer = resolve;
+      }),
+    );
+    const pending = refreshConnectedAccounts();
+    clearConnectedAccounts();
+    answer({
+      providers: { microsoft: true, google: false },
+      accounts: [{ id: 9, provider: "microsoft", status: "CONNECTED" }],
+    });
+    await pending;
+
+    expect(latestConnectedAccounts()).toEqual([]);
   });
 });
