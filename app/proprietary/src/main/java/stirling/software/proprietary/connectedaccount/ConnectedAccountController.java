@@ -177,7 +177,7 @@ public class ConnectedAccountController {
         }
     }
 
-    private List<String> scopesFor(CloudProvider provider, String resource) {
+    List<String> scopesFor(CloudProvider provider, String resource) {
         if (resource == null || resource.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "resource is required");
         }
@@ -197,7 +197,10 @@ public class ConnectedAccountController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported resource");
         }
         String origin = uri.getScheme() + "://" + uri.getAuthority();
-        if (!isSharePoint(uri) && !origin.equals(graphOrigin())) {
+        if (origin.equals(graphOrigin())) {
+            return List.of(MicrosoftOAuthClient.BROWSER_SCOPE);
+        }
+        if (!isSharePoint(uri)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported resource");
         }
         return List.of(origin + "/.default");
