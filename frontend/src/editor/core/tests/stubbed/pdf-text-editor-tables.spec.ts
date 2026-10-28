@@ -269,6 +269,154 @@ test.describe("PDF text editor - tables", () => {
     expect(afterUndo.rows).toEqual(start.rows);
   });
 
+  test("deletes the row selected by its row handle", async ({ page }) => {
+    test.setTimeout(180_000);
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page
+      .locator('[data-testid="pdf-editor-file-input"]')
+      .setInputFiles(
+        path.join(
+          import.meta.dirname,
+          "../test-fixtures",
+          "paragraph-sample.pdf",
+        ),
+      );
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    await page.getByTestId("pdf-editor-add-table").click();
+    const box = await page.getByTestId("pdf-editor-page-0").boundingBox();
+    expect(box).not.toBeNull();
+    await page.mouse.click(
+      box!.x + box!.width * 0.35,
+      box!.y + box!.height * 0.45,
+    );
+    await page.waitForFunction(
+      `(${STORE}.state.pages[0].tables ? ${STORE}.state.pages[0].tables.length : 0) > 0`,
+      undefined,
+      { timeout: 10_000 },
+    );
+    const tableId = (await page.evaluate(
+      `${STORE}.state.pages[0].tables[0].id`,
+    )) as string;
+
+    const fillCell = async (row: number, text: string) => {
+      const cell = page.getByTestId(
+        `pdf-editor-table-cell-${tableId}-${row}-0`,
+      );
+      await cell.click();
+      await cell.type(text);
+      await cell.press("Enter");
+      await page.waitForTimeout(300);
+    };
+    await fillCell(1, "middle");
+    await fillCell(2, "last");
+    const runIds = (await page.evaluate(
+      `(t => ({ middle: t.cells.find(c => c.row === 1 && c.col === 0)?.runIds[0], last: t.cells.find(c => c.row === 2 && c.col === 0)?.runIds[0] }))(${STORE}.state.pages[0].tables[0])`,
+    )) as { middle: string; last: string };
+
+    // Handle 2 is the lower edge of body row 1, so clicking it selects row 1.
+    await page.getByTestId(`pdf-editor-table-row-handle-${tableId}-2`).click();
+    await page.getByTestId(`pdf-editor-table-del-row-${tableId}`).click();
+    await page.waitForFunction(
+      `(${STORE}.state.pages[0].tables[0].rows) === 2`,
+    );
+
+    const result = (await page.evaluate(
+      `(t => ({ rows: t.rows, row: t.cells.find(c => c.row === 1 && c.col === 0)?.runIds[0] }))(${STORE}.state.pages[0].tables[0])`,
+    )) as { rows: number; row: string };
+    expect(result).toEqual({ rows: 2, row: runIds.last });
+    expect(result.row).not.toBe(runIds.middle);
+  });
+
+  test("keeps row selection isolated when switching between tables", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page
+      .locator('[data-testid="pdf-editor-file-input"]')
+      .setInputFiles(
+        path.join(
+          import.meta.dirname,
+          "../test-fixtures",
+          "paragraph-sample.pdf",
+        ),
+      );
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const pageBox = await page.getByTestId("pdf-editor-page-0").boundingBox();
+    expect(pageBox).not.toBeNull();
+    const addTable = async (x: number, y: number) => {
+      await page.getByTestId("pdf-editor-add-table").click();
+      await page.mouse.click(
+        pageBox!.x + pageBox!.width * x,
+        pageBox!.y + pageBox!.height * y,
+      );
+      await page.waitForFunction(
+        `(${STORE}.state.pages[0].tables ? ${STORE}.state.pages[0].tables.length : 0) > 0`,
+        undefined,
+        { timeout: 10_000 },
+      );
+    };
+    await addTable(0.25, 0.35);
+    await addTable(0.7, 0.65);
+    await page.waitForFunction(
+      `(${STORE}.state.pages[0].tables ? ${STORE}.state.pages[0].tables.length : 0) === 2`,
+      undefined,
+      { timeout: 10_000 },
+    );
+
+    const tableIds = (await page.evaluate(
+      `${STORE}.state.pages[0].tables.map(t => t.id)`,
+    )) as string[];
+    const [firstId, secondId] = tableIds;
+    const fillCell = async (tableId: string, row: number, text: string) => {
+      const cell = page.getByTestId(
+        `pdf-editor-table-cell-${tableId}-${row}-0`,
+      );
+      await cell.click();
+      await cell.type(text);
+      await cell.press("Enter");
+      await page.waitForTimeout(300);
+    };
+    await fillCell(firstId, 1, "first-table-body");
+    await fillCell(firstId, 2, "first-table-last");
+    await fillCell(secondId, 1, "second-table-body");
+    await fillCell(secondId, 2, "second-table-last");
+
+    // Select a non-default row in the first table and delete it.
+    await page.getByTestId(`pdf-editor-table-row-handle-${firstId}-2`).click();
+    await page.getByTestId(`pdf-editor-table-del-row-${firstId}`).click();
+    await page.waitForFunction(
+      `(${STORE}.state.pages[0].tables.find(t => t.id === "${firstId}").rows) === 2`,
+    );
+
+    // Without selecting a handle in the second table, its own default
+    // selection must remove its final body row, not the first table's row.
+    await page.getByTestId(`pdf-editor-table-del-row-${secondId}`).click();
+    await page.waitForFunction(
+      `(${STORE}.state.pages[0].tables.find(t => t.id === "${secondId}").rows) === 2`,
+    );
+
+    const result = (await page.evaluate(
+      `(s => s.state.pages[0].tables.map(t => ({ id: t.id, rows: t.rows, texts: t.cells.map(c => c.runIds[0]).filter(Boolean).map(id => s.state.pages[0].runs.find(r => r.id === id)?.text) })) )(${STORE})`,
+    )) as { id: string; rows: number; texts: string[] }[];
+    expect(result).toEqual([
+      { id: firstId, rows: 2, texts: ["first-table-last"] },
+      { id: secondId, rows: 2, texts: ["second-table-body"] },
+    ]);
+  });
+
   test("recognizes a borderless table and makes it editable", async ({
     page,
   }) => {
