@@ -7,6 +7,7 @@ import { FileOrigin } from "@editor/components/filesPage/fileOrigin";
 interface FileOriginBadgeProps {
   origin: FileOrigin;
   onDisk?: boolean;
+  fromOneDrive?: boolean;
   /** Compact (icon-only) vs full (icon + text). */
   compact?: boolean;
   tooltip?: string;
@@ -43,6 +44,7 @@ const styles = {
 export function FileOriginBadge({
   origin,
   onDisk = false,
+  fromOneDrive = false,
   compact = false,
   tooltip,
 }: FileOriginBadgeProps) {
@@ -69,6 +71,14 @@ export function FileOriginBadge({
         };
       case "local":
       default:
+        if (fromOneDrive) {
+          return {
+            label: t("filesPage.origin.oneDrive", "OneDrive"),
+            icon: <Icon name="onedrive" size={"0.85rem"} />,
+            style: styles.local,
+            tooltip: t("oneDriveSave.fromOneDrive", "From OneDrive"),
+          };
+        }
         return {
           label: t("filesPage.origin.local", "Local"),
           icon: (

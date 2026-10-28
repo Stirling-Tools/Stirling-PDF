@@ -12,6 +12,24 @@ import {
  * Provides axios-compatible API while bypassing CORS restrictions
  */
 
+async function withInMemoryFiles(form: FormData): Promise<FormData> {
+  const copy = new FormData();
+  for (const [key, value] of form.entries()) {
+    if (typeof value === "string") {
+      copy.append(key, value);
+      continue;
+    }
+    copy.append(
+      key,
+      new File([await value.arrayBuffer()], value.name, {
+        type: value.type,
+        lastModified: value.lastModified,
+      }),
+    );
+  }
+  return copy;
+}
+
 export interface TauriHttpResponse<T = any> {
   data: T;
   status: number;
@@ -225,8 +243,7 @@ class TauriHttpClient {
 
     if (finalConfig.data) {
       if (finalConfig.data instanceof FormData) {
-        // FormData can be passed directly
-        body = finalConfig.data;
+        body = await withInMemoryFiles(finalConfig.data);
         // Drop any caller-supplied Content-Type so the native fetch generates
         // multipart/form-data WITH its boundary (matches axios's FormData
         // handling). A boundary-less "multipart/form-data" header makes the

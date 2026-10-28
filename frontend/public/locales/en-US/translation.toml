@@ -4052,7 +4052,7 @@ connectAnother = "Connect another"
 connectFailed = "The account couldn't be connected. Check that the server's app registration is set up, then try again."
 disconnect = "Disconnect"
 google = "Google Drive"
-intro = "Connect your own accounts once. Your pipelines can then read from and save to them as you."
+intro = "Connect your own accounts once. The editor can then open files from them without signing in again, and your pipelines can read from and save to them as you."
 microsoft = "Microsoft (OneDrive & SharePoint)"
 needsReconnect = "Stirling can no longer reach this account, so pipelines using it are paused."
 none = "Your administrator hasn't turned on connected accounts."
@@ -4815,10 +4815,12 @@ downloadFailed = "Download failed"
 dropHint = "Open files to get started"
 duplicateFailed = "Could not duplicate file"
 expand = "Expand sidebar"
-googleDrive = "Google Drive"
+googleDrive = "Open from Google Drive"
 library = "PDF Library"
 myFiles = "File library"
 noFiles = "No files yet"
+oneDrive = "Open from OneDrive"
+oneDriveFailed = "Couldn't open OneDrive"
 openFileManager = "Browse all files & folders"
 openFromComputer = "Open from computer"
 openSettings = "Open settings"
@@ -5148,6 +5150,7 @@ diskFileHint = "Stored on your computer"
 diskHint = "A file in the mounted folder on your disk"
 local = "Local"
 localHint = "Not backed up"
+oneDrive = "OneDrive"
 shared = "Shared"
 sharedHint = "Shared with you via link"
 
@@ -6544,6 +6547,23 @@ pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages.
 quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
 topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
 wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
+
+[oneDriveSave]
+chooseFolder = "Choose a OneDrive folder to save to"
+conflict = "Someone changed this file in OneDrive after you opened it. Save your version as a copy instead."
+failedTitle = "Couldn't save to OneDrive"
+fromOneDrive = "From OneDrive"
+linkNotStored = "This browser couldn't remember the link to the OneDrive file. After a reload, save it as a copy instead."
+open = "Open in OneDrive"
+personalUnsupported = "Saving to a chosen folder needs a work or school Microsoft account."
+reconnect = "Reconnect"
+replaces = "Replaces {{name}}"
+saveCopy = "Save a copy"
+saveCopyToOneDrive = "Save a copy to OneDrive"
+saved = "Saved to OneDrive"
+saveToFolder = "Save to a OneDrive folder…"
+saving = "Saving to OneDrive…"
+updateOriginal = "Update original in OneDrive"
 
 [overlay-pdfs]
 desc = "Overlay one PDF on top of another"
@@ -11148,6 +11168,7 @@ description = "Allow users to import files directly from Google Drive"
 label = "Enable Google Drive File Picker"
 
 [provider.googledrive.errors]
+connectFailed = "Couldn't connect your Google account. Try again from Settings > Connected accounts."
 notConfigured = "Google Drive is not configured"
 pickerFailed = "Failed to open Google Drive picker"
 
@@ -11172,8 +11193,12 @@ description = "Needed for connected accounts and organisation connections. Stays
 label = "Client secret"
 
 [provider.microsoft.enabled]
-description = "Let people use OneDrive and SharePoint in pipelines"
+description = "Let people open files from OneDrive and SharePoint, and use them in pipelines"
 label = "Enable OneDrive & SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "Add this as a Single-page application redirect URI on the same app registration, for signing in from the editor."
+label = "Single-page application redirect URI"
 
 [provider.microsoft.redirectUri]
 description = "Add this as a Web redirect URI on the Entra app registration."
@@ -11283,6 +11308,19 @@ label = "Scopes"
 [provider.oauth2.keycloak.useAsUsername]
 description = "Field to use as username (email, name, given_name, family_name, preferred_username)"
 label = "Use as Username"
+
+[provider.onedrive]
+pickerLoading = "Connecting to OneDrive…"
+pickerTitle = "Choose files from OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "Couldn't connect your Microsoft account. Try again from Settings > Connected accounts."
+notConfigured = "OneDrive is not configured"
+pickerFailed = "Failed to open OneDrive"
+popupBlocked = "Your browser blocked the Microsoft sign-in window. Allow pop-ups for this site and try again."
+reconnect = "Your Microsoft account needs to sign in again. Reconnect it in Settings > Connected accounts."
+serverError = "OneDrive or the Stirling server had a problem. Try again, or ask your administrator if it keeps happening."
+unreachable = "Couldn't reach OneDrive. Check your connection and try again."
 
 [provider.saml2]
 name = "SAML2"
@@ -12030,7 +12068,7 @@ storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
 
 [settings.connectedAccounts]
-description = "Your own OneDrive, SharePoint and Google Drive, for your pipelines."
+description = "Your own OneDrive, SharePoint and Google Drive, for opening files and for your pipelines."
 title = "Connected accounts"
 
 [settings.connectedInstances]

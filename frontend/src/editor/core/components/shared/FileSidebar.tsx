@@ -7,7 +7,8 @@ import React, {
   forwardRef,
   type RefCallback,
 } from "react";
-import { Loader, Tooltip } from "@mantine/core";
+import { Loader, Menu, Tooltip } from "@mantine/core";
+import { useNavigate } from "react-router-dom";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { NavSurface } from "@editor/ui/NavSurface";
 import { Button } from "@editor/ui/Button";
@@ -15,7 +16,10 @@ import { Icon, type IconName } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useFileState, useFileActions } from "@editor/contexts/file/fileHooks";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
-import { useGoogleDrivePicker } from "@editor/hooks/useGoogleDrivePicker";
+import {
+  useCloudFilePickers,
+  type CloudFilePicker,
+} from "@editor/hooks/useCloudFilePickers";
 import {
   useNavigationState,
   useNavigationActions,
@@ -72,6 +76,10 @@ import { useToolEligibleFileIds } from "@editor/contexts/ToolFileEligibilityCont
 import { useWorkbenchFileDrop } from "@editor/components/layout/useWorkbenchFileDrop";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
 import "@editor/components/shared/FileSidebar.css";
+import {
+  CONNECTED_ACCOUNTS_SETTINGS_PATH,
+  useOneDriveSave,
+} from "@editor/hooks/useOneDriveSave";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
 const SIDEBAR_WIDTH = "var(--sidebar-w)";
@@ -91,8 +99,7 @@ export interface FileSidebarProps {
   onUploadFiles?: (files: File[]) => void | Promise<void>;
   /** Publishes the sidebar's picker so the quick navigation rail can reuse it. */
   onRegisterOpenFromComputer?: (open: (() => void) | null) => void;
-  /** Override the Google Drive handler. */
-  onPickGoogleDriveFiles?: (files: File[]) => void | Promise<void>;
+  onPickCloudFiles?: (files: File[]) => void | Promise<void>;
   /** Action rows inserted under Open-from-computer (New folder, Refresh). A
    *  control with more than one destination renders itself instead. */
   extraActions?: Array<{
@@ -203,8 +210,8 @@ function SidebarActionRow({ action }: { action: SidebarAction }) {
 interface LibraryHeaderProps {
   stubs: StirlingFileStub[];
   scrolled: boolean;
-  isGoogleDriveEnabled: boolean;
-  onGoogleDrive: () => void;
+  cloudPickers: CloudFilePicker[];
+  onCloudPick: (picker: CloudFilePicker) => void;
   onAddFiles: () => void;
   onOpenFilesPage: () => void;
 }
@@ -212,8 +219,8 @@ interface LibraryHeaderProps {
 function LibraryHeader({
   stubs,
   scrolled,
-  isGoogleDriveEnabled,
-  onGoogleDrive,
+  cloudPickers,
+  onCloudPick,
   onAddFiles,
   onOpenFilesPage,
 }: LibraryHeaderProps) {
@@ -250,28 +257,51 @@ function LibraryHeader({
       >
         <Icon name="search" size={"1rem"} />
       </ActionIcon>
-      {isGoogleDriveEnabled && (
+      {cloudPickers.length === 0 ? (
         <ActionIcon
           variant="quiet"
-          className="file-sidebar-section-btn file-sidebar-section-btn-drive"
-          onClick={onGoogleDrive}
-          title={t("fileSidebar.googleDrive", "Open from Google Drive")}
-          aria-label={t("fileSidebar.googleDrive", "Open from Google Drive")}
-          data-testid="google-drive-button"
+          className="file-sidebar-section-btn file-sidebar-section-btn-add"
+          data-testid="pdf-library-add-files"
+          onClick={onAddFiles}
+          title={t("fileSidebar.addFiles", "Add files")}
+          aria-label={t("fileSidebar.addFiles", "Add files")}
         >
-          <Icon name="googledrive" size={16} />
+          <Icon name="plus" size={"1rem"} />
         </ActionIcon>
+      ) : (
+        <Menu position="bottom-end" withinPortal shadow="md" width={220}>
+          <Menu.Target>
+            <ActionIcon
+              variant="quiet"
+              className="file-sidebar-section-btn file-sidebar-section-btn-add"
+              data-testid="pdf-library-add-files"
+              title={t("fileSidebar.addFiles", "Add files")}
+              aria-label={t("fileSidebar.addFiles", "Add files")}
+            >
+              <Icon name="plus" size={"1rem"} />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<Icon name="file-up" size={16} />}
+              onClick={onAddFiles}
+              data-testid="pdf-library-add-from-computer"
+            >
+              {t("fileSidebar.openFromComputer", "Open from computer")}
+            </Menu.Item>
+            {cloudPickers.map((picker) => (
+              <Menu.Item
+                key={picker.id}
+                leftSection={<Icon name={picker.icon} size={16} />}
+                onClick={() => onCloudPick(picker)}
+                data-testid={picker.testId}
+              >
+                {picker.actionLabel}
+              </Menu.Item>
+            ))}
+          </Menu.Dropdown>
+        </Menu>
       )}
-      <ActionIcon
-        variant="quiet"
-        className="file-sidebar-section-btn file-sidebar-section-btn-add"
-        data-testid="pdf-library-add-files"
-        onClick={onAddFiles}
-        title={t("fileSidebar.addFiles", "Add files")}
-        aria-label={t("fileSidebar.addFiles", "Add files")}
-      >
-        <Icon name="plus" size={"1rem"} />
-      </ActionIcon>
     </div>
   );
 }
@@ -453,14 +483,14 @@ interface FileLibrarySectionProps extends Omit<
   LibraryFileListProps,
   "scrollRef"
 > {
-  isGoogleDriveEnabled: boolean;
-  onGoogleDrive: () => void;
+  cloudPickers: CloudFilePicker[];
+  onCloudPick: (picker: CloudFilePicker) => void;
   onAddFiles: () => void;
 }
 
 function FileLibrarySection({
-  isGoogleDriveEnabled,
-  onGoogleDrive,
+  cloudPickers,
+  onCloudPick,
   onAddFiles,
   ...list
 }: FileLibrarySectionProps) {
@@ -470,8 +500,8 @@ function FileLibrarySection({
       <LibraryHeader
         stubs={list.stubs}
         scrolled={scrolled}
-        isGoogleDriveEnabled={isGoogleDriveEnabled}
-        onGoogleDrive={onGoogleDrive}
+        cloudPickers={cloudPickers}
+        onCloudPick={onCloudPick}
         onAddFiles={onAddFiles}
         onOpenFilesPage={list.onOpenFilesPage}
       />
@@ -488,7 +518,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       accountHoisted = false,
       onUploadFiles,
       onRegisterOpenFromComputer,
-      onPickGoogleDriveFiles,
+      onPickCloudFiles,
       extraActions,
     },
     ref,
@@ -505,10 +535,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     );
 
     const { config } = useAppConfig();
-    const {
-      isEnabled: isGoogleDriveEnabled,
-      openPicker: openGoogleDrivePicker,
-    } = useGoogleDrivePicker();
+    const cloudPickers = useCloudFilePickers();
+    const navigate = useNavigate();
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const damagedRepair = useDamagedFileRepair();
@@ -725,6 +753,40 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [allFileStubs, warnDataUnavailable, t],
     );
 
+    const oneDriveSave = useOneDriveSave();
+    const stubById = useCallback(
+      (fileId: FileId) => allFileStubs.find((s) => s.id === fileId),
+      [allFileStubs],
+    );
+    const handleSaveToOneDrive = useCallback(
+      (fileId: FileId) => {
+        const stub = stubById(fileId);
+        if (stub) void oneDriveSave.save(stub);
+      },
+      [oneDriveSave, stubById],
+    );
+    const handleSaveCopyToOneDrive = useCallback(
+      (fileId: FileId) => {
+        const stub = stubById(fileId);
+        if (stub) void oneDriveSave.saveCopy(stub);
+      },
+      [oneDriveSave, stubById],
+    );
+    const handleOpenInOneDrive = useCallback(
+      (fileId: FileId) => {
+        const stub = stubById(fileId);
+        if (stub) oneDriveSave.openInOneDrive(stub);
+      },
+      [oneDriveSave, stubById],
+    );
+    const handleSaveToOneDriveFolder = useCallback(
+      (fileId: FileId) => {
+        const stub = stubById(fileId);
+        if (stub) void oneDriveSave.saveToFolder(stub);
+      },
+      [oneDriveSave, stubById],
+    );
+
     const handleDuplicate = useCallback(
       async (fileId: FileId) => {
         const stub = allFileStubs.find((s) => s.id === fileId);
@@ -826,26 +888,40 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [],
     );
 
-    const handleGoogleDriveClick = useCallback(async () => {
-      if (!isGoogleDriveEnabled) return;
-      const files = await openGoogleDrivePicker({ multiple: true });
-      if (files.length === 0) return;
-      if (onPickGoogleDriveFiles) {
-        await onPickGoogleDriveFiles(files);
-        return;
-      }
-      await addFiles(files);
-      if (!staysOnAdd) {
-        navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
-      }
-    }, [
-      isGoogleDriveEnabled,
-      openGoogleDrivePicker,
-      addFiles,
-      navActions,
-      staysOnAdd,
-      onPickGoogleDriveFiles,
-    ]);
+    const handleCloudPick = useCallback(
+      async (picker: CloudFilePicker) => {
+        const files = await picker.openPicker({ multiple: true });
+        if (files.length === 0) return;
+        if (onPickCloudFiles) {
+          await onPickCloudFiles(files);
+          return;
+        }
+        await addFiles(files);
+        if (!staysOnAdd) {
+          navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
+        }
+      },
+      [addFiles, navActions, staysOnAdd, onPickCloudFiles],
+    );
+
+    const failedPicker = cloudPickers.find((picker) => picker.error);
+    useEffect(() => {
+      if (!failedPicker?.error) return;
+      alert({
+        alertType: "error",
+        title: failedPicker.failedTitle,
+        body: failedPicker.error,
+        expandable: false,
+        durationMs: 8000,
+        ...(failedPicker.reconnectNeeded
+          ? {
+              buttonText: t("oneDriveSave.reconnect", "Reconnect"),
+              buttonCallback: () => navigate(CONNECTED_ACCOUNTS_SETTINGS_PATH),
+            }
+          : {}),
+      });
+      failedPicker.clearError();
+    }, [failedPicker, navigate, t]);
 
     const handleFileClick = useCallback(
       async (fileId: FileId) => {
@@ -1100,6 +1176,21 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onSaveToCloud={handleSaveToCloud}
           canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
           isUploadedToCloud={fileOrigin === "cloud"}
+          hasOneDriveOrigin={Boolean(stub.cloudOrigin)}
+          oneDriveName={stub.cloudOrigin?.name}
+          onOpenInOneDrive={
+            stub.cloudOrigin?.webUrl ? handleOpenInOneDrive : undefined
+          }
+          savingToOneDrive={oneDriveSave.saving === stub.id}
+          onSaveToOneDrive={
+            oneDriveSave.available ? handleSaveToOneDrive : undefined
+          }
+          onSaveCopyToOneDrive={
+            oneDriveSave.available ? handleSaveCopyToOneDrive : undefined
+          }
+          onSaveToOneDriveFolder={
+            oneDriveSave.available ? handleSaveToOneDriveFolder : undefined
+          }
           onVersionHistory={handleVersionHistory}
           hasVersionHistory={(stub.versionNumber ?? 1) > 1}
           primaryLabel={
@@ -1120,19 +1211,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               onClick: openNativeFilePicker,
               testId: "pdf-library-add-files",
             },
-            ...(isGoogleDriveEnabled
-              ? [
-                  {
-                    icon: <Icon name="googledrive" />,
-                    label: t(
-                      "fileSidebar.googleDrive",
-                      "Open from Google Drive",
-                    ),
-                    onClick: () => void handleGoogleDriveClick(),
-                    testId: "google-drive-button",
-                  },
-                ]
-              : []),
+            ...cloudPickers.map((picker) => ({
+              icon: <Icon name={picker.icon} />,
+              label: picker.actionLabel,
+              onClick: () => void handleCloudPick(picker),
+              testId: picker.testId,
+            })),
           ]
         : []),
       ...(extraActions ?? []),
@@ -1185,8 +1269,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   groupOpen={groupOpen}
                   onGroupOpenChange={setGroupOpenState}
                   renderFileRow={renderFileRow}
-                  isGoogleDriveEnabled={isGoogleDriveEnabled}
-                  onGoogleDrive={handleGoogleDriveClick}
+                  cloudPickers={cloudPickers}
+                  onCloudPick={(picker) => void handleCloudPick(picker)}
                   onAddFiles={openNativeFilePicker}
                   onOpenFilesPage={() => navActions.setWorkbench("myFiles")}
                 />

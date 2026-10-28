@@ -1335,6 +1335,7 @@ const FileCard = React.memo(function FileCard({
           <FileOriginBadge
             origin={getFileOrigin(file)}
             onDisk={Boolean(file.localFilePath)}
+            fromOneDrive={Boolean(file.cloudOrigin)}
             compact
           />
           <DiskLinkBadge file={file} compact />
@@ -2026,6 +2027,7 @@ const FileRow = React.memo(function FileRow({
         <FileOriginBadge
           origin={getFileOrigin(file)}
           onDisk={Boolean(file.localFilePath)}
+          fromOneDrive={Boolean(file.cloudOrigin)}
           compact
         />
         <DiskLinkBadge file={file} compact />

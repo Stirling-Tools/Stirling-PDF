@@ -79,6 +79,27 @@ fn parse_launch_files(args: &[String]) -> Vec<String> {
     .collect()
 }
 
+const ONEDRIVE_PICKER_HOST_SUFFIXES: &[&str] = &[
+  ".sharepoint.com",
+  ".sharepoint.us",
+  ".sharepoint-mil.us",
+  ".sharepoint.de",
+  ".sharepoint.cn",
+];
+
+fn is_onedrive_picker_url(url: &tauri::Url) -> bool {
+  if url.scheme() != "https" {
+    return false;
+  }
+  match url.host_str() {
+    Some("onedrive.live.com") => true,
+    Some(host) => ONEDRIVE_PICKER_HOST_SUFFIXES
+      .iter()
+      .any(|suffix| host.ends_with(suffix)),
+    None => false,
+  }
+}
+
 // URLs the webview is allowed to show: the bundled app and dev server only.
 // Anything else (file://, https://...) must never replace the app UI.
 fn is_app_url(url: &tauri::Url) -> bool {
@@ -108,7 +129,7 @@ pub fn run() {
       // unclosable). Block every off-app navigation at the Rust layer.
       tauri::plugin::Builder::<tauri::Wry, ()>::new("navigation-guard")
         .on_navigation(|_webview, url| {
-          let allowed = is_app_url(url);
+          let allowed = is_app_url(url) || is_onedrive_picker_url(url);
           if !allowed {
             add_log(format!("🚫 Blocked webview navigation to: {}", url));
           }
@@ -357,7 +378,27 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-  use super::is_app_url;
+  use super::{is_app_url, is_onedrive_picker_url};
+
+  fn picker(raw: &str) -> bool {
+    is_onedrive_picker_url(&tauri::Url::parse(raw).expect("valid url"))
+  }
+
+  #[test]
+  fn allows_the_onedrive_picker_iframe() {
+    assert!(picker("https://contoso-my.sharepoint.com/_layouts/15/FilePicker.aspx?x=1"));
+    assert!(picker("https://contoso.sharepoint.us/_layouts/15/FilePicker.aspx"));
+    assert!(picker("https://onedrive.live.com/picker"));
+  }
+
+  #[test]
+  fn picker_allowance_is_https_microsoft_hosts_only() {
+    assert!(!picker("http://contoso-my.sharepoint.com/_layouts/15/FilePicker.aspx"));
+    assert!(!picker("https://contoso.sharepoint.com.evil.test/"));
+    assert!(!picker("https://evilsharepoint.com/"));
+    assert!(!picker("https://onedrive.live.com.evil.test/"));
+    assert!(!picker("file:///Users/me/report.pdf"));
+  }
 
   fn allows(raw: &str) -> bool {
     is_app_url(&tauri::Url::parse(raw).expect("valid url"))
