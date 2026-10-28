@@ -310,14 +310,19 @@ tasks:
       CHANGED:
         sh: node .storybook/a11y-changed.mjs {{.CLI_ARGS | default "origin/main"}}
     cmds:
+      # The nested invocations name the root Taskfile explicitly: they start in
+      # frontend/, and Task only walks up to a parent directory with the same
+      # owner. In the CI container the checkout runs as root, so frontend/ is
+      # root-owned while the mounted workspace belongs to the runner user, and
+      # the walk stops one level short.
       - cmd: |
           if [ -z '{{.CHANGED}}' ]; then
             echo "a11y: no story files affected vs {{.BASE}} — nothing to check"
             exit 0
           fi
           rc=0
-          task frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1
-          task frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1
+          task --taskfile "{{.ROOT_TASKFILE}}" frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1
+          task --taskfile "{{.ROOT_TASKFILE}}" frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1
           exit $rc
 
   storybook:a11y:record:
