@@ -420,3 +420,17 @@
   font-size: 0.7rem;
   white-space: nowrap;
 }
+
+.file-sidebar-kebab-item-stack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.file-sidebar-kebab-item-detail {
+  color: var(--c-text-subtle);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,4 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
+import { AxiosError, AxiosHeaders } from "axios";
 import { beforeEach, expect, it, vi } from "vitest";
 import { useOneDrivePicker } from "@editor/hooks/useOneDrivePicker";
 import { allowConsole } from "@editor/tests/failOnConsole";
@@ -172,4 +173,56 @@ it("stops quietly when the user closes the connect window", async () => {
 
   expect(service.pick).not.toHaveBeenCalled();
   expect(result.current.error).toBeNull();
+});
+
+function httpFailure(status: number) {
+  return new AxiosError("failed", "ERR", undefined, undefined, {
+    status,
+    statusText: "Failed",
+    data: {},
+    headers: {},
+    config: { headers: new AxiosHeaders() },
+  });
+}
+
+it("offers to reconnect when the server refuses the account's token", async () => {
+  allowConsole.error(/OneDrive picker error/);
+  accounts.available = true;
+  accounts.account = { id: 4, personal: false };
+  service.pick.mockRejectedValue(httpFailure(409));
+  const { result } = renderHook(useOneDrivePicker);
+
+  await act(async () => {
+    await result.current.openPicker();
+  });
+
+  expect(result.current.error).toBe("provider.onedrive.errors.reconnect");
+  expect(result.current.reconnectNeeded).toBe(true);
+  act(() => result.current.clearError());
+  expect(result.current.reconnectNeeded).toBe(false);
+});
+
+it("blames the connection only when no response came back", async () => {
+  allowConsole.error(/OneDrive picker error/);
+  service.pick
+    .mockRejectedValueOnce(new AxiosError("Network Error", "ERR_NETWORK"))
+    .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+    .mockRejectedValueOnce(httpFailure(500));
+  const { result } = renderHook(useOneDrivePicker);
+
+  await act(async () => {
+    await result.current.openPicker();
+  });
+  expect(result.current.error).toBe("provider.onedrive.errors.unreachable");
+
+  await act(async () => {
+    await result.current.openPicker();
+  });
+  expect(result.current.error).toBe("provider.onedrive.errors.unreachable");
+
+  await act(async () => {
+    await result.current.openPicker();
+  });
+  expect(result.current.error).toBe("provider.onedrive.errors.serverError");
+  expect(result.current.reconnectNeeded).toBe(false);
 });

@@ -6,6 +6,7 @@ const google = vi.hoisted(() => ({
   isEnabled: true,
   isLoading: false,
   error: null as string | null,
+  reconnectNeeded: false,
   clearError: vi.fn(),
   openPicker: vi.fn(async () => []),
 }));
@@ -13,6 +14,7 @@ const oneDrive = vi.hoisted(() => ({
   isEnabled: true,
   isLoading: false,
   error: null as string | null,
+  reconnectNeeded: false,
   clearError: vi.fn(),
   openPicker: vi.fn(async () => []),
 }));
@@ -53,4 +55,14 @@ it("passes one accept filter to whichever picker is opened", async () => {
     multiple: false,
     mimeTypes: ".pdf",
   });
+});
+
+it("only the OneDrive picker can ask the user to reconnect", () => {
+  oneDrive.reconnectNeeded = true;
+  const { result } = renderHook(useCloudFilePickers);
+  expect(result.current.map((picker) => picker.reconnectNeeded)).toEqual([
+    false,
+    true,
+  ]);
+  oneDrive.reconnectNeeded = false;
 });

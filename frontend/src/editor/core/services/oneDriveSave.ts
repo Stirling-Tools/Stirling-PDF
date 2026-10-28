@@ -15,7 +15,7 @@ export type OneDriveSaveTarget =
 
 export class OneDriveSaveError extends Error {
   constructor(
-    readonly code: "conflict" | "reconnect" | "failed",
+    readonly code: "conflict" | "reconnect" | "network" | "server" | "failed",
     message: string,
   ) {
     super(message);
@@ -91,9 +91,24 @@ export async function saveToOneDrive(
           : "Your Microsoft account needs to sign in again.",
       );
     }
+    if (isAxiosError(error) && !error.response) {
+      throw new OneDriveSaveError(
+        "network",
+        "Couldn't reach OneDrive. Check your connection and try again.",
+      );
+    }
+    if (
+      isAxiosError(error) &&
+      (error.response?.status === 401 || error.response?.status === 403)
+    ) {
+      throw new OneDriveSaveError(
+        "reconnect",
+        "Your Microsoft account needs to sign in again.",
+      );
+    }
     throw new OneDriveSaveError(
-      "failed",
-      "Couldn't save to OneDrive. Check your connection and try again.",
+      "server",
+      "OneDrive or the Stirling server had a problem saving the file.",
     );
   }
 }

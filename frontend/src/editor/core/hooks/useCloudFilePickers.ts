@@ -18,6 +18,7 @@ export interface CloudFilePicker {
   testId: string;
   isLoading: boolean;
   error: string | null;
+  reconnectNeeded: boolean;
   clearError: () => void;
   openPicker: (options?: CloudPickOptions) => Promise<File[]>;
 }
@@ -42,6 +43,7 @@ export function useCloudFilePickers(): CloudFilePicker[] {
         testId: "google-drive-button",
         isLoading: google.isLoading,
         error: google.error,
+        reconnectNeeded: false,
         clearError: google.clearError,
         openPicker: (options = {}) =>
           google.openPicker({
@@ -60,6 +62,7 @@ export function useCloudFilePickers(): CloudFilePicker[] {
         testId: "onedrive-button",
         isLoading: oneDrive.isLoading,
         error: oneDrive.error,
+        reconnectNeeded: oneDrive.reconnectNeeded,
         clearError: oneDrive.clearError,
         openPicker: oneDrive.openPicker,
       });
