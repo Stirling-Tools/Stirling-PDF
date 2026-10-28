@@ -82,6 +82,16 @@ function errorMessage(error: unknown): string {
   );
 }
 
+/**
+ * Provides cached app config and fetch state to descendants. `carriedIn`
+ * records cache presence at mount and stays fixed across refetches.
+ * `initialConfig` supplies a fallback; non-blocking bootstrap mode suppresses
+ * loading when it is supplied.
+ *
+ * A 401 resolves to defaults. Other fetch failures expose `error` and use
+ * `initialConfig` or defaults if no cached data exists; explicit `refetch`
+ * calls reject on those failures.
+ */
 export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   children,
   retryOptions,

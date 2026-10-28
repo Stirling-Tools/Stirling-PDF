@@ -33,7 +33,13 @@ function requiresMfaSetup(account: AccountData): boolean {
   }
 }
 
-/** Rechecks setup on app entry; deferred backends can supply config without another fetch. */
+/**
+ * Gates children on analytics consent and required password or MFA setup.
+ * The entry check refreshes config only if it was cached before the provider
+ * mounted or a config fetch failed. `refreshConfigOnMount=false` skips this
+ * refresh so deferred backends can supply config without another fetch.
+ * Renders nothing during the check and a retry dialog if the check fails.
+ */
 export function StartupSetup({
   children,
   refreshConfigOnMount = true,
