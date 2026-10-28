@@ -115,6 +115,7 @@ export interface CreatableSourceType {
   type: string;
   labelKey: string;
   descriptionKey: string;
+  outputDescriptionKey?: string;
   fields: SourceFieldDef[];
   readable?: boolean;
 }
@@ -265,6 +266,7 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
     type: "folder",
     labelKey: "portal.sources.types.folder.label",
     descriptionKey: "portal.sources.types.folder.description",
+    outputDescriptionKey: "portal.sources.types.folder.outputDescription",
     fields: [
       {
         key: "directory",
@@ -348,6 +350,7 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
     type: "s3",
     labelKey: "portal.sources.types.s3.label",
     descriptionKey: "portal.sources.types.s3.description",
+    outputDescriptionKey: "portal.sources.types.s3.outputDescription",
     fields: [
       {
         key: "connectionId",
@@ -409,18 +412,21 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
     type: "onedrive",
     labelKey: "portal.sources.types.onedrive.label",
     descriptionKey: "portal.sources.types.onedrive.description",
+    outputDescriptionKey: "portal.sources.types.onedrive.outputDescription",
     fields: cloudSourceFields("microsoft", "onedrive", "onedrive"),
   },
   {
     type: "sharepoint",
     labelKey: "portal.sources.types.sharepoint.label",
     descriptionKey: "portal.sources.types.sharepoint.description",
+    outputDescriptionKey: "portal.sources.types.sharepoint.outputDescription",
     fields: cloudSourceFields("microsoft", "sharepoint", "sharepoint"),
   },
   {
     type: "googledrive",
     labelKey: "portal.sources.types.googledrive.label",
     descriptionKey: "portal.sources.types.googledrive.description",
+    outputDescriptionKey: "portal.sources.types.googledrive.outputDescription",
     fields: cloudSourceFields("google", "googleworkspace", "googledrive"),
   },
   {

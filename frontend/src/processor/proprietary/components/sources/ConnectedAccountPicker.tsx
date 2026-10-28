@@ -14,12 +14,14 @@ interface ConnectedAccountPickerProps {
   provider: CloudAccountProvider;
   value: string;
   onChange: (accountId: string) => void;
+  onUnavailable?: () => void;
 }
 
 export function ConnectedAccountPicker({
   provider,
   value,
   onChange,
+  onUnavailable,
 }: ConnectedAccountPickerProps) {
   const { t } = useTranslation();
   const { available, accounts, connect } = useConnectedAccounts();
@@ -36,7 +38,14 @@ export function ConnectedAccountPicker({
     }
   }, [value, mine, onChange]);
 
-  if (!available(provider)) {
+  const unavailable = !available(provider);
+  useEffect(() => {
+    if (unavailable) {
+      onUnavailable?.();
+    }
+  }, [unavailable, onUnavailable]);
+
+  if (unavailable) {
     return (
       <Banner
         tone="info"

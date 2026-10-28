@@ -376,7 +376,7 @@ describe("SourceModal", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("explains when the server does not allow connecting your own account", () => {
+  it("starts on an organisation connection when your own account is turned off", async () => {
     connectedAccounts.available = false;
     try {
       renderModal();
@@ -384,10 +384,47 @@ describe("SourceModal", () => {
         screen.getByText("portal.sources.types.googledrive.label"),
       );
       expect(
-        screen.getByText("portal.sources.cloudFields.account.unavailable"),
+        await screen.findByText("portal.sources.cloudFields.connection.label"),
       ).toBeInTheDocument();
+      expect(
+        screen.queryByText("portal.sources.cloudFields.account.label"),
+      ).not.toBeInTheDocument();
     } finally {
       connectedAccounts.available = true;
     }
+  });
+
+  it("keeps My account when your own account can be connected", () => {
+    renderModal();
+    fireEvent.click(screen.getByText("portal.sources.types.onedrive.label"));
+    expect(
+      screen.getByText("portal.sources.cloudFields.account.label"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.sources.cloudFields.connection.label"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("titles and describes the picker as a destination for outputs", () => {
+    render(<SourceModal open direction="output" onClose={vi.fn()} />);
+    expect(
+      screen.getByText("portal.sources.builder.createDestinationTitle"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.sources.types.onedrive.outputDescription"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.sources.types.onedrive.description"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps source wording for inputs", () => {
+    renderModal();
+    expect(
+      screen.getByText("portal.sources.builder.createTitle"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.sources.types.onedrive.description"),
+    ).toBeInTheDocument();
   });
 });
