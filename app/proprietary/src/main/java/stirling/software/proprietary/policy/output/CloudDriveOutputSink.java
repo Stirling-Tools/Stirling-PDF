@@ -28,6 +28,8 @@ import stirling.software.proprietary.policy.remote.ContentHasher;
 public abstract class CloudDriveOutputSink<L extends CloudLocation, F extends CloudFile>
         implements PolicyOutputSink {
 
+    private static final int MAX_NAME_ATTEMPTS = 100;
+
     private final CloudDrive<L, F> drive;
     private final ProcessedLedger processedLedger;
 
@@ -90,7 +92,7 @@ public abstract class CloudDriveOutputSink<L extends CloudLocation, F extends Cl
 
     private F upload(OutputDelivery delivery, L location, String name, Path staged, String gate)
             throws IOException {
-        for (int attempt = 0; ; attempt++) {
+        for (int attempt = 0; attempt < MAX_NAME_ATTEMPTS; attempt++) {
             String candidate = attempt == 0 ? name : OutputNames.numbered(name, attempt);
             String identity = drive.outputIdentity(location, candidate);
             if (delivery.policyId() != null) {
@@ -116,6 +118,12 @@ public abstract class CloudDriveOutputSink<L extends CloudLocation, F extends Cl
             forget(delivery, identity, gate);
             log.debug("{} already exists; trying the next name", identity);
         }
+        throw new IOException(
+                "Could not find a free name for "
+                        + name
+                        + " after "
+                        + MAX_NAME_ATTEMPTS
+                        + " tries");
     }
 
     private void forget(OutputDelivery delivery, String identity, String gate) {

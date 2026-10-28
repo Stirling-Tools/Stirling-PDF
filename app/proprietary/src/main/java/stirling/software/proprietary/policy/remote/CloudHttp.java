@@ -8,6 +8,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Set;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -15,6 +16,7 @@ import tools.jackson.databind.ObjectMapper;
 public final class CloudHttp {
 
     private static final int MAX_ATTEMPTS = 4;
+    private static final Set<String> IDEMPOTENT = Set.of("GET", "HEAD", "PUT", "DELETE", "OPTIONS");
     private static final long MAX_RETRY_WAIT_SECONDS = 60;
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -52,12 +54,8 @@ public final class CloudHttp {
                         e);
             }
             int status = response.statusCode();
-            boolean retry =
-                    status == 429
-                            || status == 500
-                            || status == 502
-                            || status == 503
-                            || status == 504;
+            boolean serverError = status == 500 || status == 502 || status == 503 || status == 504;
+            boolean retry = status == 429 || (serverError && IDEMPOTENT.contains(request.method()));
             if (!retry || attempt >= MAX_ATTEMPTS) {
                 return response;
             }
