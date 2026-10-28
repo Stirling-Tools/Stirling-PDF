@@ -91,8 +91,8 @@ public class EmlParser {
 
     /**
      * Rejects a compound file whose directory declares more stream data than the file holds, or
-     * whose property streams are larger than a message needs. Both are read in full by the MSG
-     * parser, so they are checked before it runs.
+     * whose property streams are larger than a message needs. The MSG parser reads both in full, so
+     * the check runs first.
      */
     private void validateMsgStreamSizes(byte[] msgBytes) throws IOException {
         try (POIFSFileSystem fileSystem = new POIFSFileSystem(new ByteArrayInputStream(msgBytes))) {
@@ -155,8 +155,8 @@ public class EmlParser {
             content.setTextBody(NO_CONTENT_MESSAGE);
         }
 
-        // Embedding is capped like the archive readers; listing alone has no such limit. Counted
-        // before mapping so nothing is read for a message that will be rejected.
+        // Embedding is capped like the archive readers; listing alone is not. Counted before
+        // mapping so a rejected message reads nothing.
         if (request != null && request.isIncludeAttachments()) {
             int resourceCount =
                     countResources(email.getEmbeddedImages())
@@ -528,9 +528,9 @@ public class EmlParser {
         }
 
         /**
-         * Names longer than {@code MAX_FILENAME_LENGTH} UTF-16 units are shortened, keeping an
-         * extension of up to {@code MAX_EXTENSION_LENGTH} characters and never splitting a
-         * surrogate pair. Every consumer then sees the same bounded name.
+         * Names over {@code MAX_FILENAME_LENGTH} UTF-16 units are shortened, keeping an extension
+         * of up to {@code MAX_EXTENSION_LENGTH} characters and never splitting a surrogate pair, so
+         * every consumer sees the same bounded name.
          */
         public void setFilename(String filename) {
             this.filename = limitFilenameLength(filename);

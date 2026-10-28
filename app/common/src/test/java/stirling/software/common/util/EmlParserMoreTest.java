@@ -272,7 +272,7 @@ class EmlParserMoreTest {
             }
         }
 
-        /** Offset of the directory entry with this name; the directory fits in one sector. */
+        /** Offset of the named directory entry; the directory fits in one sector. */
         private static int directoryEntryOffset(byte[] file, String name) {
             int sectorSize = 1 << LittleEndian.getShort(file, 30);
             int directoryStartSector = LittleEndian.getInt(file, 48);

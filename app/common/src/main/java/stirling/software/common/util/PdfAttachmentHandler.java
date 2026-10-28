@@ -174,7 +174,7 @@ public class PdfAttachmentHandler {
             baseName = filename;
         }
 
-        // Resume after the last suffix handed out for this name; lower ones are already taken
+        // Resume after the last suffix handed out for this name; lower ones are taken
         int counter = nextCounters.getOrDefault(filename, 1);
         String uniqueName;
         do {
@@ -187,7 +187,7 @@ public class PdfAttachmentHandler {
         return uniqueName;
     }
 
-    /** Shortens the base so the suffixed name stays within the attachment name limit. */
+    /** Shortens the base so the suffixed name fits the attachment name limit. */
     private static String fitWithSuffix(String baseName, String suffix) {
         int keep = EmlParser.MAX_FILENAME_LENGTH - suffix.length();
         if (baseName.length() <= keep || keep < 1) {
@@ -444,7 +444,7 @@ public class PdfAttachmentHandler {
 
         int annotationsToAdd = Math.min(markerPositions.size(), attachments.size());
 
-        // The lookup tables are the same for every marker, so build them once up front.
+        // The lookup tables are the same for every marker, so build them once.
         Map<String, EmlParser.EmailAttachment> attachmentsByNormalizedFilename =
                 new LinkedHashMap<>();
         for (EmlParser.EmailAttachment attachment : attachments) {
@@ -614,8 +614,8 @@ public class PdfAttachmentHandler {
             if (isInAttachmentSection) {
                 currentText.append(string);
 
-                // The attachments template prints one marker per entry, so the first "@" in a
-                // run is the marker and any later "@" is part of the filename (me@example.com.vcf).
+                // The attachments template prints one marker per entry, so only the first "@" in a
+                // run is the marker; later ones belong to the filename (me@example.com.vcf).
                 int i = string.indexOf(ATTACHMENT_MARKER);
                 if (i != -1 && i < textPositions.size()) {
                     TextPosition textPosition = textPositions.get(i);
