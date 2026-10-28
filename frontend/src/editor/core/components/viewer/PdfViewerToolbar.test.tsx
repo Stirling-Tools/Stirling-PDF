@@ -13,15 +13,22 @@ const device = vi.hoisted(() => ({ isPhone: false }));
 const viewer = vi.hoisted(() => {
   const zoomListeners = new Set<(percent: number) => void>();
   const zoom = { level: undefined as ZoomLevel | undefined, percent: 100 };
+  const scroll = { currentPage: 1, totalPages: 3 };
+  const registrations = { scroll: 0, zoom: 0, spread: 0 };
   return {
     zoom,
+    scroll,
+    registrations,
     notifyZoom: (level: ZoomLevel, percent: number) => {
       zoom.level = level;
       zoom.percent = percent;
       for (const listener of [...zoomListeners]) listener(percent);
     },
     value: {
-      getScrollState: () => ({ currentPage: 1, totalPages: 3 }),
+      getScrollState: () => ({
+        currentPage: scroll.currentPage,
+        totalPages: scroll.totalPages,
+      }),
       getZoomState: () => ({
         currentZoom: zoom.percent / 100,
         zoomPercent: zoom.percent,
@@ -43,13 +50,20 @@ const viewer = vi.hoisted(() => {
       zoomRestorePendingRef: { current: false },
       zoomRestoreSettledTick: 0,
       registerImmediateZoomUpdate: (listener: (percent: number) => void) => {
+        registrations.zoom += 1;
         zoomListeners.add(listener);
         return () => {
           zoomListeners.delete(listener);
         };
       },
-      registerImmediateScrollUpdate: () => () => {},
-      registerImmediateSpreadUpdate: () => () => {},
+      registerImmediateScrollUpdate: () => {
+        registrations.scroll += 1;
+        return () => {};
+      },
+      registerImmediateSpreadUpdate: () => {
+        registrations.spread += 1;
+        return () => {};
+      },
       pdfRenderMode: "normal",
       cyclePdfRenderMode: vi.fn(),
     },
@@ -75,6 +89,11 @@ describe("PdfViewerToolbar fit controls", () => {
     device.isPhone = false;
     viewer.zoom.level = 1;
     viewer.zoom.percent = 100;
+    viewer.scroll.currentPage = 1;
+    viewer.scroll.totalPages = 3;
+    viewer.registrations.scroll = 0;
+    viewer.registrations.zoom = 0;
+    viewer.registrations.spread = 0;
     vi.clearAllMocks();
   });
 
@@ -132,5 +151,31 @@ describe("PdfViewerToolbar fit controls", () => {
     expect(viewer.value.zoomActions.requestZoom).toHaveBeenCalledWith(
       ZoomMode.FitWidth,
     );
+  });
+
+  it("keeps notifier subscriptions across live state changes", () => {
+    renderToolbar();
+
+    act(() => viewer.notifyZoom(1.2, 120));
+
+    expect(viewer.registrations.scroll).toBe(1);
+    expect(viewer.registrations.zoom).toBe(1);
+    expect(viewer.registrations.spread).toBe(1);
+  });
+
+  it("navigates once when the page number is committed", async () => {
+    viewer.scroll.totalPages = 120;
+    const user = userEvent.setup();
+    renderToolbar();
+    const input = screen.getByRole("textbox");
+
+    await user.clear(input);
+    await user.type(input, "120");
+    expect(viewer.value.scrollActions.scrollToPage).not.toHaveBeenCalled();
+
+    await user.keyboard("{Enter}");
+    await user.tab();
+    expect(viewer.value.scrollActions.scrollToPage).toHaveBeenCalledTimes(1);
+    expect(viewer.value.scrollActions.scrollToPage).toHaveBeenCalledWith(120);
   });
 });
