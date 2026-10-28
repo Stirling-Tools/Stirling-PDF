@@ -210,9 +210,11 @@ function cloudSourceFields(
   copyKey: keyof typeof CLOUD_FOLDER_COPY,
 ): SourceFieldDef[] {
   const network = networkSourceFields(organisationConnectionTypeId);
-  const modeAndDepth = network.filter(
-    (field) => field.key === "mode" || field.key === "recursive",
-  );
+  const modeAndDepth = network
+    .filter((field) => field.key === "mode" || field.key === "recursive")
+    .map((field) =>
+      field.key === "mode" ? { ...field, defaultValue: "track" } : field,
+    );
   return [
     {
       key: "authMode",
