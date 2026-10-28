@@ -1,4 +1,6 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { Transition, useDirection } from "@mantine/core";
+import { useReducedMotion } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@editor/contexts/SidebarContext";
@@ -10,6 +12,7 @@ import { ToolIcon } from "@editor/components/shared/ToolIcon";
 import { ToolPanelHeader } from "@editor/components/shared/ToolPanelHeader";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
+import { ToolId } from "@editor/types/toolId";
 import type { ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
 import {
   FullscreenToolPanel,
@@ -55,43 +58,47 @@ export default function RightSidebar() {
     setSearchQuery("");
   };
 
-  // A plain fade rather than a View Transition: startViewTransition() forces
-  // accelerated compositing, which segfaults WebKitGTK with its DMA-BUF renderer
-  // off (WebKit bug 324730), and the Linux desktop app runs it that way.
-  const contentRef = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const content = contentRef.current;
-    if (
-      !content ||
-      typeof content.animate !== "function" ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      return;
-    }
-    content.animate([{ opacity: 0 }, { opacity: 1 }], {
-      duration: 220,
-      easing: "ease-in",
-    });
-  }, [leftPanelView, selectedToolKey, allToolsView]);
-
-  // The header shows [back] [search] when we have somewhere to go back to —
-  // i.e. the user is in a specific tool, or already in the all-tools/search view.
   const inToolView = leftPanelView !== "toolPicker";
-  // Show X (close) button only when there's somewhere to go back to.
-  const showCloseButton = inToolView || allToolsView;
-
-  const handleHeaderBack = () => {
-    if (inToolView) {
-      handleBackToTools();
-    } else {
-      handleBackToDefault();
-    }
-  };
 
   const activeTool: ToolRegistryEntry | null =
     inToolView && selectedToolKey
       ? (toolRegistry[selectedToolKey] ?? null)
       : null;
+
+  // The tool view slides over the picker from the trailing edge and back out.
+  // A CSS transition rather than a View Transition: startViewTransition()
+  // forces accelerated compositing, which segfaults WebKitGTK with its DMA-BUF
+  // renderer off (WebKit bug 324730), and the Linux desktop app runs it that
+  // way. The tool stays selected until it has left: a tool kept mounted after
+  // the context cleared it can re-run its mount effects against the picker (the
+  // text editor pins the view back to toolContent).
+  const [closing, setClosing] = useState(false);
+  const closingRef = useRef(false);
+  const toolLayerMounted = inToolView && !closing;
+  const handleClose = () => {
+    closingRef.current = true;
+    setClosing(true);
+  };
+  const handleToolLayerExited = () => {
+    if (!closingRef.current) return;
+    closingRef.current = false;
+    setClosing(false);
+    handleBackToTools();
+  };
+  const handlePickerSelect = (id: ToolId) => {
+    closingRef.current = false;
+    setClosing(false);
+    handleToolSelect(id);
+  };
+  const { dir } = useDirection();
+  const reduceMotion = useReducedMotion();
+  const slideFromTrailingEdge = {
+    in: { transform: "translateX(0)" },
+    out: {
+      transform: dir === "rtl" ? "translateX(-100%)" : "translateX(100%)",
+    },
+    transitionProperty: "transform",
+  };
 
   const expandedWidth = "18.5rem";
 
@@ -108,7 +115,6 @@ export default function RightSidebar() {
     >
       {!fullscreenExpanded && (
         <div
-          ref={contentRef}
           style={{
             opacity: 1,
             transition: "opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
@@ -124,58 +130,76 @@ export default function RightSidebar() {
         >
           <>
             {policiesEnabled && <EditorPipelinesPanel />}
-            {activeTool ? (
-              <ToolPanelHeader
-                icon={
-                  <ToolIcon
-                    icon={activeTool.icon}
-                    marginRight="0"
-                    color="currentColor"
-                  />
-                }
-                title={activeTool.name}
-                onClose={handleHeaderBack}
-                closeLabel={
-                  inToolView
-                    ? t("toolPanel.backToAllTools", "Back to all tools")
-                    : t("toolPanel.goBack", "Go back")
-                }
-              />
-            ) : showCloseButton ? (
-              /* Closing a tool, not the panel: the panel itself is fixed open, so
-                 with nothing to leave there is no header to show. */
-              <div className="tool-panel__compact-header">
-                <span className="tool-panel__compact-title">
-                  {t("toolPanel.pdfTools", "PDF Tools")}
-                </span>
-                <div className="tool-panel__compact-header-actions">
-                  <ActionIcon
-                    variant="tertiary"
-                    size="md"
-                    shape="circle"
-                    onClick={handleHeaderBack}
-                    aria-label={
-                      inToolView
-                        ? t("toolPanel.backToAllTools", "Back to all tools")
-                        : t("toolPanel.goBack", "Go back")
-                    }
-                    className="tool-panel__expand-btn"
-                  >
-                    <Icon name="x" size={"1.1rem"} />
-                  </ActionIcon>
-                </div>
+            <div className="tool-panel__stage">
+              <div
+                className="tool-panel__picker-layer"
+                inert={toolLayerMounted}
+              >
+                {allToolsView && (
+                  <div className="tool-panel__compact-header">
+                    <span className="tool-panel__compact-title">
+                      {t("toolPanel.pdfTools", "PDF Tools")}
+                    </span>
+                    <div className="tool-panel__compact-header-actions">
+                      <ActionIcon
+                        variant="tertiary"
+                        size="md"
+                        shape="circle"
+                        onClick={handleBackToDefault}
+                        aria-label={t("toolPanel.goBack", "Go back")}
+                        className="tool-panel__expand-btn"
+                      >
+                        <Icon name="x" size={"1.1rem"} />
+                      </ActionIcon>
+                    </div>
+                  </div>
+                )}
+                <ToolPanel
+                  view="toolPicker"
+                  allToolsView={allToolsView}
+                  onShowAllTools={handleShowAllTools}
+                  onToolSelect={handlePickerSelect}
+                  compact={false}
+                  /* Mobile keeps the workbench bar - and with it the super search -
+                     on the other slide, so the list needs its own filter. */
+                  showSearch={isMobile}
+                />
               </div>
-            ) : null}
-
-            <ToolPanel
-              allToolsView={allToolsView}
-              onShowAllTools={handleShowAllTools}
-              onToolSelect={handleToolSelect}
-              compact={false}
-              /* Mobile keeps the workbench bar - and with it the super search -
-                 on the other slide, so the list needs its own filter. */
-              showSearch={isMobile}
-            />
+              <Transition
+                mounted={toolLayerMounted}
+                transition={slideFromTrailingEdge}
+                onExited={handleToolLayerExited}
+                duration={reduceMotion ? 0 : 220}
+                timingFunction="ease"
+              >
+                {(styles) => (
+                  <div className="tool-panel__tool-layer" style={styles}>
+                    {activeTool && (
+                      <ToolPanelHeader
+                        icon={
+                          <ToolIcon
+                            icon={activeTool.icon}
+                            marginRight="0"
+                            color="currentColor"
+                          />
+                        }
+                        title={activeTool.name}
+                        onClose={handleClose}
+                        closeLabel={t(
+                          "toolPanel.backToAllTools",
+                          "Back to all tools",
+                        )}
+                      />
+                    )}
+                    <ToolPanel
+                      view="toolContent"
+                      allToolsView={false}
+                      onShowAllTools={handleShowAllTools}
+                    />
+                  </div>
+                )}
+              </Transition>
+            </div>
           </>
         </div>
       )}

@@ -194,6 +194,38 @@
   margin-bottom: 0;
 }
 
+/* Everything under the processor bar. The picker is the floor; the tool view
+   is a layer over it that slides in from the trailing edge and back out. */
+.tool-panel__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tool-panel__picker-layer,
+.tool-panel__tool-layer {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* The picker's own stacking context, so its sticky headers and the search
+   field's dropdown z-index cannot paint through the tool view above it. */
+.tool-panel__picker-layer {
+  flex: 1;
+  isolation: isolate;
+}
+
+.tool-panel__tool-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--c-surface);
+}
+
 /* Slightly recessed search field so it reads as distinct from the panel. */
 .tool-panel__between-search input {
   background-color: var(--c-surface-sunken);
