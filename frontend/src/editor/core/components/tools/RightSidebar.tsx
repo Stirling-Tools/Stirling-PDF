@@ -66,24 +66,17 @@ export default function RightSidebar() {
       ? (toolRegistry[selectedToolKey] ?? null)
       : null;
 
-  // The tool view slides over the picker from the trailing edge and back out.
-  // A CSS transition rather than a View Transition: startViewTransition()
-  // forces accelerated compositing, which segfaults WebKitGTK with its DMA-BUF
-  // renderer off (WebKit bug 324730), and the Linux desktop app runs it that
-  // way. The tool stays selected until it has left: a tool kept mounted after
-  // the context cleared it can re-run its mount effects against the picker (the
-  // text editor pins the view back to toolContent). The picker unmounts once
-  // the tool view has covered it, so the page never holds two copies of a
-  // tool's name or link.
+  // A CSS slide: startViewTransition() segfaults WebKitGTK (WebKit bug 324730).
+  // The tool stays selected until it has slid out, or its mount effects rerun.
   const [closing, setClosing] = useState(false);
   const closingRef = useRef(false);
   const toolLayerMounted = inToolView && !closing;
+  // Unmount the covered picker so the page never has two copies of a tool link.
   const [toolLayerCovers, setToolLayerCovers] = useState(toolLayerMounted);
   if (toolLayerCovers && !toolLayerMounted) setToolLayerCovers(false);
   const { actions: navigationActions } = useNavigationActions();
-  // Ask about unsaved changes before the slide, or the tool leaves and comes
-  // back before the prompt shows. The prompt resolves the edits before it
-  // continues, so handleBackToTools passes its own guard afterwards.
+  // Ask before the slide. The prompt resolves the edits, so handleBackToTools
+  // passes its own guard once the tool has left.
   const handleClose = () => {
     navigationActions.requestNavigation(() => {
       closingRef.current = true;
