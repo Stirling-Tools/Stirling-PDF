@@ -9,6 +9,8 @@ import {
 import { useOneDrivePicker } from "@editor/hooks/useOneDrivePicker";
 import { fileStorage } from "@editor/services/fileStorage";
 import { getOneDrivePickerService } from "@editor/services/oneDrivePickerService";
+import { isPopupBlocked } from "@editor/services/connectedAccountsService";
+import { isAxiosError } from "axios";
 import {
   copyName,
   OneDriveSaveError,
@@ -54,7 +56,21 @@ export function useOneDriveSave(): OneDriveSave {
       try {
         const origin = await saveToOneDrive(file, target);
         actions.updateStirlingFileStub(stub.id, { cloudOrigin: origin });
-        await fileStorage.updateFileMetadata(stub.id, { cloudOrigin: origin });
+        const remembered = await fileStorage.updateFileMetadata(stub.id, {
+          cloudOrigin: origin,
+        });
+        if (!remembered) {
+          alert({
+            alertType: "warning",
+            title: t("oneDriveSave.saved", "Saved to OneDrive"),
+            body: t(
+              "oneDriveSave.linkNotStored",
+              "This browser couldn't remember the link to the OneDrive file. After a reload, save it as a copy instead.",
+            ),
+            expandable: false,
+          });
+          return;
+        }
         alert({
           alertType: "success",
           title: t("oneDriveSave.saved", "Saved to OneDrive"),
@@ -138,28 +154,78 @@ export function useOneDriveSave(): OneDriveSave {
 
   const saveToFolder = useCallback(
     async (stub: StirlingFileStub) => {
+      const fail = (body: string) =>
+        alert({
+          alertType: "error",
+          title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
+          body,
+          expandable: false,
+        });
       const { account } = await ensureConnectedAccount(
         "microsoft",
         connected.connect,
       );
-      if (!account || account.personal) return;
-      const folder = await getOneDrivePickerService().pickFolder(
-        {
-          locale: i18n?.language,
-          labels: {
-            title: t(
-              "oneDriveSave.chooseFolder",
-              "Choose a OneDrive folder to save to",
-            ),
-            close: t("close", "Close"),
-            loading: t(
-              "provider.onedrive.pickerLoading",
-              "Connecting to OneDrive…",
-            ),
+      if (!account) {
+        fail(
+          t(
+            "provider.onedrive.errors.connectFailed",
+            "Couldn't connect your Microsoft account. Try again from Settings > Connected accounts.",
+          ),
+        );
+        return;
+      }
+      if (account.personal) {
+        fail(
+          t(
+            "oneDriveSave.personalUnsupported",
+            "Saving to a chosen folder needs a work or school Microsoft account.",
+          ),
+        );
+        return;
+      }
+      let folder;
+      try {
+        folder = await getOneDrivePickerService().pickFolder(
+          {
+            locale: i18n?.language,
+            labels: {
+              title: t(
+                "oneDriveSave.chooseFolder",
+                "Choose a OneDrive folder to save to",
+              ),
+              close: t("close", "Close"),
+              loading: t(
+                "provider.onedrive.pickerLoading",
+                "Connecting to OneDrive…",
+              ),
+            },
           },
-        },
-        { accountId: account.id },
-      );
+          { accountId: account.id },
+        );
+      } catch (err) {
+        if (
+          (err as { errorCode?: string } | null)?.errorCode === "user_cancelled"
+        )
+          return;
+        fail(
+          isPopupBlocked(err)
+            ? t(
+                "provider.onedrive.errors.popupBlocked",
+                "Your browser blocked the Microsoft sign-in window. Allow pop-ups for this site and try again.",
+              )
+            : isAxiosError(err) &&
+                [401, 403, 409].includes(err.response?.status ?? 0)
+              ? t(
+                  "provider.onedrive.errors.reconnect",
+                  "Your Microsoft account needs to sign in again. Reconnect it in Settings > Connected accounts.",
+                )
+              : t(
+                  "provider.onedrive.errors.unreachable",
+                  "Couldn't reach OneDrive. Check your connection and try again.",
+                ),
+        );
+        return;
+      }
       if (!folder) return;
       await run(stub, {
         kind: "folder",
