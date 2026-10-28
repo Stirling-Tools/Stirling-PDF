@@ -7,8 +7,13 @@ env:
 
 vars:
   # jdk.dynalink is required by VeraPDF (PDF/A validation); without it the bundled JRE throws
-  # NoClassDefFoundError: jdk/dynalink/Namespace at runtime in get-info-on-pdf and verify-pdf
-  JLINK_MODULES: "java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.dynalink"
+  # NoClassDefFoundError: jdk/dynalink/Namespace at runtime in get-info-on-pdf and verify-pdf.
+  # java.management is needed for javax.management.DynamicMBean, java.instrument for the
+  # ClassFileTransformer API Spring Boot's loader references, java.net.http for PostHogClient.
+  # java.desktop pulls java.datatransfer and java.prefs on its own; java.compiler, java.sql,
+  # java.naming, java.rmi, java.security.jgss/sasl and java.transaction.xa are not needed by the
+  # desktop sidecar and are left out (verified by booting the packaged JAR and exercising tools).
+  JLINK_MODULES: "java.base,java.desktop,java.instrument,java.logging,java.management,java.net.http,java.scripting,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.dynalink"
 
   # Minimum Java major the bundled JRE must be. Keep in sync with build.gradle
   # `modernJavaVersion` - the app JAR is compiled for this, so an older runtime
@@ -128,20 +133,22 @@ tasks:
       DISABLE_ADDITIONAL_FEATURES: "true"
       STIRLING_DESKTOP_BUNDLE: "true"
     cmds:
-      - echo "Building bootJar with JPDFium natives for {{.JPDFIUM_PLATFORMS}}"
-      - cmd: cmd /c gradlew.bat bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
+      - echo "Building the ProGuard-shrunk JAR with JPDFium natives for {{.JPDFIUM_PLATFORMS}}"
+      - cmd: cmd /c gradlew.bat shrinkDesktopJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
         platforms: [windows]
-      - cmd: ./gradlew bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
+      - cmd: ./gradlew shrinkDesktopJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
         platforms: [linux, darwin]
       # The bundle globs libs/*.jar, so an old jar left behind would ship too
       # (and could be selected as the backend). The script stages only the jar
       # this build just produced, replacing whatever the last build left there.
-      - node frontend/scripts/stage-backend-jar.mjs app/core/build/libs frontend/src-tauri/libs
+      - node frontend/scripts/stage-backend-jar.mjs app/core/build/libs/desktop frontend/src-tauri/libs
 
   jlink:runtime:
     desc: "Create custom JRE with jlink"
     deps: [jlink:jar]
     dir: src-tauri
+    env:
+      JLINK_MODULES: "{{.JLINK_MODULES}}"
     cmds:
       - rm -rf runtime/jre
       - mkdir -p runtime
@@ -215,8 +222,11 @@ tasks:
       # `ForEach-Object { .IsReadOnly = }`, which fails on every file.
       - cmd: powershell -NoProfile -Command 'Get-ChildItem -Recurse -File runtime/jre | ForEach-Object { $_.IsReadOnly = $false }'
         platforms: [windows]
+      - cmd: node ../scripts/jlink-fingerprint.mjs write runtime/jre
+    # A plain existence check would reuse the previous runtime after a module-list change, which
+    # makes every size comparison after such an edit describe the wrong artifact.
     status:
-      - test -f runtime/jre/release
+      - node ../scripts/jlink-fingerprint.mjs check runtime/jre
 
   jlink:clean:
     desc: "Remove JLink runtime and bundled JARs"

@@ -489,7 +489,7 @@ function compressStaticCopyPlugin(
 
       // The TTFs are only ever requested through the backend, which serves the
       // .br/.gz siblings and falls back to its own classpath copy of the raw
-      // file. Shipping the raw set in dist would duplicate ~100 MB for nothing.
+      // file. Shipping the raw set in dist would duplicate ~7.5 MB for nothing.
       // Kept: NotoSans-Regular.ttf, which the text editor's Unicode fallback
       // fetches directly, and the viewer's Latin fallback faces
       // (services/pdfiumFontFallback.ts). Static hosts have no classpath to

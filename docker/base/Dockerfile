@@ -384,7 +384,7 @@ FROM eclipse-temurin:25-jdk-noble@sha256:ba0f0e1a33864105e1d454e88105c617ab40f71
 
 RUN "$JAVA_HOME/bin/jlink" \
       --add-modules java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.dynalink,jdk.management,jdk.charsets,jdk.localedata,jdk.naming.dns,jdk.unsupported,jdk.zipfs \
-      --strip-debug --no-man-pages --no-header-files --compress=zip-6 \
+      --strip-debug --no-man-pages --no-header-files --compress=zip-9 \
       --output /opt/jre
 
 

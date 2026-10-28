@@ -211,6 +211,14 @@ tasks:
       - cmd: ./gradlew build -PnoSpotless
         platforms: [linux, darwin]
 
+  size:report:
+    desc: "Report the largest dependency JARs in the packaged backend JAR"
+    cmds:
+      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:jarSizeReport"
+        platforms: [windows]
+      - cmd: ./gradlew :stirling-pdf:jarSizeReport
+        platforms: [linux, darwin]
+
   test:
     desc: "Run backend tests"
     cmds:

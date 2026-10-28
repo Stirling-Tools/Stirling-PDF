@@ -7,6 +7,8 @@ configurations {
     runtimeClasspath {
         extendsFrom developmentOnly
     }
+    // ProGuard itself; resolved only for the desktop shrink task.
+    proguardShrink
 }
 
 dependencies {
@@ -28,6 +30,9 @@ dependencies {
             exclude group: 'jakarta.enterprise'
         }
     }
+    // Boot 4's JettyWebServerFactory builds an h2c HTTP2CServerConnectionFactory for every
+    // connector, so jetty-http2-server is not optional even on the loopback-only desktop sidecar.
+    // ALPN stays because the same factory wires it for TLS connectors.
     implementation 'org.eclipse.jetty.http2:jetty-http2-server'
     implementation 'org.eclipse.jetty:jetty-alpn-java-server'
     if (!gradle.ext.desktopBundle) {
@@ -129,6 +134,10 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 }
 
+dependencies {
+    proguardShrink 'com.guardsquare:proguard-base:7.10.0'
+}
+
 sourceSets {
     main {
         resources {
@@ -182,6 +191,13 @@ jar {
     enabled = false
 }
 
+// Desktop CJK fallbacks. Bundled by default on every platform; `-PdesktopBundledCjkFonts=false`
+// omits the two Stirling faces where the OS is known to provide embeddable ones. PDFBox embeds
+// only TrueType outlines, so a host whose CJK faces are CFF (Linux Noto collections) still needs
+// the bundled copies.
+def desktopBundledCjkFonts =
+        project.findProperty('desktopBundledCjkFonts')?.toString()?.toBoolean() != false
+
 // Configure and enable bootJar for this project
 bootJar {
     enabled = true
@@ -226,6 +242,11 @@ bootJar {
         if (path.contains('static/vendor/jscanify/opencv.js')) {
             details.exclude()
         }
+        if (!desktopBundledCjkFonts
+                && (path.endsWith('/static/fonts/StirlingSansCJK-Regular.ttf')
+                        || path.endsWith('/static/fonts/StirlingSansKR-Regular.ttf'))) {
+            details.exclude()
+        }
         // Build-time-only frontend inputs and the dev mock service worker.
         if (path.contains('static/og-metadata.')
                 || path.contains('static/mockServiceWorker.js')
@@ -243,10 +264,83 @@ bootJar {
     }
 }
 
+// Prints the largest entries of the packaged boot JAR so a size change can be attributed to a
+// dependency instead of guessed at. Nested JARs are STORED, so their compressed size is the
+// artifact size.
+tasks.register('jarSizeReport') {
+    group = 'reporting'
+    description = 'Print the largest entries of the boot JAR'
+    dependsOn tasks.named('bootJar')
+    doLast {
+        def archive = tasks.named('bootJar').get().archiveFile.get().asFile
+        def rows = []
+        def staticByTop = new TreeMap<String, Long>()
+        long staticTotal = 0
+        new java.util.zip.ZipFile(archive).withCloseable { zip ->
+            zip.entries().each { entry ->
+                if (entry.directory) {
+                    return
+                }
+                if (entry.name.startsWith('BOOT-INF/lib/')) {
+                    rows << [entry.compressedSize,
+                             entry.name.substring('BOOT-INF/lib/'.length())]
+                } else if (entry.name.startsWith('BOOT-INF/classes/static/')) {
+                    staticTotal += entry.compressedSize
+                    def rel = entry.name.substring('BOOT-INF/classes/static/'.length())
+                    def top = rel.contains('/') ? rel.substring(0, rel.indexOf('/')) : '(root)'
+                    staticByTop[top] = (staticByTop[top] ?: 0L) + entry.compressedSize
+                }
+            }
+        }
+        def fmt = { long value -> String.format('%,d', value) }
+        println "bootJar: ${archive.name} (${fmt(archive.length())} bytes)"
+        println ''
+        println 'Top dependency JARs (bytes, largest first):'
+        rows.sort { a, b -> b[0] <=> a[0] }.take(40).each { row ->
+            println "  ${String.format('%10s', fmt(row[0]))}  ${row[1]}"
+        }
+        println ''
+        println 'Static payload (compressed bytes):'
+        staticByTop.each { top, size -> println "  ${String.format('%10s', fmt(size))}  static/${top}" }
+        println "  ${String.format('%10s', fmt(staticTotal))}  static/ (total)"
+    }
+}
+
+
+// Desktop shrinking. ProGuard removes unreachable code inside dependencies, which no exclusion can
+// do: it drops ~21 % of the backend JAR while every artifact family stays available. Opt out with
+// -PshrinkDesktopJar=false; point -PproguardJmods at a full JDK 25 if the build JDK has no jmods.
+def shrinkDesktopJarEnabled =
+        project.findProperty('shrinkDesktopJar')?.toString()?.toBoolean() != false
+def proguardJmods = project.findProperty('proguardJmods')?.toString()
+if (proguardJmods == null) {
+    proguardJmods = new File(System.getProperty('java.home'), 'jmods').absolutePath
+}
+if (!new File(proguardJmods).isDirectory() && System.getenv('JAVA_HOME')) {
+    proguardJmods = new File(System.getenv('JAVA_HOME'), 'jmods').absolutePath
+}
+
+if (gradle.ext.desktopBundle) {
+    tasks.register('shrinkDesktopJar', stirling.software.gradle.ShrinkDesktopJarTask) {
+        group = 'build'
+        description = 'Shrink the desktop boot JAR with ProGuard'
+        dependsOn tasks.named('bootJar')
+        bootJar = tasks.named('bootJar').flatMap { it.archiveFile }
+        shrunkJar = layout.buildDirectory.file("libs/desktop/stirling-pdf-${project.version}.jar")
+        staticRules = rootProject.file('buildSrc/src/main/resources/proguard-desktop.pro')
+        targetJava = rootProject.ext.modernJavaVersion
+        implementationVersion = project.version.toString()
+        libraryJars = proguardJmods
+        shrinkEnabled = shrinkDesktopJarEnabled
+        proguardClasspath = configurations.proguardShrink
+    }
+}
+
 // Configure main class for Spring Boot
 springBoot {
     mainClass = 'stirling.software.SPDF.SPDFApplication'
 }
+
 
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'

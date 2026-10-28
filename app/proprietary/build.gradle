@@ -94,7 +94,14 @@ dependencies {
         exclude group: 'org.opensaml', module: 'opensaml-core'
     }
 
-    implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
+    // Both S3 client factories build UrlConnectionHttpClient explicitly; the SDK's default
+    // Apache and Netty transports are never constructed.
+    implementation("software.amazon.awssdk:s3:${awsSdkVersion}") {
+        // Only the synchronous client is used (S3Clients/S3ConnectionPool), so both default
+        // transports go: apache5-client for sync, netty-nio-client for async.
+        exclude group: 'software.amazon.awssdk', module: 'apache5-client'
+        exclude group: 'software.amazon.awssdk', module: 'netty-nio-client'
+    }
     implementation "software.amazon.awssdk:url-connection-client:${awsSdkVersion}"
 
     // Network policy sources (SFTP/FTP/SMB drop folders). All permissively licensed:

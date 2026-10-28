@@ -38,7 +38,7 @@
       },
       "rpm": {
         "desktopTemplate": "stirling-pdf.desktop",
-        "compression": { "type": "zstd", "level": 3 }
+        "compression": { "type": "zstd", "level": 19 }
       },
       "appimage": {
         "bundleMediaFramework": false
