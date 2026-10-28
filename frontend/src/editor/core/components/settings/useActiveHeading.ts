@@ -80,6 +80,9 @@ export function useActiveHeading(
     const read = () => {
       frame = 0;
       if (Date.now() < settleUntil.current) return;
+      // The phone layout hides this pane instead of unmounting it; every rect
+      // then reads zero, which would elect the last heading as current.
+      if (container.clientHeight === 0) return;
       const line = container.getBoundingClientRect().top + ACTIVE_LINE;
       let current = headings[0]?.id ?? null;
       for (const h of headings) {
