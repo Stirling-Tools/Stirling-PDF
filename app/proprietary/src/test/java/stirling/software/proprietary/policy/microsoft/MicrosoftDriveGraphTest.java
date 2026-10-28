@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -65,6 +67,7 @@ class MicrosoftDriveGraphTest {
     private ApplicationProperties properties;
 
     private final User alice = user(5L, "alice");
+    private final OwnershipService ownership = mock(OwnershipService.class);
     private final User mallory = user(9L, "mallory");
 
     @BeforeEach
@@ -89,10 +92,11 @@ class MicrosoftDriveGraphTest {
         connections = mock(IntegrationConfigRepository.class);
         storeConnection("onedrive", true);
         UserService users = mock(UserService.class);
+        when(ownership.canUse(any(), any(), eq(alice))).thenReturn(true);
+        signIn(alice);
         when(users.findByUsername("alice")).thenReturn(Optional.of(alice));
         when(users.findByUsername("mallory")).thenReturn(Optional.of(mallory));
-        ConnectionLookup lookup =
-                new ConnectionLookup(connections, mock(OwnershipService.class), users);
+        ConnectionLookup lookup = new ConnectionLookup(connections, ownership, users);
         MicrosoftConnectionResolver resolver =
                 new MicrosoftConnectionResolver(
                         lookup,
@@ -327,6 +331,39 @@ class MicrosoftDriveGraphTest {
                                         "onedrive",
                                         Map.of("accountId", account.getId(), "directory", "Out"))));
         assertNull(graph.content("Out/done.pdf"));
+    }
+
+    @Test
+    void anOrganisationConnectionIsRefusedWhenNobodyIsActing() {
+        SecurityContextHolder.clearContext();
+
+        assertThrows(IllegalArgumentException.class, () -> source.resolve(onedrive(Map.of()), ctx));
+    }
+
+    @Test
+    void anUnattendedRunUsesAConnectionItsOwnerMayUse() throws Exception {
+        graph.put("Out/.keep", "x");
+        SecurityContextHolder.clearContext();
+
+        sink.deliver(
+                new OutputDelivery("run-1", POLICY, null, null, null, "alice"),
+                List.of(named(bytes("processed"), "done.pdf")),
+                onedriveOut("Out"));
+
+        assertEquals("processed", graph.content("Out/done.pdf"));
+    }
+
+    @Test
+    void anUnattendedRunCannotUseAConnectionItsOwnerMayNot() {
+        SecurityContextHolder.clearContext();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        sink.deliver(
+                                new OutputDelivery("run-1", POLICY, null, null, null, "mallory"),
+                                List.of(named(bytes("planted"), "done.pdf")),
+                                onedriveOut("Out")));
     }
 
     @Test

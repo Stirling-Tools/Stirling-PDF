@@ -40,7 +40,8 @@ public class MicrosoftConnectionResolver {
                                 options,
                                 IntegrationType.MICROSOFT_365,
                                 "Microsoft 365",
-                                PER_USE_KEYS),
+                                PER_USE_KEYS,
+                                owner),
                         appDefaults());
         if (expected != null && config.drive() != expected) {
             throw new IllegalArgumentException(

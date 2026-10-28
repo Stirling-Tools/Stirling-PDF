@@ -38,13 +38,16 @@ public class ConnectionLookup {
             Map<String, Object> options,
             IntegrationType type,
             String label,
-            Set<String> perUseKeys) {
+            Set<String> perUseKeys,
+            String owner) {
+        User acting = actingUser(owner);
+
         long connectionId = connectionId(options, label);
         IntegrationConfig connection =
                 connections
                         .findById(connectionId)
                         .filter(cfg -> cfg.getIntegrationType() == type)
-                        .filter(this::usableByCurrentUser)
+                        .filter(cfg -> usableBy(acting, cfg))
                         .orElseThrow(
                                 () ->
                                         new IllegalArgumentException(
@@ -82,9 +85,12 @@ public class ConnectionLookup {
         return null;
     }
 
-    private boolean usableByCurrentUser(IntegrationConfig connection) {
-        User user = currentUser();
-        return user == null || ownership.canUse(ResourceType.INTEGRATION_CONFIG, connection, user);
+    private User actingUser(String owner) {
+        return owner != null ? userService.findByUsername(owner).orElse(null) : currentUser();
+    }
+
+    private boolean usableBy(User user, IntegrationConfig connection) {
+        return user != null && ownership.canUse(ResourceType.INTEGRATION_CONFIG, connection, user);
     }
 
     private static long connectionId(Map<String, Object> options, String label) {
