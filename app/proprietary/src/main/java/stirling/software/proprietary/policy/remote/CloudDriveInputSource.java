@@ -42,7 +42,7 @@ public abstract class CloudDriveInputSource<L extends CloudLocation, F extends C
 
     @Override
     public void validate(InputSpec spec) {
-        L location = drive.resolve(spec.type(), spec.options());
+        L location = drive.resolve(spec.type(), spec.options(), null);
         try {
             drive.checkReadable(location);
         } catch (IOException e) {
@@ -53,12 +53,17 @@ public abstract class CloudDriveInputSource<L extends CloudLocation, F extends C
     @Override
     public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
             throws IOException {
-        return resolve(source.toInputSpec(), ctx);
+        return resolve(source.toInputSpec(), ctx, policyOwner);
     }
 
     @Override
     public List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException {
-        L location = drive.resolve(spec.type(), spec.options());
+        return resolve(spec, ctx, null);
+    }
+
+    private List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx, String owner)
+            throws IOException {
+        L location = drive.resolve(spec.type(), spec.options(), owner);
         List<F> files = drive.list(location);
         if (files.size() >= MAX_FILES) {
             log.warn(
@@ -76,7 +81,7 @@ public abstract class CloudDriveInputSource<L extends CloudLocation, F extends C
                     .toList();
         }
         ctx.reportPresent(files.stream().map(CloudFile::identity).toList());
-        boolean track = "track".equals(String.valueOf(spec.options().get("mode")).trim());
+        boolean track = !"consume".equals(String.valueOf(spec.options().get("mode")).trim());
         List<ResolvedInput> work = new ArrayList<>();
         for (F file : files) {
             String gate = file.version();

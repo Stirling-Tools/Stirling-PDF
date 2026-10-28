@@ -55,6 +55,17 @@ public abstract class CloudDriveContract<L extends CloudLocation, F extends Clou
     }
 
     @Test
+    void withoutAModeOriginalsAreKept() throws Exception {
+        put("Inbox", "a.pdf", "first");
+
+        List<ResolvedInput> work =
+                source.resolve(new InputSpec(type(), options("Inbox", Map.of())), new Ctx(POLICY));
+        work.getFirst().onComplete().accept(true);
+
+        assertThat(content("Inbox", "a.pdf")).isEqualTo("first");
+    }
+
+    @Test
     void consumeReadsThenRemovesOnlyAfterSuccess() throws Exception {
         put("Inbox", "a.pdf", "first");
         put("Inbox", "b.pdf", "second");

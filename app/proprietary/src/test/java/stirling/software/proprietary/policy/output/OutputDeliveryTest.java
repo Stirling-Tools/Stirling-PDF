@@ -20,6 +20,7 @@ class OutputDeliveryTest {
                         source,
                         document,
                         user,
+                        null,
                         null);
         return OutputDelivery.forRun(run, PolicyInputs.of(List.of(new FileSystemResource(path))));
     }

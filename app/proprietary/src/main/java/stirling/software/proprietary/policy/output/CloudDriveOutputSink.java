@@ -49,7 +49,7 @@ public abstract class CloudDriveOutputSink<L extends CloudLocation, F extends Cl
     @Override
     public void validate(OutputSpec spec) {
         try {
-            drive.checkWritable(drive.resolve(spec.type(), spec.options()));
+            drive.checkWritable(drive.resolve(spec.type(), spec.options(), null));
         } catch (IOException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         }
@@ -58,7 +58,7 @@ public abstract class CloudDriveOutputSink<L extends CloudLocation, F extends Cl
     @Override
     public List<ResultFile> deliver(
             OutputDelivery delivery, List<Resource> outputs, OutputSpec spec) throws IOException {
-        L location = drive.resolve(spec.type(), spec.options());
+        L location = drive.resolve(spec.type(), spec.options(), delivery.pipelineOwner());
         List<ResultFile> results = new ArrayList<>();
         for (int i = 0; i < outputs.size(); i++) {
             Resource resource = outputs.get(i);

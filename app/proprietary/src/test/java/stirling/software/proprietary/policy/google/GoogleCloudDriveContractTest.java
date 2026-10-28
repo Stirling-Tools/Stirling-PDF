@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.access.service.OwnershipService;
@@ -21,6 +23,7 @@ import stirling.software.proprietary.integration.repository.IntegrationConfigRep
 import stirling.software.proprietary.integration.service.ConnectionLookup;
 import stirling.software.proprietary.policy.remote.CloudDrive;
 import stirling.software.proprietary.policy.remote.CloudDriveContract;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 
 class GoogleCloudDriveContractTest extends CloudDriveContract<GoogleDriveConfig, GoogleFile> {
@@ -41,6 +44,10 @@ class GoogleCloudDriveContractTest extends CloudDriveContract<GoogleDriveConfig,
         app.setClientSecret(FakeGoogleServer.CLIENT_SECRET);
         InMemoryConnectedAccounts accounts = new InMemoryConnectedAccounts();
         accountId = accounts.add(5L, CloudProvider.GOOGLE, "google-refresh").getId();
+        User owner = new User();
+        owner.setId(5L);
+        SecurityContextHolder.getContext()
+                .setAuthentication(new UsernamePasswordAuthenticationToken(owner, null, List.of()));
         ConnectedAccountService connected =
                 new ConnectedAccountService(
                         accounts.repository,
@@ -54,7 +61,9 @@ class GoogleCloudDriveContractTest extends CloudDriveContract<GoogleDriveConfig,
         folders.put("Inbox", google.folder(scans, "Inbox"));
         folders.put("Done", google.folder(scans, "Done"));
         return new GoogleCloudDrive(
-                new GoogleConnectionResolver(lookup, new ConnectedAccountAccess(connected, lookup)),
+                new GoogleConnectionResolver(
+                        lookup,
+                        new ConnectedAccountAccess(connected, lookup, mock(UserService.class))),
                 new GoogleDriveClient(
                         google.endpoints(),
                         new GoogleTokenProvider(google.endpoints(), connected)));
@@ -62,6 +71,7 @@ class GoogleCloudDriveContractTest extends CloudDriveContract<GoogleDriveConfig,
 
     @AfterEach
     void stop() {
+        SecurityContextHolder.clearContext();
         google.close();
     }
 

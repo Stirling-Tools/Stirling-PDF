@@ -103,6 +103,7 @@ class PolicyRunRegistryTest {
                         null,
                         null,
                         null,
+                        null,
                         null);
         registry.register(run);
         return run;

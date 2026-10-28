@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,6 +20,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.access.service.OwnershipService;
@@ -40,6 +43,7 @@ import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.output.GoogleDriveOutputSink;
 import stirling.software.proprietary.policy.output.OutputDelivery;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 
 import tools.jackson.databind.ObjectMapper;
@@ -82,19 +86,25 @@ class GoogleDriveTest {
         ConnectionLookup lookup =
                 new ConnectionLookup(connections, mock(OwnershipService.class), users);
         GoogleConnectionResolver resolver =
-                new GoogleConnectionResolver(lookup, new ConnectedAccountAccess(connected, lookup));
+                new GoogleConnectionResolver(
+                        lookup, new ConnectedAccountAccess(connected, lookup, users));
         GoogleCloudDrive cloud = new GoogleCloudDrive(resolver, drive);
         ledger = new InProcessProcessedLedger();
         source = new GoogleDriveInputSource(cloud);
         sink = new GoogleDriveOutputSink(cloud, ledger);
         ctx = new Ctx(POLICY);
         account = accounts.add(5L, CloudProvider.GOOGLE, "google-refresh");
+        User owner = new User();
+        owner.setId(5L);
+        SecurityContextHolder.getContext()
+                .setAuthentication(new UsernamePasswordAuthenticationToken(owner, null, List.of()));
         String scans = google.folder("root", "Scans");
         inbox = google.folder(scans, "Inbox");
     }
 
     @AfterEach
     void tearDown() {
+        SecurityContextHolder.clearContext();
         google.close();
     }
 
@@ -106,8 +116,9 @@ class GoogleDriveTest {
     void aMyDrivePathResolvesAndConsumeBinsTheProcessedFile() throws Exception {
         String id = google.file(inbox, "scan.pdf", "pdf bytes");
 
-        List<ResolvedInput> work =
-                source.resolve(new InputSpec("googledrive", mine("Scans/Inbox")), ctx);
+        Map<String, Object> options = new HashMap<>(mine("Scans/Inbox"));
+        options.put("mode", "consume");
+        List<ResolvedInput> work = source.resolve(new InputSpec("googledrive", options), ctx);
 
         assertThat(work).hasSize(1);
         Resource resource = work.getFirst().inputs().primary().getFirst();
@@ -146,6 +157,7 @@ class GoogleDriveTest {
 
     @Test
     void aServiceAccountSignsItsOwnAssertionAndActsAsTheSubject() throws Exception {
+        SecurityContextHolder.clearContext();
         IntegrationConfig connection = new IntegrationConfig();
         connection.setId(CONNECTION);
         connection.setName("Workspace bot");
