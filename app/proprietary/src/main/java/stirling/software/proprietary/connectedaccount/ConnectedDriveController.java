@@ -85,6 +85,10 @@ public class ConnectedDriveController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "driveId is required");
         }
         if (!isBlank(itemId)) {
+            if (isBlank(eTag)) {
+                throw new ResponseStatusException(
+                        HttpStatus.PRECONDITION_REQUIRED, "eTag is required to replace a file");
+            }
             return new ConnectedDriveWriter.Replace(driveId, itemId, eTag);
         }
         if (isBlank(parentId) || isBlank(name)) {

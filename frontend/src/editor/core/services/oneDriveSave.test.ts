@@ -51,6 +51,16 @@ describe("saveToOneDrive", () => {
     post.mockReset();
   });
 
+  it("refuses to replace a file whose OneDrive version is unknown", async () => {
+    await expect(
+      saveToOneDrive(file, {
+        kind: "replace",
+        origin: { ...origin, eTag: null },
+      }),
+    ).rejects.toMatchObject({ code: "conflict" });
+    expect(post).not.toHaveBeenCalled();
+  });
+
   it("replaces the picked item, sending the eTag it was opened with", async () => {
     post.mockResolvedValue({ data: saved });
 
