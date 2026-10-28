@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.io.IOUtils;
@@ -760,8 +761,14 @@ public class CustomPDFDocumentFactory {
                 continue;
             }
             for (int i = kids.size() - 1; i >= 0; i--) {
-                if (kids.getObject(i) instanceof COSDictionary kid) {
-                    pending.push(kid);
+                COSBase kid = kids.getObject(i);
+                if (kid instanceof COSDictionary dictionary) {
+                    pending.push(dictionary);
+                } else if (kid == null) {
+                    // PDPageTree.getKids puts an empty page in place of a null entry
+                    if (++pages >= stopAt) {
+                        return pages;
+                    }
                 }
             }
         }

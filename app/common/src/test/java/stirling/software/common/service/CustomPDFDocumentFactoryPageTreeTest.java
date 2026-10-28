@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSNull;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.Test;
@@ -118,6 +119,25 @@ class CustomPDFDocumentFactoryPageTreeTest {
 
             assertThat(document.getNumberOfPages()).isEqualTo(2);
             assertThatCode(() -> document.getPage(1)).doesNotThrowAnyException();
+        }
+    }
+
+    @Test
+    void countsANullEntryAsThePagePdfBoxPutsInItsPlace() throws Exception {
+        try (PDDocument document = withPages(1)) {
+            COSDictionary root = root(document);
+            COSArray kids = root.getCOSArray(COSName.KIDS);
+            COSDictionary realPage = (COSDictionary) kids.getObject(0);
+            COSArray withNullFirst = new COSArray();
+            withNullFirst.add(COSNull.NULL);
+            withNullFirst.add(realPage);
+            root.setItem(COSName.KIDS, withNullFirst);
+            root.setInt(COSName.COUNT, 2);
+
+            CustomPDFDocumentFactory.correctInflatedPageCount(document);
+
+            assertThat(document.getNumberOfPages()).isEqualTo(2);
+            assertThat(document.getPage(1).getCOSObject()).isSameAs(realPage);
         }
     }
 
