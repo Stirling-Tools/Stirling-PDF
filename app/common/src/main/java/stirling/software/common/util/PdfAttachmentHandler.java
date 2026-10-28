@@ -16,6 +16,8 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -156,7 +158,8 @@ public class PdfAttachmentHandler {
         };
     }
 
-    private static String ensureUniqueFilename(String filename, Set<String> existingNames) {
+    private static String ensureUniqueFilename(
+            String filename, Set<String> existingNames, Map<String, Integer> nextCounters) {
         if (!existingNames.contains(filename)) {
             return filename;
         }
@@ -171,14 +174,29 @@ public class PdfAttachmentHandler {
             baseName = filename;
         }
 
-        int counter = 1;
+        // Resume after the last suffix handed out for this name; lower ones are taken
+        int counter = nextCounters.getOrDefault(filename, 1);
         String uniqueName;
         do {
-            uniqueName = baseName + "_" + counter + extension;
+            String suffix = "_" + counter + extension;
+            uniqueName = fitWithSuffix(baseName, suffix);
             counter++;
         } while (existingNames.contains(uniqueName));
+        nextCounters.put(filename, counter);
 
         return uniqueName;
+    }
+
+    /** Shortens the base so the suffixed name fits the attachment name limit. */
+    private static String fitWithSuffix(String baseName, String suffix) {
+        int keep = EmlParser.MAX_FILENAME_LENGTH - suffix.length();
+        if (baseName.length() <= keep || keep < 1) {
+            return baseName + suffix;
+        }
+        if (Character.isHighSurrogate(baseName.charAt(keep - 1))) {
+            keep--;
+        }
+        return baseName.substring(0, keep) + suffix;
     }
 
     private static @NotNull PDRectangle calculateAnnotationRectangle(
@@ -362,6 +380,7 @@ public class PdfAttachmentHandler {
         }
 
         Map<Integer, String> indexToFilenameMap = new HashMap<>();
+        Map<String, Integer> nextCounters = new HashMap<>();
 
         for (int i = 0; i < attachments.size(); i++) {
             MultipartFile attachment = attachments.get(i);
@@ -376,7 +395,7 @@ public class PdfAttachmentHandler {
                             : java.text.Normalizer.normalize(
                                     filename, java.text.Normalizer.Form.NFC);
             String uniqueFilename =
-                    ensureUniqueFilename(normalizedFilename, existingNames.keySet());
+                    ensureUniqueFilename(normalizedFilename, existingNames.keySet(), nextCounters);
 
             indexToFilenameMap.put(i, uniqueFilename);
 
@@ -425,17 +444,31 @@ public class PdfAttachmentHandler {
 
         int annotationsToAdd = Math.min(markerPositions.size(), attachments.size());
 
+        // The lookup tables are the same for every marker, so build them once.
+        Map<String, EmlParser.EmailAttachment> attachmentsByNormalizedFilename =
+                new LinkedHashMap<>();
+        for (EmlParser.EmailAttachment attachment : attachments) {
+            if (attachment.getFilename() != null) {
+                attachmentsByNormalizedFilename.putIfAbsent(
+                        normalizeFilename(attachment.getFilename()), attachment);
+            }
+        }
+        Set<String> embeddedFilenames = new LinkedHashSet<>(indexToFilenameMap.values());
+        PDEmbeddedFilesNameTreeNode efTree =
+                document.getDocumentCatalog().getNames().getEmbeddedFiles();
+        Map<String, PDComplexFileSpecification> efMap = efTree != null ? efTree.getNames() : null;
+
         for (int i = 0; i < annotationsToAdd; i++) {
             MarkerPosition position = markerPositions.get(i);
 
             String filenameNearMarker = position.getFilename();
 
             EmlParser.EmailAttachment matchingAttachment =
-                    findAttachmentByFilename(attachments, filenameNearMarker);
+                    findAttachmentByFilename(attachmentsByNormalizedFilename, filenameNearMarker);
 
             if (matchingAttachment != null) {
                 String embeddedFilename =
-                        findEmbeddedFilenameForAttachment(matchingAttachment, indexToFilenameMap);
+                        findEmbeddedFilenameForAttachment(matchingAttachment, embeddedFilenames);
 
                 if (embeddedFilename != null) {
                     PDPage page = document.getPage(position.getPageIndex());
@@ -444,6 +477,7 @@ public class PdfAttachmentHandler {
                             page,
                             matchingAttachment,
                             embeddedFilename,
+                            efMap,
                             position.getX(),
                             position.getY(),
                             i);
@@ -457,7 +491,8 @@ public class PdfAttachmentHandler {
     }
 
     private static EmlParser.EmailAttachment findAttachmentByFilename(
-            List<EmlParser.EmailAttachment> attachments, String targetFilename) {
+            Map<String, EmlParser.EmailAttachment> attachmentsByNormalizedFilename,
+            String targetFilename) {
         if (targetFilename == null || targetFilename.trim().isEmpty()) {
             return null;
         }
@@ -465,23 +500,19 @@ public class PdfAttachmentHandler {
         String normalizedTarget = normalizeFilename(targetFilename);
 
         // First try exact match
-        for (EmlParser.EmailAttachment attachment : attachments) {
-            if (attachment.getFilename() != null) {
-                String normalizedAttachment = normalizeFilename(attachment.getFilename());
-                if (normalizedAttachment.equals(normalizedTarget)) {
-                    return attachment;
-                }
-            }
+        EmlParser.EmailAttachment exactMatch =
+                attachmentsByNormalizedFilename.get(normalizedTarget);
+        if (exactMatch != null) {
+            return exactMatch;
         }
 
         // Then try contains match
-        for (EmlParser.EmailAttachment attachment : attachments) {
-            if (attachment.getFilename() != null) {
-                String normalizedAttachment = normalizeFilename(attachment.getFilename());
-                if (normalizedAttachment.contains(normalizedTarget)
-                        || normalizedTarget.contains(normalizedAttachment)) {
-                    return attachment;
-                }
+        for (Map.Entry<String, EmlParser.EmailAttachment> entry :
+                attachmentsByNormalizedFilename.entrySet()) {
+            String normalizedAttachment = entry.getKey();
+            if (normalizedAttachment.contains(normalizedTarget)
+                    || normalizedTarget.contains(normalizedAttachment)) {
+                return entry.getValue();
             }
         }
 
@@ -489,18 +520,22 @@ public class PdfAttachmentHandler {
     }
 
     private static String findEmbeddedFilenameForAttachment(
-            EmlParser.EmailAttachment attachment, Map<Integer, String> indexToFilenameMap) {
+            EmlParser.EmailAttachment attachment, Set<String> embeddedFilenames) {
 
         String attachmentFilename = attachment.getFilename();
         if (attachmentFilename == null) {
             return null;
         }
 
-        for (Map.Entry<Integer, String> entry : indexToFilenameMap.entrySet()) {
-            String embeddedFilename = entry.getValue();
+        // First try exact match
+        if (embeddedFilenames.contains(attachmentFilename)) {
+            return attachmentFilename;
+        }
+
+        // Then try contains match
+        for (String embeddedFilename : embeddedFilenames) {
             if (embeddedFilename != null
-                    && (embeddedFilename.equals(attachmentFilename)
-                            || embeddedFilename.contains(attachmentFilename)
+                    && (embeddedFilename.contains(attachmentFilename)
                             || attachmentFilename.contains(embeddedFilename))) {
                 return embeddedFilename;
             }
@@ -579,21 +614,22 @@ public class PdfAttachmentHandler {
             if (isInAttachmentSection) {
                 currentText.append(string);
 
-                for (int i = 0; (i = string.indexOf(ATTACHMENT_MARKER, i)) != -1; i++) {
-                    if (i < textPositions.size()) {
-                        TextPosition textPosition = textPositions.get(i);
+                // The attachments template prints one marker per entry, so only the first "@" in a
+                // run is the marker; later ones belong to the filename (me@example.com.vcf).
+                int i = string.indexOf(ATTACHMENT_MARKER);
+                if (i != -1 && i < textPositions.size()) {
+                    TextPosition textPosition = textPositions.get(i);
 
-                        String filename = extractFilenameAfterMarker(string, i);
+                    String filename = extractFilenameAfterMarker(string, i);
 
-                        MarkerPosition position =
-                                new MarkerPosition(
-                                        currentPageIndex,
-                                        textPosition.getXDirAdj(),
-                                        textPosition.getYDirAdj(),
-                                        ATTACHMENT_MARKER,
-                                        filename);
-                        positions.add(position);
-                    }
+                    MarkerPosition position =
+                            new MarkerPosition(
+                                    currentPageIndex,
+                                    textPosition.getXDirAdj(),
+                                    textPosition.getYDirAdj(),
+                                    ATTACHMENT_MARKER,
+                                    filename);
+                    positions.add(position);
                 }
             }
             super.writeString(string, textPositions);
@@ -632,6 +668,7 @@ public class PdfAttachmentHandler {
             PDPage page,
             EmlParser.EmailAttachment attachment,
             String embeddedFilename,
+            Map<String, PDComplexFileSpecification> efMap,
             float x,
             float y,
             int attachmentIndex)
@@ -658,17 +695,12 @@ public class PdfAttachmentHandler {
             fileAnnotation.setAppearance(null);
         }
 
-        PDEmbeddedFilesNameTreeNode efTree =
-                document.getDocumentCatalog().getNames().getEmbeddedFiles();
-        if (efTree != null) {
-            Map<String, PDComplexFileSpecification> efMap = efTree.getNames();
-            if (efMap != null) {
-                PDComplexFileSpecification fileSpec = efMap.get(embeddedFilename);
-                if (fileSpec != null) {
-                    fileAnnotation.setFile(fileSpec);
-                } else {
-                    // Could not find embedded file
-                }
+        if (efMap != null) {
+            PDComplexFileSpecification fileSpec = efMap.get(embeddedFilename);
+            if (fileSpec != null) {
+                fileAnnotation.setFile(fileSpec);
+            } else {
+                // Could not find embedded file
             }
         }
 
