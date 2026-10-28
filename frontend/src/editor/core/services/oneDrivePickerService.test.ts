@@ -143,6 +143,26 @@ describe("picker protocol", () => {
     };
   }
 
+  it("creates one sign-in client for concurrent initialisations", async () => {
+    const msalModule = await import("@azure/msal-browser");
+    const create = vi.mocked(msalModule.createStandardPublicClientApplication);
+    create.mockClear();
+    const service = getOneDrivePickerService();
+    const config = {
+      clientId: "concurrent-app",
+      tenant: "organizations",
+      graphUrl: "https://graph.microsoft.com/v1.0",
+    };
+
+    await Promise.all([
+      service.initialize(config),
+      service.initialize(config),
+      service.initialize(config),
+    ]);
+
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
   it("answers token requests and downloads the picked files", async () => {
     const service = getOneDrivePickerService();
     await service.initialize({
