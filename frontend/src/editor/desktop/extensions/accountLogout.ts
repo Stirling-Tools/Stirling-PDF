@@ -1,4 +1,5 @@
 import { clearNotificationReadState } from "@editor/hooks/useNotifications";
+import { clearConnectedAccounts } from "@editor/hooks/useConnectedAccounts";
 import { connectionModeService } from "@editor/services/connectionModeService";
 import { suspendWorkbenchSession } from "@editor/services/workbenchSession";
 
@@ -24,6 +25,7 @@ export function useAccountLogout() {
       suspendWorkbenchSession();
       // Same reason: the next person's own failures must not arrive pre-read.
       clearNotificationReadState();
+      clearConnectedAccounts();
       await signOut();
 
       const currentConfig = await connectionModeService.getCurrentConfig();

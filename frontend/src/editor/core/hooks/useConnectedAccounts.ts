@@ -18,6 +18,7 @@ const EMPTY: ConnectedAccountsState = {
 let snapshot: ConnectedAccountsState = EMPTY;
 let loaded = false;
 let inflight: Promise<void> | null = null;
+let generation = 0;
 const listeners = new Set<() => void>();
 
 function publish(next: ConnectedAccountsState) {
@@ -33,14 +34,26 @@ function subscribe(listener: () => void) {
 
 export function refreshConnectedAccounts(): Promise<void> {
   if (!inflight) {
-    inflight = fetchConnectedAccounts()
-      .then(publish)
+    const started = generation;
+    const request: Promise<void> = fetchConnectedAccounts()
+      .then((next) => {
+        if (started === generation) publish(next);
+      })
       .catch(() => undefined)
       .finally(() => {
-        inflight = null;
+        if (inflight === request) inflight = null;
       });
+    inflight = request;
   }
   return inflight;
+}
+
+export function clearConnectedAccounts() {
+  generation++;
+  snapshot = EMPTY;
+  loaded = false;
+  inflight = null;
+  listeners.forEach((listener) => listener());
 }
 
 export function connectedAccountFor(
@@ -66,12 +79,6 @@ export async function ensureConnectedAccount(
   }
   const outcome = await connect(provider);
   return { account: connectedAccountFor(provider), outcome };
-}
-
-export function resetConnectedAccountsForTests() {
-  snapshot = EMPTY;
-  loaded = false;
-  inflight = null;
 }
 
 export interface UseConnectedAccounts {
@@ -128,6 +135,10 @@ export function useConnectedAccounts(): UseConnectedAccounts {
 
   const disconnect = useCallback(async (id: number) => {
     await disconnectAccount(id);
+    publish({
+      ...snapshot,
+      accounts: snapshot.accounts.filter((account) => account.id !== id),
+    });
     await refreshConnectedAccounts();
   }, []);
 
