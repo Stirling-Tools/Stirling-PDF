@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@editor/contexts/SidebarContext";
@@ -9,9 +9,7 @@ import { EditorPipelinesPanel } from "@editor/components/policies/EditorPipeline
 import { ToolIcon } from "@editor/components/shared/ToolIcon";
 import { ToolPanelHeader } from "@editor/components/shared/ToolPanelHeader";
 import { ActionIcon } from "@editor/ui/ActionIcon";
-import { withViewTransition } from "@editor/utils/viewTransition";
 import { Icon } from "@editor/ui/Icon";
-import { ToolId } from "@editor/types/toolId";
 import type { ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
 import {
   FullscreenToolPanel,
@@ -50,16 +48,31 @@ export default function RightSidebar() {
 
   const [allToolsView, setAllToolsView] = useState(false);
 
-  const handleShowAllTools = () => {
-    withViewTransition(() => setAllToolsView(true));
-  };
+  const handleShowAllTools = () => setAllToolsView(true);
 
   const handleBackToDefault = () => {
-    withViewTransition(() => {
-      setAllToolsView(false);
-      setSearchQuery("");
-    });
+    setAllToolsView(false);
+    setSearchQuery("");
   };
+
+  // A plain fade rather than a View Transition: startViewTransition() forces
+  // accelerated compositing, which segfaults WebKitGTK with its DMA-BUF renderer
+  // off (WebKit bug 324730), and the Linux desktop app runs it that way.
+  const contentRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const content = contentRef.current;
+    if (
+      !content ||
+      typeof content.animate !== "function" ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+    content.animate([{ opacity: 0 }, { opacity: 1 }], {
+      duration: 220,
+      easing: "ease-in",
+    });
+  }, [leftPanelView, selectedToolKey, allToolsView]);
 
   // The header shows [back] [search] when we have somewhere to go back to —
   // i.e. the user is in a specific tool, or already in the all-tools/search view.
@@ -69,14 +82,10 @@ export default function RightSidebar() {
 
   const handleHeaderBack = () => {
     if (inToolView) {
-      withViewTransition(() => handleBackToTools());
+      handleBackToTools();
     } else {
       handleBackToDefault();
     }
-  };
-
-  const handleToolSelectWithTransition = (id: ToolId) => {
-    withViewTransition(() => handleToolSelect(id));
   };
 
   const activeTool: ToolRegistryEntry | null =
@@ -99,6 +108,7 @@ export default function RightSidebar() {
     >
       {!fullscreenExpanded && (
         <div
+          ref={contentRef}
           style={{
             opacity: 1,
             transition: "opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
@@ -160,7 +170,7 @@ export default function RightSidebar() {
             <ToolPanel
               allToolsView={allToolsView}
               onShowAllTools={handleShowAllTools}
-              onToolSelect={handleToolSelectWithTransition}
+              onToolSelect={handleToolSelect}
               compact={false}
               /* Mobile keeps the workbench bar - and with it the super search -
                  on the other slide, so the list needs its own filter. */

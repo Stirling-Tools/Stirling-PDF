@@ -40,7 +40,7 @@ export interface PanelHeaderProps {
   /** Right-aligned content rendered inside the header bar, after the title
    *  (e.g. a status badge). */
   actions?: ReactNode;
-  /** Applied to the inner header element — e.g. to set a view-transition-name. */
+  /** Applied to the inner header element. */
   barClassName?: string;
   /** Applied to the outer header container. */
   className?: string;
