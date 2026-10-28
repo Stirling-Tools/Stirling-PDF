@@ -24,7 +24,7 @@ import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDoc
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   isInlineType,
-  type PageStructure,
+  TEXT_RANGE_TYPES,
   type StructureElement,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
@@ -111,7 +111,7 @@ export class TagTextRangeCommand implements Command {
       throw new Error("The range holds no text");
     }
     const owner = rangeOwner(doc, run, this.start, this.end);
-    if (!isInlineType(this.as) && !splittable(structure, owner)) {
+    if (!isInlineType(this.as) && !structure.canSplit(owner)) {
       throw new Error("Only a block of text can be split into blocks");
     }
 
@@ -564,15 +564,66 @@ function rangeOwner(
   return owner;
 }
 
-/** True when an element is a block of text, which a block cut out of it can split. */
-function splittable(
-  structure: PageStructure,
-  owner: StructureElement,
-): boolean {
-  return (
-    owner.block.key === owner.key &&
-    structure.cannotRetag(owner.mcids[0]) === null
-  );
+/**
+ * The types code units `start` to `end` of run `runId` can be tagged as:
+ * every TEXT_RANGE_TYPES entry, only the inline ones when the text's element
+ * is not a block it can split, or none. Checks what apply refuses, without
+ * changing anything.
+ */
+export function rangeTagTypes(
+  doc: EditorDocument,
+  pageIndex: number,
+  runId: string,
+  start: number,
+  end: number,
+): StructureType[] {
+  const run = doc.page(pageIndex).findRun(runId);
+  const structure = doc.structure(pageIndex);
+  if (!run || structure.cannotAddElement()) return [];
+  if (!/\S/.test(run.text.slice(start, end))) return [];
+  let owner: StructureElement;
+  try {
+    owner = rangeOwner(doc, run, start, end);
+  } catch {
+    return [];
+  }
+  const splits = structure.canSplit(owner);
+  return TEXT_RANGE_TYPES.filter((type) => splits || isInlineType(type));
+}
+
+/** A stretch of a run's text, code units `start` to `end`, that one element marks. */
+export interface ElementStretch {
+  start: number;
+  end: number;
+  element: StructureElement;
+}
+
+/**
+ * The stretches of run `runId`'s text each element marks, in reading order:
+ * one for each series of the run's objects one element marks. Untagged and
+ * artifact text is left out, and every stretch when the run's objects cannot
+ * be mapped to its text.
+ */
+export function elementStretches(
+  doc: EditorDocument,
+  pageIndex: number,
+  runId: string,
+): ElementStretch[] {
+  const run = doc.page(pageIndex).findRun(runId);
+  const all = run ? leaves(run) : null;
+  if (!all) return [];
+  const structure = doc.structure(pageIndex);
+  const out: ElementStretch[] = [];
+  let previous: StructureElement | null = null;
+  for (const leaf of all) {
+    const mcid = ownMark(doc, leaf.ptr)?.mcid ?? null;
+    const element = mcid === null ? null : structure.element(mcid);
+    const end = leaf.start + leaf.text.length;
+    if (element && element === previous) out.at(-1)!.end = end;
+    else if (element) out.push({ start: leaf.start, end, element });
+    previous = element;
+  }
+  return out;
 }
 
 /** The object's innermost tag with an MCID; null for an artifact or untagged object. */

@@ -230,7 +230,7 @@ export class EditorDocument {
       }
       for (const edit of this.cutEdits(pageIndex, structure)) {
         const { type, from, before } = edit.cut!;
-        if (isInlineType(type)) continue;
+        if (type === null || isInlineType(type)) continue;
         const owner = structure.element(from[0])!.block.key;
         const at = blocks.findIndex((block) => block.key === owner);
         const after = before === null ? 0 : 1;
@@ -308,6 +308,12 @@ export class EditorDocument {
     return [
       ...[...this.structureCache].flatMap(([pageIndex, structure]) => [
         ...structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
+        ...structure.innerEdits().map(({ mcid, type }) => ({
+          pageIndex,
+          mcid,
+          ownType: type,
+          decorative: false,
+        })),
         ...this.addedElementEdits(pageIndex, structure),
         ...this.cutEdits(pageIndex, structure),
       ]),

@@ -164,6 +164,10 @@ export const TEXT_RANGE_TYPES = [
   "Code",
 ] as const satisfies readonly StructureType[];
 
+/** What an inline element of the file's own can be retagged as: changing it to a block would split its block. */
+const INLINE_RANGE_TYPES: readonly StructureType[] =
+  TEXT_RANGE_TYPES.filter(isInlineType);
+
 const RETAGGABLE_TYPES: ReadonlySet<StructureType> = new Set<StructureType>([
   ...TEXT_BLOCK_TYPES,
   "H",
@@ -210,8 +214,26 @@ function givenMcids(cut: ContentCut): number[] {
 }
 
 /** An element the session cut out of another's text. */
-export interface CutElement extends AddedElement {
+export interface CutElement {
+  mcid: number;
+  /** Null once removed: the save gives the text back to the element it was cut from. */
+  type: StructureType | null;
+  alt: string | null;
   cut: ContentCut;
+}
+
+/** What an element marking part of a block's text can be changed to. */
+export interface InnerOptions {
+  /** Empty when its type cannot be changed. */
+  types: readonly StructureType[];
+  removable: boolean;
+}
+
+/** A change to one of the file's elements marking part of a block's text. */
+export interface InnerElementEdit {
+  mcid: number;
+  /** Null removes the element, its content joining its parent. */
+  type: StructureType | null;
 }
 
 /** An element the session adds for content the file leaves untagged. */
@@ -239,6 +261,16 @@ export class PageStructure {
     { cut: ContentCut; owner: StructureElement }
   >();
   private readonly fileElements: ReadonlySet<StructureElement>;
+  /** Changes to the file's inner elements: null for one the session removed. */
+  private readonly innerChanges = new Map<
+    StructureElement,
+    StructureType | null
+  >();
+  /**
+   * What a removed inner element's text belongs to, by block key, where the
+   * block owns no content of its own on the page to stand for it.
+   */
+  private readonly standIns = new Map<string, StructureElement>();
 
   /** Why the save cannot write descriptions for this page, or null when it can. */
   readonly readOnly: ReadOnlyReason | null;
@@ -376,7 +408,11 @@ export class PageStructure {
    * highest MCID the page's content carries, -1 for none.
    */
   freeMcid(contentMax: number): number {
-    const used = [...this.added.keys(), ...this.cutGivenMcids()];
+    const used = [
+      ...this.added.keys(),
+      ...this.cuts.keys(),
+      ...this.cutGivenMcids(),
+    ];
     return Math.max(
       this.slotCount ?? 0,
       contentMax + 1,
@@ -429,7 +465,7 @@ export class PageStructure {
   }
 
   private putAdded(mcid: number, type: StructureType): AddedStructureElement {
-    const key = `added:${mcid}`;
+    const key = addedKey(mcid);
     const owner = this.cuts.get(mcid)?.owner;
     const own = { key, role: type, type };
     const element: AddedStructureElement = {
@@ -450,10 +486,10 @@ export class PageStructure {
   /** Drop an added element, its description, and the cut it was made by. */
   removeElement(mcid: number): void {
     const element = this.added.get(mcid);
-    if (!element) return;
+    if (!element && !this.cuts.has(mcid)) return;
     this.added.delete(mcid);
     this.byMcid.delete(mcid);
-    this.edits.delete(element);
+    if (element) this.edits.delete(element);
     const cut = this.cuts.get(mcid)?.cut;
     this.cuts.delete(mcid);
     for (const given of cut ? givenMcids(cut) : []) this.byMcid.delete(given);
@@ -469,9 +505,133 @@ export class PageStructure {
   /** Elements cut from others' text, in the order they were cut. */
   cutElements(): CutElement[] {
     return [...this.cuts].map(([mcid, { cut }]) => ({
-      ...this.addedElement(mcid),
+      mcid,
+      type: this.added.get(mcid)?.type ?? null,
+      alt: this.alt(mcid),
       cut,
     }));
+  }
+
+  /** True when the element is a block of text, which a block cut out of it can split. */
+  canSplit(el: StructureElement): boolean {
+    return el.block.key === el.key && this.cannotRetag(el.mcids[0]) === null;
+  }
+
+  /**
+   * The role element `key` has as the session has it, one marking part of a
+   * block's text; null once the session removed it. Throws when the page has
+   * no such element.
+   */
+  innerType(key: string): StructureRole | null {
+    const cut = this.cutMcid(key);
+    if (cut !== null) {
+      const type = this.added.get(cut)?.type;
+      return type ? { role: type, type } : null;
+    }
+    const el = this.fileElement(key);
+    const change = this.innerChanges.get(el);
+    if (change === undefined) return el;
+    return change === null ? null : { role: change, type: change };
+  }
+
+  /** What element `key` can be changed to. Throws as innerType does. */
+  innerOptions(key: string): InnerOptions {
+    if (this.readOnly) return { types: [], removable: false };
+    const cut = this.cutMcid(key);
+    if (cut !== null) {
+      const { owner } = this.cuts.get(cut)!;
+      const types = this.canSplit(owner)
+        ? TEXT_RANGE_TYPES
+        : INLINE_RANGE_TYPES;
+      return { types, removable: true };
+    }
+    const el = this.fileElement(key);
+    // In a list item or table cell the element is part of that structure:
+    // an LI's Lbl must stay one.
+    if (el.key === el.block.key || this.cannotRetag(el.mcids[0]) !== null) {
+      return { types: [], removable: false };
+    }
+    const inline = el.type !== null && INLINE_RANGE_TYPES.includes(el.type);
+    return {
+      types: inline ? INLINE_RANGE_TYPES : [],
+      // Only marked content can join the parent without re-parenting
+      // annotations or child elements.
+      removable: el.type !== null && el.onlyMarkedContent,
+    };
+  }
+
+  /**
+   * Retag element `key`, or remove it with null, its text read as its
+   * block's again. Throws as innerType does, and for a change innerOptions
+   * does not offer, but for going back to the file's type: one the save
+   * cannot write would fail every later save.
+   */
+  setInnerType(key: string, type: StructureType | null): void {
+    const cut = this.cutMcid(key);
+    const el = cut === null ? this.fileElement(key) : null;
+    const options = this.innerOptions(key);
+    const allowed =
+      type === null
+        ? options.removable
+        : type === el?.type || options.types.includes(type);
+    if (!allowed) throw new Error(`Element ${key} cannot become ${type}`);
+    if (!el) {
+      this.setCutType(cut!, type);
+      return;
+    }
+    const holder = type === null ? this.standIn(el) : el;
+    for (const mcid of el.mcids) this.byMcid.set(mcid, holder);
+    if (type === el.type) this.innerChanges.delete(el);
+    else this.innerChanges.set(el, type);
+  }
+
+  /** Changes to the file's inner elements, for the save. */
+  innerEdits(): InnerElementEdit[] {
+    return [...this.innerChanges].map(([el, type]) => ({
+      mcid: el.mcids[0],
+      type,
+    }));
+  }
+
+  private setCutType(mcid: number, type: StructureType | null): void {
+    if (type !== null) {
+      if (this.added.has(mcid)) this.setAddedType(mcid, type);
+      else this.putAdded(mcid, type);
+      return;
+    }
+    const element = this.added.get(mcid);
+    if (element) this.edits.delete(element);
+    this.added.delete(mcid);
+    this.byMcid.set(mcid, this.cuts.get(mcid)!.owner);
+  }
+
+  private cutMcid(key: string): number | null {
+    for (const mcid of this.cuts.keys()) {
+      if (addedKey(mcid) === key) return mcid;
+    }
+    return null;
+  }
+
+  private fileElement(key: string): StructureElement {
+    const el = this.elements.find((candidate) => candidate.key === key);
+    if (!el) throw new Error(`No element ${key} on the page`);
+    return el;
+  }
+
+  /** The element a removed inner element's text belongs to: its block. */
+  private standIn(el: StructureElement): StructureElement {
+    const block = this.elements.find((other) => other.key === el.block.key);
+    if (block) return block;
+    const made = this.standIns.get(el.block.key) ?? {
+      ...el.block,
+      alt: null,
+      actualText: null,
+      mcids: el.mcids,
+      onlyMarkedContent: true,
+      block: el.block,
+    };
+    this.standIns.set(el.block.key, made);
+    return made;
   }
 
   private addedElement(mcid: number): AddedElement {
@@ -495,7 +655,17 @@ export class PageStructure {
     const cut = this.cuts.get(mcid);
     const el = cut ? cut.owner : this.element(mcid);
     if (!el) return null;
-    if (this.fileElements.has(el)) return el.mcids[0];
+    // A stand-in's MCIDs still name the removed element in the file, whose
+    // block the save climbs to.
+    if (this.fileElements.has(el) || this.isStandIn(el)) return el.mcids[0];
     return cut ? this.fileMcid(el.mcids[0]) : null;
   }
+
+  private isStandIn(el: StructureElement): boolean {
+    return this.standIns.get(el.key) === el;
+  }
+}
+
+function addedKey(mcid: number): string {
+  return `added:${mcid}`;
 }

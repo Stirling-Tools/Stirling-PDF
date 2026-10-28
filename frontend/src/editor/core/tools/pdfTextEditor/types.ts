@@ -223,6 +223,18 @@ export interface SelectionState {
   shapeIds: string[];
   /** Caret position when exactly one run is selected and the user is typing */
   caret: number | null;
+  /**
+   * The characters selected inside the one selected run, as code units of
+   * its text; null when nothing within it is selected. Kept after the run's
+   * box loses focus, so a control outside it can act on the selection.
+   */
+  textRange: TextRange | null;
+}
+
+/** Code units `start` (inclusive) to `end` (exclusive) of a run's text; never empty. */
+export interface TextRange {
+  start: number;
+  end: number;
 }
 
 export interface ToolbarState {

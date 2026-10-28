@@ -18,6 +18,7 @@ import {
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/addElements";
 import { cutElements } from "@editor/tools/pdfTextEditor/pdfdoc/passes/cutElements";
 import { markDecorative } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markDecorative";
+import { unwrapElements } from "@editor/tools/pdfTextEditor/pdfdoc/passes/unwrapElements";
 import { StructureNodes } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
 import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 import type { ContentCut } from "@editor/tools/pdfTextEditor/model/PageStructure";
@@ -34,6 +35,8 @@ export interface StructureEdit {
    * it is one, else the block an inline element such as a Span sits in.
    */
   type?: StructureType;
+  /** The new /S of the element itself; null removes it, its content joining its parent. */
+  ownType?: StructureType | null;
   /** Turn the element's content into an artifact and drop the element, its /Alt with it. */
   decorative: boolean;
   /**
@@ -41,8 +44,11 @@ export interface StructureEdit {
    * the element owning MCID `after` on the page (see NewElement).
    */
   newElement?: { type: StructureType; after: number | null };
-  /** Set when the content was cut out of an element's: give it one of `type` (see cutElements). */
-  cut?: ContentCut & { type: StructureType };
+  /**
+   * Set when the content was cut out of an element's: give it one of `type`,
+   * or give it back to that element with null (see cutElements).
+   */
+  cut?: ContentCut & { type: StructureType | null };
 }
 
 export interface StructureEditFailure {
@@ -95,6 +101,7 @@ export async function applyStructureEdits(
   );
   const failures: StructureEditFailure[] = [];
   const decorative = new Map<number, StructureEdit[]>();
+  const unwraps: { edit: StructureEdit; owner: number }[] = [];
   const added = edits.filter((edit) => edit.newElement);
   const cuts = edits.filter((edit) => edit.cut);
   for (const edit of edits) {
@@ -106,6 +113,10 @@ export async function applyStructureEdits(
     }
     if (edit.decorative) {
       decorative.set(owner, [...(decorative.get(owner) ?? []), edit]);
+      continue;
+    }
+    if (edit.ownType === null) {
+      unwraps.push({ edit, owner });
       continue;
     }
     const target = edit.type ? nodes.blockOf(owner) : owner;
@@ -122,6 +133,17 @@ export async function applyStructureEdits(
   }
 
   const parentTree = new ParentTreeWriter(pdf, treeRoot);
+  // After the retags, which address elements through the ParentTree as the
+  // file has it, and before the cuts, which may take text an element held.
+  const kept = unwrapElements(
+    pdf,
+    unwraps.map(({ owner }) => owner),
+    bodies,
+    parentTree,
+  );
+  for (const [index, reason] of kept) {
+    failures.push({ edit: unwraps[index].edit, reason });
+  }
   // After the retags, which address elements by the MCIDs a cut can take
   // from them, and before the added elements, which may be placed beside a cut.
   const uncut = await cutElements(
@@ -187,15 +209,16 @@ function edited(
   num: number,
 ): string | null {
   let out: string | null = body;
+  const type = edit.type ?? edit.ownType;
   if (edit.alt !== undefined) {
     out =
       edit.alt === null
         ? removeDictEntry(out, "Alt")
         : setDictEntry(out, "Alt", encodeTextString(edit.alt));
   }
-  if (out !== null && edit.type) {
-    out = setDictEntry(out, "S", `/${edit.type}`);
-    if (out !== null && edit.type === "Note" && !pdf.valueSpan(out, "ID")) {
+  if (out !== null && type) {
+    out = setDictEntry(out, "S", `/${type}`);
+    if (out !== null && type === "Note" && !pdf.valueSpan(out, "ID")) {
       out = setDictEntry(out, "ID", noteId(num));
     }
   }

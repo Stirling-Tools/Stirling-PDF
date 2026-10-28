@@ -4,7 +4,10 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
+import type {
+  PageSnapshot,
+  TextRange,
+} from "@editor/tools/pdfTextEditor/types";
 import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
 import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
@@ -49,6 +52,10 @@ interface PageViewProps {
     dy: number,
   ) => void;
   onEditRun: (pageIndex: number, runId: string, nextText: string) => void;
+  /** The characters selected inside a run's box, while it has focus. */
+  onSelectRunText?: (runId: string, range: TextRange | null) => void;
+  /** The characters selected inside the one selected run. */
+  selectedTextRange?: TextRange | null;
   /** Ctrl+drag committed; dx/dy in PDF points. */
   onMoveRun?: (
     pageIndex: number,
@@ -102,6 +109,8 @@ export function PageView({
   onSelectShape,
   onMoveShape,
   onEditRun,
+  onSelectRunText,
+  selectedTextRange,
   onMoveRun,
   onWrapRun,
   onResizeRun,
@@ -418,6 +427,12 @@ export function PageView({
             highlighted={highlightedRunId === run.id}
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
             onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
+            onTextRangeChange={(range) => onSelectRunText?.(run.id, range)}
+            textRange={
+              selectedRunIds.length === 1 && selectedRunIds[0] === run.id
+                ? selectedTextRange
+                : null
+            }
             onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
             onWrap={(maxWidthPt) =>
               onWrapRun?.(page.pageIndex, run.id, maxWidthPt)

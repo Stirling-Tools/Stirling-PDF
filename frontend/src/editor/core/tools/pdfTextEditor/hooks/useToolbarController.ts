@@ -528,6 +528,7 @@ export function useToolbarController(
     onSelectNextImageToReview: imageA11y.selectNextImage,
     textTag: textA11y.tag,
     onSetTextTag: textA11y.setTag,
+    innerTextTags: textA11y.inner,
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
     hasImageSelection: selection.imageIds.length > 0,

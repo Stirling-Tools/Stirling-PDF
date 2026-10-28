@@ -1,5 +1,9 @@
+import { elementStretches } from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { RetagBlocker } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import type {
+  InnerOptions,
+  RetagBlocker,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type { TextRunSnapshot } from "@editor/tools/pdfTextEditor/types";
 
@@ -44,5 +48,37 @@ export function canTagText(doc: EditorDocument, run: TextRunSnapshot): boolean {
     !run.artifact &&
     run.mcid === undefined &&
     doc.structure(run.pageIndex).cannotAddElement() === null
+  );
+}
+
+/** An element marking part of a run's text, rather than the run's own block. */
+export interface InnerTag extends InnerOptions {
+  /** As PageStructure.innerType takes it. */
+  key: string;
+  /** The text it marks, and where in the run's text, in code units. */
+  text: string;
+  start: number;
+  end: number;
+  role: StructureRole;
+}
+
+/** The run's inner tags in reading order, as the session has them. */
+export function innerTags(
+  doc: EditorDocument,
+  run: TextRunSnapshot,
+): InnerTag[] {
+  if (run.inForm || run.mcid === undefined) return [];
+  const structure = doc.structure(run.pageIndex);
+  const block = structure.block(run.mcid);
+  if (!block) return [];
+  return elementStretches(doc, run.pageIndex, run.id).flatMap(
+    ({ start, end, element }) => {
+      const role =
+        element.key === block.key ? null : structure.innerType(element.key);
+      if (!role) return [];
+      const options = structure.innerOptions(element.key);
+      const text = run.text.slice(start, end);
+      return [{ key: element.key, text, start, end, role, ...options }];
+    },
   );
 }

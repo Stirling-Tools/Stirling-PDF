@@ -11,14 +11,21 @@ import {
   test,
   vi,
 } from "vitest";
-import { TagTextRangeCommand } from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
+import {
+  rangeTagTypes,
+  TagTextRangeCommand,
+} from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
 import { readObjTexts } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   charOrigins,
   readMatrix,
 } from "@editor/tools/pdfTextEditor/commands/textPieces";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { StructureElement } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  isInlineType,
+  TEXT_RANGE_TYPES,
+  type StructureElement,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import { elementKids } from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
 import {
@@ -325,5 +332,54 @@ describe("tagging part of an element's text", () => {
     ).toThrow();
     expect(textByMcid(doc)).toEqual(before);
     expect(doc.structureEdits()).toEqual([]);
+  });
+});
+
+describe("which tags part of a run's text can take", () => {
+  const typesFor = (
+    doc: EditorDocument,
+    pageIndex: number,
+    fragment: string,
+    within = fragment,
+  ) => {
+    const run = doc.page(pageIndex).runs.find((r) => r.text.includes(within))!;
+    const start = run.text.indexOf(fragment);
+    return rangeTagTypes(
+      doc,
+      pageIndex,
+      run.id,
+      start,
+      start + fragment.length,
+    );
+  };
+
+  test("offers every type for text inside a block it can split", async () => {
+    const doc = await open(cutPdf());
+    expect(typesFor(doc, 0, "rose in every")).toEqual([...TEXT_RANGE_TYPES]);
+  });
+
+  test("offers only inline types for text in an inline element", async () => {
+    const doc = await EditorDocument.open(
+      new Uint8Array(
+        await readFile(
+          path.join(
+            import.meta.dirname,
+            "../../../tests/test-fixtures/tagged-sample.pdf",
+          ),
+        ),
+      ),
+    );
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(1));
+    expect(typesFor(doc, 1, "appendix")).toEqual(
+      TEXT_RANGE_TYPES.filter(isInlineType),
+    );
+    expect(typesFor(doc, 1, "in the appendix")).toEqual([]);
+  });
+
+  test("offers none for untagged text or only spaces", async () => {
+    const doc = await open(cutPdf());
+    expect(typesFor(doc, 0, "Printed")).toEqual([]);
+    expect(typesFor(doc, 0, " ", "Sales rose")).toEqual([]);
   });
 });

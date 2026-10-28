@@ -32,10 +32,13 @@ export interface NewCut {
   pageIndex: number;
   /** The MCID the cut text carries. */
   mcid: number;
-  type: StructureType;
+  /** Null for a cut the session removed. */
+  type: StructureType | null;
   alt: string | null;
   cut: ContentCut;
 }
+
+type TypedCut = NewCut & { type: StructureType };
 
 /** What one cut changes, worked out before anything is written. */
 interface CutPlan {
@@ -73,9 +76,10 @@ export async function cutElements(
       failed.set(index, plan);
       continue;
     }
-    const reason = isInlineType(cut.type)
-      ? joinOwner(pdf, cut, plan, bodies)
-      : splitOwner(pdf, cut, plan, bodies, parentTree);
+    const reason =
+      cut.type === null || isInlineType(cut.type)
+        ? joinOwner(pdf, cut, plan, bodies)
+        : splitOwner(pdf, { ...cut, type: cut.type }, plan, bodies, parentTree);
     if (reason) failed.set(index, reason);
   }
   return failed;
@@ -140,20 +144,37 @@ async function planCut(
   };
 }
 
-/** Put the cut among the owner's kids, between the parts read before and after it. */
+/**
+ * Put the cut among the owner's kids, between the parts read before and
+ * after it: as an element of its own, or as the owner's own content when the
+ * session removed it.
+ */
 function joinOwner(
   pdf: RawPdf,
   cut: NewCut,
   plan: CutPlan,
   bodies: Map<number, string>,
 ): string | null {
-  const num = unusedObjectNumber(pdf, bodies);
-  const kids = [...plan.before, indirectRef(pdf, num), ...plan.after];
+  const num = cut.type === null ? null : unusedObjectNumber(pdf, bodies);
+  const kid =
+    num === null
+      ? mcidKid(pdf, cut.mcid, plan.ownerPage, plan.pageNum)
+      : indirectRef(pdf, num);
+  const kids = [...plan.before, kid, ...plan.after];
   const owner = setDictEntry(plan.ownerBody, "K", `[${kids.join(" ")}]`);
   if (!owner) return "the element it was cut from cannot be written";
   bodies.set(plan.owner, owner);
-  bodies.set(num, newElement(pdf, cut, num, plan.owner, plan.pageNum));
-  setSlot(plan.slots, cut.mcid, num);
+  if (num !== null && cut.type !== null) {
+    const element = newElement(
+      pdf,
+      { ...cut, type: cut.type },
+      num,
+      plan.owner,
+      plan.pageNum,
+    );
+    bodies.set(num, element);
+  }
+  setSlot(plan.slots, cut.mcid, num ?? plan.owner);
   keepParts(plan, [cut.cut.before, cut.cut.after]);
   return null;
 }
@@ -172,7 +193,7 @@ function keepParts(plan: CutPlan, parts: readonly (number | null)[]): void {
  */
 function splitOwner(
   pdf: RawPdf,
-  cut: NewCut,
+  cut: TypedCut,
   plan: CutPlan,
   bodies: Map<number, string>,
   parentTree: ParentTreeWriter,
@@ -233,7 +254,7 @@ function splitOwner(
 /** The cut is all of the owner's content: the owner becomes the cut's type, keeping only the cut. */
 function retagOwner(
   pdf: RawPdf,
-  cut: NewCut,
+  cut: TypedCut,
   plan: CutPlan,
   bodies: Map<number, string>,
 ): string | null {
@@ -297,7 +318,7 @@ function kidPage(
 
 function newElement(
   pdf: RawPdf,
-  { type, mcid, alt }: NewCut,
+  { type, mcid, alt }: TypedCut,
   num: number,
   parent: number,
   pageNum: number,

@@ -1,5 +1,8 @@
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
+import { Box, Group, Stack } from "@mantine/core";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
 import { Select } from "@editor/ui/Select";
 import {
   Field,
@@ -12,18 +15,26 @@ import type {
   StructureRole,
   StructureType,
 } from "@editor/tools/pdfTextEditor/model/structureTypes";
-import type { TextTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import type {
+  InnerTag,
+  TextTag,
+} from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import type { InnerTagsControl } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
+import "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection.css";
 
 /**
  * What the selected text is tagged as, and a picker to change it: retagging
- * its block, or giving untagged text an element of its own.
+ * its block, or giving untagged text an element of its own. Beneath it, the
+ * tags marking parts of the text, and a picker for characters selected in it.
  */
 export function TextAccessibilitySection({
   tag,
   onSetTag,
+  inner,
 }: {
   tag: TextTag;
   onSetTag: (type: StructureType) => void;
+  inner: InnerTagsControl;
 }) {
   const { t } = useTranslation();
   const label = t("pdfTextEditor.inspector.accessibility.tagLabel", "Tag");
@@ -32,24 +43,162 @@ export function TextAccessibilitySection({
       <SectionLabel>
         {t("pdfTextEditor.inspector.accessibility.heading", "Accessibility")}
       </SectionLabel>
-      {pickable(tag) ? (
-        <Field label={label}>
-          <TagPicker
-            current={tag.kind === "tagged" ? tag.block : null}
-            placeholder={tagText(t, tag)}
-            onSetTag={onSetTag}
+      <Stack gap="xs">
+        {pickable(tag) ? (
+          <Field label={label}>
+            <TagPicker
+              types={TEXT_BLOCK_TYPES}
+              current={tag.kind === "tagged" ? tag.block : null}
+              placeholder={tagText(t, tag)}
+              onSetTag={onSetTag}
+              label={label}
+              testId="pdf-editor-text-tag-picker"
+            />
+          </Field>
+        ) : (
+          <StatRow
             label={label}
+            value={
+              <span data-testid="pdf-editor-text-tag">{tagText(t, tag)}</span>
+            }
           />
-        </Field>
-      ) : (
-        <StatRow
-          label={label}
-          value={
-            <span data-testid="pdf-editor-text-tag">{tagText(t, tag)}</span>
-          }
-        />
-      )}
+        )}
+        <InnerTagList inner={inner} />
+        <NewTagPicker inner={inner} />
+      </Stack>
     </Section>
+  );
+}
+
+/** The tags marking parts of the text, numbered in reading order; the one picked opens its controls. */
+function InnerTagList({ inner }: { inner: InnerTagsControl }) {
+  const { t } = useTranslation();
+  if (inner.tags.length === 0) return null;
+  return (
+    <Field
+      label={t(
+        "pdfTextEditor.inspector.accessibility.innerTags",
+        "Tags in this text",
+      )}
+    >
+      <Stack gap={2} data-testid="pdf-editor-inner-tags">
+        {inner.tags.map((innerTag, index) => (
+          <InnerTagRow
+            key={innerTag.key}
+            number={index + 1}
+            innerTag={innerTag}
+            active={inner.active === index}
+            onSelect={() => inner.onSelect(index)}
+            onSet={(type) => inner.onSet(index, type)}
+          />
+        ))}
+      </Stack>
+    </Field>
+  );
+}
+
+function InnerTagRow({
+  number,
+  innerTag,
+  active,
+  onSelect,
+  onSet,
+}: {
+  number: number;
+  innerTag: InnerTag;
+  active: boolean;
+  onSelect: () => void;
+  onSet: (type: StructureType | null) => void;
+}) {
+  const text = innerTag.text.replace(/\s+/g, " ").trim();
+  return (
+    <div data-testid="pdf-editor-inner-tag">
+      <button
+        type="button"
+        className="pdf-editor-inner-tag__entry"
+        aria-pressed={active}
+        onClick={onSelect}
+      >
+        <span className="pdf-editor-inner-tag__number">{number}</span>
+        <span className="pdf-editor-inner-tag__text" title={text}>
+          {text}
+        </span>
+      </button>
+      {active && (
+        <InnerTagControls number={number} innerTag={innerTag} onSet={onSet} />
+      )}
+    </div>
+  );
+}
+
+function InnerTagControls({
+  number,
+  innerTag,
+  onSet,
+}: {
+  number: number;
+  innerTag: InnerTag;
+  onSet: (type: StructureType | null) => void;
+}) {
+  const { t } = useTranslation();
+  const removeLabel = t(
+    "pdfTextEditor.inspector.accessibility.removeTag",
+    "Remove tag",
+  );
+  return (
+    <Group gap={4} wrap="nowrap" mt={4}>
+      <Box style={{ flex: 1, minWidth: 0 }}>
+        <TagPicker
+          types={innerTag.types}
+          current={innerTag.role}
+          placeholder={blockName(t, innerTag.role)}
+          onSetTag={onSet}
+          label={t(
+            "pdfTextEditor.inspector.accessibility.innerTagLabel",
+            "Tag {{number}}",
+            { number },
+          )}
+          testId="pdf-editor-inner-tag-picker"
+        />
+      </Box>
+      {innerTag.removable && (
+        <ActionIcon
+          variant="tertiary"
+          size="sm"
+          aria-label={removeLabel}
+          title={removeLabel}
+          onClick={() => onSet(null)}
+          data-testid="pdf-editor-inner-tag-remove"
+        >
+          <Icon name="trash" size={14} />
+        </ActionIcon>
+      )}
+    </Group>
+  );
+}
+
+/** A picker tagging the characters selected in the text, shown while some are. */
+function NewTagPicker({ inner }: { inner: InnerTagsControl }) {
+  const { t } = useTranslation();
+  if (!inner.newTagTypes) return null;
+  const label = t(
+    "pdfTextEditor.inspector.accessibility.selectedText",
+    "Selected text",
+  );
+  return (
+    <Field label={label}>
+      <TagPicker
+        types={inner.newTagTypes}
+        current={null}
+        placeholder={t(
+          "pdfTextEditor.inspector.accessibility.addTag",
+          "Add tag",
+        )}
+        onSetTag={inner.onTagSelection}
+        label={label}
+        testId="pdf-editor-new-tag-picker"
+      />
+    </Field>
   );
 }
 
@@ -59,33 +208,37 @@ function pickable(tag: TextTag): boolean {
 }
 
 function TagPicker({
+  types,
   current,
   placeholder,
   onSetTag,
   label,
+  testId,
 }: {
+  types: readonly StructureType[];
   /** Null for untagged text. */
   current: StructureRole | null;
   /** Shown when the current tag is not one the picker offers, such as a custom role. */
   placeholder: string;
   onSetTag: (type: StructureType) => void;
   label: string;
+  testId: string;
 }) {
   const { t } = useTranslation();
-  const offered =
-    TEXT_BLOCK_TYPES.find((type) => type === current?.type) ?? null;
+  const offered = types.find((type) => type === current?.type) ?? null;
   return (
-    <div data-testid="pdf-editor-text-tag-picker">
+    <div data-testid={testId}>
       <Select
+        disabled={types.length === 0}
         inputSize="sm"
-        options={TEXT_BLOCK_TYPES.map((type) => ({
+        options={types.map((type) => ({
           value: type,
           label: typeName(t, type),
         }))}
         value={offered}
         placeholder={placeholder}
         onChange={(value) => {
-          const picked = TEXT_BLOCK_TYPES.find((type) => type === value);
+          const picked = types.find((type) => type === value);
           if (picked) onSetTag(picked);
         }}
         aria-label={label}
