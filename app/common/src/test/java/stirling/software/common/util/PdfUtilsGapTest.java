@@ -273,6 +273,30 @@ class PdfUtilsGapTest {
         }
 
         @Test
+        @DisplayName("a percent sign in the filename is kept literally in the zip entry names")
+        void percentInFilenameIsLiteral() throws Exception {
+            byte[] bytes = simplePdfBytes();
+            when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(1));
+
+            TempFile output =
+                    PdfUtils.convertFromPdf(
+                            pdfDocumentFactory,
+                            tempFileManager,
+                            bytes,
+                            "PNG",
+                            ImageType.RGB,
+                            false,
+                            72,
+                            "100%",
+                            true);
+            try (output;
+                    ZipInputStream zis =
+                            new ZipInputStream(Files.newInputStream(output.getPath()))) {
+                assertEquals("100%_1.png", zis.getNextEntry().getName());
+            }
+        }
+
+        @Test
         @DisplayName("a failed conversion leaves no temp file behind")
         void failureDeletesTempFile() throws Exception {
             byte[] bytes = simplePdfBytes();

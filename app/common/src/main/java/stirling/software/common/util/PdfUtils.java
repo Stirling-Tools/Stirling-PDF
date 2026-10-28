@@ -319,9 +319,7 @@ public class PdfUtils {
         try (ZipOutputStream zos = new ZipOutputStream(out)) {
             for (int i = 0; i < document.getNumberOfPages(); ++i) {
                 BufferedImage image = renderPage(document, pdfRenderer, i, DPI, colorType);
-                zos.putNextEntry(
-                        new ZipEntry(
-                                String.format(Locale.ROOT, filename + "_%d.%s", i + 1, extension)));
+                zos.putNextEntry(new ZipEntry(filename + "_" + (i + 1) + "." + extension));
                 ImageIO.write(image, imageType, zos);
                 zos.closeEntry();
             }
