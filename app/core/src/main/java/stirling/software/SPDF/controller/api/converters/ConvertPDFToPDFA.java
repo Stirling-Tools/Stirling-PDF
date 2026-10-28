@@ -22,6 +22,7 @@ import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.io.RandomAccessRead;
 import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
@@ -1715,6 +1716,7 @@ public class ConvertPDFToPDFA {
             Set<String> missingFonts;
             boolean needImgs;
             try (PDDocument doc = Loader.loadPDF(preProcessedFile)) {
+                requireSanitizablePageCount(doc, maxConversionPages);
                 missingFonts = findUnembeddedFontNames(doc);
                 needImgs = (pdfaPart == 1) && hasTransparentImages(doc);
                 if (!missingFonts.isEmpty() || needImgs) {
@@ -2202,18 +2204,59 @@ public class ConvertPDFToPDFA {
         if (maxPages <= 0) {
             return;
         }
-        // Counted by walking the tree: getNumberOfPages() is the /Count the file declares
+        if (hasMorePagesThan(doc, maxPages)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "PDF/A and PDF/X conversion is limited to "
+                            + maxPages
+                            + " pages, split the document first");
+        }
+    }
+
+    /**
+     * Counts pages the way {@code doc.getPages()} lists them, visiting each intermediate node once,
+     * and stops at the first page over {@code maxPages}. getNumberOfPages() is only the /Count the
+     * file declares, and the PDFBox iterator resolves the whole tree before returning a page.
+     */
+    private static boolean hasMorePagesThan(PDDocument doc, int maxPages) {
+        COSDictionary root =
+                doc.getDocumentCatalog().getCOSObject().getCOSDictionary(COSName.PAGES);
+        if (root == null) {
+            return false;
+        }
+        Set<COSDictionary> visitedNodes = Collections.newSetFromMap(new IdentityHashMap<>());
+        Deque<Iterator<COSBase>> pending = new ArrayDeque<>();
+        pending.push(kidsOf(root));
         int pages = 0;
-        for (PDPage ignored : doc.getPages()) {
-            if (++pages > maxPages) {
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidArgument",
-                        "Invalid argument: {0}",
-                        "PDF/A and PDF/X conversion is limited to "
-                                + maxPages
-                                + " pages, split the document first");
+        while (!pending.isEmpty()) {
+            Iterator<COSBase> kids = pending.peek();
+            if (!kids.hasNext()) {
+                pending.pop();
+                continue;
+            }
+            COSBase kid = kids.next();
+            if (kid instanceof COSObject indirect) {
+                kid = indirect.getObject();
+            }
+            if (!(kid instanceof COSDictionary node)) {
+                continue;
+            }
+            if (COSName.PAGES.equals(node.getCOSName(COSName.TYPE))
+                    || node.containsKey(COSName.KIDS)) {
+                if (visitedNodes.add(node)) {
+                    pending.push(kidsOf(node));
+                }
+            } else if (++pages > maxPages) {
+                return true;
             }
         }
+        return false;
+    }
+
+    private static Iterator<COSBase> kidsOf(COSDictionary node) {
+        COSArray kids = node.getCOSArray(COSName.KIDS);
+        return kids == null ? Collections.emptyIterator() : kids.iterator();
     }
 
     /** The page tree can list one page object many times; each step should touch it once. */

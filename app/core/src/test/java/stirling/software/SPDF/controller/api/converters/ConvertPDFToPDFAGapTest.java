@@ -17,12 +17,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -126,6 +128,17 @@ class ConvertPDFToPDFAGapTest {
         }
         throw new IllegalStateException(
                 "No method named " + methodName + " with " + argCount + " params");
+    }
+
+    private static Object pdfaProfile(String token) throws Exception {
+        for (Class<?> inner : ConvertPDFToPDFA.class.getDeclaredClasses()) {
+            if (inner.getSimpleName().equals("PdfaProfile")) {
+                Method fromRequest = inner.getDeclaredMethod("fromRequest", String.class);
+                fromRequest.setAccessible(true);
+                return fromRequest.invoke(null, token);
+            }
+        }
+        throw new IllegalStateException("PdfaProfile not found");
     }
 
     private static Exception unwrap(InvocationTargetException e) {
@@ -1039,6 +1052,100 @@ class ConvertPDFToPDFAGapTest {
                 assertThatCode(() -> invokeStatic("requireSanitizablePageCount", document, 0))
                         .doesNotThrowAnyException();
             }
+        }
+
+        @Test
+        @DisplayName("the page check stops at the limit without resolving later page-tree entries")
+        void pageCheckStopsAtTheLimit() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                repeatOnlyPage(document, 6);
+                AtomicBoolean armed = new AtomicBoolean();
+                document.getDocumentCatalog()
+                        .getCOSObject()
+                        .getCOSDictionary(COSName.PAGES)
+                        .getCOSArray(COSName.KIDS)
+                        .add(
+                                new COSObject(new COSDictionary()) {
+                                    @Override
+                                    public COSBase getObject() {
+                                        if (armed.get()) {
+                                            throw new AssertionError("resolved past the limit");
+                                        }
+                                        return super.getObject();
+                                    }
+                                });
+                armed.set(true);
+
+                assertThatThrownBy(() -> invokeStatic("requireSanitizablePageCount", document, 5))
+                        .isInstanceOf(IllegalArgumentException.class);
+            }
+        }
+
+        @Test
+        @DisplayName("pages are counted as the page tree lists them, with shared nodes and cycles")
+        void pageCountMatchesPageTree() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                COSDictionary root =
+                        document.getDocumentCatalog()
+                                .getCOSObject()
+                                .getCOSDictionary(COSName.PAGES);
+                COSArray rootKids = root.getCOSArray(COSName.KIDS);
+                COSDictionary page = (COSDictionary) rootKids.getObject(0);
+                COSArray sharedKids = new COSArray();
+                sharedKids.add(page);
+                sharedKids.add(page);
+                COSDictionary shared = new COSDictionary();
+                shared.setItem(COSName.TYPE, COSName.PAGES);
+                shared.setItem(COSName.KIDS, sharedKids);
+                rootKids.add(shared);
+                rootKids.add(shared);
+                rootKids.add(root);
+
+                int iterated = 0;
+                for (PDPage ignored : document.getPages()) {
+                    iterated++;
+                }
+                int listed = iterated;
+
+                assertThatCode(() -> invokeStatic("requireSanitizablePageCount", document, listed))
+                        .doesNotThrowAnyException();
+                assertThatThrownBy(
+                                () ->
+                                        invokeStatic(
+                                                "requireSanitizablePageCount",
+                                                document,
+                                                listed - 1))
+                        .isInstanceOf(IllegalArgumentException.class);
+            }
+        }
+
+        @Test
+        @DisplayName("the PDF/A-2 fallback refuses documents over the page limit")
+        void fallbackChecksPageLimit() throws Exception {
+            Path input = tempDir.resolve("six-pages.pdf");
+            try (PDDocument document = simplePdf()) {
+                repeatOnlyPage(document, 6);
+                document.save(input.toFile());
+            }
+            ApplicationProperties properties = new ApplicationProperties();
+            properties.getSystem().setMaxPdfaConversionPages(5);
+            ConvertPDFToPDFA controller =
+                    new ConvertPDFToPDFA(
+                            runtimePathConfig,
+                            veraPDFService,
+                            pdfaLevelAService,
+                            tempFileManager,
+                            properties);
+
+            assertThatThrownBy(
+                            () ->
+                                    invokeInstance(
+                                            controller,
+                                            "convertWithPdfBoxMethod",
+                                            input,
+                                            pdfaProfile("pdfa-2b")))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("5 pages");
         }
 
         @Test
