@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.google;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -62,6 +63,7 @@ class GoogleDriveTest {
     private Ctx ctx;
     private ConnectedAccount account;
     private String inbox;
+    private final OwnershipService ownership = mock(OwnershipService.class);
 
     @BeforeEach
     void setUp() throws Exception {
@@ -83,8 +85,7 @@ class GoogleDriveTest {
                         google.endpoints(), new GoogleTokenProvider(google.endpoints(), connected));
         UserService users = mock(UserService.class);
         connections = mock(IntegrationConfigRepository.class);
-        ConnectionLookup lookup =
-                new ConnectionLookup(connections, mock(OwnershipService.class), users);
+        ConnectionLookup lookup = new ConnectionLookup(connections, ownership, users);
         GoogleConnectionResolver resolver =
                 new GoogleConnectionResolver(
                         lookup, new ConnectedAccountAccess(connected, lookup, users));
@@ -157,7 +158,7 @@ class GoogleDriveTest {
 
     @Test
     void aServiceAccountSignsItsOwnAssertionAndActsAsTheSubject() throws Exception {
-        SecurityContextHolder.clearContext();
+        when(ownership.canUse(any(), any(), any())).thenReturn(true);
         IntegrationConfig connection = new IntegrationConfig();
         connection.setId(CONNECTION);
         connection.setName("Workspace bot");

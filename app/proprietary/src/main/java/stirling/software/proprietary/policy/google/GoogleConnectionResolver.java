@@ -32,6 +32,7 @@ public class GoogleConnectionResolver {
                         options,
                         IntegrationType.GOOGLE_WORKSPACE,
                         "Google Workspace",
-                        PER_USE_KEYS));
+                        PER_USE_KEYS,
+                        owner));
     }
 }
