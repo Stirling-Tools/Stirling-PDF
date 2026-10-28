@@ -61,8 +61,8 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     // Every statement must start with one of these: what H2's SCRIPT writes for this schema.
     // SET MODE is left out because it changes how H2 tokenizes the rest of the script.
-    private static final java.util.List<Pattern> ALLOWED_STATEMENTS =
-            java.util.List.of(
+    private static final List<Pattern> ALLOWED_STATEMENTS =
+            List.of(
                     Pattern.compile("(?i)CREATE\\s+((CACHED|MEMORY)\\s+)?TABLE\\b"),
                     Pattern.compile(
                             "(?i)CREATE\\s+(UNIQUE\\s+(NULLS\\s+(NOT\\s+)?DISTINCT\\s+)?)?(HASH\\s+)?INDEX\\b"),
@@ -76,8 +76,8 @@ public class DatabaseService implements DatabaseServiceInterface {
                     Pattern.compile(
                             "(?i)SET\\s+(DB_CLOSE_DELAY|REFERENTIAL_INTEGRITY|IGNORECASE|SCHEMA)\\b"));
 
-    private static final java.util.List<Pattern> DENIED_PATTERNS =
-            java.util.List.of(
+    private static final List<Pattern> DENIED_PATTERNS =
+            List.of(
                     Pattern.compile("(?i)\\bCREATE\\s+(FORCE\\s+)?ALIAS\\b"),
                     Pattern.compile("(?i)\\bCREATE\\s+(FORCE\\s+)?TRIGGER\\b"),
                     Pattern.compile("(?i)\\bCREATE\\s+(FORCE\\s+)?AGGREGATE\\b"),
