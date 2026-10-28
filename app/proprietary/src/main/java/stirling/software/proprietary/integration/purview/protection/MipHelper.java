@@ -139,14 +139,16 @@ public class MipHelper {
     private static void answer(BufferedWriter in, JsonNode request, TokenSource tokens)
             throws IOException {
         String reply;
+        String scope = null;
         try {
-            String token = tokens.token(scopeFor(request));
+            scope = scopeFor(request);
+            String token = tokens.token(scope);
             reply = "OK " + token;
         } catch (IOException | RuntimeException e) {
             String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
             log.warn(
                     "Token for {} (resource {}) refused: {}",
-                    scopeFor(request),
+                    scope,
                     text(request, "resource"),
                     reason);
             reply = "ERR " + reason.replaceAll("[\\r\\n]+", " ");
