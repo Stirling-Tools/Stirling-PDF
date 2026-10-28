@@ -172,11 +172,11 @@ const SettingsPageInner: React.FC = () => {
   const jumpToHeading = useCallback(
     (id: string) => {
       if (!isMobile) {
-        focusHeading(id);
+        focusHeading(id, { moveFocus: true });
         return;
       }
       setMobilePane("content");
-      window.requestAnimationFrame(() => focusHeading(id));
+      window.requestAnimationFrame(() => focusHeading(id, { moveFocus: true }));
     },
     [focusHeading, isMobile],
   );

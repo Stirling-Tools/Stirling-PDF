@@ -15,6 +15,11 @@ function writeHash(id: string): void {
   );
 }
 
+export interface HeadingFocusOptions {
+  /** Move keyboard focus to the target as well as scrolling to it. */
+  moveFocus?: boolean;
+}
+
 /**
  * Which card the reader is on, mirrored into the URL as `#slug`.
  *
@@ -24,14 +29,17 @@ function writeHash(id: string): void {
 export function useActiveHeading(
   container: HTMLElement | null,
   headings: SectionHeading[],
-): { active: string | null; focus: (id: string) => void } {
+): {
+  active: string | null;
+  focus: (id: string, options?: HeadingFocusOptions) => void;
+} {
   const [active, setActive] = useState<string | null>(null);
   // A click scrolls smoothly; without this the spy reads the frames on the way
   // and overwrites the slug the reader just asked for.
   const settleUntil = useRef(0);
 
   const focus = useCallback(
-    (id: string) => {
+    (id: string, { moveFocus = false }: HeadingFocusOptions = {}) => {
       const el = document.getElementById(id);
       if (!el) return;
       // Unfold first, or there is nothing to scroll to: the anchor is either a
@@ -51,15 +59,30 @@ export function useActiveHeading(
       // Scroll the settings scroller itself, not scrollIntoView: that walks the
       // whole ancestor chain and drags the app frame up under the title bar.
       if (container) {
+        // The phone layout sticks the back bar over the scroller; landing the
+        // heading at the top edge would put the bar over it.
+        const stickyOffset =
+          container.querySelector<HTMLElement>(".settings-page__mobile-bar")
+            ?.offsetHeight ?? 0;
         container.scrollTo({
           top:
             el.getBoundingClientRect().top -
             container.getBoundingClientRect().top +
-            container.scrollTop,
+            container.scrollTop -
+            stickyOffset,
           behavior: "smooth",
         });
       } else {
         el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      if (moveFocus) {
+        // Pages that still draw a plain heading are not focusable by default.
+        if (
+          !el.matches("a[href], button, input, select, textarea, [tabindex]")
+        ) {
+          el.setAttribute("tabindex", "-1");
+        }
+        el.focus({ preventScroll: true });
       }
       el.classList.add("settings-focus-target");
       window.setTimeout(
