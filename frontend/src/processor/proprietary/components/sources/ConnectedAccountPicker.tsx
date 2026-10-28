@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { Banner, Button, Select } from "@editor/ui";
@@ -6,6 +6,7 @@ import {
   latestConnectedAccounts,
   useConnectedAccounts,
 } from "@editor/hooks/useConnectedAccounts";
+import { isPopupBlocked } from "@editor/services/connectedAccountsService";
 import type { CloudAccountProvider } from "@processor/components/sources/sourceTypes";
 import "@processor/components/sources/connections.css";
 
@@ -24,10 +25,13 @@ export function ConnectedAccountPicker({
   const { available, accounts, connect } = useConnectedAccounts();
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const mine = accounts.filter((account) => account.provider === provider);
+  const mine = useMemo(
+    () => accounts.filter((account) => account.provider === provider),
+    [accounts, provider],
+  );
 
   useEffect(() => {
-    if (!value && mine.length === 1) {
+    if (!value && mine.length === 1 && mine[0].status === "CONNECTED") {
       onChange(String(mine[0].id));
     }
   }, [value, mine, onChange]);
@@ -65,7 +69,16 @@ export function ConnectedAccountPicker({
         onChange(String(added.id));
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(
+        isPopupBlocked(e)
+          ? t(
+              "connectedAccounts.popupBlocked",
+              "Your browser blocked the sign-in window. Allow pop-ups for this site and try again.",
+            )
+          : e instanceof Error
+            ? e.message
+            : String(e),
+      );
     } finally {
       setConnecting(false);
     }

@@ -35,7 +35,7 @@ export function refreshConnectedAccounts(): Promise<void> {
   if (!inflight) {
     inflight = fetchConnectedAccounts()
       .then(publish)
-      .catch(() => publish(EMPTY))
+      .catch(() => undefined)
       .finally(() => {
         inflight = null;
       });
