@@ -366,16 +366,17 @@ public class PipelineDirectoryProcessor {
         }
     }
 
-    private PipelineResult runPipelineAgainstFiles(
+    PipelineResult runPipelineAgainstFiles(
             List<File> filesToProcess, PipelineConfig config, Path dir, Path processingDir)
             throws IOException {
+        PipelineResult result = null;
         try {
             List<Resource> inputFiles =
                     processor.generateInputFiles(filesToProcess.toArray(new File[0]));
             if (inputFiles == null || inputFiles.isEmpty()) {
                 return new PipelineResult();
             }
-            PipelineResult result = processor.runPipelineAgainstFiles(inputFiles, config);
+            result = processor.runPipelineAgainstFiles(inputFiles, config);
 
             if (result.isHasErrors()) {
                 log.error("Errors occurred during processing, retaining original files");
@@ -387,7 +388,11 @@ public class PipelineDirectoryProcessor {
             return result;
         } catch (Exception e) {
             log.error("Error during processing", e);
-            moveFilesBack(filesToProcess, processingDir);
+            if (result != null) {
+                result.close();
+            }
+            // processing/ is never scanned, so leaving them there would lose them silently.
+            moveToErrorDirectory(filesToProcess, dir);
             return new PipelineResult();
         }
     }
@@ -399,7 +404,10 @@ public class PipelineDirectoryProcessor {
         }
 
         for (File file : files) {
-            Path target = errorDir.resolve(file.getName());
+            if (!file.exists()) {
+                continue;
+            }
+            Path target = resolveUniqueFilePath(errorDir, file.getName());
             Files.move(file.toPath(), target);
             log.info("Moved failed file to error directory for investigation: {}", target);
         }
@@ -480,20 +488,6 @@ public class PipelineDirectoryProcessor {
         for (File file : filesToProcess) {
             Files.deleteIfExists(processingDir.resolve(file.getName()));
             log.info("Deleted original file: {}", file.getName());
-        }
-    }
-
-    private void moveFilesBack(List<File> filesToProcess, Path processingDir) {
-        for (File file : filesToProcess) {
-            try {
-                Files.move(processingDir.resolve(file.getName()), file.toPath());
-                log.info(
-                        "Moved file back to original location: {} , {}",
-                        file.toPath(),
-                        file.getName());
-            } catch (IOException e) {
-                log.error("Error moving file back to original location: {}", file.getName(), e);
-            }
         }
     }
 }

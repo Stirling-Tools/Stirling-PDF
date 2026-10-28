@@ -125,7 +125,14 @@ public class McpOperationExecutor {
             return McpResponses.error(
                     mapper, meta.id() + " failed unexpectedly. See server logs for details.");
         }
-        return buildResult(meta, response);
+        try {
+            return buildResult(meta, response);
+        } finally {
+            // The result was inlined or stored, so the temp file is not needed any longer
+            if (response.getBody() instanceof InternalApiClient.TempFileResource tempFileResource) {
+                tempFileResource.getTempFile().close();
+            }
+        }
     }
 
     private ObjectNode buildResult(OperationMeta meta, ResponseEntity<Resource> response) {
