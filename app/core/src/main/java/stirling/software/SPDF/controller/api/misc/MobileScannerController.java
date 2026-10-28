@@ -193,7 +193,9 @@ public class MobileScannerController {
             responseCode = "200",
             description = "Files uploaded successfully",
             content = @Content(schema = @Schema(implementation = UploadResponse.class)))
-    @ApiResponse(responseCode = "400", description = "Invalid session ID or files")
+    @ApiResponse(
+            responseCode = "400",
+            description = "Unknown or expired session, invalid session ID or no files")
     @ApiResponse(responseCode = "413", description = "File or session size limit exceeded")
     @ApiResponse(responseCode = "503", description = "Server-wide upload capacity reached")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")

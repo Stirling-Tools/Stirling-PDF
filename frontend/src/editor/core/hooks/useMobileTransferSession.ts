@@ -183,17 +183,6 @@ export function useMobileTransferSession({
           );
         }
       }
-
-      // Delete the entire session immediately after downloading, so uploads
-      // sit on the server only for the seconds between polls.
-      try {
-        await apiClient.delete(`/api/v1/mobile-scanner/session/${sessionId}`);
-      } catch (cleanupErr) {
-        console.warn(
-          "[useMobileTransferSession] post-download cleanup failed:",
-          cleanupErr,
-        );
-      }
     } catch (err) {
       console.error("[useMobileTransferSession] polling failed:", err);
       setError(pollingErrorMessage);

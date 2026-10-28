@@ -209,8 +209,10 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/healthz")
                 || trimmedUri.startsWith("/liveness")
                 || trimmedUri.startsWith("/readiness")
-                || trimmedUri.startsWith(
-                        "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
+                // The phone that scans the QR code has no credentials; the desktop's session,
+                // listing and download calls stay behind login.
+                || trimmedUri.startsWith("/api/v1/mobile-scanner/validate-session/")
+                || trimmedUri.startsWith("/api/v1/mobile-scanner/upload/")
                 || trimmedUri.startsWith("/api/v1/webhooks/")
                 || trimmedUri.startsWith("/v1/api-docs")
                 // Workflow participant endpoints - access controlled by share tokens, not login
