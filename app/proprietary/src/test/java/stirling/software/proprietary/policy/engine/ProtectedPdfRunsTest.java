@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -83,7 +83,7 @@ class ProtectedPdfRunsTest {
             assertThat(unlocked.hasProtectedInputs()).isFalse();
             assertThat(unlocked.inputs()).isSameAs(inputs);
         }
-        verifyNoInteractions(rightsManagement);
+        verify(rightsManagement, never()).open(any(), any());
     }
 
     @Test
@@ -93,7 +93,7 @@ class ProtectedPdfRunsTest {
         try (ProtectedPdfRuns.Unlocked unlocked = runs.unlock(inputs, sourceAccount(), false)) {
             assertThat(unlocked.inputs()).isSameAs(inputs);
         }
-        verifyNoInteractions(rightsManagement);
+        verify(rightsManagement, never()).open(any(), any());
     }
 
     @Test
@@ -194,6 +194,22 @@ class ProtectedPdfRunsTest {
 
         assertThatThrownBy(() -> runs.unlock(inputs, sourceAccount(), true))
                 .isInstanceOf(IOException.class);
+    }
+
+    @Test
+    void anExplicitAccountIsRefusedWhenTheOwnerIsUnknown() throws IOException {
+        PolicyInputs inputs = PolicyInputs.of(List.of(named(wrapper, "secret.pdf")));
+
+        for (String owner : new String[] {null, "someone-deleted"}) {
+            assertThatThrownBy(
+                            () ->
+                                    runs.unlock(
+                                            inputs,
+                                            new ProtectedPdfRuns.RunAccount(33L, owner),
+                                            true))
+                    .isInstanceOf(IOException.class);
+        }
+        verify(rightsManagement, never()).open(any(), any());
     }
 
     @Test

@@ -222,14 +222,14 @@ public class ProtectedPdfRuns {
                         : users.findByUsernameIgnoreCase(runAccount.fileOwner())
                                 .map(user -> user.getId())
                                 .orElse(null);
+        if (ownerId == null) {
+            throw needsAccount(fileName);
+        }
         if (runAccount.accountId() != null) {
             return accounts.find(runAccount.accountId())
                     .filter(account -> CloudProvider.MICROSOFT.id().equals(account.getProvider()))
-                    .filter(account -> ownerId == null || account.getOwnerUserId().equals(ownerId))
+                    .filter(account -> account.getOwnerUserId().equals(ownerId))
                     .orElseThrow(() -> needsAccount(fileName));
-        }
-        if (ownerId == null) {
-            throw needsAccount(fileName);
         }
         List<ConnectedAccount> microsoft =
                 users.findById(ownerId).map(accounts::list).orElse(List.of()).stream()
