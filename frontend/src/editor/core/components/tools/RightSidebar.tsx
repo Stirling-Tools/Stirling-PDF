@@ -3,6 +3,7 @@ import { Transition, useDirection } from "@mantine/core";
 import { useReducedMotion } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { useSidebarContext } from "@editor/contexts/SidebarContext";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import ToolPanel from "@editor/components/tools/ToolPanel";
@@ -71,13 +72,23 @@ export default function RightSidebar() {
   // renderer off (WebKit bug 324730), and the Linux desktop app runs it that
   // way. The tool stays selected until it has left: a tool kept mounted after
   // the context cleared it can re-run its mount effects against the picker (the
-  // text editor pins the view back to toolContent).
+  // text editor pins the view back to toolContent). The picker unmounts once
+  // the tool view has covered it, so the page never holds two copies of a
+  // tool's name or link.
   const [closing, setClosing] = useState(false);
   const closingRef = useRef(false);
   const toolLayerMounted = inToolView && !closing;
+  const [toolLayerCovers, setToolLayerCovers] = useState(toolLayerMounted);
+  if (toolLayerCovers && !toolLayerMounted) setToolLayerCovers(false);
+  const { actions: navigationActions } = useNavigationActions();
+  // Ask about unsaved changes before the slide, or the tool leaves and comes
+  // back before the prompt shows. The prompt resolves the edits before it
+  // continues, so handleBackToTools passes its own guard afterwards.
   const handleClose = () => {
-    closingRef.current = true;
-    setClosing(true);
+    navigationActions.requestNavigation(() => {
+      closingRef.current = true;
+      setClosing(true);
+    });
   };
   const handleToolLayerExited = () => {
     if (!closingRef.current) return;
@@ -131,43 +142,46 @@ export default function RightSidebar() {
           <>
             {policiesEnabled && <EditorPipelinesPanel />}
             <div className="tool-panel__stage">
-              <div
-                className="tool-panel__picker-layer"
-                inert={toolLayerMounted}
-              >
-                {allToolsView && (
-                  <div className="tool-panel__compact-header">
-                    <span className="tool-panel__compact-title">
-                      {t("toolPanel.pdfTools", "PDF Tools")}
-                    </span>
-                    <div className="tool-panel__compact-header-actions">
-                      <ActionIcon
-                        variant="tertiary"
-                        size="md"
-                        shape="circle"
-                        onClick={handleBackToDefault}
-                        aria-label={t("toolPanel.goBack", "Go back")}
-                        className="tool-panel__expand-btn"
-                      >
-                        <Icon name="x" size={"1.1rem"} />
-                      </ActionIcon>
+              {!toolLayerCovers && (
+                <div
+                  className="tool-panel__picker-layer"
+                  inert={toolLayerMounted}
+                >
+                  {allToolsView && (
+                    <div className="tool-panel__compact-header">
+                      <span className="tool-panel__compact-title">
+                        {t("toolPanel.pdfTools", "PDF Tools")}
+                      </span>
+                      <div className="tool-panel__compact-header-actions">
+                        <ActionIcon
+                          variant="tertiary"
+                          size="md"
+                          shape="circle"
+                          onClick={handleBackToDefault}
+                          aria-label={t("toolPanel.goBack", "Go back")}
+                          className="tool-panel__expand-btn"
+                        >
+                          <Icon name="x" size={"1.1rem"} />
+                        </ActionIcon>
+                      </div>
                     </div>
-                  </div>
-                )}
-                <ToolPanel
-                  view="toolPicker"
-                  allToolsView={allToolsView}
-                  onShowAllTools={handleShowAllTools}
-                  onToolSelect={handlePickerSelect}
-                  compact={false}
-                  /* Mobile keeps the workbench bar - and with it the super search -
+                  )}
+                  <ToolPanel
+                    view="toolPicker"
+                    allToolsView={allToolsView}
+                    onShowAllTools={handleShowAllTools}
+                    onToolSelect={handlePickerSelect}
+                    compact={false}
+                    /* Mobile keeps the workbench bar - and with it the super search -
                      on the other slide, so the list needs its own filter. */
-                  showSearch={isMobile}
-                />
-              </div>
+                    showSearch={isMobile}
+                  />
+                </div>
+              )}
               <Transition
                 mounted={toolLayerMounted}
                 transition={slideFromTrailingEdge}
+                onEntered={() => setToolLayerCovers(true)}
                 onExited={handleToolLayerExited}
                 duration={reduceMotion ? 0 : 220}
                 timingFunction="ease"

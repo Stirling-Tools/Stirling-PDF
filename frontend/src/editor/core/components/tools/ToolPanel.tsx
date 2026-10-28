@@ -19,8 +19,8 @@ interface ToolPanelProps {
   /** Tool-selection handler; falls back to the workflow context's handler. */
   onToolSelect?: (id: ToolId) => void;
   /**
-   * Which view to render, overriding the workflow context. RightSidebar keeps
-   * the picker mounted under the tool view so the tool can slide over it.
+   * Which view to render, overriding the workflow context. RightSidebar renders
+   * both while the tool view slides over the picker or off it.
    */
   view?: "toolPicker" | "toolContent";
   /** Whether to render the compact (favourites + recommended only) view. */
