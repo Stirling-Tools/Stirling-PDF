@@ -695,7 +695,7 @@ public class CustomPDFDocumentFactory {
     }
 
     private PDDocument maybePostProcess(PDDocument doc, boolean readOnly) throws IOException {
-        rejectInflatedPageCount(doc);
+        correctInflatedPageCount(doc);
         if (!readOnly) {
             pdfMetadataService.setDefaultMetadata(doc);
             removePassword(doc);
@@ -704,11 +704,12 @@ public class CustomPDFDocumentFactory {
     }
 
     /**
-     * Refuses a document whose page tree declares more pages than it holds. {@code
-     * getNumberOfPages()} returns the root /Count as written in the file, and tools size page lists
-     * and per-page loops from it.
+     * Lowers the root /Count to the pages the tree holds when the file declares more. {@code
+     * getNumberOfPages()} returns the root /Count as written, and tools size page lists and
+     * per-page loops from it. Damaged files often overstate it, so the count is corrected rather
+     * than the document refused.
      */
-    static void rejectInflatedPageCount(PDDocument doc) throws IOException {
+    static void correctInflatedPageCount(PDDocument doc) {
         COSDictionary root =
                 doc.getDocumentCatalog().getCOSObject().getCOSDictionary(COSName.PAGES);
         if (root == null) {
@@ -720,13 +721,9 @@ public class CustomPDFDocumentFactory {
         }
         long actual = countPages(root, declared);
         if (actual < declared) {
-            throw ExceptionUtils.createPdfCorruptedException(
-                    "while reading the page tree",
-                    new IOException(
-                            "Page tree declares "
-                                    + declared
-                                    + " pages but contains only "
-                                    + actual));
+            log.warn(
+                    "Page tree declares {} pages but holds {}; using {}", declared, actual, actual);
+            root.setInt(COSName.COUNT, (int) actual);
         }
     }
 

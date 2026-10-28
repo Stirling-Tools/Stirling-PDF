@@ -1,7 +1,10 @@
 package stirling.software.common.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+
+import java.io.ByteArrayOutputStream;
 
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -9,8 +12,6 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.Test;
-
-import stirling.software.common.util.ExceptionUtils.PdfCorruptedException;
 
 class CustomPDFDocumentFactoryPageTreeTest {
 
@@ -26,36 +27,48 @@ class CustomPDFDocumentFactoryPageTreeTest {
         return document.getDocumentCatalog().getCOSObject().getCOSDictionary(COSName.PAGES);
     }
 
+    private static int iteratedPages(PDDocument document) {
+        int pages = 0;
+        for (PDPage ignored : document.getPages()) {
+            pages++;
+        }
+        return pages;
+    }
+
     @Test
-    void acceptsATreeThatHoldsItsDeclaredCount() throws Exception {
+    void keepsACountTheTreeHolds() throws Exception {
         try (PDDocument document = withPages(3)) {
-            assertThatCode(() -> CustomPDFDocumentFactory.rejectInflatedPageCount(document))
-                    .doesNotThrowAnyException();
+            CustomPDFDocumentFactory.correctInflatedPageCount(document);
+
+            assertThat(document.getNumberOfPages()).isEqualTo(3);
         }
     }
 
     @Test
-    void acceptsADeclaredCountBelowTheRealOne() throws Exception {
+    void leavesADeclaredCountBelowTheRealOne() throws Exception {
         try (PDDocument document = withPages(3)) {
             root(document).setInt(COSName.COUNT, 2);
 
-            assertThatCode(() -> CustomPDFDocumentFactory.rejectInflatedPageCount(document))
-                    .doesNotThrowAnyException();
+            CustomPDFDocumentFactory.correctInflatedPageCount(document);
+
+            assertThat(document.getNumberOfPages()).isEqualTo(2);
         }
     }
 
     @Test
-    void refusesADeclaredCountAboveWhatTheTreeHolds() throws Exception {
+    void lowersACountAboveWhatTheTreeHolds() throws Exception {
         try (PDDocument document = withPages(1)) {
             root(document).setInt(COSName.COUNT, 1000);
 
-            assertThatThrownBy(() -> CustomPDFDocumentFactory.rejectInflatedPageCount(document))
-                    .isInstanceOf(PdfCorruptedException.class);
+            CustomPDFDocumentFactory.correctInflatedPageCount(document);
+
+            assertThat(document.getNumberOfPages()).isEqualTo(1);
+            assertThatCode(() -> document.getPage(0)).doesNotThrowAnyException();
         }
     }
 
     @Test
-    void refusesAnIntermediateNodeListedTwice() throws Exception {
+    void countsAnIntermediateNodeListedTwiceOnce() throws Exception {
         try (PDDocument document = withPages(1)) {
             COSDictionary root = root(document);
             COSDictionary page = (COSDictionary) root.getCOSArray(COSName.KIDS).getObject(0);
@@ -71,13 +84,14 @@ class CustomPDFDocumentFactoryPageTreeTest {
             root.setItem(COSName.KIDS, rootKids);
             root.setInt(COSName.COUNT, 2);
 
-            assertThatThrownBy(() -> CustomPDFDocumentFactory.rejectInflatedPageCount(document))
-                    .isInstanceOf(PdfCorruptedException.class);
+            CustomPDFDocumentFactory.correctInflatedPageCount(document);
+
+            assertThat(document.getNumberOfPages()).isEqualTo(iteratedPages(document)).isOne();
         }
     }
 
     @Test
-    void refusesACountThatIncludesANonPageLeaf() throws Exception {
+    void leavesANonPageLeafOutOfTheCount() throws Exception {
         try (PDDocument document = withPages(1)) {
             COSDictionary root = root(document);
             COSDictionary annotation = new COSDictionary();
@@ -85,8 +99,9 @@ class CustomPDFDocumentFactoryPageTreeTest {
             root.getCOSArray(COSName.KIDS).add(annotation);
             root.setInt(COSName.COUNT, 2);
 
-            assertThatThrownBy(() -> CustomPDFDocumentFactory.rejectInflatedPageCount(document))
-                    .isInstanceOf(PdfCorruptedException.class);
+            CustomPDFDocumentFactory.correctInflatedPageCount(document);
+
+            assertThat(document.getNumberOfPages()).isOne();
         }
     }
 
@@ -99,22 +114,39 @@ class CustomPDFDocumentFactoryPageTreeTest {
             root.getCOSArray(COSName.KIDS).add(untyped);
             root.setInt(COSName.COUNT, 2);
 
-            assertThatCode(() -> CustomPDFDocumentFactory.rejectInflatedPageCount(document))
-                    .doesNotThrowAnyException();
+            CustomPDFDocumentFactory.correctInflatedPageCount(document);
+
+            assertThat(document.getNumberOfPages()).isEqualTo(2);
             assertThatCode(() -> document.getPage(1)).doesNotThrowAnyException();
         }
     }
 
     @Test
-    void acceptsALeafListedTwiceWhenTheCountAgrees() throws Exception {
+    void keepsALeafListedTwiceWhenTheCountAgrees() throws Exception {
         try (PDDocument document = withPages(1)) {
             COSDictionary root = root(document);
             COSArray kids = root.getCOSArray(COSName.KIDS);
             kids.add(kids.getObject(0));
             root.setInt(COSName.COUNT, 2);
 
-            assertThatCode(() -> CustomPDFDocumentFactory.rejectInflatedPageCount(document))
-                    .doesNotThrowAnyException();
+            CustomPDFDocumentFactory.correctInflatedPageCount(document);
+
+            assertThat(document.getNumberOfPages()).isEqualTo(2);
+        }
+    }
+
+    @Test
+    void loadingCorrectsTheCount() throws Exception {
+        ByteArrayOutputStream saved = new ByteArrayOutputStream();
+        try (PDDocument document = withPages(2)) {
+            root(document).setInt(COSName.COUNT, 50_000);
+            document.save(saved);
+        }
+        CustomPDFDocumentFactory factory =
+                new CustomPDFDocumentFactory(mock(PdfMetadataService.class));
+
+        try (PDDocument loaded = factory.load(saved.toByteArray(), true)) {
+            assertThat(loaded.getNumberOfPages()).isEqualTo(2);
         }
     }
 }
