@@ -7,6 +7,7 @@ import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
 import { generateId } from "@editor/utils/generateId";
 import { fetchAccessToken } from "@editor/services/connectedAccountsService";
 import type { AppConfig } from "@editor/types/appConfig";
+import { rememberCloudOrigin } from "@editor/services/cloudOrigin";
 
 export interface OneDriveConfig {
   clientId: string;
@@ -25,6 +26,7 @@ export interface OneDrivePickOptions {
   extensions?: string[];
   locale?: string;
   labels?: { title: string; close: string; loading: string };
+  folders?: boolean;
 }
 
 interface PickerCommand {
@@ -40,7 +42,17 @@ interface PickedItem {
   parentReference: { driveId: string };
 }
 
+export interface PickedFolder {
+  driveId: string;
+  folderId: string;
+  name: string;
+}
+
 interface DriveItemDownload {
+  id: string;
+  eTag?: string;
+  webUrl?: string;
+  parentReference?: { driveId?: string; id?: string };
   name: string;
   file?: { mimeType?: string };
   lastModifiedDateTime?: string;
@@ -48,6 +60,8 @@ interface DriveItemDownload {
 }
 
 const DEFAULT_GRAPH_URL = "https://graph.microsoft.com/v1.0";
+const PICKER_SETTLE_MS = 1200;
+const PICKER_REVEAL_FALLBACK_MS = 15000;
 const GRAPH_READ_SCOPES = ["Files.Read.All"];
 const PERSONAL_PICKER_URL = "https://onedrive.live.com/picker";
 const PERSONAL_PICKER_SCOPES = ["OneDrive.ReadOnly"];
@@ -103,8 +117,54 @@ class OneDrivePickerService {
       }
       const graphToken = await tokens.graph();
       return await Promise.all(
-        items.map((item) => this.download(item, graphToken)),
+        items.map(async (item) => {
+          const { file, details } = await this.download(item, graphToken);
+          if (connected) {
+            rememberCloudOrigin(file, {
+              provider: "onedrive",
+              accountId: connected.accountId,
+              driveId:
+                details.parentReference?.driveId ??
+                item.parentReference.driveId,
+              itemId: details.id ?? item.id,
+              parentId: details.parentReference?.id ?? null,
+              name: details.name,
+              eTag: details.eTag ?? null,
+              webUrl: details.webUrl ?? null,
+            });
+          }
+          return file;
+        }),
       );
+    } finally {
+      this.open = false;
+    }
+  }
+
+  async pickFolder(
+    options: OneDrivePickOptions,
+    connected: { accountId: number },
+  ): Promise<PickedFolder | null> {
+    if (this.open) {
+      return null;
+    }
+    this.open = true;
+    try {
+      const tokens = this.accountTokens(connected.accountId);
+      const baseUrl = await this.businessPickerBaseUrl(tokens);
+      const [folder] = await this.showPicker(tokens, baseUrl, {
+        ...options,
+        multiple: false,
+        folders: true,
+      });
+      if (!folder) {
+        return null;
+      }
+      return {
+        driveId: folder.parentReference.driveId,
+        folderId: folder.id,
+        name: folder.name ?? "",
+      };
     } finally {
       this.open = false;
     }
@@ -232,8 +292,10 @@ class OneDrivePickerService {
         document.documentElement.dataset.theme === "dark" ? "dark" : "default",
       accessibility: { enableFocusTrap: true },
       typesAndSources: {
-        mode: "files",
-        ...(options.extensions && options.extensions.length > 0
+        mode: options.folders ? "folders" : "files",
+        ...(!options.folders &&
+        options.extensions &&
+        options.extensions.length > 0
           ? { filters: options.extensions }
           : {}),
         pivots: { oneDrive: true, recent: true, sharedLibraries: !personal },
@@ -259,9 +321,18 @@ class OneDrivePickerService {
       let port: MessagePort | null = null;
       let settled = false;
 
+      let revealTimer: ReturnType<typeof setTimeout> | undefined;
+      const reveal = (delayMs: number) => {
+        clearTimeout(revealTimer);
+        revealTimer = setTimeout(() => {
+          overlay.frame.style.opacity = "1";
+        }, delayMs);
+      };
+
       const finish = (items: PickedItem[] | Error) => {
         if (settled) return;
         settled = true;
+        clearTimeout(revealTimer);
         window.removeEventListener("message", onWindowMessage);
         document.removeEventListener("keydown", onKeyDown, true);
         port?.close();
@@ -280,6 +351,7 @@ class OneDrivePickerService {
             try {
               const token = await tokens.forResource(command.resource);
               reply(id, { result: "token", token });
+              reveal(PICKER_SETTLE_MS);
             } catch (error) {
               reply(id, {
                 result: "error",
@@ -313,7 +385,7 @@ class OneDrivePickerService {
           return;
         }
         port = event.ports[0];
-        overlay.loading.remove();
+        reveal(PICKER_REVEAL_FALLBACK_MS);
         port.addEventListener("message", (portEvent: MessageEvent) => {
           const payload = portEvent.data as {
             type?: string;
@@ -350,11 +422,14 @@ class OneDrivePickerService {
     });
   }
 
-  private async download(item: PickedItem, graphToken: string): Promise<File> {
+  private async download(
+    item: PickedItem,
+    graphToken: string,
+  ): Promise<{ file: File; details: DriveItemDownload }> {
     const driveId = encodeURIComponent(item.parentReference.driveId);
     const itemId = encodeURIComponent(item.id);
     const metadata = await fetch(
-      `${this.graphUrl}/drives/${driveId}/items/${itemId}?$select=name,file,lastModifiedDateTime,content.downloadUrl`,
+      `${this.graphUrl}/drives/${driveId}/items/${itemId}?$select=id,name,eTag,webUrl,parentReference,file,lastModifiedDateTime,content.downloadUrl`,
       { headers: { Authorization: `Bearer ${graphToken}` } },
     );
     if (!metadata.ok) {
@@ -374,12 +449,13 @@ class OneDrivePickerService {
       );
     }
     const blob = await content.blob();
-    return new File([blob], details.name, {
+    const file = new File([blob], details.name, {
       type: details.file?.mimeType ?? blob.type,
       lastModified: details.lastModifiedDateTime
         ? Date.parse(details.lastModifiedDateTime)
         : Date.now(),
     });
+    return { file, details };
   }
 }
 
@@ -387,7 +463,6 @@ interface PickerOverlay {
   root: HTMLDivElement;
   frame: HTMLIFrameElement;
   closeButton: HTMLButtonElement;
-  loading: HTMLDivElement;
 }
 
 function createOverlay(labels: {
@@ -458,7 +533,16 @@ function createOverlay(labels: {
   const frame = document.createElement("iframe");
   frame.name = `onedrive-picker-${generateId()}`;
   frame.title = labels.title;
-  Object.assign(frame.style, { width: "100%", height: "100%", border: "0" });
+  Object.assign(frame.style, {
+    position: "absolute",
+    inset: "0",
+    width: "100%",
+    height: "100%",
+    border: "0",
+    background: "transparent",
+    opacity: "0",
+    transition: "opacity 150ms ease-in",
+  });
 
   const loading = document.createElement("div");
   loading.dataset.testid = "onedrive-picker-loading";
@@ -491,11 +575,11 @@ function createOverlay(labels: {
   message.textContent = labels.loading;
   loading.append(spinner, message);
 
-  body.append(frame, loading);
+  body.append(loading, frame);
   panel.append(header, body);
   root.append(panel);
   document.body.append(root);
-  return { root, frame, closeButton, loading };
+  return { root, frame, closeButton };
 }
 
 function submitIntoFrame(

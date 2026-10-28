@@ -6547,6 +6547,18 @@ quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between R
 topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
 wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
+[oneDriveSave]
+chooseFolder = "Choose a OneDrive folder to save to"
+conflict = "Someone changed this file in OneDrive after you opened it. Save your version as a copy instead."
+failedTitle = "Couldn't save to OneDrive"
+open = "Open in OneDrive"
+save = "Save to OneDrive"
+saveCopy = "Save a copy"
+saveCopyToOneDrive = "Save a copy to OneDrive"
+saved = "Saved to OneDrive"
+saveToFolder = "Save to OneDrive…"
+saving = "Saving to OneDrive…"
+
 [overlay-pdfs]
 desc = "Overlay one PDF on top of another"
 submit = "Submit"
