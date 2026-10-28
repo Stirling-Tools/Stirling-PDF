@@ -24,9 +24,11 @@ public class MicrosoftConnectionResolver {
     private final ConnectedAccountAccess accountAccess;
     private final ApplicationProperties applicationProperties;
 
-    public MicrosoftDriveConfig resolve(Map<String, Object> options, MicrosoftDrive expected) {
+    public MicrosoftDriveConfig resolve(
+            Map<String, Object> options, MicrosoftDrive expected, String owner) {
         if (ConnectedAccountAccess.usesAccount(options)) {
-            ConnectedAccount account = accountAccess.require(options, CloudProvider.MICROSOFT);
+            ConnectedAccount account =
+                    accountAccess.require(options, CloudProvider.MICROSOFT, owner);
             return MicrosoftDriveConfig.forAccount(
                     expected == null ? MicrosoftDrive.ONEDRIVE : expected,
                     account.getId(),

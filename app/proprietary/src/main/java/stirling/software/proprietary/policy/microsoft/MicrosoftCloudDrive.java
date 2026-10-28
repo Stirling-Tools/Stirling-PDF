@@ -35,8 +35,8 @@ public class MicrosoftCloudDrive implements CloudDrive<MicrosoftDriveConfig, Dri
     }
 
     @Override
-    public MicrosoftDriveConfig resolve(String type, Map<String, Object> options) {
-        return resolver.resolve(options, MicrosoftDrive.fromOption(type));
+    public MicrosoftDriveConfig resolve(String type, Map<String, Object> options, String owner) {
+        return resolver.resolve(options, MicrosoftDrive.fromOption(type), owner);
     }
 
     @Override

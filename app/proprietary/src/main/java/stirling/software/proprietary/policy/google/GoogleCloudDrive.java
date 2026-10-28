@@ -31,8 +31,8 @@ public class GoogleCloudDrive implements CloudDrive<GoogleDriveConfig, GoogleFil
     }
 
     @Override
-    public GoogleDriveConfig resolve(String type, Map<String, Object> options) {
-        return resolver.resolve(options);
+    public GoogleDriveConfig resolve(String type, Map<String, Object> options, String owner) {
+        return resolver.resolve(options, owner);
     }
 
     @Override

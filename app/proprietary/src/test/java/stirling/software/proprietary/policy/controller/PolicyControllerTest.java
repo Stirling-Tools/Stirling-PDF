@@ -256,7 +256,8 @@ class PolicyControllerTest {
     }
 
     private static PolicyRunHandle handle(String runId) {
-        PolicyRun run = new PolicyRun(runId, null, definitionWithStep(), null, null, null, null);
+        PolicyRun run =
+                new PolicyRun(runId, null, definitionWithStep(), null, null, null, null, null);
         return new PolicyRunHandle(runId, CompletableFuture.completedFuture(run));
     }
 
@@ -518,7 +519,8 @@ class PolicyControllerTest {
         @DisplayName("returns the run view when present")
         void found() {
             PolicyRun run =
-                    new PolicyRun("run-3", null, definitionWithStep(), null, null, null, null);
+                    new PolicyRun(
+                            "run-3", null, definitionWithStep(), null, null, null, null, null);
             when(runRegistry.get("run-3")).thenReturn(run);
             when(jobOwnershipService.extractJobId("run-3")).thenReturn("run-3");
             when(jobOwnershipService.createScopedJobKey("run-3")).thenReturn("run-3");
@@ -580,13 +582,28 @@ class PolicyControllerTest {
         @DisplayName("excludes ad-hoc runs and runs owned by others")
         void filtersRuns() {
             PolicyRun adHoc =
-                    new PolicyRun("adhoc", null, definitionWithStep(), null, null, null, null);
+                    new PolicyRun(
+                            "adhoc", null, definitionWithStep(), null, null, null, null, null);
             PolicyRun ownedStored =
                     new PolicyRun(
-                            "owned", "policy-A", definitionWithStep(), null, null, null, null);
+                            "owned",
+                            "policy-A",
+                            definitionWithStep(),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null);
             PolicyRun otherStored =
                     new PolicyRun(
-                            "other", "policy-B", definitionWithStep(), null, null, null, null);
+                            "other",
+                            "policy-B",
+                            definitionWithStep(),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null);
             when(runRegistry.all()).thenReturn(List.of(adHoc, ownedStored, otherStored));
 
             // ownedByCurrentUser: strip then re-apply scope reproduces the key only for the owned

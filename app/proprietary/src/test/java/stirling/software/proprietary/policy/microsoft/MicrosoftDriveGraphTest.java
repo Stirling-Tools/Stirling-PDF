@@ -64,6 +64,9 @@ class MicrosoftDriveGraphTest {
     private InMemoryConnectedAccounts accounts;
     private ApplicationProperties properties;
 
+    private final User alice = user(5L, "alice");
+    private final User mallory = user(9L, "mallory");
+
     @BeforeEach
     void setUp() throws IOException {
         TestCredentialKey.install();
@@ -86,11 +89,15 @@ class MicrosoftDriveGraphTest {
         connections = mock(IntegrationConfigRepository.class);
         storeConnection("onedrive", true);
         UserService users = mock(UserService.class);
+        when(users.findByUsername("alice")).thenReturn(Optional.of(alice));
+        when(users.findByUsername("mallory")).thenReturn(Optional.of(mallory));
         ConnectionLookup lookup =
                 new ConnectionLookup(connections, mock(OwnershipService.class), users);
         MicrosoftConnectionResolver resolver =
                 new MicrosoftConnectionResolver(
-                        lookup, new ConnectedAccountAccess(connectedAccounts, lookup), properties);
+                        lookup,
+                        new ConnectedAccountAccess(connectedAccounts, lookup, users),
+                        properties);
         MicrosoftCloudDrive drive = new MicrosoftCloudDrive(resolver, client);
         ledger = new InProcessProcessedLedger();
         source = new MicrosoftDriveInputSource(drive);
@@ -102,6 +109,18 @@ class MicrosoftDriveGraphTest {
     void tearDown() {
         graph.close();
         SecurityContextHolder.clearContext();
+    }
+
+    private static User user(long id, String username) {
+        User user = new User();
+        user.setId(id);
+        user.setUsername(username);
+        return user;
+    }
+
+    private static void signIn(User user) {
+        SecurityContextHolder.getContext()
+                .setAuthentication(new UsernamePasswordAuthenticationToken(user, null, List.of()));
     }
 
     private void storeConnection(String drive, boolean enabled) {
@@ -220,6 +239,7 @@ class MicrosoftDriveGraphTest {
 
     @Test
     void aConnectedAccountWorksInItsOwnOneDrive() throws Exception {
+        signIn(alice);
         ConnectedAccount account = accounts.add(5L, CloudProvider.MICROSOFT, "rt-0");
         graph.put("Scans/in.pdf", "mine");
 
@@ -227,7 +247,13 @@ class MicrosoftDriveGraphTest {
                 source.resolve(
                         new InputSpec(
                                 "onedrive",
-                                Map.of("accountId", account.getId(), "directory", "Scans")),
+                                Map.of(
+                                        "accountId",
+                                        account.getId(),
+                                        "directory",
+                                        "Scans",
+                                        "mode",
+                                        "consume")),
                         ctx);
 
         assertEquals(1, work.size());
@@ -240,6 +266,7 @@ class MicrosoftDriveGraphTest {
 
     @Test
     void aPastedFolderLinkAnchorsAConnectedAccountsSharePointLocation() throws Exception {
+        signIn(alice);
         ConnectedAccount account = accounts.add(5L, CloudProvider.MICROSOFT, "rt-0");
         graph.put("Sites/Finance/Invoices/march.pdf", "invoice");
         Map<String, Object> options =
@@ -262,12 +289,7 @@ class MicrosoftDriveGraphTest {
     @Test
     void someoneElsesConnectedAccountCannotBeUsed() {
         ConnectedAccount account = accounts.add(5L, CloudProvider.MICROSOFT, "rt-0");
-        User mallory = new User();
-        mallory.setId(9L);
-        mallory.setUsername("mallory");
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(mallory, null, List.of()));
+        signIn(mallory);
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -279,7 +301,53 @@ class MicrosoftDriveGraphTest {
     }
 
     @Test
+    void anUnattendedRunWritesToItsOwnersAccount() throws Exception {
+        ConnectedAccount account = accounts.add(5L, CloudProvider.MICROSOFT, "rt-0");
+
+        sink.deliver(
+                new OutputDelivery("run-1", POLICY, null, null, null, "alice"),
+                List.of(named(bytes("processed"), "done.pdf")),
+                new OutputSpec(
+                        "onedrive", Map.of("accountId", account.getId(), "directory", "Out")));
+
+        assertEquals("processed", graph.content("Out/done.pdf"));
+    }
+
+    @Test
+    void anUnattendedRunCannotWriteToAnotherUsersAccount() {
+        ConnectedAccount account = accounts.add(5L, CloudProvider.MICROSOFT, "rt-0");
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        sink.deliver(
+                                new OutputDelivery("run-1", POLICY, null, null, null, "mallory"),
+                                List.of(named(bytes("planted"), "done.pdf")),
+                                new OutputSpec(
+                                        "onedrive",
+                                        Map.of("accountId", account.getId(), "directory", "Out"))));
+        assertNull(graph.content("Out/done.pdf"));
+    }
+
+    @Test
+    void anAccountIsRefusedWhenNobodyIsActing() {
+        ConnectedAccount account = accounts.add(5L, CloudProvider.MICROSOFT, "rt-0");
+        graph.put("Scans/in.pdf", "mine");
+        SecurityContextHolder.clearContext();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        source.resolve(
+                                new InputSpec(
+                                        "onedrive",
+                                        Map.of("accountId", account.getId(), "directory", "Scans")),
+                                ctx));
+    }
+
+    @Test
     void accountLocationsStopWhenTheAdminTurnsConnectionsOff() {
+        signIn(alice);
         ConnectedAccount account = accounts.add(5L, CloudProvider.MICROSOFT, "rt-0");
         properties.getPremium().getProFeatures().getMicrosoft().setAllowAccountConnections(false);
 

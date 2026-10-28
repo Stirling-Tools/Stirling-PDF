@@ -12,7 +12,7 @@ public interface CloudDrive<L extends CloudLocation, F extends CloudFile> {
 
     Set<String> types();
 
-    L resolve(String type, Map<String, Object> options);
+    L resolve(String type, Map<String, Object> options, String owner);
 
     void checkReadable(L location) throws IOException;
 

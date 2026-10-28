@@ -22,9 +22,9 @@ public class GoogleConnectionResolver {
     private final ConnectionLookup connections;
     private final ConnectedAccountAccess accountAccess;
 
-    public GoogleDriveConfig resolve(Map<String, Object> options) {
+    public GoogleDriveConfig resolve(Map<String, Object> options, String owner) {
         if (ConnectedAccountAccess.usesAccount(options)) {
-            ConnectedAccount account = accountAccess.require(options, CloudProvider.GOOGLE);
+            ConnectedAccount account = accountAccess.require(options, CloudProvider.GOOGLE, owner);
             return GoogleDriveConfig.forAccount(account.getId(), options);
         }
         return GoogleDriveConfig.fromConnection(
