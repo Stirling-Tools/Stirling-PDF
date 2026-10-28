@@ -24,7 +24,7 @@ export interface OneDrivePickOptions {
   multiple?: boolean;
   extensions?: string[];
   locale?: string;
-  labels?: { title: string; close: string };
+  labels?: { title: string; close: string; loading: string };
 }
 
 interface PickerCommand {
@@ -228,6 +228,9 @@ class OneDrivePickerService {
       authentication: {},
       messaging: { origin: window.location.origin, channelId },
       selection: { mode: options.multiple === false ? "single" : "multiple" },
+      theme:
+        document.documentElement.dataset.theme === "dark" ? "dark" : "default",
+      accessibility: { enableFocusTrap: true },
       typesAndSources: {
         mode: "files",
         ...(options.extensions && options.extensions.length > 0
@@ -242,7 +245,11 @@ class OneDrivePickerService {
     });
 
     const overlay = createOverlay(
-      options.labels ?? { title: "OneDrive", close: "Close" },
+      options.labels ?? {
+        title: "OneDrive",
+        close: "Close",
+        loading: "Connecting to OneDrive…",
+      },
     );
     const pickerUrl = personal
       ? `${baseUrl}?${query}`
@@ -306,6 +313,7 @@ class OneDrivePickerService {
           return;
         }
         port = event.ports[0];
+        overlay.loading.remove();
         port.addEventListener("message", (portEvent: MessageEvent) => {
           const payload = portEvent.data as {
             type?: string;
@@ -379,11 +387,13 @@ interface PickerOverlay {
   root: HTMLDivElement;
   frame: HTMLIFrameElement;
   closeButton: HTMLButtonElement;
+  loading: HTMLDivElement;
 }
 
 function createOverlay(labels: {
   title: string;
   close: string;
+  loading: string;
 }): PickerOverlay {
   const root = document.createElement("div");
   root.dataset.testid = "onedrive-picker";
@@ -400,28 +410,36 @@ function createOverlay(labels: {
 
   const panel = document.createElement("div");
   Object.assign(panel.style, {
-    position: "relative",
+    display: "flex",
+    flexDirection: "column",
     width: "min(1080px, 100%)",
-    height: "min(680px, 100%)",
+    height: "min(724px, 100%)",
     borderRadius: "var(--radius-lg, 12px)",
     overflow: "hidden",
     background: "var(--c-modal-surface, var(--c-surface))",
     boxShadow: "var(--shadow-xl)",
   });
 
-  const frame = document.createElement("iframe");
-  frame.name = `onedrive-picker-${generateId()}`;
-  frame.title = labels.title;
-  Object.assign(frame.style, { width: "100%", height: "100%", border: "0" });
+  const header = document.createElement("div");
+  Object.assign(header.style, {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flex: "0 0 44px",
+    padding: "0 8px 0 16px",
+    borderBottom: "1px solid var(--c-border-subtle)",
+    color: "var(--c-text)",
+    fontSize: "14px",
+    fontWeight: "600",
+  });
+  const title = document.createElement("span");
+  title.textContent = labels.title;
 
   const closeButton = document.createElement("button");
   closeButton.type = "button";
   closeButton.setAttribute("aria-label", labels.close);
   closeButton.textContent = "×";
   Object.assign(closeButton.style, {
-    position: "absolute",
-    top: "8px",
-    right: "8px",
     width: "32px",
     height: "32px",
     border: "0",
@@ -429,13 +447,55 @@ function createOverlay(labels: {
     background: "transparent",
     color: "var(--c-text-muted)",
     fontSize: "22px",
+    lineHeight: "1",
     cursor: "pointer",
   });
+  header.append(title, closeButton);
 
-  panel.append(frame, closeButton);
+  const body = document.createElement("div");
+  Object.assign(body.style, { position: "relative", flex: "1 1 auto" });
+
+  const frame = document.createElement("iframe");
+  frame.name = `onedrive-picker-${generateId()}`;
+  frame.title = labels.title;
+  Object.assign(frame.style, { width: "100%", height: "100%", border: "0" });
+
+  const loading = document.createElement("div");
+  loading.dataset.testid = "onedrive-picker-loading";
+  loading.setAttribute("role", "status");
+  Object.assign(loading.style, {
+    position: "absolute",
+    inset: "0",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "12px",
+    background: "var(--c-modal-surface, var(--c-surface))",
+    color: "var(--c-text-muted)",
+    fontSize: "14px",
+  });
+  const spinner = document.createElement("div");
+  Object.assign(spinner.style, {
+    width: "28px",
+    height: "28px",
+    borderRadius: "50%",
+    border: "3px solid var(--c-border)",
+    borderTopColor: "var(--c-primary)",
+  });
+  spinner.animate?.(
+    [{ transform: "rotate(0deg)" }, { transform: "rotate(360deg)" }],
+    { duration: 900, iterations: Infinity },
+  );
+  const message = document.createElement("span");
+  message.textContent = labels.loading;
+  loading.append(spinner, message);
+
+  body.append(frame, loading);
+  panel.append(header, body);
   root.append(panel);
   document.body.append(root);
-  return { root, frame, closeButton };
+  return { root, frame, closeButton, loading };
 }
 
 function submitIntoFrame(

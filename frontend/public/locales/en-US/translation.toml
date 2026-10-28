@@ -11292,6 +11292,7 @@ description = "Field to use as username (email, name, given_name, family_name, p
 label = "Use as Username"
 
 [provider.onedrive]
+pickerLoading = "Connecting to OneDrive…"
 pickerTitle = "Choose files from OneDrive"
 
 [provider.onedrive.errors]
@@ -11299,6 +11300,8 @@ connectFailed = "Couldn't connect your Microsoft account. Try again from Setting
 notConfigured = "OneDrive is not configured"
 pickerFailed = "Failed to open OneDrive"
 popupBlocked = "Your browser blocked the Microsoft sign-in window. Allow pop-ups for this site and try again."
+reconnect = "Your Microsoft account needs to sign in again. Reconnect it in Settings > Connected accounts."
+unreachable = "Couldn't reach OneDrive. Check your connection and try again."
 
 [provider.saml2]
 name = "SAML2"
