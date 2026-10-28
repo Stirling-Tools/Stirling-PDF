@@ -32,6 +32,10 @@ public class FileMonitor {
     private final List<Path> rootDirs;
     private Set<Path> stagingFiles;
 
+    private static final long RE_REGISTER_INTERVAL_MS = 60_000;
+    private volatile long nextRegistrationAttemptMs;
+    private volatile boolean missingRootsWarned;
+
     /**
      * @param rootDirectory the root directory to monitor
      * @param pathFilter the filter to apply to the paths, return true if the path should be
@@ -113,18 +117,13 @@ public class FileMonitor {
          If those files are not modified in current iteration, they will be considered as ready for processing.
         */
 
+        boolean hasUnregisteredRoot =
+                rootDirs.stream().anyMatch(root -> !path2KeyMapping.containsKey(root));
+        if (hasUnregisteredRoot) {
+            retryMissingRoots();
+        }
         if (path2KeyMapping.isEmpty()) {
-            log.warn("Not monitoring any directories; attempting to re-register root paths.");
-            for (Path rootDir : rootDirs) {
-                if (Files.exists(
-                        rootDir)) { // if the root directory exists, re-register the root directory
-                    try {
-                        recursivelyRegisterEntry(rootDir);
-                    } catch (IOException e) {
-                        log.error("unable to register monitoring for {}", rootDir, e);
-                    }
-                }
-            }
+            return;
         }
 
         // Skip expensive collection work when there is nothing to track
@@ -179,6 +178,42 @@ public class FileMonitor {
             key = watchService.poll();
         }
         readyForProcessingFiles.addAll(stagingFiles);
+    }
+
+    /**
+     * Re-attempts registration of configured roots that were absent at startup. Runs at most once a
+     * minute, so a not-yet-mounted folder does not turn the five-second tick into a filesystem
+     * scan; an unconfigured monitor is silent because the constructor already reports it.
+     */
+    private void retryMissingRoots() {
+        if (rootDirs.isEmpty()) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (now < nextRegistrationAttemptMs) {
+            return;
+        }
+        nextRegistrationAttemptMs = now + RE_REGISTER_INTERVAL_MS;
+
+        boolean registered = false;
+        for (Path rootDir : rootDirs) {
+            if (path2KeyMapping.containsKey(rootDir) || !Files.exists(rootDir)) {
+                continue;
+            }
+            try {
+                recursivelyRegisterEntry(rootDir);
+                registered = true;
+            } catch (IOException e) {
+                log.error("Failed to register monitoring for {}", rootDir, e);
+            }
+        }
+        if (!registered && !missingRootsWarned) {
+            missingRootsWarned = true;
+            log.warn(
+                    "Watched folders are not available yet; retrying registration every {}s: {}",
+                    RE_REGISTER_INTERVAL_MS / 1000,
+                    rootDirs);
+        }
     }
 
     private void handleDirectoryCreation(Path dir) throws IOException {
