@@ -1445,14 +1445,14 @@ public class ExceptionUtils {
     }
 
     /** Exception thrown when every repair strategy has declined a damaged document. */
-    public static class RightsManagedInputException extends BaseAppException {
-        public RightsManagedInputException(String message, String errorCode) {
+    public static class PdfUnrepairableException extends BaseAppException {
+        public PdfUnrepairableException(String message, String errorCode) {
             super(message, null, errorCode);
         }
     }
 
-    public static class PdfUnrepairableException extends BaseAppException {
-        public PdfUnrepairableException(String message, String errorCode) {
+    public static class RightsManagedInputException extends BaseAppException {
+        public RightsManagedInputException(String message, String errorCode) {
             super(message, null, errorCode);
         }
     }
