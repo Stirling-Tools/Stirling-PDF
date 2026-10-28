@@ -125,9 +125,7 @@ public class RedactExecuteRequest extends PDFFile {
         private boolean convertToImage = false;
 
         @Schema(
-                description =
-                        "Execution strategy hint for the redaction pipeline. OVERLAY_ONLY only draws"
-                                + " boxes and leaves the covered content in the file.",
+                description = "Execution strategy hint for the redaction pipeline",
                 defaultValue = "AUTO")
         private RedactionStrategy strategy = RedactionStrategy.AUTO;
     }

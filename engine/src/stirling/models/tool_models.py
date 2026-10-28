@@ -1293,7 +1293,7 @@ class RearrangePagesParams(ApiModel):
 
 class Strategy(StrEnum):
     """
-    Execution strategy hint for the redaction pipeline. OVERLAY_ONLY only draws boxes and leaves the covered content in the file.
+    Execution strategy hint for the redaction pipeline
     """
 
     auto = "AUTO"
@@ -1309,10 +1309,7 @@ class Style(ApiModel):
     color: str = Field("#000000", description="Hex redaction box color")
     convert_to_image: bool = Field(False, description="Rasterize output to prevent text extraction")
     padding: float = Field(0, description="Extra padding around each box in points")
-    strategy: Strategy = Field(
-        Strategy.auto,
-        description="Execution strategy hint for the redaction pipeline. OVERLAY_ONLY only draws boxes and leaves the covered content in the file.",
-    )
+    strategy: Strategy = Field(Strategy.auto, description="Execution strategy hint for the redaction pipeline")
 
 
 class RedactionArea(ApiModel):

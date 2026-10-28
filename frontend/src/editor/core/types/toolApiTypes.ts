@@ -1219,7 +1219,7 @@ export interface RedactStyle {
    */
   padding?: number;
   /**
-   * Execution strategy hint for the redaction pipeline. OVERLAY_ONLY only draws boxes and leaves the covered content in the file.
+   * Execution strategy hint for the redaction pipeline
    */
   strategy?: "AUTO" | "OVERLAY_ONLY" | "IMAGE_FINALIZE";
 }
