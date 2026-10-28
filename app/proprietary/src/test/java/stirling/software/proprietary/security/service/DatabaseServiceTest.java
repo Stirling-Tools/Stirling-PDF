@@ -341,4 +341,29 @@ class DatabaseServiceTest {
                                         databaseService, "validateSqlContent", script))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void validateSqlContentRejectsTableEngineClause() throws IOException {
+        Path script = tempDir.resolve("table-engine.sql");
+        Files.writeString(
+                script,
+                "CREATE CACHED TABLE \"PUBLIC\".\"T\"(\"ID\" INT) ENGINE \"org.h2.mvstore.db.MVTableEngine\";\n");
+
+        assertThatThrownBy(
+                        () ->
+                                ReflectionTestUtils.invokeMethod(
+                                        databaseService, "validateSqlContent", script))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validateSqlContentAcceptsEngineInsideStringsAndNames() throws IOException {
+        Path script = tempDir.resolve("engine-in-data.sql");
+        Files.writeString(
+                script,
+                "CREATE CACHED TABLE \"PUBLIC\".\"ENGINE\"(\"ENGINE\" INT);\n"
+                        + "INSERT INTO \"PUBLIC\".\"AUDIT_EVENTS\"(\"ID\", \"DATA\") VALUES(1, 'engine');\n");
+
+        ReflectionTestUtils.invokeMethod(databaseService, "validateSqlContent", script);
+    }
 }

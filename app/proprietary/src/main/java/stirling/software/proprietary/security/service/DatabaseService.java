@@ -88,7 +88,9 @@ public class DatabaseService implements DatabaseServiceInterface {
                     Pattern.compile("(?i)\\bCSVREAD\\s*\\("),
                     Pattern.compile("(?i)\\bLINK_SCHEMA\\s*\\("),
                     Pattern.compile("(?i)\\bRUNSCRIPT\\b"),
-                    Pattern.compile("(?i)\\bSCRIPT\\s+TO\\b"));
+                    Pattern.compile("(?i)\\bSCRIPT\\s+TO\\b"),
+                    // ENGINE loads a TableEngine class by name; SCRIPT never writes it
+                    Pattern.compile("(?i)\\bENGINE\\b"));
 
     private final ApplicationProperties.Datasource datasourceProps;
     private final DataSource dataSource;
