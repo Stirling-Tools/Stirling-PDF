@@ -13,11 +13,19 @@ export type FieldValue = string | number | boolean | string[];
 
 export interface ProviderField {
   key: string;
-  type: "text" | "password" | "switch" | "textarea" | "number" | "tags";
+  type:
+    | "text"
+    | "password"
+    | "switch"
+    | "textarea"
+    | "number"
+    | "tags"
+    | "copy";
   label: string;
   description: string;
   placeholder?: string;
   defaultValue?: FieldValue;
+  value?: string;
 }
 
 /** Signing in with this provider, versus wiring the server to another service. */
@@ -825,7 +833,7 @@ const useGoogleDriveProvider = (): Provider => {
     name: t("provider.googledrive.name", "Google Drive"),
     icon: "googledrive",
     type: "googledrive",
-    scope: t("provider.googledrive.scope", "File Import"),
+    scope: t("provider.googledrive.scope", "Files & pipelines"),
     documentationUrl:
       "https://docs.stirlingpdf.com/Configuration/Google%20Drive%20File%20Picker/",
     fields: [
@@ -878,12 +886,19 @@ const useGoogleDriveProvider = (): Provider => {
         label: t("provider.googledrive.clientSecret.label", "Client secret"),
         description: t(
           "provider.googledrive.clientSecret.description",
-          "Lets people connect their Google account for their pipelines. Add {{redirect}} as an authorised redirect URI of the OAuth client.",
-          {
-            redirect: absoluteWithBasePath(
-              "/api/v1/connected-accounts/callback/google",
-            ),
-          },
+          "Lets people connect their Google account for their pipelines. Add the redirect URI below as an authorised redirect URI of the OAuth client.",
+        ),
+      },
+      {
+        key: "redirectUri",
+        type: "copy",
+        label: t("provider.googledrive.redirectUri.label", "Redirect URI"),
+        description: t(
+          "provider.googledrive.redirectUri.description",
+          "Add this as an authorised redirect URI of the OAuth client in Google Cloud Console.",
+        ),
+        value: absoluteWithBasePath(
+          "/api/v1/connected-accounts/callback/google",
         ),
       },
       {
@@ -950,10 +965,19 @@ const useMicrosoftProvider = (): Provider => {
         ),
         description: t(
           "provider.microsoft.clientId.description",
-          "From one Microsoft Entra app registration. Add a web redirect URI of {{accountRedirect}}.",
-          { accountRedirect },
+          "From one Microsoft Entra app registration.",
         ),
         placeholder: "00000000-0000-0000-0000-000000000000",
+      },
+      {
+        key: "redirectUri",
+        type: "copy",
+        label: t("provider.microsoft.redirectUri.label", "Redirect URI"),
+        description: t(
+          "provider.microsoft.redirectUri.description",
+          "Add this as a Web redirect URI on the Entra app registration.",
+        ),
+        value: accountRedirect,
       },
       {
         key: "tenant",

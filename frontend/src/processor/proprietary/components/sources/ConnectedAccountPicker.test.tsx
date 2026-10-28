@@ -9,12 +9,13 @@ vi.mock("react-i18next", () => ({
 }));
 
 const state = vi.hoisted(() => ({
+  available: true,
   accounts: [] as Array<{ id: number; provider: string; status: string }>,
   connect: vi.fn(),
 }));
 vi.mock("@editor/hooks/useConnectedAccounts", () => ({
   useConnectedAccounts: () => ({
-    available: () => true,
+    available: () => state.available,
     accounts: state.accounts,
     connect: state.connect,
   }),
@@ -25,13 +26,14 @@ function account(status: string) {
   return { id: 7, provider: "microsoft", status, email: "pat@contoso.com" };
 }
 
-function renderPicker(onChange = vi.fn()) {
+function renderPicker(onChange = vi.fn(), onUnavailable?: () => void) {
   render(
     <PortalTestProviders>
       <ConnectedAccountPicker
         provider="microsoft"
         value=""
         onChange={onChange}
+        onUnavailable={onUnavailable}
       />
     </PortalTestProviders>,
   );
@@ -63,5 +65,24 @@ describe("ConnectedAccountPicker", () => {
     expect(
       await screen.findByText("connectedAccounts.popupBlocked"),
     ).toBeTruthy();
+  });
+
+  it("reports when connecting your own account is turned off", async () => {
+    state.available = false;
+    try {
+      state.accounts = [];
+      const onUnavailable = vi.fn();
+      renderPicker(vi.fn(), onUnavailable);
+      await waitFor(() => expect(onUnavailable).toHaveBeenCalled());
+    } finally {
+      state.available = true;
+    }
+  });
+
+  it("does not report an available provider", () => {
+    state.accounts = [];
+    const onUnavailable = vi.fn();
+    renderPicker(vi.fn(), onUnavailable);
+    expect(onUnavailable).not.toHaveBeenCalled();
   });
 });

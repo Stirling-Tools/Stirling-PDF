@@ -4049,17 +4049,26 @@ title = "Renew your server sign-in"
 [connectedAccounts]
 connect = "Connect"
 connectAnother = "Connect another"
-connected = "Connected"
 connectFailed = "The account couldn't be connected. Check that the server's app registration is set up, then try again."
 disconnect = "Disconnect"
 google = "Google Drive"
 intro = "Connect your own accounts once. Your pipelines can then read from and save to them as you."
 microsoft = "Microsoft (OneDrive & SharePoint)"
-needsReconnect = "Sign in again: Stirling can no longer reach this account, so pipelines using it are paused."
+needsReconnect = "Stirling can no longer reach this account, so pipelines using it are paused."
 none = "Your administrator hasn't turned on connected accounts."
 personal = "Personal account"
 popupBlocked = "Your browser blocked the sign-in window. Allow pop-ups for this site and try again."
 reconnect = "Sign in again"
+work = "Work account"
+
+[connectedAccounts.disconnectConfirm]
+body = "Sources and pipelines that use this account will stop until you connect it again."
+confirm = "Disconnect"
+title = "Disconnect {{account}}?"
+
+[connectedAccounts.status]
+connected = "Connected"
+needsSignIn = "Needs sign-in"
 
 [convert]
 autoRotate = "Auto Rotate"
@@ -10745,6 +10754,7 @@ chooseOutputHint = "Choose where processed documents go. Greyed-out connectors a
 comingSoon = "Coming soon"
 comingSoonHeading = "Coming soon"
 create = "Create source"
+createDestinationTitle = "Add a destination"
 createTitle = "Connect a source"
 delete = "Delete"
 editTitle = "Edit source"
@@ -10851,6 +10861,7 @@ label = "Email inbox"
 [portal.sources.types.folder]
 description = "Watch a directory on the server for new documents."
 label = "Folder"
+outputDescription = "Save results to a directory on the server."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "The absolute path to the folder to watch for new files."
@@ -10887,20 +10898,23 @@ description = "Poll an FTP or FTPS server folder for new documents."
 label = "FTP"
 
 [portal.sources.types.googledrive]
-description = "Watch a Google Drive folder for new documents, or save results to one."
+description = "Watch a Google Drive folder for new documents."
 label = "Google Drive"
+outputDescription = "Save results to a Google Drive folder."
 
 [portal.sources.types.network]
 description = "Watch an SMB network share for new documents."
 label = "Network drive"
 
 [portal.sources.types.onedrive]
-description = "Watch a OneDrive folder for new documents, or save results to one."
+description = "Watch a OneDrive folder for new documents."
 label = "OneDrive"
+outputDescription = "Save results to a OneDrive folder."
 
 [portal.sources.types.s3]
 description = "Pull documents from an Amazon S3 or S3-compatible bucket."
 label = "Amazon S3"
+outputDescription = "Save results to an Amazon S3 or S3-compatible bucket."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "The saved connection with the bucket and credentials. Shared by every source and pipeline output that uses it."
@@ -10924,8 +10938,9 @@ description = "Poll an SFTP drop folder for new documents."
 label = "SFTP"
 
 [portal.sources.types.sharepoint]
-description = "Watch a SharePoint document library folder, or save results to one."
+description = "Watch a SharePoint document library folder."
 label = "SharePoint"
+outputDescription = "Save results to a SharePoint document library folder."
 
 [portal.sources.types.unknown]
 label = "Source"
@@ -11102,7 +11117,7 @@ waiting = "Queued ..."
 
 [provider.googledrive]
 name = "Google Drive"
-scope = "File Import"
+scope = "Files & pipelines"
 
 [provider.googledrive.accountScope]
 description = "drive reaches every file (Google must verify a public app for it); drive.file only files people pick or Stirling creates"
@@ -11125,7 +11140,7 @@ description = "Google OAuth 2.0 Client ID from Google Cloud Console"
 label = "Client ID"
 
 [provider.googledrive.clientSecret]
-description = "Lets people connect their Google account for their pipelines. Add {{redirect}} as an authorised redirect URI of the OAuth client."
+description = "Lets people connect their Google account for their pipelines. Add the redirect URI below as an authorised redirect URI of the OAuth client."
 label = "Client secret"
 
 [provider.googledrive.enabled]
@@ -11136,6 +11151,10 @@ label = "Enable Google Drive File Picker"
 notConfigured = "Google Drive is not configured"
 pickerFailed = "Failed to open Google Drive picker"
 
+[provider.googledrive.redirectUri]
+description = "Add this as an authorised redirect URI of the OAuth client in Google Cloud Console."
+label = "Redirect URI"
+
 [provider.microsoft]
 name = "Microsoft 365 (OneDrive & SharePoint)"
 scope = "Files & pipelines"
@@ -11145,7 +11164,7 @@ description = "One sign-in for the editor and their pipelines. Turn off to allow
 label = "Let people connect their own account"
 
 [provider.microsoft.clientId]
-description = "From one Microsoft Entra app registration. Add a web redirect URI of {{accountRedirect}}."
+description = "From one Microsoft Entra app registration."
 label = "Application (client) ID"
 
 [provider.microsoft.clientSecret]
@@ -11155,6 +11174,10 @@ label = "Client secret"
 [provider.microsoft.enabled]
 description = "Let people use OneDrive and SharePoint in pipelines"
 label = "Enable OneDrive & SharePoint"
+
+[provider.microsoft.redirectUri]
+description = "Add this as a Web redirect URI on the Entra app registration."
+label = "Redirect URI"
 
 [provider.microsoft.tenant]
 description = "common for work, school and personal accounts; organizations for work and school only; or a tenant ID to admit one organisation"

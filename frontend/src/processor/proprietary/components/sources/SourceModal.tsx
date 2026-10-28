@@ -201,6 +201,7 @@ export function SourceModal({
   // The "Advanced" disclosure starts closed; on edit it opens if a stored value
   // there differs from its default, so nothing non-standard hides behind it.
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [authModeChosen, setAuthModeChosen] = useState(false);
 
   // Seed on every open: fresh catalogue for create, fetched record for edit.
   useEffect(() => {
@@ -217,6 +218,7 @@ export function SourceModal({
       setEnabled(true);
       setLoaded(null);
       setShowAdvanced(Boolean(initialOptions?.mode));
+      setAuthModeChosen(Boolean(initialOptions?.authMode));
       return;
     }
     setStage("configure");
@@ -244,10 +246,14 @@ export function SourceModal({
     setType(next);
     setOptions({ ...defaultOptions(next), ...initialOptions });
     setShowAdvanced(Boolean(initialOptions?.mode));
+    setAuthModeChosen(Boolean(initialOptions?.authMode));
     setStage("configure");
   }
 
   function setOption(key: string, value: string) {
+    if (key === "authMode") {
+      setAuthModeChosen(true);
+    }
     setOptions((current) => ({ ...current, [key]: value }));
   }
 
@@ -380,7 +386,9 @@ export function SourceModal({
         return t(
           isEdit
             ? "portal.sources.builder.editTitle"
-            : "portal.sources.builder.createTitle",
+            : direction === "output"
+              ? "portal.sources.builder.createDestinationTitle"
+              : "portal.sources.builder.createTitle",
         );
     }
   }
@@ -547,6 +555,11 @@ export function SourceModal({
             provider={field.provider ?? "microsoft"}
             value={options[field.key] ?? ""}
             onChange={(id) => setOption(field.key, id)}
+            onUnavailable={
+              isEdit || authModeChosen
+                ? undefined
+                : () => setOptions((o) => ({ ...o, authMode: "organisation" }))
+            }
           />
         );
       case "select":
@@ -622,7 +635,11 @@ export function SourceModal({
                     {t(ct.labelKey)}
                   </span>
                   <span className="portal-source-modal__card-desc">
-                    {t(ct.descriptionKey)}
+                    {t(
+                      direction === "output"
+                        ? (ct.outputDescriptionKey ?? ct.descriptionKey)
+                        : ct.descriptionKey,
+                    )}
                   </span>
                 </span>
               </button>
