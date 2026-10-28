@@ -14,7 +14,7 @@ import {
   useNavigationState,
 } from "@editor/contexts/NavigationContext";
 import { StirlingFileStub } from "@editor/types/fileContext";
-import type { FileId } from "@editor/types/file";
+import type { FileId, RemoteSyncBase } from "@editor/types/file";
 import { fileStorage } from "@editor/services/fileStorage";
 import apiClient from "@editor/services/apiClient";
 import {
@@ -91,6 +91,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       remoteOwnedByCurrentUser?: boolean,
       remoteSharedViaLink?: boolean,
       remoteShareToken?: string,
+      remoteSync?: RemoteSyncBase,
     ): Promise<FileId[]> => {
       const bundle = isZipBundle(contentType, filename)
         ? await loadShareBundleEntries(blob)
@@ -183,6 +184,10 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
           remoteOwnedByCurrentUser,
           remoteSharedViaLink,
           remoteShareToken,
+          remoteSync:
+            remoteSync && !remoteSharedViaLink
+              ? { revision: remoteSync.revision, leafId: fileId }
+              : undefined,
         };
         actions.updateStirlingFileStub(fileId, updates);
         await fileStorage.updateFileMetadata(fileId, updates);
@@ -301,6 +306,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
             stub.remoteOwnedByCurrentUser,
             stub.remoteShareToken ? true : stub.remoteSharedViaLink,
             stub.remoteShareToken,
+            stub.remoteSync,
           );
           requestedIds.push(...importedIds);
         } catch (cause) {

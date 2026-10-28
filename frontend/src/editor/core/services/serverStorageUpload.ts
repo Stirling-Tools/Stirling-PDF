@@ -8,8 +8,23 @@ import {
   buildHistoryBundle,
   buildSharePackage,
 } from "@editor/services/serverStorageBundle";
-import type { FileId } from "@editor/types/file";
+import type { FileId, RemoteSyncBase } from "@editor/types/file";
 import type { StirlingFileStub } from "@editor/types/fileContext";
+
+export interface ChainUploadResult {
+  remoteId: number;
+  updatedAt: number;
+  chain: StirlingFileStub[];
+  /** Absent when the server does not report revisions. */
+  remoteSync?: RemoteSyncBase;
+}
+
+export interface ChainUploadOptions {
+  /** Refuse the update (HTTP 409) unless the server copy is still at this revision. */
+  expectedRevision?: string;
+  /** Leave failures to the caller instead of the global error toast. */
+  quiet?: boolean;
+}
 
 function resolveUpdatedAt(value: unknown): number {
   if (!value) {
@@ -22,10 +37,20 @@ function resolveUpdatedAt(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : Date.now();
 }
 
+function syncBaseFrom(
+  data: { revision?: unknown } | undefined,
+  leafId: FileId,
+): RemoteSyncBase | undefined {
+  return typeof data?.revision === "string"
+    ? { revision: data.revision, leafId }
+    : undefined;
+}
+
 export async function uploadHistoryChain(
   originalFileId: FileId,
   existingRemoteId?: number,
-): Promise<{ remoteId: number; updatedAt: number; chain: StirlingFileStub[] }> {
+  options: ChainUploadOptions = {},
+): Promise<ChainUploadResult> {
   assertFilesNotBlocked([originalFileId]);
   const chain = await fileStorage.getHistoryChainStubs(originalFileId);
   if (chain.length === 0) {
@@ -57,23 +82,70 @@ export async function uploadHistoryChain(
   formData.append("auditLog", auditLog, auditLog.name);
   assertFilesNotBlocked(chain.flatMap(policySourceIds));
 
+  const requestConfig = {
+    suppressErrorToast: options.quiet,
+    params: options.expectedRevision
+      ? { baseRevision: options.expectedRevision }
+      : undefined,
+  };
+
   if (existingRemoteId) {
     const response = await apiClient.put(
       `/api/v1/storage/files/${existingRemoteId}`,
       formData,
+      requestConfig,
     );
     const updatedAt = resolveUpdatedAt(response.data?.updatedAt);
-    return { remoteId: existingRemoteId, updatedAt, chain };
+    return {
+      remoteId: existingRemoteId,
+      updatedAt,
+      chain,
+      remoteSync: syncBaseFrom(response.data, finalStub.id),
+    };
   }
 
-  const response = await apiClient.post("/api/v1/storage/files", formData);
+  const response = await apiClient.post(
+    "/api/v1/storage/files",
+    formData,
+    requestConfig,
+  );
   const remoteId = response.data?.id as number | undefined;
   if (!remoteId) {
     throw new Error("Missing stored file ID in response.");
   }
 
   const updatedAt = resolveUpdatedAt(response.data?.updatedAt);
-  return { remoteId, updatedAt, chain };
+  return {
+    remoteId,
+    updatedAt,
+    chain,
+    remoteSync: syncBaseFrom(response.data, finalStub.id),
+  };
+}
+
+/**
+ * Records a finished upload on `stubs`, in memory and in IndexedDB. Pass every
+ * stub of the document that exists now, not just the uploaded chain: a version
+ * made while the upload ran must inherit the new base, or its next update is
+ * checked against a revision the server has already replaced.
+ */
+export async function recordChainUpload(
+  result: ChainUploadResult,
+  stubs: StirlingFileStub[],
+  updateStub: (id: FileId, updates: Partial<StirlingFileStub>) => void,
+  extra: Partial<StirlingFileStub> = {},
+): Promise<void> {
+  const updates: Partial<StirlingFileStub> = {
+    remoteStorageId: result.remoteId,
+    remoteStorageUpdatedAt: result.updatedAt,
+    remoteOwnedByCurrentUser: true,
+    remoteSync: result.remoteSync,
+    ...extra,
+  };
+  for (const stub of stubs) {
+    updateStub(stub.id, updates);
+    await fileStorage.updateFileMetadata(stub.id, updates);
+  }
 }
 
 export async function uploadHistoryChains(

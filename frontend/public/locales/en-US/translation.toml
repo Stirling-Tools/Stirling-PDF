@@ -11841,6 +11841,18 @@ showTools = "View unavailable tools ▾"
 title = "Your Stirling-PDF server is unreachable"
 toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}}\" is not available on the local backend."
 
+[serverSync.conflict]
+body = "The server copy of \"{{name}}\" is newer than the version you edited, so your changes were not uploaded. They are still here. Use Update on Server to replace the server copy with them."
+title = "Changed on another device"
+
+[serverSync.status]
+conflict = "Changed on another device: use Update on Server to keep your version"
+error = "Sync failed: it will retry after your next edit"
+offline = "Offline: changes will sync when the connection returns"
+pending = "Changes waiting to sync"
+synced = "Up to date on server"
+syncing = "Syncing to server"
+
 [session]
 expired = "Your session has expired. Please refresh the page and try again."
 
@@ -12158,6 +12170,7 @@ appearance = "Appearance"
 description = "How the editor looks and behaves for you, and your account."
 downloads = "Downloads"
 editorDefaults = "Editor defaults"
+serverSync = "Server files"
 title = "Preferences"
 
 [settings.security]
@@ -12188,6 +12201,10 @@ title = "Security & sign-in"
 [settings.server]
 system = "System"
 title = "Server"
+
+[settings.serverSync]
+autoSync = "Sync changes to server files automatically"
+autoSyncTooltip = "Edits to files you have uploaded to the server are saved there in the background, so you can continue on another device. If the server copy was changed elsewhere in the meantime, your edits stay here and you are asked before anything is replaced."
 
 [settings.signOut]
 confirm = "Are you sure you want to sign out?"

@@ -35,6 +35,7 @@ export interface UserPreferences {
   hideUnavailableTools: boolean;
   hideUnavailableConversions: boolean;
   pdfRenderMode: PdfRenderMode;
+  autoSyncServerFiles: boolean;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -53,6 +54,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   hideUnavailableTools: false,
   hideUnavailableConversions: false,
   pdfRenderMode: "normal",
+  autoSyncServerFiles: false,
 };
 
 const STORAGE_KEY = "stirlingpdf_preferences";

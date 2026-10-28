@@ -19,7 +19,10 @@ import { alert } from "@editor/components/toast";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import type { StirlingFileStub } from "@editor/types/fileContext";
-import { uploadHistoryChain } from "@editor/services/serverStorageUpload";
+import {
+  recordChainUpload,
+  uploadHistoryChain,
+} from "@editor/services/serverStorageUpload";
 import { fileStorage } from "@editor/services/fileStorage";
 import { useFileActions } from "@editor/contexts/FileContext";
 import type { FileId } from "@editor/types/file";
@@ -119,28 +122,17 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({
 
       if (!isUpToDate) {
         const originalFileId = (file.originalFileId || file.id) as FileId;
-        const remoteId = file.remoteStorageId;
-        const {
-          remoteId: newStoredId,
-          updatedAt,
-          chain,
-        } = await uploadHistoryChain(originalFileId, remoteId);
-        storedId = newStoredId;
-
-        for (const stub of chain) {
-          actions.updateStirlingFileStub(stub.id, {
-            remoteStorageId: newStoredId,
-            remoteStorageUpdatedAt: updatedAt,
-            remoteOwnedByCurrentUser: true,
-            remoteHasShareLinks: true,
-          });
-          await fileStorage.updateFileMetadata(stub.id, {
-            remoteStorageId: newStoredId,
-            remoteStorageUpdatedAt: updatedAt,
-            remoteOwnedByCurrentUser: true,
-            remoteHasShareLinks: true,
-          });
-        }
+        const result = await uploadHistoryChain(
+          originalFileId,
+          file.remoteStorageId,
+        );
+        storedId = result.remoteId;
+        await recordChainUpload(
+          result,
+          result.chain,
+          actions.updateStirlingFileStub,
+          { remoteHasShareLinks: true },
+        );
       }
 
       if (!storedId) {

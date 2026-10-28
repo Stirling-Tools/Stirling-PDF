@@ -36,6 +36,8 @@ import { downloadFileWithPolicy as downloadFile } from "@editor/services/exportW
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { CloseFilesConfirmModal } from "@editor/components/shared/CloseFilesConfirmModal";
 import UploadToServerModal from "@editor/components/shared/UploadToServerModal";
+import { ServerSyncBadge } from "@editor/components/shared/ServerSyncBadge";
+import { hasUnsyncedChanges } from "@editor/services/serverAutoSync";
 import ShareFileModal from "@editor/components/shared/ShareFileModal";
 import { VersionHistoryModal } from "@editor/components/filesPage/VersionHistoryModal";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
@@ -161,7 +163,11 @@ const FileEditorThumbnail = ({
   const localUpdatedAt = file.createdAt ?? file.lastModified ?? 0;
   const remoteUpdatedAt = file.remoteStorageUpdatedAt ?? 0;
   const isUploaded = Boolean(file.remoteStorageId);
-  const isUpToDate = isUploaded && remoteUpdatedAt >= localUpdatedAt;
+  // The library refresh moves remoteStorageUpdatedAt to the server's latest,
+  // which can postdate local edits another device never saw.
+  const isUpToDate = file.remoteSync
+    ? !hasUnsyncedChanges(file)
+    : isUploaded && remoteUpdatedAt >= localUpdatedAt;
   const canUpload =
     uploadEnabled &&
     isOwnedOrLocal &&
@@ -679,6 +685,7 @@ const FileEditorThumbnail = ({
                 >
                   v{file.versionNumber}
                 </span>
+                <ServerSyncBadge file={file} className={styles.syncBadge} />
                 {isPinned && (
                   <span className={styles.pinnedBadge}>
                     <Icon name="pin" size={12} filled />

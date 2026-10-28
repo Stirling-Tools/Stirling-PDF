@@ -7,8 +7,10 @@ import { useTranslation } from "react-i18next";
 import { alert } from "@editor/components/toast";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
 import type { StirlingFileStub } from "@editor/types/fileContext";
-import { uploadHistoryChain } from "@editor/services/serverStorageUpload";
-import { fileStorage } from "@editor/services/fileStorage";
+import {
+  recordChainUpload,
+  uploadHistoryChain,
+} from "@editor/services/serverStorageUpload";
 import { useFileActions } from "@editor/contexts/FileContext";
 import type { FileId } from "@editor/types/file";
 
@@ -43,25 +45,15 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
 
     try {
       const originalFileId = (file.originalFileId || file.id) as FileId;
-      const remoteId = file.remoteStorageId;
-      const {
-        remoteId: storedId,
-        updatedAt,
-        chain,
-      } = await uploadHistoryChain(originalFileId, remoteId);
-
-      for (const stub of chain) {
-        actions.updateStirlingFileStub(stub.id, {
-          remoteStorageId: storedId,
-          remoteStorageUpdatedAt: updatedAt,
-          remoteOwnedByCurrentUser: true,
-        });
-        await fileStorage.updateFileMetadata(stub.id, {
-          remoteStorageId: storedId,
-          remoteStorageUpdatedAt: updatedAt,
-          remoteOwnedByCurrentUser: true,
-        });
-      }
+      const result = await uploadHistoryChain(
+        originalFileId,
+        file.remoteStorageId,
+      );
+      await recordChainUpload(
+        result,
+        result.chain,
+        actions.updateStirlingFileStub,
+      );
 
       alert({
         alertType: "success",

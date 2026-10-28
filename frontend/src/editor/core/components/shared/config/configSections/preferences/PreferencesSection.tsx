@@ -6,6 +6,7 @@ import { AdminSetupBanner } from "@editor/components/shared/config/configSection
 import { AppearanceCard } from "@editor/components/shared/config/configSections/preferences/AppearanceCard";
 import { EditorDefaultsCard } from "@editor/components/shared/config/configSections/preferences/EditorDefaultsCard";
 import { DownloadsCard } from "@editor/components/shared/config/configSections/preferences/DownloadsCard";
+import { ServerSyncCard } from "@editor/components/shared/config/configSections/preferences/ServerSyncCard";
 import { SoftwareUpdatesCard } from "@editor/components/shared/config/configSections/preferences/SoftwareUpdatesCard";
 import { HotkeysCard } from "@editor/components/shared/config/configSections/preferences/HotkeysCard";
 import type {
@@ -92,6 +93,15 @@ export default function PreferencesSection({
         >
           <DownloadsCard />
         </SettingsCard>
+
+        {config?.storageEnabled === true && (
+          <SettingsCard
+            id="serverSync"
+            title={t("settings.preferences.serverSync", "Server files")}
+          >
+            <ServerSyncCard />
+          </SettingsCard>
+        )}
 
         {showUpdates && (
           <SettingsCard

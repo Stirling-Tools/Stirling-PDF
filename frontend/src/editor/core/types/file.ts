@@ -88,6 +88,20 @@ export interface BaseFileMetadata {
   remoteHasShareLinks?: boolean; // True when owner has shared this file
   remoteHasUserShares?: boolean; // True when owner has invited specific users
   remoteShareToken?: string; // Share token when file is from a share link
+  /**
+   * The server copy this chain last matched. Kept apart from
+   * `remoteStorageUpdatedAt`, which the library refresh overwrites with the
+   * server's latest: a stale base is what lets an update be refused instead
+   * of replacing another device's work.
+   */
+  remoteSync?: RemoteSyncBase;
+}
+
+export interface RemoteSyncBase {
+  /** Server `revision` of the stored copy. */
+  revision: string;
+  /** Leaf whose bytes that revision holds; any other leaf is unsynced. */
+  leafId: FileId;
 }
 
 /**

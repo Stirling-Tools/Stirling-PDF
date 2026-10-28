@@ -403,6 +403,7 @@ class FileStorageService {
       remoteSharedViaLink: stub.remoteSharedViaLink,
       remoteHasShareLinks: stub.remoteHasShareLinks,
       remoteShareToken: stub.remoteShareToken,
+      remoteSync: stub.remoteSync,
 
       // History data from stub
       versionNumber: stub.versionNumber ?? 1,
@@ -827,6 +828,7 @@ class FileStorageService {
           remoteSharedViaLink: record.remoteSharedViaLink,
           remoteHasShareLinks: record.remoteHasShareLinks,
           remoteShareToken: record.remoteShareToken,
+          remoteSync: record.remoteSync,
           versionNumber: record.versionNumber,
           originalFileId: record.originalFileId,
           parentFileId: record.parentFileId,
@@ -911,6 +913,7 @@ class FileStorageService {
               remoteSharedViaLink: record.remoteSharedViaLink,
               remoteHasShareLinks: record.remoteHasShareLinks,
               remoteShareToken: record.remoteShareToken,
+              remoteSync: record.remoteSync,
               versionNumber: record.versionNumber || 1,
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
@@ -1027,6 +1030,7 @@ class FileStorageService {
               remoteSharedViaLink: record.remoteSharedViaLink,
               remoteHasShareLinks: record.remoteHasShareLinks,
               remoteShareToken: record.remoteShareToken,
+              remoteSync: record.remoteSync,
               versionNumber: record.versionNumber || 1,
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
