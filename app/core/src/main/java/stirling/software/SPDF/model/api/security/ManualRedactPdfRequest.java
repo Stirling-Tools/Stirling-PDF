@@ -15,9 +15,10 @@ import stirling.software.common.model.api.security.RedactionArea;
 public class ManualRedactPdfRequest extends PDFWithPageNums {
     @Schema(
             description =
-                    "Areas to redact. Text at least half inside an area, and the image content"
-                            + " under it, is removed from the file and the area is painted; a page"
-                            + " that cannot be redacted this way is rasterized instead.",
+                    "Areas to redact. The text and image content under each area is removed from"
+                            + " the file, a letter the area only partly covers with it, and the"
+                            + " area is painted; a page that cannot be redacted this way is"
+                            + " rasterized instead.",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private List<RedactionArea> redactions;
 

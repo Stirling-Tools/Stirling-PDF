@@ -1299,7 +1299,7 @@ class RearrangePagesParams(ApiModel):
 
 class Strategy(StrEnum):
     """
-    AUTO removes the covered content of every redaction from the file (text counts when at least half of it is inside a box); a page that cannot be redacted this way is rasterized instead. OVERLAY_ONLY only paints boxes and leaves the covered text and images extractable. IMAGE_FINALIZE rasterizes every page.
+    AUTO removes the covered content of every redaction from the file, including any letter a box only partly covers; a page that cannot be redacted this way is rasterized instead. OVERLAY_ONLY only paints boxes and leaves the covered text and images extractable. IMAGE_FINALIZE rasterizes every page.
     """
 
     auto = "AUTO"
@@ -1320,13 +1320,13 @@ class Style(ApiModel):
     padding: float = Field(0, description="Extra padding around each box in points")
     strategy: Strategy = Field(
         Strategy.auto,
-        description="AUTO removes the covered content of every redaction from the file (text counts when at least half of it is inside a box); a page that cannot be redacted this way is rasterized instead. OVERLAY_ONLY only paints boxes and leaves the covered text and images extractable. IMAGE_FINALIZE rasterizes every page.",
+        description="AUTO removes the covered content of every redaction from the file, including any letter a box only partly covers; a page that cannot be redacted this way is rasterized instead. OVERLAY_ONLY only paints boxes and leaves the covered text and images extractable. IMAGE_FINALIZE rasterizes every page.",
     )
 
 
 class RedactionArea(ApiModel):
     """
-    Areas to redact. Text at least half inside an area, and the image content under it, is removed from the file and the area is painted; a page that cannot be redacted this way is rasterized instead.
+    Areas to redact. The text and image content under each area is removed from the file, a letter the area only partly covers with it, and the area is painted; a page that cannot be redacted this way is rasterized instead.
     """
 
     color: str | None = Field(None, description="The color used to redact the specified area.")
@@ -1855,7 +1855,7 @@ class RedactExecuteParams(ApiModel):
 
 class RedactParams(ApiModel):
     """
-    Redacts manually specified areas and whole pages. Text at least half inside an area, and the images under it, are removed from the file before the area is painted, and listed pages are wiped of all content. A page that cannot be redacted this way is rasterized instead. Optionally rasterizes every page. Input:PDF Output:PDF Type:SISO
+    Redacts manually specified areas and whole pages. The text and images under each area are removed from the file before the area is painted, a letter the area only partly covers with them, and listed pages are wiped of all content. A page that cannot be redacted this way is rasterized instead. Optionally rasterizes every page. Input:PDF Output:PDF Type:SISO
     """
 
     convert_pdf_to_image: bool = Field(
@@ -1872,7 +1872,7 @@ class RedactParams(ApiModel):
     )
     redactions: list[RedactionArea] = Field(
         ...,
-        description="Areas to redact. Text at least half inside an area, and the image content under it, is removed from the file and the area is painted; a page that cannot be redacted this way is rasterized instead.",
+        description="Areas to redact. The text and image content under each area is removed from the file, a letter the area only partly covers with it, and the area is painted; a page that cannot be redacted this way is rasterized instead.",
     )
 
 
