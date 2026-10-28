@@ -21,6 +21,8 @@ public class XmpUtils {
     public static final int MAX_XMP_BYTES = 1024 * 1024;
 
     /**
+     * Parses the XMP packet of {@code metadata} with a {@link #MAX_XMP_BYTES}-byte limit.
+     *
      * @throws IOException if the packet is larger than {@link #MAX_XMP_BYTES} or cannot be read
      */
     public XMPMetadata parse(PDMetadata metadata, boolean strict)

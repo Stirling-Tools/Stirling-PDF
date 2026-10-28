@@ -760,7 +760,7 @@ public class GetInfoOnPDF {
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                     new XmpSerializer().serialize(xmpMeta, outputStream, true);
                     xmpString = outputStream.toString(StandardCharsets.UTF_8);
-                } catch (XmpParsingException e) {
+                } catch (XmpParsingException | IOException e) {
                     log.debug("XMP parsing failed, reading raw metadata: {}", e.getMessage());
                     try (COSInputStream inputStream = pdMetadata.createInputStream()) {
                         byte[] metadataBytes = inputStream.readAllBytes();

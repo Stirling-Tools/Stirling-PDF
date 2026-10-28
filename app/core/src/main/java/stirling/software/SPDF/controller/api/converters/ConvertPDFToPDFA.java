@@ -92,6 +92,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
@@ -108,23 +109,25 @@ import stirling.software.common.util.XmpUtils;
 public class ConvertPDFToPDFA {
 
     private static final Pattern NON_PRINTABLE_ASCII = Pattern.compile("[^\\x20-\\x7E]");
-    // The sanitizer adds content streams to every page, all held in memory until the save
-    private static final int MAX_SANITIZER_PAGES = 20_000;
     private final RuntimePathConfig runtimePathConfig;
     private final stirling.software.SPDF.service.VeraPDFService veraPDFService;
     // Level A needs the proprietary tagger; core builds convert at level B instead.
     private final PdfaLevelAServiceInterface pdfaLevelAService;
     private final TempFileManager tempFileManager;
+    // The sanitizer adds content streams to every page, all held in memory until the save
+    private final int maxConversionPages;
 
     public ConvertPDFToPDFA(
             RuntimePathConfig runtimePathConfig,
             stirling.software.SPDF.service.VeraPDFService veraPDFService,
             @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService,
-            TempFileManager tempFileManager) {
+            TempFileManager tempFileManager,
+            ApplicationProperties applicationProperties) {
         this.runtimePathConfig = runtimePathConfig;
         this.veraPDFService = veraPDFService;
         this.pdfaLevelAService = pdfaLevelAService;
         this.tempFileManager = tempFileManager;
+        this.maxConversionPages = applicationProperties.getSystem().getMaxPdfaConversionPages();
     }
 
     private static final String ICC_RESOURCE_PATH = "/icc/sRGB2014.icc";
@@ -1283,12 +1286,14 @@ public class ConvertPDFToPDFA {
         return false;
     }
 
-    private static File preProcessHighlights(File inputPdf) throws Exception {
+    private static File preProcessHighlights(File inputPdf, int maxPages) throws Exception {
 
         try (PDDocument document = Loader.loadPDF(inputPdf)) {
-            requireSanitizablePageCount(document);
+            requireSanitizablePageCount(document, maxPages);
 
-            for (PDPage page : flattenHighlightsToContent(document)) {
+            // PDF/A-1 cannot keep a highlight without an appearance, so drop the ones we cannot
+            // draw
+            for (PDPage page : flattenHighlights(document, true)) {
                 COSDictionary pageDict = page.getCOSObject();
                 if (pageDict.getDictionaryObject(COSName.GROUP) instanceof COSDictionary groupDict
                         && COSName.TRANSPARENCY
@@ -1704,7 +1709,7 @@ public class ConvertPDFToPDFA {
             if (pdfaPart == 2 || pdfaPart == 3) {
                 preProcessedFile = tempInputFile.toFile();
             } else {
-                preProcessedFile = preProcessHighlights(tempInputFile.toFile());
+                preProcessedFile = preProcessHighlights(tempInputFile.toFile(), maxConversionPages);
             }
 
             Set<String> missingFonts;
@@ -1992,7 +1997,7 @@ public class ConvertPDFToPDFA {
     private void sanitizeDocument(Path inputPath, Path outputPath, boolean addWhiteBackground)
             throws IOException {
         try (PDDocument doc = Loader.loadPDF(inputPath.toFile())) {
-            requireSanitizablePageCount(doc);
+            requireSanitizablePageCount(doc, maxConversionPages);
             Map<String, DocumentSanitizer> sanitizers = new LinkedHashMap<>();
             sanitizers.put(
                     "Flatten highlight annotations", ConvertPDFToPDFA::flattenHighlightsToContent);
@@ -2193,16 +2198,19 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private static void requireSanitizablePageCount(PDDocument doc) {
+    private static void requireSanitizablePageCount(PDDocument doc, int maxPages) {
+        if (maxPages <= 0) {
+            return;
+        }
         // Counted by walking the tree: getNumberOfPages() is the /Count the file declares
         int pages = 0;
         for (PDPage ignored : doc.getPages()) {
-            if (++pages > MAX_SANITIZER_PAGES) {
+            if (++pages > maxPages) {
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.invalidArgument",
                         "Invalid argument: {0}",
                         "PDF/A and PDF/X conversion is limited to "
-                                + MAX_SANITIZER_PAGES
+                                + maxPages
                                 + " pages, split the document first");
             }
         }
@@ -2249,8 +2257,10 @@ public class ConvertPDFToPDFA {
         if (value == null) {
             return "null";
         }
-        String printable = NON_PRINTABLE_ASCII.matcher(value).replaceAll("?");
-        return printable.length() > 64 ? printable.substring(0, 64) + "..." : printable;
+        boolean truncated = value.length() > 64;
+        String head = truncated ? value.substring(0, 64) : value;
+        String printable = NON_PRINTABLE_ASCII.matcher(head).replaceAll("?");
+        return truncated ? printable + "..." : printable;
     }
 
     private void addWhiteBackground(PDDocument doc) throws IOException {
@@ -2278,21 +2288,40 @@ public class ConvertPDFToPDFA {
      * annotation. Returns the pages that had one.
      */
     private static List<PDPage> flattenHighlightsToContent(PDDocument doc) throws IOException {
-        List<PDPage> flattenedPages = new ArrayList<>();
+        return flattenHighlights(doc, false);
+    }
+
+    /**
+     * With {@code dropUndrawable}, highlights whose quad points are missing or malformed are
+     * removed without drawing; otherwise they are left on the page.
+     */
+    private static List<PDPage> flattenHighlights(PDDocument doc, boolean dropUndrawable)
+            throws IOException {
+        List<PDPage> changedPages = new ArrayList<>();
         int invalidQuads = 0;
         for (PDPage page : distinctPages(doc)) {
             List<PDAnnotation> highlights = new ArrayList<>();
+            List<PDAnnotation> toRemove = new ArrayList<>();
             for (PDAnnotation annot : page.getAnnotations()) {
                 if (annot instanceof PDAnnotationHighlight highlight
                         && ANNOTATION_HIGHLIGHT.equals(annot.getSubtype())) {
                     if (isValidQuadPoints(highlight.getQuadPoints())) {
                         highlights.add(highlight);
+                        toRemove.add(highlight);
                     } else {
                         invalidQuads++;
+                        if (dropUndrawable) {
+                            toRemove.add(highlight);
+                        }
                     }
                 }
             }
+            if (toRemove.isEmpty()) {
+                continue;
+            }
             if (highlights.isEmpty()) {
+                removeAnnotations(page, toRemove);
+                changedPages.add(page);
                 continue;
             }
 
@@ -2313,15 +2342,16 @@ public class ConvertPDFToPDFA {
                 }
                 cs.restoreGraphicsState();
             }
-            removeAnnotations(page, highlights);
-            flattenedPages.add(page);
+            removeAnnotations(page, toRemove);
+            changedPages.add(page);
         }
         if (invalidQuads > 0) {
             log.warn(
-                    "Skipped {} highlight annotation(s) with an invalid quad points array",
+                    "{} {} highlight annotation(s) with an invalid quad points array",
+                    dropUndrawable ? "Removed" : "Skipped",
                     invalidQuads);
         }
-        return flattenedPages;
+        return changedPages;
     }
 
     private static void fillQuads(PDPageContentStream cs, float[] quads) throws IOException {

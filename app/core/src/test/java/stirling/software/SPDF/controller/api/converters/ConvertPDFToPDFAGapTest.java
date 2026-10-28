@@ -58,6 +58,7 @@ import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
 import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
 import stirling.software.common.util.TempFileManager;
 
@@ -85,7 +86,11 @@ class ConvertPDFToPDFAGapTest {
 
     private ConvertPDFToPDFA newController() {
         return new ConvertPDFToPDFA(
-                runtimePathConfig, veraPDFService, pdfaLevelAService, tempFileManager);
+                runtimePathConfig,
+                veraPDFService,
+                pdfaLevelAService,
+                tempFileManager,
+                new ApplicationProperties());
     }
 
     // ---- reflection helpers ----------------------------------------------------------------
@@ -969,7 +974,6 @@ class ConvertPDFToPDFAGapTest {
         }
     }
 
-    // =======================================================================================
     @Nested
     @DisplayName("sanitizer bounds")
     class SanitizerBounds {
@@ -1019,9 +1023,59 @@ class ConvertPDFToPDFAGapTest {
             try (PDDocument document = simplePdf()) {
                 repeatOnlyPage(document, 20_001);
 
-                assertThatThrownBy(() -> invokeStatic("requireSanitizablePageCount", document))
+                assertThatThrownBy(
+                                () -> invokeStatic("requireSanitizablePageCount", document, 20_000))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessageContaining("20000");
+            }
+        }
+
+        @Test
+        @DisplayName("a limit of 0 turns the page check off")
+        void zeroLimitDisablesTheCheck() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                repeatOnlyPage(document, 50);
+
+                assertThatCode(() -> invokeStatic("requireSanitizablePageCount", document, 0))
+                        .doesNotThrowAnyException();
+            }
+        }
+
+        @Test
+        @DisplayName("the PDF/A-1 fallback removes highlights it cannot draw")
+        void fallbackDropsMalformedHighlights() throws Exception {
+            Path input = tempDir.resolve("bad-quads.pdf");
+            try (PDDocument document = simplePdf()) {
+                PDAnnotationHighlight noQuads = new PDAnnotationHighlight();
+                noQuads.setRectangle(new PDRectangle(0, 0, 10, 10));
+                PDAnnotationLink link = new PDAnnotationLink();
+                link.setRectangle(new PDRectangle(0, 0, 5, 5));
+                document.getPage(0)
+                        .setAnnotations(List.of(highlight(0, 0, 10, 10, 0), noQuads, link));
+                document.save(input.toFile());
+            }
+
+            File output = invokeStatic("preProcessHighlights", input.toFile(), 20_000);
+            try (PDDocument result = Loader.loadPDF(output)) {
+                assertThat(result.getPage(0).getAnnotations())
+                        .extracting(PDAnnotation::getSubtype)
+                        .containsExactly("Link");
+            } finally {
+                Files.deleteIfExists(output.toPath());
+            }
+        }
+
+        @Test
+        @DisplayName("the sanitizer leaves highlights it cannot draw for the appearance check")
+        void sanitizerKeepsMalformedHighlights() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                PDPage page = document.getPage(0);
+                page.setAnnotations(List.of(highlight(0, 0, 10, 10, 0)));
+
+                List<PDPage> flattened = invokeStatic("flattenHighlightsToContent", document);
+
+                assertThat(flattened).isEmpty();
+                assertThat(page.getAnnotations()).hasSize(1);
             }
         }
 
@@ -1082,7 +1136,7 @@ class ConvertPDFToPDFAGapTest {
             File output =
                     assertTimeoutPreemptively(
                             Duration.ofSeconds(20),
-                            () -> invokeStatic("preProcessHighlights", input.toFile()));
+                            () -> invokeStatic("preProcessHighlights", input.toFile(), 20_000));
             try (PDDocument result = Loader.loadPDF(output)) {
                 assertThat(result.getPage(0).getAnnotations()).isEmpty();
             } finally {
