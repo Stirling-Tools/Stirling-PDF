@@ -47,13 +47,8 @@ public class DatabaseService implements DatabaseServiceInterface {
     public static final String BACKUP_PREFIX = "backup_";
     public static final String SQL_SUFFIX = ".sql";
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
-    // Everything H2 reads as something other than SQL code: string and $$ literals, quoted names,
-    // and --, // and /* */ comments. One left-to-right pass, so whichever starts first wins, as
-    // RUNSCRIPT's ScriptReader reads the script; the statement checks below are only as accurate
-    // as this match. $$ opens a literal only at the start or after whitespace, as there: elsewhere
-    // it is part of a name such as A$$B. Keep the quoted alternatives unrolled and possessive:
-    // '(?:[^']|'')*' recurses once per character in java.util.regex and overflows the stack on
-    // long values such as audit-event JSON.
+    // What H2's ScriptReader skips: '' $$ "" quoting and --, //, /* */ comments. Possessive and
+    // unrolled quoting: '(?:[^']|'')*' recurses per character and overflows the stack.
     private static final Pattern NON_CODE_PATTERN =
             Pattern.compile(
                     "'[^']*+(?:''[^']*+)*+'"
@@ -64,9 +59,8 @@ public class DatabaseService implements DatabaseServiceInterface {
                             + "|/\\*[\\s\\S]*?\\*/");
     private final Path BACKUP_DIR;
 
-    // The statements H2's SCRIPT command writes for this schema; each one in a backup must start
-    // with one of these. SET MODE is deliberately absent: it changes how H2 tokenizes the rest of
-    // the script, which NON_CODE_PATTERN would then no longer match.
+    // Every statement must start with one of these: what H2's SCRIPT writes for this schema.
+    // SET MODE is left out because it changes how H2 tokenizes the rest of the script.
     private static final java.util.List<Pattern> ALLOWED_STATEMENTS =
             java.util.List.of(
                     Pattern.compile("(?i)CREATE\\s+((CACHED|MEMORY)\\s+)?TABLE\\b"),
@@ -556,11 +550,7 @@ public class DatabaseService implements DatabaseServiceInterface {
         }
     }
 
-    /**
-     * The script's SQL code alone: literals blanked to {@code ''}, quoted names to {@code ""},
-     * comments removed and whitespace collapsed, so the checks see neither data, nor names, nor
-     * anything in a comment.
-     */
+    /** The script with literals, quoted names and comments blanked and whitespace collapsed. */
     private String codeOnly(String sql) {
         // TODO: I feel like this should re-evaluated.
         // Passing around SQL like this, smells a bit when we have Hibernate/Critaria API.
