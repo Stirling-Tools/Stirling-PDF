@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.Test;
 
+import stirling.software.common.model.ApplicationProperties;
+
 /**
  * Unit tests for OAuth2Configuration redirect URI logic.
  *
@@ -158,5 +160,15 @@ class OAuth2ConfigurationTest {
                 registrationId,
                 extractedId,
                 "Registration ID from callback MUST match original registration ID");
+    }
+
+    @Test
+    void testRegistrationId_sanitization() {
+        ApplicationProperties.Security.OAUTH2 oauth2 = new ApplicationProperties.Security.OAUTH2();
+        oauth2.setProvider("KeyCloak");
+        assertEquals("KeyCloak", oauth2.getEffectiveRegistrationId());
+
+        oauth2.setRegistrationId("My Entra!");
+        assertEquals("my-entra-", oauth2.getEffectiveRegistrationId());
     }
 }
