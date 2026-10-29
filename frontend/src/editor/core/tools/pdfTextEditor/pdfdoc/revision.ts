@@ -36,6 +36,19 @@ export function plainObject(body: string): Uint8Array {
 }
 
 /**
+ * A number for a new object: above every object the file has and every one
+ * in `bodies`, so passes adding objects to one revision never collide.
+ */
+export function unusedObjectNumber(
+  pdf: RawPdf,
+  bodies: ReadonlyMap<number, string>,
+): number {
+  let highest = pdf.highestObjectNumber;
+  for (const num of bodies.keys()) highest = Math.max(highest, num);
+  return highest + 1;
+}
+
+/**
  * Serialise `objects` as a new revision appended to `pdf`.
  *
  * Returns null when the file's structure is not one this can extend safely -

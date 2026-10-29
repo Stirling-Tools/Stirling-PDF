@@ -13,6 +13,7 @@ import {
 } from "@editor/tools/pdfTextEditor/pdfdoc/contentOps";
 import {
   arrayItems,
+  indirectRef,
   referencedObject,
   setDictEntry,
   spliceValue,
@@ -130,6 +131,42 @@ export function elementKids(pdf: RawPdf, body: string): string[] | null {
   if (!span) return [];
   if (!span.text.startsWith("[")) return [span.text];
   return arrayItems(span.text)?.map((kid) => kid.text) ?? null;
+}
+
+/**
+ * The MCID a /K entry marks on page `pageNum`, in an element whose /Pg is
+ * `elementPage`: an integer names an MCID on that page. Null for any other
+ * kid: a child element, an annotation, form XObject content, or content on
+ * another page.
+ */
+export function kidMcid(
+  pdf: RawPdf,
+  kid: string,
+  elementPage: number | null,
+  pageNum: number,
+): number | null {
+  if (/^\d+$/.test(kid)) {
+    return elementPage === pageNum ? parseInt(kid, 10) : null;
+  }
+  const ref = referencedObject(kid);
+  const dict = ref === null ? kid : pdf.objectBody(ref);
+  if (!dict?.trimStart().startsWith("<<")) return null;
+  if (pdf.dictName(dict, "Type") !== "MCR" || pdf.valueSpan(dict, "Stm")) {
+    return null;
+  }
+  const page = pdf.dictRef(dict, "Pg") ?? elementPage;
+  return page === pageNum ? pdf.dictInt(dict, "MCID") : null;
+}
+
+/** The /K entry for MCID `mcid` on page `pageNum`, in an element whose /Pg is `elementPage`. */
+export function mcidKid(
+  pdf: RawPdf,
+  mcid: number,
+  elementPage: number | null,
+  pageNum: number,
+): string {
+  if (elementPage === pageNum) return String(mcid);
+  return `<< /Type /MCR /Pg ${indirectRef(pdf, pageNum)} /MCID ${mcid} >>`;
 }
 
 /** True when every kid in the element's /K is an MCID or an MCR on a page, rather than a child element, an annotation or form XObject content. */

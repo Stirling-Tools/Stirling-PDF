@@ -5,6 +5,8 @@ import {
   paintLines,
   paintPlainText,
   plainCaretOffset,
+  plainDomRange,
+  plainSelectionRange,
   readOverlayText,
   refitEditedTokens,
   restoreCaretOffset,
@@ -376,5 +378,42 @@ describe("refitEditedTokens", () => {
     expect(`${span.style.letterSpacing}|${span.style.marginRight}`).toBe(
       before,
     );
+  });
+});
+
+describe("selection ranges", () => {
+  function select(from: [Node, number], to: [Node, number]): void {
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.setBaseAndExtent(from[0], from[1], to[0], to[1]);
+  }
+
+  it("counts the selected characters as the model text does, either way round", () => {
+    const el = host();
+    paintLines(el, [line("Hello world"), line("second line")], OPTS);
+    const first = el.children[0].firstChild!.firstChild!;
+    const second = el.children[1].firstChild!.firstChild!;
+    select([first, 2], [second, 3]);
+    expect(plainSelectionRange(el)).toEqual({ start: 2, end: 15 });
+    select([second, 3], [first, 2]);
+    expect(plainSelectionRange(el)).toEqual({ start: 2, end: 15 });
+  });
+
+  it("reads a caret as no range", () => {
+    const el = host();
+    paintLines(el, [line("Hello")], OPTS);
+    const text = el.children[0].firstChild!.firstChild!;
+    select([text, 2], [text, 2]);
+    expect(plainSelectionRange(el)).toBeNull();
+  });
+
+  it("maps a range back onto the painted text it was read from", () => {
+    const el = host();
+    paintLines(el, [line("Hello world"), line("second line")], OPTS);
+    const range = plainDomRange(el, { start: 6, end: 18 })!;
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    expect(plainSelectionRange(el)).toEqual({ start: 6, end: 18 });
   });
 });
