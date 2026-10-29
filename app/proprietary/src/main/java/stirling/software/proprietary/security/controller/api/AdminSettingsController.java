@@ -558,30 +558,36 @@ public class AdminSettingsController {
     @Operation(
             summary = "Mark first-run setup as complete",
             description =
-                    "Records that an admin has finished or skipped the first-run setup wizard, so it"
-                            + " is not shown again. Applies immediately, without a restart. Admin"
-                            + " access required.")
+                    "Records that an admin has finished the first-run setup wizard, so it is not"
+                            + " shown again. Applies immediately, without a restart. Admin access"
+                            + " required. The response says whether it also reached the settings"
+                            + " file; when it did not, setup is complete until the next restart.")
     @ApiResponses(
             value = {
                 @ApiResponse(responseCode = "200", description = "Setup marked complete"),
                 @ApiResponse(
                         responseCode = "403",
-                        description = "Access denied - Admin role required"),
-                @ApiResponse(
-                        responseCode = "500",
-                        description = "Failed to save settings to configuration file")
+                        description = "Access denied - Admin role required")
             })
     public ResponseEntity<Map<String, Object>> completeSetup() {
+        // In memory first: the wizard must not come back because the settings file is
+        // read-only or the follow-up restart fails. The file only decides the next boot.
+        applicationProperties.getSystem().setSetupCompleted(true);
         try {
             GeneralUtils.saveKeyToSettings("system.setupCompleted", true);
-            // Set in memory too: the wizard must not reappear if the follow-up restart fails.
-            applicationProperties.getSystem().setSetupCompleted(true);
-            return ResponseEntity.ok(Map.of("message", "Setup marked complete."));
         } catch (IOException e) {
-            log.error("Failed to mark setup complete: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", GENERIC_FILE_ERROR));
+            log.warn(
+                    "Setup is complete for this run but could not be recorded in the settings"
+                            + " file: {}",
+                    e.getMessage());
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            "Setup marked complete until the next restart.",
+                            "persisted",
+                            false));
         }
+        return ResponseEntity.ok(Map.of("message", "Setup marked complete.", "persisted", true));
     }
 
     @PostMapping("/restart")
