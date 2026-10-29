@@ -1,6 +1,7 @@
 package stirling.software.SPDF.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -115,6 +116,18 @@ class OfficeConversionServiceTest {
 
         when(endpoints.isGroupEnabled("LibreOffice")).thenReturn(false);
         assertThat(toPdf.canFallBack(new IOException("bad file"))).isFalse();
+    }
+
+    @Test
+    void refusesPptBeyondThePageCap() throws Exception {
+        Path target = dir.resolve("out.ppt");
+        try (PDDocument pdf = new PDDocument()) {
+            for (int i = 0; i < OfficeConversionService.MAX_PPT_SLIDES; i++) {
+                pdf.addPage(new PDPage());
+            }
+            assertThatThrownBy(() -> service.convert(pdf, target, "ppt", service.settings()))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
     }
 
     private static PDDocument textPdf(String text) throws Exception {
