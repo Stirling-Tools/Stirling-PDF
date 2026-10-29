@@ -153,7 +153,7 @@ class DecompressPdfControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         String contentDisposition = response.getHeaders().getFirst("Content-Disposition");
-        assertThat(contentDisposition).contains("_decompressed.pdf");
+        assertThat(contentDisposition).contains("filename=\"mydoc.pdf\"");
     }
 
     @Test

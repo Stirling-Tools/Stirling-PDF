@@ -61,7 +61,7 @@ public class PdfCommentAgentOrchestrator {
     private static final float ANNOTATION_SIZE = 20f;
 
     /** Filename used when the uploaded PDF has no usable original filename. */
-    private static final String FALLBACK_OUTPUT_NAME = "document-commented.pdf";
+    private static final String FALLBACK_OUTPUT_NAME = "document.pdf";
 
     private static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]");
 
@@ -261,7 +261,7 @@ public class PdfCommentAgentOrchestrator {
         if (base == null || base.isBlank()) {
             base = "document";
         }
-        return base + "-commented.pdf";
+        return base + ".pdf";
     }
 
     private static String safeName(String originalFilename) {

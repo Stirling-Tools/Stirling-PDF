@@ -139,8 +139,7 @@ public class PasswordController {
             }
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(
-                            fileInput.getOriginalFilename(), "_password_removed.pdf"),
+                    GeneralUtils.generateFilename(fileInput.getOriginalFilename(), ".pdf"),
                     tempFileManager);
         } catch (IOException e) {
             // Handle password errors specifically
@@ -264,8 +263,7 @@ public class PasswordController {
                     return WebResponseUtils.pdfDocToWebResponse(
                             document,
                             GeneralUtils.generateFilename(
-                                    request.getFileInput().getOriginalFilename(),
-                                    "_permissions.pdf"),
+                                    request.getFileInput().getOriginalFilename(), ".pdf"),
                             tempFileManager);
                 }
                 String reader = request.getPassword() == null ? "" : request.getPassword();
@@ -318,10 +316,8 @@ public class PasswordController {
             protection.setPreferAES(document.getEncryption().getVersion() >= 4);
         }
         document.protect(protection);
-        String suffix =
-                owner.isEmpty() && reader.isEmpty() ? "_permissions.pdf" : "_passworded.pdf";
         String filename =
-                GeneralUtils.generateFilename(request.getFileInput().getOriginalFilename(), suffix);
+                GeneralUtils.generateFilename(request.getFileInput().getOriginalFilename(), ".pdf");
         if (!validate || permissions.isOwnerPermission()) {
             return WebResponseUtils.pdfDocToWebResponse(document, filename, tempFileManager);
         }

@@ -229,7 +229,7 @@ public class CropController {
                 return WebResponseUtils.pdfDocToWebResponse(
                         newDocument,
                         GeneralUtils.generateFilename(
-                                request.getFileInput().getOriginalFilename(), "_cropped.pdf"),
+                                request.getFileInput().getOriginalFilename(), ".pdf"),
                         tempFileManager);
             }
         }
@@ -292,7 +292,7 @@ public class CropController {
                 return WebResponseUtils.pdfDocToWebResponse(
                         newDocument,
                         GeneralUtils.generateFilename(
-                                request.getFileInput().getOriginalFilename(), "_cropped.pdf"),
+                                request.getFileInput().getOriginalFilename(), ".pdf"),
                         tempFileManager);
             }
         }
@@ -320,7 +320,7 @@ public class CropController {
             MultipartFile fileInput = request.getFileInput();
             String sourceName =
                     fileInput != null ? fileInput.getOriginalFilename() : request.getFileId();
-            String outputFilename = GeneralUtils.generateFilename(sourceName, "_cropped.pdf");
+            String outputFilename = GeneralUtils.generateFilename(sourceName, ".pdf");
 
             List<Integer> selected = new ArrayList<>();
             for (int i = 0; i < totalPages; i++) {

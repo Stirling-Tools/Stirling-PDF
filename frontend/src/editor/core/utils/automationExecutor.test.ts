@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, type Mock, test, vi } from "vitest";
+import JSZip from "jszip";
 import apiClient from "@editor/services/apiClient";
 import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { ToolType } from "@editor/hooks/tools/shared/useToolOperation";
@@ -68,6 +69,23 @@ describe("processMultiFileResponse (automation execution)", () => {
     const result = await run("APPLICATION/PDF");
     expect(result.length).toBe(1);
     expect(result[0].name).not.toMatch(/\.zip$/);
+  });
+
+  test("prefixes zipped outputs without eating underscores in their names", async () => {
+    const zip = new JSZip();
+    zip.file("my_report_1.pdf", PDF_BYTES);
+    zip.file("my_report_2.pdf", PDF_BYTES);
+    const result = await processMultiFileResponse(
+      await zip.generateAsync({ type: "blob" }),
+      { "content-type": "application/zip" },
+      inputFiles,
+      "Nightly_",
+      false,
+    );
+    expect(result.map((f) => f.name).sort()).toEqual([
+      "Nightly_my_report_1.pdf",
+      "Nightly_my_report_2.pdf",
+    ]);
   });
 });
 

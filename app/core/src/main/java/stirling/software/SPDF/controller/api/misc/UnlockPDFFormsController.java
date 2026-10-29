@@ -124,7 +124,7 @@ public class UnlockPDFFormsController {
             }
             String mergedFileName =
                     GeneralUtils.generateFilename(
-                            file.getFileInput().getOriginalFilename(), "_unlocked_forms.pdf");
+                            file.getFileInput().getOriginalFilename(), ".pdf");
             return WebResponseUtils.pdfDocToWebResponse(
                     document, Filenames.toSimpleFileName(mergedFileName), tempFileManager);
         } catch (Exception e) {

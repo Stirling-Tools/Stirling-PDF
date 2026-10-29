@@ -86,7 +86,7 @@ public class PDFToFile {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
 
-        String fileName = pdfBaseName + "ToMarkdown.zip";
+        String fileName = pdfBaseName + ".zip";
         TempFile finalOut = tempFileManager.createManagedTempFile(".zip");
         try {
             try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
@@ -182,7 +182,7 @@ public class PDFToFile {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
 
-        String fileName = pdfBaseName + "ToHtml.zip";
+        String fileName = pdfBaseName + ".zip";
         TempFile finalOut = tempFileManager.createManagedTempFile(".zip");
         try {
             try (TempFile inputFileTemp = new TempFile(tempFileManager, ".pdf");
@@ -338,7 +338,7 @@ public class PDFToFile {
                     FileUtils.copyFile(outputFile, finalOut.getFile());
                 } else {
                     // Return output files in a ZIP archive
-                    fileName = pdfBaseName + "To" + outputFormat + ".zip";
+                    fileName = pdfBaseName + ".zip";
                     try (OutputStream fos = Files.newOutputStream(finalOut.getPath());
                             ZipOutputStream zipOutputStream = new ZipOutputStream(fos)) {
                         for (File outputFile : outputFiles) {

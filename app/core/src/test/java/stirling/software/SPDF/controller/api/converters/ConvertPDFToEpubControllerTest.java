@@ -147,8 +147,8 @@ class ConvertPDFToEpubControllerTest {
                                 return execResult;
                             });
 
-            gu.when(() -> GeneralUtils.generateFilename("novel.pdf", "_convertedToEPUB.epub"))
-                    .thenReturn("novel_convertedToEPUB.epub");
+            gu.when(() -> GeneralUtils.generateFilename("novel.pdf", ".epub"))
+                    .thenReturn("novel.epub");
             ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
@@ -172,9 +172,7 @@ class ConvertPDFToEpubControllerTest {
             assertTrue(command.contains(TargetDevice.TABLET_PHONE_IMAGES.getCalibreProfile()));
 
             assertEquals(EPUB_MEDIA_TYPE, response.getHeaders().getContentType());
-            assertEquals(
-                    "novel_convertedToEPUB.epub",
-                    response.getHeaders().getContentDisposition().getFilename());
+            assertEquals("novel.epub", response.getHeaders().getContentDisposition().getFilename());
             assertEquals("epub", new String(drainBody(response), StandardCharsets.UTF_8));
 
             verify(tempFileManager).deleteTempDirectory(workingDir);
@@ -241,8 +239,8 @@ class ConvertPDFToEpubControllerTest {
                                 return execResult;
                             });
 
-            gu.when(() -> GeneralUtils.generateFilename("story.pdf", "_convertedToEPUB.epub"))
-                    .thenReturn("story_convertedToEPUB.epub");
+            gu.when(() -> GeneralUtils.generateFilename("story.pdf", ".epub"))
+                    .thenReturn("story.epub");
             ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
@@ -258,9 +256,7 @@ class ConvertPDFToEpubControllerTest {
             assertTrue(command.size() >= 11);
 
             assertEquals(EPUB_MEDIA_TYPE, response.getHeaders().getContentType());
-            assertEquals(
-                    "story_convertedToEPUB.epub",
-                    response.getHeaders().getContentDisposition().getFilename());
+            assertEquals("story.epub", response.getHeaders().getContentDisposition().getFilename());
             assertEquals("epub", new String(drainBody(response), StandardCharsets.UTF_8));
         } finally {
             deleteIfExists(workingDir);
@@ -326,8 +322,8 @@ class ConvertPDFToEpubControllerTest {
                                 return execResult;
                             });
 
-            gu.when(() -> GeneralUtils.generateFilename("book.pdf", "_convertedToAZW3.azw3"))
-                    .thenReturn("book_convertedToAZW3.azw3");
+            gu.when(() -> GeneralUtils.generateFilename("book.pdf", ".azw3"))
+                    .thenReturn("book.azw3");
             ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
@@ -346,9 +342,7 @@ class ConvertPDFToEpubControllerTest {
             assertEquals(
                     MediaType.valueOf("application/vnd.amazon.ebook"),
                     response.getHeaders().getContentType());
-            assertEquals(
-                    "book_convertedToAZW3.azw3",
-                    response.getHeaders().getContentDisposition().getFilename());
+            assertEquals("book.azw3", response.getHeaders().getContentDisposition().getFilename());
             assertEquals("azw3", new String(drainBody(response), StandardCharsets.UTF_8));
 
             verify(tempFileManager).deleteTempDirectory(workingDir);

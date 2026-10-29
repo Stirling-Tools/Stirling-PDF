@@ -97,7 +97,7 @@ public class PdfVectorExportController {
             throw e;
         }
 
-        String outputName = GeneralUtils.generateFilename(originalName, "_converted.pdf");
+        String outputName = GeneralUtils.generateFilename(originalName, ".pdf");
         return WebResponseUtils.pdfFileToWebResponse(outputTemp, outputName);
     }
 
@@ -150,8 +150,7 @@ public class PdfVectorExportController {
             throw e;
         }
 
-        String outputName =
-                GeneralUtils.generateFilename(originalName, "_converted." + outputFormat);
+        String outputName = GeneralUtils.generateFilename(originalName, "." + outputFormat);
 
         MediaType mediaType;
         switch (outputFormat.toLowerCase(Locale.ROOT)) {

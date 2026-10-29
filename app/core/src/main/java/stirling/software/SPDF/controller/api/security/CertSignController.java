@@ -325,7 +325,7 @@ public class CertSignController {
         }
         // Return the signed PDF
         return WebResponseUtils.pdfFileToWebResponse(
-                signedOut, GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_signed.pdf"));
+                signedOut, GeneralUtils.generateFilename(pdf.getOriginalFilename(), ".pdf"));
     }
 
     private MultipartFile validateFilePresent(

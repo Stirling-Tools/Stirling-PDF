@@ -482,9 +482,19 @@ interface ImportContext {
 }
 
 /**
- * Fold server-side runs into the local store: patch tracked ones, adopt untracked ones for feed
- * visibility only. Unmappable and ad-hoc runs are skipped.
+ * The tool's own name for an output: tools keep the input's name unless renaming is their job
+ * (auto-rename, split parts, a converted extension). Falls back to the input's name when the
+ * output has no usable one, such as a sink's extensionless "result-1".
  */
+function deliveredOutputName(
+  inputFileName: string,
+  outputFileName: string,
+): string {
+  // Folder sinks report a full path; only the last segment is the name.
+  const name = outputFileName.split(/[\\/]/).pop() ?? "";
+  return splitFileName(name)[1] ? name : inputFileName;
+}
+
 function applyOutputName(
   inputFileName: string,
   outputName: string,
@@ -525,6 +535,10 @@ async function chainUploadPolicies(
   );
 }
 
+/**
+ * Fold server-side runs into the local store: patch tracked ones, adopt untracked ones for feed
+ * visibility only. Unmappable and ad-hoc runs are skipped.
+ */
 async function reconcileServerRuns(policies: PoliciesByKey): Promise<void> {
   let serverRuns;
   try {
@@ -707,26 +721,23 @@ async function importOutputs(
     return;
   }
 
-  // Keep the input's filename unless a rename rule is set, else the backend's auto-suffixed
-  // name renames every output.
-  const targetName = ctx.outputName
-    ? applyOutputName(
-        run.fileName,
-        ctx.outputName,
-        ctx.outputNamePosition ?? "suffix",
-      )
-    : run.fileName;
   const settled = await Promise.allSettled(
     pending.map(async (out) => {
       const blob = await downloadPolicyOutput(out.fileId, run.target);
-      const [base, inputExtension] = splitFileName(targetName);
-      const [, outputExtension] = splitFileName(out.fileName);
+      const name = deliveredOutputName(run.fileName, out.fileName);
       return {
         fileId: out.fileId,
-        // Conversions must retain the output extension so later policies see the resulting type.
-        file: new File([blob], base + (outputExtension || inputExtension), {
-          type: blob.type,
-        }),
+        file: new File(
+          [blob],
+          ctx.outputName
+            ? applyOutputName(
+                name,
+                ctx.outputName,
+                ctx.outputNamePosition ?? "suffix",
+              )
+            : name,
+          { type: blob.type },
+        ),
       };
     }),
   );

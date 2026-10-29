@@ -7,6 +7,7 @@ import {
   defaultParameters,
 } from "@editor/hooks/tools/convert/useConvertParameters";
 import { createFileFromApiResponse } from "@editor/utils/fileResponseUtils";
+import { splitFileName } from "@editor/utils/fileUtils";
 import {
   useToolOperation,
   defineCustomTool,
@@ -249,7 +250,7 @@ export const createFileFromResponse = (
   originalFileName: string,
   targetExtension: string,
 ): File => {
-  const originalName = originalFileName.split(".")[0];
+  const [originalName] = splitFileName(originalFileName);
 
   // Map pdfa, pdfx and pdfua to pdf since they all result in PDF files
   if (["pdfa", "pdfx", "pdfua"].includes(targetExtension)) {

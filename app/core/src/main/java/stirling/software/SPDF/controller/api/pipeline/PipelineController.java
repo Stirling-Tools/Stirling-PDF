@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -32,7 +33,6 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.PipelineApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.PostHogService;
-import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PipelineLimits;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -130,9 +130,13 @@ public class PipelineController {
                         String filename = originalFilename;
                         if (filenameCount.containsKey(originalFilename)) {
                             int count = filenameCount.get(originalFilename);
+                            String extension = FilenameUtils.getExtension(originalFilename);
                             filename =
-                                    GeneralUtils.generateFilename(
-                                            originalFilename, "(" + count + ")");
+                                    FilenameUtils.getBaseName(originalFilename)
+                                            + " ("
+                                            + count
+                                            + ")"
+                                            + (extension.isEmpty() ? "" : "." + extension);
                             filenameCount.put(originalFilename, count + 1);
                         } else {
                             filenameCount.put(originalFilename, 1);

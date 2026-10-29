@@ -70,7 +70,7 @@ public class RotationController {
             // Return the rotated PDF as a response
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_rotated.pdf"),
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), ".pdf"),
                     tempFileManager);
         }
     }

@@ -185,14 +185,14 @@ public class OCRController {
             String outputFilename =
                     GeneralUtils.removeExtension(
                                     Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
-                            + "_OCR.pdf";
+                            + ".pdf";
 
             if (sidecar && sidecarTextFile != null) {
                 // Create a zip file containing both the PDF and the text file
                 String outputZipFilename =
                         GeneralUtils.removeExtension(
                                         Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
-                                + "_OCR.zip";
+                                + ".zip";
 
                 tempZipFile = new TempFile(tempFileManager, ".zip");
                 try (ZipOutputStream zipOut =

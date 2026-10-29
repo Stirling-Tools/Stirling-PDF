@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api.misc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -245,8 +244,8 @@ class UnlockPDFFormsControllerMoreTest {
     }
 
     @Test
-    @DisplayName("output filename carries the _unlocked_forms suffix")
-    void filenameSuffix() throws Exception {
+    @DisplayName("output filename keeps the input name")
+    void filenameKeepsInputName() throws Exception {
         wireCapturingLoad();
         List<String> names = new ArrayList<>();
         ResponseEntity<Resource> stub = ResponseEntity.ok(new ByteArrayResource("ok".getBytes()));
@@ -254,7 +253,7 @@ class UnlockPDFFormsControllerMoreTest {
             ResponseEntity<Resource> response =
                     controller.unlockPDFForms(request(formPdf(true, false)));
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertTrue(names.get(0).contains("_unlocked_forms.pdf"));
+            assertEquals("form.pdf", names.get(0));
             assertSame(stub.getStatusCode(), response.getStatusCode());
         }
     }

@@ -86,8 +86,7 @@ public class RemoveImagesController {
 
             return WebResponseUtils.pdfFileToWebResponse(
                     tempOut,
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_images_removed.pdf"));
+                    GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".pdf"));
 
         } catch (IOException e) {
             throw ExceptionUtils.handlePdfException(e, "during image removal");

@@ -94,7 +94,7 @@ public class ToSinglePageController {
                 return WebResponseUtils.pdfDocToWebResponse(
                         newDocument,
                         GeneralUtils.generateFilename(
-                                request.getFileInput().getOriginalFilename(), "_singlePage.pdf"),
+                                request.getFileInput().getOriginalFilename(), ".pdf"),
                         tempFileManager);
             }
         }

@@ -47,12 +47,10 @@ export const processMultiFileResponse = async (
   if (!filePrefix || preserveBackendFilename) {
     return result.files;
   }
-  return result.files.map((file) => {
-    const nameWithoutPrefix = file.name.replace(/^[^_]*_/, "");
-    return new File([file], `${filePrefix}${nameWithoutPrefix}`, {
-      type: file.type,
-    });
-  });
+  return result.files.map(
+    (file) =>
+      new File([file], `${filePrefix}${file.name}`, { type: file.type }),
+  );
 };
 
 /**

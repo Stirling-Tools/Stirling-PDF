@@ -153,8 +153,7 @@ public class ConvertEbookToPDFController {
                 throw new IllegalStateException("Calibre did not produce a PDF output");
             }
 
-            String outputFilename =
-                    GeneralUtils.generateFilename(originalFilename, "_convertedToPDF.pdf");
+            String outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");
 
             TempFile tempOut = null;
             try {

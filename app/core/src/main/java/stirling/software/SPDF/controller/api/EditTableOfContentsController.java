@@ -137,7 +137,7 @@ public class EditTableOfContentsController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_with_toc.pdf"),
+                    GeneralUtils.generateFilename(file.getOriginalFilename(), ".pdf"),
                     tempFileManager);
         }
     }
