@@ -7507,6 +7507,23 @@ tableHeader = "Table header"
 tableRow = "Table row"
 title = "Title"
 
+[pdfTextEditor.inspector.language]
+cannotSetDocument = "This document's language can't be changed."
+cannotSetText = "This text's language can't be changed."
+documentHint = "The language screen readers use unless a part of the text sets its own."
+documentLabel = "Language"
+documentLocked = "An encrypted document's language can't be changed here."
+inherited = "Same as surrounding text ({{language}})"
+innerLabel = "Tag {{number}} language"
+label = "Language"
+missing = "No language set. Screen readers will guess, and may read the whole document in the wrong voice."
+mixed = "Mixed"
+noMatch = "No matching language. Type its code instead, such as mt or en-IE."
+selectedText = "Selected text language"
+setForSelection = "Set a language"
+textHint = "Screen readers switch voice and pronunciation to this language."
+unknown = "Not set"
+
 [pdfTextEditor.mobile]
 actions = "Editor actions"
 addImage = "Image"

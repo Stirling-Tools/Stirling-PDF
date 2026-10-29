@@ -3,6 +3,7 @@ import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { useHeadingOutline } from "@editor/tools/pdfTextEditor/hooks/useHeadingOutline";
+import { useDocumentLanguage } from "@editor/tools/pdfTextEditor/hooks/useDocumentLanguage";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
@@ -62,6 +63,7 @@ export function EditorSidebar({
   const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
   const geometry = useSelectionGeometry(store, state, selection);
+  const documentLanguage = useDocumentLanguage(store, state);
   const hasSelection =
     selection.runIds.length > 0 ||
     selection.imageIds.length > 0 ||
@@ -179,6 +181,7 @@ export function EditorSidebar({
             onSelectNextImageToReview={selectNextImageToReview}
             headingOutline={headings.outline}
             onSelectHeading={headings.selectHeading}
+            documentLanguage={documentLanguage}
           />
         </Tabs.Panel>
       </Box>

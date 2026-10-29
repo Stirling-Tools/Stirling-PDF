@@ -67,6 +67,8 @@ export interface EditorViewState {
   pages: PageSnapshot[];
   /** Document-level dirty bit (any page dirty). */
   dirty: boolean;
+  /** The catalog /Lang as the session has it; null when unknown. */
+  documentLanguage: string | null;
   /** Async lifecycle markers. */
   loading: boolean;
   /** True once the first page's bitmap has actually painted in PageView. */
@@ -106,6 +108,7 @@ const INITIAL: EditorViewState = {
   pageCount: 0,
   pages: [],
   dirty: false,
+  documentLanguage: null,
   loading: false,
   firstPageRendered: false,
   progress: null,
@@ -305,6 +308,7 @@ export class EditorStore {
       pageCount: doc.pageCount,
       pages: [],
       dirty: false,
+      documentLanguage: doc.documentLanguage(),
       loading: false,
       firstPageRendered: false,
       error: null,
@@ -564,8 +568,12 @@ export class EditorStore {
   /** Re-read the model into a fresh page-snapshot array and publish it. */
   resnapshot(): void {
     if (!this.doc) return;
-    let changed = false;
     const doc = this.doc;
+    const documentLanguage = doc.documentLanguage();
+    if (documentLanguage !== this.state.documentLanguage) {
+      this.patch({ documentLanguage });
+    }
+    let changed = false;
     const pages: PageSnapshot[] = this.state.pages.map((p) => {
       const live = doc.page(p.pageIndex);
       if (live.revision === p.revision) return p;

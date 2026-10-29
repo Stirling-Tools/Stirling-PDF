@@ -34,6 +34,8 @@ export interface SelectProps {
 
   // Behaviour
   searchable?: boolean;
+  /** Called with the text typed into a searchable select. */
+  onSearchChange?: (search: string) => void;
   clearable?: boolean;
   placeholder?: string;
   nothingFoundMessage?: React.ReactNode;
@@ -67,6 +69,7 @@ type PassthroughProps = Omit<
     | "onChange"
     | "defaultValue"
     | "searchable"
+    | "onSearchChange"
     | "clearable"
     | "placeholder"
     | "nothingFoundMessage"
@@ -100,6 +103,7 @@ export function Select({
   onChange,
   defaultValue,
   searchable,
+  onSearchChange,
   clearable,
   placeholder,
   nothingFoundMessage,
@@ -123,6 +127,7 @@ export function Select({
     onChange,
     defaultValue,
     searchable,
+    onSearchChange,
     clearable,
     placeholder,
     nothingFoundMessage,

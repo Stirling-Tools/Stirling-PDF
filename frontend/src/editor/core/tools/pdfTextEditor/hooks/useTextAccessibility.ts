@@ -2,12 +2,18 @@ import { useCallback, useMemo } from "react";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { RetagInnerCommand } from "@editor/tools/pdfTextEditor/commands/RetagInnerCommand";
 import { RetagTextCommand } from "@editor/tools/pdfTextEditor/commands/RetagTextCommand";
+import { SetInnerLanguageCommand } from "@editor/tools/pdfTextEditor/commands/SetInnerLanguageCommand";
+import {
+  SetTextLanguageCommand,
+  type LanguageTarget,
+} from "@editor/tools/pdfTextEditor/commands/SetTextLanguageCommand";
 import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
 import {
   rangeTagTypes,
   TagTextRangeCommand,
 } from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
+import type { TextLanguage } from "@editor/tools/pdfTextEditor/model/languageTag";
 import type {
   EditorStore,
   EditorViewState,
@@ -35,6 +41,17 @@ export interface InnerTagsControl {
   /** What the characters selected inside the run can be tagged as; null when nothing new is selected. */
   newTagTypes: readonly StructureType[] | null;
   onTagSelection: (type: StructureType) => void;
+  /** Sets the language of tag `index`, or clears it with null. */
+  onSetLanguage: (index: number, lang: string | null) => void;
+  /** Tags the characters selected inside the run as a Span in `lang`; null when they cannot take one. */
+  onLanguageSelection: ((lang: string) => void) | null;
+}
+
+/** The language the selected text's blocks are read in, and a way to change it. */
+export interface TextLanguageControl {
+  /** The language the blocks share; undefined when they differ. */
+  language: TextLanguage | undefined;
+  onSet: (lang: string | null) => void;
 }
 
 /**
@@ -50,6 +67,13 @@ export function useTextAccessibility(
 ) {
   // One memo over the pages: a retag changes no snapshot of the run, only
   // republishes them.
+  const languageTargets = useMemo(
+    () =>
+      store.document
+        ? textLanguageTargets(store.document, state, selection)
+        : null,
+    [store, state, selection],
+  );
   const { run, tag, inner, newTagTypes } = useMemo(() => {
     const doc = store.document;
     const selected =
@@ -155,6 +179,40 @@ export function useTextAccessibility(
     [store, run, selection.textRange],
   );
 
+  const setInnerLanguage = useCallback(
+    (index: number, lang: string | null) => {
+      const picked = inner[index];
+      if (!run || !picked) return;
+      store.dispatch(
+        new SetInnerLanguageCommand({
+          pageIndex: run.pageIndex,
+          key: picked.key,
+          lang,
+        }),
+      );
+    },
+    [store, run, inner],
+  );
+
+  const spansSelection = newTagTypes?.includes("Span") ?? false;
+  const setSelectionLanguage = useCallback(
+    (lang: string) => {
+      const range = selection.textRange;
+      if (!run || !range) return;
+      store.dispatch(
+        new TagTextRangeCommand({
+          pageIndex: run.pageIndex,
+          runId: run.id,
+          ...range,
+          as: "Span",
+          lang,
+        }),
+      );
+      store.selection.setTextRange(run.id, null);
+    },
+    [store, run, selection.textRange],
+  );
+
   const innerControl = useMemo(
     (): InnerTagsControl => ({
       tags: inner,
@@ -163,6 +221,8 @@ export function useTextAccessibility(
       onSet: setInnerTag,
       newTagTypes,
       onTagSelection: tagSelectedText,
+      onSetLanguage: setInnerLanguage,
+      onLanguageSelection: spansSelection ? setSelectionLanguage : null,
     }),
     [
       inner,
@@ -171,10 +231,63 @@ export function useTextAccessibility(
       setInnerTag,
       newTagTypes,
       tagSelectedText,
+      setInnerLanguage,
+      spansSelection,
+      setSelectionLanguage,
     ],
   );
 
-  return { tag, setTag, inner: innerControl };
+  const language = useMemo((): TextLanguageControl | null => {
+    const doc = store.document;
+    if (!doc || !languageTargets) return null;
+    const [first, ...rest] = languageTargets.map(({ pageIndex, mcid }) =>
+      doc.textLanguage(pageIndex, mcid),
+    );
+    const shared = rest.every(
+      (l) => l?.own === first?.own && l?.inherited === first?.inherited,
+    );
+    return {
+      language: shared && first ? first : undefined,
+      onSet: (lang) =>
+        store.dispatch(
+          new SetTextLanguageCommand({ targets: languageTargets, lang }),
+        ),
+    };
+    // state.pages: a language change republishes the pages, not the targets.
+  }, [store, languageTargets, state.pages]);
+
+  return { tag, setTag, inner: innerControl, language };
+}
+
+/**
+ * The text the selection's runs are tagged as, for setting their blocks'
+ * language; null unless only runs are selected and every one can take one.
+ */
+function textLanguageTargets(
+  doc: EditorDocument,
+  state: EditorViewState,
+  selection: SelectionState,
+): LanguageTarget[] | null {
+  if (
+    !ACCESSIBILITY_EDITING ||
+    selection.runIds.length === 0 ||
+    selection.imageIds.length > 0 ||
+    selection.shapeIds.length > 0
+  ) {
+    return null;
+  }
+  const ids = new Set(selection.runIds);
+  const runs = state.pages
+    .flatMap((page) => page.runs)
+    .filter((r) => ids.has(r.id));
+  const targets = runs.flatMap((r) =>
+    r.mcid !== undefined &&
+    !r.inForm &&
+    doc.structure(r.pageIndex).cannotSetLanguage(r.mcid) === null
+      ? [{ pageIndex: r.pageIndex, mcid: r.mcid }]
+      : [],
+  );
+  return targets.length > 0 && targets.length === ids.size ? targets : null;
 }
 
 function sameRange(a: TextRange, b: TextRange | null): boolean {

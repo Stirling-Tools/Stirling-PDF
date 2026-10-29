@@ -25,6 +25,8 @@ export interface NewElement {
   mcid: number;
   type: StructureType;
   alt: string | null;
+  /** Its /Lang; null to read it in its parent's language. */
+  lang: string | null;
   /**
    * The MCID of the content the element reads after: it goes after the
    * block holding that, or before the block holding the page's first tagged
@@ -85,18 +87,22 @@ export async function addElements(
       continue;
     }
     bodies.set(place.parent, joined);
-    const alt =
-      element.alt === null ? "" : ` /Alt ${encodeTextString(element.alt)}`;
     const id = element.type === "Note" ? ` /ID ${noteId(num)}` : "";
     bodies.set(
       num,
       `<< /Type /StructElem /S /${element.type} /P ${indirectRef(pdf, place.parent)} ` +
-        `/Pg ${indirectRef(pdf, pageNum)} /K ${element.mcid}${alt}${id} >>`,
+        `/Pg ${indirectRef(pdf, pageNum)} /K ${element.mcid}` +
+        `${textEntry("Alt", element.alt)}${textEntry("Lang", element.lang)}${id} >>`,
     );
     while (slots.length < element.mcid) slots.push("null");
     slots[element.mcid] = `${num} 0 R`;
   }
   return failed;
+}
+
+/** ` /Key (value)` for a new element's dictionary; empty for null. */
+export function textEntry(key: string, value: string | null): string {
+  return value === null ? "" : ` /${key} ${encodeTextString(value)}`;
 }
 
 /**

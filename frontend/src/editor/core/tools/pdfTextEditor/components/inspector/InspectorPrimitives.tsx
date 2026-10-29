@@ -85,19 +85,34 @@ export function Field({
   );
 }
 
-/** The `?` that replaced the panel's permanent explanatory paragraphs. */
+/**
+ * The `?` that replaced the panel's permanent explanatory paragraphs, its
+ * hint shown on hover or keyboard focus and read out as its name.
+ */
 export function HintIcon({ label }: { label: string }) {
   return (
-    <Tooltip label={label} multiline w={220} withArrow position="left">
-      <Icon
-        name="circle-question-mark"
-        size="1em"
+    <Tooltip
+      label={label}
+      multiline
+      w={220}
+      withArrow
+      position="left"
+      events={{ hover: true, focus: true, touch: true }}
+    >
+      {/* Tooltip anchors to its child's ref and handlers, which Icon drops. */}
+      <span
+        role="img"
+        aria-label={label}
+        tabIndex={0}
         style={{
+          display: "inline-flex",
           cursor: "help",
           color: "var(--mantine-color-dimmed)",
           flexShrink: 0,
         }}
-      />
+      >
+        <Icon name="circle-question-mark" size="1em" />
+      </span>
     </Tooltip>
   );
 }
