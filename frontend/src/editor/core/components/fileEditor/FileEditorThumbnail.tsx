@@ -144,14 +144,6 @@ const FileEditorThumbnail = ({
     return (m?.[1] || "").toUpperCase();
   }, [file.name]);
 
-  const extLower = useMemo(() => {
-    const m = /\.([a-z0-9]+)$/i.exec(file.name ?? "");
-    return (m?.[1] || "").toLowerCase();
-  }, [file.name]);
-
-  const isCBZ = extLower === "cbz";
-  const isCBR = extLower === "cbr";
-
   // Guests have no server storage to save or share into.
   const uploadEnabled = config?.storageEnabled === true && !isAnonymous;
   const sharingEnabled =
@@ -467,7 +459,7 @@ const FileEditorThumbnail = ({
             });
           }
         },
-        hidden: !isZipFile || !onUnzipFile || isCBZ || isCBR,
+        hidden: !isZipFile || !onUnzipFile,
       },
       {
         id: "versionHistory",
@@ -496,8 +488,6 @@ const FileEditorThumbnail = ({
     file.name,
     file.versionNumber,
     isZipFile,
-    isCBZ,
-    isCBR,
     isPinned,
     isDamaged,
     damagedRepair,
