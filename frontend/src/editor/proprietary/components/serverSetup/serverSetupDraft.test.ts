@@ -100,7 +100,7 @@ describe("settingsDelta", () => {
     expect(delta).toMatchObject({
       "security.oauth2.enabled": true,
       "security.oauth2.client.keycloak.issuer":
-        "https://id.example.com/realms/main",
+        "https://id.example.com/realms/main/",
       "security.oauth2.client.keycloak.clientId": "stirling",
       "security.oauth2.client.keycloak.clientSecret": "s3cret",
     });

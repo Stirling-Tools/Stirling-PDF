@@ -64,7 +64,7 @@ export function issuersToCheck(
   const covers = step === "summary" ? QUICK_SUMMARY_STEPS : [step];
   return covers.includes("signIn") &&
     loginNeedsIssuer(draft.login) &&
-    trimUrl(draft.oauthIssuer) !== trimUrl(initial.oauthIssuer)
+    draft.oauthIssuer.trim() !== initial.oauthIssuer.trim()
     ? ["oauthIssuer"]
     : [];
 }
@@ -432,7 +432,9 @@ function loginSettings(draft: ServerSetupDraft): Settings {
     [`${prefix}.clientSecret`]: draft.oauthClientSecret.trim(),
   };
   if (loginNeedsIssuer(draft.login)) {
-    settings[`${prefix}.issuer`] = trimUrl(draft.oauthIssuer);
+    // As entered, slash and all: Spring matches it against the issuer the
+    // discovery document advertises, and Auth0 advertises a trailing slash.
+    settings[`${prefix}.issuer`] = draft.oauthIssuer.trim();
   }
   if (draft.login === "oidc") {
     settings["security.oauth2.provider"] = draft.oauthProviderName.trim();

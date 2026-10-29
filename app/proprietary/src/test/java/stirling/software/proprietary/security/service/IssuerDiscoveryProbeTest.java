@@ -1,10 +1,13 @@
 package stirling.software.proprietary.security.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.AfterEach;
@@ -31,6 +34,20 @@ class IssuerDiscoveryProbeTest {
         server.createContext(
                 "/elsewhere/.well-known/openid-configuration",
                 exchange -> respond(exchange, 200, "{\"issuer\":\"" + base + "/good\"}"));
+        server.createContext(
+                "/slashed/.well-known/openid-configuration",
+                exchange -> respond(exchange, 200, "{\"issuer\":\"" + base + "/slashed/\"}"));
+        server.createContext(
+                "/huge/.well-known/openid-configuration",
+                exchange ->
+                        respond(
+                                exchange,
+                                200,
+                                "{\"issuer\":\""
+                                        + base
+                                        + "/huge\",\"pad\":\""
+                                        + "x".repeat(300 * 1024)
+                                        + "\"}"));
         server.createContext(
                 "/numeric/.well-known/openid-configuration",
                 exchange -> respond(exchange, 200, "{\"issuer\":1}"));
@@ -66,7 +83,21 @@ class IssuerDiscoveryProbeTest {
 
     @Test
     void anIssuerThatAnswersDiscovery() {
-        assertThat(probe.answersDiscovery(base + "/good/")).isTrue();
+        assertThat(probe.answersDiscovery(" " + base + "/good ")).isTrue();
+    }
+
+    @Test
+    void anIssuerIsMatchedExactly() {
+        // Auth0 advertises its issuer with a trailing slash, so one entered with it must pass
+        // and one entered without must not: Spring compares them the same way on boot.
+        assertThat(probe.answersDiscovery(base + "/slashed/")).isTrue();
+        assertThat(probe.answersDiscovery(base + "/slashed")).isFalse();
+        assertThat(probe.answersDiscovery(base + "/good/")).isFalse();
+    }
+
+    @Test
+    void anOversizedDocument() {
+        assertThat(probe.answersDiscovery(base + "/huge")).isFalse();
     }
 
     @Test
@@ -97,8 +128,8 @@ class IssuerDiscoveryProbeTest {
     }
 
     @Test
-    void anIssuerWithManyTrailingSlashes() {
-        assertThat(probe.answersDiscovery(base + "/good" + "/".repeat(10_000))).isTrue();
+    void anIssuerWithManyTrailingSlashesIsAnsweredPromptly() {
+        assertThat(probe.answersDiscovery(base + "/good" + "/".repeat(10_000))).isFalse();
     }
 
     @Test
@@ -107,9 +138,16 @@ class IssuerDiscoveryProbeTest {
     }
 
     @Test
-    void aLinkLocalIssuerSuchAsTheMetadataService() {
-        assertThat(probe.answersDiscovery("http://169.254.169.254/latest")).isFalse();
-        assertThat(probe.answersDiscovery("http://[fe80::1]/issuer")).isFalse();
+    void aMetadataServiceIsNeverRequested() {
+        HttpClient client = mock(HttpClient.class);
+        IssuerDiscoveryProbe guarded =
+                new IssuerDiscoveryProbe(client, JsonMapper.builder().build());
+
+        assertThat(guarded.answersDiscovery("http://169.254.169.254/latest")).isFalse();
+        assertThat(guarded.answersDiscovery("http://[fe80::1]/issuer")).isFalse();
+        assertThat(guarded.answersDiscovery("http://100.100.100.200/latest")).isFalse();
+        assertThat(guarded.answersDiscovery("http://[fd00:ec2::254]/latest")).isFalse();
+        verifyNoInteractions(client);
     }
 
     @Test
