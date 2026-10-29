@@ -1,5 +1,6 @@
 package stirling.software.proprietary.policy.engine;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -8,9 +9,11 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.service.ToolChainValidator;
+import stirling.software.common.util.PipelineLimits;
 import stirling.software.proprietary.document.conditions.ConditionValidator;
 import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
 import stirling.software.proprietary.policy.asset.PolicyAssetStore;
@@ -47,6 +50,7 @@ public class PolicyValidator {
     private final SourceStore sourceStore;
     private final PolicyAssetStore assetStore;
     private final ToolChainValidator toolChainValidator;
+    private final ApplicationProperties applicationProperties;
 
     /**
      * @throws IllegalArgumentException if the policy has more than one input or output, any facet's
@@ -207,7 +211,17 @@ public class PolicyValidator {
                                         new ToolChainValidator.Step(
                                                 step.operation(), step.parameters()))
                         .toList();
-        return toolChainValidator.validate(chain, sourceFormat);
+        List<ToolDiagnostic> diagnostics =
+                new ArrayList<>(toolChainValidator.validate(chain, sourceFormat));
+        ApplicationProperties.Policies policies = applicationProperties.getPolicies();
+        if (PipelineLimits.exceedsStepLimit(steps.size(), policies)) {
+            diagnostics.add(
+                    ToolDiagnostic.error(
+                            policies.getMaxSteps(),
+                            ToolDiagnostic.TOO_MANY_STEPS,
+                            PipelineLimits.stepLimitMessage(policies)));
+        }
+        return diagnostics;
     }
 
     /**
@@ -216,10 +230,11 @@ public class PolicyValidator {
      * #validateOutput(OutputSpec)}: a step that dereferences an integration connection by id is
      * access-checked here or nowhere, since the worker thread that later runs it has no principal.
      *
-     * @throws IllegalArgumentException if any step is invalid or references an inaccessible
-     *     resource
+     * @throws IllegalArgumentException if there are more than {@code policies.maxSteps} steps, or
+     *     any step is invalid or references an inaccessible resource
      */
     public void validateSteps(List<PipelineStep> steps) {
+        PipelineLimits.requireWithinStepLimit(steps.size(), applicationProperties.getPolicies());
         for (PipelineStep step : steps) {
             for (PipelineStepValidator validator : stepValidators) {
                 validator.validate(step);

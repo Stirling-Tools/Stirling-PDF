@@ -129,7 +129,8 @@ class PolicyEngineTest {
                         internalApiClient,
                         toolMetadataService,
                         tempFileManager,
-                        JsonMapper.builder().build());
+                        JsonMapper.builder().build(),
+                        new ApplicationProperties());
         registry = new PolicyRunRegistry(new ApplicationProperties());
         InlineOutputSink sink = new InlineOutputSink(fileStorage);
         PolicyOutputResolver outputResolver = new PolicyOutputResolver(sourceStore);

@@ -14,7 +14,7 @@ import {
   removeLabel,
 } from "./github.ts";
 import { enforceSizeLimit, MAX_LINES, type SizedPullRequest } from "./pr-size.ts";
-import { clearStaleTurnLabel } from "./pr-turn.ts";
+import { syncTurnLabel } from "./pr-turn.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -628,7 +628,8 @@ export interface TriageInputs {
 }
 
 /**
- * Triages every open PR, holding each to the size limit first, and writes a job summary.
+ * Triages every open PR, first bringing waiting-on-author up to date on a ready one and
+ * holding each to the size limit, and writes a job summary.
  * A PR that cannot be read or updated is logged and skipped, and the job is failed at
  * the end. Throws if the open PRs cannot be listed.
  */
@@ -653,9 +654,13 @@ export default async function triageStalePullRequests({
     try {
       let pr = await fetchPullRequest(github, repo, number);
       if (pr === null) continue;
-      if (!pr.isDraft && hasLabel(pr, LABELS.waitingOnAuthor) && (await clearStaleTurnLabel(github, issue, live))) {
-        core.info(`#${number}: -${LABELS.waitingOnAuthor} (the turn had already moved on)`);
-        pr = withLabel(pr, LABELS.waitingOnAuthor, false, now);
+      if (!pr.isDraft) {
+        const turnLabelled = hasLabel(pr, LABELS.waitingOnAuthor);
+        const waiting = await syncTurnLabel(github, issue, turnLabelled, live);
+        if (waiting !== turnLabelled) {
+          core.info(`#${number}: ${waiting ? "+" : "-"}${LABELS.waitingOnAuthor}`);
+          pr = withLabel(pr, LABELS.waitingOnAuthor, waiting, now);
+        }
       }
       const size = await enforceSizeLimit(github, repo, sizedPullRequest(pr), sizeLive, canPush);
       if (size.held !== hasLabel(pr, LABELS.tooLarge)) {

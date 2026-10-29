@@ -29,8 +29,37 @@ import { markSetupSignIn } from "@editor/components/serverSetup/setupSignInHando
 import { DEFAULT_ADMIN_CREDENTIALS } from "@editor/auth/defaultCredentials";
 import { springAuth } from "@editor/auth/spring/springAuthClient";
 import { useSpringLogin } from "@editor/auth/ui/useSpringLogin";
+import {
+  clearSignedOutFlag,
+  hasSignedOutInThisTab,
+  isSsoAutoLoginAllowed,
+  recordSsoAutoLoginAttempt,
+  recordSsoAutoLoginError,
+  resetSsoAutoLoginCounts,
+} from "@editor/auth/ssoAutoLogin";
 import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
 import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
+
+// A failed default sign-in counts against the admin's lockout, so a tab that
+// has seen one fail never tries again. Unreadable storage counts as failed:
+// without the record a broken attempt would repeat on every view.
+const DEFAULT_SIGN_IN_FAILED_KEY = "stirling_default_sign_in_failed";
+
+function defaultSignInFailedInThisTab(): boolean {
+  try {
+    return window.sessionStorage.getItem(DEFAULT_SIGN_IN_FAILED_KEY) === "1";
+  } catch {
+    return true;
+  }
+}
+
+function recordDefaultSignInFailure(): void {
+  try {
+    window.sessionStorage.setItem(DEFAULT_SIGN_IN_FAILED_KEY, "1");
+  } catch {
+    // Storage blocked: the read above already stops the next attempt.
+  }
+}
 
 export default function Login() {
   const navigate = useNavigate();
@@ -83,55 +112,6 @@ export default function Login() {
   >("idle");
   const autoLoginErrorRecorded = useRef(false);
 
-  const AUTO_LOGIN_ATTEMPTS_KEY = "stirling_sso_auto_login_attempts";
-  const AUTO_LOGIN_ERRORS_KEY = "stirling_sso_auto_login_errors";
-  const AUTO_LOGIN_LOGOUT_KEY = "stirling_sso_auto_login_logged_out";
-  // A failed default sign-in counts against the admin's lockout, so a tab that
-  // has seen one fail never tries again.
-  const DEFAULT_SIGN_IN_FAILED_KEY = "stirling_default_sign_in_failed";
-  const MAX_AUTO_LOGIN_ATTEMPTS = 2;
-  const MAX_AUTO_LOGIN_ERRORS = 1;
-
-  const readSessionNumber = (key: string) => {
-    if (typeof window === "undefined") {
-      return 0;
-    }
-    const raw = window.sessionStorage.getItem(key);
-    const value = Number(raw);
-    return Number.isFinite(value) ? value : 0;
-  };
-
-  const writeSessionNumber = (key: string, value: number) => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    window.sessionStorage.setItem(key, String(value));
-  };
-
-  const hasLogoutBlock = () => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-    return window.sessionStorage.getItem(AUTO_LOGIN_LOGOUT_KEY) === "1";
-  };
-
-  const clearLogoutBlock = () => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    window.sessionStorage.removeItem(AUTO_LOGIN_LOGOUT_KEY);
-  };
-
-  const recordAutoLoginAttempt = () => {
-    const attempts = readSessionNumber(AUTO_LOGIN_ATTEMPTS_KEY);
-    writeSessionNumber(AUTO_LOGIN_ATTEMPTS_KEY, attempts + 1);
-  };
-
-  const recordAutoLoginError = () => {
-    const errors = readSessionNumber(AUTO_LOGIN_ERRORS_KEY);
-    writeSessionNumber(AUTO_LOGIN_ERRORS_KEY, errors + 1);
-  };
-
   const errorFromState = (location.state as { error?: string } | null)?.error;
   const errorFromQuery = useMemo(() => {
     if (!searchParams) {
@@ -161,13 +141,16 @@ export default function Login() {
   }, [searchParams]);
 
   const hasSsoLoginError = Boolean(errorFromState || errorFromQuery);
+  // /login?all is how a local admin reaches the password form when SSO
+  // auto-login would otherwise redirect straight to the provider.
+  const skipSsoAutoLogin = searchParams.has("all");
 
   // Shared login state + sign-in handlers + provider fetch. Editor-specific
   // behaviour (auto-login, redirects, first-time setup) is layered on here.
   const login = useSpringLogin({
     ready: backendProbe.status === "up" || backendProbe.loginDisabled,
     redirectTo: `${BASE_PATH}/auth/callback`,
-    onSignInStart: clearLogoutBlock,
+    onSignInStart: clearSignedOutFlag,
     onBeforeOAuth: () => {
       // Don't overwrite a path already stashed by httpErrorHandler on a 401.
       const returnPath = resolveReturnPath();
@@ -197,6 +180,11 @@ export default function Login() {
 
   const isUserPassAllowed = login.isUserPassAllowed;
   const isSsoOnlyMode = !login.isUserPassAllowed;
+  // Visitors who can only sign in with a password: the admin of a fresh
+  // install (default credentials) and a local account just created from an
+  // invite (messageType). Redirecting them to the IdP strands them there.
+  const awaitsPasswordSignIn =
+    isUserPassAllowed && (isFirstTimeSetup || searchParams.has("messageType"));
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
@@ -229,6 +217,7 @@ export default function Login() {
   useEffect(() => {
     if (loading) return;
     if (!session) return;
+    resetSsoAutoLoginCounts();
     const stashed = consumePostLoginRedirectPath();
     const returnPath = resolveReturnPath() ?? stashed;
     if (returnPath) {
@@ -282,12 +271,6 @@ export default function Login() {
       return;
     }
 
-    const attempts = readSessionNumber(AUTO_LOGIN_ATTEMPTS_KEY);
-    const errors = readSessionNumber(AUTO_LOGIN_ERRORS_KEY);
-    const blockedByErrors = errors >= MAX_AUTO_LOGIN_ERRORS;
-    const blockedByAttempts = attempts >= MAX_AUTO_LOGIN_ATTEMPTS;
-    const blockedByLogout = hasLogoutBlock();
-
     if (
       !ssoAutoLogin ||
       loginDisabled ||
@@ -299,15 +282,11 @@ export default function Login() {
     }
 
     if (
+      skipSsoAutoLogin ||
+      awaitsPasswordSignIn ||
       hasSsoLoginError ||
-      blockedByErrors ||
-      blockedByAttempts ||
-      blockedByLogout
+      !isSsoAutoLoginAllowed()
     ) {
-      return;
-    }
-
-    if (login.isUserPassAllowed) {
       return;
     }
 
@@ -316,7 +295,9 @@ export default function Login() {
     }
 
     autoLoginAttempted.current = true;
-    recordAutoLoginAttempt();
+    if (!recordSsoAutoLoginAttempt()) {
+      return;
+    }
     void login.signInWithProvider(login.providers[0]);
   }, [
     ssoAutoLogin,
@@ -327,8 +308,9 @@ export default function Login() {
     login.loginMethod,
     login.providers,
     login.signInWithProvider,
-    login.isUserPassAllowed,
     hasSsoLoginError,
+    skipSsoAutoLogin,
+    awaitsPasswordSignIn,
   ]);
 
   // A server still in first-run setup on the default admin login signs in by
@@ -339,9 +321,9 @@ export default function Login() {
     defaultSignInAllowed &&
     login.isUserPassAllowed &&
     !hasSsoLoginError &&
-    !hasLogoutBlock() &&
+    !hasSignedOutInThisTab() &&
     !session &&
-    readSessionNumber(DEFAULT_SIGN_IN_FAILED_KEY) === 0;
+    !defaultSignInFailedInThisTab();
 
   useEffect(() => {
     if (
@@ -363,7 +345,7 @@ export default function Login() {
       .then(
         ({ session: signedIn, error }) => {
           if (error || !signedIn) {
-            writeSessionNumber(DEFAULT_SIGN_IN_FAILED_KEY, 1);
+            recordDefaultSignInFailure();
             setDefaultSignIn("failed");
             return;
           }
@@ -371,7 +353,7 @@ export default function Login() {
           setDefaultSignIn("signedIn");
         },
         () => {
-          writeSessionNumber(DEFAULT_SIGN_IN_FAILED_KEY, 1);
+          recordDefaultSignInFailure();
           setDefaultSignIn("failed");
         },
       );
@@ -433,7 +415,7 @@ export default function Login() {
       }
 
       if (hasSsoLoginError && !autoLoginErrorRecorded.current) {
-        recordAutoLoginError();
+        recordSsoAutoLoginError();
         autoLoginErrorRecorded.current = true;
       }
     } catch (_) {

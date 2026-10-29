@@ -28,9 +28,12 @@ import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.ToolMetadataService;
+import stirling.software.common.util.PipelineLimits;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 
@@ -46,15 +49,19 @@ public class PipelineProcessor {
 
     private final TempFileManager tempFileManager;
 
+    private final ApplicationProperties applicationProperties;
+
     public PipelineProcessor(
             ApiDocService apiDocService,
             ToolMetadataService toolMetadataService,
             InternalApiClient internalApiClient,
-            TempFileManager tempFileManager) {
+            TempFileManager tempFileManager,
+            ApplicationProperties applicationProperties) {
         this.apiDocService = apiDocService;
         this.toolMetadataService = toolMetadataService;
         this.internalApiClient = internalApiClient;
         this.tempFileManager = tempFileManager;
+        this.applicationProperties = applicationProperties;
     }
 
     public static String removeTrailingNaming(String filename) {
@@ -76,21 +83,34 @@ public class PipelineProcessor {
         return name.substring(0, underscoreIndex) + extension;
     }
 
+    /**
+     * Runs the pipeline. The inputs stay the caller's; the caller closes the returned result, which
+     * holds the outputs, once it has read them.
+     *
+     * @throws PipelineLimits.LimitExceededException if the run breaks {@code policies.maxSteps} or
+     *     {@code policies.maxFilesPerStep}
+     */
     PipelineResult runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config)
             throws Exception {
+        PipelineLimits.requireWithinStepLimit(
+                config.getOperations().size(), applicationProperties.getPolicies());
+        PipelineResult result = new PipelineResult();
         // One pipeline execution = one automation run. Scope a run id so every tool sub-step
         // dispatched via InternalApiClient groups into a single charge on the SaaS billing side
         // (see AutomationRunContext); pipeline steps run synchronously on this thread.
         try (AutomationRunContext.Scope ignored =
                 AutomationRunContext.open(UUID.randomUUID().toString())) {
-            return runPipelineAgainstFilesInternal(outputFiles, config);
+            return runPipelineAgainstFilesInternal(outputFiles, config, result);
+        } catch (Exception e) {
+            // The caller never receives the result, so release the earlier steps' outputs here
+            result.close();
+            throw e;
         }
     }
 
     private PipelineResult runPipelineAgainstFilesInternal(
-            List<Resource> outputFiles, PipelineConfig config) throws Exception {
-        PipelineResult result = new PipelineResult();
-
+            List<Resource> outputFiles, PipelineConfig config, PipelineResult result)
+            throws Exception {
         ByteArrayOutputStream logStream = new ByteArrayOutputStream();
         PrintStream logPrintStream = new PrintStream(logStream);
         boolean hasErrors = false;
@@ -114,6 +134,7 @@ public class PipelineProcessor {
                         "Invalid operation: " + operation + " with parameters: " + parameters);
             }
 
+            int consumedTempFiles = result.getTempFiles().size();
             List<Resource> newOutputFiles = new ArrayList<>();
             if (!isMultiInputOperation) {
                 for (Resource file : outputFiles) {
@@ -266,6 +287,7 @@ public class PipelineProcessor {
             }
             logPrintStream.close();
             outputFiles = newOutputFiles;
+            result.releaseTempFiles(consumedTempFiles);
         }
         if (hasErrors) {
             log.error("Errors occurred during processing. Log: {}", logStream.toString());
@@ -314,6 +336,8 @@ public class PipelineProcessor {
                     };
             newOutputFiles.add(outputResource);
         }
+        PipelineLimits.requireWithinFileLimit(
+                operation, newOutputFiles.size(), applicationProperties.getPolicies());
         return newOutputFiles;
     }
 
@@ -362,27 +386,43 @@ public class PipelineProcessor {
         return outputFiles;
     }
 
+    /**
+     * Copies the uploads to managed temp files; the caller passes the returned list to {@link
+     * #deleteInputFiles} once it no longer needs them.
+     */
     List<Resource> generateInputFiles(MultipartFile[] files) throws Exception {
         if (files == null || files.length == 0) {
             log.info("No files");
             return null;
         }
         List<Resource> outputFiles = new ArrayList<>();
-        for (MultipartFile file : files) {
-            Path tempFile = Files.createTempFile("SPDF-upload-", ".tmp");
-            file.transferTo(tempFile);
-
-            Resource fileResource =
-                    new FileSystemResource(tempFile.toFile()) {
-
-                        @Override
-                        public String getFilename() {
-                            return Filenames.toSimpleFileName(file.getOriginalFilename());
-                        }
-                    };
-            outputFiles.add(fileResource);
+        List<TempFile> uploads = new ArrayList<>();
+        try {
+            for (MultipartFile file : files) {
+                TempFile upload = tempFileManager.createManagedTempFile("pipeline-upload");
+                uploads.add(upload);
+                file.transferTo(upload.getPath());
+                outputFiles.add(
+                        new InternalApiClient.TempFileResource(
+                                upload, Filenames.toSimpleFileName(file.getOriginalFilename())));
+            }
+        } catch (IOException | RuntimeException e) {
+            uploads.forEach(TempFile::close);
+            throw e;
         }
         log.info("Files successfully loaded. Starting processing...");
         return outputFiles;
+    }
+
+    /** Deletes the copies made by {@link #generateInputFiles(MultipartFile[])}; null is a no-op. */
+    void deleteInputFiles(List<Resource> inputFiles) {
+        if (inputFiles == null) {
+            return;
+        }
+        for (Resource input : inputFiles) {
+            if (input instanceof InternalApiClient.TempFileResource upload) {
+                upload.getTempFile().close();
+            }
+        }
     }
 }

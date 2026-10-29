@@ -27,6 +27,7 @@ import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.Outpu
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.TargetDevice;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
@@ -51,19 +52,23 @@ public class ConvertPDFToEpubController {
 
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
+    private final RuntimePathConfig runtimePathConfig;
 
-    private static List<String> buildCalibreCommand(
+    private List<String> buildCalibreCommand(
             Path inputPath, Path outputPath, boolean detectChapters, TargetDevice targetDevice) {
         List<String> command = new ArrayList<>();
-        command.add("ebook-convert");
+        command.add(runtimePathConfig.getCalibrePath());
         command.add(inputPath.toString());
         command.add(outputPath.toString());
 
-        // Use pdftohtml engine (poppler) for PDF input instead of calibre's Qt-based engine.
-        // This avoids the Qt WebEngine dependency for PDF parsing and uses the lighter
-        // poppler-utils pdftohtml binary which is already available in the container.
+        // Calibre's own engine reads pdftohtml's XML output, so no Qt WebEngine is involved in
+        // parsing. Header and footer detection is off: it fails on some short documents.
         command.add("--pdf-engine");
-        command.add("pdftohtml");
+        command.add("calibre");
+        command.add("--pdf-header-skip");
+        command.add("0");
+        command.add("--pdf-footer-skip");
+        command.add("0");
 
         // Golden defaults
         command.add("--enable-heuristics");
@@ -157,11 +162,7 @@ public class ConvertPDFToEpubController {
             }
 
             if (result.getRc() != 0) {
-                String errorMessage = result.getMessages();
-                if (errorMessage == null || errorMessage.isBlank()) {
-                    errorMessage = "Calibre conversion failed";
-                }
-                throw new IllegalStateException(errorMessage);
+                throw new IllegalStateException("Calibre conversion failed");
             }
 
             if (!Files.exists(outputPath) || Files.size(outputPath) == 0L) {
