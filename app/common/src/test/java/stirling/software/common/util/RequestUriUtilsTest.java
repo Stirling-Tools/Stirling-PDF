@@ -216,6 +216,34 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsPublicAuthEndpoint_mobileScannerPhoneCallsOnly() {
+        // The phone has no credentials; everything the desktop calls stays behind login.
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/validate-session/abc", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/upload/abc", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/app/api/v1/mobile-scanner/upload/abc", "/app"));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/create-session/abc", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/files/abc", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/download/abc/a.jpg", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/session/abc", ""));
+        // Anything beyond a bare session id stays protected, whatever the firewall allows.
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/upload/abc/../../files/abc", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/upload/abc/extra", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/upload/", ""));
+    }
+
+    @Test
     void testIsPublicAuthEndpoint_withContextPath() {
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/login", "/app"));
     }
