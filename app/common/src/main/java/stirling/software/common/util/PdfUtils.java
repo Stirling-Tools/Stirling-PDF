@@ -7,9 +7,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -19,6 +22,7 @@ import javax.imageio.*;
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.ImageOutputStream;
 
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -71,21 +75,48 @@ public class PdfUtils {
         };
     }
 
+    /**
+     * Collects the images reachable from {@code resources}, searching each resources dictionary
+     * once. A form XObject can be named any number of times, so a walk that follows every name
+     * grows with the number of paths, not the number of objects.
+     */
     public List<RenderedImage> getAllImages(PDResources resources) throws IOException {
         List<RenderedImage> images = new ArrayList<>();
+        collectImages(resources, images, Collections.newSetFromMap(new IdentityHashMap<>()));
+        return images;
+    }
 
+    private void collectImages(
+            PDResources resources, List<RenderedImage> images, Set<COSDictionary> visited)
+            throws IOException {
+        if (resources == null || !visited.add(resources.getCOSObject())) {
+            return;
+        }
         for (COSName name : resources.getXObjectNames()) {
             PDXObject object = resources.getXObject(name);
-
-            if (object instanceof PDImageXObject) {
-                images.add(((PDImageXObject) object).getImage());
-
-            } else if (object instanceof PDFormXObject) {
-                images.addAll(getAllImages(((PDFormXObject) object).getResources()));
+            if (object instanceof PDImageXObject image) {
+                images.add(image.getImage());
+            } else if (object instanceof PDFormXObject form) {
+                collectImages(form.getResources(), images, visited);
             }
         }
+    }
 
-        return images;
+    private boolean containsImage(PDResources resources, Set<COSDictionary> visited)
+            throws IOException {
+        if (resources == null || !visited.add(resources.getCOSObject())) {
+            return false;
+        }
+        for (COSName name : resources.getXObjectNames()) {
+            if (resources.isImageXObject(name)) {
+                return true;
+            }
+            if (resources.getXObject(name) instanceof PDFormXObject form
+                    && containsImage(form.getResources(), visited)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean hasImages(PDDocument document, String pagesToCheck) throws IOException {
@@ -120,7 +151,8 @@ public class PdfUtils {
     }
 
     public boolean hasImagesOnPage(PDPage page) throws IOException {
-        return !getAllImages(page.getResources()).isEmpty();
+        return containsImage(
+                page.getResources(), Collections.newSetFromMap(new IdentityHashMap<>()));
     }
 
     public boolean hasTextOnPage(PDPage page, String phrase) throws IOException {
