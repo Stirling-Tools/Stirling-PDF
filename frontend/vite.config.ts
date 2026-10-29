@@ -621,11 +621,6 @@ export default defineConfig(async ({ mode, command }) => {
       viteStaticCopy({
         targets: [
           {
-            // Copy jscanify vendor files to dist
-            src: "public/vendor/jscanify/*",
-            dest: "vendor/jscanify",
-          },
-          {
             // pdfjs-dist CMap data for CJK / non-latin glyph mapping. Required
             // when rendering PDFs inside workers where the default DOM fetch paths
             // aren't available.
