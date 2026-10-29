@@ -169,7 +169,7 @@ public class ExternalAppDepConfig {
                                     required,
                                     String.join(", ", affectedGroups));
                         } else {
-                            log.info("WeasyPrint {} meets minimum {}", installed, required);
+                            log.debug("WeasyPrint {} meets minimum {}", installed, required);
                         }
                     },
                     () ->
@@ -198,7 +198,7 @@ public class ExternalAppDepConfig {
                                     required,
                                     String.join(", ", affectedGroups));
                         } else {
-                            log.info("qpdf {} meets minimum {}", installed, required);
+                            log.debug("qpdf {} meets minimum {}", installed, required);
                         }
                     },
                     () -> log.warn("qpdf version could not be determined ({} --version)", command));
