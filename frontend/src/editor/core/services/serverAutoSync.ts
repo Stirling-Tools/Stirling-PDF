@@ -20,12 +20,16 @@ export type ServerSyncFailure = Extract<
   "offline" | "conflict" | "error"
 >;
 
-/** A leaf holding edits that the server copy it was based on lacks. */
+/**
+ * A leaf holding edits that the server copy it was based on lacks.
+ */
 export function hasUnsyncedChanges(stub: StirlingFileStub): boolean {
   return stub.remoteSync !== undefined && stub.remoteSync.leafId !== stub.id;
 }
 
-/** Unsynced, and this user may replace the server copy. */
+/**
+ * Unsynced, and this user may replace the server copy.
+ */
 export function canAutoSync(stub: StirlingFileStub): boolean {
   return (
     stub.isLeaf !== false &&
@@ -36,7 +40,9 @@ export function canAutoSync(stub: StirlingFileStub): boolean {
   );
 }
 
-/** A request without a response is recoverable offline work; HTTP 409 requires conflict resolution. */
+/**
+ * A request without a response is recoverable offline work; HTTP 409 requires conflict resolution.
+ */
 export function classifySyncFailure(error: unknown): ServerSyncFailure {
   if (!axios.isAxiosError(error)) return "error";
   if (!error.response) return "offline";
@@ -48,7 +54,9 @@ export function classifySyncFailure(error: unknown): ServerSyncFailure {
 const transientStatus = new Map<number, ServerSyncStatus>();
 const listeners = new Set<() => void>();
 
-/** Publishes transient status to every subscriber; undefined removes it so persisted metadata determines status. */
+/**
+ * Publishes transient status to every subscriber; undefined removes it so persisted metadata determines status.
+ */
 export function setServerSyncStatus(
   remoteId: number,
   status: ServerSyncStatus | undefined,
@@ -61,13 +69,17 @@ export function setServerSyncStatus(
   listeners.forEach((listener) => listener());
 }
 
-/** Registers a card's external-store listener and returns cleanup; it does not poll the server. */
+/**
+ * Registers a card's external-store listener and returns cleanup; it does not poll the server.
+ */
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
-/** Undefined for a file that is not a synced server document's current version. */
+/**
+ * Undefined for a file that is not a synced server document's current version.
+ */
 export function useServerSyncStatus(
   stub: StirlingFileStub,
 ): ServerSyncStatus | undefined {

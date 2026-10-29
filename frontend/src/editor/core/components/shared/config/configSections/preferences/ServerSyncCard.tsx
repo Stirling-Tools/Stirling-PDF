@@ -4,7 +4,9 @@ import { Paper, Switch, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
 
-/** Per-browser switch for pushing edits to server files automatically. */
+/**
+ * Per-browser switch for pushing edits to server files automatically.
+ */
 export function ServerSyncCard() {
   const { t } = useTranslation();
   const labelId = `${useId()}-auto-sync-server-files`;

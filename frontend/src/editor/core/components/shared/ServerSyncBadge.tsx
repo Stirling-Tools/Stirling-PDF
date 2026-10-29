@@ -22,7 +22,9 @@ interface ServerSyncBadgeProps {
   className?: string;
 }
 
-/** Sync state of a server document while automatic sync is on; nothing otherwise. */
+/**
+ * Sync state of a server document while automatic sync is on; nothing otherwise.
+ */
 export function ServerSyncBadge({ file, className }: ServerSyncBadgeProps) {
   const { t } = useTranslation();
   const { preferences } = usePreferences();

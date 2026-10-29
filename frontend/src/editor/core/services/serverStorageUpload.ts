@@ -15,14 +15,20 @@ export interface ChainUploadResult {
   remoteId: number;
   updatedAt: number;
   chain: StirlingFileStub[];
-  /** Absent when the server does not report revisions. */
+  /**
+   * Absent when the server does not report revisions.
+   */
   remoteSync?: RemoteSyncBase;
 }
 
 export interface ChainUploadOptions {
-  /** Refuse the update (HTTP 409) unless the server copy is still at this revision. */
+  /**
+   * Refuse the update (HTTP 409) unless the server copy is still at this revision.
+   */
   expectedRevision?: string;
-  /** Leave failures to the caller instead of the global error toast. */
+  /**
+   * Leave failures to the caller instead of the global error toast.
+   */
   quiet?: boolean;
 }
 
@@ -37,7 +43,9 @@ function resolveUpdatedAt(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : Date.now();
 }
 
-/** Older servers omit revision tokens; their uploads must not establish an automatic-sync base. */
+/**
+ * Older servers omit revision tokens; their uploads must not establish an automatic-sync base.
+ */
 function syncBaseFrom(
   data: { revision?: unknown } | undefined,
   leafId: FileId,

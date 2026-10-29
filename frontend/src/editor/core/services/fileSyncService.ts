@@ -112,7 +112,9 @@ function normalizeServerFileName(fileName: string | undefined | null): string {
   return fallback;
 }
 
-/** Pull the server file list (and share-links) and reconcile with local stubs. */
+/**
+ * Pull the server file list (and share-links) and reconcile with local stubs.
+ */
 export async function reconcileServerFiles(
   localStubs: StirlingFileStub[],
   opts: ReconcileOptions,

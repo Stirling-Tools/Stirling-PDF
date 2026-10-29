@@ -778,7 +778,9 @@ class FileStorageService {
       const request = store.get(id);
 
       request.onerror = () => reject(request.error);
-      /** Missing records resolve to null; existing records retain their saved server revision in the metadata-only stub. */
+      /**
+       * Missing records resolve to null; existing records retain their saved server revision in the metadata-only stub.
+       */
       request.onsuccess = () => {
         const record = request.result as StoredStirlingFileRecord | undefined;
         if (!record) {
@@ -866,7 +868,9 @@ class FileStorageService {
       const toexpire: FileId[] = [];
 
       request.onerror = () => reject(request.error);
-      /** Restores cursor metadata including the sync base, skips invalid records, and resolves the accumulated list at exhaustion. */
+      /**
+       * Restores cursor metadata including the sync base, skips invalid records, and resolves the accumulated list at exhaustion.
+       */
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {
@@ -978,7 +982,9 @@ class FileStorageService {
       const toexpire: FileId[] = [];
 
       request.onerror = () => reject(request.error);
-      /** Restores valid leaf metadata and its sync base without remote fetches; legacy records without a leaf flag remain eligible. */
+      /**
+       * Restores valid leaf metadata and its sync base without remote fetches; legacy records without a leaf flag remain eligible.
+       */
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {

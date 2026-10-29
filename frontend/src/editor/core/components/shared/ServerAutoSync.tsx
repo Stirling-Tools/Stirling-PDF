@@ -28,12 +28,16 @@ type PushableLeaf = StirlingFileStub & {
   remoteSync: RemoteSyncBase;
 };
 
-/** Uses the history root as upload identity, including files without an explicit ancestor. */
+/**
+ * Uses the history root as upload identity, including files without an explicit ancestor.
+ */
 function documentOf(stub: StirlingFileStub): FileId {
   return (stub.originalFileId || stub.id) as FileId;
 }
 
-/** Preserves workspace order while omitting IDs whose records have already been removed. */
+/**
+ * Preserves workspace order while omitting IDs whose records have already been removed.
+ */
 function stubsOf(files: FileContextState["files"]): StirlingFileStub[] {
   return files.ids
     .map((id) => files.byId[id])
@@ -66,7 +70,9 @@ export function ServerAutoSync() {
   const [wakeups, setWakeups] = useState(0);
 
   useEffect(() => {
-    /** Retry connectivity failures when online, without clearing revision-conflict refusals. */
+    /**
+     * Retry connectivity failures when online, without clearing revision-conflict refusals.
+     */
     const onOnline = () => {
       failedLeaf.current.clear();
       setWakeups((n) => n + 1);
