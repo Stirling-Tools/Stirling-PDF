@@ -462,6 +462,10 @@ public class FileStorageService {
         return buildResponse(file, currentUser, null);
     }
 
+    /**
+     * Builds an access-scoped response without exposing storage keys. Only owners receive share
+     * recipients and links; other callers see their effective role without those private details.
+     */
     private StoredFileResponse buildResponse(
             StoredFile file, User currentUser, ShareAccessRole accessRoleOverride) {
         boolean ownedByCurrentUser =
