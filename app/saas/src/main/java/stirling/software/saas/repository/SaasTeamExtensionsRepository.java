@@ -9,7 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 import stirling.software.saas.model.SaasTeamExtensions;
 
-public interface SaasTeamExtensionsRepository extends JpaRepository<SaasTeamExtensions, Long> {
+public interface SaasTeamExtensionsRepository
+        extends JpaRepository<SaasTeamExtensions, Long>, SaasTeamExtensionsRepositoryCustom {
 
     // A linked team needs one cloud owner even when everyone works on its self-hosted deployments.
     String CLOUD_SEATS =
@@ -28,21 +29,6 @@ public interface SaasTeamExtensionsRepository extends JpaRepository<SaasTeamExte
                     + " AND d.trial_ends_at > (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'))))";
 
     Optional<SaasTeamExtensions> findByTeamId(Long teamId);
-
-    /**
-     * Atomic seat claim for every team type. Returns 1 on success, 0 when capacity is exhausted.
-     */
-    @Modifying
-    @Query(
-            value =
-                    "UPDATE stirling_pdf.saas_team_extensions e SET seats_used = seats_used + 1 "
-                            + "WHERE team_id = :teamId AND ("
-                            + FLEET_SEATS
-                            + " < max_seats OR "
-                            + ENTERPRISE_ACCESS
-                            + ")",
-            nativeQuery = true)
-    int incrementSeatsUsed(@Param("teamId") Long teamId);
 
     @Query(
             value =

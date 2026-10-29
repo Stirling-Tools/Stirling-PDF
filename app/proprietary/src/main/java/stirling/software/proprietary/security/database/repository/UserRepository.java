@@ -18,7 +18,7 @@ import stirling.software.common.model.api.security.UserSummaryDTO;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long>, UserRepositoryCustom {
     @Query(
             "SELECT u FROM User u JOIN u.authorities a WHERE a.authority = 'ROLE_ADMIN' AND (u.enabled IS NULL OR u.enabled = true) ORDER BY u.id ASC")
     List<User> findEnabledAdminsByIdAsc();
@@ -37,6 +37,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
 
+    /** Both associations are EAGER, so fetch them in one statement rather than three. */
+    @EntityGraph(attributePaths = {"team", "authorities"})
     Optional<User> findBySupabaseId(UUID supabaseId);
 
     Optional<User> findBySsoProviderAndSsoProviderId(String ssoProvider, String ssoProviderId);
@@ -143,13 +145,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "SELECT COUNT(u) FROM User u JOIN u.settings settings "
                     + "WHERE KEY(settings) = :key AND settings = :value")
     long countUsersBySetting(@Param("key") String key, @Param("value") String value);
-
-    @Modifying
-    @Query(
-            value = "DELETE FROM user_settings WHERE user_id = :userId AND setting_key IN (:keys)",
-            nativeQuery = true)
-    void deleteSettingsByUserIdAndKeys(
-            @Param("userId") Long userId, @Param("keys") List<String> keys);
 
     /** Anonymous users (no username) created before the cut-off, streamed for batch cleanup. */
     @Query("SELECT u.id FROM User u WHERE u.username IS NULL AND u.createdAt < :cutoffDate")

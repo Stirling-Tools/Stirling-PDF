@@ -23,7 +23,8 @@ import stirling.software.proprietary.model.ToolUsageStatId;
  * - per distinct value a caller asks about, which is a scan the caller gets to trigger.
  */
 @Repository
-public interface ToolUsageStatRepository extends JpaRepository<ToolUsageStat, ToolUsageStatId> {
+public interface ToolUsageStatRepository
+        extends JpaRepository<ToolUsageStat, ToolUsageStatId>, ToolUsageStatRepositoryCustom {
 
     String RECENT = "SUM(CASE WHEN s.epochDay >= :recentCutoff THEN s.count ELSE 0 END), ";
 
@@ -88,24 +89,6 @@ public interface ToolUsageStatRepository extends JpaRepository<ToolUsageStat, To
                     + "WHERE s.principal = :principal AND s.fromTool = :fromTool "
                     + "AND s.toolKey = :toolKey AND s.epochDay = :epochDay")
     int incrementCount(
-            @Param("principal") String principal,
-            @Param("fromTool") String fromTool,
-            @Param("toolKey") String toolKey,
-            @Param("epochDay") long epochDay,
-            @Param("delta") long delta);
-
-    /**
-     * Native insert so a concurrent first-run-of-day loses the primary key race instead of silently
-     * overwriting the winner - {@code save()} would merge, resetting their count.
-     */
-    @Modifying(clearAutomatically = true)
-    @Transactional
-    @Query(
-            value =
-                    "INSERT INTO tool_usage_stats (principal, from_tool, tool_key, epoch_day,"
-                            + " count) VALUES (:principal, :fromTool, :toolKey, :epochDay, :delta)",
-            nativeQuery = true)
-    void insertCount(
             @Param("principal") String principal,
             @Param("fromTool") String fromTool,
             @Param("toolKey") String toolKey,

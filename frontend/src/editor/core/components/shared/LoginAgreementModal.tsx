@@ -1,0 +1,275 @@
+import {
+  Component,
+  Suspense,
+  lazy,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import {
+  Box,
+  Center,
+  Divider,
+  Group,
+  Loader,
+  Modal,
+  ScrollArea,
+  Stack,
+  Text,
+} from "@mantine/core";
+import { Button } from "@editor/ui/Button";
+import { useTranslation } from "react-i18next";
+import apiClient from "@editor/services/apiClient";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useAuth } from "@editor/auth/UseSession";
+import { withBasePath } from "@editor/constants/app";
+import { Z_INDEX_SIGN_IN_MODAL } from "@editor/styles/zIndex";
+
+// The markdown renderer (react-markdown + remark-gfm + micromark, ~120 KB gz)
+// is only needed when an administrator set a disclaimer, so the modal body
+// loads it as its own chunk.
+const LoginAgreementBody = lazy(
+  () => import("@editor/components/shared/LoginAgreementBody"),
+);
+
+/**
+ * Catches a failed login-agreement chunk so the modal can offer a retry. Without
+ * it the rejection surfaces at the nearest ancestor boundary, outside this
+ * modal, leaving the mandatory agreement impossible to pass.
+ */
+class BodyBoundary extends Component<
+  { children: ReactNode; onError: () => void },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch() {
+    this.props.onError();
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+const ACCEPTED_STORAGE_KEY = "loginAgreementAccepted";
+
+interface DisclaimerResponse {
+  enabled: boolean;
+  showInAnonymousMode: boolean;
+  content: string;
+  format: string;
+}
+
+function readJwt(): string | null {
+  try {
+    return localStorage.getItem("stirling_jwt");
+  } catch {
+    return null;
+  }
+}
+
+// A value that changes on each fresh login so the agreement re-shows per login, but stays
+// stable across page refreshes within the same logged-in tab session.
+// Opaque, non-reversible digest so we never persist any token material. Only
+// needs to change when the input changes (to re-trigger the disclaimer).
+function digest(value: string): string {
+  let h = 5381;
+  for (let i = 0; i < value.length; i++) {
+    h = ((h << 5) + h + value.charCodeAt(i)) | 0;
+  }
+  return (h >>> 0).toString(36);
+}
+
+function getLoginNonce(loginEnabled: boolean, userId?: string): string {
+  if (!loginEnabled) return "anon";
+  const jwt = readJwt();
+  if (jwt) return `jwt:${digest(jwt)}`;
+  if (userId) return `user:${userId}`;
+  return "session";
+}
+
+/**
+ * Blocking login agreement / disclaimer shown once per login (and once per app session in
+ * anonymous mode). Text is fetched live for the user's current language; admins manage it via
+ * customFiles/disclaimer/<locale>.md.
+ */
+export default function LoginAgreementModal({
+  children,
+}: {
+  children?: ReactNode;
+}) {
+  const { t, i18n } = useTranslation();
+  const { config } = useAppConfig();
+  const { user, signOut } = useAuth();
+
+  const [opened, setOpened] = useState(false);
+  const [resolved, setResolved] = useState(false);
+  const [content, setContent] = useState("");
+  const [bodyError, setBodyError] = useState(false);
+  const nonceRef = useRef("anon");
+
+  useEffect(() => {
+    if (!config) return;
+    setResolved(false);
+    setOpened(false);
+    setBodyError(false);
+
+    const loginEnabled = config.enableLogin !== false;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const resp = await apiClient.get<DisclaimerResponse>(
+          "/api/v1/config/login-disclaimer",
+          {
+            params: { lang: i18n.language },
+            suppressErrorToast: true,
+            skipAuthRedirect: true,
+          },
+        );
+        const data = resp.data;
+        if (cancelled || !data?.enabled) return;
+        if (!loginEnabled && !data.showInAnonymousMode) return;
+        if (!data.content || !data.content.trim()) return;
+
+        const nonce = getLoginNonce(loginEnabled, user?.id);
+        nonceRef.current = nonce;
+
+        let accepted: string | null = null;
+        try {
+          accepted = sessionStorage.getItem(ACCEPTED_STORAGE_KEY);
+        } catch {
+          accepted = null;
+        }
+        if (accepted === nonce) return;
+
+        setContent(data.content);
+        setOpened(true);
+      } catch {
+        // On fetch error (unreachable/unauthorized) fail OPEN: don't block app usage on a
+        // disclaimer we couldn't load.
+      } finally {
+        if (!cancelled) setResolved(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [config, i18n.language, user?.id]);
+
+  const handleAccept = () => {
+    try {
+      sessionStorage.setItem(ACCEPTED_STORAGE_KEY, nonceRef.current);
+    } catch {
+      /* ignore storage errors */
+    }
+    setOpened(false);
+  };
+
+  const handleDecline = async () => {
+    const loginEnabled = config?.enableLogin !== false;
+    if (loginEnabled) {
+      setResolved(false);
+      setOpened(false);
+      try {
+        await signOut();
+      } catch {
+        /* ignore */
+      }
+      window.location.assign(withBasePath("/login"));
+    } else {
+      // Anonymous / desktop: best-effort close the window; if that is a no-op (web),
+      // reload so the agreement re-blocks until accepted.
+      window.close();
+      window.location.reload();
+    }
+  };
+
+  if (!opened) return resolved ? <>{children}</> : null;
+
+  return (
+    <Modal
+      opened={opened}
+      onClose={() => {}}
+      title={t("loginAgreementTitle", "Login Agreement")}
+      centered
+      size="lg"
+      radius="md"
+      closeOnClickOutside={false}
+      closeOnEscape={false}
+      withCloseButton={false}
+      zIndex={Z_INDEX_SIGN_IN_MODAL}
+    >
+      <Stack>
+        {bodyError ? (
+          <Stack align="center" gap="md">
+            <Text size="sm" c="dimmed" ta="center">
+              {t(
+                "loginAgreementLoadFailed",
+                "The login agreement could not be loaded.",
+              )}
+            </Text>
+            <Group gap="sm">
+              <Button variant="secondary" onClick={handleDecline}>
+                {t("loginAgreementDecline", "Decline")}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => window.location.reload()}
+              >
+                {t("loginAgreementRetry", "Retry")}
+              </Button>
+            </Group>
+          </Stack>
+        ) : (
+          /* The controls share the boundary: acceptance must not be reachable
+             before the agreement text itself has loaded. */
+          <BodyBoundary onError={() => setBodyError(true)}>
+            <Suspense
+              fallback={
+                <Center mih="8rem">
+                  <Loader size="sm" />
+                </Center>
+              }
+            >
+              <ScrollArea.Autosize mah="50vh" type="auto">
+                <Box px="xs">
+                  <LoginAgreementBody content={content} />
+                </Box>
+              </ScrollArea.Autosize>
+              <Divider />
+              <Group
+                justify="space-between"
+                gap="sm"
+                align="center"
+                wrap="wrap"
+              >
+                <Text size="xs" c="dimmed" style={{ flex: 1, minWidth: 0 }}>
+                  {t(
+                    "loginAgreementProvider",
+                    "This notice is provided by your administrator, not Stirling PDF Inc.",
+                  )}
+                </Text>
+                <Group gap="sm" wrap="nowrap">
+                  <Button variant="secondary" onClick={handleDecline}>
+                    {t("loginAgreementDecline", "Decline")}
+                  </Button>
+                  <Button variant="primary" onClick={handleAccept}>
+                    {t("loginAgreementAccept", "Accept")}
+                  </Button>
+                </Group>
+              </Group>
+            </Suspense>
+          </BodyBoundary>
+        )}
+      </Stack>
+    </Modal>
+  );
+}
