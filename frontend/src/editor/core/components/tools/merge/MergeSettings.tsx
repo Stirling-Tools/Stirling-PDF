@@ -50,6 +50,21 @@ const MergeSettings: React.FC<MergeSettingsProps> = ({
         }
         disabled={disabled}
       />
+
+      <Checkbox
+        label={t(
+          "merge.generateTableOfContentsPage.label",
+          "Generate table of contents page in the merged file?",
+        )}
+        checked={parameters.generateTableOfContentsPage}
+        onChange={(event) =>
+          onParameterChange(
+            "generateTableOfContentsPage",
+            event.currentTarget.checked,
+          )
+        }
+        disabled={disabled}
+      />
     </Stack>
   );
 };
