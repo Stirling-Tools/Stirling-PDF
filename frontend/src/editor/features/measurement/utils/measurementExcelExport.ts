@@ -100,7 +100,7 @@ export async function exportMeasurementExcel(opts: Options): Promise<void> {
     const blob = await zip.generateAsync({type:"blob", compression:"DEFLATE"});
     const filename = `malinger-${new Date().toISOString().slice(0,10)}.xlsx`;
     if ("__TAURI_INTERNALS__" in window) {
-      const { showSaveDialog, saveToLocalPath } = await import("../../../desktop/services/localFileSaveService");
+      const { showSaveDialog, saveToLocalPath } = await import("@editor/services/localFileSaveService");
       const path = await showSaveDialog(filename);
       if (!path) return;
       const result = await saveToLocalPath(blob,path);
