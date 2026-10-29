@@ -3,22 +3,28 @@ package stirling.software.SPDF.controller.api.converters;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
+import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -30,6 +36,7 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.model.tool.ToolIOCase;
 import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFile;
@@ -43,6 +50,8 @@ public class ConvertPDFToOffice {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final RuntimePathConfig runtimePathConfig;
+    private final OfficeConversionService officeConversionService;
+    private final EndpointConfiguration endpointConfiguration;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -53,12 +62,21 @@ public class ConvertPDFToOffice {
             summary = "Convert PDF to Presentation format",
             description = "This endpoint converts a given PDF file to a Presentation format.")
     public ResponseEntity<Resource> processPdfToPresentation(
-            @ModelAttribute PdfToPresentationRequest request)
+            @ModelAttribute PdfToPresentationRequest request,
+            @RequestParam(value = "useStirlingOfficeConvert", required = false)
+                    Boolean useStirlingOfficeConvert)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
-        PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
-        return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "impress_pdf_import");
+        if (officeConversionService.replacesLibreOffice(useStirlingOfficeConvert)) {
+            return convert(
+                    inputFile,
+                    outputFormat,
+                    Set.of("ppt", "pptx", "odp"),
+                    MediaType.APPLICATION_OCTET_STREAM);
+        }
+        return convertWithLibreOffice(
+                inputFile, outputFormat, Set.of("ppt", "pptx", "odp"), "impress_pdf_import");
     }
 
     @AutoJobPostMapping(
@@ -76,11 +94,31 @@ public class ConvertPDFToOffice {
             summary = "Convert PDF to Text or RTF format",
             description = "This endpoint converts a given PDF file to Text or RTF format.")
     public ResponseEntity<Resource> processPdfToRTForTXT(
-            @ModelAttribute PdfToTextOrRTFRequest request)
+            @ModelAttribute PdfToTextOrRTFRequest request,
+            @RequestParam(value = "useStirlingOfficeConvert", required = false)
+                    Boolean useStirlingOfficeConvert)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
-        if ("txt".equals(request.getOutputFormat())) {
+        boolean plainText = "txt".equals(outputFormat);
+        // The interceptor only sees pdf-to-text; RTF has its own key, which removal must honour.
+        // Other formats are left to the 400 below.
+        if ("rtf".equals(outputFormat) && !endpointConfiguration.isEndpointEnabled("pdf-to-rtf")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This endpoint is disabled");
+        }
+        // Legacy text came from PDFBox, not LibreOffice, so it never needs the fallback.
+        boolean officeConvert =
+                plainText
+                        ? !officeConversionService.legacy(useStirlingOfficeConvert)
+                        : officeConversionService.replacesLibreOffice(useStirlingOfficeConvert);
+        if (officeConvert) {
+            return convert(
+                    inputFile,
+                    outputFormat,
+                    Set.of("rtf", "txt"),
+                    plainText ? MediaType.TEXT_PLAIN : MediaType.APPLICATION_OCTET_STREAM);
+        }
+        if (plainText) {
             String fileName =
                     GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".txt");
             TempFile finalOut = tempFileManager.createManagedTempFile(".txt");
@@ -94,8 +132,8 @@ public class ConvertPDFToOffice {
             }
             return WebResponseUtils.fileToWebResponse(finalOut, fileName, MediaType.TEXT_PLAIN);
         } else {
-            PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
-            return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
+            return convertWithLibreOffice(
+                    inputFile, outputFormat, Set.of("rtf"), "writer_pdf_import");
         }
     }
 
@@ -107,12 +145,22 @@ public class ConvertPDFToOffice {
     @Operation(
             summary = "Convert PDF to Word document",
             description = "This endpoint converts a given PDF file to a Word document format.")
-    public ResponseEntity<Resource> processPdfToWord(@ModelAttribute PdfToWordRequest request)
+    public ResponseEntity<Resource> processPdfToWord(
+            @ModelAttribute PdfToWordRequest request,
+            @RequestParam(value = "useStirlingOfficeConvert", required = false)
+                    Boolean useStirlingOfficeConvert)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
-        PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
-        return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
+        if (officeConversionService.replacesLibreOffice(useStirlingOfficeConvert)) {
+            return convert(
+                    inputFile,
+                    outputFormat,
+                    Set.of("doc", "docx", "odt"),
+                    MediaType.APPLICATION_OCTET_STREAM);
+        }
+        return convertWithLibreOffice(
+                inputFile, outputFormat, Set.of("doc", "docx", "odt"), "writer_pdf_import");
     }
 
     @AutoJobPostMapping(
@@ -126,7 +174,45 @@ public class ConvertPDFToOffice {
     public ResponseEntity<Resource> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
 
+        return convertWithLibreOffice(inputFile, "xml", Set.of("xml"), "writer_pdf_import");
+    }
+
+    /**
+     * Every LibreOffice run goes through here. The endpoint gate sees only the URL, so it cannot
+     * tell which formats a request asks for or that a caller picked LibreOffice over Stirling
+     * Office Convert; this keeps each endpoint to its own formats and refuses when the LibreOffice
+     * group is off.
+     */
+    private ResponseEntity<Resource> convertWithLibreOffice(
+            MultipartFile input, String format, Set<String> formats, String filter)
+            throws IOException, InterruptedException {
+        if (format == null || !formats.contains(format)) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (!officeConversionService.libreOfficeAvailable()) {
+            throw ExceptionUtils.createLibreOfficeRequiredException("pdf");
+        }
         PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
-        return pdfToFile.processPdfToOfficeFormat(inputFile, "xml", "writer_pdf_import");
+        return pdfToFile.processPdfToOfficeFormat(input, format, filter);
+    }
+
+    private ResponseEntity<Resource> convert(
+            MultipartFile input, String format, Set<String> formats, MediaType type)
+            throws IOException {
+        // Text reads any upload; every other format takes only an upload typed as a PDF.
+        boolean pdf = MediaType.APPLICATION_PDF_VALUE.equals(input.getContentType());
+        if (format == null || !formats.contains(format) || !pdf && !"txt".equals(format)) {
+            return ResponseEntity.badRequest().build();
+        }
+        TempFile out = tempFileManager.createManagedTempFile("." + format);
+        try (PDDocument document = pdfDocumentFactory.load(input)) {
+            officeConversionService.convert(
+                    document, out.getPath(), format, officeConversionService.settings());
+        } catch (Exception e) {
+            out.close();
+            throw e;
+        }
+        String fileName = GeneralUtils.generateFilename(input.getOriginalFilename(), "." + format);
+        return WebResponseUtils.fileToWebResponse(out, fileName, type);
     }
 }

@@ -16,6 +16,9 @@ public interface AttachmentServiceInterface {
 
     Optional<byte[]> extractAttachments(PDDocument document) throws IOException;
 
+    Optional<byte[]> extractSingleAttachment(PDDocument document, String attachmentName)
+            throws IOException;
+
     List<AttachmentInfo> listAttachments(PDDocument document) throws IOException;
 
     PDDocument renameAttachment(PDDocument document, String attachmentName, String newName)

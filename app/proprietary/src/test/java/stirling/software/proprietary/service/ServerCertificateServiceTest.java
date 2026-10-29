@@ -2,9 +2,7 @@ package stirling.software.proprietary.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -17,27 +15,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
-import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 
-/**
- * Tests for {@link ServerCertificateService}. Uses a {@link TempDir} for the keystore location
- * (mocked via {@link InstallationPathConfig}) and a mocked {@link LicenseKeyChecker} to drive the
- * Pro/Enterprise license gating.
- */
-@ExtendWith(MockitoExtension.class)
 class ServerCertificateServiceTest {
-
-    @Mock private LicenseKeyChecker licenseKeyChecker;
 
     @TempDir Path tempDir;
 
@@ -49,7 +34,7 @@ class ServerCertificateServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ServerCertificateService(licenseKeyChecker, new ApplicationProperties());
+        service = new ServerCertificateService(new ApplicationProperties());
         // default: feature enabled, validity 365, org Stirling-PDF, no regenerate
         ReflectionTestUtils.setField(service, "enabled", true);
         ReflectionTestUtils.setField(service, "organizationName", "Stirling-PDF");
@@ -64,49 +49,24 @@ class ServerCertificateServiceTest {
         return mocked;
     }
 
-    private void grantProLicense() {
-        lenient().when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
-    }
-
-    private void denyLicense() {
-        lenient().when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
-    }
-
-    // -------------------------------------------------------------------------
     @Nested
     @DisplayName("isEnabled")
     class IsEnabled {
 
         @Test
-        @DisplayName("true when feature flag on and license is SERVER")
-        void enabledWithServerLicense() {
-            grantProLicense();
+        @DisplayName("true when the feature flag is on without a license")
+        void enabledWithoutLicense() {
             assertThat(service.isEnabled()).isTrue();
         }
 
         @Test
-        @DisplayName("true when feature flag on and license is ENTERPRISE")
-        void enabledWithEnterpriseLicense() {
-            when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
-            assertThat(service.isEnabled()).isTrue();
-        }
-
-        @Test
-        @DisplayName("false when license is NORMAL")
-        void disabledWithNormalLicense() {
-            denyLicense();
-            assertThat(service.isEnabled()).isFalse();
-        }
-
-        @Test
-        @DisplayName("false when feature flag off even with a valid license")
+        @DisplayName("false when the feature flag is off")
         void disabledWhenFlagOff() {
             ReflectionTestUtils.setField(service, "enabled", false);
             assertThat(service.isEnabled()).isFalse();
         }
     }
 
-    // -------------------------------------------------------------------------
     @Nested
     @DisplayName("getServerCertificatePassword")
     class Password {
@@ -118,7 +78,6 @@ class ServerCertificateServiceTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     @Nested
     @DisplayName("hasServerCertificate")
     class HasCertificate {
@@ -141,15 +100,13 @@ class ServerCertificateServiceTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     @Nested
     @DisplayName("initializeServerCertificate")
     class Initialize {
 
         @Test
-        @DisplayName("generates a keystore when none exists and license granted")
+        @DisplayName("generates a keystore without a license when none exists")
         void generatesWhenMissing() {
-            grantProLicense();
             try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
                 service.initializeServerCertificate();
                 assertThat(Files.exists(tempDir.resolve(KEYSTORE_FILE))).isTrue();
@@ -167,19 +124,8 @@ class ServerCertificateServiceTest {
         }
 
         @Test
-        @DisplayName("does nothing without a Pro/Enterprise license")
-        void noopWithoutLicense() {
-            denyLicense();
-            try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
-                service.initializeServerCertificate();
-                assertThat(Files.exists(tempDir.resolve(KEYSTORE_FILE))).isFalse();
-            }
-        }
-
-        @Test
         @DisplayName("does not regenerate when keystore exists and regenerateOnStartup is false")
         void keepsExistingKeystore() throws Exception {
-            grantProLicense();
             try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
                 // First generation
                 service.initializeServerCertificate();
@@ -194,7 +140,6 @@ class ServerCertificateServiceTest {
         @Test
         @DisplayName("regenerates when regenerateOnStartup is true")
         void regeneratesWhenFlagged() throws Exception {
-            grantProLicense();
             ReflectionTestUtils.setField(service, "regenerateOnStartup", true);
             try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
                 service.initializeServerCertificate();
@@ -206,26 +151,25 @@ class ServerCertificateServiceTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     @Nested
     @DisplayName("getServerKeyStore")
     class GetKeyStore {
 
         @Test
-        @DisplayName("throws when license is missing")
-        void throwsWithoutLicense() {
-            denyLicense();
+        @DisplayName("blocks an existing certificate when the feature flag is off")
+        void throwsWhenDisabled() {
             try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
+                service.initializeServerCertificate();
+                ReflectionTestUtils.setField(service, "enabled", false);
                 assertThatThrownBy(() -> service.getServerKeyStore())
                         .isInstanceOf(IllegalStateException.class)
-                        .hasMessageContaining("Pro or Enterprise license");
+                        .hasMessageContaining("not available");
             }
         }
 
         @Test
         @DisplayName("throws when no certificate is available")
         void throwsWhenNoCertificate() {
-            grantProLicense();
             try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
                 assertThatThrownBy(() -> service.getServerKeyStore())
                         .isInstanceOf(IllegalStateException.class)
@@ -236,7 +180,6 @@ class ServerCertificateServiceTest {
         @Test
         @DisplayName("loads the generated keystore with the default password")
         void loadsGeneratedKeystore() throws Exception {
-            grantProLicense();
             try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
                 service.initializeServerCertificate();
                 KeyStore ks = service.getServerKeyStore();
@@ -246,7 +189,6 @@ class ServerCertificateServiceTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     @Nested
     @DisplayName("getServerCertificate / publicKey / info")
     class CertificateAccessors {
@@ -254,7 +196,6 @@ class ServerCertificateServiceTest {
         @Test
         @DisplayName("returns the X509 certificate for the standard alias")
         void returnsCertificate() throws Exception {
-            grantProLicense();
             try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
                 service.initializeServerCertificate();
                 X509Certificate cert = service.getServerCertificate();
@@ -266,7 +207,6 @@ class ServerCertificateServiceTest {
         @Test
         @DisplayName("returns DER-encoded public key bytes")
         void returnsPublicKeyBytes() throws Exception {
-            grantProLicense();
             try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
                 service.initializeServerCertificate();
                 byte[] der = service.getServerCertificatePublicKey();
@@ -287,7 +227,6 @@ class ServerCertificateServiceTest {
         @Test
         @DisplayName("info reports subject/issuer/dates when a certificate exists")
         void infoPresentWhenAvailable() throws Exception {
-            grantProLicense();
             try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
                 service.initializeServerCertificate();
                 var info = service.getServerCertificateInfo();
@@ -300,7 +239,6 @@ class ServerCertificateServiceTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     @Nested
     @DisplayName("uploadServerCertificate")
     class Upload {
@@ -308,7 +246,6 @@ class ServerCertificateServiceTest {
         @Test
         @DisplayName("imports a private key entry from an uploaded P12 under the standard alias")
         void importsUploadedKeystore() throws Exception {
-            grantProLicense();
             byte[] uploaded = loadCert("valid-test.p12");
             try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
                 service.uploadServerCertificate(new ByteArrayInputStream(uploaded), "testpass");
@@ -320,22 +257,8 @@ class ServerCertificateServiceTest {
         }
 
         @Test
-        @DisplayName("rejects upload without a Pro/Enterprise license")
-        void rejectsWithoutLicense() throws Exception {
-            denyLicense();
-            byte[] uploaded = loadCert("valid-test.p12");
-            try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
-                InputStream in = new ByteArrayInputStream(uploaded);
-                assertThatThrownBy(() -> service.uploadServerCertificate(in, "testpass"))
-                        .isInstanceOf(IllegalStateException.class)
-                        .hasMessageContaining("Pro or Enterprise license");
-            }
-        }
-
-        @Test
         @DisplayName("throws on a wrong upload password")
         void rejectsWrongPassword() throws Exception {
-            grantProLicense();
             byte[] uploaded = loadCert("valid-test.p12");
             try (MockedStatic<InstallationPathConfig> ignored = mockConfigPath()) {
                 InputStream in = new ByteArrayInputStream(uploaded);
@@ -345,7 +268,6 @@ class ServerCertificateServiceTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     @Nested
     @DisplayName("deleteServerCertificate")
     class Delete {
@@ -370,7 +292,6 @@ class ServerCertificateServiceTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     private static byte[] loadCert(String filename) throws Exception {
         try (InputStream in =
                 ServerCertificateServiceTest.class.getResourceAsStream("/test-certs/" + filename)) {
