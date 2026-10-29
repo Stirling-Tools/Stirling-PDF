@@ -203,31 +203,33 @@ describe("ServerSetupGate", () => {
     expect(screen.getByText("The app")).toBeInTheDocument();
   });
 
-  it("records setup as done when the admin chooses Not now", async () => {
+  it("offers no way to skip setup", async () => {
     renderGate();
     await screen.findByRole("heading", { name: "Your server is up" });
-    click("Not now");
-    await screen.findByText("The app");
-    expect(api.markSetupComplete).toHaveBeenCalled();
-    expect(api.saveServerSettings).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "Not now" })).toBeNull();
+    expect(api.markSetupComplete).not.toHaveBeenCalled();
   });
 
   it("keeps setup up until the server says it is done", async () => {
     vi.mocked(api.markSetupComplete).mockRejectedValue(new Error("offline"));
     renderGate();
-    await screen.findByRole("heading", { name: "Your server is up" });
-    click("Not now");
-    await waitFor(() => expect(api.markSetupComplete).toHaveBeenCalled());
+    await openQuickStart();
+    click("Continue");
+    click("Accept and finish");
+    await screen.findByRole("heading", { name: "Couldn't save your settings" });
+    expect(api.markSetupComplete).toHaveBeenCalled();
     expect(screen.queryByText("The app")).toBeNull();
   });
 
-  it("records setup as done from the load error card too", async () => {
+  it("only offers a retry when the settings fail to load", async () => {
     vi.mocked(api.fetchServerSettings).mockRejectedValue(new Error("offline"));
     renderGate();
     await screen.findByRole("heading", { name: "Couldn't load your settings" });
-    click("Not now");
-    await screen.findByText("The app");
-    expect(api.markSetupComplete).toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "Try again" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Not now" })).toBeNull();
+    expect(screen.queryByText("The app")).toBeNull();
   });
 
   it("saves Quick start's summary in one write, then restarts", async () => {
@@ -464,14 +466,19 @@ describe("ServerSetupGate", () => {
     expect(auth.signOut).toHaveBeenCalled();
   });
 
-  it("rotates the token when setup is put off after the account", async () => {
+  it("rotates the token as setup closes after the account", async () => {
     renderGate({ usingDefaultCredentials: true });
     await reachAccountStep();
     fillAccount("admin");
     click("Save and continue");
     await screen.findByRole("heading", { name: "Your server is up" });
 
-    click("Not now");
+    click("Continue");
+    click("Continue");
+    click("Accept and finish");
+    await screen.findByRole("heading", { name: "Settings saved" });
+    expect(auth.refreshSession).not.toHaveBeenCalled();
+    click("Continue");
     await waitFor(() => expect(auth.refreshSession).toHaveBeenCalled());
   });
 

@@ -11,8 +11,10 @@ import {
  *
  *   1. **Pristine CI path** — a fresh server signs its default
  *      `admin / stirling` user in by itself and opens first-run setup on
- *      the account card. Set `admin / adminadmin` there, then skip the rest
- *      of setup with "Not now". Real coverage of the first-run flow.
+ *      the account card. Set `admin / adminadmin` there, then mark the rest
+ *      of setup complete through the API: setup has no skip, and finishing
+ *      it in the UI would restart the server under the suite. Real coverage
+ *      of the account card, and the API call proves the new password took.
  *
  *   2. **Already-seeded path** — for local dev where `admin / adminadmin`
  *      already exists (e.g. the developer's settings.yml provisions it
@@ -83,18 +85,17 @@ test.describe("Live-suite bootstrap", () => {
     await expect(page.getByText("Your server is up").first()).toBeVisible({
       timeout: 15_000,
     });
-    await page.getByRole("button", { name: "Not now" }).click();
 
+    const token = await signInSeededAdmin(request);
+    expect(token).not.toBeNull();
+    const done = await request.post("/api/v1/admin/settings/setup-complete", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(done.ok()).toBeTruthy();
+
+    await page.reload({ waitUntil: "domcontentloaded" });
     await expect(page.getByText("Your server is up")).toHaveCount(0, {
       timeout: 15_000,
     });
-
-    const verify = await request.post("/api/v1/auth/login", {
-      data: {
-        username: DEFAULT_TEST_USERNAME,
-        password: DEFAULT_TEST_PASSWORD,
-      },
-    });
-    expect(verify.ok()).toBeTruthy();
   });
 });

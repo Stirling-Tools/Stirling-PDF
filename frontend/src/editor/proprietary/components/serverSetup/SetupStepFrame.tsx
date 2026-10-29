@@ -18,8 +18,6 @@ interface SetupStepFrameProps {
   primaryLabel?: ReactNode;
   onPrimary?: () => void;
   primaryLoading?: boolean;
-  secondaryLabel?: ReactNode;
-  onSecondary?: () => void;
 }
 
 /**
@@ -37,8 +35,6 @@ export function SetupStepFrame({
   primaryLabel,
   onPrimary,
   primaryLoading,
-  secondaryLabel,
-  onSecondary,
 }: SetupStepFrameProps) {
   const { t } = useTranslation();
   return (
@@ -83,11 +79,6 @@ export function SetupStepFrame({
           >
             {primaryLabel}
           </Button>
-          {secondaryLabel && onSecondary && (
-            <Button variant="quiet" size="sm" onClick={onSecondary}>
-              {secondaryLabel}
-            </Button>
-          )}
         </div>
       )}
     </div>

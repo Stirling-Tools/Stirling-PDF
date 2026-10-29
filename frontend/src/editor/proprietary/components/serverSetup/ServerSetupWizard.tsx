@@ -39,7 +39,6 @@ import { DEFAULT_ADMIN_CREDENTIALS } from "@editor/auth/defaultCredentials";
 import {
   checkIssuer,
   fetchServerSettings,
-  markSetupComplete,
 } from "@editor/components/serverSetup/serverSetupApi";
 import {
   draftFromSettings,
@@ -226,9 +225,6 @@ function ServerSetupFlow({
   const [openSection, setOpenSection] = useState<ExpandableSection | null>(
     null,
   );
-  const [dismissing, setDismissing] = useState(false);
-  const [dismissFailed, setDismissFailed] = useState(false);
-
   const steps = stepsFor(mode);
   const {
     state: finishState,
@@ -259,18 +255,6 @@ function ServerSetupFlow({
       }
     }
     setOpenSection(initialOpenSection(step, target));
-  };
-
-  const notNow = async () => {
-    setDismissing(true);
-    setDismissFailed(false);
-    try {
-      await markSetupComplete();
-      complete();
-    } catch {
-      setDismissFailed(true);
-      setDismissing(false);
-    }
   };
 
   /** Errors `step` has in `section`'s fields. */
@@ -456,49 +440,34 @@ function ServerSetupFlow({
       ),
       primaryLabel: t("serverSetup.continue", "Continue"),
       onPrimary: () => goTo({ kind: "step", index: 0 }),
-      primaryLoading: dismissing,
-      secondaryLabel: t("serverSetup.notNow", "Not now"),
-      onSecondary: () => void notNow(),
       children: (
-        <>
-          <SettingRow label={setupLabel}>
-            {() => (
-              <SegmentedControl
-                fullWidth
-                ariaLabel={setupLabel}
-                value={mode}
-                onChange={(next) => {
-                  setMode(next);
-                  if (next === "quick" && aiAutoSet.current) {
-                    aiAutoSet.current = false;
-                    aiDefaulted.current = false;
-                    setDraft((current) => ({ ...current, ai: initial.ai }));
-                  }
-                }}
-                options={[
-                  {
-                    value: "quick",
-                    label: t("serverSetup.start.quick", "Quick start"),
-                  },
-                  {
-                    value: "custom",
-                    label: t("serverSetup.start.custom", "Custom"),
-                  },
-                ]}
-              />
-            )}
-          </SettingRow>
-          {dismissFailed && (
-            <SetupNote tone="warning">
-              <p className={styles.noteText}>
-                {t(
-                  "serverSetup.start.dismissFailed",
-                  "Couldn't skip setup. Check you're still signed in as an admin.",
-                )}
-              </p>
-            </SetupNote>
+        <SettingRow label={setupLabel}>
+          {() => (
+            <SegmentedControl
+              fullWidth
+              ariaLabel={setupLabel}
+              value={mode}
+              onChange={(next) => {
+                setMode(next);
+                if (next === "quick" && aiAutoSet.current) {
+                  aiAutoSet.current = false;
+                  aiDefaulted.current = false;
+                  setDraft((current) => ({ ...current, ai: initial.ai }));
+                }
+              }}
+              options={[
+                {
+                  value: "quick",
+                  label: t("serverSetup.start.quick", "Quick start"),
+                },
+                {
+                  value: "custom",
+                  label: t("serverSetup.start.custom", "Custom"),
+                },
+              ]}
+            />
           )}
-        </>
+        </SettingRow>
       ),
     };
   };
@@ -654,12 +623,6 @@ export function ServerSetupWizard({
           )}
           primaryLabel={t("serverSetup.finish.retry", "Try again")}
           onPrimary={() => void settings.refetch()}
-          secondaryLabel={t("serverSetup.notNow", "Not now")}
-          onSecondary={() => {
-            markSetupComplete()
-              .then(onDone)
-              .catch(() => {});
-          }}
         />
       </SetupScreen>
     );

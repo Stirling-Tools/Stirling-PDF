@@ -58,7 +58,7 @@ tasks:
     env:
       STIRLING_BASE_PATH: '{{.BASE_DIR}}'
       # Suppress the analytics opt-in modal that fires on admin login once
-      # setup is skipped. It renders a Mantine overlay that intercepts pointer
+      # setup is complete. It renders a Mantine overlay that intercepts pointer
       # events, so every live spec signed in as admin would time out behind it.
       SYSTEM_ENABLEANALYTICS: "false"
       # NOTE: SECURITY_INITIALLOGIN_USERNAME/PASSWORD are intentionally NOT set.
