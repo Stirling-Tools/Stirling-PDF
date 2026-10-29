@@ -311,7 +311,7 @@ test.describe("PDF text editor - tables", () => {
       await cell.click();
       await cell.type(text);
       await cell.press("Enter");
-      await page.waitForTimeout(300);
+      await expect(cell).toHaveCount(0);
     };
     await fillCell(1, "middle");
     await fillCell(2, "last");
@@ -387,7 +387,7 @@ test.describe("PDF text editor - tables", () => {
       await cell.click();
       await cell.type(text);
       await cell.press("Enter");
-      await page.waitForTimeout(300);
+      await expect(cell).toHaveCount(0);
     };
     await fillCell(firstId, 1, "first-table-body");
     await fillCell(firstId, 2, "first-table-last");
@@ -415,6 +415,93 @@ test.describe("PDF text editor - tables", () => {
       { id: firstId, rows: 2, texts: ["first-table-last"] },
       { id: secondId, rows: 2, texts: ["second-table-body"] },
     ]);
+  });
+
+  test("selects an added row and deletes the selected column", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page
+      .locator('[data-testid="pdf-editor-file-input"]')
+      .setInputFiles(
+        path.join(
+          import.meta.dirname,
+          "../test-fixtures",
+          "paragraph-sample.pdf",
+        ),
+      );
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    await page.getByTestId("pdf-editor-add-table").click();
+    const box = await page.getByTestId("pdf-editor-page-0").boundingBox();
+    expect(box).not.toBeNull();
+    await page.mouse.click(
+      box!.x + box!.width * 0.35,
+      box!.y + box!.height * 0.45,
+    );
+    await page.waitForFunction(
+      `(${STORE}.state.pages[0].tables ? ${STORE}.state.pages[0].tables.length : 0) > 0`,
+      undefined,
+      { timeout: 10_000 },
+    );
+    const tableId = (await page.evaluate(
+      `${STORE}.state.pages[0].tables[0].id`,
+    )) as string;
+    const fillCell = async (row: number, col: number, text: string) => {
+      const cell = page.getByTestId(
+        `pdf-editor-table-cell-${tableId}-${row}-${col}`,
+      );
+      await cell.click();
+      await cell.type(text);
+      await cell.press("Enter");
+      await expect(cell).toHaveCount(0);
+    };
+
+    await fillCell(2, 0, "old-last-row");
+    await page.getByTestId(`pdf-editor-table-add-row-${tableId}`).click();
+    await expect
+      .poll(() =>
+        page.evaluate(`(t => t.rows)(${STORE}.state.pages[0].tables[0])`),
+      )
+      .toBe(4);
+    await page.getByTestId(`pdf-editor-table-del-row-${tableId}`).click();
+    await expect
+      .poll(() =>
+        page.evaluate(`(t => t.rows)(${STORE}.state.pages[0].tables[0])`),
+      )
+      .toBe(3);
+    const afterAddedRowDelete = (await page.evaluate(
+      `(s => { const t = s.state.pages[0].tables[0]; return { rows: t.rows, runIds: t.cells.find(c => c.row === 2 && c.col === 0)?.runIds ?? [] }; })(${STORE})`,
+    )) as { rows: number; runIds: string[] };
+    expect(afterAddedRowDelete.rows).toBe(3);
+    expect(afterAddedRowDelete.runIds).toHaveLength(1);
+
+    await fillCell(1, 1, "selected-column");
+    await fillCell(1, 2, "remaining-column");
+    const columnRuns = (await page.evaluate(
+      `(t => ({ selected: t.cells.find(c => c.row === 1 && c.col === 1)?.runIds, remaining: t.cells.find(c => c.row === 1 && c.col === 2)?.runIds }))(${STORE}.state.pages[0].tables[0])`,
+    )) as { selected: string[]; remaining: string[] };
+    await page.getByTestId(`pdf-editor-table-col-handle-${tableId}-2`).click();
+    await page.getByTestId(`pdf-editor-table-del-col-${tableId}`).click();
+    await expect
+      .poll(() =>
+        page.evaluate(`(t => t.cols)(${STORE}.state.pages[0].tables[0])`),
+      )
+      .toBe(2);
+    const afterColumnDelete = (await page.evaluate(
+      `(t => ({ cols: t.cols, runIds: t.cells.find(c => c.row === 1 && c.col === 1)?.runIds ?? [] }))(${STORE}.state.pages[0].tables[0])`,
+    )) as { cols: number; runIds: string[] };
+    expect(afterColumnDelete).toEqual({
+      cols: 2,
+      runIds: columnRuns.remaining,
+    });
+    expect(afterColumnDelete.runIds).not.toEqual(columnRuns.selected);
   });
 
   test("recognizes a borderless table and makes it editable", async ({
