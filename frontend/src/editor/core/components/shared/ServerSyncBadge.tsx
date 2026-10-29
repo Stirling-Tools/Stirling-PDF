@@ -1,6 +1,6 @@
 import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import {
   type ServerSyncStatus,
   useServerSyncStatus,
@@ -27,9 +27,14 @@ interface ServerSyncBadgeProps {
  */
 export function ServerSyncBadge({ file, className }: ServerSyncBadgeProps) {
   const { t } = useTranslation();
-  const { preferences } = usePreferences();
+  const { config } = useAppConfig();
   const status = useServerSyncStatus(file);
-  if (!preferences.autoSyncServerFiles || !status) return null;
+  if (
+    config?.storageEnabled !== true ||
+    config.storageAutoSyncEnabled !== true ||
+    !status
+  )
+    return null;
 
   const label = {
     pending: t("serverSync.status.pending", "Changes waiting to sync"),

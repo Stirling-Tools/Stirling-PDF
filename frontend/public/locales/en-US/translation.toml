@@ -1791,6 +1791,10 @@ sameorigin = "Same Origin (Allow framing from same domain)"
 description = "Control server storage and sharing options."
 title = "File Storage & Sharing"
 
+[admin.settings.storage.autoSync]
+description = "Automatically save edits to server-stored files for all users. Conflicting changes stay local until the user chooses to replace the server copy."
+label = "Enable Automatic File Sync"
+
 [admin.settings.storage.enabled]
 description = "Allow users to store files on the server."
 label = "Enable Server File Storage"
@@ -12170,7 +12174,6 @@ appearance = "Appearance"
 description = "How the editor looks and behaves for you, and your account."
 downloads = "Downloads"
 editorDefaults = "Editor defaults"
-serverSync = "Server files"
 title = "Preferences"
 
 [settings.security]
@@ -12201,10 +12204,6 @@ title = "Security & sign-in"
 [settings.server]
 system = "System"
 title = "Server"
-
-[settings.serverSync]
-autoSync = "Sync changes to server files automatically"
-autoSyncTooltip = "Edits to files you have uploaded to the server are saved there in the background, so you can continue on another device. If the server copy was changed elsewhere in the meantime, your edits stay here and you are asked before anything is replaced."
 
 [settings.signOut]
 confirm = "Are you sure you want to sign out?"

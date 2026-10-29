@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { alert } from "@editor/components/toast";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { useFileActions, useFileSelector } from "@editor/contexts/FileContext";
-import { usePreferences } from "@editor/contexts/PreferencesContext";
 import {
   canAutoSync,
   classifySyncFailure,
@@ -54,9 +53,8 @@ function stubsOf(files: FileContextState["files"]): StirlingFileStub[] {
 export function ServerAutoSync() {
   const { t } = useTranslation();
   const { config } = useAppConfig();
-  const { preferences } = usePreferences();
   const enabled =
-    config?.storageEnabled === true && preferences.autoSyncServerFiles;
+    config?.storageEnabled === true && config.storageAutoSyncEnabled === true;
   const { actions } = useFileActions();
   const files = useFileSelector((state) => state.files);
   const filesRef = useRef(files);

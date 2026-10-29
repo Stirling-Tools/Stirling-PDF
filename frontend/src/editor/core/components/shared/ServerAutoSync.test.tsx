@@ -4,7 +4,8 @@ import { AxiosError } from "axios";
 
 const mocks = vi.hoisted(() => ({
   files: { ids: [] as string[], byId: {} },
-  autoSync: true,
+  autoSync: true as boolean | undefined,
+  storageEnabled: true,
   uploadHistoryChain: vi.fn(),
   recordChainUpload: vi.fn(),
   updateStirlingFileStub: vi.fn(),
@@ -19,11 +20,11 @@ vi.mock("@editor/contexts/FileContext", () => ({
   }),
 }));
 vi.mock("@editor/contexts/AppConfigContext", () => ({
-  useAppConfig: () => ({ config: { storageEnabled: true } }),
-}));
-vi.mock("@editor/contexts/PreferencesContext", () => ({
-  usePreferences: () => ({
-    preferences: { autoSyncServerFiles: mocks.autoSync },
+  useAppConfig: () => ({
+    config: {
+      storageEnabled: mocks.storageEnabled,
+      storageAutoSyncEnabled: mocks.autoSync,
+    },
   }),
 }));
 vi.mock("@editor/components/toast", () => ({ alert: mocks.alert }));
@@ -79,6 +80,7 @@ describe("ServerAutoSync", () => {
     vi.useFakeTimers();
     vi.clearAllMocks();
     mocks.autoSync = true;
+    mocks.storageEnabled = true;
     open();
   });
   afterEach(() => {
@@ -142,6 +144,27 @@ describe("ServerAutoSync", () => {
     rerender(<ServerAutoSync />);
     await settle();
 
+    expect(mocks.uploadHistoryChain).not.toHaveBeenCalled();
+  });
+
+  it.each([false, undefined])(
+    "requires explicit server opt-in (%s)",
+    async (flag) => {
+      mocks.autoSync = flag;
+      open(version("v2", "r1", "v1"));
+      render(<ServerAutoSync />);
+      await settle();
+      expect(mocks.uploadHistoryChain).not.toHaveBeenCalled();
+    },
+  );
+
+  it("cancels a pending upload when the server disables storage", async () => {
+    open(version("v2", "r1", "v1"));
+    const { rerender } = render(<ServerAutoSync />);
+    await settle(1000);
+    mocks.storageEnabled = false;
+    rerender(<ServerAutoSync />);
+    await settle();
     expect(mocks.uploadHistoryChain).not.toHaveBeenCalled();
   });
 
