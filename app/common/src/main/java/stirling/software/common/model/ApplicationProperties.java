@@ -78,7 +78,6 @@ public class ApplicationProperties {
 
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
-    private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
     private FormDetection formDetection = new FormDetection();
     private Docparse docparse = new Docparse();
@@ -284,6 +283,19 @@ public class ApplicationProperties {
         private int runExpiryMinutes = 30;
 
         /**
+         * Most steps one pipeline or policy run may have, covering {@code
+         * /api/v1/pipeline/handleData} as well as policies; 0 = unlimited.
+         */
+        private int maxSteps = 50;
+
+        /**
+         * Most files one step of a pipeline or policy run may produce before the run is aborted; 0
+         * = unlimited. A step answering with a ZIP multiplies the files the next step is called on,
+         * so without a cap a few split steps fan out into millions of tool calls.
+         */
+        private int maxFilesPerStep = 10000;
+
+        /**
          * Whether a policy S3 source's custom endpoint may resolve to a loopback, link-local, or
          * private address. Off by default so a user-supplied endpoint cannot be pointed at internal
          * services (e.g. the cloud metadata address); enable for a self-hosted MinIO or other
@@ -328,46 +340,6 @@ public class ApplicationProperties {
         private boolean allowCustomApiIntegrations = true;
 
         private long webhookMaxBytes = 104857600L;
-    }
-
-    @Data
-    public static class PdfEditor {
-        private Cache cache = new Cache();
-        private FontNormalization fontNormalization = new FontNormalization();
-        private CffConverter cffConverter = new CffConverter();
-        private Type3 type3 = new Type3();
-        private String fallbackFont = "classpath:/static/fonts/NotoSans-Regular.ttf";
-
-        @Data
-        public static class Cache {
-            private long maxBytes = -1;
-            private int maxPercent = 20;
-        }
-
-        @Data
-        public static class FontNormalization {
-            private boolean enabled = false;
-        }
-
-        @Data
-        public static class CffConverter {
-            private boolean enabled = true;
-            private String method = "python";
-            private String pythonCommand = "/opt/venv/bin/python3";
-            private String pythonScript = "/scripts/convert_cff_to_ttf.py";
-            private String fontforgeCommand = "fontforge";
-        }
-
-        @Data
-        public static class Type3 {
-            private Library library = new Library();
-
-            @Data
-            public static class Library {
-                private boolean enabled = true;
-                private String index = "classpath:/type3/library/index.json";
-            }
-        }
     }
 
     @Data
@@ -976,6 +948,7 @@ public class ApplicationProperties {
     @Data
     public static class Security {
         private boolean enableLogin;
+        private boolean honorOwnerPasswords = true;
         private boolean ssoAutoLogin;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
@@ -1043,6 +1016,9 @@ public class ApplicationProperties {
             private Boolean autoCreateUser = true;
             private Boolean blockRegistration = false;
             private String registrationId = "stirling";
+
+            // Opt-in public URL for SAML endpoints; wins over system.backendUrl when set.
+            private String redirectBaseUrl;
 
             @ToString.Exclude
             @JsonProperty("idpMetadataUri")
@@ -1123,6 +1099,9 @@ public class ApplicationProperties {
             private Collection<String> scopes = new ArrayList<>();
             private String provider;
             private Client client = new Client();
+
+            // Opt-in public URL for OAuth2 callbacks; blank keeps building them from each request.
+            private String redirectBaseUrl;
 
             /**
              * When true, the OAuth2/OIDC login flow logs the full set of ID token and UserInfo
@@ -1339,7 +1318,9 @@ public class ApplicationProperties {
         private boolean enableEasterEggs = true;
         private Datasource datasource;
         private boolean disableSanitize;
+        private boolean stirlingOfficeConversion;
         private int maxDPI = 500;
+        private int maxPdfaConversionPages = 20_000;
         private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
@@ -1394,7 +1375,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Storage {
-        private boolean enabled = false;
+        private boolean enabled = true;
         private String provider = "local";
         private Local local = new Local();
         private S3 s3 = new S3();
@@ -1496,11 +1477,7 @@ public class ApplicationProperties {
 
         @Data
         public static class Signing {
-            private boolean enabled = false;
-
-            // Signing user-picker scope: 'org' (default) = whole instance, anything else =
-            // caller's team only (fail-closed). The saas profile pins 'team'.
-            private String userListScope = "org";
+            private boolean enabled = true;
         }
     }
 
@@ -1624,12 +1601,33 @@ public class ApplicationProperties {
     public static class Ui {
         private String appNameNavbar;
         private List<String> languages;
+        // Options: "sidebar" (default) or "fullscreen"
+        private String defaultToolPanelMode = "sidebar";
+        // Options: "tools" (default), "read", or "automate"
+        private String defaultStartupView = "tools";
         private boolean defaultHideUnavailableTools = false;
         private boolean defaultHideUnavailableConversions = false;
         private HideDisabledTools hideDisabledTools = new HideDisabledTools();
 
         public String getAppNameNavbar() {
             return appNameNavbar != null && !appNameNavbar.trim().isEmpty() ? appNameNavbar : null;
+        }
+
+        public String getDefaultToolPanelMode() {
+            if ("fullscreen".equalsIgnoreCase(defaultToolPanelMode)) {
+                return "fullscreen";
+            }
+            return "sidebar";
+        }
+
+        public String getDefaultStartupView() {
+            if ("read".equalsIgnoreCase(defaultStartupView)) {
+                return "read";
+            }
+            if ("automate".equalsIgnoreCase(defaultStartupView)) {
+                return "automate";
+            }
+            return "tools";
         }
 
         @Data

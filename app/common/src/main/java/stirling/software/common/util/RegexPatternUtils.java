@@ -187,8 +187,13 @@ public final class RegexPatternUtils {
             log.trace("Compiled and cached regex pattern with flags {}: {}", flags, regex);
             return pattern;
         } catch (PatternSyntaxException e) {
-            log.error(
-                    "Invalid regex pattern: '{}' with flags {} - {}", regex, flags, e.getMessage());
+            // Patterns can be user input such as auto-redact search terms, so the pattern text
+            // stays out of the log; getMessage() would include it.
+            log.warn(
+                    "Invalid regex pattern with flags {}: {} near index {}",
+                    flags,
+                    e.getDescription(),
+                    e.getIndex());
             throw e;
         }
     }
@@ -438,9 +443,13 @@ public final class RegexPatternUtils {
         return getPattern("(https?://[\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+)");
     }
 
-    /** Pattern for matching email addresses in text for link creation */
+    /**
+     * Pattern for matching email addresses in text for link creation. Anchored to the start of a
+     * local-part run so each run is scanned once.
+     */
     public Pattern getEmailLinkPattern() {
-        return getPattern("([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,63})");
+        return getPattern(
+                "(?<![a-zA-Z0-9._%+-])([a-zA-Z0-9._%+-]++@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,63})");
     }
 
     /** Pattern for removing script tags from HTML */
@@ -453,14 +462,14 @@ public final class RegexPatternUtils {
         return getPattern("(?i)<style[^>]*>.*?</style>");
     }
 
-    /** Pattern for removing fixed position CSS */
+    /** Pattern for removing fixed position CSS. Anchored to the start of a whitespace run. */
     public Pattern getFixedPositionCssPattern() {
-        return getPattern("(?i)\\s*position\\s*:\\s*fixed[^;]*;?");
+        return getPattern("(?i)(?<!\\s)\\s*+position\\s*:\\s*fixed[^;]*;?");
     }
 
-    /** Pattern for removing absolute position CSS */
+    /** Pattern for removing absolute position CSS. Anchored to the start of a whitespace run. */
     public Pattern getAbsolutePositionCssPattern() {
-        return getPattern("(?i)\\s*position\\s*:\\s*absolute[^;]*;?");
+        return getPattern("(?i)(?<!\\s)\\s*+position\\s*:\\s*absolute[^;]*;?");
     }
 
     /** Pattern for matching size unit suffixes (KB, MB, GB, etc.) */
@@ -483,9 +492,12 @@ public final class RegexPatternUtils {
         return getPattern("[\\s\\(\\)]+");
     }
 
-    /** Pattern for MIME header whitespace cleanup before encoded sequences */
+    /**
+     * Pattern for MIME header whitespace cleanup before encoded sequences. Anchored to the start of
+     * a whitespace run.
+     */
     public Pattern getMimeHeaderWhitespacePattern() {
-        return getPattern("\\s+(?==\\?)");
+        return getPattern("(?<!\\s)\\s++(?==\\?)");
     }
 
     /** Pattern for font name validation (6 uppercase letters + plus + rest) */

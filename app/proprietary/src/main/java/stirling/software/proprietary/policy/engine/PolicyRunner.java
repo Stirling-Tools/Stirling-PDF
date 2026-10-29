@@ -196,7 +196,13 @@ public class PolicyRunner {
         requireDatabaseAccess();
         PolicyRunHandle handle =
                 policyEngine.runPolicy(policy, inputs, listener, null, documentReference);
-        docCounter.record(EditorSource.counterKey(policy.teamId()), inputs.primary().size());
+        try {
+            docCounter.record(EditorSource.counterKey(policy.teamId()), inputs.primary().size());
+        } catch (RuntimeException e) {
+            // The run is already executing; failing the call would have the caller clean up the
+            // inputs it is reading.
+            log.warn("Could not count editor documents for policy {}", policy.id(), e);
+        }
         return handle;
     }
 

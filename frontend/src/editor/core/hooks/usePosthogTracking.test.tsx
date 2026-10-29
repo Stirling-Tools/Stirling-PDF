@@ -1,0 +1,123 @@
+import { ReactNode } from "react";
+import { renderHook, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
+
+const posthogState = vi.hoisted(() => ({ loaded: false }));
+const posthogMock = vi.hoisted(() => ({
+  get __loaded() {
+    return posthogState.loaded;
+  },
+  init: vi.fn(() => {
+    posthogState.loaded = true;
+  }),
+  opt_out_capturing: vi.fn(),
+  opt_in_capturing: vi.fn(),
+  set_config: vi.fn(),
+  has_opted_in_capturing: vi.fn(() => false),
+}));
+
+vi.mock("posthog-js", () => ({
+  default: posthogMock,
+}));
+
+import { usePosthogTracking } from "@editor/hooks/usePosthogTracking";
+
+describe("usePosthogTracking", () => {
+  beforeEach(() => {
+    posthogState.loaded = false;
+    posthogMock.init.mockClear();
+    posthogMock.opt_out_capturing.mockClear();
+    posthogMock.opt_in_capturing.mockClear();
+    posthogMock.set_config.mockClear();
+    vi.stubEnv("VITE_PUBLIC_POSTHOG_KEY", "test-key");
+    vi.stubEnv("VITE_PUBLIC_POSTHOG_HOST", "https://eu.i.posthog.com");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("does not initialize PostHog when analytics is disabled", async () => {
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <TestQueryProvider>
+        <AppConfigProvider
+          initialConfig={{ enableAnalytics: false }}
+          bootstrapMode="non-blocking"
+          autoFetch={false}
+        >
+          {children}
+        </AppConfigProvider>
+      </TestQueryProvider>
+    );
+
+    renderHook(() => usePosthogTracking(), { wrapper });
+
+    await waitFor(() => {
+      expect(posthogMock.init).not.toHaveBeenCalled();
+    });
+  });
+
+  it("initializes PostHog when analytics is enabled", async () => {
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <TestQueryProvider>
+        <AppConfigProvider
+          initialConfig={{ enableAnalytics: true }}
+          bootstrapMode="non-blocking"
+          autoFetch={false}
+        >
+          {children}
+        </AppConfigProvider>
+      </TestQueryProvider>
+    );
+
+    renderHook(() => usePosthogTracking(), { wrapper });
+
+    await waitFor(() => {
+      expect(posthogMock.init).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("retries the import after a failed load instead of replaying it", async () => {
+    vi.resetModules();
+    let attempts = 0;
+    vi.doMock("posthog-js", () => {
+      attempts += 1;
+      if (attempts === 1) throw new Error("chunk load failed");
+      return { default: posthogMock };
+    });
+
+    const [
+      { usePosthogTracking: useTracking },
+      { AppConfigProvider: Provider },
+    ] = await Promise.all([
+      import("@editor/hooks/usePosthogTracking"),
+      import("@editor/contexts/AppConfigContext"),
+    ]);
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <TestQueryProvider>
+        <Provider
+          initialConfig={{ enableAnalytics: true }}
+          bootstrapMode="non-blocking"
+          autoFetch={false}
+        >
+          {children}
+        </Provider>
+      </TestQueryProvider>
+    );
+
+    const first = renderHook(() => useTracking(), { wrapper });
+    await waitFor(() => {
+      expect(attempts).toBe(1);
+    });
+    expect(posthogMock.init).not.toHaveBeenCalled();
+    first.unmount();
+
+    renderHook(() => useTracking(), { wrapper });
+    await waitFor(() => {
+      expect(posthogMock.init).toHaveBeenCalledTimes(1);
+    });
+    expect(attempts).toBe(2);
+  });
+});

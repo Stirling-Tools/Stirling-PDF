@@ -1,0 +1,110 @@
+// The GitHub API surface, labels and timings the PR bots share.
+
+export const LABELS = {
+  stale: "Stale PR",
+  onHold: "on-hold",
+  backlogCleanup: "backlog-cleanup",
+  waitingOnAuthor: "waiting-on-author",
+  conflicts: "has conflicts", // must match CONFLICT_LABEL in pr-conflict-labeler.yml
+  largePrApproved: "large-pr-approved",
+  tooLarge: "too-large",
+};
+
+/** Days from a warning to the close, for the stale PR warning and the size warning alike. */
+export const CLOSE_AFTER_WARNING_DAYS = 7;
+
+/** The login github.token acts as, so the actor on every write these bots make. */
+export const BOT_LOGIN = "github-actions";
+
+export interface Repo {
+  owner: string;
+  repo: string;
+}
+
+export type IssueRef = Repo & { issue_number: number };
+
+export interface PullData {
+  mergeable: boolean | null;
+  mergeable_state: string;
+}
+
+/** The parts of github-script's `github` client these scripts call. */
+export interface GitHubClient {
+  graphql<T>(query: string, variables: Record<string, unknown>): Promise<T>;
+  rest: {
+    issues: {
+      createComment(params: IssueRef & { body: string }): Promise<unknown>;
+      addLabels(params: IssueRef & { labels: string[] }): Promise<unknown>;
+      removeLabel(params: IssueRef & { name: string }): Promise<unknown>;
+      listComments(
+        params: IssueRef & { per_page: number; page: number },
+      ): Promise<{ data: { id: number; body?: string; user: { login: string; type: string } | null }[] }>;
+      updateComment(params: Repo & { comment_id: number; body: string }): Promise<unknown>;
+    };
+    repos: {
+      getCollaboratorPermissionLevel(params: Repo & { username: string }): Promise<{ data: { permission: string } }>;
+    };
+    pulls: {
+      get(params: Repo & { pull_number: number }): Promise<{ data: PullData }>;
+      update(params: Repo & { pull_number: number; state: "closed" }): Promise<unknown>;
+      listFiles(
+        params: Repo & { pull_number: number; per_page: number; page: number },
+      ): Promise<{ data: { filename: string; additions: number; deletions: number }[] }>;
+    };
+  };
+}
+
+type SummaryCell = string | { data: string; header?: boolean };
+
+interface Summary {
+  addHeading(text: string): Summary;
+  addRaw(text: string, addEOL?: boolean): Summary;
+  addTable(rows: SummaryCell[][]): Summary;
+  write(): Promise<Summary>;
+}
+
+/** The parts of github-script's `core` (@actions/core) these scripts call. */
+export interface Core {
+  info(message: string): void;
+  warning(message: string): void;
+  error(message: string): void;
+  setFailed(message: string): void;
+  summary: Summary;
+}
+
+export const isNotFound = (error: unknown) =>
+  typeof error === "object" && error !== null && "status" in error && error.status === 404;
+
+// "maintain" reports as write.
+const PUSH_PERMISSIONS = ["admin", "write"];
+
+/** Whether a login can push to the repository. */
+export type CanPush = (login: string) => Promise<boolean>;
+
+/**
+ * Asks GitHub once per login whether it can push. This, not author_association, marks the
+ * team: org membership can be private, and github.token then sees a member as a CONTRIBUTOR.
+ */
+export function pushAccessChecker(github: GitHubClient, repo: Repo): CanPush {
+  const answers = new Map<string, Promise<boolean>>();
+  return (login) => {
+    const known = answers.get(login);
+    if (known) return known;
+    const answer = github.rest.repos.getCollaboratorPermissionLevel({ ...repo, username: login }).then(
+      ({ data }) => PUSH_PERMISSIONS.includes(data.permission),
+      (error: unknown) => {
+        if (isNotFound(error)) return false;
+        throw error;
+      },
+    );
+    answers.set(login, answer);
+    return answer;
+  };
+}
+
+/** Removes a label, treating one that is already gone as removed. */
+export async function removeLabel(github: GitHubClient, issue: IssueRef, name: string) {
+  await github.rest.issues.removeLabel({ ...issue, name }).catch((error: unknown) => {
+    if (!isNotFound(error)) throw error;
+  });
+}

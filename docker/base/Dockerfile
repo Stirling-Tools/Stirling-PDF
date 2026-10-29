@@ -5,7 +5,7 @@
 ARG TARGETPLATFORM
 
 # Stage 1: Build and strip Calibre
-FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS calibre-build
+FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS calibre-build
 ARG TARGETPLATFORM
 ARG CALIBRE_VERSION=9.15.0
 ARG CALIBRE_STRIP_WEBENGINE=false
@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     rm /tmp/calibre.txz; \
     \
     # We only need Qt6 WebEngine (Chromium) for ebook->PDF output.
-    # PDF INPUT now uses the pdftohtml engine (poppler), not Qt.
+    # PDF input is parsed through pdftohtml, not Qt.
     rm -f  /opt/calibre/lib/libQt6Designer* \
            /opt/calibre/lib/libQt6Multimedia* \
            /opt/calibre/lib/libQt6SpatialAudio.so.* \
@@ -253,7 +253,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     /opt/calibre/ebook-convert /tmp/test.txt /tmp/test.epub; \
     rm -f /tmp/test.txt /tmp/test.epub; \
     \
-    # Verify pdftohtml (poppler) is available for the pdftohtml PDF engine.
     pdftohtml -v >/dev/null 2>&1 && echo "pdftohtml OK" || { echo "ERROR: pdftohtml not found"; exit 1; }; \
     echo "=== Calibre stripped successfully ==="
 
@@ -274,7 +273,7 @@ RUN if [ "${CALIBRE_STRIP_WEBENGINE}" = "true" ]; then \
 
 
 # Stage 2: Build Ghostscript from source
-FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS gs-build
+FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS gs-build
 ARG TARGETPLATFORM
 ARG GS_VERSION=10.08.0
 
@@ -298,10 +297,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 
 # Stage 3: Build PDF Tools (QPDF and ImageMagick 7)
-FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS pdf-tools-build
+FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS pdf-tools-build
 ARG TARGETPLATFORM
 ARG QPDF_VERSION=12.4.2
-ARG IM_VERSION=7.1.2-32
+ARG IM_VERSION=7.1.2-33
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/tmp/pdf-tools-build,id=pdf-tools-${TARGETPLATFORM:-local} \
@@ -343,7 +342,7 @@ RUN mkdir -p /magick-export/usr/bin \
 
 
 # Stage 4: Build Python venv
-FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS python-venv-build
+FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS python-venv-build
 ARG TARGETPLATFORM
 ARG UNOSERVER_VERSION=3.7
 
@@ -367,7 +366,7 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     find /opt/venv -name '*.so' -exec strip --strip-unneeded {} + 2>/dev/null || true
 
 
-FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS lo-sandbox-build
+FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS lo-sandbox-build
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \

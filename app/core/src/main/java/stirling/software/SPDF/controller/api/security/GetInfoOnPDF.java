@@ -39,7 +39,6 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.xmpbox.XMPMetadata;
-import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpParsingException;
 import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.http.MediaType;
@@ -63,6 +62,7 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.XmpUtils;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -755,15 +755,12 @@ public class GetInfoOnPDF {
             PDMetadata pdMetadata = document.getDocumentCatalog().getMetadata();
             if (pdMetadata != null) {
                 try {
-                    try (COSInputStream inputStream = pdMetadata.createInputStream()) {
-                        DomXmpParser domXmpParser = new DomXmpParser();
-                        XMPMetadata xmpMeta = domXmpParser.parse(inputStream);
+                    XMPMetadata xmpMeta = XmpUtils.parse(pdMetadata, true);
 
-                        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                        new XmpSerializer().serialize(xmpMeta, outputStream, true);
-                        xmpString = outputStream.toString(StandardCharsets.UTF_8);
-                    }
-                } catch (XmpParsingException e) {
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    new XmpSerializer().serialize(xmpMeta, outputStream, true);
+                    xmpString = outputStream.toString(StandardCharsets.UTF_8);
+                } catch (XmpParsingException | IOException e) {
                     log.debug("XMP parsing failed, reading raw metadata: {}", e.getMessage());
                     try (COSInputStream inputStream = pdMetadata.createInputStream()) {
                         byte[] metadataBytes = inputStream.readAllBytes();

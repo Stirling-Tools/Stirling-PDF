@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@editor/*": ["../../editor/core/*"]
+    }
+  },
+  "include": [
+    "../../global.d.ts",
+    "../../*.js",
+    "../../*.ts",
+    "../../*.tsx",
+    "."
+  ]
+}

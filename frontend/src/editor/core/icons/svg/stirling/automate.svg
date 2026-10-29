@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+  <!-- The step box, elbow and play button are Lucide geometry (ISC). Full notice and the exact paths:
+       src/core/icons/LICENSE-lucide.txt, which must stay with this file. -->
+  <rect width="8" height="8" x="3" y="3" rx="2" />
+  <path d="M7 11v4a2 2 0 0 0 2 2h5" />
+  <path d="M14 13.5a1 1 0 0 1 1.504-.864l5.999 3.499a1 1 0 0 1 .001 1.729l-6 3.5A1 1 0 0 1 14 20.5z" />
+</svg>
