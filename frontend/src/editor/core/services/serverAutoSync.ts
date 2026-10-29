@@ -61,6 +61,7 @@ export function setServerSyncStatus(
   listeners.forEach((listener) => listener());
 }
 
+/** Registers a card's external-store listener and returns cleanup; it does not poll the server. */
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);

@@ -66,6 +66,7 @@ export function ServerAutoSync() {
   const [wakeups, setWakeups] = useState(0);
 
   useEffect(() => {
+    /** Retry connectivity failures when online, without clearing revision-conflict refusals. */
     const onOnline = () => {
       failedLeaf.current.clear();
       setWakeups((n) => n + 1);

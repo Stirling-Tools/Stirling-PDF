@@ -62,6 +62,10 @@ export const FilesModalContext = createContext<FilesModalContextType | null>(
   null,
 );
 
+/**
+ * Coordinates picker state, optional custom consumers and workbench admission.
+ * Imported server documents must retain their access metadata and revision base.
+ */
 export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {

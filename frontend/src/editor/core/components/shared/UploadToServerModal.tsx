@@ -21,6 +21,10 @@ interface UploadToServerModalProps {
   onUploaded?: () => Promise<void> | void;
 }
 
+/**
+ * User-confirmed server upload and replacement UI. Explicit replacement remains
+ * available after an automatic-sync conflict; dismissing the dialog does not upload.
+ */
 const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
   opened,
   onClose,

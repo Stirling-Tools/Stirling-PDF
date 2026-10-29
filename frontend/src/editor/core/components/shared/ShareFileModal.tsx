@@ -34,6 +34,10 @@ interface ShareFileModalProps {
   onUploaded?: () => Promise<void> | void;
 }
 
+/**
+ * Configures access to the selected server document, persisting a local selection
+ * before link creation when needed. Closing the dialog clears its generated token.
+ */
 const ShareFileModal: React.FC<ShareFileModalProps> = ({
   opened,
   onClose,
