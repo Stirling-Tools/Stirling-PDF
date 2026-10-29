@@ -332,13 +332,19 @@ function EditableTable({
   const [selectedRow, setSelectedRow] = useState(() =>
     table.rows > 1 ? table.rows - 1 : 0,
   );
+  const [selectedCol, setSelectedCol] = useState(() =>
+    table.cols > 1 ? table.cols - 1 : 0,
+  );
   const origin = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     setSelectedRow((row) =>
       table.rows > 1 ? Math.min(Math.max(1, row), table.rows - 1) : 0,
     );
-  }, [table.rows]);
+    setSelectedCol((col) =>
+      table.cols > 1 ? Math.min(Math.max(1, col), table.cols - 1) : 0,
+    );
+  }, [table.rows, table.cols]);
 
   // Client-space pointer delta -> raw-PDF delta. invert() is affine, so the
   // translation cancels and the handler needs no container origin.
@@ -426,11 +432,17 @@ function EditableTable({
           ? selectedRow
           : op === "add-col"
             ? table.cols
-            : table.cols - 1;
+            : selectedCol;
     if ((op === "delete-row" || op === "delete-col") && index < 1) return;
     mutate(new ModifyTableCommand({ tableId: table.id, op, index }));
     if (op === "delete-row") {
       setSelectedRow((row) => Math.min(Math.max(1, row), table.rows - 2));
+    } else if (op === "add-row") {
+      setSelectedRow(table.rows);
+    } else if (op === "delete-col") {
+      setSelectedCol((col) => Math.min(Math.max(1, col), table.cols - 2));
+    } else if (op === "add-col") {
+      setSelectedCol(table.cols);
     }
   };
 
@@ -532,6 +544,7 @@ function EditableTable({
               orientation="vertical"
               offset={d.active && drag ? drag.dx : 0}
               guide={box.height}
+              onSelect={() => setSelectedCol(Math.max(1, i - 1))}
               style={{
                 left: fx * box.width - GRAB / 2,
                 top: box.height,
