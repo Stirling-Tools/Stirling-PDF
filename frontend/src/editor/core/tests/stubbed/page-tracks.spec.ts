@@ -464,7 +464,10 @@ test.describe("Page Editor tracks", () => {
     await expect(
       header.getByRole("button", { name: "Deselect All", exact: true }),
     ).toBeVisible();
-    await page.getByRole("button", { name: "Delete selected pages" }).click();
+    await page
+      .locator(".workbench-bar")
+      .getByRole("button", { name: "Delete selected pages" })
+      .click();
 
     await expect(rotated.locator("[data-page-id]")).toHaveCount(0);
     // The other track was never selected, so it is untouched.
@@ -773,6 +776,35 @@ test.describe("Page Editor tracks", () => {
     await expect(
       page.locator('[data-page-id][data-selected="true"]'),
     ).toHaveCount(5);
+  });
+
+  test("a selected page's hover delete removes the whole cross-track selection", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    const sample = track(page, "sample.pdf");
+    const rotatedTiles = rotated.locator("[data-page-id]");
+    await expect(rotatedTiles).toHaveCount(4, { timeout: 30_000 });
+
+    await rotatedTiles.nth(0).click();
+    await rotatedTiles.nth(2).click();
+    await sample.locator("[data-page-id]").first().click();
+    await expect(
+      page.locator('[data-page-id][data-selected="true"]'),
+    ).toHaveCount(3);
+
+    const third = rotatedTiles.nth(2);
+    await third.hover();
+    await third.getByRole("button", { name: "Delete selected pages" }).click();
+
+    // The trash sits on one selected page but takes the selection in both files.
+    await expect(rotatedTiles).toHaveCount(2);
+    await expect(sample.locator("[data-page-id]")).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Undo" }).click();
+    await expect(rotatedTiles).toHaveCount(4);
+    await expect(sample.locator("[data-page-id]")).toHaveCount(1);
   });
 
   test("the bar's select all toggles, selecting every page then clearing", async ({

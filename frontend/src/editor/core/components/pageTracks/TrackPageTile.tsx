@@ -33,6 +33,8 @@ export interface TrackPageTileProps {
   /** Vertical offset within the lane (0 in single-row mode; row top in wrap). */
   offsetY: number;
   selected: boolean;
+  /** More than one page is selected across all tracks. */
+  hasMultiSelection: boolean;
   dragging: boolean;
   /** Draw the insertion line on this tile's leading edge. */
   dropBefore: boolean;
@@ -47,7 +49,7 @@ export interface TrackPageTileProps {
   /** Opens the track's page-view modal starting at this page. */
   onViewPage: (pageId: string) => void;
   onRotate: (pageIds: string[], delta: number) => void;
-  onDelete: (pageIds: string[]) => void;
+  onDeletePage: (pageId: string) => void;
   onDuplicate: (pageIds: string[]) => void;
   /** Swaps the page with its neighbour: -1 left, 1 right. */
   onShift: (pageId: string, by: -1 | 1) => void;
@@ -100,6 +102,7 @@ function TrackPageTileImpl({
   offsetX,
   offsetY,
   selected,
+  hasMultiSelection,
   dragging,
   dropBefore,
   dropAfterLast,
@@ -107,7 +110,7 @@ function TrackPageTileImpl({
   onSelect,
   onViewPage,
   onRotate,
-  onDelete,
+  onDeletePage,
   onDuplicate,
   onShift,
 }: TrackPageTileProps) {
@@ -186,15 +189,27 @@ function TrackPageTileImpl({
       {
         id: "delete",
         icon: <Icon name="trash" size={16} />,
-        label: t("pageTracks.delete.page", "Delete page"),
+        label:
+          selected && hasMultiSelection
+            ? t("pageTracks.deleteSelected", "Delete selected pages")
+            : t("pageTracks.delete.page", "Delete page"),
         color: "var(--c-danger)",
         onClick: (event) => {
           event.stopPropagation();
-          onDelete([page.id]);
+          onDeletePage(page.id);
         },
       },
     ],
-    [t, onViewPage, onRotate, onDelete, onDuplicate, page.id],
+    [
+      t,
+      onViewPage,
+      onRotate,
+      onDeletePage,
+      onDuplicate,
+      page.id,
+      selected,
+      hasMultiSelection,
+    ],
   );
 
   return (
