@@ -300,7 +300,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS pdf-tools-build
 ARG TARGETPLATFORM
 ARG QPDF_VERSION=12.4.2
-ARG IM_VERSION=7.1.2-33
+ARG IM_VERSION=7.1.2-34
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/tmp/pdf-tools-build,id=pdf-tools-${TARGETPLATFORM:-local} \
