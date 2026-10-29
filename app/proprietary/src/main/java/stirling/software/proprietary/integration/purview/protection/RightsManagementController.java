@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -49,6 +52,23 @@ public class RightsManagementController {
 
     public static final String PROTECTION_HEADER = "X-Stirling-Protection";
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final Set<String> USAGE_RIGHTS =
+            Set.of(
+                    "VIEW",
+                    "EDIT",
+                    "DOCEDIT",
+                    "PRINT",
+                    "EXTRACT",
+                    "EXPORT",
+                    "COMMENT",
+                    "FORWARD",
+                    "REPLY",
+                    "REPLYALL",
+                    "OBJMODEL",
+                    "VIEWRIGHTSDATA",
+                    "EDITRIGHTSDATA",
+                    "AUDITEDEXTRACT",
+                    "OWNER");
 
     private final RightsManagementService service;
     private final ConnectedAccountService accounts;
@@ -134,9 +154,14 @@ public class RightsManagementController {
             throws IOException {
         ConnectedAccount account = account(user, accountId);
         Path originalCopy = protectedCopy(original);
-        Path derived = Files.createTempFile("stirling-mip-derived-", ".pdf");
+        Path derived;
         try {
-            file.transferTo(derived);
+            derived = plainCopy(file);
+        } catch (RuntimeException | IOException e) {
+            Files.deleteIfExists(originalCopy);
+            throw e;
+        }
+        try {
             byte[] protectedPdf = service.protectLike(account, originalCopy, derived);
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
@@ -167,9 +192,8 @@ public class RightsManagementController {
             @RequestParam(required = false) Long accountId)
             throws IOException {
         ConnectedAccount account = account(user, accountId);
-        Path input = Files.createTempFile("stirling-mip-plain-", ".pdf");
+        Path input = plainCopy(file);
         try {
-            file.transferTo(input);
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
                     .header(HttpHeaders.CACHE_CONTROL, "no-store")
@@ -191,18 +215,14 @@ public class RightsManagementController {
             @RequestParam String grants,
             @RequestParam(required = false) Long accountId)
             throws IOException {
-        if (!grants.matches("[^;=]+=[A-Za-z,]+(;[^;=]+=[A-Za-z,]+)*")) {
-            throw new RightsManagementException(
-                    "bad_input", "grants must look like user@example.com=VIEW,PRINT");
-        }
+        String normalizedGrants = normalizeGrants(grants);
         ConnectedAccount account = account(user, accountId);
-        Path input = Files.createTempFile("stirling-mip-plain-", ".pdf");
+        Path input = plainCopy(file);
         try {
-            file.transferTo(input);
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
                     .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                    .body(service.protectForUsers(account, input, grants));
+                    .body(service.protectForUsers(account, input, normalizedGrants));
         } finally {
             Files.deleteIfExists(input);
         }
@@ -216,7 +236,10 @@ public class RightsManagementController {
                             RightsManagementException.ACCESS_DENIED ->
                             HttpStatus.FORBIDDEN;
                     case RightsManagementException.SIGN_IN_REQUIRED -> HttpStatus.CONFLICT;
-                    case RightsManagementException.NOT_PROTECTED, "bad_input", "not_supported" ->
+                    case RightsManagementException.NOT_PROTECTED,
+                            RightsManagementException.ALREADY_PROTECTED,
+                            RightsManagementException.BAD_INPUT,
+                            "not_supported" ->
                             HttpStatus.UNPROCESSABLE_CONTENT;
                     case RightsManagementException.UNAVAILABLE, "service_disabled" ->
                             HttpStatus.SERVICE_UNAVAILABLE;
@@ -279,6 +302,50 @@ public class RightsManagementController {
                     "This PDF is not protected by Microsoft Purview");
         }
         return copy;
+    }
+
+    private static Path plainCopy(MultipartFile file) throws IOException {
+        Path copy = Files.createTempFile("stirling-mip-plain-", ".pdf");
+        file.transferTo(copy);
+        boolean isProtected;
+        try (PDDocument document = Loader.loadPDF(copy.toFile())) {
+            isProtected = ProtectedPdfDetector.isMicrosoftProtected(document);
+        } catch (IOException e) {
+            Files.deleteIfExists(copy);
+            throw new RightsManagementException(
+                    RightsManagementException.BAD_INPUT, "This file is not a readable PDF");
+        }
+        if (isProtected) {
+            Files.deleteIfExists(copy);
+            throw new RightsManagementException(
+                    RightsManagementException.ALREADY_PROTECTED,
+                    "This PDF is already protected by Microsoft Purview");
+        }
+        return copy;
+    }
+
+    static String normalizeGrants(String grants) {
+        if (grants == null || !grants.matches("[^;=]+=[A-Za-z,]+(;[^;=]+=[A-Za-z,]+)*")) {
+            throw new RightsManagementException(
+                    RightsManagementException.BAD_INPUT,
+                    "grants must look like user@example.com=VIEW,PRINT");
+        }
+        List<String> normalized = new ArrayList<>();
+        for (String grant : grants.split(";")) {
+            int equals = grant.indexOf('=');
+            List<String> rights = new ArrayList<>();
+            for (String right : grant.substring(equals + 1).split(",")) {
+                String upper = right.trim().toUpperCase(Locale.ROOT);
+                if (!USAGE_RIGHTS.contains(upper)) {
+                    throw new RightsManagementException(
+                            RightsManagementException.BAD_INPUT,
+                            "Unknown usage right '" + right.trim() + "'");
+                }
+                rights.add(upper);
+            }
+            normalized.add(grant.substring(0, equals).trim() + "=" + String.join(",", rights));
+        }
+        return String.join(";", normalized);
     }
 
     private static String encode(ProtectionInfo protection) {
