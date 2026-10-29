@@ -6,8 +6,8 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtDecoderInitializationException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.service.UserService;
@@ -34,7 +34,7 @@ class McpJwtDecoderTest {
     void anUnreachableIssuerRejectsTokensInstead() {
         JwtDecoder decoder = decoderFor("http://127.0.0.1:1/issuer");
 
-        assertThatThrownBy(() -> decoder.decode("a.b.c"))
-                .isInstanceOf(JwtDecoderInitializationException.class);
+        // BadJwtException is what the resource server answers with a 401.
+        assertThatThrownBy(() -> decoder.decode("a.b.c")).isInstanceOf(BadJwtException.class);
     }
 }
