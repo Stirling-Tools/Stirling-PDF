@@ -390,6 +390,25 @@ class PosterPdfControllerTest {
         }
 
         @Test
+        @DisplayName("Rejects a grid that would produce more than 100000 pages")
+        void rejectsTooManyOutputPages() throws Exception {
+            MockMultipartFile file = createRealPdf(1001, "big.pdf");
+            PosterPdfRequest request = createRequest(file);
+            request.setXFactor(10);
+            request.setYFactor(10);
+            PDDocument sourceDoc = Loader.loadPDF(file.getBytes());
+            PDDocument outputDoc = new PDDocument();
+            when(pdfDocumentFactory.load(file)).thenReturn(sourceDoc);
+            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc))
+                    .thenReturn(outputDoc);
+
+            assertThatThrownBy(() -> controller.posterPdf(request))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("100000");
+            assertThat(outputDoc.getNumberOfPages()).isZero();
+        }
+
+        @Test
         @DisplayName("RuntimeException from createNewDocument propagates and closes zip temp file")
         void createNewDocumentRuntimeException() throws Exception {
             MockMultipartFile file = createRealPdf(1, "rt.pdf");

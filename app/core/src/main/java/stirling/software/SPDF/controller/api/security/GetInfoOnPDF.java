@@ -9,6 +9,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSInputStream;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSString;
@@ -39,7 +40,6 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.xmpbox.XMPMetadata;
-import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpParsingException;
 import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.http.MediaType;
@@ -63,6 +63,7 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.XmpUtils;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -79,24 +80,29 @@ public class GetInfoOnPDF {
     private static final int MAX_LOGGED_ERRORS = 5;
     private static final String PAGE_PREFIX = "Page ";
     private static final long MAX_FILE_SIZE = 100L * 1024 * 1024;
+    private static final int MAX_OUTLINE_DEPTH = 64;
 
     private static final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final VeraPDFService veraPDFService;
 
-    private static void addOutlinesToArray(PDOutlineItem outline, ArrayNode arrayNode) {
-        if (outline == null) return;
+    /**
+     * Outline links come from the file and can form cycles through /Next or /First, so each item is
+     * emitted once and nesting is capped.
+     */
+    private static void addOutlinesToArray(
+            PDOutlineItem outline, ArrayNode arrayNode, Set<COSDictionary> visited, int depth) {
+        if (outline == null || depth > MAX_OUTLINE_DEPTH || !visited.add(outline.getCOSObject())) {
+            return;
+        }
 
         ObjectNode outlineNode = objectMapper.createObjectNode();
         outlineNode.put("Title", outline.getTitle());
-        // You can add other properties if needed
         arrayNode.add(outlineNode);
 
-        PDOutlineItem child = outline.getFirstChild();
-        while (child != null) {
-            addOutlinesToArray(child, arrayNode);
-            child = child.getNextSibling();
+        for (PDOutlineItem child : outline.children()) {
+            addOutlinesToArray(child, arrayNode, visited, depth + 1);
         }
     }
 
@@ -219,19 +225,27 @@ public class GetInfoOnPDF {
         dimensionInfo.put("Height (cm)", String.format(Locale.ROOT, "%.2f", heightInCm));
     }
 
-    private static ArrayNode exploreStructureTree(List<Object> nodes) {
+    /**
+     * A structure element can be listed under /K many times or be its own ancestor, so each one is
+     * expanded once.
+     */
+    private static ArrayNode exploreStructureTree(List<Object> nodes, Set<COSDictionary> expanded) {
         ArrayNode elementsArray = objectMapper.createArrayNode();
         if (nodes != null) {
             for (Object obj : nodes) {
-                if (obj instanceof PDStructureNode node) {
+                if (obj instanceof PDStructureNode node && expanded.add(node.getCOSObject())) {
                     ObjectNode elementNode = objectMapper.createObjectNode();
 
                     if (node instanceof PDStructureElement structureElement) {
                         elementNode.put("Type", structureElement.getStructureType());
-                        elementNode.put("Content", getContent(structureElement));
+                        elementNode.put(
+                                "Content",
+                                getContent(
+                                        structureElement,
+                                        Collections.newSetFromMap(new IdentityHashMap<>())));
 
-                        // Recursively explore child elements
-                        ArrayNode childElements = exploreStructureTree(structureElement.getKids());
+                        ArrayNode childElements =
+                                exploreStructureTree(structureElement.getKids(), expanded);
                         if (!childElements.isEmpty()) {
                             elementNode.set("Children", childElements);
                         }
@@ -243,16 +257,18 @@ public class GetInfoOnPDF {
         return elementsArray;
     }
 
-    private static String getContent(PDStructureElement structureElement) {
+    private static String getContent(
+            PDStructureElement structureElement, Set<COSDictionary> visited) {
         StringBuilder contentBuilder = new StringBuilder();
+        if (!visited.add(structureElement.getCOSObject())) {
+            return "";
+        }
 
         for (Object item : structureElement.getKids()) {
             if (item instanceof COSString cosString) {
                 contentBuilder.append(cosString.getString());
             } else if (item instanceof PDStructureElement pdstructureelement) {
-                // For simplicity, we're handling only COSString and PDStructureElement here
-                // but a more comprehensive method would handle other types too
-                contentBuilder.append(getContent(pdstructureelement));
+                contentBuilder.append(getContent(pdstructureelement, visited));
             }
         }
 
@@ -582,7 +598,9 @@ public class GetInfoOnPDF {
                         document.getDocumentCatalog().getStructureTreeRoot();
                 if (structureTreeRoot != null) {
                     ArrayNode structureTreeArray =
-                            exploreStructureTree(structureTreeRoot.getKids());
+                            exploreStructureTree(
+                                    structureTreeRoot.getKids(),
+                                    Collections.newSetFromMap(new IdentityHashMap<>()));
                     other.set("StructureTree", structureTreeArray);
                 }
             } catch (Exception e) {
@@ -737,8 +755,9 @@ public class GetInfoOnPDF {
         try {
             PDOutlineNode root = document.getDocumentCatalog().getDocumentOutline();
             if (root != null) {
+                Set<COSDictionary> visited = Collections.newSetFromMap(new IdentityHashMap<>());
                 for (PDOutlineItem child : root.children()) {
-                    addOutlinesToArray(child, bookmarksArray);
+                    addOutlinesToArray(child, bookmarksArray, visited, 0);
                 }
             }
         } catch (Exception e) {
@@ -755,15 +774,12 @@ public class GetInfoOnPDF {
             PDMetadata pdMetadata = document.getDocumentCatalog().getMetadata();
             if (pdMetadata != null) {
                 try {
-                    try (COSInputStream inputStream = pdMetadata.createInputStream()) {
-                        DomXmpParser domXmpParser = new DomXmpParser();
-                        XMPMetadata xmpMeta = domXmpParser.parse(inputStream);
+                    XMPMetadata xmpMeta = XmpUtils.parse(pdMetadata, true);
 
-                        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                        new XmpSerializer().serialize(xmpMeta, outputStream, true);
-                        xmpString = outputStream.toString(StandardCharsets.UTF_8);
-                    }
-                } catch (XmpParsingException e) {
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    new XmpSerializer().serialize(xmpMeta, outputStream, true);
+                    xmpString = outputStream.toString(StandardCharsets.UTF_8);
+                } catch (XmpParsingException | IOException e) {
                     log.debug("XMP parsing failed, reading raw metadata: {}", e.getMessage());
                     try (COSInputStream inputStream = pdMetadata.createInputStream()) {
                         byte[] metadataBytes = inputStream.readAllBytes();

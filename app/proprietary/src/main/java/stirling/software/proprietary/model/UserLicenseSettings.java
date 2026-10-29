@@ -3,6 +3,9 @@ package stirling.software.proprietary.model;
 import java.io.Serial;
 import java.io.Serializable;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -13,6 +16,8 @@ import lombok.*;
  */
 @Entity
 @Table(name = "user_license_settings")
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "user-license-settings")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

@@ -5988,8 +5988,8 @@ test.describe("PDF text editor - stress: overlay box width hugs the text", () =>
 });
 
 test.describe("PDF text editor - F-duplication regression (Sample.pdf tagline)", () => {
-  // This regression guards against the bug fixed by gating the per-char
-  // backend-emit branch on `!reuse`.
+  // This regression guards against duplicate glyphs when typing into a tagline
+  // run.
   test("typing a single F at end of tagline produces exactly one F", async ({
     page,
   }) => {

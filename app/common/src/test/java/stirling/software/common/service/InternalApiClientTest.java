@@ -5,6 +5,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -268,6 +271,47 @@ class InternalApiClientTest {
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
+        } finally {
+            Files.deleteIfExists(tempPath);
+        }
+    }
+
+    @Test
+    void postReleasesTempFileWhenResponseCopyFails() throws Exception {
+        // E.g. "No space left on device": the partial copy is the file that filled the volume, and
+        // the caller has no handle to it.
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("fileInput", namedResource("input.pdf", "data"));
+
+        Path tempPath = Files.createTempFile("internal-api-copy-fails-test", ".tmp");
+        TempFile tempFile = mock(TempFile.class);
+        when(tempFile.getPath()).thenReturn(tempPath);
+        when(tempFileManager.createManagedTempFile("internal-api")).thenReturn(tempFile);
+
+        InputStream failing = mock(InputStream.class);
+        when(failing.transferTo(any())).thenThrow(new IOException("No space left on device"));
+        ClientHttpResponse response = mock(ClientHttpResponse.class);
+        when(response.getBody()).thenReturn(failing);
+
+        try (var ignored =
+                mockConstruction(
+                        RestTemplate.class,
+                        (rt, ctx) -> {
+                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
+                                    .thenReturn((RequestCallback) req -> {});
+                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
+                                    .thenAnswer(
+                                            inv ->
+                                                    ((ResponseExtractor<?>) inv.getArgument(3))
+                                                            .extractData(response));
+                        })) {
+
+            InternalApiClient mockedClient = newClient();
+            assertThrows(
+                    UncheckedIOException.class,
+                    () -> mockedClient.post("/api/v1/convert/vector/pdf", body));
+
+            verify(tempFile).close();
         } finally {
             Files.deleteIfExists(tempPath);
         }
