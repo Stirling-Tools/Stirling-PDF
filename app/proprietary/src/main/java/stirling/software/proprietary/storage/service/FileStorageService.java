@@ -393,7 +393,14 @@ public class FileStorageService {
             MultipartFile historyBundle,
             MultipartFile auditLog,
             String baseRevision) {
-        StoredFile existing = getOwnedFile(owner, fileId);
+        ensureStorageEnabled();
+        StoredFile existing =
+                storedFileRepository
+                        .findByIdAndOwnerForUpdate(fileId, owner)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "File not found"));
         if (baseRevision != null && !baseRevision.equals(revisionOf(existing))) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "File was changed by another session");

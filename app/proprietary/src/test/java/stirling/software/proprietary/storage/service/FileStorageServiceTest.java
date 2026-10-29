@@ -539,7 +539,7 @@ class FileStorageServiceTest {
         User owner = user(1L);
         StoredFile existing = ownedFile(owner);
         existing.setStorageKey("key-written-by-other-device");
-        when(storedFileRepository.findByIdAndOwnerWithShares(100L, owner))
+        when(storedFileRepository.findByIdAndOwnerForUpdate(100L, owner))
                 .thenReturn(Optional.of(existing));
         MockMultipartFile newFile =
                 new MockMultipartFile("file", "a.pdf", "application/pdf", new byte[] {1});
@@ -560,7 +560,7 @@ class FileStorageServiceTest {
         StoredFile existing = ownedFile(owner);
         existing.setStorageKey("old-key");
         String currentRevision = FileStorageService.revisionOf(existing);
-        when(storedFileRepository.findByIdAndOwnerWithShares(100L, owner))
+        when(storedFileRepository.findByIdAndOwnerForUpdate(100L, owner))
                 .thenReturn(Optional.of(existing));
         when(storageProvider.store(any(), any()))
                 .thenReturn(
