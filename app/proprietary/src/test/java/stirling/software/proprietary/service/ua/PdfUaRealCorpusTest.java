@@ -36,12 +36,10 @@ class PdfUaRealCorpusTest {
     /** Files the converter is expected to refuse rather than process. */
     private static final List<String> EXPECTED_REJECTS = List.of("encrypted.pdf", "corrupted.pdf");
 
-    // Files the font-embedding pass still alters, measured 2026-08-28. Both are
-    // ADDITIONS, not loss: the embedder flattens a widget annotation into the
-    // page, and injects spaces into rotated text. Loss is caught by
-    // FontEmbeddingService, which keeps the original instead.
-    private static final List<String> KNOWN_EMBED_TEXT_DIFFS =
-            List.of("rotated-text-sample.pdf", "annotation-text-sample.pdf");
+    // Files the font-embedding pass still alters, measured 2026-08-28. This is an
+    // ADDITION, not loss: the embedder injects spaces into rotated text. Loss is
+    // caught by FontEmbeddingService, which keeps the original instead.
+    private static final List<String> KNOWN_EMBED_TEXT_DIFFS = List.of("rotated-text-sample.pdf");
 
     @BeforeAll
     static void setUp() {

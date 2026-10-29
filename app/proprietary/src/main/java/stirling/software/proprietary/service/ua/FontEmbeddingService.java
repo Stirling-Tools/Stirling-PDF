@@ -17,6 +17,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 
@@ -69,14 +70,25 @@ public class FontEmbeddingService {
      */
     public Result embedFonts(byte[] pdfBytes) {
         Set<String> missing;
+        boolean hasFormFields;
         try (PDDocument document = Loader.loadPDF(pdfBytes)) {
             missing = findUnembeddedFonts(document);
+            hasFormFields = hasFormFields(document);
         } catch (IOException e) {
             return new Result(
                     pdfBytes, false, Set.of(), "Could not inspect fonts: " + e.getMessage());
         }
         if (missing.isEmpty()) {
             return new Result(pdfBytes, false, Set.of(), null);
+        }
+        if (hasFormFields) {
+            return new Result(
+                    pdfBytes,
+                    false,
+                    missing,
+                    "Font embedding was skipped because it would flatten the form fields. "
+                            + missing.size()
+                            + " font(s) remain unembedded.");
         }
         if (!isGhostscriptAvailable()) {
             return new Result(
@@ -149,6 +161,11 @@ public class FontEmbeddingService {
         }
     }
 
+    private static boolean hasFormFields(PDDocument document) {
+        PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm(null);
+        return acroForm != null && !acroForm.getFields().isEmpty();
+    }
+
     /**
      * True when the rewritten document still holds the original's content. A collapse in page count
      * or content-stream size is the only signature of a failed rewrite the exit code hides.
@@ -189,8 +206,8 @@ public class FontEmbeddingService {
      * came back with each page truncated to its first half - 422070 characters down to 211230 -
      * while its content streams stayed well inside the byte ratio below.
      *
-     * <p>Growth is not loss: flattening a widget annotation into the page legitimately adds text.
-     * Only a shortfall fails.
+     * <p>Growth is not loss: flattening an annotation into the page legitimately adds text. Only a
+     * shortfall fails.
      */
     private static boolean lostText(PDDocument before, PDDocument after) {
         String textBefore = extractText(before);

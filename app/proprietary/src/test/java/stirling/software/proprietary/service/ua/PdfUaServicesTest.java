@@ -1,5 +1,6 @@
 package stirling.software.proprietary.service.ua;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -18,6 +19,9 @@ import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -228,6 +232,36 @@ class PdfUaServicesTest {
             FontEmbeddingService.Result result = fonts.embedFonts(embedded);
             assertFalse(result.changed());
             assertEquals(embedded.length, result.pdfBytes().length);
+        }
+
+        @Test
+        @DisplayName("keeps a fillable form rather than flattening it to embed fonts")
+        void keepsFormFieldsFillable() throws Exception {
+            byte[] form = unembeddedFontForm();
+            FontEmbeddingService.Result result = fonts.embedFonts(form);
+            assertFalse(result.changed());
+            assertArrayEquals(form, result.pdfBytes());
+            assertTrue(result.fonts().contains("Helvetica"));
+            assertNotNull(result.warning());
+            assertTrue(result.warning().contains("form fields"));
+        }
+    }
+
+    private static byte[] unembeddedFontForm() throws IOException {
+        try (PDDocument document = Loader.loadPDF(unembeddedFontPdf())) {
+            PDAcroForm acroForm = new PDAcroForm(document);
+            document.getDocumentCatalog().setAcroForm(acroForm);
+            PDTextField field = new PDTextField(acroForm);
+            field.setPartialName("name");
+            acroForm.getFields().add(field);
+            PDAnnotationWidget widget = field.getWidgets().get(0);
+            widget.setRectangle(new PDRectangle(50, 600, 200, 20));
+            PDPage page = document.getPage(0);
+            widget.setPage(page);
+            page.getAnnotations().add(widget);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            document.save(out);
+            return out.toByteArray();
         }
     }
 
