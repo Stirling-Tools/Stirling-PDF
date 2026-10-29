@@ -19,6 +19,7 @@ import stirling.software.common.annotations.api.ProprietaryUiDataApi;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.service.ToolRecommendationService;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolRecommendation;
+import stirling.software.proprietary.service.ToolRecommendationService.ToolWorkflow;
 import stirling.software.proprietary.service.ToolUsageTrackingService;
 
 /**
@@ -40,6 +41,8 @@ public class ToolRecommendationController {
     private final Optional<UserServiceInterface> userService;
 
     public record RecommendationsResponse(List<ToolRecommendation> recommendations) {}
+
+    public record WorkflowsResponse(List<ToolWorkflow> workflows) {}
 
     /**
      * @param priorChains the tools already applied to each input document, oldest step first and
@@ -71,6 +74,30 @@ public class ToolRecommendationController {
             // Recommendations are advisory; never break the UI over them.
             log.warn("Failed to compute tool recommendations: {}", e.getMessage());
             return ResponseEntity.ok(new RecommendationsResponse(List.of()));
+        }
+    }
+
+    @GetMapping("/tool-recommendations/workflows")
+    @Operation(
+            summary = "Get repeated tool workflows",
+            description =
+                    "Returns the tool sequences most often applied to the same document, the"
+                            + " caller's own first, then their team's and the install's. Answers"
+                            + " 501 when the install records no usage, or when login is disabled.")
+    public ResponseEntity<WorkflowsResponse> getWorkflows(
+            @RequestParam(value = "minLength", defaultValue = "2") int minLength,
+            @RequestParam(value = "limit", defaultValue = "6") int limit) {
+        String principal = currentPrincipal();
+        if (principal == null || !trackingService.isRecordingEnabled()) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        }
+        try {
+            return ResponseEntity.ok(
+                    new WorkflowsResponse(
+                            recommendationService.getWorkflows(principal, minLength, limit)));
+        } catch (Exception e) {
+            log.warn("Failed to compute tool workflows: {}", e.getMessage());
+            return ResponseEntity.ok(new WorkflowsResponse(List.of()));
         }
     }
 

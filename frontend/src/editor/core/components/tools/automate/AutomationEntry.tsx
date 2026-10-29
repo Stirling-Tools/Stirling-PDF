@@ -102,7 +102,7 @@ export default function AutomationEntry({
     ));
 
     return (
-      <div style={{ minWidth: "400px", width: "auto" }}>
+      <div>
         {description && (
           <Text
             size="sm"
