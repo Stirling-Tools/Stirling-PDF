@@ -427,7 +427,11 @@ export function PageView({
             highlighted={highlightedRunId === run.id}
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
             onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
-            onTextRangeChange={(range) => onSelectRunText?.(run.id, range)}
+            onTextRangeChange={
+              ACCESSIBILITY_EDITING
+                ? (range) => onSelectRunText?.(run.id, range)
+                : undefined
+            }
             textRange={
               selectedRunIds.length === 1 && selectedRunIds[0] === run.id
                 ? selectedTextRange

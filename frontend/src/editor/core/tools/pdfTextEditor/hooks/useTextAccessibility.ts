@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { RetagInnerCommand } from "@editor/tools/pdfTextEditor/commands/RetagInnerCommand";
 import { RetagTextCommand } from "@editor/tools/pdfTextEditor/commands/RetagTextCommand";
 import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
@@ -52,6 +53,7 @@ export function useTextAccessibility(
   const { run, tag, inner, newTagTypes } = useMemo(() => {
     const doc = store.document;
     const selected =
+      ACCESSIBILITY_EDITING &&
       selection.runIds.length === 1 &&
       selection.imageIds.length === 0 &&
       selection.shapeIds.length === 0
