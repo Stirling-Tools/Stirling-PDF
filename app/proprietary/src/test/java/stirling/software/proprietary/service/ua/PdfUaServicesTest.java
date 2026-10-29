@@ -237,7 +237,16 @@ class PdfUaServicesTest {
         @Test
         @DisplayName("keeps a fillable form rather than flattening it to embed fonts")
         void keepsFormFieldsFillable() throws Exception {
-            byte[] form = unembeddedFontForm();
+            assertFormKept(unembeddedFontForm(true));
+        }
+
+        @Test
+        @DisplayName("keeps widgets the AcroForm does not list rather than flattening them")
+        void keepsOrphanWidgetsFillable() throws Exception {
+            assertFormKept(unembeddedFontForm(false));
+        }
+
+        private void assertFormKept(byte[] form) {
             FontEmbeddingService.Result result = fonts.embedFonts(form);
             assertFalse(result.changed());
             assertArrayEquals(form, result.pdfBytes());
@@ -247,13 +256,15 @@ class PdfUaServicesTest {
         }
     }
 
-    private static byte[] unembeddedFontForm() throws IOException {
+    private static byte[] unembeddedFontForm(boolean listedInAcroForm) throws IOException {
         try (PDDocument document = Loader.loadPDF(unembeddedFontPdf())) {
             PDAcroForm acroForm = new PDAcroForm(document);
             document.getDocumentCatalog().setAcroForm(acroForm);
             PDTextField field = new PDTextField(acroForm);
             field.setPartialName("name");
-            acroForm.getFields().add(field);
+            if (listedInAcroForm) {
+                acroForm.getFields().add(field);
+            }
             PDAnnotationWidget widget = field.getWidgets().get(0);
             widget.setRectangle(new PDRectangle(50, 600, 200, 20));
             PDPage page = document.getPage(0);

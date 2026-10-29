@@ -17,7 +17,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 
@@ -161,9 +162,15 @@ public class FontEmbeddingService {
         }
     }
 
-    private static boolean hasFormFields(PDDocument document) {
-        PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm(null);
-        return acroForm != null && !acroForm.getFields().isEmpty();
+    private static boolean hasFormFields(PDDocument document) throws IOException {
+        for (PDPage page : document.getPages()) {
+            for (PDAnnotation annotation : page.getAnnotations()) {
+                if (annotation instanceof PDAnnotationWidget) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
