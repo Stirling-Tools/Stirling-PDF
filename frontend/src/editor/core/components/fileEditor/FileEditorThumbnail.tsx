@@ -69,6 +69,10 @@ interface FileEditorThumbnailProps {
   policies?: FileItemPolicyRef[];
 }
 
+/**
+ * Presents one workspace version; a remote ID alone does not mean its edits are synced.
+ * Opening, exporting and removal remain delegated to the caller callbacks.
+ */
 const FileEditorThumbnail = ({
   file,
   onCloseFile,

@@ -37,6 +37,7 @@ function resolveUpdatedAt(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : Date.now();
 }
 
+/** Older servers omit revision tokens; their uploads must not establish an automatic-sync base. */
 function syncBaseFrom(
   data: { revision?: unknown } | undefined,
   leafId: FileId,
@@ -46,6 +47,11 @@ function syncBaseFrom(
     : undefined;
 }
 
+/**
+ * Uploads the selected history chain and its audit bundle; an existing remote ID selects
+ * replacement. A supplied expected revision rejects stale writes instead of overwriting.
+ * Returns the uploaded leaf's sync base but leaves local metadata persistence to the caller.
+ */
 export async function uploadHistoryChain(
   originalFileId: FileId,
   existingRemoteId?: number,

@@ -36,6 +36,7 @@ export function canAutoSync(stub: StirlingFileStub): boolean {
   );
 }
 
+/** A request without a response is recoverable offline work; HTTP 409 requires conflict resolution. */
 export function classifySyncFailure(error: unknown): ServerSyncFailure {
   if (!axios.isAxiosError(error)) return "error";
   if (!error.response) return "offline";
@@ -47,6 +48,7 @@ export function classifySyncFailure(error: unknown): ServerSyncFailure {
 const transientStatus = new Map<number, ServerSyncStatus>();
 const listeners = new Set<() => void>();
 
+/** Publishes transient status to every subscriber; undefined removes it so persisted metadata determines status. */
 export function setServerSyncStatus(
   remoteId: number,
   status: ServerSyncStatus | undefined,

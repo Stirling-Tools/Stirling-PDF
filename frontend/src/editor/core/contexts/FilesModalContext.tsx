@@ -62,6 +62,10 @@ export const FilesModalContext = createContext<FilesModalContextType | null>(
   null,
 );
 
+/**
+ * Routes picker selections through workspace ingestion while retaining each server
+ * file's identity and revision. Custom handlers may consume selections instead.
+ */
 export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {

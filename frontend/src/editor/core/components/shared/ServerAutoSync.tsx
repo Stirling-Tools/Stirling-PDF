@@ -28,10 +28,12 @@ type PushableLeaf = StirlingFileStub & {
   remoteSync: RemoteSyncBase;
 };
 
+/** Uses the history root as upload identity, including files without an explicit ancestor. */
 function documentOf(stub: StirlingFileStub): FileId {
   return (stub.originalFileId || stub.id) as FileId;
 }
 
+/** Preserves workspace order while omitting IDs whose records have already been removed. */
 function stubsOf(files: FileContextState["files"]): StirlingFileStub[] {
   return files.ids
     .map((id) => files.byId[id])
