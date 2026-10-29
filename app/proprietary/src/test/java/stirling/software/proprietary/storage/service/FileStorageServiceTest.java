@@ -535,6 +535,22 @@ class FileStorageServiceTest {
     }
 
     @Test
+    void updateFileResponse_lockFailure_rejectsWithoutStoring() throws IOException {
+        User owner = user(1L);
+        when(storedFileRepository.findByIdAndOwnerForUpdate(100L, owner))
+                .thenThrow(new org.springframework.dao.CannotAcquireLockException("busy"));
+        MockMultipartFile newFile =
+                new MockMultipartFile("file", "a.pdf", "application/pdf", new byte[] {1});
+        assertThatThrownBy(() -> service.updateFileResponse(owner, 100L, newFile, null, null, "r1"))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(
+                        error ->
+                                assertThat(((ResponseStatusException) error).getStatusCode())
+                                        .isEqualTo(HttpStatus.CONFLICT));
+        verify(storageProvider, never()).store(any(), any());
+    }
+
+    @Test
     void updateFileResponse_staleRevision_rejectsWithoutStoring() throws IOException {
         User owner = user(1L);
         StoredFile existing = ownedFile(owner);

@@ -394,13 +394,19 @@ public class FileStorageService {
             MultipartFile auditLog,
             String baseRevision) {
         ensureStorageEnabled();
-        StoredFile existing =
-                storedFileRepository
-                        .findByIdAndOwnerForUpdate(fileId, owner)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND, "File not found"));
+        StoredFile existing;
+        try {
+            existing =
+                    storedFileRepository
+                            .findByIdAndOwnerForUpdate(fileId, owner)
+                            .orElseThrow(
+                                    () ->
+                                            new ResponseStatusException(
+                                                    HttpStatus.NOT_FOUND, "File not found"));
+        } catch (org.springframework.dao.PessimisticLockingFailureException exception) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "File is being updated by another session", exception);
+        }
         if (baseRevision != null && !baseRevision.equals(revisionOf(existing))) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "File was changed by another session");
