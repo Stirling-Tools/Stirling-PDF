@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +26,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
+import stirling.software.common.service.JobOwnershipService;
 
 @Aspect
 @Component
@@ -35,9 +37,14 @@ public class AutoJobAspect {
 
     private static final Duration RETRY_BASE_DELAY = Duration.ofMillis(100);
 
+    private static final String AUDIT_PRINCIPAL_MDC_KEY = "auditPrincipal";
+
     private final JobExecutorService jobExecutorService;
     private final HttpServletRequest request;
     private final FileStorage fileStorage;
+
+    @Autowired(required = false)
+    private JobOwnershipService jobOwnershipService;
 
     @Around("@annotation(autoJobPostMapping)")
     public Object wrapWithJobExecution(
@@ -332,6 +339,10 @@ public class AutoJobAspect {
      */
     private <T> Supplier<T> wrapWithMDC(Supplier<T> supplier) {
         final Map<String, String> captured = MDC.getCopyOfContextMap();
+        final String caller =
+                jobOwnershipService != null
+                        ? jobOwnershipService.getCurrentUserId().orElse(null)
+                        : null;
         return () -> {
             final Map<String, String> previous = MDC.getCopyOfContextMap();
             try {
@@ -340,6 +351,9 @@ public class AutoJobAspect {
                     MDC.setContextMap(new HashMap<>(captured));
                 } else {
                     MDC.clear();
+                }
+                if (caller != null && MDC.get(AUDIT_PRINCIPAL_MDC_KEY) == null) {
+                    MDC.put(AUDIT_PRINCIPAL_MDC_KEY, caller);
                 }
                 return supplier.get();
             } finally {

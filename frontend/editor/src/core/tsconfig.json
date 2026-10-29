@@ -1,9 +1,0 @@
-{
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "paths": {
-      "@app/*": ["../../src/core/*"]
-    }
-  },
-  "include": ["../global.d.ts", "../*.js", "../*.ts", "../*.tsx", "."]
-}

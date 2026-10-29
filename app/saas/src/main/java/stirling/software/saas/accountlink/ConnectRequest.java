@@ -78,7 +78,7 @@ public class ConnectRequest {
     @Column(name = "team_id")
     private Long teamId;
 
-    /** LINK: set on approval. REAUTH: pinned to the original linking user at creation. */
+    /** The current cloud owner who approved this handshake; populated on approval. */
     @Column(name = "approved_by_user_id")
     private Long approvedByUserId;
 

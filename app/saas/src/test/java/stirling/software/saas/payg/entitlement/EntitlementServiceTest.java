@@ -49,6 +49,7 @@ class EntitlementServiceTest {
     private PaygShadowChargeRepository ledgerRepo;
     private PrepaidBundleService prepaidBundleService;
     private EntitlementService service;
+    private stirling.software.saas.procurement.service.EnterpriseEntitlementService enterprise;
 
     @Test
     void zeroMeteredCapDoesNotBlockIncludedTeamCredits() {
@@ -76,9 +77,28 @@ class EntitlementServiceTest {
         walletPolicyRepo = Mockito.mock(WalletPolicyRepository.class);
         ledgerRepo = Mockito.mock(PaygShadowChargeRepository.class);
         prepaidBundleService = Mockito.mock(PrepaidBundleService.class);
+        enterprise =
+                Mockito.mock(
+                        stirling.software.saas.procurement.service.EnterpriseEntitlementService
+                                .class);
         service =
                 new EntitlementService(
-                        billingService, walletPolicyRepo, ledgerRepo, prepaidBundleService);
+                        billingService,
+                        walletPolicyRepo,
+                        ledgerRepo,
+                        prepaidBundleService,
+                        enterprise);
+    }
+
+    @Test
+    void enterpriseOverridesAnExhaustedGrantOnlyWhileItIsActive() {
+        stubBilling(42L, freeContext(500L, 0L));
+        assertThat(service.getSnapshot(42L).state()).isEqualTo(EntitlementState.DEGRADED);
+        when(enterprise.isActive(42L)).thenReturn(true);
+        assertThat(service.getSnapshot(42L).state()).isEqualTo(EntitlementState.FULL);
+        assertThat(service.getSnapshot(42L).periodCapUnits()).isNull();
+        when(enterprise.isActive(42L)).thenReturn(false);
+        assertThat(service.getSnapshot(42L).state()).isEqualTo(EntitlementState.DEGRADED);
     }
 
     @Test

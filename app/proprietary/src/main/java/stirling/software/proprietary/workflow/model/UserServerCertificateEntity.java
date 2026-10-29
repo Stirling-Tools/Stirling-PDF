@@ -37,7 +37,7 @@ public class UserServerCertificateEntity implements Serializable {
     @JsonIgnore
     private User user;
 
-    @Lob
+    // PostgreSQL bytea needs binary binding; @Lob binds a large-object OID instead.
     @Basic(fetch = FetchType.EAGER)
     @Column(name = "keystore_data", nullable = false, columnDefinition = "bytea")
     @JsonIgnore

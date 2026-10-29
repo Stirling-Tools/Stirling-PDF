@@ -295,6 +295,24 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void handleRuntimeException_wrapping_PdfUnrepairableException_returns_422() {
+        // Repair runs as a job, so this is the path a real refusal takes. Answering 500 here and
+        // 422 when it is thrown directly would make one outcome two, by route alone.
+        PdfUnrepairableException cause = new PdfUnrepairableException("beyond repair", "E076");
+        RuntimeException ex = new RuntimeException("wrapped", cause);
+        ResponseEntity<ProblemDetail> resp = handler.handleRuntimeException(ex, request);
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, resp.getStatusCode());
+    }
+
+    @Test
+    void handlePdfUnrepairable_returns_422() {
+        PdfUnrepairableException ex = new PdfUnrepairableException("beyond repair", "E076");
+        ResponseEntity<ProblemDetail> resp = handler.handlePdfUnrepairable(ex, request);
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, resp.getStatusCode());
+        assertNotNull(resp.getBody());
+    }
+
+    @Test
     void handleRuntimeException_wrapping_BaseValidationException_returns_400() {
         CbrFormatException cause = new CbrFormatException("bad format", "E030");
         RuntimeException ex = new RuntimeException("wrapped", cause);
