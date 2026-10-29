@@ -19,13 +19,6 @@ public class StoredFileResponse {
     private final String accessRole;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
-
-    /**
-     * Opaque token that changes whenever the stored content is replaced. Send it back as {@code
-     * baseRevision} on an update to reject the write when another session replaced the file first.
-     */
-    private final String revision;
-
     private final List<String> sharedWithUsers;
     private final List<SharedUserResponse> sharedUsers;
     private final List<ShareLinkResponse> shareLinks;

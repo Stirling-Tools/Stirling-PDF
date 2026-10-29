@@ -81,11 +81,9 @@ public class FileStorageController {
             @PathVariable Long fileId,
             @RequestPart("file") MultipartFile file,
             @RequestPart(name = "historyBundle", required = false) MultipartFile historyBundle,
-            @RequestPart(name = "auditLog", required = false) MultipartFile auditLog,
-            @RequestParam(name = "baseRevision", required = false) String baseRevision) {
+            @RequestPart(name = "auditLog", required = false) MultipartFile auditLog) {
         User user = fileStorageService.requireAuthenticatedUser();
-        return fileStorageService.updateFileResponse(
-                user, fileId, file, historyBundle, auditLog, baseRevision);
+        return fileStorageService.updateFileResponse(user, fileId, file, historyBundle, auditLog);
     }
 
     @GetMapping(value = "/files", produces = MediaType.APPLICATION_JSON_VALUE)

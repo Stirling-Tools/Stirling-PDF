@@ -7,13 +7,10 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
-
-import jakarta.persistence.LockModeType;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -21,12 +18,6 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 
 public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
     Optional<StoredFile> findByIdAndOwner(Long id, User owner);
-
-    /** Serializes content replacements until the surrounding transaction commits. */
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT f FROM StoredFile f WHERE f.id = :id AND f.owner = :owner")
-    Optional<StoredFile> findByIdAndOwnerForUpdate(
-            @Param("id") Long id, @Param("owner") User owner);
 
     /** Files that expired before {@code cutoff}, in id order after {@code afterId}. */
     @Query(
