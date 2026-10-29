@@ -251,6 +251,7 @@ system:
 
 storage:
   enabled: true # set to 'false' to disable server-side file storage (requires security.enableLogin) [ALPHA]
+  autoSyncEnabled: false # opt in to background uploads of edits for all users; requires server file storage
   provider: local # storage provider: 'local' for filesystem storage, 'database' for DB-backed storage
   local:
     basePath: './storage' # base directory for stored files

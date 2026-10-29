@@ -294,6 +294,9 @@ public class ConfigController {
             boolean groupSigningEnabled =
                     storageEnabled && applicationProperties.getStorage().getSigning().isEnabled();
             configData.put("storageEnabled", storageEnabled);
+            configData.put(
+                    "storageAutoSyncEnabled",
+                    storageEnabled && applicationProperties.getStorage().isAutoSyncEnabled());
             configData.put("storageSharingEnabled", sharingEnabled);
             configData.put("storageShareLinksEnabled", shareLinksEnabled);
             configData.put("storageShareEmailEnabled", shareEmailEnabled);

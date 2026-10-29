@@ -1375,6 +1375,12 @@ public class ApplicationProperties {
     @Data
     public static class Storage {
         private boolean enabled = true;
+
+        /**
+         * Opt-in instance policy for background pushes; revision checks still protect conflicts.
+         */
+        private boolean autoSyncEnabled = false;
+
         private String provider = "local";
         private Local local = new Local();
         private S3 s3 = new S3();
