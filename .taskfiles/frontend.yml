@@ -316,8 +316,8 @@ tasks:
             exit 0
           fi
           rc=0
-          task frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1
-          task frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1
+          task --taskfile "{{.ROOT_TASKFILE}}" frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1
+          task --taskfile "{{.ROOT_TASKFILE}}" frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1
           exit $rc
 
   storybook:a11y:record:
