@@ -100,7 +100,7 @@ public class ReactRoutingController {
 
     @PostConstruct
     public void init() {
-        log.info("Static files custom path: {}", InstallationPathConfig.getStaticPath());
+        log.debug("Static files custom path: {}", InstallationPathConfig.getStaticPath());
 
         // Always initialize callback HTML (used for OAuth desktop flow)
         this.cachedCallbackHtml = buildCallbackHtml();

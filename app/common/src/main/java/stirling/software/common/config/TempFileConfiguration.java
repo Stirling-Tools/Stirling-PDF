@@ -46,7 +46,7 @@ public class TempFileConfiguration {
             Path tempDir = Path.of(customTempDirectory);
             if (!Files.exists(tempDir)) {
                 Files.createDirectories(tempDir);
-                log.info("Created temporary directory: {}", tempDir);
+                log.debug("Created temporary directory: {}", tempDir);
             }
 
             log.debug("Temporary file configuration initialized");

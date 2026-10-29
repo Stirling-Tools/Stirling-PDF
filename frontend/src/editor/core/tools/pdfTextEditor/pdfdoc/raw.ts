@@ -708,6 +708,11 @@ export function referencedObject(text: string): number | null {
   return m ? parseInt(m[1], 10) : null;
 }
 
+/** A reference to object `num`, at the generation the file has it. */
+export function indirectRef(pdf: RawPdf, num: number): string {
+  return `${num} ${pdf.generationOf(num)} R`;
+}
+
 export function arrayItems(text: string): ValueSpan[] | null {
   if (text[0] !== "[") return null;
   const items: ValueSpan[] = [];
