@@ -24,6 +24,19 @@ export class ProcessingCache {
     // Calculate entry size (rough estimate)
     const size = this.calculateSize(data);
 
+    // Replacing a key must not count the old payload twice.
+    const existing = this.cache.get(key);
+    if (existing) {
+      this.totalSize -= existing.size;
+      this.cache.delete(key);
+    }
+
+    // A single entry over the cap can never fit; caching it would evict
+    // everything else and still leave totalSize over the limit.
+    if (size > this.config.maxSizeBytes) {
+      return;
+    }
+
     // Make room if needed
     this.makeRoom(size);
 
@@ -100,14 +113,14 @@ export class ProcessingCache {
   }
 
   private calculateSize(data: ProcessedFile): number {
-    // Rough size estimation
+    // Measure actual bytes: base64 thumbnails are ASCII, so one char is one
+    // byte. A fixed per-page estimate undercounts full-page PNGs by ~30x and
+    // the byte cap never binds.
     let size = 0;
 
-    // Estimate size of thumbnails (main memory consumer)
     data.pages.forEach((page) => {
       if (page.thumbnail) {
-        // Base64 thumbnail is roughly 50KB each
-        size += 50 * 1024;
+        size += page.thumbnail.length;
       }
     });
 

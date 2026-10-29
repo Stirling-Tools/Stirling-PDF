@@ -83,6 +83,7 @@ import { RotateAPIBridge } from "@editor/components/viewer/RotateAPIBridge";
 import { SignatureAPIBridge } from "@editor/components/viewer/SignatureAPIBridge";
 import { AnnotationAPIBridge } from "@editor/components/viewer/AnnotationAPIBridge";
 import { HistoryAPIBridge } from "@editor/components/viewer/HistoryAPIBridge";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
 import type {
   SignatureAPI,
   AnnotationAPI,
@@ -1187,8 +1188,10 @@ export function LocalEmbedPDF({
       );
     };
     if (file && typeof file.arrayBuffer === "function") {
-      file
-        .arrayBuffer()
+      // Shared with the other byte consumers through the document bytes
+      // cache: a fresh arrayBuffer() per mount would keep a second copy of
+      // the whole document resident next to the cached one.
+      getDocumentBytes(file)
         .then((buf) => {
           if (cancelled) return;
           bindPdfViewerSource(buf, file);
