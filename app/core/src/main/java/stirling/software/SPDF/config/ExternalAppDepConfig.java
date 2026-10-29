@@ -19,6 +19,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.RegexPatternUtils;
 
 /**
@@ -101,11 +102,26 @@ public class ExternalAppDepConfig {
             // Python / OpenCV special handling
             checkPythonAndOpenCV();
 
+            disableCalibreUnlessConfined();
+
             dependenciesChecked = true;
         } finally {
             endpointConfiguration.logDisabledEndpointsSummary();
             pool.shutdown();
         }
+    }
+
+    private void disableCalibreUnlessConfined() {
+        if (!endpointConfiguration.isGroupEnabled("Calibre")
+                || ProcessExecutor.isCalibreSandboxUsable(List.of(calibrePath, "--version"))) {
+            return;
+        }
+        endpointConfiguration.disableGroup(
+                "Calibre", EndpointConfiguration.DisableReason.DEPENDENCY);
+        log.warn(
+                "Calibre cannot be confined on this host - Disabling group: Calibre (Affected"
+                        + " features: {})",
+                String.join(", ", getAffectedFeatures("Calibre")));
     }
 
     private void checkDependencyAndDisableGroup(String command) {

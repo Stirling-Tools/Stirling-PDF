@@ -312,6 +312,45 @@ class RearrangePagesPDFControllerTest {
     }
 
     @Test
+    void testRearrangePages_DuplicateRejectsTooManyOutputPages() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        // Within the per-page limit (3 x 1000), but 1000 x 101 = 101,000 pages in total
+        request.setPageNumbers("101");
+        request.setCustomMode("DUPLICATE");
+
+        try (PDDocument realDoc = buildRealPdf(1000)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            IllegalArgumentException e =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> controller.rearrangePages(request));
+            assertTrue(e.getMessage().contains("100000"), e.getMessage());
+            assertEquals(1000, realDoc.getNumberOfPages());
+        }
+    }
+
+    @Test
+    void testRearrangePages_UnknownCustomModeIsRejected() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setCustomMode("NOT_A_MODE");
+
+        try (PDDocument realDoc = buildRealPdf(2)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            IllegalArgumentException e =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> controller.rearrangePages(request));
+            assertTrue(e.getMessage().contains("customMode"), e.getMessage());
+        }
+    }
+
+    @Test
     void testRearrangePages_SideStitchBooklet() throws IOException {
         MockMultipartFile file = createMockPdf();
         RearrangePagesRequest request = new RearrangePagesRequest();

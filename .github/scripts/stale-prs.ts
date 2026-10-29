@@ -2,19 +2,23 @@
 
 import {
   BOT_LOGIN,
+  type CanPush,
+  CLOSE_AFTER_WARNING_DAYS,
   type Core,
   type GitHubClient,
   type IssueRef,
   LABELS,
   type PullData,
+  pushAccessChecker,
   type Repo,
   removeLabel,
 } from "./github.ts";
-import { clearStaleTurnLabel } from "./pr-turn.ts";
+import { enforceSizeLimit, MAX_LINES, type SizedPullRequest } from "./pr-size.ts";
+import { syncTurnLabel } from "./pr-turn.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export type Reason = "conflicts" | "waitingOnAuthor" | "idleDraft";
+export type Reason = "conflicts" | "waitingOnAuthor" | "idleDraft" | "tooLarge";
 
 const TURN_LABELS: { label: string; reason: Reason }[] = [
   { label: LABELS.conflicts, reason: "conflicts" },
@@ -23,7 +27,6 @@ const TURN_LABELS: { label: string; reason: Reason }[] = [
 
 export const TURN_DAYS = 7;
 export const IDLE_DRAFT_DAYS = 30;
-export const CLOSE_AFTER_WARNING_DAYS = 7;
 
 // GitHub asks for at least a second between writes to stay under its secondary rate limit.
 const WRITE_INTERVAL_MS = 1000;
@@ -74,6 +77,8 @@ const PULL_REQUEST_QUERY = `
         isDraft
         createdAt
         baseRefName
+        additions
+        deletions
         author { login __typename }
         labels(first: 100) { nodes { name } }
         commits(last: 1) { nodes { commit { committedDate } } }
@@ -128,6 +133,8 @@ export interface PullRequestNode {
   isDraft: boolean;
   createdAt: string;
   baseRefName: string;
+  additions: number;
+  deletions: number;
   author: Actor | null;
   labels: { nodes: { name: string }[] };
   commits: { nodes: { commit: { committedDate: string } }[] };
@@ -141,11 +148,22 @@ export interface PullRequest {
   url: string;
   isDraft: boolean;
   baseRefName: string;
+  additions: number;
+  deletions: number;
   author: Actor | null;
   labels: string[];
   timeline: TimelineEvent[];
   /** When a person last did anything on it; see latestActivity. */
   lastActivityAt: string;
+  /** The newest comments and reviews by people, oldest first. */
+  comments: Comment[];
+}
+
+export interface Comment {
+  createdAt: string;
+  author: string;
+  /** Whether the author can push; only looked up on a too-large PR, false elsewhere. */
+  fromTeam: boolean;
 }
 
 export type Action = "none" | "warn" | "pending" | "close" | "resume" | "clear";
@@ -213,6 +231,25 @@ function lastWarningEndedAt(pr: PullRequest) {
   return endedAt;
 }
 
+// The size close runs from the warning or a reopen. The author explaining why the PR
+// can't be split pauses it, and a reply from the team after that restarts it. Null
+// while paused.
+function sizeClockStart(pr: PullRequest, warnedAt: number) {
+  let since = Math.max(warnedAt, latestEvent(pr, reopened) ?? 0);
+  let paused = false;
+  for (const comment of pr.comments) {
+    const at = time(comment.createdAt);
+    if (at <= since) continue;
+    if (comment.author === pr.author?.login) {
+      paused = true;
+    } else if (paused && comment.fromTeam) {
+      paused = false;
+      since = at;
+    }
+  }
+  return paused ? null : since;
+}
+
 // A close labels the PR backlog-cleanup before closing it, so one still open with that
 // label added since the warning, and not reopened since, stopped partway.
 function closeInterrupted(pr: PullRequest, warnedAt: number) {
@@ -269,17 +306,27 @@ function decideDraft(pr: PullRequest, now: number, warnedAt: number | null): Dec
  * - "resume": a close stopped after its comment; close the PR without commenting again.
  * - "clear": warned, but something has changed since; remove the label.
  *
- * Conflicts still need confirming with GitHub before acting; see confirmConflicts.
+ * A too-large PR was warned when the label went on, by pr-size.ts's comment, so it is
+ * "pending" until CLOSE_AFTER_WARNING_DAYS later and then "close"; see sizeClockStart
+ * for what pauses and restarts that. Conflicts still need confirming with GitHub before
+ * acting; see confirmConflicts.
  */
 export function decide(pr: PullRequest, now: number): Decision {
   const stale = hasLabel(pr, LABELS.stale);
   if (pr.author?.__typename === "Bot" || hasLabel(pr, LABELS.onHold)) return stale ? CLEAR : NONE;
   const warnedAt = warningTime(pr);
-  if (warnedAt !== null && closeInterrupted(pr, warnedAt)) return { action: "resume", reasons: [] };
+  const sizeWarnedAt = hasLabel(pr, LABELS.tooLarge) ? (latestEvent(pr, labelled(LABELS.tooLarge)) ?? now) : null;
+  const warnings = [warnedAt, sizeWarnedAt].filter((at) => at !== null);
+  if (warnings.length > 0 && closeInterrupted(pr, Math.min(...warnings))) return { action: "resume", reasons: [] };
+  const sizeSince = sizeWarnedAt === null ? null : sizeClockStart(pr, sizeWarnedAt);
+  const size: Decision | null =
+    sizeWarnedAt === null ? null : sizeSince === null ? { action: "pending", reasons: ["tooLarge"] } : closeOrPending(now, sizeSince, ["tooLarge"]);
+  if (size?.action === "close") return size;
   const decision = pr.isDraft ? decideDraft(pr, now, warnedAt) : decideReady(pr, now, warnedAt);
   // A Stale PR label someone else added warned nobody: replace it with a warning when one
   // is due, and drop it otherwise.
-  return stale && warnedAt === null && decision.action === "none" ? CLEAR : decision;
+  const settled = stale && warnedAt === null && decision.action === "none" ? CLEAR : decision;
+  return settled.action === "none" && size !== null ? size : settled;
 }
 
 function problem(reason: Reason, pr: PullRequest, now: number): string {
@@ -290,6 +337,8 @@ function problem(reason: Reason, pr: PullRequest, now: number): string {
       return "A maintainer is waiting on a response from you.";
     case "idleDraft":
       return `It has been a draft with no activity for ${days(now - time(pr.lastActivityAt))} days.`;
+    case "tooLarge":
+      return `It changes more than ${MAX_LINES} lines, the limit for contributors outside the team.`;
   }
 }
 
@@ -301,10 +350,21 @@ function remedy(reason: Reason, pr: PullRequest): string {
       return "Please add a comment, a new push or re-request review.";
     case "idleDraft":
       return "Any activity keeps it open, such as a push, a comment or marking it ready for review.";
+    case "tooLarge":
+      return "Please split it into smaller PRs.";
   }
 }
 
 const authorLogin = (pr: PullRequest) => pr.author?.login ?? "ghost";
+
+const sizedPullRequest = (pr: PullRequest): SizedPullRequest => ({
+  number: pr.number,
+  state: "open",
+  additions: pr.additions,
+  deletions: pr.deletions,
+  user: { login: authorLogin(pr), type: pr.author?.__typename === "Bot" ? "Bot" : "User" },
+  labels: pr.labels.map((name) => ({ name })),
+});
 
 export function warningComment(pr: PullRequest, reasons: Reason[], now: number) {
   return [
@@ -325,6 +385,13 @@ export function closingComment(pr: PullRequest, reasons: Reason[], now: number) 
     "",
     "Thanks for the contribution! If you pick this up again, please feel free to open a new PR and fix the above issues.",
   ].join("\n");
+}
+
+function commentOf(item: ActivityItem): Comment | null {
+  if (item.__typename === "HeadRefForcePushedEvent" || item.author === null || !byPerson(item.author)) return null;
+  const createdAt = item.__typename === "IssueComment" ? item.createdAt : item.submittedAt;
+  if (createdAt === null) return null;
+  return { createdAt, author: item.author.login, fromTeam: false };
 }
 
 function activityTime(item: ActivityItem) {
@@ -395,10 +462,15 @@ async function fetchPullRequest(github: GitHubClient, repo: Repo, number: number
     url: node.url,
     isDraft: node.isDraft,
     baseRefName: node.baseRefName,
+    additions: node.additions,
+    deletions: node.deletions,
     author: node.author,
     labels: node.labels.nodes.map((label) => label.name),
     timeline,
     lastActivityAt: latestActivity(node, timeline),
+    comments: node.activity.nodes
+      .flatMap((item) => commentOf(item) ?? [])
+      .sort((a, b) => time(a.createdAt) - time(b.createdAt)),
   };
 }
 
@@ -431,15 +503,25 @@ async function confirmConflicts(
   return decision.action === "close" ? { action: "pending", reasons: decision.reasons } : NONE;
 }
 
-// Applies a label removal to the PR as read, so the decision sees it even in a dry run.
-function withoutLabel(pr: PullRequest, name: string, now: number): PullRequest {
-  const removed: TimelineEvent = {
-    __typename: "UnlabeledEvent",
+// Only a too-large PR's clock depends on who replied, so only its commenters are looked up.
+async function withTeamComments(pr: PullRequest, canPush: CanPush): Promise<PullRequest> {
+  if (!hasLabel(pr, LABELS.tooLarge)) return pr;
+  const comments = await Promise.all(
+    pr.comments.map(async (comment) => ({ ...comment, fromTeam: comment.author !== pr.author?.login && (await canPush(comment.author)) })),
+  );
+  return { ...pr, comments };
+}
+
+// Applies a label change to the PR as read, so the decision sees it even in a dry run.
+function withLabel(pr: PullRequest, name: string, present: boolean, now: number): PullRequest {
+  const change: TimelineEvent = {
+    __typename: present ? "LabeledEvent" : "UnlabeledEvent",
     createdAt: new Date(now).toISOString(),
     label: { name },
     actor: { login: BOT_LOGIN, __typename: "Bot" },
   };
-  return { ...pr, labels: pr.labels.filter((label) => label !== name), timeline: [...pr.timeline, removed] };
+  const others = pr.labels.filter((label) => label !== name);
+  return { ...pr, labels: present ? [...others, name] : others, timeline: [...pr.timeline, change] };
 }
 
 async function paced(intervalMs: number, writes: (() => Promise<unknown>)[]) {
@@ -496,7 +578,8 @@ interface Result {
   failed: boolean;
 }
 
-async function writeSummary(core: Core, results: Result[], live: boolean) {
+async function writeSummary(core: Core, results: Result[], live: boolean, sizeLive: boolean) {
+  const dryRuns = [...(live ? [] : ["stale warnings and closes"]), ...(sizeLive ? [] : ["the size limit"])];
   const rows = results
     .filter(({ decision }) => decision.action !== "none")
     .sort((a, b) => ACTION_ORDER.indexOf(a.decision.action) - ACTION_ORDER.indexOf(b.decision.action))
@@ -507,7 +590,7 @@ async function writeSummary(core: Core, results: Result[], live: boolean) {
       decision.reasons.join(", "),
     ]);
   await core.summary
-    .addHeading(live ? "Stale PR triage" : "Stale PR triage (dry run: no PRs changed)")
+    .addHeading(dryRuns.length === 0 ? "Stale PR triage" : `Stale PR triage (dry run for ${dryRuns.join(" and ")})`)
     .addRaw(`${results.length} open PRs, ${rows.length} with something outstanding.`, true)
     .addTable([
       [
@@ -521,14 +604,23 @@ async function writeSummary(core: Core, results: Result[], live: boolean) {
     .write();
 }
 
+// A size close belongs to the size limit and everything else to the stale triage; a
+// resumed close could have been either's.
+function writesLive(decision: Decision, live: boolean, sizeLive: boolean) {
+  if (decision.action === "resume") return live || sizeLive;
+  return decision.reasons.includes("tooLarge") ? sizeLive : live;
+}
+
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 export interface TriageInputs {
   github: GitHubClient;
   context: { repo: Repo };
   core: Core;
-  /** false reports what would happen without commenting, labelling or closing. */
+  /** false reports what the stale triage would do without commenting, labelling or closing. */
   live: boolean;
+  /** The same for the size limit, its too-large comments, labels and closes. */
+  sizeLive: boolean;
   /** Least pause between writes. Defaults to WRITE_INTERVAL_MS. */
   writeIntervalMs?: number;
   /** Pause between mergeability checks. Defaults to MERGEABILITY_RETRY_MS. */
@@ -536,21 +628,24 @@ export interface TriageInputs {
 }
 
 /**
- * Triages every open PR and writes a job summary. A PR that cannot be read or updated
- * is logged and skipped, and the job is failed at the end. Throws if the open PRs
- * cannot be listed.
+ * Triages every open PR, first bringing waiting-on-author up to date on a ready one and
+ * holding each to the size limit, and writes a job summary.
+ * A PR that cannot be read or updated is logged and skipped, and the job is failed at
+ * the end. Throws if the open PRs cannot be listed.
  */
 export default async function triageStalePullRequests({
   github,
   context,
   core,
   live,
+  sizeLive,
   writeIntervalMs = WRITE_INTERVAL_MS,
   mergeabilityRetryMs = MERGEABILITY_RETRY_MS,
 }: TriageInputs) {
   const now = Date.now();
   const { repo } = context;
   const results: Result[] = [];
+  const canPush = pushAccessChecker(github, repo);
   let failures = 0;
 
   for (const number of await fetchOpenPullNumbers(github, repo)) {
@@ -559,15 +654,25 @@ export default async function triageStalePullRequests({
     try {
       let pr = await fetchPullRequest(github, repo, number);
       if (pr === null) continue;
-      if (!pr.isDraft && hasLabel(pr, LABELS.waitingOnAuthor) && (await clearStaleTurnLabel(github, issue, live))) {
-        core.info(`#${number}: -${LABELS.waitingOnAuthor} (the turn had already moved on)`);
-        pr = withoutLabel(pr, LABELS.waitingOnAuthor, now);
+      if (!pr.isDraft) {
+        const turnLabelled = hasLabel(pr, LABELS.waitingOnAuthor);
+        const waiting = await syncTurnLabel(github, issue, turnLabelled, live);
+        if (waiting !== turnLabelled) {
+          core.info(`#${number}: ${waiting ? "+" : "-"}${LABELS.waitingOnAuthor}`);
+          pr = withLabel(pr, LABELS.waitingOnAuthor, waiting, now);
+        }
       }
+      const size = await enforceSizeLimit(github, repo, sizedPullRequest(pr), sizeLive, canPush);
+      if (size.held !== hasLabel(pr, LABELS.tooLarge)) {
+        core.info(`#${number}: ${size.held ? "+" : "-"}${LABELS.tooLarge}`);
+        pr = withLabel(pr, LABELS.tooLarge, size.held, now);
+      }
+      pr = await withTeamComments(pr, canPush);
       const decision = await confirmConflicts(github, repo, pr, decide(pr, now), mergeabilityRetryMs);
       result = { pr, decision, failed: false };
 
       if (decision.action !== "none") core.info(`#${number}: ${decision.action} (${decision.reasons.join(", ")})`);
-      if (live && WRITES.includes(decision.action)) {
+      if (writesLive(decision, live, sizeLive) && WRITES.includes(decision.action)) {
         await apply(github, issue, pr, decision, now, writeIntervalMs);
         await sleep(writeIntervalMs);
       }
@@ -579,6 +684,6 @@ export default async function triageStalePullRequests({
     }
   }
 
-  await writeSummary(core, results, live);
+  await writeSummary(core, results, live, sizeLive);
   if (failures > 0) core.setFailed(`${failures} PR(s) could not be updated.`);
 }

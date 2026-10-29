@@ -753,6 +753,29 @@ public class ExceptionUtils {
     }
 
     /**
+     * The redaction engine's own check failed on some pages, so its output is withheld.
+     *
+     * @param pages the 1-based page numbers, already joined for display
+     */
+    public static ToolFailedException createRedactionUnverifiedException(String pages) {
+        return new ToolFailedException(
+                getMessage(ErrorCode.REDACTION_UNVERIFIED, pages),
+                null,
+                ErrorCode.REDACTION_UNVERIFIED.getCode());
+    }
+
+    /**
+     * The redaction engine could not run or check its own result, and named no page, so its output
+     * is withheld.
+     */
+    public static ToolFailedException createRedactionUnverifiableException(Throwable cause) {
+        return new ToolFailedException(
+                getMessage(ErrorCode.REDACTION_UNVERIFIABLE),
+                cause,
+                ErrorCode.REDACTION_UNVERIFIABLE.getCode());
+    }
+
+    /**
      * A step refused its input on type alone, before running.
      *
      * @param actual the extension, never the filename: this message is persisted on a failure
@@ -1309,7 +1332,7 @@ public class ExceptionUtils {
         LIBREOFFICE_REQUIRED(
                 "E082",
                 "error.libreOfficeRequired",
-                "LibreOffice must be installed to convert .{0} files to PDF. Install LibreOffice and ensure it is available on the system PATH."),
+                "LibreOffice is needed to convert .{0} files but is not available. Install LibreOffice and ensure it is on the system PATH, or ask an administrator to re-enable the LibreOffice tool group."),
 
         // Validation errors
         INVALID_ARGUMENT("E070", "error.invalidArgument", "Invalid argument ''{0}'': {1}"),
@@ -1326,6 +1349,18 @@ public class ExceptionUtils {
                 "E076",
                 "error.pdfUnrepairable",
                 "This document is damaged in a way the repair tools cannot fix."),
+
+        // The redaction engine's post-redaction check did not pass on these pages.
+        REDACTION_UNVERIFIED(
+                "E077",
+                "error.redactionUnverified",
+                "Redaction could not be verified on page {0}, so no file was returned."),
+
+        // The redaction engine could not run or check its result; it reports no page for this.
+        REDACTION_UNVERIFIABLE(
+                "E083",
+                "error.redactionUnverifiable",
+                "Redaction could not be verified, so no file was returned."),
 
         // Raised before a step runs, by whoever knows both what the step accepts and what it was
         // handed. Distinct from PDF_NOT_PDF, which speaks only for steps that want a PDF.
