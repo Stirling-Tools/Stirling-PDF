@@ -15,7 +15,6 @@
   transition:
     width 0.3s ease,
     max-width 0.3s ease;
-  view-transition-name: tool-rail;
   user-select: none;
 }
 
@@ -195,39 +194,41 @@
   margin-bottom: 0;
 }
 
+/* Everything under the processor bar. The picker is the floor; the tool view
+   is a layer over it that slides in from the trailing edge and back out. */
+.tool-panel__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tool-panel__picker-layer,
+.tool-panel__tool-layer {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* The picker's own stacking context, so its sticky headers and the search
+   field's dropdown z-index cannot paint through the tool view above it. */
+.tool-panel__picker-layer {
+  flex: 1;
+  isolation: isolate;
+}
+
+.tool-panel__tool-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--c-surface);
+}
+
 /* Slightly recessed search field so it reads as distinct from the panel. */
 .tool-panel__between-search input {
   background-color: var(--c-surface-sunken);
-}
-
-::view-transition-old(tool-rail) {
-  animation: vt-rail-fade-out 180ms ease-out forwards;
-}
-
-::view-transition-new(tool-rail) {
-  animation: vt-rail-fade-in 220ms ease-in forwards;
-}
-
-@keyframes vt-rail-fade-out {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes vt-rail-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(tool-rail),
-  ::view-transition-new(tool-rail) {
-    animation-duration: 1ms !important;
-  }
 }
 
 .tool-panel__mode-toggle {
