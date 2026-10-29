@@ -1,3 +1,4 @@
+import { protectLikeOriginal } from "@editor/services/rightsManagedPdf";
 import React, {
   useCallback,
   useEffect,
@@ -75,6 +76,9 @@ import { ScaleCalibrationDialog } from "@editor/components/viewer/ScaleCalibrati
 import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
 import { alert } from "@editor/components/toast";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
+import { useRightsManagedPdf } from "@editor/hooks/useRightsManagedPdf";
+import { RightsManagedPdfPanel } from "@editor/components/viewer/RightsManagedPdfPanel";
+import { RightsManagedPdfBanner } from "@editor/components/viewer/RightsManagedPdfBanner";
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -692,6 +696,24 @@ const EmbedPdfViewerContent = ({
     setActiveFileId,
   ]);
   const fileWithUrl = useFileWithUrl(currentFile, currentFileId);
+  const rightsManaged = useRightsManagedPdf(previewFile ?? currentFile);
+  const rightsManagedOpened =
+    rightsManaged.status === "opened" ? rightsManaged.opened : null;
+  const exportProtect = React.useMemo(
+    () =>
+      rightsManagedOpened
+        ? async (bytes: ArrayBuffer) =>
+            (
+              await protectLikeOriginal(
+                rightsManagedOpened,
+                new File([bytes], rightsManagedOpened.original.name, {
+                  type: "application/pdf",
+                }),
+              )
+            ).arrayBuffer()
+        : undefined,
+    [rightsManagedOpened],
+  );
 
   // Lineage root of the open document: saves and tool outputs add a child record,
   // so mounting on the root keeps the engine alive across reloads.
@@ -708,6 +730,9 @@ const EmbedPdfViewerContent = ({
 
   // Determine the effective file to display
   const effectiveFile = React.useMemo(() => {
+    if (rightsManagedOpened) {
+      return { file: rightsManagedOpened.plaintext, url: null };
+    }
     if (previewFile) {
       // In preview mode, show the preview file
       if (previewFile.size === 0) {
@@ -717,7 +742,7 @@ const EmbedPdfViewerContent = ({
     } else {
       return fileWithUrl;
     }
-  }, [previewFile, fileWithUrl]);
+  }, [rightsManagedOpened, previewFile, fileWithUrl]);
 
   // Check if the current file is encrypted (gate the viewer to prevent PDFium crash)
   const isStoredFileEncrypted = useFileSelector((s) =>
@@ -725,7 +750,9 @@ const EmbedPdfViewerContent = ({
       ? s.files.byId[currentFile.fileId]?.processedFile?.isEncrypted === true
       : false,
   );
-  const pdfAccess = usePdfAccess(previewFile ?? currentFile);
+  const pdfAccess = usePdfAccess(
+    rightsManagedOpened?.plaintext ?? previewFile ?? currentFile,
+  );
   const isCurrentFileEncrypted =
     isStoredFileEncrypted || Boolean(pdfAccess?.encrypted);
   const isCurrentFileLocked = isCurrentFileEncrypted && !pdfAccess;
@@ -1896,6 +1923,11 @@ const EmbedPdfViewerContent = ({
             )}
           </Text>
         </Center>
+      ) : rightsManaged.status === "locked" && (previewFile ?? currentFile) ? (
+        <RightsManagedPdfPanel
+          file={(previewFile ?? currentFile)!}
+          onClose={previewFile ? onClose : undefined}
+        />
       ) : isCurrentFileLocked ? (
         <Center style={{ flex: 1 }}>
           <Stack align="center" gap="md">
@@ -1921,6 +1953,12 @@ const EmbedPdfViewerContent = ({
         <>
           {currentFile && isStirlingFile(currentFile) && (
             <PdfProtectionStatus key={currentFile.fileId} file={currentFile} />
+          )}
+          {rightsManagedOpened && (
+            <RightsManagedPdfBanner
+              protection={rightsManagedOpened.protection}
+              fileName={rightsManagedOpened.original.name}
+            />
           )}
           {/* EmbedPDF Viewer */}
           <Box
@@ -1952,6 +1990,8 @@ const EmbedPdfViewerContent = ({
               pdfRenderMode={pdfRenderMode}
               file={effectiveFile.file}
               url={effectiveFile.url}
+              exportOriginal={rightsManagedOpened?.original}
+              exportProtect={exportProtect}
               fileName={
                 previewFile
                   ? previewFile.name

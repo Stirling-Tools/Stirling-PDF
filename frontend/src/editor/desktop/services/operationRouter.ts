@@ -31,7 +31,7 @@ export class OperationRouter {
     const path = endpoint.startsWith("http")
       ? new URL(endpoint).pathname
       : endpoint;
-    return /^\/api\/v1\/(policies|processing-folders|automation|pipeline)(?:[/?]|$)/.test(
+    return /^\/api\/v1\/(policies|processing-folders|automation|pipeline|rights-management|connected-accounts)(?:[/?]|$)/.test(
       path,
     );
   }

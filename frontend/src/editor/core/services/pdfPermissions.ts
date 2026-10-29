@@ -5,12 +5,18 @@ type PermissionAccess = Pick<
   PdfAccess,
   "encrypted" | "ownerAuthenticated" | "permissions"
 > &
-  Partial<Pick<PdfAccess, "honorOwnerPasswords" | "encryptionRevision">>;
+  Partial<
+    Pick<
+      PdfAccess,
+      "honorOwnerPasswords" | "encryptionRevision" | "rightsManaged"
+    >
+  >;
 
 /** Grants actions without changing the document's actual authentication role. */
 export function hasPdfPermissionOverride(
   access: Partial<PdfAccess> | undefined,
 ): boolean {
+  if (access?.rightsManaged) return false;
   return (
     access?.ownerAuthenticated === true || access?.honorOwnerPasswords === false
   );

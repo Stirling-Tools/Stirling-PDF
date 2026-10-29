@@ -24,6 +24,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
 
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
@@ -105,6 +106,25 @@ class PolicyFailureRecorderTest {
             // The run's message, not the exception's: that is what the operator saw. Stored
             // verbatim, including for a kind we recognise, so the row says what actually happened.
             assertThat(event.detail()).isEqualTo("Policy run failed: locked");
+        }
+
+        @Test
+        void storesNoDocumentOrOwnerDetailForAPurviewRefusal() {
+            when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
+
+            recorder.recordRunFailure(
+                    "run-1",
+                    "policy-1",
+                    null,
+                    null,
+                    ACTOR,
+                    "Policy run failed: secret-plan.pdf. Ask alice@contoso.com for edit rights.",
+                    ExceptionUtils.createRightsManagedInputException(
+                            "secret-plan.pdf. Ask alice@contoso.com for edit rights."));
+
+            FileRunEvent event = store.list(TEAM, null, false, null, null, 10).getFirst();
+            assertThat(event.kind()).isEqualTo(FailureKind.INPUT_RIGHTS_MANAGED);
+            assertThat(event.detail()).doesNotContain("secret-plan").doesNotContain("alice");
         }
 
         @Test

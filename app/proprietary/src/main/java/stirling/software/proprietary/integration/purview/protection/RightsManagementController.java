@@ -1,0 +1,363 @@
+package stirling.software.proprietary.integration.purview.protection;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.proprietary.connectedaccount.AccountReconnectRequiredException;
+import stirling.software.proprietary.connectedaccount.CloudProvider;
+import stirling.software.proprietary.connectedaccount.ConnectedAccount;
+import stirling.software.proprietary.connectedaccount.ConnectedAccountService;
+import stirling.software.proprietary.security.model.User;
+
+import tools.jackson.databind.ObjectMapper;
+
+@Slf4j
+@RestController
+@RequestMapping("/api/v1/rights-management")
+@RequiredArgsConstructor
+@Tag(
+        name = "Microsoft Purview protection",
+        description = "Open and edit PDFs encrypted by Microsoft Purview sensitivity labels")
+public class RightsManagementController {
+
+    public static final String PROTECTION_HEADER = "X-Stirling-Protection";
+    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final Set<String> USAGE_RIGHTS =
+            Set.of(
+                    "VIEW",
+                    "EDIT",
+                    "DOCEDIT",
+                    "PRINT",
+                    "EXTRACT",
+                    "EXPORT",
+                    "COMMENT",
+                    "FORWARD",
+                    "REPLY",
+                    "REPLYALL",
+                    "OBJMODEL",
+                    "VIEWRIGHTSDATA",
+                    "EDITRIGHTSDATA",
+                    "AUDITEDEXTRACT",
+                    "OWNER");
+
+    private final RightsManagementService service;
+    private final ConnectedAccountService accounts;
+
+    public record StatusResponse(
+            boolean enabled, boolean available, List<AccountOption> accounts) {}
+
+    public record AccountOption(long id, String email, String status) {}
+
+    public record ErrorResponse(String code, String message, String owner) {}
+
+    @GetMapping("/status")
+    @Operation(summary = "Whether this server can open Purview protected PDFs for the caller")
+    public StatusResponse status(@AuthenticationPrincipal User user) {
+        requireUser(user);
+        List<AccountOption> options =
+                accounts.list(user).stream()
+                        .filter(
+                                account ->
+                                        CloudProvider.MICROSOFT.id().equals(account.getProvider()))
+                        .map(
+                                account ->
+                                        new AccountOption(
+                                                account.getId(),
+                                                account.getEmail(),
+                                                account.getStatus()))
+                        .toList();
+        return new StatusResponse(service.enabled(), service.available(), options);
+    }
+
+    @PostMapping(value = "/inspect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Read the label and the caller's rights on a Purview protected PDF")
+    public ProtectionInfo inspect(
+            @AuthenticationPrincipal User user,
+            @RequestPart("fileInput") MultipartFile file,
+            @RequestParam(required = false) Long accountId)
+            throws IOException {
+        ConnectedAccount account = account(user, accountId);
+        Path input = protectedCopy(file);
+        try {
+            return service.inspect(account, input);
+        } finally {
+            Files.deleteIfExists(input);
+        }
+    }
+
+    @PostMapping(value = "/open", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Decrypt a Purview protected PDF for viewing",
+            description =
+                    "Requires the VIEW right. The caller's rights are returned base64url JSON in"
+                            + " the X-Stirling-Protection header.")
+    public ResponseEntity<byte[]> open(
+            @AuthenticationPrincipal User user,
+            @RequestPart("fileInput") MultipartFile file,
+            @RequestParam(required = false) Long accountId)
+            throws IOException {
+        ConnectedAccount account = account(user, accountId);
+        Path input = protectedCopy(file);
+        try {
+            RightsManagementService.Opened opened = service.open(account, input);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                    .header(PROTECTION_HEADER, encode(opened.protection()))
+                    .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, PROTECTION_HEADER)
+                    .body(opened.pdf());
+        } finally {
+            Files.deleteIfExists(input);
+        }
+    }
+
+    @PostMapping(value = "/protect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary =
+                    "Protect a PDF with the label and permissions of a Purview protected original",
+            description = "Requires the EDIT right on the original.")
+    public ResponseEntity<byte[]> protect(
+            @AuthenticationPrincipal User user,
+            @RequestPart("original") MultipartFile original,
+            @RequestPart("fileInput") MultipartFile file,
+            @RequestParam(required = false) Long accountId)
+            throws IOException {
+        ConnectedAccount account = account(user, accountId);
+        Path originalCopy = protectedCopy(original);
+        Path derived;
+        try {
+            derived = plainCopy(file);
+        } catch (RuntimeException | IOException e) {
+            Files.deleteIfExists(originalCopy);
+            throw e;
+        }
+        try {
+            byte[] protectedPdf = service.protectLike(account, originalCopy, derived);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                    .body(protectedPdf);
+        } finally {
+            Files.deleteIfExists(originalCopy);
+            Files.deleteIfExists(derived);
+        }
+    }
+
+    @GetMapping("/labels")
+    @Operation(summary = "Sensitivity labels the caller's Microsoft account may apply")
+    public List<RightsManagementService.AvailableLabel> labels(
+            @AuthenticationPrincipal User user, @RequestParam(required = false) Long accountId)
+            throws IOException {
+        return service.labels(account(user, accountId));
+    }
+
+    @PostMapping(value = "/apply-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Apply a sensitivity label, including any encryption it requires",
+            description = "Runs as the caller's connected Microsoft account.")
+    public ResponseEntity<byte[]> applyLabel(
+            @AuthenticationPrincipal User user,
+            @RequestPart("fileInput") MultipartFile file,
+            @RequestParam String labelId,
+            @RequestParam(required = false) Long accountId)
+            throws IOException {
+        ConnectedAccount account = account(user, accountId);
+        Path input = plainCopy(file);
+        try {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                    .body(service.applyLabel(account, input, labelId));
+        } finally {
+            Files.deleteIfExists(input);
+        }
+    }
+
+    @PostMapping(value = "/protect-for-users", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Encrypt a PDF so only the named people get the named rights",
+            description =
+                    "grants is 'user@a.com,user@b.com=VIEW,PRINT;user@c.com=EDIT', using the"
+                            + " Rights Management usage rights. The caller becomes the owner.")
+    public ResponseEntity<byte[]> protectForUsers(
+            @AuthenticationPrincipal User user,
+            @RequestPart("fileInput") MultipartFile file,
+            @RequestParam String grants,
+            @RequestParam(required = false) Long accountId)
+            throws IOException {
+        String normalizedGrants = normalizeGrants(grants);
+        ConnectedAccount account = account(user, accountId);
+        Path input = plainCopy(file);
+        try {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                    .body(service.protectForUsers(account, input, normalizedGrants));
+        } finally {
+            Files.deleteIfExists(input);
+        }
+    }
+
+    @ExceptionHandler(RightsManagementException.class)
+    public ResponseEntity<ErrorResponse> rightsError(RightsManagementException e) {
+        HttpStatus status =
+                switch (e.getCode()) {
+                    case RightsManagementException.NO_PERMISSIONS,
+                            RightsManagementException.ACCESS_DENIED ->
+                            HttpStatus.FORBIDDEN;
+                    case RightsManagementException.SIGN_IN_REQUIRED -> HttpStatus.CONFLICT;
+                    case RightsManagementException.NOT_PROTECTED,
+                            RightsManagementException.ALREADY_PROTECTED,
+                            RightsManagementException.BAD_INPUT,
+                            "not_supported" ->
+                            HttpStatus.UNPROCESSABLE_CONTENT;
+                    case RightsManagementException.UNAVAILABLE, "service_disabled" ->
+                            HttpStatus.SERVICE_UNAVAILABLE;
+                    case RightsManagementException.NETWORK -> HttpStatus.BAD_GATEWAY;
+                    default -> HttpStatus.INTERNAL_SERVER_ERROR;
+                };
+        if (status == HttpStatus.INTERNAL_SERVER_ERROR
+                || RightsManagementException.ACCESS_DENIED.equals(e.getCode())) {
+            log.warn("Purview protection failed: {} {}", e.getCode(), e.getMessage());
+        }
+        return ResponseEntity.status(status)
+                .body(new ErrorResponse(e.getCode(), e.getMessage(), e.getOwner()));
+    }
+
+    @ExceptionHandler(AccountReconnectRequiredException.class)
+    public ResponseEntity<ErrorResponse> reconnect(AccountReconnectRequiredException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(
+                        new ErrorResponse(
+                                RightsManagementException.SIGN_IN_REQUIRED, e.getMessage(), null));
+    }
+
+    private ConnectedAccount account(User user, Long accountId) {
+        requireUser(user);
+        List<ConnectedAccount> microsoft =
+                accounts.list(user).stream()
+                        .filter(
+                                account ->
+                                        CloudProvider.MICROSOFT.id().equals(account.getProvider()))
+                        .toList();
+        if (accountId != null) {
+            return microsoft.stream()
+                    .filter(account -> account.getId().equals(accountId))
+                    .findFirst()
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        }
+        if (microsoft.size() == 1) {
+            return microsoft.getFirst();
+        }
+        throw new RightsManagementException(
+                RightsManagementException.SIGN_IN_REQUIRED,
+                microsoft.isEmpty()
+                        ? "Connect your Microsoft account to open Purview protected PDFs"
+                        : "Choose which connected Microsoft account to open this PDF with");
+    }
+
+    private static Path protectedCopy(MultipartFile file) throws IOException {
+        Path copy = Files.createTempFile("stirling-mip-in-", ".pdf");
+        file.transferTo(copy);
+        boolean isProtected;
+        try (PDDocument document = Loader.loadPDF(copy.toFile())) {
+            isProtected = ProtectedPdfDetector.isMicrosoftProtected(document);
+        } catch (IOException e) {
+            isProtected = false;
+        }
+        if (!isProtected) {
+            Files.deleteIfExists(copy);
+            throw new RightsManagementException(
+                    RightsManagementException.NOT_PROTECTED,
+                    "This PDF is not protected by Microsoft Purview");
+        }
+        return copy;
+    }
+
+    private static Path plainCopy(MultipartFile file) throws IOException {
+        Path copy = Files.createTempFile("stirling-mip-plain-", ".pdf");
+        file.transferTo(copy);
+        boolean isProtected;
+        try (PDDocument document = Loader.loadPDF(copy.toFile())) {
+            isProtected = ProtectedPdfDetector.isMicrosoftProtected(document);
+        } catch (IOException e) {
+            Files.deleteIfExists(copy);
+            throw new RightsManagementException(
+                    RightsManagementException.BAD_INPUT, "This file is not a readable PDF");
+        }
+        if (isProtected) {
+            Files.deleteIfExists(copy);
+            throw new RightsManagementException(
+                    RightsManagementException.ALREADY_PROTECTED,
+                    "This PDF is already protected by Microsoft Purview");
+        }
+        return copy;
+    }
+
+    static String normalizeGrants(String grants) {
+        if (grants == null || !grants.matches("[^;=]+=[A-Za-z,]+(;[^;=]+=[A-Za-z,]+)*")) {
+            throw new RightsManagementException(
+                    RightsManagementException.BAD_INPUT,
+                    "grants must look like user@example.com=VIEW,PRINT");
+        }
+        List<String> normalized = new ArrayList<>();
+        for (String grant : grants.split(";")) {
+            int equals = grant.indexOf('=');
+            List<String> rights = new ArrayList<>();
+            for (String right : grant.substring(equals + 1).split(",")) {
+                String upper = right.trim().toUpperCase(Locale.ROOT);
+                if (!USAGE_RIGHTS.contains(upper)) {
+                    throw new RightsManagementException(
+                            RightsManagementException.BAD_INPUT,
+                            "Unknown usage right '" + right.trim() + "'");
+                }
+                rights.add(upper);
+            }
+            normalized.add(grant.substring(0, equals).trim() + "=" + String.join(",", rights));
+        }
+        return String.join(";", normalized);
+    }
+
+    private static String encode(ProtectionInfo protection) {
+        return Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(
+                        JSON.writeValueAsString(protection).getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static void requireUser(User user) {
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+    }
+}

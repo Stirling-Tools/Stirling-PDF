@@ -8,6 +8,13 @@ import {
 import apiClient from "@editor/services/apiClient";
 import axios, { type CancelToken } from "axios";
 import i18n from "i18next";
+import {
+  fetchRightsManagementStatus,
+  getOpenedRightsManagedPdf,
+  isMicrosoftProtectedPdf,
+  protectLikeOriginal,
+  type OpenedRightsManagedPdf,
+} from "@editor/services/rightsManagedPdf";
 
 import type { StirlingFile } from "@editor/types/fileContext";
 import { PdfPermissionFlag } from "@embedpdf/models";
@@ -83,6 +90,71 @@ async function ensureAccessUnlessDamaged(
   }
 }
 
+export function supportsRightsManaged(endpoint: string | undefined): boolean {
+  return (
+    supportsSessionUnlock(endpoint) &&
+    endpoint !== "/api/v1/security/add-password" &&
+    endpoint !== "/api/v1/security/remove-password"
+  );
+}
+
+async function unopenedRightsManagedMessage(): Promise<string> {
+  const status = await fetchRightsManagementStatus();
+  if (!status.available)
+    return i18n.t(
+      "rightsManagedPdf.unavailable",
+      "This server cannot open Microsoft Purview protected PDFs. Ask your administrator to turn it on, or open the file in a Microsoft 365 app.",
+    );
+  if (!status.accounts.some((account) => account.status === "CONNECTED"))
+    return i18n.t(
+      "rightsManagedPdf.signInFirst",
+      "Sign in with Microsoft in the viewer to open this Microsoft Purview protected PDF, then run the tool again.",
+    );
+  return i18n.t(
+    "rightsManagedPdf.openFirst",
+    "Open this Microsoft Purview protected PDF in the viewer first, then run the tool again.",
+  );
+}
+
+async function preflightRightsManaged(
+  files: readonly StirlingFile[],
+  endpoint: string | undefined,
+  combinesFiles: boolean,
+): Promise<void> {
+  const protectedFiles: StirlingFile[] = [];
+  for (const file of files) {
+    if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) continue;
+    if (await isMicrosoftProtectedPdf(file)) protectedFiles.push(file);
+  }
+  if (protectedFiles.length === 0) return;
+  if (!supportsRightsManaged(endpoint))
+    throw new Error(
+      i18n.t(
+        "rightsManagedPdf.toolUnsupported",
+        "This tool cannot keep Microsoft Purview protection yet.",
+      ),
+    );
+  if (combinesFiles && protectedFiles.length > 1)
+    throw new Error(
+      i18n.t(
+        "rightsManagedPdf.mixedProtection",
+        "Process Microsoft Purview protected PDFs one at a time. Protected files: {{files}}.",
+        { files: protectedFiles.map((file) => file.name).join(", ") },
+      ),
+    );
+  for (const file of protectedFiles) {
+    const opened = getOpenedRightsManagedPdf(file);
+    if (!opened) throw new Error(await unopenedRightsManagedMessage());
+    if (!opened.protection.permissions.edit)
+      throw new Error(
+        i18n.t(
+          "rightsManagedPdf.editNotAllowed",
+          "Your permissions on this protected PDF do not allow changes.",
+        ),
+      );
+  }
+}
+
 /** Checks the whole selection before processing; encryption hints request authentication but never grant access. */
 export async function preflightPdfOperation(
   files: readonly StirlingFile[],
@@ -92,6 +164,7 @@ export async function preflightPdfOperation(
   signal?: AbortSignal,
   isKnownEncrypted: (file: StirlingFile) => boolean = () => false,
 ): Promise<boolean> {
+  await preflightRightsManaged(files, endpoint, combinesFiles);
   const protectedFiles: StirlingFile[] = [];
   const changesProtection =
     endpoint === "/api/v1/security/add-password" ||
@@ -99,6 +172,7 @@ export async function preflightPdfOperation(
   for (const file of files) {
     if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
     if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) continue;
+    if (getOpenedRightsManagedPdf(file)) continue;
     // Password endpoints validate the requested change themselves; unknown roles need no preflight upload.
     const access = changesProtection
       ? getPdfAccess(file)
@@ -179,6 +253,20 @@ export async function prepareUnlockedFile(
   inspectionSignal?: AbortSignal,
   cancelToken?: CancelToken,
 ): Promise<File> {
+  const rightsManaged = getOpenedRightsManagedPdf(file);
+  if (rightsManaged) {
+    if (
+      !supportsRightsManaged(endpoint) ||
+      !rightsManaged.protection.permissions.edit
+    )
+      throw new Error(
+        i18n.t(
+          "rightsManagedPdf.editNotAllowed",
+          "Your permissions on this protected PDF do not allow changes.",
+        ),
+      );
+    return rightsManaged.plaintext;
+  }
   if (
     endpoint === "/api/v1/security/remove-password" ||
     endpoint === "/api/v1/security/add-password"
@@ -238,6 +326,63 @@ function protectionRestoreError(): Error {
   );
 }
 
+function rightsManagedRestoreError(): Error {
+  return new Error(
+    i18n.t(
+      "rightsManagedPdf.protectFailed",
+      "Unable to re-apply Microsoft Purview protection. No unprotected result was saved.",
+    ),
+  );
+}
+
+async function protectEachPdf(
+  outputs: File[],
+  protect: (output: File) => Promise<File>,
+  failure: () => Error,
+): Promise<File[]> {
+  const protectedFiles: File[] = [];
+  for (const output of outputs) {
+    if (await zipFileService.isZipResponse(output)) {
+      const extracted = await zipFileService.extractAllFiles(output);
+      if (
+        !extracted.success ||
+        extracted.errors.length > 0 ||
+        extracted.extractedCount !== extracted.totalFiles ||
+        extracted.extractedFiles.length === 0
+      )
+        throw failure();
+      const protectedEntries: File[] = [];
+      for (const entry of extracted.extractedFiles) {
+        protectedEntries.push(await protect(entry));
+      }
+      const { zipFile } = await zipFileService.createZipFromFiles(
+        protectedEntries,
+        output.name,
+      );
+      protectedFiles.push(zipFile);
+    } else {
+      protectedFiles.push(await protect(output));
+    }
+  }
+  return protectedFiles;
+}
+
+async function protectRightsManagedOutput(
+  output: File,
+  source: OpenedRightsManagedPdf,
+): Promise<File> {
+  if (
+    output.type !== "application/pdf" &&
+    !output.name.toLowerCase().endsWith(".pdf")
+  )
+    throw rightsManagedRestoreError();
+  try {
+    return await protectLikeOriginal(source, output);
+  } catch {
+    throw rightsManagedRestoreError();
+  }
+}
+
 async function protectPdfOutput(
   output: File,
   source: File,
@@ -268,6 +413,16 @@ export async function protectUnlockedResults(
   inputs: readonly File[],
   endpoint: string | undefined,
 ): Promise<File[]> {
+  const rightsSources = inputs
+    .map((file) => getOpenedRightsManagedPdf(file))
+    .filter((opened): opened is OpenedRightsManagedPdf => Boolean(opened));
+  if (rightsSources.length > 1) throw rightsManagedRestoreError();
+  if (rightsSources.length === 1)
+    return protectEachPdf(
+      outputs,
+      (output) => protectRightsManagedOutput(output, rightsSources[0]),
+      rightsManagedRestoreError,
+    );
   if (
     endpoint === "/api/v1/security/remove-password" ||
     endpoint === "/api/v1/security/add-password"
@@ -283,31 +438,11 @@ export async function protectUnlockedResults(
   const source = inputs.find((file) => getPdfAccess(file)?.encrypted);
   if (!source) return outputs;
   const access = getPdfAccess(source)!;
-  const protectedFiles: File[] = [];
-  for (const output of outputs) {
-    if (await zipFileService.isZipResponse(output)) {
-      const extracted = await zipFileService.extractAllFiles(output);
-      if (
-        !extracted.success ||
-        extracted.errors.length > 0 ||
-        extracted.extractedCount !== extracted.totalFiles ||
-        extracted.extractedFiles.length === 0
-      )
-        throw protectionRestoreError();
-      const protectedEntries: File[] = [];
-      for (const entry of extracted.extractedFiles) {
-        protectedEntries.push(await protectPdfOutput(entry, source, access));
-      }
-      const { zipFile } = await zipFileService.createZipFromFiles(
-        protectedEntries,
-        output.name,
-      );
-      protectedFiles.push(zipFile);
-    } else {
-      protectedFiles.push(await protectPdfOutput(output, source, access));
-    }
-  }
-  return protectedFiles;
+  return protectEachPdf(
+    outputs,
+    (output) => protectPdfOutput(output, source, access),
+    protectionRestoreError,
+  );
 }
 
 /** Session credentials authenticate the source without selecting which passwords to remove. */

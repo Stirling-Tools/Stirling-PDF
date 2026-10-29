@@ -455,6 +455,7 @@ class FailureKindTest {
                     .containsExactlyInAnyOrder(
                             FailureKind.COMPLIANCE_NOT_MET,
                             FailureKind.INPUT_UNREPAIRABLE,
+                            FailureKind.INPUT_RIGHTS_MANAGED,
                             FailureKind.INPUT_WRONG_TYPE,
                             FailureKind.INPUT_UNREADABLE,
                             FailureKind.INPUT_EMPTY,

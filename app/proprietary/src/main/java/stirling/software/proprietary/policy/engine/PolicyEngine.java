@@ -35,12 +35,14 @@ import stirling.software.common.service.ResourceMonitor;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExecutorFactory;
 import stirling.software.common.util.JobContext;
+import stirling.software.proprietary.connectedaccount.ConnectedAccountAccess;
 import stirling.software.proprietary.document.DocumentFacts;
 import stirling.software.proprietary.document.conditions.ConditionEvaluator;
 import stirling.software.proprietary.failure.DownstreamProblemDetail;
 import stirling.software.proprietary.failure.FailureKind;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
+import stirling.software.proprietary.policy.microsoft.MicrosoftDrive;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
@@ -96,6 +98,7 @@ public class PolicyEngine {
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
     private final PolicyAssetResolver assetResolver;
+    private final ProtectedPdfRuns protectedPdfRuns;
 
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
 
@@ -148,6 +151,7 @@ public class PolicyEngine {
                 policyId,
                 definition,
                 inputs,
+                new ProtectedPdfRuns.RunAccount(null, principal),
                 listener,
                 null,
                 null,
@@ -234,6 +238,7 @@ public class PolicyEngine {
                 policy.id(),
                 definition,
                 resolved,
+                new ProtectedPdfRuns.RunAccount(microsoftAccountOf(source), fileOwner),
                 listener,
                 sourceId,
                 fileIdentity,
@@ -247,6 +252,7 @@ public class PolicyEngine {
             String policyId,
             PipelineDefinition definition,
             PolicyInputs inputs,
+            ProtectedPdfRuns.RunAccount runAccount,
             PolicyProgressListener listener,
             String sourceId,
             String fileIdentity,
@@ -288,7 +294,8 @@ public class PolicyEngine {
                                         }
                                     }
                                     try {
-                                        runToCompletion(run, inputs, tracking, completion);
+                                        runToCompletion(
+                                                run, inputs, runAccount, tracking, completion);
                                     } finally {
                                         if (admission != null) {
                                             admission.release();
@@ -394,6 +401,7 @@ public class PolicyEngine {
     private void runToCompletion(
             PolicyRun run,
             PolicyInputs inputs,
+            ProtectedPdfRuns.RunAccount runAccount,
             PolicyProgressListener listener,
             CompletableFuture<PolicyRun> completion) {
         String runId = run.getRunId();
@@ -407,17 +415,22 @@ public class PolicyEngine {
                     // Cancelled before it started: nothing runs, nothing delivers.
                     return;
                 }
-                result = stepExecutor.execute(run.getDefinition(), inputs, listener);
-                if (!run.beginDelivery()) {
-                    // Cancelled while the steps ran: discard the produced files —
-                    // delivering would stamp results over files being restored right now.
-                    taskManager.addNote(runId, "Cancelled before delivery; results discarded");
-                    return;
+                try (ProtectedPdfRuns.Unlocked unlocked =
+                        protectedPdfRuns.unlock(
+                                inputs, runAccount, !run.getDefinition().steps().isEmpty())) {
+                    result = executeUnlocked(run.getDefinition(), unlocked, listener);
+                    if (!run.beginDelivery()) {
+                        // Cancelled while the steps ran: discard the produced files —
+                        // delivering would stamp results over files being restored right now.
+                        taskManager.addNote(runId, "Cancelled before delivery; results discarded");
+                        return;
+                    }
+                    List<ResultFile> outputs =
+                            deliver(run, runId, inputs, unlocked.protect(result));
+                    taskManager.setMultipleFileResults(runId, outputs);
+                    taskManager.setComplete(runId);
+                    run.complete(outputs);
                 }
-                List<ResultFile> outputs = deliver(run, runId, inputs, result.files());
-                taskManager.setMultipleFileResults(runId, outputs);
-                taskManager.setComplete(runId);
-                run.complete(outputs);
             } catch (PolicyInputRequiredException e) {
                 // Expected path: suspend rather than fail. Persist intermediates as fileIds so the
                 // run
@@ -482,6 +495,38 @@ public class PolicyEngine {
                 // Always resolve so stream/await callers unblock.
                 completion.complete(run);
             }
+        }
+    }
+
+    private PolicyExecutionResult executeUnlocked(
+            PipelineDefinition definition,
+            ProtectedPdfRuns.Unlocked unlocked,
+            PolicyProgressListener listener)
+            throws IOException {
+        try {
+            return stepExecutor.execute(definition, unlocked.inputs(), listener);
+        } catch (PolicyInputRequiredException e) {
+            if (!unlocked.hasProtectedInputs()) {
+                throw e;
+            }
+            throw new IOException(
+                    "Runs on Microsoft Purview-protected PDFs cannot pause for input: "
+                            + e.getMessage(),
+                    e);
+        }
+    }
+
+    private static Long microsoftAccountOf(Source source) {
+        if (source == null
+                || MicrosoftDrive.fromOption(source.type()) == null
+                || !ConnectedAccountAccess.usesAccount(source.options())) {
+            return null;
+        }
+        try {
+            return Long.parseLong(
+                    source.options().get(ConnectedAccountAccess.ACCOUNT_OPTION).toString().trim());
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 

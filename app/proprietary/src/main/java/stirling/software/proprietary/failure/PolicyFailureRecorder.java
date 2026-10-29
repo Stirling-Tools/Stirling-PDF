@@ -35,7 +35,9 @@ public class PolicyFailureRecorder {
             String actor,
             String detail,
             Throwable cause) {
-        record(classifier.classify(cause), runId, policyId, sourceId, fileIdentity, actor, detail);
+        FailureKind kind = classifier.classify(cause);
+        String stored = kind == FailureKind.INPUT_RIGHTS_MANAGED ? kind.getDefaultTitle() : detail;
+        record(kind, runId, policyId, sourceId, fileIdentity, actor, stored);
     }
 
     /**

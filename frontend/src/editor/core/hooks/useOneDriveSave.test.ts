@@ -64,6 +64,7 @@ const origin: CloudOrigin = {
   name: "Report.pdf",
   eTag: '"{E},1"',
   webUrl: "https://contoso.sharepoint.com/Report.pdf",
+  protected: false,
 };
 
 const stub = {

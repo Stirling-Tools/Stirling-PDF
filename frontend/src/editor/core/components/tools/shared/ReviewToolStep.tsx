@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useSyncExternalStore } from "react";
 import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -13,6 +13,12 @@ import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
 import { saveOperationResults } from "@editor/services/operationResultsSaveService";
 import { useFileActions, useFileSelectors } from "@editor/contexts/FileContext";
 import i18n from "@editor/i18n";
+import {
+  getOpenedRightsManagedPdf,
+  getRightsManagedThumbnail,
+  rightsManagedPdfRevision,
+  subscribeRightsManagedPdfs,
+} from "@editor/services/rightsManagedPdf";
 
 /**
  * Nearest scrolling ancestor - in the right rail that is the tool panel's
@@ -71,11 +77,18 @@ function ReviewStepContent<TParams = unknown>({
     }
   };
 
+  useSyncExternalStore(
+    subscribeRightsManagedPdfs,
+    rightsManagedPdfRevision,
+    rightsManagedPdfRevision,
+  );
   const previewFiles =
     operation.files?.map((file, index) => ({
       file,
-      thumbnail: operation.thumbnails[index],
+      thumbnail: getRightsManagedThumbnail(file) ?? operation.thumbnails[index],
     })) || [];
+  const rightsManagedOutput =
+    operation.files?.some((file) => getOpenedRightsManagedPdf(file)) ?? false;
 
   const handleDownload = async () => {
     if (!operation.downloadUrl) return;
@@ -183,7 +196,7 @@ function ReviewStepContent<TParams = unknown>({
         </Button>
       )}
 
-      <SuggestedToolsSection />
+      <SuggestedToolsSection rightsManaged={rightsManagedOutput} />
     </Stack>
   );
 }

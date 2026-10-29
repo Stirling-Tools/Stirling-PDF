@@ -10,6 +10,7 @@ import {
   getPdfAccess,
   rememberPdfAccess,
 } from "@editor/services/pdfAccessService";
+import { forgetRightsManagedPdfs } from "@editor/services/rightsManagedPdf";
 import {
   FileContextAction,
   FileContextState,
@@ -78,6 +79,7 @@ export class FileLifecycleManager {
    */
   cleanupAllFiles = (): void => {
     forgetPdfAccess([...this.filesRef.current.keys()]);
+    forgetRightsManagedPdfs([...this.filesRef.current.keys()]);
     // Revoke all blob URLs
     this.blobUrls.forEach((url) => {
       try {
@@ -165,6 +167,7 @@ export class FileLifecycleManager {
     stateRef?: React.RefObject<FileContextState>,
   ): void => {
     forgetPdfAccess([fileId]);
+    forgetRightsManagedPdfs([fileId]);
     const file = this.filesRef.current.get(fileId);
     this.filesRef.current.delete(fileId);
 

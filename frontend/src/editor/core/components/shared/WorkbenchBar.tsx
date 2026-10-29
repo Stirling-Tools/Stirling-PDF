@@ -1,6 +1,10 @@
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import { pdfAllows } from "@editor/services/pdfPermissions";
 
+import {
+  getOpenedRightsManagedPdf,
+  rightsManagedSaveBlocked,
+} from "@editor/services/rightsManagedPdf";
 import { PdfPermissionFlag } from "@embedpdf/models";
 import React, {
   useCallback,
@@ -346,15 +350,27 @@ export default function WorkbenchBar({
     pdfAllows(printAccess, PdfPermissionFlag.PrintHighQuality);
   const printDisabledReason =
     printAccess?.encrypted && !canPrint
-      ? pdfAllows(printAccess, PdfPermissionFlag.Print)
+      ? getOpenedRightsManagedPdf(activeFileId)
         ? t(
-            "encryptedPdfUnlock.lowQualityPrintUnsupported",
-            "This PDF allows low-quality printing only, which this viewer does not support.",
+            "rightsManagedPdf.printNotAllowed",
+            "Your Microsoft Purview permissions do not allow printing this PDF.",
           )
-        : t(
-            "encryptedPdfUnlock.printRestricted",
-            "Printing is restricted. Verify permissions in Manage protection.",
-          )
+        : pdfAllows(printAccess, PdfPermissionFlag.Print)
+          ? t(
+              "encryptedPdfUnlock.lowQualityPrintUnsupported",
+              "This PDF allows low-quality printing only, which this viewer does not support.",
+            )
+          : t(
+              "encryptedPdfUnlock.printRestricted",
+              "Printing is restricted. Verify permissions in Manage protection.",
+            )
+      : undefined;
+  const downloadDisabledReason =
+    currentView === "viewer" && rightsManagedSaveBlocked(activeFileId)
+      ? t(
+          "rightsManagedPdf.saveNotAllowed",
+          "Your Microsoft Purview permissions do not allow saving a copy of this PDF.",
+        )
       : undefined;
   const handlePrint = useCallback(() => {
     viewerContext?.printActions?.print?.();
@@ -422,6 +438,7 @@ export default function WorkbenchBar({
     saveAsIconName: icons.saveAs,
     onPrint: canPrint ? handlePrint : undefined,
     printDisabledReason,
+    downloadDisabledReason,
     onExport: handleExportAll,
     onClose: handleClose,
   };

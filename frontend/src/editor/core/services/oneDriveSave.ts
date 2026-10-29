@@ -1,6 +1,7 @@
 import { isAxiosError } from "axios";
 import apiClient from "@editor/services/apiClient";
 import type { CloudOrigin } from "@editor/types/file";
+import { isMicrosoftProtectedPdf } from "@editor/services/rightsManagedPdf";
 
 export type OneDriveSaveTarget =
   | { kind: "replace"; origin: CloudOrigin }
@@ -15,7 +16,13 @@ export type OneDriveSaveTarget =
 
 export class OneDriveSaveError extends Error {
   constructor(
-    readonly code: "conflict" | "reconnect" | "network" | "server" | "failed",
+    readonly code:
+      | "conflict"
+      | "reconnect"
+      | "network"
+      | "server"
+      | "unprotected"
+      | "failed",
     message: string,
   ) {
     super(message);
@@ -35,6 +42,14 @@ export async function saveToOneDrive(
   file: File,
   target: OneDriveSaveTarget,
 ): Promise<CloudOrigin> {
+  const origin = target.kind === "folder" ? null : target.origin;
+  const isProtected = await isMicrosoftProtectedPdf(file);
+  if (origin?.protected && !isProtected) {
+    throw new OneDriveSaveError(
+      "unprotected",
+      "This copy is no longer protected with Microsoft Purview, so it was not saved to OneDrive.",
+    );
+  }
   const accountId =
     target.kind === "folder" ? target.accountId : target.origin.accountId;
   const form = new FormData();
@@ -80,6 +95,7 @@ export async function saveToOneDrive(
       name: saved.name,
       eTag: saved.eTag,
       webUrl: saved.webUrl,
+      protected: isProtected,
     };
   } catch (error) {
     if (isAxiosError(error) && error.response?.status === 409) {

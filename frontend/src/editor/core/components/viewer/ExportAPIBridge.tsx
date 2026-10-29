@@ -7,9 +7,11 @@ import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentRea
 export function ExportAPIBridge({
   disabled = false,
   originalFile,
+  protect,
 }: {
   disabled?: boolean;
   originalFile?: Blob;
+  protect?: (bytes: ArrayBuffer) => Promise<ArrayBuffer>;
 }) {
   const { provides: exportApi } = useExportCapability();
   const { registerBridge } = useViewer();
@@ -19,20 +21,35 @@ export function ExportAPIBridge({
     if (documentReady && !disabled && (originalFile || exportApi)) {
       registerBridge("export", {
         state: { canExport: true },
-        api: originalFile
-          ? {
-              saveAsCopy: () => ({
-                toPromise: () => originalFile.arrayBuffer(),
-              }),
-            }
-          : exportApi!,
+        api:
+          protect && exportApi
+            ? {
+                saveAsCopy: () => ({
+                  toPromise: async () =>
+                    protect(await exportApi.saveAsCopy().toPromise()),
+                }),
+              }
+            : originalFile
+              ? {
+                  saveAsCopy: () => ({
+                    toPromise: () => originalFile.arrayBuffer(),
+                  }),
+                }
+              : exportApi!,
       });
     }
 
     return () => {
       registerBridge("export", null);
     };
-  }, [exportApi, documentReady, registerBridge, disabled, originalFile]);
+  }, [
+    exportApi,
+    documentReady,
+    registerBridge,
+    disabled,
+    originalFile,
+    protect,
+  ]);
 
   return null;
 }
