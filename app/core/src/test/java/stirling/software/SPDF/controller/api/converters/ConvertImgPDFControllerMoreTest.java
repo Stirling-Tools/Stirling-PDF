@@ -23,6 +23,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -33,6 +34,7 @@ import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -217,8 +219,8 @@ class ConvertImgPDFControllerMoreTest {
             Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
                     .thenReturn(tinyDoc(3));
 
-            byte[] imageBytes = "img".getBytes();
-            ResponseEntity<byte[]> expected = ResponseEntity.ok(imageBytes);
+            TempFile rendered = Mockito.mock(TempFile.class);
+            ResponseEntity<Resource> expected = ResponseEntity.ok().build();
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
                     MockedStatic<WebResponseUtils> wr =
@@ -228,6 +230,7 @@ class ConvertImgPDFControllerMoreTest {
                                 () ->
                                         PdfUtils.convertFromPdf(
                                                 eq(pdfDocumentFactory),
+                                                eq(tempFileManager),
                                                 any(byte[].class),
                                                 eq("PNG"),
                                                 eq(ImageType.RGB),
@@ -235,11 +238,11 @@ class ConvertImgPDFControllerMoreTest {
                                                 eq(72),
                                                 any(String.class),
                                                 eq(false)))
-                        .thenReturn(imageBytes);
+                        .thenReturn(rendered);
                 wr.when(
                                 () ->
-                                        WebResponseUtils.bytesToWebResponse(
-                                                eq(imageBytes),
+                                        WebResponseUtils.fileToWebResponse(
+                                                eq(rendered),
                                                 any(String.class),
                                                 any(MediaType.class)))
                         .thenReturn(expected);

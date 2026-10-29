@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URLConnection;
 import java.nio.file.Files;
@@ -111,144 +110,120 @@ public class ConvertImgPDFController {
                         : requestedDpi;
         String pageNumbers = request.getPageNumbers();
         boolean includeAnnotations = Boolean.TRUE.equals(request.getIncludeAnnotations());
-        Path tempFile = null;
-        Path tempOutputDir = null;
-        Path tempPdfPath = null;
-        byte[] result = null;
+        boolean webp = "webp".equalsIgnoreCase(imageFormat);
+        if (webp && !CheckProgramInstall.isPythonAvailable()) {
+            throw ExceptionUtils.createPythonRequiredForWebpException();
+        }
         String[] pageOrderArr =
                 (pageNumbers != null && !pageNumbers.trim().isEmpty())
                         ? pageNumbers.split(",")
                         : new String[] {"all"};
-        ;
+
+        byte[] newPdfBytes = rearrangePdfPages(file, pageOrderArr);
+
+        ImageType colorTypeResult = ImageType.RGB;
+        if ("greyscale".equals(colorType)) {
+            colorTypeResult = ImageType.GRAY;
+        } else if ("blackwhite".equals(colorType)) {
+            colorTypeResult = ImageType.BINARY;
+        }
+        boolean singleImage = "single".equals(singleOrMultiple);
+        String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
+        // A WebP run that yields one file returns it bare, even in multiple-images mode
+        MediaType imageMediaType =
+                singleImage || webp ? MediaType.parseMediaType(getMediaType(imageFormat)) : null;
+
+        TempFile rendered =
+                PdfUtils.convertFromPdf(
+                        pdfDocumentFactory,
+                        tempFileManager,
+                        newPdfBytes,
+                        webp ? "png" : imageFormat.toUpperCase(Locale.ROOT),
+                        colorTypeResult,
+                        singleImage,
+                        dpi,
+                        filename,
+                        includeAnnotations);
+
+        if (webp) {
+            try (rendered) {
+                return convertToWebp(
+                        file, rendered, singleImage, dpi, filename, imageFormat, imageMediaType);
+            }
+        }
+        if (singleImage) {
+            return WebResponseUtils.fileToWebResponse(
+                    rendered, filename + "." + imageFormat, imageMediaType);
+        }
+        return WebResponseUtils.zipFileToWebResponse(rendered, filename + "_convertedToImages.zip");
+    }
+
+    private ResponseEntity<?> convertToWebp(
+            MultipartFile file,
+            TempFile renderedPng,
+            boolean singleImage,
+            int dpi,
+            String filename,
+            String imageFormat,
+            MediaType imageMediaType)
+            throws IOException, InterruptedException {
+        Path tempOutputDir = null;
+        Path tempPdfPath = null;
         try {
-            // Load the input PDF
-            byte[] newPdfBytes = rearrangePdfPages(file, pageOrderArr);
+            String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
+            Path pngToWebpScript = GeneralUtils.extractScript("png_to_webp.py");
 
-            ImageType colorTypeResult = ImageType.RGB;
-            if ("greyscale".equals(colorType)) {
-                colorTypeResult = ImageType.GRAY;
-            } else if ("blackwhite".equals(colorType)) {
-                colorTypeResult = ImageType.BINARY;
-            }
-            // returns bytes for image
-            boolean singleImage = "single".equals(singleOrMultiple);
-            String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
+            List<String> command = new ArrayList<>();
+            command.add(pythonVersion);
+            command.add(pngToWebpScript.toAbsolutePath().toString());
 
-            result =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            newPdfBytes,
-                            "webp".equalsIgnoreCase(imageFormat)
-                                    ? "png"
-                                    : imageFormat.toUpperCase(Locale.ROOT),
-                            colorTypeResult,
-                            singleImage,
-                            dpi,
-                            filename,
-                            includeAnnotations);
-            if (result == null || result.length == 0) {
-                log.error("resultant bytes for {} is null, error converting ", filename);
-            }
-            if ("webp".equalsIgnoreCase(imageFormat) && !CheckProgramInstall.isPythonAvailable()) {
-                throw ExceptionUtils.createPythonRequiredForWebpException();
-            } else if ("webp".equalsIgnoreCase(imageFormat)
-                    && CheckProgramInstall.isPythonAvailable()) {
-                // Write the output stream to a temp file
-                tempFile = Files.createTempFile("temp_png", ".png");
-                try (FileOutputStream fos = new FileOutputStream(tempFile.toFile())) {
-                    fos.write(result);
-                    fos.flush();
-                }
-
-                String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
-                Path pngToWebpScript = GeneralUtils.extractScript("png_to_webp.py");
-
-                List<String> command = new ArrayList<>();
-                command.add(pythonVersion);
-                command.add(
-                        pngToWebpScript
-                                .toAbsolutePath()
-                                .toString()); // Python script to handle the conversion
-
-                // Create a temporary directory for the output WebP files
-                tempOutputDir = Files.createTempDirectory("webp_output");
-                if (singleImage) {
-                    // Run the Python script to convert PNG to WebP
-                    command.add(tempFile.toString());
-                    command.add(tempOutputDir.toString());
-                    command.add("--single");
-                } else {
-                    // Save the uploaded PDF to a temporary file
-                    tempPdfPath = Files.createTempFile("temp_pdf", ".pdf");
-                    file.transferTo(tempPdfPath.toFile());
-                    // Run the Python script to convert PDF to WebP
-                    command.add(tempPdfPath.toString());
-                    command.add(tempOutputDir.toString());
-                }
-                command.add("--dpi");
-                command.add(String.valueOf(dpi));
-                ProcessExecutorResult resultProcess =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
-                                .runCommandWithOutputHandling(command);
-
-                // Find all WebP files in the output directory
-                List<Path> webpFiles;
-                try (Stream<Path> walkStream = Files.walk(tempOutputDir)) {
-                    webpFiles =
-                            walkStream.filter(path -> path.toString().endsWith(".webp")).toList();
-                }
-
-                if (webpFiles.isEmpty()) {
-                    log.error("No WebP files were created in: {}", tempOutputDir.toString());
-                    throw new IOException(
-                            "No WebP files were created. " + resultProcess.getMessages());
-                }
-
-                if (webpFiles.size() == 1) {
-                    Path webpFilePath = webpFiles.getFirst();
-                    byte[] webpBytes = Files.readAllBytes(webpFilePath);
-                    Files.deleteIfExists(tempFile);
-                    tempFile = null;
-                    FileUtils.deleteDirectory(tempOutputDir.toFile());
-                    tempOutputDir = null;
-                    String docName = filename + "." + imageFormat;
-                    MediaType mediaType = MediaType.parseMediaType(getMediaType(imageFormat));
-                    return WebResponseUtils.bytesToWebResponse(webpBytes, docName, mediaType);
-                } else {
-                    ByteArrayOutputStream zipBAOS = new ByteArrayOutputStream();
-                    try (ZipOutputStream zos = new ZipOutputStream(zipBAOS)) {
-                        for (Path webpFile : webpFiles) {
-                            zos.putNextEntry(new ZipEntry(webpFile.getFileName().toString()));
-                            Files.copy(webpFile, zos);
-                            zos.closeEntry();
-                        }
-                    }
-                    Files.deleteIfExists(tempFile);
-                    tempFile = null;
-                    FileUtils.deleteDirectory(tempOutputDir.toFile());
-                    tempOutputDir = null;
-                    String zipFilename = filename + "_convertedToImages.zip";
-                    return WebResponseUtils.bytesToWebResponse(
-                            zipBAOS.toByteArray(), zipFilename, MediaType.APPLICATION_OCTET_STREAM);
-                }
-            }
-
+            tempOutputDir = Files.createTempDirectory("webp_output");
             if (singleImage) {
-                String docName = filename + "." + imageFormat;
-                MediaType mediaType = MediaType.parseMediaType(getMediaType(imageFormat));
-                return WebResponseUtils.bytesToWebResponse(result, docName, mediaType);
+                command.add(renderedPng.getAbsolutePath());
+                command.add(tempOutputDir.toString());
+                command.add("--single");
             } else {
-                String zipFilename = filename + "_convertedToImages.zip";
-                return WebResponseUtils.bytesToWebResponse(
-                        result, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
+                tempPdfPath = Files.createTempFile("temp_pdf", ".pdf");
+                file.transferTo(tempPdfPath.toFile());
+                command.add(tempPdfPath.toString());
+                command.add(tempOutputDir.toString());
+            }
+            command.add("--dpi");
+            command.add(String.valueOf(dpi));
+            ProcessExecutorResult resultProcess =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
+                            .runCommandWithOutputHandling(command);
+
+            List<Path> webpFiles;
+            try (Stream<Path> walkStream = Files.walk(tempOutputDir)) {
+                webpFiles = walkStream.filter(path -> path.toString().endsWith(".webp")).toList();
             }
 
+            if (webpFiles.isEmpty()) {
+                log.error("No WebP files were created in: {}", tempOutputDir.toString());
+                throw new IOException("No WebP files were created. " + resultProcess.getMessages());
+            }
+
+            if (webpFiles.size() == 1) {
+                byte[] webpBytes = Files.readAllBytes(webpFiles.getFirst());
+                return WebResponseUtils.bytesToWebResponse(
+                        webpBytes, filename + "." + imageFormat, imageMediaType);
+            }
+
+            TempFile zip = tempFileManager.createManagedTempFile(".zip");
+            try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip.getPath()))) {
+                for (Path webpFile : webpFiles) {
+                    zos.putNextEntry(new ZipEntry(webpFile.getFileName().toString()));
+                    Files.copy(webpFile, zos);
+                    zos.closeEntry();
+                }
+            } catch (IOException | RuntimeException e) {
+                zip.close();
+                throw e;
+            }
+            return WebResponseUtils.zipFileToWebResponse(zip, filename + "_convertedToImages.zip");
         } finally {
             try {
-                // Clean up temporary files
-                if (tempFile != null) {
-                    Files.deleteIfExists(tempFile);
-                }
                 if (tempPdfPath != null) {
                     Files.deleteIfExists(tempPdfPath);
                 }
