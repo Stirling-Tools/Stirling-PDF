@@ -170,6 +170,10 @@ public class ConfigController {
         return null;
     }
 
+    /**
+     * Public frontend bootstrap metadata and effective feature flags. Storage-derived options
+     * require login mode and server storage; a persisted opt-in alone does not enable them.
+     */
     @GetMapping("/app-config")
     public ResponseEntity<Map<String, Object>> getAppConfig(HttpServletRequest request) {
         Map<String, Object> configData = new HashMap<>();
