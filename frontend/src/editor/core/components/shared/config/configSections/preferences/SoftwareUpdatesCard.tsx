@@ -41,13 +41,18 @@ export function SoftwareUpdatesCard({
   // falling back to the backend version.
   const currentVersion = appVersion ?? backendVersion ?? null;
 
+  // An administrator turned updates off: the card still reports the version and
+  // the locked mode, but must not reach the update server.
+  const updatesManagedOff =
+    desktopUpdateMode?.mode === "disabled" && desktopUpdateMode.locked;
+
   // Check for updates on mount. The card is not rendered at all when the update
-  // UI is hidden (SaaS build, managed-disabled desktop), so no call ever fires.
+  // UI is hidden (SaaS build), so no call fires there.
   useEffect(() => {
-    if (currentVersion) {
+    if (currentVersion && !updatesManagedOff) {
       checkForUpdate();
     }
-  }, [currentVersion, config?.machineType]);
+  }, [currentVersion, config?.machineType, updatesManagedOff]);
 
   const checkForUpdate = async () => {
     if (!currentVersion) return;
@@ -151,19 +156,21 @@ export function SoftwareUpdatesCard({
               )}
             </div>
             <Group gap="sm">
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={checkForUpdate}
-                loading={checkingUpdate}
-                disabled={!currentVersion}
-                leftSection={<Icon name="refresh-cw" size="1rem" />}
-              >
-                {t(
-                  "settings.general.updates.checkForUpdates",
-                  "Check for Updates",
-                )}
-              </Button>
+              {!updatesManagedOff && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={checkForUpdate}
+                  loading={checkingUpdate}
+                  disabled={!currentVersion}
+                  leftSection={<Icon name="refresh-cw" size="1rem" />}
+                >
+                  {t(
+                    "settings.general.updates.checkForUpdates",
+                    "Check for Updates",
+                  )}
+                </Button>
+              )}
               {updateSummary && (
                 <Button
                   size="sm"
