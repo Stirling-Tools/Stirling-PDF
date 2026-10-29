@@ -21,6 +21,9 @@ import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.common.model.enumeration.UsernameAttribute;
+import stirling.software.common.model.oauth2.KeycloakProvider;
+import stirling.software.common.model.oauth2.Provider;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.NoProviderFoundException;
@@ -210,6 +213,55 @@ class OAuth2ConfigurationMoreTest {
             var mapped = mapper.mapAuthorities(List.of(oauthAuthority));
 
             assertThat(mapped).extracting(GrantedAuthority::getAuthority).contains("ROLE_ADMIN");
+        }
+    }
+
+    @Nested
+    @DisplayName("userNameAttribute")
+    class UserNameAttributeTests {
+
+        @Test
+        @DisplayName("returns sub when generic OIDC provider scopes include openid")
+        void returnsSubWhenGenericProviderIncludesOpenid() {
+            OAuth2Configuration config = newConfig(enabledProps());
+            Provider provider = new Provider();
+            provider.setScopes("openid, profile, email");
+            provider.setUseAsUsername(UsernameAttribute.PREFERRED_USERNAME);
+
+            assertThat(config.userNameAttribute(provider)).isEqualTo("sub");
+        }
+
+        @Test
+        @DisplayName("returns sub when KeycloakProvider scopes include openid")
+        void returnsSubWhenKeycloakIncludesOpenid() {
+            OAuth2Configuration config = newConfig(enabledProps());
+            KeycloakProvider provider = new KeycloakProvider();
+            provider.setScopes("openid, profile, email");
+            provider.setUseAsUsername(UsernameAttribute.PREFERRED_USERNAME);
+
+            assertThat(config.userNameAttribute(provider)).isEqualTo("sub");
+        }
+
+        @Test
+        @DisplayName("returns configured attribute when scopes do not include openid")
+        void returnsConfiguredAttributeWhenOpenidAbsent() {
+            OAuth2Configuration config = newConfig(enabledProps());
+            Provider provider = new Provider();
+            provider.setScopes("profile, email");
+            provider.setUseAsUsername(UsernameAttribute.PREFERRED_USERNAME);
+
+            assertThat(config.userNameAttribute(provider)).isEqualTo("preferred_username");
+        }
+
+        @Test
+        @DisplayName("returns configured attribute for KeycloakProvider when openid is absent")
+        void returnsConfiguredAttributeForKeycloakWhenOpenidAbsent() {
+            OAuth2Configuration config = newConfig(enabledProps());
+            KeycloakProvider provider = new KeycloakProvider();
+            provider.setScopes("profile, email");
+            provider.setUseAsUsername(UsernameAttribute.PREFERRED_USERNAME);
+
+            assertThat(config.userNameAttribute(provider)).isEqualTo("preferred_username");
         }
     }
 }
