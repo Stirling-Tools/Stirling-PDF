@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.config.FolderAccessDeniedException;
@@ -45,6 +46,7 @@ import stirling.software.proprietary.util.SecretMasker;
 @RestController
 @RequestMapping("/api/v1/sources")
 @Hidden
+@Slf4j
 @RequiredArgsConstructor
 @Tag(name = "Sources", description = "Reusable policy input connections")
 public class SourceController {
@@ -163,6 +165,7 @@ public class SourceController {
                             + String.join(", ", referencing));
         }
         sourceStore.delete(sourceId);
+        releaseHeldInputs(source);
         return ResponseEntity.noContent().build();
     }
 
@@ -283,6 +286,21 @@ public class SourceController {
             return saved;
         }
         return withMaskedSecrets(saved);
+    }
+
+    private void releaseHeldInputs(Source source) {
+        inputSourceFor(source.toInputSpec())
+                .ifPresent(
+                        input -> {
+                            try {
+                                input.sourceDeleted(source);
+                            } catch (RuntimeException e) {
+                                log.warn(
+                                        "Could not release inputs held for deleted source {}: {}",
+                                        source.id(),
+                                        e.getMessage());
+                            }
+                        });
     }
 
     private Optional<InputSource> inputSourceFor(InputSpec spec) {
