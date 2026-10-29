@@ -9,6 +9,10 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -19,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.officeconvert.OfficeConvert;
 import stirling.software.officeconvert.PdfToPptx;
 import stirling.software.officeconvert.legacy.PdfToPpt;
@@ -96,11 +101,74 @@ public class OfficeConversionService {
         }
         try (OutputStream out = Files.newOutputStream(target)) {
             if ("ppt".equals(format)) {
-                // Binary PowerPoint comes from the legacy module, outside OfficeConvert's timeout.
-                PdfToPpt.convert(document, out, slides(settings));
+                convertToPpt(document, out, settings);
             } else {
                 OfficeConvert.convert(document, out, FORMATS.get(format), settings);
             }
+        }
+    }
+
+    /** A .ppt holds one slide per page; the legacy writer creates them up front. */
+    static final int MAX_PPT_SLIDES = 5000;
+
+    private static final long PPT_STOP_MILLIS = 5000;
+
+    /**
+     * Binary PowerPoint comes from the legacy module, which the shared {@link OfficeConvert} path
+     * does not cover, so the page count is bounded and the work runs under {@code
+     * settings.timeout()} like every other format.
+     */
+    private void convertToPpt(
+            PDDocument document, OutputStream out, OfficeConvert.Settings settings)
+            throws IOException {
+        int total = document.getNumberOfPages();
+        int first = settings.firstPage() > 0 ? settings.firstPage() : 1;
+        int last = settings.lastPage() > 0 ? Math.min(settings.lastPage(), total) : total;
+        if (last - first + 1 >= MAX_PPT_SLIDES) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pptTooManyPages",
+                    "A .ppt holds at most {0} pages; convert to .pptx instead.",
+                    MAX_PPT_SLIDES);
+        }
+        FutureTask<Void> task =
+                new FutureTask<>(
+                        () -> {
+                            PdfToPpt.convert(document, out, slides(settings));
+                            return null;
+                        });
+        Thread worker = Thread.ofPlatform().name("office-convert-ppt").daemon().unstarted(task);
+        worker.start();
+        try {
+            task.get(settings.timeout().toNanos(), TimeUnit.NANOSECONDS);
+        } catch (TimeoutException e) {
+            task.cancel(true);
+            joinQuietly(worker);
+            throw new IOException(
+                    "The conversion took longer than "
+                            + settings.timeout().toMillis()
+                            + " ms and was stopped");
+        } catch (InterruptedException e) {
+            task.cancel(true);
+            Thread.currentThread().interrupt();
+            throw new IOException("Conversion interrupted", e);
+        } catch (ExecutionException e) {
+            task.cancel(true);
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException io) {
+                throw io;
+            }
+            if (cause instanceof RuntimeException re) {
+                throw re;
+            }
+            throw new IOException("PDF to .ppt conversion failed", cause);
+        }
+    }
+
+    private static void joinQuietly(Thread worker) {
+        try {
+            worker.join(PPT_STOP_MILLIS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 

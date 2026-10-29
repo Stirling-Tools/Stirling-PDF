@@ -193,6 +193,7 @@ public class PdfUtils {
 
         try (PDDocument document = pdfDocumentFactory.load(inputStream);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            PdfImageRasterGuard.validate(document);
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             if (!includeAnnotations) {
