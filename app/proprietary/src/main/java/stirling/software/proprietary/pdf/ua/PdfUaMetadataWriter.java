@@ -1,6 +1,5 @@
 package stirling.software.proprietary.pdf.ua;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,10 +17,11 @@ import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferenc
 import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.schema.DublinCoreSchema;
 import org.apache.xmpbox.schema.XMPSchema;
-import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpSerializer;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.util.XmpUtils;
 
 /** Applies the document-level PDF/UA requirements: title, language, tab order, declaration. */
 @Slf4j
@@ -211,10 +211,8 @@ public class PdfUaMetadataWriter {
         PDMetadata existing = catalog.getMetadata();
         if (existing != null) {
             try {
-                DomXmpParser parser = new DomXmpParser();
                 // Strict parsing rejects pdfuaid, silently discarding a packet we just wrote.
-                parser.setStrictParsing(false);
-                return parser.parse(new ByteArrayInputStream(existing.toByteArray()));
+                return XmpUtils.parse(existing, false);
             } catch (Exception e) {
                 log.debug("Replacing unparseable XMP packet: {}", e.getMessage());
             }

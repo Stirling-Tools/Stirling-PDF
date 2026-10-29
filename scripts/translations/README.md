@@ -4,7 +4,7 @@ This directory contains Python scripts for managing frontend translations in Sti
 
 ## Current Format: TOML
 
-**Stirling PDF uses TOML format for translations** in `frontend/editor/public/locales/{lang}/translation.toml`.
+**Stirling PDF uses TOML format for translations** in `frontend/public/locales/{lang}/translation.toml`.
 
 **All scripts now support TOML format!**
 
@@ -190,7 +190,7 @@ python scripts/translations/translation_merger.py fr-FR create-template --output
 python scripts/translations/translation_merger.py fr-FR apply-translations --translations-file fr_translated.json
 
 # Override default paths if needed
-python scripts/translations/translation_merger.py fr-FR add-missing --locales-dir ./frontend/editor/public/locales --ignore-file ./scripts/ignore_translation.toml
+python scripts/translations/translation_merger.py fr-FR add-missing --locales-dir ./frontend/public/locales --ignore-file ./scripts/ignore_translation.toml
 
 # Remove unused translations not present in en-US
 python scripts/translations/translation_merger.py fr-FR remove-unused
@@ -302,7 +302,29 @@ python3 scripts/translations/auto_translate.py es-ES --skip-verification
 - Uses appropriate formal/informal tone per language
 
 **Supported Languages:**
-All language codes from `frontend/editor/public/locales/` (e.g., es-ES, de-DE, fr-FR, zh-CN, ar-AR, etc.)
+All language codes from `frontend/public/locales/` (e.g., es-ES, de-DE, fr-FR, zh-CN, ar-AR, etc.)
+
+#### Retranslating changed English text
+
+`auto_translate.py` only picks up keys that are missing. When an existing en-US string is reworded, other languages keep the old translation. `bulk_auto_translate.py --mode changed` finds those keys from git history and retranslates them:
+
+```bash
+# See how many changed keys each language has (no API calls)
+python3 scripts/translations/bulk_auto_translate.py --mode changed --dry-run
+
+# Retranslate changed keys only, or missing + changed together
+python3 scripts/translations/bulk_auto_translate.py --mode changed --parallel 5
+python3 scripts/translations/bulk_auto_translate.py --mode all --parallel 5
+
+# Inspect old vs new English per key without translating
+python3 scripts/translations/stale_translations.py --languages de-DE --verbose
+```
+
+For each key, `stale_translations.py` finds the commit where the translation last changed and compares the English text at that commit with today's en-US. It follows the old file locations (`frontend/public/locales`, `translation.json`).
+
+en-GB was the source language until en-US was re-added in June 2026. Translations written before that are compared against en-GB, then mapped to the en-US text of the same string, so US/GB spelling differences alone never count as a change. Case-only English edits are skipped too.
+
+Uncommitted edits to a language file count as up to date. `auto_translate.py --keys-file keys.json [--only-keys]` retranslates a specific list of keys.
 
 ### 6. `batch_translator.py` - GPT-5.6 Translation Engine
 
@@ -471,7 +493,7 @@ python scripts/translations/translation_merger.py fr-FR apply-translations --tra
 
 ## Translation File Structure
 
-Translation files are located in `frontend/editor/public/locales/{language}/translation.toml` with TOML structure:
+Translation files are located in `frontend/public/locales/{language}/translation.toml` with TOML structure:
 
 ```toml
 [addPageNumbers]
@@ -727,7 +749,7 @@ python scripts/translations/ai_translation_helper.py apply-batch de_batch_1.json
 ## Integration with Development
 
 These scripts integrate with the existing translation system:
-- Works with the current `frontend/editor/public/locales/` structure
+- Works with the current `frontend/public/locales/` structure
 - Compatible with the i18n system used in the React frontend
 - Respects the JSON format expected by the translation loader
 - Maintains the nested structure required by the UI components

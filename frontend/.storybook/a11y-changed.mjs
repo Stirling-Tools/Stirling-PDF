@@ -18,8 +18,10 @@ const base = process.argv[2] || "origin/main";
 const git = (...args) =>
   execFileSync("git", args, { encoding: "utf8" })
     .split("\n")
-    .map((l) => l.trim().replace(/^frontend\//, ""))
+    .map((l) => l.trim())
     .filter(Boolean);
+
+const fromFrontend = (path) => path.replace(/^frontend\//, "");
 
 const STORY = /\.stories\.tsx?$/;
 const TEST = /\.test\.tsx?$/;
@@ -28,11 +30,22 @@ const SOURCE = /\.(ts|tsx|css)$/;
 // Committed changes vs the base, plus working-tree changes, plus untracked
 // files — so the gate covers exactly what the branch would merge and what a
 // developer is about to commit.
+// A pure rename (R100) renders exactly as before; counting it would turn a
+// folder move into a scan of every story.
 const changed = [
-  ...git("diff", "--name-only", "--diff-filter=d", `${base}...HEAD`),
+  ...git(
+    "diff",
+    "--name-status",
+    "--find-renames",
+    "--diff-filter=d",
+    `${base}...HEAD`,
+  )
+    .map((line) => line.split("\t"))
+    .filter(([status]) => status !== "R100")
+    .map((columns) => columns.at(-1)),
   ...git("diff", "--name-only", "--diff-filter=d"),
   ...git("ls-files", "--others", "--exclude-standard"),
-];
+].map(fromFrontend);
 
 const stories = new Set();
 for (const f of changed) {

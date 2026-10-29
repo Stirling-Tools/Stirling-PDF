@@ -99,6 +99,17 @@ class LicenseFilterHttpTest {
         assertThat(request("POST", "/api/v1/misc/compress-pdf")).isEqualTo(402);
     }
 
+    @Test
+    void percentEncodedPathsAreGatedLikeThePlainPath() throws Exception {
+        assertThat(request("GET", "/actuator/prometheus")).isEqualTo(404);
+        assertThat(request("GET", "/%61ctuator/prometheus")).isEqualTo(404);
+        assertThat(request("GET", "/%61ctuator/health")).isEqualTo(204);
+        properties.getSystem().getDatasource().setEnableCustomDatabase(true);
+        assertThat(request("POST", "/%61pi/v1/misc/compress-pdf")).isEqualTo(402);
+        assertThat(request("POST", "/api/v1/misc/%63ompress-pdf")).isEqualTo(402);
+        assertThat(request("POST", "/api/v1/account-link/connect/st%61rt")).isEqualTo(204);
+    }
+
     @SpringBootConfiguration
     @EnableAutoConfiguration
     @Import({

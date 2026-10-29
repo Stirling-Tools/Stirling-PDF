@@ -1,0 +1,36 @@
+.preview {
+  position: relative;
+  height: 14rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+  border-radius: 0.75rem;
+  border: 1px solid var(--c-border-subtle);
+  background-color: white;
+  background-image: repeating-conic-gradient(
+    var(--c-illustration-line) 0% 25%,
+    transparent 0% 50%
+  );
+  background-size: 1.125rem 1.125rem;
+}
+
+.image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-overlay);
+  color: white;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+}

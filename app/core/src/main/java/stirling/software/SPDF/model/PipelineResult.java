@@ -22,6 +22,13 @@ public class PipelineResult implements AutoCloseable {
         tempFiles.add(tempFile);
     }
 
+    /** Deletes the {@code count} temp files added first. */
+    public void releaseTempFiles(int count) {
+        List<TempFile> released = tempFiles.subList(0, count);
+        released.forEach(TempFile::close);
+        released.clear();
+    }
+
     @Override
     public void close() {
         for (TempFile file : tempFiles) {

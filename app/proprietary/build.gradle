@@ -30,7 +30,9 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     api 'org.springframework.boot:spring-boot-starter-mail'
     api 'org.springframework.boot:spring-boot-starter-cache'
+    api 'org.hibernate.orm:hibernate-jcache'
     api 'com.github.ben-manes.caffeine:caffeine'
+    api 'com.github.ben-manes.caffeine:jcache'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     // Supplies GenericObjectPoolConfig for the Lettuce pool, which today backs only the single
     // shared native connection; headroom for a future dedicated-connection path.
@@ -124,14 +126,6 @@ processTestResources {
 
 tasks.register('prepareKotlinBuildScriptModel') {}
 
-tasks.register('type3SignatureTool', JavaExec) {
-    group = 'type3'
-    description = 'Dump Type3 font signatures and glyph coverage for the Type3 library'
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'stirling.software.SPDF.service.pdfjson.type3.tool.Type3SignatureTool'
-    standardInput = System.in
-}
-
 // FailureKindTest asserts the enum against two files outside this project, found by walking up to
 // the repo root: the kind-to-code fixture the frontend also reads, and the English copy every kind
 // must have a key in. Gradle cannot infer either, so without this the task is up-to-date when only
@@ -139,6 +133,6 @@ tasks.register('type3SignatureTool', JavaExec) {
 tasks.named('test', Test).configure {
     inputs.files(
         rootProject.file('testing/failure-kind-codes.json'),
-        rootProject.file('frontend/editor/public/locales/en-US/translation.toml')
+        rootProject.file('frontend/public/locales/en-US/translation.toml')
     ).withPropertyName('sharedConformanceFixtures').optional()
 }
