@@ -872,4 +872,187 @@ describe("Login", () => {
       "/share/abc123",
     );
   });
+
+  describe("SSO auto-login", () => {
+    const mockLoginConfig = (
+      loginMethod: string,
+      overrides: { firstTimeSetup?: boolean } = {},
+    ) =>
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: {
+          enableLogin: true,
+          ssoAutoLogin: true,
+          loginMethod,
+          providerList: { "/oauth2/authorization/authentik": "Authentik" },
+          ...overrides,
+        },
+      });
+
+    const renderAt = (entry: string) =>
+      render(
+        <TestWrapper>
+          <MemoryRouter initialEntries={[entry]}>
+            <Login />
+          </MemoryRouter>
+        </TestWrapper>,
+      );
+
+    beforeEach(() => {
+      sessionStorage.clear();
+      vi.mocked(springAuth.signInWithOAuth).mockResolvedValue({ error: null });
+    });
+
+    it("redirects to the only provider even when password login is allowed", async () => {
+      mockLoginConfig("all");
+      renderAt("/login");
+
+      await waitFor(() => {
+        expect(springAuth.signInWithOAuth).toHaveBeenCalled();
+      });
+    });
+
+    it("shows the form instead of redirecting on the second view without a sign-in", async () => {
+      mockLoginConfig("all");
+      const first = renderAt("/login");
+      await waitFor(() => {
+        expect(springAuth.signInWithOAuth).toHaveBeenCalledTimes(1);
+      });
+      first.unmount();
+
+      renderAt("/login");
+
+      await waitFor(() => {
+        expect(screen.getByText(/Authentik/)).toBeInTheDocument();
+        expect(document.getElementById("password")).toBeInTheDocument();
+      });
+      expect(springAuth.signInWithOAuth).toHaveBeenCalledTimes(1);
+    });
+
+    it("resets the visit and error counts once signed in", async () => {
+      mockLoginConfig("all");
+      sessionStorage.setItem("stirling_sso_auto_login_attempts", "1");
+      sessionStorage.setItem("stirling_sso_auto_login_errors", "1");
+      vi.mocked(useAuth).mockReturnValue({
+        ...vi.mocked(useAuth)(),
+        session: {
+          user: {
+            id: "123",
+            email: "test@example.com",
+            username: "testuser",
+            role: "USER",
+          },
+          access_token: "mock-token",
+          expires_in: 3600,
+        },
+      });
+
+      renderAt("/login");
+
+      await waitFor(() => {
+        expect(
+          sessionStorage.getItem("stirling_sso_auto_login_attempts"),
+        ).toBeNull();
+        expect(
+          sessionStorage.getItem("stirling_sso_auto_login_errors"),
+        ).toBeNull();
+      });
+    });
+
+    it("shows the form instead of redirecting when session storage is blocked", async () => {
+      mockLoginConfig("all");
+      vi.spyOn(window, "sessionStorage", "get").mockImplementation(() => {
+        throw new DOMException("blocked", "SecurityError");
+      });
+
+      try {
+        renderAt("/login");
+
+        await waitFor(() => {
+          expect(screen.getByText(/Authentik/)).toBeInTheDocument();
+          expect(document.getElementById("password")).toBeInTheDocument();
+        });
+        expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
+      } finally {
+        vi.restoreAllMocks();
+      }
+    });
+
+    it("shows the form instead of redirecting when the visit cannot be recorded", async () => {
+      mockLoginConfig("all");
+      vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+        throw new DOMException("full", "QuotaExceededError");
+      });
+
+      try {
+        renderAt("/login");
+
+        await waitFor(() => {
+          expect(screen.getByText(/Authentik/)).toBeInTheDocument();
+          expect(document.getElementById("password")).toBeInTheDocument();
+        });
+        expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
+      } finally {
+        vi.restoreAllMocks();
+      }
+    });
+
+    it("stays on the page with the email form under ?all", async () => {
+      mockLoginConfig("all");
+      renderAt("/login?all");
+
+      await waitFor(() => {
+        expect(screen.getByText(/Authentik/)).toBeInTheDocument();
+        expect(document.getElementById("email")).toBeInTheDocument();
+        expect(document.getElementById("password")).toBeInTheDocument();
+      });
+      expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
+    });
+
+    it("stays on the page in SSO-only mode under ?all", async () => {
+      mockLoginConfig("oauth2");
+      renderAt("/login?all");
+
+      await waitFor(() => {
+        expect(screen.getByText(/Authentik/)).toBeInTheDocument();
+      });
+      expect(document.getElementById("email")).not.toBeInTheDocument();
+      expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
+    });
+
+    it("stays on the page during first-time setup when password login is allowed", async () => {
+      mockLoginConfig("all", { firstTimeSetup: true });
+      renderAt("/login");
+
+      await waitFor(() => {
+        expect(screen.getByText(/Authentik/)).toBeInTheDocument();
+        expect(document.getElementById("password")).toBeInTheDocument();
+      });
+      expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
+    });
+
+    it("still redirects during first-time setup in SSO-only mode", async () => {
+      mockLoginConfig("oauth2", { firstTimeSetup: true });
+      renderAt("/login");
+
+      await waitFor(() => {
+        expect(springAuth.signInWithOAuth).toHaveBeenCalled();
+      });
+    });
+
+    it("stays on the page after a local account is created", async () => {
+      mockLoginConfig("all");
+      renderAt("/login?messageType=accountCreated");
+
+      await waitFor(() => {
+        expect(screen.getByText(/Authentik/)).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            "Account created successfully! You can now sign in.",
+          ),
+        ).toBeInTheDocument();
+        expect(document.getElementById("password")).toBeInTheDocument();
+      });
+      expect(springAuth.signInWithOAuth).not.toHaveBeenCalled();
+    });
+  });
 });
