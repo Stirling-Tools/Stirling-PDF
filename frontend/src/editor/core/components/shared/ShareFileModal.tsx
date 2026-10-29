@@ -34,10 +34,6 @@ interface ShareFileModalProps {
   onUploaded?: () => Promise<void> | void;
 }
 
-/**
- * Ensures the selected history chain is stored before configuring server sharing.
- * Upload completion refreshes the caller only after local remote metadata is recorded.
- */
 const ShareFileModal: React.FC<ShareFileModalProps> = ({
   opened,
   onClose,
@@ -101,6 +97,10 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({
     [shareRole],
   );
 
+  /**
+   * Refreshes a missing or outdated server copy before creating its share link.
+   * Persists sharing metadata before notifying the caller; failures remain in the dialog.
+   */
   const handleGenerateLink = useCallback(async () => {
     if (!shareLinksEnabled) {
       alert({

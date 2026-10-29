@@ -74,6 +74,10 @@ export function ServerAutoSync() {
     return () => window.removeEventListener("online", onOnline);
   }, []);
 
+  /**
+   * Serializes uploads per remote file and uses the leaf's base revision to reject stale writes.
+   * Conflicts pause that revision; other failures pause the leaf until a retry trigger.
+   */
   const push = useCallback(
     async (leaf: PushableLeaf) => {
       const remoteId = leaf.remoteStorageId;

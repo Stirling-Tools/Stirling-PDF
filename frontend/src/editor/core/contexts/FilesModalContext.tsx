@@ -62,10 +62,6 @@ export const FilesModalContext = createContext<FilesModalContextType | null>(
   null,
 );
 
-/**
- * Routes picker selections through workspace ingestion while retaining each server
- * file's identity and revision. Custom handlers may consume selections instead.
- */
 export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -84,6 +80,10 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   const [maxSelectable, setMaxSelectable] = useState<number | null>(null);
   const [supportedFormats, setSupportedFormats] = useState<string[]>();
 
+  /**
+   * Restores bundle history, or admits a plain file, while retaining server access and sync
+   * metadata. Returns the imported IDs so selection can be merged rather than replaced.
+   */
   const importBundleToWorkbench = useCallback(
     async (
       blob: Blob,
@@ -263,6 +263,11 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
     [downloadRemoteFile],
   );
 
+  /**
+   * Admits available selections and uploads without discarding the current selection.
+   * Custom handlers receive loaded files instead; unavailable selections are reported
+   * after successful files have been admitted. Remote imports retain their revision base.
+   */
   const handleRecentFileSelect = useCallback(
     async (stirlingFileStubs: StirlingFileStub[], uploads: File[] = []) => {
       const failedNames: string[] = [];

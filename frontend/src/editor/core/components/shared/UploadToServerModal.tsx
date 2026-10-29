@@ -21,10 +21,6 @@ interface UploadToServerModalProps {
   onUploaded?: () => Promise<void> | void;
 }
 
-/**
- * Explicit upload or replacement of a document history chain, without an automatic-sync
- * revision precondition. Failed uploads keep the dialog open for recovery.
- */
 const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
   opened,
   onClose,
@@ -43,6 +39,10 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
     }
   }, [opened]);
 
+  /**
+   * Explicitly uploads or replaces the history chain without a revision precondition.
+   * Records its new sync base before notifying the caller; failure keeps the dialog open.
+   */
   const handleUpload = useCallback(async () => {
     setIsUploading(true);
     setErrorMessage(null);
