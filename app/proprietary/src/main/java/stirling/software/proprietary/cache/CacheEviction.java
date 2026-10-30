@@ -1,20 +1,12 @@
 package stirling.software.proprietary.cache;
 
-/**
- * One second-level cache entry, or set of entries, to drop. Crosses the wire between nodes, so
- * every field is a string: {@code role} is a Hibernate entity name or collection role, and {@code
- * key} is the identifier, owner identifier or natural id rendered by the matching Hibernate {@code
- * JavaType}.
- */
 public record CacheEviction(Kind kind, String role, String key) {
 
     public enum Kind {
         ENTITY,
-        /** The entity plus every cached collection it owns, for writes Java did not see. */
         ENTITY_WITH_COLLECTIONS,
         COLLECTION,
         NATURAL_ID,
-        /** Every entry of the entity, its natural ids and its collections. */
         ENTITY_REGION,
         ALL
     }

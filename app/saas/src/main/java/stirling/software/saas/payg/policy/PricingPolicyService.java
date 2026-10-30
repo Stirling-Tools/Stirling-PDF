@@ -173,7 +173,6 @@ public class PricingPolicyService {
                             .orElse(0L));
         }
         policyRepository.clearDefaultFlag();
-        // Bulk UPDATE: Hibernate evicts the region here but peers would keep the old default.
         cacheEvictionBroadcaster.broadcastToPeersAfterCommit(
                 CacheEviction.entityRegion(PricingPolicy.class.getName()));
         target.setIsDefault(true);

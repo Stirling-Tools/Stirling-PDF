@@ -19,13 +19,6 @@ import stirling.software.proprietary.security.database.repository.UserIdentity;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 
-/**
- * Evicts, on every node, what a write made outside this application (a Supabase edge function, a
- * database function, manual SQL) may have left stale.
- *
- * <p>Identifiers are resolved against the database, not the cache. A user that no longer resolves
- * was deleted, and its id, username and roles are unknown, so the whole user region is evicted.
- */
 @Slf4j
 @Service
 public class ExternalWriteEvictionService {
@@ -59,10 +52,6 @@ public class ExternalWriteEvictionService {
         this.broadcaster = broadcaster;
     }
 
-    /**
-     * Returns the evictions broadcast. Throws {@link IllegalArgumentException} over {@link
-     * #MAX_IDS}.
-     */
     public List<CacheEviction> evict(Request request) {
         if (request.size() > MAX_IDS) {
             throw new IllegalArgumentException(
@@ -103,9 +92,6 @@ public class ExternalWriteEvictionService {
         return batch;
     }
 
-    /**
-     * Adds the evictions for every user that resolves; returns whether any requested key did not.
-     */
     private static <K> boolean addUsers(
             Set<CacheEviction> evictions,
             Collection<K> keys,

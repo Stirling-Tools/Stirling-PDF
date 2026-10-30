@@ -19,7 +19,6 @@ class UserRepositoryCustomImpl implements UserRepositoryCustom {
 
     @PersistenceContext private EntityManager entityManager;
 
-    // Optional: JPA test slices build repositories without the cache beans.
     private final ObjectProvider<CacheEvictionBroadcaster> cacheEvictionBroadcaster;
 
     UserRepositoryCustomImpl(ObjectProvider<CacheEvictionBroadcaster> cacheEvictionBroadcaster) {
@@ -33,8 +32,6 @@ class UserRepositoryCustomImpl implements UserRepositoryCustom {
                 entityManager.unwrap(Session.class).find(User.class, username, KeyType.NATURAL));
     }
 
-    // Hibernate evicts a bulk update's region on this node itself but raises no entity event, so
-    // peers would keep the old team without the explicit broadcast.
     @Override
     @Transactional
     public int updateUserTeamId(Long userId, Long teamId) {

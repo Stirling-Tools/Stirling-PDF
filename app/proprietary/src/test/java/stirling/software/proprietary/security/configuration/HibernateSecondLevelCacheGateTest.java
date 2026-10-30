@@ -9,11 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import stirling.software.common.model.ApplicationProperties;
 
-/**
- * Pins the second-level cache gate: only the Valkey backplane carries evictions between nodes, so a
- * clustered deployment on any other backplane must stand the cache down, and a multi-instance
- * deployment that does not use cluster mode yet must be able to rule it out explicitly.
- */
 class HibernateSecondLevelCacheGateTest {
 
     private static Map<String, Object> customize(ApplicationProperties properties) {

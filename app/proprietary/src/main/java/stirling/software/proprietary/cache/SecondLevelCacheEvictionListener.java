@@ -38,18 +38,6 @@ import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManagerFactory;
 
-/**
- * Turns this node's Hibernate writes to cached entities into {@link CacheEviction}s, broadcast once
- * the transaction commits. A rolled-back transaction broadcasts nothing.
- *
- * <p>Peers get every entry this node's Hibernate evicted for itself. One case Hibernate misses even
- * locally is also broadcast to this node: an inverse one-to-many such as {@code User.authorities}
- * is cached on the owner, so saving or deleting an {@code Authority} without touching the owner's
- * set leaves the owner's cached set stale.
- *
- * <p>Bulk JPQL and native updates raise no entity events; their callers broadcast through {@link
- * CacheEvictionBroadcaster#broadcastToPeersAfterCommit}.
- */
 @Component
 public class SecondLevelCacheEvictionListener
         implements PostInsertEventListener,
@@ -224,7 +212,6 @@ public class SecondLevelCacheEvictionListener
                         ownerId));
     }
 
-    /** The natural id this write retired from the cache, if it is cached and actually changed. */
     private static Optional<CacheEviction> naturalIdEviction(
             EntityPersister persister, Object[] oldState, Object[] newState) {
         NaturalIdMapping mapping = persister.getNaturalIdMapping();

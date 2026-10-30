@@ -1,5 +1,3 @@
-"""Steps for features/multinode/cache_eviction.feature: per-node reads go straight to each node's own :8080, so a stale second-level cache on one node cannot hide behind the load balancer."""
-
 import json
 import time
 import uuid
@@ -13,7 +11,6 @@ CACHE_TEST_PASSWORD = "CacheTest123!"
 CHANNEL_LOST_LOG = "Re-subscribed to stirling:cache-evict"
 CACHE_OFF_LOG = "disabling the Hibernate second-level cache"
 REGIONS_LOG = "Second-level cache regions:"
-# /api/v1/auth/me skips UserAuthenticationFilter, so it never rejects a disabled user; this one does not.
 FILTERED_PROBE = "/api/v1/proprietary/ui-data/account"
 
 
