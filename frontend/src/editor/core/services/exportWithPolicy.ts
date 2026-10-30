@@ -12,18 +12,20 @@ import {
   type DownloadResult,
 } from "@editor/services/downloadService";
 import { enforceExportPolicies } from "@editor/services/policyExport";
+import { includeMeasurementsInExport } from "../../features/measurement/utils/measurementExportBridge";
 
 export async function downloadFileWithPolicy(
   request: DownloadRequest,
 ): Promise<DownloadResult> {
   // enforceExportPolicies only touches PDFs and is a no-op without an active
   // export policy, so non-PDF / non-policy downloads pass straight through.
+  const withMeasurements = await includeMeasurementsInExport(request.data, request.filename, request.fileId);
   const input =
-    request.data instanceof File
-      ? request.data
-      : new File([request.data], request.filename, {
-          type: request.data.type,
+    withMeasurements instanceof File
+      ? withMeasurements
+      : new File([withMeasurements], request.filename, {
+          type: withMeasurements.type,
         });
   const [enforced] = await enforceExportPolicies([input], [request.fileId]);
-  return downloadFile({ ...request, data: enforced ?? request.data });
+  return downloadFile({ ...request, data: enforced ?? withMeasurements });
 }
