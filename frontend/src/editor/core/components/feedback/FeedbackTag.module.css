@@ -5,10 +5,12 @@
   z-index: 20;
   display: flex;
   align-items: stretch;
+  border: 1px solid var(--c-border);
+  border-bottom: none;
   border-radius: 6px 6px 0 0;
-  background: var(--c-brand-mark);
-  color: var(--c-text-on-brand);
-  box-shadow: 0 -1px 6px rgb(0 0 0 / 15%);
+  background: var(--c-surface);
+  color: var(--c-text-muted);
+  box-shadow: 0 -1px 4px rgb(0 0 0 / 6%);
   overflow: hidden;
 }
 
@@ -25,7 +27,8 @@
 
 .open:hover,
 .dismiss:hover {
-  background: rgb(0 0 0 / 12%);
+  background: var(--c-hover);
+  color: var(--c-text);
 }
 
 .open {
@@ -48,10 +51,9 @@
 
 /* The mark's two paths are filled by class, not currentColor. */
 .mark :global(.sui-brandmark__a) {
-  fill: currentColor;
-  opacity: 0.7;
+  fill: var(--c-brand-mark-soft);
 }
 
 .mark :global(.sui-brandmark__b) {
-  fill: currentColor;
+  fill: var(--c-brand-mark);
 }
