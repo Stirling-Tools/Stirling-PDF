@@ -1,4 +1,5 @@
 import React from "react";
+import { Stack } from "@mantine/core";
 import { type TFunction } from "i18next";
 import {
   createPreferencesNavSection,
@@ -9,6 +10,7 @@ import PasswordSecurity from "@editor/components/shared/config/configSections/Pa
 import ApiKeys from "@editor/components/shared/config/configSections/ApiKeys";
 import McpSection from "@editor/components/shared/config/configSections/McpSection";
 import HelpSection from "@editor/components/shared/config/configSections/HelpSection";
+import FeedbackSection from "@editor/components/shared/config/configSections/FeedbackSection";
 import LegalSection from "@editor/components/shared/config/configSections/LegalSection";
 import {
   createCloudBillingSection,
@@ -142,7 +144,10 @@ function appendHelpSection(
           label: t("settings.help.label", "Tours"),
           icon: "circle-question-mark",
           component: (
-            <HelpSection isAdmin={false} onRequestClose={onRequestClose} />
+            <Stack gap="lg">
+              <HelpSection isAdmin={false} onRequestClose={onRequestClose} />
+              <FeedbackSection />
+            </Stack>
           ),
         },
       ],
