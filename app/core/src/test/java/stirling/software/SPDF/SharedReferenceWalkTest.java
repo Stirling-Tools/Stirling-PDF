@@ -29,6 +29,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.controller.api.EditTableOfContentsController;
 import stirling.software.SPDF.controller.api.security.GetInfoOnPDF;
+import stirling.software.SPDF.model.api.general.ExtractBookmarksRequest;
 import stirling.software.SPDF.service.AttachmentService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFileManager;
@@ -65,8 +66,11 @@ class SharedReferenceWalkTest {
                 new EditTableOfContentsController(
                         factory, new ObjectMapper(), mock(TempFileManager.class));
 
+        ExtractBookmarksRequest request = new ExtractBookmarksRequest();
+        request.setFileInput(file);
         List<Map<String, Object>> bookmarks =
-                assertTimeoutPreemptively(LIMIT, () -> controller.extractBookmarks(file).getBody());
+                assertTimeoutPreemptively(
+                        LIMIT, () -> controller.extractBookmarks(request).getBody());
 
         assertThat(bookmarks).hasSize(1);
         assertThat(bookmarks.get(0)).containsEntry("title", "loop");
