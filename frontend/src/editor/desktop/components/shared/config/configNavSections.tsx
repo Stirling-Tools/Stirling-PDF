@@ -12,6 +12,7 @@ import { BillingSettingsSection } from "@editor/components/settings/BillingSetti
 import { connectionModeService } from "@editor/services/connectionModeService";
 import { authService } from "@editor/services/authService";
 import { useAuth } from "@editor/auth/context";
+import PrivacySection from "@editor/components/shared/config/configSections/PrivacySection";
 
 export type {
   ConfigNavSection,
@@ -108,7 +109,20 @@ export const useConfigNavSections = (
     // Matched on the group id: its items were four rows and are now one, and a
     // miss here drops the group silently.
     const aboutSection = sections.find((section) => section.id === "about");
-    if (aboutSection) result.push(aboutSection);
+    if (aboutSection) {
+      result.push({
+        title: t("settings.privacy.title", "Privacy"),
+        items: [
+          {
+            key: "privacy",
+            label: t("settings.privacy.title", "Privacy"),
+            icon: "shield",
+            component: <PrivacySection />,
+          },
+        ],
+      });
+      result.push(aboutSection);
+    }
     return result;
   }
 
