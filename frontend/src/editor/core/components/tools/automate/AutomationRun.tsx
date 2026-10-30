@@ -22,12 +22,14 @@ import type { useAutomateOperation } from "@editor/hooks/tools/automate/useAutom
 interface AutomationRunProps {
   automation: AutomationConfig;
   onComplete: () => void;
+  onEditCopy?: (automation: AutomationConfig) => void;
   automateOperation?: ReturnType<typeof useAutomateOperation>;
 }
 
 export default function AutomationRun({
   automation,
   onComplete,
+  onEditCopy,
   automateOperation,
 }: AutomationRunProps) {
   const { t } = useTranslation();
@@ -52,6 +54,15 @@ export default function AutomationRun({
   const signInReason = connectedServer
     ? null
     : t("automate.sequence.signInToRun", "Sign in to run automations.");
+  const hasFiles = (selectedFiles?.length ?? 0) > 0;
+  const runDisabledReason =
+    signInReason ??
+    (hasFiles
+      ? null
+      : t(
+          "automate.sequence.selectFiles",
+          "Select at least one file to run this automation.",
+        ));
 
   // Initialize execution steps from automation
   useEffect(() => {
@@ -190,6 +201,11 @@ export default function AutomationRun({
             {automation?.name ||
               t("automate.sequence.unnamed", "Unnamed Automation")}
           </Text>
+          {automation?.description && (
+            <Text size="xs" c="dimmed" mb="xs">
+              {automation.description}
+            </Text>
+          )}
           <Text size="xs" c="dimmed">
             {t("automate.sequence.steps", "{{count}} steps", {
               count: executionSteps.length,
@@ -249,34 +265,56 @@ export default function AutomationRun({
         </Stack>
 
         {/* Action Buttons */}
-        <Group justify="space-between" mt="xl">
-          <Tooltip label={signInReason} disabled={!signInReason} withArrow>
-            {/* Wrapper keeps the tooltip reachable while the button is disabled. */}
-            <span style={{ display: "inline-flex" }}>
-              <Button
-                leftSection={<Icon name="play" />}
-                onClick={executeAutomation}
-                disabled={
-                  isExecuting ||
-                  !selectedFiles ||
-                  selectedFiles.length === 0 ||
-                  Boolean(signInReason)
-                }
-                loading={isExecuting}
-              >
-                {isExecuting
-                  ? t("automate.sequence.running", "Running Automation...")
-                  : t("automate.sequence.run", "Run Automation")}
-              </Button>
-            </span>
-          </Tooltip>
+        <div
+          style={{
+            position: "sticky",
+            bottom: 0,
+            zIndex: 2,
+            background: "var(--c-bg-raised)",
+            paddingTop: "var(--mantine-spacing-sm)",
+            borderTop: "1px solid var(--c-border-subtle)",
+          }}
+        >
+          <Stack gap="sm">
+            <Tooltip
+              label={runDisabledReason}
+              disabled={!runDisabledReason}
+              withArrow
+            >
+              {/* Wrapper keeps the tooltip reachable while the button is disabled. */}
+              <span style={{ display: "block" }}>
+                <Button
+                  leftSection={<Icon name="play" />}
+                  onClick={executeAutomation}
+                  disabled={isExecuting || !hasFiles || Boolean(signInReason)}
+                  loading={isExecuting}
+                  fullWidth
+                >
+                  {isExecuting
+                    ? t("automate.sequence.running", "Running Automation...")
+                    : t("automate.sequence.run", "Run Automation")}
+                </Button>
+              </span>
+            </Tooltip>
 
-          {hasResults && (
-            <Button variant="secondary" onClick={onComplete}>
-              {t("automate.sequence.finish", "Finish")}
-            </Button>
-          )}
-        </Group>
+            {hasResults && (
+              <Button variant="secondary" onClick={onComplete} fullWidth>
+                {t("automate.sequence.finish", "Finish")}
+              </Button>
+            )}
+
+            {onEditCopy && (
+              <Button
+                variant="secondary"
+                leftSection={<Icon name="pencil" />}
+                onClick={() => onEditCopy(automation)}
+                fullWidth
+              >
+                {t("automate.sequence.editCopy", "Edit a copy")}
+              </Button>
+            )}
+          </Stack>
+        </div>
       </Stack>
 
       <style>

@@ -91,7 +91,9 @@ export function useAutomationForm({
         const toolEntry = toolRegistry[operation as ToolId];
         // If tool has no settingsComponent, it's automatically configured
         const isConfigured =
-          mode === AutomationMode.EDIT ? true : !toolEntry?.automationSettings;
+          mode === AutomationMode.EDIT || mode === AutomationMode.SUGGESTED
+            ? true
+            : !toolEntry?.automationSettings;
 
         return {
           id: `${operation}-${Date.now()}-${index}`,

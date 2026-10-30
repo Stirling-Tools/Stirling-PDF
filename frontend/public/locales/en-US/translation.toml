@@ -2310,6 +2310,7 @@ title = "Configure {{toolName}}"
 [automate.creation]
 cancel = "Cancel"
 createTitle = "Create Automation"
+customizeTitle = "Customize Automation"
 editTitle = "Edit Automation"
 export = "Export"
 exportForFolderScanning = "Export for Folder Scanning"
@@ -2389,9 +2390,11 @@ title = "Saved"
 title = "Suggested"
 
 [automate.sequence]
+editCopy = "Edit a copy"
 finish = "Finish"
 run = "Run Automation"
 running = "Running Automation..."
+selectFiles = "Select at least one file to run this automation."
 signInToRun = "Sign in to run automations."
 steps_one = "{{count}} step"
 steps_other = "{{count}} steps"
@@ -2407,7 +2410,7 @@ processImagesDesc = "Converts multiple image files into a single PDF document, t
 securePdfIngestion = "Secure PDF Ingestion"
 securePdfIngestionDesc = "Comprehensive PDF processing workflow that sanitizes documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimizes file size."
 secureWorkflow = "Security Workflow"
-secureWorkflowDesc = "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorized access. Password is set to 'password' by default."
+secureWorkflowDesc = "Secures PDF documents by removing potentially malicious content like JavaScript and embedded files, then adds password protection to prevent unauthorized access. The password is 'password' by default; edit a copy to choose your own."
 
 [autoRename]
 description = "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."

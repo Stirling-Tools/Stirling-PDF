@@ -117,6 +117,16 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     onComplete?.([]); // Pass empty array since automation creation doesn't produce files
   };
 
+  const handleEditCopy = (automation: AutomationConfig) => {
+    // Prefill the builder with the pre-made definition but keep it unsaved
+    // until the user chooses Save; cancelling must not leave an orphan copy.
+    handleStepChange({
+      step: AUTOMATION_STEPS.CREATION,
+      mode: AutomationMode.SUGGESTED,
+      automation,
+    });
+  };
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case AUTOMATION_STEPS.SELECTION:
@@ -192,6 +202,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           <AutomationRun
             automation={stepData.automation}
             onComplete={handleComplete}
+            onEditCopy={handleEditCopy}
             automateOperation={automateOperation}
           />
         );
@@ -242,7 +253,9 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     createStep(
       stepData.mode === AutomationMode.EDIT
         ? t("automate.creation.editTitle", "Edit Automation")
-        : t("automate.creation.createTitle", "Create Automation"),
+        : stepData.mode === AutomationMode.SUGGESTED
+          ? t("automate.creation.customizeTitle", "Customize Automation")
+          : t("automate.creation.createTitle", "Create Automation"),
       {
         isVisible: currentStep === AUTOMATION_STEPS.CREATION,
         isCollapsed: false,

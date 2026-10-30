@@ -293,6 +293,34 @@ test.describe("11.4 Automation - builder usability", () => {
     ).toHaveCount(0);
   });
 
+  test("a pre-made automation can be edited as a copy before running", async ({
+    page,
+  }) => {
+    await ensureOnSelection(page);
+    await page
+      .getByRole("button", { name: "Security Workflow", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Run Automation" }),
+    ).toBeVisible({ timeout: 10_000 });
+
+    await page.getByRole("button", { name: "Edit a copy" }).click();
+    await expect(page.getByText("Customize Automation").first()).toBeVisible();
+    await expect(page.getByLabel(/Automation Name/i)).toHaveValue(
+      "Security Workflow",
+    );
+    await expect(page.getByText("Add Password").first()).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Save Automation" }),
+    ).toBeEnabled();
+
+    // Cancelling must not leave an orphan copy in Saved.
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(
+      page.getByRole("button", { name: "Security Workflow", exact: true }),
+    ).toHaveCount(1);
+  });
+
   test("renaming an edited automation updates it instead of duplicating", async ({
     page,
   }) => {
