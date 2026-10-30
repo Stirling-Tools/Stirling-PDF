@@ -1,232 +1,240 @@
-import type { PDFObject } from "@cantoo/pdf-lib";
+import LayerParseWorker from "@editor/workers/layerParseWorker?worker";
+import {
+  PdfFileReader,
+  PdfStructureError,
+  appendIncrementalUpdate,
+  containsEncryptedString,
+  rewriteDictBuffer,
+  serializeValue,
+  type ObjectUpdate,
+  type PdfRef,
+  type PdfValue,
+} from "@editor/utils/pdfObjectReader";
+import type {
+  LayerInfo,
+  LayerParseRequest,
+  LayerParseResponse,
+} from "@editor/components/viewer/layerParser";
 
-export interface LayerInfo {
-  id: string;
-  name: string;
-  visible: boolean;
-  children?: LayerInfo[];
-}
-
-// pdfjs types its OCG groups as `any`; these are the fields we read off them.
-interface OcGroup {
-  name?: string;
-  visible?: boolean;
-}
+export type { LayerInfo } from "@editor/components/viewer/layerParser";
 
 /**
- * Reads OCG layer info from a PDF file using pdfjs-dist.
- * Returns a flat list of all OCG groups with their names and default visibility.
+ * Reads OCG layer info for the layers panel. The parse runs in a worker so a
+ * large document cannot tie up the main thread, and the worker reads the blob
+ * itself, so opening the panel never pulls pdf.js or a copy of the bytes onto
+ * the main thread.
  */
 export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
-  const { getDocument, GlobalWorkerOptions } =
-    await import("pdfjs-dist/legacy/build/pdf.mjs");
+  return await new Promise<LayerInfo[]>((resolve, reject) => {
+    const worker = new LayerParseWorker();
+    const settle = (finish: () => void) => {
+      worker.terminate();
+      finish();
+    };
+    worker.onmessage = (event: MessageEvent<LayerParseResponse>) => {
+      const message = event.data;
+      if ("error" in message) {
+        settle(() => reject(new Error(message.error)));
+        return;
+      }
+      settle(() => resolve(message.layers));
+    };
+    worker.onerror = (event) => {
+      settle(() =>
+        reject(new Error(event.message || "Layer parse worker failed")),
+      );
+    };
+    worker.postMessage({ blob: file } satisfies LayerParseRequest);
+  });
+}
 
-  if (!GlobalWorkerOptions.workerSrc) {
-    GlobalWorkerOptions.workerSrc = new URL(
-      "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-      import.meta.url,
-    ).toString();
-  }
+function refId(ref: PdfRef): string {
+  return `${ref.num} ${ref.gen} R`;
+}
 
-  const arrayBuffer = await file.arrayBuffer();
-  const loadingTask = getDocument({ data: arrayBuffer, verbosity: 0 });
-  const pdfDoc = await loadingTask.promise;
-
-  try {
-    const ocConfig = await pdfDoc.getOptionalContentConfig();
-
-    if (!ocConfig) return [];
-
-    const groups: Record<string, OcGroup> = {};
-    for (const [id, group] of ocConfig) {
-      groups[id] = group;
-    }
-    if (Object.keys(groups).length === 0) return [];
-
-    // Use getOrder() for hierarchical display
-    let order: unknown[] | null = null;
-    try {
-      order = ocConfig.getOrder?.() ?? null;
-    } catch {
-      // getOrder not available
-    }
-
-    if (order && Array.isArray(order) && order.length > 0) {
-      return buildLayerTree(order, groups);
-    }
-
-    // Fallback: flat list in enumeration order
-    return Object.entries(groups).map(([id, group]) => ({
-      id,
-      name: group.name ?? id,
-      visible: group.visible ?? true,
-    }));
-  } finally {
-    await pdfDoc.destroy();
-  }
+function nameValue(key: string): string {
+  return serializeValue({ kind: "name", name: key });
 }
 
 /**
- * Recursively builds a LayerInfo tree from pdfjs OCG order array.
- * The order array can contain:
- *  - string: an OCG id
- *  - { name: string, order: unknown[] }: a named group with children
- *  - array: a nested group
- */
-function buildLayerTree(
-  order: unknown[],
-  groups: Record<string, OcGroup>,
-  visited = new Set<string>(),
-): LayerInfo[] {
-  const result: LayerInfo[] = [];
-
-  for (const item of order) {
-    if (typeof item === "string") {
-      // It's an OCG id
-      if (visited.has(item)) continue;
-      visited.add(item);
-      const group = groups[item];
-      if (group) {
-        result.push({
-          id: item,
-          name: group.name ?? item,
-          visible: group.visible ?? true,
-        });
-      }
-    } else if (Array.isArray(item)) {
-      // Nested group (unlabeled)
-      const children = buildLayerTree(item, groups, visited);
-      result.push(...children);
-    } else if (item && typeof item === "object") {
-      // Named group with nested items
-      const { name, order: subOrder } = item as {
-        name?: string;
-        order?: unknown[];
-      };
-      const children = subOrder
-        ? buildLayerTree(subOrder, groups, visited)
-        : [];
-      if (name && children.length > 0) {
-        // Use the first child's id as a synthetic group id
-        result.push({
-          id: `group-${name}`,
-          name: name,
-          visible: children.every((c) => c.visible),
-          children,
-        });
-      } else {
-        result.push(...children);
-      }
-    }
-  }
-
-  return result;
-}
-
-/**
- * Modifies OCG visibility in a PDF using @cantoo/pdf-lib.
- * Accepts a flat map of { layerName -> visible } and rewrites the /D config.
+ * Modifies OCG visibility by appending an incremental update to the file.
  *
- * Strategy: set /BaseState to /OFF and only list visible layers in /ON.
- * This is the most unambiguous approach and avoids conflicts between
- * /BaseState, /ON, and /OFF that can confuse some viewers.
- * Also removes /AS (auto-state) entries that can override visibility.
+ * Strategy: set /BaseState to /OFF and only list visible layers in /ON and
+ * hidden ones in /OFF. This is the most unambiguous approach and avoids
+ * conflicts between /BaseState, /ON, and /OFF that can confuse some viewers.
+ * /AS (auto-state) entries are dropped because they can override visibility.
+ *
+ * The default config is rewritten in place wherever possible: every byte of
+ * an untouched value survives, so unknown keys and encrypted strings stay
+ * valid for the object number that holds them.
  */
 export async function applyOCGVisibilityToPdf(
   pdfBytes: ArrayBuffer,
   layerVisibility: Record<string, boolean>,
 ): Promise<Uint8Array> {
-  const { PDFDocument, PDFDict, PDFName, PDFArray, PDFString, PDFHexString } =
-    await import("@cantoo/pdf-lib");
+  const reader = await PdfFileReader.open(new Uint8Array(pdfBytes));
+  if (!reader.root) throw new PdfStructureError("PDF catalog is missing");
+  const catalog = await reader.resolveValue({ kind: "ref", ref: reader.root });
+  if (catalog?.kind !== "dict") {
+    throw new PdfStructureError("PDF catalog is missing");
+  }
+  const ocPropertiesEntry = catalog.map.get("OCProperties");
+  const ocProperties = await reader.resolveValue(ocPropertiesEntry);
+  if (ocProperties?.kind !== "dict") return reader.bytes;
+  const ocgs = await reader.resolveValue(ocProperties.map.get("OCGs"));
+  if (ocgs?.kind !== "array") return reader.bytes;
 
-  const doc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
-  const context = doc.context;
-
-  // Access the catalog via the trailer's Root reference
-  const catalog = context.lookup(context.trailerInfo.Root);
-  if (!(catalog instanceof PDFDict)) {
-    return doc.save();
+  const onRefs: PdfRef[] = [];
+  const offRefs: PdfRef[] = [];
+  for (const item of ocgs.items) {
+    if (item.kind !== "ref") continue;
+    const dict = await reader.resolveValue(item);
+    if (dict?.kind !== "dict") continue;
+    const resolvedName = await reader.resolveValue(dict.map.get("Name"));
+    const name =
+      resolvedName?.kind === "string"
+        ? ((await reader.stringText(resolvedName)) ?? "")
+        : resolvedName?.kind === "name"
+          ? resolvedName.name
+          : "";
+    ((layerVisibility[name] ?? true) ? onRefs : offRefs).push(item.ref);
   }
 
-  // Get OCProperties dict (may be a direct dict or an indirect reference)
-  const ocPropsRaw = catalog.lookup(PDFName.of("OCProperties"));
-  if (!ocPropsRaw) {
-    return doc.save();
-  }
-  const ocProps =
-    ocPropsRaw instanceof PDFDict ? ocPropsRaw : context.lookup(ocPropsRaw);
-  if (!(ocProps instanceof PDFDict)) {
-    return doc.save();
-  }
+  const edits = new Map<string, string | null>([
+    ["BaseState", "/OFF"],
+    ["ON", onRefs.length > 0 ? `[${onRefs.map(refId).join(" ")}]` : null],
+    ["OFF", offRefs.length > 0 ? `[${offRefs.map(refId).join(" ")}]` : null],
+    ["AS", null],
+  ]);
 
-  // Get the /OCGs array
-  const ocgsArray = ocProps.lookup(PDFName.of("OCGs"));
-  if (!(ocgsArray instanceof PDFArray)) {
-    return doc.save();
-  }
+  const updates: ObjectUpdate[] = [];
+  const defaultEntry = ocProperties.map.get("D");
+  const defaultRef = defaultEntry?.kind === "ref" ? defaultEntry.ref : null;
 
-  // Get or create the /D (default config) dict
-  const dRaw = ocProps.lookup(PDFName.of("D"));
-  if (!dRaw) {
-    return doc.save();
-  }
-  const dDict = dRaw instanceof PDFDict ? dRaw : context.lookup(dRaw);
-  if (!(dDict instanceof PDFDict)) {
-    return doc.save();
-  }
-
-  // Collect OCG refs for ON vs OFF based on user visibility settings
-  const onRefs: PDFObject[] = [];
-  const offRefs: PDFObject[] = [];
-
-  const size = ocgsArray.size();
-  for (let i = 0; i < size; i++) {
-    const ocgRef = ocgsArray.get(i);
-    const ocgDict = context.lookup(ocgRef);
-    if (!(ocgDict instanceof PDFDict)) continue;
-
-    // Get the OCG name
-    const nameRaw = ocgDict.lookup(PDFName.of("Name"));
-    let ocgName = "";
-    if (nameRaw instanceof PDFString || nameRaw instanceof PDFHexString) {
-      ocgName = nameRaw.decodeText();
-    } else if (nameRaw) {
-      ocgName = String(nameRaw);
-    }
-
-    // Look up visibility by name
-    const shouldBeVisible = layerVisibility[ocgName] ?? true;
-
-    if (shouldBeVisible) {
-      onRefs.push(ocgRef);
+  if (defaultRef) {
+    const span = await reader.getRawSpan(defaultRef.num);
+    if (span && !span.inStream && span.buffer === reader.bytes) {
+      updates.push({
+        num: defaultRef.num,
+        gen: defaultRef.gen,
+        body: rewriteDictBuffer(reader.bytes, span.start, edits, []),
+      });
     } else {
-      offRefs.push(ocgRef);
+      updates.push({
+        num: defaultRef.num,
+        gen: defaultRef.gen,
+        body: rebuildDict(
+          reader,
+          await reader.resolveValue({ kind: "ref", ref: defaultRef }),
+          edits,
+        ),
+      });
+    }
+  } else {
+    // No indirect default config: add one and point /OCProperties at it.
+    const newNum = reader.maxObjectNum + 1;
+    updates.push({
+      num: newNum,
+      gen: 0,
+      body: rebuildDict(reader, defaultEntry, edits),
+    });
+    const replacement = `${newNum} 0 R`;
+    if (ocPropertiesEntry?.kind === "ref") {
+      const span = await reader.getRawSpan(ocPropertiesEntry.ref.num);
+      if (span && !span.inStream && span.buffer === reader.bytes) {
+        updates.push({
+          num: ocPropertiesEntry.ref.num,
+          gen: ocPropertiesEntry.ref.gen,
+          body: rewriteDictBuffer(
+            reader.bytes,
+            span.start,
+            new Map<string, string | null>([["D", replacement]]),
+            [],
+          ),
+        });
+      } else {
+        updates.push({
+          num: ocPropertiesEntry.ref.num,
+          gen: ocPropertiesEntry.ref.gen,
+          body: rebuildDict(
+            reader,
+            ocProperties,
+            new Map([["D", replacement]]),
+          ),
+        });
+      }
+    } else {
+      // A direct /OCProperties dict can only be reached through the catalog.
+      const newOcProps = reader.maxObjectNum + 2;
+      updates.push({
+        num: newOcProps,
+        gen: 0,
+        body: rebuildDict(reader, ocProperties, new Map([["D", replacement]])),
+      });
+      const catalogSpan = await reader.getRawSpan(reader.root.num);
+      const catalogEdit = new Map([
+        ["OCProperties", `${newOcProps} 0 R` as string | null],
+      ]);
+      updates.push({
+        num: reader.root.num,
+        gen: reader.root.gen,
+        body:
+          catalogSpan &&
+          !catalogSpan.inStream &&
+          catalogSpan.buffer === reader.bytes
+            ? rewriteDictBuffer(
+                reader.bytes,
+                catalogSpan.start,
+                catalogEdit,
+                [],
+              )
+            : rebuildDict(reader, catalog, catalogEdit),
+      });
     }
   }
 
-  // Set /BaseState to /OFF so all layers start hidden, then /ON lists visible ones.
-  // This is unambiguous and avoids conflicts between /BaseState and /ON//OFF.
-  dDict.set(PDFName.of("BaseState"), PDFName.of("OFF"));
+  const size =
+    Math.max(reader.maxObjectNum, ...updates.map((update) => update.num)) + 1;
+  return appendIncrementalUpdate(reader.bytes, updates, {
+    size,
+    root: reader.root,
+    prev: reader.startxrefOffset,
+    id: reader.trailerId,
+    info: reader.info,
+    encrypt: reader.encryptValue,
+  });
+}
 
-  // Set /ON to only the visible layers
-  if (onRefs.length > 0) {
-    dDict.set(PDFName.of("ON"), context.obj(onRefs));
-  } else {
-    dDict.delete(PDFName.of("ON"));
+/**
+ * Rebuilds a dict from parsed values when it cannot be spliced in place (it
+ * lives in an object stream, or it has to be constructed from scratch). Keys
+ * holding strings from an encrypted document are dropped: strings are
+ * encrypted per object number, and a rebuilt object cannot reuse them.
+ */
+function rebuildDict(
+  reader: PdfFileReader,
+  source: PdfValue | undefined,
+  edits: Map<string, string | null>,
+): string {
+  const entries =
+    source?.kind === "dict" ? source.map : new Map<string, PdfValue>();
+  const parts: string[] = [];
+  const seen = new Set<string>();
+  for (const [key, value] of entries) {
+    seen.add(key);
+    const edit = edits.get(key);
+    if (edit === null) continue;
+    if (edit !== undefined) {
+      parts.push(`${nameValue(key)} ${edit}`);
+      continue;
+    }
+    if (containsEncryptedString(value, reader.encrypted)) continue;
+    parts.push(`${nameValue(key)} ${serializeValue(value)}`);
   }
-
-  // Set /OFF to only the hidden layers (for viewers that check it)
-  if (offRefs.length > 0) {
-    dDict.set(PDFName.of("OFF"), context.obj(offRefs));
-  } else {
-    dDict.delete(PDFName.of("OFF"));
+  for (const [key, edit] of edits) {
+    if (edit && !seen.has(key)) parts.push(`${nameValue(key)} ${edit}`);
   }
-
-  // Remove /AS (auto-state) array - it can contain usage-based overrides
-  // (e.g., print vs view) that conflict with our explicit visibility settings.
-  dDict.delete(PDFName.of("AS"));
-
-  return doc.save();
+  return "<<" + (parts.length > 0 ? " " + parts.join(" ") + " " : "") + ">>";
 }
 
 /**

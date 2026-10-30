@@ -7,33 +7,18 @@ import {
 } from "@editor/components/viewer/readAloudFromSelection";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { useStopReadAloudOnNavigation } from "@editor/components/viewer/useStopReadAloudOnNavigation";
-import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import {
+  extractPageTextItemsForReadAloudFromDoc,
+  openRawDocumentSafe,
+  closeRawDocument,
+  type ReadAloudTextItem,
+} from "@editor/services/pdfiumService";
+import { createReadAloudDocSession } from "@editor/components/viewer/readAloudDocSession";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
 import { StirlingFile } from "@editor/types/fileContext";
 import { ZINDEX } from "@editor/constants/zIndex";
 
-interface TextItemWithGeometry {
-  str: string;
-  transform: number[];
-  width: number;
-  height: number;
-  viewportTransform: number[];
-}
-
-function isTextItem(value: unknown): value is {
-  str: string;
-  transform: number[];
-  width: number;
-  height: number;
-} {
-  if (!value || typeof value !== "object") return false;
-  const item = value as Record<string, unknown>;
-  return (
-    typeof item.str === "string" &&
-    Array.isArray(item.transform) &&
-    typeof item.width === "number" &&
-    typeof item.height === "number"
-  );
-}
+type TextItemWithGeometry = ReadAloudTextItem;
 
 function createHighlightElement(
   item: TextItemWithGeometry,
@@ -114,12 +99,25 @@ export function useViewerReadAloud(
   const speechRateRef = useRef(1); // Keep track of current rate without recreating dependent functions
   const speechLanguageRef = useRef(defaultLanguage || "en-US");
 
-  // Cache parsed PDF document and page text items to avoid reparsing on every zoom/scroll
-  const cachedPdfDocRef = useRef<Awaited<
-    ReturnType<typeof pdfWorkerManager.createDocument>
-  > | null>(null);
-  const cachedPageNumberRef = useRef<number | null>(null);
   const cachedTextItemsRef = useRef<TextItemWithGeometry[] | null>(null);
+  const cachedPageNumberRef = useRef<number | null>(null);
+  const cachedArrayBufferRef = useRef<ArrayBuffer | null>(null);
+  const cachedFileRef = useRef<StirlingFile | File | null>(null);
+  // One PDFium document shared by every page of the reading session, so page
+  // advances do not pay a full open+parse each. Lazily created so tests and
+  // non-reading mounts never touch the WASM module.
+  const docSessionRef = useRef<ReturnType<
+    typeof createReadAloudDocSession
+  > | null>(null);
+  const getDocSession = useCallback(() => {
+    if (!docSessionRef.current) {
+      docSessionRef.current = createReadAloudDocSession(
+        (bytes) => openRawDocumentSafe(bytes),
+        (docPtr) => closeRawDocument(docPtr),
+      );
+    }
+    return docSessionRef.current;
+  }, []);
 
   // Helper to find best voice for language
   const findVoiceForLanguage = useCallback(
@@ -224,13 +222,12 @@ export function useViewerReadAloud(
   }, []);
 
   const cleanupReadingSession = useCallback(() => {
-    // Destroy the cached PDF document to free memory
-    if (cachedPdfDocRef.current) {
-      pdfWorkerManager.destroyDocument(cachedPdfDocRef.current);
-      cachedPdfDocRef.current = null;
-      cachedPageNumberRef.current = null;
-      cachedTextItemsRef.current = null;
-    }
+    cachedTextItemsRef.current = null;
+    cachedPageNumberRef.current = null;
+    cachedArrayBufferRef.current = null;
+    cachedFileRef.current = null;
+    docSessionRef.current?.close();
+    docSessionRef.current = null;
   }, []);
 
   const stopReadingAloud = useCallback(() => {
@@ -313,6 +310,18 @@ export function useViewerReadAloud(
     [clearHighlights],
   );
 
+  // Session document handle for readPage: opens once per file, shared across
+  // page advances, closed by cleanupReadingSession. A superseded open (file
+  // changed mid-open) is closed instead of cached.
+  const ensureReadAloudDoc = useCallback(
+    async (
+      currentFile: StirlingFile | File,
+      arrayBuffer: ArrayBuffer,
+    ): Promise<number | null> =>
+      getDocSession().ensure(currentFile, arrayBuffer),
+    [getDocSession],
+  );
+
   /**
    * Parses one page's text for speaking. Null when the page has no text or
    * when `session` was superseded mid-parse, so callers check the session
@@ -324,126 +333,50 @@ export function useViewerReadAloud(
       pageNumber: number,
       session: number,
     ) => {
-      let pdfDoc: Awaited<
-        ReturnType<typeof pdfWorkerManager.createDocument>
-      > | null = null;
+      const zoom = (viewer.getZoomState().zoomPercent || 100) / 100;
 
-      try {
-        const zoom = (viewer.getZoomState().zoomPercent || 100) / 100;
-
-        // If we have a cached document for the same file, reuse it instead of recreating
-        if (cachedPdfDocRef.current) {
-          pdfDoc = cachedPdfDocRef.current;
-        } else {
-          const createdDoc = await pdfWorkerManager.createDocument(
-            await currentFile.arrayBuffer(),
-          );
-          if (session !== sessionRef.current) {
-            pdfWorkerManager.destroyDocument(createdDoc);
-            return null;
-          }
-          pdfDoc = createdDoc;
-          cachedPdfDocRef.current = pdfDoc;
-        }
-
-        const page = await pdfDoc.getPage(pageNumber);
-        const textContent = await page.getTextContent();
-        if (session !== sessionRef.current) return null;
-        // The highlight is rendered inside the page element, so we keep geometry in
-        // page-local coordinates and let the viewer's own rotation transform it.
-        const viewportTransform = page.getViewport({ scale: zoom }).transform;
-
-        const textItems: TextItemWithGeometry[] = [];
-        for (const item of textContent.items) {
-          if (!isTextItem(item)) continue;
-          textItems.push({
-            ...item,
-            viewportTransform,
-          });
-        }
-
-        // Sort text items by visual position (top-to-bottom, then left-to-right)
-        // to preserve reading order instead of PDF internal order
-        const sortedItems = [...textItems].sort((a, b) => {
-          // transform array is [a, b, c, d, e, f] where e=x, f=y (translation components)
-          const yA = a.transform[5] ?? 0; // y position
-          const yB = b.transform[5] ?? 0;
-          const xA = a.transform[4] ?? 0; // x position
-          const xB = b.transform[4] ?? 0;
-
-          // Sort top-to-bottom (higher y first in PDF coordinates), then left-to-right
-          // 5px threshold for "same line" to group text on same horizontal line
-          if (Math.abs(yA - yB) > 5) {
-            return yB - yA; // Top to bottom
-          }
-          return xA - xB; // Left to right
-        });
-
-        // Merge adjacent text items on same line, using PDF spaces as word boundaries
-        // This fixes PDFs where characters/syllables are individual text items
-        const mergedItems: TextItemWithGeometry[] = [];
-        const CHAR_MERGE_THRESHOLD = 5; // px - merge adjacent chars/syllables closer than this
-
-        for (const item of sortedItems) {
-          const itemText = item.str;
-          const isSpace = itemText.trim() === "";
-
-          // Spaces mark word boundaries - always push them separately
-          if (isSpace) {
-            mergedItems.push(item);
-            continue;
-          }
-
-          const lastItem = mergedItems[mergedItems.length - 1];
-
-          // Only merge if last item exists, is not a space, and items are on same line
-          if (lastItem && lastItem.str.trim()) {
-            const yDiff = Math.abs(
-              (lastItem.transform[5] ?? 0) - (item.transform[5] ?? 0),
-            );
-            const xGap =
-              (item.transform[4] ?? 0) -
-              ((lastItem.transform[4] ?? 0) + (lastItem.width ?? 0));
-
-            // Same line and very close horizontally?
-            if (yDiff < 5 && xGap < CHAR_MERGE_THRESHOLD) {
-              lastItem.str += itemText;
-              // Update width: add the new item's width plus any gap between them
-              lastItem.width =
-                (lastItem.width ?? 0) + Math.max(0, xGap) + (item.width ?? 0);
-              continue;
-            }
-          }
-          mergedItems.push({ ...item, str: itemText });
-        }
-
-        // Use merged items for both highlighting and caching
-        // This ensures word counting in highlightWord matches the spoken text order
-        textItemsRef.current = mergedItems;
-        cachedTextItemsRef.current = mergedItems;
-        cachedPageNumberRef.current = pageNumber;
-
-        const spokenText = mergedItems
-          .map((item) => item.str)
-          .join(" ")
-          .replace(/\s+/g, " ")
-          .trim();
-
-        if (!spokenText) {
-          return null;
-        }
-
-        const words = spokenText.split(/\s+/).filter(Boolean);
-        return { spokenText, words };
-      } catch (error) {
-        // Clear cache on error to avoid stale state
-        if (pdfDoc && pdfDoc === cachedPdfDocRef.current) {
-          cachedPdfDocRef.current = null;
-        }
-        throw error;
+      let arrayBuffer: ArrayBuffer;
+      if (
+        cachedFileRef.current === currentFile &&
+        cachedArrayBufferRef.current
+      ) {
+        arrayBuffer = cachedArrayBufferRef.current;
+      } else {
+        arrayBuffer = await getDocumentBytes(currentFile);
+        cachedArrayBufferRef.current = arrayBuffer;
+        cachedFileRef.current = currentFile;
       }
+
+      const docPtr = await ensureReadAloudDoc(currentFile, arrayBuffer);
+      if (docPtr === null || session !== sessionRef.current) {
+        return null;
+      }
+
+      const mergedItems = await extractPageTextItemsForReadAloudFromDoc(
+        docPtr,
+        pageNumber - 1,
+        zoom,
+      );
+      if (session !== sessionRef.current) return null;
+
+      textItemsRef.current = mergedItems;
+      cachedTextItemsRef.current = mergedItems;
+      cachedPageNumberRef.current = pageNumber;
+
+      const spokenText = mergedItems
+        .map((item) => item.str)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      if (!spokenText) {
+        return null;
+      }
+
+      const words = spokenText.split(/\s+/).filter(Boolean);
+      return { spokenText, words };
     },
-    [viewer],
+    [ensureReadAloudDoc, viewer],
   );
 
   const speakFromCharIndex = useCallback(

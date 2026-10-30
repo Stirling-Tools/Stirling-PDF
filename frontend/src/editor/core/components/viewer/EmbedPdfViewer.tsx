@@ -148,7 +148,6 @@ const EmbedPdfViewerContent = ({
     isBookmarkSidebarVisible,
     isAttachmentSidebarVisible,
     isLayerSidebarVisible,
-    setHasLayers,
     isCommentsSidebarVisible,
     isSearchInterfaceVisible,
     searchInterfaceActions,
@@ -2087,7 +2086,6 @@ const EmbedPdfViewerContent = ({
         file={effectiveFile?.file ?? null}
         documentCacheKey={bookmarkCacheKey}
         onApplyLayers={handleLayerApply}
-        onLayersDetected={setHasLayers}
       />
     </Box>
   );
