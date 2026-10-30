@@ -7,6 +7,7 @@ import {
 } from "@editor/components/tools/sign/createSignature/signatureStyles";
 import { ControlLabel } from "@editor/components/tools/sign/createSignature/ControlLabel";
 import styles from "@editor/components/tools/sign/createSignature/SignatureStylePicker.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const PREVIEW_FONT_SIZE = 30;
 
@@ -48,7 +49,7 @@ export function SignatureStylePicker({
             <span
               data-user-content-preview
               data-placeholder={!text.trim() || undefined}
-              className={styles.preview}
+              className={`${styles.preview} ${privateContentClassName}`}
               style={{
                 fontFamily: `"${font.family}", cursive`,
                 fontSize: PREVIEW_FONT_SIZE * font.previewScale,

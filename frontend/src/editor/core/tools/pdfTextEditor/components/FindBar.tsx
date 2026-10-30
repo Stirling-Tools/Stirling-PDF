@@ -20,6 +20,7 @@ import type {
   PageSnapshot,
   TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface FindBarProps {
   store: EditorStore;
@@ -243,6 +244,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
         <TextInput
           ref={inputRef}
           value={query}
+          className={privateContentClassName}
           onChange={(e) => setQuery(e.currentTarget.value)}
           placeholder={t("pdfTextEditor.find.findPlaceholder", "Find")}
           aria-label={t("pdfTextEditor.find.findPlaceholder", "Find")}
@@ -322,6 +324,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
 
         <TextInput
           value={replace}
+          className={privateContentClassName}
           onChange={(e) => setReplace(e.currentTarget.value)}
           placeholder={t(
             "pdfTextEditor.find.replacePlaceholder",

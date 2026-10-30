@@ -3,6 +3,7 @@ import { Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import type { PdfTocEntry } from "@editor/types/getPdfInfo";
 import SectionBlock from "@editor/components/tools/getPdfInfo/shared/SectionBlock";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface TableOfContentsSectionProps {
   anchorId: string;
@@ -28,7 +29,12 @@ const TableOfContentsSection: React.FC<TableOfContentsSectionProps> = ({
       ) : (
         <Stack gap={4}>
           {tocArray.map((item, idx) => (
-            <Text key={idx} size="sm" c="dimmed">
+            <Text
+              key={idx}
+              size="sm"
+              c="dimmed"
+              className={privateContentClassName}
+            >
               {typeof item === "string" ? item : JSON.stringify(item)}
             </Text>
           ))}

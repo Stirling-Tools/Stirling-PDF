@@ -9,6 +9,7 @@ import "@editor/components/tools/validateSignature/reportView/styles.css";
 import ThumbnailPreview from "@editor/components/tools/validateSignature/reportView/ThumbnailPreview";
 import FileSummaryHeader from "@editor/components/tools/validateSignature/reportView/FileSummaryHeader";
 import SignatureSection from "@editor/components/tools/validateSignature/reportView/SignatureSection";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface ValidateSignatureReportViewProps {
   data: SignatureValidationReportData;
@@ -82,7 +83,12 @@ const PageSummary = ({
         <Stack gap="sm" style={{ flex: 1 }}>
           <Group justify="space-between" align="flex-start">
             <div>
-              <Text fw={700} size="xl" style={{ lineHeight: 1.1 }}>
+              <Text
+                fw={700}
+                size="xl"
+                style={{ lineHeight: 1.1 }}
+                className={privateContentClassName}
+              >
                 {entry.fileName}
               </Text>
               <Text size="sm" c="dimmed">

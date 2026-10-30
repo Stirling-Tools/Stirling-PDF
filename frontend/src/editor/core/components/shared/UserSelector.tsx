@@ -10,6 +10,7 @@ import { fetchUsers } from "@editor/api/users";
 import { useAuth } from "@editor/auth/UseSession";
 import { qk } from "@editor/query/keys";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface UserSelectorProps {
   value: number[];
@@ -166,7 +167,7 @@ const UserSelector = ({
                   return (
                     <label
                       key={id}
-                      className={styles.card}
+                      className={`${styles.card} ${privateContentClassName}`}
                       data-selected={selected}
                     >
                       <span className={styles.avatar} aria-hidden="true">

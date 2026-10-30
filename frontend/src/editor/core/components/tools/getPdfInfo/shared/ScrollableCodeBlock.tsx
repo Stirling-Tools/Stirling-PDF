@@ -1,6 +1,7 @@
 import React from "react";
 import { Code, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface ScrollableCodeBlockProps {
   content: string | null | undefined;
@@ -30,6 +31,7 @@ const ScrollableCodeBlock: React.FC<ScrollableCodeBlockProps> = ({
   return (
     <Code
       block
+      className={privateContentClassName}
       style={{
         whiteSpace: "pre-wrap",
         backgroundColor: "var(--c-surface-raised)",

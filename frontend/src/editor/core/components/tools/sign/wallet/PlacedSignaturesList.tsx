@@ -5,6 +5,7 @@ import { DrawingControls } from "@editor/components/annotation/shared/DrawingCon
 import type { PlacedSignature } from "@editor/contexts/SignatureContext";
 import type { HistoryAvailability } from "@editor/hooks/useHistoryAvailability";
 import styles from "@editor/components/tools/sign/wallet/PlacedSignaturesList.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface PlacedSignaturesListProps {
   placed: PlacedSignature[];
@@ -89,13 +90,18 @@ function PlacedSignatureRow({
 
   return (
     <li className={styles.row}>
-      <span className={styles.thumb} aria-hidden>
+      <span
+        className={`${styles.thumb} ${privateContentClassName}`}
+        aria-hidden
+      >
         {entry.imageSrc && (
           <img className={styles.thumbImage} src={entry.imageSrc} alt="" />
         )}
       </span>
       <span className={styles.text}>
-        <span className={styles.name}>{name}</span>
+        <span className={`${styles.name} ${privateContentClassName}`}>
+          {name}
+        </span>
         <span className={styles.where}>
           {t("sign.wallet.placed.page", "Page {{page}}", {
             page: entry.pageIndex + 1,

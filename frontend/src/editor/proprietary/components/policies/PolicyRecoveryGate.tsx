@@ -38,6 +38,7 @@ import { fileStorage } from "@editor/services/fileStorage";
 import type { PoliciesByKey } from "@editor/types/policies";
 import type { FileId } from "@editor/types/file";
 import "@editor/components/policies/PolicyRecoveryGate.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Keeps the editor mounted but inaccessible until all open, failed inputs are recovered or closed. */
 export function PolicyRecoveryGate() {
@@ -217,7 +218,13 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
           return (
             <section className="policy-recovery__policy" key={policyKey}>
               <strong>{policyName(policyKey)}</strong>
-              <p className="policy-recovery__hint">
+              <p
+                className={
+                  owner && !isOwner
+                    ? `policy-recovery__hint ${privateContentClassName}`
+                    : "policy-recovery__hint"
+                }
+              >
                 {t(
                   isOwner
                     ? "policy.recoveryOwnedPolicy"
@@ -236,13 +243,17 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
         <div className="policy-recovery__errors">
           {blocks.map((block) => (
             <div className="policy-recovery__error" key={recoveryKey(block)}>
-              <strong>
+              <strong className={privateContentClassName}>
                 {block.outcome.fileName ?? block.affectedFiles[0].name}
               </strong>
               {policyKeys.length > 1 && (
                 <p>{policyName(block.outcome.policyKey)}</p>
               )}
-              {block.outcome.error && <pre>{block.outcome.error}</pre>}
+              {block.outcome.error && (
+                <pre className={privateContentClassName}>
+                  {block.outcome.error}
+                </pre>
+              )}
             </div>
           ))}
         </div>

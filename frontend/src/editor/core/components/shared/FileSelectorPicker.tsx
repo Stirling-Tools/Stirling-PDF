@@ -30,6 +30,7 @@ import {
 import { alert } from "@editor/components/toast";
 import styles from "@editor/components/shared/FileSelectorPicker.module.css";
 import "@editor/components/shared/FileSidebarFileItem.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const LS_TAB = "filePicker.tab";
 const LS_SORT = "filePicker.sort";
@@ -553,7 +554,10 @@ export function FileSelectorPicker({
                     }
                   >
                     <div className={styles.fileItemContent}>
-                      <span className={styles.fileName} title={stub.name}>
+                      <span
+                        className={`${styles.fileName} ${privateContentClassName}`}
+                        title={stub.name}
+                      >
                         {truncateCenter(stub.name, 48)}
                       </span>
                       {meta && <span className={styles.fileMeta}>{meta}</span>}
@@ -568,7 +572,7 @@ export function FileSelectorPicker({
             hoveredThumbnail &&
             createPortal(
               <div
-                className="file-sidebar-thumb-tooltip"
+                className={`file-sidebar-thumb-tooltip ${privateContentClassName}`}
                 style={{
                   top: hoveredStub.rect.top + hoveredStub.rect.height / 2,
                   left: hoveredStub.rect.left - 170,

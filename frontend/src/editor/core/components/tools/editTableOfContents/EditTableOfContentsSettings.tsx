@@ -5,6 +5,7 @@ import { Button as DSButton } from "@editor/ui/Button";
 import { FilePicker } from "@editor/ui/FilePicker";
 import { Icon } from "@editor/ui/Icon";
 import { BookmarkNode } from "@editor/utils/editTableOfContents";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface EditTableOfContentsSettingsProps {
   bookmarks: BookmarkNode[];
@@ -67,7 +68,11 @@ export default function EditTableOfContentsSettings({
         <Text size="sm" fw={500}>
           {t("editTableOfContents.actions.source", "Load bookmarks")}
         </Text>
-        <Text size="xs" c="dimmed">
+        <Text
+          size="xs"
+          c="dimmed"
+          className={selectedFileName ? privateContentClassName : undefined}
+        >
           {selectedFileName
             ? t("editTableOfContents.actions.selectedFile", {
                 file: selectedFileName,

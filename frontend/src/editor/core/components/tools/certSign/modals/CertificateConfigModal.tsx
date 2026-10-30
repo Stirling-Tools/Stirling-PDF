@@ -13,6 +13,8 @@ import {
 } from "@editor/components/tools/certSign/CertificateSelector";
 import { isAxiosError } from "axios";
 import apiClient from "@editor/services/apiClient";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export interface CertificateSubmitData {
   certType: CertificateType;
@@ -322,9 +324,9 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
                     : "—",
                 },
               )}
-              {certValidation.subjectName
-                ? ` · ${certValidation.subjectName}`
-                : ""}
+              {certValidation.subjectName && (
+                <PrivateContent>{` · ${certValidation.subjectName}`}</PrivateContent>
+              )}
             </Text>
           </Group>
         )}
@@ -388,6 +390,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
                     "Why are you signing?",
                   )}
                   value={reason}
+                  className={privateContentClassName}
                   onChange={(e) => setReason(e.currentTarget.value)}
                   disabled={disabled || signing}
                 />
@@ -404,6 +407,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
                     "Where are you signing from?",
                   )}
                   value={location}
+                  className={privateContentClassName}
                   onChange={(e) => setLocation(e.currentTarget.value)}
                   disabled={disabled || signing}
                 />
