@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { type ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
@@ -13,6 +13,7 @@ import { Icon } from "@editor/ui/Icon";
 import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@editor/types/folder";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 interface MoveToFolderDialogProps {
   opened: boolean;
@@ -135,7 +136,7 @@ export function MoveToFolderDialog({
           {treeOrder.map((folder) => (
             <FolderPick
               key={folder.id}
-              label={folder.name}
+              label={<PrivateContent>{folder.name}</PrivateContent>}
               color={folder.color}
               isActive={target === folder.id}
               disabled={blocked.has(folder.id)}
@@ -293,7 +294,7 @@ export function MoveToFolderDialog({
 }
 
 interface FolderPickProps {
-  label: string;
+  label: ReactNode;
   color?: string;
   isActive: boolean;
   disabled: boolean;

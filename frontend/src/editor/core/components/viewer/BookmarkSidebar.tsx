@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { SidebarBase } from "@editor/components/viewer/SidebarBase";
 import "@editor/components/viewer/BookmarkSidebar.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface BookmarkSidebarProps {
   visible: boolean;
@@ -649,7 +650,11 @@ export const BookmarkSidebar = ({
               <span className="bookmark-item__dash">-</span>
             )}
             <div className="bookmark-item__content">
-              <Text size="sm" fw={500} className="bookmark-item__title">
+              <Text
+                size="sm"
+                fw={500}
+                className={`bookmark-item__title ${privateContentClassName}`}
+              >
                 {node.title || t("viewer.bookmarks.untitled", "Untitled")}
               </Text>
               {pageNumber && (
@@ -814,6 +819,7 @@ export const BookmarkSidebar = ({
             </Text>
             <TextInput
               size="xs"
+              className={privateContentClassName}
               placeholder={t(
                 "viewer.bookmarks.bookmarkTitle",
                 "Bookmark title",
