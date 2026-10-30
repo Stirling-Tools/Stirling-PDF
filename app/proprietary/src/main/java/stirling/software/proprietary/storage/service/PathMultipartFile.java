@@ -5,11 +5,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.Paths;
 
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.common.model.api.FileBackedMultipartFile;
@@ -24,7 +25,13 @@ public class PathMultipartFile implements MultipartFile, FileBackedMultipartFile
 
     public PathMultipartFile(Path path, String originalFilename, String contentType)
             throws IOException {
-        this.path = path;
+        Path normalized = path.toAbsolutePath().normalize();
+        Path tempRoot =
+                Paths.get(System.getProperty("java.io.tmpdir")).toAbsolutePath().normalize();
+        if (!normalized.startsWith(tempRoot)) {
+            throw new IllegalArgumentException("Path must be under the temp directory");
+        }
+        this.path = normalized;
         this.originalFilename = originalFilename;
         this.contentType =
                 contentType != null ? contentType : MediaType.APPLICATION_OCTET_STREAM_VALUE;
@@ -60,25 +67,34 @@ public class PathMultipartFile implements MultipartFile, FileBackedMultipartFile
         return path;
     }
 
+    private Path safePath() {
+        Path normalized = path.toAbsolutePath().normalize();
+        Path tempRoot =
+                Paths.get(System.getProperty("java.io.tmpdir")).toAbsolutePath().normalize();
+        if (!normalized.startsWith(tempRoot)) {
+            throw new IllegalStateException("Path must be under the temp directory");
+        }
+        return normalized;
+    }
+
     @Override
     public byte[] getBytes() throws IOException {
-        return Files.readAllBytes(path);
+        return Files.readAllBytes(safePath());
     }
 
     @Override
     public InputStream getInputStream() throws IOException {
-        return Files.newInputStream(path);
+        return Files.newInputStream(safePath());
     }
 
     @Override
     public Resource getResource() {
-        return new FileSystemResource(path);
+        return new FileSystemResource(safePath());
     }
 
     @Override
     public void transferTo(File dest) throws IOException {
         // The caller owns the destination; this mirrors the MultipartFile contract.
-        // lgtm[java/path-injection]
-        Files.copy(path, dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        FileCopyUtils.copy(getBytes(), dest);
     }
 }
