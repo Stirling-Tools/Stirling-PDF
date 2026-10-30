@@ -7,9 +7,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -47,6 +47,7 @@ import stirling.software.common.cluster.JobStoreEntry;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.model.tool.ToolDiagnostic;
+import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.ToolChainValidator;
 import stirling.software.common.util.TempFile;
@@ -121,6 +122,7 @@ public class PolicyController {
     private final JobOwnershipService jobOwnershipService;
     // Shared job store: lets the run endpoints see runs that executed on other nodes.
     private final JobStore jobStore;
+    private final StepSecrets stepSecrets;
 
     @PostMapping(value = "/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -132,17 +134,24 @@ public class PolicyController {
                             + " in order asynchronously and returns a run id. Poll the run status"
                             + " endpoint and download outputs via /api/v1/general/files/{id}.")
     public ResponseEntity<JobResponse<Void>> run(
-            @RequestPart("json") PipelineDefinition definition,
+            @RequestPart("json") AdHocRunRequest request,
             @RequestParam(value = "policyId", required = false) String policyId,
             @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
+        PipelineDefinition definition = withStoredStepSecrets(policyId, request.toDefinition());
         stampPolicyAudit(definition);
         requireRunnable(definition);
         validateAdHocRun(definition);
-        PolicyInputs inputs = resolveStoredAssets(policyId, toInputs(files));
+        PolicyInputs uploads = toInputs(files);
         PolicyRunHandle handle =
-                policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP);
-        recordEditorDocs(inputs);
+                startOnUploads(
+                        uploads,
+                        () ->
+                                policyRunner.runAdHoc(
+                                        definition,
+                                        resolveStoredAssets(policyId, uploads),
+                                        PolicyProgressListener.NOOP));
+        recordEditorDocs(uploads);
         return ResponseEntity.accepted().body(new JobResponse<>(true, handle.runId(), null));
     }
 
@@ -154,21 +163,29 @@ public class PolicyController {
                             + " starts and completes, then a terminal 'completed', 'failed',"
                             + " 'cancelled', or 'waiting' event carrying the final run view.")
     public SseEmitter runStream(
-            @RequestPart("json") PipelineDefinition definition,
+            @RequestPart("json") AdHocRunRequest request,
             @RequestParam(value = "policyId", required = false) String policyId,
             @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
+        PipelineDefinition definition = withStoredStepSecrets(policyId, request.toDefinition());
         stampPolicyAudit(definition);
         requireRunnable(definition);
         validateAdHocRun(definition);
-        PolicyInputs inputs = resolveStoredAssets(policyId, toInputs(files));
 
         SseEmitter emitter =
                 new SseEmitter(applicationProperties.getPolicies().getStreamTimeoutMs());
         emitter.onError(e -> log.warn("Policy run SSE emitter error", e));
 
-        PolicyRunHandle handle = policyRunner.runAdHoc(definition, inputs, streamListener(emitter));
-        recordEditorDocs(inputs);
+        PolicyInputs uploads = toInputs(files);
+        PolicyRunHandle handle =
+                startOnUploads(
+                        uploads,
+                        () ->
+                                policyRunner.runAdHoc(
+                                        definition,
+                                        resolveStoredAssets(policyId, uploads),
+                                        streamListener(emitter)));
+        recordEditorDocs(uploads);
         // whenComplete runs on the worker thread after the run finishes, so the terminal event
         // never races the step events.
         handle.completion()
@@ -290,7 +307,8 @@ public class PolicyController {
         requirePolicyEditingAllowed();
         Policy owned =
                 ClassificationStepPlanner.ensureClassificationFirst(
-                        withStoredOutputSecrets(resolveOwnership(policy)));
+                        withStoredSecrets(resolveOwnership(policy)));
+        stepSecrets.requireUnmasked(owned.steps());
         // Snapshot the previous version before saving so supporting files this edit dropped can
         // be cleaned up once nothing references them.
         Policy previous =
@@ -309,7 +327,7 @@ public class PolicyController {
         // Re-sync trigger registrations now so a new/changed folder-watch policy starts being
         // watched immediately instead of after the next reconcile sweep.
         policyTriggerManager.notifyPoliciesChanged();
-        return ResponseEntity.ok(withMaskedOutputSecrets(saved));
+        return ResponseEntity.ok(withMaskedSecrets(saved));
     }
 
     @PutMapping("/order")
@@ -446,20 +464,25 @@ public class PolicyController {
                 policy.routingRules());
     }
 
-    /** Output secrets never leave the server: reads return the redaction sentinel instead. */
-    private static Policy withMaskedOutputSecrets(Policy policy) {
+    /**
+     * Output and step secrets never leave the server, even to a policy editor: reads return the
+     * redaction sentinel instead.
+     */
+    private Policy withMaskedSecrets(Policy policy) {
         return withOutput(
-                policy,
-                new OutputSpec(
-                        policy.output().type(), SecretMasker.mask(policy.output().options())));
+                        policy,
+                        new OutputSpec(
+                                policy.output().type(),
+                                SecretMasker.mask(policy.output().options())))
+                .withSteps(stepSecrets.mask(policy.steps()));
     }
 
     /**
-     * An edit that round-trips a masked read sends output secrets back as the sentinel; restore
-     * them from the stored policy so saving without re-typing keeps them (validation then runs
-     * against the real values).
+     * An edit that round-trips a masked read sends secrets back as the sentinel; restore them from
+     * the stored policy so saving without re-typing keeps them (validation then runs against the
+     * real values).
      */
-    private Policy withStoredOutputSecrets(Policy incoming) {
+    private Policy withStoredSecrets(Policy incoming) {
         if (incoming.id() == null || incoming.id().isBlank()) {
             return incoming;
         }
@@ -468,12 +491,15 @@ public class PolicyController {
                 .map(
                         existing ->
                                 withOutput(
-                                        incoming,
-                                        new OutputSpec(
-                                                incoming.output().type(),
-                                                SecretMasker.restoreRedacted(
-                                                        incoming.output().options(),
-                                                        existing.output().options()))))
+                                                incoming,
+                                                new OutputSpec(
+                                                        incoming.output().type(),
+                                                        SecretMasker.restoreRedacted(
+                                                                incoming.output().options(),
+                                                                existing.output().options())))
+                                        .withSteps(
+                                                stepSecrets.restore(
+                                                        incoming.steps(), existing.steps())))
                 .orElse(incoming);
     }
 
@@ -527,11 +553,11 @@ public class PolicyController {
             summary = "List policies",
             description =
                     "Lists the policies belonging to the caller's team. Secret-bearing output"
-                            + " options are returned as a redaction sentinel, never their stored"
-                            + " values.")
+                            + " options and step passwords are returned as a redaction sentinel,"
+                            + " never their stored values.")
     public List<Policy> listPolicies() {
         return policyAccessGuard.visibleFrom(policyStore).stream()
-                .map(PolicyController::withMaskedOutputSecrets)
+                .map(this::withMaskedSecrets)
                 .toList();
     }
 
@@ -575,14 +601,14 @@ public class PolicyController {
     @Operation(
             summary = "Get a policy by id",
             description =
-                    "Secret-bearing output options are returned as a redaction sentinel, never"
-                            + " their stored values; an edit that sends the sentinel back keeps"
-                            + " them.")
+                    "Secret-bearing output options and step passwords are returned as a"
+                            + " redaction sentinel, never their stored values; an edit that sends"
+                            + " the sentinel back keeps them.")
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyId) {
         return policyStore
                 .get(policyId)
                 .filter(this::accessiblePolicySurface)
-                .map(PolicyController::withMaskedOutputSecrets)
+                .map(this::withMaskedSecrets)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -656,14 +682,16 @@ public class PolicyController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
         stampPolicyAudit(policy.toDefinition());
-        PolicyInputs inputs = toInputs(files);
+        PolicyInputs uploads = toInputs(files);
         String runId =
-                policyRunner
-                        .runWith(
-                                policy,
-                                inputs,
-                                PolicyProgressListener.NOOP,
-                                documentReferenceFor(files, inputs))
+                startOnUploads(
+                                uploads,
+                                () ->
+                                        policyRunner.runWith(
+                                                policy,
+                                                uploads,
+                                                PolicyProgressListener.NOOP,
+                                                documentReferenceFor(files, uploads)))
                         .runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
     }
@@ -766,14 +794,37 @@ public class PolicyController {
      * inaccessible policy leaves the run-supplied inputs untouched.
      */
     private PolicyInputs resolveStoredAssets(String policyId, PolicyInputs inputs) {
-        if (policyId == null || policyId.isBlank() || !policyEditingAllowed()) {
-            return inputs;
-        }
-        return policyStore
-                .get(policyId)
-                .filter(this::accessiblePolicySurface)
+        return testedPolicy(policyId)
                 .map(policy -> assetResolver.resolve(policy, inputs))
                 .orElse(inputs);
+    }
+
+    /**
+     * A test run sends the saved policy's steps as read, so their passwords arrive as the sentinel.
+     * Restore them under the same rule as its stored assets; a sentinel left over is rejected
+     * rather than run as the password.
+     */
+    private PipelineDefinition withStoredStepSecrets(
+            String policyId, PipelineDefinition requested) {
+        PipelineDefinition definition =
+                testedPolicy(policyId)
+                        .map(
+                                policy ->
+                                        new PipelineDefinition(
+                                                requested.name(),
+                                                stepSecrets.restore(
+                                                        requested.steps(), policy.steps()),
+                                                requested.outputs()))
+                        .orElse(requested);
+        stepSecrets.requireUnmasked(definition.steps());
+        return definition;
+    }
+
+    private Optional<Policy> testedPolicy(String policyId) {
+        if (policyId == null || policyId.isBlank() || !policyEditingAllowed()) {
+            return Optional.empty();
+        }
+        return policyStore.get(policyId).filter(this::accessiblePolicySurface);
     }
 
     /**
@@ -783,17 +834,58 @@ public class PolicyController {
      * files.
      */
     private PolicyInputs toInputs(PolicyRunFiles files) throws IOException {
-        List<Resource> primary = toResources(files.getFileInput());
+        List<Resource> primary = new ArrayList<>();
         Map<String, List<Resource>> supportingFiles = new LinkedHashMap<>();
-        for (NamedAsset asset : files.getAssets()) {
-            Resource resource = toResource(asset.getFile());
-            if (resource != null) {
-                supportingFiles
-                        .computeIfAbsent(asset.getKey(), key -> new ArrayList<>())
-                        .add(resource);
+        try {
+            if (files.getFileInput() != null) {
+                for (MultipartFile file : files.getFileInput()) {
+                    Resource resource = toResource(file);
+                    if (resource != null) {
+                        primary.add(resource);
+                    }
+                }
             }
+            for (NamedAsset asset : files.getAssets()) {
+                Resource resource = toResource(asset.getFile());
+                if (resource != null) {
+                    supportingFiles
+                            .computeIfAbsent(asset.getKey(), key -> new ArrayList<>())
+                            .add(resource);
+                }
+            }
+        } catch (IOException | RuntimeException e) {
+            deleteUploads(new PolicyInputs(primary, supportingFiles));
+            throw e;
         }
         return new PolicyInputs(primary, supportingFiles);
+    }
+
+    /**
+     * Starts a run on spooled uploads and deletes them once it settles, or straight away if {@code
+     * start} throws. {@code start} must not throw once the run is submitted, or the uploads are
+     * deleted under it.
+     */
+    private static PolicyRunHandle startOnUploads(
+            PolicyInputs uploads, Supplier<PolicyRunHandle> start) {
+        PolicyRunHandle handle;
+        try {
+            handle = start.get();
+        } catch (RuntimeException e) {
+            deleteUploads(uploads);
+            throw e;
+        }
+        handle.completion().whenComplete((run, error) -> deleteUploads(uploads));
+        return handle;
+    }
+
+    private static void deleteUploads(PolicyInputs uploads) {
+        List<Resource> all = new ArrayList<>(uploads.primary());
+        uploads.supportingFiles().values().forEach(all::addAll);
+        for (Resource upload : all) {
+            if (upload instanceof InternalApiClient.TempFileResource spooled) {
+                spooled.getTempFile().close();
+            }
+        }
     }
 
     /**
@@ -857,33 +949,19 @@ public class PolicyController {
         }
     }
 
-    private List<Resource> toResources(List<MultipartFile> files) throws IOException {
-        List<Resource> resources = new ArrayList<>();
-        if (files == null) {
-            return resources;
-        }
-        for (MultipartFile file : files) {
-            Resource resource = toResource(file);
-            if (resource != null) {
-                resources.add(resource);
-            }
-        }
-        return resources;
-    }
-
     /** Spool a single uploaded file to a managed temp file, preserving its name; null if empty. */
     private Resource toResource(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             return null;
         }
         TempFile tempFile = tempFileManager.createManagedTempFile("policy-run");
-        file.transferTo(tempFile.getPath());
-        final String originalName = Filenames.toSimpleFileName(file.getOriginalFilename());
-        return new FileSystemResource(tempFile.getFile()) {
-            @Override
-            public String getFilename() {
-                return originalName;
-            }
-        };
+        try {
+            file.transferTo(tempFile.getPath());
+        } catch (IOException | RuntimeException e) {
+            tempFile.close();
+            throw e;
+        }
+        return new InternalApiClient.TempFileResource(
+                tempFile, Filenames.toSimpleFileName(file.getOriginalFilename()));
     }
 }

@@ -6,6 +6,8 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
+import { useImageAccessibility } from "@editor/tools/pdfTextEditor/hooks/useImageAccessibility";
+import { useTextAccessibility } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
 import { warmDocumentDeviceFonts } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import {
@@ -51,6 +53,8 @@ export function useToolbarController(
   selection: SelectionState,
 ) {
   const sel = useSelectionActions(store);
+  const imageA11y = useImageAccessibility(store, state, selection);
+  const textA11y = useTextAccessibility(store, state, selection);
 
   const onToggleLock = useCallback(() => {
     const doc = store.document;
@@ -517,6 +521,14 @@ export function useToolbarController(
     onReplaceImage,
     onEditImageExternally,
     externalEditSupported: isExternalImageEditSupported(),
+    imageAccessibility: imageA11y.accessibility,
+    onSetImageDescription: imageA11y.setDescription,
+    onSetImageDecorative: imageA11y.setDecorative,
+    imageReview: imageA11y.review,
+    onSelectNextImageToReview: imageA11y.selectNextImage,
+    textTag: textA11y.tag,
+    onSetTextTag: textA11y.setTag,
+    innerTextTags: textA11y.inner,
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
     hasImageSelection: selection.imageIds.length > 0,

@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -61,6 +62,7 @@ import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.source.InProcessSourceDocCounter;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
 
 /**
@@ -594,6 +596,34 @@ class PolicyRunnerTest {
 
         assertSame(handle, runner.runWith(policy, inputs, PolicyProgressListener.NOOP, null));
         verifyNoInteractions(folderSource);
+    }
+
+    @Test
+    void aFailedDocumentCountDoesNotFailARunThatHasStarted() {
+        SourceDocCounter failingCounter = mock(SourceDocCounter.class);
+        doThrow(new IllegalStateException("database down"))
+                .when(failingCounter)
+                .record(any(), anyLong());
+        PolicyRunner countingRunner =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        failingCounter,
+                        processedLedger,
+                        new ApplicationProperties(),
+                        reachableOwners(),
+                        databaseLicenseGuard,
+                        mock(PolicyFailureRecorder.class),
+                        eventPublisher);
+        Policy policy = policy(List.of(InputSpec.folder("/in")));
+        PolicyInputs inputs = PolicyInputs.of(List.of());
+        PolicyRunHandle handle = new PolicyRunHandle("r", new CompletableFuture<>());
+        when(policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP, null, null))
+                .thenReturn(handle);
+
+        assertSame(
+                handle, countingRunner.runWith(policy, inputs, PolicyProgressListener.NOOP, null));
     }
 
     @Test

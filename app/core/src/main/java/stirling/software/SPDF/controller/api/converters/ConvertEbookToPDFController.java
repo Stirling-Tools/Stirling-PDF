@@ -28,6 +28,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
@@ -52,6 +53,7 @@ public class ConvertEbookToPDFController {
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
     private final OfficeDocumentSanitizer officeDocumentSanitizer;
+    private final RuntimePathConfig runtimePathConfig;
 
     private boolean isCalibreEnabled() {
         return endpointConfiguration.isGroupEnabled("Calibre");
@@ -116,8 +118,8 @@ public class ConvertEbookToPDFController {
         Path workingDirectory = tempFileManager.createTempDirectory();
         Path inputPath = workingDirectory.resolve(baseName + "." + lowerExtension);
         Path outputPath = workingDirectory.resolve(baseName + ".pdf");
-        TempFile tempOut = null;
         try {
+
             if (officeDocumentSanitizer.isSanitizableExtension(lowerExtension)) {
                 Files.write(
                         inputPath,
@@ -154,33 +156,36 @@ public class ConvertEbookToPDFController {
             String outputFilename =
                     GeneralUtils.generateFilename(originalFilename, "_convertedToPDF.pdf");
 
-            tempOut = tempFileManager.createManagedTempFile(".pdf");
-            if (optimizeForEbook) {
-                byte[] pdfBytes = Files.readAllBytes(outputPath);
-                try {
-                    byte[] optimizedPdf = GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
-                    Files.write(tempOut.getPath(), optimizedPdf);
-                } catch (IOException e) {
-                    log.warn(
-                            "Ghostscript optimization failed for ebook conversion, returning"
-                                    + " original PDF",
-                            e);
-                    Files.write(tempOut.getPath(), pdfBytes);
+            TempFile tempOut = null;
+            try {
+                tempOut = tempFileManager.createManagedTempFile(".pdf");
+                if (optimizeForEbook) {
+                    byte[] pdfBytes = Files.readAllBytes(outputPath);
+                    try {
+                        byte[] optimizedPdf = GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
+                        Files.write(tempOut.getPath(), optimizedPdf);
+                    } catch (IOException e) {
+                        log.warn(
+                                "Ghostscript optimization failed for ebook conversion, returning"
+                                        + " original PDF",
+                                e);
+                        Files.write(tempOut.getPath(), pdfBytes);
+                    }
+                } else {
+                    try (PDDocument document = pdfDocumentFactory.load(outputPath.toFile())) {
+                        document.save(tempOut.getFile());
+                    }
                 }
-            } else {
-                try (PDDocument document = pdfDocumentFactory.load(outputPath.toFile())) {
-                    document.save(tempOut.getFile());
+                ResponseEntity<Resource> response =
+                        WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
+                tempOut = null;
+                return response;
+            } catch (Exception e) {
+                if (tempOut != null) {
+                    tempOut.close();
                 }
+                throw e;
             }
-            ResponseEntity<Resource> response =
-                    WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
-            tempOut = null;
-            return response;
-        } catch (Exception e) {
-            if (tempOut != null) {
-                tempOut.close();
-            }
-            throw e;
         } finally {
             cleanupTempFiles(workingDirectory, inputPath, outputPath);
         }
@@ -193,7 +198,7 @@ public class ConvertEbookToPDFController {
             boolean includeTableOfContents,
             boolean includePageNumbers) {
         List<String> command = new ArrayList<>();
-        command.add("ebook-convert");
+        command.add(runtimePathConfig.getCalibrePath());
         command.add(inputPath.toString());
         command.add(outputPath.toString());
 

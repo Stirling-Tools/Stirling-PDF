@@ -83,6 +83,12 @@ export interface TextRunSnapshot {
   locked?: boolean;
   /** Box width the user set by resize, in PDF points; absent = follow the ink. */
   wrapWidthPt?: number;
+  /** The marked-content ID that ties the run's text into the structure tree. */
+  mcid?: number;
+  /** Marked as an artifact: content that assistive technology skips. */
+  artifact?: boolean;
+  /** Drawn by a form XObject, whose marks the editor does not read. */
+  inForm?: boolean;
 }
 
 export interface ImageObjectSnapshot {
@@ -92,10 +98,15 @@ export interface ImageObjectSnapshot {
   matrix: Affine;
   /** Editor-only: see TextRunSnapshot.locked. */
   locked?: boolean;
-  /** The marked-content ID that ties the image into the structure tree. */
+  /**
+   * The page's marked-content ID that ties the image into the structure tree:
+   * for an image in a form XObject, the form's.
+   */
   mcid?: number;
   /** Marked as an artifact: decoration that assistive technology skips. */
   artifact?: boolean;
+  /** Drawn by a form XObject, whose marks are not the page's to change. */
+  inForm?: boolean;
 }
 
 // One ruling line the page draws, with the ink needed to reproduce it: a table
@@ -212,6 +223,18 @@ export interface SelectionState {
   shapeIds: string[];
   /** Caret position when exactly one run is selected and the user is typing */
   caret: number | null;
+  /**
+   * The characters selected inside the one selected run, as code units of
+   * its text; null when nothing within it is selected. Kept after the run's
+   * box loses focus, so a control outside it can act on the selection.
+   */
+  textRange: TextRange | null;
+}
+
+/** Code units `start` (inclusive) to `end` (exclusive) of a run's text; never empty. */
+export interface TextRange {
+  start: number;
+  end: number;
 }
 
 export interface ToolbarState {

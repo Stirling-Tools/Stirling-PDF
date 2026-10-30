@@ -708,6 +708,11 @@ export function referencedObject(text: string): number | null {
   return m ? parseInt(m[1], 10) : null;
 }
 
+/** A reference to object `num`, at the generation the file has it. */
+export function indirectRef(pdf: RawPdf, num: number): string {
+  return `${num} ${pdf.generationOf(num)} R`;
+}
+
 export function arrayItems(text: string): ValueSpan[] | null {
   if (text[0] !== "[") return null;
   const items: ValueSpan[] = [];
@@ -766,11 +771,12 @@ function findEntry(body: string, key: string): Entry | null {
     }
     if (ch === "/" && depth === 1) {
       const nameEnd = scanNameEnd(body, i + 1);
-      if (body.slice(i + 1, nameEnd) === key) {
-        const start = skipWhitespace(body, nameEnd);
-        return { keyStart: i, start, end: scanValueEnd(body, start) };
-      }
-      i = nameEnd;
+      const start = skipWhitespace(body, nameEnd);
+      const end = scanValueEnd(body, start);
+      if (body.slice(i + 1, nameEnd) === key)
+        return { keyStart: i, start, end };
+      // Past the value too: in `/S /P /P 9 0 R` the value /P is not the key.
+      i = end;
       continue;
     }
     i += 1;
@@ -811,6 +817,9 @@ function skipLiteralString(text: string, at: number): number {
   }
   return i;
 }
+
+/** Sticky, so a value is matched where it starts without copying the rest of the body. */
+const REF_AT = /\d+\s+\d+\s+R\b/y;
 
 /** End index of one complete object starting at `at`. */
 function scanValueEnd(text: string, at: number): number {
@@ -860,7 +869,8 @@ function scanValueEnd(text: string, at: number): number {
   }
   // Bare token(s). An indirect reference is three tokens, so consume them
   // together or `/Length 12 0 R` reads back as the integer 12.
-  const refMatch = /^\d+\s+\d+\s+R\b/.exec(text.slice(i));
+  REF_AT.lastIndex = i;
+  const refMatch = REF_AT.exec(text);
   if (refMatch) return i + refMatch[0].length;
   if (text[i] === "/") return scanNameEnd(text, i + 1);
   while (

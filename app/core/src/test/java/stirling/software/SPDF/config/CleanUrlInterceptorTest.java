@@ -78,14 +78,40 @@ class CleanUrlInterceptorTest {
     }
 
     @Test
-    void preHandleSkipsParamsWithNoEqualsSign() throws Exception {
+    void preHandleStripsDisallowedBareFlag() throws Exception {
         when(request.getRequestURI()).thenReturn("/page");
         when(request.getContextPath()).thenReturn("");
         when(request.getQueryString()).thenReturn("lang=en&malformed");
-        // "malformed" has no '=', so keyValuePair.length != 2 -> skipped
-        // allowedParameters has 1 entry (lang=en) but queryParameters.length is 2
-        // So it redirects
         assertFalse(interceptor.preHandle(request, response, new Object()));
+        verify(response).sendRedirect("/page?lang=en");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"all", "all=", "all=1", "all=true", "lang=en&all"})
+    void preHandleKeepsShowAllLoginFlag(String queryString) throws Exception {
+        when(request.getRequestURI()).thenReturn("/login");
+        when(request.getContextPath()).thenReturn("");
+        when(request.getQueryString()).thenReturn(queryString);
+        assertTrue(interceptor.preHandle(request, response, new Object()));
+        verify(response, never()).sendRedirect(anyString());
+    }
+
+    @Test
+    void preHandleKeepsBareAllowedFlagWhenStrippingOthers() throws Exception {
+        when(request.getRequestURI()).thenReturn("/login");
+        when(request.getContextPath()).thenReturn("");
+        when(request.getQueryString()).thenReturn("all&evil=malicious");
+        assertFalse(interceptor.preHandle(request, response, new Object()));
+        verify(response).sendRedirect("/login?all");
+    }
+
+    @Test
+    void preHandleStripsParamWithMultipleEqualsSigns() throws Exception {
+        when(request.getRequestURI()).thenReturn("/page");
+        when(request.getContextPath()).thenReturn("");
+        when(request.getQueryString()).thenReturn("lang=en&page=1=2");
+        assertFalse(interceptor.preHandle(request, response, new Object()));
+        verify(response).sendRedirect("/page?lang=en");
     }
 
     @ParameterizedTest

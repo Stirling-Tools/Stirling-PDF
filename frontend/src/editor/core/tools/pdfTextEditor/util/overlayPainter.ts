@@ -3,6 +3,7 @@ import {
   type TokenFit,
 } from "@editor/tools/pdfTextEditor/util/lineLayout";
 import { measureAdvancePx } from "@editor/tools/pdfTextEditor/util/textMetrics";
+import type { TextRange } from "@editor/tools/pdfTextEditor/types";
 
 export interface PaintToken {
   text: string;
@@ -264,11 +265,36 @@ export function plainCaretOffset(el: HTMLElement): number | null {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0) return null;
   const { focusNode, focusOffset } = selection;
-  if (!focusNode || !el.contains(focusNode)) return null;
+  return focusNode ? plainOffset(el, focusNode, focusOffset) : null;
+}
+
+/**
+ * The characters of the run's model text the selection covers, counted as
+ * plainCaretOffset counts; null for a caret or a selection that leaves `el`.
+ */
+export function plainSelectionRange(el: HTMLElement): TextRange | null {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+    return null;
+  }
+  const { anchorNode, anchorOffset, focusNode, focusOffset } = selection;
+  if (!anchorNode || !focusNode) return null;
+  const anchor = plainOffset(el, anchorNode, anchorOffset);
+  const focus = plainOffset(el, focusNode, focusOffset);
+  if (anchor === null || focus === null || anchor === focus) return null;
+  return { start: Math.min(anchor, focus), end: Math.max(anchor, focus) };
+}
+
+function plainOffset(
+  el: HTMLElement,
+  node: Node,
+  offset: number,
+): number | null {
+  if (!el.contains(node)) return null;
   const range = document.createRange();
   try {
     range.setStart(el, 0);
-    range.setEnd(focusNode, focusOffset);
+    range.setEnd(node, offset);
   } catch {
     return null;
   }
@@ -278,8 +304,8 @@ export function plainCaretOffset(el: HTMLElement): number | null {
   // A caret parked on the container BETWEEN two line children sits at the
   // start of the next line - one past the end of the truncated text. Past the
   // last line child it belongs at that line's end, not on a fresh one.
-  if (focusNode === el) {
-    const idx = Math.min(focusOffset, el.childNodes.length);
+  if (node === el) {
+    const idx = Math.min(offset, el.childNodes.length);
     const children = Array.from(el.childNodes);
     const isLineChild = (n: Node) =>
       n instanceof HTMLElement && n.tagName !== "BR";
@@ -342,6 +368,50 @@ export function normalizeContainerCaret(
 export function restoreCaretOffset(el: HTMLElement, offset: number): void {
   const selection = window.getSelection();
   if (!selection) return;
+  const at = domPosition(el, offset);
+  setCollapsed(selection, at.node, at.offset);
+}
+
+const TEXT_RANGE_HIGHLIGHT = "pdf-editor-text-range";
+
+/**
+ * Paint `range` as selected text, through the CSS Custom Highlight API, until
+ * the returned cleanup runs. One range at a time: a later call replaces it.
+ * Does nothing where the browser lacks the API.
+ */
+export function highlightTextRange(range: Range): () => void {
+  if (typeof CSS === "undefined" || !("highlights" in CSS)) return () => {};
+  const highlight = new Highlight(range);
+  CSS.highlights.set(TEXT_RANGE_HIGHLIGHT, highlight);
+  return () => {
+    if (CSS.highlights.get(TEXT_RANGE_HIGHLIGHT) === highlight) {
+      CSS.highlights.delete(TEXT_RANGE_HIGHLIGHT);
+    }
+  };
+}
+
+/**
+ * A DOM range over the characters of the run's model text `range` covers,
+ * counted as plainSelectionRange counts; null when the DOM cannot hold it.
+ */
+export function plainDomRange(el: HTMLElement, range: TextRange): Range | null {
+  const from = domPosition(el, range.start);
+  const to = domPosition(el, range.end);
+  const out = document.createRange();
+  try {
+    out.setStart(from.node, from.offset);
+    out.setEnd(to.node, to.offset);
+  } catch {
+    return null;
+  }
+  return out;
+}
+
+/** Where character `offset` of the run's model text falls in the overlay's DOM. */
+function domPosition(
+  el: HTMLElement,
+  offset: number,
+): { node: Node; offset: number } {
   const target = Math.max(0, offset);
 
   const blocks = lineBlocks(el);
@@ -368,13 +438,12 @@ export function restoreCaretOffset(el: HTMLElement, offset: number): void {
   while (node) {
     const length = (node.nodeValue ?? "").length;
     if (seen + length >= remaining) {
-      setCollapsed(selection, node, remaining - seen);
-      return;
+      return { node, offset: remaining - seen };
     }
     seen += length;
     node = walker.nextNode();
   }
-  setCollapsed(selection, scope, 0);
+  return { node: scope, offset: 0 };
 }
 
 function setCollapsed(selection: Selection, node: Node, offset: number): void {

@@ -21,11 +21,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -112,7 +114,11 @@ class AiWorkflowServiceTest {
 
         PolicyExecutor policyExecutor =
                 new PolicyExecutor(
-                        internalApiClient, toolMetadataService, tempFileManager, objectMapper);
+                        internalApiClient,
+                        toolMetadataService,
+                        tempFileManager,
+                        objectMapper,
+                        new ApplicationProperties());
         service =
                 new AiWorkflowService(
                         pdfDocumentFactory,
@@ -151,6 +157,25 @@ class AiWorkflowServiceTest {
         assertEquals("file-1", result.getResultFiles().get(0).getFileId());
         assertEquals(1, ids.get());
         verify(internalApiClient, times(1)).post(eq(ROTATE_ENDPOINT), any());
+    }
+
+    @Test
+    void toolCallDeletesItsCopiesOfTheInputs() throws IOException {
+        stubOrchestrator(
+                """
+                {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
+                """
+                        .formatted(ROTATE_ENDPOINT));
+        when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(ROTATE_ENDPOINT)).thenReturn(false);
+        stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated-bytes", "rotated.pdf"));
+        stubFileStorage();
+
+        service.orchestrate(requestFor(pdf("input.pdf", "original-pdf-bytes"), "rotate 90"));
+
+        try (Stream<Path> left = Files.list(tempDir)) {
+            assertTrue(left.noneMatch(path -> path.toString().endsWith("ai-workflow")));
+        }
     }
 
     @Test
@@ -317,52 +342,52 @@ class AiWorkflowServiceTest {
 
     @Test
     void parameterListOfStructuredObjectsIsJsonEncodedAsSingleField() throws IOException {
-        // Endpoints like /general/edit-text and /security/redact bind a List<StructuredObject>
-        // from a single JSON form field via a property editor. The plan executor must
-        // pre-serialize such lists rather than splitting them into repeated form fields.
-        String editTextEndpoint = "/api/v1/general/edit-text";
+        // Endpoints like /security/redact bind a List<StructuredObject> from a single JSON form
+        // field via a property editor. The plan executor must pre-serialize such lists rather
+        // than splitting them into repeated form fields.
+        String redactEndpoint = "/api/v1/security/redact";
         MockMultipartFile input = pdf("input.pdf", "bytes");
         stubOrchestrator(
                 """
                 {
                   "outcome":"plan",
-                  "summary":"Find and replace",
+                  "summary":"Redact areas",
                   "steps":[
                     {"tool":"%s","parameters":{
-                      "edits":[{"find":"foo","replace":"bar"},{"find":"baz","replace":"qux"}],
-                      "useRegex":false
+                      "redactions":[{"page":1,"x":10,"y":20,"width":100,"height":50},{"page":2,"x":5,"y":15,"width":80,"height":30}],
+                      "convertPDFToImage":false
                     }}
                   ]
                 }
                 """
-                        .formatted(editTextEndpoint));
-        when(toolMetadataService.isMultiInput(editTextEndpoint)).thenReturn(false);
-        when(toolMetadataService.shouldUnpackZipResponse(editTextEndpoint)).thenReturn(false);
-        stubEndpoint(editTextEndpoint, pdfResource("edited", "edited.pdf"));
+                        .formatted(redactEndpoint));
+        when(toolMetadataService.isMultiInput(redactEndpoint)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(redactEndpoint)).thenReturn(false);
+        stubEndpoint(redactEndpoint, pdfResource("edited", "edited.pdf"));
         stubFileStorage();
 
-        service.orchestrate(requestFor(input, "find and replace"));
+        service.orchestrate(requestFor(input, "redact areas"));
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
                 ArgumentCaptor.forClass(MultiValueMap.class);
-        verify(internalApiClient).post(eq(editTextEndpoint), bodyCaptor.capture());
+        verify(internalApiClient).post(eq(redactEndpoint), bodyCaptor.capture());
         MultiValueMap<String, Object> body = bodyCaptor.getValue();
 
         // The structured-list field must be serialized as ONE JSON-string entry, not multiple
         // entries.
-        List<Object> editsValues = body.get("edits");
-        assertNotNull(editsValues);
-        assertEquals(1, editsValues.size());
+        List<Object> redactionsValues = body.get("redactions");
+        assertNotNull(redactionsValues);
+        assertEquals(1, redactionsValues.size());
         assertEquals(
-                "[{\"find\":\"foo\",\"replace\":\"bar\"},{\"find\":\"baz\",\"replace\":\"qux\"}]",
-                editsValues.get(0));
+                "[{\"page\":1,\"x\":10,\"y\":20,\"width\":100,\"height\":50},{\"page\":2,\"x\":5,\"y\":15,\"width\":80,\"height\":30}]",
+                redactionsValues.get(0));
 
         // Primitive fields keep the original behavior (single value, not JSON-wrapped).
-        List<Object> useRegex = body.get("useRegex");
-        assertNotNull(useRegex);
-        assertEquals(1, useRegex.size());
-        assertEquals(false, useRegex.get(0));
+        List<Object> convertPDFToImage = body.get("convertPDFToImage");
+        assertNotNull(convertPDFToImage);
+        assertEquals(1, convertPDFToImage.size());
+        assertEquals(false, convertPDFToImage.get(0));
     }
 
     @Test

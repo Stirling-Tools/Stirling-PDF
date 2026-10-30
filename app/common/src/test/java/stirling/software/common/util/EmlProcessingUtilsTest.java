@@ -2,6 +2,8 @@ package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.Duration;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -150,11 +152,33 @@ class EmlProcessingUtilsTest {
             String result = EmlProcessingUtils.convertTextToHtml("Contact test@example.com", null);
             assertTrue(result.contains("mailto:test@example.com"));
         }
+
+        @Test
+        @DisplayName("a long run of letters with no address converts promptly")
+        void longLetterRun() {
+            String text = "a".repeat(200_000);
+            String result =
+                    assertTimeoutPreemptively(
+                            Duration.ofSeconds(5),
+                            () -> EmlProcessingUtils.convertTextToHtml(text, null));
+            assertFalse(result.contains("mailto:"));
+        }
     }
 
     @Nested
     @DisplayName("decodeMimeHeader")
     class DecodeMimeHeaderTests {
+
+        @Test
+        @DisplayName("a long whitespace run inside an encoded word decodes promptly")
+        void longWhitespaceInEncodedWord() {
+            String header = "=?utf-8?Q?" + " ".repeat(200_000) + "x?==?utf-8?Q?y?=";
+            String result =
+                    assertTimeoutPreemptively(
+                            Duration.ofSeconds(5),
+                            () -> EmlProcessingUtils.decodeMimeHeader(header));
+            assertNotNull(result);
+        }
 
         @Test
         @DisplayName("should return null for null input")
@@ -270,6 +294,25 @@ class EmlProcessingUtilsTest {
             String html = "<div style=\"position:fixed; top:0\">content</div>";
             String result = EmlProcessingUtils.processEmailHtmlBody(html, null, null);
             assertFalse(result.contains("position:fixed"));
+        }
+
+        @Test
+        @DisplayName("whitespace before position CSS is removed with the declaration")
+        void stripsLeadingWhitespaceWithDeclaration() {
+            String html = "<div style=\"color:red;  position: fixed; top:0\">x</div>";
+            String result = EmlProcessingUtils.processEmailHtmlBody(html, null, null);
+            assertEquals("<div style=\"color:red; top:0\">x</div>", result);
+        }
+
+        @Test
+        @DisplayName("a long whitespace run converts promptly")
+        void longWhitespaceRun() {
+            String html = "<p>hello</p>" + " ".repeat(200_000);
+            String result =
+                    assertTimeoutPreemptively(
+                            Duration.ofSeconds(5),
+                            () -> EmlProcessingUtils.processEmailHtmlBody(html, null, null));
+            assertTrue(result.startsWith("<p>hello</p>"));
         }
     }
 

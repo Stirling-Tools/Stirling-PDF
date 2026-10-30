@@ -93,38 +93,57 @@ public class ConvertOfficeController {
             baseName = "input";
         }
 
-        // create temporary working directory
+        // The caller deletes it on success: the returned PDF lives in it.
         Path workDir = tempFileManager.createTempDirectory();
+        boolean converted = false;
+        try {
+            File pdf =
+                    convertInWorkDir(
+                            inputFile, useStirlingOfficeConvert, extensionLower, baseName, workDir);
+            converted = true;
+            return pdf;
+        } finally {
+            if (!converted) {
+                tempFileManager.deleteTempDirectory(workDir);
+            }
+        }
+    }
+
+    private File convertInWorkDir(
+            MultipartFile inputFile,
+            Boolean useStirlingOfficeConvert,
+            String extensionLower,
+            String baseName,
+            Path workDir)
+            throws IOException, InterruptedException {
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
         if (officeToPdfService.handles(extensionLower, useStirlingOfficeConvert)) {
-            if (convertInProcess(inputFile, extensionLower, workDir, inputPath, outputPath)) {
+            if (convertInProcess(inputFile, extensionLower, inputPath, outputPath)) {
                 return outputPath.toFile();
             }
         } else if (!officeConversionService.libreOfficeAvailable()) {
-            tempFileManager.deleteTempDirectory(workDir);
             throw ExceptionUtils.createLibreOfficeRequiredException(extensionLower);
         }
 
-        Path libreOfficeProfile = null;
-        boolean converted = false;
-        try {
-            // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
-            if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
-                String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
-                String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
-                Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
-            } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
-                byte[] sanitized =
-                        officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
-                Files.write(inputPath, sanitized);
-            } else {
-                try (InputStream in = inputFile.getInputStream()) {
-                    Files.copy(in, inputPath, StandardCopyOption.REPLACE_EXISTING);
-                }
+        // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
+        if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
+            String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
+            String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
+            Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
+        } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
+            byte[] sanitized =
+                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
+            Files.write(inputPath, sanitized);
+        } else {
+            try (InputStream in = inputFile.getInputStream()) {
+                Files.copy(in, inputPath, StandardCopyOption.REPLACE_EXISTING);
             }
+        }
 
+        Path libreOfficeProfile = null;
+        try {
             ProcessExecutorResult result = null;
             IOException unoconvertException = null;
 
@@ -209,12 +228,8 @@ public class ConvertOfficeController {
                 throw new IllegalStateException("Produced PDF is empty");
             }
 
-            converted = true;
             return outputPath.toFile();
         } finally {
-            if (!converted) {
-                tempFileManager.deleteTempDirectory(workDir);
-            }
             // Clean up the temporary files
             try {
                 Files.deleteIfExists(inputPath);
@@ -229,34 +244,22 @@ public class ConvertOfficeController {
 
     /** False when LibreOffice should retry the file; the original upload is converted as is. */
     private boolean convertInProcess(
-            MultipartFile inputFile,
-            String extension,
-            Path workDir,
-            Path inputPath,
-            Path outputPath)
+            MultipartFile inputFile, String extension, Path inputPath, Path outputPath)
             throws IOException {
-        try {
-            // Same sanitizing and ZIP budget as the LibreOffice path; a refused file never falls
-            // back.
-            if (officeDocumentSanitizer.isSanitizableExtension(extension)) {
-                Files.write(
-                        inputPath,
-                        officeDocumentSanitizer.sanitize(inputFile.getBytes(), extension));
-            } else {
-                try (InputStream in = inputFile.getInputStream()) {
-                    Files.copy(in, inputPath, StandardCopyOption.REPLACE_EXISTING);
-                }
+        // Same sanitizing and ZIP budget as the LibreOffice path; a refused file never falls back.
+        if (officeDocumentSanitizer.isSanitizableExtension(extension)) {
+            Files.write(
+                    inputPath, officeDocumentSanitizer.sanitize(inputFile.getBytes(), extension));
+        } else {
+            try (InputStream in = inputFile.getInputStream()) {
+                Files.copy(in, inputPath, StandardCopyOption.REPLACE_EXISTING);
             }
-        } catch (IOException | RuntimeException e) {
-            tempFileManager.deleteTempDirectory(workDir);
-            throw e;
         }
         try {
             officeToPdfService.convert(inputPath, outputPath);
             return true;
         } catch (IOException | RuntimeException e) {
             if (!officeToPdfService.canFallBack(e)) {
-                tempFileManager.deleteTempDirectory(workDir);
                 throw e;
             }
             log.warn(

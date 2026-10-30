@@ -1,5 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import type { Page, Route } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import path from "path";
 import { readFile, writeFile } from "node:fs/promises";
 import { readPdfProtection } from "@editor/tests/helpers/pdf-protection";
@@ -19,7 +19,6 @@ const SAMPLE = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
 const ENCRYPTED_PASSWORD = "testpass123";
 
 async function gotoEditor(page: Page): Promise<void> {
-  await page.route("**/encode-charcodes", (route: Route) => route.abort());
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 20_000,
@@ -36,7 +35,6 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
   test("saves a protected workbench PDF without uploading it for inspection", async ({
     page,
   }) => {
-    await page.route("**/encode-charcodes", (route) => route.abort());
     await page.goto("/editor");
     await page.locator('[data-testid="file-input"]').setInputFiles(ENCRYPTED);
     await page

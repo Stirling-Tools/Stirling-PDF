@@ -4,7 +4,11 @@ import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
 import { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import { LineGrouper } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
+import type { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  LineGrouper,
+  type BlockKey,
+} from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
 import { ParagraphGrouper } from "@editor/tools/pdfTextEditor/pdfium/ParagraphGrouper";
 import { PdfiumAnnotationReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumAnnotationReader";
 import { primeFontGlyphMap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
@@ -22,7 +26,12 @@ import {
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import {
+  readObjFill,
+  readObjStroke,
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
+import {
   ARTIFACT_TAG,
+  innermostMcid,
   readTagMarks,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
@@ -31,6 +40,8 @@ const FPDF_PAGEOBJ_TEXT = 1;
 const FPDF_PAGEOBJ_PATH = 2;
 const FPDF_PAGEOBJ_IMAGE = 3;
 const FPDF_PAGEOBJ_FORM = 5;
+
+const OPAQUE_BLACK: RGBA = { r: 0, g: 0, b: 0, a: 255 };
 
 // A ruling line is hairline-thin on one axis and long on the other. Anything
 // squarer is a box, a shading or a glyph-like drawing.
@@ -91,8 +102,9 @@ export class PdfiumTextReader {
       PdfiumAnnotationReader.populate(m, page);
       // LineGrouper always runs (merges per-glyph/per-word source objects into
       // one line).
-      LineGrouper.apply(page);
-      if (mode === "auto") ParagraphGrouper.apply(page);
+      const blockKey = structureBlockKey(doc, page.index);
+      LineGrouper.apply(page, blockKey);
+      if (mode === "auto") ParagraphGrouper.apply(page, blockKey);
       // Grouping is done.
       // One walk feeds both: each was reading the same characters with its
       // own WASM round-trips, doubling the cost of every page read.
@@ -443,7 +455,15 @@ function walkObjects(
       }
     } else if (type === FPDF_PAGEOBJ_IMAGE) {
       const indexId = [...path, i].join("-");
-      const img = readImage(m, page, objPtr, indexId, transform, containerPtr);
+      const img = readImage(
+        m,
+        page,
+        objPtr,
+        indexId,
+        transform,
+        containerPtr,
+        path,
+      );
       if (img) images.push(img);
     } else if (type === FPDF_PAGEOBJ_FORM && depth < MAX_DEPTH) {
       let formCount: number;
@@ -475,6 +495,25 @@ function walkObjects(
       }
     }
   }
+}
+
+/**
+ * Keys a run by the structure block of its own MCID, keeping artifacts and
+ * untagged text apart from tagged text and from each other. The structure is
+ * read only once a run carries an MCID, so an untagged file pays nothing.
+ */
+function structureBlockKey(doc: EditorDocument, pageIndex: number): BlockKey {
+  let structure: PageStructure | null = null;
+  return (run) => {
+    const mcid = innermostMcid(run.tagMarks);
+    if (mcid !== null) {
+      structure ??= doc.structure(pageIndex);
+      const block = structure.block(mcid);
+      if (block) return `block:${block.key}`;
+    }
+    const artifact = run.tagMarks.some((tag) => tag.name === ARTIFACT_TAG);
+    return artifact ? "artifact" : "untagged";
+  };
 }
 
 /** Identity affine - the page-level transform. */
@@ -535,12 +574,26 @@ function getFormContainer(
   pagePtr: number,
   path: number[],
 ): number {
+  return formChain(m, pagePtr, path).at(-1)!;
+}
+
+/** The form objects the index path passes through, outermost first. */
+function formChain(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  path: number[],
+): number[] {
   const formModule = m as PdfiumWithForms;
-  let current = m.FPDFPage_GetObject(pagePtr, path[0]);
-  for (let i = 1; i < path.length; i++) {
-    current = formModule.FPDFFormObj_GetObject(current, path[i]);
+  const chain: number[] = [];
+  for (const index of path) {
+    const parent = chain.at(-1);
+    chain.push(
+      parent === undefined
+        ? m.FPDFPage_GetObject(pagePtr, index)
+        : formModule.FPDFFormObj_GetObject(parent, index),
+    );
   }
-  return current;
+  return chain;
 }
 
 // The ruling lines a path object draws.
@@ -621,61 +674,20 @@ function readPaint(m: WrappedPdfiumModule, objPtr: number): RulePaint | null {
     m.pdfium.wasmExports.free(strokePtr);
   }
   if (fillMode === 0 && !stroked) return null;
-  const mod = m as unknown as RulePaintModule;
-  const read = stroked
-    ? mod.FPDFPageObj_GetStrokeColor
-    : mod.FPDFPageObj_GetFillColor;
-  const color = read ? readRGBA(m, objPtr, read) : null;
+  const color = stroked ? readObjStroke(m, objPtr) : readObjFill(m, objPtr);
   return {
     stroked,
     thickness: stroked ? readStrokeWidth(m, objPtr) : 0,
-    color: color ?? { r: 0, g: 0, b: 0, a: 255 },
+    color: color ?? { ...OPAQUE_BLACK },
   };
 }
 
-interface RulePaintModule {
-  FPDFPageObj_GetStrokeColor?: ColorReader;
-  FPDFPageObj_GetFillColor?: ColorReader;
+interface StrokeWidthModule {
   FPDFPageObj_GetStrokeWidth?: (obj: number, w: number) => boolean | number;
 }
 
-type ColorReader = (
-  obj: number,
-  r: number,
-  g: number,
-  b: number,
-  a: number,
-) => boolean | number;
-
-function readRGBA(
-  m: WrappedPdfiumModule,
-  objPtr: number,
-  read: ColorReader,
-): RGBA | null {
-  const r = m.pdfium.wasmExports.malloc(4);
-  const g = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const a = m.pdfium.wasmExports.malloc(4);
-  try {
-    if (!read(objPtr, r, g, b, a)) return null;
-    return {
-      r: m.pdfium.getValue(r, "i32") & 0xff,
-      g: m.pdfium.getValue(g, "i32") & 0xff,
-      b: m.pdfium.getValue(b, "i32") & 0xff,
-      a: m.pdfium.getValue(a, "i32") & 0xff,
-    };
-  } catch {
-    return null;
-  } finally {
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(g);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(a);
-  }
-}
-
 function readStrokeWidth(m: WrappedPdfiumModule, objPtr: number): number {
-  const get = (m as unknown as RulePaintModule).FPDFPageObj_GetStrokeWidth;
+  const get = (m as unknown as StrokeWidthModule).FPDFPageObj_GetStrokeWidth;
   if (!get) return 0;
   const w = m.pdfium.wasmExports.malloc(4);
   try {
@@ -793,35 +805,6 @@ function readMatrix(m: WrappedPdfiumModule, objPtr: number): Affine {
   };
 }
 
-function readFill(m: WrappedPdfiumModule, objPtr: number): RGBA {
-  const buf = scratchPtr(m, SCRATCH.readerFill, 16);
-  const ok = m.FPDFPageObj_GetFillColor(
-    objPtr,
-    buf,
-    buf + 4,
-    buf + 8,
-    buf + 12,
-  );
-  if (!ok) return { r: 0, g: 0, b: 0, a: 255 };
-  return {
-    r: m.pdfium.getValue(buf, "i32") & 0xff,
-    g: m.pdfium.getValue(buf + 4, "i32") & 0xff,
-    b: m.pdfium.getValue(buf + 8, "i32") & 0xff,
-    a: m.pdfium.getValue(buf + 12, "i32") & 0xff,
-  };
-}
-
-interface StrokeReaderModule {
-  FPDFPageObj_GetStrokeColor?: (
-    obj: number,
-    r: number,
-    g: number,
-    b: number,
-    a: number,
-  ) => boolean;
-  FPDFPageObj_GetStrokeWidth?: (obj: number, out: number) => boolean;
-}
-
 /** Render modes that actually put stroke ink on the page. */
 const STROKING_MODES = new Set([1, 2, 5, 6]);
 
@@ -833,34 +816,9 @@ function readStroke(
   renderMode: number,
 ): { stroke: RGBA | null; strokeWidth: number } {
   if (!STROKING_MODES.has(renderMode)) return { stroke: null, strokeWidth: 0 };
-  const mod = m as unknown as StrokeReaderModule;
-  const getColor = mod.FPDFPageObj_GetStrokeColor;
-  const getWidth = mod.FPDFPageObj_GetStrokeWidth;
-  if (!getColor) return { stroke: null, strokeWidth: 0 };
-  try {
-    const buf = scratchPtr(m, SCRATCH.readerStroke, 20);
-    if (!getColor(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
-      return { stroke: null, strokeWidth: 0 };
-    }
-    const alpha = m.pdfium.getValue(buf + 12, "i32") & 0xff;
-    let strokeWidth = 0;
-    if (getWidth && getWidth(objPtr, buf + 16)) {
-      const raw = m.pdfium.getValue(buf + 16, "float");
-      if (Number.isFinite(raw) && raw > 0) strokeWidth = raw;
-    }
-    return {
-      stroke: {
-        r: m.pdfium.getValue(buf, "i32") & 0xff,
-        g: m.pdfium.getValue(buf + 4, "i32") & 0xff,
-        b: m.pdfium.getValue(buf + 8, "i32") & 0xff,
-        a: alpha,
-      },
-      strokeWidth,
-    };
-  } catch {
-    // A throwing stroke accessor must not abort the rest of the page.
-    return { stroke: null, strokeWidth: 0 };
-  }
+  const stroke = readObjStroke(m, objPtr);
+  if (!stroke) return { stroke: null, strokeWidth: 0 };
+  return { stroke, strokeWidth: readStrokeWidth(m, objPtr) };
 }
 
 function readTextObjString(
@@ -932,7 +890,7 @@ function readTextRun(
     const localBounds = readBounds(m, objPtr);
     if (!localBounds) return null;
     const localMatrix = readMatrix(m, objPtr);
-    const fill = readFill(m, objPtr);
+    const fill = readObjFill(m, objPtr) ?? { ...OPAQUE_BLACK };
 
     // Lift form-local coordinates into page space. For page-level text
     // `transform` is identity and these are no-ops.
@@ -1039,17 +997,9 @@ function isPainted(m: WrappedPdfiumModule, objPtr: number): boolean {
   const fills = m.pdfium.getValue(buf, "i32") !== 0;
   const strokes = m.pdfium.getValue(buf + 4, "i32") !== 0;
   return (
-    (fills && readFill(m, objPtr).a > 0) ||
-    (strokes && readStrokeAlpha(m, objPtr) > 0)
+    (fills && (readObjFill(m, objPtr) ?? OPAQUE_BLACK).a > 0) ||
+    (strokes && (readObjStroke(m, objPtr)?.a ?? 0) > 0)
   );
-}
-
-function readStrokeAlpha(m: WrappedPdfiumModule, objPtr: number): number {
-  const buf = scratchPtr(m, SCRATCH.shapeStrokeAlpha, 16);
-  if (!m.FPDFPageObj_GetStrokeColor(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
-    return 0;
-  }
-  return m.pdfium.getValue(buf + 12, "i32") & 0xff;
 }
 
 function readImage(
@@ -1059,13 +1009,13 @@ function readImage(
   index: number | string,
   transform: Affine,
   containerPtr: number,
+  formPath: number[],
 ): ImageObject | null {
   const localBounds = readBounds(m, objPtr);
   if (!localBounds) return null;
   const localMatrix = readMatrix(m, objPtr);
   const ident = isIdentity(transform);
-  // A form XObject's MCIDs are not the page's, so only page-level images are tagged.
-  const tags = containerPtr === 0 ? readTagMarks(m, objPtr) : [];
+  const tags = imageTags(m, page.pagePtr, formPath, objPtr);
   return new ImageObject({
     id: `p${page.index}-i${index}`,
     pageIndex: page.index,
@@ -1073,7 +1023,30 @@ function readImage(
     bounds: ident ? localBounds : transformRect(transform, localBounds),
     matrix: ident ? localMatrix : composeAffine(transform, localMatrix),
     containerPtr,
-    mcid: [...tags].reverse().find((t) => t.mcid !== null)?.mcid ?? undefined,
-    artifact: tags.some((t) => t.name === ARTIFACT_TAG) || undefined,
+    mcid: tags.mcid ?? undefined,
+    artifact: tags.artifact || undefined,
   });
+}
+
+/**
+ * An image's tags as the page's structure tree sees them. PDFium gives an
+ * object in a form XObject only the marks in the form's content, whose MCIDs
+ * resolve against the form's own /StructParents, so the page's MCID is the
+ * one on the outermost form. An /Artifact at any level still makes the image
+ * one (ISO 32000-1 14.8.2.2).
+ */
+function imageTags(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  formPath: number[],
+  objPtr: number,
+): { mcid: number | null; artifact: boolean } {
+  const [onPage, ...inForms] = [...formChain(m, pagePtr, formPath), objPtr].map(
+    (ptr) => readTagMarks(m, ptr),
+  );
+  const formOwnsContent = inForms.flat().some((t) => t.mcid !== null);
+  return {
+    mcid: formOwnsContent ? null : innermostMcid(onPage),
+    artifact: [onPage, ...inForms].flat().some((t) => t.name === ARTIFACT_TAG),
+  };
 }

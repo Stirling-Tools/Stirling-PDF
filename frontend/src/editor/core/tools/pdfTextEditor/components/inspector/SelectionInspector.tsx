@@ -13,6 +13,9 @@ import type { SelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSel
 import type { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import { modShortcut } from "@editor/utils/hotkeys";
+import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
+import { ImageAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/ImageAccessibilitySection";
+import { TextAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
 
 export type InspectorController = ReturnType<typeof useToolbarController>;
 
@@ -71,6 +74,22 @@ export function SelectionInspector({
         />
       )}
       {hasImageSelection && <ImageSection controller={controller} />}
+      {ACCESSIBILITY_EDITING && controller.textTag && (
+        <TextAccessibilitySection
+          tag={controller.textTag}
+          onSetTag={controller.onSetTextTag}
+          inner={controller.innerTextTags}
+        />
+      )}
+      {ACCESSIBILITY_EDITING && controller.imageAccessibility && (
+        <ImageAccessibilitySection
+          accessibility={controller.imageAccessibility}
+          onSetDescription={controller.onSetImageDescription}
+          onSetDecorative={controller.onSetImageDecorative}
+          review={controller.imageReview}
+          onNext={controller.onSelectNextImageToReview}
+        />
+      )}
     </Stack>
   );
 }
