@@ -66,13 +66,22 @@ export class ZipFileService {
   public static readonly ZIP_WARNING_THRESHOLD = 20;
 
   // ZIP file validation constants
-  private static readonly VALID_ZIP_TYPES = [
-    "application/zip",
-    "application/x-zip-compressed",
-    "application/x-zip",
-    "application/octet-stream", // Some browsers use this for ZIP files
-  ];
   private static readonly VALID_ZIP_EXTENSIONS = [".zip"];
+
+  /**
+   * ZIP is a container format, not a promise that the file is an archive.
+   * DOCX, ODT, EPUB and CBZ are ZIPs internally too, and extracting their
+   * parts would hand the user XML fragments instead of a document. Only a
+   * `.zip` name is something the archive extractor should open.
+   */
+  private static isZipArchiveName(name: string | undefined): boolean {
+    return (
+      typeof name === "string" &&
+      ZipFileService.VALID_ZIP_EXTENSIONS.some((ext) =>
+        name.toLowerCase().endsWith(ext),
+      )
+    );
+  }
 
   /**
    * Validate a ZIP file without extracting it
@@ -300,28 +309,17 @@ export class ZipFileService {
   }
 
   /**
-   * Check if a file is a ZIP file based on type and extension
+   * Check whether a file is an extractable `.zip` archive. MIME type alone is
+   * not enough: browsers report ZIP-based documents as `application/zip` or
+   * `application/octet-stream`, which would wrongly offer to extract them.
    */
   public isZipFile(file: File): boolean {
-    const hasValidType = ZipFileService.VALID_ZIP_TYPES.includes(file.type);
-    const hasValidExtension = ZipFileService.VALID_ZIP_EXTENSIONS.some((ext) =>
-      file.name.toLowerCase().endsWith(ext),
-    );
-
-    return hasValidType || hasValidExtension;
+    return ZipFileService.isZipArchiveName(file.name);
   }
 
-  /**
-   * Check if a StirlingFileStub represents a ZIP file (for UI checks without loading full file)
-   */
+  /** Stub variant of {@link isZipFile}, for UI checks without loading the bytes. */
   public isZipFileStub(stub: StirlingFileStub): boolean {
-    const hasValidType =
-      stub.type && ZipFileService.VALID_ZIP_TYPES.includes(stub.type);
-    const hasValidExtension = ZipFileService.VALID_ZIP_EXTENSIONS.some((ext) =>
-      stub.name.toLowerCase().endsWith(ext),
-    );
-
-    return hasValidType || hasValidExtension;
+    return ZipFileService.isZipArchiveName(stub.name);
   }
 
   // Signature-first ZIP detection for HTTP response bodies. Content-Type alone
