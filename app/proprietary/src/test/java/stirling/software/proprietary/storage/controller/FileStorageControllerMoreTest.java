@@ -30,6 +30,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.storage.model.FileShare;
@@ -50,12 +54,15 @@ class FileStorageControllerMoreTest {
     @Mock private FileStorageService fileStorageService;
     @Mock private StorageProvider storageProvider;
     @Mock private AuditService auditService;
+    @Mock private ApplicationProperties applicationProperties;
 
     private FileStorageController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new FileStorageController(fileStorageService, storageProvider, auditService);
+        controller =
+                new FileStorageController(
+                        fileStorageService, storageProvider, auditService, applicationProperties);
     }
 
     private User user() {
@@ -148,7 +155,13 @@ class FileStorageControllerMoreTest {
                 .thenReturn(Optional.empty());
         when(fileStorageService.loadFile(f)).thenReturn(resource);
 
-        ResponseEntity<Resource> response = controller.downloadFile(77L, false);
+        ResponseEntity<Resource> response =
+                controller.downloadFile(
+                        77L,
+                        false,
+                        false,
+                        mock(HttpServletRequest.class),
+                        mock(HttpServletResponse.class));
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isSameAs(resource);

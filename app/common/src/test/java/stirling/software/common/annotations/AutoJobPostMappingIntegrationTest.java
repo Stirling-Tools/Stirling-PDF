@@ -34,6 +34,7 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
 import stirling.software.common.service.JobOwnershipService;
+import stirling.software.common.service.StoredFileReferenceResolver;
 
 @ExtendWith(MockitoExtension.class)
 class AutoJobPostMappingIntegrationTest {
@@ -46,9 +47,13 @@ class AutoJobPostMappingIntegrationTest {
 
     @Mock private FileStorage fileStorage;
 
+    @Mock private StoredFileReferenceResolver storedFileReferenceResolver;
+
     @BeforeEach
     void setUp() {
-        autoJobAspect = new AutoJobAspect(jobExecutorService, request, fileStorage);
+        autoJobAspect =
+                new AutoJobAspect(
+                        jobExecutorService, request, fileStorage, storedFileReferenceResolver);
     }
 
     @Mock private ProceedingJoinPoint joinPoint;

@@ -2,12 +2,21 @@ package stirling.software.proprietary.storage.controller;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+import org.eclipse.jetty.ee11.servlet.ServletApiResponse;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Blocker;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,12 +35,17 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.WebUtils;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.AuditService;
@@ -55,11 +69,14 @@ import stirling.software.proprietary.storage.service.FileStorageService;
         description = "Stored file management, sharing, and share link operations")
 public class FileStorageController {
 
+    private static final int DIRECT_BUFFER_BYTES = 1024 * 1024;
+
     private static final Duration SIGNED_URL_TTL = Duration.ofMinutes(5);
 
     private final FileStorageService fileStorageService;
     private final StorageProvider storageProvider;
     private final AuditService auditService;
+    private final ApplicationProperties applicationProperties;
 
     @PostMapping(
             value = "/files",
@@ -71,6 +88,19 @@ public class FileStorageController {
             @RequestPart(name = "auditLog", required = false) MultipartFile auditLog) {
         User user = fileStorageService.requireAuthenticatedUser();
         return fileStorageService.storeFileResponse(user, file, historyBundle, auditLog);
+    }
+
+    /** Stores a hidden working copy for later {@code storage:<id>} references. */
+    @PostMapping(
+            value = "/files/temporary",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public StoredFileResponse uploadTemporaryFile(
+            @RequestPart("file") MultipartFile file,
+            @RequestParam(name = "ttlMinutes", defaultValue = "60") long ttlMinutes) {
+        User user = fileStorageService.requireAuthenticatedUser();
+        Duration ttl = Duration.ofMinutes(Math.clamp(ttlMinutes, 1, 24 * 60));
+        return fileStorageService.storeTemporaryFileResponse(user, file, ttl);
     }
 
     @PutMapping(
@@ -99,15 +129,111 @@ public class FileStorageController {
     }
 
     @GetMapping("/files/{fileId}/download")
-    public ResponseEntity<org.springframework.core.io.Resource> downloadFile(
+    public ResponseEntity<Resource> downloadFile(
             @PathVariable Long fileId,
-            @RequestParam(name = "inline", defaultValue = "false") boolean inline) {
+            @RequestParam(name = "inline", defaultValue = "false") boolean inline,
+            @RequestParam(name = "direct", defaultValue = "true") boolean direct,
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
         User user = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getAccessibleFile(user, fileId);
         fileStorageService.requireReadAccess(user, file);
-        Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect =
-                tryRedirectToSignedUrl(file, inline);
-        return redirect.orElseGet(() -> buildFileResponse(file, inline));
+        Optional<ResponseEntity<Resource>> redirect = tryRedirectToSignedUrl(file, inline);
+        if (redirect.isPresent()) {
+            return redirect.get();
+        }
+
+        // Range and HEAD stay on Spring's converter: it implements 206/Content-Range, and a
+        // partial body has no benefit from the whole-file direct path.
+        boolean canWriteDirect =
+                direct
+                        && request.getHeader(HttpHeaders.RANGE) == null
+                        && !"HEAD".equalsIgnoreCase(request.getMethod())
+                        && WebUtils.getNativeResponse(response, ServletApiResponse.class) != null;
+        if (canWriteDirect) {
+            Resource resource = fileStorageService.loadFile(file);
+            if (resource instanceof FileSystemResource fileSystemResource) {
+                writeDirect(response, fileSystemResource.getFile().toPath(), file, inline, request);
+                return null;
+            }
+            return buildFileResponse(file, inline, resource);
+        }
+        return buildFileResponse(file, inline);
+    }
+
+    private void prepareDirectResponse(
+            HttpServletResponse servletResponse,
+            StoredFile file,
+            boolean inline,
+            long size,
+            HttpServletRequest request) {
+        String contentType =
+                file.getContentType() == null
+                        ? MediaType.APPLICATION_OCTET_STREAM_VALUE
+                        : file.getContentType();
+        servletResponse.setStatus(HttpStatus.OK.value());
+        try {
+            servletResponse.setContentType(contentType);
+        } catch (IllegalArgumentException ex) {
+            servletResponse.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        }
+        servletResponse.setContentLengthLong(size);
+        servletResponse.setHeader(
+                HttpHeaders.CONTENT_DISPOSITION,
+                ContentDisposition.builder(inline ? "inline" : "attachment")
+                        .filename(file.getOriginalFilename())
+                        .build()
+                        .toString());
+        servletResponse.setHeader(HttpHeaders.ACCEPT_RANGES, "bytes");
+        applySecurityHeaders(servletResponse, request);
+    }
+
+    /** Streams a local file with one direct buffer; the blocking callback bounds in-flight data. */
+    private void writeDirect(
+            HttpServletResponse servletResponse,
+            Path path,
+            StoredFile file,
+            boolean inline,
+            HttpServletRequest request)
+            throws IOException {
+        ServletApiResponse jettyResponse =
+                WebUtils.getNativeResponse(servletResponse, ServletApiResponse.class);
+        if (jettyResponse == null) {
+            throw new IllegalStateException("Direct download requires a Jetty response");
+        }
+
+        Response response = jettyResponse.getResponse();
+        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+            long size = channel.size();
+            prepareDirectResponse(servletResponse, file, inline, size, request);
+            if (size == 0) {
+                try (Blocker.Callback callback = Blocker.callback()) {
+                    response.write(true, ByteBuffer.allocate(0), callback);
+                    callback.block();
+                }
+                return;
+            }
+            ByteBuffer buffer = ByteBuffer.allocateDirect(DIRECT_BUFFER_BYTES);
+            long remaining = size;
+            while (remaining > 0) {
+                buffer.clear();
+                buffer.limit((int) Math.min(buffer.capacity(), remaining));
+                int read = channel.read(buffer);
+                if (read < 0) {
+                    break;
+                }
+                if (read == 0) {
+                    continue;
+                }
+                buffer.flip();
+                remaining -= read;
+                try (Blocker.Callback callback = Blocker.callback()) {
+                    response.write(remaining == 0, buffer, callback);
+                    callback.block();
+                }
+            }
+        }
     }
 
     @DeleteMapping("/files/{fileId}")
@@ -185,7 +311,7 @@ public class FileStorageController {
     }
 
     @GetMapping("/share-links/{token}")
-    public ResponseEntity<org.springframework.core.io.Resource> downloadShareLink(
+    public ResponseEntity<Resource> downloadShareLink(
             @PathVariable String token,
             Authentication authentication,
             @RequestParam(name = "inline", defaultValue = "false") boolean inline) {
@@ -205,8 +331,7 @@ public class FileStorageController {
         fileStorageService.requireReadAccess(share);
         fileStorageService.recordShareAccess(share, authentication, inline);
         StoredFile file = share.getFile();
-        Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect =
-                tryRedirectToSignedUrl(file, inline);
+        Optional<ResponseEntity<Resource>> redirect = tryRedirectToSignedUrl(file, inline);
         return redirect.orElseGet(() -> buildFileResponse(file, inline));
     }
 
@@ -263,9 +388,12 @@ public class FileStorageController {
         return fileStorageService.listShareAccessResponses(owner, file, token);
     }
 
-    private ResponseEntity<org.springframework.core.io.Resource> buildFileResponse(
-            StoredFile file, boolean inline) {
-        org.springframework.core.io.Resource resource = fileStorageService.loadFile(file);
+    private ResponseEntity<Resource> buildFileResponse(StoredFile file, boolean inline) {
+        return buildFileResponse(file, inline, fileStorageService.loadFile(file));
+    }
+
+    private ResponseEntity<Resource> buildFileResponse(
+            StoredFile file, boolean inline, Resource resource) {
         if (file.getEncryptionKeyId() != null) {
             // Compliance marker: a plaintext copy of encrypted-at-rest content left the platform
             // (inline=true is an in-app view; false is a saved download).
@@ -300,13 +428,33 @@ public class FileStorageController {
         return ResponseEntity.ok().headers(headers).body(resource);
     }
 
+    /**
+     * Direct writes skip Spring Security's on-commit headers; mirror them in step with
+     * SecurityConfiguration.
+     */
+    private void applySecurityHeaders(HttpServletResponse response, HttpServletRequest request) {
+        response.setHeader("X-Content-Type-Options", "nosniff");
+        ApplicationProperties.Security security = applicationProperties.getSecurity();
+        if (security != null && security.isEnableLogin()) {
+            String frame = security.getXFrameOptions();
+            if (frame == null || frame.isBlank() || "DENY".equalsIgnoreCase(frame)) {
+                response.setHeader("X-Frame-Options", "DENY");
+            } else if ("SAMEORIGIN".equalsIgnoreCase(frame)) {
+                response.setHeader("X-Frame-Options", "SAMEORIGIN");
+            }
+        }
+        if (request.isSecure()) {
+            response.setHeader("Strict-Transport-Security", "max-age=31536000 ; includeSubDomains");
+        }
+    }
+
     private boolean isAuthenticated(Authentication authentication) {
         return authentication != null
                 && authentication.isAuthenticated()
                 && !"anonymousUser".equals(authentication.getPrincipal());
     }
 
-    private Optional<ResponseEntity<org.springframework.core.io.Resource>> tryRedirectToSignedUrl(
+    private Optional<ResponseEntity<Resource>> tryRedirectToSignedUrl(
             StoredFile file, boolean inline) {
         if (file == null || file.getStorageKey() == null || file.getStorageKey().isBlank()) {
             return Optional.empty();
@@ -323,7 +471,7 @@ public class FileStorageController {
             }
             HttpHeaders headers = new HttpHeaders();
             headers.setLocation(signed.get());
-            ResponseEntity<org.springframework.core.io.Resource> response =
+            ResponseEntity<Resource> response =
                     ResponseEntity.status(HttpStatus.FOUND).headers(headers).build();
             return Optional.of(response);
         } catch (IOException e) {

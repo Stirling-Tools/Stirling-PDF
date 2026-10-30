@@ -725,6 +725,10 @@ export interface MergePdfsRequest {
    * JSON array of client-provided IDs for each uploaded file (same order as fileInput)
    */
   clientFileIds?: string;
+  /**
+   * Storage references, in order, used instead of fileInput.
+   */
+  fileIds?: string[];
   fileOrder?: string;
   /**
    * Flag indicating whether to generate a table of contents for the merged PDF. If true, a table of contents will be created using the input filenames as chapter names.
@@ -1902,6 +1906,91 @@ export const TOOL_FILE_FIELDS = {
   ],
   "/api/v1/security/validate-signature": ["certFile"],
 } as const satisfies Partial<Record<ToolEndpoint, readonly string[]>>;
+
+/** Endpoints whose request model accepts a persistent `fileId`/`fileIds` reference. */
+export const TOOL_STORED_FILE_REFERENCE_ENDPOINTS = [
+  "/api/v1/convert/eml/pdf",
+  "/api/v1/convert/html/pdf",
+  "/api/v1/convert/pdf/csv",
+  "/api/v1/convert/pdf/epub",
+  "/api/v1/convert/pdf/html",
+  "/api/v1/convert/pdf/img",
+  "/api/v1/convert/pdf/markdown",
+  "/api/v1/convert/pdf/pdfa",
+  "/api/v1/convert/pdf/presentation",
+  "/api/v1/convert/pdf/text",
+  "/api/v1/convert/pdf/ua",
+  "/api/v1/convert/pdf/vector",
+  "/api/v1/convert/pdf/word",
+  "/api/v1/convert/pdf/xlsx",
+  "/api/v1/convert/pdf/xml",
+  "/api/v1/convert/vector/pdf",
+  "/api/v1/docparse/ingest",
+  "/api/v1/filter/filter-contains-image",
+  "/api/v1/filter/filter-contains-text",
+  "/api/v1/filter/filter-file-size",
+  "/api/v1/filter/filter-page-count",
+  "/api/v1/filter/filter-page-rotation",
+  "/api/v1/filter/filter-page-size",
+  "/api/v1/general/booklet-imposition",
+  "/api/v1/general/crop",
+  "/api/v1/general/edit-table-of-contents",
+  "/api/v1/general/merge-pdfs",
+  "/api/v1/general/multi-page-layout",
+  "/api/v1/general/overlay-pdfs",
+  "/api/v1/general/pdf-to-single-page",
+  "/api/v1/general/rearrange-pages",
+  "/api/v1/general/remove-image-pdf",
+  "/api/v1/general/remove-pages",
+  "/api/v1/general/rotate-pdf",
+  "/api/v1/general/scale-pages",
+  "/api/v1/general/split-by-size-or-count",
+  "/api/v1/general/split-for-poster-print",
+  "/api/v1/general/split-pages",
+  "/api/v1/general/split-pdf-by-chapters",
+  "/api/v1/general/split-pdf-by-sections",
+  "/api/v1/misc/add-attachments",
+  "/api/v1/misc/add-comments",
+  "/api/v1/misc/add-image",
+  "/api/v1/misc/add-page-numbers",
+  "/api/v1/misc/add-stamp",
+  "/api/v1/misc/auto-rename",
+  "/api/v1/misc/auto-rotate-pdf",
+  "/api/v1/misc/auto-split-pdf",
+  "/api/v1/misc/batch-process-attachments",
+  "/api/v1/misc/compress-pdf",
+  "/api/v1/misc/decompress-pdf",
+  "/api/v1/misc/delete-attachment",
+  "/api/v1/misc/extract-attachments",
+  "/api/v1/misc/extract-images",
+  "/api/v1/misc/extract-single-attachment",
+  "/api/v1/misc/flatten",
+  "/api/v1/misc/flatten-portfolio",
+  "/api/v1/misc/list-attachments",
+  "/api/v1/misc/ocr-pdf",
+  "/api/v1/misc/remove-blanks",
+  "/api/v1/misc/rename-attachment",
+  "/api/v1/misc/repair",
+  "/api/v1/misc/replace-invert-pdf",
+  "/api/v1/misc/show-javascript",
+  "/api/v1/misc/unlock-pdf-forms",
+  "/api/v1/misc/update-metadata",
+  "/api/v1/security/accessibility-report",
+  "/api/v1/security/add-password",
+  "/api/v1/security/add-watermark",
+  "/api/v1/security/auto-redact",
+  "/api/v1/security/cert-sign",
+  "/api/v1/security/get-info-on-pdf",
+  "/api/v1/security/redact",
+  "/api/v1/security/redact-execute",
+  "/api/v1/security/remove-cert-sign",
+  "/api/v1/security/remove-password",
+  "/api/v1/security/sanitize-pdf",
+  "/api/v1/security/timestamp-pdf",
+  "/api/v1/security/validate-compliance",
+  "/api/v1/security/validate-signature",
+  "/api/v1/security/verify-pdf",
+] as const satisfies readonly ToolEndpoint[];
 
 /** Union of every generated tool request model. */
 export type ToolApiRequest = ToolApiParams[ToolEndpoint];

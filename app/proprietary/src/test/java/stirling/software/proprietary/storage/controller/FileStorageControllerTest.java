@@ -33,6 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.AuditService;
@@ -49,13 +50,15 @@ class FileStorageControllerTest {
     @Mock private FileStorageService fileStorageService;
     @Mock private StorageProvider storageProvider;
     @Mock private AuditService auditService;
+    @Mock private ApplicationProperties applicationProperties;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         FileStorageController controller =
-                new FileStorageController(fileStorageService, storageProvider, auditService);
+                new FileStorageController(
+                        fileStorageService, storageProvider, auditService, applicationProperties);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 

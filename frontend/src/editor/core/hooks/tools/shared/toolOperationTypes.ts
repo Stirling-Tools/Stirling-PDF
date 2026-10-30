@@ -5,6 +5,7 @@ import { ToolId } from "@editor/types/toolId";
 import type { ProcessingProgress } from "@editor/hooks/tools/shared/useToolState";
 import {
   TOOL_FILE_FIELDS,
+  TOOL_STORED_FILE_REFERENCE_ENDPOINTS,
   type ToolApiParams,
   type ToolEndpoint,
 } from "@editor/types/toolApiTypes";
@@ -109,6 +110,9 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
 
   /** How to handle API responses (e.g., ZIP extraction, single file response) */
   responseHandler?: ResponseHandler;
+
+  /** Whether every request model can take a storage reference instead of uploaded bytes. */
+  storedFileReference?: boolean;
 
   /** Extract user-friendly error messages from API errors */
   getErrorMessage?: (error: unknown) => string;
@@ -267,6 +271,18 @@ type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
   ? Omit<T, K>
   : never;
 
+/** A static endpoint is usable only when the generated spec says its model takes a reference. */
+function endpointTakesStoredFileReference(
+  endpoint: ToolEndpoint | null | ((params: never) => ToolEndpoint | null),
+): boolean {
+  return (
+    typeof endpoint === "string" &&
+    (TOOL_STORED_FILE_REFERENCE_ENDPOINTS as readonly string[]).includes(
+      endpoint,
+    )
+  );
+}
+
 /**
  * Define a single-file tool's operation config. Infers the endpoint literal from
  * `endpoint` and binds toApiParams/fromApiParams to that endpoint's request
@@ -284,6 +300,9 @@ export function defineSingleFileTool<
   return {
     ...config,
     toolType: ToolType.singleFile,
+    storedFileReference:
+      config.storedFileReference ??
+      endpointTakesStoredFileReference(config.endpoint),
   };
 }
 
@@ -300,6 +319,9 @@ export function defineMultiFileTool<
   return {
     ...config,
     toolType: ToolType.multiFile,
+    storedFileReference:
+      config.storedFileReference ??
+      endpointTakesStoredFileReference(config.endpoint),
   };
 }
 

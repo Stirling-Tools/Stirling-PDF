@@ -33,6 +33,7 @@ import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction;
 import org.apache.pdfbox.io.ScratchFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -239,6 +240,19 @@ public class CustomPDFDocumentFactory {
         long size = pdfFile.getSize();
         if (size > 0 && size <= SMALL_FILE_THRESHOLD) {
             return load(pdfFile.getBytes(), readOnly);
+        }
+        // A disk-backed upload can be loaded directly, avoiding a full temp-file copy.
+        File backingFile = null;
+        try {
+            Resource resource = pdfFile.getResource();
+            if (resource != null && resource.isFile()) {
+                backingFile = resource.getFile();
+            }
+        } catch (IOException | RuntimeException ignored) {
+            // No usable local path; fall through to the stream copy.
+        }
+        if (backingFile != null) {
+            return load(backingFile, readOnly);
         }
         return streamToTemp(pdfFile.getInputStream(), null, readOnly);
     }

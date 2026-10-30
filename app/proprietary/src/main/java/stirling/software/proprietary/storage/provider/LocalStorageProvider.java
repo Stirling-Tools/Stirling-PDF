@@ -3,6 +3,7 @@ package stirling.software.proprietary.storage.provider;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -43,8 +44,25 @@ public class LocalStorageProvider implements StorageProvider {
         }
 
         Files.createDirectories(targetPath.getParent());
-        try (InputStream inputStream = file.getInputStream()) {
-            Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        boolean copiedFromPath = false;
+        try {
+            // A disk-backed multipart (stored file, chunk assembly) can be copied path-to-path,
+            // letting the JDK use sendfile/copy_file_range instead of an 8 KiB stream loop.
+            Resource resource = file.getResource();
+            if (resource != null && resource.isFile()) {
+                Files.copy(
+                        resource.getFile().toPath(),
+                        targetPath,
+                        StandardCopyOption.REPLACE_EXISTING);
+                copiedFromPath = true;
+            }
+        } catch (IOException | RuntimeException ignored) {
+            // Fall back to the stream copy below.
+        }
+        if (!copiedFromPath) {
+            try (InputStream inputStream = file.getInputStream()) {
+                Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            }
         }
 
         return StoredObject.builder()
@@ -52,6 +70,46 @@ public class LocalStorageProvider implements StorageProvider {
                 .originalFilename(originalFilename)
                 .contentType(file.getContentType())
                 .sizeBytes(file.getSize())
+                .build();
+    }
+
+    @Override
+    public StoredObject storeFromPath(
+            User owner, Path source, String originalFilename, String contentType)
+            throws IOException {
+        if (owner == null || owner.getId() == null) {
+            throw new IllegalArgumentException("owner.id is required for local storage key");
+        }
+        String sanitizedFilename = sanitizeFilename(originalFilename);
+        String storageKey =
+                owner.getId()
+                        + "/"
+                        + UUID.randomUUID()
+                        + "_"
+                        + Optional.ofNullable(sanitizedFilename).orElse("file");
+        Path targetPath = basePath.resolve(storageKey).normalize();
+        if (!targetPath.startsWith(basePath)) {
+            throw new IOException("Resolved storage path is outside the storage directory");
+        }
+        Path normalizedSource = source.toAbsolutePath().normalize();
+        Path tempRoot =
+                Paths.get(System.getProperty("java.io.tmpdir")).toAbsolutePath().normalize();
+        if (!normalizedSource.startsWith(tempRoot)
+                || !Files.isRegularFile(normalizedSource, LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("Source path is not a regular file under the temp directory");
+        }
+        Files.createDirectories(targetPath.getParent());
+        try {
+            Files.move(normalizedSource, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException moveFailed) {
+            Files.copy(normalizedSource, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            Files.deleteIfExists(normalizedSource);
+        }
+        return StoredObject.builder()
+                .storageKey(storageKey)
+                .originalFilename(sanitizedFilename)
+                .contentType(contentType)
+                .sizeBytes(Files.size(targetPath))
                 .build();
     }
 

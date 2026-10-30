@@ -26,6 +26,7 @@ import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.service.StoredFileReferenceResolver;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -51,6 +52,7 @@ public class ValidateComplianceController {
     private static final int MAX_DETAIL_LENGTH = 460;
 
     private final VeraPDFService veraPDFService;
+    private final StoredFileReferenceResolver storedFileReferenceResolver;
 
     @PostMapping(value = "/validate-compliance", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ToolIO(produces = ToolFormat.PDF)
@@ -65,6 +67,10 @@ public class ValidateComplianceController {
             throws IOException {
 
         MultipartFile file = request.getFileInput();
+        if (file == null && request.getFileId() != null) {
+            // This endpoint is synchronous (no AutoJob aspect), so resolve the reference here.
+            file = storedFileReferenceResolver.resolve(request.getFileId());
+        }
 
         if (file == null || file.isEmpty()) {
             throw ExceptionUtils.createPdfFileRequiredException();

@@ -23,10 +23,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
-import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.api.MultiFileInput;
+import stirling.software.common.model.api.SingleFileInput;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
 import stirling.software.common.service.JobOwnershipService;
+import stirling.software.common.service.StoredFileReferenceResolver;
 
 @Aspect
 @Component
@@ -42,6 +44,7 @@ public class AutoJobAspect {
     private final JobExecutorService jobExecutorService;
     private final HttpServletRequest request;
     private final FileStorage fileStorage;
+    private final StoredFileReferenceResolver storedFileReferenceResolver;
 
     @Autowired(required = false)
     private JobOwnershipService jobOwnershipService;
@@ -261,38 +264,49 @@ public class AutoJobAspect {
         for (int i = 0; i < originalArgs.length; i++) {
             Object arg = originalArgs[i];
 
-            if (arg instanceof PDFFile pdfFile) {
+            if (arg instanceof SingleFileInput fileInputArg) {
+                if (storedFileReferenceResolver.isStoredFileReference(fileInputArg.getFileId())) {
+                    fileInputArg.setFileInput(
+                            storedFileReferenceResolver.resolve(fileInputArg.getFileId()));
+                }
                 // Case 1: fileId is provided but no fileInput
-                if (pdfFile.getFileInput() == null && pdfFile.getFileId() != null) {
+                else if (fileInputArg.getFileInput() == null && fileInputArg.getFileId() != null) {
                     try {
-                        log.debug("Using fileId {} to get file content", pdfFile.getFileId());
-                        MultipartFile file = fileStorage.retrieveFile(pdfFile.getFileId());
-                        pdfFile.setFileInput(file);
+                        log.debug("Using fileId {} to get file content", fileInputArg.getFileId());
+                        MultipartFile file = fileStorage.retrieveFile(fileInputArg.getFileId());
+                        fileInputArg.setFileInput(file);
                     } catch (Exception e) {
                         throw new RuntimeException(
-                                "Failed to resolve file by ID: " + pdfFile.getFileId(), e);
+                                "Failed to resolve file by ID: " + fileInputArg.getFileId(), e);
                     }
                 }
                 // Case 2: For async requests, we need to make a copy of the MultipartFile
-                else if (async && pdfFile.getFileInput() != null) {
+                else if (async && fileInputArg.getFileInput() != null) {
                     try {
                         log.debug("Making persistent copy of uploaded file for async processing");
-                        MultipartFile originalFile = pdfFile.getFileInput();
+                        MultipartFile originalFile = fileInputArg.getFileInput();
                         String fileId = fileStorage.storeFile(originalFile);
 
                         // Store the fileId for later reference
-                        pdfFile.setFileId(fileId);
+                        fileInputArg.setFileId(fileId);
                         recordPendingInputFile(fileId);
 
                         // Replace the original MultipartFile with our persistent copy
                         MultipartFile persistentFile = fileStorage.retrieveFile(fileId);
-                        pdfFile.setFileInput(persistentFile);
+                        fileInputArg.setFileInput(persistentFile);
 
                         log.debug("Created persistent file copy with fileId: {}", fileId);
                     } catch (IOException e) {
                         throw new RuntimeException(
                                 "Failed to create persistent copy of uploaded file", e);
                     }
+                }
+            }
+
+            if (arg instanceof MultiFileInput multiFileInput) {
+                List<String> fileIds = multiFileInput.getFileIds();
+                if (fileIds != null && !fileIds.isEmpty()) {
+                    multiFileInput.setFileInput(storedFileReferenceResolver.resolveAll(fileIds));
                 }
             }
         }

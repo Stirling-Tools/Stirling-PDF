@@ -8,6 +8,8 @@ import { useTranslation } from "react-i18next";
 import { useFileContext } from "@editor/contexts/FileContext";
 import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { ViewerContext } from "@editor/contexts/ViewerContext";
+import { storedFileIdForFile } from "@editor/services/serverFileReference";
+import { ensureWorkingSetReferences } from "@editor/services/workingSetService";
 import { toolAcceptsFile } from "@editor/utils/toolIOCompat";
 import {
   prepareUnlockedFile,
@@ -364,6 +366,17 @@ export const useToolOperation = <TParams>(
           );
         }
 
+        // Upload at most once per working-set lifetime; failure falls back to the upload path.
+        let workingSetReferences = new Map<FileId, string>();
+        if (config.storedFileReference) {
+          actions.setStatus("Preparing files...");
+          workingSetReferences = await ensureWorkingSetReferences(
+            validFiles,
+            filesForAPI,
+            selectors.getStirlingFileStub,
+          );
+        }
+
         switch (config.toolType) {
           case ToolType.singleFile: {
             // Individual file processing - separate API call per file
@@ -373,6 +386,11 @@ export const useToolOperation = <TParams>(
               filePrefix: config.filePrefix,
               responseHandler: config.responseHandler,
               preserveBackendFilename: config.preserveBackendFilename,
+              serverFileId: (file) =>
+                config.storedFileReference
+                  ? (workingSetReferences.get(file.fileId) ??
+                    storedFileIdForFile(file, selectors.getStirlingFileStub))
+                  : undefined,
             };
             console.debug("[useToolOperation] Multi-file start", {
               count: filesForAPI.length,
@@ -409,6 +427,19 @@ export const useToolOperation = <TParams>(
             // Multi-file processing - single API call with all files
             actions.setStatus("Processing files...");
             const formData = config.buildFormData(params, filesForAPI);
+            const storedFileIds = validFiles.map((file) =>
+              workingSetReferences.get(file.fileId),
+            );
+            if (
+              config.storedFileReference &&
+              storedFileIds.every((id): id is string => Boolean(id))
+            ) {
+              // Every input is stored, so send references only.
+              formData.delete("fileInput");
+              for (const id of storedFileIds) {
+                formData.append("fileIds", id);
+              }
+            }
             const endpoint =
               typeof config.endpoint === "function"
                 ? config.endpoint(params)

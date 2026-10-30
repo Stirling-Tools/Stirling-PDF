@@ -356,6 +356,8 @@ async function main(): Promise<void> {
   // Named file fields (as File uploads) per model, so a caller can tell a file param from a scalar
   // string param - which `format: binary` -> `string` would otherwise erase.
   const fileFieldsByClass: Record<string, string[]> = {};
+  // Models that let a caller reference a persistent server copy instead of uploading bytes.
+  const storedFileReferenceByClass: Record<string, boolean> = {};
 
   for (const path of Object.keys(paths).sort()) {
     if (
@@ -406,6 +408,12 @@ async function main(): Promise<void> {
       const query = queryParameters(pathItem);
       // Body wins over query on a name collision.
       const properties: Json = { ...query.props, ...bodyProps };
+      const declaresStoredReference =
+        "fileId" in properties ||
+        "fileIds" in properties ||
+        refComponent === "PDFFile" ||
+        refComponent === "PDFFileRef";
+      storedFileReferenceByClass[className] = declaresStoredReference;
       // `file` is stripped as a primary-document alias (see BASE_FILE_FIELDS). That only holds while
       // no endpoint uses `file` as a *supporting* upload beside a primary `fileInput`; if one ever
       // does, blanket-stripping would silently drop it. Fail generation so the assumption is fixed
@@ -483,6 +491,7 @@ async function main(): Promise<void> {
     tools,
     definitions,
     fileFieldsByClass,
+    storedFileReferenceByClass,
     outputPath,
     skipped,
   );
@@ -492,6 +501,7 @@ async function compileAndWrite(
   tools: DiscoveredTool[],
   definitions: Record<string, Json>,
   fileFieldsByClass: Record<string, string[]>,
+  storedFileReferenceByClass: Record<string, boolean>,
   outputPath: string,
   skipped: string[],
 ): Promise<void> {
@@ -552,6 +562,13 @@ async function compileAndWrite(
         `  ${JSON.stringify(t.path)}: ${JSON.stringify(fileFieldsByClass[t.className])},`,
     )
     .join("\n");
+  // Endpoints whose request model accepts `fileId`/`fileIds`, so the client may skip uploading
+  // server-backed files. Membership is the capability check; a tool with a dynamic endpoint must
+  // opt in explicitly in its config.
+  const storedReferenceEntries = tools
+    .filter((t) => storedFileReferenceByClass[t.className])
+    .map((t) => `  ${JSON.stringify(t.path)},`)
+    .join("\n");
 
   const footer = [
     "/** Endpoint path for a generated tool operation (the operation identity across languages). */",
@@ -565,6 +582,9 @@ async function compileAndWrite(
     "",
     "/** The supporting-file parameters each endpoint accepts beyond its primary fileInput, by name. */",
     `export const TOOL_FILE_FIELDS = {\n${fileFieldEntries}\n} as const satisfies Partial<\n  Record<ToolEndpoint, readonly string[]>\n>;`,
+    "",
+    "/** Endpoints whose request model accepts a persistent `fileId`/`fileIds` reference. */",
+    `export const TOOL_STORED_FILE_REFERENCE_ENDPOINTS = [\n${storedReferenceEntries}\n] as const satisfies readonly ToolEndpoint[];`,
     "",
     "/** Union of every generated tool request model. */",
     `export type ToolApiRequest = ToolApiParams[ToolEndpoint];`,

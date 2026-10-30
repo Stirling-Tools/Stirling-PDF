@@ -94,6 +94,20 @@ public class GeneralUtils {
             tempFile = Files.createTempFile(tempDir, "stirling-pdf-", null).toFile();
         }
 
+        try {
+            // Disk-backed uploads can copy path-to-path instead of looping through an 8 KiB buffer.
+            Resource resource = multipartFile.getResource();
+            if (resource != null && resource.isFile()) {
+                Files.copy(
+                        resource.getFile().toPath(),
+                        tempFile.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING);
+                return tempFile;
+            }
+        } catch (IOException | RuntimeException ignored) {
+            // Fall back to the stream copy below.
+        }
+
         try (InputStream inputStream = multipartFile.getInputStream();
                 FileOutputStream outputStream = new FileOutputStream(tempFile)) {
 

@@ -39,6 +39,7 @@ import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.api.FileBackedMultipartFile;
 import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
@@ -250,6 +251,7 @@ public class MergeController {
             @RequestParam(value = "fileOrder", required = false) String fileOrder)
             throws IOException {
         List<File> filesToDelete = new ArrayList<>();
+        TempFile mergeTarget = null;
         TempFile outputTempFile = null;
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
@@ -268,29 +270,40 @@ public class MergeController {
             Arrays.sort(files, getSortComparator(request.getSortType()));
         }
 
-        try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
+        try {
+            mergeTarget = new TempFile(tempFileManager, ".pdf");
 
             List<Path> inputPaths = new ArrayList<>(files.length);
             List<Integer> invalidIndexes = new ArrayList<>();
             for (int index = 0; index < files.length; index++) {
                 MultipartFile multipartFile = files[index];
-                File tempFile;
-                if (isImageFile(multipartFile)) {
-                    // Convert images to PDF so JPDFium can merge them; fall back to the raw
-                    // upload if conversion fails so pre-validate can flag it.
-                    try {
-                        tempFile = convertImageToPdf(multipartFile);
-                    } catch (Exception e) {
-                        ExceptionUtils.logException("image to PDF conversion for merge", e);
+                Path inputPath = null;
+                if (!isImageFile(multipartFile)
+                        && multipartFile instanceof FileBackedMultipartFile backed) {
+                    // Stored files and chunk uploads already exist on disk. Merge only reads its
+                    // inputs, so use the file directly instead of copying it to another temp file.
+                    inputPath = backed.getPath();
+                }
+                if (inputPath == null) {
+                    File tempFile;
+                    if (isImageFile(multipartFile)) {
+                        // Convert images to PDF so JPDFium can merge them; fall back to the raw
+                        // upload if conversion fails so pre-validate can flag it.
+                        try {
+                            tempFile = convertImageToPdf(multipartFile);
+                        } catch (Exception e) {
+                            ExceptionUtils.logException("image to PDF conversion for merge", e);
+                            tempFile = tempFileManager.convertMultipartFileToFile(multipartFile);
+                        }
+                    } else {
                         tempFile = tempFileManager.convertMultipartFileToFile(multipartFile);
                     }
-                } else {
-                    tempFile = tempFileManager.convertMultipartFileToFile(multipartFile);
+                    filesToDelete.add(tempFile);
+                    inputPath = tempFile.toPath();
                 }
-                filesToDelete.add(tempFile);
-                inputPaths.add(tempFile.toPath());
+                inputPaths.add(inputPath);
 
-                try (PdfDocument ignored = PdfDocument.open(tempFile.toPath())) {
+                try (PdfDocument ignored = PdfDocument.open(inputPath)) {
                 } catch (Exception e) {
                     ExceptionUtils.logException("PDF pre-validate", e);
                     invalidIndexes.add(index);
@@ -300,7 +313,8 @@ public class MergeController {
             int[] pageCounts;
             try {
                 pageCounts =
-                        mergeWithJpdfium(inputPaths, files, generateToc, mt.getFile().toPath());
+                        mergeWithJpdfium(
+                                inputPaths, files, generateToc, mergeTarget.getFile().toPath());
             } catch (IOException e) {
                 ExceptionUtils.logException("PDF merge", e);
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
@@ -311,7 +325,7 @@ public class MergeController {
 
             boolean sigFlattenNeeded = false;
             if (removeCertSign) {
-                try (PdfDocument check = PdfDocument.open(mt.getFile().toPath())) {
+                try (PdfDocument check = PdfDocument.open(mergeTarget.getFile().toPath())) {
                     sigFlattenNeeded = !check.signatures().isEmpty();
                 } catch (Exception e) {
                     log.debug(
@@ -328,7 +342,7 @@ public class MergeController {
             }
 
             if (sigFlattenNeeded) {
-                try (PDDocument mergedDocument = pdfDocumentFactory.load(mt.getFile())) {
+                try (PDDocument mergedDocument = pdfDocumentFactory.load(mergeTarget.getFile())) {
                     PDDocumentCatalog catalog = mergedDocument.getDocumentCatalog();
                     PDAcroForm acroForm = catalog.getAcroForm();
                     if (acroForm != null) {
@@ -350,21 +364,15 @@ public class MergeController {
                     }
                 }
             } else {
-                outputTempFile = new TempFile(tempFileManager, ".pdf");
-                try {
-                    Files.copy(
-                            mt.getFile().toPath(),
-                            outputTempFile.getFile().toPath(),
-                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                } catch (Exception e) {
-                    outputTempFile.close();
-                    outputTempFile = null;
-                    throw e;
-                }
+                // Hand the merge result straight to the response; copying it to a second temp
+                // file would double the disk write for every merge.
+                outputTempFile = mergeTarget;
+                mergeTarget = null;
             }
         } catch (Exception ex) {
             if (outputTempFile != null) {
                 outputTempFile.close();
+                outputTempFile = null;
             }
             if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
                 log.warn("Corrupted PDF detected in merge pdf process: {}", ex.getMessage());
@@ -373,6 +381,9 @@ public class MergeController {
             }
             throw ex;
         } finally {
+            if (mergeTarget != null) {
+                mergeTarget.close();
+            }
             for (File file : filesToDelete) {
                 tempFileManager.deleteTempFile(file);
             }

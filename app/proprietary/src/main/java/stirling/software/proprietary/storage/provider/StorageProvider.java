@@ -2,6 +2,7 @@ package stirling.software.proprietary.storage.provider;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Optional;
 
@@ -9,9 +10,17 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.service.PathMultipartFile;
 
 public interface StorageProvider extends AutoCloseable {
     StoredObject store(User owner, MultipartFile file) throws IOException;
+
+    /** Stores an on-disk file, moving it when the provider shares the filesystem. */
+    default StoredObject storeFromPath(
+            User owner, Path source, String originalFilename, String contentType)
+            throws IOException {
+        return store(owner, new PathMultipartFile(source, originalFilename, contentType));
+    }
 
     Resource load(String storageKey) throws IOException;
 

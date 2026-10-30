@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
-public class PDFFile {
+public class PDFFile implements SingleFileInput {
 
     @Schema(
             description = "The input PDF file",
@@ -24,13 +24,13 @@ public class PDFFile {
 
     @Schema(
             description =
-                    "File ID for server-side files (can be used instead of fileInput if job was previously done on file in async mode)")
+                    "File ID for server-side files. Either a job file id from an async run, or a"
+                            + " persistent storage reference of the form storage:<id>.")
     private String fileId;
 
     @AssertTrue(message = "Either fileInput or fileId must be provided")
     @Schema(hidden = true)
     private boolean isValid() {
-        return (fileInput != null && (fileId == null || fileId.trim().isEmpty()))
-                || (fileId != null && !fileId.trim().isEmpty() && fileInput == null);
+        return fileInput != null || (fileId != null && !fileId.trim().isEmpty());
     }
 }
