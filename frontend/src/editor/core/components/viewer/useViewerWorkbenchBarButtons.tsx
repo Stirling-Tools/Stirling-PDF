@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Slider, Popover, Select } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
@@ -24,18 +24,9 @@ import {
   useRedactionMode,
 } from "@editor/contexts/RedactionContext";
 import { useViewerReadAloud } from "@editor/components/viewer/useViewerReadAloud";
-import { RulerScaleSettingsButton } from "@editor/components/viewer/RulerScaleSettingsButton";
-import type { MeasureScale } from "@editor/utils/measurementTypes";
 import type { StirlingFile } from "@editor/types/fileContext";
 
 export function useViewerWorkbenchBarButtons(
-  isRulerActive?: boolean,
-  setIsRulerActive?: (v: boolean) => void,
-  customScale?: MeasureScale | null,
-  setCustomScale?: (scale: MeasureScale | null) => void,
-  isScaleCalibrationActive?: boolean,
-  startScaleCalibration?: () => void,
-  cancelScaleCalibration?: () => void,
   displayedFile?: StirlingFile | File | null,
 ) {
   const { t, i18n } = useTranslation();
@@ -109,35 +100,14 @@ export function useViewerWorkbenchBarButtons(
     "Exit annotation mode",
   );
   const formFillLabel = t("workbenchBar.formFill", "Form Editor");
-  const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
-  const rulerSettingsLabel = t("workbenchBar.rulerSettings", "Scale Settings");
+  const isMeasureActive = selectedTool === "measure";
+  const rulerLabel = isMeasureActive
+    ? t("workbenchBar.exitMeasure", "Close Measure")
+    : t("workbenchBar.ruler", "Ruler / Measure");
   const readAloudLabel = t("workbenchBar.readAloud", "Read Aloud");
   const readAloudSpeedLabel = t("workbenchBar.readAloudSpeed", "Speed");
 
   const isFormFillActive = (selectedTool as string) === "formFill";
-
-  const handleStartScaleCalibration = useCallback(() => {
-    startScaleCalibration?.();
-    setIsRulerActive?.(true);
-    if (isPanning) {
-      viewer.panActions.disablePan();
-    }
-  }, [isPanning, setIsRulerActive, startScaleCalibration, viewer.panActions]);
-
-  const handleCancelScaleCalibration = useCallback(() => {
-    cancelScaleCalibration?.();
-  }, [cancelScaleCalibration]);
-
-  const handleApplyRulerScale = useCallback(
-    (scale: MeasureScale) => {
-      setCustomScale?.(scale);
-    },
-    [setCustomScale],
-  );
-
-  const handleResetRulerScale = useCallback(() => {
-    setCustomScale?.(null);
-  }, [setCustomScale]);
 
   // Filter languages based on available voices
   const filteredLanguages = useMemo(
@@ -227,7 +197,6 @@ export function useViewerWorkbenchBarButtons(
           !isPanning && pendingCount > 0 && redactionActiveType !== null,
         onClick: () => {
           viewer.panActions.togglePan();
-          if (!isPanning && isRulerActive) setIsRulerActive?.(false);
         },
       },
       {
@@ -237,41 +206,16 @@ export function useViewerWorkbenchBarButtons(
         ariaLabel: rulerLabel,
         section: "top" as const,
         order: 25,
-        active: Boolean(isRulerActive),
+        active: isMeasureActive,
         onClick: () => {
-          const next = !isRulerActive;
-          setIsRulerActive?.(next);
-          if (next && isPanning) {
-            viewer.panActions.disablePan();
+          if (isMeasureActive) {
+            handleBackToTools();
+            return;
           }
+          if (isPanning) viewer.panActions.disablePan();
+          handleToolSelect("measure");
         },
       },
-      // Ruler scale settings button - only visible when ruler is active
-      ...(isRulerActive
-        ? [
-            {
-              id: "viewer-ruler-settings",
-              icon: <Icon name="settings" size={"1.5rem"} />,
-              tooltip: rulerSettingsLabel,
-              ariaLabel: rulerSettingsLabel,
-              section: "top" as const,
-              order: 25.5,
-              render: ({ disabled }: { disabled?: boolean }) => (
-                <RulerScaleSettingsButton
-                  disabled={disabled}
-                  label={rulerSettingsLabel}
-                  tooltipPosition={tooltipPosition}
-                  currentScale={customScale}
-                  onApplyScale={handleApplyRulerScale}
-                  onResetScale={handleResetRulerScale}
-                  onStartCalibration={handleStartScaleCalibration}
-                  onCancelCalibration={handleCancelScaleCalibration}
-                  isCalibrationActive={isScaleCalibrationActive}
-                />
-              ),
-            },
-          ]
-        : []),
       {
         id: "viewer-rotate-left",
         icon: <Icon name="rotate-ccw" size="1rem" />,
@@ -582,15 +526,8 @@ export function useViewerWorkbenchBarButtons(
     formFillLabel,
     isFormFillActive,
     rulerLabel,
-    rulerSettingsLabel,
-    isRulerActive,
-    setIsRulerActive,
-    handleStartScaleCalibration,
-    handleCancelScaleCalibration,
-    handleApplyRulerScale,
-    handleResetRulerScale,
-    customScale,
-    isScaleCalibrationActive,
+    isMeasureActive,
+    handleBackToTools,
     readAloudLabel,
     readAloudSpeedLabel,
     isReadingAloud,
