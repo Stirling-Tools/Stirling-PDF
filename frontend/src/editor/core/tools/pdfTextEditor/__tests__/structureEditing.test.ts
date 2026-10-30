@@ -164,6 +164,7 @@ describe("reading the structure tree", () => {
       type,
       alt,
       actualText: null,
+      lang: null,
       mcids,
       onlyMarkedContent: false,
       key,
@@ -272,6 +273,7 @@ describe("reading tags from the file's ParentTree", () => {
       type,
       alt,
       actualText: null,
+      lang: null,
       mcids,
       onlyMarkedContent: true,
       key: String(num),
@@ -660,6 +662,7 @@ describe("PageStructure", () => {
     type: "Figure" as const,
     alt: "old",
     actualText: null,
+    lang: null,
     mcids: [3, 4],
     onlyMarkedContent: true,
     key: "figure",
@@ -877,7 +880,11 @@ describe("SetDecorativeCommand", () => {
       reviewImages(reopened, [
         { pageIndex: 0, images: [image] },
       ] as PageSnapshot[]),
-    ).toEqual({ needsDescription: 0, untagged: 0, untaggable: 0 });
+    ).toEqual({
+      needsDescription: 0,
+      untagged: 0,
+      untaggable: 0,
+    });
   });
 });
 
@@ -938,6 +945,7 @@ describe("PageStructure: added figures", () => {
     type: "P" as const,
     alt: null,
     actualText: null,
+    lang: null,
     mcids: [3],
     onlyMarkedContent: true,
     key: "paragraph",
@@ -965,7 +973,7 @@ describe("PageStructure: added figures", () => {
       { mcid: 3, alt: "Chart", decorative: false },
     ]);
     expect(s.addedElements()).toEqual([
-      { mcid: 5, type: "Figure", alt: "Logo" },
+      { mcid: 5, type: "Figure", alt: "Logo", lang: null },
     ]);
     expect(() => s.setDecorative(5, true)).toThrow();
     s.removeElement(5);
@@ -1091,7 +1099,7 @@ describe("TagImageCommand", () => {
 
     history.undo(doc);
     expect(doc.structure(0).addedElements()).toEqual([
-      { mcid: 1, type: "Figure", alt: "A logo" },
+      { mcid: 1, type: "Figure", alt: "A logo", lang: null },
     ]);
   });
 
@@ -1183,7 +1191,11 @@ describe("saving an added figure", () => {
     expect(images.filter((img) => img.artifact)).toHaveLength(2);
     expect(
       reviewImages(reopened, [{ pageIndex: 0, images }] as PageSnapshot[]),
-    ).toEqual({ needsDescription: 0, untagged: 0, untaggable: 0 });
+    ).toEqual({
+      needsDescription: 0,
+      untagged: 0,
+      untaggable: 0,
+    });
     expect(tree(reopened)).toEqual(["Document", "A grey square"]);
   });
 

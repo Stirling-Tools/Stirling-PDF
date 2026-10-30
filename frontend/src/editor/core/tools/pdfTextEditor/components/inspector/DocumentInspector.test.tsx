@@ -1,10 +1,15 @@
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
+import type { DocumentLanguageControl } from "@editor/tools/pdfTextEditor/hooks/useDocumentLanguage";
 import type { ImageReview } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 
-function renderInspector(imageReview: ImageReview | null, onNext = vi.fn()) {
+function renderInspector(
+  imageReview: ImageReview | null,
+  onNext = vi.fn(),
+  documentLanguage: DocumentLanguageControl | null = null,
+) {
   render(
     <MantineProvider env="test">
       <DocumentInspector
@@ -19,6 +24,7 @@ function renderInspector(imageReview: ImageReview | null, onNext = vi.fn()) {
         onSelectNextImageToReview={onNext}
         headingOutline={null}
         onSelectHeading={vi.fn()}
+        documentLanguage={documentLanguage}
       />
     </MantineProvider>,
   );
@@ -68,6 +74,59 @@ describe("DocumentInspector accessibility review", () => {
     renderInspector(null);
     expect(
       screen.queryByTestId("pdf-editor-document-accessibility"),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("DocumentInspector language", () => {
+  const LANGUAGE_KEY = "pdfTextEditor.inspector.language";
+  const MISSING = "pdf-editor-document-language-missing";
+  const language = (
+    lang: string | null,
+    editable = true,
+  ): DocumentLanguageControl => ({
+    language: lang,
+    editable,
+    onSet: vi.fn(),
+  });
+
+  function picker(): HTMLInputElement {
+    return screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.documentLabel`,
+    });
+  }
+
+  it("flags a document with no language and sets one", () => {
+    const control = language(null);
+    renderInspector(null, vi.fn(), control);
+    expect(screen.getByTestId(MISSING)).toBeVisible();
+    expect(picker()).toHaveValue("");
+    expect(picker()).toHaveAttribute("placeholder", `${LANGUAGE_KEY}.unknown`);
+    fireEvent.click(picker());
+    const options = document.getElementById(
+      picker().getAttribute("aria-controls")!,
+    )!;
+    fireEvent.click(
+      within(options).getByRole("option", { name: /(^|\()en-IE\)?$/ }),
+    );
+    expect(control.onSet).toHaveBeenCalledWith("en-IE");
+  });
+
+  it("shows the document's language without flagging it", () => {
+    renderInspector(null, vi.fn(), language("fr"));
+    expect(picker().value).toMatch(/(^|\()fr\)?$/);
+    expect(screen.queryByTestId(MISSING)).not.toBeInTheDocument();
+  });
+
+  it("disables the picker where the language can't be saved", () => {
+    renderInspector(null, vi.fn(), language("fr", false));
+    expect(picker()).toBeDisabled();
+  });
+
+  it("leaves the language out when it can't be edited here", () => {
+    renderInspector(null);
+    expect(
+      screen.queryByTestId("pdf-editor-document-language-picker"),
     ).not.toBeInTheDocument();
   });
 });

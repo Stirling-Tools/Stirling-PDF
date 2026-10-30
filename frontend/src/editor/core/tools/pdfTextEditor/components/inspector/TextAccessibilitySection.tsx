@@ -19,54 +19,106 @@ import type {
   InnerTag,
   TextTag,
 } from "@editor/tools/pdfTextEditor/util/textAccessibility";
-import type { InnerTagsControl } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
+import type {
+  InnerTagsControl,
+  TextLanguageControl,
+} from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
+import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
 import "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection.css";
 
 /**
- * What the selected text is tagged as, and a picker to change it: retagging
- * its block, or giving untagged text an element of its own. Beneath it, the
- * tags marking parts of the text, and a picker for characters selected in it.
+ * What the selected text is tagged as and the language it is read in, with
+ * pickers to change them: retagging its block, or giving untagged text an
+ * element of its own. Beneath them, the tags marking parts of the text, and
+ * pickers for characters selected in it. With several runs selected, only
+ * their language: `tag` is null.
  */
 export function TextAccessibilitySection({
   tag,
   onSetTag,
   inner,
+  language,
 }: {
-  tag: TextTag;
+  tag: TextTag | null;
   onSetTag: (type: StructureType) => void;
   inner: InnerTagsControl;
+  language: TextLanguageControl | null;
 }) {
   const { t } = useTranslation();
-  const label = t("pdfTextEditor.inspector.accessibility.tagLabel", "Tag");
   return (
     <Section testId="pdf-editor-text-accessibility">
       <SectionLabel>
         {t("pdfTextEditor.inspector.accessibility.heading", "Accessibility")}
       </SectionLabel>
       <Stack gap="xs">
-        {pickable(tag) ? (
-          <Field label={label}>
-            <TagPicker
-              types={TEXT_BLOCK_TYPES}
-              current={tag.kind === "tagged" ? tag.block : null}
-              placeholder={tagText(t, tag)}
-              onSetTag={onSetTag}
-              label={label}
-              testId="pdf-editor-text-tag-picker"
-            />
-          </Field>
-        ) : (
-          <StatRow
-            label={label}
-            value={
-              <span data-testid="pdf-editor-text-tag">{tagText(t, tag)}</span>
-            }
-          />
+        {tag && <TagField tag={tag} onSetTag={onSetTag} />}
+        {language && <TextLanguageField control={language} />}
+        {tag && (
+          <>
+            <InnerTagList inner={inner} />
+            <NewTagPicker inner={inner} />
+            <NewLanguagePicker inner={inner} />
+          </>
         )}
-        <InnerTagList inner={inner} />
-        <NewTagPicker inner={inner} />
       </Stack>
     </Section>
+  );
+}
+
+function TagField({
+  tag,
+  onSetTag,
+}: {
+  tag: TextTag;
+  onSetTag: (type: StructureType) => void;
+}) {
+  const { t } = useTranslation();
+  const label = t("pdfTextEditor.inspector.accessibility.tagLabel", "Tag");
+  return pickable(tag) ? (
+    <Field label={label}>
+      <TagPicker
+        types={TEXT_BLOCK_TYPES}
+        current={tag.kind === "tagged" ? tag.block : null}
+        placeholder={tagText(t, tag)}
+        onSetTag={onSetTag}
+        label={label}
+        testId="pdf-editor-text-tag-picker"
+      />
+    </Field>
+  ) : (
+    <StatRow
+      label={label}
+      value={<span data-testid="pdf-editor-text-tag">{tagText(t, tag)}</span>}
+    />
+  );
+}
+
+/** The language the selected text's blocks are read in; "Mixed" when they differ. */
+function TextLanguageField({ control }: { control: TextLanguageControl }) {
+  const { t } = useTranslation();
+  const label = t("pdfTextEditor.inspector.language.label", "Language");
+  const { language } = control;
+  return (
+    <Field
+      label={label}
+      hint={t(
+        "pdfTextEditor.inspector.language.textHint",
+        "Screen readers switch voice and pronunciation to this language.",
+      )}
+    >
+      <LanguagePicker
+        own={language?.own ?? null}
+        inherited={language?.inherited ?? null}
+        placeholder={
+          language
+            ? t("pdfTextEditor.inspector.language.unknown", "Not set")
+            : t("pdfTextEditor.inspector.language.mixed", "Mixed")
+        }
+        onChange={control.onSet}
+        label={label}
+        testId="pdf-editor-text-language-picker"
+      />
+    </Field>
   );
 }
 
@@ -90,6 +142,7 @@ function InnerTagList({ inner }: { inner: InnerTagsControl }) {
             active={inner.active === index}
             onSelect={() => inner.onSelect(index)}
             onSet={(type) => inner.onSet(index, type)}
+            onSetLanguage={(lang) => inner.onSetLanguage(index, lang)}
           />
         ))}
       </Stack>
@@ -103,12 +156,14 @@ function InnerTagRow({
   active,
   onSelect,
   onSet,
+  onSetLanguage,
 }: {
   number: number;
   innerTag: InnerTag;
   active: boolean;
   onSelect: () => void;
   onSet: (type: StructureType | null) => void;
+  onSetLanguage: (lang: string | null) => void;
 }) {
   const text = innerTag.text.replace(/\s+/g, " ").trim();
   return (
@@ -125,7 +180,12 @@ function InnerTagRow({
         </span>
       </button>
       {active && (
-        <InnerTagControls number={number} innerTag={innerTag} onSet={onSet} />
+        <InnerTagControls
+          number={number}
+          innerTag={innerTag}
+          onSet={onSet}
+          onSetLanguage={onSetLanguage}
+        />
       )}
     </div>
   );
@@ -135,10 +195,12 @@ function InnerTagControls({
   number,
   innerTag,
   onSet,
+  onSetLanguage,
 }: {
   number: number;
   innerTag: InnerTag;
   onSet: (type: StructureType | null) => void;
+  onSetLanguage: (lang: string | null) => void;
 }) {
   const { t } = useTranslation();
   const removeLabel = t(
@@ -146,34 +208,49 @@ function InnerTagControls({
     "Remove tag",
   );
   return (
-    <Group gap={4} wrap="nowrap" mt={4}>
-      <Box style={{ flex: 1, minWidth: 0 }}>
-        <TagPicker
-          types={innerTag.types}
-          current={innerTag.role}
-          placeholder={blockName(t, innerTag.role)}
-          onSetTag={onSet}
-          label={t(
-            "pdfTextEditor.inspector.accessibility.innerTagLabel",
-            "Tag {{number}}",
-            { number },
-          )}
-          testId="pdf-editor-inner-tag-picker"
-        />
-      </Box>
-      {innerTag.removable && (
-        <ActionIcon
-          variant="tertiary"
-          size="sm"
-          aria-label={removeLabel}
-          title={removeLabel}
-          onClick={() => onSet(null)}
-          data-testid="pdf-editor-inner-tag-remove"
-        >
-          <Icon name="trash" size={14} />
-        </ActionIcon>
-      )}
-    </Group>
+    <Stack gap={4} mt={4}>
+      <Group gap={4} wrap="nowrap">
+        <Box style={{ flex: 1, minWidth: 0 }}>
+          <TagPicker
+            types={innerTag.types}
+            current={innerTag.role}
+            placeholder={blockName(t, innerTag.role)}
+            onSetTag={onSet}
+            label={t(
+              "pdfTextEditor.inspector.accessibility.innerTagLabel",
+              "Tag {{number}}",
+              { number },
+            )}
+            testId="pdf-editor-inner-tag-picker"
+          />
+        </Box>
+        {innerTag.removable && (
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            aria-label={removeLabel}
+            title={removeLabel}
+            onClick={() => onSet(null)}
+            data-testid="pdf-editor-inner-tag-remove"
+          >
+            <Icon name="trash" size={14} />
+          </ActionIcon>
+        )}
+      </Group>
+      <LanguagePicker
+        own={innerTag.language.own}
+        inherited={innerTag.language.inherited}
+        placeholder={t("pdfTextEditor.inspector.language.unknown", "Not set")}
+        onChange={onSetLanguage}
+        label={t(
+          "pdfTextEditor.inspector.language.innerLabel",
+          "Tag {{number}} language",
+          { number },
+        )}
+        testId="pdf-editor-inner-tag-language-picker"
+        disabled={!innerTag.languageEditable}
+      />
+    </Stack>
   );
 }
 
@@ -197,6 +274,37 @@ function NewTagPicker({ inner }: { inner: InnerTagsControl }) {
         onSetTag={inner.onTagSelection}
         label={label}
         testId="pdf-editor-new-tag-picker"
+      />
+    </Field>
+  );
+}
+
+/**
+ * A picker marking the characters selected in the text as a Span in another
+ * language, shown while some are and can take one.
+ */
+function NewLanguagePicker({ inner }: { inner: InnerTagsControl }) {
+  const { t } = useTranslation();
+  const onPick = inner.onLanguageSelection;
+  if (!onPick) return null;
+  const label = t(
+    "pdfTextEditor.inspector.language.selectedText",
+    "Selected text language",
+  );
+  return (
+    <Field label={label}>
+      <LanguagePicker
+        own={null}
+        inherited={null}
+        placeholder={t(
+          "pdfTextEditor.inspector.language.setForSelection",
+          "Set a language",
+        )}
+        onChange={(lang) => {
+          if (lang) onPick(lang);
+        }}
+        label={label}
+        testId="pdf-editor-new-language-picker"
       />
     </Field>
   );

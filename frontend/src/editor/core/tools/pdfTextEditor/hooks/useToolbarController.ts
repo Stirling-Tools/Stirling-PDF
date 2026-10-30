@@ -529,6 +529,7 @@ export function useToolbarController(
     textTag: textA11y.tag,
     onSetTextTag: textA11y.setTag,
     innerTextTags: textA11y.inner,
+    textLanguage: textA11y.language,
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
     hasImageSelection: selection.imageIds.length > 0,

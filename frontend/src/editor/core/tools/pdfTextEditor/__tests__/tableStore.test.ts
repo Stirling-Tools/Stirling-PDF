@@ -30,6 +30,8 @@ async function makeStore() {
     pageCount: 1,
     page: () => page,
     loadedPages: () => [page],
+    documentLanguage: () => null,
+    languagesInUse: () => [],
     module: {},
     dispose: () => {},
   } as unknown as EditorDocument;
