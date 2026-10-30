@@ -9,27 +9,25 @@ import {
 /**
  * Live-suite bootstrap. Two responsibilities:
  *
- *   1. **Pristine CI path** — log in as the backend's default
- *      `admin / stirling` user (created with firstLogin=true), exercise
- *      the FirstLoginSlide UI, change to `admin / adminadmin`, verify
- *      the post-change toast. Real coverage of the forced-first-login
- *      flow.
+ *   1. **Pristine CI path** — a fresh server signs its default
+ *      `admin / stirling` user in by itself and opens first-run setup on
+ *      the account card. Set `admin / adminadmin` there, then mark the rest
+ *      of setup complete through the API: setup has no skip, and finishing
+ *      it in the UI would restart the server under the suite. Real coverage
+ *      of the account card, and the API call proves the new password took.
  *
  *   2. **Already-seeded path** — for local dev where `admin / adminadmin`
  *      already exists (e.g. the developer's settings.yml provisions it
- *      directly), the bootstrap is a no-op pass. We detect this by
- *      attempting the API login first; if it returns 200 we skip the
- *      UI flow.
+ *      directly), skip the UI flow and only mark setup complete through the
+ *      API, so the wizard does not stand in front of every other live spec.
  *
  * Configured as a Playwright `setup` project; the `live` project
  * depends on it so it runs once before every other live spec.
  */
 
-const DEFAULT_BACKEND_PASSWORD = "stirling";
-
-async function adminAdminadminAlreadyExists(
+async function signInSeededAdmin(
   request: import("@playwright/test").APIRequestContext,
-): Promise<boolean> {
+): Promise<string | null> {
   const res = await request
     .post("/api/v1/auth/login", {
       data: {
@@ -38,22 +36,28 @@ async function adminAdminadminAlreadyExists(
       },
     })
     .catch(() => null);
-  return res?.ok() ?? false;
+  if (!res?.ok()) return null;
+  const body = await res.json();
+  return body?.session?.access_token ?? null;
 }
 
 test.describe("Live-suite bootstrap", () => {
-  test("first-login: change default admin/stirling to admin/adminadmin", async ({
+  test("first-run setup: change default admin/stirling to admin/adminadmin", async ({
     page,
     request,
   }) => {
     test.setTimeout(60_000);
 
-    // Already-seeded local case — skip the UI flow.
-    if (await adminAdminadminAlreadyExists(request)) {
+    const seededToken = await signInSeededAdmin(request);
+    if (seededToken) {
+      const done = await request.post("/api/v1/admin/settings/setup-complete", {
+        headers: { Authorization: `Bearer ${seededToken}` },
+      });
+      expect(done.ok()).toBeTruthy();
       test.info().annotations.push({
         type: "bootstrap",
         description:
-          "admin/adminadmin already provisioned (local-dev path); skipping forced-first-login UI flow",
+          "admin/adminadmin already provisioned (local-dev path); skipping first-run setup UI flow",
       });
       return;
     }
@@ -62,43 +66,36 @@ test.describe("Live-suite bootstrap", () => {
     await skipOnboarding(page);
 
     await page.goto("/login", { waitUntil: "domcontentloaded" });
-    await page.locator("#email").waitFor({ state: "visible", timeout: 15_000 });
 
-    await page.locator("#email").fill(DEFAULT_TEST_USERNAME);
-    await page.locator("#password").fill(DEFAULT_BACKEND_PASSWORD);
-    await page.locator('button[type="submit"]').click();
-
-    await expect(
-      page.getByText(/must change your password|set your password/i).first(),
-    ).toBeVisible({ timeout: 15_000 });
-
-    // Mantine's PasswordInput label association doesn't match getByLabel
-    // cleanly across builds — use the placeholder which is stable.
-    await page
-      .getByPlaceholder(/enter new password.*characters/i)
-      .fill(DEFAULT_TEST_PASSWORD);
-    await page
-      .getByPlaceholder(/re-enter new password/i)
-      .fill(DEFAULT_TEST_PASSWORD);
-
-    const submitBtn = page.getByRole("button", { name: /change password/i });
-    await expect(submitBtn).toBeEnabled();
-    await submitBtn.click();
-
-    await expect(
-      page.getByText(/password changed successfully/i).first(),
-    ).toBeVisible({ timeout: 10_000 });
-
-    // After success the user is signed out; expect redirect back to /login
-    await page.waitForURL(/\/login(\?.*)?$/, { timeout: 15_000 });
-
-    // Confirm the new credentials work via the API
-    const verify = await request.post("/api/v1/auth/login", {
-      data: {
-        username: DEFAULT_TEST_USERNAME,
-        password: DEFAULT_TEST_PASSWORD,
-      },
+    await expect(page.getByText("Set up your account").first()).toBeVisible({
+      timeout: 20_000,
     });
-    expect(verify.ok()).toBeTruthy();
+
+    await page
+      .getByRole("textbox", { name: "Username", exact: true })
+      .fill(DEFAULT_TEST_USERNAME);
+    await page
+      .getByRole("textbox", { name: "New password", exact: true })
+      .fill(DEFAULT_TEST_PASSWORD);
+    await page
+      .getByRole("textbox", { name: "Confirm new password", exact: true })
+      .fill(DEFAULT_TEST_PASSWORD);
+    await page.getByRole("button", { name: "Save and continue" }).click();
+
+    await expect(page.getByText("Your server is up").first()).toBeVisible({
+      timeout: 15_000,
+    });
+
+    const token = await signInSeededAdmin(request);
+    expect(token).not.toBeNull();
+    const done = await request.post("/api/v1/admin/settings/setup-complete", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(done.ok()).toBeTruthy();
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.getByText("Your server is up")).toHaveCount(0, {
+      timeout: 15_000,
+    });
   });
 });

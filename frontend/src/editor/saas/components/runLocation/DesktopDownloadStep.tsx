@@ -11,7 +11,7 @@ import {
   type DesktopTargetId,
 } from "@editor/components/runLocation/desktopTargets";
 import { startDownload } from "@editor/components/runLocation/startDownload";
-import styles from "@editor/components/runLocation/RunLocation.module.css";
+import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 
 interface DesktopDownloadStepProps {
   onBack: () => void;

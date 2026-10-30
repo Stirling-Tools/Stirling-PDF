@@ -873,6 +873,98 @@ describe("Login", () => {
     );
   });
 
+  describe("on a fresh server", () => {
+    const renderFresh = () =>
+      render(
+        <TestWrapper>
+          <BrowserRouter>
+            <Login />
+          </BrowserRouter>
+        </TestWrapper>,
+      );
+
+    beforeEach(() => {
+      sessionStorage.clear();
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: {
+          enableLogin: true,
+          providerList: {},
+          firstTimeSetup: true,
+          showDefaultCredentials: true,
+          defaultSignIn: true,
+        },
+      });
+    });
+
+    it("signs in with the default credentials by itself", async () => {
+      vi.mocked(springAuth.signInWithPassword).mockReturnValue(
+        new Promise(() => {}),
+      );
+      renderFresh();
+
+      expect(
+        await screen.findByText("Signing in with default credentials"),
+      ).toBeInTheDocument();
+      expect(springAuth.signInWithPassword).toHaveBeenCalledTimes(1);
+      expect(springAuth.signInWithPassword).toHaveBeenCalledWith({
+        email: "admin",
+        password: "stirling",
+      });
+    });
+
+    it("shows the form, without the default credentials, when they fail", async () => {
+      vi.mocked(springAuth.signInWithPassword).mockResolvedValueOnce({
+        user: null,
+        session: null,
+        error: { message: "Invalid credentials" },
+      });
+      renderFresh();
+
+      await waitFor(() =>
+        expect(document.getElementById("email")).toBeTruthy(),
+      );
+      expect(screen.queryByText("Default Login Credentials")).toBeNull();
+    });
+
+    it("does not try again in a tab where it already failed", async () => {
+      sessionStorage.setItem("stirling_default_sign_in_failed", "1");
+      renderFresh();
+
+      await waitFor(() =>
+        expect(document.getElementById("email")).toBeTruthy(),
+      );
+      expect(springAuth.signInWithPassword).not.toHaveBeenCalled();
+    });
+
+    it("only shows the defaults once the server has finished setup", async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: {
+          enableLogin: true,
+          providerList: {},
+          firstTimeSetup: true,
+          showDefaultCredentials: true,
+          defaultSignIn: false,
+        },
+      });
+      renderFresh();
+
+      expect(
+        await screen.findByText("Default Login Credentials"),
+      ).toBeInTheDocument();
+      expect(springAuth.signInWithPassword).not.toHaveBeenCalled();
+    });
+
+    it("leaves a signed-out admin on the form", async () => {
+      sessionStorage.setItem("stirling_sso_auto_login_logged_out", "1");
+      renderFresh();
+
+      await waitFor(() =>
+        expect(document.getElementById("email")).toBeTruthy(),
+      );
+      expect(springAuth.signInWithPassword).not.toHaveBeenCalled();
+    });
+  });
+
   describe("SSO auto-login", () => {
     const mockLoginConfig = (
       loginMethod: string,

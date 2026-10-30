@@ -11,6 +11,8 @@ export interface InfoTooltipProps {
   ariaLabel?: string;
   /** Which side the tooltip opens on. Default "top". */
   position?: FloatingPosition;
+  /** For use over a layer that sits above the default tooltip layer. */
+  zIndex?: number;
 }
 
 /**
@@ -22,6 +24,7 @@ export function InfoTooltip({
   label,
   ariaLabel,
   position = "top",
+  zIndex,
 }: InfoTooltipProps) {
   const { t } = useTranslation();
   return (
@@ -31,6 +34,7 @@ export function InfoTooltip({
       w={260}
       withArrow
       position={position}
+      zIndex={zIndex}
       events={{ hover: true, focus: true, touch: true }}
     >
       <button

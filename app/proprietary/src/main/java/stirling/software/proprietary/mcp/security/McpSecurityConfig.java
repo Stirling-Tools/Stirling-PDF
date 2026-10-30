@@ -234,6 +234,10 @@ public class McpSecurityConfig {
                         "mcp.auth.issuer-uri is not configured");
             };
         }
+        return new LazyIssuerJwtDecoder(() -> buildIssuerDecoder(auth));
+    }
+
+    private NimbusJwtDecoder buildIssuerDecoder(ApplicationProperties.Mcp.Auth auth) {
         String jwksUri = auth.getJwksUri();
         NimbusJwtDecoder decoder =
                 jwksUri.isBlank()
