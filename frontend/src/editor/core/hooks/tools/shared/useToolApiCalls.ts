@@ -36,6 +36,8 @@ export interface ApiCallsConfig<TParams = void> {
   filePrefix?: string;
   responseHandler?: ResponseHandler;
   preserveBackendFilename?: boolean;
+  /** Drops the upload and lets the endpoint resolve the stored copy. */
+  serverFileId?: (file: StirlingFile) => string | undefined;
 }
 
 export const useToolApiCalls = <TParams = void>() => {
@@ -111,6 +113,14 @@ export const useToolApiCalls = <TParams = void>() => {
             cancellation.token,
           );
           const formData = config.buildFormData(params, workingFile);
+          const storedFileId = config.serverFileId?.(file);
+          if (storedFileId) {
+            // Both field names are used by single-file tools; drop the bytes before the
+            // request is serialised so only the reference travels.
+            formData.delete("fileInput");
+            formData.delete("file");
+            formData.append("fileId", storedFileId);
+          }
           console.debug("[processFiles] POST", { endpoint, name: file.name });
           const response =
             endpoint === "/api/v1/security/add-password" ||

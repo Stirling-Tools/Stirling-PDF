@@ -135,6 +135,12 @@ public class FileStorageService {
         return storeFile(owner, file, null, null, LocalDateTime.now().plus(ttl));
     }
 
+    /** Returns the client handle for a short-lived working copy. */
+    public StoredFileResponse storeTemporaryFileResponse(
+            User owner, MultipartFile file, Duration ttl) {
+        return buildResponse(storeTemporaryFile(owner, file, ttl), owner);
+    }
+
     private StoredFile storeFile(
             User owner,
             MultipartFile file,

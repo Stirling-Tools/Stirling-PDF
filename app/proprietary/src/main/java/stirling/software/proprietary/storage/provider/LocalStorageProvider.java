@@ -43,8 +43,25 @@ public class LocalStorageProvider implements StorageProvider {
         }
 
         Files.createDirectories(targetPath.getParent());
-        try (InputStream inputStream = file.getInputStream()) {
-            Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        boolean copiedFromPath = false;
+        try {
+            // A disk-backed multipart (stored file, chunk assembly) can be copied path-to-path,
+            // letting the JDK use sendfile/copy_file_range instead of an 8 KiB stream loop.
+            Resource resource = file.getResource();
+            if (resource != null && resource.isFile()) {
+                Files.copy(
+                        resource.getFile().toPath(),
+                        targetPath,
+                        StandardCopyOption.REPLACE_EXISTING);
+                copiedFromPath = true;
+            }
+        } catch (IOException | RuntimeException ignored) {
+            // Fall back to the stream copy below.
+        }
+        if (!copiedFromPath) {
+            try (InputStream inputStream = file.getInputStream()) {
+                Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            }
         }
 
         return StoredObject.builder()
