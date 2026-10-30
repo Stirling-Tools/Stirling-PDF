@@ -3,6 +3,7 @@ package stirling.software.proprietary.storage.provider;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -69,6 +70,46 @@ public class LocalStorageProvider implements StorageProvider {
                 .originalFilename(originalFilename)
                 .contentType(file.getContentType())
                 .sizeBytes(file.getSize())
+                .build();
+    }
+
+    @Override
+    public StoredObject storeFromPath(
+            User owner, Path source, String originalFilename, String contentType)
+            throws IOException {
+        if (owner == null || owner.getId() == null) {
+            throw new IllegalArgumentException("owner.id is required for local storage key");
+        }
+        String sanitizedFilename = sanitizeFilename(originalFilename);
+        String storageKey =
+                owner.getId()
+                        + "/"
+                        + UUID.randomUUID()
+                        + "_"
+                        + Optional.ofNullable(sanitizedFilename).orElse("file");
+        Path targetPath = basePath.resolve(storageKey).normalize();
+        if (!targetPath.startsWith(basePath)) {
+            throw new IOException("Resolved storage path is outside the storage directory");
+        }
+        Path normalizedSource = source.toAbsolutePath().normalize();
+        Path tempRoot =
+                Paths.get(System.getProperty("java.io.tmpdir")).toAbsolutePath().normalize();
+        if (!normalizedSource.startsWith(tempRoot)
+                || !Files.isRegularFile(normalizedSource, LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("Source path is not a regular file under the temp directory");
+        }
+        Files.createDirectories(targetPath.getParent());
+        try {
+            Files.move(normalizedSource, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException moveFailed) {
+            Files.copy(normalizedSource, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            Files.deleteIfExists(normalizedSource);
+        }
+        return StoredObject.builder()
+                .storageKey(storageKey)
+                .originalFilename(sanitizedFilename)
+                .contentType(contentType)
+                .sizeBytes(Files.size(targetPath))
                 .build();
     }
 

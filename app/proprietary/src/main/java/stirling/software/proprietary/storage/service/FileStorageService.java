@@ -84,6 +84,12 @@ public class FileStorageService {
         }
     }
 
+    /** Rejects an upload over quota before chunk bytes are accepted. */
+    public void assertUploadWithinQuota(User owner, long bytes) {
+        ensureStorageEnabled();
+        enforceStorageQuotas(owner, bytes, 0);
+    }
+
     public User requireAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null
@@ -141,6 +147,17 @@ public class FileStorageService {
         return buildResponse(storeTemporaryFile(owner, file, ttl), owner);
     }
 
+    private StoredObject storeObject(User owner, MultipartFile file) throws IOException {
+        if (file instanceof PathMultipartFile pathFile) {
+            return storageProvider.storeFromPath(
+                    owner,
+                    pathFile.getPath(),
+                    pathFile.getOriginalFilename(),
+                    pathFile.getContentType());
+        }
+        return storageProvider.store(owner, file);
+    }
+
     private StoredFile storeFile(
             User owner,
             MultipartFile file,
@@ -157,12 +174,12 @@ public class FileStorageService {
         StoredObject historyObject = null;
         StoredObject auditObject = null;
         try {
-            mainObject = storageProvider.store(owner, file);
+            mainObject = storeObject(owner, file);
             if (isValidUpload(historyBundle)) {
-                historyObject = storageProvider.store(owner, historyBundle);
+                historyObject = storeObject(owner, historyBundle);
             }
             if (isValidUpload(auditLog)) {
-                auditObject = storageProvider.store(owner, auditLog);
+                auditObject = storeObject(owner, auditLog);
             }
 
             StoredFile storedFile = new StoredFile();
@@ -225,12 +242,12 @@ public class FileStorageService {
         String oldAuditKey = existing.getAuditLogStorageKey();
 
         try {
-            mainObject = storageProvider.store(owner, file);
+            mainObject = storeObject(owner, file);
             if (isValidUpload(historyBundle)) {
-                historyObject = storageProvider.store(owner, historyBundle);
+                historyObject = storeObject(owner, historyBundle);
             }
             if (isValidUpload(auditLog)) {
-                auditObject = storageProvider.store(owner, auditLog);
+                auditObject = storeObject(owner, auditLog);
             }
 
             existing.setOriginalFilename(mainObject.getOriginalFilename());
