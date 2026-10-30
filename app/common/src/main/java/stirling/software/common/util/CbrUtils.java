@@ -121,6 +121,7 @@ public class CbrUtils {
 
                 for (ImageEntryData imageEntry : imageEntries) {
                     try {
+                        ImageProcessingUtils.assertWithinPixelLimit(imageEntry.data());
                         PDImageXObject pdImage =
                                 PDImageXObject.createFromByteArray(
                                         document, imageEntry.data(), imageEntry.name());

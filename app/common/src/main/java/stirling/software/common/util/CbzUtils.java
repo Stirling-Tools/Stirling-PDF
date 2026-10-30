@@ -79,6 +79,7 @@ public class CbzUtils {
                     try (InputStream is = zipFile.getInputStream(entry)) {
                         byte[] imageBytes = budget.readEntry(is);
                         try {
+                            ImageProcessingUtils.assertWithinPixelLimit(imageBytes);
                             PDImageXObject pdImage =
                                     PDImageXObject.createFromByteArray(
                                             document, imageBytes, imageName);
