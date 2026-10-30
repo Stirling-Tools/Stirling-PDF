@@ -9,6 +9,8 @@ export const MAX_PREVIEW_WIDTH_REM = 15; // Absolute max width in rem
 export const MAX_PREVIEW_HEIGHT_REM = 10; // Absolute max height in rem
 export const MIN_SIGNATURE_DIMENSION_REM = 0.75; // Min dimension for visibility
 export const OVERLAY_EDGE_PADDING_REM = 0.25; // Padding from container edges
+export const SIGNATURE_RESIZE_STEP = 0.1;
+export const SIGNATURE_RESIZE_WHEEL_THRESHOLD = 10;
 
 // Text signature padding (relative to font size)
 export const HORIZONTAL_PADDING_RATIO = 0.8;
