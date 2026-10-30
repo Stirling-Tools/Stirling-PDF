@@ -20,8 +20,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -137,7 +136,8 @@ public class CertSignController {
             String name,
             String location,
             String reason,
-            Boolean showLogo) {
+            Boolean showLogo)
+            throws IOException {
         try (PDDocument doc = pdfDocumentFactory.load(input)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -159,8 +159,9 @@ public class CertSignController {
                 doc.addSignature(signature, instance);
                 doc.saveIncremental(output);
             }
-        } catch (Exception e) {
+        } catch (IOException | RuntimeException e) {
             ExceptionUtils.logException("PDF signing", e);
+            throw e;
         }
     }
 
@@ -311,7 +312,7 @@ public class CertSignController {
                     location,
                     reason,
                     showLogo);
-        } catch (IOException e) {
+        } catch (Exception e) {
             signedOut.close();
             throw e;
         } finally {
@@ -440,7 +441,14 @@ public class CertSignController {
                 PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
                 float height = bbox.getHeight();
                 form.setBBox(bbox);
-                PDFont font = new PDType1Font(FontName.TIMES_BOLD);
+                // PDType0Font embeds the TTF subset into the PDF and supports the full Unicode
+                // range. PDType1Font (Times-Bold, WinAnsiEncoding) only covers Latin-1 and throws
+                // IllegalArgumentException for diacritical characters such as Czech "ř" (U+0159).
+                PDFont font;
+                try (InputStream fontStream =
+                        new ClassPathResource("static/fonts/NotoSans-Bold.ttf").getInputStream()) {
+                    font = PDType0Font.load(doc, fontStream);
+                }
 
                 // from PDVisualSigBuilder.createAppearanceDictionary()
                 PDAppearanceDictionary appearance = new PDAppearanceDictionary();
@@ -474,19 +482,29 @@ public class CertSignController {
 
                     X509Certificate cert = (X509Certificate) getCertificateChain()[0];
 
-                    // https://stackoverflow.com/questions/2914521/
                     X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
-                    RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
-                    String name = IETFUtils.valueToString(cn.getFirst().getValue());
+                    RDN[] rdns = x500Name.getRDNs(BCStyle.CN);
+                    String name =
+                            (rdns != null && rdns.length > 0)
+                                    ? IETFUtils.valueToString(rdns[0].getFirst().getValue())
+                                    : signature.getName();
+                    if (name == null) {
+                        name = "";
+                    }
 
-                    String date = signature.getSignDate().getTime().toString();
+                    String date =
+                            signature.getSignDate() != null
+                                    ? signature.getSignDate().getTime().toString()
+                                    : Calendar.getInstance().getTime().toString();
                     String reason = signature.getReason();
 
                     cs.showText("Signed by " + name);
                     cs.newLine();
                     cs.showText(date);
-                    cs.newLine();
-                    cs.showText(reason);
+                    if (reason != null && !reason.isEmpty()) {
+                        cs.newLine();
+                        cs.showText(reason);
+                    }
 
                     cs.endText();
                 }
