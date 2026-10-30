@@ -12,18 +12,32 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.nio.file.Files;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.Security;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Date;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.cms.CMSProcessableByteArray;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -434,6 +448,122 @@ class CertSignControllerTest {
                         () -> signWithPemKey("test-cert.pem", pemCertBytes, "password"));
 
         assertTrue(exception.getMessage().contains("PEM private key"));
+    }
+
+    @Test
+    void testSignPdfWithVisibleSignature() throws Exception {
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        MockMultipartFile p12File =
+                new MockMultipartFile("p12File", "test-cert.p12", "application/x-pkcs12", p12Bytes);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(pdfFile);
+        request.setCertType("PKCS12");
+        request.setP12File(p12File);
+        request.setPassword("password");
+        request.setShowSignature(true);
+        request.setReason("Approved");
+        request.setLocation("Prague");
+        request.setName("Tester");
+        request.setPageNumber(1);
+        request.setShowLogo(false);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertNotNull(response.getBody());
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void testSignPdfWithVisibleSignatureAndNonAsciiSubject() throws Exception {
+        byte[] czechCertBytes = createPkcs12WithSubject("Křivka");
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        MockMultipartFile p12File =
+                new MockMultipartFile(
+                        "p12File", "czech-cert.p12", "application/x-pkcs12", czechCertBytes);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(pdfFile);
+        request.setCertType("PKCS12");
+        request.setP12File(p12File);
+        request.setPassword("password");
+        request.setShowSignature(true);
+        request.setReason("Schváleno");
+        request.setLocation("Praha");
+        request.setName("Křivka");
+        request.setPageNumber(1);
+        request.setShowLogo(false);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertNotNull(response.getBody());
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void testSignPdfWithVisibleSignatureAndCjkSubject() throws Exception {
+        byte[] cjkCertBytes = createPkcs12WithSubject("王");
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        MockMultipartFile p12File =
+                new MockMultipartFile(
+                        "p12File", "cjk-cert.p12", "application/x-pkcs12", cjkCertBytes);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(pdfFile);
+        request.setCertType("PKCS12");
+        request.setP12File(p12File);
+        request.setPassword("password");
+        request.setShowSignature(true);
+        request.setReason("Approved");
+        request.setLocation("Beijing");
+        request.setName("王");
+        request.setPageNumber(1);
+        request.setShowLogo(false);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertNotNull(response.getBody());
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    private byte[] createPkcs12WithSubject(String commonName) throws Exception {
+        if (Security.getProvider("BC") == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(2048);
+        KeyPair kp = kpg.generateKeyPair();
+        X500Name subject = new X500Name("CN=" + commonName + ", O=Test, C=CZ");
+        BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
+        Date notBefore = new Date(System.currentTimeMillis() - 60_000L);
+        Date notAfter = new Date(System.currentTimeMillis() + 86_400_000L);
+        X509v3CertificateBuilder certBuilder =
+                new JcaX509v3CertificateBuilder(
+                        subject, serial, notBefore, notAfter, subject, kp.getPublic());
+        ContentSigner signer =
+                new JcaContentSignerBuilder("SHA256withRSA")
+                        .setProvider("BC")
+                        .build(kp.getPrivate());
+        X509Certificate cert =
+                new JcaX509CertificateConverter()
+                        .setProvider("BC")
+                        .getCertificate(certBuilder.build(signer));
+        KeyStore ks = KeyStore.getInstance("PKCS12");
+        ks.load(null, null);
+        ks.setKeyEntry(
+                "alias", kp.getPrivate(), "password".toCharArray(), new Certificate[] {cert});
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ks.store(baos, "password".toCharArray());
+        return baos.toByteArray();
     }
 
     private ResponseEntity<Resource> signWithPemKey(
