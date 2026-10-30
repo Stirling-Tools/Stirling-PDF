@@ -93,7 +93,7 @@ vi.mock("react-router-dom", async () => {
 });
 
 // AuthLayout renders <Footer>, which reads useFooterInfo. In the real router
-// /login sits inside AppProviders, which supplies the client.
+// /login sits inside PlatformProviders, which supplies the client.
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <TestQueryProvider>
     <MantineProvider>

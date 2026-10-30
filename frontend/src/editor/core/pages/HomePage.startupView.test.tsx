@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { AppProviders } from "@editor/components/AppProviders";
+import { PlatformProviders } from "@editor/components/PlatformProviders";
 import HomePage from "@editor/pages/HomePage";
 import SettingsPage from "@editor/pages/SettingsPage";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
@@ -74,15 +75,17 @@ function renderApp(late = false) {
       <MantineProvider>
         <QuickNavHostProvider>
           <QuickNavRailHost />
-          <AppProviders
+          <PlatformProviders
             appConfigProviderProps={{
               initialConfig: {},
               bootstrapMode: "non-blocking",
               autoFetch: false,
             }}
           >
-            <Page late={late} />
-          </AppProviders>
+            <AppProviders>
+              <Page late={late} />
+            </AppProviders>
+          </PlatformProviders>
         </QuickNavHostProvider>
       </MantineProvider>
     </MemoryRouter>,

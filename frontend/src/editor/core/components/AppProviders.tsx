@@ -1,10 +1,7 @@
-import { ReactNode, useEffect, useState } from "react";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { createAppQueryClient } from "@editor/query/queryClient";
+import { ReactNode, useEffect } from "react";
 import { ThemeProvider } from "@editor/components/shared/ThemeProvider";
 import { FileContextProvider } from "@editor/contexts/FileContext";
 import { NavigationProvider } from "@editor/contexts/NavigationContext";
-import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
 import { FilesModalProvider } from "@editor/contexts/FilesModalContext";
 import { ToolWorkflowProvider } from "@editor/contexts/ToolWorkflowContext";
 import { DamagedFileRepairProvider } from "@editor/contexts/DamagedFileRepairContext";
@@ -14,12 +11,7 @@ import {
   PreferencesProvider,
   usePreferences,
 } from "@editor/contexts/PreferencesContext";
-import {
-  AppConfigProvider,
-  AppConfigProviderProps,
-  AppConfigRetryOptions,
-  useAppConfig,
-} from "@editor/contexts/AppConfigContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { WorkbenchBarProvider } from "@editor/contexts/WorkbenchBarContext";
 import { ViewerProvider } from "@editor/contexts/ViewerContext";
 import { SignatureProvider } from "@editor/contexts/SignatureContext";
@@ -73,16 +65,8 @@ function BrandingAssetManager() {
   return null;
 }
 
-// Avoid requirement to have props which are required in app providers anyway
-type AppConfigProviderOverrides = Omit<
-  AppConfigProviderProps,
-  "children" | "retryOptions"
->;
-
 export interface AppProvidersProps {
   children: ReactNode;
-  appConfigRetryOptions?: AppConfigRetryOptions;
-  appConfigProviderProps?: Partial<AppConfigProviderOverrides>;
 }
 
 // Component to sync server defaults to preferences when AppConfig loads
@@ -122,79 +106,59 @@ function ServerDefaultsSync() {
   return null;
 }
 
-/**
- * Core application providers
- * Contains all providers needed for the core
- */
-export function AppProviders({
-  children,
-  appConfigRetryOptions,
-  appConfigProviderProps,
-}: AppProvidersProps) {
-  const [queryClient] = useState(createAppQueryClient);
+/** The editor's own providers. Expects PlatformProviders above it. */
+export function AppProviders({ children }: AppProvidersProps) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <PreferencesProvider>
-        <ThemeProvider>
-          <ErrorBoundary>
-            <BannerProvider>
-              <AppConfigProvider
-                retryOptions={appConfigRetryOptions}
-                {...appConfigProviderProps}
-              >
-                <AppConfigLoader />
-                <ServerDefaultsSync />
-                {/* Auto-popup on startup when a newer Stirling-PDF release is available.
-                  No-ops inside Tauri — the desktop popup handles that flow. */}
-                <UpdateStartupPopup />
-                <FileContextProvider
-                  enableUrlSync={true}
-                  enablePersistence={true}
-                >
-                  <FolderProvider>
-                    <AppInitializer />
-                    <BrandingAssetManager />
-                    <ToolRegistryProvider>
-                      <NavigationProvider>
-                        <FilesModalProvider>
-                          <ToolWorkflowProvider>
-                            <HotkeyProvider>
-                              <SidebarProvider>
-                                <ViewerProvider>
-                                  <SignatureProvider>
-                                    <SigningOverlayProvider>
-                                      <RedactionProvider>
-                                        <FormFillProvider>
-                                          <AnnotationProvider>
-                                            <WorkbenchBarProvider>
-                                              <TourOrchestrationProvider>
-                                                <AdminTourOrchestrationProvider>
-                                                  <WorkbenchSessionPersistence />
-                                                  <DamagedFileRepairProvider>
-                                                    {children}
-                                                  </DamagedFileRepairProvider>
-                                                </AdminTourOrchestrationProvider>
-                                              </TourOrchestrationProvider>
-                                            </WorkbenchBarProvider>
-                                          </AnnotationProvider>
-                                        </FormFillProvider>
-                                      </RedactionProvider>
-                                    </SigningOverlayProvider>
-                                  </SignatureProvider>
-                                </ViewerProvider>
-                              </SidebarProvider>
-                            </HotkeyProvider>
-                          </ToolWorkflowProvider>
-                        </FilesModalProvider>
-                      </NavigationProvider>
-                    </ToolRegistryProvider>
-                  </FolderProvider>
-                </FileContextProvider>
-              </AppConfigProvider>
-            </BannerProvider>
-          </ErrorBoundary>
-        </ThemeProvider>
-      </PreferencesProvider>
-    </QueryClientProvider>
+    <PreferencesProvider>
+      <ThemeProvider>
+        <ErrorBoundary>
+          <BannerProvider>
+            <AppConfigLoader />
+            <ServerDefaultsSync />
+            {/* Auto-popup on startup when a newer Stirling-PDF release is available.
+              No-ops inside Tauri — the desktop popup handles that flow. */}
+            <UpdateStartupPopup />
+            <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+              <FolderProvider>
+                <AppInitializer />
+                <BrandingAssetManager />
+                <NavigationProvider>
+                  <FilesModalProvider>
+                    <ToolWorkflowProvider>
+                      <HotkeyProvider>
+                        <SidebarProvider>
+                          <ViewerProvider>
+                            <SignatureProvider>
+                              <SigningOverlayProvider>
+                                <RedactionProvider>
+                                  <FormFillProvider>
+                                    <AnnotationProvider>
+                                      <WorkbenchBarProvider>
+                                        <TourOrchestrationProvider>
+                                          <AdminTourOrchestrationProvider>
+                                            <WorkbenchSessionPersistence />
+                                            <DamagedFileRepairProvider>
+                                              {children}
+                                            </DamagedFileRepairProvider>
+                                          </AdminTourOrchestrationProvider>
+                                        </TourOrchestrationProvider>
+                                      </WorkbenchBarProvider>
+                                    </AnnotationProvider>
+                                  </FormFillProvider>
+                                </RedactionProvider>
+                              </SigningOverlayProvider>
+                            </SignatureProvider>
+                          </ViewerProvider>
+                        </SidebarProvider>
+                      </HotkeyProvider>
+                    </ToolWorkflowProvider>
+                  </FilesModalProvider>
+                </NavigationProvider>
+              </FolderProvider>
+            </FileContextProvider>
+          </BannerProvider>
+        </ErrorBoundary>
+      </ThemeProvider>
+    </PreferencesProvider>
   );
 }

@@ -2,16 +2,9 @@ import { AppProviders as ProprietaryAppProviders } from "@editor-proprietary/com
 import { AppProvidersProps } from "@editor-core/components/AppProviders";
 import { SaaSTeamProvider } from "@editor/contexts/SaaSTeamContext";
 
-export function AppProviders({
-  children,
-  appConfigRetryOptions,
-  appConfigProviderProps,
-}: AppProvidersProps) {
+export function AppProviders({ children }: AppProvidersProps) {
   return (
-    <ProprietaryAppProviders
-      appConfigRetryOptions={appConfigRetryOptions}
-      appConfigProviderProps={appConfigProviderProps}
-    >
+    <ProprietaryAppProviders>
       <SaaSTeamProvider>{children}</SaaSTeamProvider>
     </ProprietaryAppProviders>
   );

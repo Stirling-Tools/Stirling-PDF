@@ -8,7 +8,7 @@ import {
 import { useAuth as useSharedAuth } from "@editor/auth/context";
 import type { AuthUser } from "@editor/auth/types";
 // Side-effect import: wires the editor's transport + platform seams into the
-// shared Spring engine before AppProviders mounts the provider below.
+// shared Spring engine before PlatformProviders mounts the provider below.
 import "@editor/auth/configureSpringAuth";
 
 export type { AuthUser as User } from "@editor/auth/types";

@@ -8,7 +8,5 @@ export function StartupSetup({ children }: { children: ReactNode }) {
   const isSaaSMode = useSaaSMode();
   const { config } = useAppConfig();
   if (isSaaSMode || !config?.appVersion) return <>{children}</>;
-  return (
-    <CoreStartupSetup refreshConfigOnMount={false}>{children}</CoreStartupSetup>
-  );
+  return <CoreStartupSetup>{children}</CoreStartupSetup>;
 }

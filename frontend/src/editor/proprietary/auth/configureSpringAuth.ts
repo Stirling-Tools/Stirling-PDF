@@ -1,7 +1,7 @@
 /**
  * Wires the editor's transport + platform seams into the shared Spring auth
  * engine. Import this module for its side effect (it configures the engine on
- * load) before any auth call runs - AppProviders does so via UseSession.
+ * load) before any auth call runs - PlatformProviders does so via UseSession.
  *
  * The `@editor/*` imports resolve per build flavor: proprietary/web gets the no-op
  * web defaults, the desktop build gets the Tauri-backed implementations. So the

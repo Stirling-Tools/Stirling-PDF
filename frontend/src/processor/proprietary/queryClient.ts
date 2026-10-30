@@ -6,11 +6,11 @@ let current: QueryClient | null = null;
 /**
  * One client for the session, not one per mount. The portal is a route, so
  * switching to the editor unmounts it, and a per-mount client would throw the
- * cache away and refetch everything on the way back. The editor's own client
- * sits above the router and never pays that.
+ * cache away and refetch everything on the way back.
  *
- * Still a separate instance from the editor's: the two namespace their keys
- * apart and invalidate independently.
+ * Still a separate instance from the platform's (see PlatformProviders): the
+ * portal invalidates and clears its own cache without touching the app config
+ * or the editor's.
  */
 export function getPortalQueryClient(): QueryClient {
   current ??= new QueryClient({
