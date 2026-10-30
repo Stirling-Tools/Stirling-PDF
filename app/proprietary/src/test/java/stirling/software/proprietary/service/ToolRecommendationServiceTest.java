@@ -144,6 +144,19 @@ class ToolRecommendationServiceTest {
         }
 
         @Test
+        @DisplayName("under the saas profile the install's workflows are never read")
+        void saasNeverReadsGlobalWorkflows() {
+            environment.setActiveProfiles("saas");
+            when(signalService.userChains(eq(PRINCIPAL), anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of(chain(2, "compress", "ocr")));
+
+            assertThat(service.getWorkflows(PRINCIPAL, 2, 6))
+                    .extracting(ToolWorkflow::scope)
+                    .containsOnly(WorkflowScope.USER);
+            verify(signalService, never()).globalChains(anyLong(), anyInt(), anyInt());
+        }
+
+        @Test
         @DisplayName("team workflows are only consulted for a team with other members")
         void soloTeamIsSkipped() {
             when(signalService.resolveTeamScope(PRINCIPAL)).thenReturn(TeamScope.none());

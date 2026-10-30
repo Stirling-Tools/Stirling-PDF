@@ -25,7 +25,13 @@ public interface ToolChainStatRepository
     String SELECT_TOP =
             "SELECT c.chainKey, MAX(c.chainLength), SUM(c.count) FROM ToolChainStat c WHERE ";
 
-    String GROUP_ORDER = " GROUP BY c.chainKey ORDER BY SUM(c.count) DESC, c.chainKey ASC";
+    String GROUP_ORDER =
+            " GROUP BY c.chainKey HAVING SUM(c.count) >= :minRuns"
+                    + " ORDER BY SUM(c.count) DESC, c.chainKey ASC";
+
+    String SUM_MULTI_STEP_RUNS =
+            "SELECT COALESCE(SUM(c.count), 0) FROM ToolChainStat c WHERE c.chainLength = 2"
+                    + " AND c.epochDay >= :cutoff";
 
     @Query(
             SELECT_TOP
@@ -36,6 +42,7 @@ public interface ToolChainStatRepository
             @Param("principal") String principal,
             @Param("cutoff") long cutoff,
             @Param("minLength") int minLength,
+            @Param("minRuns") long minRuns,
             Pageable pageable);
 
     @Query(
@@ -47,11 +54,26 @@ public interface ToolChainStatRepository
             @Param("principals") Collection<String> principals,
             @Param("cutoff") long cutoff,
             @Param("minLength") int minLength,
+            @Param("minRuns") long minRuns,
             Pageable pageable);
 
     @Query(SELECT_TOP + "c.epochDay >= :cutoff AND c.chainLength >= :minLength" + GROUP_ORDER)
     List<Object[]> topGlobal(
-            @Param("cutoff") long cutoff, @Param("minLength") int minLength, Pageable pageable);
+            @Param("cutoff") long cutoff,
+            @Param("minLength") int minLength,
+            @Param("minRuns") long minRuns,
+            Pageable pageable);
+
+    @Query(SUM_MULTI_STEP_RUNS + " AND c.principal = :principal")
+    long countMultiStepRunsByPrincipal(
+            @Param("principal") String principal, @Param("cutoff") long cutoff);
+
+    @Query(SUM_MULTI_STEP_RUNS + " AND c.principal IN :principals")
+    long countMultiStepRunsByPrincipals(
+            @Param("principals") Collection<String> principals, @Param("cutoff") long cutoff);
+
+    @Query(SUM_MULTI_STEP_RUNS)
+    long countMultiStepRunsGlobal(@Param("cutoff") long cutoff);
 
     /** Returns 0 when today's row does not exist yet, telling the caller to insert it. */
     @Modifying(clearAutomatically = true)

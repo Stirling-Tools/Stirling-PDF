@@ -26,6 +26,10 @@ vi.mock("@processor/hooks/useConnectGate", () => ({
 
 // Keys verbatim. initReactI18next/Trans are exported because modules this page imports
 // reference them at import time.
+vi.mock("@processor/components/pipelines/ActivityPipelineSuggestions", () => ({
+  ActivityPipelineSuggestions: () => null,
+}));
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,

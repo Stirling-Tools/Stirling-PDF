@@ -34,6 +34,7 @@ export const qk = {
   teams: () => ["editor", "teams"] as const,
   toolRecommendations: (context: string, limit: number, completions: number) =>
     ["editor", "toolRecommendations", context, limit, completions] as const,
+  toolWorkflows: (limit: number) => ["editor", "toolWorkflows", limit] as const,
   users: () => ["editor", "users"] as const,
   /** Historical billing belongs to the account, independently of its current team. */
   legacySubscriptions: (userId: string | null) =>

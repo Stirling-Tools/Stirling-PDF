@@ -2368,6 +2368,10 @@ title = "Run Automation"
 [automate.selection]
 title = "Automation Selection"
 
+[automate.selection.activity]
+description = "Save it as an automation and run it with one click."
+title = "From your activity"
+
 [automate.selection.createNew]
 title = "Create New Automation"
 
@@ -9723,6 +9727,10 @@ title = "Pipelines"
 [portal.pipelines.actions]
 newCustomPipeline = "New custom pipeline"
 
+[portal.pipelines.activity]
+build = "Build pipeline"
+title = "From how people work"
+
 [portal.pipelines.all]
 title = "All pipelines"
 
@@ -13400,6 +13408,14 @@ noTools = "No tools available"
 
 [tooltip]
 close = "Close tooltip"
+
+[toolWorkflows]
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
+[toolWorkflows.ranBy]
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
 
 [unlockPDFForms]
 description = "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable."
