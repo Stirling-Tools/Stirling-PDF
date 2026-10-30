@@ -1,7 +1,7 @@
 import React from "react";
-import { Stack } from "@mantine/core";
 import { type TFunction } from "i18next";
 import {
+  createFeedbackNavItem,
   createPreferencesNavSection,
   type ConfigNavSection,
 } from "@editor-core/components/shared/config/configNavSections";
@@ -10,7 +10,6 @@ import PasswordSecurity from "@editor/components/shared/config/configSections/Pa
 import ApiKeys from "@editor/components/shared/config/configSections/ApiKeys";
 import McpSection from "@editor/components/shared/config/configSections/McpSection";
 import HelpSection from "@editor/components/shared/config/configSections/HelpSection";
-import FeedbackSection from "@editor/components/shared/config/configSections/FeedbackSection";
 import LegalSection from "@editor/components/shared/config/configSections/LegalSection";
 import {
   createCloudBillingSection,
@@ -24,6 +23,8 @@ interface CreateSaasConfigNavSectionsOptions {
   t: TFunction<"translation", undefined>;
   /** Leaves settings; the Help tours need the page out of the way to run. */
   onRequestClose?: () => void;
+  /** From `useFeedback`: whether there is anywhere to send feedback. */
+  feedbackAvailable?: boolean;
 }
 
 function appendDeveloperSection(
@@ -125,6 +126,7 @@ function appendHelpSection(
   sections: ConfigNavSection[],
   t: TFunction<"translation", undefined>,
   onRequestClose: () => void,
+  feedbackAvailable: boolean,
 ): ConfigNavSection[] {
   const hasHelp = sections.some((section) =>
     section.items.some((item) => item.key === "help"),
@@ -144,12 +146,10 @@ function appendHelpSection(
           label: t("settings.help.label", "Tours"),
           icon: "circle-question-mark",
           component: (
-            <Stack gap="lg">
-              <HelpSection isAdmin={false} onRequestClose={onRequestClose} />
-              <FeedbackSection />
-            </Stack>
+            <HelpSection isAdmin={false} onRequestClose={onRequestClose} />
           ),
         },
+        ...(feedbackAvailable ? [createFeedbackNavItem(t)] : []),
       ],
     },
   ];
@@ -192,6 +192,7 @@ export function createSaasConfigNavSections(
     isAnonymous = false,
     t,
     onRequestClose = () => {},
+    feedbackAvailable = false,
   }: CreateSaasConfigNavSectionsOptions,
 ): ConfigNavSection[] {
   // Create Account section as the first section with Overview and Passwords & Security
@@ -237,7 +238,7 @@ export function createSaasConfigNavSections(
     sections = appendBillingSection(sections, t);
   }
 
-  sections = appendHelpSection(sections, t, onRequestClose);
+  sections = appendHelpSection(sections, t, onRequestClose, feedbackAvailable);
   sections = appendLegalSection(sections, t);
 
   return sections;

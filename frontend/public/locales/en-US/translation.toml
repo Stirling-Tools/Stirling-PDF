@@ -12006,8 +12006,7 @@ label = "Feedback"
 
 [settings.feedback.send]
 description = "Report a problem or suggest an improvement to the Stirling team."
-open = "Open"
-title = "Send feedback"
+label = "Send feedback"
 
 [settings.general]
 autoUnzip = "Auto-unzip API responses"

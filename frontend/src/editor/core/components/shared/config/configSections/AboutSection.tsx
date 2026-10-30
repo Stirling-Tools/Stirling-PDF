@@ -1,13 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { SettingsCard } from "@editor/components/shared/config/SettingsCard";
 import HelpSection from "@editor/components/shared/config/configSections/HelpSection";
-import FeedbackSection from "@editor/components/shared/config/configSections/FeedbackSection";
 import LegalSection from "@editor/components/shared/config/configSections/LegalSection";
 import {
   BackendThirdPartyLicensesSection,
   FrontendThirdPartyLicensesSection,
 } from "@editor/components/shared/config/configSections/ThirdPartyLicensesSection";
-import { useFeedback } from "@editor/hooks/useFeedback";
 import "@editor/components/shared/config/configSections/AboutSection.css";
 
 export interface AboutSectionProps {
@@ -28,7 +26,6 @@ export default function AboutSection({
   onRequestClose,
 }: AboutSectionProps) {
   const { t } = useTranslation();
-  const feedbackAvailable = useFeedback() !== null;
   return (
     <div className="settings-section-container">
       <div className="about-section">
@@ -42,15 +39,6 @@ export default function AboutSection({
         >
           <HelpSection isAdmin={isAdmin} onRequestClose={onRequestClose} />
         </SettingsCard>
-
-        {feedbackAvailable && (
-          <SettingsCard
-            id="feedback"
-            title={t("settings.feedback.label", "Feedback")}
-          >
-            <FeedbackSection />
-          </SettingsCard>
-        )}
 
         <SettingsCard
           id="legal"
