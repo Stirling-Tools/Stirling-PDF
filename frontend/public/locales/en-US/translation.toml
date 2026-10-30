@@ -13409,10 +13409,13 @@ noTools = "No tools available"
 [tooltip]
 close = "Close tooltip"
 
+[toolWorkflows]
+longName = "{{first}} → … → {{last}} ({{count}} steps)"
+
 [toolWorkflows.ranBy]
-install = "Your colleagues have done this {{count}} times."
-team = "Your team has done this {{count}} times."
-user = "You've done this {{count}} times."
+install = "Your colleagues have done this {{count, number}} times."
+team = "Your team has done this {{count, number}} times."
+user = "You've done this {{count, number}} times."
 
 [unlockPDFForms]
 description = "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable."

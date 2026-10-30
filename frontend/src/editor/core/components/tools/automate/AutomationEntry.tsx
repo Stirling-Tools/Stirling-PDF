@@ -117,6 +117,7 @@ export default function AutomationEntry({
             style={{
               display: "flex",
               alignItems: "center",
+              flexWrap: "wrap",
               gap: "4px",
               whiteSpace: "nowrap",
             }}

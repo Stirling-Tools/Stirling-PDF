@@ -22,6 +22,7 @@ import {
 const WORKFLOW_STALE_TIME = 2 * 60 * 1000;
 const WORKFLOW_FETCH_LIMIT = 20;
 export const MAX_WORKFLOW_SUGGESTIONS = 3;
+const MAX_NAMED_STEPS = 3;
 
 const SCOPES: Record<ToolWorkflowScope, ActivityScope> = {
   USER: "user",
@@ -94,14 +95,19 @@ export function useActivityChainText(toolRegistry: Partial<ToolRegistry>) {
   const { t } = useTranslation();
 
   const name = useCallback(
-    (chain: ActivityChain) =>
-      chain.operations
-        .map(
-          (operation) =>
-            toolRegistry[operation as ToolId]?.name ??
-            t(`tools.${operation}.name`, operation),
-        )
-        .join(" → "),
+    (chain: ActivityChain) => {
+      const names = chain.operations.map(
+        (operation) =>
+          toolRegistry[operation as ToolId]?.name ??
+          t(`tools.${operation}.name`, operation),
+      );
+      if (names.length <= MAX_NAMED_STEPS) return names.join(" → ");
+      return t(
+        "toolWorkflows.longName",
+        "{{first}} → … → {{last}} ({{count}} steps)",
+        { first: names[0], last: names[names.length - 1], count: names.length },
+      );
+    },
     [toolRegistry, t],
   );
 
@@ -112,19 +118,19 @@ export function useActivityChainText(toolRegistry: Partial<ToolRegistry>) {
         case "team":
           return t(
             "toolWorkflows.ranBy.team",
-            "Your team has done this {{count}} times.",
+            "Your team has done this {{count, number}} times.",
             { count },
           );
         case "install":
           return t(
             "toolWorkflows.ranBy.install",
-            "Your colleagues have done this {{count}} times.",
+            "Your colleagues have done this {{count, number}} times.",
             { count },
           );
         default:
           return t(
             "toolWorkflows.ranBy.user",
-            "You've done this {{count}} times.",
+            "You've done this {{count, number}} times.",
             { count },
           );
       }
