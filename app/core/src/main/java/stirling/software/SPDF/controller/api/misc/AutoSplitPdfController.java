@@ -37,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
+import stirling.software.SPDF.utils.SplitOutputNames;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -356,8 +357,10 @@ public class AutoSplitPdfController {
             // Stream split documents directly into zip — avoids holding all PDFs in memory
             try (OutputStream fileOut = Files.newOutputStream(outputTempFile.getPath());
                     ZipOutputStream zipOut = new ZipOutputStream(fileOut)) {
+                SplitOutputNames names =
+                        SplitOutputNames.forRequest(request, splitDocuments.size());
                 for (int i = 0; i < splitDocuments.size(); i++) {
-                    String fileName = filename + "_" + (i + 1) + ".pdf";
+                    String fileName = names.next(filename + "_" + (i + 1));
                     zipOut.putNextEntry(new ZipEntry(fileName));
                     // NO_COMPRESSION: split docs are built by addPage()-ing pages copied from the
                     // source document. PDFBox 3.0.7's compressed writer (PDFBOX-6203) drops shared

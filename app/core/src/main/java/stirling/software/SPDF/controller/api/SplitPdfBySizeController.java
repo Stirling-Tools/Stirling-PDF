@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.general.SplitPdfBySizeOrCountRequest;
+import stirling.software.SPDF.utils.SplitOutputNames;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -86,6 +87,9 @@ public class SplitPdfBySizeController {
 
                 try (PdfDocument sourceDocument = PdfDocument.open(sourceTempFile.getPath())) {
                     List<int[]> ranges = computeRanges(request, sourceDocument);
+                    int documentCount =
+                            (int) ranges.stream().filter(range -> range.length > 0).count();
+                    SplitOutputNames names = SplitOutputNames.forRequest(request, documentCount);
 
                     int fileIndex = 1;
                     for (int[] range : ranges) {
@@ -97,8 +101,7 @@ public class SplitPdfBySizeController {
                                 sourceTempFile.getFile(),
                                 range,
                                 zipOut,
-                                filename,
-                                fileIndex++,
+                                names.next(filename + "_" + fileIndex++),
                                 hasForm);
                     }
                 }
@@ -132,29 +135,24 @@ public class SplitPdfBySizeController {
             File sourceFile,
             int[] range,
             ZipOutputStream zipOut,
-            String baseFilename,
-            int fileIndex,
+            String entryName,
             boolean hasForm)
             throws IOException {
         if (hasForm) {
             // JPDFium's FPDF_ImportPagesByIndex drops the AcroForm dictionary, breaking form
             // fields downstream. For form-bearing PDFs, do the extract via PDFBox so the
             // AcroForm survives (pruneOrphanedFormFields removes references to dropped pages).
-            writeRangeViaPdfBox(sourceFile, range, zipOut, baseFilename, fileIndex);
+            writeRangeViaPdfBox(sourceFile, range, zipOut, entryName);
         } else {
             try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
                 extractRangeToFile(sourceDoc, range, splitTemp.getPath());
-                writeEntry(zipOut, baseFilename, fileIndex, splitTemp.getPath());
+                writeEntry(zipOut, entryName, splitTemp.getPath());
             }
         }
     }
 
     private void writeRangeViaPdfBox(
-            File sourceFile,
-            int[] range,
-            ZipOutputStream zipOut,
-            String baseFilename,
-            int fileIndex)
+            File sourceFile, int[] range, ZipOutputStream zipOut, String entryName)
             throws IOException {
         Set<Integer> keep = new HashSet<>();
         for (int p : range) {
@@ -167,7 +165,7 @@ public class SplitPdfBySizeController {
                 }
             }
             FormUtils.pruneOrphanedFormFields(doc);
-            zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + fileIndex + ".pdf"));
+            zipOut.putNextEntry(new ZipEntry(entryName));
             doc.save(zipOut);
             zipOut.closeEntry();
         }
@@ -182,10 +180,9 @@ public class SplitPdfBySizeController {
         }
     }
 
-    private void writeEntry(
-            ZipOutputStream zipOut, String baseFilename, int fileIndex, Path pdfPath)
+    private void writeEntry(ZipOutputStream zipOut, String entryName, Path pdfPath)
             throws IOException {
-        zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + fileIndex + ".pdf"));
+        zipOut.putNextEntry(new ZipEntry(entryName));
         Files.copy(pdfPath, zipOut);
         zipOut.closeEntry();
     }

@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
+import stirling.software.SPDF.utils.SplitOutputNames;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -164,9 +165,15 @@ public class SplitPdfByChaptersController {
                 }
             }
 
+            SplitOutputNames names = SplitOutputNames.forRequest(request, bookmarks.size());
             TempFile zipTempFile =
                     createZipFile(
-                            sourceTempFile.getFile(), bookmarks, metadata, totalPages, hasForm);
+                            sourceTempFile.getFile(),
+                            bookmarks,
+                            names,
+                            metadata,
+                            totalPages,
+                            hasForm);
             String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
             return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + ".zip");
         }
@@ -200,6 +207,7 @@ public class SplitPdfByChaptersController {
     private TempFile createZipFile(
             File sourceFile,
             List<Bookmark> bookmarks,
+            SplitOutputNames names,
             PdfMetadata metadata,
             int totalPages,
             boolean hasForm)
@@ -215,8 +223,7 @@ public class SplitPdfByChaptersController {
                     writeChapterViaPdfBox(
                             sourceFile,
                             bookmarks.get(i),
-                            i,
-                            fileNumberFormatter,
+                            names.next(defaultStem(fileNumberFormatter, i, bookmarks.get(i))),
                             metadata,
                             zipOut,
                             totalPages);
@@ -227,8 +234,7 @@ public class SplitPdfByChaptersController {
                         writeChapterViaJpdfium(
                                 sourceDocument,
                                 bookmarks.get(i),
-                                i,
-                                fileNumberFormatter,
+                                names.next(defaultStem(fileNumberFormatter, i, bookmarks.get(i))),
                                 metadata,
                                 zipOut,
                                 totalPages);
@@ -248,8 +254,7 @@ public class SplitPdfByChaptersController {
     private void writeChapterViaJpdfium(
             PdfDocument sourceDocument,
             Bookmark bookmark,
-            int index,
-            String fileNumberFormatter,
+            String entryName,
             PdfMetadata metadata,
             ZipOutputStream zipOut,
             int totalPages)
@@ -272,7 +277,7 @@ public class SplitPdfByChaptersController {
                     }
                     finalPath = metaTemp.getPath();
                 }
-                writeZipEntry(zipOut, fileNumberFormatter, index, bookmark.getTitle(), finalPath);
+                writeZipEntry(zipOut, entryName, finalPath);
             } finally {
                 if (metaTemp != null) {
                     metaTemp.close();
@@ -284,8 +289,7 @@ public class SplitPdfByChaptersController {
     private void writeChapterViaPdfBox(
             File sourceFile,
             Bookmark bookmark,
-            int index,
-            String fileNumberFormatter,
+            String entryName,
             PdfMetadata metadata,
             ZipOutputStream zipOut,
             int totalPages)
@@ -303,29 +307,23 @@ public class SplitPdfByChaptersController {
             if (metadata != null) {
                 pdfMetadataService.setMetadataToPdf(doc, metadata);
             }
-            String fileName =
-                    String.format(Locale.ROOT, fileNumberFormatter, index)
-                            + bookmark.getTitle()
-                            + ".pdf";
-            zipOut.putNextEntry(new ZipEntry(fileName));
+            zipOut.putNextEntry(new ZipEntry(entryName));
             doc.save(zipOut);
             zipOut.closeEntry();
-            log.debug("Wrote split document {} to zip file", fileName);
+            log.debug("Wrote split document {} to zip file", entryName);
         }
     }
 
-    private void writeZipEntry(
-            ZipOutputStream zipOut,
-            String fileNumberFormatter,
-            int index,
-            String title,
-            Path pdfPath)
+    private void writeZipEntry(ZipOutputStream zipOut, String entryName, Path pdfPath)
             throws IOException {
-        String fileName = String.format(Locale.ROOT, fileNumberFormatter, index) + title + ".pdf";
-        zipOut.putNextEntry(new ZipEntry(fileName));
+        zipOut.putNextEntry(new ZipEntry(entryName));
         Files.copy(pdfPath, zipOut);
         zipOut.closeEntry();
-        log.debug("Wrote split document {} to zip file", fileName);
+        log.debug("Wrote split document {} to zip file", entryName);
+    }
+
+    private static String defaultStem(String fileNumberFormatter, int index, Bookmark bookmark) {
+        return String.format(Locale.ROOT, fileNumberFormatter, index) + bookmark.getTitle();
     }
 
     private static int[] clampRange(Bookmark bookmark, int totalPages) {

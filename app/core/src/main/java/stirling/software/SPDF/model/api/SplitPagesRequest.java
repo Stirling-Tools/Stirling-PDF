@@ -11,12 +11,11 @@ import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.GeneralUtils;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class SplitPagesRequest extends PDFFile {
+public class SplitPagesRequest extends SplitOutputNamingRequest {
 
     @Schema(
             description =
