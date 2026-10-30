@@ -2,6 +2,7 @@ import React, {
   createContext,
   useContext,
   ReactNode,
+  useMemo,
   useRef,
   useState,
   useCallback,
@@ -49,12 +50,20 @@ export const AnnotationProvider: React.FC<{ children: ReactNode }> = ({
     [],
   );
 
-  const value: AnnotationContextValue = {
-    annotationApiRef,
-    activateAnnotationToolRef,
-    activeAnnotationToolId,
-    setActiveAnnotationToolId,
-  };
+  // Memoised so state changes in the providers above this one (viewer, file,
+  // tool workflow, sidebar) do not hand every consumer a new value object.
+  // CommentsSidebar is a heavy consumer that would otherwise re-render on each
+  // of those changes; the refs and the callback are stable, so only an armed
+  // tool actually changes the value.
+  const value = useMemo<AnnotationContextValue>(
+    () => ({
+      annotationApiRef,
+      activateAnnotationToolRef,
+      activeAnnotationToolId,
+      setActiveAnnotationToolId,
+    }),
+    [activeAnnotationToolId, setActiveAnnotationToolId],
+  );
 
   return (
     <AnnotationContext.Provider value={value}>
