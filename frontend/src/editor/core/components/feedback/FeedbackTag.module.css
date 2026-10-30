@@ -1,6 +1,7 @@
 .tag {
   position: absolute;
-  right: var(--space-4);
+  /* A page's 1.5rem padding inside its scrollbar gutter. */
+  right: calc(var(--space-6) + var(--space-4));
   bottom: 0;
   z-index: 20;
   display: flex;
