@@ -114,6 +114,30 @@ export async function deleteAttachment(
   return response.data as Blob;
 }
 
+// A file specification can carry a path or an empty name. A ZIP entry must be
+// a leaf name so extracting the archive cannot write outside the target folder.
+function safeZipEntryName(name: string): string {
+  const leaf = name.split(/[\\/]/).pop()?.trim() ?? "";
+  return leaf && leaf !== "." && leaf !== ".." ? leaf : "attachment";
+}
+
+// Match the server's extract-all naming: duplicate file specification names get
+// `_1`, `_2`, … before the extension instead of overwriting each other in JSZip.
+function uniqueZipEntryName(name: string, usedNames: Set<string>): string {
+  const dot = name.lastIndexOf(".");
+  const hasExtension = dot > 0 && dot < name.length - 1;
+  const base = hasExtension ? name.slice(0, dot) : name;
+  const extension = hasExtension ? name.slice(dot) : "";
+  let candidate = name;
+  let counter = 1;
+  while (usedNames.has(candidate)) {
+    candidate = `${base}_${counter}${extension}`;
+    counter++;
+  }
+  usedNames.add(candidate);
+  return candidate;
+}
+
 /**
  * Extract all embedded attachments from a PDF into a ZIP archive.
  * Reads the local document with PDFium; nothing is uploaded.
@@ -123,8 +147,12 @@ export async function extractAttachments(fileInput: File): Promise<Blob> {
     await fileInput.arrayBuffer(),
   );
   const zip = new JSZip();
+  const usedNames = new Set<string>();
   for (const { attachment, bytes } of entries) {
-    zip.file(attachment.name || "attachment", bytes);
+    zip.file(
+      uniqueZipEntryName(safeZipEntryName(attachment.name), usedNames),
+      bytes,
+    );
   }
   return zip.generateAsync({ type: "blob" });
 }

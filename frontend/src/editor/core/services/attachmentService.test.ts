@@ -25,8 +25,8 @@ vi.mock("jszip", () => ({
     file(...args: unknown[]) {
       zipFile(...args);
     }
-    generateAsync(...args: unknown[]) {
-      return zipGenerateAsync(...args);
+    generateAsync(..._args: unknown[]) {
+      return zipGenerateAsync();
     }
   },
 }));
@@ -65,6 +65,8 @@ describe("attachmentService CRUD", () => {
     readPdfAttachments.mockReset();
     readPdfAttachmentBytes.mockReset();
     readPdfAttachmentsWithContent.mockReset();
+    zipFile.mockClear();
+    zipGenerateAsync.mockClear();
   });
 
   it("lists attachments locally without uploading the PDF", async () => {
@@ -139,12 +141,32 @@ describe("attachmentService CRUD", () => {
     expect(post).not.toHaveBeenCalled();
   });
 
-  it("zips every attachment locally", async () => {
+  it("zips every attachment locally with unique leaf names", async () => {
     readPdfAttachmentsWithContent.mockResolvedValue([
       {
         attachment: {
           index: 0,
+          name: "reports/../a.txt",
+          description: "",
+          mimeType: "text/plain",
+          size: 5,
+        },
+        bytes: new TextEncoder().encode("hello").buffer,
+      },
+      {
+        attachment: {
+          index: 1,
           name: "a.txt",
+          description: "",
+          mimeType: "text/plain",
+          size: 5,
+        },
+        bytes: new TextEncoder().encode("hello").buffer,
+      },
+      {
+        attachment: {
+          index: 2,
+          name: "",
           description: "",
           mimeType: "text/plain",
           size: 5,
@@ -159,7 +181,11 @@ describe("attachmentService CRUD", () => {
     expect(readPdfAttachmentsWithContent).toHaveBeenCalledWith(
       expect.any(ArrayBuffer),
     );
-    expect(zipFile).toHaveBeenCalledWith("a.txt", expect.anything());
+    expect(zipFile.mock.calls.map(([name]) => name)).toEqual([
+      "a.txt",
+      "a_1.txt",
+      "attachment",
+    ]);
     expect(post).not.toHaveBeenCalled();
   });
 

@@ -2280,6 +2280,9 @@ function readAttachmentUtf16(
   const length = read(0, 0);
   if (length <= 1) return "";
   const buffer = m.pdfium.wasmExports.malloc(length);
+  if (!buffer) {
+    throw new Error("PDFium: not enough memory to read an attachment string");
+  }
   try {
     read(buffer, length);
     return m.pdfium.UTF16ToString(buffer);
@@ -2304,6 +2307,9 @@ function readAttachmentSize(
   attachmentPtr: number,
 ): number {
   const sizePtr = m.pdfium.wasmExports.malloc(4);
+  if (!sizePtr) {
+    throw new Error("PDFium: not enough memory to read attachment size");
+  }
   try {
     if (!m.FPDFAttachment_GetFile(attachmentPtr, 0, 0, sizePtr)) return 0;
     return m.pdfium.getValue(sizePtr, "i32") >>> 0;
@@ -2338,6 +2344,9 @@ function readAttachmentBytes(
   attachmentPtr: number,
 ): ArrayBuffer {
   const sizePtr = m.pdfium.wasmExports.malloc(4);
+  if (!sizePtr) {
+    throw new Error("PDFium: not enough memory to read attachment size");
+  }
   try {
     if (!m.FPDFAttachment_GetFile(attachmentPtr, 0, 0, sizePtr)) {
       throw new Error("PDFium: could not read attachment size");
@@ -2346,6 +2355,9 @@ function readAttachmentBytes(
     if (size === 0) return new ArrayBuffer(0);
 
     const contentPtr = m.pdfium.wasmExports.malloc(size);
+    if (!contentPtr) {
+      throw new Error("PDFium: not enough memory to read attachment content");
+    }
     try {
       if (!m.FPDFAttachment_GetFile(attachmentPtr, contentPtr, size, sizePtr)) {
         throw new Error("PDFium: could not read attachment content");
