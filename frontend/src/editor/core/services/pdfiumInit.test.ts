@@ -42,10 +42,7 @@ describe("pdfium bootstrap", () => {
   test("rejects when instantiating the pre-compiled module fails", async () => {
     const failure = new Error("LinkError: import mismatch");
     vi.spyOn(WebAssembly, "instantiate").mockImplementation(() => {
-      const rejected = Promise.reject(failure);
-      // Mark handled here too: Vitest can report the mock's rejection after the test ends.
-      rejected.catch(() => {});
-      return rejected;
+      throw failure;
     });
     init.mockImplementation((overrides: Record<string, never>) =>
       emscriptenInit(overrides.instantiateWasm),
