@@ -837,34 +837,42 @@ class PDFToFileTest {
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
         assertEquals(1, workingDirs.size());
-        assertEquals("--", captured.get(captured.size() - 2));
-        assertTrue(Path.of(captured.get(captured.size() - 3)).isAbsolute());
+        assertTrue(Path.of(captured.get(captured.size() - 2)).isAbsolute());
+        assertEquals("document", captured.getLast());
+        String uploadBaseName = originalName.substring(0, originalName.lastIndexOf('.'));
+        if (!uploadBaseName.isEmpty()) {
+            assertTrue(captured.stream().noneMatch(arg -> arg.contains(uploadBaseName)));
+        }
         return captured;
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"-xml.pdf", "-stdout.pdf", "--help.pdf", "-q -o x.pdf"})
-    void processPdfToHtml_optionLikeFilenameIsNotPassedAsOption(String name)
+    @ValueSource(
+            strings = {
+                "-xml.pdf",
+                "-stdout.pdf",
+                "--help.pdf",
+                "-q -o x.pdf",
+                "<b>x</b>.pdf",
+                ".pdf"
+            })
+    void processPdfToHtml_uploadNameIsNotPassedToPdftohtml(String name)
             throws IOException, InterruptedException {
         List<String> command = runPdftohtmlCapturingCommand(name, false);
         assertEquals(List.of("pdftohtml", "-c"), command.subList(0, 2));
-        assertEquals(name.substring(0, name.lastIndexOf('.')), command.getLast());
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"-xml.pdf", "-stdout.pdf", "--help.pdf", "-q -o x.pdf"})
-    void processPdfToMarkdown_optionLikeFilenameIsNotPassedAsOption(String name)
+    @ValueSource(strings = {"-xml.pdf", "--help.pdf", "-q -o x.pdf", "<b>x</b>.pdf"})
+    void processPdfToMarkdown_uploadNameIsNotPassedToPdftohtml(String name)
             throws IOException, InterruptedException {
         List<String> command = runPdftohtmlCapturingCommand(name, true);
         assertEquals(List.of("pdftohtml", "-s", "-noframes", "-c"), command.subList(0, 4));
-        assertEquals(name.substring(0, name.lastIndexOf('.')), command.getLast());
     }
 
     @Test
-    void processPdfToHtml_blankBaseNameStaysInsideOutputDir()
-            throws IOException, InterruptedException {
-        List<String> command = runPdftohtmlCapturingCommand(".pdf", false);
-        assertEquals("document", command.getLast());
+    void processPdfToHtml_longUploadNameStillConverts() throws IOException, InterruptedException {
+        runPdftohtmlCapturingCommand("a".repeat(250) + ".pdf", false);
     }
 
     @Test
@@ -888,6 +896,34 @@ class PDFToFileTest {
                             MediaType.APPLICATION_PDF_VALUE,
                             "Fake PDF content".getBytes());
             assertThrows(IOException.class, () -> pdfToFile.processPdfToHtml(pdfFile));
+        }
+    }
+
+    @Test
+    void processPdfToOfficeFormat_zipWriteFailureIsNotReportedAsSuccess() throws Exception {
+        try (MockedStatic<ProcessExecutor> mockedStaticProcessExecutor =
+                mockStatic(ProcessExecutor.class)) {
+            mockedStaticProcessExecutor
+                    .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE))
+                    .thenReturn(mockProcessExecutor);
+            when(mockProcessExecutor.runCommandWithOutputHandling(anyList()))
+                    .thenAnswer(
+                            invocation -> {
+                                List<String> args = invocation.getArgument(0);
+                                Path outDir = Path.of(args.get(args.indexOf("--outdir") + 1));
+                                Files.write(outDir.resolve("document.odp"), new byte[] {1});
+                                Files.createDirectory(outDir.resolve("document_media1.png"));
+                                return mockExecutorResult;
+                            });
+            MultipartFile pdfFile =
+                    new MockMultipartFile(
+                            "file",
+                            "document.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            "Fake PDF content".getBytes());
+            assertThrows(
+                    IOException.class,
+                    () -> pdfToFile.processPdfToOfficeFormat(pdfFile, "odp", "draw_pdf_import"));
         }
     }
 }

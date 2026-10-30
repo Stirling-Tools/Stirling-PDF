@@ -91,8 +91,20 @@ class ConvertOfficeControllerTest {
     }
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
         controller = newController();
+        lenient()
+                .when(tempFileManager.createTempDirectory())
+                .thenAnswer(inv -> Files.createTempDirectory(tempDir, "work-"));
+        lenient()
+                .doAnswer(
+                        inv -> {
+                            org.apache.commons.io.FileUtils.deleteDirectory(
+                                    inv.<Path>getArgument(0).toFile());
+                            return null;
+                        })
+                .when(tempFileManager)
+                .deleteTempDirectory(any(Path.class));
         lenient().when(runtimePathConfig.getSOfficePath()).thenReturn("soffice");
         lenient().when(runtimePathConfig.getUnoConvertPath()).thenReturn("unoconvert");
         lenient().when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
@@ -405,8 +417,9 @@ class ConvertOfficeControllerTest {
 
             List<Path> workDirs = new ArrayList<>();
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                ProcessExecutorResult result = mockExecutor(pe, 1);
+                mockExecutor(pe, 1);
                 ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
+                // ProcessExecutor reports a non-zero exit by throwing, not by returning the rc.
                 when(executor.runCommandWithOutputHandling(any(List.class)))
                         .thenAnswer(
                                 inv -> {
@@ -414,15 +427,15 @@ class ConvertOfficeControllerTest {
                                     Path workDir = Path.of(command.getLast()).getParent();
                                     workDirs.add(workDir);
                                     Files.write(workDir.resolve("partial.tmp"), new byte[] {1});
-                                    return result;
+                                    throw new IOException("soffice exited with code 1");
                                 });
 
                 assertThatThrownBy(() -> controller.convertToPdf(docxFile("docx".getBytes())))
-                        .isInstanceOf(IllegalStateException.class);
+                        .isInstanceOf(IOException.class);
             }
 
             assertThat(workDirs).hasSize(1);
-            assertThat(workDirs.getFirst().getFileName().toString()).startsWith("office2pdf_");
+            Mockito.verify(tempFileManager).deleteTempDirectory(workDirs.getFirst());
             assertThat(workDirs.getFirst()).doesNotExist();
         }
 

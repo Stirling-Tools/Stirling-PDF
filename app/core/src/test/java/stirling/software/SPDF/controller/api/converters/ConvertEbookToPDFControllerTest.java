@@ -310,12 +310,11 @@ class ConvertEbookToPDFControllerTest {
         try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
             ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
             pe.when(() -> ProcessExecutor.getInstance(Processes.CALIBRE)).thenReturn(executor);
-            ProcessExecutorResult execResult = Mockito.mock(ProcessExecutorResult.class);
-            when(execResult.getRc()).thenReturn(1);
+            // ProcessExecutor reports a non-zero Calibre exit by throwing, not by returning the rc.
             when(executor.runCommandWithOutputHandling(any(), any(File.class)))
-                    .thenReturn(execResult);
+                    .thenThrow(new IOException("Calibre conversion failed with exit code 1"));
 
-            assertThrows(IllegalStateException.class, () -> controller.convertEbookToPdf(request));
+            assertThrows(IOException.class, () -> controller.convertEbookToPdf(request));
         } finally {
             Files.deleteIfExists(workingDir);
         }

@@ -1632,7 +1632,7 @@ public class ConvertPDFToPDFA {
 
     private Path runLibreOfficeConversion(Path tempInputFile, int pdfaPart) throws Exception {
         // Create temp output directory
-        Path tempOutputDir = Files.createTempDirectory("output_");
+        Path tempOutputDir = tempFileManager.createTempDirectory();
         try {
             // Determine PDF/A filter based on requested format
             String pdfFilter =
@@ -1675,7 +1675,7 @@ public class ConvertPDFToPDFA {
             }
             return outputFiles[0].toPath();
         } catch (Exception e) {
-            FileUtils.deleteQuietly(tempOutputDir.toFile());
+            tempFileManager.deleteTempDirectory(tempOutputDir);
             throw e;
         }
     }
@@ -1799,7 +1799,7 @@ public class ConvertPDFToPDFA {
 
         } finally {
             if (loPdfPath != null && loPdfPath.getParent() != null) {
-                FileUtils.deleteDirectory(loPdfPath.getParent().toFile());
+                tempFileManager.deleteTempDirectory(loPdfPath.getParent());
             }
             if (preProcessedFile != null && !preProcessedFile.equals(tempInputFile.toFile())) {
                 Files.deleteIfExists(preProcessedFile.toPath());

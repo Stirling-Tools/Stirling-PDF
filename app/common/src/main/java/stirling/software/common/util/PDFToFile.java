@@ -1,7 +1,6 @@
 package stirling.software.common.util;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -15,7 +14,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -37,6 +35,12 @@ public class PDFToFile {
 
     private static final Pattern PATTERN =
             Pattern.compile("(!\\[.*?\\])\\((?!images/)([^/)][^)]*?)\\)");
+
+    // pdftohtml names its output files after this and writes it into the generated HTML, so the
+    // upload's name is never used: it could be read as an option, exceed the filename length
+    // limit, or inject markup.
+    private static final String PDFTOHTML_OUTPUT_NAME = "document";
+
     private final TempFileManager tempFileManager;
     private final RuntimePathConfig runtimePathConfig;
 
@@ -101,8 +105,7 @@ public class PDFToFile {
                                         "-noframes",
                                         "-c",
                                         tempInputFile.getAbsolutePath(),
-                                        "--",
-                                        outputBaseName(pdfBaseName)));
+                                        PDFTOHTML_OUTPUT_NAME));
 
                 ProcessExecutorResult returnCode =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
@@ -202,8 +205,7 @@ public class PDFToFile {
                                         "pdftohtml",
                                         "-c",
                                         tempInputFile.toAbsolutePath().toString(),
-                                        "--",
-                                        outputBaseName(pdfBaseName)));
+                                        PDFTOHTML_OUTPUT_NAME));
 
                 ProcessExecutorResult returnCode =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
@@ -228,10 +230,6 @@ public class PDFToFile {
 
         return WebResponseUtils.fileToWebResponse(
                 finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
-    }
-
-    static String outputBaseName(String baseName) {
-        return baseName == null || baseName.isBlank() ? "document" : baseName;
     }
 
     public ResponseEntity<Resource> processPdfToOfficeFormat(
@@ -344,18 +342,10 @@ public class PDFToFile {
                     try (OutputStream fos = Files.newOutputStream(finalOut.getPath());
                             ZipOutputStream zipOutputStream = new ZipOutputStream(fos)) {
                         for (File outputFile : outputFiles) {
-                            ZipEntry entry = new ZipEntry(outputFile.getName());
-                            zipOutputStream.putNextEntry(entry);
-                            try (FileInputStream fis = new FileInputStream(outputFile)) {
-                                IOUtils.copy(fis, zipOutputStream);
-                            } catch (IOException e) {
-                                log.error("Exception writing zip entry", e);
-                            }
-
+                            zipOutputStream.putNextEntry(new ZipEntry(outputFile.getName()));
+                            Files.copy(outputFile.toPath(), zipOutputStream);
                             zipOutputStream.closeEntry();
                         }
-                    } catch (IOException e) {
-                        log.error("Exception writing zip", e);
                     }
                 }
             }

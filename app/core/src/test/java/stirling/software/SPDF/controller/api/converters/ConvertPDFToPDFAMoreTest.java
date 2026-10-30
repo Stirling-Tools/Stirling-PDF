@@ -600,31 +600,33 @@ class ConvertPDFToPDFAMoreTest {
         when(runtimePathConfig.getSOfficePath()).thenReturn("soffice");
         Path input = tempDir.resolve("in.pdf");
         Files.write(input, simplePdfBytes());
+        Path managedOutputDir = Files.createDirectory(tempDir.resolve("lo-out"));
+        when(tempFileManager.createTempDirectory()).thenReturn(managedOutputDir);
         List<Path> outputDirs = new java.util.ArrayList<>();
 
         try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
             ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
             pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE))
                     .thenReturn(executor);
-            ProcessExecutorResult result = Mockito.mock(ProcessExecutorResult.class);
-            when(result.getRc()).thenReturn(1);
+            // ProcessExecutor reports a non-zero exit by throwing, not by returning the rc.
             when(executor.runCommandWithOutputHandling(any()))
                     .thenAnswer(
                             inv -> {
                                 List<String> command = inv.getArgument(0);
-                                outputDirs.add(
-                                        Path.of(command.get(command.indexOf("--outdir") + 1)));
-                                return result;
+                                Path outDir = Path.of(command.get(command.indexOf("--outdir") + 1));
+                                outputDirs.add(outDir);
+                                Files.write(outDir.resolve("partial.pdf"), new byte[] {1});
+                                throw new IOException("soffice exited with code 1");
                             });
 
             assertThatThrownBy(
                             () ->
                                     invokeInstance(
                                             newController(), "runLibreOfficeConversion", input, 1))
-                    .isNotNull();
+                    .isInstanceOf(IOException.class);
         }
 
-        assertThat(outputDirs).hasSize(1);
-        assertThat(outputDirs.getFirst()).doesNotExist();
+        assertThat(outputDirs).containsExactly(managedOutputDir);
+        Mockito.verify(tempFileManager).deleteTempDirectory(managedOutputDir);
     }
 }
