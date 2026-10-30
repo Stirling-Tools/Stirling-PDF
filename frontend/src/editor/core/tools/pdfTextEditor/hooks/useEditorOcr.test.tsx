@@ -56,6 +56,7 @@ function makeDoc(encrypted = false): EditorDocument {
     pageCount: 0,
     loadedPages: () => [],
     documentLanguage: () => null,
+    languagesInUse: () => [],
     dispose: vi.fn(),
   } as unknown as EditorDocument;
 }

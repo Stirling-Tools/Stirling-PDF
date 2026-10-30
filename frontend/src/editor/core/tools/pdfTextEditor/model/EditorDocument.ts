@@ -313,6 +313,29 @@ export class EditorDocument {
   }
 
   /**
+   * Every language the document is read in as the session has it: its own
+   * and each element's. An element's from the file is left out once the
+   * session changes it; one PDFium alone reads is left out unless set here.
+   */
+  languagesInUse(): string[] {
+    const edited = new Map<string, string | null>();
+    for (const structure of this.structureCache.values()) {
+      for (const [key, lang] of structure.ownLangEdits()) edited.set(key, lang);
+    }
+    for (const [key, { lang }] of this.blockLangs) edited.set(key, lang);
+    const fromFile = [...(this.fileStructure?.languages ?? [])].map(
+      ([key, { lang }]) => (edited.has(key) ? null : lang),
+    );
+    return [
+      ...new Set(
+        [this.documentLanguage(), ...fromFile, ...edited.values()].filter(
+          (lang): lang is string => lang !== null,
+        ),
+      ),
+    ];
+  }
+
+  /**
    * The language of the block the text `mcid` marks belongs to; null when no
    * element owns it.
    */

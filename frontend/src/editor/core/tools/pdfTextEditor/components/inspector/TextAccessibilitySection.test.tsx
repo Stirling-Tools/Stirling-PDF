@@ -162,16 +162,26 @@ describe("TextAccessibilitySection", () => {
     ).toBeDisabled();
   });
 
-  it("shows the language the text inherits, and sets one of its own", () => {
+  it("shows the language the text inherits, muted, and sets one of its own", () => {
     const language = languageControl("en-IE", null);
     renderSection(innerControl(), language);
     const input = screen.getByRole("textbox", {
       name: `${LANGUAGE_KEY}.label`,
     });
-    expect(input).toHaveValue(`${LANGUAGE_KEY}.inherited`);
+    expect((input as HTMLInputElement).value).toMatch(/(^|\()en-IE\)?$/);
+    expect(isMuted(input)).toBe(true);
     fireEvent.click(input);
     fireEvent.click(optionFor(input, "fr"));
     expect(language.onSet).toHaveBeenCalledWith("fr");
+  });
+
+  it("mutes a language set the same as the one inherited", () => {
+    renderSection(innerControl(), languageControl("en-IE", "en-IE"));
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.label`,
+    });
+    expect(isMuted(input)).toBe(true);
+    expect(clearButtonOf(input)).toBeNull();
   });
 
   it("clears the text's own language", () => {
@@ -181,10 +191,8 @@ describe("TextAccessibilitySection", () => {
       name: `${LANGUAGE_KEY}.label`,
     });
     expect((input as HTMLInputElement).value).toMatch(/(^|\()fr\)?$/);
-    fireEvent.click(input);
-    fireEvent.click(
-      within(listboxOf(input)).getByText(`${LANGUAGE_KEY}.inherited`),
-    );
+    expect(isMuted(input)).toBe(false);
+    fireEvent.click(clearButtonOf(input)!);
     expect(language.onSet).toHaveBeenCalledWith(null);
   });
 
@@ -201,9 +209,11 @@ describe("TextAccessibilitySection", () => {
     );
     expect(screen.queryByTestId("pdf-editor-text-tag")).toBeNull();
     expect(screen.queryByTestId("pdf-editor-inner-tags")).toBeNull();
-    expect(
-      screen.getByRole("textbox", { name: `${LANGUAGE_KEY}.label` }),
-    ).toHaveValue(`${LANGUAGE_KEY}.mixed`);
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.label`,
+    });
+    expect(input).toHaveValue("");
+    expect(input).toHaveAttribute("placeholder", `${LANGUAGE_KEY}.mixed`);
   });
 
   it("sets the language of the selected tag", () => {
@@ -293,6 +303,14 @@ function renderSection(
       />
     </MantineProvider>,
   );
+}
+
+function isMuted(input: HTMLElement): boolean {
+  return input.closest('[style*="--c-text-muted"]') !== null;
+}
+
+function clearButtonOf(input: HTMLElement): HTMLElement | null {
+  return input.closest(".mantine-Input-wrapper")!.querySelector("button");
 }
 
 /** A language picker's option for `tag`: "Name (tag)", or the tag alone where the locale has no name. */

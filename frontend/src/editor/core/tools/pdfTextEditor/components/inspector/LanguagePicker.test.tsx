@@ -1,11 +1,15 @@
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
+import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
 import {
   OFFERED_LANGUAGE_TAGS,
+  filterLanguages,
   languageOptions,
 } from "@editor/tools/pdfTextEditor/util/languageOptions";
+
+const tagsOf = (options: { tag: string }[]) => options.map((o) => o.tag);
 
 describe("languageOptions", () => {
   it("offers every OCR language and the regional variants", () => {
@@ -27,41 +31,133 @@ describe("languageOptions", () => {
   });
 
   it("offers a typed tag the list lacks, in canonical form", () => {
-    const tags = languageOptions(null, "en", "HAW").map((o) => o.tag);
-    expect(tags).toContain("haw");
+    expect(tagsOf(languageOptions(null, "en", "HAW").others)).toContain("haw");
+  });
+
+  it("offers the code edited inside a shown label", () => {
+    expect(
+      tagsOf(languageOptions(null, "en", "Spanish (es-AR)").others),
+    ).toContain("es-AR");
+    expect(
+      tagsOf(languageOptions(null, "en", "Spanish (es)-CL").others),
+    ).toContain("es-CL");
   });
 
   it("offers nothing extra for text that is not a tag", () => {
-    expect(languageOptions(null, "en", "not a language")).toHaveLength(
-      OFFERED_LANGUAGE_TAGS.length,
-    );
+    const { inUse, others } = languageOptions(null, "en", "not a language");
+    expect(inUse).toEqual([]);
+    expect(others).toHaveLength(OFFERED_LANGUAGE_TAGS.length);
   });
 
   it("keeps the file's own tag when the list lacks it", () => {
-    expect(languageOptions("x-klingon", "en").map((o) => o.tag)).toContain(
+    expect(tagsOf(languageOptions("x-klingon", "en").others)).toContain(
       "x-klingon",
     );
   });
+
+  it("lists the document's languages apart from the rest", () => {
+    const { inUse, others } = languageOptions(null, "en", "", [
+      "fr",
+      "x-klingon",
+    ]);
+    expect(new Set(tagsOf(inUse))).toEqual(new Set(["fr", "x-klingon"]));
+    expect(tagsOf(others)).not.toContain("fr");
+    expect(others).toHaveLength(OFFERED_LANGUAGE_TAGS.length - 1);
+  });
 });
 
-describe("LanguagePicker", () => {
-  it("picks a language typed by its code", () => {
-    const onChange = vi.fn();
-    render(
-      <MantineProvider env="test">
+describe("filterLanguages", () => {
+  const options = [
+    {
+      group: "In this document",
+      items: [{ value: "fr", label: "French (fr)" }],
+    },
+    {
+      group: "All languages",
+      items: [
+        { value: "es", label: "Spanish (es)" },
+        { value: "es-MX", label: "Spanish (Mexico) (es-MX)" },
+      ],
+    },
+  ];
+  const valuesFor = (search: string) =>
+    filterLanguages({ options, search, limit: Infinity }).flatMap((item) =>
+      "items" in item ? item.items.map((i) => i.value) : [item.value],
+    );
+
+  it("matches a language by its name", () => {
+    expect(valuesFor("fren")).toEqual(["fr"]);
+  });
+
+  it("matches the code edited inside a shown label", () => {
+    expect(valuesFor("Spanish (es-MX)")).toEqual(["es-MX"]);
+    expect(valuesFor("Spanish (es)-M")).toEqual(["es-MX"]);
+  });
+
+  it("drops a group left with nothing", () => {
+    expect(
+      filterLanguages({ options, search: "fren", limit: Infinity }),
+    ).toHaveLength(1);
+  });
+});
+
+function renderPicker(
+  props: Partial<Parameters<typeof LanguagePicker>[0]> = {},
+  inUse: string[] = [],
+) {
+  const onChange = vi.fn();
+  render(
+    <MantineProvider env="test">
+      <LanguagesInUse.Provider value={inUse}>
         <LanguagePicker
-          value={null}
-          unsetLabel="Not set"
+          own={null}
+          inherited={null}
+          placeholder="Not set"
           onChange={onChange}
           label="Language"
           testId="picker"
+          {...props}
         />
-      </MantineProvider>,
-    );
-    const input = screen.getByRole("textbox", { name: "Language" });
+      </LanguagesInUse.Provider>
+    </MantineProvider>,
+  );
+  return {
+    onChange,
+    input: screen.getByRole("textbox", {
+      name: "Language",
+    }) as HTMLInputElement,
+  };
+}
+
+describe("LanguagePicker", () => {
+  it("picks a language typed by its code", () => {
+    const { onChange, input } = renderPicker();
     fireEvent.click(input);
     fireEvent.change(input, { target: { value: "haw" } });
     fireEvent.click(screen.getByRole("option", { name: /haw/ }));
     expect(onChange).toHaveBeenCalledWith("haw");
+  });
+
+  it("lists the document's languages first", () => {
+    const { input } = renderPicker({}, ["ga"]);
+    fireEvent.click(input);
+    expect(screen.getAllByRole("option")[0]).toHaveAccessibleName(
+      /(^|\()ga\)?$/,
+    );
+  });
+
+  it("selects its text on focus, so typing replaces it", () => {
+    const { input } = renderPicker({ own: "fr" });
+    act(() => input.focus());
+    expect(input.selectionStart).toBe(0);
+    expect(input.selectionEnd).toBe(input.value.length);
+    expect(input.value).not.toBe("");
+  });
+
+  it("leaves the language as it is when the inherited one is picked again", () => {
+    const { onChange, input } = renderPicker({ inherited: "ga" });
+    fireEvent.click(input);
+    fireEvent.click(screen.getByRole("option", { name: /(^|\()ga\)?$/ }));
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

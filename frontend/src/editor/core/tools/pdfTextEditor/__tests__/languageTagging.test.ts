@@ -282,6 +282,18 @@ describe("text language", () => {
     expect((await savedLangs(doc)).get("10")?.lang).toBeNull();
   });
 
+  test("lists the languages in use, as the session has them", async () => {
+    const doc = await open(letterPdf(" /Lang (en-IE)"));
+    expect(doc.languagesInUse()).toEqual(["en-IE", "fr"]);
+
+    const target = { pageIndex: 0, mcid: mcidOf(doc, 0, "Mes vacances") };
+    new HistoryStack().execute(
+      new SetTextLanguageCommand({ targets: [target], lang: "de" }),
+      doc,
+    );
+    expect(doc.languagesInUse()).toEqual(["en-IE", "de"]);
+  });
+
   test("refuses text with no element", async () => {
     const doc = await open(untaggedPdf());
     expect(doc.structure(0).cannotSetLanguage(0)).toBe("untagged");

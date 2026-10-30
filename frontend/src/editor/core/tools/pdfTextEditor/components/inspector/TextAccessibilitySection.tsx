@@ -24,8 +24,6 @@ import type {
   TextLanguageControl,
 } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
-import type { TextLanguage } from "@editor/tools/pdfTextEditor/model/languageTag";
-import { languageName } from "@editor/tools/pdfTextEditor/util/languageOptions";
 import "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection.css";
 
 /**
@@ -97,7 +95,7 @@ function TagField({
 
 /** The language the selected text's blocks are read in; "Mixed" when they differ. */
 function TextLanguageField({ control }: { control: TextLanguageControl }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const label = t("pdfTextEditor.inspector.language.label", "Language");
   const { language } = control;
   return (
@@ -109,10 +107,11 @@ function TextLanguageField({ control }: { control: TextLanguageControl }) {
       )}
     >
       <LanguagePicker
-        value={language ? language.own : null}
-        unsetLabel={
+        own={language?.own ?? null}
+        inherited={language?.inherited ?? null}
+        placeholder={
           language
-            ? inheritedLabel(t, language, i18n.language)
+            ? t("pdfTextEditor.inspector.language.unknown", "Not set")
             : t("pdfTextEditor.inspector.language.mixed", "Mixed")
         }
         onChange={control.onSet}
@@ -121,23 +120,6 @@ function TextLanguageField({ control }: { control: TextLanguageControl }) {
       />
     </Field>
   );
-}
-
-/** What clearing a language leaves the text read in. */
-function inheritedLabel(
-  t: TFunction,
-  { inherited }: TextLanguage,
-  uiLang: string,
-): string {
-  return inherited
-    ? t(
-        "pdfTextEditor.inspector.language.inherited",
-        "Same as surrounding text ({{language}})",
-        {
-          language: languageName(inherited, uiLang),
-        },
-      )
-    : t("pdfTextEditor.inspector.language.unknown", "Not set");
 }
 
 /** The tags marking parts of the text, numbered in reading order; the one picked opens its controls. */
@@ -220,7 +202,7 @@ function InnerTagControls({
   onSet: (type: StructureType | null) => void;
   onSetLanguage: (lang: string | null) => void;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const removeLabel = t(
     "pdfTextEditor.inspector.accessibility.removeTag",
     "Remove tag",
@@ -256,8 +238,9 @@ function InnerTagControls({
         )}
       </Group>
       <LanguagePicker
-        value={innerTag.language.own}
-        unsetLabel={inheritedLabel(t, innerTag.language, i18n.language)}
+        own={innerTag.language.own}
+        inherited={innerTag.language.inherited}
+        placeholder={t("pdfTextEditor.inspector.language.unknown", "Not set")}
         onChange={onSetLanguage}
         label={t(
           "pdfTextEditor.inspector.language.innerLabel",
@@ -311,8 +294,9 @@ function NewLanguagePicker({ inner }: { inner: InnerTagsControl }) {
   return (
     <Field label={label}>
       <LanguagePicker
-        value={null}
-        unsetLabel={t(
+        own={null}
+        inherited={null}
+        placeholder={t(
           "pdfTextEditor.inspector.language.setForSelection",
           "Set a language",
         )}

@@ -698,6 +698,11 @@ export class PageStructure {
     else this.langs.set(key, lang);
   }
 
+  /** The /Lang the session set, by element key, over the file's. */
+  ownLangEdits(): ReadonlyMap<string, string | null> {
+    return this.langs;
+  }
+
   /** Changes to the /Lang of the file's elements, but those the session removed, for the save. */
   langEdits(): ElementLanguageEdit[] {
     return this.elements.flatMap((el) =>

@@ -115,8 +115,9 @@ function DocumentLanguageField({
     <Stack gap={4} mt="sm">
       <Field label={label} hint={documentLanguageHint(t, control)}>
         <LanguagePicker
-          value={control.language}
-          unsetLabel={t("pdfTextEditor.inspector.language.unknown", "Not set")}
+          own={control.language}
+          inherited={null}
+          placeholder={t("pdfTextEditor.inspector.language.unknown", "Not set")}
           onChange={control.onSet}
           label={label}
           testId="pdf-editor-document-language-picker"

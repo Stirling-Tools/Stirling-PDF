@@ -7,6 +7,7 @@ import { useDocumentLanguage } from "@editor/tools/pdfTextEditor/hooks/useDocume
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
+import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
 import { analyzePageFonts } from "@editor/tools/pdfTextEditor/util/pageFonts";
 import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
@@ -144,47 +145,51 @@ export function EditorSidebar({
         </Tabs.List>
       </Group>
 
-      <Box>
-        <Tabs.Panel value="selected">
-          {hasSelection ? (
-            <SelectionInspector
-              controller={controller}
-              selection={selection}
-              geometry={geometry}
-              fontNote={fontNote}
-              canGroup={canGroup}
-              canUngroup={canUngroup}
-              onGroup={onGroup}
-              onUngroup={onUngroup}
-            />
-          ) : (
-            <NothingSelected
+      <LanguagesInUse.Provider value={state.languagesInUse}>
+        <Box>
+          <Tabs.Panel value="selected">
+            {hasSelection ? (
+              <SelectionInspector
+                controller={controller}
+                selection={selection}
+                geometry={geometry}
+                fontNote={fontNote}
+                canGroup={canGroup}
+                canUngroup={canUngroup}
+                onGroup={onGroup}
+                onUngroup={onUngroup}
+              />
+            ) : (
+              <NothingSelected
+                pages={state.pages}
+                onRunOcr={onRunOcr}
+                ocrRunning={ocrRunning}
+                ocrAvailable={ocrAvailable}
+                ocrBlockedReason={ocrBlockedReason}
+                onRemovePassword={onRemovePassword}
+              />
+            )}
+          </Tabs.Panel>
+          <Tabs.Panel value="document">
+            <DocumentInspector
               pages={state.pages}
-              onRunOcr={onRunOcr}
-              ocrRunning={ocrRunning}
-              ocrAvailable={ocrAvailable}
-              ocrBlockedReason={ocrBlockedReason}
-              onRemovePassword={onRemovePassword}
+              groupingMode={state.groupingMode}
+              widthMode={state.widthMode}
+              showRulers={state.showRulers}
+              onSetGroupingMode={onSetGroupingMode}
+              onSetWidthMode={onSetWidthMode}
+              onSetShowRulers={onSetShowRulers}
+              imageReview={
+                reviewingAccessibility ? controller.imageReview : null
+              }
+              onSelectNextImageToReview={selectNextImageToReview}
+              headingOutline={headings.outline}
+              onSelectHeading={headings.selectHeading}
+              documentLanguage={documentLanguage}
             />
-          )}
-        </Tabs.Panel>
-        <Tabs.Panel value="document">
-          <DocumentInspector
-            pages={state.pages}
-            groupingMode={state.groupingMode}
-            widthMode={state.widthMode}
-            showRulers={state.showRulers}
-            onSetGroupingMode={onSetGroupingMode}
-            onSetWidthMode={onSetWidthMode}
-            onSetShowRulers={onSetShowRulers}
-            imageReview={reviewingAccessibility ? controller.imageReview : null}
-            onSelectNextImageToReview={selectNextImageToReview}
-            headingOutline={headings.outline}
-            onSelectHeading={headings.selectHeading}
-            documentLanguage={documentLanguage}
-          />
-        </Tabs.Panel>
-      </Box>
+          </Tabs.Panel>
+        </Box>
+      </LanguagesInUse.Provider>
     </Tabs>
   );
 }
