@@ -6,9 +6,10 @@ import { defineConfig, type OxlintGlobals } from "oxlint";
 // scope must restate the full set of bans that apply to it.
 const APP_SOURCE = "src/**/*.{js,mjs,jsx,ts,tsx}";
 const DESKTOP_SOURCE = "src/editor/desktop/**/*.{js,mjs,jsx,ts,tsx}";
+const MOBILE_SOURCE = "src/editor/mobile/**/*.{js,mjs,jsx,ts,tsx}";
 const TAURI_SOURCE = "src/editor/tauri/**/*.{js,mjs,jsx,ts,tsx}";
 // The layers that run inside the Tauri shell, the only ones that may reach @tauri-apps/*.
-const TAURI_LAYERS = [DESKTOP_SOURCE, TAURI_SOURCE];
+const TAURI_LAYERS = [DESKTOP_SOURCE, MOBILE_SOURCE, TAURI_SOURCE];
 const CLOUD_SOURCE = "src/editor/cloud/**/*.{js,mjs,jsx,ts,tsx}";
 
 // Shared import-ban building blocks -----------------------------------------
@@ -25,12 +26,12 @@ const aliasOverSrc = {
 const noTauriOutsideTauriLayers = {
   regex: "^@tauri-apps/",
   message:
-    "Tauri APIs are only for the tauri/ and desktop/ layers. Review frontend/DeveloperGuide.md for structure advice.",
+    "Tauri APIs are only for the tauri/, desktop/ and mobile/ layers. Review frontend/DeveloperGuide.md for structure advice.",
 };
 const cloudNoTauri = {
   regex: "^@tauri-apps/",
   message:
-    "cloud/ must stay platform-portable. Tauri APIs belong to tauri/ and desktop/ — reach native features via an @editor/* seam (e.g. @editor/platform/openExternal).",
+    "cloud/ must stay platform-portable. Tauri APIs belong to tauri/, desktop/ and mobile/ — reach native features via an @editor/* seam (e.g. @editor/platform/openExternal).",
 };
 const cloudNoSupabase = {
   regex: "^@supabase/",
@@ -379,8 +380,8 @@ export default defineConfig({
       // they are exempt from the shared-DS Mantine import ban, and they keep the
       // Tauri allowance.
       files: [
-        "src/editor/{desktop,tauri}/**/*.test.{js,mjs,jsx,ts,tsx}",
-        "src/editor/{desktop,tauri}/**/*.stories.{js,mjs,jsx,ts,tsx}",
+        "src/editor/{desktop,mobile,tauri}/**/*.test.{js,mjs,jsx,ts,tsx}",
+        "src/editor/{desktop,mobile,tauri}/**/*.stories.{js,mjs,jsx,ts,tsx}",
       ],
       rules: {
         "no-restricted-imports": [

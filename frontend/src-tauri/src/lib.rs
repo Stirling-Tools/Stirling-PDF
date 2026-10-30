@@ -1,5 +1,6 @@
 use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+#[cfg(desktop)]
 use tauri_plugin_window_state::StateFlags;
 
 mod utils;
@@ -50,10 +51,12 @@ use commands::{
     download_and_install_update,
     get_app_version,
     restart_app,
-    target_window_label,
     build_main_window,
-    MAIN_WINDOW_LABEL,
 };
+// Only the desktop-only paths (single-instance forwarding, macOS Opened event)
+// route to a chosen window; mobile has exactly one.
+#[cfg(desktop)]
+use commands::{target_window_label, MAIN_WINDOW_LABEL};
 use commands::connection::apply_provisioning_if_present;
 use state::connection_state::AppConnectionState;
 use utils::{add_log, get_tauri_logs};
@@ -63,6 +66,7 @@ fn dispatch_deep_link(app: &AppHandle, url: &str) {
   add_log(format!("🔗 Dispatching deep link: {}", url));
   let _ = app.emit("deep-link", url.to_string());
 
+  #[cfg(desktop)]
   if let Some(window) = app.get_webview_window("main") {
     let _ = window.set_focus();
     let _ = window.unminimize();
@@ -101,7 +105,7 @@ pub fn run() {
     std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
   }
 
-  tauri::Builder::default()
+  let builder = tauri::Builder::default()
     .plugin(
       // Dropping a file outside a dropzone makes WebKit navigate the webview to
       // that file, killing the app UI and its close handler (window becomes
@@ -130,13 +134,18 @@ pub fn run() {
     .plugin(tauri_plugin_store::Builder::new().build())
     .plugin(tauri_plugin_deep_link::init())
     .plugin(tauri_plugin_notification::init())
+    .manage(AppConnectionState::default());
+
+  // Desktop-only plugins: in-app updates (mobile uses the app stores), window
+  // geometry persistence and single-instance / "open with" forwarding.
+  #[cfg(desktop)]
+  let builder = builder
     .plugin(tauri_plugin_updater::Builder::new().build())
     .plugin(
       tauri_plugin_window_state::Builder::default()
         .with_state_flags(StateFlags::all() & !StateFlags::DECORATIONS)
         .build()
     )
-    .manage(AppConnectionState::default())
     .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
       // Runs in the existing instance when a second launch is attempted
       // (e.g. "open with" / double-click while the app is running).
@@ -155,8 +164,16 @@ pub fn run() {
         let _ = window.set_focus();
         let _ = window.unminimize();
       }
-    }))
+    }));
+
+  builder
     .setup(|app| {
+      #[cfg(mobile)]
+      {
+        if let Ok(dir) = app.path().app_log_dir() {
+          utils::set_log_directory(dir);
+        }
+      }
       add_log("🚀 Tauri app setup started".to_string());
 
       if let Err(err) = apply_provisioning_if_present(app.handle()) {
@@ -215,16 +232,19 @@ pub fn run() {
         });
       }
 
-      // Start backend immediately, non-blocking
-      let app_handle = app.handle().clone();
-
-      tauri::async_runtime::spawn(async move {
-        add_log("🚀 Starting bundled backend in background".to_string());
-        let connection_state = app_handle.state::<AppConnectionState>();
-        if let Err(e) = commands::backend::start_backend(app_handle.clone(), connection_state).await {
-          add_log(format!("⚠️ Backend start failed: {}", e));
-        }
-      });
+      // Start the bundled backend immediately, non-blocking. Mobile has no JVM;
+      // it always talks to a remote server, so there is nothing to start.
+      #[cfg(desktop)]
+      {
+        let app_handle = app.handle().clone();
+        tauri::async_runtime::spawn(async move {
+          add_log("🚀 Starting bundled backend in background".to_string());
+          let connection_state = app_handle.state::<AppConnectionState>();
+          if let Err(e) = commands::backend::start_backend(app_handle.clone(), connection_state).await {
+            add_log(format!("⚠️ Backend start failed: {}", e));
+          }
+        });
+      }
 
       add_log("🔍 DEBUG: Setup completed".to_string());
       Ok(())
@@ -283,6 +303,7 @@ pub fn run() {
           // Use Tauri's built-in cleanup
           app_handle.cleanup_before_exit();
         }
+        #[cfg(desktop)]
         RunEvent::WindowEvent { event: WindowEvent::CloseRequested {.. }, label, .. } => {
           add_log("🔄 Window close requested (will cleanup on actual exit)...".to_string());
           // Don't cleanup here - let JavaScript handler prevent close if needed

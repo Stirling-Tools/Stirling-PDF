@@ -65,6 +65,11 @@ vi.mock("@editor/services/connectionModeService", () => ({
   },
 }));
 
+// Pinned to the bundled-backend readiness so the suite means the same under every platform.
+vi.mock("@editor/services/endpointCheckReadiness", () =>
+  vi.importActual("@editor-tauri/services/endpointCheckReadiness"),
+);
+
 // --- tauri backend: a mutable status + change listeners (no replay on subscribe) ---
 let backendStatus: "stopped" | "starting" | "healthy" | "unhealthy" = "healthy";
 let backendUrl: string | null = "http://127.0.0.1:8080";

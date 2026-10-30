@@ -22,6 +22,7 @@ import { STIRLING_SAAS_URL } from "@editor/constants/connection";
 import { listen } from "@tauri-apps/api/event";
 import "@editor/auth/ui/auth.css";
 import { DisabledButtonWithTooltip } from "@editor/components/shared/DisabledButtonWithTooltip";
+import { useLocalModePresentation } from "@editor/hooks/useLocalModePresentation";
 
 enum SetupStep {
   SaaSLogin,
@@ -44,6 +45,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
+  const { offersLocalTools } = useLocalModePresentation();
   const [activeStep, setActiveStep] = useState<SetupStep>(SetupStep.SaaSLogin);
   const [serverConfig, setServerConfig] = useState<ServerConfig | null>({
     url: STIRLING_SAAS_URL,
@@ -566,7 +568,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
                 )}
               </Button>
             )}
-            {!requireSignIn && (
+            {offersLocalTools && !requireSignIn && (
               <Button
                 variant="tertiary"
                 accent="neutral"
@@ -598,7 +600,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
               loading={loading}
               error={error}
             />
-            {!requireSignIn && (
+            {offersLocalTools && !requireSignIn && (
               <div
                 className="navigation-link-container"
                 style={{ marginTop: "1.5rem" }}

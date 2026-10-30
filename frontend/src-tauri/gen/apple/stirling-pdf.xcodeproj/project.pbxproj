@@ -1,0 +1,522 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0A0B2423EC6B993F326C70FD /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 07F5AAC0EDE209D43A5B9A41 /* MetalKit.framework */; };
+		0F22F87D2B7A6F21AEEBDF2E /* assets in Resources */ = {isa = PBXBuildFile; fileRef = A9895E580EA698638AC62746 /* assets */; };
+		19441A55A6130DA9C5EB6646 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D77E0E36A5B440EAFF78FE7D /* libapp.a */; };
+		3C6E002363BEC128BCD5B72C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FCF15C34396A7D24996A60D6 /* UIKit.framework */; };
+		443BF2D81872250C5EEA3AD0 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EDA4CE5181763781D12B37D7 /* LaunchScreen.storyboard */; };
+		51DDEDB587725A52123FC903 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33FE2C582F630689885895E7 /* Security.framework */; };
+		71D7D64854FDED75DFBF93CA /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B6D4B98C4DCBD26308A3417 /* CoreGraphics.framework */; };
+		7B1457854AD564AC03759DFA /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = F8F7D1D29EA35F0EAA7AF794 /* main.mm */; };
+		8F592462D33DA643231970B0 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFDDF6BEB61CAEB6F595792 /* QuartzCore.framework */; };
+		BEE54359200DFB9C743B5DCA /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AC883AA2F45D141C8135F900 /* WebKit.framework */; };
+		C51B0D8D69FE08485933114D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F9B116106D182FD38677E664 /* Assets.xcassets */; };
+		B2D1C6F8E4A0592D3F7C8B01 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = A1C0B5E7D3F9481C2E6B7A90 /* AppIcon.icon */; };
+		FD795DCFFE5B0E2BB3662406 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84D259BBA2718056A652AFF0 /* Metal.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		07F5AAC0EDE209D43A5B9A41 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		0A69E6DED009C7A9AEDDC756 /* files.rs */ = {isa = PBXFileReference; path = files.rs; sourceTree = "<group>"; };
+		1CD1F07DE35C77530E7CB567 /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
+		24A9043BC9A899CFCC5C966C /* stirling-pdf_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "stirling-pdf_iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		27288897BB0FC225665CF534 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		295046FC09FB80B722EC4F61 /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
+		2DD415CA984580B8661A3D13 /* main.rs */ = {isa = PBXFileReference; path = main.rs; sourceTree = "<group>"; };
+		33FE2C582F630689885895E7 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		3D213B9D79C1B59558B7668E /* updater.rs */ = {isa = PBXFileReference; path = updater.rs; sourceTree = "<group>"; };
+		40E672C3ACF5543681A61F95 /* paths.rs */ = {isa = PBXFileReference; path = paths.rs; sourceTree = "<group>"; };
+		43B33C7AF51B0E1407427CC8 /* auth.rs */ = {isa = PBXFileReference; path = auth.rs; sourceTree = "<group>"; };
+		4EA7D56F355CEED0A9C73C88 /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
+		58662F1D9CFD7D4B8B93999E /* default_app.rs */ = {isa = PBXFileReference; path = default_app.rs; sourceTree = "<group>"; };
+		7408B19A87F99063BB852D56 /* print.rs */ = {isa = PBXFileReference; path = print.rs; sourceTree = "<group>"; };
+		7B6D4B98C4DCBD26308A3417 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		84D259BBA2718056A652AFF0 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		9FFDDF6BEB61CAEB6F595792 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		A1056011CE735BEBD3E3C398 /* mobile_stubs.rs */ = {isa = PBXFileReference; path = mobile_stubs.rs; sourceTree = "<group>"; };
+		A9895E580EA698638AC62746 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
+		AC883AA2F45D141C8135F900 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		ADCF04A47C7EF1EDCF3F10CD /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
+		B836216445DB1DB9DF81A45A /* stirling-pdf_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "stirling-pdf_iOS.entitlements"; sourceTree = "<group>"; };
+		BB131FE569E43C32F48A932C /* logging.rs */ = {isa = PBXFileReference; path = logging.rs; sourceTree = "<group>"; };
+		C7BD1D5FA28174501E08B243 /* backend.rs */ = {isa = PBXFileReference; path = backend.rs; sourceTree = "<group>"; };
+		CD57B55AA1587A5A305A2457 /* lib.rs */ = {isa = PBXFileReference; path = lib.rs; sourceTree = "<group>"; };
+		D2B47A874A4B9DFAC7A587AC /* local_proxy.rs */ = {isa = PBXFileReference; path = local_proxy.rs; sourceTree = "<group>"; };
+		D77E0E36A5B440EAFF78FE7D /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
+		DFDBE1DB356DD484B2E2FA91 /* connection.rs */ = {isa = PBXFileReference; path = connection.rs; sourceTree = "<group>"; };
+		E4F7E31E9FBEB92963D1455D /* platform.rs */ = {isa = PBXFileReference; path = platform.rs; sourceTree = "<group>"; };
+		EDA4CE5181763781D12B37D7 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		EEBE2F911EE29A181D0D34CF /* window.rs */ = {isa = PBXFileReference; path = window.rs; sourceTree = "<group>"; };
+		F78C59DCC6DCD6A9EE866BEB /* connection_state.rs */ = {isa = PBXFileReference; path = connection_state.rs; sourceTree = "<group>"; };
+		F8F7D1D29EA35F0EAA7AF794 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+		F9B116106D182FD38677E664 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1C0B5E7D3F9481C2E6B7A90 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		FCF15C34396A7D24996A60D6 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		EC28BCE39310D442AB5012B4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				19441A55A6130DA9C5EB6646 /* libapp.a in Frameworks */,
+				71D7D64854FDED75DFBF93CA /* CoreGraphics.framework in Frameworks */,
+				FD795DCFFE5B0E2BB3662406 /* Metal.framework in Frameworks */,
+				0A0B2423EC6B993F326C70FD /* MetalKit.framework in Frameworks */,
+				8F592462D33DA643231970B0 /* QuartzCore.framework in Frameworks */,
+				51DDEDB587725A52123FC903 /* Security.framework in Frameworks */,
+				3C6E002363BEC128BCD5B72C /* UIKit.framework in Frameworks */,
+				BEE54359200DFB9C743B5DCA /* WebKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0F34A22ED1B9C69508A1C8EB = {
+			isa = PBXGroup;
+			children = (
+				A9895E580EA698638AC62746 /* assets */,
+				F9B116106D182FD38677E664 /* Assets.xcassets */,
+				A1C0B5E7D3F9481C2E6B7A90 /* AppIcon.icon */,
+				EDA4CE5181763781D12B37D7 /* LaunchScreen.storyboard */,
+				B574BC3A0C9148226B8AC917 /* Externals */,
+				399F07471CFCA8CE54B86842 /* Sources */,
+				DDB3A9E24FD3E2070CD08AF7 /* src */,
+				91FE53B9F0F2D609671299AE /* stirling-pdf_iOS */,
+				8B7BE4A0FE4F0CA2FEF0AD55 /* Frameworks */,
+				164D3BFE1106DCDA59F11EC2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		164D3BFE1106DCDA59F11EC2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				24A9043BC9A899CFCC5C966C /* stirling-pdf_iOS.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1AF922BBDA77285A9E78EDBC /* utils */ = {
+			isa = PBXGroup;
+			children = (
+				BB131FE569E43C32F48A932C /* logging.rs */,
+				ADCF04A47C7EF1EDCF3F10CD /* mod.rs */,
+				40E672C3ACF5543681A61F95 /* paths.rs */,
+			);
+			path = utils;
+			sourceTree = "<group>";
+		};
+		26BC9D23B3CC7EF043B6B020 /* state */ = {
+			isa = PBXGroup;
+			children = (
+				F78C59DCC6DCD6A9EE866BEB /* connection_state.rs */,
+				1CD1F07DE35C77530E7CB567 /* mod.rs */,
+			);
+			path = state;
+			sourceTree = "<group>";
+		};
+		399F07471CFCA8CE54B86842 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				EB0ED55A19416938E7F3B6BE /* stirling-pdf */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		47D5DAD0FE5C39086EBCCC7C /* bindings */ = {
+			isa = PBXGroup;
+			children = (
+				4EA7D56F355CEED0A9C73C88 /* bindings.h */,
+			);
+			path = bindings;
+			sourceTree = "<group>";
+		};
+		7AAF8204375C65EB2E9FDFBE /* commands */ = {
+			isa = PBXGroup;
+			children = (
+				43B33C7AF51B0E1407427CC8 /* auth.rs */,
+				C7BD1D5FA28174501E08B243 /* backend.rs */,
+				DFDBE1DB356DD484B2E2FA91 /* connection.rs */,
+				58662F1D9CFD7D4B8B93999E /* default_app.rs */,
+				0A69E6DED009C7A9AEDDC756 /* files.rs */,
+				D2B47A874A4B9DFAC7A587AC /* local_proxy.rs */,
+				A1056011CE735BEBD3E3C398 /* mobile_stubs.rs */,
+				295046FC09FB80B722EC4F61 /* mod.rs */,
+				E4F7E31E9FBEB92963D1455D /* platform.rs */,
+				7408B19A87F99063BB852D56 /* print.rs */,
+				3D213B9D79C1B59558B7668E /* updater.rs */,
+				EEBE2F911EE29A181D0D34CF /* window.rs */,
+			);
+			path = commands;
+			sourceTree = "<group>";
+		};
+		8B7BE4A0FE4F0CA2FEF0AD55 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7B6D4B98C4DCBD26308A3417 /* CoreGraphics.framework */,
+				D77E0E36A5B440EAFF78FE7D /* libapp.a */,
+				84D259BBA2718056A652AFF0 /* Metal.framework */,
+				07F5AAC0EDE209D43A5B9A41 /* MetalKit.framework */,
+				9FFDDF6BEB61CAEB6F595792 /* QuartzCore.framework */,
+				33FE2C582F630689885895E7 /* Security.framework */,
+				FCF15C34396A7D24996A60D6 /* UIKit.framework */,
+				AC883AA2F45D141C8135F900 /* WebKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		91FE53B9F0F2D609671299AE /* stirling-pdf_iOS */ = {
+			isa = PBXGroup;
+			children = (
+				27288897BB0FC225665CF534 /* Info.plist */,
+				B836216445DB1DB9DF81A45A /* stirling-pdf_iOS.entitlements */,
+			);
+			path = "stirling-pdf_iOS";
+			sourceTree = "<group>";
+		};
+		B574BC3A0C9148226B8AC917 /* Externals */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Externals;
+			sourceTree = "<group>";
+		};
+		DDB3A9E24FD3E2070CD08AF7 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				CD57B55AA1587A5A305A2457 /* lib.rs */,
+				2DD415CA984580B8661A3D13 /* main.rs */,
+				7AAF8204375C65EB2E9FDFBE /* commands */,
+				26BC9D23B3CC7EF043B6B020 /* state */,
+				1AF922BBDA77285A9E78EDBC /* utils */,
+			);
+			name = src;
+			path = ../../src;
+			sourceTree = "<group>";
+		};
+		EB0ED55A19416938E7F3B6BE /* stirling-pdf */ = {
+			isa = PBXGroup;
+			children = (
+				F8F7D1D29EA35F0EAA7AF794 /* main.mm */,
+				47D5DAD0FE5C39086EBCCC7C /* bindings */,
+			);
+			path = "stirling-pdf";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		024A3299B30E4B01E078228C /* stirling-pdf_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7DF8234482EB27B516B849FA /* Build configuration list for PBXNativeTarget "stirling-pdf_iOS" */;
+			buildPhases = (
+				9E6537FB7DF744D7E9603389 /* Build Rust Code */,
+				A027B14D8C460B51FADFB05C /* Sources */,
+				87B0BC66A965DA3C49899602 /* Resources */,
+				EC28BCE39310D442AB5012B4 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "stirling-pdf_iOS";
+			packageProductDependencies = (
+			);
+			productName = "stirling-pdf_iOS";
+			productReference = 24A9043BC9A899CFCC5C966C /* stirling-pdf_iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		763C125C2975249E8CAFA296 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 9310E552614A7EE6003672E5 /* Build configuration list for PBXProject "stirling-pdf" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 0F34A22ED1B9C69508A1C8EB;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 164D3BFE1106DCDA59F11EC2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				024A3299B30E4B01E078228C /* stirling-pdf_iOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		87B0BC66A965DA3C49899602 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C51B0D8D69FE08485933114D /* Assets.xcassets in Resources */,
+				B2D1C6F8E4A0592D3F7C8B01 /* AppIcon.icon in Resources */,
+				443BF2D81872250C5EEA3AD0 /* LaunchScreen.storyboard in Resources */,
+				0F22F87D2B7A6F21AEEBDF2E /* assets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		9E6537FB7DF744D7E9603389 /* Build Rust Code */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build Rust Code";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Externals/x86_64/${CONFIGURATION}/libapp.a",
+				"$(SRCROOT)/Externals/arm64/${CONFIGURATION}/libapp.a",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd \"$SRCROOT/../..\" && npx tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A027B14D8C460B51FADFB05C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7B1457854AD564AC03759DFA /* main.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		10E7CF2884042A7C693C0663 /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = debug;
+		};
+		91235D6B8CFBC72643DF587F /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ARCHS = (
+					arm64,
+				);
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "stirling-pdf_iOS/stirling-pdf_iOS.entitlements";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				INFOPLIST_FILE = "stirling-pdf_iOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = stirling.pdf.dev;
+				PRODUCT_NAME = "Stirling PDF";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = arm64;
+			};
+			name = release;
+		};
+		AA19A5870A2B5E71990B7C8D /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = release;
+		};
+		AA5088C4713B5BB2DD1F4E95 /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ARCHS = (
+					arm64,
+				);
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "stirling-pdf_iOS/stirling-pdf_iOS.entitlements";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				INFOPLIST_FILE = "stirling-pdf_iOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = stirling.pdf.dev;
+				PRODUCT_NAME = "Stirling PDF";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = arm64;
+			};
+			name = debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		7DF8234482EB27B516B849FA /* Build configuration list for PBXNativeTarget "stirling-pdf_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA5088C4713B5BB2DD1F4E95 /* debug */,
+				91235D6B8CFBC72643DF587F /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
+		9310E552614A7EE6003672E5 /* Build configuration list for PBXProject "stirling-pdf" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				10E7CF2884042A7C693C0663 /* debug */,
+				AA19A5870A2B5E71990B7C8D /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 763C125C2975249E8CAFA296 /* Project object */;
+}

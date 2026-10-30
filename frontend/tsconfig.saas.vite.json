@@ -34,6 +34,7 @@
     "src/editor/cloud/**/*.test.ts*",
     "src/editor/cloud/**/*.spec.ts*",
     "src/editor/desktop",
-    "src/editor/tauri"
+    "src/editor/tauri",
+    "src/editor/mobile"
   ]
 }

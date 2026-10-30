@@ -479,10 +479,16 @@ function subpathBareRedirectPlugin(subpath: string): PluginOption {
 }
 
 // NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled
-// into the saas and desktop builds. It has no entry here and no vite tsconfig;
+// into the saas, desktop and mobile builds. It has no entry here and no vite tsconfig;
 // it is only typechecked standalone via src/editor/cloud/tsconfig.json
-// (task frontend:typecheck:cloud) to prove it carries no saas/desktop-only deps.
-const VALID_MODES = ["core", "proprietary", "saas", "desktop"] as const;
+// (task frontend:typecheck:cloud) to prove it carries no saas/desktop/mobile-only deps.
+const VALID_MODES = [
+  "core",
+  "proprietary",
+  "saas",
+  "desktop",
+  "mobile",
+] as const;
 type BuildMode = (typeof VALID_MODES)[number];
 
 const TSCONFIG_MAP: Record<BuildMode, string> = {
@@ -490,6 +496,7 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
   proprietary: "./tsconfig.proprietary.vite.json",
   saas: "./tsconfig.saas.vite.json",
   desktop: "./tsconfig.desktop.vite.json",
+  mobile: "./tsconfig.mobile.vite.json",
 };
 
 export default defineConfig(async ({ mode, command }) => {
@@ -519,6 +526,9 @@ export default defineConfig(async ({ mode, command }) => {
       : process.env.DISABLE_ADDITIONAL_FEATURES === "true"
         ? "core"
         : "proprietary");
+  // Tauri builds talk to their servers directly and ship inside the app binary.
+  const isTauriShell =
+    effectiveMode === "desktop" || effectiveMode === "mobile";
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
@@ -547,18 +557,17 @@ export default defineConfig(async ({ mode, command }) => {
   // in CI/E2E) so the live test suite still resolves /api → :8080. /fonts is
   // deliberately absent: the stubbed suite runs backend-free and proxying font
   // requests would turn a static 404 into a connection error.
-  const backendProxyConfig =
-    effectiveMode === "desktop"
-      ? undefined
-      : {
-          "/api": backendProxy,
-          "/oauth2": backendProxy,
-          "/saml2": backendProxy,
-          "/login/oauth2": backendProxy,
-          "/login/saml2": backendProxy,
-          "/swagger-ui": backendProxy,
-          "/v1/api-docs": backendProxy,
-        };
+  const backendProxyConfig = isTauriShell
+    ? undefined
+    : {
+        "/api": backendProxy,
+        "/oauth2": backendProxy,
+        "/saml2": backendProxy,
+        "/login/oauth2": backendProxy,
+        "/login/saml2": backendProxy,
+        "/swagger-ui": backendProxy,
+        "/v1/api-docs": backendProxy,
+      };
 
   return {
     // Per-mode: the default is one shared node_modules/.vite, so two dev servers in
@@ -589,7 +598,7 @@ export default defineConfig(async ({ mode, command }) => {
       // compresses every asset itself and never negotiates encodings, so the
       // .br/.gz siblings would only add their full size (tens of MB) to the
       // bundle. Web flavours keep both encodings for the HTTP server.
-      ...(effectiveMode === "desktop"
+      ...(isTauriShell
         ? []
         : [
             compression({
@@ -646,9 +655,10 @@ export default defineConfig(async ({ mode, command }) => {
             dest: "modern-logo",
           },
           // The compression pass writes the .br/.gz siblings the backend JAR
-          // serves from classpath:/static/fonts/; desktop is embedded and gets
-          // them from the bundled backend instead.
-          ...(effectiveMode === "desktop"
+          // serves from classpath:/static/fonts/. Tauri builds are embedded and
+          // get them from a backend instead: desktop's bundled one, or the
+          // server a phone is connected to.
+          ...(isTauriShell
             ? []
             : [
                 {
@@ -658,10 +668,10 @@ export default defineConfig(async ({ mode, command }) => {
               ]),
         ],
       }),
-      ...(effectiveMode === "desktop" ? [] : [compressStaticCopyPlugin()]),
+      ...(isTauriShell ? [] : [compressStaticCopyPlugin()]),
       prerenderOgPlugin({
         isSaas: effectiveMode === "saas",
-        precompress: effectiveMode !== "desktop",
+        precompress: !isTauriShell,
       }),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,

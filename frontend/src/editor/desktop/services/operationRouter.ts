@@ -4,7 +4,10 @@ import {
   requiresOffDeviceProcessing,
   documentPrivacyError,
 } from "@editor/services/documentPrivacyService";
-import { authService } from "@editor/services/authService";
+import {
+  isServerAutomationEndpoint,
+  resolveAuthenticatedServerBaseUrl,
+} from "@editor/services/authenticatedServerBaseUrl";
 import { connectionModeService } from "@editor/services/connectionModeService";
 import { tauriBackendService } from "@editor/services/tauriBackendService";
 import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
@@ -27,34 +30,9 @@ export class OperationRouter {
     return OperationRouter.instance;
   }
 
-  private isServerAutomationEndpoint(endpoint = ""): boolean {
-    const path = endpoint.startsWith("http")
-      ? new URL(endpoint).pathname
-      : endpoint;
-    return /^\/api\/v1\/(policies|processing-folders|automation|pipeline)(?:[/?]|$)/.test(
-      path,
-    );
-  }
-
   /** Resolves the authenticated server; automation must never fall back to the bundled backend. */
   async getConnectedServerBaseUrl(): Promise<string> {
-    if (await isLocalProcessingOnly()) throw documentPrivacyError();
-    const mode = await connectionModeService.getCurrentMode();
-    await authService.awaitRefreshIfInProgress();
-    if (mode === "local" || !(await authService.isAuthenticated())) {
-      throw new Error(
-        i18n.t(
-          "localMode.automationUnavailable",
-          "Sign in to Stirling Cloud or a self-hosted server to use processing folders and pipelines.",
-        ),
-      );
-    }
-    const url =
-      mode === "saas"
-        ? STIRLING_SAAS_BACKEND_API_URL
-        : (await connectionModeService.getServerConfig())?.url;
-    if (!url) throw new Error("Server configuration not found");
-    return url.replace(/\/$/, "");
+    return resolveAuthenticatedServerBaseUrl();
   }
 
   /** Standalone tools route by connection mode. Automation endpoints never reach here —
@@ -205,7 +183,7 @@ export class OperationRouter {
         return localUrl.replace(/\/$/, "");
       }
     }
-    if (this.isServerAutomationEndpoint(operation)) {
+    if (isServerAutomationEndpoint(operation)) {
       return this.getConnectedServerBaseUrl();
     }
     const mode = await connectionModeService.getCurrentMode();
@@ -414,7 +392,7 @@ export class OperationRouter {
         this.isSaaSBackendEndpoint(endpoint) &&
         !requiresOffDeviceProcessing(endpoint),
       );
-    if (this.isServerAutomationEndpoint(endpoint)) return true;
+    if (isServerAutomationEndpoint(endpoint)) return true;
     if (endpoint?.startsWith("http")) return true;
     // Team endpoints always skip (existing logic)
     if (this.isSaaSBackendEndpoint(endpoint)) {

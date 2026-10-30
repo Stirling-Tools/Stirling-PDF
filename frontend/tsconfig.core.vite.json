@@ -8,6 +8,7 @@
   "exclude": [
     "src/editor/proprietary",
     "src/editor/desktop",
-    "src/editor/tauri"
+    "src/editor/tauri",
+    "src/editor/mobile"
   ]
 }

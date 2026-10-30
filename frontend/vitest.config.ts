@@ -152,6 +152,29 @@ export default defineConfig({
       },
       {
         test: {
+          name: "mobile",
+          ...TEST_DEFAULTS,
+          include: [
+            "src/editor/mobile/**/*.test.{ts,tsx}",
+            "src/editor/tauri/**/*.test.{ts,tsx}",
+          ],
+          environment: "jsdom",
+          globals: true,
+          setupFiles: ["./src/editor/core/setupTests.ts"],
+        },
+        plugins: [
+          iconSvgr(),
+          react(),
+          tsconfigPaths({
+            projects: ["./tsconfig.mobile.vite.json"],
+          }),
+        ],
+        esbuild: {
+          target: "es2020",
+        },
+      },
+      {
+        test: {
           name: "saas",
           ...TEST_DEFAULTS,
           // src/editor/saas = editor-saas layer; src/processor/saas = the portal's saas

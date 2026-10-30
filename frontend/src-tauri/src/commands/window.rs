@@ -38,7 +38,11 @@ const TRAFFIC_LIGHT_INSET: (f64, f64) = (13.0, 18.0);
 // sits beside the spawned-window chrome instead of split across a config file.
 // OS drag-drop is disabled; the frontend handles file drops itself.
 pub fn build_main_window(app: &AppHandle) -> Result<WebviewWindow, String> {
-    let builder = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, WebviewUrl::App("/".into()))
+    let builder = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, WebviewUrl::App("/".into()));
+
+    // Window geometry only exists on desktop; mobile webviews fill the screen.
+    #[cfg(desktop)]
+    let builder = builder
         .title("Stirling PDF")
         .inner_size(1280.0, 800.0)
         // Below this width the file manager collapses to its mobile layout, so
@@ -68,7 +72,11 @@ pub fn build_main_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 // browser args so they can share one user-data folder (see the note below),
 // so all spawn paths funnel through here.
 fn build_window(app: &AppHandle, label: &str, url: &str) -> Result<WebviewWindow, String> {
-    let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into()))
+    let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into()));
+
+    // Window geometry only exists on desktop; mobile webviews fill the screen.
+    #[cfg(desktop)]
+    let builder = builder
         .title("Stirling-PDF")
         .inner_size(1280.0, 800.0)
         // Below this width the file manager collapses to its mobile layout,
@@ -260,8 +268,13 @@ pub fn forward_files_to_window(app: &AppHandle, label: &str, paths: Vec<String>)
     }
     if let Some(window) = app.get_webview_window(label) {
         let _ = app.emit_to(label, "files-changed", ());
-        let _ = window.set_focus();
-        let _ = window.unminimize();
+        #[cfg(desktop)]
+        {
+            let _ = window.set_focus();
+            let _ = window.unminimize();
+        }
+        #[cfg(mobile)]
+        let _ = window;
     } else {
         // Target window is gone; let any window pick the files up.
         let _ = app.emit("files-changed", ());
