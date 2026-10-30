@@ -17,6 +17,7 @@ import {
 import { FormFieldPropertyEditor } from "@editor/tools/formFill/FormFieldPropertyEditor";
 import type { NewFieldDefinition } from "@editor/tools/formFill/types";
 import styles from "@editor/tools/formFill/FormFill.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export function PendingFields() {
   const { t } = useTranslation();
@@ -90,7 +91,11 @@ export function PendingFields() {
                     >
                       <Icon name={FIELD_TYPE_ICON[pf.type]} size={16} />
                     </span>
-                    <Text size="xs" truncate>
+                    <Text
+                      size="xs"
+                      truncate
+                      className={privateContentClassName}
+                    >
                       {pf.name}
                     </Text>
                     <Text size="xs" c="dimmed">

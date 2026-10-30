@@ -252,6 +252,7 @@ const FileEditorThumbnail = ({
     alert({
       alertType: "neutral",
       title: t("fileEditor.closedFile", "Closed {{name}}", { name: file.name }),
+      privateTitle: true,
       expandable: false,
       durationMs: 3500,
     });
@@ -285,6 +286,7 @@ const FileEditorThumbnail = ({
           body: t("fileEditor.couldNotSave", "Could not save {{name}}", {
             name: file.name,
           }),
+          privateBody: true,
           expandable: true,
         });
         setShowCloseModal(false);
@@ -297,6 +299,7 @@ const FileEditorThumbnail = ({
       title: t("fileEditor.savedAndClosed", "Saved and closed {{name}}", {
         name: file.name,
       }),
+      privateTitle: true,
       expandable: false,
       durationMs: 3500,
     });
@@ -385,6 +388,7 @@ const FileEditorThumbnail = ({
                 title: t("fileEditor.unpinnedFile", "Unpinned {{name}}", {
                   name: file.name,
                 }),
+                privateTitle: true,
                 expandable: false,
                 durationMs: 3000,
               });
@@ -395,6 +399,7 @@ const FileEditorThumbnail = ({
                 title: t("fileEditor.pinnedFile", "Pinned {{name}}", {
                   name: file.name,
                 }),
+                privateTitle: true,
                 expandable: false,
                 durationMs: 3000,
               });
@@ -462,6 +467,7 @@ const FileEditorThumbnail = ({
               title: t("fileEditor.unzipping", "Unzipping {{name}}", {
                 name: file.name,
               }),
+              privateTitle: true,
               expandable: false,
               durationMs: 2500,
             });

@@ -3,6 +3,7 @@ import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@editor/auth/UseSession";
 import { withBasePath } from "@editor/constants/app";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export function OverviewHeader() {
   const { t } = useTranslation();
@@ -39,7 +40,12 @@ export function OverviewHeader() {
             )}
           </Text>
           {user?.email && (
-            <Text size="xs" c="dimmed" mt="0.25rem">
+            <Text
+              size="xs"
+              c="dimmed"
+              mt="0.25rem"
+              className={privateContentClassName}
+            >
               {t("account.overview.signedInAs", "Signed in as: {{email}}", {
                 email: user.email,
               })}

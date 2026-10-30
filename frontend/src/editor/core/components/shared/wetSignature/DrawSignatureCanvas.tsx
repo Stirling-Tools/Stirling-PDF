@@ -3,6 +3,7 @@ import { Stack, Group, ColorPicker, Slider, Text } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 interface DrawSignatureCanvasProps {
   signature: string | null;
   onChange: (signature: string | null) => void;
@@ -104,6 +105,7 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
         ref={canvasRef}
         width={400}
         height={150}
+        className={privateContentClassName}
         onMouseDown={startDrawing}
         onMouseMove={draw}
         onMouseUp={stopDrawing}

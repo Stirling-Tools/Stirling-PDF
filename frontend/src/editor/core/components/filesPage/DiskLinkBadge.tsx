@@ -4,6 +4,7 @@ import { Tooltip } from "@mantine/core";
 
 import { StirlingFileStub } from "@editor/types/fileContext";
 import { diskLinkState } from "@editor/services/diskLinkState";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 /** Keeps a lost or diverged disk link on screen, where only a transient toast said so.
  *  Silent when healthy or never from disk, so it always means trouble. */
@@ -83,7 +84,18 @@ export function DiskLinkBadge({ file, compact = false }: DiskLinkBadgeProps) {
           };
 
   return (
-    <Tooltip label={config.tooltip} withinPortal multiline maw={300}>
+    <Tooltip
+      label={
+        state === "orphaned" ? (
+          <PrivateContent>{config.tooltip}</PrivateContent>
+        ) : (
+          config.tooltip
+        )
+      }
+      withinPortal
+      multiline
+      maw={300}
+    >
       {/* Icon-only needs its own name, but aria-label is prohibited on a bare
           span, hence role="img". With the label visible it would shadow the text. */}
       <span

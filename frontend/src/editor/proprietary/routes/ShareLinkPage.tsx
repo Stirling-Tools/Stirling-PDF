@@ -24,6 +24,8 @@ import {
   importShareLinkToWorkbench,
   ShareLinkMetadata,
 } from "@editor/services/shareLinkImport";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 type ShareLinkStatus =
   | "loading"
@@ -208,11 +210,12 @@ export default function ShareLinkPage() {
 
           {status === "ready" && (
             <>
-              <Text size="lg" fw={600}>
+              <Text size="lg" fw={600} className={privateContentClassName}>
                 {title}
               </Text>
               <Text size="sm" c="dimmed">
-                {t("storageShare.ownerLabel", "Owner")}: {ownerLabel}
+                {t("storageShare.ownerLabel", "Owner")}:{" "}
+                <PrivateContent>{ownerLabel}</PrivateContent>
               </Text>
               {metadata?.createdAt && (
                 <Text size="sm" c="dimmed">

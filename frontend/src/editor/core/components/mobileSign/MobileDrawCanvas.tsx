@@ -6,6 +6,7 @@ import {
   useRef,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * Touch-first signature canvas for the phone `/mobile-sign` page.
@@ -218,6 +219,7 @@ export const MobileDrawCanvas = forwardRef<
   return (
     <canvas
       ref={canvasRef}
+      className={privateContentClassName}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={endStroke}

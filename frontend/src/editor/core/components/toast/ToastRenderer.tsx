@@ -4,6 +4,7 @@ import { useToast } from "@editor/components/toast/ToastContext";
 import { ToastInstance, ToastLocation } from "@editor/components/toast/types";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Button } from "@editor/ui/Button";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import "@editor/components/toast/ToastRenderer.css";
 
 import { Icon, type IconName } from "@editor/ui/Icon";
@@ -86,7 +87,13 @@ export default function ToastRenderer() {
 
                   {/* Title + count badge */}
                   <div className="toast-title-container">
-                    <span>{t.title}</span>
+                    <span>
+                      {t.privateTitle ? (
+                        <PrivateContent>{t.title}</PrivateContent>
+                      ) : (
+                        t.title
+                      )}
+                    </span>
                     {typeof t.count === "number" && t.count > 1 && (
                       <span className="toast-count-badge">{t.count}</span>
                     )}
@@ -134,7 +141,13 @@ export default function ToastRenderer() {
 
                 {/* Body content - only show when expanded */}
                 {(t.isExpanded || !t.expandable) && (
-                  <div className="toast-body">{t.body}</div>
+                  <div className="toast-body">
+                    {t.privateBody ? (
+                      <PrivateContent>{t.body}</PrivateContent>
+                    ) : (
+                      t.body
+                    )}
+                  </div>
                 )}
 
                 {/* Button - always show when present, positioned below body */}

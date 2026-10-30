@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { Icon } from "@editor/ui/Icon";
 import { StatusBadge, type StatusTone } from "@editor/ui/StatusBadge";
 import { Chip, type ChipAccent } from "@editor/ui/Chip";
@@ -151,6 +152,9 @@ interface Common {
   key: string;
   header: ReactNode;
   sortable?: boolean;
+  /** Keeps the cell out of analytics and feedback captures, for user content
+   * such as names and emails. */
+  privateContent?: boolean;
 }
 
 function base<T>(
@@ -171,7 +175,9 @@ function base<T>(
     sortValue: o.sortable ? extra.sortValue : undefined,
     sortFn: o.sortable ? extra.sortFn : undefined,
     interactive: extra.interactive,
-    renderCell: extra.renderCell,
+    renderCell: o.privateContent
+      ? (row) => <PrivateContent>{extra.renderCell(row)}</PrivateContent>
+      : extra.renderCell,
   };
 }
 

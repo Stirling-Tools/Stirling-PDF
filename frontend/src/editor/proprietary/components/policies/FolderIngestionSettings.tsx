@@ -10,6 +10,7 @@ import {
 } from "@editor/components/policies/PolicyIngestionConfig";
 import { ingestChunkingConfigured } from "@editor/policies/ingestOperation";
 import { policyStepFromWire } from "@editor/policies/operations";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Folder ingestion settings for surfaces without Processor connection management. */
 export function FolderIngestionSettings({
@@ -123,13 +124,18 @@ export function FolderIngestionSettings({
           "Processed files are saved in this folder. Corpus exports keep the original PDF.",
         )}
       >
-        <Input inputSize="sm" value={folderName} readOnly />
+        <Input
+          inputSize="sm"
+          value={folderName}
+          readOnly
+          className={privateContentClassName}
+        />
       </FormField>
     );
 
   return (
     <>
-      <p className="portal-policies__wizard-desc">
+      <p className={`portal-policies__wizard-desc ${privateContentClassName}`}>
         {t(
           "portal.policies.wizard.locations.folder",
           "Input: {{name}}. Originals are retained when delivering to a vector database.",

@@ -42,6 +42,7 @@ import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { buildSignaturePreview } from "@editor/utils/signaturePreview";
 
 import { Icon, type IconName } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 type SignatureDrafts = {
   canvas?: string;
   image?: string;
@@ -1046,6 +1047,7 @@ const SignSettings = ({
             >
               <img
                 src={imageSignatureData}
+                className={privateContentClassName}
                 alt={translate("image.previewAlt", "Current image signature")}
                 style={{
                   maxWidth: "100%",

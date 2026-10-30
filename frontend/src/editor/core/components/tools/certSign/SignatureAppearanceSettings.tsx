@@ -2,6 +2,7 @@ import { Stack, Text, TextInput, NumberInput } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface SignatureAppearanceSettingsProps {
   parameters: CertSignParameters;
@@ -80,6 +81,7 @@ const SignatureAppearanceSettings = ({
           <TextInput
             label={t("certSign.reason", "Reason")}
             value={parameters.reason}
+            className={privateContentClassName}
             onChange={(event) =>
               onParameterChange("reason", event.currentTarget.value)
             }
@@ -88,6 +90,7 @@ const SignatureAppearanceSettings = ({
           <TextInput
             label={t("certSign.location", "Location")}
             value={parameters.location}
+            className={privateContentClassName}
             onChange={(event) =>
               onParameterChange("location", event.currentTarget.value)
             }
@@ -96,6 +99,7 @@ const SignatureAppearanceSettings = ({
           <TextInput
             label={t("certSign.name", "Name")}
             value={parameters.name}
+            className={privateContentClassName}
             onChange={(event) =>
               onParameterChange("name", event.currentTarget.value)
             }

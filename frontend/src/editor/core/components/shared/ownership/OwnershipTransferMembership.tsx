@@ -4,6 +4,7 @@ import { Tooltip } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Describes invitation readiness without implying that entering an email sends an invitation. */
 export function OwnershipTransferMembership({
@@ -34,7 +35,11 @@ export function OwnershipTransferMembership({
                 defaults="Invite <account>{{email}}</account> to {{team}}."
                 values={{ email, team: teamName }}
                 components={{
-                  account: <strong className="ownership-flow__username" />,
+                  account: (
+                    <strong
+                      className={`ownership-flow__username ${privateContentClassName}`}
+                    />
+                  ),
                 }}
               />
             </p>
@@ -62,7 +67,7 @@ export function OwnershipTransferMembership({
               <strong>
                 {t("ownership.invitationSent", "Invitation sent")}
               </strong>
-              <p>
+              <p className={privateContentClassName}>
                 {t(
                   "ownership.waitingForEmail",
                   "Waiting for {{email}} to join {{team}}.",
@@ -78,7 +83,11 @@ export function OwnershipTransferMembership({
                 defaults="Invite <account>{{email}}</account> to {{team}}."
                 values={{ email: cloudEmail, team: teamName }}
                 components={{
-                  account: <strong className="ownership-flow__username" />,
+                  account: (
+                    <strong
+                      className={`ownership-flow__username ${privateContentClassName}`}
+                    />
+                  ),
                 }}
               />
             </p>

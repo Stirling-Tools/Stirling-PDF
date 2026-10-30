@@ -23,6 +23,7 @@ import { uploadHistoryChain } from "@editor/services/serverStorageUpload";
 import { fileStorage } from "@editor/services/fileStorage";
 import { useFileActions } from "@editor/contexts/FileContext";
 import type { FileId } from "@editor/types/file";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 interface ShareFileModalProps {
   opened: boolean;
@@ -218,7 +219,8 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({
               )}
             </Text>
             <Text size="sm" c="dimmed">
-              {t("storageShare.fileLabel", "File")}: {file.name}
+              {t("storageShare.fileLabel", "File")}:{" "}
+              <PrivateContent>{file.name}</PrivateContent>
             </Text>
           </Stack>
         </Paper>

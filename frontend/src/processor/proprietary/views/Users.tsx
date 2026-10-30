@@ -41,6 +41,7 @@ import {
 } from "@editor/components/shared/ownership/OwnershipTransferModal";
 import { ownershipAdapter, pendingOwnership } from "@processor/api/ownership";
 import { useUI } from "@processor/contexts/UIContext";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface Confirm {
   title: string;
@@ -419,7 +420,7 @@ export function Users() {
 
       {pendingTransfer && viewer?.orgOwner && (
         <div role="status">
-          <p>
+          <p className={privateContentClassName}>
             {t(
               "ownership.pending",
               "An ownership transfer to {{name}} is pending.",

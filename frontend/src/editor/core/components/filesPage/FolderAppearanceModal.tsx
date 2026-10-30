@@ -4,6 +4,7 @@ import { Modal } from "@editor/ui/Modal";
 import { Button } from "@editor/ui/Button";
 import { FolderRecord } from "@editor/types/folder";
 import { FolderAppearancePicker } from "@editor/components/filesPage/FolderAppearancePicker";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 interface FolderAppearanceModalProps {
   /** The folder being restyled; null closes the modal. */
@@ -34,7 +35,7 @@ export function FolderAppearanceModal({
       onClose={onClose}
       width="sm"
       title={t("filesPage.appearance.title", "Appearance")}
-      subtitle={folder?.name}
+      subtitle={folder && <PrivateContent>{folder.name}</PrivateContent>}
       footer={
         <Button variant="secondary" onClick={onClose}>
           {t("filesPage.appearance.done", "Done")}

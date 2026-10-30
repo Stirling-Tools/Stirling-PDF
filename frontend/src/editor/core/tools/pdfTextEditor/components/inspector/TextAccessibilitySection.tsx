@@ -21,6 +21,7 @@ import type {
 } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import type { InnerTagsControl } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * What the selected text is tagged as, and a picker to change it: retagging
@@ -120,7 +121,10 @@ function InnerTagRow({
         onClick={onSelect}
       >
         <span className="pdf-editor-inner-tag__number">{number}</span>
-        <span className="pdf-editor-inner-tag__text" title={text}>
+        <span
+          className={`pdf-editor-inner-tag__text ${privateContentClassName}`}
+          title={text}
+        >
           {text}
         </span>
       </button>

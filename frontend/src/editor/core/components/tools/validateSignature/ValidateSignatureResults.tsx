@@ -22,6 +22,7 @@ import {
   computeSignatureStatus,
   type SignatureStatusKind,
 } from "@editor/hooks/tools/validateSignature/utils/signatureStatus";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 // Worst trust-aware status across a file's signatures - keeps the summary badge
 // consistent with the per-signature badges in the report (valid vs unverified vs invalid).
@@ -251,7 +252,10 @@ const ValidateSignatureResults = ({
               style={{ borderLeft: "2px solid var(--mantine-color-gray-4)" }}
             >
               <Group justify="space-between" align="flex-start">
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  className={privateContentClassName}
+                  style={{ flex: 1, minWidth: 0 }}
+                >
                   <FitText
                     text={result.fileName}
                     lines={2}

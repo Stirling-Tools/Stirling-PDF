@@ -9,6 +9,7 @@ import ResultsPreview from "@editor/components/tools/shared/ResultsPreview";
 import BookmarkEditor from "@editor/components/tools/editTableOfContents/BookmarkEditor";
 import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
 import { downloadFromUrl } from "@editor/services/downloadService";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export interface EditTableOfContentsWorkbenchViewData {
   bookmarks: BookmarkNode[];
@@ -131,7 +132,13 @@ const EditTableOfContentsWorkbenchView = ({
               <Text fw={600}>
                 {t("editTableOfContents.editor.heading", "Bookmark editor")}
               </Text>
-              <Text size="sm" c="dimmed">
+              <Text
+                size="sm"
+                c="dimmed"
+                className={
+                  selectedFileName ? privateContentClassName : undefined
+                }
+              >
                 {selectedFileName
                   ? t("editTableOfContents.actions.selectedFile", {
                       file: selectedFileName,

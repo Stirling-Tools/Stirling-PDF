@@ -13,6 +13,8 @@ import { Icon } from "@editor/ui/Icon";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { formatFileSize, detectFileExtension } from "@editor/utils/fileUtils";
 import { DraftRowKind } from "@editor/hooks/tools/addAttachments/useAttachmentManager";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export interface AttachmentRowProps {
   id: string;
@@ -141,6 +143,7 @@ export const AttachmentRow = memo(function AttachmentRow({
         <Group gap={6} style={{ flex: 1, minWidth: 0 }}>
           <TextInput
             value={editingName}
+            className={privateContentClassName}
             onChange={(e) => setEditingName(e.currentTarget.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -179,12 +182,16 @@ export const AttachmentRow = memo(function AttachmentRow({
             style={{ minWidth: 0, width: "100%", overflow: "hidden" }}
           >
             <Box style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-              <Tooltip label={tooltipLabel} openDelay={400}>
+              <Tooltip
+                label={<PrivateContent>{tooltipLabel}</PrivateContent>}
+                openDelay={400}
+              >
                 <Text
                   size="sm"
                   fw={500}
                   c={isDeleted ? "dimmed" : undefined}
                   truncate="end"
+                  className={privateContentClassName}
                   style={{
                     display: "block",
                     width: "100%",

@@ -5,6 +5,7 @@ import { ActionIcon } from "@editor/ui/ActionIcon";
 import "@editor/components/viewer/SidebarBase.css";
 
 import { Icon, isIconName, type IconName } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 export const SIDEBAR_WIDTH = "15rem";
 
 export interface SidebarBaseProps {
@@ -105,6 +106,7 @@ export function SidebarBase({
         <Box px="sm" pb="sm" className="sidebar-base__search">
           <TextInput
             value={searchTerm ?? ""}
+            className={privateContentClassName}
             placeholder={
               searchPlaceholder ??
               t("viewer.sidebar.searchPlaceholder", "Search...")

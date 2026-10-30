@@ -2,6 +2,7 @@ import React from "react";
 import { Stack, Text, TextInput } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface EmailStageProps {
   emailInput: string;
@@ -35,6 +36,7 @@ export const EmailStage: React.FC<EmailStageProps> = ({
         placeholder={t("payment.emailStage.emailPlaceholder", "your@email.com")}
         value={emailInput}
         onChange={(e) => setEmailInput(e.currentTarget.value)}
+        className={privateContentClassName}
         error={emailError}
         size="lg"
         required

@@ -21,6 +21,7 @@ import {
   type ExternalApiStepParams,
   type StepOperation,
 } from "@processor/components/policies/stepOperations";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * Configures a "send the document to another system" step.
@@ -213,7 +214,7 @@ export function PolicyExternalApiConfig({
         >
           {field.control === "textarea" ? (
             <textarea
-              className="portal-sources__connection-textarea"
+              className={`portal-sources__connection-textarea ${privateContentClassName}`}
               rows={3}
               value={values[field.key] ?? ""}
               onChange={(e) => setValue(field.key, e.target.value)}
@@ -230,6 +231,7 @@ export function PolicyExternalApiConfig({
           ) : (
             <Input
               value={values[field.key] ?? ""}
+              className={privateContentClassName}
               placeholder={
                 field.placeholderKey ? t(field.placeholderKey) : undefined
               }
@@ -312,6 +314,7 @@ function CustomCallFields({
       >
         <Input
           value={str("path")}
+          className={privateContentClassName}
           placeholder="/v1/scan"
           onChange={(e) => set("path", e.target.value)}
         />
@@ -393,7 +396,7 @@ function CustomCallFields({
         helperText={t("portal.policies.operations.fields.headers.helperText")}
       >
         <textarea
-          className="portal-sources__connection-textarea"
+          className={`portal-sources__connection-textarea ${privateContentClassName}`}
           rows={2}
           value={str("headers")}
           placeholder='{"X-Api-Version": "2"}'
@@ -409,7 +412,7 @@ function CustomCallFields({
           )}
         >
           <textarea
-            className="portal-sources__connection-textarea"
+            className={`portal-sources__connection-textarea ${privateContentClassName}`}
             rows={4}
             value={str("bodyTemplate")}
             placeholder='{"file": "{{document.base64}}"}'

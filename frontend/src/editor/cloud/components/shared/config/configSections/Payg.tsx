@@ -32,6 +32,7 @@ import "./Payg.css";
 import SpendCapControl from "./SpendCapControl";
 import { useTranslation } from "react-i18next";
 import type { Wallet } from "@editor/hooks/useWallet";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -508,12 +509,15 @@ function MemberUsage({ members }: { members: Wallet["members"] }) {
           {members.map((m) => (
             <div className="payg-member" key={m.userId}>
               <span
-                className="payg-member__avatar"
+                className={`payg-member__avatar ${privateContentClassName}`}
                 style={{ background: avatarColor(m.userId) }}
               >
                 {m.name.charAt(0).toUpperCase()}
               </span>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                className={privateContentClassName}
+                style={{ flex: 1, minWidth: 0 }}
+              >
                 <div className="payg-member__name">{m.name}</div>
                 <div className="payg-member__email">{m.email}</div>
               </div>

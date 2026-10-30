@@ -14,6 +14,7 @@ import {
 import { useCleanedSignatureImage } from "@editor/components/tools/sign/createSignature/useCleanedSignatureImage";
 import type { UploadPanelHandle } from "@editor/components/tools/sign/createSignature/types";
 import styles from "@editor/components/tools/sign/createSignature/UploadSignaturePanel.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const MAX_UPLOAD_MB = 10;
@@ -115,7 +116,9 @@ export const UploadSignaturePanel = forwardRef<
         />
         <div className={styles.fileRow}>
           <Icon name="image" size={16} />
-          <span className={styles.fileName}>{source.name}</span>
+          <span className={`${styles.fileName} ${privateContentClassName}`}>
+            {source.name}
+          </span>
           {source.size !== undefined && (
             <span className={styles.fileSize}>
               {formatFileSize(source.size)}

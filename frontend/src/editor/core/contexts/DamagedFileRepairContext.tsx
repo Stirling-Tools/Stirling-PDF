@@ -73,6 +73,7 @@ export function DamagedFileRepairProvider({
         title: t("damagedPdf.repaired", "Repaired {{name}}", {
           name: repairing.name,
         }),
+        privateTitle: true,
         expandable: false,
         durationMs: 3000,
       });
@@ -82,6 +83,7 @@ export function DamagedFileRepairProvider({
         title: t("damagedPdf.repairFailed", "Couldn't repair {{name}}", {
           name: repairing.name,
         }),
+        privateTitle: true,
         body: operation.errorMessage ?? undefined,
         expandable: false,
         durationMs: 6000,

@@ -14,6 +14,7 @@ import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
 import { useAsync } from "@processor/hooks/useAsync";
 import "@processor/theme/surface.css";
 import "@processor/views/Procurement.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * The agreement (security) step: the buyer reviews the full Stirling Enterprise Agreement — Master
@@ -208,6 +209,7 @@ export function ProcurementAgreement({
               </span>
               <input
                 value={legalName}
+                className={privateContentClassName}
                 placeholder={t(
                   "portal.procurement.agreement.legalNamePlaceholder",
                 )}
@@ -220,6 +222,7 @@ export function ProcurementAgreement({
               </span>
               <input
                 value={signatory}
+                className={privateContentClassName}
                 placeholder={t(
                   "portal.procurement.agreement.signatoryPlaceholder",
                 )}
@@ -232,6 +235,7 @@ export function ProcurementAgreement({
               </span>
               <input
                 value={title}
+                className={privateContentClassName}
                 placeholder={t(
                   "portal.procurement.agreement.signatoryTitlePlaceholder",
                 )}

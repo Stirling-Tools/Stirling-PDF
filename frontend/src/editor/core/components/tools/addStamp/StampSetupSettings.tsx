@@ -26,6 +26,7 @@ import { getDefaultFontSizeForAlphabet } from "@editor/components/tools/addStamp
 import { useFileWithUrl } from "@editor/hooks/useFileWithUrl";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 import { alphabetOptions } from "@editor/constants/addWatermarkConstants";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const STAMP_TEMPLATES = [
   {
@@ -186,6 +187,7 @@ const StampTextPreview = ({
       </Text>
       <Text
         size="sm"
+        className={privateContentClassName}
         style={{
           whiteSpace: "pre-wrap",
           fontFamily: "monospace",
@@ -297,6 +299,7 @@ const StampSetupSettings = ({
               "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines.",
             )}
             value={parameters.stampText}
+            className={privateContentClassName}
             onChange={(e) =>
               onParameterChange("stampText", e.currentTarget.value)
             }
@@ -681,6 +684,7 @@ const StampSetupSettings = ({
             "Text or link to encode. Dynamic variables such as @filename and @page_number are supported.",
           )}
           value={parameters.stampText}
+          className={privateContentClassName}
           onChange={(e) =>
             onParameterChange("stampText", e.currentTarget.value)
           }
@@ -720,7 +724,7 @@ const StampSetupSettings = ({
             {t("chooseFile", "Choose File")}
           </Button>
           {parameters.stampImage && stampImageWithUrl && (
-            <Stack gap="xs">
+            <Stack gap="xs" className={privateContentClassName}>
               <img
                 src={stampImageWithUrl.url}
                 alt={t(

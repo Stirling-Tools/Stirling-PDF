@@ -8,6 +8,7 @@ import type {
 } from "@editor/types/getPdfInfo";
 import SectionBlock from "@editor/components/tools/getPdfInfo/shared/SectionBlock";
 import KeyValueList from "@editor/components/tools/getPdfInfo/shared/KeyValueList";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface SummarySectionProps {
   sections: ParsedPdfSections;
@@ -241,7 +242,7 @@ const SummarySection: React.FC<SummarySectionProps> = ({
         <Text fw={600} size="sm">
           {t("getPdfInfo.summary.overviewTitle", "PDF Overview")}
         </Text>
-        <Text size="sm" c="dimmed">
+        <Text size="sm" c="dimmed" className={privateContentClassName}>
           {summaryBlocks.overview}
         </Text>
       </Stack>

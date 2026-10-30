@@ -28,6 +28,7 @@ import {
   usePendingSigningIntent,
 } from "@editor/utils/pendingSigningIntent";
 import "@editor/components/shared/signing/signing.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const Viewer = lazy(() => import("@editor/components/viewer/Viewer"));
 
@@ -167,7 +168,11 @@ export default function SigningWorkspace() {
               </Button>
               <Icon name="chevron-right" size={16} aria-hidden="true" />
               <span
-                className="signing-workspace__current"
+                className={
+                  showCreate
+                    ? "signing-workspace__current"
+                    : `signing-workspace__current ${privateContentClassName}`
+                }
                 aria-current="page"
                 title={currentLocation}
               >

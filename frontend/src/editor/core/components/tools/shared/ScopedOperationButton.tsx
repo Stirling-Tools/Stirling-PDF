@@ -14,6 +14,7 @@ import { StirlingFile } from "@editor/types/fileContext";
 import { useAllFiles } from "@editor/contexts/FileContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export interface ScopedOperationButtonProps extends OperationButtonProps {
   selectedFiles: StirlingFile[];
@@ -136,7 +137,14 @@ export function ScopedOperationButton({
         />
       )}
       {viewerFileName && (
-        <Text size="xs" c="dimmed" ta="center" mx="md" mt={2}>
+        <Text
+          size="xs"
+          c="dimmed"
+          ta="center"
+          mx="md"
+          mt={2}
+          className={privateContentClassName}
+        >
           {t("tool.singleFileScope", "Only applying to: {{fileName}}", {
             fileName: viewerFileName,
           })}

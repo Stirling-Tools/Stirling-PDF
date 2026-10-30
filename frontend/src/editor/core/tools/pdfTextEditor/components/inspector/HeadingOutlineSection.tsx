@@ -14,6 +14,7 @@ import {
   type OutlineEntry,
 } from "@editor/tools/pdfTextEditor/util/headingOutline";
 import "@editor/tools/pdfTextEditor/components/inspector/HeadingOutlineSection.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const INDENT_PX = 12;
 
@@ -108,7 +109,7 @@ function OutlineRow({
     >
       <button
         type="button"
-        className="pdf-editor-heading-outline__entry"
+        className={`pdf-editor-heading-outline__entry ${privateContentClassName}`}
         title={label}
         disabled={entry.pageIndex === null}
         onClick={onSelect}

@@ -14,6 +14,7 @@ import TableOfContentsSection from "@editor/components/tools/getPdfInfo/sections
 import OtherSection from "@editor/components/tools/getPdfInfo/sections/OtherSection";
 import PerPageSection from "@editor/components/tools/getPdfInfo/sections/PerPageSection";
 import ComplianceSection from "@editor/components/tools/getPdfInfo/sections/ComplianceSection";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 /** Valid section anchor IDs for navigation */
 const VALID_ANCHORS = new Set([
@@ -112,7 +113,7 @@ const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({
                 size="xl"
                 style={{ lineHeight: 1.3, wordBreak: "break-word" }}
               >
-                {entry.fileName}
+                <PrivateContent>{entry.fileName}</PrivateContent>
                 <Text component="span" fw={700}>
                   {" "}
                   - {t("getPdfInfo.summary.title", "PDF Summary")}

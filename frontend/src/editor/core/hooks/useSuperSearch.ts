@@ -255,6 +255,7 @@ export function rankFileResults(
       key: `file:${item.id}`,
       group: "files",
       title: item.name,
+      privateContent: true,
       // The file-type doc icon (PDF/image/doc/…) the sidebar and grid use,
       // rather than a flat generic file glyph.
       icon: createElement(FileDocIcon, {

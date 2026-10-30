@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Modal } from "@editor/ui";
 import { ConnectedInstanceRow } from "@editor/components/settings/ConnectedInstanceRow";
 import type { LinkedInstanceRow } from "@editor/types/linkedInstance";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 interface Props {
   instances: LinkedInstanceRow[];
@@ -60,15 +61,15 @@ export function LinkedInstancesTable({
         open={selected !== null}
         onClose={() => setSelected(null)}
         width="sm"
-        title={t(
-          "settings.connectedInstances.confirmTitle",
-          "Remove {{name}}?",
-          {
-            name:
-              selected?.name ??
-              t("portal.accountLink.instances.unnamed", "Unnamed instance"),
-          },
-        )}
+        title={
+          <PrivateContent>
+            {t("settings.connectedInstances.confirmTitle", "Remove {{name}}?", {
+              name:
+                selected?.name ??
+                t("portal.accountLink.instances.unnamed", "Unnamed instance"),
+            })}
+          </PrivateContent>
+        }
         footer={
           <div className="account-connection__actions">
             <Button

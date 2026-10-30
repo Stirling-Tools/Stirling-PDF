@@ -23,6 +23,7 @@ import {
   type MobileDrawCanvasHandle,
 } from "@editor/components/mobileSign/MobileDrawCanvas";
 import apiClient from "@editor/services/apiClient";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 // Use the configured API base (e.g. api.stirling.com), not the page origin.
 const API_BASE = (apiClient.defaults.baseURL ?? "").replace(/\/+$/, "");
@@ -476,6 +477,7 @@ export default function MobileSignPage() {
           {photoDataUrl ? (
             <Card withBorder radius="md" style={{ background: "white" }}>
               <Image
+                className={privateContentClassName}
                 src={photoDataUrl}
                 alt={t("mobileSign.photo.previewAlt", "Signature")}
                 fit="contain"

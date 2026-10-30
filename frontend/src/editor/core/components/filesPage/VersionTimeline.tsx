@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge, Group, Menu, Text } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
@@ -9,13 +9,14 @@ import { toolOperationLabel } from "@editor/utils/toolOperationLabel";
 import { StirlingFileStub } from "@editor/types/fileContext";
 import { formatFileSize, getFileDate } from "@editor/utils/fileUtils";
 import { downloadFileFromStorage } from "@editor/utils/downloadUtils";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 export function DetailField({
   label,
   value,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
 }) {
   return (
     <div
@@ -314,9 +315,11 @@ export function VersionTimeline({
                     {nameChanged
                       ? `${t("filesPage.renamed", "Renamed")}: `
                       : `${t("filesPage.file", "File")}: `}
-                    <span style={{ color: "var(--c-text)", fontWeight: 500 }}>
-                      {v.name}
-                    </span>
+                    <PrivateContent>
+                      <span style={{ color: "var(--c-text)", fontWeight: 500 }}>
+                        {v.name}
+                      </span>
+                    </PrivateContent>
                   </Text>
                 )}
               </div>

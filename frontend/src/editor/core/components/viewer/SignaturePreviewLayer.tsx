@@ -10,6 +10,7 @@ import {
   Z_INDEX_SIGNATURE_OVERLAY_HANDLE,
 } from "@editor/styles/zIndex";
 import type { SignaturePreview } from "@editor/components/viewer/viewerTypes";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 const DEFAULT_COLOR = "rgb(0, 122, 204)";
 const RESIZE_HANDLES = [
@@ -136,7 +137,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
         return (
           <Tooltip
             key={preview.id}
-            label={preview.participantName ?? ""}
+            label={<PrivateContent>{preview.participantName}</PrivateContent>}
             position="top"
             withArrow
             disabled={!preview.participantName}

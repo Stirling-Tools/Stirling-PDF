@@ -9,6 +9,7 @@ import type {
 } from "@editor/types/signingSession";
 import { getFileColor } from "@editor/utils/fileColors";
 import "@editor/components/shared/signing/signingDetail.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface ParticipantListPanelProps {
   participants: (SigningParticipantPreview & { email?: string })[];
@@ -45,11 +46,18 @@ export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
         const name = participant.name || participant.email || "";
         return (
           <li className="signing-participant" key={participant.id}>
-            <Avatar name={name} size="sm" tone="neutral" />
+            <Avatar
+              name={name}
+              size="sm"
+              tone="neutral"
+              className={privateContentClassName}
+            />
             <div className="signing-participant__identity">
-              <strong>{name}</strong>
+              <strong className={privateContentClassName}>{name}</strong>
               {participant.email && participant.email !== name && (
-                <span className="signing-participant__email">
+                <span
+                  className={`signing-participant__email ${privateContentClassName}`}
+                >
                   {participant.email}
                 </span>
               )}
