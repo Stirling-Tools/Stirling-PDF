@@ -162,6 +162,8 @@ interface LocalEmbedPDFProps {
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
   /** File identity passed through to FormFieldOverlay for stale-field guards */
   fileId?: string | null;
+  /** Page-1 image shown while the engine opens, so the viewer never renders empty. */
+  posterUrl?: string;
   /** Comments sidebar visibility and offset (from EmbedPdfViewer) */
   isCommentsSidebarVisible?: boolean;
   commentsSidebarRightOffset?: string;
@@ -892,6 +894,27 @@ function EditingBridges({
   );
 }
 
+/** Absolutely positioned, so any loading content painted after it must be positioned to stay visible. */
+function ViewerLoadingPoster({ url }: { url?: string }) {
+  if (!url) return null;
+  return (
+    <img
+      data-testid="viewer-loading-poster"
+      src={url}
+      alt=""
+      aria-hidden
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        objectFit: "contain",
+        background: "var(--mantine-color-body)",
+      }}
+    />
+  );
+}
+
 export function LocalEmbedPDF({
   file,
   url,
@@ -908,6 +931,7 @@ export function LocalEmbedPDF({
   historyApiRef,
   redactionTrackerRef,
   fileId,
+  posterUrl,
   isCommentsSidebarVisible = false,
   commentsSidebarRightOffset = "0rem",
   isSignMode = false,
@@ -1520,8 +1544,9 @@ export function LocalEmbedPDF({
 
   if (isLoading || !engine || (hasInput && !isInputReady)) {
     return (
-      <Center h="100%" w="100%">
-        <Stack align="center" gap="md">
+      <Center h="100%" w="100%" style={{ position: "relative" }}>
+        <ViewerLoadingPoster url={posterUrl} />
+        <Stack align="center" gap="md" style={{ position: "relative" }}>
           <Loader size="lg" />
           <Text c="dimmed" size="sm">
             {t("viewer.loadingEngine", "Loading PDF Engine...")}
@@ -1743,8 +1768,19 @@ export function LocalEmbedPDF({
               !!file && isStirlingFile(file) && repairingFileId === file.fileId
             }
             fallback={
-              <Center style={{ height: "100%", width: "100%" }}>
-                <ToolLoadingFallback />
+              <Center
+                style={{ height: "100%", width: "100%", position: "relative" }}
+              >
+                <ViewerLoadingPoster url={posterUrl} />
+                <div
+                  style={{
+                    position: "relative",
+                    height: "100%",
+                    width: "100%",
+                  }}
+                >
+                  <ToolLoadingFallback />
+                </div>
               </Center>
             }
           >
