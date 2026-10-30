@@ -17,10 +17,11 @@ import { LogoIcon } from "@editor/components/shared/LogoIcon";
 import { Wordmark } from "@editor/components/shared/Wordmark";
 import { Icon } from "@editor/ui/Icon";
 import {
-  loadJscanify,
-  type JscanifyCornerPoints,
-  type JscanifyScanner,
-} from "@editor/utils/loadJscanify";
+  detectDocument,
+  refineCorners,
+  type DocumentCorners,
+} from "@editor/utils/documentDetection";
+import { warpPerspective } from "@editor/utils/perspectiveWarp";
 import apiClient from "@editor/services/apiClient";
 import { fitThumbs, THUMB_GAP } from "@editor/utils/mobileScannerThumbs";
 
@@ -43,6 +44,82 @@ function readFileAsDataUrl(file: File): Promise<string> {
     reader.onerror = () => reject(reader.error ?? new Error("read failed"));
     reader.readAsDataURL(file);
   });
+}
+
+function scaleCorners(
+  corners: DocumentCorners,
+  factor: number,
+): DocumentCorners {
+  const scale = ({ x, y }: { x: number; y: number }) => ({
+    x: x * factor,
+    y: y * factor,
+  });
+  return {
+    topLeft: scale(corners.topLeft),
+    topRight: scale(corners.topRight),
+    bottomRight: scale(corners.bottomRight),
+    bottomLeft: scale(corners.bottomLeft),
+  };
+}
+
+function downscaledPixels(source: HTMLCanvasElement, width: number): ImageData {
+  const target = document.createElement("canvas");
+  target.width = Math.min(width, source.width);
+  target.height = Math.round((source.height * target.width) / source.width);
+  const context = target.getContext("2d", { willReadFrequently: true });
+  if (!context) throw new Error("Cannot create a 2D canvas context");
+  context.drawImage(source, 0, 0, target.width, target.height);
+  return context.getImageData(0, 0, target.width, target.height);
+}
+
+/**
+ * Finds the page in a full-resolution frame and returns it straightened, or
+ * `null` when no page is found. Detection runs on a small copy for speed; the
+ * corners are then sharpened on a mid-size copy before the full-size warp.
+ */
+function straightenedPage(
+  frame: HTMLCanvasElement,
+  detectionWidth: number,
+  refineWidth: number,
+): HTMLCanvasElement | null {
+  const small = downscaledPixels(frame, detectionWidth);
+  const found = detectDocument(small);
+  if (!found) return null;
+  const mid = downscaledPixels(frame, refineWidth);
+  const midScale = mid.width / small.width;
+  const refined = refineCorners(
+    mid,
+    scaleCorners(found, midScale),
+    Math.ceil(midScale * 2),
+  );
+  const corners = scaleCorners(refined, frame.width / mid.width);
+  const { topLeft, topRight, bottomRight, bottomLeft } = corners;
+  const width = Math.round(
+    (Math.hypot(topRight.x - topLeft.x, topRight.y - topLeft.y) +
+      Math.hypot(bottomRight.x - bottomLeft.x, bottomRight.y - bottomLeft.y)) /
+      2,
+  );
+  const height = Math.round(
+    (Math.hypot(bottomLeft.x - topLeft.x, bottomLeft.y - topLeft.y) +
+      Math.hypot(bottomRight.x - topRight.x, bottomRight.y - topRight.y)) /
+      2,
+  );
+  const frameContext = frame.getContext("2d");
+  if (!frameContext || width < 1 || height < 1) return null;
+  const warped = warpPerspective(
+    frameContext.getImageData(0, 0, frame.width, frame.height),
+    corners,
+    width,
+    height,
+  );
+  if (!warped) return null;
+  const output = document.createElement("canvas");
+  output.width = width;
+  output.height = height;
+  output
+    .getContext("2d")
+    ?.putImageData(new ImageData(warped.data, width, height), 0, 0);
+  return output;
 }
 
 declare global {
@@ -77,7 +154,6 @@ export default function MobileScannerPage() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [autoEnhance, setAutoEnhance] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [openCvReady, setOpenCvReady] = useState(false);
   const [torchEnabled, setTorchEnabled] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
   const [sessionValid, setSessionValid] = useState<boolean | null>(null);
@@ -89,10 +165,10 @@ export default function MobileScannerPage() {
   const highlightCanvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const scannerRef = useRef<JscanifyScanner | null>(null);
   const highlightIntervalRef = useRef<number | null>(null);
 
-  const DETECTION_WIDTH = 160;
+  const DETECTION_WIDTH = 240;
+  const REFINE_WIDTH = 640;
 
   useEffect(() => {
     const validateSession = async () => {
@@ -149,31 +225,6 @@ export default function MobileScannerPage() {
 
     validateSession();
   }, [sessionId, t]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    loadJscanify({
-      onStatus: (status) => console.log("[Mobile Scanner] jscanify:", status),
-    })
-      .then(() => {
-        if (cancelled) return;
-        try {
-          scannerRef.current = new window.jscanify!();
-          setOpenCvReady(true);
-        } catch (err) {
-          console.error("Failed to initialize jscanify:", err);
-        }
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        console.error("Failed to load jscanify:", err);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     console.log(
@@ -312,15 +363,13 @@ export default function MobileScannerPage() {
 
   useEffect(() => {
     console.log(
-      `[Mobile Scanner] Effect triggered: mode=${mode}, autoEnhance=${autoEnhance}, openCvReady=${openCvReady}, cameraReady=${cameraReady}, viewing=${selectedIndex}`,
+      `[Mobile Scanner] Effect triggered: mode=${mode}, autoEnhance=${autoEnhance}, cameraReady=${cameraReady}, viewing=${selectedIndex}`,
     );
 
     if (
       mode === "camera" &&
       autoEnhance &&
-      openCvReady &&
       cameraReady &&
-      scannerRef.current &&
       selectedIndex === null
     ) {
       const startHighlighting = () => {
@@ -412,19 +461,14 @@ export default function MobileScannerPage() {
               const copyTime = performance.now() - copyStart;
 
               const detectionStart = performance.now();
-              let corners: JscanifyCornerPoints | null = null;
-
-              const cv = window.cv;
-              const scanner = scannerRef.current;
-              if (cv && scanner) {
-                const mat = cv.imread(detectionCanvas);
-                const contour = scanner.findPaperContour(mat);
-                mat.delete();
-
-                if (contour) {
-                  corners = scanner.getCornerPoints(contour);
-                }
-              }
+              const corners = detectDocument(
+                detectionCtx.getImageData(
+                  0,
+                  0,
+                  detectionCanvas.width,
+                  detectionCanvas.height,
+                ),
+              );
 
               const detectionTime = performance.now() - detectionStart;
 
@@ -436,30 +480,14 @@ export default function MobileScannerPage() {
                 highlightCanvas.height,
               );
 
-              if (
-                corners &&
-                corners.topLeftCorner &&
-                corners.topRightCorner &&
-                corners.bottomLeftCorner &&
-                corners.bottomRightCorner
-              ) {
+              if (corners) {
                 const scaleFactor = video.videoWidth / detectionCanvas.width;
-                const tl = {
-                  x: corners.topLeftCorner.x * scaleFactor,
-                  y: corners.topLeftCorner.y * scaleFactor,
-                };
-                const tr = {
-                  x: corners.topRightCorner.x * scaleFactor,
-                  y: corners.topRightCorner.y * scaleFactor,
-                };
-                const br = {
-                  x: corners.bottomRightCorner.x * scaleFactor,
-                  y: corners.bottomRightCorner.y * scaleFactor,
-                };
-                const bl = {
-                  x: corners.bottomLeftCorner.x * scaleFactor,
-                  y: corners.bottomLeftCorner.y * scaleFactor,
-                };
+                const {
+                  topLeft: tl,
+                  topRight: tr,
+                  bottomRight: br,
+                  bottomLeft: bl,
+                } = scaleCorners(corners, scaleFactor);
 
                 highlightCtx.strokeStyle = "#00FF00";
                 highlightCtx.lineWidth = 4;
@@ -585,7 +613,7 @@ export default function MobileScannerPage() {
         }
       };
     }
-  }, [mode, autoEnhance, openCvReady, cameraReady, selectedIndex]);
+  }, [mode, autoEnhance, cameraReady, selectedIndex]);
 
   const addImages = useCallback(
     (added: string[]) => {
@@ -613,124 +641,21 @@ export default function MobileScannerPage() {
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      let finalDataUrl: string;
-
-      const cv = window.cv;
-      const scanner = scannerRef.current;
-      if (autoEnhance && scanner && openCvReady && cv) {
+      let finalDataUrl = canvas.toDataURL("image/jpeg", 0.95);
+      if (autoEnhance) {
         try {
-          const detectionCanvas = document.createElement("canvas");
-          const detectionCtx = detectionCanvas.getContext("2d", {
-            willReadFrequently: true,
-          });
-          if (!detectionCtx) throw new Error("Cannot create detection context");
-
-          const scale = DETECTION_WIDTH / video.videoWidth;
-          detectionCanvas.width = DETECTION_WIDTH;
-          detectionCanvas.height = Math.round(video.videoHeight * scale);
-
-          detectionCtx.drawImage(
-            video,
-            0,
-            0,
-            detectionCanvas.width,
-            detectionCanvas.height,
-          );
-
-          const mat = cv.imread(detectionCanvas);
-          const contour = scanner.findPaperContour(mat);
-
-          if (contour) {
-            const cornerPoints = scanner.getCornerPoints(contour);
-
-            if (cornerPoints) {
-              const scaleFactor = 1 / scale;
-              const scaledCorners = {
-                topLeftCorner: {
-                  x: cornerPoints.topLeftCorner.x * scaleFactor,
-                  y: cornerPoints.topLeftCorner.y * scaleFactor,
-                },
-                topRightCorner: {
-                  x: cornerPoints.topRightCorner.x * scaleFactor,
-                  y: cornerPoints.topRightCorner.y * scaleFactor,
-                },
-                bottomLeftCorner: {
-                  x: cornerPoints.bottomLeftCorner.x * scaleFactor,
-                  y: cornerPoints.bottomLeftCorner.y * scaleFactor,
-                },
-                bottomRightCorner: {
-                  x: cornerPoints.bottomRightCorner.x * scaleFactor,
-                  y: cornerPoints.bottomRightCorner.y * scaleFactor,
-                },
-              };
-
-              const {
-                topLeftCorner,
-                topRightCorner,
-                bottomLeftCorner,
-                bottomRightCorner,
-              } = scaledCorners;
-
-              console.log("Document detected at full resolution:", {
-                corners: scaledCorners,
-              });
-
-              const topWidth = Math.hypot(
-                topRightCorner.x - topLeftCorner.x,
-                topRightCorner.y - topLeftCorner.y,
-              );
-              const bottomWidth = Math.hypot(
-                bottomRightCorner.x - bottomLeftCorner.x,
-                bottomRightCorner.y - bottomLeftCorner.y,
-              );
-              const leftHeight = Math.hypot(
-                bottomLeftCorner.x - topLeftCorner.x,
-                bottomLeftCorner.y - topLeftCorner.y,
-              );
-              const rightHeight = Math.hypot(
-                bottomRightCorner.x - topRightCorner.x,
-                bottomRightCorner.y - topRightCorner.y,
-              );
-
-              const docWidth = Math.round((topWidth + bottomWidth) / 2);
-              const docHeight = Math.round((leftHeight + rightHeight) / 2);
-
-              const resultCanvas = scanner.extractPaper(
-                canvas,
-                docWidth,
-                docHeight,
-                scaledCorners,
-              );
-
-              mat.delete();
-
-              finalDataUrl = resultCanvas.toDataURL("image/jpeg", 0.95);
-            } else {
-              console.log("No corners detected, using original");
-              mat.delete();
-              finalDataUrl = canvas.toDataURL("image/jpeg", 0.95);
-            }
-          } else {
-            console.log("No contour detected, using original");
-            mat.delete();
-            finalDataUrl = canvas.toDataURL("image/jpeg", 0.95);
-          }
+          const page = straightenedPage(canvas, DETECTION_WIDTH, REFINE_WIDTH);
+          if (page) finalDataUrl = page.toDataURL("image/jpeg", 0.95);
         } catch (err) {
-          console.warn(
-            "jscanify processing failed, using original image:",
-            err,
-          );
-          finalDataUrl = canvas.toDataURL("image/jpeg", 0.95);
+          console.warn("Page detection failed, using original image:", err);
         }
-      } else {
-        finalDataUrl = canvas.toDataURL("image/jpeg", 0.95);
       }
 
       addImages([finalDataUrl]);
     } finally {
       setIsProcessing(false);
     }
-  }, [addImages, autoEnhance, openCvReady]);
+  }, [addImages, autoEnhance]);
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1475,7 +1400,6 @@ export default function MobileScannerPage() {
                     size="sm"
                     checked={autoEnhance}
                     onChange={(e) => setAutoEnhance(e.currentTarget.checked)}
-                    disabled={!openCvReady}
                   />
                   <Text style={{ fontSize: FLUID.body }}>
                     {t("mobileScanner.edgeDetection", "Edge Detection")}
