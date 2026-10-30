@@ -5,6 +5,7 @@ import { LicenseProvider } from "@editor/contexts/LicenseContext";
 import { StartupPrompts } from "@editor/components/startup/StartupPrompts";
 import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
 import { CheckoutProvider } from "@editor/contexts/CheckoutContext";
+import UserbackWidget from "@editor/components/feedback/UserbackWidget";
 
 /**
  * SaaS provider stack. There is no account-link layer: the signed-in account IS
@@ -25,6 +26,7 @@ export function PortalProviders() {
           <LicenseProvider>
             <CheckoutProvider>
               <StartupPrompts />
+              <UserbackWidget />
               <PortalChrome />
             </CheckoutProvider>
           </LicenseProvider>
