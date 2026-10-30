@@ -1,4 +1,9 @@
 import apiClient from "@editor/services/apiClient";
+import {
+  readPdfAttachmentBytes,
+  readPdfAttachments,
+  readPdfAttachmentsWithContent,
+} from "@editor/services/pdfiumService";
 import axios from "axios";
 import JSZip from "jszip";
 
@@ -50,18 +55,21 @@ export async function parseBlobError(
 
 /**
  * List all embedded attachments in a PDF file.
+ *
+ * Reads the local document with PDFium so the table renders without uploading
+ * the file; renames and deletions are staged client-side until save.
  */
 export async function listAttachments(
   fileInput: File,
 ): Promise<AttachmentInfo[]> {
-  const formData = new FormData();
-  formData.append("fileInput", fileInput);
-
-  const response = await apiClient.post<AttachmentInfo[]>(
-    "/api/v1/misc/list-attachments",
-    formData,
-  );
-  return response.data || [];
+  const attachments = await readPdfAttachments(await fileInput.arrayBuffer());
+  return attachments.map((attachment) => ({
+    filename: attachment.name,
+    size: attachment.size,
+    contentType: attachment.mimeType || undefined,
+    description: attachment.description || undefined,
+    creationDate: attachment.creationDate?.toISOString(),
+  }));
 }
 
 /**
@@ -108,80 +116,45 @@ export async function deleteAttachment(
 
 /**
  * Extract all embedded attachments from a PDF into a ZIP archive.
- * Returns the ZIP Blob.
+ * Reads the local document with PDFium; nothing is uploaded.
  */
 export async function extractAttachments(fileInput: File): Promise<Blob> {
-  const formData = new FormData();
-  formData.append("fileInput", fileInput);
-
-  const response = await apiClient.post(
-    "/api/v1/misc/extract-attachments",
-    formData,
-    { responseType: "blob" },
+  const entries = await readPdfAttachmentsWithContent(
+    await fileInput.arrayBuffer(),
   );
-  return response.data as Blob;
+  const zip = new JSZip();
+  for (const { attachment, bytes } of entries) {
+    zip.file(attachment.name || "attachment", bytes);
+  }
+  return zip.generateAsync({ type: "blob" });
 }
 
 /**
- * Extract a single embedded attachment from a PDF file directly from the server.
+ * Extract a single embedded attachment from a PDF file.
  * Returns the attachment Blob.
  */
 export async function extractSingleAttachment(
   fileInput: File,
   filename: string,
 ): Promise<Blob> {
-  const formData = new FormData();
-  formData.append("fileInput", fileInput);
-  formData.append("attachmentName", filename);
-
-  try {
-    const response = await apiClient.post(
-      "/api/v1/misc/extract-single-attachment",
-      formData,
-      { responseType: "blob" },
+  const data = await fileInput.arrayBuffer();
+  const attachments = await readPdfAttachments(data);
+  const cleanFilename = filename.trim();
+  const match =
+    attachments.find((attachment) => attachment.name === cleanFilename) ??
+    attachments.find(
+      (attachment) =>
+        attachment.name.toLowerCase() === cleanFilename.toLowerCase(),
     );
-    return response.data as Blob;
-  } catch (err) {
-    const status = axios.isAxiosError(err) ? err.response?.status : undefined;
-    if (status !== 404 && status !== 501) {
-      throw err;
-    }
-    // Client-side JSZip fallback if running against legacy backend
-    const zipBlob = await extractAttachments(fileInput);
-    const zip = await JSZip.loadAsync(zipBlob);
-    const cleanFilename = filename.trim();
-    const fileEntries = Object.keys(zip.files).filter((k) => !zip.files[k].dir);
-    let matchedKey = fileEntries.find((k) => k === cleanFilename);
-    if (!matchedKey) {
-      // Invalid percent escapes throw instead of comparing: fall back to the
-      // raw string so one odd entry cannot fail the whole extraction.
-      const norm = (s: string) => {
-        try {
-          return decodeURIComponent(s).toLowerCase().replace(/\\/g, "/");
-        } catch {
-          return s.toLowerCase().replace(/\\/g, "/");
-        }
-      };
-      const targetNorm = norm(cleanFilename);
-      const targetBase = targetNorm.split("/").pop() || targetNorm;
-      matchedKey = fileEntries.find((k) => {
-        const kNorm = norm(k);
-        const kBase = kNorm.split("/").pop() || kNorm;
-        return (
-          kNorm === targetNorm ||
-          kBase === targetBase ||
-          kNorm.endsWith("/" + targetBase)
-        );
-      });
-    }
-    const zipEntry = matchedKey ? zip.file(matchedKey) : null;
-    if (!zipEntry) {
-      throw new Error(`Attachment file '${filename}' not found in archive.`, {
-        cause: err,
-      });
-    }
-    return await zipEntry.async("blob");
+
+  if (!match) {
+    throw new Error(`Attachment file '${filename}' not found in the PDF.`);
   }
+
+  const bytes = await readPdfAttachmentBytes(data, match.index);
+  return new Blob([bytes], {
+    type: match.mimeType || "application/octet-stream",
+  });
 }
 
 /**
