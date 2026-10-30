@@ -54,7 +54,7 @@ describe("chunked upload", () => {
       "/api/v1/storage/uploads",
       expect.objectContaining({
         sizeBytes: file.size,
-        chunkSize: 1024 * 1024,
+        chunkSize: 512 * 1024,
       }),
     );
     expect(put).toHaveBeenCalledTimes(3);
@@ -68,6 +68,8 @@ describe("chunked upload", () => {
   });
 
   it("balances chunks across connections as files grow", () => {
+    expect(chunkSizeFor(2 * 1024 * 1024)).toBe(256 * 1024);
+    expect(chunkSizeFor(9 * 1024 * 1024)).toBe(512 * 1024);
     expect(chunkSizeFor(20 * 1024 * 1024)).toBe(1024 * 1024);
     expect(chunkSizeFor(100 * 1024 * 1024)).toBe(4 * 1024 * 1024);
     expect(chunkSizeFor(10 * 1024 * 1024 * 1024)).toBe(4 * 1024 * 1024);

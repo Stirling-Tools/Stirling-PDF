@@ -1,11 +1,12 @@
 import apiClient from "@editor/services/apiClient";
 
 const MAX_CHUNK_SIZE = 4 * 1024 * 1024;
-const MIN_CHUNK_SIZE = 1024 * 1024;
+const MIN_CHUNK_SIZE = 256 * 1024;
+const CHUNK_GRANULARITY = 256 * 1024;
 const MAX_CHUNKS = 4096;
 const CONCURRENCY = 6;
 const WAVES_PER_WORKER = 4;
-const MIN_CHUNKED_SIZE = 2 * 1024 * 1024;
+const MIN_CHUNKED_SIZE = 1024 * 1024;
 const MAX_CHUNK_ATTEMPTS = 3;
 const RETRY_BASE_DELAY_MS = 250;
 
@@ -15,10 +16,13 @@ export function chunkSizeFor(sizeBytes: number): number {
     sizeBytes / (CONCURRENCY * WAVES_PER_WORKER),
   );
   const toStayUnderMaxChunks = Math.ceil(sizeBytes / MAX_CHUNKS);
-  return Math.min(
-    MAX_CHUNK_SIZE,
-    Math.max(MIN_CHUNK_SIZE, toBalanceWorkers, toStayUnderMaxChunks),
+  const target = Math.max(
+    MIN_CHUNK_SIZE,
+    toBalanceWorkers,
+    toStayUnderMaxChunks,
   );
+  const rounded = Math.ceil(target / CHUNK_GRANULARITY) * CHUNK_GRANULARITY;
+  return Math.min(MAX_CHUNK_SIZE, rounded);
 }
 
 function retryable(error: unknown): boolean {

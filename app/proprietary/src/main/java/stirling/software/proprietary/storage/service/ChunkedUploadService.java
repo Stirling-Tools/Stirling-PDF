@@ -40,7 +40,7 @@ import stirling.software.proprietary.storage.model.api.StoredFileResponse;
 public class ChunkedUploadService {
 
     static final int DEFAULT_CHUNK_SIZE = 4 * 1024 * 1024;
-    static final int MIN_CHUNK_SIZE = 1024 * 1024;
+    static final int MIN_CHUNK_SIZE = 256 * 1024;
     static final int MAX_CHUNK_SIZE = 32 * 1024 * 1024;
     static final long MAX_UPLOAD_SIZE = 10L * 1024 * 1024 * 1024;
     static final int MAX_CHUNKS = 4096;
