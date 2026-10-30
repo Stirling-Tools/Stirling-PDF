@@ -1,6 +1,7 @@
 package stirling.software.saas.payg.api;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -54,6 +55,7 @@ import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
+import stirling.software.saas.payg.stripe.StripeSubscriptionDao;
 import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 import stirling.software.saas.payg.wallet.WalletPolicy;
 import stirling.software.saas.procurement.service.EnterpriseEntitlementService;
@@ -118,6 +120,7 @@ public class PaygWalletController {
     private final SaasTeamExtensionsRepository teamExtensionsRepository;
     private final FleetSeatService fleetSeats;
     private final EnterpriseEntitlementService enterprise;
+    private final StripeSubscriptionDao subscriptionDao;
 
     public PaygWalletController(
             EntitlementService entitlementService,
@@ -132,9 +135,11 @@ public class PaygWalletController {
             UserTeamResolver userTeamResolver,
             SaasTeamExtensionsRepository teamExtensionsRepository,
             FleetSeatService fleetSeats,
-            EnterpriseEntitlementService enterprise) {
+            EnterpriseEntitlementService enterprise,
+            StripeSubscriptionDao subscriptionDao) {
         this.fleetSeats = fleetSeats;
         this.enterprise = Objects.requireNonNull(enterprise);
+        this.subscriptionDao = Objects.requireNonNull(subscriptionDao, "subscriptionDao");
         this.entitlementService = Objects.requireNonNull(entitlementService, "entitlementService");
         this.billingService = Objects.requireNonNull(billingService, "billingService");
         this.memberRepo = Objects.requireNonNull(memberRepo, "memberRepo");
@@ -186,7 +191,14 @@ public class PaygWalletController {
 
         String status = billing.subscribed() ? STATUS_SUBSCRIBED : STATUS_FREE;
         WalletSnapshotResponse.ProcessorHolding processor =
-                new WalletSnapshotResponse.ProcessorHolding(billing.subscribed());
+                new WalletSnapshotResponse.ProcessorHolding(
+                        billing.subscribed(),
+                        billing.subscribed()
+                                ? subscriptionDao
+                                        .findScheduledEnd(billing.subscriptionId())
+                                        .map(Instant::toString)
+                                        .orElse(null)
+                                : null);
         WalletSnapshotResponse.TeamHolding team = teamHolding(teamId, isLeader);
 
         boolean noCap = billing.subscribed() && billing.capMoneyMinor() == null;
@@ -314,7 +326,13 @@ public class PaygWalletController {
                 licensed,
                 usersInUse,
                 fleetUsers != null,
-                isLeader ? fleetSeats.breakdown(teamId) : null);
+                isLeader ? fleetSeats.breakdown(teamId) : null,
+                licensed != null
+                        ? subscriptionDao
+                                .findTeamScheduledEnd(teamId)
+                                .map(Instant::toString)
+                                .orElse(null)
+                        : null);
     }
 
     /** Per-category size-scaled units + input-file counts for the same window. */

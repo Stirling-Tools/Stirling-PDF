@@ -1,8 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@editor/auth/UseSession";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, EmptyState, Skeleton, StatusBadge, Tooltip } from "@editor/ui";
+import {
+  Banner,
+  Button,
+  EmptyState,
+  Skeleton,
+  StatusBadge,
+  Tooltip,
+} from "@editor/ui";
 import {
   claimTeamOwnership,
   changeMemberRole,
@@ -33,6 +40,7 @@ import { ResetPasswordModal } from "@processor/components/users/ResetPasswordMod
 import { MoveToTeamModal } from "@processor/components/users/MoveToTeamModal";
 import { RenameTeamModal } from "@processor/components/users/RenameTeamModal";
 import { ConfirmModal } from "@processor/components/users/ConfirmModal";
+import { MakeActiveModal } from "@processor/components/users/MakeActiveModal";
 import { seatsLabel } from "@processor/components/users/format";
 import { useUsersData } from "@processor/views/usersData";
 import {
@@ -65,6 +73,8 @@ export function Users() {
   const [pendingTransfer, setPendingTransfer] =
     useState<OwnershipStatus | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
+  const [swapFor, setSwapFor] = useState<Member | null>(null);
+  const navigate = useNavigate();
   const { usersState, grantsState, teamsState, authState, refresh } =
     useUsersData();
 
@@ -199,6 +209,10 @@ export function Users() {
     });
   }, [usersState.data?.members, grantsState.data, grantByTeam]);
 
+  const overLimitCount = members.filter(
+    (m) => m.status === "over_limit",
+  ).length;
+
   const processorTeamIds = useMemo(
     () => new Set(grantByTeam.keys()),
     [grantByTeam],
@@ -320,6 +334,15 @@ export function Users() {
   }
   function transferOwner(member: Member) {
     setOwnershipTarget(member);
+  }
+  function makeActive(member: Member, replace?: Member) {
+    const backend = usersBackend.makeActive;
+    if (!backend) return;
+    run(async () => {
+      const result = await backend(member, replace?.id);
+      // A full team needs to know who steps aside; that answer comes from the swap dialog.
+      setSwapFor(result === "no_place" ? member : null);
+    });
   }
 
   function removeUser(member: Member) {
@@ -477,6 +500,25 @@ export function Users() {
           </div>
         )}
 
+      {canManage && overLimitCount > 0 && (
+        <Banner
+          tone="warning"
+          title={t("users.overLimit.title", "{{count}} users are disabled", {
+            count: overLimitCount,
+          })}
+          action={
+            <Button size="sm" onClick={() => navigate("/settings/billing")}>
+              {t("users.overLimit.renew", "Renew Team plan")}
+            </Button>
+          }
+        >
+          {t(
+            "users.overLimit.body",
+            "Your team's plan no longer covers them, so they can't sign in. Renew the plan, or use Make active on a row to choose who has a place.",
+          )}
+        </Banner>
+      )}
+
       {actionError && (
         <p className="portal-users__error" role="alert">
           {actionError}
@@ -548,6 +590,11 @@ export function Users() {
             onDisableMfa={disableMfa}
             onRemove={removeUser}
             onTransferOwnership={transferOwner}
+            onMakeActive={
+              canManage && usersBackend.makeActive
+                ? (member) => makeActive(member)
+                : undefined
+            }
             onRenameTeam={(team) =>
               setRenameTarget({ id: team.id, name: team.name })
             }
@@ -556,6 +603,18 @@ export function Users() {
         </div>
       )}
 
+      <MakeActiveModal
+        member={swapFor}
+        candidates={members.filter(
+          (m) =>
+            m.status === "active" &&
+            !m.teamLead &&
+            m.teamId === swapFor?.teamId,
+        )}
+        busy={actionBusy}
+        onClose={() => setSwapFor(null)}
+        onConfirm={(replace) => swapFor && makeActive(swapFor, replace)}
+      />
       <InviteMemberModal
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
