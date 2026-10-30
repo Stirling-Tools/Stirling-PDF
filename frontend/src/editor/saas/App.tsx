@@ -40,8 +40,6 @@ import "@editor/styles/index.css";
 // Import file ID debugging helpers (development only)
 import "@editor/utils/fileIdSafety";
 
-const USERBACK_TOKEN = import.meta.env.VITE_USERBACK_TOKEN;
-
 function handleConfigLoaded(config: AppConfig) {
   if (config.baseUrl) setBaseUrl(config.baseUrl);
 }
@@ -61,7 +59,7 @@ function NonAuthBootstraps() {
       <OnboardingBootstrap />
       <SignupRequiredBootstrap />
       <UsageLimitModalHost />
-      {USERBACK_TOKEN && <UserbackWidget token={USERBACK_TOKEN} />}
+      <UserbackWidget />
     </>
   );
 }
