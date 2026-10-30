@@ -1,11 +1,34 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import JSZip from "jszip";
 
 const post = vi.fn();
 const isAxiosErrorMock = vi.fn();
+const readPdfAttachments = vi.fn();
+const readPdfAttachmentBytes = vi.fn();
+const readPdfAttachmentsWithContent = vi.fn();
+const zipFile = vi.fn();
+const zipGenerateAsync = vi.fn(async () => new Blob());
 
 vi.mock("@editor/services/apiClient", () => ({
   default: { post: (...args: unknown[]) => post(...args) },
+}));
+
+vi.mock("@editor/services/pdfiumService", () => ({
+  readPdfAttachments: (...args: unknown[]) => readPdfAttachments(...args),
+  readPdfAttachmentBytes: (...args: unknown[]) =>
+    readPdfAttachmentBytes(...args),
+  readPdfAttachmentsWithContent: (...args: unknown[]) =>
+    readPdfAttachmentsWithContent(...args),
+}));
+
+vi.mock("jszip", () => ({
+  default: class {
+    file(...args: unknown[]) {
+      zipFile(...args);
+    }
+    generateAsync(..._args: unknown[]) {
+      return zipGenerateAsync();
+    }
+  },
 }));
 
 vi.mock("axios", () => ({
@@ -16,6 +39,7 @@ const {
   listAttachments,
   renameAttachment,
   deleteAttachment,
+  extractAttachments,
   extractSingleAttachment,
   addAttachments,
   applyBatchAttachmentOps,
@@ -38,17 +62,36 @@ describe("attachmentService CRUD", () => {
   beforeEach(() => {
     post.mockReset();
     isAxiosErrorMock.mockReset();
+    readPdfAttachments.mockReset();
+    readPdfAttachmentBytes.mockReset();
+    readPdfAttachmentsWithContent.mockReset();
+    zipFile.mockClear();
+    zipGenerateAsync.mockClear();
   });
 
-  it("lists attachments from the server", async () => {
-    const attachments = [{ filename: "a.txt", size: 4 }];
-    post.mockResolvedValue({ data: attachments });
+  it("lists attachments locally without uploading the PDF", async () => {
+    readPdfAttachments.mockResolvedValue([
+      {
+        index: 0,
+        name: "a.txt",
+        description: "",
+        mimeType: "text/plain",
+        size: 4,
+      },
+    ]);
+
     const result = await listAttachments(pdfFile());
-    expect(result).toEqual(attachments);
-    expect(post).toHaveBeenCalledWith(
-      "/api/v1/misc/list-attachments",
-      expect.any(FormData),
-    );
+
+    expect(result).toEqual([
+      {
+        filename: "a.txt",
+        size: 4,
+        contentType: "text/plain",
+        description: undefined,
+        creationDate: undefined,
+      },
+    ]);
+    expect(post).not.toHaveBeenCalled();
   });
 
   it("renames an attachment and returns a blob", async () => {
@@ -73,17 +116,77 @@ describe("attachmentService CRUD", () => {
     );
   });
 
-  it("extracts a single attachment directly", async () => {
-    post.mockResolvedValue(blobResponse());
-    const result = await extractSingleAttachment(pdfFile(), "a.txt");
-    expect(result).toBeInstanceOf(Blob);
-    expect(post).toHaveBeenCalledWith(
-      "/api/v1/misc/extract-single-attachment",
-      expect.any(FormData),
+  it("extracts a single attachment locally", async () => {
+    readPdfAttachments.mockResolvedValue([
       {
-        responseType: "blob",
+        index: 3,
+        name: "a.txt",
+        description: "",
+        mimeType: "text/plain",
+        size: 5,
       },
+    ]);
+    readPdfAttachmentBytes.mockResolvedValue(
+      new TextEncoder().encode("hello").buffer,
     );
+
+    const result = await extractSingleAttachment(pdfFile(), "a.txt");
+
+    expect(result).toBeInstanceOf(Blob);
+    expect(result.type).toBe("text/plain");
+    expect(readPdfAttachmentBytes).toHaveBeenCalledWith(
+      expect.any(ArrayBuffer),
+      3,
+    );
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("zips every attachment locally with unique leaf names", async () => {
+    readPdfAttachmentsWithContent.mockResolvedValue([
+      {
+        attachment: {
+          index: 0,
+          name: "reports/../a.txt",
+          description: "",
+          mimeType: "text/plain",
+          size: 5,
+        },
+        bytes: new TextEncoder().encode("hello").buffer,
+      },
+      {
+        attachment: {
+          index: 1,
+          name: "a.txt",
+          description: "",
+          mimeType: "text/plain",
+          size: 5,
+        },
+        bytes: new TextEncoder().encode("hello").buffer,
+      },
+      {
+        attachment: {
+          index: 2,
+          name: "",
+          description: "",
+          mimeType: "text/plain",
+          size: 5,
+        },
+        bytes: new TextEncoder().encode("hello").buffer,
+      },
+    ]);
+
+    const result = await extractAttachments(pdfFile());
+
+    expect(result).toBeInstanceOf(Blob);
+    expect(readPdfAttachmentsWithContent).toHaveBeenCalledWith(
+      expect.any(ArrayBuffer),
+    );
+    expect(zipFile.mock.calls.map(([name]) => name)).toEqual([
+      "a.txt",
+      "a_1.txt",
+      "attachment",
+    ]);
+    expect(post).not.toHaveBeenCalled();
   });
 
   it("adds attachments and returns a blob", async () => {
@@ -121,21 +224,13 @@ describe("attachmentService CRUD", () => {
     );
   });
 
-  it("extracts a single attachment through the legacy ZIP fallback on 404", async () => {
-    isAxiosErrorMock.mockReturnValue(true);
-    const zip = new JSZip();
-    zip.file("a.txt", "hello");
-    const zipBlob = await zip.generateAsync({ type: "blob" });
-    post
-      .mockRejectedValueOnce({ response: { status: 404 } })
-      .mockResolvedValueOnce({ data: zipBlob });
+  it("reports a missing local attachment", async () => {
+    readPdfAttachments.mockResolvedValue([]);
 
-    const result = await extractSingleAttachment(pdfFile(), "a.txt");
-    expect(result).toBeInstanceOf(Blob);
-    expect(post.mock.calls.map((c) => c[0])).toEqual([
-      "/api/v1/misc/extract-single-attachment",
-      "/api/v1/misc/extract-attachments",
-    ]);
+    await expect(
+      extractSingleAttachment(pdfFile(), "missing.txt"),
+    ).rejects.toThrow("not found");
+    expect(readPdfAttachmentBytes).not.toHaveBeenCalled();
   });
 
   it("falls back to sequential rename/delete when batch is unsupported", async () => {

@@ -13,6 +13,7 @@
  * never have to deal with raw pointers or Tasks.
  */
 import type { WrappedPdfiumModule, PdfiumModule } from "@embedpdf/pdfium";
+import { pdfDateToDate } from "@embedpdf/models";
 import {
   pdfiumWasmModulePromise,
   startEagerWasmCompilation,
@@ -2246,4 +2247,196 @@ export async function fetchSignatureFieldsWithAppearances(
   }
 
   return formFields;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Embedded file attachments                                         */
+/* ------------------------------------------------------------------ */
+
+/** One embedded file attachment, read from the document's name tree. */
+export interface PdfiumAttachmentInfo {
+  index: number;
+  name: string;
+  description: string;
+  mimeType: string;
+  /** Uncompressed attachment size in bytes. */
+  size: number;
+  creationDate?: Date;
+}
+
+export interface PdfiumAttachmentContent {
+  attachment: PdfiumAttachmentInfo;
+  bytes: ArrayBuffer;
+}
+
+/**
+ * Read a UTF-16 string with the two-call PDFium length pattern: first pass
+ * asks for the byte length, second fills a buffer of that size.
+ */
+function readAttachmentUtf16(
+  m: WrappedPdfiumModule,
+  read: (buffer: number, length: number) => number,
+): string {
+  const length = read(0, 0);
+  if (length <= 1) return "";
+  const buffer = m.pdfium.wasmExports.malloc(length);
+  if (!buffer) {
+    throw new Error("PDFium: not enough memory to read an attachment string");
+  }
+  try {
+    read(buffer, length);
+    return m.pdfium.UTF16ToString(buffer);
+  } finally {
+    m.pdfium.wasmExports.free(buffer);
+  }
+}
+
+/** Read an attachment's CreationDate or ModDate from its string dictionary. */
+function readAttachmentDate(
+  m: WrappedPdfiumModule,
+  attachmentPtr: number,
+  key: "CreationDate" | "ModDate",
+): Date | undefined {
+  const raw = readAttachmentUtf16(m, (buffer, length) =>
+    m.FPDFAttachment_GetStringValue(attachmentPtr, key, buffer, length),
+  );
+  return raw ? pdfDateToDate(raw) : undefined;
+}
+
+/** Read the uncompressed attachment size without copying its bytes. */
+function readAttachmentSize(
+  m: WrappedPdfiumModule,
+  attachmentPtr: number,
+): number {
+  const sizePtr = m.pdfium.wasmExports.malloc(4);
+  if (!sizePtr) {
+    throw new Error("PDFium: not enough memory to read attachment size");
+  }
+  try {
+    if (!m.FPDFAttachment_GetFile(attachmentPtr, 0, 0, sizePtr)) return 0;
+    return m.pdfium.getValue(sizePtr, "i32") >>> 0;
+  } finally {
+    m.pdfium.wasmExports.free(sizePtr);
+  }
+}
+
+/** Read one embedded file's metadata from its file specification. */
+function readAttachmentInfo(
+  m: WrappedPdfiumModule,
+  attachmentPtr: number,
+  index: number,
+): PdfiumAttachmentInfo {
+  return {
+    index,
+    name: readAttachmentUtf16(m, (buffer, length) =>
+      m.FPDFAttachment_GetName(attachmentPtr, buffer, length),
+    ),
+    description: readAttachmentUtf16(m, (buffer, length) =>
+      m.EPDFAttachment_GetDescription(attachmentPtr, buffer, length),
+    ),
+    mimeType: readAttachmentUtf16(m, (buffer, length) =>
+      m.FPDFAttachment_GetSubtype(attachmentPtr, buffer, length),
+    ),
+    size: readAttachmentSize(m, attachmentPtr),
+    creationDate: readAttachmentDate(m, attachmentPtr, "CreationDate"),
+  };
+}
+
+/** Copy one attachment's bytes out of the WASM heap. */
+function readAttachmentBytes(
+  m: WrappedPdfiumModule,
+  attachmentPtr: number,
+): ArrayBuffer {
+  const sizePtr = m.pdfium.wasmExports.malloc(4);
+  if (!sizePtr) {
+    throw new Error("PDFium: not enough memory to read attachment size");
+  }
+  try {
+    if (!m.FPDFAttachment_GetFile(attachmentPtr, 0, 0, sizePtr)) {
+      throw new Error("PDFium: could not read attachment size");
+    }
+    const size = m.pdfium.getValue(sizePtr, "i32") >>> 0;
+    if (size === 0) return new ArrayBuffer(0);
+
+    const contentPtr = m.pdfium.wasmExports.malloc(size);
+    if (!contentPtr) {
+      throw new Error("PDFium: not enough memory to read attachment content");
+    }
+    try {
+      if (!m.FPDFAttachment_GetFile(attachmentPtr, contentPtr, size, sizePtr)) {
+        throw new Error("PDFium: could not read attachment content");
+      }
+      const runtime = m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime;
+      return runtime.HEAPU8.slice(contentPtr, contentPtr + size).buffer;
+    } finally {
+      m.pdfium.wasmExports.free(contentPtr);
+    }
+  } finally {
+    m.pdfium.wasmExports.free(sizePtr);
+  }
+}
+
+/** List embedded files without copying their contents into JS memory. */
+export async function readPdfAttachments(
+  data: ArrayBuffer | Uint8Array,
+): Promise<PdfiumAttachmentInfo[]> {
+  const m = await getPdfiumModule();
+  const docPtr = await openRawDocumentSafe(data);
+  try {
+    const count = m.FPDFDoc_GetAttachmentCount(docPtr);
+    const attachments: PdfiumAttachmentInfo[] = [];
+    for (let index = 0; index < count; index++) {
+      const attachmentPtr = m.FPDFDoc_GetAttachment(docPtr, index);
+      if (attachmentPtr) {
+        attachments.push(readAttachmentInfo(m, attachmentPtr, index));
+      }
+    }
+    return attachments;
+  } finally {
+    closeDocAndFreeBuffer(m, docPtr);
+  }
+}
+
+/** Read one embedded file's bytes by its position in the attachment list. */
+export async function readPdfAttachmentBytes(
+  data: ArrayBuffer | Uint8Array,
+  index: number,
+): Promise<ArrayBuffer> {
+  const m = await getPdfiumModule();
+  const docPtr = await openRawDocumentSafe(data);
+  try {
+    const attachmentPtr = m.FPDFDoc_GetAttachment(docPtr, index);
+    if (!attachmentPtr) {
+      throw new Error(`PDFium: attachment ${index} not found`);
+    }
+    return readAttachmentBytes(m, attachmentPtr);
+  } finally {
+    closeDocAndFreeBuffer(m, docPtr);
+  }
+}
+
+/**
+ * Read every attachment and its bytes over one document open. Extract-all
+ * would otherwise reopen the whole PDF once per member.
+ */
+export async function readPdfAttachmentsWithContent(
+  data: ArrayBuffer | Uint8Array,
+): Promise<PdfiumAttachmentContent[]> {
+  const m = await getPdfiumModule();
+  const docPtr = await openRawDocumentSafe(data);
+  try {
+    const count = m.FPDFDoc_GetAttachmentCount(docPtr);
+    const attachments: PdfiumAttachmentContent[] = [];
+    for (let index = 0; index < count; index++) {
+      const attachmentPtr = m.FPDFDoc_GetAttachment(docPtr, index);
+      if (!attachmentPtr) continue;
+      attachments.push({
+        attachment: readAttachmentInfo(m, attachmentPtr, index),
+        bytes: readAttachmentBytes(m, attachmentPtr),
+      });
+    }
+    return attachments;
+  } finally {
+    closeDocAndFreeBuffer(m, docPtr);
+  }
 }
