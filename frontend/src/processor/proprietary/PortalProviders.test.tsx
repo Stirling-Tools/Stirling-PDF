@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import type { ReactNode } from "react";
 import { PortalProviders } from "@editor/portal/PortalProviders";
+import { PlatformProviders } from "@editor/components/PlatformProviders";
 import { ServerLicenseSection } from "@editor/portal/components/billing/ServerLicenseSection";
 
 const { fetchAppConfig, getLicenseInfo } = vi.hoisted(() => ({
@@ -14,6 +14,10 @@ const { fetchAppConfig, getLicenseInfo } = vi.hoisted(() => ({
 
 vi.mock("@editor/auth", () => ({
   useAuth: () => ({ user: { id: "owner" }, isAdmin: true, loading: false }),
+}));
+vi.mock("@editor/auth/UseSession", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@editor/auth/UseSession")>()),
+  AuthProvider: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock("@editor/api/config", () => ({
   DEFAULT_APP_CONFIG: { enableLogin: true },
@@ -56,21 +60,17 @@ vi.mock("@editor/portal/components/PortalChrome", () => ({
 
 function renderPortal() {
   return render(
-    <QueryClientProvider
-      client={
-        new QueryClient({ defaultOptions: { queries: { retry: false } } })
-      }
-    >
-      <MemoryRouter initialEntries={["/processor/usage"]}>
-        <MantineProvider>
+    <MemoryRouter initialEntries={["/processor/usage"]}>
+      <MantineProvider>
+        <PlatformProviders>
           <PortalProviders />
-        </MantineProvider>
-      </MemoryRouter>
-    </QueryClientProvider>,
+        </PlatformProviders>
+      </MantineProvider>
+    </MemoryRouter>,
   );
 }
 
-describe("PortalProviders license loading", () => {
+describe("Processor license loading", () => {
   beforeEach(() => {
     fetchAppConfig
       .mockReset()

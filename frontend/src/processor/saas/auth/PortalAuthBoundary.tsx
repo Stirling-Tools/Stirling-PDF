@@ -1,7 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { AuthProvider } from "@editor/auth";
 import { useAuth } from "@editor/auth/context";
-import { AuthProvider as SaasSessionProvider } from "@editor/auth/UseSession";
 import { Spinner } from "@editor/ui";
 import { stripBasePath, withBasePath } from "@editor/constants/app";
 import { rememberPendingDestination } from "@editor/services/pendingDestination";
@@ -81,11 +80,9 @@ function SaasPortalGate({ children }: { children: ReactNode }) {
  * SaaS override of the portal auth boundary: authenticate against the SaaS Supabase
  * project (inheriting the editor's session) instead of the self-hosted Spring login.
  *
- * Two providers, because the Processor mounts outside the editor's AppProviders (it
- * is a sibling route, not a child). The unified AuthProvider is what gates entry;
- * the saas session provider is what the saas-layer hooks read - profile picture,
- * display name, pro status - so without it every one of them sees an unmounted
- * context and reports nothing. Both read the same persisted session.
+ * The saas session provider the saas-layer hooks read is mounted by the platform;
+ * the gate reads the unified auth context, which only the unified AuthProvider
+ * feeds, so that one is mounted here. Both read the same persisted session.
  */
 export function PortalAuthBoundary({ children }: { children: ReactNode }) {
   // Configure the shared Supabase client (SaaS project) synchronously here, before
@@ -95,10 +92,8 @@ export function PortalAuthBoundary({ children }: { children: ReactNode }) {
   // signed into the editor is picked up from the persisted session (no second login).
   ensureSaasSupabase();
   return (
-    <SaasSessionProvider>
-      <AuthProvider mode="supabase">
-        <SaasPortalGate>{children}</SaasPortalGate>
-      </AuthProvider>
-    </SaasSessionProvider>
+    <AuthProvider mode="supabase">
+      <SaasPortalGate>{children}</SaasPortalGate>
+    </AuthProvider>
   );
 }

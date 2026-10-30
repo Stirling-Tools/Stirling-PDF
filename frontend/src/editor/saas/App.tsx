@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@editor/utils/pathUtils";
 import { AppProviders } from "@editor/components/AppProviders";
+import { PlatformProviders } from "@editor/components/PlatformProviders";
 import { PublicRouteProviders } from "@editor/components/PublicRouteProviders";
 import { RunLocationGate } from "@editor/components/runLocation/RunLocationGate";
 import { setBaseUrl } from "@editor/constants/app";
@@ -87,14 +88,12 @@ function MainRoutes() {
   );
 }
 
-// Everything else needs the auth/backend providers. RootGate routes "/" by role
-// before any of it mounts.
+// Everything else needs the editor's providers. RootGate routes "/" by role
+// before any of them mount.
 function MainApp() {
   return (
     <RootGate>
-      <AppProviders
-        appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
-      >
+      <AppProviders>
         <AppLayout>
           <NonAuthBootstraps />
           <ResumePendingConnect />
@@ -135,7 +134,15 @@ export default function App() {
         {/* Before the frame and auth, so a first visit sees the chooser alone. */}
         <Route element={<RunLocationGate />}>
           {/* Both apps, under a shared frame so the rail renders once outside them. */}
-          <Route element={<AppFrame />}>
+          <Route
+            element={
+              <PlatformProviders
+                appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
+              >
+                <AppFrame />
+              </PlatformProviders>
+            }
+          >
             {/* The portal: its own top-level shell, before the catch-all. */}
             {getAdminRouteExtensions()}
             <Route path="*" element={<MainApp />} />

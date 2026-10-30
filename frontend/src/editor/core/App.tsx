@@ -1,6 +1,7 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AppProviders } from "@editor/components/AppProviders";
+import { PlatformProviders } from "@editor/components/PlatformProviders";
 import { AppFrame } from "@editor/components/layout/AppFrame";
 import { AppLayout } from "@editor/components/AppLayout";
 import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
@@ -55,8 +56,14 @@ export default function App() {
         />
 
         {/* The app, under a shared frame so the rail renders once outside it. */}
-        <Route element={<AppFrame />}>
-          {/* All other routes need AppProviders for backend integration */}
+        <Route
+          element={
+            <PlatformProviders>
+              <AppFrame />
+            </PlatformProviders>
+          }
+        >
+          {/* Everything else is the editor. */}
           <Route
             path="*"
             element={
