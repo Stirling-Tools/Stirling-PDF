@@ -1,0 +1,57 @@
+.tag {
+  position: absolute;
+  right: var(--space-4);
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  align-items: stretch;
+  border-radius: 6px 6px 0 0;
+  background: var(--c-brand-mark);
+  color: var(--c-text-on-brand);
+  box-shadow: 0 -1px 6px rgb(0 0 0 / 15%);
+  overflow: hidden;
+}
+
+.open,
+.dismiss {
+  display: flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.open:hover,
+.dismiss:hover {
+  background: rgb(0 0 0 / 12%);
+}
+
+.open {
+  gap: var(--space-1_5);
+  height: 1.625rem;
+  padding: 0 var(--space-1) 0 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.dismiss {
+  padding: 0 var(--space-2) 0 var(--space-1);
+  opacity: 0.75;
+}
+
+.dismiss:hover {
+  opacity: 1;
+}
+
+/* The mark's two paths are filled by class, not currentColor. */
+.mark :global(.sui-brandmark__a) {
+  fill: currentColor;
+  opacity: 0.7;
+}
+
+.mark :global(.sui-brandmark__b) {
+  fill: currentColor;
+}

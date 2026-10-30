@@ -4648,6 +4648,10 @@ title = "Settings"
 [extractPages.tooltip]
 description = "Extracts the selected pages into a new PDF, preserving order."
 
+[feedback.tag]
+dismiss = "Hide the feedback button"
+label = "Feedback"
+
 [fileCard]
 openInFileEditor = "Open in File Editor"
 viewInViewer = "View in Viewer"
@@ -11996,6 +12000,14 @@ selfhosted = "Self-Hosted"
 apiKeys = "API Keys"
 apiKeysDescription = "Personal keys for calling the Stirling API from scripts and integrations."
 title = "Developer"
+
+[settings.feedback]
+label = "Feedback"
+
+[settings.feedback.send]
+description = "Report a problem or suggest an improvement to the Stirling team."
+open = "Open"
+title = "Send feedback"
 
 [settings.general]
 autoUnzip = "Auto-unzip API responses"

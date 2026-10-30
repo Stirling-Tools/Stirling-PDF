@@ -61,6 +61,7 @@ html[data-app-theme="light"] {
   /* Stirling brand red (auth CTAs) — a fixed brand colour, same in both themes. */
   --c-brand: var(--p-brand-red);
   --c-brand-hover: var(--p-brand-red-600);
+  --c-text-on-brand: var(--p-white);
 
   --c-primary-tint: color-mix(in srgb, var(--c-primary) 14%, var(--c-surface));
   --c-primary-border: color-mix(
