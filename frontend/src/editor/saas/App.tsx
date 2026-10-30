@@ -25,6 +25,7 @@ import { NoAppChrome } from "@editor/components/layout/NoAppChrome";
 import OnboardingBootstrap from "@editor/components/OnboardingBootstrap";
 import SignupRequiredBootstrap from "@editor/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@editor/components/UsageLimitModalHost";
+import UserbackWidget from "@editor/components/feedback/UserbackWidget";
 import { RootGate } from "@editor/routes/RootGate";
 
 const MobileScannerPage = lazy(() => import("@editor/pages/MobileScannerPage"));
@@ -38,6 +39,8 @@ import "@editor/styles/index.css";
 
 // Import file ID debugging helpers (development only)
 import "@editor/utils/fileIdSafety";
+
+const USERBACK_TOKEN = import.meta.env.VITE_USERBACK_TOKEN;
 
 function handleConfigLoaded(config: AppConfig) {
   if (config.baseUrl) setBaseUrl(config.baseUrl);
@@ -58,6 +61,7 @@ function NonAuthBootstraps() {
       <OnboardingBootstrap />
       <SignupRequiredBootstrap />
       <UsageLimitModalHost />
+      {USERBACK_TOKEN && <UserbackWidget token={USERBACK_TOKEN} />}
     </>
   );
 }
