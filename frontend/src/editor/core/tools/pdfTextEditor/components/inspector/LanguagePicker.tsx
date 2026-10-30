@@ -2,6 +2,7 @@ import { useContext, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Select } from "@editor/ui/Select";
 import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
+import { comparableLanguageTag } from "@editor/tools/pdfTextEditor/model/languageTag";
 import {
   filterLanguages,
   languageOptions,
@@ -18,8 +19,8 @@ import {
  * file may have or a user may type, becomes an option of its own.
  */
 export function LanguagePicker({
-  own,
-  inherited,
+  own: ownAsGiven,
+  inherited: inheritedAsGiven,
   placeholder,
   onChange,
   label,
@@ -40,6 +41,9 @@ export function LanguagePicker({
   // The click that focuses the field selects its text, so typing replaces
   // the language; a later click places the caret to edit its code.
   const selectOnMouseUp = useRef(false);
+  const own = ownAsGiven === null ? null : comparableLanguageTag(ownAsGiven);
+  const inherited =
+    inheritedAsGiven === null ? null : comparableLanguageTag(inheritedAsGiven);
   const shown = own ?? inherited;
   const options = useMemo(() => {
     const groups = languageOptions(shown, i18n.language, typed, inUse);

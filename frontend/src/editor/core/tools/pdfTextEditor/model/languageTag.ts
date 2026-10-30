@@ -22,6 +22,14 @@ export function canonicalLanguageTag(tag: string): string | null {
   }
 }
 
+/**
+ * The tag in canonical form, or as given when it is not well-formed, so two
+ * spellings of one tag compare equal while a malformed one is kept to show.
+ */
+export function comparableLanguageTag(tag: string): string {
+  return canonicalLanguageTag(tag) ?? tag;
+}
+
 /** The language text is read in, and where that comes from. */
 export interface TextLanguage {
   /** The tag set on the element itself, as the session has it; null when it sets none. */

@@ -49,6 +49,13 @@ describe("languageOptions", () => {
     ).toContain("en-MT");
   });
 
+  it("offers one option for two spellings of a tag", () => {
+    const { inUse, others } = languageOptions("EN-ie", "en", "", ["EN-ie"]);
+    expect(tagsOf(inUse)).toEqual(["en-IE"]);
+    expect(tagsOf(others)).not.toContain("EN-ie");
+    expect(tagsOf(others)).not.toContain("en-IE");
+  });
+
   it("offers nothing extra for text that is not a tag", () => {
     const { inUse, others } = languageOptions(null, "en", "not a language");
     expect(inUse).toEqual([]);
@@ -100,6 +107,13 @@ describe("filterLanguages", () => {
     expect(valuesFor("Spanish (es)-M")).toEqual(["es-MX"]);
     expect(valuesFor("Spanish (Mexico) (es-MX)")).toEqual(["es-MX"]);
     expect(valuesFor("Spanish (Mexico) (es)")).toEqual(["es", "es-MX"]);
+  });
+
+  it("matches a deprecated code by the tag it stands for", () => {
+    const withHebrew = [{ value: "he", label: "Hebrew (he)" }];
+    expect(
+      filterLanguages({ options: withHebrew, search: "iw", limit: Infinity }),
+    ).toEqual(withHebrew);
   });
 
   it("drops a group left with nothing", () => {
@@ -160,6 +174,12 @@ describe("LanguagePicker", () => {
     expect(input.selectionStart).toBe(0);
     expect(input.selectionEnd).toBe(input.value.length);
     expect(input.value).not.toBe("");
+  });
+
+  it("mutes its own tag spelled differently from the inherited one", () => {
+    const { input } = renderPicker({ own: "EN-ie", inherited: "en-IE" });
+    expect(input.style.color).toBe("var(--c-text-muted)");
+    expect(input.value).toMatch(/(^|\()en-IE\)?$/);
   });
 
   it("leaves the language as it is when the inherited one is picked again", () => {

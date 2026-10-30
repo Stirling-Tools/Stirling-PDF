@@ -4,7 +4,10 @@ import {
   type ComboboxParsedItem,
   type OptionsFilter,
 } from "@mantine/core";
-import { canonicalLanguageTag } from "@editor/tools/pdfTextEditor/model/languageTag";
+import {
+  canonicalLanguageTag,
+  comparableLanguageTag,
+} from "@editor/tools/pdfTextEditor/model/languageTag";
 import { getAllLanguageDefinitions } from "@editor/utils/languageMapping";
 
 /**
@@ -72,7 +75,8 @@ export interface LanguageOptions {
  * The offered languages, split into those the document uses and the rest,
  * plus `current`, the file's own tag, and the tag `typed` names when either
  * is one the list lacks: any well-formed tag can be picked, not only those
- * listed.
+ * listed. Tags are compared in canonical form, so the options hold
+ * `comparableLanguageTag(current)`, not `current`.
  */
 export function languageOptions(
   current: string | null,
@@ -80,12 +84,14 @@ export function languageOptions(
   typed = "",
   inUse: readonly string[] = [],
 ): LanguageOptions {
+  const used = inUse.map(comparableLanguageTag);
   const tags = new Set([
     ...OFFERED_LANGUAGE_TAGS,
-    ...inUse,
-    ...[current, canonicalLanguageTag(searchedCode(typed))].filter(
-      (tag): tag is string => tag !== null,
-    ),
+    ...used,
+    ...[
+      current === null ? null : comparableLanguageTag(current),
+      canonicalLanguageTag(searchedCode(typed)),
+    ].filter((tag): tag is string => tag !== null),
   ]);
   const sorted = (keep: (tag: string) => boolean) =>
     [...tags]
@@ -93,8 +99,8 @@ export function languageOptions(
       .map((tag) => ({ tag, label: optionLabel(tag, uiLang) }))
       .sort((a, b) => a.label.localeCompare(b.label, uiLang));
   return {
-    inUse: sorted((tag) => inUse.includes(tag)),
-    others: sorted((tag) => !inUse.includes(tag)),
+    inUse: sorted((tag) => used.includes(tag)),
+    others: sorted((tag) => !used.includes(tag)),
   };
 }
 
@@ -105,10 +111,14 @@ export function languageOptions(
  */
 export const filterLanguages: OptionsFilter = ({ options, search }) => {
   const words = search.trim().toLowerCase();
-  const code = searchedCode(search).toLowerCase();
+  const code = searchedCode(search);
+  // A deprecated code is offered as the tag it stands for ("iw" as "he").
+  const codes = [code, canonicalLanguageTag(code) ?? ""]
+    .filter((c) => c !== "")
+    .map((c) => c.toLowerCase());
   const matches = ({ value, label }: ComboboxItem) =>
     label.toLowerCase().includes(words) ||
-    (code !== "" && value.toLowerCase().startsWith(code));
+    codes.some((c) => value.toLowerCase().startsWith(c));
   return options.flatMap((option): ComboboxParsedItem[] => {
     if (!isOptionsGroup(option)) return matches(option) ? [option] : [];
     const items = option.items.filter(matches);
