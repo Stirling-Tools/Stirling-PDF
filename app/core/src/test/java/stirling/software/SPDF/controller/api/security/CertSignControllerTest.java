@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -187,6 +188,58 @@ class CertSignControllerTest {
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void testSignPdfWithVisibleSignatureAndNoReason() throws Exception {
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        MockMultipartFile pfxFile =
+                new MockMultipartFile("p12File", "test-cert.pfx", "application/x-pkcs12", pfxBytes);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(pdfFile);
+        request.setCertType("PFX");
+        request.setP12File(pfxFile);
+        request.setPassword("password");
+        request.setShowSignature(true);
+        request.setLocation("test");
+        request.setName("tester");
+        request.setPageNumber(1);
+        request.setShowLogo(false);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        try (PDDocument signed = Loader.loadPDF(drainBody(response))) {
+            assertEquals(1, signed.getSignatureDictionaries().size());
+        }
+    }
+
+    @Test
+    void testSignPdfFailureIsNotAnsweredWithEmptyPdf() {
+        MockMultipartFile notAPdf =
+                new MockMultipartFile(
+                        "fileInput",
+                        "test.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "not a pdf".getBytes());
+        MockMultipartFile pfxFile =
+                new MockMultipartFile("p12File", "test-cert.pfx", "application/x-pkcs12", pfxBytes);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(notAPdf);
+        request.setCertType("PFX");
+        request.setP12File(pfxFile);
+        request.setPassword("password");
+        request.setShowSignature(false);
+        request.setReason("test");
+        request.setPageNumber(1);
+
+        assertThrows(
+                java.io.IOException.class,
+                () -> certSignController.signPDFWithCert(request, httpRequest));
     }
 
     @Test
