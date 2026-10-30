@@ -290,6 +290,7 @@ export function buildProcessorEntityGroups(
           group: "portal-users",
           title: item.name,
           subtitle: item.email,
+          privateContent: true,
           icon: <Icon name="users" size={18} />,
           score,
           onSelect: () =>

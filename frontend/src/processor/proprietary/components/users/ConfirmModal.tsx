@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Button, Modal } from "@editor/ui";
 import "@processor/views/Users.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface ConfirmModalProps {
   open: boolean;
@@ -53,7 +54,10 @@ export function ConfirmModal({
         </div>
       }
     >
-      <p className="portal-users__confirm-body">{body}</p>
+      {/* Every body here names a member, an invitee or a team. */}
+      <p className={`portal-users__confirm-body ${privateContentClassName}`}>
+        {body}
+      </p>
     </Modal>
   );
 }

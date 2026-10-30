@@ -32,6 +32,7 @@ import {
 import "@editor/components/shared/superSearch/SuperSearch.css";
 
 import { Icon } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 /** Rows shown per group before a "show more" toggle reveals the rest. */
 const COLLAPSED_GROUP_SIZE = 5;
 
@@ -596,7 +597,13 @@ export default function SuperSearch({
                                     />
                                   )}
                                 </span>
-                                <span className="super-search-item-text">
+                                <span
+                                  className={
+                                    result.privateContent
+                                      ? `super-search-item-text ${privateContentClassName}`
+                                      : "super-search-item-text"
+                                  }
+                                >
                                   <span className="super-search-item-title">
                                     {result.title}
                                   </span>
