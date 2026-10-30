@@ -73,6 +73,39 @@ public class LocalStorageProvider implements StorageProvider {
     }
 
     @Override
+    public StoredObject storeFromPath(
+            User owner, Path source, String originalFilename, String contentType)
+            throws IOException {
+        if (owner == null || owner.getId() == null) {
+            throw new IllegalArgumentException("owner.id is required for local storage key");
+        }
+        String sanitizedFilename = sanitizeFilename(originalFilename);
+        String storageKey =
+                owner.getId()
+                        + "/"
+                        + UUID.randomUUID()
+                        + "_"
+                        + Optional.ofNullable(sanitizedFilename).orElse("file");
+        Path targetPath = basePath.resolve(storageKey).normalize();
+        if (!targetPath.startsWith(basePath)) {
+            throw new IOException("Resolved storage path is outside the storage directory");
+        }
+        Files.createDirectories(targetPath.getParent());
+        try {
+            Files.move(source, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException moveFailed) {
+            Files.copy(source, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            Files.deleteIfExists(source);
+        }
+        return StoredObject.builder()
+                .storageKey(storageKey)
+                .originalFilename(sanitizedFilename)
+                .contentType(contentType)
+                .sizeBytes(Files.size(targetPath))
+                .build();
+    }
+
+    @Override
     public Resource load(String storageKey) throws IOException {
         Path targetPath = basePath.resolve(storageKey).normalize();
         if (!targetPath.startsWith(basePath)) {

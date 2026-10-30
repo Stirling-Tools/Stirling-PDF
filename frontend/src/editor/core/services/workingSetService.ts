@@ -4,6 +4,7 @@ import type {
   StirlingFile,
   StirlingFileStub,
 } from "@editor/types/fileContext";
+import { uploadTemporaryFileInChunks } from "@editor/services/chunkedUploadService";
 import { storedFileIdForStub } from "@editor/services/serverFileReference";
 
 /** Must stay below the server temp-file TTL so a cached reference is never used after eviction. */
@@ -76,13 +77,17 @@ export async function ensureWorkingSetReference(
   const cached = references.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.reference;
 
-  const formData = new FormData();
-  formData.append("file", uploadFile);
-  const response = await apiClient.post(
-    `/api/v1/storage/files/temporary?ttlMinutes=${WORKING_SET_TTL_MINUTES}`,
-    formData,
-  );
-  const id = Number((response.data as { id?: unknown } | undefined)?.id);
+  const chunkedId = await uploadTemporaryFileInChunks(uploadFile);
+  let id = chunkedId;
+  if (id === undefined) {
+    const formData = new FormData();
+    formData.append("file", uploadFile);
+    const response = await apiClient.post(
+      `/api/v1/storage/files/temporary?ttlMinutes=${WORKING_SET_TTL_MINUTES}`,
+      formData,
+    );
+    id = Number((response.data as { id?: unknown } | undefined)?.id);
+  }
   if (!Number.isFinite(id)) return undefined;
 
   const reference = `storage:${id}`;
