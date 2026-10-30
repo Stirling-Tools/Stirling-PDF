@@ -17,6 +17,7 @@
     "src/editor/core/**/*.test.ts*",
     "src/editor/core/**/*.spec.ts*",
     "src/editor/desktop",
+    "src/editor/tauri",
     "src/editor/cloud"
   ]
 }

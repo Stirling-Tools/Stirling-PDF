@@ -32,6 +32,7 @@
     "paths": {
       "@editor/*": [
         "./src/editor/desktop/*",
+        "./src/editor/tauri/*",
         "./src/editor/proprietary/*",
         "./src/editor/core/*"
       ],
