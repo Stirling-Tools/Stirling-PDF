@@ -33,14 +33,8 @@ function requiresMfaSetup(account: AccountData): boolean {
   }
 }
 
-/** Rechecks setup on app entry; deferred backends can supply config without another fetch. */
-export function StartupSetup({
-  children,
-  refreshConfigOnMount = true,
-}: {
-  children: ReactNode;
-  refreshConfigOnMount?: boolean;
-}) {
+/** Rechecks setup on app entry. */
+export function StartupSetup({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const { config, refetch } = useAppConfig();
   const { user, signOut, isAnonymous } = useAuth();
@@ -55,9 +49,6 @@ export function StartupSetup({
   const requirements = useQuery({
     queryKey: ["startup", "requirements", user?.id, loginEnabled],
     queryFn: async () => {
-      // Editor and Processor have separate query caches. Re-read server settings
-      // on entry so an analytics choice made in the other app is respected.
-      if (refreshConfigOnMount) await refetch();
       if (!loginEnabled || !user || isAnonymous) return null;
       const [account, login] = await Promise.all([
         accountService.getAccountData(),

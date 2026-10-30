@@ -1,14 +1,8 @@
 import { useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient, errorMessage } from "@processor/api/http";
-import { qk } from "@processor/queries/keys";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { useLinkOptional } from "@processor/contexts/LinkContext";
 import { useUI } from "@processor/contexts/UIContext";
 import { useAccountLinkOptional } from "@processor/contexts/AccountLinkContext";
-
-interface AppConfigShape {
-  accountLinkAvailable?: boolean;
-}
 
 interface ConnectGate {
   /** Can link but has not, so gated features must ask first. */
@@ -38,27 +32,22 @@ export function useConnectGate(): ConnectGate {
   const { openLinkModal } = useUI();
   const accountLink = useAccountLinkOptional();
 
-  const query = useQuery({
-    enabled: link != null,
-    queryKey: qk.appConfig(),
-    queryFn: () =>
-      apiClient.local.json<AppConfigShape>("/api/v1/config/app-config"),
-  });
+  const appConfig = useAppConfig();
 
-  const available = Boolean(query.data?.accountLinkAvailable) && link != null;
+  const available =
+    Boolean(appConfig.config?.accountLinkAvailable) && link != null;
   const statusKnown = link?.statusKnown ?? false;
-  const error =
-    link != null && query.isError
-      ? errorMessage(query.error)
-      : available && !statusKnown
-        ? (accountLink?.statusError ?? null)
-        : null;
+  const configError = link != null ? appConfig.error : null;
+  const statusError =
+    available && !statusKnown ? (accountLink?.statusError ?? null) : null;
+  const error = configError ?? statusError;
   // A disabled capability has no status endpoint. Only wait for link status when linking applies.
   const loading =
-    link != null && (query.isPending || (available && !statusKnown && !error));
+    link != null &&
+    (appConfig.config == null || (available && !statusKnown && !error));
   const gated = !error && available && statusKnown && !link?.isLinked;
   const retry = () => {
-    if (query.isError) void query.refetch();
+    if (configError) void appConfig.refetch();
     else void accountLink?.refresh();
   };
 
