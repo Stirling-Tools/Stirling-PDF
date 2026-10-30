@@ -7,6 +7,7 @@ import {
 } from "@editor/utils/signingItems";
 import { signingStatus } from "@editor/utils/signingStatus";
 import { SigningActivityDot } from "@editor/components/shared/signing/SigningActivityDot";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface SigningSessionRowProps {
   item: SigningMenuItem;
@@ -44,13 +45,22 @@ export function SigningSessionRow({
         </span>
         <span className="sign-menu__session-copy">
           <span className="sign-menu__document-heading">
-            <span className="sign-menu__document" title={item.documentName}>
+            <span
+              className={`sign-menu__document ${privateContentClassName}`}
+              title={item.documentName}
+            >
               {item.documentName}
             </span>
             {item.unread && <SigningActivityDot />}
           </span>
           <span className="sign-menu__state">{state}</span>
-          <span className="sign-menu__meta">
+          <span
+            className={
+              item.kind === "request"
+                ? `sign-menu__meta ${privateContentClassName}`
+                : "sign-menu__meta"
+            }
+          >
             {item.kind === "request"
               ? `${t("certSign.collab.signRequest.from", "From")}: ${item.ownerUsername}`
               : t(

@@ -23,6 +23,7 @@ import {
 } from "@editor/utils/loadJscanify";
 import apiClient from "@editor/services/apiClient";
 import { fitThumbs, THUMB_GAP } from "@editor/utils/mobileScannerThumbs";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const API_BASE = (apiClient.defaults.baseURL ?? "").replace(/\/+$/, "");
 
@@ -1098,6 +1099,7 @@ export default function MobileScannerPage() {
               ← {t("mobileScanner.back", "Back")}
             </DSButton>
             <img
+              className={privateContentClassName}
               src={viewing}
               alt={t(
                 "mobileScanner.imagePosition",
@@ -1273,6 +1275,7 @@ export default function MobileScannerPage() {
               ← {t("mobileScanner.back", "Back")}
             </DSButton>
             <video
+              className={privateContentClassName}
               ref={videoRef}
               autoPlay
               playsInline
@@ -1286,6 +1289,7 @@ export default function MobileScannerPage() {
             />
             <canvas ref={canvasRef} style={{ display: "none" }} />
             <canvas
+              className={privateContentClassName}
               ref={highlightCanvasRef}
               style={{
                 position: "absolute",
@@ -1441,6 +1445,7 @@ export default function MobileScannerPage() {
                   }}
                 >
                   <img
+                    className={privateContentClassName}
                     src={img}
                     alt=""
                     style={{

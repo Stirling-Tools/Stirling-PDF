@@ -132,6 +132,7 @@ export function SigningSessionsTable({
       key: "document",
       header: t("signWorkspace.document", "Document"),
       sortable: true,
+      privateContent: true,
       primary: (item) => item.documentName,
       icon: () => <Icon name="file-text" size={18} />,
       unreadLabel: (item) =>
@@ -146,6 +147,7 @@ export function SigningSessionsTable({
       key: "owner",
       header: t("signWorkspace.owner", "Owner"),
       sortable: true,
+      privateContent: true,
       get: owner,
     }),
     column.badge<SigningItem>({
