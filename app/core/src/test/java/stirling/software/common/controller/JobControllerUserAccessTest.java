@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -16,8 +18,13 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -113,10 +120,30 @@ class JobControllerUserAccessTest {
         when(users.getCurrentUsername()).thenReturn("source-owner");
         var response = controller.downloadFile(fileId);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertArrayEquals(
-                OUTPUT, ((InputStreamResource) response.getBody()).getInputStream().readAllBytes());
+        assertArrayEquals(OUTPUT, readBody(response));
         assertEquals(HttpStatus.OK, controller.getFileMetadata(fileId).getStatusCode());
         assertEquals(HttpStatus.OK, controller.getJobStatus(runId).getStatusCode());
+    }
+
+    @Test
+    void downloadsStreamWholeFileWithLengthAndIgnoreRange() throws Exception {
+        storeOutput(false);
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
+
+        for (String path :
+                List.of(
+                        "/api/v1/general/files/" + fileId,
+                        "/api/v1/general/job/" + runId + "/result")) {
+            MvcResult result =
+                    mvc.perform(get(path).header(HttpHeaders.RANGE, "bytes=0-3")).andReturn();
+
+            assertEquals(HttpStatus.OK.value(), result.getResponse().getStatus(), path);
+            assertEquals(
+                    String.valueOf(OUTPUT.length),
+                    result.getResponse().getHeader(HttpHeaders.CONTENT_LENGTH),
+                    path);
+            assertArrayEquals(OUTPUT, result.getResponse().getContentAsByteArray(), path);
+        }
     }
 
     @Test
@@ -125,7 +152,12 @@ class JobControllerUserAccessTest {
         assertEquals("run", runId);
         var response = controller.downloadFile(fileId);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertArrayEquals(
-                OUTPUT, ((InputStreamResource) response.getBody()).getInputStream().readAllBytes());
+        assertArrayEquals(OUTPUT, readBody(response));
+    }
+
+    private static byte[] readBody(ResponseEntity<?> response) throws Exception {
+        try (InputStream in = ((InputStreamResource) response.getBody()).getInputStream()) {
+            return in.readAllBytes();
+        }
     }
 }

@@ -94,12 +94,20 @@ class FileStorageTest {
         // Act
         MultipartFile result = fileStorage.retrieveFile(fileId);
 
-        // Assert
+        // Assert: every read opens the stored content afresh
         assertEquals(fileContent.length, result.getSize());
-        try (InputStream in = result.getInputStream()) {
-            assertArrayEquals(fileContent, in.readAllBytes());
+        for (int i = 0; i < 2; i++) {
+            try (InputStream in = result.getInputStream()) {
+                assertArrayEquals(fileContent, in.readAllBytes());
+            }
         }
         assertArrayEquals(fileContent, result.getBytes());
+        Path copy = tempDir.resolve("copy.pdf");
+        result.transferTo(copy);
+        assertArrayEquals(fileContent, Files.readAllBytes(copy));
+        Path fileCopy = tempDir.resolve("file-copy.pdf");
+        result.transferTo(fileCopy.toFile());
+        assertArrayEquals(fileContent, Files.readAllBytes(fileCopy));
     }
 
     @Test
