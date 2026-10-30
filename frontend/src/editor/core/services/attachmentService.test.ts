@@ -51,6 +51,16 @@ describe("attachmentService CRUD", () => {
     );
   });
 
+  it("references a server copy instead of re-uploading bytes", async () => {
+    post.mockResolvedValue({ data: [] });
+
+    await listAttachments(pdfFile(), "storage:7");
+
+    const formData = post.mock.calls[0][1] as FormData;
+    expect(formData.get("fileId")).toBe("storage:7");
+    expect(formData.get("fileInput")).toBeNull();
+  });
+
   it("renames an attachment and returns a blob", async () => {
     post.mockResolvedValue(blobResponse());
     const result = await renameAttachment(pdfFile(), "old.txt", "new.txt");

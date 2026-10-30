@@ -5,7 +5,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -113,6 +115,29 @@ class AutoJobPostMappingIntegrationTest {
 
         // Test that file was resolved
         assertNotNull(pdfFile.getFileInput(), "File input should be set");
+    }
+
+    @Test
+    void shouldResolveStoredFileReferenceBeforeController() throws Throwable {
+        PDFFile pdfFile = new PDFFile();
+        pdfFile.setFileId("storage:42");
+        Object[] args = {pdfFile};
+        MultipartFile resolved = mock(MultipartFile.class);
+
+        when(joinPoint.getArgs()).thenReturn(args);
+        when(request.getParameter("async")).thenReturn("false");
+        when(autoJobPostMapping.retryCount()).thenReturn(1);
+        when(storedFileReferenceResolver.isStoredFileReference("storage:42")).thenReturn(true);
+        when(storedFileReferenceResolver.resolve("storage:42")).thenReturn(resolved);
+        when(jobExecutorService.runJobGeneric(
+                        anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
+                .thenAnswer(invocation -> ((Supplier<?>) invocation.getArgument(1)).get());
+        when(joinPoint.proceed(any())).thenReturn(ResponseEntity.ok("success"));
+
+        autoJobAspect.wrapWithJobExecution(joinPoint, autoJobPostMapping);
+
+        assertSame(resolved, pdfFile.getFileInput());
+        verify(fileStorage, never()).retrieveFile(anyString());
     }
 
     @Test

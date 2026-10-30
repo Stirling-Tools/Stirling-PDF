@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.StoredFileReferenceResolver;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.formdetection.inference.OnnxFormDetector;
 import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
@@ -29,6 +30,14 @@ class FormDetectionControllerTest {
             FormDetectionModelManager manager,
             OnnxFormDetector detector,
             PageRasterizer rasterizer) {
+        return mvc(manager, detector, rasterizer, Mockito.mock(StoredFileReferenceResolver.class));
+    }
+
+    private MockMvc mvc(
+            FormDetectionModelManager manager,
+            OnnxFormDetector detector,
+            PageRasterizer rasterizer,
+            StoredFileReferenceResolver resolver) {
         // A real service over mocked collaborators, so the HTTP translation is exercised against
         // the pipeline's actual exceptions rather than a stubbed stand-in.
         FormDetectionController controller =
@@ -36,6 +45,7 @@ class FormDetectionControllerTest {
                         provider(new FormDetectionService(manager, detector, rasterizer)),
                         Mockito.mock(CustomPDFDocumentFactory.class),
                         Mockito.mock(TempFileManager.class),
+                        resolver,
                         new ObjectMapper());
         return MockMvcBuilders.standaloneSetup(controller).build();
     }
@@ -84,6 +94,22 @@ class FormDetectionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.detections").isArray())
                 .andExpect(jsonPath("$.detections").isEmpty());
+    }
+
+    @Test
+    void detectAcceptsAStoredFileReference() throws Exception {
+        StoredFileReferenceResolver resolver = Mockito.mock(StoredFileReferenceResolver.class);
+        Mockito.when(resolver.resolve("storage:5")).thenReturn(pdf());
+
+        mvc(readyManager(), Mockito.mock(OnnxFormDetector.class), noPages(), resolver)
+                .perform(
+                        multipart("/api/v1/form/form-detection/detect")
+                                .param("fileId", "storage:5")
+                                .param("applyToPdf", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.detections").isArray());
+
+        Mockito.verify(resolver).resolve("storage:5");
     }
 
     @Test

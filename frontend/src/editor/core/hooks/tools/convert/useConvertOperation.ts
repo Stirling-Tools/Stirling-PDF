@@ -31,6 +31,7 @@ import {
   OUTPUT_OPTIONS,
   FIT_OPTIONS,
 } from "@editor/constants/convertConstants";
+import { TOOL_STORED_FILE_REFERENCE_ENDPOINTS } from "@editor/types/toolApiTypes";
 import { useToolCloudStatus } from "@editor/hooks/useToolCloudStatus";
 
 // Static function that can be used by both the hook and automation executor
@@ -90,6 +91,7 @@ export const shouldProcessFilesSeparately = (
 export const buildConvertFormData = (
   parameters: ConvertParameters,
   selectedFiles: File[],
+  serverFileId?: string,
 ): FormData => {
   const formData = new FormData();
   const {
@@ -109,9 +111,13 @@ export const buildConvertFormData = (
     epubOptions,
   } = parameters;
 
-  selectedFiles.forEach((file) => {
-    formData.append("fileInput", file);
-  });
+  if (serverFileId) {
+    formData.append("fileId", serverFileId);
+  } else {
+    selectedFiles.forEach((file) => {
+      formData.append("fileInput", file);
+    });
+  }
 
   if (
     parameters.useStirlingOfficeConvert !== undefined &&
@@ -281,6 +287,7 @@ const withoutCrossFileAltText = (
 export const convertProcessor = async (
   rawParameters: ConvertParameters,
   selectedFiles: File[],
+  serverFileIds?: (string | undefined)[],
 ): Promise<CustomProcessorResult> => {
   const parameters = withoutCrossFileAltText(rawParameters, selectedFiles);
   const processedFiles: File[] = [];
@@ -306,16 +313,23 @@ export const convertProcessor = async (
     toExtension: actualToExtension, // Use the mapped extension for decision logic
   });
 
+  const supportsReferences =
+    typeof endpoint === "string" &&
+    (TOOL_STORED_FILE_REFERENCE_ENDPOINTS as readonly string[]).includes(
+      endpoint,
+    );
+
   if (isSeparateProcessing) {
     // Individual processing for complex cases (PDF→image, smart detection, etc.)
-    for (const file of selectedFiles) {
+    for (let index = 0; index < selectedFiles.length; index++) {
+      const file = selectedFiles[index];
       try {
-        const formData = buildConvertFormData(parameters, [file]);
-        const response = await apiClient.post(
-          endpoint,
-          formData,
-          requestConfig,
+        const formData = buildConvertFormData(
+          parameters,
+          [file],
+          supportsReferences ? serverFileIds?.[index] : undefined,
         );
+        const response = await apiClient.post(endpoint, formData, requestConfig);
 
         const convertedFile = createFileFromResponse(
           response.data,
@@ -330,8 +344,16 @@ export const convertProcessor = async (
       }
     }
   } else {
-    // Batch processing for simple cases (image→PDF combine)
-    const formData = buildConvertFormData(parameters, selectedFiles);
+    // A single PDF can use its stored reference; multi-file batches still need fileInput[].
+    const batchReference =
+      selectedFiles.length === 1 && supportsReferences
+        ? serverFileIds?.[0]
+        : undefined;
+    const formData = buildConvertFormData(
+      parameters,
+      selectedFiles,
+      batchReference,
+    );
     const response = await apiClient.post(endpoint, formData, requestConfig);
 
     const baseFilename =

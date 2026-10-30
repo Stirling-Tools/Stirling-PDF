@@ -11,6 +11,10 @@ interface AddAttachmentsSettingsProps {
   ) => void;
   disabled?: boolean;
   activeFile?: File | null;
+  /** Persistent reference for the active file, when it already lives on the server. */
+  serverFileId?: string;
+  /** Resolves or creates the working-set reference for the active file. */
+  resolveServerFileId?: () => Promise<string | undefined>;
   onFileUpdated?: (file: File) => void;
   onError?: (errorMessage: string) => void;
 }
@@ -20,6 +24,8 @@ const AddAttachmentsSettings = ({
   onParameterChange,
   disabled = false,
   activeFile = null,
+  serverFileId,
+  resolveServerFileId,
   onFileUpdated,
   onError,
 }: AddAttachmentsSettingsProps) => {
@@ -32,6 +38,8 @@ const AddAttachmentsSettings = ({
 
   const manager = useAttachmentManager({
     activeFile,
+    serverFileId,
+    resolveServerFileId,
     onFileUpdated: handleFileUpdated,
     onError,
   });

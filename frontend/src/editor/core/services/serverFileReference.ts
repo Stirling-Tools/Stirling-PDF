@@ -18,9 +18,13 @@ export function storedFileIdForStub(
     if (stub.id.startsWith(SERVER_STUB_PREFIX)) {
       return `${STORED_FILE_ID_PREFIX}${stub.remoteStorageId}`;
     }
+    if (stub.remoteSync?.leafId === stub.id) {
+      return `${STORED_FILE_ID_PREFIX}${stub.remoteStorageId}`;
+    }
     // Version 1 with no parent or tool provenance identifies the original bytes; the local
     // timestamp is the download time, not the server update time.
     if (
+      stub.remoteSync === undefined &&
       (stub.versionNumber ?? 1) <= 1 &&
       !stub.parentFileId &&
       !stub.derivedFromTool

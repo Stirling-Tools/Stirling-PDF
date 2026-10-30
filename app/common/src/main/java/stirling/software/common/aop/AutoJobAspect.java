@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.api.MultiFileInput;
+import stirling.software.common.model.api.MultiFileListInput;
 import stirling.software.common.model.api.SingleFileInput;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
@@ -307,6 +308,14 @@ public class AutoJobAspect {
                 List<String> fileIds = multiFileInput.getFileIds();
                 if (fileIds != null && !fileIds.isEmpty()) {
                     multiFileInput.setFileInput(storedFileReferenceResolver.resolveAll(fileIds));
+                }
+            }
+
+            if (arg instanceof MultiFileListInput multiFileListInput) {
+                List<String> fileIds = multiFileListInput.getFileIds();
+                if (fileIds != null && !fileIds.isEmpty()) {
+                    multiFileListInput.setFiles(
+                            List.of(storedFileReferenceResolver.resolveAll(fileIds)));
                 }
             }
         }

@@ -403,6 +403,10 @@ export interface ConvertToPdfRequest {
    */
   colorType?: "color" | "greyscale" | "blackwhite";
   /**
+   * Persistent storage references, in order, used instead of fileInput.
+   */
+  fileIds?: string[];
+  /**
    * Option to determine how the image will fit onto the page
    */
   fitOption?:
@@ -417,9 +421,13 @@ export interface CreatePortfolioRequest {
    */
   coverTitle?: string;
   /**
+   * Storage references for the portfolio members.
+   */
+  fileIds?: string[];
+  /**
    * The files to bundle into the PDF Portfolio.
    */
-  files: File[];
+  files?: File[];
 }
 export interface CropPdfForm {
   /**
@@ -486,6 +494,7 @@ export interface EmlToPdfRequest {
   maxAttachmentSizeMB?: number;
 }
 export type ExtractAttachmentsRequest = Record<string, never>;
+export type ExtractBookmarksRequest = Record<string, never>;
 export interface ExtractHeaderRequest {
   /**
    * Flag indicating whether to use the first text as a fallback if no suitable title is found. Defaults to false.
@@ -545,7 +554,6 @@ export interface FormFormDetectionDetectRequest {
   applyToPdf?: boolean;
   confThreshold?: number;
 }
-export type GeneralExtractBookmarksRequest = Record<string, never>;
 export interface GeneralFile {
   useStirlingOfficeConvert?: boolean;
 }
@@ -1549,6 +1557,10 @@ export interface SvgToPdfRequest {
    * Whether to combine all SVG files into a single PDF (each SVG as a separate page) or create separate PDF files for each SVG.
    */
   combineIntoSinglePdf?: boolean;
+  /**
+   * Persistent storage references, in order, used instead of fileInput.
+   */
+  fileIds?: string[];
 }
 export interface TimestampPdfRequest {
   /**
@@ -1709,7 +1721,7 @@ export interface ToolApiParams {
   "/api/v1/general/booklet-imposition": BookletImpositionRequest;
   "/api/v1/general/crop": CropPdfForm;
   "/api/v1/general/edit-table-of-contents": EditTableOfContentsRequest;
-  "/api/v1/general/extract-bookmarks": GeneralExtractBookmarksRequest;
+  "/api/v1/general/extract-bookmarks": ExtractBookmarksRequest;
   "/api/v1/general/merge-pdfs": MergePdfsRequest;
   "/api/v1/general/multi-page-layout": MergeMultiplePagesRequest;
   "/api/v1/general/overlay-pdfs": OverlayPdfsRequest;
@@ -1909,8 +1921,16 @@ export const TOOL_FILE_FIELDS = {
 
 /** Endpoints whose request model accepts a persistent `fileId`/`fileIds` reference. */
 export const TOOL_STORED_FILE_REFERENCE_ENDPOINTS = [
+  "/api/v1/convert/cbr/pdf",
+  "/api/v1/convert/cbz/pdf",
+  "/api/v1/convert/ebook/pdf",
   "/api/v1/convert/eml/pdf",
+  "/api/v1/convert/file/pdf",
   "/api/v1/convert/html/pdf",
+  "/api/v1/convert/img/pdf",
+  "/api/v1/convert/markdown/pdf",
+  "/api/v1/convert/pdf/cbr",
+  "/api/v1/convert/pdf/cbz",
   "/api/v1/convert/pdf/csv",
   "/api/v1/convert/pdf/epub",
   "/api/v1/convert/pdf/html",
@@ -1924,6 +1944,7 @@ export const TOOL_STORED_FILE_REFERENCE_ENDPOINTS = [
   "/api/v1/convert/pdf/word",
   "/api/v1/convert/pdf/xlsx",
   "/api/v1/convert/pdf/xml",
+  "/api/v1/convert/svg/pdf",
   "/api/v1/convert/vector/pdf",
   "/api/v1/docparse/ingest",
   "/api/v1/filter/filter-contains-image",
@@ -1932,9 +1953,11 @@ export const TOOL_STORED_FILE_REFERENCE_ENDPOINTS = [
   "/api/v1/filter/filter-page-count",
   "/api/v1/filter/filter-page-rotation",
   "/api/v1/filter/filter-page-size",
+  "/api/v1/form/form-detection/detect",
   "/api/v1/general/booklet-imposition",
   "/api/v1/general/crop",
   "/api/v1/general/edit-table-of-contents",
+  "/api/v1/general/extract-bookmarks",
   "/api/v1/general/merge-pdfs",
   "/api/v1/general/multi-page-layout",
   "/api/v1/general/overlay-pdfs",
@@ -1959,9 +1982,11 @@ export const TOOL_STORED_FILE_REFERENCE_ENDPOINTS = [
   "/api/v1/misc/auto-split-pdf",
   "/api/v1/misc/batch-process-attachments",
   "/api/v1/misc/compress-pdf",
+  "/api/v1/misc/create-portfolio",
   "/api/v1/misc/decompress-pdf",
   "/api/v1/misc/delete-attachment",
   "/api/v1/misc/extract-attachments",
+  "/api/v1/misc/extract-image-scans",
   "/api/v1/misc/extract-images",
   "/api/v1/misc/extract-single-attachment",
   "/api/v1/misc/flatten",
@@ -1972,6 +1997,7 @@ export const TOOL_STORED_FILE_REFERENCE_ENDPOINTS = [
   "/api/v1/misc/rename-attachment",
   "/api/v1/misc/repair",
   "/api/v1/misc/replace-invert-pdf",
+  "/api/v1/misc/scanner-effect",
   "/api/v1/misc/show-javascript",
   "/api/v1/misc/unlock-pdf-forms",
   "/api/v1/misc/update-metadata",

@@ -1,7 +1,5 @@
 package stirling.software.SPDF.model.api.misc;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.NotNull;
@@ -9,9 +7,11 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import stirling.software.common.model.api.PDFFile;
+
 @Data
-@EqualsAndHashCode
-public class ScannerEffectRequest {
+@EqualsAndHashCode(callSuper = true)
+public class ScannerEffectRequest extends PDFFile {
     public enum Quality {
         low,
         medium,
@@ -29,14 +29,6 @@ public class ScannerEffectRequest {
         grayscale,
         color
     }
-
-    @Schema(
-            description = "PDF file to process",
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            type = "string",
-            format = "binary")
-    @NotNull(message = "File input is required")
-    private MultipartFile fileInput;
 
     @Schema(description = "Scan quality preset", example = "high")
     @NotNull(message = "Quality is required")

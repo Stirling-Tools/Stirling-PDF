@@ -1,20 +1,15 @@
 package stirling.software.SPDF.model.api.converters;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@Data
-@EqualsAndHashCode
-public class ConvertPdfToCbzRequest {
+import stirling.software.common.model.api.PDFFile;
 
-    @Schema(
-            description = "The input PDF file to be converted to a CBZ file",
-            requiredMode = Schema.RequiredMode.REQUIRED)
-    private MultipartFile fileInput;
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class ConvertPdfToCbzRequest extends PDFFile {
 
     @Schema(
             description = "The DPI (Dots Per Inch) for rendering PDF pages as images",

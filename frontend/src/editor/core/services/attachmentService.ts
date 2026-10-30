@@ -11,6 +11,19 @@ export interface AttachmentInfo {
   modificationDate?: string;
 }
 
+/** Sends the server copy when the caller has one, otherwise the bytes. */
+function appendPrimaryFile(
+  formData: FormData,
+  fileInput: File,
+  serverFileId?: string,
+): void {
+  if (serverFileId) {
+    formData.append("fileId", serverFileId);
+  } else {
+    formData.append("fileInput", fileInput);
+  }
+}
+
 /**
  * Parse Blob error response bodies from Axios error responses into readable message strings.
  */
@@ -53,9 +66,10 @@ export async function parseBlobError(
  */
 export async function listAttachments(
   fileInput: File,
+  serverFileId?: string,
 ): Promise<AttachmentInfo[]> {
   const formData = new FormData();
-  formData.append("fileInput", fileInput);
+  appendPrimaryFile(formData, fileInput, serverFileId);
 
   const response = await apiClient.post<AttachmentInfo[]>(
     "/api/v1/misc/list-attachments",
@@ -72,9 +86,10 @@ export async function renameAttachment(
   fileInput: File,
   attachmentName: string,
   newName: string,
+  serverFileId?: string,
 ): Promise<Blob> {
   const formData = new FormData();
-  formData.append("fileInput", fileInput);
+  appendPrimaryFile(formData, fileInput, serverFileId);
   formData.append("attachmentName", attachmentName);
   formData.append("newName", newName);
 
@@ -93,9 +108,10 @@ export async function renameAttachment(
 export async function deleteAttachment(
   fileInput: File,
   attachmentName: string,
+  serverFileId?: string,
 ): Promise<Blob> {
   const formData = new FormData();
-  formData.append("fileInput", fileInput);
+  appendPrimaryFile(formData, fileInput, serverFileId);
   formData.append("attachmentName", attachmentName);
 
   const response = await apiClient.post(
@@ -110,9 +126,12 @@ export async function deleteAttachment(
  * Extract all embedded attachments from a PDF into a ZIP archive.
  * Returns the ZIP Blob.
  */
-export async function extractAttachments(fileInput: File): Promise<Blob> {
+export async function extractAttachments(
+  fileInput: File,
+  serverFileId?: string,
+): Promise<Blob> {
   const formData = new FormData();
-  formData.append("fileInput", fileInput);
+  appendPrimaryFile(formData, fileInput, serverFileId);
 
   const response = await apiClient.post(
     "/api/v1/misc/extract-attachments",
@@ -129,9 +148,10 @@ export async function extractAttachments(fileInput: File): Promise<Blob> {
 export async function extractSingleAttachment(
   fileInput: File,
   filename: string,
+  serverFileId?: string,
 ): Promise<Blob> {
   const formData = new FormData();
-  formData.append("fileInput", fileInput);
+  appendPrimaryFile(formData, fileInput, serverFileId);
   formData.append("attachmentName", filename);
 
   try {
@@ -147,7 +167,7 @@ export async function extractSingleAttachment(
       throw err;
     }
     // Client-side JSZip fallback if running against legacy backend
-    const zipBlob = await extractAttachments(fileInput);
+    const zipBlob = await extractAttachments(fileInput, serverFileId);
     const zip = await JSZip.loadAsync(zipBlob);
     const cleanFilename = filename.trim();
     const fileEntries = Object.keys(zip.files).filter((k) => !zip.files[k].dir);
@@ -192,9 +212,10 @@ export async function addAttachments(
   fileInput: File,
   attachments: File[],
   convertToPdfA3b?: boolean,
+  serverFileId?: string,
 ): Promise<Blob> {
   const formData = new FormData();
-  formData.append("fileInput", fileInput);
+  appendPrimaryFile(formData, fileInput, serverFileId);
   attachments.forEach((att) => {
     formData.append("attachments", att);
   });
@@ -222,9 +243,10 @@ export async function applyBatchAttachmentOps(
     additions: File[];
     convertToPdfA3b?: boolean;
   },
+  serverFileId?: string,
 ): Promise<Blob> {
   const formData = new FormData();
-  formData.append("fileInput", fileInput);
+  appendPrimaryFile(formData, fileInput, serverFileId);
   formData.append(
     "opsJson",
     JSON.stringify({
@@ -253,15 +275,27 @@ export async function applyBatchAttachmentOps(
     }
     // Client-side sequential fallback if running against legacy server
     let currentFile: File = fileInput;
+    let currentServerFileId = serverFileId;
     for (const { oldName, newName } of ops.renames) {
-      const blob = await renameAttachment(currentFile, oldName, newName);
+      const blob = await renameAttachment(
+        currentFile,
+        oldName,
+        newName,
+        currentServerFileId,
+      );
+      currentServerFileId = undefined;
       currentFile = new File([blob], currentFile.name, {
         type: currentFile.type || "application/pdf",
         lastModified: Date.now(),
       });
     }
     for (const name of ops.deletions) {
-      const blob = await deleteAttachment(currentFile, name);
+      const blob = await deleteAttachment(
+        currentFile,
+        name,
+        currentServerFileId,
+      );
+      currentServerFileId = undefined;
       currentFile = new File([blob], currentFile.name, {
         type: currentFile.type || "application/pdf",
         lastModified: Date.now(),
