@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.security;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
@@ -29,6 +30,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.service.StoredFileReferenceResolver;
 import stirling.software.common.util.ExceptionUtils;
 
 @DisplayName("ValidateComplianceController Tests")
@@ -37,6 +39,7 @@ import stirling.software.common.util.ExceptionUtils;
 class ValidateComplianceControllerTest {
 
     @Mock private VeraPDFService veraPDFService;
+    @Mock private StoredFileReferenceResolver storedFileReferenceResolver;
 
     @InjectMocks private ValidateComplianceController validateComplianceController;
 
@@ -305,5 +308,30 @@ class ValidateComplianceControllerTest {
                     RuntimeException.class,
                     () -> validateComplianceController.validateCompliance(request));
         }
+    }
+
+    @Test
+    @DisplayName("resolves a stored file reference")
+    void resolvesStoredReference() throws Exception {
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput", "stored.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
+        when(storedFileReferenceResolver.resolve("storage:9")).thenReturn(pdfFile);
+        PDFFile request = new PDFFile();
+        request.setFileId("storage:9");
+
+        PDFVerificationResult compliant = new PDFVerificationResult();
+        compliant.setStandard("2b");
+        compliant.setStandardName("PDF/A-2B compliant");
+        compliant.setValidationProfile("2b");
+        compliant.setValidationProfileName("PDF/A-2B");
+        compliant.setCompliant(true);
+        when(veraPDFService.validatePDF(any(InputStream.class))).thenReturn(List.of(compliant));
+
+        ResponseEntity<byte[]> response = validateComplianceController.validateCompliance(request);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertArrayEquals(simplePdfBytes, response.getBody());
+        verify(storedFileReferenceResolver).resolve("storage:9");
     }
 }

@@ -12,7 +12,7 @@ import { useEditTableOfContentsParameters } from "@editor/hooks/tools/editTableO
 import { useEditTableOfContentsOperation } from "@editor/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
 import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
-import apiClient from "@editor/services/apiClient";
+import { extractBookmarks } from "@editor/services/bookmarkExtractionService";
 import {
   BookmarkPayload,
   BookmarkNode,
@@ -26,21 +26,11 @@ import {
   useNavigationState,
 } from "@editor/contexts/NavigationContext";
 import { useFileSelection } from "@editor/contexts/FileContext";
+import { useFileContext } from "@editor/contexts/file/fileHooks";
+import { storedFileIdForFile } from "@editor/services/serverFileReference";
 import { isStirlingFile } from "@editor/types/fileContext";
 
-const extractBookmarks = async (file: File): Promise<BookmarkPayload[]> => {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const response = await apiClient.post(
-    "/api/v1/general/extract-bookmarks",
-    formData,
-  );
-
-  return response.data as BookmarkPayload[];
-};
-
-const useStableCallback = <T extends (...args: never[]) => unknown>(
+export const useStableCallback = <T extends (...args: never[]) => unknown>(
   callback: T,
 ): T => {
   const callbackRef = useRef(callback);
@@ -84,6 +74,7 @@ const EditTableOfContents = (props: BaseToolProps) => {
   const [lastLoadedFileId, setLastLoadedFileId] = useState<string | null>(null);
   const hasAutoOpenedWorkbenchRef = useRef(false);
 
+  const { selectors } = useFileContext();
   const selectedFile = base.selectedFiles[0];
 
   const { setBookmarks } = base.params;
@@ -110,7 +101,10 @@ const EditTableOfContents = (props: BaseToolProps) => {
       setLoadError(null);
 
       try {
-        const payload = await extractBookmarks(file);
+        const payload = await extractBookmarks(
+          file,
+          storedFileIdForFile(file, selectors.getStirlingFileStub),
+        );
         const bookmarks = hydrateBookmarkPayload(payload);
         setBookmarks(bookmarks);
         setLastLoadedFileId(isStirlingFile(file) ? file.fileId : file.name);
@@ -149,7 +143,7 @@ const EditTableOfContents = (props: BaseToolProps) => {
         setIsLoadingBookmarks(false);
       }
     },
-    [setBookmarks, t],
+    [selectors, setBookmarks, t],
   );
 
   useEffect(() => {

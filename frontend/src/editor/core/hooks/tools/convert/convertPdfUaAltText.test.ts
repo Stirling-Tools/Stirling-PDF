@@ -82,6 +82,18 @@ describe("PDF/UA alt text never crosses documents", () => {
     }
   });
 
+  test("uses a storage reference instead of uploading the PDF", async () => {
+    await convertProcessor(
+      pdfUaParameters(""),
+      [pdf("report.pdf")],
+      ["storage:42"],
+    );
+
+    expect(api.post).toHaveBeenCalledTimes(1);
+    expect(bodyOf(0).get("fileId")).toBe("storage:42");
+    expect(bodyOf(0).get("fileInput")).toBeNull();
+  });
+
   test("leaves the caller's parameters untouched", async () => {
     const parameters = pdfUaParameters("0:1=Bar chart of revenue");
 

@@ -28,6 +28,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
+import stirling.software.SPDF.model.api.general.ExtractBookmarksRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -61,7 +62,8 @@ public class EditTableOfContentsController {
             summary = "Extract PDF Bookmarks",
             description = "Extracts bookmarks/table of contents from a PDF document as JSON.")
     public ResponseEntity<List<Map<String, Object>>> extractBookmarks(
-            @RequestParam("file") MultipartFile file) throws Exception {
+            @ModelAttribute ExtractBookmarksRequest request) throws Exception {
+        MultipartFile file = request.getFileInput();
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDDocumentOutline outline = document.getDocumentCatalog().getDocumentOutline();
 

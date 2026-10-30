@@ -4,6 +4,7 @@ import type {
   StirlingFile,
   StirlingFileStub,
 } from "@editor/types/fileContext";
+import { uploadTemporaryFileInChunks } from "@editor/services/chunkedUploadService";
 import { storedFileIdForStub } from "@editor/services/serverFileReference";
 
 /** Must stay below the server temp-file TTL so a cached reference is never used after eviction. */
@@ -17,6 +18,7 @@ interface CachedReference {
 }
 
 const references = new Map<string, CachedReference>();
+const inFlight = new Map<string, Promise<string | undefined>>();
 let loaded = false;
 
 function storage(): Storage | undefined {
@@ -76,22 +78,37 @@ export async function ensureWorkingSetReference(
   const cached = references.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.reference;
 
-  const formData = new FormData();
-  formData.append("file", uploadFile);
-  const response = await apiClient.post(
-    `/api/v1/storage/files/temporary?ttlMinutes=${WORKING_SET_TTL_MINUTES}`,
-    formData,
-  );
-  const id = Number((response.data as { id?: unknown } | undefined)?.id);
-  if (!Number.isFinite(id)) return undefined;
+  const pending = inFlight.get(cacheKey);
+  if (pending) return pending;
 
-  const reference = `storage:${id}`;
-  references.set(cacheKey, {
-    reference,
-    expiresAt: Date.now() + CACHE_TTL_MS,
-  });
-  persist();
-  return reference;
+  const upload = (async () => {
+    const chunkedId = await uploadTemporaryFileInChunks(uploadFile);
+    let id = chunkedId;
+    if (id === undefined) {
+      const formData = new FormData();
+      formData.append("file", uploadFile);
+      const response = await apiClient.post(
+        `/api/v1/storage/files/temporary?ttlMinutes=${WORKING_SET_TTL_MINUTES}`,
+        formData,
+      );
+      id = Number((response.data as { id?: unknown } | undefined)?.id);
+    }
+    if (!Number.isFinite(id)) return undefined;
+
+    const reference = `storage:${id}`;
+    references.set(cacheKey, {
+      reference,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    });
+    persist();
+    return reference;
+  })();
+  inFlight.set(cacheKey, upload);
+  try {
+    return await upload;
+  } finally {
+    inFlight.delete(cacheKey);
+  }
 }
 
 /** Resolves every input or nothing, so one failure falls back to uploads for the whole batch. */

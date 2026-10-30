@@ -43,6 +43,7 @@ const observed = vi.hoisted(() => ({
 }));
 const id = "editor-encrypted" as FileId;
 const localInspection = vi.hoisted(() => vi.fn());
+const workingSet = vi.hoisted(() => ({ ensure: vi.fn() }));
 
 vi.mock("@editor/services/pdfAccessService", async (importOriginal) => ({
   ...(await importOriginal<
@@ -59,6 +60,9 @@ vi.mock("@editor/services/pdfAccessService", async (importOriginal) => ({
 }));
 
 vi.mock("@editor/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@editor/services/workingSetService", () => ({
+  ensureWorkingSetReference: workingSet.ensure,
+}));
 vi.mock("@editor/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata: vi.fn(),
 }));
@@ -181,6 +185,7 @@ function wrapper({ children }: { children: ReactNode }) {
 beforeEach(() => {
   vi.mocked(apiClient.post).mockReset();
   localInspection.mockReset();
+  workingSet.ensure.mockReset().mockResolvedValue("storage:9");
   vi.mocked(generateProcessedFileMetadata).mockResolvedValue({
     pages: [],
     totalPages: 1,
@@ -195,6 +200,37 @@ beforeEach(() => {
 });
 
 describe("deferred opening inspection", () => {
+  it("warms the working set after an unencrypted file is admitted", async () => {
+    observed.isEncrypted = false;
+    observed.requiresOpeningPassword = undefined;
+    localInspection.mockResolvedValueOnce({
+      data: {
+        encrypted: false,
+        signed: false,
+        ownerAuthenticated: true,
+        permissions: -4,
+        pageCount: 1,
+      },
+    });
+    const { result } = renderHook(() => ({ ...useFileActions() }), {
+      wrapper,
+    });
+    const file = new File(["plain"], "plain.pdf", {
+      type: "application/pdf",
+    });
+
+    await act(async () => {
+      await result.current.actions.addFiles([file]);
+    });
+
+    await waitFor(() => expect(workingSet.ensure).toHaveBeenCalledTimes(1));
+    expect(workingSet.ensure).toHaveBeenCalledWith(
+      expect.objectContaining({ fileId: id }),
+      file,
+      expect.any(Function),
+    );
+  });
+
   it.each([false, true])(
     "hydrates page geometry after admission without losing its thumbnail, closed: %s",
     async (closed) => {

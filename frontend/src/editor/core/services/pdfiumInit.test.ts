@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 /**
  * A WASM instantiate that fails must reject, not hang. `instantiateWasm` reports
@@ -31,10 +31,19 @@ async function loadService() {
   return await import("@editor/services/pdfiumService");
 }
 
+beforeEach(() => {
+  // Both tests replace WebAssembly.instantiate and the hoisted init mock; leaking either into
+  // the next test makes the failure/retry assertions order-dependent.
+  vi.restoreAllMocks();
+  init.mockReset();
+});
+
 describe("pdfium bootstrap", () => {
   test("rejects when instantiating the pre-compiled module fails", async () => {
     const failure = new Error("LinkError: import mismatch");
-    vi.spyOn(WebAssembly, "instantiate").mockRejectedValue(failure);
+    vi.spyOn(WebAssembly, "instantiate").mockImplementation(() => {
+      throw failure;
+    });
     init.mockImplementation((overrides: Record<string, never>) =>
       emscriptenInit(overrides.instantiateWasm),
     );
@@ -48,7 +57,9 @@ describe("pdfium bootstrap", () => {
   test("a failed load isn't cached, so the next call retries", async () => {
     const instantiate = vi
       .spyOn(WebAssembly, "instantiate")
-      .mockRejectedValueOnce(new Error("transient"))
+      .mockImplementationOnce(() => {
+        throw new Error("transient");
+      })
       .mockResolvedValue({} as never);
     const ready = { PDFiumExt_Init: () => {} };
     init.mockImplementation(

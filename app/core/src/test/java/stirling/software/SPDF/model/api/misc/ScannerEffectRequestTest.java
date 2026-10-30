@@ -26,26 +26,26 @@ class ScannerEffectRequestTest {
     }
 
     @Test
-    @DisplayName("fileInput is @NotNull -> violation when missing")
+    @DisplayName("fileInput and fileId both missing -> violation when missing")
     void fileInput_missing_triggersViolation() {
         ScannerEffectRequest req = new ScannerEffectRequest();
 
         Set<ConstraintViolation<ScannerEffectRequest>> violations = validator.validate(req);
-        boolean hasFileInputViolation =
+        boolean hasInputViolation =
                 violations.stream()
-                        .anyMatch(v -> "fileInput".contentEquals(v.getPropertyPath().toString()));
+                        .anyMatch(v -> "valid".contentEquals(v.getPropertyPath().toString()));
 
         assertTrue(
-                hasFileInputViolation,
+                hasInputViolation,
                 () ->
-                        "Expected a validation violation on 'fileInput', but got: "
+                        "Expected a validation violation on 'valid', but got: "
                                 + violations.stream()
                                         .map(v -> v.getPropertyPath() + " -> " + v.getMessage())
                                         .collect(Collectors.joining(", ")));
     }
 
     @Test
-    @DisplayName("fileInput present -> no violation for fileInput")
+    @DisplayName("fileInput present -> no input violation")
     void fileInput_present_noViolationForThatField() {
         ScannerEffectRequest req = new ScannerEffectRequest();
         req.setFileInput(
@@ -54,17 +54,22 @@ class ScannerEffectRequestTest {
 
         Set<ConstraintViolation<ScannerEffectRequest>> violations = validator.validate(req);
 
-        boolean hasFileInputViolation =
+        assertFalse(
                 violations.stream()
-                        .anyMatch(v -> "fileInput".contentEquals(v.getPropertyPath().toString()));
+                        .anyMatch(v -> "valid".contentEquals(v.getPropertyPath().toString())));
+    }
+
+    @Test
+    @DisplayName("fileId present -> no input violation")
+    void fileId_present_noViolationForThatField() {
+        ScannerEffectRequest req = new ScannerEffectRequest();
+        req.setFileId("storage:7");
+
+        Set<ConstraintViolation<ScannerEffectRequest>> violations = validator.validate(req);
 
         assertFalse(
-                hasFileInputViolation,
-                () ->
-                        "Did not expect a validation violation on 'fileInput', but got: "
-                                + violations.stream()
-                                        .map(v -> v.getPropertyPath() + " -> " + v.getMessage())
-                                        .collect(Collectors.joining(", ")));
+                violations.stream()
+                        .anyMatch(v -> "valid".contentEquals(v.getPropertyPath().toString())));
     }
 
     @Test

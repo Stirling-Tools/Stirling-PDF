@@ -25,6 +25,10 @@ export interface DraftAttachmentRow {
 
 interface UseAttachmentManagerOptions {
   activeFile: File | null;
+  /** Reference to the server copy when the active file is already stored there. */
+  serverFileId?: string;
+  /** Resolves or creates the working-set reference for the active file. */
+  resolveServerFileId?: () => Promise<string | undefined>;
   onFileUpdated?: (updatedFile: File) => void;
   onError?: (errorMessage: string) => void;
 }
@@ -51,6 +55,8 @@ function rebuildStagedFile(
 
 export function useAttachmentManager({
   activeFile,
+  serverFileId,
+  resolveServerFileId,
   onFileUpdated,
   onError,
 }: UseAttachmentManagerOptions) {
@@ -75,43 +81,50 @@ export function useAttachmentManager({
     ? `${activeFile.name}-${activeFile.size}-${activeFile.lastModified}`
     : "";
 
-  const fetchAttachmentsForFile = useCallback(async (file: File | null) => {
-    if (!file) {
-      setRows([]);
-      return;
-    }
-    const currentGen = ++genRef.current;
-    setIsLoading(true);
-    try {
-      const list = await listAttachments(file);
-      if (currentGen !== genRef.current) return;
-      const initialRows: DraftAttachmentRow[] = list.map((att, idx) => ({
-        id: `existing-${att.filename}-${idx}`,
-        originalName: att.filename,
-        name: att.filename,
-        size: att.size,
-        contentType: att.contentType,
-        kind: "existing",
-      }));
-      // A user can pick files while the list request is in flight; keep the
-      // rows staged for this generation instead of dropping them on the floor.
-      setRows((prev) => [
-        ...initialRows,
-        ...prev.filter(
-          (row) => row.kind === "staged" && row.stagedGen === currentGen,
-        ),
-      ]);
-    } catch (err) {
-      if (currentGen !== genRef.current) return;
-      setRows([]);
-      const msg = await parseBlobError(err, "Failed to load attachments.");
-      onErrorRef.current?.(msg);
-    } finally {
-      if (currentGen === genRef.current) {
-        setIsLoading(false);
+  const fetchAttachmentsForFile = useCallback(
+    async (file: File | null) => {
+      if (!file) {
+        setRows([]);
+        return;
       }
-    }
-  }, []);
+      const currentGen = ++genRef.current;
+      setIsLoading(true);
+      try {
+        const reference =
+          file === activeFileRef.current
+            ? (serverFileId ?? (await resolveServerFileId?.()))
+            : undefined;
+        const list = await listAttachments(file, reference);
+        if (currentGen !== genRef.current) return;
+        const initialRows: DraftAttachmentRow[] = list.map((att, idx) => ({
+          id: `existing-${att.filename}-${idx}`,
+          originalName: att.filename,
+          name: att.filename,
+          size: att.size,
+          contentType: att.contentType,
+          kind: "existing",
+        }));
+        // A user can pick files while the list request is in flight; keep the
+        // rows staged for this generation instead of dropping them on the floor.
+        setRows((prev) => [
+          ...initialRows,
+          ...prev.filter(
+            (row) => row.kind === "staged" && row.stagedGen === currentGen,
+          ),
+        ]);
+      } catch (err) {
+        if (currentGen !== genRef.current) return;
+        setRows([]);
+        const msg = await parseBlobError(err, "Failed to load attachments.");
+        onErrorRef.current?.(msg);
+      } finally {
+        if (currentGen === genRef.current) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [serverFileId, resolveServerFileId],
+  );
 
   useEffect(() => {
     if (skipNextFetchRef.current) {
@@ -241,7 +254,8 @@ export function useAttachmentManager({
     if (!activeFile) return;
     setActiveAction("extractAll");
     try {
-      const zipBlob = await apiExtractAttachments(activeFile);
+      const reference = serverFileId ?? (await resolveServerFileId?.());
+      const zipBlob = await apiExtractAttachments(activeFile, reference);
       const baseName = activeFile.name.replace(/\.[^/.]+$/, "");
       const zipFilename = `${baseName}_attachments.zip`;
       await downloadFileWithPolicy({ data: zipBlob, filename: zipFilename });
@@ -251,14 +265,19 @@ export function useAttachmentManager({
     } finally {
       setActiveAction(null);
     }
-  }, [activeFile, onError]);
+  }, [activeFile, onError, serverFileId, resolveServerFileId]);
 
   const extractSingle = useCallback(
     async (filename: string) => {
       if (!activeFile || !filename) return;
       setActiveAction(`extract-${filename}`);
       try {
-        const fileBlob = await apiExtractSingleAttachment(activeFile, filename);
+        const reference = serverFileId ?? (await resolveServerFileId?.());
+        const fileBlob = await apiExtractSingleAttachment(
+          activeFile,
+          filename,
+          reference,
+        );
         await downloadFileWithPolicy({ data: fileBlob, filename });
       } catch (err) {
         const msg = await parseBlobError(err, "Failed to download attachment.");
@@ -296,12 +315,17 @@ export function useAttachmentManager({
           .filter((r) => r.kind === "staged" && r.file)
           .map((r) => r.file as File);
 
-        const updatedBlob = await applyBatchAttachmentOps(activeFile, {
-          renames,
-          deletions,
-          additions,
-          convertToPdfA3b,
-        });
+        const reference = serverFileId ?? (await resolveServerFileId?.());
+        const updatedBlob = await applyBatchAttachmentOps(
+          activeFile,
+          {
+            renames,
+            deletions,
+            additions,
+            convertToPdfA3b,
+          },
+          reference,
+        );
 
         if (saveGen !== genRef.current) return false;
 
@@ -341,7 +365,14 @@ export function useAttachmentManager({
         }
       }
     },
-    [activeFile, rows, onFileUpdated, onError],
+    [
+      activeFile,
+      rows,
+      onFileUpdated,
+      onError,
+      serverFileId,
+      resolveServerFileId,
+    ],
   );
 
   const discardDraft = useCallback(() => {

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -38,6 +40,7 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.storage.model.StoredFile;
+import stirling.software.proprietary.storage.model.api.StoredFileResponse;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.service.FileStorageService;
 
@@ -192,6 +195,31 @@ class FileStorageControllerTest {
         ArgumentCaptor<Map<String, Object>> data = ArgumentCaptor.forClass(Map.class);
         verify(auditService).audit(eq(AuditEventType.STORAGE_ENCRYPTION), data.capture());
         return data.getAllValues();
+    }
+
+    @Test
+    void uploadTemporaryFile_clampsTtlAndReturnsStoredResponse() throws Exception {
+        User user = new User();
+        user.setId(11L);
+        when(fileStorageService.requireAuthenticatedUser()).thenReturn(user);
+        StoredFileResponse response = StoredFileResponse.builder().id(5L).fileName("x.pdf").build();
+        when(fileStorageService.storeTemporaryFileResponse(eq(user), any(), any()))
+                .thenReturn(response);
+
+        mockMvc.perform(
+                        multipart("/api/v1/storage/files/temporary")
+                                .file(
+                                        new MockMultipartFile(
+                                                "file",
+                                                "x.pdf",
+                                                "application/pdf",
+                                                "data".getBytes(UTF_8)))
+                                .param("ttlMinutes", "0"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<Duration> ttl = ArgumentCaptor.forClass(Duration.class);
+        verify(fileStorageService).storeTemporaryFileResponse(eq(user), any(), ttl.capture());
+        assertThat(ttl.getValue()).isEqualTo(Duration.ofMinutes(1));
     }
 
     private static StoredFile newStoredFile() {

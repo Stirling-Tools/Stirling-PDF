@@ -30,9 +30,11 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.controller.api.EditTableOfContentsController.BookmarkItem;
 import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
+import stirling.software.SPDF.model.api.general.ExtractBookmarksRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -105,7 +107,7 @@ class EditTableOfContentsControllerTest {
 
         // When
         ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+                editTableOfContentsController.extractBookmarks(request(mockFile));
 
         // Then
         assertNotNull(response);
@@ -130,7 +132,7 @@ class EditTableOfContentsControllerTest {
 
         // When
         ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+                editTableOfContentsController.extractBookmarks(request(mockFile));
 
         // Then
         assertNotNull(response);
@@ -167,7 +169,7 @@ class EditTableOfContentsControllerTest {
 
         // When
         ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+                editTableOfContentsController.extractBookmarks(request(mockFile));
 
         // Then
         assertNotNull(response);
@@ -206,7 +208,7 @@ class EditTableOfContentsControllerTest {
 
         // When
         ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+                editTableOfContentsController.extractBookmarks(request(mockFile));
 
         // Then
         assertNotNull(response);
@@ -450,6 +452,12 @@ class EditTableOfContentsControllerTest {
         // When & Then
         assertThrows(
                 RuntimeException.class,
-                () -> editTableOfContentsController.extractBookmarks(mockFile));
+                () -> editTableOfContentsController.extractBookmarks(request(mockFile)));
+    }
+
+    private static ExtractBookmarksRequest request(MultipartFile file) {
+        ExtractBookmarksRequest request = new ExtractBookmarksRequest();
+        request.setFileInput(file);
+        return request;
     }
 }

@@ -436,6 +436,7 @@ export const useToolOperation = <TParams>(
             ) {
               // Every input is stored, so send references only.
               formData.delete("fileInput");
+              formData.delete("files");
               for (const id of storedFileIds) {
                 formData.append("fileIds", id);
               }
@@ -491,7 +492,14 @@ export const useToolOperation = <TParams>(
 
           case ToolType.custom: {
             actions.setStatus("Processing files...");
-            const result = await config.customProcessor(params, filesForAPI);
+            const serverFileIds = validFiles.map((file) =>
+              storedFileIdForFile(file, selectors.getStirlingFileStub),
+            );
+            const result = await config.customProcessor(
+              params,
+              filesForAPI,
+              serverFileIds,
+            );
 
             processedFiles = result.files;
             const consumedAllInputs = result.consumedAllInputs || false;

@@ -41,15 +41,22 @@ export const extractPagesOperationConfig = defineCustomTool({
   customProcessor: async (
     parameters: ExtractPagesParameters,
     files: File[],
+    serverFileIds?: (string | undefined)[],
   ): Promise<CustomProcessorResult> => {
     const outputs: File[] = [];
 
-    for (const file of files) {
+    for (let index = 0; index < files.length; index++) {
+      const file = files[index];
       // Resolve selection into CSV acceptable by backend
       const csv = await resolveSelectionToCsv(parameters.pageNumbers, file);
 
       const formData = new FormData();
-      formData.append("fileInput", file);
+      const serverFileId = serverFileIds?.[index];
+      if (serverFileId) {
+        formData.append("fileId", serverFileId);
+      } else {
+        formData.append("fileInput", file);
+      }
       formData.append("pageNumbers", csv);
 
       const response = await apiClient.post(

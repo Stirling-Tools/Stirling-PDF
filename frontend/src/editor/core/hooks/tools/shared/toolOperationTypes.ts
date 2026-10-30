@@ -243,6 +243,8 @@ export interface CustomToolOperationConfig<
   customProcessor: (
     params: TParams,
     files: File[],
+    /** Persistent storage references aligned with `files`, when the endpoint accepts them. */
+    serverFileIds?: (string | undefined)[],
   ) => Promise<CustomProcessorResult>;
 }
 

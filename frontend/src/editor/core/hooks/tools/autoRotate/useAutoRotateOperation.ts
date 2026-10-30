@@ -93,12 +93,19 @@ const createAutoRotateProcessor =
   async (
     parameters: AutoRotateParameters,
     files: File[],
+    serverFileIds?: (string | undefined)[],
   ): Promise<CustomProcessorResult> => {
     const outputs: File[] = [];
 
-    for (const inputFile of files) {
+    for (let index = 0; index < files.length; index++) {
+      const inputFile = files[index];
       const analysisForm = new FormData();
-      analysisForm.append("fileInput", inputFile);
+      const serverFileId = serverFileIds?.[index];
+      if (serverFileId) {
+        analysisForm.append("fileId", serverFileId);
+      } else {
+        analysisForm.append("fileInput", inputFile);
+      }
       analysisForm.append("detectionMode", parameters.detectionMode);
       analysisForm.append(
         "confidenceThreshold",
