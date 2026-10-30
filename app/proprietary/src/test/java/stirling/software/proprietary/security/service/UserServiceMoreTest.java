@@ -394,7 +394,16 @@ class UserServiceMoreTest {
         void updateUserSettingsKeepsMfaState() throws SQLException, UnsupportedProviderException {
             User u = user("p");
             u.setSettings(
-                    new HashMap<>(Map.of("mfaEnabled", "true", "mfaSecret", "original-secret")));
+                    new HashMap<>(
+                            Map.of(
+                                    "mfaEnabled",
+                                    "true",
+                                    "mfaSecret",
+                                    "original-secret",
+                                    "loginLandingView",
+                                    "files",
+                                    "theme",
+                                    "light")));
             when(userRepository.findByUsernameIgnoreCaseWithSettings("p"))
                     .thenReturn(Optional.of(u));
 
@@ -404,6 +413,7 @@ class UserServiceMoreTest {
             assertThat(u.getSettings())
                     .containsEntry("mfaEnabled", "true")
                     .containsEntry("mfaSecret", "original-secret")
+                    .containsEntry("loginLandingView", "files")
                     .containsEntry("theme", "dark");
         }
 
