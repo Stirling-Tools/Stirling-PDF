@@ -604,7 +604,7 @@ class RedactExecuteServiceMoreTest {
         }
 
         @Test
-        @DisplayName("range redaction between two anchors produces a saved document")
+        @DisplayName("range redaction removes the lines between the anchors from the file")
         void rangeRedaction() throws IOException {
             byte[] pdf =
                     singlePageTextPdf(
@@ -615,8 +615,44 @@ class RedactExecuteServiceMoreTest {
             req.setRanges(List.of(new TextRange("START anchor", "END anchor")));
 
             try (TempFile out = service.execute(req)) {
-                assertThat(out.getFile()).exists();
-                assertThat(out.getFile().length()).isGreaterThan(0L);
+                String text = extractText(out);
+                assertThat(text).doesNotContain("START anchor").doesNotContain("middle one");
+                assertThat(text).doesNotContain("middle two");
+            }
+        }
+
+        @Test
+        @DisplayName("OVERLAY_ONLY range only covers, so the lines stay in the file")
+        void overlayOnlyRangeKeepsContent() throws IOException {
+            byte[] pdf =
+                    singlePageTextPdf(
+                            "START anchor line", "middle one", "middle two", "END anchor line");
+            factoryReturns(pdf);
+
+            RedactExecuteRequest req = requestFor(pdf);
+            req.setRanges(List.of(new TextRange("START anchor", "END anchor")));
+            RedactStyle style = new RedactStyle();
+            style.setStrategy(RedactionStrategy.OVERLAY_ONLY);
+            req.setStyle(style);
+
+            try (TempFile out = service.execute(req)) {
+                assertThat(extractText(out)).contains("middle one");
+            }
+        }
+
+        @Test
+        @DisplayName("an image box given top edge first still removes what it covers")
+        void imageBoxTopEdgeFirst() throws IOException {
+            byte[] pdf = singlePageTextPdf("covered by the box", "left alone below");
+            factoryReturns(pdf);
+
+            RedactExecuteRequest req = requestFor(pdf);
+            req.setImageBoxes(
+                    List.of(new ImageBox(0, LEFT_X - 2, TOP_Y + 12, LEFT_X + 300, TOP_Y - 4)));
+
+            try (TempFile out = service.execute(req)) {
+                String text = extractText(out);
+                assertThat(text).doesNotContain("covered by the box").contains("left alone below");
             }
         }
 
