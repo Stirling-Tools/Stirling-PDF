@@ -153,7 +153,7 @@ describe("file picker caller contract", () => {
   });
 
   it("still opens local selections after a remote download fails", async () => {
-    allowConsole.error(/Could not import selected file/);
+    allowConsole.error(/Could not (import|download) selected file/);
     const locals = ["First.pdf", "Last.pdf"].map((name) =>
       createNewStirlingFileStub(new File([], name)),
     );
@@ -214,6 +214,36 @@ describe("file picker caller contract", () => {
       "Local.pdf",
       "Shared.pdf",
     ]);
+  });
+
+  it("starts every server download before the first one settles", async () => {
+    const resolvers: Array<(value: unknown) => void> = [];
+    state.apiGet.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolvers.push(resolve);
+        }),
+    );
+    const stubs = [12, 13].map((id) => ({
+      ...createNewStirlingFileStub(new File([], `Server-${id}.pdf`)),
+      id: `server-${id}` as StirlingFileStub["id"],
+      remoteStorageId: id,
+    }));
+    const { result } = renderHook(useFilesModalContext, {
+      wrapper: FilesModalProvider,
+    });
+
+    const loading = result.current.loadFiles(stubs);
+    await Promise.resolve();
+    expect(state.apiGet).toHaveBeenCalledTimes(2);
+
+    for (const resolve of resolvers) {
+      resolve({
+        data: new Blob(["PDF"], { type: "application/pdf" }),
+        headers: { "content-type": "application/pdf" },
+      });
+    }
+    await expect(loading).resolves.toHaveLength(2);
   });
 
   it("downloads a shared server entry once through its share link", async () => {

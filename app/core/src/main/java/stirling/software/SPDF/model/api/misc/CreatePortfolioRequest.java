@@ -8,14 +8,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 
+import stirling.software.common.model.api.MultiFileListInput;
+
 @Data
-public class CreatePortfolioRequest {
+public class CreatePortfolioRequest implements MultiFileListInput {
 
     @Schema(
             description = "The files to bundle into the PDF Portfolio.",
-            requiredMode = Schema.RequiredMode.REQUIRED,
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             format = "binary")
     private List<MultipartFile> files;
+
+    @Schema(description = "Storage references for the portfolio members.")
+    private List<String> fileIds;
 
     @Schema(
             description = "Title shown on the portfolio cover page.",

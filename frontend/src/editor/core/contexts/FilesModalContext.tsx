@@ -103,6 +103,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
           autoUnzip: false,
           skipAutoUnzip: false,
           allowDuplicates: true,
+          skipWorkingSetPrime: true,
         });
 
         const idMap = new Map<string, FileId>();
@@ -172,6 +173,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         autoUnzip: false,
         skipAutoUnzip: false,
         allowDuplicates: true,
+        skipWorkingSetPrime: true,
       });
       const fileId = stirlingFiles[0]?.fileId as FileId | undefined;
       if (fileId && remoteStorageId) {
@@ -232,24 +234,22 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const loadFiles = useCallback(
     async (stirlingFileStubs: StirlingFileStub[]) => {
-      const loadedFiles: File[] = [];
-      for (const stub of stirlingFileStubs) {
-        const remote = await downloadRemoteFile(stub);
-        if (remote) {
-          loadedFiles.push(
-            ...(await extractLatestFilesFromBundle(
+      const loaded = await Promise.all(
+        stirlingFileStubs.map(async (stub) => {
+          const remote = await downloadRemoteFile(stub);
+          if (remote) {
+            return extractLatestFilesFromBundle(
               remote.blob,
               remote.filename,
               remote.contentType,
-            )),
-          );
-        } else {
+            );
+          }
           const file = await fileStorage.getStirlingFile(stub.id);
           if (!file) throw new Error(`${stub.name} is no longer available.`);
-          loadedFiles.push(file);
-        }
-      }
-      return loadedFiles;
+          return [file];
+        }),
+      );
+      return loaded.flat();
     },
     [downloadRemoteFile],
   );
@@ -266,13 +266,21 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
           );
       };
       if (customHandler) {
+        const results = await Promise.allSettled(
+          stirlingFileStubs.map((stub) => loadFiles([stub])),
+        );
         const loadedFiles: File[] = [];
-        for (const stub of stirlingFileStubs) {
-          try {
-            loadedFiles.push(...(await loadFiles([stub])));
-          } catch (cause) {
-            console.error("Could not load selected file", stub.name, cause);
-            failedNames.push(stub.name);
+        for (let index = 0; index < results.length; index++) {
+          const result = results[index];
+          if (result.status === "fulfilled") {
+            loadedFiles.push(...result.value);
+          } else {
+            console.error(
+              "Could not load selected file",
+              stirlingFileStubs[index].name,
+              result.reason,
+            );
+            failedNames.push(stirlingFileStubs[index].name);
           }
         }
         const files = [...loadedFiles, ...uploads];
@@ -284,13 +292,26 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const localStubs: StirlingFileStub[] = [];
       const requestedIds: FileId[] = [];
-      for (const stub of stirlingFileStubs) {
-        try {
-          const remote = await downloadRemoteFile(stub);
-          if (!remote) {
-            localStubs.push(stub);
-            continue;
+      const downloads = await Promise.all(
+        stirlingFileStubs.map(async (stub) => {
+          try {
+            return { stub, remote: await downloadRemoteFile(stub) };
+          } catch (cause) {
+            return { stub, cause };
           }
+        }),
+      );
+      for (const { stub, remote, cause } of downloads) {
+        if (cause) {
+          console.error("Could not download selected file", stub.name, cause);
+          failedNames.push(stub.name);
+          continue;
+        }
+        if (!remote) {
+          localStubs.push(stub);
+          continue;
+        }
+        try {
           const importedIds = await importBundleToWorkbench(
             remote.blob,
             remote.filename,
@@ -303,8 +324,12 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
             stub.remoteShareToken,
           );
           requestedIds.push(...importedIds);
-        } catch (cause) {
-          console.error("Could not import selected file", stub.name, cause);
+        } catch (importCause) {
+          console.error(
+            "Could not import selected file",
+            stub.name,
+            importCause,
+          );
           failedNames.push(stub.name);
         }
       }

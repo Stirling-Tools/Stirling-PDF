@@ -429,6 +429,7 @@ export interface FileContextActions {
       ) => Promise<boolean>;
       allowDuplicates?: boolean;
       skipUploadTracking?: boolean;
+      skipWorkingSetPrime?: boolean;
     },
   ) => Promise<StirlingFile[]>;
   addStirlingFileStubs: (

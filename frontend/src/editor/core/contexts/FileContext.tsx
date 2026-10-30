@@ -89,6 +89,7 @@ import {
 } from "@editor/services/pendingUnlocks";
 import { handlePasswordError } from "@editor/utils/toolErrorHandler";
 import apiClient from "@editor/services/apiClient";
+import { ensureWorkingSetReference } from "@editor/services/workingSetService";
 import { buildRemovePasswordFormData } from "@editor/hooks/tools/removePassword/buildRemovePasswordFormData";
 import { combineAbortSignals } from "@editor/utils/combineAbortSignals";
 
@@ -291,6 +292,23 @@ function FileContextInner({
       (file): file is StirlingFile =>
         file !== null && filesRef.current.get(file.fileId) === file,
     );
+  }, []);
+
+  const primeWorkingSet = useCallback((files: StirlingFile[]) => {
+    for (const file of files) {
+      const bytes = filesRef.current.get(file.fileId);
+      if (!bytes) continue;
+      const stub = stateRef.current.files.byId[file.fileId];
+      if (stub?.processedFile?.isEncrypted || getPdfAccess(bytes)?.encrypted) {
+        continue;
+      }
+      // Best effort: a failed warm-up falls back to the tool's own upload path.
+      void ensureWorkingSetReference(
+        file,
+        bytes,
+        (id) => stateRef.current.files.byId[id],
+      ).catch(() => {});
+    }
   }, []);
 
   const cancelPendingAdmissions = useCallback((ids: readonly FileId[]) => {
@@ -507,6 +525,7 @@ function FileContextInner({
         };
         /** Bytes and stub only, no thumbnail parse (see AddFileOptions). */
         skipMetadataHydration?: boolean;
+        skipWorkingSetPrime?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(
@@ -530,6 +549,9 @@ function FileContextInner({
         indexedDB?.bumpRevision?.();
       }
       const admitted = await awaitAdmissions(stirlingFiles);
+      if (!options?.skipWorkingSetPrime && !options?.derivedFromTool) {
+        primeWorkingSet(admitted);
+      }
       if (options?.selectFiles && admitted.length > 0) selectFiles(admitted);
       return admitted;
     },
@@ -539,6 +561,7 @@ function FileContextInner({
       indexedDB,
       dispatchWithUnlock,
       awaitAdmissions,
+      primeWorkingSet,
     ],
   );
 
@@ -557,6 +580,7 @@ function FileContextInner({
         ) => Promise<boolean>;
         allowDuplicates?: boolean;
         skipUploadTracking?: boolean;
+        skipWorkingSetPrime?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(
@@ -575,10 +599,17 @@ function FileContextInner({
         indexedDB?.bumpRevision?.();
       }
       const admitted = await awaitAdmissions(stirlingFiles);
+      if (!options?.skipWorkingSetPrime) primeWorkingSet(admitted);
       if (options?.selectFiles && admitted.length > 0) selectFiles(admitted);
       return admitted;
     },
-    [enablePersistence, indexedDB, dispatchWithUnlock, awaitAdmissions],
+    [
+      enablePersistence,
+      indexedDB,
+      dispatchWithUnlock,
+      awaitAdmissions,
+      primeWorkingSet,
+    ],
   );
 
   const addStirlingFileStubsAction = useCallback(
@@ -597,10 +628,11 @@ function FileContextInner({
       );
 
       const admitted = await awaitAdmissions(result);
+      primeWorkingSet(admitted);
       if (options?.selectFiles && admitted.length > 0) selectFiles(admitted);
       return admitted;
     },
-    [dispatchWithUnlock, awaitAdmissions],
+    [dispatchWithUnlock, awaitAdmissions, primeWorkingSet],
   );
 
   const reconcileOpenFilesAction = useCallback(

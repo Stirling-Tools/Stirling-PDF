@@ -1,5 +1,7 @@
 package stirling.software.SPDF.model.api.converters;
 
+import java.util.List;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -7,14 +9,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import stirling.software.common.model.api.MultiFileInput;
+
 @Data
 @EqualsAndHashCode
-public class ConvertToPdfRequest {
+public class ConvertToPdfRequest implements MultiFileInput {
 
     @Schema(
             description = "The input images to be converted to a PDF file",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile[] fileInput;
+
+    @Schema(description = "Persistent storage references, in order, used instead of fileInput.")
+    private List<String> fileIds;
 
     @Schema(
             description = "Option to determine how the image will fit onto the page",

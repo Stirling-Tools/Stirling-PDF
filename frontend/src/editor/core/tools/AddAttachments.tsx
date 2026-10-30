@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
 import { useFileContext } from "@editor/contexts/file/fileHooks";
+import { storedFileIdForFile } from "@editor/services/serverFileReference";
+import { ensureWorkingSetReference } from "@editor/services/workingSetService";
 import {
   createToolFlow,
   type MiddleStepConfig,
@@ -21,7 +23,7 @@ const AddAttachments = ({
 }: BaseToolProps) => {
   const { t } = useTranslation();
   const selectedFiles = useViewScopedFiles();
-  const { addFiles } = useFileContext();
+  const { addFiles, selectors } = useFileContext();
   const addAttachmentsTips = useAddAttachmentsTips();
 
   const params = useAddAttachmentsParameters();
@@ -56,6 +58,22 @@ const AddAttachments = ({
     }
   };
 
+  const activeFile = selectedFiles[0] ?? null;
+  const serverFileId = activeFile
+    ? storedFileIdForFile(activeFile, selectors.getStirlingFileStub)
+    : undefined;
+  const resolveServerFileId = useCallback(async () => {
+    if (!activeFile) return undefined;
+    try {
+      return await ensureWorkingSetReference(
+        activeFile,
+        activeFile,
+        selectors.getStirlingFileStub,
+      );
+    } catch {
+      return undefined;
+    }
+  }, [activeFile, selectors]);
   const hasFiles = selectedFiles.length > 0;
   const hasResults =
     operation.files.length > 0 || operation.downloadUrl !== null;
@@ -94,7 +112,9 @@ const AddAttachments = ({
           parameters={params.parameters}
           onParameterChange={params.updateParameter}
           disabled={endpointLoading}
-          activeFile={selectedFiles[0] || null}
+          activeFile={activeFile}
+          serverFileId={serverFileId}
+          resolveServerFileId={resolveServerFileId}
           onFileUpdated={(updatedFile) => {
             void addFiles([updatedFile], { selectFiles: true });
             if (onComplete) {

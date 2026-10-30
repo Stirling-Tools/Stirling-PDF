@@ -32,6 +32,7 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.model.tool.ToolIOCase;
 import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.StoredFileReferenceResolver;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.FormUtils.NewFormFieldDefinition;
 import stirling.software.common.util.TempFileManager;
@@ -64,6 +65,7 @@ public class FormDetectionController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final StoredFileReferenceResolver storedFileReferenceResolver;
     private final ObjectMapper objectMapper;
 
     @PostMapping(value = "/detect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -82,11 +84,25 @@ public class FormDetectionController {
                             + " detected fields added. With applyToPdf=false, returns the field"
                             + " rectangles as JSON instead, in PDF points.")
     public ResponseEntity<?> detect(
-            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "fileId", required = false) String fileId,
             @RequestParam(value = "confThreshold", required = false) Float confThreshold,
             @RequestParam(value = "applyToPdf", required = false, defaultValue = "true")
                     boolean applyToPdf)
             throws IOException {
+
+        if (file == null && fileId != null) {
+            file = storedFileReferenceResolver.resolve(fileId);
+        }
+        if (file == null) {
+            return ResponseEntity.badRequest()
+                    .body(
+                            Map.of(
+                                    "reason",
+                                    "INVALID_PDF",
+                                    "message",
+                                    "Either file or fileId is required"));
+        }
 
         if (file.isEmpty()) {
             return ResponseEntity.badRequest()

@@ -451,7 +451,8 @@ class CreatePortfolioParams(ApiModel):
     """
 
     cover_title: str = Field("PDF Portfolio", description="Title shown on the portfolio cover page.")
-    files: list[bytes] = Field(..., description="The files to bundle into the PDF Portfolio.")
+    file_ids: list[str] | None = Field(None, description="Storage references for the portfolio members.")
+    files: list[bytes] | None = Field(None, description="The files to bundle into the PDF Portfolio.")
 
 
 class CropParams(ApiModel):
@@ -697,6 +698,9 @@ class ImgToPdfParams(ApiModel):
         False, description="Whether to automatically rotate the images to better fit the PDF page"
     )
     color_type: ColorType = Field(ColorType.color, description="The color type of the output image(s)")
+    file_ids: list[str] | None = Field(
+        None, description="Persistent storage references, in order, used instead of fileInput."
+    )
     fit_option: FitOption = Field(
         FitOption.fill_page, description="Option to determine how the image will fit onto the page"
     )
@@ -1638,6 +1642,9 @@ class SvgToPdfParams(ApiModel):
     combine_into_single_pdf: bool = Field(
         False,
         description="Whether to combine all SVG files into a single PDF (each SVG as a separate page) or create separate PDF files for each SVG.",
+    )
+    file_ids: list[str] | None = Field(
+        None, description="Persistent storage references, in order, used instead of fileInput."
     )
 
 

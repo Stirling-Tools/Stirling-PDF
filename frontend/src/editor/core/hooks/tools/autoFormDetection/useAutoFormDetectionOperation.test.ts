@@ -64,6 +64,14 @@ describe("processAutoFormDetection", () => {
     expect(files[0].type).toBe("application/pdf");
   });
 
+  it("uses a storage reference instead of the file", async () => {
+    await process(defaultParameters, [pdfFile()], ["storage:9"]);
+
+    const body = (apiClient.post as Mock).mock.calls[0][1] as FormData;
+    expect(body.get("fileId")).toBe("storage:9");
+    expect(body.get("file")).toBeNull();
+  });
+
   it("sends the sensitivity's confidence threshold", async () => {
     await process({ ...defaultParameters, sensitivity: "low" }, [pdfFile()]);
 

@@ -23,9 +23,14 @@ const DETECT_ENDPOINT = "/api/v1/form/form-detection/detect";
 export const buildAutoFormDetectionFormData = (
   parameters: AutoFormDetectionParameters,
   file: File,
+  serverFileId?: string,
 ): FormData => {
   const formData = new FormData();
-  formData.append("file", file);
+  if (serverFileId) {
+    formData.append("fileId", serverFileId);
+  } else {
+    formData.append("file", file);
+  }
   // The server writes the AcroForm with PDFBox and reports what it added in a header, so one
   // request covers both the fillable PDF and the counts the results panel shows.
   formData.append("applyToPdf", "true");
@@ -44,11 +49,12 @@ function asPdf(data: Blob, source: File): File {
 async function processAutoFormDetection(
   parameters: AutoFormDetectionParameters,
   files: File[],
+  serverFileIds?: (string | undefined)[],
 ): Promise<{ files: File[] }> {
   const file = files[0];
   const res = await apiClient.post(
     DETECT_ENDPOINT,
-    buildAutoFormDetectionFormData(parameters, file),
+    buildAutoFormDetectionFormData(parameters, file, serverFileIds?.[0]),
     { responseType: "blob" },
   );
 
