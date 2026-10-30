@@ -479,7 +479,7 @@ mcp:
 
 secondLevelCache:
   enabled: true # Keep users, teams and policies in memory between requests. Turn off when running several instances without cluster mode
-  regions: {} # Per-region size and lifetime, e.g. {users: {maxEntries: 200000, ttl: 5m}}
+  regions: {} # Per-region size and lifetime. Set them in custom_settings.yml or as environment variables (e.g. SECONDLEVELCACHE_REGIONS_USERS_MAXENTRIES=200000); this file only keeps keys listed here
 
 # Multi-node Stirling PDF. Two different things are called "nodes" here: cluster.node.* is THIS
 # Stirling PDF instance, cluster.valkey.* is the shared Valkey - so 'mode: cluster' is Valkey's own.
