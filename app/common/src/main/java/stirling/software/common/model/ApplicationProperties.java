@@ -1882,6 +1882,7 @@ public class ApplicationProperties {
             private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
             private GoogleDrive googleDrive = new GoogleDrive();
+            private Microsoft microsoft = new Microsoft();
 
             @Data
             public static class GoogleDrive {
@@ -1889,6 +1890,18 @@ public class ApplicationProperties {
                 private String clientId = "";
                 private String apiKey = "";
                 private String appId = "";
+                private String clientSecret = "";
+                private boolean allowAccountConnections = true;
+                private String accountScope = "drive";
+            }
+
+            @Data
+            public static class Microsoft {
+                private boolean enabled = false;
+                private String clientId = "";
+                private String tenant = "common";
+                private String clientSecret = "";
+                private boolean allowAccountConnections = true;
             }
 
             @Data

@@ -215,6 +215,7 @@ public class RequestUriUtils {
                 // The phone that scans the QR code has no credentials
                 || MOBILE_SCANNER_PHONE_PATTERN.matcher(trimmedUri).matches()
                 || trimmedUri.startsWith("/api/v1/webhooks/")
+                || trimmedUri.startsWith("/api/v1/connected-accounts/callback/")
                 || trimmedUri.startsWith("/v1/api-docs")
                 // Workflow participant endpoints - access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
