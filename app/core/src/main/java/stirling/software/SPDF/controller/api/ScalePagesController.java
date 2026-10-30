@@ -153,7 +153,7 @@ public class ScalePagesController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     outputDocument,
-                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_scaled.pdf"),
+                    GeneralUtils.generateFilename(file.getOriginalFilename(), ".pdf"),
                     tempFileManager);
         }
     }

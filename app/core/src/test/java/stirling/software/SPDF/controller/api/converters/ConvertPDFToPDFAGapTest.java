@@ -198,22 +198,10 @@ class ConvertPDFToPDFAGapTest {
             return (int) getPart.invoke(profile);
         }
 
-        private String suffixOf(Object profile) throws Exception {
-            return suffixOf(profile, true);
-        }
-
-        private String suffixOf(Object profile, boolean levelAReached) throws Exception {
-            Method m = profile.getClass().getDeclaredMethod("outputSuffix", boolean.class);
+        private String displayNameOf(Object profile) throws Exception {
+            Method m = profile.getClass().getDeclaredMethod("getDisplayName");
             m.setAccessible(true);
-            return (String) m.invoke(profile, levelAReached);
-        }
-
-        @Test
-        @DisplayName("a level A profile falls back to the level B name when tagging failed")
-        void levelANotReachedIsNamedLevelB() throws Exception {
-            assertThat(suffixOf(resolveProfile("pdfa-1a"), false)).isEqualTo("_PDFA-1b.pdf");
-            assertThat(suffixOf(resolveProfile("pdfa-2a"), false)).isEqualTo("_PDFA-2b.pdf");
-            assertThat(suffixOf(resolveProfile("pdfa-3a"), true)).isEqualTo("_PDFA-3a.pdf");
+            return (String) m.invoke(profile);
         }
 
         @Test
@@ -221,14 +209,14 @@ class ConvertPDFToPDFAGapTest {
         void nullDefaultsToPdfA2() throws Exception {
             Object profile = resolveProfile(null);
             assertThat(partOf(profile)).isEqualTo(2);
-            assertThat(suffixOf(profile)).isEqualTo("_PDFA-2b.pdf");
+            assertThat(displayNameOf(profile)).isEqualTo("PDF/A-2b");
         }
 
         @Test
         @DisplayName("'pdfa-1' resolves to PDF/A-1b")
         void pdfa1Resolves() throws Exception {
             assertThat(partOf(resolveProfile("pdfa-1"))).isEqualTo(1);
-            assertThat(suffixOf(resolveProfile("pdfa-1"))).isEqualTo("_PDFA-1b.pdf");
+            assertThat(displayNameOf(resolveProfile("pdfa-1"))).isEqualTo("PDF/A-1b");
         }
 
         @Test
@@ -243,7 +231,7 @@ class ConvertPDFToPDFAGapTest {
         void pdfa3Resolves() throws Exception {
             assertThat(partOf(resolveProfile("pdfa-3"))).isEqualTo(3);
             assertThat(partOf(resolveProfile("pdfa-3b"))).isEqualTo(3);
-            assertThat(suffixOf(resolveProfile("pdfa-3"))).isEqualTo("_PDFA-3b.pdf");
+            assertThat(displayNameOf(resolveProfile("pdfa-3"))).isEqualTo("PDF/A-3b");
         }
 
         @Test
@@ -278,8 +266,8 @@ class ConvertPDFToPDFAGapTest {
             return m.invoke(null, token);
         }
 
-        private String suffixOf(Object profile) throws Exception {
-            Method m = profile.getClass().getDeclaredMethod("outputSuffix");
+        private String displayNameOf(Object profile) throws Exception {
+            Method m = profile.getClass().getDeclaredMethod("getDisplayName");
             m.setAccessible(true);
             return (String) m.invoke(profile);
         }
@@ -287,19 +275,19 @@ class ConvertPDFToPDFAGapTest {
         @Test
         @DisplayName("null token defaults to PDF/X")
         void nullDefaultsToPdfX() throws Exception {
-            assertThat(suffixOf(resolveProfile(null))).isEqualTo("_PDFX.pdf");
+            assertThat(displayNameOf(resolveProfile(null))).isEqualTo("PDF/X");
         }
 
         @Test
         @DisplayName("'pdfx' resolves to the PDF/X profile")
         void pdfxResolves() throws Exception {
-            assertThat(suffixOf(resolveProfile("pdfx"))).isEqualTo("_PDFX.pdf");
+            assertThat(displayNameOf(resolveProfile("pdfx"))).isEqualTo("PDF/X");
         }
 
         @Test
         @DisplayName("unknown token falls back to PDF/X")
         void unknownFallsBack() throws Exception {
-            assertThat(suffixOf(resolveProfile("garbage"))).isEqualTo("_PDFX.pdf");
+            assertThat(displayNameOf(resolveProfile("garbage"))).isEqualTo("PDF/X");
         }
     }
 

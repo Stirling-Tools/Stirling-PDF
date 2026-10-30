@@ -130,9 +130,8 @@ class ConvertImgPDFControllerMoreTest {
                                                 eq("color"),
                                                 eq(pdfDocumentFactory)))
                         .thenReturn(pdfBytes);
-                gu.when(() -> GeneralUtils.generateFilename("p.jpg", "_converted.pdf"))
-                        .thenReturn("p_converted.pdf");
-                wr.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "p_converted.pdf"))
+                gu.when(() -> GeneralUtils.generateFilename("p.jpg", ".pdf")).thenReturn("p.pdf");
+                wr.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "p.pdf"))
                         .thenReturn(expected);
 
                 ResponseEntity<byte[]> response = controller.convertToPdf(request);
@@ -180,15 +179,15 @@ class ConvertImgPDFControllerMoreTest {
                                                 eq("color"),
                                                 eq(pdfDocumentFactory)))
                         .thenReturn(pdfBytes);
-                gu.when(() -> GeneralUtils.generateFilename("first.png", "_converted.pdf"))
-                        .thenReturn("first_converted.pdf");
-                wr.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "first_converted.pdf"))
+                gu.when(() -> GeneralUtils.generateFilename("first.png", ".pdf"))
+                        .thenReturn("first.pdf");
+                wr.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "first.pdf"))
                         .thenReturn(expected);
 
                 ResponseEntity<byte[]> response = controller.convertToPdf(request);
 
                 assertThat(response).isSameAs(expected);
-                gu.verify(() -> GeneralUtils.generateFilename("first.png", "_converted.pdf"));
+                gu.verify(() -> GeneralUtils.generateFilename("first.png", ".pdf"));
             }
         }
     }

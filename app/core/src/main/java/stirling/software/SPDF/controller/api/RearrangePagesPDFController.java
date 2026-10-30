@@ -85,8 +85,7 @@ public class RearrangePagesPDFController {
             FormUtils.pruneOrphanedFormFields(document);
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(
-                            pdfFile.getOriginalFilename(), "_removed_pages.pdf"),
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), ".pdf"),
                     tempFileManager);
         }
     }
@@ -311,8 +310,7 @@ public class RearrangePagesPDFController {
 
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
-                        GeneralUtils.generateFilename(
-                                pdfFile.getOriginalFilename(), "_rearranged.pdf"),
+                        GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), ".pdf"),
                         tempFileManager);
             }
         } catch (IOException e) {

@@ -3056,7 +3056,6 @@ ssoManaged = "Your account is managed by your identity provider."
 title = "Change Credentials"
 
 [changeMetadata]
-filenamePrefix = "metadata"
 submit = "Change"
 tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 

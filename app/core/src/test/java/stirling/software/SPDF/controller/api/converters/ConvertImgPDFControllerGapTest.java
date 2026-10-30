@@ -122,9 +122,8 @@ class ConvertImgPDFControllerGapTest {
                                                 eq(tempFileManager),
                                                 eq(false)))
                         .thenReturn(tempFile);
-                gu.when(() -> GeneralUtils.generateFilename("book", "_converted.pdf"))
-                        .thenReturn("book_converted.pdf");
-                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(tempFile, "book_converted.pdf"))
+                gu.when(() -> GeneralUtils.generateFilename("book", ".pdf")).thenReturn("book.pdf");
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(tempFile, "book.pdf"))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.convertCbzToPdf(request);
@@ -169,9 +168,8 @@ class ConvertImgPDFControllerGapTest {
                                                 eq(tempFileManager),
                                                 eq(true)))
                         .thenReturn(tempFile);
-                gu.when(() -> GeneralUtils.generateFilename("book", "_converted.pdf"))
-                        .thenReturn("book_converted.pdf");
-                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(tempFile, "book_converted.pdf"))
+                gu.when(() -> GeneralUtils.generateFilename("book", ".pdf")).thenReturn("book.pdf");
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(tempFile, "book.pdf"))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.convertCbzToPdf(request);
@@ -207,19 +205,16 @@ class ConvertImgPDFControllerGapTest {
 
                 cbz.when(() -> CbzUtils.convertCbzToPdf(any(), any(), any(), anyBoolean()))
                         .thenReturn(tempFile);
-                gu.when(() -> GeneralUtils.generateFilename("comic", "_converted.pdf"))
-                        .thenReturn("comic_converted.pdf");
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                tempFile, "comic_converted.pdf"))
+                gu.when(() -> GeneralUtils.generateFilename("comic", ".pdf"))
+                        .thenReturn("comic.pdf");
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(tempFile, "comic.pdf"))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.convertCbzToPdf(request);
 
                 assertSame(expected, response);
                 // Default comic name is resolved when the upload carries no filename.
-                gu.verify(() -> GeneralUtils.generateFilename("comic", "_converted.pdf"));
+                gu.verify(() -> GeneralUtils.generateFilename("comic", ".pdf"));
             }
         }
     }
@@ -256,9 +251,8 @@ class ConvertImgPDFControllerGapTest {
                                                 eq(tempFileManager),
                                                 eq(false)))
                         .thenReturn(pdfBytes);
-                gu.when(() -> GeneralUtils.generateFilename("book", "_converted.pdf"))
-                        .thenReturn("book_converted.pdf");
-                wr.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "book_converted.pdf"))
+                gu.when(() -> GeneralUtils.generateFilename("book", ".pdf")).thenReturn("book.pdf");
+                wr.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "book.pdf"))
                         .thenReturn(expected);
 
                 ResponseEntity<?> response = controller.convertCbrToPdf(request);
@@ -302,9 +296,9 @@ class ConvertImgPDFControllerGapTest {
                                                 eq(tempFileManager),
                                                 eq(true)))
                         .thenReturn(pdfBytes);
-                gu.when(() -> GeneralUtils.generateFilename("story", "_converted.pdf"))
-                        .thenReturn("story_converted.pdf");
-                wr.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "story_converted.pdf"))
+                gu.when(() -> GeneralUtils.generateFilename("story", ".pdf"))
+                        .thenReturn("story.pdf");
+                wr.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "story.pdf"))
                         .thenReturn(expected);
 
                 ResponseEntity<?> response = controller.convertCbrToPdf(request);
@@ -343,9 +337,8 @@ class ConvertImgPDFControllerGapTest {
                                                 eq(pdfDocumentFactory),
                                                 eq(tempFileManager)))
                         .thenReturn(cbzFile);
-                gu.when(() -> GeneralUtils.generateFilename("doc", "_converted.cbz"))
-                        .thenReturn("doc_converted.cbz");
-                wr.when(() -> WebResponseUtils.zipFileToWebResponse(cbzFile, "doc_converted.cbz"))
+                gu.when(() -> GeneralUtils.generateFilename("doc", ".cbz")).thenReturn("doc.cbz");
+                wr.when(() -> WebResponseUtils.zipFileToWebResponse(cbzFile, "doc.cbz"))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.convertPdfToCbz(request);
@@ -379,9 +372,8 @@ class ConvertImgPDFControllerGapTest {
                                                 eq(pdfDocumentFactory),
                                                 eq(tempFileManager)))
                         .thenReturn(cbzFile);
-                gu.when(() -> GeneralUtils.generateFilename("doc", "_converted.cbz"))
-                        .thenReturn("doc_converted.cbz");
-                wr.when(() -> WebResponseUtils.zipFileToWebResponse(cbzFile, "doc_converted.cbz"))
+                gu.when(() -> GeneralUtils.generateFilename("doc", ".cbz")).thenReturn("doc.cbz");
+                wr.when(() -> WebResponseUtils.zipFileToWebResponse(cbzFile, "doc.cbz"))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.convertPdfToCbz(request);
@@ -424,13 +416,12 @@ class ConvertImgPDFControllerGapTest {
                                         PdfToCbrUtils.convertPdfToCbr(
                                                 eq(file), eq(150), eq(pdfDocumentFactory)))
                         .thenReturn(cbrBytes);
-                gu.when(() -> GeneralUtils.generateFilename("doc", "_converted.cbr"))
-                        .thenReturn("doc_converted.cbr");
+                gu.when(() -> GeneralUtils.generateFilename("doc", ".cbr")).thenReturn("doc.cbr");
                 wr.when(
                                 () ->
                                         WebResponseUtils.bytesToWebResponse(
                                                 eq(cbrBytes),
-                                                eq("doc_converted.cbr"),
+                                                eq("doc.cbr"),
                                                 eq(MediaType.APPLICATION_OCTET_STREAM)))
                         .thenReturn(expected);
 
@@ -461,13 +452,12 @@ class ConvertImgPDFControllerGapTest {
                                         PdfToCbrUtils.convertPdfToCbr(
                                                 eq(file), eq(300), eq(pdfDocumentFactory)))
                         .thenReturn(cbrBytes);
-                gu.when(() -> GeneralUtils.generateFilename("doc", "_converted.cbr"))
-                        .thenReturn("doc_converted.cbr");
+                gu.when(() -> GeneralUtils.generateFilename("doc", ".cbr")).thenReturn("doc.cbr");
                 wr.when(
                                 () ->
                                         WebResponseUtils.bytesToWebResponse(
                                                 eq(cbrBytes),
-                                                eq("doc_converted.cbr"),
+                                                eq("doc.cbr"),
                                                 eq(MediaType.APPLICATION_OCTET_STREAM)))
                         .thenReturn(expected);
 
@@ -812,19 +802,16 @@ class ConvertImgPDFControllerGapTest {
 
                 cbz.when(() -> CbzUtils.convertCbzToPdf(any(), any(), any(), anyBoolean()))
                         .thenReturn(tempFile);
-                gu.when(() -> GeneralUtils.generateFilename("my.archive", "_converted.pdf"))
-                        .thenReturn("my.archive_converted.pdf");
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                tempFile, "my.archive_converted.pdf"))
+                gu.when(() -> GeneralUtils.generateFilename("my.archive", ".pdf"))
+                        .thenReturn("my.archive.pdf");
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(tempFile, "my.archive.pdf"))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.convertCbzToPdf(request);
 
                 assertSame(expected, response);
                 // Only the final ".cbz" is removed, the inner dot is preserved.
-                gu.verify(() -> GeneralUtils.generateFilename("my.archive", "_converted.pdf"));
+                gu.verify(() -> GeneralUtils.generateFilename("my.archive", ".pdf"));
             }
         }
 
@@ -849,18 +836,15 @@ class ConvertImgPDFControllerGapTest {
 
                 cbz.when(() -> CbzUtils.convertCbzToPdf(any(), any(), any(), anyBoolean()))
                         .thenReturn(tempFile);
-                gu.when(() -> GeneralUtils.generateFilename("comic", "_converted.pdf"))
-                        .thenReturn("comic_converted.pdf");
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                tempFile, "comic_converted.pdf"))
+                gu.when(() -> GeneralUtils.generateFilename("comic", ".pdf"))
+                        .thenReturn("comic.pdf");
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(tempFile, "comic.pdf"))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.convertCbzToPdf(request);
 
                 assertSame(expected, response);
-                gu.verify(() -> GeneralUtils.generateFilename("comic", "_converted.pdf"));
+                gu.verify(() -> GeneralUtils.generateFilename("comic", ".pdf"));
             }
         }
     }

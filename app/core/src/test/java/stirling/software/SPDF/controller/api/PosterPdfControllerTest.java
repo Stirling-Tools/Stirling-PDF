@@ -148,7 +148,7 @@ class PosterPdfControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getHeaders().getContentDisposition().getFilename())
-                    .isEqualTo("doc_poster.zip");
+                    .isEqualTo("doc.zip");
             assertThat(response.getHeaders().getContentType())
                     .isEqualTo(MediaType.APPLICATION_OCTET_STREAM);
 
@@ -163,7 +163,7 @@ class PosterPdfControllerTest {
         }
 
         @Test
-        @DisplayName("ZIP entry is named <base>_poster.pdf")
+        @DisplayName("ZIP entry is named <base>.pdf")
         void zipEntryNamedAfterBase() throws Exception {
             MockMultipartFile file = createRealPdf(1, "report.pdf");
             PosterPdfRequest request = createRequest(file);
@@ -175,7 +175,7 @@ class PosterPdfControllerTest {
             try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
                 ZipEntry entry = zis.getNextEntry();
                 assertThat(entry).isNotNull();
-                assertThat(entry.getName()).isEqualTo("report_poster.pdf");
+                assertThat(entry.getName()).isEqualTo("report.pdf");
             }
         }
 
@@ -256,12 +256,12 @@ class PosterPdfControllerTest {
             ResponseEntity<Resource> response = controller.posterPdf(request);
 
             assertThat(response.getHeaders().getContentDisposition().getFilename())
-                    .isEqualTo("noext_poster.zip");
+                    .isEqualTo("noext.zip");
             try (ZipInputStream zis =
                     new ZipInputStream(new ByteArrayInputStream(drainBody(response)))) {
                 ZipEntry entry = zis.getNextEntry();
                 assertThat(entry).isNotNull();
-                assertThat(entry.getName()).isEqualTo("noext_poster.pdf");
+                assertThat(entry.getName()).isEqualTo("noext.pdf");
             }
         }
 
@@ -280,9 +280,9 @@ class PosterPdfControllerTest {
             ResponseEntity<Resource> response = controller.posterPdf(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            // MockMultipartFile maps a null name to "", so the base is empty -> leading underscore.
+            // MockMultipartFile maps a null name to "", so the base is empty.
             assertThat(response.getHeaders().getContentDisposition().getFilename())
-                    .isEqualTo("_poster.zip");
+                    .isEqualTo(".zip");
         }
     }
 

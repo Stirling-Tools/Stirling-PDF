@@ -124,7 +124,7 @@ public class PortfolioController {
                     GeneralUtils.generateFilename(
                             Filenames.toSimpleFileName(
                                     request.getFileInput().getOriginalFilename()),
-                            "_flattened.pdf"),
+                            ".pdf"),
                     tempFileManager);
         }
     }

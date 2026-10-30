@@ -172,11 +172,7 @@ public class ConvertPDFToEpubController {
 
             String outputFilename =
                     GeneralUtils.generateFilename(
-                            originalFilename,
-                            "_convertedTo"
-                                    + outputFormat.name()
-                                    + "."
-                                    + outputFormat.getExtension());
+                            originalFilename, "." + outputFormat.getExtension());
 
             MediaType mediaType = MediaType.valueOf(outputFormat.getMediaType());
             TempFile tempOut =

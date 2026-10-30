@@ -672,7 +672,7 @@ public class ConvertPDFToPDFA {
 
             log.info("Using Ghostscript for PDF/X conversion to {}", profile.getDisplayName());
             byte[] converted = convertWithGhostscriptX(inputPath, workingDir, profile);
-            String outputFilename = baseFileName + profile.outputSuffix();
+            String outputFilename = baseFileName + ".pdf";
 
             log.info("PDF/X conversion completed successfully to {}", profile.getDisplayName());
 
@@ -1859,7 +1859,7 @@ public class ConvertPDFToPDFA {
                     var levelA =
                             applyLevelA(converted, inputPath, profile, baseFileName, declarePdfUa);
                     converted = levelA.pdfBytes();
-                    String outputFilename = baseFileName + profile.outputSuffix(levelA.levelA());
+                    String outputFilename = baseFileName + ".pdf";
 
                     validateAndWarnPdfA(converted, profile, "Ghostscript");
 
@@ -1887,7 +1887,7 @@ public class ConvertPDFToPDFA {
             converted = convertWithPdfBoxMethod(inputPath, profile);
             var levelA = applyLevelA(converted, inputPath, profile, baseFileName, declarePdfUa);
             converted = levelA.pdfBytes();
-            String outputFilename = baseFileName + profile.outputSuffix(levelA.levelA());
+            String outputFilename = baseFileName + ".pdf";
 
             // Validate with PDFBox preflight and warn if issues found
             validateAndWarnPdfA(converted, profile, "PDFBox/LibreOffice");
@@ -2683,18 +2683,17 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfaProfile {
-        PDF_A_1B(1, "B", "PDF/A-1b", "_PDFA-1b.pdf", "1.4", Format.PDF_A1B, "pdfa-1"),
-        PDF_A_2B(2, "B", "PDF/A-2b", "_PDFA-2b.pdf", "1.7", null, "pdfa", "pdfa-2", "pdfa-2b"),
-        PDF_A_3B(3, "B", "PDF/A-3b", "_PDFA-3b.pdf", "1.7", null, "pdfa-3", "pdfa-3b"),
+        PDF_A_1B(1, "B", "PDF/A-1b", "1.4", Format.PDF_A1B, "pdfa-1"),
+        PDF_A_2B(2, "B", "PDF/A-2b", "1.7", null, "pdfa", "pdfa-2", "pdfa-2b"),
+        PDF_A_3B(3, "B", "PDF/A-3b", "1.7", null, "pdfa-3", "pdfa-3b"),
         // Level A = level B plus tagging, declared language and Unicode text; tagged post-convert.
-        PDF_A_1A(1, "A", "PDF/A-1a", "_PDFA-1a.pdf", "1.4", Format.PDF_A1B, "pdfa-1a"),
-        PDF_A_2A(2, "A", "PDF/A-2a", "_PDFA-2a.pdf", "1.7", null, "pdfa-2a"),
-        PDF_A_3A(3, "A", "PDF/A-3a", "_PDFA-3a.pdf", "1.7", null, "pdfa-3a");
+        PDF_A_1A(1, "A", "PDF/A-1a", "1.4", Format.PDF_A1B, "pdfa-1a"),
+        PDF_A_2A(2, "A", "PDF/A-2a", "1.7", null, "pdfa-2a"),
+        PDF_A_3A(3, "A", "PDF/A-3a", "1.7", null, "pdfa-3a");
 
         private final int part;
         private final String conformanceLevel;
         private final String displayName;
-        private final String suffix;
         private final String compatibilityLevel;
         private final Format preflightFormat;
         private final List<String> requestTokens;
@@ -2703,14 +2702,12 @@ public class ConvertPDFToPDFA {
                 int part,
                 String conformanceLevel,
                 String displayName,
-                String suffix,
                 String compatibilityLevel,
                 Format preflightFormat,
                 String... requestTokens) {
             this.part = part;
             this.conformanceLevel = conformanceLevel;
             this.displayName = displayName;
-            this.suffix = suffix;
             this.compatibilityLevel = compatibilityLevel;
             this.preflightFormat = preflightFormat;
             this.requestTokens =
@@ -2736,13 +2733,6 @@ public class ConvertPDFToPDFA {
             return match.orElse(PDF_A_2B);
         }
 
-        /**
-         * Names the file at the level actually reached; a level A name over level B content lies.
-         */
-        String outputSuffix(boolean levelAReached) {
-            return levelAReached ? suffix : "_PDFA-" + part + "b.pdf";
-        }
-
         Optional<Format> preflightFormat() {
             return Optional.ofNullable(preflightFormat);
         }
@@ -2750,22 +2740,19 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfXProfile {
-        PDF_X("PDF/X", "_PDFX.pdf", "1.6", "2008", "pdfx");
+        PDF_X("PDF/X", "1.6", "2008", "pdfx");
 
         private final String displayName;
-        private final String suffix;
         private final String compatibilityLevel;
         private final String pdfxVersion;
         private final List<String> requestTokens;
 
         PdfXProfile(
                 String displayName,
-                String suffix,
                 String compatibilityLevel,
                 String pdfxVersion,
                 String... requestTokens) {
             this.displayName = displayName;
-            this.suffix = suffix;
             this.compatibilityLevel = compatibilityLevel;
             this.pdfxVersion = pdfxVersion;
             this.requestTokens =
@@ -2785,10 +2772,6 @@ public class ConvertPDFToPDFA {
                             .findFirst();
 
             return match.orElse(PDF_X);
-        }
-
-        String outputSuffix() {
-            return suffix;
         }
     }
 

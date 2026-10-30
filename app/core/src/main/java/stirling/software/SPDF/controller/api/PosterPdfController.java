@@ -247,7 +247,7 @@ public class PosterPdfController {
                 // Create ZIP from the PDF TempFile, streaming directly to zip TempFile
                 try (ZipOutputStream zipOut =
                         new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
-                    zipOut.putNextEntry(new ZipEntry(filename + "_poster.pdf"));
+                    zipOut.putNextEntry(new ZipEntry(filename + ".pdf"));
                     Files.copy(pdfTempFile.getPath(), zipOut);
                     zipOut.closeEntry();
                 }
@@ -255,7 +255,7 @@ public class PosterPdfController {
             }
 
             log.debug("Successfully created ZIP");
-            return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + "_poster.zip");
+            return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + ".zip");
 
         } catch (IOException e) {
             ExceptionUtils.logException("PDF poster split process", e);

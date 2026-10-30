@@ -227,7 +227,7 @@ public class ConvertImgPDFController {
                     tempFile = null;
                     FileUtils.deleteDirectory(tempOutputDir.toFile());
                     tempOutputDir = null;
-                    String zipFilename = filename + "_convertedToImages.zip";
+                    String zipFilename = filename + ".zip";
                     return WebResponseUtils.bytesToWebResponse(
                             zipBAOS.toByteArray(), zipFilename, MediaType.APPLICATION_OCTET_STREAM);
                 }
@@ -238,7 +238,7 @@ public class ConvertImgPDFController {
                 MediaType mediaType = MediaType.parseMediaType(getMediaType(imageFormat));
                 return WebResponseUtils.bytesToWebResponse(result, docName, mediaType);
             } else {
-                String zipFilename = filename + "_convertedToImages.zip";
+                String zipFilename = filename + ".zip";
                 return WebResponseUtils.bytesToWebResponse(
                         result, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
             }
@@ -294,8 +294,7 @@ public class ConvertImgPDFController {
         byte[] bytes =
                 PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType, pdfDocumentFactory);
         return WebResponseUtils.bytesToWebResponse(
-                bytes,
-                GeneralUtils.generateFilename(file[0].getOriginalFilename(), "_converted.pdf"));
+                bytes, GeneralUtils.generateFilename(file[0].getOriginalFilename(), ".pdf"));
     }
 
     @AutoJobPostMapping(
@@ -324,7 +323,7 @@ public class ConvertImgPDFController {
                 CbzUtils.convertCbzToPdf(
                         file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
 
-        String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
+        String filename = createConvertedFilename(file.getOriginalFilename(), ".pdf");
 
         return WebResponseUtils.pdfFileToWebResponse(pdfFile, filename);
     }
@@ -349,7 +348,7 @@ public class ConvertImgPDFController {
         TempFile cbzFile =
                 PdfToCbzUtils.convertPdfToCbz(file, dpi, pdfDocumentFactory, tempFileManager);
 
-        String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbz");
+        String filename = createConvertedFilename(file.getOriginalFilename(), ".cbz");
 
         return WebResponseUtils.zipFileToWebResponse(cbzFile, filename);
     }
@@ -380,7 +379,7 @@ public class ConvertImgPDFController {
                 CbrUtils.convertCbrToPdf(
                         file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
 
-        String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
+        String filename = createConvertedFilename(file.getOriginalFilename(), ".pdf");
 
         return WebResponseUtils.bytesToWebResponse(pdfBytes, filename);
     }
@@ -406,7 +405,7 @@ public class ConvertImgPDFController {
 
         byte[] cbrBytes = PdfToCbrUtils.convertPdfToCbr(file, dpi, pdfDocumentFactory);
 
-        String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbr");
+        String filename = createConvertedFilename(file.getOriginalFilename(), ".cbr");
 
         return WebResponseUtils.bytesToWebResponse(
                 cbrBytes, filename, MediaType.APPLICATION_OCTET_STREAM);

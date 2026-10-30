@@ -158,16 +158,14 @@ public class WatermarkController {
                     // Return the watermarked PDF as a response
                     return WebResponseUtils.pdfDocToWebResponse(
                             convertedPdf,
-                            GeneralUtils.generateFilename(
-                                    pdfFile.getOriginalFilename(), "_watermarked.pdf"),
+                            GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), ".pdf"),
                             tempFileManager);
                 }
             } else {
                 // Return the watermarked PDF as a response
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
-                        GeneralUtils.generateFilename(
-                                pdfFile.getOriginalFilename(), "_watermarked.pdf"),
+                        GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), ".pdf"),
                         tempFileManager);
             }
         }
