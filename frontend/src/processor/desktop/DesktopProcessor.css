@@ -1,0 +1,7 @@
+/* The shell pins itself to the viewport on the web. Here it sits in the app's
+   body under the title-bar strip, which already has the right height. */
+.desktop-processor,
+.desktop-processor > .portal-scope,
+.desktop-processor .portal-shell {
+  height: 100%;
+}

@@ -40,7 +40,7 @@ vi.mock("@editor/auth/supabase/supabaseClient", () => ({
 vi.mock("@editor/portal/usersBackend", async () => ({
   usersBackend:
     // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @editor alias
-    (await import("../../../editor/saas/portal/usersBackend")).usersBackend,
+    (await import("../../cloud/usersBackend")).usersBackend,
 }));
 
 let teamMyFetches = 0;

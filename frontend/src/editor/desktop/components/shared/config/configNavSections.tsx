@@ -8,10 +8,8 @@ import {
 import { ConnectionSettings } from "@editor/components/ConnectionSettings";
 import DesktopGeneralSection from "@editor/components/shared/config/configSections/GeneralSection";
 import { createCloudTeamNavItem } from "@editor/components/shared/config/cloudConfigNavSections";
-import { BillingSettingsSection } from "@editor/components/settings/BillingSettingsSection";
 import { connectionModeService } from "@editor/services/connectionModeService";
 import { authService } from "@editor/services/authService";
-import { useAuth } from "@editor/auth/context";
 
 export type {
   ConfigNavSection,
@@ -29,8 +27,6 @@ export const useConfigNavSections = (
   showSettingsWhenNoLogin: boolean = true,
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
-  const { isAdmin: authenticatedAdmin, user, loading } = useAuth();
-  const isOwner = authenticatedAdmin && !loading && user?.orgOwner === true;
 
   const [connectionMode, setConnectionMode] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -130,37 +126,6 @@ export const useConfigNavSections = (
   // Connection Mode always sits immediately after Preferences
   result.push(connectionModeSection);
 
-  if (
-    isAuthenticated &&
-    (isSaasMode || (connectionMode === "selfhosted" && isOwner))
-  ) {
-    const billingSection: ConfigNavSection = {
-      id: "workspace",
-      title: t("settings.workspace.title", "Workspace"),
-      items: [
-        {
-          key: "billing",
-          label: t("portal.nav.usage", "Usage & Billing"),
-          icon: "credit-card",
-          component: (
-            <BillingSettingsSection mode={isSaasMode ? "saas" : "selfhosted"} />
-          ),
-        },
-      ],
-    };
-    const workspace = isSaasMode
-      ? undefined
-      : sections.find((section) => section.id === "workspace");
-    if (workspace) {
-      const index = sections.indexOf(workspace);
-      sections[index] = {
-        ...workspace,
-        items: [...workspace.items, ...billingSection.items],
-      };
-    } else {
-      result.push(billingSection);
-    }
-  }
   if (isSaasMode && isAuthenticated) {
     result.push({
       title: t("settings.team.title", "Team"),
