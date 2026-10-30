@@ -1328,6 +1328,10 @@ label = "Watched Folders Directories"
 description = "The default language for new users (e.g., en_US, es_ES)"
 label = "Default Locale"
 
+[admin.settings.general.enableFeedback]
+description = "Let users send feedback to the Stirling team"
+label = "Enable Feedback"
+
 [admin.settings.general.fileUploadLimit]
 description = "Maximum file upload size (e.g., 100MB, 1GB)"
 label = "File Upload Limit"

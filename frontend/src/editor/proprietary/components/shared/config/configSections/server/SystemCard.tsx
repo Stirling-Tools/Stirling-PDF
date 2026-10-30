@@ -351,6 +351,29 @@ export function SystemCard({
 
         <SettingsToggleRow
           label={t(
+            "admin.settings.general.enableFeedback.label",
+            "Enable Feedback",
+          )}
+          info={t(
+            "admin.settings.general.enableFeedback.description",
+            "Let users send feedback to the Stirling team",
+          )}
+          pending={isFieldPending("system.enableFeedback")}
+          checked={settings.system?.enableFeedback || false}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              system: {
+                ...settings.system,
+                enableFeedback: checked,
+              },
+            })
+          }
+          disabled={!loginEnabled}
+        />
+
+        <SettingsToggleRow
+          label={t(
             "admin.settings.general.customHTMLFiles.label",
             "Custom HTML Files",
           )}
