@@ -74,7 +74,7 @@ class SecondLevelCacheRegionTunerTest {
     @Test
     void overridesSizeAndLifetimeOfTheNamedRegionOnly() {
         SecondLevelCacheRegionTuner.apply(
-                manager, Map.of("users", region(200_000L, Duration.ofMinutes(2))));
+                manager, Map.of(), Map.of("users", region(200_000L, Duration.ofMinutes(2))));
 
         assertThat(maximum("users")).isEqualTo(200_000);
         assertThat(ttl("users")).isEqualTo(Duration.ofMinutes(2));
@@ -84,7 +84,8 @@ class SecondLevelCacheRegionTunerTest {
 
     @Test
     void leavesTheLifetimeAloneWhenOnlyTheSizeIsSet() {
-        SecondLevelCacheRegionTuner.apply(manager, Map.of("teams", region(75_000L, null)));
+        SecondLevelCacheRegionTuner.apply(
+                manager, Map.of(), Map.of("teams", region(75_000L, null)));
 
         assertThat(maximum("teams")).isEqualTo(75_000);
         assertThat(ttl("teams")).isEqualTo(Duration.ofMinutes(15));
@@ -96,7 +97,7 @@ class SecondLevelCacheRegionTunerTest {
         overrides.put("usersnaturalid", region(60_000L, null));
         overrides.put("policysources", region(3_000L, null));
 
-        SecondLevelCacheRegionTuner.apply(manager, overrides);
+        SecondLevelCacheRegionTuner.apply(manager, Map.of(), overrides);
 
         assertThat(maximum("usersNaturalId")).isEqualTo(60_000);
         assertThat(maximum("policy-sources")).isEqualTo(3_000);
@@ -107,10 +108,53 @@ class SecondLevelCacheRegionTunerTest {
         assertThatThrownBy(
                         () ->
                                 SecondLevelCacheRegionTuner.apply(
-                                        manager, Map.of("userz", region(10L, null))))
+                                        manager, Map.of(), Map.of("userz", region(10L, null))))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("secondLevelCache.regions.userz")
                 .hasMessageContaining("usersNaturalId");
+    }
+
+    @Test
+    void profileDefaultsApplyAndSettingsOverrideThemPerField() {
+        SecondLevelCacheRegionTuner.apply(
+                manager,
+                Map.of("users", region(200_000L, null)),
+                Map.of("users", region(null, Duration.ofMinutes(2))));
+
+        assertThat(maximum("users")).isEqualTo(200_000);
+        assertThat(ttl("users")).isEqualTo(Duration.ofMinutes(2));
+
+        SecondLevelCacheRegionTuner.apply(
+                manager,
+                Map.of("users", region(200_000L, null)),
+                Map.of("users", region(1_000L, null)));
+
+        assertThat(maximum("users")).isEqualTo(1_000);
+    }
+
+    @Test
+    void twoSpellingsOfARegionCombineTheirFields() {
+        Map<String, Region> overrides = new LinkedHashMap<>();
+        overrides.put("usersNaturalId", region(60_000L, null));
+        overrides.put("usersnaturalid", region(null, Duration.ofMinutes(3)));
+
+        SecondLevelCacheRegionTuner.apply(manager, Map.of(), overrides);
+
+        assertThat(maximum("usersNaturalId")).isEqualTo(60_000);
+        assertThat(ttl("usersNaturalId")).isEqualTo(Duration.ofMinutes(3));
+    }
+
+    @Test
+    void twoSpellingsDisagreeingOnOneFieldFail() {
+        Map<String, Region> overrides = new LinkedHashMap<>();
+        overrides.put("usersNaturalId", region(60_000L, null));
+        overrides.put("usersnaturalid", region(70_000L, null));
+
+        assertThatThrownBy(() -> SecondLevelCacheRegionTuner.apply(manager, Map.of(), overrides))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("usersNaturalId")
+                .hasMessageContaining("usersnaturalid")
+                .hasMessageContaining("keep one spelling");
     }
 
     @Test
