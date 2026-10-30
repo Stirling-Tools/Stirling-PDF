@@ -2291,6 +2291,7 @@ function readAttachmentUtf16(
   }
 }
 
+/** Read an attachment's CreationDate or ModDate from its string dictionary. */
 function readAttachmentDate(
   m: WrappedPdfiumModule,
   attachmentPtr: number,
@@ -2302,6 +2303,7 @@ function readAttachmentDate(
   return raw ? pdfDateToDate(raw) : undefined;
 }
 
+/** Read the uncompressed attachment size without copying its bytes. */
 function readAttachmentSize(
   m: WrappedPdfiumModule,
   attachmentPtr: number,
@@ -2318,6 +2320,7 @@ function readAttachmentSize(
   }
 }
 
+/** Read one embedded file's metadata from its file specification. */
 function readAttachmentInfo(
   m: WrappedPdfiumModule,
   attachmentPtr: number,
@@ -2339,6 +2342,7 @@ function readAttachmentInfo(
   };
 }
 
+/** Copy one attachment's bytes out of the WASM heap. */
 function readAttachmentBytes(
   m: WrappedPdfiumModule,
   attachmentPtr: number,

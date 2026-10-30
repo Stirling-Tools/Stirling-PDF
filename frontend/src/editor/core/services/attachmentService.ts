@@ -114,15 +114,19 @@ export async function deleteAttachment(
   return response.data as Blob;
 }
 
-// A file specification can carry a path or an empty name. A ZIP entry must be
-// a leaf name so extracting the archive cannot write outside the target folder.
+/**
+ * Reduce an attachment name to one leaf name, so extracting the archive cannot
+ * write outside the user's chosen folder.
+ */
 function safeZipEntryName(name: string): string {
   const leaf = name.split(/[\\/]/).pop()?.trim() ?? "";
   return leaf && leaf !== "." && leaf !== ".." ? leaf : "attachment";
 }
 
-// Match the server's extract-all naming: duplicate file specification names get
-// `_1`, `_2`, … before the extension instead of overwriting each other in JSZip.
+/**
+ * Match the server's extract-all naming: duplicate file specification names get
+ * `_1`, `_2`, … before the extension instead of overwriting each other in JSZip.
+ */
 function uniqueZipEntryName(name: string, usedNames: Set<string>): string {
   const dot = name.lastIndexOf(".");
   const hasExtension = dot > 0 && dot < name.length - 1;
