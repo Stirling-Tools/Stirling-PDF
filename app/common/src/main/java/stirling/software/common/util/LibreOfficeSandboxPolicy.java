@@ -1,5 +1,6 @@
 package stirling.software.common.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +32,10 @@ import lombok.extern.slf4j.Slf4j;
 final class LibreOfficeSandboxPolicy {
 
     static final String IPC_PIPE_DIR = "/tmp";
+
+    // lo-sandbox splits its lists on the path-list separator: ':' on Linux, the only place it runs.
+    static final String LIST_SEPARATOR = File.pathSeparator;
+
     private static final String IPC_PIPE_PREFIX = "OSL_PIPE_";
     private static final String USER_INSTALLATION_PREFIX = "-env:UserInstallation=";
 
@@ -101,7 +106,9 @@ final class LibreOfficeSandboxPolicy {
         }
 
         Map<String, String> env = new LinkedHashMap<>();
-        env.put("STIRLING_LO_ALLOW_RW", profile + ":" + outDir + ":/dev");
+        env.put(
+                "STIRLING_LO_ALLOW_RW",
+                String.join(LIST_SEPARATOR, profile.toString(), outDir.toString(), "/dev"));
         env.put("STIRLING_LO_ALLOW_SOCK", IPC_PIPE_DIR);
         env.put("STIRLING_LO_ALLOW_RO_EXTRA", join(inputs));
         env.put("HOME", profile.toString());
@@ -248,13 +255,14 @@ final class LibreOfficeSandboxPolicy {
     }
 
     private static boolean listable(Path profile, Path outDir, List<Path> inputs) {
-        if (profile.toString().contains(":") || outDir.toString().contains(":")) {
+        if (profile.toString().contains(LIST_SEPARATOR)
+                || outDir.toString().contains(LIST_SEPARATOR)) {
             return false;
         }
-        return inputs.stream().noneMatch(p -> p.toString().contains(":"));
+        return inputs.stream().noneMatch(p -> p.toString().contains(LIST_SEPARATOR));
     }
 
     private static String join(List<Path> paths) {
-        return String.join(":", paths.stream().map(Path::toString).toList());
+        return String.join(LIST_SEPARATOR, paths.stream().map(Path::toString).toList());
     }
 }
