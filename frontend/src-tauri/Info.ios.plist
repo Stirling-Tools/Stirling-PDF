@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  iOS-only additions, merged by Tauri on top of the generated Info.plist.
+	  The sibling Info.plist stays macOS/desktop-only.
+
+	  Without these two keys the app's Documents directory is invisible to the
+	  system: "On My iPhone" shows no Stirling folder, so a user cannot get a
+	  document in from the Files app or find one the app saved. Both are
+	  expected of a document-based app.
+	-->
+
+	<!-- Expose the app's Documents directory in the Files app. -->
+	<key>UIFileSharingEnabled</key>
+	<true/>
+
+	<!-- Open documents in place rather than working on a private copy, so an
+	     edit is written back to the file the user actually chose. -->
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+</dict>
+</plist>

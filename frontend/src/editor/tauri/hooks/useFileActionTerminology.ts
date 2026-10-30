@@ -1,9 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-/**
- * File action terminology for desktop builds
- * Overrides core implementation with desktop-appropriate terminology
- */
+/** A native app opens and saves files on the device rather than uploading and downloading them. */
 export function useFileActionTerminology() {
   const { t } = useTranslation();
 

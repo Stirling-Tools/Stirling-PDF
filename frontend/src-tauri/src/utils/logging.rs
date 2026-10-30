@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -7,9 +7,25 @@ use std::path::PathBuf;
 // Store backend logs globally
 static BACKEND_LOGS: Mutex<VecDeque<String>> = Mutex::new(VecDeque::new());
 
-// Get platform-specific log directory
-fn get_log_directory() -> PathBuf {
-    if cfg!(target_os = "macos") {
+// Mobile sandboxes only allow writes inside app storage, which is known once
+// Tauri has started; entries logged before then stay in memory only.
+static APP_LOG_DIR: OnceLock<PathBuf> = OnceLock::new();
+
+#[cfg(mobile)]
+pub fn set_log_directory(dir: PathBuf) {
+    let _ = APP_LOG_DIR.set(dir);
+}
+
+// None until `set_log_directory` runs on mobile: the desktop fallbacks below
+// resolve outside the app sandbox there, where writes fail.
+fn get_log_directory() -> Option<PathBuf> {
+    if let Some(dir) = APP_LOG_DIR.get() {
+        return Some(dir.clone());
+    }
+    if cfg!(mobile) {
+        return None;
+    }
+    Some(if cfg!(target_os = "macos") {
         // macOS: ~/Library/Logs/Stirling-PDF
         let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
         PathBuf::from(home).join("Library").join("Logs").join("Stirling-PDF")
@@ -21,7 +37,7 @@ fn get_log_directory() -> PathBuf {
         // Linux: ~/.config/Stirling-PDF/logs
         let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
         PathBuf::from(home).join(".config").join("Stirling-PDF").join("logs")
-    }
+    })
 }
 
 // Helper function to add log entry
@@ -53,7 +69,9 @@ pub fn add_log(message: String) {
 
 // Write log entry to file
 fn write_to_log_file(log_entry: &str) {
-    let log_dir = get_log_directory();
+    let Some(log_dir) = get_log_directory() else {
+        return;
+    };
     if let Err(e) = std::fs::create_dir_all(&log_dir) {
         eprintln!("Failed to create log directory: {}", e);
         return;

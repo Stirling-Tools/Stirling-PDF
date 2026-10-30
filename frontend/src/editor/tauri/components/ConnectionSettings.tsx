@@ -9,10 +9,12 @@ import {
 import { authService, UserInfo } from "@editor/services/authService";
 import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
 import { useAuth } from "@editor/auth/UseSession";
+import { useLocalModePresentation } from "@editor/hooks/useLocalModePresentation";
 
 export const ConnectionSettings: React.FC = () => {
   const { t } = useTranslation();
   const { signOut } = useAuth();
+  const localMode = useLocalModePresentation();
   const [config, setConfig] = useState<ConnectionConfig | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(false);
@@ -109,17 +111,14 @@ export const ConnectionSettings: React.FC = () => {
               {config.mode === "saas"
                 ? t("settings.connection.mode.saas", "Stirling Cloud")
                 : config.mode === "local"
-                  ? t("settings.connection.mode.local", "Local Only")
+                  ? localMode.label
                   : t("settings.connection.mode.selfhosted", "Self-Hosted")}
             </Badge>
           </Group>
 
           {config.mode === "local" && (
             <Text size="sm" c="dimmed">
-              {t(
-                "settings.connection.localDescription",
-                "You are using the local backend without an account. Some tools requiring cloud processing or a self-hosted server are unavailable.",
-              )}
+              {localMode.description}
             </Text>
           )}
 

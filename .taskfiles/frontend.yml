@@ -194,6 +194,15 @@ tasks:
       - task: dev:_run
         vars: { MODE: desktop, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
+  dev:mobile:
+    desc: "Start frontend dev server in mobile mode"
+    deps:
+      - task: prepare
+        vars: { MODE: mobile }
+    cmds:
+      - task: dev:_run
+        vars: { MODE: mobile, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
+
   # ============================================================
   # Build
   # ============================================================
@@ -241,6 +250,14 @@ tasks:
         vars: { MODE: desktop }
     cmds:
       - npx vite build --mode desktop --outDir dist-desktop
+
+  build:mobile:
+    desc: "Build for mobile mode"
+    deps:
+      - task: prepare
+        vars: { MODE: mobile }
+    cmds:
+      - npx vite build --mode mobile
 
 
   storybook:
@@ -451,6 +468,15 @@ tasks:
       - task: typecheck:_run
         vars: { PROJECT: src/editor/desktop/tsconfig.json }
 
+  typecheck:mobile:
+    desc: "Typecheck mobile build variant"
+    deps:
+      - task: prepare
+        vars: { MODE: mobile }
+    cmds:
+      - task: typecheck:_run
+        vars: { PROJECT: src/editor/mobile/tsconfig.json }
+
   typecheck:cloud:
     desc: "Typecheck cloud shared layer (standalone)"
     deps: [prepare]
@@ -486,6 +512,7 @@ tasks:
       - task: typecheck:proprietary
       - task: typecheck:saas
       - task: typecheck:desktop
+      - task: typecheck:mobile
       - task: typecheck:cloud
       - task: typecheck:scripts
       - task: typecheck:portal

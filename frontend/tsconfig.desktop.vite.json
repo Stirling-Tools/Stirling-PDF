@@ -34,6 +34,7 @@
     "src/editor/saas",
     "src/processor/saas",
     "src/processor/proprietary/**/*.test.ts*",
-    "src/processor/proprietary/**/*.spec.ts*"
+    "src/processor/proprietary/**/*.spec.ts*",
+    "src/editor/mobile"
   ]
 }

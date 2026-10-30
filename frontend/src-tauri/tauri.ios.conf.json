@@ -1,0 +1,12 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "build": {
+    "devUrl": "http://localhost:5174",
+    "beforeDevCommand": "npx vite --mode mobile --port 5174",
+    "beforeBuildCommand": "npx vite build --mode mobile"
+  },
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "resources": []
+  }
+}
