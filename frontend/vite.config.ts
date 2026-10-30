@@ -13,7 +13,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
-import { embedpdfFontFallbackPlugin } from "./scripts/embedpdfFontFallbackPatch.mts";
+import { embedpdfEnginesPlugin } from "./scripts/embedpdfEnginesPatch.mts";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const gzipPromise = promisify(gzip);
@@ -578,7 +578,7 @@ export default defineConfig(async ({ mode, command }) => {
       __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
     },
     plugins: [
-      embedpdfFontFallbackPlugin(),
+      embedpdfEnginesPlugin(),
       iconSvgr(),
       react(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
