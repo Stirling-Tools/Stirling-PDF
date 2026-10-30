@@ -22,6 +22,12 @@ export interface SuperSearchResult {
   iconName?: IconName;
   icon?: React.ReactNode;
   score: number;
+  /**
+   * Set when the destination exists but can't be used right now (e.g. a tool
+   * the server has disabled): the row is shown greyed with this reason and
+   * selecting it does nothing, matching how the destination's own list shows it.
+   */
+  disabledReason?: string;
   onSelect: () => void | Promise<void>;
 }
 
@@ -74,6 +80,10 @@ export interface SuperSearchGates {
    * (SaaS). Hosts whose users are always signed in may omit it.
    */
   isAnonymous?: boolean;
+  /** Whether General renders the account card (see useAccountCardShown). */
+  accountCardShown?: boolean;
+  /** An admin who owns the organization — the only one who sees billing. */
+  isOrgOwner?: boolean;
 }
 
 /**

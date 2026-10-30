@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from "react";
+import { memo } from "react";
 import CoreToolButton from "@editor-core/components/tools/toolPicker/ToolButton";
 import { getToolDisabledReason } from "@editor/components/tools/fullscreen/shared";
 import {
@@ -7,10 +7,7 @@ import {
 } from "@editor/contexts/ToolWorkflowContext";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
-import {
-  connectionModeService,
-  type ConnectionMode,
-} from "@editor/services/connectionModeService";
+import { useUnavailableToolFallback } from "@editor/hooks/useUnavailableToolFallback";
 
 type CoreToolButtonProps = React.ComponentProps<typeof CoreToolButton>;
 
@@ -27,16 +24,7 @@ const ToolButton: React.FC<CoreToolButtonProps> = (props) => {
   const { config } = useAppConfig();
   const localOnly = useLocalProcessingOnly();
   const premiumEnabled = config?.premiumEnabled;
-  const [connectionMode, setConnectionMode] = useState<ConnectionMode | null>(
-    null,
-  );
-
-  useEffect(() => {
-    void connectionModeService.getCurrentMode().then(setConnectionMode);
-    return connectionModeService.subscribeToModeChanges((cfg) =>
-      setConnectionMode(cfg.mode),
-    );
-  }, []);
+  const unavailableFallback = useUnavailableToolFallback();
 
   const disabledReason = getToolDisabledReason(
     props.id,
@@ -50,8 +38,7 @@ const ToolButton: React.FC<CoreToolButtonProps> = (props) => {
   // user can see the settings; the disabled execute button handles the sign-in prompt.
   // comingSoon and selfHostedOffline tools remain dimmed — they have no usable UI to show.
   const handleUnavailableClick =
-    !localOnly &&
-    connectionMode === "local" &&
+    unavailableFallback &&
     disabledReason !== "comingSoon" &&
     disabledReason !== "selfHostedOffline"
       ? () => handleToolSelectForced(props.id)
