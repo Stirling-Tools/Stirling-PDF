@@ -442,7 +442,10 @@ class SupabaseSecurityConfigMoreTest {
                     // The handshake is server-side plus our own approval page, never the
                     // customer's origin.
                     "/api/v1/account-link/connect/request",
-                    "/api/v1/account-link/connect/claim"
+                    "/api/v1/account-link/connect/claim",
+                    // Keys are made on our own settings page and redeemed server to server.
+                    "/api/v1/account-link/keys",
+                    "/api/v1/account-link/keys/redeem"
                 })
         @DisplayName("every other path keeps the credentialed allow-list")
         void otherPathsUnchanged(String path) {

@@ -37,6 +37,7 @@ vi.mock("@editor/portal/contexts/UIContext", () => ({
 }));
 vi.mock("@editor/portal/contexts/AccountLinkContext", () => ({
   AccountLinkProvider: ({ children }: { children: ReactNode }) => children,
+  useAccountLinkOptional: () => null,
 }));
 vi.mock("@editor/contexts/CheckoutContext", () => ({
   CheckoutProvider: ({ children }: { children: ReactNode }) => children,
