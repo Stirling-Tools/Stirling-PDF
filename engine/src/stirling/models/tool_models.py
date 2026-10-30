@@ -728,6 +728,7 @@ class MergePdfsParams(ApiModel):
     client_file_ids: str | None = Field(
         None, description="JSON array of client-provided IDs for each uploaded file (same order as fileInput)"
     )
+    file_ids: list[str] | None = Field(None, description="Storage references, in order, used instead of fileInput.")
     file_order: str | None = None
     generate_toc: bool = Field(
         False,
