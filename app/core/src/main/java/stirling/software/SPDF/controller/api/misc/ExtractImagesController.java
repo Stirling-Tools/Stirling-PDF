@@ -56,6 +56,7 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ImageMemoryLimit;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -153,6 +154,9 @@ public class ExtractImagesController {
             try {
                 PDImageXObject imageObject =
                         (PDImageXObject) page.getResources().getXObject(resourceName);
+                // Before fingerprinting, which reads the colour space: a JPEG 2000 image decodes
+                // in full to supply it.
+                ImageMemoryLimit.requireEmbeddedImageFits(imageObject);
 
                 if (!fingerprints.isFirstOccurrence(imageObject)) {
                     continue;

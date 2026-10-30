@@ -325,7 +325,7 @@ public class EndpointConfiguration {
                 disabledGroups.stream().filter(group -> !isToolGroup(group)).sorted().toList();
 
         if (!disabledToolGroups.isEmpty()) {
-            log.info(
+            log.debug(
                     "Disabled tool groups: {} (endpoints may have alternative implementations)",
                     String.join(", ", disabledToolGroups));
         }
@@ -384,6 +384,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-markdown");
         addEndpointToGroup("Convert", "eml-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-epub");
+        addEndpointToGroup("Convert", "ebook-to-pdf");
         // Backend-only endpoints (not in frontend tool registry)
         addEndpointToGroup("Convert", "pdf-to-vector");
         addEndpointToGroup("Convert", "vector-to-pdf");
@@ -423,9 +424,11 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "get-info-on-pdf");
         addEndpointToGroup("Other", "add-attachments");
+        addEndpointToGroup("Other", "batch-process-attachments");
+        addEndpointToGroup("Other", "list-attachments");
+        addEndpointToGroup("Other", "extract-single-attachment");
         addEndpointToGroup("Other", "replace-invert-pdf");
         addEndpointToGroup("Other", "edit-table-of-contents");
-        addEndpointToGroup("Other", "text-editor-pdf");
         // Backend-only endpoints (not in frontend tool registry endpoints)
         addEndpointToGroup("Other", "add-image");
         addEndpointToGroup("Other", "compare");
@@ -542,6 +545,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-text");
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
+        addEndpointToGroup("Java", "batch-process-attachments");
+        addEndpointToGroup("Java", "list-attachments");
+        addEndpointToGroup("Java", "extract-single-attachment");
         addEndpointToGroup("Java", "compress-pdf");
         addEndpointToGroup("Java", "cbz-to-pdf");
         addEndpointToGroup("Java", "pdf-to-cbz");
@@ -555,9 +561,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "flatten");
         addEndpointToGroup("Java", "unlock-pdf-forms");
         addEndpointToGroup("Java", "validate-signature");
-        addEndpointToGroup("Java", "text-editor-pdf");
         addEndpointToGroup("Java", "edit-table-of-contents");
         addEndpointToGroup("Java", "pdf-to-epub");
+        addEndpointToGroup("Java", "ebook-to-pdf");
         addEndpointToGroup("Java", "eml-to-pdf");
         addEndpointToGroup("Java", "handleData");
         addEndpointToGroup("Java", "form-detection");
@@ -568,7 +574,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Javascript", "sign");
         addEndpointToGroup("Javascript", "compare");
         addEndpointToGroup("Javascript", "adjust-contrast");
-        addEndpointToGroup("Javascript", "text-editor-pdf");
 
         /* qpdf */
         addEndpointToGroup("qpdf", "repair");
@@ -588,6 +593,7 @@ public class EndpointConfiguration {
 
         /* tesseract */
         addEndpointToGroup("tesseract", "ocr-pdf");
+        addEndpointToGroup("tesseract", "auto-rotate-pdf");
 
         /* OCRmyPDF */
         addEndpointToGroup("OCRmyPDF", "ocr-pdf");
@@ -606,6 +612,14 @@ public class EndpointConfiguration {
         // file-to-pdf has multiple implementations
         addEndpointAlternative("file-to-pdf", "LibreOffice");
         addEndpointAlternative("file-to-pdf", "Unoconvert");
+        // Stirling Office Convert, when enabled, keeps Office conversions working without
+        // LibreOffice
+        if (applicationProperties.getSystem().isStirlingOfficeConversion()) {
+            addEndpointAlternative("file-to-pdf", "Java");
+            addEndpointAlternative("pdf-to-word", "Java");
+            addEndpointAlternative("pdf-to-presentation", "Java");
+            addEndpointAlternative("pdf-to-rtf", "Java");
+        }
 
         // pdf-to-html and pdf-to-markdown can use either LibreOffice or Pdftohtml
         addEndpointAlternative("pdf-to-html", "LibreOffice");
@@ -634,6 +648,7 @@ public class EndpointConfiguration {
 
         // Calibre dependent endpoints
         addEndpointToGroup("Calibre", "pdf-to-epub");
+        addEndpointToGroup("Calibre", "ebook-to-pdf");
     }
 
     private void processEnvironmentConfigs() {

@@ -139,7 +139,7 @@ public class TempFileCleanupService {
                 Path loTempDir = Path.of(libreOfficeTempDir);
                 if (!Files.exists(loTempDir)) {
                     Files.createDirectories(loTempDir);
-                    log.info("Created LibreOffice temp directory: {}", loTempDir);
+                    log.debug("Created LibreOffice temp directory: {}", loTempDir);
                 }
             }
         } catch (IOException e) {
@@ -153,12 +153,11 @@ public class TempFileCleanupService {
                     "#{applicationProperties.system.tempFileManagement.cleanupIntervalMinutes}",
             timeUnit = TimeUnit.MINUTES)
     public void scheduledCleanup() {
-        log.info("Running scheduled temporary file cleanup");
+        log.debug("Running scheduled temporary file cleanup");
         long maxAgeMillis = tempFileManager.getMaxAgeMillis();
 
         // Clean up registered temp files (managed by TempFileRegistry)
         int registeredDeletedCount = tempFileManager.cleanupOldTempFiles(maxAgeMillis);
-        log.info("Cleaned up {} registered temporary files", registeredDeletedCount);
 
         // Clean up registered temp directories
         int directoriesDeletedCount = 0;
@@ -201,19 +200,18 @@ public class TempFileCleanupService {
     private void runStartupCleanup() {
         boolean containerMode = isContainerMode();
 
-        log.info(
-                "Running in {} mode, using {} cleanup strategy",
-                machineType,
-                containerMode ? "aggressive" : "conservative");
+        log.info("Running in {} mode", machineType);
 
         // For startup cleanup, we use a longer timeout for non-container environments
         long maxAgeMillis = containerMode ? 0 : 24 * 60 * 60 * 1000; // 0 or 24 hours
 
         int totalDeletedCount = cleanupUnregisteredFiles(containerMode, false, maxAgeMillis);
         totalDeletedCount += cleanupStaleJpdfiumDirs();
-        log.info(
-                "Startup cleanup complete. Deleted {} temporary files/directories",
-                totalDeletedCount);
+        if (totalDeletedCount > 0) {
+            log.info(
+                    "Startup cleanup complete. Deleted {} temporary files/directories",
+                    totalDeletedCount);
+        }
     }
 
     /**
@@ -249,7 +247,7 @@ public class TempFileCleanupService {
                 try {
                     GeneralUtils.deleteDirectory(dir);
                     deletedCount++;
-                    log.info("Removed stale JPDFium extraction dir: {}", dir);
+                    log.debug("Removed stale JPDFium extraction dir: {}", dir);
                 } catch (IOException e) {
                     // Windows keeps loaded DLLs locked; a later startup retries.
                     log.debug("Could not remove JPDFium dir {}: {}", dir, e.getMessage());
@@ -392,7 +390,7 @@ public class TempFileCleanupService {
                                     int count = dirDeletedCount.get();
                                     totalDeletedCount.addAndGet(count);
                                     if (count > 0) {
-                                        log.info(
+                                        log.debug(
                                                 "Cleaned up {} files/directories in {}",
                                                 count,
                                                 tempDir);

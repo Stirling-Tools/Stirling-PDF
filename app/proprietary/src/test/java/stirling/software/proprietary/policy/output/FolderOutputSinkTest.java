@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,6 +18,8 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -50,7 +55,7 @@ class FolderOutputSinkTest {
         // exercise the allowlist, so they opt into login like a hosted install.
         properties.getSecurity().setEnableLogin(true);
         properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
-        ledger = new InProcessProcessedLedger();
+        ledger = spy(new InProcessProcessedLedger());
         sink =
                 new FolderOutputSink(
                         new FolderAccessGuard(
@@ -190,7 +195,7 @@ class FolderOutputSinkTest {
     }
 
     @Test
-    void replaceKeepsTheFirstOriginalForRevert() throws IOException {
+    void reprocessingOurOutputKeepsTheOriginalAfterLedgerResetAndRestart() throws IOException {
         Path out = tempDir.resolve("out");
         Files.createDirectories(out);
         Files.writeString(out.resolve("a.pdf"), "original");
@@ -198,22 +203,20 @@ class FolderOutputSinkTest {
                 new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
 
         sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace);
+        setUp();
         sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v2")), replace);
 
         assertEquals("v2", Files.readString(out.resolve("a.pdf")));
         // The archive holds what the user put in, not any intermediate result.
-        Path archived = out.resolve(".stirling").resolve("originals").resolve("a.pdf");
+        Path archived = out.resolve(".stirling").resolve("a.pdf");
         assertEquals("original", Files.readString(archived));
     }
 
     @Test
     void archiveFailureAbortsTheReplaceInsteadOfDestroyingTheOriginal() throws IOException {
         Path out = tempDir.resolve("out");
-        Files.createDirectories(out.resolve(".stirling"));
+        Files.createDirectories(out.resolve(".stirling").resolve("a.pdf"));
         Files.writeString(out.resolve("a.pdf"), "original");
-        // Block the originals dir by occupying its path with a regular file, so archiving throws
-        // exactly as an unwritable/locked/full originals dir would in the field.
-        Files.writeString(out.resolve(".stirling").resolve("originals"), "blocker");
         OutputSpec replace =
                 new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
 
@@ -225,65 +228,109 @@ class FolderOutputSinkTest {
     }
 
     @Test
-    void aReDroppedSameNameFileKeepsItsOwnOriginalRatherThanLosingIt() throws IOException {
+    void editingProcessedContentPreservesTheUploadedOriginal() throws IOException {
         Path out = tempDir.resolve("out");
         Files.createDirectories(out);
         Files.writeString(out.resolve("a.pdf"), "first-original");
         OutputSpec replace =
                 new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
 
-        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed1")), replace);
-        // The user drops a genuinely different document under the same name; it is reprocessed.
-        Files.writeString(out.resolve("a.pdf"), "second-original");
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "output-document")), replace);
+        var outputTime = Files.getLastModifiedTime(out.resolve("a.pdf"));
+        Files.writeString(out.resolve("a.pdf"), "annotated-output");
+        Files.setLastModifiedTime(out.resolve("a.pdf"), outputTime);
         sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed2")), replace);
 
         assertEquals("processed2", Files.readString(out.resolve("a.pdf")));
-        Path originals = out.resolve(".stirling").resolve("originals");
+        Path originals = out.resolve(".stirling");
         assertEquals("first-original", Files.readString(originals.resolve("a.pdf")));
-        // The second original was preserved, not overwritten away.
-        boolean kept;
-        try (Stream<Path> archived = Files.walk(originals)) {
-            kept =
-                    archived.filter(Files::isRegularFile)
-                            .anyMatch(
-                                    p -> {
-                                        try {
-                                            return "second-original".equals(Files.readString(p));
-                                        } catch (IOException e) {
-                                            return false;
-                                        }
-                                    });
-        }
-        assertTrue(kept, "the re-dropped original must be preserved, never silently lost");
+        assertEquals(List.of("a.pdf"), FolderOutputSink.originalNames(out));
+        assertFalse(Files.exists(originals.resolve("originals")));
+        assertFalse(Files.exists(originals.resolve("superseded")));
     }
 
     @Test
-    void aSupersededOriginalIsKeptOutOfTheRestoreNamespace() throws IOException {
+    void reprocessingMigratesTheNestedOriginalWithoutChangingItsContents() throws IOException {
+        Path out = tempDir.resolve("out");
+        Path original = out.resolve(".stirling/originals/a.pdf");
+        Files.createDirectories(original.getParent());
+        Files.writeString(original, "first-original");
+        Files.writeString(out.resolve("a.pdf"), "new-document");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed2")), replace);
+
+        assertEquals("processed2", Files.readString(out.resolve("a.pdf")));
+        assertEquals("first-original", Files.readString(out.resolve(".stirling/a.pdf")));
+        assertFalse(Files.exists(original));
+        assertFalse(Files.exists(original.getParent().resolve("superseded")));
+        assertEquals(out.resolve(".stirling/a.pdf"), FolderOutputSink.originalPath(out, "a.pdf"));
+    }
+
+    @Test
+    void failedFirstDeliveryLeavesTheInputAndBackupIntact() throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out);
+        Files.writeString(out.resolve("a.pdf"), "original");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+        doThrow(new IllegalStateException("ledger unavailable"))
+                .when(ledger)
+                .recordOutput(anyString(), anyString(), anyString(), anyString());
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace));
+
+        assertEquals("original", Files.readString(out.resolve("a.pdf")));
+        assertEquals("original", Files.readString(out.resolve(".stirling/a.pdf")));
+    }
+
+    @Test
+    void failedLaterDeliveryLeavesTheCurrentFileAndFirstOriginalIntact() throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out);
+        Files.writeString(out.resolve("a.pdf"), "original");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace);
+        doThrow(new IllegalStateException("ledger unavailable"))
+                .when(ledger)
+                .recordOutput(anyString(), anyString(), anyString(), anyString());
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v2")), replace));
+
+        assertEquals("v1", Files.readString(out.resolve("a.pdf")));
+        assertEquals("original", Files.readString(out.resolve(".stirling/a.pdf")));
+    }
+
+    @Test
+    void editsAndFailedRetriesNeverOverwriteTheUploadedOriginal() throws IOException {
         Path out = tempDir.resolve("out");
         Files.createDirectories(out);
         Files.writeString(out.resolve("a.pdf"), "first-original");
         OutputSpec replace =
                 new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
-
-        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed1")), replace);
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace);
         Files.writeString(out.resolve("a.pdf"), "second-original");
-        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed2")), replace);
+        doThrow(new IllegalStateException("ledger unavailable"))
+                .doCallRealMethod()
+                .when(ledger)
+                .recordOutput(anyString(), anyString(), anyString(), anyString());
 
-        // A restore brings back every regular file directly under originals/, so only the
-        // canonical original may sit there; a sibling would be restored as a file the folder
-        // never held. The superseded one is kept, one level down.
-        Path originals = out.resolve(".stirling").resolve("originals");
-        List<String> restorable;
-        try (Stream<Path> entries = Files.list(originals)) {
-            restorable =
-                    entries.filter(Files::isRegularFile)
-                            .map(entry -> entry.getFileName().toString())
-                            .toList();
-        }
-        assertEquals(List.of("a.pdf"), restorable);
-        assertEquals(
-                "second-original",
-                Files.readString(originals.resolve("superseded").resolve("a.pdf")));
+        assertThrows(
+                IllegalStateException.class,
+                () -> sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v2")), replace));
+        assertEquals("second-original", Files.readString(out.resolve("a.pdf")));
+        assertEquals("first-original", Files.readString(out.resolve(".stirling/a.pdf")));
+
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v2")), replace);
+
+        assertEquals("v2", Files.readString(out.resolve("a.pdf")));
+        assertEquals("first-original", Files.readString(out.resolve(".stirling/a.pdf")));
     }
 
     @Test
@@ -294,7 +341,27 @@ class FolderOutputSinkTest {
 
         sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace);
 
-        assertFalse(Files.exists(out.resolve(".stirling").resolve("originals").resolve("a.pdf")));
+        assertFalse(Files.exists(out.resolve(".stirling").resolve("a.pdf")));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"tmp", "originals", "TMP", "Originals"})
+    void internalDirectoryNamesHaveFlatRestorableBackups(String name) throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out.resolve(".stirling/originals"));
+        Files.writeString(out.resolve(name), "original");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+
+        sink.deliver(inPlaceRun(name), List.of(named(name, "processed")), replace);
+
+        Path archived = FolderOutputSink.originalPath(out, name);
+        assertEquals(out.resolve(".stirling"), archived.getParent());
+        assertEquals("original", Files.readString(archived));
+        assertEquals(List.of(name), FolderOutputSink.originalNames(out));
+        assertEquals("processed", Files.readString(out.resolve(name)));
+        assertTrue(Files.isDirectory(out.resolve(".stirling/tmp")));
+        assertTrue(Files.isDirectory(out.resolve(".stirling/originals")));
     }
 
     @Test
@@ -313,9 +380,7 @@ class FolderOutputSinkTest {
         // The watched file became its processed self; nothing landed beside it.
         assertEquals("v1", Files.readString(out.resolve("doc.pdf")));
         assertFalse(Files.exists(out.resolve("doc_redacted_watermarked.pdf")));
-        assertEquals(
-                "original",
-                Files.readString(out.resolve(".stirling").resolve("originals").resolve("doc.pdf")));
+        assertEquals("original", Files.readString(out.resolve(".stirling").resolve("doc.pdf")));
     }
 
     @Test

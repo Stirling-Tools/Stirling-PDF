@@ -75,7 +75,7 @@ public class UserLicenseSettingsService {
                 .findSettings()
                 .orElseGet(
                         () -> {
-                            log.info("Initializing user license settings");
+                            log.debug("Initializing user license settings");
                             UserLicenseSettings settings = new UserLicenseSettings();
                             settings.setId(UserLicenseSettings.SINGLETON_ID);
                             settings.setGrandfatheredUserCount(0);
@@ -135,7 +135,7 @@ public class UserLicenseSettingsService {
         if (isExistingInstallation) {
             // Existing installation (v2.0+ or has users) - grandfather current user count
             grandfatheredCount = Math.max(DEFAULT_USER_LIMIT, (int) currentUserCount);
-            log.info(
+            log.debug(
                     "Existing installation detected. Grandfathering {} users (current: {}, minimum:"
                             + " {})",
                     grandfatheredCount,
@@ -144,7 +144,7 @@ public class UserLicenseSettingsService {
         } else {
             // Fresh installation - set to default
             grandfatheredCount = DEFAULT_USER_LIMIT;
-            log.info(
+            log.debug(
                     "Fresh installation detected. Setting default grandfathered limit: {}",
                     grandfatheredCount);
         }
@@ -155,9 +155,7 @@ public class UserLicenseSettingsService {
         settings.setGrandfatheredUserSignature(generateSignature(grandfatheredCount, settings));
         settingsRepository.save(settings);
 
-        log.warn(
-                "GRANDFATHERING LOCKED: {} users. This value can never be changed.",
-                grandfatheredCount);
+        log.debug("Grandfathering locked at {} users", grandfatheredCount);
     }
 
     /**
@@ -627,7 +625,7 @@ public class UserLicenseSettingsService {
 
         License license = checker.premiumTier();
         boolean hasPaid = (license == License.SERVER || license == License.ENTERPRISE);
-        log.info("License check result: type={}, requiresPaid=true, hasPaid={}", license, hasPaid);
+        log.debug("License check result: type={}, requiresPaid=true, hasPaid={}", license, hasPaid);
 
         return hasPaid;
     }
@@ -662,7 +660,7 @@ public class UserLicenseSettingsService {
         }
 
         License license = checker.premiumTier();
-        log.info(
+        log.debug(
                 "License check result: type={}, requiresEnterprise=true, hasEnterprise={}",
                 license,
                 (license == License.ENTERPRISE));

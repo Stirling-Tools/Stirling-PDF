@@ -304,7 +304,8 @@ public class OrgOwnerService {
         OwnershipHandoverService.clear(row);
         audit.getObject().audit(actor, AuditEventType.ORG_OWNERSHIP_CHANGE, data, AuditLevel.BASIC);
         log.info("Organization owner is {} ({})", target.getUsername(), reason);
-        if (target.isFirstLogin())
+        // Boot-time reconcile always lands on a fresh admin; only warn on deliberate handovers
+        if (target.isFirstLogin() && !"RECONCILE".equals(reason))
             log.warn(
                     "Organization owner {} has not completed first login; complete setup or use operator recovery before transferring ownership",
                     target.getUsername());

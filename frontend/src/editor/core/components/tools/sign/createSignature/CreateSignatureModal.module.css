@@ -1,0 +1,17 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.tabLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+}
