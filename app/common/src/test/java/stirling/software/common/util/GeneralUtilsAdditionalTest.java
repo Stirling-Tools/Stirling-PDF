@@ -2,6 +2,8 @@ package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.Duration;
+
 import org.junit.jupiter.api.Test;
 
 class GeneralUtilsAdditionalTest {
@@ -22,6 +24,20 @@ class GeneralUtilsAdditionalTest {
         assertNull(GeneralUtils.convertSizeToBytes("10000000TB")); // overflow beyond long
         assertEquals(1099511627776L, GeneralUtils.convertSizeToBytes("1TB"));
         assertEquals(2684354560L, GeneralUtils.convertSizeToBytes("2.5GB"));
+    }
+
+    @Test
+    void testConvertSizeToBytesRejectsExponentsWithoutExpandingThem() {
+        assertTimeoutPreemptively(
+                Duration.ofSeconds(5),
+                () -> {
+                    assertNull(GeneralUtils.convertSizeToBytes("1E+300000000"));
+                    assertNull(GeneralUtils.convertSizeToBytes("1E+500000000MB"));
+                    assertNull(GeneralUtils.convertSizeToBytes("1e3KB"));
+                    assertNull(GeneralUtils.convertSizeToBytes("9".repeat(100_000) + "MB"));
+                });
+        assertEquals(512L, GeneralUtils.convertSizeToBytes(".5KB"));
+        assertEquals(10L * 1024 * 1024, GeneralUtils.convertSizeToBytes("10.MB"));
     }
 
     @Test

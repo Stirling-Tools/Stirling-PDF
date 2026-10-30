@@ -49,6 +49,10 @@ import stirling.software.proprietary.service.MathAuditorOrchestrator;
 public class MathAuditorAgentController {
 
     private static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]");
+    // Plain decimal only: BigDecimal parsing is superlinear in digit count, and exponent notation
+    // is later expanded by toPlainString(), so either form lets one request burn CPU or heap.
+    private static final Pattern TOLERANCE_PATTERN =
+            Pattern.compile("\\d{1,20}(\\.\\d{0,20})?|\\.\\d{1,20}");
     private final MathAuditorOrchestrator orchestrator;
     private final AiFeatureGate aiFeatureGate;
 
@@ -78,23 +82,24 @@ public class MathAuditorAgentController {
                                     "Arithmetic tolerance — differences smaller than this are"
                                             + " ignored (default: 0.01)")
                     @RequestParam(value = "tolerance", defaultValue = "0.01")
-                    BigDecimal tolerance) {
+                    String tolerance) {
         aiFeatureGate.requireMathAuditor();
 
         AiToolInputValidator.validatePdfUpload(fileInput);
-        if (tolerance.compareTo(BigDecimal.ZERO) < 0) {
+        if (!TOLERANCE_PATTERN.matcher(tolerance).matches()) {
             return ResponseEntity.badRequest().build();
         }
+        BigDecimal toleranceValue = new BigDecimal(tolerance);
 
         String originalFilename = fileInput.getOriginalFilename();
         String safeName =
                 originalFilename != null
                         ? NEWLINE_PATTERN.matcher(originalFilename).replaceAll("_")
                         : "<unnamed>";
-        log.info("[math-auditor-agent] request file={} tolerance={}", safeName, tolerance);
+        log.info("[math-auditor-agent] request file={} tolerance={}", safeName, toleranceValue);
 
         try {
-            Verdict verdict = orchestrator.audit(fileInput, tolerance);
+            Verdict verdict = orchestrator.audit(fileInput, toleranceValue);
             return ResponseEntity.ok(verdict);
         } catch (IOException e) {
             log.error("[math-auditor-agent] IO error during audit", e);
