@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.security;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -1111,7 +1112,9 @@ public class GetInfoOnPDF {
 
         List<PDFVerificationResult> verificationResults = null;
         try {
-            verificationResults = veraPDFService.validatePDF(inputFile.getInputStream());
+            try (InputStream in = inputFile.getInputStream()) {
+                verificationResults = veraPDFService.validatePDF(in);
+            }
         } catch (Exception e) {
             log.error("VeraPDF validation failed", e);
         }

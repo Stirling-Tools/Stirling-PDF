@@ -135,8 +135,13 @@ public class ValidateSignatureController {
                 result.setCoversEntireDocument(documentCovered);
 
                 try {
-                    byte[] signedContent = sig.getSignedContent(file.getInputStream());
-                    byte[] signatureBytes = sig.getContents(file.getInputStream());
+                    byte[] signedContent;
+                    byte[] signatureBytes;
+                    try (InputStream signedIn = file.getInputStream();
+                            InputStream contentsIn = file.getInputStream()) {
+                        signedContent = sig.getSignedContent(signedIn);
+                        signatureBytes = sig.getContents(contentsIn);
+                    }
 
                     // An RFC 3161 document timestamp (PAdES-LTV) carries its signed content
                     // *inside* the CMS - a TSTInfo - rather than being detached over the document.
