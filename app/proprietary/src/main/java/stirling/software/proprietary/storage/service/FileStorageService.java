@@ -14,7 +14,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -33,6 +32,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.util.EmailAddresses;
 import stirling.software.proprietary.storage.crypto.StorageEncryptionErrors;
 import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
 import stirling.software.proprietary.storage.model.FileShare;
@@ -59,10 +59,6 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 @RequiredArgsConstructor
 @Slf4j
 public class FileStorageService {
-
-    // Requires at least 2-character TLD; rejects obvious non-addresses like a@b.c
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$");
 
     private final StoredFileRepository storedFileRepository;
     private final FolderRepository folderRepository;
@@ -913,7 +909,7 @@ public class FileStorageService {
     }
 
     private boolean isEmailAddress(String value) {
-        return value != null && EMAIL_PATTERN.matcher(value.trim()).matches();
+        return EmailAddresses.hasDeliverableShape(value);
     }
 
     private boolean isOwner(StoredFile file, User owner) {
