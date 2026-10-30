@@ -29,6 +29,7 @@ import { RootGate } from "@editor/routes/RootGate";
 
 const MobileScannerPage = lazy(() => import("@editor/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@editor/pages/MobileSignPage"));
+const FeedbackPage = lazy(() => import("@editor/pages/FeedbackPage"));
 
 // Import global styles
 import "@editor/styles/tailwind.css";
@@ -122,6 +123,15 @@ export default function App() {
           element={
             <PublicRouteProviders>
               <MobileScannerPage />
+            </PublicRouteProviders>
+          }
+        />
+
+        <Route
+          path="/feedback"
+          element={
+            <PublicRouteProviders>
+              <FeedbackPage />
             </PublicRouteProviders>
           }
         />
