@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Group, Text, Menu, Box } from "@mantine/core";
 import { Button as SharedButton } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { ToolIcon } from "@editor/components/shared/ToolIcon";
@@ -59,8 +60,6 @@ export default function AutomationEntry({
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const shouldShowMenu = isHovered || isMenuOpen;
-
   // Helper function to resolve tool display names
   const getToolDisplayName = (operation: string): string => {
     const entry = toolRegistry?.[operation as ToolId];
@@ -83,8 +82,8 @@ export default function AutomationEntry({
           size="sm"
           fw={600}
           style={{
-            color: "var(--mantine-primary-color-filled)",
-            background: "var(--mantine-primary-color-light)",
+            color: "var(--c-accent-fg, var(--c-primary))",
+            background: "var(--c-primary-subtle)",
             padding: "2px 6px",
             borderRadius: "4px",
             fontSize: "0.75rem",
@@ -102,7 +101,7 @@ export default function AutomationEntry({
     ));
 
     return (
-      <div style={{ minWidth: "400px", width: "auto" }}>
+      <div style={{ maxWidth: 360, width: "auto" }}>
         {description && (
           <Text
             size="sm"
@@ -117,8 +116,8 @@ export default function AutomationEntry({
             style={{
               display: "flex",
               alignItems: "center",
+              flexWrap: "wrap",
               gap: "4px",
-              whiteSpace: "nowrap",
             }}
           >
             {toolChain}
@@ -134,7 +133,7 @@ export default function AutomationEntry({
         <ToolIcon
           icon={<Icon name={badgeIcon} />}
           {...(keepIconColor && {
-            color: "var(--mantine-primary-color-filled)",
+            color: "var(--c-accent-fg, var(--c-primary))",
           })}
         />
       )}
@@ -149,7 +148,7 @@ export default function AutomationEntry({
       >
         {title ? (
           // Custom automation with title
-          <Text size="sm" style={{ textAlign: "left" }}>
+          <Text size="sm" truncate style={{ textAlign: "left" }}>
             {title}
           </Text>
         ) : (
@@ -173,7 +172,12 @@ export default function AutomationEntry({
 
   const wrapperContent = (
     <Box
-      style={{ position: "relative", width: "100%" }}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        width: "100%",
+        paddingRight: "0.25rem",
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -185,10 +189,13 @@ export default function AutomationEntry({
         justify="start"
         className="tool-button"
         style={{
+          flex: 1,
+          minWidth: 0,
           borderRadius: 0,
           color: "var(--c-text)",
           overflow: "visible",
-          backgroundColor: shouldShowMenu ? "var(--c-hover)" : undefined,
+          backgroundColor:
+            isHovered || isMenuOpen ? "var(--c-hover)" : undefined,
         }}
       >
         {buttonContent}
@@ -201,28 +208,19 @@ export default function AutomationEntry({
           onClose={() => setIsMenuOpen(false)}
         >
           <Menu.Target>
-            <SharedButton
-              leftSection={<Icon name="ellipsis-vertical" size={20} />}
+            <ActionIcon
               variant="tertiary"
-              accent="neutral"
-              size="md"
+              size="sm"
               aria-label={t(
                 "automate.entryMenu.label",
                 "Open menu for {{title}}",
                 { title: title || operations.join(" → ") },
               )}
               onClick={(e) => e.stopPropagation()}
-              style={{
-                position: "absolute",
-                right: "0.5rem",
-                top: "50%",
-                transform: "translateY(-50%)",
-                zIndex: 1,
-                opacity: shouldShowMenu ? 1 : 0,
-                transition: "opacity 0.2s ease",
-                pointerEvents: shouldShowMenu ? "auto" : "none",
-              }}
-            />
+              style={{ flexShrink: 0, color: "var(--c-text-muted)" }}
+            >
+              <Icon name="ellipsis-vertical" size={18} />
+            </ActionIcon>
           </Menu.Target>
 
           <Menu.Dropdown>
@@ -272,7 +270,7 @@ export default function AutomationEntry({
             )}
             {onExportFolderScan && (
               <Menu.Item
-                leftSection={<Icon name="download" size={16} />}
+                leftSection={<Icon name="folder-input" size={16} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onExportFolderScan();
@@ -287,6 +285,7 @@ export default function AutomationEntry({
             {onDelete && (
               <Menu.Item
                 leftSection={<Icon name="trash" size={16} />}
+                style={{ color: "var(--c-danger)" }}
                 onClick={(e) => {
                   e.stopPropagation();
                   onDelete();
@@ -308,6 +307,7 @@ export default function AutomationEntry({
     <Tooltip
       content={createTooltipContent()}
       position="left"
+      maxWidth={360}
       arrow={true}
       delay={500}
     >

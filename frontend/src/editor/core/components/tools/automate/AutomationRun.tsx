@@ -158,9 +158,13 @@ export default function AutomationRun({
   const getStepIcon = (step: ExecutionStep) => {
     switch (step.status) {
       case EXECUTION_STATUS.COMPLETED:
-        return <Icon name="check" size={16} style={{ color: "green" }} />;
+        return (
+          <Icon name="check" size={16} style={{ color: "var(--c-success)" }} />
+        );
       case EXECUTION_STATUS.ERROR:
-        return <span style={{ fontSize: 16, color: "red" }}>✕</span>;
+        return (
+          <span style={{ fontSize: 16, color: "var(--c-danger)" }}>✕</span>
+        );
       case EXECUTION_STATUS.RUNNING:
         return <Loader size={16} />;
       default:
@@ -226,8 +230,8 @@ export default function AutomationRun({
                   style={{
                     color:
                       step.status === EXECUTION_STATUS.RUNNING
-                        ? "var(--mantine-color-blue-6)"
-                        : "var(--mantine-color-text)",
+                        ? "var(--c-accent-fg, var(--c-primary))"
+                        : "var(--c-text)",
                     fontWeight:
                       step.status === EXECUTION_STATUS.RUNNING ? 500 : 400,
                   }}
@@ -235,7 +239,7 @@ export default function AutomationRun({
                   {step.name}
                 </Text>
                 {step.error && (
-                  <Text size="xs" c="var(--color-red-dark)" mt="xs">
+                  <Text size="xs" c="var(--c-danger)" mt="xs">
                     {step.error}
                   </Text>
                 )}

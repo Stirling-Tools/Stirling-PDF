@@ -221,14 +221,20 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     createStep(
       t("automate.selection.title", "Automation Selection"),
       {
-        isVisible: true,
+        // The builder owns the panel while it is open; Cancel on the sticky
+        // footer is the supported way back and can ask before discarding.
+        isVisible: currentStep !== AUTOMATION_STEPS.CREATION,
         isCollapsed: currentStep !== AUTOMATION_STEPS.SELECTION,
-        onCollapsedClick: () => {
-          // Clear results when clicking back to selection
-          automateOperation.resetResults();
-          setCurrentStep(AUTOMATION_STEPS.SELECTION);
-          setStepData({ step: AUTOMATION_STEPS.SELECTION });
-        },
+        // Creation owns its discard confirmation; collapsing straight back to
+        // the selection from there would drop the draft without asking.
+        onCollapsedClick:
+          currentStep === AUTOMATION_STEPS.SELECTION
+            ? () => {
+                automateOperation.resetResults();
+                setCurrentStep(AUTOMATION_STEPS.SELECTION);
+                setStepData({ step: AUTOMATION_STEPS.SELECTION });
+              }
+            : undefined,
       },
       currentStep === AUTOMATION_STEPS.SELECTION ? renderCurrentStep() : null,
     ),

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AutomationTool,
@@ -50,6 +50,31 @@ export function useAutomationForm({
     [toolRegistry],
   );
 
+  // Dirty-check against the form as it was initialised, not against the saved
+  // config: defaults merged into step parameters would otherwise make an
+  // untouched edit look changed and prompt on Cancel.
+  const initialSnapshotRef = useRef<string | null>(null);
+  const serializeForm = useCallback(
+    (
+      name: string,
+      description: string,
+      icon: string,
+      tools: AutomationTool[],
+    ) =>
+      JSON.stringify({
+        name: name.trim(),
+        description: description.trim(),
+        icon,
+        operations: tools
+          .filter((tool) => tool.operation !== "")
+          .map((tool) => ({
+            operation: tool.operation,
+            parameters: tool.parameters ?? {},
+          })),
+      }),
+    [],
+  );
+
   // Initialize based on mode and existing automation
   useEffect(() => {
     if (
@@ -84,6 +109,12 @@ export function useAutomationForm({
       });
 
       setSelectedTools(tools);
+      initialSnapshotRef.current = serializeForm(
+        existingAutomation.name || "",
+        existingAutomation.description || "",
+        existingAutomation.icon || "SettingsIcon",
+        tools,
+      );
     } else if (mode === AutomationMode.CREATE && selectedTools.length === 0) {
       // Initialize with default empty tools for new automation
       const defaultTools = Array.from(
@@ -97,8 +128,21 @@ export function useAutomationForm({
         }),
       );
       setSelectedTools(defaultTools);
+      initialSnapshotRef.current = serializeForm(
+        "",
+        "",
+        "SettingsIcon",
+        defaultTools,
+      );
     }
-  }, [mode, existingAutomation, t, getToolName, getToolDefaultParameters]);
+  }, [
+    mode,
+    existingAutomation,
+    t,
+    getToolName,
+    getToolDefaultParameters,
+    serializeForm,
+  ]);
 
   const addTool = (operation: string) => {
     const toolEntry = toolRegistry[operation as ToolId];
@@ -128,9 +172,14 @@ export function useAutomationForm({
   };
 
   const hasUnsavedChanges = () => {
+    if (initialSnapshotRef.current === null) return false;
     return (
-      automationName.trim() !== "" ||
-      selectedTools.some((tool) => tool.operation !== "" || tool.configured)
+      serializeForm(
+        automationName,
+        automationDescription,
+        automationIcon,
+        selectedTools,
+      ) !== initialSnapshotRef.current
     );
   };
 

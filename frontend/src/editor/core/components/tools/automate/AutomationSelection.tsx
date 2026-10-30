@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Title, Stack, Divider } from "@mantine/core";
+import { Title, Stack, Divider, Modal, Text, Group } from "@mantine/core";
+import { Button } from "@editor/ui/Button";
+import { Z_INDEX_AUTOMATE_MODAL } from "@editor/styles/zIndex";
 import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
 import AutomationImportModal from "@editor/components/tools/automate/AutomationImportModal";
 import { useSuggestedAutomations } from "@editor/hooks/tools/automate/useSuggestedAutomations";
@@ -48,6 +50,9 @@ export default function AutomationSelection({
   const suggestedAutomations = useSuggestedAutomations();
 
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<AutomationConfig | null>(
+    null,
+  );
 
   const handleImportSubmit = async (
     automation: ImportableAutomation,
@@ -129,7 +134,7 @@ export default function AutomationSelection({
               onExportFolderScan={() =>
                 downloadFolderScanningConfig(automation, toolRegistry)
               }
-              onDelete={() => onDelete(automation)}
+              onDelete={() => setDeleteTarget(automation)}
               toolRegistry={toolRegistry}
             />
           );
@@ -179,6 +184,38 @@ export default function AutomationSelection({
         onCancel={() => setImportModalOpen(false)}
         onImport={handleImportSubmit}
       />
+
+      <Modal
+        opened={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        title={t("automate.delete.title", "Delete automation")}
+        centered
+        zIndex={Z_INDEX_AUTOMATE_MODAL}
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            {t(
+              "automate.delete.message",
+              'Delete "{{name}}"? This cannot be undone.',
+              { name: deleteTarget?.name ?? "" },
+            )}
+          </Text>
+          <Group gap="sm" justify="flex-end">
+            <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+              {t("automate.delete.cancel", "Cancel")}
+            </Button>
+            <Button
+              accent="danger"
+              onClick={() => {
+                if (deleteTarget) onDelete(deleteTarget);
+                setDeleteTarget(null);
+              }}
+            >
+              {t("automate.delete.confirm", "Delete")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </div>
   );
 }

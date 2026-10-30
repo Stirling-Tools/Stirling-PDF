@@ -2308,12 +2308,14 @@ save = "Save Configuration"
 title = "Configure {{toolName}}"
 
 [automate.creation]
+cancel = "Cancel"
 createTitle = "Create Automation"
 editTitle = "Edit Automation"
 export = "Export"
 exportForFolderScanning = "Export for Folder Scanning"
 intro = "Automations run tools sequentially. To get started, add tools in the order you want them to run."
 save = "Save Automation"
+saveFailed = "Could not save the automation"
 
 [automate.creation.description]
 label = "Description (optional)"
@@ -2329,8 +2331,11 @@ placeholder = "My Automation"
 [automate.creation.tools]
 add = "Add a tool..."
 addTool = "Add Tool"
+change = "Change tool"
+changeTool = "Change tool: {{name}}"
 configure = "Configure tool"
-notConfigured = "! Not Configured"
+configureTool = "Configure {{name}}"
+notConfigured = "Configuration required"
 remove = "Remove tool"
 selected = "Selected Tools"
 selectTool = "Select a tool..."
@@ -2340,6 +2345,12 @@ cancel = "Cancel"
 confirm = "Go Back"
 message = "You have unsaved changes. Are you sure you want to go back? All changes will be lost."
 title = "Unsaved Changes"
+
+[automate.delete]
+cancel = "Cancel"
+confirm = "Delete"
+message = "Delete \"{{name}}\"? This cannot be undone."
+title = "Delete automation"
 
 [automate.entryMenu]
 label = "Open menu for {{title}}"

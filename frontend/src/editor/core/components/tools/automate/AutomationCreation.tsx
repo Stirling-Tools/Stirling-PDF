@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Z_INDEX_AUTOMATE_MODAL } from "@editor/styles/zIndex";
+import { alert } from "@editor/components/toast";
 import { Icon } from "@editor/ui/Icon";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import ToolConfigurationModal from "@editor/components/tools/automate/ToolConfigurationModal";
@@ -55,6 +56,7 @@ export default function AutomationCreation({
     removeTool,
     updateTool,
     canSaveAutomation,
+    hasUnsavedChanges,
     getToolName,
     getToolDefaultParameters,
   } = useAutomationForm({ mode, existingAutomation, toolRegistry });
@@ -100,6 +102,14 @@ export default function AutomationCreation({
     onBack();
   };
 
+  const requestBack = () => {
+    if (hasUnsavedChanges()) {
+      setUnsavedWarningOpen(true);
+      return;
+    }
+    onBack();
+  };
+
   const handleCancelBack = () => {
     setUnsavedWarningOpen(false);
   };
@@ -123,26 +133,13 @@ export default function AutomationCreation({
       let savedAutomation;
 
       if (mode === AutomationMode.EDIT && existingAutomation) {
-        // For edit mode, check if name has changed
-        const nameChanged = automationName.trim() !== existingAutomation.name;
-
-        if (nameChanged) {
-          // Name changed - create new automation
-          savedAutomation =
-            await automationStorage.saveAutomation(automationData);
-        } else {
-          // Name unchanged - update existing automation
-          const updatedAutomation = {
-            ...existingAutomation,
-            ...automationData,
-            id: existingAutomation.id,
-            createdAt: existingAutomation.createdAt,
-          };
-          savedAutomation =
-            await automationStorage.updateAutomation(updatedAutomation);
-        }
+        savedAutomation = await automationStorage.updateAutomation({
+          ...existingAutomation,
+          ...automationData,
+          id: existingAutomation.id,
+          createdAt: existingAutomation.createdAt,
+        });
       } else {
-        // Create mode - always create new automation
         savedAutomation =
           await automationStorage.saveAutomation(automationData);
       }
@@ -150,6 +147,16 @@ export default function AutomationCreation({
       onComplete(savedAutomation);
     } catch (error) {
       console.error("Error saving automation:", error);
+      alert({
+        alertType: "error",
+        title: t(
+          "automate.creation.saveFailed",
+          "Could not save the automation",
+        ),
+        body: error instanceof Error ? error.message : undefined,
+        expandable: false,
+        durationMs: 4000,
+      });
     }
   };
 
@@ -177,13 +184,13 @@ export default function AutomationCreation({
   return (
     <div>
       <Text
-        size="sm"
+        size="xs"
         mb="md"
-        p="md"
+        p="sm"
         style={{
           borderRadius: "var(--mantine-radius-md)",
-          background: "var(--color-gray-200)",
-          color: "var(--mantine-color-text)",
+          background: "var(--c-surface-sunken)",
+          color: "var(--c-text-muted)",
         }}
       >
         {t(
@@ -242,19 +249,26 @@ export default function AutomationCreation({
           />
         )}
 
-        <Divider />
+        <div
+          style={{
+            position: "sticky",
+            bottom: 0,
+            zIndex: 2,
+            background: "var(--c-bg-raised)",
+            paddingTop: "var(--mantine-spacing-sm)",
+            borderTop: "1px solid var(--c-border-subtle)",
+          }}
+        >
+          <Stack gap="sm">
+            <Button
+              leftSection={<Icon name="check" />}
+              onClick={() => void saveAutomation()}
+              disabled={!canSaveAutomation()}
+              fullWidth
+            >
+              {t("automate.creation.save", "Save Automation")}
+            </Button>
 
-        <Stack gap="sm">
-          <Button
-            leftSection={<Icon name="check" />}
-            onClick={saveAutomation}
-            disabled={!canSaveAutomation()}
-            fullWidth
-          >
-            {t("automate.creation.save", "Save Automation")}
-          </Button>
-
-          <Group gap="sm" grow>
             <Button
               variant="secondary"
               leftSection={<Icon name="download" />}
@@ -262,12 +276,13 @@ export default function AutomationCreation({
                 downloadAutomationConfig(buildExportableAutomation());
               }}
               disabled={!canSaveAutomation()}
+              fullWidth
             >
               {t("automate.creation.export", "Export")}
             </Button>
             <Button
               variant="secondary"
-              leftSection={<Icon name="download" />}
+              leftSection={<Icon name="folder-input" />}
               onClick={() => {
                 downloadFolderScanningConfig(
                   buildExportableAutomation(),
@@ -275,14 +290,23 @@ export default function AutomationCreation({
                 );
               }}
               disabled={!canSaveAutomation()}
+              fullWidth
             >
               {t(
                 "automate.creation.exportForFolderScanning",
                 "Export for Folder Scanning",
               )}
             </Button>
-          </Group>
-        </Stack>
+            <Button
+              variant="secondary"
+              leftSection={<Icon name="arrow-left" />}
+              onClick={requestBack}
+              fullWidth
+            >
+              {t("automate.creation.cancel", "Cancel")}
+            </Button>
+          </Stack>
+        </div>
       </Stack>
 
       {/* Tool Configuration Modal */}

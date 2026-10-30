@@ -3,9 +3,11 @@ import { useTranslation } from "react-i18next";
 import { Text, Stack, Group } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import { AutomationTool } from "@editor/types/automation";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { ToolId } from "@editor/types/toolId";
+import { AUTOMATION_CONSTANTS } from "@editor/constants/automation";
 import ToolSelector from "@editor/components/tools/automate/ToolSelector";
 import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
 
@@ -20,6 +22,22 @@ interface ToolListProps {
   getToolDefaultParameters: (operation: string) => Record<string, unknown>;
 }
 
+function StepArrow() {
+  return (
+    <div
+      aria-hidden
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        padding: "6px 0",
+        color: "var(--c-text-subtle)",
+      }}
+    >
+      <Icon name="arrow-down" size={14} />
+    </div>
+  );
+}
+
 export default function ToolList({
   tools,
   toolRegistry,
@@ -31,6 +49,7 @@ export default function ToolList({
   getToolDefaultParameters,
 }: ToolListProps) {
   const { t } = useTranslation();
+  const canRemove = tools.length > AUTOMATION_CONSTANTS.MIN_TOOL_COUNT;
 
   const handleToolSelect = (index: number, newOperation: string) => {
     const defaultParams = getToolDefaultParameters(newOperation);
@@ -48,12 +67,7 @@ export default function ToolList({
 
   return (
     <div>
-      <Text
-        size="sm"
-        fw={500}
-        mb="xs"
-        style={{ color: "var(--mantine-color-text)" }}
-      >
+      <Text size="sm" fw={500} mb="xs">
         {t("automate.creation.tools.selected", "Selected Tools")} (
         {tools.length})
       </Text>
@@ -62,125 +76,124 @@ export default function ToolList({
           <React.Fragment key={tool.id}>
             <div
               style={{
-                border: "1px solid var(--mantine-color-gray-2)",
+                border: "1px solid var(--c-border-subtle)",
                 borderRadius:
                   tool.operation && !tool.configured
-                    ? "var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0"
-                    : "var(--mantine-radius-lg)",
-                backgroundColor: "var(--mantine-color-gray-2)",
+                    ? "var(--mantine-radius-md) var(--mantine-radius-md) 0 0"
+                    : "var(--mantine-radius-md)",
+                backgroundColor: "var(--c-surface-sunken)",
                 position: "relative",
                 padding: "var(--mantine-spacing-xs)",
                 borderBottomWidth:
                   tool.operation && !tool.configured ? "0" : "1px",
               }}
             >
-              {/* Delete X - centered vertically, anchored right */}
-              {index > 1 && (
-                <ActionIcon
-                  variant="tertiary"
-                  size="sm"
-                  hover={false}
-                  onClick={() => onToolRemove(index)}
-                  aria-label={t(
-                    "automate.creation.tools.remove",
-                    "Remove tool",
-                  )}
-                  title={t("automate.creation.tools.remove", "Remove tool")}
-                  style={{
-                    position: "absolute",
-                    top: "50%",
-                    right: "8px",
-                    transform: "translateY(-50%)",
-                    zIndex: 1,
-                    color: "var(--mantine-color-gray-6)",
-                  }}
-                >
-                  <Icon name="x" size={16} />
-                </ActionIcon>
-              )}
+              <Group gap="xs" align="center" wrap="nowrap">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <ToolSelector
+                    key={`tool-selector-${tool.id}`}
+                    onSelect={(newOperation) =>
+                      handleToolSelect(index, newOperation)
+                    }
+                    excludeTools={["automate"]}
+                    toolRegistry={toolRegistry}
+                    selectedValue={tool.operation}
+                    placeholder={tool.name}
+                  />
+                </div>
 
-              <div>
-                {/* Tool Selection Dropdown with inline settings cog */}
-                <Group gap="xs" align="center" wrap="nowrap">
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <ToolSelector
-                      key={`tool-selector-${tool.id}`}
-                      onSelect={(newOperation) =>
-                        handleToolSelect(index, newOperation)
-                      }
-                      excludeTools={["automate"]}
-                      toolRegistry={toolRegistry}
-                      selectedValue={tool.operation}
-                      placeholder={tool.name}
-                    />
-                  </div>
-
-                  {/* Settings cog - only show if tool is selected, aligned right */}
+                <Group gap={2} wrap="nowrap">
                   {tool.operation && (
-                    <ActionIcon
-                      variant="tertiary"
-                      size="sm"
-                      onClick={() => onToolConfigure(index)}
-                      aria-label={t(
+                    <Tooltip
+                      content={t(
                         "automate.creation.tools.configure",
                         "Configure tool",
                       )}
-                      title={t(
-                        "automate.creation.tools.configure",
-                        "Configure tool",
-                      )}
-                      style={{ color: "var(--mantine-color-gray-6)" }}
+                      position="top"
                     >
-                      <Icon name="settings" size={16} />
-                    </ActionIcon>
+                      <ActionIcon
+                        variant="quiet"
+                        size="sm"
+                        onClick={() => onToolConfigure(index)}
+                        aria-label={t(
+                          "automate.creation.tools.configure",
+                          "Configure tool",
+                        )}
+                        style={{ color: "var(--c-text-muted)" }}
+                      >
+                        <Icon name="settings" size={16} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
+                  {canRemove && (
+                    <Tooltip
+                      content={t(
+                        "automate.creation.tools.remove",
+                        "Remove tool",
+                      )}
+                      position="top"
+                    >
+                      <ActionIcon
+                        variant="quiet"
+                        size="sm"
+                        onClick={() => onToolRemove(index)}
+                        aria-label={t(
+                          "automate.creation.tools.remove",
+                          "Remove tool",
+                        )}
+                        style={{ color: "var(--c-text-muted)" }}
+                      >
+                        <Icon name="x" size={16} />
+                      </ActionIcon>
+                    </Tooltip>
                   )}
                 </Group>
-              </div>
+              </Group>
             </div>
-            {/* Configuration status underneath */}
             {tool.operation && !tool.configured && (
-              <div
+              <button
+                type="button"
+                onClick={() => onToolConfigure(index)}
+                aria-label={t(
+                  "automate.creation.tools.configureTool",
+                  "Configure {{name}}",
+                  { name: tool.name },
+                )}
                 style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.375rem",
                   width: "100%",
-                  border: "1px solid var(--mantine-color-gray-2)",
+                  border: "1px solid var(--c-warning)",
                   borderTop: "none",
                   borderRadius:
-                    "0 0 var(--mantine-radius-lg) var(--mantine-radius-lg)",
-                  backgroundColor: "var(--c-active)",
+                    "0 0 var(--mantine-radius-md) var(--mantine-radius-md)",
+                  backgroundColor: "var(--c-warning-subtle)",
+                  color: "var(--c-warning)",
                   padding: "var(--mantine-spacing-xs)",
+                  textAlign: "left",
+                  font: "inherit",
+                  cursor: "pointer",
                 }}
               >
-                <Text pl="md" size="xs">
+                <Icon name="triangle-alert" size={14} />
+                <Text size="xs" fw={500}>
                   {t(
                     "automate.creation.tools.notConfigured",
-                    "! Not Configured",
+                    "Configuration required",
                   )}
                 </Text>
-              </div>
+              </button>
             )}
-            {index < tools.length - 1 && (
-              <div style={{ textAlign: "center", padding: "8px 0" }}>
-                <Text size="xs" c="dimmed">
-                  ↓
-                </Text>
-              </div>
-            )}
+            {index < tools.length - 1 && <StepArrow />}
           </React.Fragment>
         ))}
 
-        {/* Arrow before Add Tool Button */}
-        {tools.length > 0 && (
-          <div style={{ textAlign: "center", padding: "8px 0" }}>
-            <Text size="xs" c="dimmed">
-              ↓
-            </Text>
-          </div>
-        )}
+        {tools.length > 0 && <StepArrow />}
 
-        {/* Add Tool Button */}
         <div
           style={{
-            border: "1px solid var(--mantine-color-gray-2)",
+            border: "1px solid var(--c-border-subtle)",
             borderRadius: "var(--mantine-radius-sm)",
             overflow: "hidden",
           }}

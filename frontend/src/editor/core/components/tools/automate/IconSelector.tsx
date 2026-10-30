@@ -34,11 +34,7 @@ export default function IconSelector({
 
   return (
     <Stack gap="1px">
-      <Text
-        size="sm"
-        fw={600}
-        style={{ color: "var(--mantine-color-primary)" }}
-      >
+      <Text size="sm" fw={500} style={{ color: "var(--c-text)" }}>
         {t("automate.creation.icon.label", "Icon")}
       </Text>
 
@@ -64,8 +60,8 @@ export default function IconSelector({
               display: "flex",
               justifyContent: "flex-start",
               paddingLeft: "0.5rem",
-              borderColor: "var(--mantine-color-gray-3)",
-              color: "var(--mantine-color-text)",
+              borderColor: "var(--c-border)",
+              color: "var(--c-text)",
             }}
           >
             <Icon name={selectedIcon} size={iconSize} />
@@ -92,7 +88,17 @@ export default function IconSelector({
                 return (
                   <Tooltip key={option.value} label={option.label}>
                     <Box
+                      role="button"
+                      tabIndex={0}
+                      aria-label={option.label}
+                      aria-pressed={isSelected}
                       onClick={() => handleIconSelect(option.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          handleIconSelect(option.value);
+                        }
+                      }}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -101,13 +107,13 @@ export default function IconSelector({
                         borderRadius: "0.25rem",
                         cursor: "pointer",
                         backgroundColor: isSelected
-                          ? "var(--mantine-color-gray-1)"
+                          ? "var(--c-primary-subtle)"
                           : "transparent",
                       }}
                       onMouseEnter={(e) => {
                         if (!isSelected) {
                           e.currentTarget.style.backgroundColor =
-                            "var(--mantine-color-gray-0)";
+                            "var(--c-hover)";
                         }
                       }}
                       onMouseLeave={(e) => {
@@ -121,8 +127,8 @@ export default function IconSelector({
                         size={iconSize}
                         style={{
                           color: isSelected
-                            ? "var(--mantine-color-gray-9)"
-                            : "var(--mantine-color-gray-7)",
+                            ? "var(--c-accent-fg, var(--c-primary))"
+                            : "var(--c-text-muted)",
                         }}
                       />
                     </Box>

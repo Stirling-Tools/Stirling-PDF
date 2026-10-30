@@ -7,11 +7,15 @@ import {
   SubcategoryId,
   getToolSupportsAutomate,
 } from "@editor/data/toolsTaxonomy";
-import { useToolSections } from "@editor/hooks/useToolSections";
+import {
+  useToolSections,
+  type SubcategoryGroup,
+} from "@editor/hooks/useToolSections";
 import { renderToolButtons } from "@editor/components/tools/shared/renderToolButtons";
 import ToolSearch from "@editor/components/tools/toolPicker/ToolSearch";
-import ToolButton from "@editor/components/tools/toolPicker/ToolButton";
 import { ToolId } from "@editor/types/toolId";
+import { ToolIcon } from "@editor/components/shared/ToolIcon";
+import { Icon } from "@editor/ui/Icon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface ToolSelectorProps {
@@ -107,9 +111,25 @@ export default function ToolSelector({
       return [];
     }
 
-    // Find the "all" section which contains all tools without duplicates
-    const allSection = sections.find((s) => s.key === "all");
-    return allSection?.subcategories || [];
+    // Recommended tools live in the quick section and are deliberately absent
+    // from "all"; a selector that only reads "all" silently loses Compress,
+    // Merge and the rest of the common tools. Merge both sections by
+    // subcategory so every automatable tool is offered once.
+    const merged = new Map<string, SubcategoryGroup>();
+    for (const section of sections) {
+      for (const group of section.subcategories) {
+        const existing = merged.get(group.subcategoryId);
+        if (existing) {
+          existing.tools.push(...group.tools);
+        } else {
+          merged.set(group.subcategoryId, {
+            subcategoryId: group.subcategoryId,
+            tools: [...group.tools],
+          });
+        }
+      }
+    }
+    return [...merged.values()];
   }, [isSearching, searchGroups, sections, baseFilteredTools]);
 
   const handleToolSelect = useCallback(
@@ -186,25 +206,45 @@ export default function ToolSelector({
   };
 
   return (
-    <div ref={containerRef} className="rounded-xl">
+    <div ref={containerRef} style={{ position: "relative" }}>
       {/* Always show the target - either selected tool or search input */}
 
       {selectedTool && !opened ? (
-        // Show selected tool in AutomationEntry style when tool is selected and dropdown closed
         <div
+          role="button"
+          tabIndex={0}
+          aria-label={t(
+            "automate.creation.tools.changeTool",
+            "Change tool: {{name}}",
+            { name: selectedTool.name },
+          )}
           onClick={handleSearchFocus}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              handleSearchFocus();
+            }
+          }}
           style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            minHeight: "2.25rem",
+            padding: "0.25rem 0.5rem",
             cursor: "pointer",
-            borderRadius: "var(--mantine-radius-lg)",
+            borderRadius: "var(--mantine-radius-sm)",
+            border: "1px solid var(--c-border)",
+            backgroundColor: "var(--c-input-bg)",
           }}
         >
-          <ToolButton
-            id={"tool" as ToolId}
-            tool={selectedTool}
-            isSelected={false}
-            onSelect={() => {}}
-            rounded={true}
-            disableNavigation={true}
+          <ToolIcon icon={selectedTool.icon} color="var(--c-text)" />
+          <Text size="sm" fw={500} truncate style={{ flex: 1 }}>
+            {selectedTool.name}
+          </Text>
+          <Icon
+            name="chevron-down"
+            size={14}
+            style={{ color: "var(--c-text-muted)" }}
           />
         </div>
       ) : (
@@ -230,12 +270,15 @@ export default function ToolSelector({
             left: 0,
             right: 0,
             zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-            backgroundColor: "var(--mantine-color-body)",
-            border: "1px solid var(--mantine-color-gray-3)",
+            backgroundColor: "var(--c-surface)",
+            border: "1px solid var(--c-border)",
             borderRadius: "var(--mantine-radius-sm)",
             boxShadow: "var(--mantine-shadow-sm)",
             marginTop: "4px",
-            minWidth: "16rem",
+            width: "100%",
+            minWidth: 0,
+            maxWidth: "100%",
+            boxSizing: "border-box",
           }}
         >
           <ScrollArea h={350}>

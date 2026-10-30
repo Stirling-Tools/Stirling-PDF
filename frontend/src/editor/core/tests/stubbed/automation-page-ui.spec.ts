@@ -197,3 +197,155 @@ test.describe("11. Automation Page", () => {
     });
   });
 });
+
+test.describe("11.4 Automation - builder usability", () => {
+  test.beforeEach(async ({ page }) => {
+    await gotoAutomate(page);
+  });
+
+  async function openBuilder(page: Page): Promise<void> {
+    await ensureOnSelection(page);
+    await page
+      .getByText(/Create New Automation/i)
+      .first()
+      .click();
+    await expect(page.getByLabel(/Automation Name/i)).toBeVisible({
+      timeout: 5_000,
+    });
+  }
+
+  async function copySuggestedToSaved(page: Page, name: RegExp): Promise<void> {
+    await openEntryMenu(page, name);
+    await page.getByRole("menuitem", { name: /Copy to Saved/i }).click();
+    await expect
+      .poll(async () => page.getByRole("button", { name }).count(), {
+        timeout: 5_000,
+      })
+      .toBeGreaterThanOrEqual(2);
+  }
+
+  test("offers recommended tools such as Compress in the selector", async ({
+    page,
+  }) => {
+    await openBuilder(page);
+    await page.getByPlaceholder("Select a tool...").first().click();
+
+    const compress = page.getByRole("button", {
+      name: "Compress",
+      exact: true,
+    });
+    await expect(compress).toBeVisible({ timeout: 5_000 });
+    await compress.click();
+
+    await expect(page.getByText("Configuration required").first()).toBeVisible({
+      timeout: 5_000,
+    });
+  });
+
+  test("every tool row can be removed while more than one remains", async ({
+    page,
+  }) => {
+    await openBuilder(page);
+    await page.getByText("Add Tool", { exact: true }).click();
+    await expect(page.getByPlaceholder("Select a tool...")).toHaveCount(2);
+
+    const remove = page.getByRole("button", { name: "Remove tool" });
+    await expect(remove).toHaveCount(2);
+    await remove.first().click();
+
+    await expect(page.getByPlaceholder("Select a tool...")).toHaveCount(1);
+    await expect(page.getByRole("button", { name: "Remove tool" })).toHaveCount(
+      0,
+    );
+  });
+
+  test("Cancel prompts only when there is something to lose", async ({
+    page,
+  }) => {
+    await openBuilder(page);
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page.getByText("Saved").first()).toBeVisible({
+      timeout: 5_000,
+    });
+
+    await openBuilder(page);
+    await page.getByLabel(/Automation Name/i).fill("Unsaved automation");
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Unsaved Changes" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Go Back" }).click();
+    await expect(page.getByText("Saved").first()).toBeVisible();
+  });
+
+  test("cancelling an untouched edit does not warn", async ({ page }) => {
+    await copySuggestedToSaved(page, /Secure PDF Ingestion/i);
+    await openEntryMenu(page, /Secure PDF Ingestion/i);
+    await page.getByRole("menuitem", { name: /^Edit$/ }).click();
+
+    await expect(page.getByLabel(/Automation Name/i)).toBeVisible();
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page.getByText("Saved").first()).toBeVisible({
+      timeout: 5_000,
+    });
+    await expect(
+      page.getByRole("heading", { name: "Unsaved Changes" }),
+    ).toHaveCount(0);
+  });
+
+  test("renaming an edited automation updates it instead of duplicating", async ({
+    page,
+  }) => {
+    await copySuggestedToSaved(page, /Secure PDF Ingestion/i);
+    await openEntryMenu(page, /Secure PDF Ingestion/i);
+    await page.getByRole("menuitem", { name: /^Edit$/ }).click();
+
+    const nameField = page.getByLabel(/Automation Name/i);
+    await expect(nameField).toHaveValue("Secure PDF Ingestion");
+    await nameField.fill("Renamed automation");
+    await page.getByRole("button", { name: "Save Automation" }).click();
+
+    await expect(
+      page.getByRole("button", {
+        name: "Renamed automation",
+        exact: true,
+      }),
+    ).toHaveCount(1, { timeout: 5_000 });
+    // Only the Suggested copy keeps the old name; the saved one was updated.
+    await expect(
+      page.getByRole("button", {
+        name: "Secure PDF Ingestion",
+        exact: true,
+      }),
+    ).toHaveCount(1);
+  });
+
+  test("deleting a saved automation asks first and can be cancelled", async ({
+    page,
+  }) => {
+    await copySuggestedToSaved(page, /Secure PDF Ingestion/i);
+    await openEntryMenu(page, /Secure PDF Ingestion/i);
+    await page.getByRole("menuitem", { name: /^Delete$/ }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText("This cannot be undone");
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(
+      page.getByRole("button", {
+        name: "Secure PDF Ingestion",
+        exact: true,
+      }),
+    ).toHaveCount(2);
+
+    await openEntryMenu(page, /Secure PDF Ingestion/i);
+    await page.getByRole("menuitem", { name: /^Delete$/ }).click();
+    await dialog.getByRole("button", { name: "Delete" }).click();
+    await expect(
+      page.getByRole("button", {
+        name: "Secure PDF Ingestion",
+        exact: true,
+      }),
+    ).toHaveCount(1);
+  });
+});
