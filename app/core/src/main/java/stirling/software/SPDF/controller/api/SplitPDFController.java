@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -69,10 +70,9 @@ public class SplitPDFController {
         TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
         try {
             try (TempFile sourceTempFile = new TempFile(tempFileManager, ".pdf")) {
-                Files.copy(
-                        file.getInputStream(),
-                        sourceTempFile.getPath(),
-                        StandardCopyOption.REPLACE_EXISTING);
+                try (InputStream in = file.getInputStream()) {
+                    Files.copy(in, sourceTempFile.getPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
 
                 int totalPages;
                 List<Integer> pageNumbers;

@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.misc;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -295,7 +296,8 @@ public class AutoSplitPdfController {
 
         List<PDDocument> splitDocuments = new ArrayList<>();
         TempFile outputTempFile = new TempFile(tempFileManager, ".zip");
-        try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
+        try (InputStream in = file.getInputStream();
+                PDDocument document = pdfDocumentFactory.load(in)) {
             int totalPages = document.getNumberOfPages();
             log.info("PDF loaded, totalPages={}", totalPages);
 

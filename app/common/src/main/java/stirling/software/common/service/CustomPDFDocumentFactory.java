@@ -240,7 +240,9 @@ public class CustomPDFDocumentFactory {
         if (size > 0 && size <= SMALL_FILE_THRESHOLD) {
             return load(pdfFile.getBytes(), readOnly);
         }
-        return streamToTemp(pdfFile.getInputStream(), null, readOnly);
+        try (InputStream in = pdfFile.getInputStream()) {
+            return streamToTemp(in, null, readOnly);
+        }
     }
 
     public PDDocument load(MultipartFile fileInput, String password) throws IOException {
@@ -249,7 +251,9 @@ public class CustomPDFDocumentFactory {
 
     public PDDocument load(MultipartFile fileInput, String password, boolean readOnly)
             throws IOException {
-        return streamToTemp(fileInput.getInputStream(), password, readOnly);
+        try (InputStream in = fileInput.getInputStream()) {
+            return streamToTemp(in, password, readOnly);
+        }
     }
 
     /**

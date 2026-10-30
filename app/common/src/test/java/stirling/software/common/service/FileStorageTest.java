@@ -88,16 +88,26 @@ class FileStorageTest {
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
 
-        MultipartFile expectedFile = mock(MultipartFile.class);
-        when(fileOrUploadService.toMockMultipartFile(eq(fileId), eq(fileContent)))
-                .thenReturn(expectedFile);
+        when(fileOrUploadService.toStreamingMultipartFile(eq(fileId), anyLong(), any()))
+                .thenCallRealMethod();
 
         // Act
         MultipartFile result = fileStorage.retrieveFile(fileId);
 
-        // Assert
-        assertSame(expectedFile, result);
-        verify(fileOrUploadService).toMockMultipartFile(eq(fileId), eq(fileContent));
+        // Assert: every read opens the stored content afresh
+        assertEquals(fileContent.length, result.getSize());
+        for (int i = 0; i < 2; i++) {
+            try (InputStream in = result.getInputStream()) {
+                assertArrayEquals(fileContent, in.readAllBytes());
+            }
+        }
+        assertArrayEquals(fileContent, result.getBytes());
+        Path copy = tempDir.resolve("copy.pdf");
+        result.transferTo(copy);
+        assertArrayEquals(fileContent, Files.readAllBytes(copy));
+        Path fileCopy = tempDir.resolve("file-copy.pdf");
+        result.transferTo(fileCopy.toFile());
+        assertArrayEquals(fileContent, Files.readAllBytes(fileCopy));
     }
 
     @Test
