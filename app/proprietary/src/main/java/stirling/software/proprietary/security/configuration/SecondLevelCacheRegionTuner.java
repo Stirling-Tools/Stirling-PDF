@@ -126,7 +126,7 @@ public class SecondLevelCacheRegionTuner {
             Object current,
             Object wanted) {
         String earlier = setBy.putIfAbsent(region + "." + field, key);
-        if (earlier != null && !earlier.equals(key) && !Objects.equals(current, wanted)) {
+        if (earlier != null && !Objects.equals(current, wanted)) {
             throw new IllegalStateException(
                     "secondLevelCache.regions."
                             + earlier
