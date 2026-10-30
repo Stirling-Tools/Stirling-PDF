@@ -43,6 +43,12 @@ describe("languageOptions", () => {
     ).toContain("es-CL");
   });
 
+  it("offers the code edited inside a label naming a region", () => {
+    expect(
+      tagsOf(languageOptions(null, "en", "English (Ireland) (en-MT)").others),
+    ).toContain("en-MT");
+  });
+
   it("offers nothing extra for text that is not a tag", () => {
     const { inUse, others } = languageOptions(null, "en", "not a language");
     expect(inUse).toEqual([]);
@@ -92,6 +98,8 @@ describe("filterLanguages", () => {
   it("matches the code edited inside a shown label", () => {
     expect(valuesFor("Spanish (es-MX)")).toEqual(["es-MX"]);
     expect(valuesFor("Spanish (es)-M")).toEqual(["es-MX"]);
+    expect(valuesFor("Spanish (Mexico) (es-MX)")).toEqual(["es-MX"]);
+    expect(valuesFor("Spanish (Mexico) (es)")).toEqual(["es", "es-MX"]);
   });
 
   it("drops a group left with nothing", () => {

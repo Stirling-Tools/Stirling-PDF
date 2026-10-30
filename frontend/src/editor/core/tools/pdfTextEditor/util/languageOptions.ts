@@ -122,7 +122,7 @@ export const filterLanguages: OptionsFilter = ({ options, search }) => {
  * else the whole search.
  */
 function searchedCode(search: string): string {
-  const labelled = /\(([^()]*)\)\s*(\S*)$/.exec(search.trim());
+  const labelled = /\(([^()]*)\)\s*([^\s()]*)$/.exec(search.trim());
   return labelled ? labelled[1] + labelled[2] : search.trim();
 }
 
