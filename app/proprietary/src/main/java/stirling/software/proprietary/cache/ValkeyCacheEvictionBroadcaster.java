@@ -15,13 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * Publishes evictions on a Valkey pub/sub channel and applies the ones peers publish.
- *
- * <p>Pub/sub does not replay what was sent while a subscriber was disconnected, so every
- * re-subscription after the first clears this node's whole second-level cache: after a Valkey
- * outage the node cannot know which evictions it missed.
- */
 @Slf4j
 public class ValkeyCacheEvictionBroadcaster
         implements CacheEvictionBroadcaster, MessageListener, SubscriptionListener {
@@ -33,7 +26,6 @@ public class ValkeyCacheEvictionBroadcaster
     private final StringRedisTemplate template;
     private final SecondLevelCacheEvictor evictor;
     private final ObjectMapper objectMapper;
-    // Not cluster.node.id: two nodes configured with the same id would drop each other's messages.
     private final String origin = UUID.randomUUID().toString();
     private final AtomicBoolean subscribedBefore = new AtomicBoolean();
 
@@ -99,6 +91,7 @@ public class ValkeyCacheEvictionBroadcaster
 
     @Override
     public void onChannelSubscribed(byte[] channel, long count) {
+        // Pub/sub does not replay messages sent while disconnected.
         if (subscribedBefore.getAndSet(true)) {
             log.info(
                     "Re-subscribed to {}; clearing the second-level cache in case evictions were"

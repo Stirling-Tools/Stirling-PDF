@@ -613,12 +613,6 @@ public class ApplicationProperties {
     @Data
     public static class SecondLevelCache {
 
-        /**
-         * The JCache regions are process-local. With {@code cluster.enabled=true} and the Valkey
-         * backplane, writes are evicted on every node; any other multi-instance deployment must
-         * turn the cache off here, or a revocation or role change reaches the other instances only
-         * when the region TTL lapses.
-         */
         private boolean enabled = true;
 
         private Map<String, Region> regions = new LinkedHashMap<>();

@@ -35,7 +35,6 @@ public class CacheEvictionConfiguration {
         return container;
     }
 
-    // Negation of @ConditionalOnValkeyBackplane: exactly one broadcaster bean exists.
     @Bean
     @ConditionalOnExpression(
             "!(${cluster.enabled:false} and '${cluster.backplane:inprocess}'.equals('valkey'))")
