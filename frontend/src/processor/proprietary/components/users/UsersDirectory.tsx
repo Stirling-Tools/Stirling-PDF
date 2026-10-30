@@ -286,6 +286,7 @@ export function UsersDirectory({
       column.entity({
         key: "person",
         header: t("users.columns.person", "Person"),
+        privateContent: true,
         icon: (m) => (
           <Avatar
             name={m.name}
@@ -307,6 +308,7 @@ export function UsersDirectory({
         column.muted({
           key: "email",
           header: t("users.columns.email", "Email"),
+          privateContent: true,
           get: (m) => (m.email !== m.name ? m.email : undefined),
         }),
       );

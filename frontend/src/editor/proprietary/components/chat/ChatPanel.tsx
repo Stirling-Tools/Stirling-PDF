@@ -41,6 +41,7 @@ import { useTranslatedToolCatalog } from "@editor/data/useTranslatedToolRegistry
 import { StirlingLogoAnimated } from "@editor/components/agents/StirlingLogoAnimated";
 import { ChatQuickActions } from "@editor/components/chat/ChatQuickActions";
 import "@editor/components/chat/ChatPanel.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 type TranslateFn = TFunction;
 
@@ -380,6 +381,7 @@ function ChatMessageBubble({
             <Text
               ref={userTextRef}
               size="sm"
+              className={privateContentClassName}
               style={{ whiteSpace: "pre-wrap" }}
             >
               {content}
@@ -403,7 +405,7 @@ function ChatMessageBubble({
             resolveToolIcon={resolveToolIcon}
           />
         )}
-        <Text size="sm" component="div">
+        <Text size="sm" component="div" className={privateContentClassName}>
           {renderMarkdown(content)}
         </Text>
         {actions}
@@ -577,7 +579,7 @@ export function ChatPanel({
           maxRows={4}
           variant="unstyled"
           classNames={{
-            root: "chat-panel-input__textarea",
+            root: `chat-panel-input__textarea ${privateContentClassName}`,
             input: "chat-panel-input__field",
           }}
         />

@@ -28,6 +28,7 @@ import {
 import apiClient from "@editor/services/apiClient";
 import { useTeamAvatarUrls } from "@editor/hooks/useTeamAvatarUrls";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -77,6 +78,7 @@ function TeamNameEditor({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={t("team.namePlaceholder", "Team name")}
+        className={privateContentClassName}
         style={{ flex: 1, maxWidth: 300 }}
         autoFocus
         onKeyDown={(e) => {
@@ -123,7 +125,7 @@ function TeamNameDisplay({
   return (
     <>
       <Group gap="xs" align="center">
-        <Text fw={600} size="lg">
+        <Text fw={600} size="lg" className={privateContentClassName}>
           {name}
         </Text>
         {isLeader && !isPersonal && (
@@ -239,12 +241,23 @@ interface DismissibleAlertProps {
   message: string | null;
   color: string;
   onClose: () => void;
+  className?: string;
 }
 
-function DismissibleAlert({ message, color, onClose }: DismissibleAlertProps) {
+function DismissibleAlert({
+  message,
+  color,
+  onClose,
+  className,
+}: DismissibleAlertProps) {
   if (!message) return null;
   return (
-    <Alert color={color} onClose={onClose} withCloseButton>
+    <Alert
+      color={color}
+      onClose={onClose}
+      withCloseButton
+      className={className}
+    >
       {message}
     </Alert>
   );
@@ -280,6 +293,7 @@ function InviteMemberForm({
             placeholder={t("team.invite.placeholder", "email@example.com")}
             value={email}
             onChange={(e) => onEmailChange(e.target.value)}
+            className={privateContentClassName}
             style={{ flex: 1 }}
             required
             error={
@@ -392,7 +406,7 @@ function TeamMemberRow({
   return (
     <Table.Tr>
       <Table.Td>
-        <Group gap="xs" wrap="nowrap">
+        <Group gap="xs" wrap="nowrap" className={privateContentClassName}>
           <Avatar size={28} radius="xl" src={avatarUrl} alt="" color="blue">
             {member.username.charAt(0).toUpperCase()}
           </Avatar>
@@ -402,7 +416,7 @@ function TeamMemberRow({
         </Group>
       </Table.Td>
       <Table.Td>
-        <Text size="sm" c="dimmed">
+        <Text size="sm" c="dimmed" className={privateContentClassName}>
           {member.email}
         </Text>
       </Table.Td>
@@ -433,12 +447,18 @@ function PendingInvitationRow({
   return (
     <Table.Tr>
       <Table.Td>
-        <Text size="sm" fw={500} c="dimmed" fs="italic">
+        <Text
+          size="sm"
+          fw={500}
+          c="dimmed"
+          fs="italic"
+          className={privateContentClassName}
+        >
           {invitation.inviteeEmail.split("@")[0]}
         </Text>
       </Table.Td>
       <Table.Td>
-        <Text size="sm" c="dimmed">
+        <Text size="sm" c="dimmed" className={privateContentClassName}>
           {invitation.inviteeEmail}
         </Text>
       </Table.Td>
@@ -876,6 +896,7 @@ const TeamSection: React.FC = () => {
         message={success}
         color="green"
         onClose={() => setSuccess(null)}
+        className={privateContentClassName}
       />
 
       <InviteMemberForm

@@ -4,6 +4,8 @@ import { Banner, Button, Checkbox, Spinner } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { StepModalHeader } from "@editor/portal/components/shared/StepModalHeader";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * This page is step 2 of a flow that started on the instance, so it wears the same chrome: the admin
@@ -184,8 +186,11 @@ export function ConnectApproveView({
       <dl className="saas-connect__facts">
         <dt>{t("connect.confirm.signedInAs", "Account")}</dt>
         <dd>
-          {signedInEmail ??
-            t("connect.confirm.unknownAccount", "an unknown account")}
+          {signedInEmail ? (
+            <PrivateContent>{signedInEmail}</PrivateContent>
+          ) : (
+            t("connect.confirm.unknownAccount", "an unknown account")
+          )}
           <button
             type="button"
             className="saas-connect__switch"
@@ -223,7 +228,9 @@ export function ConnectApproveView({
             </Tooltip>
           ) : null}
         </dt>
-        <dd className="saas-connect__origin">{pending?.callbackOrigin}</dd>
+        <dd className={`saas-connect__origin ${privateContentClassName}`}>
+          {pending?.callbackOrigin}
+        </dd>
       </dl>
 
       {error ? <Banner tone="danger">{error}</Banner> : null}

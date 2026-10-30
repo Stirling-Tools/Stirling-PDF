@@ -9,6 +9,7 @@ import { UNIFIED_CIRCLE_CONFIG } from "@editor/components/onboarding/slides/unif
 import { accountService } from "@editor/services/accountService";
 import { alert as showToast } from "@editor/components/toast";
 import styles from "@editor/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface FirstLoginSlideProps {
   username: string;
@@ -137,7 +138,7 @@ function FirstLoginForm({
 
             <Text size="sm" fw={500}>
               {t("firstLogin.loggedInAs", "Logged in as")}:{" "}
-              <strong>{username}</strong>
+              <strong className={privateContentClassName}>{username}</strong>
             </Text>
 
             {error && (

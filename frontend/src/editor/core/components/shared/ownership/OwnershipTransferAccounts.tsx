@@ -3,6 +3,7 @@ import type { OwnershipTransferFlow } from "@editor/components/shared/ownership/
 import { Combobox } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Keeps local identity separate from the editable cloud account; focusing only loads candidates. */
 export function OwnershipTransferAccounts({
@@ -56,7 +57,7 @@ export function OwnershipTransferAccounts({
                       <input
                         id="ownership-cloud-email"
                         role="combobox"
-                        className="ownership-flow__search"
+                        className={`ownership-flow__search ${privateContentClassName}`}
                         value={search}
                         readOnly={busy}
                         autoComplete="off"
@@ -77,7 +78,9 @@ export function OwnershipTransferAccounts({
                     <span className="ownership-flow__chevron">
                       <Icon name="chevron-down" size={16} />
                     </span>
-                    <Combobox.Dropdown className="ownership-flow__dropdown">
+                    <Combobox.Dropdown
+                      className={`ownership-flow__dropdown ${privateContentClassName}`}
+                    >
                       <Combobox.Options className="ownership-flow__options">
                         {members.map((member) => (
                           <Combobox.Option
@@ -103,7 +106,12 @@ export function OwnershipTransferAccounts({
                   </div>
                 </Combobox>
               ) : (
-                <strong title={cloudEmail ?? undefined}>{cloudEmail}</strong>
+                <strong
+                  title={cloudEmail ?? undefined}
+                  className={privateContentClassName}
+                >
+                  {cloudEmail}
+                </strong>
               )}
             </div>
           )}

@@ -4,6 +4,7 @@ import { Checkbox, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Shows the scope before consent, or the remaining local step after cloud ownership commits. */
 export function OwnershipTransferReview({
@@ -48,7 +49,11 @@ export function OwnershipTransferReview({
                           team: status.cloud.teamName,
                         }}
                         components={{
-                          user: <strong className="ownership-flow__username" />,
+                          user: (
+                            <strong
+                              className={`ownership-flow__username ${privateContentClassName}`}
+                            />
+                          ),
                         }}
                       />
                     </p>

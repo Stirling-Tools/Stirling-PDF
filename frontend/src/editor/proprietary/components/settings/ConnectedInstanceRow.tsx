@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import type { LinkedInstanceRow } from "@editor/types/linkedInstance";
 import "@editor/components/settings/AccountConnectionLayout.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface Props {
   instance: LinkedInstanceRow;
@@ -60,7 +61,7 @@ export function ConnectedInstanceRow({
     <li className="account-connection__row">
       <div className="account-connection__identity">
         <div className="account-connection__name">
-          <h3>
+          <h3 className={privateContentClassName}>
             {instance.name ??
               t("portal.accountLink.instances.unnamed", "Unnamed instance")}
           </h3>
@@ -124,7 +125,9 @@ export function ConnectedInstanceRow({
             <div>
               <dt>{t("settings.connectedInstances.id", "Instance ID")}</dt>
               <dd>
-                <code>{instance.deviceId}</code>{" "}
+                <code className={privateContentClassName}>
+                  {instance.deviceId}
+                </code>{" "}
                 <Button variant="quiet" size="sm" onClick={() => void copyId()}>
                   {t("settings.connectedInstances.copyId", "Copy ID")}
                 </Button>

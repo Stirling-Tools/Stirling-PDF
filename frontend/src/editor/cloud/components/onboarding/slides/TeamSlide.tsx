@@ -6,6 +6,7 @@ import { SlideConfig } from "@editor/types/types";
 import { createLightSlideBackground } from "@editor/components/onboarding/slides/unifiedBackgroundConfig";
 import { useSaaSTeam } from "@editor/contexts/SaaSTeamContext";
 import styles from "@editor/components/onboarding/slides/SaasOnboardingSlides.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const TEAM_BACKGROUND = createLightSlideBackground([79, 70, 229], "#E0E7FF");
 
@@ -73,6 +74,7 @@ function InviteForm() {
           placeholder={t("team.invite.placeholder", "email@example.com")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          className={privateContentClassName}
           error={
             email && !emailValid
               ? t("team.invite.invalidEmail", "Invalid email format")
@@ -93,7 +95,7 @@ function InviteForm() {
       )}
       {success && (
         <span
-          className={styles.inviteFeedback}
+          className={`${styles.inviteFeedback} ${privateContentClassName}`}
           style={{ color: "var(--mantine-color-green-7)", display: "block" }}
         >
           {success}
@@ -137,7 +139,7 @@ const TeamSlideBody = () => {
                 style={{ display: "flex" }}
               >
                 <span
-                  className={styles.memberIdentity}
+                  className={`${styles.memberIdentity} ${privateContentClassName}`}
                   style={{ display: "flex" }}
                 >
                   <span className={styles.memberName}>{member.username}</span>
@@ -159,7 +161,7 @@ const TeamSlideBody = () => {
                 style={{ display: "flex" }}
               >
                 <span
-                  className={styles.memberIdentity}
+                  className={`${styles.memberIdentity} ${privateContentClassName}`}
                   style={{ display: "flex" }}
                 >
                   <span className={styles.memberName}>

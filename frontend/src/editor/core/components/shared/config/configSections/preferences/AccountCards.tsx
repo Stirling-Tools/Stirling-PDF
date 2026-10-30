@@ -22,6 +22,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { useAccountLogout } from "@editor/extensions/accountLogout";
 import { BASE_PATH, withBasePath } from "@editor/constants/app";
 import { MfaSetupResponse } from "@editor/responses/Mfa/MfaResponse";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** The signed-in user's shape is layer-specific, so read fields defensively. */
 function userField(source: unknown, key: string): string | undefined {
@@ -367,7 +368,11 @@ export function AccountCards() {
       >
         <Paper withBorder p="md" radius="md">
           <Stack gap="sm">
-            <Text size="sm" c="dimmed">
+            <Text
+              size="sm"
+              c="dimmed"
+              className={userIdentifier ? privateContentClassName : undefined}
+            >
               {userIdentifier
                 ? t("settings.general.user", "User") + ": " + userIdentifier
                 : t("account.accountSettings", "Account Settings")}
