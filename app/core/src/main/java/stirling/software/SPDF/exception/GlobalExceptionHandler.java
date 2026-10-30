@@ -552,6 +552,18 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return ProblemDetail with HTTP 400 BAD_REQUEST
      */
+    @ExceptionHandler(DecodedStreamTooLargeException.class)
+    public ResponseEntity<ProblemDetail> handleDecodedStreamTooLarge(
+            DecodedStreamTooLargeException ex, HttpServletRequest request) {
+        logException("warn", "Decoded stream too large", request, ex, ex.getErrorCode());
+        String title =
+                getLocalizedMessage(
+                        "error.decodedStreamTooLarge.title",
+                        ErrorTitles.DECODED_STREAM_TOO_LARGE_DEFAULT);
+        return createProblemDetailResponse(
+                ex, HttpStatus.BAD_REQUEST, ErrorTypes.DECODED_STREAM_TOO_LARGE, title, request);
+    }
+
     @ExceptionHandler(BaseValidationException.class)
     public ResponseEntity<ProblemDetail> handleValidation(
             BaseValidationException ex, HttpServletRequest request) {
@@ -1220,6 +1232,8 @@ public class GlobalExceptionHandler {
             } else {
                 return handleValidation(valEx, request);
             }
+        } else if (cause instanceof DecodedStreamTooLargeException tooLarge) {
+            return handleDecodedStreamTooLarge(tooLarge, request);
         } else if (cause instanceof IOException) {
             // Unwrap and handle IOException (may contain PDF-specific errors)
             return handleIOException((IOException) cause, request);
@@ -1510,6 +1524,7 @@ public class GlobalExceptionHandler {
         static final String FFMPEG_REQUIRED = "/errors/ffmpeg-required";
         static final String TOOL_REQUIRED = "/errors/tool-required";
         static final String OUT_OF_MEMORY_DPI = "/errors/out-of-memory-dpi";
+        static final String DECODED_STREAM_TOO_LARGE = "/errors/decoded-stream-too-large";
         static final String PDF_CORRUPTED = "/errors/pdf-corrupted";
         static final String PDF_ENCRYPTION = "/errors/pdf-encryption";
         static final String APP_ERROR = "/errors/app-error";
@@ -1540,6 +1555,7 @@ public class GlobalExceptionHandler {
         static final String FFMPEG_REQUIRED_DEFAULT = "FFmpeg Required";
         static final String TOOL_REQUIRED_DEFAULT = "Required Tool Not Installed";
         static final String OUT_OF_MEMORY_DPI_DEFAULT = "Insufficient Memory for Image Rendering";
+        static final String DECODED_STREAM_TOO_LARGE_DEFAULT = "Content Too Large to Decompress";
         static final String PDF_CORRUPTED_DEFAULT = "PDF File Corrupted";
         static final String PDF_ENCRYPTION_DEFAULT = "PDF Encryption Error";
         static final String APPLICATION_DEFAULT = "Application Error";

@@ -26,6 +26,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.LimitedPDFRenderer;
 
 @Slf4j
 public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
@@ -49,7 +50,7 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
             // Load the uploaded PDF
             try (PDDocument document = Loader.loadPDF(tempFile.getFile())) {
                 // Render each page and invert colors
-                PDFRenderer pdfRenderer = new PDFRenderer(document);
+                PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
                 pdfRenderer.setSubsamplingAllowed(
                         true); // Enable subsampling to reduce memory usage
                 for (int page = 0; page < document.getNumberOfPages(); page++) {
