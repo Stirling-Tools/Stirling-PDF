@@ -33,6 +33,7 @@
     "src/editor/proprietary/**/*.spec.ts*",
     "src/editor/cloud/**/*.test.ts*",
     "src/editor/cloud/**/*.spec.ts*",
-    "src/editor/desktop"
+    "src/editor/desktop",
+    "src/editor/tauri"
   ]
 }
