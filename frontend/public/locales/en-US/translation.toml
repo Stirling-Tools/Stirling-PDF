@@ -4648,6 +4648,13 @@ title = "Settings"
 [extractPages.tooltip]
 description = "Extracts the selected pages into a new PDF, preserving order."
 
+[feedback.page]
+open = "Send feedback"
+sendMore = "Send more feedback"
+sent = "Thanks for your feedback"
+title = "Help us improve Stirling"
+unavailable = "Feedback is unavailable"
+
 [feedback.tag]
 dismiss = "Hide the feedback button"
 label = "Feedback"
