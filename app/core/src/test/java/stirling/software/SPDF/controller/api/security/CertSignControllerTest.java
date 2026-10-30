@@ -506,6 +506,35 @@ class CertSignControllerTest {
         assertTrue(drainBody(response).length > 0);
     }
 
+    @Test
+    void testSignPdfWithVisibleSignatureAndCjkSubject() throws Exception {
+        byte[] cjkCertBytes = createPkcs12WithSubject("王");
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        MockMultipartFile p12File =
+                new MockMultipartFile(
+                        "p12File", "cjk-cert.p12", "application/x-pkcs12", cjkCertBytes);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(pdfFile);
+        request.setCertType("PKCS12");
+        request.setP12File(p12File);
+        request.setPassword("password");
+        request.setShowSignature(true);
+        request.setReason("Approved");
+        request.setLocation("Beijing");
+        request.setName("王");
+        request.setPageNumber(1);
+        request.setShowLogo(false);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertNotNull(response.getBody());
+        assertTrue(drainBody(response).length > 0);
+    }
+
     private byte[] createPkcs12WithSubject(String commonName) throws Exception {
         if (Security.getProvider("BC") == null) {
             Security.addProvider(new BouncyCastleProvider());

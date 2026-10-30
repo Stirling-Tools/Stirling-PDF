@@ -441,12 +441,30 @@ public class CertSignController {
                 PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
                 float height = bbox.getHeight();
                 form.setBBox(bbox);
-                // PDType0Font embeds the TTF subset into the PDF and supports the full Unicode
-                // range. PDType1Font (Times-Bold, WinAnsiEncoding) only covers Latin-1 and throws
-                // IllegalArgumentException for diacritical characters such as Czech "ř" (U+0159).
+
+                X509Certificate cert = (X509Certificate) getCertificateChain()[0];
+                X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
+                RDN[] rdns = x500Name.getRDNs(BCStyle.CN);
+                String name =
+                        (rdns != null && rdns.length > 0)
+                                ? IETFUtils.valueToString(rdns[0].getFirst().getValue())
+                                : signature.getName();
+                if (name == null) {
+                    name = "";
+                }
+
+                String date =
+                        signature.getSignDate() != null
+                                ? signature.getSignDate().getTime().toString()
+                                : Calendar.getInstance().getTime().toString();
+                String reason = signature.getReason();
+
+                String textToRender = name + " " + (reason != null ? reason : "");
+                String fontResource = resolveFontResource(textToRender);
+
                 PDFont font;
                 try (InputStream fontStream =
-                        new ClassPathResource("static/fonts/NotoSans-Bold.ttf").getInputStream()) {
+                        new ClassPathResource(fontResource).getInputStream()) {
                     font = PDType0Font.load(doc, fontStream);
                 }
 
@@ -471,7 +489,6 @@ public class CertSignController {
                         cs.restoreGraphicsState();
                     }
 
-                    // show text
                     float fontSize = 10;
                     float leading = fontSize * 1.5f;
                     cs.beginText();
@@ -480,30 +497,12 @@ public class CertSignController {
                     cs.newLineAtOffset(fontSize, height - leading);
                     cs.setLeading(leading);
 
-                    X509Certificate cert = (X509Certificate) getCertificateChain()[0];
-
-                    X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
-                    RDN[] rdns = x500Name.getRDNs(BCStyle.CN);
-                    String name =
-                            (rdns != null && rdns.length > 0)
-                                    ? IETFUtils.valueToString(rdns[0].getFirst().getValue())
-                                    : signature.getName();
-                    if (name == null) {
-                        name = "";
-                    }
-
-                    String date =
-                            signature.getSignDate() != null
-                                    ? signature.getSignDate().getTime().toString()
-                                    : Calendar.getInstance().getTime().toString();
-                    String reason = signature.getReason();
-
-                    cs.showText("Signed by " + name);
+                    cs.showText(sanitizeForFont(font, "Signed by " + name));
                     cs.newLine();
-                    cs.showText(date);
+                    cs.showText(sanitizeForFont(font, date));
                     if (reason != null && !reason.isEmpty()) {
                         cs.newLine();
-                        cs.showText(reason);
+                        cs.showText(sanitizeForFont(font, reason));
                     }
 
                     cs.endText();
@@ -513,6 +512,63 @@ public class CertSignController {
                 doc.save(baos);
                 return new ByteArrayInputStream(baos.toByteArray());
             }
+        }
+
+        private static String resolveFontResource(String text) {
+            if (text == null) {
+                return "static/fonts/NotoSans-Bold.ttf";
+            }
+            for (int i = 0; i < text.length(); ) {
+                int codePoint = text.codePointAt(i);
+                Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
+                if (block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                        || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+                        || block == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS) {
+                    return "static/fonts/NotoSansSC-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.HIRAGANA
+                        || block == Character.UnicodeBlock.KATAKANA) {
+                    return "static/fonts/NotoSansJP-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.HANGUL_SYLLABLES
+                        || block == Character.UnicodeBlock.HANGUL_JAMO) {
+                    return "static/fonts/NotoSansKR-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.ARABIC
+                        || block == Character.UnicodeBlock.ARABIC_PRESENTATION_FORMS_A
+                        || block == Character.UnicodeBlock.ARABIC_PRESENTATION_FORMS_B) {
+                    return "static/fonts/NotoSansArabic-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.DEVANAGARI) {
+                    return "static/fonts/NotoSansDevanagari-Regular.ttf";
+                }
+                i += Character.charCount(codePoint);
+            }
+            return "static/fonts/NotoSans-Bold.ttf";
+        }
+
+        private static String sanitizeForFont(PDFont font, String text) {
+            if (text == null) {
+                return "";
+            }
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < text.length(); ) {
+                int codePoint = text.codePointAt(i);
+                String ch = new String(Character.toChars(codePoint));
+                try {
+                    font.encode(ch);
+                    sb.append(ch);
+                } catch (Exception e) {
+                    try {
+                        font.encode("?");
+                        sb.append('?');
+                    } catch (Exception ignored) {
+                        // Character cannot be encoded and replacement glyph unavailable.
+                    }
+                }
+                i += Character.charCount(codePoint);
+            }
+            return sb.toString();
         }
     }
 }
