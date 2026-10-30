@@ -301,6 +301,34 @@ class ConvertEbookToPDFControllerTest {
     }
 
     @Test
+    void convertEbookToPdf_calibreFailureRemovesWorkingDirectory() throws Exception {
+        when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
+
+        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "broken.epub", "application/epub+zip", "content".getBytes()));
+
+        Path workingDir = Files.createTempDirectory("ebook-convert-fail-test-");
+        when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
+
+        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+            ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
+            pe.when(() -> ProcessExecutor.getInstance(Processes.CALIBRE)).thenReturn(executor);
+            // ProcessExecutor reports a non-zero Calibre exit by throwing, not by returning the rc.
+            when(executor.runCommandWithOutputHandling(any(), any(File.class)))
+                    .thenThrow(new IOException("Calibre conversion failed with exit code 1"));
+
+            assertThrows(IOException.class, () -> controller.convertEbookToPdf(request));
+        } finally {
+            Files.deleteIfExists(workingDir);
+        }
+
+        Mockito.verify(tempFileManager).deleteTempDirectory(workingDir);
+        assertFalse(Files.exists(workingDir.resolve("broken.epub")));
+    }
+
+    @Test
     void convertEbookToPdf_sanitizesDocxBeforeCalibreReadsIt() throws Exception {
         when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
         byte[] uploaded = "linked-picture-docx".getBytes(StandardCharsets.UTF_8);

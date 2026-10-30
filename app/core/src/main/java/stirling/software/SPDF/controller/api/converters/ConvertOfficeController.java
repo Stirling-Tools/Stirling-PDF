@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -93,7 +94,7 @@ public class ConvertOfficeController {
         }
 
         // The caller deletes it on success: the returned PDF lives in it.
-        Path workDir = Files.createTempDirectory("office2pdf_");
+        Path workDir = tempFileManager.createTempDirectory();
         boolean converted = false;
         try {
             File pdf =
@@ -103,7 +104,7 @@ public class ConvertOfficeController {
             return pdf;
         } finally {
             if (!converted) {
-                FileUtils.deleteQuietly(workDir.toFile());
+                tempFileManager.deleteTempDirectory(workDir);
             }
         }
     }
@@ -136,7 +137,9 @@ public class ConvertOfficeController {
                     officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
             Files.write(inputPath, sanitized);
         } else {
-            Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+            try (InputStream in = inputFile.getInputStream()) {
+                Files.copy(in, inputPath, StandardCopyOption.REPLACE_EXISTING);
+            }
         }
 
         Path libreOfficeProfile = null;
@@ -248,7 +251,9 @@ public class ConvertOfficeController {
             Files.write(
                     inputPath, officeDocumentSanitizer.sanitize(inputFile.getBytes(), extension));
         } else {
-            Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+            try (InputStream in = inputFile.getInputStream()) {
+                Files.copy(in, inputPath, StandardCopyOption.REPLACE_EXISTING);
+            }
         }
         try {
             officeToPdfService.convert(inputPath, outputPath);
@@ -314,7 +319,7 @@ public class ConvertOfficeController {
             throw e;
         } finally {
             if (file != null && file.getParent() != null) {
-                FileUtils.deleteDirectory(file.getParentFile());
+                tempFileManager.deleteTempDirectory(file.getParentFile().toPath());
             }
         }
     }

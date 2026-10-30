@@ -598,4 +598,40 @@ class ConvertPDFToPDFAMoreTest {
             }
         }
     }
+
+    @Test
+    @DisplayName("failed LibreOffice PDF/A step removes its output directory")
+    void libreOfficeFailureRemovesOutputDir() throws Exception {
+        when(runtimePathConfig.getSOfficePath()).thenReturn("soffice");
+        Path input = tempDir.resolve("in.pdf");
+        Files.write(input, simplePdfBytes());
+        Path managedOutputDir = Files.createDirectory(tempDir.resolve("lo-out"));
+        when(tempFileManager.createTempDirectory()).thenReturn(managedOutputDir);
+        List<Path> outputDirs = new java.util.ArrayList<>();
+
+        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+            ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
+            pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE))
+                    .thenReturn(executor);
+            // ProcessExecutor reports a non-zero exit by throwing, not by returning the rc.
+            when(executor.runCommandWithOutputHandling(any()))
+                    .thenAnswer(
+                            inv -> {
+                                List<String> command = inv.getArgument(0);
+                                Path outDir = Path.of(command.get(command.indexOf("--outdir") + 1));
+                                outputDirs.add(outDir);
+                                Files.write(outDir.resolve("partial.pdf"), new byte[] {1});
+                                throw new IOException("soffice exited with code 1");
+                            });
+
+            assertThatThrownBy(
+                            () ->
+                                    invokeInstance(
+                                            newController(), "runLibreOfficeConversion", input, 1))
+                    .isInstanceOf(IOException.class);
+        }
+
+        assertThat(outputDirs).containsExactly(managedOutputDir);
+        Mockito.verify(tempFileManager).deleteTempDirectory(managedOutputDir);
+    }
 }
