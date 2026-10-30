@@ -22,15 +22,10 @@ function stub(overrides: Partial<StirlingFileStub> = {}): StirlingFileStub {
 }
 
 describe("storedFileIdForStub", () => {
-  it("references the server copy when the revision base names this leaf", () => {
-    expect(
-      storedFileIdForStub(
-        stub({
-          remoteStorageId: 7,
-          remoteSync: { revision: "rev-1", leafId: "local-1" as FileId },
-        }),
-      ),
-    ).toBe(`${STORED_FILE_ID_PREFIX}7`);
+  it("references the server copy for an unedited import", () => {
+    expect(storedFileIdForStub(stub({ remoteStorageId: 7 }))).toBe(
+      `${STORED_FILE_ID_PREFIX}7`,
+    );
   });
 
   it("references an imported server file when the build omits revision metadata", () => {
@@ -63,7 +58,8 @@ describe("storedFileIdForStub", () => {
         stub({
           id: "local-2" as FileId,
           remoteStorageId: 7,
-          remoteSync: { revision: "rev-1", leafId: "local-1" as FileId },
+          versionNumber: 2,
+          parentFileId: "local-1" as FileId,
         }),
       ),
     ).toBeUndefined();
@@ -86,7 +82,6 @@ describe("storedFileIdForStub", () => {
       storedFileIdForStub(
         stub({
           remoteStorageId: 7,
-          remoteSync: { revision: "rev-1", leafId: "local-1" as FileId },
           processedFile: { pages: [], isEncrypted: true },
         }),
       ),
@@ -99,7 +94,6 @@ describe("storedFileIdForStub", () => {
         stub({
           remoteStorageId: 7,
           remoteSharedViaLink: true,
-          remoteSync: { revision: "rev-1", leafId: "local-1" as FileId },
         }),
       ),
     ).toBeUndefined();
@@ -117,10 +111,7 @@ describe("storedFileIdForStub", () => {
 describe("storedFileIdForFile", () => {
   it("looks the stub up by the file's embedded id", () => {
     const file = { fileId: "local-1" } as File;
-    const current = stub({
-      remoteStorageId: 5,
-      remoteSync: { revision: "rev-1", leafId: "local-1" as FileId },
-    });
+    const current = stub({ remoteStorageId: 5 });
 
     expect(storedFileIdForFile(file, () => current)).toBe(
       `${STORED_FILE_ID_PREFIX}5`,

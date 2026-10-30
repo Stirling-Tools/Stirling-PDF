@@ -329,7 +329,11 @@ export const convertProcessor = async (
           [file],
           supportsReferences ? serverFileIds?.[index] : undefined,
         );
-        const response = await apiClient.post(endpoint, formData, requestConfig);
+        const response = await apiClient.post(
+          endpoint,
+          formData,
+          requestConfig,
+        );
 
         const convertedFile = createFileFromResponse(
           response.data,

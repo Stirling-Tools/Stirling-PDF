@@ -45,7 +45,7 @@ describe("pdfium bootstrap", () => {
       const rejected = Promise.reject(failure);
       // Mark handled here too: Vitest can report the mock's rejection after the test ends.
       rejected.catch(() => {});
-      return rejected as Promise<never>;
+      return rejected;
     });
     init.mockImplementation((overrides: Record<string, never>) =>
       emscriptenInit(overrides.instantiateWasm),
