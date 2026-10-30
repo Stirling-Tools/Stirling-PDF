@@ -364,6 +364,10 @@ public class UserService implements UserServiceInterface {
         return findByUsernameIgnoreCase(username).isPresent();
     }
 
+    public boolean isUsernameTakenByOtherUser(String username, Long userId) {
+        return userRepository.existsByUsernameIgnoreCaseAndIdNot(username, userId);
+    }
+
     public boolean hasUsers() {
         long userCount = userRepository.count();
         if (findByUsernameIgnoreCase(Role.INTERNAL_API_USER.getRoleId()).isPresent()) {
@@ -372,6 +376,7 @@ public class UserService implements UserServiceInterface {
         return userCount > 0;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void updateUserSettings(String username, Map<String, String> updates)
             throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = findByUsernameIgnoreCaseWithSettings(username);
@@ -390,7 +395,7 @@ public class UserService implements UserServiceInterface {
             }
             user.setSettings(settingsMap);
             userRepository.save(user);
-            databaseService.exportDatabase();
+            exportAfterCommit();
         }
     }
 

@@ -208,12 +208,11 @@ class UserControllerTest {
     @Test
     void changeUsernameRejectsCaseVariantOfAnotherAccount() throws Exception {
         User caller = user(1L, "bob", true, null);
-        User internal = user(2L, "STIRLING-PDF-BACKEND-API-USER", true, null);
         when(userService.isUsernameValid("stirling-pdf-backend-api-user")).thenReturn(true);
         when(userService.findByUsername("bob")).thenReturn(Optional.of(caller));
         when(userService.isPasswordCorrect(caller, "pw")).thenReturn(true);
-        when(userService.findByUsernameIgnoreCase("stirling-pdf-backend-api-user"))
-                .thenReturn(Optional.of(internal));
+        when(userService.isUsernameTakenByOtherUser("stirling-pdf-backend-api-user", 1L))
+                .thenReturn(true);
 
         mockMvc.perform(
                         post("/api/v1/user/change-username")
@@ -231,7 +230,7 @@ class UserControllerTest {
         when(userService.isUsernameValid("Bob")).thenReturn(true);
         when(userService.findByUsername("bob")).thenReturn(Optional.of(caller));
         when(userService.isPasswordCorrect(caller, "pw")).thenReturn(true);
-        when(userService.findByUsernameIgnoreCase("Bob")).thenReturn(Optional.of(caller));
+        when(userService.isUsernameTakenByOtherUser("Bob", 1L)).thenReturn(false);
 
         mockMvc.perform(
                         post("/api/v1/user/change-username")

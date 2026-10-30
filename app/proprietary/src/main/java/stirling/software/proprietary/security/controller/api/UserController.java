@@ -207,10 +207,9 @@ public class UserController {
         }
         // Most account lookups match usernames case-insensitively and fail once two rows match,
         // so a case variant of another account's name (including the internal API user) is taken.
-        Optional<User> holder = userService.findByUsernameIgnoreCase(newUsername);
-        if (holder.isPresent() && !holder.get().getId().equals(user.getId())) {
+        if (userService.isUsernameTakenByOtherUser(newUsername, user.getId())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "usernameExists", "message", "Username already exists"));
+                    .body(Map.of("error", "usernameExists", "message", "Username already in use"));
         }
         if (newUsername != null && !newUsername.isEmpty()) {
             try {
