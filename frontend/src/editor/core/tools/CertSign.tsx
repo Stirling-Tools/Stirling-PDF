@@ -1,19 +1,20 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
-import { useAppConfig } from "@editor/contexts/AppConfigContext";
-import CertificateTypeSettings from "@editor/components/tools/certSign/CertificateTypeSettings";
-import CertificateFormatSettings from "@editor/components/tools/certSign/CertificateFormatSettings";
-import CertificateFilesSettings from "@editor/components/tools/certSign/CertificateFilesSettings";
-import HardwareCertificateSettings from "@editor/components/tools/certSign/HardwareCertificateSettings";
-import SignatureAppearanceSettings from "@editor/components/tools/certSign/SignatureAppearanceSettings";
-import { useCertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
-import { useCertSignOperation } from "@editor/hooks/tools/certSign/useCertSignOperation";
-import { useCertificateTypeTips } from "@editor/components/tooltips/useCertificateTypeTips";
-import { useSignatureAppearanceTips } from "@editor/components/tooltips/useSignatureAppearanceTips";
-import { useSignModeTips } from "@editor/components/tooltips/useSignModeTips";
-import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import CertificateTypeSettings from "@app/components/tools/certSign/CertificateTypeSettings";
+import CertificateFormatSettings from "@app/components/tools/certSign/CertificateFormatSettings";
+import CertificateFilesSettings from "@app/components/tools/certSign/CertificateFilesSettings";
+import HardwareCertificateSettings from "@app/components/tools/certSign/HardwareCertificateSettings";
+import SignatureAppearanceSettings from "@app/components/tools/certSign/SignatureAppearanceSettings";
+import TimestampToggleSettings from "@app/components/tools/certSign/TimestampToggleSettings";
+import { useCertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
+import { useCertSignOperation } from "@app/hooks/tools/certSign/useCertSignOperation";
+import { useCertificateTypeTips } from "@app/components/tooltips/useCertificateTypeTips";
+import { useSignatureAppearanceTips } from "@app/components/tooltips/useSignatureAppearanceTips";
+import { useSignModeTips } from "@app/components/tooltips/useSignModeTips";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const CertSign = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -163,6 +164,21 @@ const CertSign = (props: BaseToolProps) => {
         tooltip: appearanceTips,
         content: (
           <SignatureAppearanceSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading}
+          />
+        ),
+      },
+      {
+        title: t("certSign.timestamp.stepTitle", "Trusted Timestamp"),
+        isCollapsed: base.settingsCollapsed || !areCertFilesConfigured(),
+        onCollapsedClick:
+          base.settingsCollapsed || !areCertFilesConfigured()
+            ? base.handleSettingsReset
+            : undefined,
+        content: (
+          <TimestampToggleSettings
             parameters={base.params.parameters}
             onParameterChange={base.params.updateParameter}
             disabled={base.endpointLoading}

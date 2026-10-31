@@ -93,4 +93,12 @@ public class SignPDFWithCertRequest extends PDFFile {
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean showLogo;
+
+    @Schema(
+            description =
+                    "Whether to embed an RFC 3161 trusted timestamp alongside the signature,"
+                            + " recording when the signature was applied. Uses the"
+                            + " admin-configured default TSA server.",
+            defaultValue = "true")
+    private Boolean addTimestamp = true;
 }

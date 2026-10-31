@@ -7,12 +7,13 @@
  */
 
 import { Stack } from "@mantine/core";
-import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
-import CertificateTypeSettings from "@editor/components/tools/certSign/CertificateTypeSettings";
-import CertificateFormatSettings from "@editor/components/tools/certSign/CertificateFormatSettings";
-import CertificateFilesSettings from "@editor/components/tools/certSign/CertificateFilesSettings";
-import HardwareCertificateSettings from "@editor/components/tools/certSign/HardwareCertificateSettings";
-import SignatureAppearanceSettings from "@editor/components/tools/certSign/SignatureAppearanceSettings";
+import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
+import CertificateTypeSettings from "@app/components/tools/certSign/CertificateTypeSettings";
+import CertificateFormatSettings from "@app/components/tools/certSign/CertificateFormatSettings";
+import CertificateFilesSettings from "@app/components/tools/certSign/CertificateFilesSettings";
+import HardwareCertificateSettings from "@app/components/tools/certSign/HardwareCertificateSettings";
+import SignatureAppearanceSettings from "@app/components/tools/certSign/SignatureAppearanceSettings";
+import TimestampToggleSettings from "@app/components/tools/certSign/TimestampToggleSettings";
 
 interface CertSignAutomationSettingsProps {
   parameters: CertSignParameters;
@@ -66,6 +67,13 @@ const CertSignAutomationSettings = ({
 
       {/* Signature Appearance Settings */}
       <SignatureAppearanceSettings
+        parameters={parameters}
+        onParameterChange={onParameterChange}
+        disabled={disabled}
+      />
+
+      {/* Trusted Timestamp */}
+      <TimestampToggleSettings
         parameters={parameters}
         onParameterChange={onParameterChange}
         disabled={disabled}

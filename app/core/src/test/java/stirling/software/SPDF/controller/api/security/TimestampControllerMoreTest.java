@@ -31,6 +31,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.security.TimestampPdfRequest;
+import stirling.software.SPDF.pdf.signature.TsaUrlResolver;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
@@ -90,7 +91,10 @@ class TimestampControllerMoreTest {
                         });
 
         controller =
-                new TimestampController(pdfDocumentFactory, applicationProperties, tempFileManager);
+                new TimestampController(
+                        pdfDocumentFactory,
+                        new TsaUrlResolver(applicationProperties),
+                        tempFileManager);
 
         server = new MockWebServer();
         server.start();
