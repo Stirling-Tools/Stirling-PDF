@@ -49,6 +49,7 @@ import {
   extractFormFieldsCsv,
   extractFormFieldsXlsx,
 } from "@editor/tools/formFill/formApi";
+import { resolveCanonicalFormValues } from "@editor/tools/formFill/fieldValues";
 import type { FormMode } from "@editor/tools/formFill/types";
 import { FormFieldCreatePanel } from "@editor/tools/formFill/FormFieldCreatePanel";
 import { FormFieldModifyPanel } from "@editor/tools/formFill/FormFieldModifyPanel";
@@ -137,7 +138,7 @@ const FormFill = (_props: BaseToolProps) => {
   );
 
   const allValues = useAllFormValues();
-  const { validationErrors } = formState;
+  const { validationErrors, fields } = formState;
 
   const { scrollActions, activeFileId } = useViewer();
 
@@ -152,7 +153,8 @@ const FormFill = (_props: BaseToolProps) => {
   const handleExtractJson = useCallback(() => {
     setExtracting(true);
     try {
-      const data = JSON.stringify(allValues, null, 2);
+      const canonicalValues = resolveCanonicalFormValues(fields, allValues);
+      const data = JSON.stringify(canonicalValues, null, 2);
       const blob = new Blob([data], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -164,7 +166,7 @@ const FormFill = (_props: BaseToolProps) => {
     } finally {
       setExtracting(false);
     }
-  }, [allValues]);
+  }, [allValues, fields]);
   const activeFieldRef = useRef<HTMLDivElement>(null);
   useFieldShortcuts();
 
@@ -221,7 +223,8 @@ const FormFill = (_props: BaseToolProps) => {
     if (!currentFile) return;
     setExtracting(true);
     try {
-      const blob = await extractFormFieldsCsv(currentFile, allValues);
+      const canonicalValues = resolveCanonicalFormValues(fields, allValues);
+      const blob = await extractFormFieldsCsv(currentFile, canonicalValues);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -234,13 +237,14 @@ const FormFill = (_props: BaseToolProps) => {
     } finally {
       setExtracting(false);
     }
-  }, [currentFile, allValues]);
+  }, [currentFile, allValues, fields, t]);
 
   const handleExtractXlsx = useCallback(async () => {
     if (!currentFile) return;
     setExtracting(true);
     try {
-      const blob = await extractFormFieldsXlsx(currentFile, allValues);
+      const canonicalValues = resolveCanonicalFormValues(fields, allValues);
+      const blob = await extractFormFieldsXlsx(currentFile, canonicalValues);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -253,7 +257,7 @@ const FormFill = (_props: BaseToolProps) => {
     } finally {
       setExtracting(false);
     }
-  }, [currentFile, allValues]);
+  }, [currentFile, allValues, fields, t]);
 
   const isActive = selectedTool === "formFill";
   useFormAutoMode(getFormFillFileId(currentFile), isActive);
