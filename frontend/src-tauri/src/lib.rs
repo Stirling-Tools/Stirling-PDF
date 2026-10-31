@@ -6,10 +6,10 @@ mod utils;
 pub mod commands;
 mod state;
 mod directory_drop;
+mod shutdown;
 
 use commands::{
     add_opened_file,
-    cleanup_backend,
     clear_auth_token,
     clear_opened_files,
     clear_refresh_token,
@@ -277,11 +277,12 @@ pub fn run() {
     .expect("error while building tauri application")
     .run(|app_handle, event| {
       match event {
-        RunEvent::ExitRequested { .. } => {
-          add_log("🔄 App exit requested, cleaning up...".to_string());
-          cleanup_backend();
-          // Use Tauri's built-in cleanup
-          app_handle.cleanup_before_exit();
+        RunEvent::ExitRequested { code, api, .. } => {
+          // The backend stop runs on a worker; until it reports back, every
+          // exit request is prevented so the process cannot leave early.
+          if shutdown::request_exit(code, app_handle) {
+            api.prevent_exit();
+          }
         }
         RunEvent::WindowEvent { event: WindowEvent::CloseRequested {.. }, label, .. } => {
           add_log("🔄 Window close requested (will cleanup on actual exit)...".to_string());
