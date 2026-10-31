@@ -286,6 +286,21 @@
   line-height: 1;
 }
 
+.syncBadge {
+  background: var(--c-surface);
+  color: var(--c-text-muted);
+  border-radius: 4px;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.syncBadge[data-sync-status="conflict"],
+.syncBadge[data-sync-status="error"] {
+  color: var(--c-danger);
+}
+
 .dragHandle {
   position: absolute;
   bottom: 6px;

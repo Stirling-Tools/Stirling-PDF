@@ -403,6 +403,7 @@ class FileStorageService {
       remoteSharedViaLink: stub.remoteSharedViaLink,
       remoteHasShareLinks: stub.remoteHasShareLinks,
       remoteShareToken: stub.remoteShareToken,
+      remoteSync: stub.remoteSync,
 
       // History data from stub
       versionNumber: stub.versionNumber ?? 1,
@@ -777,6 +778,9 @@ class FileStorageService {
       const request = store.get(id);
 
       request.onerror = () => reject(request.error);
+      /**
+       * Missing records resolve to null; existing records retain their saved server revision in the metadata-only stub.
+       */
       request.onsuccess = () => {
         const record = request.result as StoredStirlingFileRecord | undefined;
         if (!record) {
@@ -827,6 +831,7 @@ class FileStorageService {
           remoteSharedViaLink: record.remoteSharedViaLink,
           remoteHasShareLinks: record.remoteHasShareLinks,
           remoteShareToken: record.remoteShareToken,
+          remoteSync: record.remoteSync,
           versionNumber: record.versionNumber,
           originalFileId: record.originalFileId,
           parentFileId: record.parentFileId,
@@ -863,6 +868,9 @@ class FileStorageService {
       const toexpire: FileId[] = [];
 
       request.onerror = () => reject(request.error);
+      /**
+       * Restores cursor metadata including the sync base, skips invalid records, and resolves the accumulated list at exhaustion.
+       */
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {
@@ -911,6 +919,7 @@ class FileStorageService {
               remoteSharedViaLink: record.remoteSharedViaLink,
               remoteHasShareLinks: record.remoteHasShareLinks,
               remoteShareToken: record.remoteShareToken,
+              remoteSync: record.remoteSync,
               versionNumber: record.versionNumber || 1,
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,
@@ -973,6 +982,9 @@ class FileStorageService {
       const toexpire: FileId[] = [];
 
       request.onerror = () => reject(request.error);
+      /**
+       * Restores valid leaf metadata and its sync base without remote fetches; legacy records without a leaf flag remain eligible.
+       */
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {
@@ -1027,6 +1039,7 @@ class FileStorageService {
               remoteSharedViaLink: record.remoteSharedViaLink,
               remoteHasShareLinks: record.remoteHasShareLinks,
               remoteShareToken: record.remoteShareToken,
+              remoteSync: record.remoteSync,
               versionNumber: record.versionNumber || 1,
               originalFileId: record.originalFileId || record.id,
               parentFileId: record.parentFileId,

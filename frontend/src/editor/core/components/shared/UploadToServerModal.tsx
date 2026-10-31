@@ -7,8 +7,10 @@ import { useTranslation } from "react-i18next";
 import { alert } from "@editor/components/toast";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
 import type { StirlingFileStub } from "@editor/types/fileContext";
-import { uploadHistoryChain } from "@editor/services/serverStorageUpload";
-import { fileStorage } from "@editor/services/fileStorage";
+import {
+  recordChainUpload,
+  uploadHistoryChain,
+} from "@editor/services/serverStorageUpload";
 import { useFileActions } from "@editor/contexts/FileContext";
 import type { FileId } from "@editor/types/file";
 
@@ -19,6 +21,10 @@ interface UploadToServerModalProps {
   onUploaded?: () => Promise<void> | void;
 }
 
+/**
+ * User-confirmed server upload and replacement UI. Explicit replacement remains
+ * available after an automatic-sync conflict; dismissing the dialog does not upload.
+ */
 const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
   opened,
   onClose,
@@ -37,31 +43,25 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
     }
   }, [opened]);
 
+  /**
+   * Explicitly uploads or replaces the history chain without a revision precondition.
+   * Records its new sync base before notifying the caller; failure keeps the dialog open.
+   */
   const handleUpload = useCallback(async () => {
     setIsUploading(true);
     setErrorMessage(null);
 
     try {
       const originalFileId = (file.originalFileId || file.id) as FileId;
-      const remoteId = file.remoteStorageId;
-      const {
-        remoteId: storedId,
-        updatedAt,
-        chain,
-      } = await uploadHistoryChain(originalFileId, remoteId);
-
-      for (const stub of chain) {
-        actions.updateStirlingFileStub(stub.id, {
-          remoteStorageId: storedId,
-          remoteStorageUpdatedAt: updatedAt,
-          remoteOwnedByCurrentUser: true,
-        });
-        await fileStorage.updateFileMetadata(stub.id, {
-          remoteStorageId: storedId,
-          remoteStorageUpdatedAt: updatedAt,
-          remoteOwnedByCurrentUser: true,
-        });
-      }
+      const result = await uploadHistoryChain(
+        originalFileId,
+        file.remoteStorageId,
+      );
+      await recordChainUpload(
+        result,
+        result.chain,
+        actions.updateStirlingFileStub,
+      );
 
       alert({
         alertType: "success",

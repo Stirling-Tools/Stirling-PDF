@@ -68,6 +68,7 @@ export interface EndpointsSettingsData {
 
 export interface StorageSharingSettingsData {
   enabled?: boolean;
+  autoSyncEnabled?: boolean;
   sharing?: {
     enabled?: boolean;
     linkEnabled?: boolean;

@@ -3,6 +3,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { createAppQueryClient } from "@editor/query/queryClient";
 import { ThemeProvider } from "@editor/components/shared/ThemeProvider";
 import { FileContextProvider } from "@editor/contexts/FileContext";
+import { ServerAutoSync } from "@editor/components/shared/ServerAutoSync";
 import { NavigationProvider } from "@editor/contexts/NavigationContext";
 import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
 import { FilesModalProvider } from "@editor/contexts/FilesModalContext";
@@ -153,6 +154,7 @@ export function AppProviders({
                 >
                   <FolderProvider>
                     <AppInitializer />
+                    <ServerAutoSync />
                     <BrandingAssetManager />
                     <ToolRegistryProvider>
                       <NavigationProvider>
