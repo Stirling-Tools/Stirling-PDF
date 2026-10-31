@@ -31,6 +31,14 @@ export const trackDroppableId = (fileId: FileId) => `track:${fileId}`;
 export const trackZoneId = (fileId: FileId) => `zone:${fileId}`;
 export const trackHandleId = (fileId: FileId) => `trackhandle:${fileId}`;
 
+/** A tile action hits the whole selection when that tile is part of it, and only that page otherwise. */
+export function selectionPageIds(
+  pageId: string,
+  selectedIds: ReadonlySet<string>,
+): string[] {
+  return selectedIds.has(pageId) ? [...selectedIds] : [pageId];
+}
+
 export interface DropHint {
   fileId: FileId;
   /** Insert before this page, or append to the track when null. */
@@ -370,6 +378,18 @@ function TrackRowImpl({
     [onSelectTrack, track.fileId],
   );
 
+  // The tile's trash button deletes the whole selection when that tile is part
+  // of it; otherwise it deletes only the page it was pressed on. Read through a
+  // ref so the handler identity survives selection changes, leaving the
+  // memoised tiles to re-render only for their own state.
+  const selectedIdsRef = useRef(selectedIds);
+  selectedIdsRef.current = selectedIds;
+  const handleDeletePage = useCallback(
+    (pageId: string) =>
+      onDelete(selectionPageIds(pageId, selectedIdsRef.current)),
+    [onDelete],
+  );
+
   const handleSplitPage = useCallback(
     (startPageId: string) => onSplit(track.fileId, startPageId),
     [onSplit, track.fileId],
@@ -554,6 +574,7 @@ function TrackRowImpl({
                         offsetX={item.start}
                         offsetY={0}
                         selected={selectedIds.has(page.id)}
+                        hasMultiSelection={selectedIds.size > 1}
                         dragging={draggingIds.has(page.id)}
                         dropBefore={
                           hintActive && dropHint?.beforePageId === page.id
@@ -567,7 +588,7 @@ function TrackRowImpl({
                         onSelect={onSelectPage}
                         onViewPage={handleViewPage}
                         onRotate={onRotate}
-                        onDelete={onDelete}
+                        onDeletePage={handleDeletePage}
                         onDuplicate={onDuplicate}
                         onShift={onShiftPage}
                       />
@@ -623,6 +644,7 @@ function TrackRowImpl({
                         offsetX={col * wrapColStride}
                         offsetY={rowTop}
                         selected={selectedIds.has(page.id)}
+                        hasMultiSelection={selectedIds.size > 1}
                         dragging={draggingIds.has(page.id)}
                         dropBefore={
                           hintActive && dropHint?.beforePageId === page.id
@@ -636,7 +658,7 @@ function TrackRowImpl({
                         onSelect={onSelectPage}
                         onViewPage={handleViewPage}
                         onRotate={onRotate}
-                        onDelete={onDelete}
+                        onDeletePage={handleDeletePage}
                         onDuplicate={onDuplicate}
                         onShift={onShiftPage}
                       />
