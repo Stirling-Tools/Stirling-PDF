@@ -386,8 +386,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-epub");
         addEndpointToGroup("Convert", "ebook-to-pdf");
         // Backend-only endpoints (not in frontend tool registry)
-        addEndpointToGroup("Convert", "pdf-to-vector");
-        addEndpointToGroup("Convert", "vector-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-video");
         addEndpointToGroup("Convert", "cbz-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-cbz");
@@ -585,8 +583,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Ghostscript", "crop");
         addEndpointToGroup("Ghostscript", "replace-invert-pdf");
         addEndpointToGroup("Ghostscript", "scanner-effect");
-        addEndpointToGroup("Ghostscript", "pdf-to-vector");
-        addEndpointToGroup("Ghostscript", "vector-to-pdf");
 
         /* ImageMagick */
         addEndpointToGroup("ImageMagick", "compress-pdf");

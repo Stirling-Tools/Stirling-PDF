@@ -309,7 +309,7 @@ class InternalApiClientTest {
             InternalApiClient mockedClient = newClient();
             assertThrows(
                     UncheckedIOException.class,
-                    () -> mockedClient.post("/api/v1/convert/vector/pdf", body));
+                    () -> mockedClient.post("/api/v1/convert/pdf/word", body));
 
             verify(tempFile).close();
         } finally {

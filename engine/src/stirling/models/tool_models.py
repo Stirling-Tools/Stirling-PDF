@@ -1148,35 +1148,6 @@ class PdfToUaParams(ApiModel):
 
 class OutputFormat4(StrEnum):
     """
-    Target vector format extension
-    """
-
-    eps = "eps"
-    ps = "ps"
-    pcl = "pcl"
-    xps = "xps"
-
-
-class Prepress(Enum):
-    """
-    Apply Ghostscript prepress settings
-    """
-
-    boolean_true = True
-    boolean_false = False
-
-
-class PdfToVectorParams(ApiModel):
-    """
-    Converts PDF to Ghostscript vector formats (EPS, PS, PCL, or XPS). Input:PDF Output:IMAGE Type:SISO
-    """
-
-    output_format: OutputFormat4 = Field(OutputFormat4.eps, description="Target vector format extension")
-    prepress: Prepress = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
-
-
-class OutputFormat5(StrEnum):
-    """
     The output Word document format
     """
 
@@ -1190,7 +1161,7 @@ class PdfToWordParams(ApiModel):
     This endpoint converts a given PDF file to a Word document format. Input:PDF Output:WORD Type:SISO
     """
 
-    output_format: OutputFormat5 = Field(..., description="The output Word document format")
+    output_format: OutputFormat4 = Field(..., description="The output Word document format")
     use_stirling_office_convert: bool | None = None
 
 
@@ -1721,26 +1692,6 @@ class UrlToPdfParams(ApiModel):
     url_input: str = Field(..., description="The input URL to be converted to a PDF file")
 
 
-class OutputFormat6(StrEnum):
-    """
-    Target vector format extension
-    """
-
-    eps = "eps"
-    ps = "ps"
-    pcl = "pcl"
-    xps = "xps"
-
-
-class VectorToPdfParams(ApiModel):
-    """
-    Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript. Input:POSTSCRIPT Output:PDF Type:SISO
-    """
-
-    output_format: OutputFormat6 = Field(OutputFormat6.eps, description="Target vector format extension")
-    prepress: Prepress = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
-
-
 class AutoRotatePdfParams(ApiModel):
     """
     Detects each page's orientation (embedded-text direction first, Tesseract OSD for scanned pages) and sets the page rotation so the content displays upright. With dryRun=true, returns a JSON per-page report instead of the PDF. With pageRotations set, applies the given corrections without running detection. Input:PDF Output:PDF Type:SISO
@@ -1834,13 +1785,11 @@ class Model(
         | PdfToPresentationParams
         | PdfToTextParams
         | PdfToUaParams
-        | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
         | PdfToXmlParams
         | SvgToPdfParams
         | UrlToPdfParams
-        | VectorToPdfParams
         | BookletImpositionParams
         | CropParams
         | EditTableOfContentsParams
@@ -1913,13 +1862,11 @@ class Model(
         | PdfToPresentationParams
         | PdfToTextParams
         | PdfToUaParams
-        | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
         | PdfToXmlParams
         | SvgToPdfParams
         | UrlToPdfParams
-        | VectorToPdfParams
         | BookletImpositionParams
         | CropParams
         | EditTableOfContentsParams
@@ -1993,13 +1940,11 @@ type ParamToolModel = (
     | PdfToPresentationParams
     | PdfToTextParams
     | PdfToUaParams
-    | PdfToVectorParams
     | PdfToWordParams
     | PdfToXlsxParams
     | PdfToXmlParams
     | SvgToPdfParams
     | UrlToPdfParams
-    | VectorToPdfParams
     | BookletImpositionParams
     | CropParams
     | EditTableOfContentsParams
@@ -2074,13 +2019,11 @@ class ToolEndpoint(StrEnum):
     PDF_TO_PRESENTATION = "/api/v1/convert/pdf/presentation"
     PDF_TO_TEXT = "/api/v1/convert/pdf/text"
     PDF_TO_UA = "/api/v1/convert/pdf/ua"
-    PDF_TO_VECTOR = "/api/v1/convert/pdf/vector"
     PDF_TO_WORD = "/api/v1/convert/pdf/word"
     PDF_TO_XLSX = "/api/v1/convert/pdf/xlsx"
     PDF_TO_XML = "/api/v1/convert/pdf/xml"
     SVG_TO_PDF = "/api/v1/convert/svg/pdf"
     URL_TO_PDF = "/api/v1/convert/url/pdf"
-    VECTOR_TO_PDF = "/api/v1/convert/vector/pdf"
     BOOKLET_IMPOSITION = "/api/v1/general/booklet-imposition"
     CROP = "/api/v1/general/crop"
     EDIT_TABLE_OF_CONTENTS = "/api/v1/general/edit-table-of-contents"
@@ -2153,13 +2096,11 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.PDF_TO_PRESENTATION: PdfToPresentationParams,
     ToolEndpoint.PDF_TO_TEXT: PdfToTextParams,
     ToolEndpoint.PDF_TO_UA: PdfToUaParams,
-    ToolEndpoint.PDF_TO_VECTOR: PdfToVectorParams,
     ToolEndpoint.PDF_TO_WORD: PdfToWordParams,
     ToolEndpoint.PDF_TO_XLSX: PdfToXlsxParams,
     ToolEndpoint.PDF_TO_XML: PdfToXmlParams,
     ToolEndpoint.SVG_TO_PDF: SvgToPdfParams,
     ToolEndpoint.URL_TO_PDF: UrlToPdfParams,
-    ToolEndpoint.VECTOR_TO_PDF: VectorToPdfParams,
     ToolEndpoint.BOOKLET_IMPOSITION: BookletImpositionParams,
     ToolEndpoint.CROP: CropParams,
     ToolEndpoint.EDIT_TABLE_OF_CONTENTS: EditTableOfContentsParams,
