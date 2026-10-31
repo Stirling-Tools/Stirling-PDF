@@ -545,6 +545,7 @@ function EditableTable({
               offset={d.active && drag ? drag.dx : 0}
               guide={box.height}
               onSelect={() => setSelectedCol(Math.max(1, i - 1))}
+              selected={selectedCol === Math.max(1, i - 1)}
               style={{
                 left: fx * box.width - GRAB / 2,
                 top: box.height,
@@ -573,6 +574,7 @@ function EditableTable({
               offset={d.active && drag ? drag.dy : 0}
               guide={box.width}
               onSelect={() => setSelectedRow(Math.max(1, i - 1))}
+              selected={selectedRow === Math.max(1, i - 1)}
               style={{
                 top: fy * box.height - GRAB / 2,
                 left: -MARGIN,
@@ -777,6 +779,7 @@ function DragArea({
   style,
   active,
   onSelect,
+  selected = false,
   onStart,
   onMove,
   onEnd,
@@ -793,12 +796,14 @@ function DragArea({
   style: React.CSSProperties;
   active: boolean;
   onSelect?: () => void;
+  /** Keep the selected track visibly marked after pointer hover ends. */
+  selected?: boolean;
   onStart: (x: number, y: number, alt: boolean) => void;
   onMove: (x: number, y: number) => void;
   onEnd: () => void;
 }) {
   const [hover, setHover] = useState(false);
-  const lit = hover || active;
+  const lit = hover || active || selected;
   const shift =
     orientation === "vertical"
       ? `translateX(${offset}px)`
@@ -808,6 +813,16 @@ function DragArea({
       data-testid={testid}
       title={label}
       aria-label={label}
+      role={onSelect ? "button" : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      aria-pressed={onSelect ? selected : undefined}
+      data-selected={onSelect ? selected : undefined}
+      onKeyDown={(e) => {
+        if (!onSelect || (e.key !== "Enter" && e.key !== " ")) return;
+        e.preventDefault();
+        e.stopPropagation();
+        onSelect();
+      }}
       onPointerDown={(e) => {
         e.preventDefault();
         // The stage clears the selection on any press that reaches it.
@@ -833,6 +848,8 @@ function DragArea({
         zIndex: 30,
         cursor,
         touchAction: "none",
+        outline: selected ? `2px solid ${ACCENT}` : undefined,
+        outlineOffset: 1,
         ...style,
       }}
     >
