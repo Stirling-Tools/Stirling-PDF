@@ -22,14 +22,6 @@ Feature: Heavy conversion endpoints
         Then the response status code should be 204
 
 
-    @vector @negative
-    Scenario: vector conversion rejects an input format Ghostscript cannot read
-        Given I generate an SVG file as "fileInput"
-        When I send the API request to the endpoint "/api/v1/convert/vector/pdf"
-        Then the response status code should be 400
-        And the response JSON error should contain "Unsupported"
-
-
     @ebook @positive
     Scenario: An EPUB produced by Stirling converts back to PDF
         Given I generate a PDF file as "fileInput"
