@@ -319,8 +319,12 @@ test.describe("PDF text editor - tables", () => {
       `(t => ({ middle: t.cells.find(c => c.row === 1 && c.col === 0)?.runIds[0], last: t.cells.find(c => c.row === 2 && c.col === 0)?.runIds[0] }))(${STORE}.state.pages[0].tables[0])`,
     )) as { middle: string; last: string };
 
-    // Handle 2 is the lower edge of body row 1, so clicking it selects row 1.
-    await page.getByTestId(`pdf-editor-table-row-handle-${tableId}-2`).click();
+    // Handle 2 is the lower edge of body row 1. It must also be selectable
+    // without a pointer so keyboard users can choose the deletion target.
+    const rowHandle = page.getByTestId(`pdf-editor-table-row-handle-${tableId}-2`);
+    await rowHandle.focus();
+    await page.keyboard.press("Enter");
+    await expect(rowHandle).toHaveAttribute("data-selected", "true");
     await page.getByTestId(`pdf-editor-table-del-row-${tableId}`).click();
     await page.waitForFunction(
       `(${STORE}.state.pages[0].tables[0].rows) === 2`,
@@ -487,7 +491,10 @@ test.describe("PDF text editor - tables", () => {
     const columnRuns = (await page.evaluate(
       `(t => ({ selected: t.cells.find(c => c.row === 1 && c.col === 1)?.runIds, remaining: t.cells.find(c => c.row === 1 && c.col === 2)?.runIds }))(${STORE}.state.pages[0].tables[0])`,
     )) as { selected: string[]; remaining: string[] };
-    await page.getByTestId(`pdf-editor-table-col-handle-${tableId}-2`).click();
+    const colHandle = page.getByTestId(`pdf-editor-table-col-handle-${tableId}-2`);
+    await colHandle.focus();
+    await page.keyboard.press("Enter");
+    await expect(colHandle).toHaveAttribute("data-selected", "true");
     await page.getByTestId(`pdf-editor-table-del-col-${tableId}`).click();
     await expect
       .poll(() =>
