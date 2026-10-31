@@ -1,6 +1,8 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.*;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyEditorSupport;
 import java.io.File;
@@ -641,6 +643,9 @@ public class StampController {
             float margin)
             throws IOException {
         PDRectangle pageSize = page.getMediaBox();
+        Matrix rotationMatrix = Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0);
+        Rectangle2D footprint =
+                rotatedFootprint(desiredPhysicalWidth, desiredPhysicalHeight, rotationMatrix);
         float x, y;
 
         if (overrideX >= 0 && overrideY >= 0) {
@@ -648,23 +653,48 @@ public class StampController {
             x = overrideX;
             y = overrideY;
         } else {
-            x = calculatePositionX(pageSize, position, desiredPhysicalWidth, margin);
+            float footprintWidth = (float) footprint.getWidth();
+            float footprintHeight = (float) footprint.getHeight();
+            x =
+                    calculatePositionX(pageSize, position, footprintWidth, margin)
+                            - (float) footprint.getMinX();
             // drawImage() places the lower-left corner at (x, y); use image-specific Y logic
-            y = calculateImagePositionY(pageSize, position, desiredPhysicalHeight, margin);
+            y =
+                    calculateImagePositionY(pageSize, position, footprintHeight, margin)
+                            - (float) footprint.getMinY();
         }
 
-        float llx = pageSize.getLowerLeftX();
-        float lly = pageSize.getLowerLeftY();
-        float urx = pageSize.getUpperRightX();
-        float ury = pageSize.getUpperRightY();
-        float xMax = Math.max(llx, urx - desiredPhysicalWidth);
-        float yMax = Math.max(lly, ury - desiredPhysicalHeight);
-        x = Math.min(xMax, Math.max(llx, x));
-        y = Math.min(yMax, Math.max(lly, y));
+        Point2D.Float anchor = clampImagePosition(pageSize, x, y, footprint);
 
         contentStream.saveGraphicsState();
-        contentStream.transform(Matrix.getTranslateInstance(x, y));
-        contentStream.transform(Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0));
+        contentStream.transform(Matrix.getTranslateInstance(anchor.x, anchor.y));
+        contentStream.transform(rotationMatrix);
+    }
+
+    /**
+     * Bounding box, relative to the anchor, of the image once {@code rotationMatrix} is applied.
+     * Takes the matrix used for the draw so the placement and the draw cannot disagree. Must stay
+     * in sync with getStampFootprint in StampPreviewUtils.ts so the preview matches the output.
+     */
+    private Rectangle2D rotatedFootprint(float width, float height, Matrix rotationMatrix) {
+        return new PDRectangle(width, height).transform(rotationMatrix).getBounds2D();
+    }
+
+    /**
+     * Clamps the lower-left stamp anchor so the footprint stays inside the page. A footprint larger
+     * than the page aligns with the lower-left edges. Must stay in sync with clampAnchorToPage in
+     * StampPreviewUtils.ts so the preview matches the output.
+     */
+    private Point2D.Float clampImagePosition(
+            PDRectangle pageSize, float x, float y, Rectangle2D footprint) {
+        float xLo = pageSize.getLowerLeftX() - (float) footprint.getMinX();
+        float xHi = pageSize.getUpperRightX() - (float) footprint.getMaxX();
+        float yLo = pageSize.getLowerLeftY() - (float) footprint.getMinY();
+        float yHi = pageSize.getUpperRightY() - (float) footprint.getMaxY();
+
+        float clampedX = Math.min(Math.max(x, xLo), Math.max(xLo, xHi));
+        float clampedY = Math.min(Math.max(y, yLo), Math.max(yLo, yHi));
+        return new Point2D.Float(clampedX, clampedY);
     }
 
     private float calculatePositionX(

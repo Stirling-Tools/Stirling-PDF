@@ -11,6 +11,7 @@ import {
   A4_ASPECT_RATIO,
   getFirstSelectedPage,
   getFontFamily,
+  clampPreviewAnchorToPts,
   computeStampPreviewStyle,
   getAlphabetPreviewScale,
 } from "@editor/components/tools/addStamp/StampPreviewUtils";
@@ -168,6 +169,10 @@ export default function StampPreview({
     ],
   );
 
+  // Text previews are clamped as unrotated boxes.
+  const footprintRotation =
+    parameters.stampType !== "text" ? parameters.rotation : 0;
+
   // Keep center fixed when scaling via slider (or any fontSize changes)
   const prevDimsRef = useRef<{
     fontSize: number;
@@ -205,17 +210,15 @@ export default function StampPreview({
       const newLeftPx = centerX - widthPx / 2;
       const newBottomPx = centerY - heightPx / 2;
 
-      const widthPts = pageSize?.widthPts ?? 595.28;
-      const heightPts = pageSize?.heightPts ?? 841.89;
-      const scaleX = containerSize.width / widthPts;
-      const scaleY = containerSize.height / heightPts;
-      const maxLeftPx = Math.max(0, containerSize.width - widthPx);
-      const maxBottomPx = Math.max(0, containerSize.height - heightPx);
-      const newLeftPts = Math.max(0, Math.min(maxLeftPx, newLeftPx)) / scaleX;
-      const newBottomPts =
-        Math.max(0, Math.min(maxBottomPx, newBottomPx)) / scaleY;
-      onParameterChange("overrideX", newLeftPts);
-      onParameterChange("overrideY", newBottomPts);
+      const anchor = clampPreviewAnchorToPts(
+        { left: newLeftPx, bottom: newBottomPx },
+        { width: widthPx, height: heightPx },
+        footprintRotation,
+        pageSize,
+        containerSize,
+      );
+      onParameterChange("overrideX", anchor.x);
+      onParameterChange("overrideY", anchor.y);
     }
 
     prevDimsRef.current = {
@@ -233,6 +236,7 @@ export default function StampPreview({
     showQuickGrid,
     parameters.overrideX,
     parameters.overrideY,
+    footprintRotation,
     onParameterChange,
   ]);
 
@@ -262,21 +266,16 @@ export default function StampPreview({
     const widthPx = parseFloat(String(itemStyle.width).replace("px", "")) || 0;
     const heightPx =
       parseFloat(String(itemStyle.height).replace("px", "")) || 0;
-    const widthPts = pageSize?.widthPts ?? 595.28;
-    const heightPts = pageSize?.heightPts ?? 841.89;
-    const scaleX = containerSize.width / widthPts;
-    const scaleY = containerSize.height / heightPts;
     if (parameters.overrideX < 0 || parameters.overrideY < 0) {
-      const maxLeftPx = Math.max(0, pageWidth - widthPx);
-      const maxBottomPx = Math.max(0, pageHeight - heightPx);
-      onParameterChange(
-        "overrideX",
-        Math.max(0, Math.min(maxLeftPx, leftPx)) / scaleX,
+      const anchor = clampPreviewAnchorToPts(
+        { left: leftPx, bottom: bottomPx },
+        { width: widthPx, height: heightPx },
+        footprintRotation,
+        pageSize,
+        containerSize,
       );
-      onParameterChange(
-        "overrideY",
-        Math.max(0, Math.min(maxBottomPx, bottomPx)) / scaleY,
-      );
+      onParameterChange("overrideX", anchor.x);
+      onParameterChange("overrideY", anchor.y);
     }
   };
 
@@ -329,21 +328,15 @@ export default function StampPreview({
     if (drag.type === "move") {
       const dx = x - drag.startX;
       const dy = y - drag.startY;
-      const maxLeftPx = Math.max(0, containerSize.width - drag.initWidth);
-      const maxBottomPx = Math.max(0, containerSize.height - drag.initHeight);
-      const newLeftPx = Math.max(0, Math.min(maxLeftPx, drag.initLeft + dx));
-      const newBottomPx = Math.max(
-        0,
-        Math.min(maxBottomPx, drag.initBottom + dy),
+      const anchor = clampPreviewAnchorToPts(
+        { left: drag.initLeft + dx, bottom: drag.initBottom + dy },
+        { width: drag.initWidth, height: drag.initHeight },
+        footprintRotation,
+        pageSize,
+        containerSize,
       );
-      const widthPts = pageSize?.widthPts ?? 595.28;
-      const heightPts = pageSize?.heightPts ?? 841.89;
-      const scaleX = containerSize.width / widthPts;
-      const scaleY = containerSize.height / heightPts;
-      const newLeftPts = newLeftPx / scaleX;
-      const newBottomPts = newBottomPx / scaleY;
-      onParameterChange("overrideX", newLeftPts);
-      onParameterChange("overrideY", newBottomPts);
+      onParameterChange("overrideX", anchor.x);
+      onParameterChange("overrideY", anchor.y);
     }
 
     if (drag.type === "resize") {

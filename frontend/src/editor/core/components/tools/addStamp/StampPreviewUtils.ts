@@ -17,6 +17,8 @@ export const marginFactorMap: Record<
 };
 
 export const A4_ASPECT_RATIO = 0.707; // width/height used elsewhere in legacy UI
+const DEFAULT_PAGE_WIDTH_PTS = 595.28; // A4 width at 72 DPI
+const DEFAULT_PAGE_HEIGHT_PTS = 841.89; // A4 height at 72 DPI
 
 // Get font family based on selected alphabet (matching backend logic)
 export const getFontFamily = (alphabet: string): string => {
@@ -127,6 +129,90 @@ export const getDefaultFontSizeForAlphabet = (alphabet: string): number => {
   return ALPHABET_PREVIEW_TWEAKS[alphabet as Alphabet]?.defaultFontSize ?? 80;
 };
 
+export type StampFootprint = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+};
+
+/**
+ * Bounding box, relative to the anchor, of a stamp drawn from its lower-left
+ * corner and rotated counter-clockwise about that corner. Must stay in sync with
+ * StampController.rotatedFootprint so the preview matches the stamped PDF.
+ */
+export const getStampFootprint = (
+  width: number,
+  height: number,
+  rotationDegrees: number,
+): StampFootprint => {
+  const radians = (rotationDegrees * Math.PI) / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  const corners = [
+    [0, 0],
+    [width, 0],
+    [width, height],
+    [0, height],
+  ];
+  const xs = corners.map(([x, y]) => x * cos - y * sin);
+  const ys = corners.map(([x, y]) => x * sin + y * cos);
+  return {
+    minX: Math.min(...xs),
+    minY: Math.min(...ys),
+    maxX: Math.max(...xs),
+    maxY: Math.max(...ys),
+  };
+};
+
+const clampAnchorAxis = (
+  anchor: number,
+  pageLength: number,
+  footprintMin: number,
+  footprintMax: number,
+): number => {
+  const low = -footprintMin;
+  const high = pageLength - footprintMax;
+  return Math.min(Math.max(anchor, low), Math.max(low, high));
+};
+
+/**
+ * Keeps the footprint on the page. A footprint larger than the page aligns with
+ * the left and bottom edges. Must stay in sync with
+ * StampController.clampImagePosition.
+ */
+export const clampAnchorToPage = (
+  anchor: { x: number; y: number },
+  footprint: StampFootprint,
+  page: { widthPts: number; heightPts: number },
+): { x: number; y: number } => ({
+  x: clampAnchorAxis(anchor.x, page.widthPts, footprint.minX, footprint.maxX),
+  y: clampAnchorAxis(anchor.y, page.heightPts, footprint.minY, footprint.maxY),
+});
+
+/** Clamps a preview position in pixels and returns the anchor in PDF points. */
+export const clampPreviewAnchorToPts = (
+  anchorPx: { left: number; bottom: number },
+  stampSizePx: { width: number; height: number },
+  rotationDegrees: number,
+  pageSize: PageSizePts,
+  containerSize: ContainerSize,
+): { x: number; y: number } => {
+  const widthPts = pageSize?.widthPts ?? DEFAULT_PAGE_WIDTH_PTS;
+  const heightPts = pageSize?.heightPts ?? DEFAULT_PAGE_HEIGHT_PTS;
+  const scaleX = containerSize.width / widthPts;
+  const scaleY = containerSize.height / heightPts;
+  return clampAnchorToPage(
+    { x: anchorPx.left / scaleX, y: anchorPx.bottom / scaleY },
+    getStampFootprint(
+      stampSizePx.width / scaleX,
+      stampSizePx.height / scaleY,
+      rotationDegrees,
+    ),
+    { widthPts, heightPts },
+  );
+};
+
 export function computeStampPreviewStyle(
   parameters: AddStampParameters,
   imageMeta: ImageMeta,
@@ -138,8 +224,8 @@ export function computeStampPreviewStyle(
 ): StampPreviewStyle {
   const pageWidthPx = containerSize.width;
   const pageHeightPx = containerSize.height;
-  const widthPts = pageSize?.widthPts ?? 595.28; // A4 width at 72 DPI
-  const heightPts = pageSize?.heightPts ?? 841.89; // A4 height at 72 DPI
+  const widthPts = pageSize?.widthPts ?? DEFAULT_PAGE_WIDTH_PTS;
+  const heightPts = pageSize?.heightPts ?? DEFAULT_PAGE_HEIGHT_PTS;
   const scaleX = pageWidthPx / widthPts;
   const scaleY = pageHeightPx / heightPts;
   if (pageWidthPx <= 0 || pageHeightPx <= 0) return { item: {}, container: {} };
@@ -195,6 +281,15 @@ export function computeStampPreviewStyle(
     }
   }
 
+  // Text previews rotate about their centre and are placed as if unrotated.
+  const footprint = getStampFootprint(
+    widthPtsContent,
+    heightPtsContent,
+    parameters.stampType !== "text" ? parameters.rotation : 0,
+  );
+  const footprintWidth = footprint.maxX - footprint.minX;
+  const footprintHeight = footprint.maxY - footprint.minY;
+
   // Positioning helpers - mirror backend logic
   const position = parameters.position;
   const calcX = () => {
@@ -202,11 +297,11 @@ export function computeStampPreviewStyle(
       return parameters.overrideX;
     switch (position % 3) {
       case 1: // Left
-        return marginPts;
+        return marginPts - footprint.minX;
       case 2: // Center
-        return (widthPts - widthPtsContent) / 2;
+        return (widthPts - footprintWidth) / 2 - footprint.minX;
       case 0: // Right
-        return widthPts - widthPtsContent - marginPts;
+        return widthPts - footprintWidth - marginPts - footprint.minX;
       default:
         return 0;
     }
@@ -219,14 +314,14 @@ export function computeStampPreviewStyle(
       parameters.stampType === "text"
         ? heightPtsContent *
           (ALPHABET_PREVIEW_TWEAKS[parameters.alphabet]?.capHeightRatio ?? 0.7)
-        : heightPtsContent;
+        : footprintHeight;
     switch (Math.floor((position - 1) / 3)) {
       case 0: // Top
-        return heightPts - heightForY - marginPts;
+        return heightPts - heightForY - marginPts - footprint.minY;
       case 1: // Middle
-        return (heightPts - heightForY) / 2;
+        return (heightPts - heightForY) / 2 - footprint.minY;
       case 2: // Bottom
-        return marginPts;
+        return marginPts - footprint.minY;
       default:
         return 0;
     }
@@ -255,8 +350,13 @@ export function computeStampPreviewStyle(
   const widthPx = widthPtsContent * scaleX;
   const heightPx = heightPtsContent * scaleY;
 
-  xPx = Math.max(0, Math.min(xPx, pageWidthPx - widthPx));
-  yPx = Math.max(0, Math.min(yPx, pageHeightPx - heightPx));
+  const clamped = clampAnchorToPage(
+    { x: xPx / scaleX, y: yPx / scaleY },
+    footprint,
+    { widthPts, heightPts },
+  );
+  xPx = clamped.x * scaleX;
+  yPx = clamped.y * scaleY;
 
   const opacity = Math.max(0, Math.min(1, parameters.opacity / 100));
   const displayOpacity = opacity;
@@ -280,7 +380,7 @@ export function computeStampPreviewStyle(
     container: {
       position: "relative",
       width: "100%",
-      aspectRatio: `${(pageSize?.widthPts ?? 595.28) / (pageSize?.heightPts ?? 841.89)} / 1`,
+      aspectRatio: `${widthPts / heightPts} / 1`,
       backgroundColor: hasPageThumbnail ? "white" : "rgba(255,255,255,0.03)",
       border: "1px solid var(--c-border, #333)",
       overflow: "hidden",
