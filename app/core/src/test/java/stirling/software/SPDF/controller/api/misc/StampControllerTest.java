@@ -1,15 +1,40 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.regex.Pattern;
 
+import javax.imageio.ImageIO;
+
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.contentstream.PDFStreamEngine;
+import org.apache.pdfbox.contentstream.operator.Operator;
+import org.apache.pdfbox.contentstream.operator.state.Concatenate;
+import org.apache.pdfbox.contentstream.operator.state.Restore;
+import org.apache.pdfbox.contentstream.operator.state.Save;
+import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.util.Matrix;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -21,8 +46,15 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.SPDF.model.api.misc.AddStampRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,6 +81,7 @@ class StampControllerTest {
     private Method processCustomDateFormatMethod;
     private Method calculateImagePositionYMethod;
     private Method clampImagePositionMethod;
+    private Method rotatedFootprintMethod;
 
     @BeforeEach
     void setUp() throws NoSuchMethodException {
@@ -82,19 +115,26 @@ class StampControllerTest {
                         PDRectangle.class,
                         float.class,
                         float.class,
-                        float.class,
-                        float.class,
-                        float.class);
+                        Rectangle2D.class);
         clampImagePositionMethod.setAccessible(true);
+
+        rotatedFootprintMethod =
+                StampController.class.getDeclaredMethod(
+                        "rotatedFootprint", float.class, float.class, Matrix.class);
+        rotatedFootprintMethod.setAccessible(true);
     }
 
-    private float[] invokeClampImagePosition(
+    private Point2D.Float invokeClampImagePosition(
             PDRectangle pageSize, float x, float y, float width, float height, float rotation)
             throws Exception {
         try {
-            return (float[])
-                    clampImagePositionMethod.invoke(
-                            stampController, pageSize, x, y, width, height, rotation);
+            Matrix rotationMatrix = Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0);
+            Rectangle2D footprint =
+                    (Rectangle2D)
+                            rotatedFootprintMethod.invoke(
+                                    stampController, width, height, rotationMatrix);
+            return (Point2D.Float)
+                    clampImagePositionMethod.invoke(stampController, pageSize, x, y, footprint);
         } catch (InvocationTargetException e) {
             throw (Exception) e.getCause();
         }
@@ -176,21 +216,21 @@ class StampControllerTest {
     class ImageClampTests {
 
         @Test
-        @DisplayName("Unrotated override is clamped to [llx, urx-w] x [lly, ury-h] as before")
-        void unrotatedClampMatchesPreviousBehaviour() throws Exception {
+        @DisplayName("Unrotated override is clamped to [llx, urx-w] x [lly, ury-h]")
+        void unrotatedOverrideClampsToPageBox() throws Exception {
             PDRectangle page = new PDRectangle(0, 0, 600, 800);
             // Inside bounds: left untouched.
-            float[] inside = invokeClampImagePosition(page, 100f, 200f, 50f, 60f, 0f);
-            assertEquals(100f, inside[0], 0.001f);
-            assertEquals(200f, inside[1], 0.001f);
+            Point2D.Float inside = invokeClampImagePosition(page, 100f, 200f, 50f, 60f, 0f);
+            assertEquals(100f, inside.x, 0.001f);
+            assertEquals(200f, inside.y, 0.001f);
             // Past top-right: clamped to urx-w / ury-h.
-            float[] outside = invokeClampImagePosition(page, 590f, 790f, 50f, 60f, 0f);
-            assertEquals(550f, outside[0], 0.001f);
-            assertEquals(740f, outside[1], 0.001f);
+            Point2D.Float outside = invokeClampImagePosition(page, 590f, 790f, 50f, 60f, 0f);
+            assertEquals(550f, outside.x, 0.001f);
+            assertEquals(740f, outside.y, 0.001f);
             // Below origin: clamped up to llx / lly.
-            float[] below = invokeClampImagePosition(page, -10f, -10f, 50f, 60f, 0f);
-            assertEquals(0f, below[0], 0.001f);
-            assertEquals(0f, below[1], 0.001f);
+            Point2D.Float below = invokeClampImagePosition(page, -10f, -10f, 50f, 60f, 0f);
+            assertEquals(0f, below.x, 0.001f);
+            assertEquals(0f, below.y, 0.001f);
         }
 
         @Test
@@ -199,11 +239,10 @@ class StampControllerTest {
         void rotated270OverrideIsNotSnapped() throws Exception {
             // MediaBox 792x612, square 300x300 stamp, overrideX=0 overrideY=612, rotation=270.
             PDRectangle page = new PDRectangle(0, 0, 792, 612);
-            float[] clamped = invokeClampImagePosition(page, 0f, 612f, 300f, 300f, 270f);
-            // Before the fix y was snapped from 612 down to 312 (ury - h), placing the stamp at the
-            // wrong corner. The rotated footprint actually fits, so the anchor must stay at 612.
-            assertEquals(0f, clamped[0], 0.001f);
-            assertEquals(612f, clamped[1], 0.001f);
+            Point2D.Float clamped = invokeClampImagePosition(page, 0f, 612f, 300f, 300f, 270f);
+            // The rotated footprint hangs below the anchor and fits, so the anchor stays put.
+            assertEquals(0f, clamped.x, 0.001f);
+            assertEquals(612f, clamped.y, 0.001f);
         }
 
         @Test
@@ -213,9 +252,9 @@ class StampControllerTest {
             // rotate(90) maps the rectangle so its footprint relative to the anchor is
             // x in [-h, 0] and y in [0, w]. Anchor at (0, 800) overflows the left and top edges, so
             // both axes are pulled in to keep the bitmap on-page.
-            float[] clamped = invokeClampImagePosition(page, 0f, 800f, 100f, 40f, 90f);
-            assertEquals(40f, clamped[0], 0.001f); // llx - minX = 0 - (-40)
-            assertEquals(700f, clamped[1], 0.001f); // ury - maxY = 800 - 100
+            Point2D.Float clamped = invokeClampImagePosition(page, 0f, 800f, 100f, 40f, 90f);
+            assertEquals(40f, clamped.x, 0.001f); // llx - minX = 0 - (-40)
+            assertEquals(700f, clamped.y, 0.001f); // ury - maxY = 800 - 100
         }
 
         @Test
@@ -223,9 +262,9 @@ class StampControllerTest {
         void rotated180KeepsFootprintOnPage() throws Exception {
             PDRectangle page = new PDRectangle(0, 0, 600, 800);
             // rotate(180): footprint relative to anchor is x in [-w, 0], y in [-h, 0].
-            float[] clamped = invokeClampImagePosition(page, 10f, 10f, 100f, 40f, 180f);
-            assertEquals(100f, clamped[0], 0.001f); // llx - minX = 0 - (-100)
-            assertEquals(40f, clamped[1], 0.001f); // lly - minY = 0 - (-40)
+            Point2D.Float clamped = invokeClampImagePosition(page, 10f, 10f, 100f, 40f, 180f);
+            assertEquals(100f, clamped.x, 0.001f); // llx - minX = 0 - (-100)
+            assertEquals(40f, clamped.y, 0.001f); // lly - minY = 0 - (-40)
         }
 
         @Test
@@ -233,9 +272,171 @@ class StampControllerTest {
         void respectsMediaBoxOrigin() throws Exception {
             PDRectangle page = new PDRectangle(50f, 100f, 400f, 300f);
             // Far past the upper-right; unrotated clamp -> urx - w, ury - h.
-            float[] clamped = invokeClampImagePosition(page, 1000f, 1000f, 30f, 20f, 0f);
-            assertEquals(420f, clamped[0], 0.001f); // 450 - 30
-            assertEquals(380f, clamped[1], 0.001f); // 400 - 20
+            Point2D.Float clamped = invokeClampImagePosition(page, 1000f, 1000f, 30f, 20f, 0f);
+            assertEquals(420f, clamped.x, 0.001f); // 450 - 30
+            assertEquals(380f, clamped.y, 0.001f); // 400 - 20
+        }
+
+        @Test
+        @DisplayName("45-degree stamp footprint stays inside the page bounds")
+        void rotated45KeepsFootprintOnPage() throws Exception {
+            PDRectangle page = new PDRectangle(0, 0, 600, 800);
+            // rotate(45): footprint relative to anchor is x in [-28.284, 70.711], y in [0, 98.995].
+            Point2D.Float clamped = invokeClampImagePosition(page, 0f, 800f, 100f, 40f, 45f);
+            assertEquals(28.284f, clamped.x, 0.001f);
+            assertEquals(701.005f, clamped.y, 0.001f);
+        }
+
+        @Test
+        @DisplayName("Footprint larger than the page aligns with the lower-left edges")
+        void footprintLargerThanPageAlignsLowerLeft() throws Exception {
+            PDRectangle page = new PDRectangle(0, 0, 600, 800);
+            // rotate(45): footprint relative to anchor is x in [-707.107, 1767.767], y in
+            // [0, 2474.874], wider and taller than the page.
+            Point2D.Float clamped = invokeClampImagePosition(page, 300f, 300f, 2500f, 1000f, 45f);
+            assertEquals(707.107f, clamped.x, 0.001f);
+            assertEquals(0f, clamped.y, 0.001f);
+        }
+    }
+
+    @Nested
+    @DisplayName("Image stamp placement through the endpoint")
+    class ImageStampEndpointTests {
+
+        private static final float NO_OVERRIDE = -1f;
+        private static final PDRectangle PAGE = new PDRectangle(600, 800);
+
+        @Test
+        @DisplayName("Unrotated grid stamp keeps its margin")
+        void unrotatedGridStampKeepsMargin() throws Exception {
+            Matrix drawn = stampedImageTransform(1, 0f, 40f, NO_OVERRIDE, NO_OVERRIDE);
+            assertEquals(24.5f, drawn.getTranslateX(), 0.01f);
+            assertEquals(735.5f, drawn.getTranslateY(), 0.01f);
+        }
+
+        @Test
+        @DisplayName("Rotated grid stamp keeps its margin")
+        void rotatedGridStampKeepsMargin() throws Exception {
+            Matrix drawn = stampedImageTransform(1, 90f, 40f, NO_OVERRIDE, NO_OVERRIDE);
+            assertEquals(64.5f, drawn.getTranslateX(), 0.01f);
+            assertEquals(675.5f, drawn.getTranslateY(), 0.01f);
+        }
+
+        @Test
+        @DisplayName("Grid stamp at 45 degrees sits its footprint on the margins")
+        void rotated45GridStampKeepsMargin() throws Exception {
+            Matrix drawn = stampedImageTransform(9, 45f, 40f, NO_OVERRIDE, NO_OVERRIDE);
+            Rectangle2D bounds = drawnBounds(drawn);
+            assertEquals(575.5, bounds.getMaxX(), 0.01);
+            assertEquals(24.5, bounds.getMinY(), 0.01);
+        }
+
+        @Test
+        @DisplayName("Out-of-range override on a rotated stamp is clamped to its footprint")
+        void rotatedOverrideIsClamped() throws Exception {
+            Matrix drawn = stampedImageTransform(1, 90f, 40f, 0f, 800f);
+            assertEquals(40f, drawn.getTranslateX(), 0.01f);
+            assertEquals(700f, drawn.getTranslateY(), 0.01f);
+        }
+
+        @Test
+        @DisplayName("In-range override on a rotated stamp is left alone")
+        void rotatedOverrideInsideFootprintIsKept() throws Exception {
+            Matrix drawn = stampedImageTransform(1, 270f, 300f, 0f, 800f);
+            assertEquals(0f, drawn.getTranslateX(), 0.01f);
+            assertEquals(800f, drawn.getTranslateY(), 0.01f);
+        }
+
+        @Test
+        @DisplayName("Footprint larger than the page aligns with the lower-left edges")
+        void oversizedRotatedStampAlignsLowerLeft() throws Exception {
+            Matrix drawn = stampedImageTransform(3, 45f, 1000f, NO_OVERRIDE, NO_OVERRIDE);
+            Rectangle2D bounds = drawnBounds(drawn);
+            assertEquals(0.0, bounds.getMinX(), 0.01);
+            assertEquals(0.0, bounds.getMinY(), 0.01);
+        }
+
+        /** Stamps a 250x100 image, so the drawn size is 2.5 fontSize by fontSize. */
+        private Matrix stampedImageTransform(
+                int position, float rotation, float fontSize, float overrideX, float overrideY)
+                throws Exception {
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(blankDocument());
+            lenient()
+                    .when(tempFileManager.createManagedTempFile(anyString()))
+                    .thenAnswer(
+                            invocation -> {
+                                Path output = Files.createTempFile("stamp", ".pdf");
+                                output.toFile().deleteOnExit();
+                                TempFile tempFile = mock(TempFile.class);
+                                lenient().when(tempFile.getFile()).thenReturn(output.toFile());
+                                lenient().when(tempFile.getPath()).thenReturn(output);
+                                return tempFile;
+                            });
+
+            AddStampRequest request = new AddStampRequest();
+            request.setFileInput(
+                    new MockMultipartFile(
+                            "fileInput",
+                            "input.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            new byte[] {0}));
+            request.setStampType("image");
+            request.setStampImage(
+                    new MockMultipartFile(
+                            "stampImage", "stamp.png", MediaType.IMAGE_PNG_VALUE, stampPng()));
+            request.setPageNumbers("1");
+            request.setFontSize(fontSize);
+            request.setRotation(rotation);
+            request.setOpacity(0.5f);
+            request.setPosition(position);
+            request.setOverrideX(overrideX);
+            request.setOverrideY(overrideY);
+            request.setCustomMargin("medium");
+
+            ResponseEntity<Resource> response = stampController.addStamp(request);
+
+            try (InputStream body = response.getBody().getInputStream();
+                    PDDocument stamped = Loader.loadPDF(body.readAllBytes())) {
+                ImageTransformCapture capture = new ImageTransformCapture();
+                capture.processPage(stamped.getPage(0));
+                return capture.imageTransform;
+            }
+        }
+
+        private PDDocument blankDocument() {
+            PDDocument document = new PDDocument();
+            document.addPage(new PDPage(PAGE));
+            return document;
+        }
+
+        private byte[] stampPng() throws IOException {
+            ByteArrayOutputStream png = new ByteArrayOutputStream();
+            ImageIO.write(new BufferedImage(250, 100, BufferedImage.TYPE_INT_RGB), "png", png);
+            return png.toByteArray();
+        }
+
+        private Rectangle2D drawnBounds(Matrix imageTransform) {
+            return new PDRectangle(1, 1).transform(imageTransform).getBounds2D();
+        }
+    }
+
+    /** Records the transform in force when the page paints its image XObject. */
+    private static final class ImageTransformCapture extends PDFStreamEngine {
+        private Matrix imageTransform;
+
+        private ImageTransformCapture() {
+            addOperator(new Save(this));
+            addOperator(new Restore(this));
+            addOperator(new Concatenate(this));
+        }
+
+        @Override
+        protected void processOperator(Operator operator, List<COSBase> operands)
+                throws IOException {
+            if ("Do".equals(operator.getName())) {
+                imageTransform = getGraphicsState().getCurrentTransformationMatrix().clone();
+            }
+            super.processOperator(operator, operands);
         }
     }
 
