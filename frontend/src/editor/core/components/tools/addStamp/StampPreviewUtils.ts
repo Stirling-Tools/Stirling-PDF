@@ -285,7 +285,7 @@ export function computeStampPreviewStyle(
   const footprint = getStampFootprint(
     widthPtsContent,
     heightPtsContent,
-    parameters.stampType === "image" ? parameters.rotation : 0,
+    parameters.stampType !== "text" ? parameters.rotation : 0,
   );
   const footprintWidth = footprint.maxX - footprint.minX;
   const footprintHeight = footprint.maxY - footprint.minY;

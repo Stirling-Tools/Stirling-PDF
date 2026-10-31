@@ -4,11 +4,11 @@ import {
   clampPreviewAnchorToPts,
   computeStampPreviewStyle,
   getStampFootprint,
-} from "@app/components/tools/addStamp/StampPreviewUtils";
+} from "@editor/components/tools/addStamp/StampPreviewUtils";
 import {
   defaultParameters,
   type AddStampParameters,
-} from "@app/components/tools/addStamp/useAddStampParameters";
+} from "@editor/components/tools/addStamp/useAddStampParameters";
 
 const page = { widthPts: 600, heightPts: 800 };
 const container = { width: 600, height: 800 };
@@ -168,5 +168,17 @@ describe("clampPreviewAnchorToPts", () => {
     );
     expect(anchor.x).toBeCloseTo(40);
     expect(anchor.y).toBeCloseTo(700);
+  });
+});
+
+describe("computeStampPreviewStyle QR placement", () => {
+  it("places a rotated QR stamp by its footprint, like the backend", () => {
+    const anchor = previewAnchor({
+      stampType: "qr",
+      position: 1,
+      rotation: 90,
+    });
+    expect(anchor.left).toBeCloseTo(64.5);
+    expect(anchor.bottom).toBeCloseTo(735.5);
   });
 });

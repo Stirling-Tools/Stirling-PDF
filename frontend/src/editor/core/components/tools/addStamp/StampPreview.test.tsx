@@ -1,10 +1,10 @@
 import { MantineProvider } from "@mantine/core";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import StampPreview from "@app/components/tools/addStamp/StampPreview";
-import { defaultParameters } from "@app/components/tools/addStamp/useAddStampParameters";
+import StampPreview from "@editor/components/tools/addStamp/StampPreview";
+import { defaultParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
 
-vi.mock("@app/hooks/useThumbnailGeneration", () => ({
+vi.mock("@editor/hooks/useThumbnailGeneration", () => ({
   useThumbnailGeneration: () => ({ requestThumbnail: vi.fn() }),
 }));
 
@@ -59,7 +59,7 @@ describe("StampPreview image drag", () => {
         />
       </MantineProvider>,
     );
-    return (await screen.findByAltText("stamp preview"))
+    return (await screen.findByAltText("addStamp.stampPreviewAlt"))
       .parentElement as HTMLElement;
   };
 

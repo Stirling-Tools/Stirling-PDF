@@ -171,7 +171,7 @@ export default function StampPreview({
 
   // Text previews are clamped as unrotated boxes.
   const footprintRotation =
-    parameters.stampType === "image" ? parameters.rotation : 0;
+    parameters.stampType !== "text" ? parameters.rotation : 0;
 
   // Keep center fixed when scaling via slider (or any fontSize changes)
   const prevDimsRef = useRef<{
