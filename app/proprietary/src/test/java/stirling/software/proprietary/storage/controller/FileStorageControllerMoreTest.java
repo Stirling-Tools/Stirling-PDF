@@ -105,9 +105,22 @@ class FileStorageControllerMoreTest {
             MultipartFile file = mock(MultipartFile.class);
             StoredFileResponse resp = StoredFileResponse.builder().id(2L).build();
             when(fileStorageService.requireAuthenticatedUser()).thenReturn(u);
-            when(fileStorageService.updateFileResponse(u, 5L, file, null, null)).thenReturn(resp);
+            when(fileStorageService.updateFileResponse(u, 5L, file, null, null, null))
+                    .thenReturn(resp);
 
-            assertThat(controller.updateFile(5L, file, null, null)).isSameAs(resp);
+            assertThat(controller.updateFile(5L, file, null, null, null)).isSameAs(resp);
+        }
+
+        @Test
+        void updateFile_passesBaseRevisionToService() {
+            User u = user();
+            MultipartFile file = mock(MultipartFile.class);
+            StoredFileResponse resp = StoredFileResponse.builder().id(2L).build();
+            when(fileStorageService.requireAuthenticatedUser()).thenReturn(u);
+            when(fileStorageService.updateFileResponse(u, 5L, file, null, null, "rev-1"))
+                    .thenReturn(resp);
+
+            assertThat(controller.updateFile(5L, file, null, null, "rev-1")).isSameAs(resp);
         }
 
         @Test

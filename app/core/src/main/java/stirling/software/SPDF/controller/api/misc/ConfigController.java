@@ -170,6 +170,10 @@ public class ConfigController {
         return null;
     }
 
+    /**
+     * Public frontend bootstrap metadata and effective feature flags. Storage-derived options
+     * require login mode and server storage; a persisted opt-in alone does not enable them.
+     */
     @GetMapping("/app-config")
     public ResponseEntity<Map<String, Object>> getAppConfig(HttpServletRequest request) {
         Map<String, Object> configData = new HashMap<>();
@@ -294,6 +298,9 @@ public class ConfigController {
             boolean groupSigningEnabled =
                     storageEnabled && applicationProperties.getStorage().getSigning().isEnabled();
             configData.put("storageEnabled", storageEnabled);
+            configData.put(
+                    "storageAutoSyncEnabled",
+                    storageEnabled && applicationProperties.getStorage().isAutoSyncEnabled());
             configData.put("storageSharingEnabled", sharingEnabled);
             configData.put("storageShareLinksEnabled", shareLinksEnabled);
             configData.put("storageShareEmailEnabled", shareEmailEnabled);
