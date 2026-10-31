@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -41,6 +44,8 @@ public class TempFileCleanupServiceTest {
     @Mock private ApplicationProperties.System system;
 
     @Mock private ApplicationProperties.TempFileManagement tempFileManagement;
+
+    @Mock private TaskScheduler scheduler;
 
     @InjectMocks private TempFileCleanupService cleanupService;
 
@@ -75,6 +80,18 @@ public class TempFileCleanupServiceTest {
         ReflectionTestUtils.setField(cleanupService, "machineType", "Standard");
 
         when(tempFileManager.getMaxAgeMillis()).thenReturn(3600000L); // 1 hour
+    }
+
+    @Test
+    public void ensureScheduled_registersSweepOnce() {
+        cleanupService.ensureScheduled();
+        cleanupService.ensureScheduled();
+
+        verify(scheduler, times(1))
+                .scheduleAtFixedRate(
+                        any(Runnable.class),
+                        any(Instant.class),
+                        org.mockito.ArgumentMatchers.eq(Duration.ofMinutes(30)));
     }
 
     @Test

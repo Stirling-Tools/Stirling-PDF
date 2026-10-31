@@ -40,6 +40,7 @@ import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.config.CustomAuditEventRepository;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
+import stirling.software.proprietary.service.AuditCleanupService;
 import stirling.software.proprietary.service.AuditService;
 
 import tools.jackson.databind.json.JsonMapper;
@@ -83,7 +84,9 @@ class ControllerAuditAspectTest {
         properties.getPremium().getEnterpriseFeatures().getAudit().setLevel(3);
         var config = new AuditConfigurationProperties(properties);
         var persisted = mock(PersistentAuditEventRepository.class);
-        var writer = new CustomAuditEventRepository(persisted, JsonMapper.builder().build());
+        var cleanup = mock(AuditCleanupService.class);
+        var writer =
+                new CustomAuditEventRepository(persisted, JsonMapper.builder().build(), cleanup);
         var service = new AuditService(writer, config, true, null, null);
         var realAspect = new ControllerAuditAspect(service, config);
         var jp = mock(ProceedingJoinPoint.class);
