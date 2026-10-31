@@ -27,6 +27,8 @@ import stirling.software.proprietary.accountlink.AccountLinkClient.ConnectClaimO
 import stirling.software.proprietary.accountlink.AccountLinkClient.ConnectClaimResult;
 import stirling.software.proprietary.accountlink.AccountLinkClient.ConnectRequestResult;
 import stirling.software.proprietary.accountlink.ConnectService.Phase;
+import stirling.software.proprietary.model.OrgOwner;
+import stirling.software.proprietary.service.OrgOwnerService;
 
 /** Unit tests for the instance half of the connect handshake. */
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +43,7 @@ class ConnectServiceTest {
     @Mock private ConnectStateRepository stateRepo;
     @Mock private DeviceCredentialStore credentialStore;
     @Mock private EntitlementCache entitlementCache;
+    @Mock private OrgOwnerService owners;
 
     private ApplicationProperties applicationProperties;
     private ConnectService service;
@@ -48,13 +51,18 @@ class ConnectServiceTest {
     @BeforeEach
     void setUp() {
         applicationProperties = new ApplicationProperties();
+        OrgOwner owner = new OrgOwner();
+        owner.setOwnerUserId(1L);
+        owner.setAssignedAt(LocalDateTime.of(2026, 9, 1, 0, 0));
+        when(owners.requireCurrentOwner(any())).thenReturn(owner);
         service =
                 new ConnectService(
                         client,
                         stateRepo,
                         credentialStore,
                         entitlementCache,
-                        applicationProperties);
+                        applicationProperties,
+                        owners);
     }
 
     private void configureFrontendUrl(String url) {
@@ -357,7 +365,7 @@ class ConnectServiceTest {
 
         assertThat(service.complete(NONCE).phase()).isEqualTo(Phase.UNAVAILABLE);
         verify(stateRepo, never()).delete(any());
-        verifyNoInteractions(credentialStore);
+        verify(credentialStore, never()).save(anyString(), anyString(), any());
     }
 
     @Test
@@ -369,7 +377,7 @@ class ConnectServiceTest {
 
         assertThat(service.complete(NONCE).phase()).isEqualTo(Phase.REJECTED);
         verify(stateRepo).delete(state);
-        verifyNoInteractions(credentialStore);
+        verify(credentialStore, never()).save(anyString(), anyString(), any());
     }
 
     @Test
@@ -413,6 +421,7 @@ class ConnectServiceTest {
     @Test
     void complete_onAConfirmedReauthKeepsTheExistingCredential() {
         ConnectState state = openHandshake();
+        state.setReauth(true);
         when(stateRepo.findById(ConnectState.SINGLETON_ID)).thenReturn(Optional.of(state));
         when(client.connectClaim(anyString(), anyString()))
                 .thenReturn(new ConnectClaimResult(ConnectClaimOutcome.CONFIRMED, null, null, 7L));
@@ -424,6 +433,18 @@ class ConnectServiceTest {
         // Nothing to store: a second credential would orphan the one we already hold.
         verify(credentialStore, never()).save(anyString(), anyString(), any());
         verify(stateRepo).delete(state);
+        verifyNoInteractions(owners);
+    }
+
+    @Test
+    void reauthCannotStoreANewCredentialEvenIfUpstreamGrantsOne() {
+        ConnectState state = openHandshake();
+        state.setReauth(true);
+        when(stateRepo.findById(ConnectState.SINGLETON_ID)).thenReturn(Optional.of(state));
+        when(client.connectClaim(anyString(), anyString()))
+                .thenReturn(new ConnectClaimResult(ConnectClaimOutcome.GRANTED, "dev", "sec", 7L));
+        assertThat(service.complete(NONCE).phase()).isEqualTo(Phase.REJECTED);
+        verifyNoInteractions(owners, credentialStore);
     }
 
     @Test
@@ -476,6 +497,8 @@ class ConnectServiceTest {
         state.setAuthorizeUrl("https://app.example.com/link?request=req-1");
         state.setCreatedAt(LocalDateTime.now());
         state.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+        state.setOwnerUserId(1L);
+        state.setOwnerAssignedAt(LocalDateTime.of(2026, 9, 1, 0, 0));
         return state;
     }
 

@@ -22,6 +22,7 @@ import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.io.RandomAccessRead;
 import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
@@ -70,7 +71,7 @@ import org.apache.xmpbox.schema.AdobePDFSchema;
 import org.apache.xmpbox.schema.DublinCoreSchema;
 import org.apache.xmpbox.schema.PDFAIdentificationSchema;
 import org.apache.xmpbox.schema.XMPBasicSchema;
-import org.apache.xmpbox.xml.DomXmpParser;
+import org.apache.xmpbox.type.ArrayProperty;
 import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -92,15 +93,18 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.ImageMemoryLimit;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.XmpUtils;
 
 @ConvertApi
 @Slf4j
@@ -112,16 +116,20 @@ public class ConvertPDFToPDFA {
     // Level A needs the proprietary tagger; core builds convert at level B instead.
     private final PdfaLevelAServiceInterface pdfaLevelAService;
     private final TempFileManager tempFileManager;
+    // The sanitizer adds content streams to every page, all held in memory until the save
+    private final int maxConversionPages;
 
     public ConvertPDFToPDFA(
             RuntimePathConfig runtimePathConfig,
             stirling.software.SPDF.service.VeraPDFService veraPDFService,
             @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService,
-            TempFileManager tempFileManager) {
+            TempFileManager tempFileManager,
+            ApplicationProperties applicationProperties) {
         this.runtimePathConfig = runtimePathConfig;
         this.veraPDFService = veraPDFService;
         this.pdfaLevelAService = pdfaLevelAService;
         this.tempFileManager = tempFileManager;
+        this.maxConversionPages = applicationProperties.getSystem().getMaxPdfaConversionPages();
     }
 
     private static final String ICC_RESOURCE_PATH = "/icc/sRGB2014.icc";
@@ -802,6 +810,7 @@ public class ConvertPDFToPDFA {
                 PDXObject loXo = loRes.getXObject(name);
                 if (!(loXo instanceof PDImageXObject img)) continue;
 
+                ImageMemoryLimit.requireEmbeddedImageFits(img);
                 PDImageXObject newImg = LosslessFactory.createFromImage(baseDoc, img.getImage());
 
                 // replace the resource under the same name
@@ -1280,89 +1289,20 @@ public class ConvertPDFToPDFA {
         return false;
     }
 
-    private static File preProcessHighlights(File inputPdf) throws Exception {
+    private static File preProcessHighlights(File inputPdf, int maxPages) throws Exception {
 
         try (PDDocument document = Loader.loadPDF(inputPdf)) {
+            requireSanitizablePageCount(document, maxPages);
 
-            for (PDPage page : document.getPages()) {
-                List<PDAnnotation> annotations = page.getAnnotations();
-                for (PDAnnotation annot : annotations) {
-                    if (ANNOTATION_HIGHLIGHT.equals(annot.getSubtype())
-                            && annot instanceof PDAnnotationHighlight highlight) {
-                        float[] colorComponents =
-                                highlight.getColor() != null
-                                        ? highlight.getColor().getComponents()
-                                        : new float[] {1f, 1f, 0f};
-                        Color highlightColor =
-                                new Color(
-                                        colorComponents[0], colorComponents[1], colorComponents[2]);
-
-                        float[] quadPoints = highlight.getQuadPoints();
-                        if (quadPoints != null) {
-                            try (PDPageContentStream cs =
-                                    new PDPageContentStream(
-                                            document,
-                                            page,
-                                            PDPageContentStream.AppendMode.PREPEND,
-                                            true,
-                                            true)) {
-
-                                cs.setStrokingColor(highlightColor);
-                                cs.setLineWidth(0.05f);
-                                float spacing = 2f;
-                                for (int i = 0; i < quadPoints.length; i += 8) {
-                                    float minX =
-                                            Math.min(
-                                                    Math.min(quadPoints[i], quadPoints[i + 2]),
-                                                    Math.min(quadPoints[i + 4], quadPoints[i + 6]));
-                                    float maxX =
-                                            Math.max(
-                                                    Math.max(quadPoints[i], quadPoints[i + 2]),
-                                                    Math.max(quadPoints[i + 4], quadPoints[i + 6]));
-                                    float minY =
-                                            Math.min(
-                                                    Math.min(quadPoints[i + 1], quadPoints[i + 3]),
-                                                    Math.min(quadPoints[i + 5], quadPoints[i + 7]));
-                                    float maxY =
-                                            Math.max(
-                                                    Math.max(quadPoints[i + 1], quadPoints[i + 3]),
-                                                    Math.max(quadPoints[i + 5], quadPoints[i + 7]));
-
-                                    float width = maxX - minX;
-                                    float height = maxY - minY;
-
-                                    for (float y = minY; y <= maxY; y += spacing) {
-                                        float len = Math.min(width, maxY - y);
-                                        cs.moveTo(minX, y);
-                                        cs.lineTo(minX + len, y + len);
-                                    }
-                                    for (float x = minX + spacing; x <= maxX; x += spacing) {
-                                        float len = Math.min(maxX - x, height);
-                                        cs.moveTo(x, minY);
-                                        cs.lineTo(x + len, minY + len);
-                                    }
-                                }
-
-                                cs.stroke();
-                            }
-                        }
-
-                        page.getAnnotations().remove(highlight);
-                        COSDictionary pageDict = page.getCOSObject();
-
-                        if (pageDict.containsKey(COSName.GROUP)) {
-                            COSDictionary groupDict =
-                                    (COSDictionary) pageDict.getDictionaryObject(COSName.GROUP);
-
-                            if (groupDict != null
-                                    && COSName.TRANSPARENCY
-                                            .getName()
-                                            .equalsIgnoreCase(
-                                                    groupDict.getNameAsString(COSName.S))) {
-                                pageDict.removeItem(COSName.GROUP);
-                            }
-                        }
-                    }
+            // PDF/A-1 cannot keep a highlight without an appearance, so drop the ones we cannot
+            // draw
+            for (PDPage page : flattenHighlights(document, true)) {
+                COSDictionary pageDict = page.getCOSObject();
+                if (pageDict.getDictionaryObject(COSName.GROUP) instanceof COSDictionary groupDict
+                        && COSName.TRANSPARENCY
+                                .getName()
+                                .equalsIgnoreCase(groupDict.getNameAsString(COSName.S))) {
+                    pageDict.removeItem(COSName.GROUP);
                 }
             }
             // Save the modified document to a temporary file.
@@ -1451,11 +1391,10 @@ public class ConvertPDFToPDFA {
         XMPMetadata xmp;
 
         if (existingMetadata != null) {
-            try (InputStream xmpStream = existingMetadata.createInputStream()) {
-                DomXmpParser parser = new DomXmpParser();
-                parser.setStrictParsing(false);
-                xmp = parser.parse(xmpStream);
+            try {
+                xmp = XmpUtils.parse(existingMetadata, false);
             } catch (Exception e) {
+                log.debug("Replacing the document's XMP packet: {}", e.getMessage());
                 xmp = XMPMetadata.createXMPMetadata();
             }
         } else {
@@ -1472,11 +1411,9 @@ public class ConvertPDFToPDFA {
 
         DublinCoreSchema dcSchema = xmp.getDublinCoreSchema();
         if (dcSchema != null) {
-            List<String> existingCreators = dcSchema.getCreators();
+            ArrayProperty existingCreators = dcSchema.getCreatorsProperty();
             if (existingCreators != null) {
-                for (String creator : new ArrayList<>(existingCreators)) {
-                    dcSchema.removeCreator(creator);
-                }
+                dcSchema.removeProperty(existingCreators);
             }
         } else {
             dcSchema = xmp.createAndAddDublinCoreSchema();
@@ -1775,12 +1712,13 @@ public class ConvertPDFToPDFA {
             if (pdfaPart == 2 || pdfaPart == 3) {
                 preProcessedFile = tempInputFile.toFile();
             } else {
-                preProcessedFile = preProcessHighlights(tempInputFile.toFile());
+                preProcessedFile = preProcessHighlights(tempInputFile.toFile(), maxConversionPages);
             }
 
             Set<String> missingFonts;
             boolean needImgs;
             try (PDDocument doc = Loader.loadPDF(preProcessedFile)) {
+                requireSanitizablePageCount(doc, maxConversionPages);
                 missingFonts = findUnembeddedFontNames(doc);
                 needImgs = (pdfaPart == 1) && hasTransparentImages(doc);
                 if (!missingFonts.isEmpty() || needImgs) {
@@ -2063,8 +2001,10 @@ public class ConvertPDFToPDFA {
     private void sanitizeDocument(Path inputPath, Path outputPath, boolean addWhiteBackground)
             throws IOException {
         try (PDDocument doc = Loader.loadPDF(inputPath.toFile())) {
+            requireSanitizablePageCount(doc, maxConversionPages);
             Map<String, DocumentSanitizer> sanitizers = new LinkedHashMap<>();
-            sanitizers.put("Flatten highlight annotations", this::flattenHighlightsToContent);
+            sanitizers.put(
+                    "Flatten highlight annotations", ConvertPDFToPDFA::flattenHighlightsToContent);
             sanitizers.put("Sanitize font resources", ConvertPDFToPDFA::sanitizeFontResources);
             sanitizers.put("Clean metadata", this::sanitizeMetadata);
             sanitizers.put("Remove forbidden actions", this::removeForbiddenActions);
@@ -2262,12 +2202,120 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private void addWhiteBackground(PDDocument doc) throws IOException {
+    private static void requireSanitizablePageCount(PDDocument doc, int maxPages) {
+        if (maxPages <= 0) {
+            return;
+        }
+        if (hasMorePagesThan(doc, maxPages)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "PDF/A and PDF/X conversion is limited to "
+                            + maxPages
+                            + " pages, split the document first");
+        }
+    }
+
+    /**
+     * Counts pages the way {@code doc.getPages()} lists them, visiting each intermediate node once,
+     * and stops at the first page over {@code maxPages}. getNumberOfPages() is only the /Count the
+     * file declares, and the PDFBox iterator resolves the whole tree before returning a page.
+     */
+    private static boolean hasMorePagesThan(PDDocument doc, int maxPages) {
+        COSDictionary root =
+                doc.getDocumentCatalog().getCOSObject().getCOSDictionary(COSName.PAGES);
+        if (root == null) {
+            return false;
+        }
+        Set<COSDictionary> visitedNodes = Collections.newSetFromMap(new IdentityHashMap<>());
+        Deque<Iterator<COSBase>> pending = new ArrayDeque<>();
+        pending.push(kidsOf(root));
+        int pages = 0;
+        while (!pending.isEmpty()) {
+            Iterator<COSBase> kids = pending.peek();
+            if (!kids.hasNext()) {
+                pending.pop();
+                continue;
+            }
+            COSBase kid = kids.next();
+            if (kid instanceof COSObject indirect) {
+                kid = indirect.getObject();
+            }
+            if (!(kid instanceof COSDictionary node)) {
+                continue;
+            }
+            if (COSName.PAGES.equals(node.getCOSName(COSName.TYPE))
+                    || node.containsKey(COSName.KIDS)) {
+                if (visitedNodes.add(node)) {
+                    pending.push(kidsOf(node));
+                }
+            } else if (++pages > maxPages) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static Iterator<COSBase> kidsOf(COSDictionary node) {
+        COSArray kids = node.getCOSArray(COSName.KIDS);
+        return kids == null ? Collections.emptyIterator() : kids.iterator();
+    }
+
+    /** The page tree can list one page object many times; each step should touch it once. */
+    private static List<PDPage> distinctPages(PDDocument doc) {
+        Set<COSDictionary> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        List<PDPage> pages = new ArrayList<>();
         for (PDPage page : doc.getPages()) {
+            if (seen.add(page.getCOSObject())) {
+                pages.add(page);
+            }
+        }
+        return pages;
+    }
+
+    /**
+     * Rebuilds /Annots without the given annotations in one pass. Removing them through {@code
+     * page.getAnnotations()} rescans the whole array for every item.
+     */
+    private static void removeAnnotations(PDPage page, Collection<PDAnnotation> toRemove) {
+        if (toRemove.isEmpty()) {
+            return;
+        }
+        COSArray annots = page.getCOSObject().getCOSArray(COSName.ANNOTS);
+        if (annots == null) {
+            return;
+        }
+        Set<COSBase> removed = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (PDAnnotation annot : toRemove) {
+            removed.add(annot.getCOSObject());
+        }
+        COSArray kept = new COSArray();
+        for (int i = 0; i < annots.size(); i++) {
+            if (!removed.contains(annots.getObject(i))) {
+                kept.add(annots.get(i));
+            }
+        }
+        page.getCOSObject().setItem(COSName.ANNOTS, kept);
+    }
+
+    private static String truncateForLog(String value) {
+        if (value == null) {
+            return "null";
+        }
+        boolean truncated = value.length() > 64;
+        String head = truncated ? value.substring(0, 64) : value;
+        String printable = NON_PRINTABLE_ASCII.matcher(head).replaceAll("?");
+        return truncated ? printable + "..." : printable;
+    }
+
+    private void addWhiteBackground(PDDocument doc) throws IOException {
+        for (PDPage page : distinctPages(doc)) {
             PDRectangle mediaBox = page.getMediaBox();
             try (PDPageContentStream cs =
                     new PDPageContentStream(
                             doc, page, PDPageContentStream.AppendMode.PREPEND, true, true)) {
+                // Without the restore, page text that relies on the default fill is drawn white
+                cs.saveGraphicsState();
                 cs.setNonStrokingColor(Color.WHITE);
                 cs.addRect(
                         mediaBox.getLowerLeftX(),
@@ -2275,68 +2323,106 @@ public class ConvertPDFToPDFA {
                         mediaBox.getWidth(),
                         mediaBox.getHeight());
                 cs.fill();
+                cs.restoreGraphicsState();
             }
         }
     }
 
-    private void flattenHighlightsToContent(PDDocument doc) throws IOException {
-        for (PDPage page : doc.getPages()) {
-            List<PDAnnotation> annotations = new ArrayList<>(page.getAnnotations());
+    /**
+     * Draws each highlight's quads as filled rectangles under the page content and removes the
+     * annotation. Returns the pages that had one.
+     */
+    private static List<PDPage> flattenHighlightsToContent(PDDocument doc) throws IOException {
+        return flattenHighlights(doc, false);
+    }
+
+    /**
+     * With {@code dropUndrawable}, highlights whose quad points are missing or malformed are
+     * removed without drawing; otherwise they are left on the page.
+     */
+    private static List<PDPage> flattenHighlights(PDDocument doc, boolean dropUndrawable)
+            throws IOException {
+        List<PDPage> changedPages = new ArrayList<>();
+        int invalidQuads = 0;
+        for (PDPage page : distinctPages(doc)) {
+            List<PDAnnotation> highlights = new ArrayList<>();
             List<PDAnnotation> toRemove = new ArrayList<>();
+            for (PDAnnotation annot : page.getAnnotations()) {
+                if (annot instanceof PDAnnotationHighlight highlight
+                        && ANNOTATION_HIGHLIGHT.equals(annot.getSubtype())) {
+                    if (isValidQuadPoints(highlight.getQuadPoints())) {
+                        highlights.add(highlight);
+                        toRemove.add(highlight);
+                    } else {
+                        invalidQuads++;
+                        if (dropUndrawable) {
+                            toRemove.add(highlight);
+                        }
+                    }
+                }
+            }
+            if (toRemove.isEmpty()) {
+                continue;
+            }
+            if (highlights.isEmpty()) {
+                removeAnnotations(page, toRemove);
+                changedPages.add(page);
+                continue;
+            }
 
             try (PDPageContentStream cs =
                     new PDPageContentStream(
                             doc, page, PDPageContentStream.AppendMode.PREPEND, true, true)) {
-
-                for (PDAnnotation annot : annotations) {
-                    if (annot instanceof PDAnnotationHighlight highlight
-                            && ANNOTATION_HIGHLIGHT.equals(annot.getSubtype())) {
-
-                        PDColor color = highlight.getColor();
-                        if (color != null) {
-                            cs.setNonStrokingColor(color);
-                        } else {
-                            cs.setNonStrokingColor(Color.YELLOW);
-                        }
-
-                        float[] quads = highlight.getQuadPoints();
-                        if (!isValidQuadPoints(quads)) {
-                            log.warn(
-                                    "Invalid quad points array for highlight annotation: {}",
-                                    quads != null ? "length=" + quads.length : "null");
-                            continue;
-                        }
-
-                        for (int i = 0; i <= quads.length - 8; i += 8) {
-                            float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE;
-                            float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
-
-                            for (int j = 0; j < 8; j += 2) {
-                                float x = quads[i + j];
-                                float y = quads[i + j + 1];
-                                minX = Math.min(minX, x);
-                                maxX = Math.max(maxX, x);
-                                minY = Math.min(minY, y);
-                                maxY = Math.max(maxY, y);
-                            }
-
-                            // Only draw if we have a valid rectangle
-                            float width = maxX - minX;
-                            float height = maxY - minY;
-                            if (width > 0 && height > 0) {
-                                cs.addRect(minX, minY, width, height);
-                                cs.fill();
-                            }
-                        }
-                        toRemove.add(annot);
+                // A prepended stream's state carries into the page content, so restore the fill
+                cs.saveGraphicsState();
+                for (PDAnnotation annot : highlights) {
+                    PDAnnotationHighlight highlight = (PDAnnotationHighlight) annot;
+                    PDColor color = highlight.getColor();
+                    if (color != null) {
+                        cs.setNonStrokingColor(color);
+                    } else {
+                        cs.setNonStrokingColor(Color.YELLOW);
                     }
+                    fillQuads(cs, highlight.getQuadPoints());
                 }
+                cs.restoreGraphicsState();
             }
-            page.getAnnotations().removeAll(toRemove);
+            removeAnnotations(page, toRemove);
+            changedPages.add(page);
+        }
+        if (invalidQuads > 0) {
+            log.warn(
+                    "{} {} highlight annotation(s) with an invalid quad points array",
+                    dropUndrawable ? "Removed" : "Skipped",
+                    invalidQuads);
+        }
+        return changedPages;
+    }
+
+    private static void fillQuads(PDPageContentStream cs, float[] quads) throws IOException {
+        for (int i = 0; i <= quads.length - 8; i += 8) {
+            float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE;
+            float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
+
+            for (int j = 0; j < 8; j += 2) {
+                float x = quads[i + j];
+                float y = quads[i + j + 1];
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            }
+
+            float width = maxX - minX;
+            float height = maxY - minY;
+            if (width > 0 && height > 0) {
+                cs.addRect(minX, minY, width, height);
+                cs.fill();
+            }
         }
     }
 
-    private boolean isValidQuadPoints(float[] quads) {
+    private static boolean isValidQuadPoints(float[] quads) {
         return quads != null && quads.length >= 8 && quads.length % 8 == 0;
     }
 
@@ -2368,7 +2454,8 @@ public class ConvertPDFToPDFA {
     }
 
     private void ensureAnnotationAppearances(PDDocument doc) throws IOException {
-        for (PDPage page : doc.getPages()) {
+        int removedCount = 0;
+        for (PDPage page : distinctPages(doc)) {
             List<PDAnnotation> annotations = page.getAnnotations();
             List<PDAnnotation> toRemove = new ArrayList<>();
 
@@ -2387,15 +2474,19 @@ public class ConvertPDFToPDFA {
                 PDAppearanceDictionary appearanceDict = annot.getAppearance();
                 if (appearanceDict == null || appearanceDict.getNormalAppearance() == null) {
                     if (!tryGenerateAppearance(doc, page, annot)) {
-                        log.warn("Removing annotation without appearance: {} on page", subtype);
+                        log.debug(
+                                "Removing annotation without appearance: {}",
+                                truncateForLog(subtype));
                         toRemove.add(annot);
                     }
                 }
             }
 
-            if (!toRemove.isEmpty()) {
-                annotations.removeAll(toRemove);
-            }
+            removeAnnotations(page, toRemove);
+            removedCount += toRemove.size();
+        }
+        if (removedCount > 0) {
+            log.warn("Removed {} annotation(s) without an appearance stream", removedCount);
         }
     }
 
@@ -2445,6 +2536,11 @@ public class ConvertPDFToPDFA {
                 }
             }
 
+            Set<COSBase> inAf = Collections.newSetFromMap(new IdentityHashMap<>());
+            for (int i = 0; i < afArray.size(); i++) {
+                inAf.add(afArray.getObject(i));
+            }
+
             boolean afArrayModified = false;
 
             for (Map.Entry<String, PDComplexFileSpecification> entry : fileSpecs.entrySet()) {
@@ -2466,15 +2562,7 @@ public class ConvertPDFToPDFA {
 
                 ensureEmbeddedFileMimeType(fileSpec, fileName);
 
-                boolean alreadyInAf = false;
-                for (int i = 0; i < afArray.size(); i++) {
-                    if (afArray.getObject(i) == fileSpecDict) {
-                        alreadyInAf = true;
-                        break;
-                    }
-                }
-
-                if (!alreadyInAf) {
+                if (inAf.add(fileSpecDict)) {
                     afArray.add(fileSpecDict);
                     afArrayModified = true;
                 }

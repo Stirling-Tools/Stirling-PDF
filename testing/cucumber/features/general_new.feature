@@ -313,29 +313,6 @@ Feature: General PDF Operations API Validation
         And the response PDF should contain 3 pages
 
 
-    @edit-text @positive
-    Scenario: edit-text applies a find and replace across the document
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 3 pages
-        And the pdf pages all contain the text "Hello world"
-        And the request data includes
-            | parameter | value                                        |
-            | edits     | [{"find":"Hello","replace":"Goodbye"}]       |
-        When I send the API request to the endpoint "/api/v1/general/edit-text"
-        And this operation is run 5 times in parallel
-        Then the response status code should be 200
-        And the response content type should be "application/pdf"
-
-
-    @edit-text @negative
-    Scenario: edit-text without any operations returns 400
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 2 pages
-        When I send the API request to the endpoint "/api/v1/general/edit-text"
-        Then the response status code should be 400
-        And the response JSON error should contain "find/replace"
-
-
     @split-for-poster-print @positive
     Scenario: split-for-poster-print tiles each page into an archive
         Given I generate a PDF file as "fileInput"

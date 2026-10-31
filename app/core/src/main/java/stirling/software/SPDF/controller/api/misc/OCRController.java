@@ -49,6 +49,7 @@ import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.LimitedPDFRenderer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempDirectory;
@@ -363,7 +364,7 @@ public class OCRController {
             merger.setDestinationFileName(finalOutputFile.toString());
 
             try (PDDocument document = pdfDocumentFactory.load(tempInputFile.toFile())) {
-                PDFRenderer pdfRenderer = new PDFRenderer(document);
+                PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
                 pdfRenderer.setSubsamplingAllowed(
                         true); // Enable subsampling to reduce memory usage
                 int pageCount = document.getNumberOfPages();

@@ -33,6 +33,9 @@ public record ToolDiagnostic(int stepIndex, Severity severity, String code, Stri
     /** The previous step emits several files and this one consumes them in a single call. */
     public static final String FAN_IN = "fan-in";
 
+    /** This step is past {@code policies.maxSteps}, so the chain will be refused. */
+    public static final String TOO_MANY_STEPS = "too-many-steps";
+
     public static ToolDiagnostic error(int stepIndex, String code, String message) {
         return new ToolDiagnostic(stepIndex, Severity.ERROR, code, message);
     }

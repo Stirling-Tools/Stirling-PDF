@@ -265,5 +265,42 @@ class UserAuthenticationFilterTest {
 
             assertThat(filter(true).shouldNotFilter(request)).isFalse();
         }
+
+        @Test
+        @DisplayName("does not skip a percent-encoded API path on GET")
+        void doesNotSkipEncodedApiPathOnGet() {
+            request.setMethod("GET");
+            request.setRequestURI("/%61pi/v1/info/load/all");
+
+            assertThat(filter(true).shouldNotFilter(request)).isFalse();
+        }
+
+        @Test
+        @DisplayName("does not skip a percent-encoded API path under a context path")
+        void doesNotSkipEncodedApiPathUnderContextPath() {
+            request.setMethod("GET");
+            request.setContextPath("/app");
+            request.setRequestURI("/app/a%70i/v1/general/files/x.png");
+
+            assertThat(filter(true).shouldNotFilter(request)).isFalse();
+        }
+
+        @Test
+        @DisplayName("does not skip a malformed escape")
+        void doesNotSkipMalformedEscape() {
+            request.setMethod("GET");
+            request.setRequestURI("/%zz");
+
+            assertThat(filter(true).shouldNotFilter(request)).isFalse();
+        }
+
+        @Test
+        @DisplayName("still skips the frontend root on GET")
+        void skipsFrontendRootOnGet() {
+            request.setMethod("GET");
+            request.setRequestURI("/");
+
+            assertThat(filter(true).shouldNotFilter(request)).isTrue();
+        }
     }
 }

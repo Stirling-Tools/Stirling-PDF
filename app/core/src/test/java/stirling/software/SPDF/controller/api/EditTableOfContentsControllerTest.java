@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -93,14 +94,14 @@ class EditTableOfContentsControllerTest {
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockCatalog.getDocumentOutline()).thenReturn(mockOutline);
-        when(mockOutline.getFirstChild()).thenReturn(mockOutlineItem);
+        when(mockOutline.children()).thenReturn(List.of(mockOutlineItem));
 
+        when(mockOutlineItem.getCOSObject()).thenReturn(new COSDictionary());
         when(mockOutlineItem.getTitle()).thenReturn("Chapter 1");
         when(mockOutlineItem.findDestinationPage(mockDocument)).thenReturn(mockPage1);
         when(mockDocument.getPages()).thenReturn(mockPages);
         when(mockPages.indexOf(mockPage1)).thenReturn(0);
-        when(mockOutlineItem.getFirstChild()).thenReturn(null);
-        when(mockOutlineItem.getNextSibling()).thenReturn(null);
+        when(mockOutlineItem.children()).thenReturn(List.of());
 
         // When
         ResponseEntity<List<Map<String, Object>>> response =
@@ -147,22 +148,22 @@ class EditTableOfContentsControllerTest {
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockCatalog.getDocumentOutline()).thenReturn(mockOutline);
-        when(mockOutline.getFirstChild()).thenReturn(mockOutlineItem);
+        when(mockOutline.children()).thenReturn(List.of(mockOutlineItem));
 
         // Parent bookmark
+        when(mockOutlineItem.getCOSObject()).thenReturn(new COSDictionary());
         when(mockOutlineItem.getTitle()).thenReturn("Chapter 1");
         when(mockOutlineItem.findDestinationPage(mockDocument)).thenReturn(mockPage1);
         when(mockDocument.getPages()).thenReturn(mockPages);
         when(mockPages.indexOf(mockPage1)).thenReturn(0);
-        when(mockOutlineItem.getFirstChild()).thenReturn(childItem);
-        when(mockOutlineItem.getNextSibling()).thenReturn(null);
+        when(mockOutlineItem.children()).thenReturn(List.of(childItem));
 
         // Child bookmark
+        when(childItem.getCOSObject()).thenReturn(new COSDictionary());
         when(childItem.getTitle()).thenReturn("Section 1.1");
         when(childItem.findDestinationPage(mockDocument)).thenReturn(mockPage2);
         when(mockPages.indexOf(mockPage2)).thenReturn(1);
-        when(childItem.getFirstChild()).thenReturn(null);
-        when(childItem.getNextSibling()).thenReturn(null);
+        when(childItem.children()).thenReturn(List.of());
 
         // When
         ResponseEntity<List<Map<String, Object>>> response =
@@ -196,12 +197,12 @@ class EditTableOfContentsControllerTest {
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockCatalog.getDocumentOutline()).thenReturn(mockOutline);
-        when(mockOutline.getFirstChild()).thenReturn(mockOutlineItem);
+        when(mockOutline.children()).thenReturn(List.of(mockOutlineItem));
 
+        when(mockOutlineItem.getCOSObject()).thenReturn(new COSDictionary());
         when(mockOutlineItem.getTitle()).thenReturn("Chapter 1");
         when(mockOutlineItem.findDestinationPage(mockDocument)).thenReturn(null); // Page not found
-        when(mockOutlineItem.getFirstChild()).thenReturn(null);
-        when(mockOutlineItem.getNextSibling()).thenReturn(null);
+        when(mockOutlineItem.children()).thenReturn(List.of());
 
         // When
         ResponseEntity<List<Map<String, Object>>> response =

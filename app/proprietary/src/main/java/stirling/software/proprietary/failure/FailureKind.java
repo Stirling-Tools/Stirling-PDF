@@ -168,7 +168,7 @@ public enum FailureKind {
             FailureScope.SERVER,
             // E080 (MD5 unavailable) is deliberately not claimed: its one thrower has no throws
             // clause and its caller swallows it for a fallback hash, so it cannot reach a run.
-            errorCodes("E042", "E062", "E063", "E064"),
+            errorCodes("E042", "E062", "E063", "E064", "E082"),
             fallback("This server is missing software the step needs, so it could not be run."),
             // Nothing for an owner to press: their document is fine, and a retry fails the same
             // way until someone installs the binary.
@@ -210,16 +210,16 @@ public enum FailureKind {
 
     /**
      * A tool the step shells out to ran and did not deliver: OCRmyPDF or qpdf exited non-zero,
-     * LibreOffice produced no PDF/A. E051 is also the bucket unrecognised Ghostscript output falls
-     * into, so it carries killed processes and full disks too; the retry offered first clears
-     * those.
+     * LibreOffice produced no PDF/A, the redaction engine could not verify its own result. E051 is
+     * also the bucket unrecognised Ghostscript output falls into, so it carries killed processes
+     * and full disks too; the retry offered first clears those.
      */
     STEP_TOOL_FAILED(
             FailureStage.INTERNAL,
             FailureSeverity.ERROR,
             FailureRemedy.NEEDS_FILE_FIX,
             FailureScope.FILE,
-            errorCodes("E044", "E051", "E052", "E060"),
+            errorCodes("E044", "E051", "E052", "E060", "E077", "E083"),
             fallback("A tool this step relies on could not process this document."),
             global(OPEN_IN_TOOL, OWNER, SECONDARY),
             global(VIEW_FILE, OWNER, SECONDARY),
@@ -241,17 +241,49 @@ public enum FailureKind {
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     /**
-     * A page ran the renderer out of memory at the requested resolution. The page's size and the
-     * step's DPI decide it together, so one oversized page fails while its neighbours succeed.
+     * A page's image at the requested resolution exceeded the server's image limit or ran the
+     * renderer out of memory. The page's size and the step's DPI decide it together, so one
+     * oversized page fails while its neighbours succeed.
      */
     STEP_PAGE_TOO_LARGE(
             FailureStage.INTERNAL,
             FailureSeverity.ERROR,
             FailureRemedy.NEEDS_CONFIG_FIX,
             FailureScope.FILE,
-            errorCodes("E081"),
+            errorCodes("E081", "E084", "E085"),
             fallback(
                     "A page in this document was too large to render at the requested resolution."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * An image embedded in the document is larger than the server's image limit. No step setting
+     * changes that: only a smaller image or a higher limit clears it.
+     */
+    INPUT_IMAGE_TOO_LARGE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_SERVER_FIX,
+            FailureScope.FILE,
+            errorCodes("E086"),
+            fallback("An image in this document is larger than this server can process."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * A stream in the document decompresses past the server's limit. Practically always a damaged
+     * or hostile file, so no repair is offered: repairing decompresses the same stream.
+     */
+    INPUT_DECOMPRESSES_TOO_LARGE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E087"),
+            fallback(
+                    "Part of this document decompresses to more data than this server can process."),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),

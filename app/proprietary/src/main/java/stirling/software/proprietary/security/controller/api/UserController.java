@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -76,6 +77,7 @@ public class UserController {
     private final TeamMembershipService teamMembershipService;
     private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
     private final LoginLandingService loginLandingService;
+    private final Environment environment;
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
@@ -170,7 +172,7 @@ public class UserController {
         return userMap;
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-username")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changeUsername(
@@ -203,9 +205,11 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "incorrectPassword", "message", "Incorrect password"));
         }
-        if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
+        // Most account lookups match usernames case-insensitively and fail once two rows match,
+        // so a case variant of another account's name (including the internal API user) is taken.
+        if (userService.isUsernameTakenByOtherUser(newUsername, user.getId())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "usernameExists", "message", "Username already exists"));
+                    .body(Map.of("error", "usernameExists", "message", "Username already in use"));
         }
         if (newUsername != null && !newUsername.isEmpty()) {
             try {
@@ -230,7 +234,7 @@ public class UserController {
                         "Username changed successfully. Please log in again."));
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password-on-login")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changePasswordOnLogin(
@@ -306,7 +310,7 @@ public class UserController {
                         "Password changed successfully. Please log in again."));
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changePassword(
@@ -341,7 +345,7 @@ public class UserController {
                         "Password changed successfully. Please log in again."));
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/updateUserSettings")
     /**
      * Updates the user settings based on the provided JSON payload.
@@ -849,7 +853,7 @@ public class UserController {
 
     public record OwnershipTransfer(Long userId) {}
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/get-api-key")
     public ResponseEntity<Map<String, String>> getApiKey(Principal principal) {
         if (principal == null) {
@@ -865,7 +869,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("apiKey", apiKey));
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/update-api-key")
     public ResponseEntity<Map<String, String>> updateApiKey(Principal principal) {
         if (principal == null) {
@@ -988,6 +992,7 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication)")
     @PostMapping("/complete-initial-setup")
     public ResponseEntity<?> completeInitialSetup() {
         try {
@@ -1015,7 +1020,8 @@ public class UserController {
         }
     }
 
-    // Lists enabled users for the signing picker; 'org' scope = instance-wide, else caller's team.
+    /** Lists enabled signing recipients; SaaS always restricts discovery to the caller's team. */
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication)")
     @GetMapping("/users")
     public ResponseEntity<List<UserSummaryDTO>> listUsers(Principal principal) {
         if (principal == null) {
@@ -1023,34 +1029,24 @@ public class UserController {
         }
 
         Optional<User> callerOpt = userService.findByUsernameIgnoreCase(principal.getName());
+        if (callerOpt.isEmpty() || !callerOpt.get().isEnabled()) {
+            return ResponseEntity.ok(List.of());
+        }
 
         // Anonymous (SaaS) accounts must never enumerate users, in any scope or team.
         if (callerOpt.map(UserController::isAnonymousUser).orElse(false)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        // Fail-closed: only literal "org" opens the whole instance; anything else scopes to team.
-        String scope = applicationProperties.getStorage().getSigning().getUserListScope();
-        boolean teamScoped = !"org".equalsIgnoreCase(scope == null ? "" : scope.trim());
-
-        List<User> source;
-        if (teamScoped) {
+        if (environment.matchesProfiles("saas")) {
             Team callerTeam = callerOpt.map(User::getTeam).orElse(null);
             if (callerTeam == null || isSystemTeam(callerTeam)) {
-                // No team or a shared system team: return only the caller, not the team's members.
-                source = callerOpt.map(List::of).orElse(List.of());
-            } else {
-                // Scopes via the single User.team FK; revisit if multi-team membership is added.
-                source = userRepository.findAllByTeamId(callerTeam.getId());
+                return ResponseEntity.ok(List.of(toUserSummaryDTO(callerOpt.get())));
             }
-        } else {
-            source = userRepository.findAll();
+            return ResponseEntity.ok(
+                    userRepository.findEnabledSigningUsersByTeamId(callerTeam.getId()));
         }
-
-        List<UserSummaryDTO> users =
-                source.stream().filter(User::isEnabled).map(this::toUserSummaryDTO).toList();
-
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(userRepository.findEnabledSigningUsers());
     }
 
     // SaaS anonymous accounts, which must not enumerate users.
