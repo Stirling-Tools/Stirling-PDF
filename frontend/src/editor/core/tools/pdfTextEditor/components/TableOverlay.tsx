@@ -540,6 +540,10 @@ function EditableTable({
                 "pdfTextEditor.table.resizeColumn",
                 "Drag to resize this column (Alt: share with the next)",
               )}
+              selectionLabel={t(
+                "pdfTextEditor.table.selectColumn",
+                `Select column ${Math.max(1, i - 1)} for deletion`,
+              )}
               cursor="col-resize"
               orientation="vertical"
               offset={d.active && drag ? drag.dx : 0}
@@ -568,6 +572,10 @@ function EditableTable({
               label={t(
                 "pdfTextEditor.table.resizeRow",
                 "Drag to resize this row (Alt: share with the next)",
+              )}
+              selectionLabel={t(
+                "pdfTextEditor.table.selectRow",
+                `Select row ${Math.max(1, i - 1)} for deletion`,
               )}
               cursor="row-resize"
               orientation="horizontal"
@@ -771,6 +779,7 @@ interface DragState {
 function DragArea({
   testid,
   label,
+  selectionLabel,
   cursor,
   guide,
   content,
@@ -786,6 +795,7 @@ function DragArea({
 }: {
   testid: string;
   label: string;
+  selectionLabel?: string;
   cursor: string;
   /** Length of the alignment guide drawn back across the grid while active. */
   guide: number;
@@ -803,6 +813,7 @@ function DragArea({
   onEnd: () => void;
 }) {
   const [hover, setHover] = useState(false);
+  const [keyboardFocus, setKeyboardFocus] = useState(false);
   const lit = hover || active || selected;
   const shift =
     orientation === "vertical"
@@ -812,7 +823,7 @@ function DragArea({
     <div
       data-testid={testid}
       title={label}
-      aria-label={label}
+      aria-label={selectionLabel ?? label}
       role={onSelect ? "button" : undefined}
       tabIndex={onSelect ? 0 : undefined}
       aria-pressed={onSelect ? selected : undefined}
@@ -823,7 +834,10 @@ function DragArea({
         e.stopPropagation();
         onSelect();
       }}
+      onFocus={() => setKeyboardFocus(true)}
+      onBlur={() => setKeyboardFocus(false)}
       onPointerDown={(e) => {
+        setKeyboardFocus(false);
         e.preventDefault();
         // The stage clears the selection on any press that reaches it.
         e.stopPropagation();
@@ -850,6 +864,11 @@ function DragArea({
         touchAction: "none",
         outline: selected ? `2px solid ${ACCENT}` : undefined,
         outlineOffset: 1,
+        // Keep keyboard focus visually distinct without hiding the selected
+        // track outline shown after the pointer leaves the handle.
+        boxShadow: keyboardFocus
+          ? "0 0 0 3px color-mix(in srgb, var(--c-accent-fg) 45%, transparent)"
+          : undefined,
         ...style,
       }}
     >
