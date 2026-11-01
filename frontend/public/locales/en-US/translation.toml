@@ -7671,6 +7671,8 @@ moveTable = "Drag to move the whole table"
 recognizedHint = "Recognized table - click to select all its text"
 resizeColumn = "Drag to resize this column (Alt: share with the next)"
 resizeRow = "Drag to resize this row (Alt: share with the next)"
+selectColumn = "Select column {{number}} for deletion"
+selectRow = "Select row {{number}} for deletion"
 resizeTable = "Drag to resize the whole table"
 row = "Row"
 
