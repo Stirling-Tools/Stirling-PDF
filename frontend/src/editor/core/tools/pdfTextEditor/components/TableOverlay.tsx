@@ -834,6 +834,9 @@ function DragArea({
         e.stopPropagation();
         onSelect();
       }}
+      // Assistive technology may dispatch click without pointer or keyboard events.
+      // Keep click activation in sync with the pointer and keyboard selection paths.
+      onClick={() => onSelect?.()}
       onFocus={() => setKeyboardFocus(true)}
       onBlur={() => setKeyboardFocus(false)}
       onPointerDown={(e) => {
