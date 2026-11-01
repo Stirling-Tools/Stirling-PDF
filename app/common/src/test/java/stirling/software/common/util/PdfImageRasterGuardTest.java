@@ -4,14 +4,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.junit.jupiter.api.Test;
 
 class PdfImageRasterGuardTest {
@@ -63,6 +66,30 @@ class PdfImageRasterGuardTest {
     @Test
     void anImageDeclaringMoreThanTheLimitIsRejected() throws IOException {
         try (PDDocument document = Loader.loadPDF(pdfWithImage(46000, 46000))) {
+            assertThatThrownBy(() -> PdfImageRasterGuard.validate(document))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    private static byte[] pdfWithInlineImage(int w, int h) throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            PDPage page = new PDPage();
+            document.addPage(page);
+            String content = "q BI /W " + w + " /H " + h + " /BPC 8 /CS /G /F /AHx ID 00> EI Q";
+            page.setContents(
+                    new PDStream(
+                            document,
+                            new ByteArrayInputStream(
+                                    content.getBytes(StandardCharsets.ISO_8859_1))));
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            document.save(out);
+            return out.toByteArray();
+        }
+    }
+
+    @Test
+    void anInlineImageOverTheLimitIsRejected() throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdfWithInlineImage(46000, 46000))) {
             assertThatThrownBy(() -> PdfImageRasterGuard.validate(document))
                     .isInstanceOf(IllegalArgumentException.class);
         }
