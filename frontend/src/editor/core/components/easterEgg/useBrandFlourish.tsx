@@ -7,18 +7,18 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { FileStoreContext } from "@app/contexts/file/contexts";
-import { thumbnailGenerationService } from "@app/services/thumbnailGenerationService";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { FileStoreContext } from "@editor/contexts/file/contexts";
+import { thumbnailGenerationService } from "@editor/services/thumbnailGenerationService";
 import {
   type ThumbnailRequest,
   planThumbnails,
-} from "@app/components/easterEgg/collectThumbnails";
-import type { StirlingFile } from "@app/types/fileContext";
+} from "@editor/components/easterEgg/collectThumbnails";
+import type { StirlingFile } from "@editor/types/fileContext";
 
 // Its own chunk: nothing here is fetched unless somebody actually finds it.
 const BrickGame = lazy(
-  () => import("@app/components/easterEgg/brickGame/BrickGame"),
+  () => import("@editor/components/easterEgg/brickGame/BrickGame"),
 );
 
 /** Small: the bricks are 49x68, so anything larger is detail nobody sees. */

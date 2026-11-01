@@ -1,7 +1,7 @@
 import { Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Banner, Button } from "@app/ui";
-import type { LegacyBillingState } from "@app/types/legacyBilling";
+import { Banner, Button } from "@editor/ui";
+import type { LegacyBillingState } from "@editor/types/legacyBilling";
 
 /** Displays owner billing without claiming that a legacy plan grants current product allowances. */
 export function LegacySubscriptionPlan({

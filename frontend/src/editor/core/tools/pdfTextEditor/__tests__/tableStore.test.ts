@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import { Page } from "@app/tools/pdfTextEditor/model/Page";
-import { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { PdfiumTextReader } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextReader";
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import * as detection from "@app/tools/pdfTextEditor/util/tableDetection";
+import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import * as detection from "@editor/tools/pdfTextEditor/util/tableDetection";
 
 async function makeStore() {
   const page = new Page({ index: 0, pagePtr: 1, width: 612, height: 792 });

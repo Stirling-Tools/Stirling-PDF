@@ -1,17 +1,17 @@
 import {
   defineCustomTool,
   useToolOperation,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import { useCallback } from "react";
-import { executeAutomationSequence } from "@app/utils/automationExecutor";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
-import { useFileContext } from "@app/contexts/FileContext";
-import { AutomateParameters } from "@app/types/automation";
+import { executeAutomationSequence } from "@editor/utils/automationExecutor";
+import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
+import { useFileContext } from "@editor/contexts/FileContext";
+import { AutomateParameters } from "@editor/types/automation";
 import {
   meterAutomationRun,
   type AutomationMeterInput,
-} from "@app/services/automationMeter";
-import { isStirlingFile } from "@app/types/fileContext";
+} from "@editor/services/automationMeter";
+import { isStirlingFile } from "@editor/types/fileContext";
 
 export function useAutomateOperation() {
   const { allTools } = useToolRegistry();

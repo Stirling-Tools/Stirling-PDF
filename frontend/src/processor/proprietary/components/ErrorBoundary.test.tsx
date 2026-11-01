@@ -6,7 +6,7 @@ import {
   screen,
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { ErrorBoundary } from "@portal/components/ErrorBoundary";
+import { ErrorBoundary } from "@processor/components/ErrorBoundary";
 
 const render = (
   ui: Parameters<typeof baseRender>[0],

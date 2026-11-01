@@ -4,10 +4,10 @@ import {
   AutomationTool,
   AutomationConfig,
   AutomationMode,
-} from "@app/types/automation";
-import { AUTOMATION_CONSTANTS } from "@app/constants/automation";
-import { ToolRegistry } from "@app/data/toolsTaxonomy";
-import { ToolId } from "@app/types/toolId";
+} from "@editor/types/automation";
+import { AUTOMATION_CONSTANTS } from "@editor/constants/automation";
+import { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { ToolId } from "@editor/types/toolId";
 
 interface UseAutomationFormProps {
   mode: AutomationMode;

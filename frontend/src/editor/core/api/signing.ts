@@ -1,8 +1,8 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import type {
   SignRequestSummary,
   SessionSummary,
-} from "@app/types/signingSession";
+} from "@editor/types/signingSession";
 
 export interface SigningSessions {
   signRequests: SignRequestSummary[];

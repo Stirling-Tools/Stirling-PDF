@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import type { PagePreview } from "@app/types/compare";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import type { PagePreview } from "@editor/types/compare";
 
 const DISPLAY_SCALE = 1;
 

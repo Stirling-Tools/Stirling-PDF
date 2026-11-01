@@ -7,12 +7,12 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
 
-import { FolderRecord, FOLDER_COLOR_PALETTE } from "@app/types/folder";
+import { FolderRecord, FOLDER_COLOR_PALETTE } from "@editor/types/folder";
 import {
   FOLDER_ICONS,
   FolderIconOption,
-} from "@app/components/filesPage/folderIcons";
-import "@app/components/filesPage/FolderAppearancePicker.css";
+} from "@editor/components/filesPage/folderIcons";
+import "@editor/components/filesPage/FolderAppearancePicker.css";
 
 interface FolderAppearancePickerProps {
   folder: FolderRecord;

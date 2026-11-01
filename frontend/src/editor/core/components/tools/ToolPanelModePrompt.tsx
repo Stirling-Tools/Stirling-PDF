@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Badge, Card, Group, Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { usePreferences } from "@app/contexts/PreferencesContext";
-import "@app/components/tools/ToolPanelModePrompt.css";
-import { type ToolPanelMode } from "@app/constants/toolPanel";
+import { Button } from "@editor/ui/Button";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import "@editor/components/tools/ToolPanelModePrompt.css";
+import { type ToolPanelMode } from "@editor/constants/toolPanel";
 
 interface ToolPanelModePromptProps {
   onComplete?: () => void;

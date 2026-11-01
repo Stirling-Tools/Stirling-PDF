@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { useAutoFormDetectionParameters } from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionParameters";
-import { useAutoFormDetectionOperation } from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { useAutoFormDetectionParameters } from "@editor/hooks/tools/autoFormDetection/useAutoFormDetectionParameters";
+import { useAutoFormDetectionOperation } from "@editor/hooks/tools/autoFormDetection/useAutoFormDetectionOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
 import {
   DetectionSummary,
   onSummary,
-} from "@app/services/formDetection/progress";
-import AutoFormDetectionSettings from "@app/components/tools/autoFormDetection/AutoFormDetectionSettings";
-import DetectionProgressPanel from "@app/components/tools/autoFormDetection/DetectionProgressPanel";
-import DetectionSummaryPanel from "@app/components/tools/autoFormDetection/DetectionSummaryPanel";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+} from "@editor/services/formDetection/progress";
+import AutoFormDetectionSettings from "@editor/components/tools/autoFormDetection/AutoFormDetectionSettings";
+import DetectionProgressPanel from "@editor/components/tools/autoFormDetection/DetectionProgressPanel";
+import DetectionSummaryPanel from "@editor/components/tools/autoFormDetection/DetectionSummaryPanel";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 
 const AutoFormDetection = (props: BaseToolProps) => {
   const { t } = useTranslation();

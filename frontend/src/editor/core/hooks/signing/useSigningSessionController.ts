@@ -1,26 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
-import apiClient from "@app/services/apiClient";
-import { alert } from "@app/components/toast";
-import { fileStorage } from "@app/services/fileStorage";
-import { createFileFromApiResponse } from "@app/utils/fileResponseUtils";
+import apiClient from "@editor/services/apiClient";
+import { alert } from "@editor/components/toast";
+import { fileStorage } from "@editor/services/fileStorage";
+import { createFileFromApiResponse } from "@editor/utils/fileResponseUtils";
 import {
   SignRequestSummary,
   SignRequestDetail,
   SessionSummary,
   SessionDetail,
-} from "@app/types/signingSession";
-import { getSubmittedSignaturePreviews } from "@app/utils/signingPreviews";
-import { needsSignature } from "@app/utils/signingItems";
-import type { StirlingFile } from "@app/types/fileContext";
-import { useFileActions } from "@app/contexts/FileContext";
-import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
-import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
-import { markSigningItemSeen } from "@app/services/signingSeenStore";
-import { useAuth } from "@app/auth/UseSession";
-import type { SignatureSettings } from "@app/components/tools/certSign/SignatureSettingsInput";
+} from "@editor/types/signingSession";
+import { getSubmittedSignaturePreviews } from "@editor/utils/signingPreviews";
+import { needsSignature } from "@editor/utils/signingItems";
+import type { StirlingFile } from "@editor/types/fileContext";
+import { useFileActions } from "@editor/contexts/FileContext";
+import { useSigningOverlay } from "@editor/contexts/SigningOverlayContext";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
+import { useSigningSessions } from "@editor/hooks/signing/useSigningSessions";
+import { markSigningItemSeen } from "@editor/services/signingSeenStore";
+import { useAuth } from "@editor/auth/UseSession";
+import type { SignatureSettings } from "@editor/components/tools/certSign/SignatureSettingsInput";
 
 /** The session workflow currently shown in the workspace. */
 export type SigningView = "list" | "detail" | "request";

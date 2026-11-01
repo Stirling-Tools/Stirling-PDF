@@ -1,8 +1,8 @@
 import type JSZipClass from "jszip";
 
-import { fileStorage } from "@app/services/fileStorage";
-import type { FileId, ToolOperation } from "@app/types/file";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import { fileStorage } from "@editor/services/fileStorage";
+import type { FileId, ToolOperation } from "@editor/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 interface ShareBundleEntry {
   logicalId: string;

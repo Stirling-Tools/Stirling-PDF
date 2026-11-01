@@ -8,8 +8,11 @@
  * revision, and a pass that turns out to be wrong can never destroy content
  * that was already there.
  */
-import { concatBytes, fromLatin1 } from "@app/tools/pdfTextEditor/pdfdoc/bytes";
-import type { RawPdf } from "@app/tools/pdfTextEditor/pdfdoc/raw";
+import {
+  concatBytes,
+  fromLatin1,
+} from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
+import type { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 
 export interface RevisionObject {
   num: number;
@@ -30,6 +33,19 @@ export function streamObject(
 
 export function plainObject(body: string): Uint8Array {
   return fromLatin1(body);
+}
+
+/**
+ * A number for a new object: above every object the file has and every one
+ * in `bodies`, so passes adding objects to one revision never collide.
+ */
+export function unusedObjectNumber(
+  pdf: RawPdf,
+  bodies: ReadonlyMap<number, string>,
+): number {
+  let highest = pdf.highestObjectNumber;
+  for (const num of bodies.keys()) highest = Math.max(highest, num);
+  return highest + 1;
 }
 
 /**

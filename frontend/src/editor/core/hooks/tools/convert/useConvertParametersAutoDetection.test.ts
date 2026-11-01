@@ -5,7 +5,7 @@
 
 import { describe, test, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
+import { useConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 
 describe("useConvertParameters - Auto Detection & Smart Conversion", () => {
   describe("Single File Detection", () => {

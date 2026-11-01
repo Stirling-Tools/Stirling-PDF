@@ -1,8 +1,8 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import { readFileSync } from "node:fs";
-import { uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
 
 // 4.3 "No standardised 'save PDF'". The editor only ever produced a download,
 // so the workbench kept the pre-edit bytes and the next tool ran on them. Save

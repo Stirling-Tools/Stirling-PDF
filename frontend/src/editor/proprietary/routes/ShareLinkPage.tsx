@@ -12,18 +12,18 @@ import {
   Title,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { useFileActions } from "@app/contexts/FileContext";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { alert } from "@app/components/toast";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { useFileActions } from "@editor/contexts/FileContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { alert } from "@editor/components/toast";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 import {
   downloadShareLink,
   fetchShareLinkMetadata,
   importShareLinkToWorkbench,
   ShareLinkMetadata,
-} from "@app/services/shareLinkImport";
+} from "@editor/services/shareLinkImport";
 
 type ShareLinkStatus =
   | "loading"

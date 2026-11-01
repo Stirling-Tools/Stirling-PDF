@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { UsersDirectory } from "@portal/components/users/UsersDirectory";
-import type { Member } from "@portal/api/users";
-import type { Team } from "@portal/api/teams";
-import type { UsersCapabilities } from "@portal/api/usersCapabilities";
+import { UsersDirectory } from "@processor/components/users/UsersDirectory";
+import type { Member } from "@processor/api/users";
+import type { Team } from "@processor/api/teams";
+import type { UsersCapabilities } from "@processor/api/usersCapabilities";
 
 /** Self-hosted org-admin: the full action set. */
 const FULL_CAPS: UsersCapabilities = {

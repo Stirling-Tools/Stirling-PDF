@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { recordToolUsage } from "@app/api/toolRecommendations";
+import { recordToolUsage } from "@editor/api/toolRecommendations";
 import {
   getCompletionCount,
   getDocumentToolChain,
   notifyToolCompleted,
   resetToolUsageTrackerForTests,
   subscribeToToolCompletions,
-} from "@app/services/toolUsageTracker";
-import type { FileId } from "@app/types/file";
-import type { ToolId } from "@app/types/toolId";
+} from "@editor/services/toolUsageTracker";
+import type { FileId } from "@editor/types/file";
+import type { ToolId } from "@editor/types/toolId";
 
-vi.mock("@app/api/toolRecommendations", () => ({
+vi.mock("@editor/api/toolRecommendations", () => ({
   recordToolUsage: vi.fn().mockResolvedValue(undefined),
 }));
 

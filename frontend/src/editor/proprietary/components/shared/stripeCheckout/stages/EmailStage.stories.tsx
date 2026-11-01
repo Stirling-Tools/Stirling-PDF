@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { EmailStage } from "@app/components/shared/stripeCheckout/stages/EmailStage";
+import { EmailStage } from "@editor/components/shared/stripeCheckout/stages/EmailStage";
 
 /**
  * The email-collection step of the Stripe checkout flow.

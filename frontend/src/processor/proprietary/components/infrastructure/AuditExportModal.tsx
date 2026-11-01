@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Checkbox, Modal, RadioGroup } from "@app/ui";
-import { exportAuditLog } from "@portal/api/infrastructure";
+import { Button, Checkbox, Modal, RadioGroup } from "@editor/ui";
+import { exportAuditLog } from "@processor/api/infrastructure";
 
 interface AuditExportModalProps {
   open: boolean;

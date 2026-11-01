@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useCookieConsent } from "@app/hooks/useCookieConsent";
-import { setScarfConfig, firePixel } from "@app/utils/scarfTracking";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useCookieConsent } from "@editor/hooks/useCookieConsent";
+import { setScarfConfig, firePixel } from "@editor/utils/scarfTracking";
 
 /**
  * Hook for initializing Scarf tracking

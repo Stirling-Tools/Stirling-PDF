@@ -1,12 +1,12 @@
 import type { Page } from "@playwright/test";
 import path from "path";
 import fs from "fs";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import {
   uploadFiles,
   switchToEditorIfViewerMode,
   runToolAndWaitForReview,
-} from "@app/tests/helpers/ui-helpers";
+} from "@editor/tests/helpers/ui-helpers";
 
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");

@@ -1,15 +1,15 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { useSigningSessionController } from "@app/hooks/signing/useSigningSessionController";
+import { useSigningSessionController } from "@editor/hooks/signing/useSigningSessionController";
 import type {
   SignRequestSummary,
   SessionDetail,
   SessionSummary,
   SigningParticipantPreview,
-} from "@app/types/signingSession";
+} from "@editor/types/signingSession";
 
-import { hasUnseenSigningActivity } from "@app/services/signingSeenStore";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { hasUnseenSigningActivity } from "@editor/services/signingSeenStore";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
@@ -21,24 +21,24 @@ const mocks = vi.hoisted(() => ({
   signRequests: [] as SignRequestSummary[],
   mySessions: [] as SessionSummary[],
 }));
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ user: { id: mocks.accountId } }),
 }));
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: mocks.get, post: mocks.post },
 }));
-vi.mock("@app/components/toast", () => ({ alert: mocks.alert }));
-vi.mock("@app/services/fileStorage", () => ({ fileStorage: {} }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/components/toast", () => ({ alert: mocks.alert }));
+vi.mock("@editor/services/fileStorage", () => ({ fileStorage: {} }));
+vi.mock("@editor/contexts/FileContext", () => ({
   useFileActions: () => ({ actions: {} }),
 }));
-vi.mock("@app/hooks/tools/shared/useViewScopedFiles", () => ({
+vi.mock("@editor/hooks/tools/shared/useViewScopedFiles", () => ({
   useViewScopedFiles: () => [],
 }));
-vi.mock("@app/contexts/SigningOverlayContext", () => ({
+vi.mock("@editor/contexts/SigningOverlayContext", () => ({
   useSigningOverlay: () => ({ setOverlay: mocks.setOverlay }),
 }));
-vi.mock("@app/hooks/signing/useSigningSessions", () => ({
+vi.mock("@editor/hooks/signing/useSigningSessions", () => ({
   useSigningSessions: () => ({
     signRequests: mocks.signRequests,
     mySessions: mocks.mySessions,

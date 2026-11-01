@@ -1,4 +1,4 @@
-import type { SuperSearchScope } from "@app/hooks/useSuperSearch";
+import type { SuperSearchScope } from "@editor/hooks/useSuperSearch";
 
 export interface SuperSearchPrefixToken {
   scopeId: string;

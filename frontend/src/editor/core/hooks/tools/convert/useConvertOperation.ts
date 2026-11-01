@@ -1,17 +1,17 @@
 import { useCallback, useMemo } from "react";
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import { useTranslation } from "react-i18next";
 import {
   validateConvertParameters,
   ConvertParameters,
   defaultParameters,
-} from "@app/hooks/tools/convert/useConvertParameters";
-import { createFileFromApiResponse } from "@app/utils/fileResponseUtils";
+} from "@editor/hooks/tools/convert/useConvertParameters";
+import { createFileFromApiResponse } from "@editor/utils/fileResponseUtils";
 import {
   useToolOperation,
   defineCustomTool,
   CustomProcessorResult,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   getEndpointUrl,
   getEndpointName,
@@ -19,19 +19,19 @@ import {
   isWebFormat,
   isOfficeFormat,
   usesOfficeEngine,
-} from "@app/utils/convertUtils";
+} from "@editor/utils/convertUtils";
 import {
   isToolEndpoint,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
+} from "@editor/hooks/tools/shared/toolApiMapping";
 import {
   CONVERSION_ENDPOINTS,
   COLOR_TYPES,
   OUTPUT_OPTIONS,
   FIT_OPTIONS,
-} from "@app/constants/convertConstants";
-import { useToolCloudStatus } from "@app/hooks/useToolCloudStatus";
+} from "@editor/constants/convertConstants";
+import { useToolCloudStatus } from "@editor/hooks/useToolCloudStatus";
 
 // Static function that can be used by both the hook and automation executor
 export const shouldProcessFilesSeparately = (
@@ -293,6 +293,11 @@ export const convertProcessor = async (
   if (!endpoint) {
     throw new Error("Unsupported conversion format");
   }
+  // PDF to text and to RTF share a URL, so desktop routing needs the key itself.
+  const requestConfig = {
+    responseType: "blob" as const,
+    endpointName: getEndpointName(parameters.fromExtension, actualToExtension),
+  };
 
   // Convert-specific routing logic: decide batch vs individual processing
   // For PDF/X, we want to treat it similar to PDF/A (separate processing)
@@ -306,9 +311,11 @@ export const convertProcessor = async (
     for (const file of selectedFiles) {
       try {
         const formData = buildConvertFormData(parameters, [file]);
-        const response = await apiClient.post(endpoint, formData, {
-          responseType: "blob",
-        });
+        const response = await apiClient.post(
+          endpoint,
+          formData,
+          requestConfig,
+        );
 
         const convertedFile = createFileFromResponse(
           response.data,
@@ -325,9 +332,7 @@ export const convertProcessor = async (
   } else {
     // Batch processing for simple cases (image→PDF combine)
     const formData = buildConvertFormData(parameters, selectedFiles);
-    const response = await apiClient.post(endpoint, formData, {
-      responseType: "blob",
-    });
+    const response = await apiClient.post(endpoint, formData, requestConfig);
 
     const baseFilename =
       selectedFiles.length === 1 ? selectedFiles[0].name : "converted_files";

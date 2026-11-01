@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
-import { updateService, UpdateSummary } from "@app/services/updateService";
-import { useDesktopInstall } from "@app/hooks/useDesktopInstall";
+import { updateService, UpdateSummary } from "@editor/services/updateService";
+import { useDesktopInstall } from "@editor/hooks/useDesktopInstall";
 import {
   desktopUpdateService,
   type CanInstallResult,
-} from "@app/services/desktopUpdateService";
+} from "@editor/services/desktopUpdateService";
 
 const SNOOZE_KEY = "stirling-pdf-updater:snoozedUntil";
 const STARTUP_DELAY_MS = 15_000;

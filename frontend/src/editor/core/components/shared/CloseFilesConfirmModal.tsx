@@ -1,7 +1,7 @@
 import { Group, Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { Button } from "@editor/ui/Button";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 export interface CloseFileEntry {
   /** Stable key: two open files can share a name, their ids cannot. */

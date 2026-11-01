@@ -38,7 +38,7 @@ vi.mock("react-router-dom", () => ({
   useNavigate: vi.fn(() => vi.fn()),
 }));
 
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: vi.fn(() => ({
     config: {
       isAdmin: false,
@@ -47,31 +47,31 @@ vi.mock("@app/contexts/AppConfigContext", () => ({
   })),
 }));
 
-vi.mock("@app/contexts/ToolRegistryContext", () => ({
+vi.mock("@editor/contexts/ToolRegistryContext", () => ({
   useToolRegistry: vi.fn(() => ({
     allTools: {},
   })),
 }));
 
-vi.mock("@portal/contexts/TierContext", () => ({
+vi.mock("@processor/contexts/TierContext", () => ({
   useTier: vi.fn(() => ({
     tier: "pro",
   })),
 }));
 
 const mockOpenSettings = vi.fn();
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@processor/contexts/UIContext", () => ({
   useUI: vi.fn(() => ({
     openSettings: mockOpenSettings,
   })),
 }));
 
-vi.mock("@app/data/toolsTaxonomy", () => ({
+vi.mock("@editor/data/toolsTaxonomy", () => ({
   getToolUrlPath: vi.fn((id: string) => `/tools/${id}`),
   isComingSoonTool: vi.fn(() => false),
 }));
 
-vi.mock("@app/data/settingsSearchIndex", () => ({
+vi.mock("@editor/data/settingsSearchIndex", () => ({
   SETTINGS_SEARCH_INDEX: [
     {
       section: "email",
@@ -83,7 +83,7 @@ vi.mock("@app/data/settingsSearchIndex", () => ({
   ],
 }));
 
-vi.mock("@app/data/settingsSectionRegistry", () => ({
+vi.mock("@editor/data/settingsSectionRegistry", () => ({
   SETTINGS_SECTION_REGISTRY: [
     {
       key: "email",
@@ -95,12 +95,12 @@ vi.mock("@app/data/settingsSectionRegistry", () => ({
   ],
 }));
 
-vi.mock("@app/data/settingsContentSearch", () => ({
+vi.mock("@editor/data/settingsContentSearch", () => ({
   findSettingsContentMatch: vi.fn(() => null),
   buildMatchSnippet: vi.fn(() => ""),
 }));
 
-vi.mock("@app/data/processorSearchIndex", () => ({
+vi.mock("@editor/data/processorSearchIndex", () => ({
   PROCESSOR_SEARCH_INDEX: [
     {
       id: "users",
@@ -144,42 +144,42 @@ vi.mock("@app/data/processorSearchIndex", () => ({
 }));
 
 // The roster is fetched through the flavor-resolved usersBackend (the same
-// path the shared users query uses), not @portal/api/users directly.
-vi.mock("@app/portal/usersBackend", () => ({
+// path the shared users query uses), not @processor/api/users directly.
+vi.mock("@editor/portal/usersBackend", () => ({
   usersBackend: {
     fetchUsers: vi.fn(),
   },
 }));
 
 // Keep the real (pure) assemblePolicies; only the network fetchers are mocked.
-vi.mock("@portal/api/policies", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@portal/api/policies")>()),
+vi.mock("@processor/api/policies", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@processor/api/policies")>()),
   fetchPoliciesList: vi.fn(),
   fetchPolicyRuns: vi.fn(),
 }));
 
-vi.mock("@portal/api/pipelines", () => ({
+vi.mock("@processor/api/pipelines", () => ({
   fetchPipelines: vi.fn(),
   fetchPolicyPermissions: () => Promise.resolve({ canManagePolicies: true }),
 }));
 
-vi.mock("@portal/api/sources", () => ({
+vi.mock("@processor/api/sources", () => ({
   fetchSources: vi.fn(),
 }));
 
-import type { CatalogueEntry } from "@portal/api/policies";
-import { fetchPoliciesList, fetchPolicyRuns } from "@portal/api/policies";
-import type { PipelineView } from "@portal/api/pipelines";
-import { fetchPipelines } from "@portal/api/pipelines";
-import { fetchSources } from "@portal/api/sources";
-import type { Member, UsersResponse } from "@portal/api/users";
-import { usersBackend } from "@app/portal/usersBackend";
+import type { CatalogueEntry } from "@processor/api/policies";
+import { fetchPoliciesList, fetchPolicyRuns } from "@processor/api/policies";
+import type { PipelineView } from "@processor/api/pipelines";
+import { fetchPipelines } from "@processor/api/pipelines";
+import { fetchSources } from "@processor/api/sources";
+import type { Member, UsersResponse } from "@processor/api/users";
+import { usersBackend } from "@editor/portal/usersBackend";
 import {
   rankDocsResults,
   rankPortalPipelineResults,
   rankPortalPolicyResults,
-} from "@portal/search/entitySearch";
-import { usePortalSearchResults } from "@portal/hooks/usePortalSearchResults";
+} from "@processor/search/entitySearch";
+import { usePortalSearchResults } from "@processor/hooks/usePortalSearchResults";
 
 function makePolicyEntry(overrides?: Partial<CatalogueEntry>): CatalogueEntry {
   return {

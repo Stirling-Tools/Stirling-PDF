@@ -3,8 +3,8 @@ import { waitFor } from "@testing-library/react";
 import type {
   LocalProcessingFile,
   LocalProcessingFolder,
-} from "@app/services/localProcessingFolderStorage";
-import type { DiskFileEntry } from "@app/services/localFolderContents";
+} from "@editor/services/localProcessingFolderStorage";
+import type { DiskFileEntry } from "@editor/services/localFolderContents";
 
 const mocks = vi.hoisted(() => ({
   folders: new Map<string, LocalProcessingFolder>(),
@@ -30,20 +30,20 @@ const mocks = vi.hoisted(() => ({
   original: vi.fn(),
   reconcile: vi.fn(),
 }));
-vi.mock("@app/services/localProcessingOriginals", () => ({
+vi.mock("@editor/services/localProcessingOriginals", () => ({
   reconcileLocalProcessingOriginals: mocks.reconcile,
 }));
 vi.mock("@tauri-apps/plugin-fs", () => ({ remove: mocks.remove }));
-vi.mock("@app/services/localFolderStorage", async (importOriginal) => ({
+vi.mock("@editor/services/localFolderStorage", async (importOriginal) => ({
   ...(await importOriginal<
-    typeof import("@app/services/localFolderStorage")
+    typeof import("@editor/services/localFolderStorage")
   >()),
   localFolderStorage: {
     getAllFolders: async () =>
       mocks.mountedDirectories.map((directory) => ({ directory })),
   },
 }));
-vi.mock("@app/services/localProcessingFolderStorage", () => ({
+vi.mock("@editor/services/localProcessingFolderStorage", () => ({
   localProcessingFolderStorage: {
     folders: async () => [...mocks.folders.values()],
     folder: async (id: string) => mocks.folders.get(id),
@@ -63,7 +63,7 @@ vi.mock("@app/services/localProcessingFolderStorage", () => ({
     },
   },
 }));
-vi.mock("@app/services/serverAutomationSession", () => ({
+vi.mock("@editor/services/serverAutomationSession", () => ({
   getServerAutomationSession: async () => {
     if (!mocks.connected) throw new Error("Sign in");
     return { key: "owner", baseUrl: "https://connected.test" };
@@ -72,9 +72,9 @@ vi.mock("@app/services/serverAutomationSession", () => ({
     if (!mocks.connected || key !== "owner") throw new Error("Sign in");
   },
 }));
-vi.mock("@app/services/localFolderContents", async (importOriginal) => ({
+vi.mock("@editor/services/localFolderContents", async (importOriginal) => ({
   ...(await importOriginal<
-    typeof import("@app/services/localFolderContents")
+    typeof import("@editor/services/localFolderContents")
   >()),
   listDirectory: async () => ({
     files: [{ ...mocks.disk }, ...mocks.otherDiskFiles],
@@ -84,12 +84,12 @@ vi.mock("@app/services/localFolderContents", async (importOriginal) => ({
     new File([mocks.diskContent], "a.pdf", { type: "application/pdf" }),
   writeDiskFile: vi.fn(),
 }));
-vi.mock("@app/services/serverPipeline", () => ({
+vi.mock("@editor/services/serverPipeline", () => ({
   submitServerPipeline: mocks.submit,
   waitForServerPipeline: mocks.wait,
   downloadServerPipelineOutput: mocks.download,
 }));
-vi.mock("@app/services/localProcessingDelivery", () => ({
+vi.mock("@editor/services/localProcessingDelivery", () => ({
   archiveProcessingInput: mocks.archive,
   replaceProcessingFile: mocks.replace,
   restoreProcessingFile: mocks.restore,
@@ -111,7 +111,7 @@ import {
   sweepLocalProcessingFolder,
   scanLocalProcessingFolders,
   revertLocalProcessingFile,
-} from "@app/services/localProcessingFolders";
+} from "@editor/services/localProcessingFolders";
 
 const request = {
   directory: "/downloads",

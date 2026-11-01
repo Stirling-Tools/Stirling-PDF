@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Banner } from "@app/ui/Banner";
-import { Icon } from "@app/ui/Icon";
+import { Banner } from "@editor/ui/Banner";
+import { Icon } from "@editor/ui/Icon";
 
 interface NoReductionNoticeProps {
   unreduced: number;

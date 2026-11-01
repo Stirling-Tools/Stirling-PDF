@@ -31,7 +31,8 @@ describe("native directory drops", () => {
   });
 
   it("passes the dropped DOM folder to the host and accepts only its matching reply", async () => {
-    const { directoryFromDrop } = await import("@app/services/directoryDrop");
+    const { directoryFromDrop } =
+      await import("@editor/services/directoryDrop");
     const data = dropped();
     const result = directoryFromDrop(data);
     const [message, objects] =
@@ -71,7 +72,8 @@ describe("native directory drops", () => {
   ])(
     "rejects invalid drops before contacting the host (%s, %s)",
     async (directory, count) => {
-      const { directoryFromDrop } = await import("@app/services/directoryDrop");
+      const { directoryFromDrop } =
+        await import("@editor/services/directoryDrop");
       await expect(
         directoryFromDrop(dropped(directory, count)),
       ).resolves.toBeNull();
@@ -81,7 +83,8 @@ describe("native directory drops", () => {
 
   it("releases the listener if the host cannot resolve the folder", async () => {
     vi.useFakeTimers();
-    const { directoryFromDrop } = await import("@app/services/directoryDrop");
+    const { directoryFromDrop } =
+      await import("@editor/services/directoryDrop");
     const result = directoryFromDrop(dropped());
     await vi.advanceTimersByTimeAsync(5000);
     await expect(result).resolves.toBeNull();

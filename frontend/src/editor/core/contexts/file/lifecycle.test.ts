@@ -1,13 +1,13 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
-import type { FileId } from "@app/types/file";
-import { createStirlingFile } from "@app/types/fileContext";
+import { FileLifecycleManager } from "@editor/contexts/file/lifecycle";
+import type { FileId } from "@editor/types/file";
+import { createStirlingFile } from "@editor/types/fileContext";
 import {
   clearPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
 describe("FileLifecycleManager", () => {
   afterEach(clearPdfAccess);

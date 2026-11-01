@@ -1,5 +1,5 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from "react";
-import "@app/ui/Input.css";
+import "@editor/ui/Input.css";
 
 export type InputSize = "sm" | "md";
 

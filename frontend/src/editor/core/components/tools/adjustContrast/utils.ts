@@ -1,4 +1,4 @@
-import { AdjustContrastParameters } from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
+import { AdjustContrastParameters } from "@editor/hooks/tools/adjustContrast/useAdjustContrastParameters";
 
 export function applyAdjustmentsToCanvas(
   src: HTMLCanvasElement,

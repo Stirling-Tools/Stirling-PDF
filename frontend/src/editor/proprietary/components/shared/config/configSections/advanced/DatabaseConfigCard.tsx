@@ -1,5 +1,5 @@
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
   NumberInput,
@@ -9,12 +9,12 @@ import {
   TextInput,
   Select,
 } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import EditableSecretField from "@app/components/shared/EditableSecretField";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import type { DatasourceSettingsData } from "@app/components/shared/config/configSections/advanced/advancedSettings";
-import type { AdvancedCardProps } from "@app/components/shared/config/configSections/advanced/advancedCardProps";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
+import EditableSecretField from "@editor/components/shared/EditableSecretField";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import type { DatasourceSettingsData } from "@editor/components/shared/config/configSections/advanced/advancedSettings";
+import type { AdvancedCardProps } from "@editor/components/shared/config/configSections/advanced/advancedCardProps";
 
 /**
  * The `system.datasource` block, previously its own nav row. The password stays

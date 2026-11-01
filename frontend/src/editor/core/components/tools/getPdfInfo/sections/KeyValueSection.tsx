@@ -1,6 +1,6 @@
 import React from "react";
-import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
-import KeyValueList from "@app/components/tools/getPdfInfo/shared/KeyValueList";
+import SectionBlock from "@editor/components/tools/getPdfInfo/shared/SectionBlock";
+import KeyValueList from "@editor/components/tools/getPdfInfo/shared/KeyValueList";
 
 interface KeyValueSectionProps {
   title: string;

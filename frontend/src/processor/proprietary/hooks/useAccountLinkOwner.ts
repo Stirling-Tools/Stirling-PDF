@@ -1,4 +1,4 @@
-import { useAuth } from "@app/auth";
+import { useAuth } from "@editor/auth";
 
 export function useAccountLinkOwner(): boolean {
   const { user, isAdmin, loading } = useAuth();

@@ -1,11 +1,11 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { createPortal } from "react-dom";
 import { FocusTrap } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { useIsOverflowing } from "@app/hooks/useIsOverflowing";
-import "@app/ui/Modal.css";
+import { Button } from "@editor/ui/Button";
+import { useIsOverflowing } from "@editor/hooks/useIsOverflowing";
+import "@editor/ui/Modal.css";
 
 export type ModalWidth = "sm" | "md" | "lg" | "xl";
 

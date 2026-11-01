@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { isUpdatePopupAllowed } from "@app/components/shared/updatePopupGate";
+import { isUpdatePopupAllowed } from "@editor/components/shared/updatePopupGate";
 
 describe("isUpdatePopupAllowed", () => {
   it("returns false until config has loaded", () => {

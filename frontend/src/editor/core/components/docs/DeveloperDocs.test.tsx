@@ -13,7 +13,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { DeveloperDocs } from "@app/components/docs/DeveloperDocs";
+import { DeveloperDocs } from "@editor/components/docs/DeveloperDocs";
 
 const renderDocs = (ui: ReactElement) =>
   render(

@@ -2,14 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 const props = vi.hoisted(() => ({ seen: {} as Record<string, unknown> }));
-vi.mock("@app/portal/views/Usage", () => ({
+vi.mock("@editor/portal/views/Usage", () => ({
   Usage: (value: Record<string, unknown>) => {
     props.seen = value;
     return <div data-testid="usage" />;
   },
 }));
-import { BillingSettingsSection } from "@app/portal/components/settings/BillingSettingsSection";
-import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { BillingSettingsSection } from "@editor/portal/components/settings/BillingSettingsSection";
+import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
 
 describe("PortalBillingGate — SaaS", () => {
   it("renders hosted billing without any self-hosted renewal or connection actions", () => {

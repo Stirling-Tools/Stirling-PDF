@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
+import { S3ConnectionPicker } from "@processor/components/sources/S3ConnectionPicker";
 
 const meta = {
   title: "Portal/Sources/S3ConnectionPicker",

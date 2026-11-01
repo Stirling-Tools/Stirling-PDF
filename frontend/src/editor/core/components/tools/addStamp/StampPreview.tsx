@@ -1,17 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
+import { QRCodeSVG } from "qrcode.react";
+import { Text } from "@mantine/core";
+import {
+  AddStampParameters,
+  isQrContentWithinLimit,
+} from "@editor/components/tools/addStamp/useAddStampParameters";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import { useThumbnailGeneration } from "@editor/hooks/useThumbnailGeneration";
 import {
   A4_ASPECT_RATIO,
   getFirstSelectedPage,
   getFontFamily,
   computeStampPreviewStyle,
   getAlphabetPreviewScale,
-} from "@app/components/tools/addStamp/StampPreviewUtils";
-import styles from "@app/components/tools/addStamp/StampPreview.module.css";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { Button } from "@app/ui/Button";
+} from "@editor/components/tools/addStamp/StampPreviewUtils";
+import styles from "@editor/components/tools/addStamp/StampPreview.module.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 
 type Props = {
@@ -426,6 +431,43 @@ export default function StampPreview({
             {itemHandles}
           </div>
         )}
+
+        {parameters.stampType === "qr" &&
+          isQrContentWithinLimit(parameters.stampText) && (
+            <div
+              className={`${styles.stampItem} ${showQuickGrid ? styles.stampItemGridMode : styles.stampItemDraggable}`}
+              style={style.item}
+              onPointerDown={(e) => handlePointerDown(e, "move")}
+              data-user-content-preview=""
+            >
+              <QRCodeSVG
+                value={parameters.stampText}
+                level="M"
+                marginSize={4}
+                className={styles.stampImage}
+                title={t("AddStampRequest.qrCode", "QR Code")}
+              />
+              {itemHandles}
+            </div>
+          )}
+
+        {/* Over-limit QR content renders no code, so say why instead of
+            leaving an empty preview; the setup-step error is collapsed away */}
+        {parameters.stampType === "qr" &&
+          parameters.stampText.trim().length > 0 &&
+          !isQrContentWithinLimit(parameters.stampText) && (
+            <div
+              className={styles.qrOverLimitNotice}
+              data-qr-over-limit-notice=""
+            >
+              <Text c="var(--c-danger)" size="sm" ta="center">
+                {t(
+                  "AddStampRequest.qrContentTooLong",
+                  "Too long to fit in a QR code. Shorten the content.",
+                )}
+              </Text>
+            </div>
+          )}
 
         {/* Quick position overlay grid */}
         {showQuickGrid && (

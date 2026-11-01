@@ -1,5 +1,5 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { openRecents, uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openRecents, uploadFiles } from "@editor/tests/helpers/ui-helpers";
 import path from "path";
 
 test.use({ filesViewMode: "grid" });

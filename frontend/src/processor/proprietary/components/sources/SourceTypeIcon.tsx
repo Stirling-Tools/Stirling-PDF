@@ -1,4 +1,4 @@
-import { BrandMark } from "@portal/components/BrandMarks";
+import { BrandMark } from "@processor/components/BrandMarks";
 
 /**
  * Source-type mark for the sources table and pickers: the connector's real

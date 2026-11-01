@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Stack, Text, Select, Alert, Checkbox, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import apiClient from "@app/services/apiClient";
-import { Button } from "@app/ui/Button";
-import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
-import { usePdfSignatureDetection } from "@app/hooks/usePdfSignatureDetection";
-import { StirlingFile } from "@app/types/fileContext";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import apiClient from "@editor/services/apiClient";
+import { Button } from "@editor/ui/Button";
+import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
+import { usePdfSignatureDetection } from "@editor/hooks/usePdfSignatureDetection";
+import { StirlingFile } from "@editor/types/fileContext";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface ConvertToPdfUaSettingsProps {
   parameters: ConvertParameters;

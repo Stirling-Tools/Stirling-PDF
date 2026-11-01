@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { fileOpenService } from "@app/services/fileOpenService";
-import { useMultiWindowSupported } from "@app/hooks/useMultiWindowSupported";
+import { fileOpenService } from "@editor/services/fileOpenService";
+import { useMultiWindowSupported } from "@editor/hooks/useMultiWindowSupported";
 
 /**
  * Desktop-only keyboard shortcut: Ctrl+N (Cmd+N on macOS) opens an empty new

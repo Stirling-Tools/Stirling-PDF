@@ -9,16 +9,16 @@ import {
   Text,
   Textarea,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { Dropzone } from "@mantine/dropzone";
-import { Icon } from "@app/ui/Icon";
-import { Z_INDEX_AUTOMATE_MODAL } from "@app/styles/zIndex";
+import { Icon } from "@editor/ui/Icon";
+import { Z_INDEX_AUTOMATE_MODAL } from "@editor/styles/zIndex";
 import {
   ParsedAutomationImport,
   parseAutomationFile,
-} from "@app/utils/automationConverter";
-import { ToolRegistry } from "@app/data/toolsTaxonomy";
-import type { ImportableAutomation } from "@app/hooks/tools/automate/useSavedAutomations";
+} from "@editor/utils/automationConverter";
+import { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import type { ImportableAutomation } from "@editor/hooks/tools/automate/useSavedAutomations";
 
 interface AutomationImportModalProps {
   opened: boolean;

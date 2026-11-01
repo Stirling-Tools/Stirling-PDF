@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import MobileUploadModal from "@app/components/shared/MobileUploadModal";
+import MobileUploadModal from "@editor/components/shared/MobileUploadModal";
 
 const meta: Meta<typeof MobileUploadModal> = {
   title: "Shared/MobileUploadModal",

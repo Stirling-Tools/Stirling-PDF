@@ -18,7 +18,6 @@ on:
       - ".github/workflows/stale-prs.yml"
       - ".github/scripts/*.ts"
       - ".github/workflows/pr-turn-labels.yml"
-      - ".github/workflows/pr-review-events.yml"
       - ".github/scripts/package.json"
       - ".github/scripts/package-lock.json"
       - ".github/scripts/tsconfig.json"

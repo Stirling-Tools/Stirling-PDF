@@ -313,11 +313,10 @@ public class SecurityConfiguration {
                     exceptions ->
                             exceptions.defaultAuthenticationEntryPointFor(
                                     jwtAuthenticationEntryPoint,
-                                    request -> {
-                                        String contextPath = request.getContextPath();
-                                        String requestURI = request.getRequestURI();
-                                        return requestURI.startsWith(contextPath + "/api/");
-                                    }));
+                                    request ->
+                                            RequestUriUtils.isApiRequest(
+                                                    request.getContextPath(),
+                                                    request.getRequestURI())));
 
             http.logout(
                     logout ->

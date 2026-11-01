@@ -1,8 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { FileOrigin } from "@app/components/filesPage/fileOrigin";
+import { Icon } from "@editor/ui/Icon";
+import { FileOrigin } from "@editor/components/filesPage/fileOrigin";
 
 interface FileOriginBadgeProps {
   origin: FileOrigin;

@@ -1,4 +1,4 @@
-import { supabase } from "@app/auth/supabase";
+import { supabase } from "@editor/auth/supabase";
 
 interface DeleteAccountOptions {
   notifyUser?: boolean;

@@ -10,7 +10,7 @@ Refer to the various `tsconfig.*.json` files to see the specific path alias orde
 
 The vast majority of the code is in the `src/editor/core` folder, which is the open-source app.
 Other builds, such as the desktop app, use `src/editor/core` as the base layer, and then override various files to change behaviour.
-If an import is `from '@app/a/b'`, this will refer to `src/editor/core/a/b.ts` in the core build of the app, but may refer to `src/editor/desktop/a/b.ts` in the desktop app if that file exists.
+If an import is `from '@editor/a/b'`, this will refer to `src/editor/core/a/b.ts` in the core build of the app, but may refer to `src/editor/desktop/a/b.ts` in the desktop app if that file exists.
 
 It is important to try to minimise the amount of overridden code in the app.
 Often, just one function needs to behave differently in a specific mode.
@@ -27,7 +27,7 @@ In cases like this, instead of duplicating the entire file, create a new extensi
 
 ```ts
 // core/file1.ts
-import { f2 } from '@app/file1Extensions';
+import { f2 } from '@editor/file1Extensions';
 
 function f1() { /* ... */ }
 function f3() { /* ... */ }
@@ -90,7 +90,7 @@ export function getToolbarButtons(): ToolbarButton[] {
 
 ```ts
 // desktop/toolbarExtensions.ts
-import { type ToolbarButton } from '@core/toolbarExtensions';
+import { type ToolbarButton } from '@editor-core/toolbarExtensions';
 export { type ToolbarButton };
 
 export function getToolbarButtons(): ToolbarButton[] {
@@ -102,7 +102,7 @@ export function getToolbarButtons(): ToolbarButton[] {
 
 ```tsx
 // core/Toolbar.tsx
-import { getToolbarButtons } from '@app/toolbarExtensions';
+import { getToolbarButtons } from '@editor/toolbarExtensions';
 
 export function Toolbar() {
   return (
@@ -123,8 +123,8 @@ This pattern works well for things like menu items or toolbar actions - anything
 
 ### Import aliases
 
-In general, all imports for app code should come via `@app` because it allows for other builds of the app to override behaviour if necessary.
-The only time that it is beneficial to import via a specific folder (e.g. `@core`) is when you want to reduce duplication **in the file you are overriding**. For example:
+In general, all imports for app code should come via `@editor` because it allows for other builds of the app to override behaviour if necessary.
+The only time that it is beneficial to import via a specific folder (e.g. `@editor-core`) is when you want to reduce duplication **in the file you are overriding**. For example:
 
 ```ts
 // core/file2.ts
@@ -139,7 +139,7 @@ export function f1(props: MyProps) { /* ... */ } // Original core implementation
 ```ts
 // desktop/file2.ts
 
-import { type MyProps } from '@core/file2';
+import { type MyProps } from '@editor-core/file2';
 export { type MyProps }; // Re-export so anything importing file2 can still access MyProps
 
 export function f1(props: MyProps) { /* ... */ } // Custom desktop implementation

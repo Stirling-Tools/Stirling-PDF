@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AuditExportSection from "@app/components/shared/config/configSections/audit/AuditExportSection";
+import AuditExportSection from "@editor/components/shared/config/configSections/audit/AuditExportSection";
 
 const meta = {
   title: "Config/AuditExportSection",

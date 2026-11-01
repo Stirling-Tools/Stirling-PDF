@@ -16,7 +16,7 @@ import {
   setActivePosthog,
   trackPdfUploaded,
   trackEditorOperation,
-} from "@app/services/analytics";
+} from "@editor/services/analytics";
 
 function pdf(name: string, size = 100): File {
   return new File([new Uint8Array(size)], name, { type: "application/pdf" });

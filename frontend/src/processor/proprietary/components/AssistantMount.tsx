@@ -1,5 +1,5 @@
-import { AssistantButton } from "@portal/components/AssistantButton";
-import { AssistantPanel } from "@portal/components/AssistantPanel";
+import { AssistantButton } from "@processor/components/AssistantButton";
+import { AssistantPanel } from "@processor/components/AssistantPanel";
 
 /**
  * Mounts the floating AI assistant (blob button + slide-in panel). A flavor seam:

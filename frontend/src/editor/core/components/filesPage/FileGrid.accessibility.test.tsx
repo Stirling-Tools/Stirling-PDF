@@ -2,9 +2,9 @@ import type { ComponentProps } from "react";
 import { render, screen, within } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { describe, expect, it, vi } from "vitest";
-import { FileGrid } from "@app/components/filesPage/FileGrid";
-import { FileContextProvider } from "@app/contexts/FileContext";
-import { createNewStirlingFileStub } from "@app/types/fileContext";
+import { FileGrid } from "@editor/components/filesPage/FileGrid";
+import { FileContextProvider } from "@editor/contexts/FileContext";
+import { createNewStirlingFileStub } from "@editor/types/fileContext";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -16,7 +16,7 @@ vi.mock("react-i18next", () => ({
     },
   }),
 }));
-vi.mock("@app/hooks/useLazyThumbnail", () => ({
+vi.mock("@editor/hooks/useLazyThumbnail", () => ({
   useLazyThumbnail: () => undefined,
   useDiskThumbnail: () => undefined,
 }));

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import FlattenSettings from "@app/components/tools/flatten/FlattenSettings";
-import { FlattenParameters } from "@app/hooks/tools/flatten/useFlattenParameters";
+import FlattenSettings from "@editor/components/tools/flatten/FlattenSettings";
+import { FlattenParameters } from "@editor/hooks/tools/flatten/useFlattenParameters";
 
 const buildParameters = (
   overrides: Partial<FlattenParameters> = {},

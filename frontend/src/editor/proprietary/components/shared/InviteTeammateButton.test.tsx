@@ -3,21 +3,23 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import UserSelector from "@app/components/shared/UserSelector";
-import { fetchUsers } from "@app/api/users";
-import { qk } from "@app/query/keys";
+import UserSelector from "@editor/components/shared/UserSelector";
+import { fetchUsers } from "@editor/api/users";
+import { qk } from "@editor/query/keys";
 
 const auth = vi.hoisted(() => ({
   isAdmin: true,
   isTeamLeader: false,
   isAnonymous: false,
 }));
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ ...auth, loading: false, user: { id: "1" } }),
 }));
-vi.mock("@app/contexts/SaaSTeamContext", () => ({ useSaaSTeam: () => auth }));
-vi.mock("@app/api/users", () => ({ fetchUsers: vi.fn() }));
-vi.mock("@portal/components/users/InviteTeammateFlow", () => ({
+vi.mock("@editor/contexts/SaaSTeamContext", () => ({
+  useSaaSTeam: () => auth,
+}));
+vi.mock("@editor/api/users", () => ({ fetchUsers: vi.fn() }));
+vi.mock("@processor/components/users/InviteTeammateFlow", () => ({
   default: ({
     initialValue,
     onClose,

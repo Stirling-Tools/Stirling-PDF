@@ -1,25 +1,25 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TextInput, Tooltip } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import "@app/tools/pdfTextEditor/components/FindBar.css";
-import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextCommand";
-import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
+import { Icon } from "@editor/ui/Icon";
+import "@editor/tools/pdfTextEditor/components/FindBar.css";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import {
   findMatches,
   replaceMatches,
-} from "@app/tools/pdfTextEditor/util/textMatching";
+} from "@editor/tools/pdfTextEditor/util/textMatching";
 import type {
   MatchOptions,
   TextMatch,
-} from "@app/tools/pdfTextEditor/util/textMatching";
-import { ensureAllPagesRead } from "@app/tools/pdfTextEditor/hooks/useDocumentLoader";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
+} from "@editor/tools/pdfTextEditor/util/textMatching";
+import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type {
   PageSnapshot,
   TextRunSnapshot,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
 
 interface FindBarProps {
   store: EditorStore;

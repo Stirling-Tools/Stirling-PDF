@@ -12,10 +12,13 @@
  *    paths (e.g. "/api/v1/general/merge-pdfs").
  */
 
-import { AutomationConfig, AutomationOperation } from "@app/types/automation";
-import { ToolRegistry } from "@app/data/toolsTaxonomy";
-import { downloadFile } from "@app/services/downloadService";
-import { ToolId } from "@app/types/toolId";
+import {
+  AutomationConfig,
+  AutomationOperation,
+} from "@editor/types/automation";
+import { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { downloadFile } from "@editor/services/downloadService";
+import { ToolId } from "@editor/types/toolId";
 
 /**
  * Pipeline configuration format used by folder scanning.

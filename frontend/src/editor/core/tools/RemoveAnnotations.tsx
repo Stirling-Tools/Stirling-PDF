@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import RemoveAnnotationsSettings from "@app/components/tools/removeAnnotations/RemoveAnnotationsSettings";
-import { useRemoveAnnotationsParameters } from "@app/hooks/tools/removeAnnotations/useRemoveAnnotationsParameters";
-import { useRemoveAnnotationsOperation } from "@app/hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useRemoveAnnotationsTips } from "@app/components/tooltips/useRemoveAnnotationsTips";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import RemoveAnnotationsSettings from "@editor/components/tools/removeAnnotations/RemoveAnnotationsSettings";
+import { useRemoveAnnotationsParameters } from "@editor/hooks/tools/removeAnnotations/useRemoveAnnotationsParameters";
+import { useRemoveAnnotationsOperation } from "@editor/hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useRemoveAnnotationsTips } from "@editor/components/tooltips/useRemoveAnnotationsTips";
 
 const RemoveAnnotations = (props: BaseToolProps) => {
   const { t } = useTranslation();

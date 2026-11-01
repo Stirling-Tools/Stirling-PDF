@@ -14,7 +14,7 @@ import {
   scaleColumnEdges,
   scaleRowEdges,
   MIN_TRACK,
-} from "@app/tools/pdfTextEditor/util/tableGeometry";
+} from "@editor/tools/pdfTextEditor/util/tableGeometry";
 
 describe("tableGeometry", () => {
   it("builds uniform column edges", () => {

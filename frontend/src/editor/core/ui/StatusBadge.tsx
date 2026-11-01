@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import "@app/ui/StatusBadge.css";
+import "@editor/ui/StatusBadge.css";
 
 export type StatusTone =
   | "neutral"

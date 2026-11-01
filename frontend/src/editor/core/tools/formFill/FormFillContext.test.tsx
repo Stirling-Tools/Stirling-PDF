@@ -9,17 +9,17 @@ import {
   FormFillProvider,
   useFormFill,
   useAllFormValues,
-} from "@app/tools/formFill/FormFillContext";
-import type { FieldEditResult } from "@app/tools/formFill/types";
+} from "@editor/tools/formFill/FormFillContext";
+import type { FieldEditResult } from "@editor/tools/formFill/types";
 
 const applyFieldEdits = vi.fn();
 const fetchFields = vi.fn();
 
-vi.mock("@app/tools/formFill/formApi", () => ({
+vi.mock("@editor/tools/formFill/formApi", () => ({
   applyFieldEdits: (...args: unknown[]) => applyFieldEdits(...args),
 }));
 // Defined inside each factory: vi.mock is hoisted above any module-level binding.
-vi.mock("@app/tools/formFill/providers/PdfBoxFormProvider", () => ({
+vi.mock("@editor/tools/formFill/providers/PdfBoxFormProvider", () => ({
   PdfBoxFormProvider: class {
     fetchFields(...args: unknown[]) {
       return fetchFields(...args);
@@ -29,7 +29,7 @@ vi.mock("@app/tools/formFill/providers/PdfBoxFormProvider", () => ({
     }
   },
 }));
-vi.mock("@app/tools/formFill/providers/PdfiumFormProvider", () => ({
+vi.mock("@editor/tools/formFill/providers/PdfiumFormProvider", () => ({
   PdfiumFormProvider: class {
     fetchFields(...args: unknown[]) {
       return fetchFields(...args);
@@ -39,7 +39,7 @@ vi.mock("@app/tools/formFill/providers/PdfiumFormProvider", () => ({
     }
   },
 }));
-vi.mock("@app/services/pdfiumService", () => ({
+vi.mock("@editor/services/pdfiumService", () => ({
   fetchSignatureFieldsWithAppearances: vi.fn().mockResolvedValue([]),
 }));
 

@@ -5,18 +5,18 @@
  * so configuration is read lazily through {@link getSpringAuthConfig}. Hosts
  * call {@link configureSpringAuth} once at startup:
  *
- * - Editor: injects its `@app/services/apiClient` plus a platform bridge built
- *   from its per-flavor `@app/extensions/*` seams, so desktop/saas behaviour is
+ * - Editor: injects its `@editor/services/apiClient` plus a platform bridge built
+ *   from its per-flavor `@editor/extensions/*` seams, so desktop/saas behaviour is
  *   unchanged.
  * - Portal: relies on the web defaults below (same-origin transport + no-op
  *   platform bridge).
  */
 import type { AxiosInstance } from "axios";
-import { createDefaultHttpClient } from "@app/auth/httpClient";
+import { createDefaultHttpClient } from "@editor/auth/httpClient";
 import {
   defaultPlatformBridge,
   type PlatformBridge,
-} from "@app/auth/spring/platformBridge";
+} from "@editor/auth/spring/platformBridge";
 
 export interface SpringAuthConfig {
   /** Axios instance used for all /api/v1/auth + /api/v1/user calls. */

@@ -1,18 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
-import { qk } from "@portal/queries/keys";
-import { toAsyncState } from "@portal/queries/adapters";
-import type { AsyncState } from "@portal/hooks/useAsync";
-import { fetchFleetStats, type FleetStats } from "@portal/api/fleetStats";
+import { qk } from "@processor/queries/keys";
+import { toAsyncState } from "@processor/queries/adapters";
+import type { AsyncState } from "@processor/hooks/useAsync";
+import { fetchFleetStats, type FleetStats } from "@processor/api/fleetStats";
 import {
   fetchAuditLog,
   type AuditLogResponse,
-} from "@portal/api/infrastructure";
+} from "@processor/api/infrastructure";
 import {
   fetchEditorDeployment,
   type EditorDeploymentResponse,
-} from "@portal/api/editorDeploy";
-import type { Tier } from "@portal/contexts/TierContext";
-import { useFleetStatsAccess } from "@portal/hooks/useFleetStatsAccess";
+} from "@processor/api/editorDeploy";
+import type { Tier } from "@processor/contexts/TierContext";
+import { useFleetStatsAccess } from "@processor/hooks/useFleetStatsAccess";
 
 /** Optional fleet metrics: unauthorized sessions never fetch, and failures leave figures unavailable. */
 export function useFleetStats(): AsyncState<FleetStats> {

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@app/types/tips";
+import { TooltipContent } from "@editor/types/tips";
 
 export const useAutoRotateTips = (): TooltipContent => {
   const { t } = useTranslation();

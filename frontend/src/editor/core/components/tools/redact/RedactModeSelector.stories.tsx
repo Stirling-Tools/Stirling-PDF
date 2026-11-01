@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import RedactModeSelector from "@app/components/tools/redact/RedactModeSelector";
-import type { RedactMode } from "@app/hooks/tools/redact/useRedactParameters";
+import RedactModeSelector from "@editor/components/tools/redact/RedactModeSelector";
+import type { RedactMode } from "@editor/hooks/tools/redact/useRedactParameters";
 
 const meta = {
   title: "Tools/Redact/RedactModeSelector",

@@ -8,12 +8,12 @@ import {
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 
-import { PolicyExternalApiConfig } from "@portal/components/policies/PolicyExternalApiConfig";
+import { PolicyExternalApiConfig } from "@processor/components/policies/PolicyExternalApiConfig";
 import {
   buildStepParameters,
   operationById,
   type ExternalApiStepParams,
-} from "@portal/components/policies/stepOperations";
+} from "@processor/components/policies/stepOperations";
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: MantineProvider });
@@ -25,14 +25,14 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("@portal/api/integrations", () => ({
+vi.mock("@processor/api/integrations", () => ({
   fetchIntegrations: () => Promise.resolve([]),
   fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
   createIntegration: vi.fn(),
   updateIntegration: vi.fn(),
 }));
 
-vi.mock("@portal/api/http", () => ({
+vi.mock("@processor/api/http", () => ({
   errorMessage: (e: unknown) => String(e),
 }));
 

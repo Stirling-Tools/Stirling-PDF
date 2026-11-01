@@ -3,11 +3,11 @@ import type { ReactElement } from "react";
 import {
   FileGrid,
   type FilesPageEntry,
-} from "@app/components/filesPage/FileGrid";
-import { FileContextProvider } from "@app/contexts/FileContext";
-import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+} from "@editor/components/filesPage/FileGrid";
+import { FileContextProvider } from "@editor/contexts/FileContext";
+import { NewFolderButton } from "@editor/components/filesPage/NewFolderButton";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const buildFileStub = (
   overrides: Partial<StirlingFileStub> = {},

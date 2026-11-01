@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import WatermarkWording from "@app/components/tools/addWatermark/WatermarkWording";
+import WatermarkWording from "@editor/components/tools/addWatermark/WatermarkWording";
 import {
   AddWatermarkParameters,
   defaultParameters,
-} from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
+} from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
 
 const meta: Meta<typeof WatermarkWording> = {
   title: "AddWatermark/WatermarkWording",

@@ -8,7 +8,7 @@ import {
   within,
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import type { UseAccountLink } from "@app/portal/hooks/useAccountLink";
+import type { UseAccountLink } from "@editor/portal/hooks/useAccountLink";
 
 const state = vi.hoisted(() => ({
   fetchInstances: vi.fn(),
@@ -21,19 +21,19 @@ const state = vi.hoisted(() => ({
   email: "owner@example.com" as string | null,
   isOwner: true,
 }));
-vi.mock("@app/auth/context", () => ({
+vi.mock("@editor/auth/context", () => ({
   useAuth: () => ({ user: { orgOwner: state.isOwner } }),
 }));
-vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+vi.mock("@editor/portal/hooks/useAccountLinkOwner", () => ({
   useAccountLinkOwner: () => state.isOwner,
 }));
-vi.mock("@app/portal/contexts/LinkContext", () => ({
+vi.mock("@editor/portal/contexts/LinkContext", () => ({
   useLink: () => ({ isLinked: state.status?.linked ?? false }),
 }));
-vi.mock("@app/portal/hooks/useLinkedAccountEmail", () => ({
+vi.mock("@editor/portal/hooks/useLinkedAccountEmail", () => ({
   useLinkedAccountEmail: () => state.email,
 }));
-vi.mock("@app/portal/contexts/AccountLinkContext", () => ({
+vi.mock("@editor/portal/contexts/AccountLinkContext", () => ({
   useAccountLinkOptional: () => null,
   useAccountLinkContext: () => ({
     loginConfigured: true,
@@ -45,10 +45,10 @@ vi.mock("@app/portal/contexts/AccountLinkContext", () => ({
     refresh: state.refresh,
   }),
 }));
-vi.mock("@app/portal/contexts/UIContext", () => ({
+vi.mock("@editor/portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: state.openLinkModal }),
 }));
-vi.mock("@app/portal/api/link", () => ({
+vi.mock("@editor/portal/api/link", () => ({
   fetchInstances: state.fetchInstances,
   revokeInstance: state.revokeInstance,
 }));
@@ -62,8 +62,8 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
-import { AccountLinkPanel } from "@app/portal/components/account-link/AccountLinkPanel";
+import { SaasSessionRequiredError } from "@editor/portal/auth/portalSaasSession";
+import { AccountLinkPanel } from "@editor/portal/components/account-link/AccountLinkPanel";
 
 const instance = {
   instanceId: 42,

@@ -1,12 +1,12 @@
 import { Stack, Text, Group, Divider, Paper } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import {
   CertificateType,
   UploadFormat,
-} from "@app/components/tools/certSign/CertificateSelector";
-import type { SignRequestDetail } from "@app/types/signingSession";
+} from "@editor/components/tools/certSign/CertificateSelector";
+import type { SignRequestDetail } from "@editor/types/signingSession";
 
 interface ReviewSignatureStepProps {
   signatureCount: number;

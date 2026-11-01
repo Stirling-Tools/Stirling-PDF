@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { estimatedBillWithPending } from "@app/billing/pendingUsage";
-import { subscribedWallet } from "@app/billing/walletFixtures";
+import { estimatedBillWithPending } from "@editor/billing/pendingUsage";
+import { subscribedWallet } from "@editor/billing/walletFixtures";
 
 describe("pending credit charges", () => {
   it.each([

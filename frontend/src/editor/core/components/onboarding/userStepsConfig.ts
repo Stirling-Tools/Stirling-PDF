@@ -6,7 +6,7 @@ import {
   revealPickerTool,
   waitForElement,
   waitForHighlightable,
-} from "@app/components/onboarding/tourUtils";
+} from "@editor/components/onboarding/tourUtils";
 
 export enum TourStep {
   ALL_TOOLS,

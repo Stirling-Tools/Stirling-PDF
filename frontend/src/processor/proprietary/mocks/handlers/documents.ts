@@ -1,6 +1,6 @@
 import { http, HttpResponse, delay } from "msw";
-import type { Tier } from "@portal/contexts/TierContext";
-import { buildDocumentsResponse } from "@portal/mocks/documents";
+import type { Tier } from "@processor/contexts/TierContext";
+import { buildDocumentsResponse } from "@processor/mocks/documents";
 
 export const documentsHandlers = [
   // Wildcard prefix so it intercepts both apiClient.local (same-origin) and

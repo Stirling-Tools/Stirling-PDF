@@ -3,9 +3,9 @@ import {
   ProcessedFile,
   ProcessingState,
   ProcessingConfig,
-} from "@app/types/processing";
-import { enhancedPDFProcessingService } from "@app/services/enhancedPDFProcessingService";
-import { FileHasher } from "@app/utils/fileHash";
+} from "@editor/types/processing";
+import { enhancedPDFProcessingService } from "@editor/services/enhancedPDFProcessingService";
+import { FileHasher } from "@editor/utils/fileHash";
 
 interface UseEnhancedProcessedFilesResult {
   processedFiles: Map<File, ProcessedFile>;

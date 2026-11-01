@@ -1,8 +1,8 @@
 import { useId } from "react";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { useDropTarget } from "@app/components/filesPage/useDropTarget";
-import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { useDropTarget } from "@editor/components/filesPage/useDropTarget";
+import styles from "@editor/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 
 /** Accepts a single native folder through its drop handler; the footer is outside the drop target. */
 export function ProcessingFolderActionCard({

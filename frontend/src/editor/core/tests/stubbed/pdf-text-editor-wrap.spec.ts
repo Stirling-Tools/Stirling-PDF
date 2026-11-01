@@ -1,6 +1,6 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import path from "path";
-import { selectWrapWidthMode } from "@app/tests/stubbed/widthModeHelpers";
+import { selectWrapWidthMode } from "@editor/tests/stubbed/widthModeHelpers";
 
 // Wrap never happened. On blur the overlay asked ReflowWrapCommand to wrap at
 // `width / scale`, but with an exact layout `width` is the width the BOX had

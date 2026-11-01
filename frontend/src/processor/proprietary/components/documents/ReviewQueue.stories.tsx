@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { documentsFor } from "@portal/mocks/documents";
-import { ReviewQueue } from "@portal/components/documents/ReviewQueue";
-import "@portal/views/Documents.css";
+import { documentsFor } from "@processor/mocks/documents";
+import { ReviewQueue } from "@processor/components/documents/ReviewQueue";
+import "@processor/views/Documents.css";
 
 const meta: Meta<typeof ReviewQueue> = {
   title: "Portal/Documents/ReviewQueue",

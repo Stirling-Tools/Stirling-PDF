@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromEmailSettings";
+import ConvertFromEmailSettings from "@editor/components/tools/convert/ConvertFromEmailSettings";
 import {
   ConvertParameters,
   defaultParameters,
-} from "@app/hooks/tools/convert/useConvertParameters";
+} from "@editor/hooks/tools/convert/useConvertParameters";
 
 const meta = {
   title: "Tools/Convert/ConvertFromEmailSettings",

@@ -1,5 +1,5 @@
-import type { FileId } from "@app/types/file";
-import type { StirlingFile } from "@app/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFile } from "@editor/types/fileContext";
 
 export type CompareDiffTokenType = "unchanged" | "removed" | "added";
 

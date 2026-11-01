@@ -1,15 +1,15 @@
-import { routingDestinations } from "@app/services/policySources";
+import { routingDestinations } from "@editor/services/policySources";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Select } from "@app/ui";
-import type { RoutingSetup } from "@app/components/policies/PolicySetupWizard";
-import type { WireTriggerConfig } from "@app/policies/types";
-import { availableOutputModes } from "@portal/components/pipelines/outputModes";
-import { PolicyRoutingDestinations } from "@app/components/policies/PolicyRoutingDestinations";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { useSources } from "@portal/queries/sources";
-import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
+import { Banner, Button, Select } from "@editor/ui";
+import type { RoutingSetup } from "@editor/components/policies/PolicySetupWizard";
+import type { WireTriggerConfig } from "@editor/policies/types";
+import { availableOutputModes } from "@processor/components/pipelines/outputModes";
+import { PolicyRoutingDestinations } from "@editor/components/policies/PolicyRoutingDestinations";
+import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
+import { useSources } from "@processor/queries/sources";
+import { useAiEngineEnabled } from "@processor/hooks/useAiEngineEnabled";
 
 interface PolicyRoutingConfigProps {
   value: RoutingSetup;

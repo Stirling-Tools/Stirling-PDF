@@ -3,7 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import {
   QuickNavRailBase,
   type QuickNavEntry,
-} from "@app/components/shared/quickNav/QuickNavRailBase";
+} from "@editor/components/shared/quickNav/QuickNavRailBase";
 
 /** The rail needs no providers. */
 function withProviders(ui: React.ReactNode) {

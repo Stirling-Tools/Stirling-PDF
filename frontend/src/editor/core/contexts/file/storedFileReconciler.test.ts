@@ -1,13 +1,13 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 import {
   persistedSourceFields,
   inheritedSourceLink,
   sourceLinkForNewFile,
   reconcileBeforeOpen,
-} from "@app/contexts/file/storedFileReconciler";
+} from "@editor/contexts/file/storedFileReconciler";
 
 // Where IndexedDB is the only truth there is nothing to reconcile against, and
 // the workbench has to be able to rely on that: a stub that started answering

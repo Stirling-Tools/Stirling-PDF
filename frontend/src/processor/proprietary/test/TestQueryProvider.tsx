@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { UIProvider } from "@portal/contexts/UIContext";
+import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
+import { UIProvider } from "@processor/contexts/UIContext";
 
 /**
  * Wraps a portal component under test in a fresh QueryClient (retries off for

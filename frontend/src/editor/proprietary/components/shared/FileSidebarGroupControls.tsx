@@ -5,21 +5,21 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Modal } from "@app/ui/Modal";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { ClassificationCategoryManager } from "@app/components/policies/ClassificationCategoryManager";
-import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
-import { bucketStubsByLabel } from "@app/components/shared/fileSidebarGroupingLogic";
+import { Icon } from "@editor/ui/Icon";
+import { Modal } from "@editor/ui/Modal";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { ClassificationCategoryManager } from "@editor/components/policies/ClassificationCategoryManager";
+import { useClassificationEnabled } from "@editor/hooks/useClassificationEnabled";
+import { bucketStubsByLabel } from "@editor/components/shared/fileSidebarGroupingLogic";
 import {
   getSidebarCategories,
   resetHiddenCategories,
   setCategoryHidden,
   subscribeSidebarCategories,
-} from "@app/services/fileSidebarCategories";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import "@app/components/shared/FileSidebarGroupControls.css";
+} from "@editor/services/fileSidebarCategories";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import "@editor/components/shared/FileSidebarGroupControls.css";
 
 interface FileSidebarGroupControlsProps {
   /** The files currently listed, for live per-category counts. */

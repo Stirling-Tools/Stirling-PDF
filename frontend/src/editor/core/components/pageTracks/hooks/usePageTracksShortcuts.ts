@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { TrackEditorAction } from "@app/components/pageTracks/trackWorkspaceReducer";
+import { TrackEditorAction } from "@editor/components/pageTracks/trackWorkspaceReducer";
 
 interface PageTracksShortcutsParams {
   selectedIds: ReadonlySet<string>;

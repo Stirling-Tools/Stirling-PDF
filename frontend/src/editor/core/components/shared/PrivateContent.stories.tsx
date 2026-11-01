@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 /** Layout-invisible wrapper that tags sensitive content with 'ph-no-capture' to exclude it from analytics. */
 const meta: Meta<typeof PrivateContent> = {

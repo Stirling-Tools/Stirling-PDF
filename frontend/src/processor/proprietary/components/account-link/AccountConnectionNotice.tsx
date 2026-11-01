@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button } from "@app/ui";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useAccountLinkOptional } from "@app/portal/contexts/AccountLinkContext";
+import { Banner, Button } from "@editor/ui";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useAccountLinkOptional } from "@editor/portal/contexts/AccountLinkContext";
 
-import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
-import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
-import { useUI } from "@app/portal/contexts/UIContext";
+import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
+import { usePortalSaasSession } from "@editor/portal/hooks/usePortalSaasSession";
+import { useUI } from "@editor/portal/contexts/UIContext";
 
 /** Keep feature availability current without placing a notice on local pages. */
 export function AccountConnectionRefresh() {

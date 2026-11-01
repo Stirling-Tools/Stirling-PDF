@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
+import { PolicyWatermarkConfig } from "@editor/components/policies/PolicyWatermarkConfig";
 import {
   defaultParameters,
   type AddWatermarkParameters,
-} from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
+} from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
 
 // The parent policy form owns the parameters; the story holds that state so edits are live.
 function Harness({ disabled }: { disabled?: boolean }) {

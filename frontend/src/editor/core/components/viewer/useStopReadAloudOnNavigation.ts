@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { useNavigationState } from "@app/contexts/NavigationContext";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { useNavigationState } from "@editor/contexts/NavigationContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
 
 /**
  * Hook that automatically stops read-aloud when navigating away from the viewer.

@@ -15,10 +15,10 @@ import {
   isMacLike,
   normalizeBinding,
   serializeBindings,
-} from "@app/utils/hotkeys";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { ToolId } from "@app/types/toolId";
-import { ToolCategoryId, ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+} from "@editor/utils/hotkeys";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { ToolId } from "@editor/types/toolId";
+import { ToolCategoryId, ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
 
 type Bindings = Partial<Record<ToolId, HotkeyBinding>>;
 

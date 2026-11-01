@@ -11,15 +11,15 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { fileStorage } from "@app/services/fileStorage";
-import { FileId } from "@app/types/file";
-import { FolderId } from "@app/types/folder";
+import { fileStorage } from "@editor/services/fileStorage";
+import { FileId } from "@editor/types/file";
+import { FolderId } from "@editor/types/folder";
 import {
   StirlingFileStub,
   createStirlingFile,
   createQuickKey,
-} from "@app/types/fileContext";
-import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+} from "@editor/types/fileContext";
+import { generateThumbnailForFile } from "@editor/utils/thumbnailUtils";
 
 const DEBUG = process.env.NODE_ENV === "development";
 

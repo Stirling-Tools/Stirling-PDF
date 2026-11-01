@@ -10,13 +10,13 @@ import {
   toolAcceptsFile,
   type ToolChainStep,
   type ToolDiagnostic,
-} from "@app/utils/toolIOCompat";
-import { type ToolEndpoint, TOOL_ENDPOINTS } from "@app/types/toolApiTypes";
+} from "@editor/utils/toolIOCompat";
+import { type ToolEndpoint, TOOL_ENDPOINTS } from "@editor/types/toolApiTypes";
 import {
   type ToolFormat,
   type ToolIOSpec,
   type ToolIOTable,
-} from "@app/types/toolIO";
+} from "@editor/types/toolIO";
 
 interface SharedCase {
   name: string;

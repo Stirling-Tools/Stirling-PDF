@@ -1,6 +1,6 @@
-import { useFreeCreditsSummary as useCloudFreeCreditsSummary } from "@cloud/hooks/useFreeCreditsSummary";
-import { useSaaSMode } from "@app/hooks/useSaaSMode";
-import { type NavFooterCredits } from "@app/components/shared/navFooter/NavFooterCreditsRow";
+import { useFreeCreditsSummary as useCloudFreeCreditsSummary } from "@editor-cloud/hooks/useFreeCreditsSummary";
+import { useSaaSMode } from "@editor/hooks/useSaaSMode";
+import { type NavFooterCredits } from "@editor/components/shared/navFooter/NavFooterCreditsRow";
 
 /**
  * Credits are a cloud concept. Local and self-hosted backends have no wallet, and the

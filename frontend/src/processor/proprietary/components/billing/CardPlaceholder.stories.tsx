@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CardPlaceholder } from "@portal/components/billing/CardPlaceholder";
-import "@portal/components/billing/billing.css";
+import { CardPlaceholder } from "@processor/components/billing/CardPlaceholder";
+import "@processor/components/billing/billing.css";
 
 const meta: Meta<typeof CardPlaceholder> = {
   title: "Portal/Billing/CardPlaceholder",

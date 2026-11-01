@@ -8,20 +8,20 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Button } from "@editor/ui/Button";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
-import type { SignatureValidationReportEntry } from "@app/types/validateSignature";
-import type { ValidateSignatureOperationHook } from "@app/hooks/tools/validateSignature/useValidateSignatureOperation";
-import "@app/components/tools/validateSignature/reportView/styles.css";
+import type { SignatureValidationReportEntry } from "@editor/types/validateSignature";
+import type { ValidateSignatureOperationHook } from "@editor/hooks/tools/validateSignature/useValidateSignatureOperation";
+import "@editor/components/tools/validateSignature/reportView/styles.css";
 import type { TFunction } from "i18next";
-import FitText from "@app/components/shared/FitText";
-import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
-import { downloadFile } from "@app/services/downloadService";
+import FitText from "@editor/components/shared/FitText";
+import { SuggestedToolsSection } from "@editor/components/tools/shared/SuggestedToolsSection";
+import { downloadFile } from "@editor/services/downloadService";
 import {
   computeSignatureStatus,
   type SignatureStatusKind,
-} from "@app/hooks/tools/validateSignature/utils/signatureStatus";
+} from "@editor/hooks/tools/validateSignature/utils/signatureStatus";
 
 // Worst trust-aware status across a file's signatures - keeps the summary badge
 // consistent with the per-signature badges in the report (valid vs unverified vs invalid).

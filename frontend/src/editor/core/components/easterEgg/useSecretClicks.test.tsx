@@ -4,7 +4,7 @@ import {
   CLICKS_REQUIRED,
   WINDOW_MS,
   useSecretClicks,
-} from "@app/components/easterEgg/useSecretClicks";
+} from "@editor/components/easterEgg/useSecretClicks";
 
 // Driven off the real constants, so retuning the trigger does not need these
 // rewritten - only the behaviour is asserted, never the specific number.

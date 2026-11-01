@@ -1,13 +1,13 @@
 import axios from "axios";
-import { supabase } from "@app/auth/supabase";
-import { handleHttpError } from "@app/services/httpErrorHandler";
+import { supabase } from "@editor/auth/supabase";
+import { handleHttpError } from "@editor/services/httpErrorHandler";
 import {
   classifyPaygError,
   normalizePaygError,
   handlePaygError,
-} from "@app/services/paygErrorInterceptor";
-import { redirectToLogin } from "@app/auth/redirectToLogin";
-import { getBrowserId } from "@app/utils/browserIdentifier";
+} from "@editor/services/paygErrorInterceptor";
+import { redirectToLogin } from "@editor/auth/redirectToLogin";
+import { getBrowserId } from "@editor/utils/browserIdentifier";
 
 // Helper: decode base64url JWT payload safely
 function decodeJwtPayload(token: string): Record<string, unknown> | null {

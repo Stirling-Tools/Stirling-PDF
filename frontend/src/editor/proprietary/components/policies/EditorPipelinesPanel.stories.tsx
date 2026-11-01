@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   EditorPipelinesPanelView,
   type EditorPipelinesPanelViewProps,
-} from "@app/components/policies/EditorPipelinesPanel";
-import type { EditorPipeline } from "@app/components/policies/useEditorPipelines";
+} from "@editor/components/policies/EditorPipelinesPanel";
+import type { EditorPipeline } from "@editor/components/policies/useEditorPipelines";
 
 const pipeline = (over: Partial<EditorPipeline>): EditorPipeline => ({
   policyKey: "classification",

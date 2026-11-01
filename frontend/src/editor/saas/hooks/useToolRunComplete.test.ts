@@ -1,11 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useToolRunComplete } from "@app/hooks/useToolRunComplete";
+import { useToolRunComplete } from "@editor/hooks/useToolRunComplete";
 
 const auth = vi.hoisted(() => ({ isAnonymous: true, user: { id: "guest-a" } }));
 const signup = vi.hoisted(() => vi.fn());
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => auth }));
-vi.mock("@app/services/processorSignup", () => ({
+vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => auth }));
+vi.mock("@editor/services/processorSignup", () => ({
   requestProcessorSignup: signup,
 }));
 

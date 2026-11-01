@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { Select } from "@app/ui/Select";
-import { RunLocationStepLayout } from "@app/components/runLocation/RunLocationStepLayout";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { Select } from "@editor/ui/Select";
+import { RunLocationStepLayout } from "@editor/components/runLocation/RunLocationStepLayout";
 import {
   DESKTOP_TARGETS,
   detectDesktopTarget,
   getDesktopTarget,
   type DesktopTargetId,
-} from "@app/components/runLocation/desktopTargets";
-import { startDownload } from "@app/components/runLocation/startDownload";
-import styles from "@app/components/runLocation/RunLocation.module.css";
+} from "@editor/components/runLocation/desktopTargets";
+import { startDownload } from "@editor/components/runLocation/startDownload";
+import styles from "@editor/components/runLocation/RunLocation.module.css";
 
 interface DesktopDownloadStepProps {
   onBack: () => void;

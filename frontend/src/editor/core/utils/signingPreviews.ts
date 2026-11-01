@@ -1,6 +1,6 @@
-import type { SignaturePreview } from "@app/components/viewer/viewerTypes";
-import { getFileColor } from "@app/utils/fileColors";
-import type { SigningParticipantPreview } from "@app/types/signingSession";
+import type { SignaturePreview } from "@editor/components/viewer/viewerTypes";
+import { getFileColor } from "@editor/utils/fileColors";
+import type { SigningParticipantPreview } from "@editor/types/signingSession";
 
 /** Only submitted marks overlay the original PDF; finalized PDFs already contain those marks. */
 export function getSubmittedSignaturePreviews(session: {

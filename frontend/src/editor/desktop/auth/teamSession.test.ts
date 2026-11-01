@@ -9,17 +9,17 @@ const { subscribeToAuthMock, getCurrentModeMock, subscribeToModeChangesMock } =
     subscribeToModeChangesMock: vi.fn(),
   }));
 
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: { subscribeToAuth: subscribeToAuthMock },
 }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentMode: getCurrentModeMock,
     subscribeToModeChanges: subscribeToModeChangesMock,
   },
 }));
 
-import { useTeamAuth } from "@app/auth/teamSession";
+import { useTeamAuth } from "@editor/auth/teamSession";
 
 /** Wire authService.subscribeToAuth to immediately report `status`. */
 function withAuthStatus(status: "authenticated" | "unauthenticated") {

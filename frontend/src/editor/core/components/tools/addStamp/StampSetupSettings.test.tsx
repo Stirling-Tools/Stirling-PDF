@@ -1,8 +1,8 @@
 import { MantineProvider } from "@mantine/core";
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import StampSetupSettings from "@app/components/tools/addStamp/StampSetupSettings";
-import { defaultParameters } from "@app/components/tools/addStamp/useAddStampParameters";
+import StampSetupSettings from "@editor/components/tools/addStamp/StampSetupSettings";
+import { defaultParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
 
 describe("StampSetupSettings image preview", () => {
   const onParameterChange = vi.fn();

@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createElement, type ReactNode, useMemo, useState } from "react";
 
-import { Icon } from "@app/ui/Icon";
-import { ICONS, type IconName } from "@app/icons/icons";
-import { STROKE_WIDTH } from "@app/icons/icons.config";
+import { Icon } from "@editor/ui/Icon";
+import { ICONS, type IconName } from "@editor/icons/icons";
+import { STROKE_WIDTH } from "@editor/icons/icons.config";
 import usedIcons from "virtual:used-icons";
 
-import "@app/icons/IconRegistry.css";
+import "@editor/icons/IconRegistry.css";
 
 const meta = {
   title: "Icons/Registry",

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import WetSignatureInput from "@app/components/tools/certSign/WetSignatureInput";
+import WetSignatureInput from "@editor/components/tools/certSign/WetSignatureInput";
 
 const meta = {
   title: "Tools/CertSign/WetSignatureInput",

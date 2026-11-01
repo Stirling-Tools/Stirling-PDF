@@ -1,7 +1,7 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
-import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
+import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 
 /** Regression coverage for three user-reported issues: 1. */
 const SAMPLE = path.join(
@@ -314,12 +314,6 @@ test.describe("PDF text editor - reported issue: align a single paragraph's line
 });
 
 test.describe("PDF text editor - reported issue: character insertion + font integrity", () => {
-  // Editor edits fire encode-charcodes; with no backend in the stubbed project
-  // an UNMOCKED call 401s and redirects to login.
-  test.beforeEach(async ({ page }) => {
-    await page.route("**/encode-charcodes", (route) => route.abort());
-  });
-
   test("inserting a duplicate letter into an embedded-font run keeps text correct and emits no ydieresis tofu", async ({
     page,
   }) => {

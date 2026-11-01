@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { PipelineView } from "@portal/api/pipelines";
-import { PipelinesTable } from "@portal/components/pipelines/PipelinesTable";
+import type { PipelineView } from "@processor/api/pipelines";
+import { PipelinesTable } from "@processor/components/pipelines/PipelinesTable";
 
 const PIPELINES: PipelineView[] = [
   {

@@ -4,14 +4,14 @@ import { renderHook, waitFor } from "@testing-library/react";
 const getCurrentMode = vi.fn();
 const subscribeToModeChanges = vi.fn((_cb: unknown) => () => {});
 
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentMode: () => getCurrentMode(),
     subscribeToModeChanges: (cb: unknown) => subscribeToModeChanges(cb),
   },
 }));
 
-const { useRosterAvailable } = await import("@app/hooks/useRosterAvailable");
+const { useRosterAvailable } = await import("@editor/hooks/useRosterAvailable");
 
 describe("useRosterAvailable (desktop)", () => {
   beforeEach(() => {

@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
-import { type ViewId } from "@portal/contexts/ViewContext";
-import { Icon } from "@app/ui/Icon";
+import { type ViewId } from "@processor/contexts/ViewContext";
+import { Icon } from "@editor/ui/Icon";
 
 export interface NavEntry {
   id: ViewId;

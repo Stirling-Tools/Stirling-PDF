@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   rotationFromMatrix,
   counterPageRotation,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 
 describe("rotationFromMatrix", () => {
   it("returns undefined for upright text (identity / pure scale)", () => {

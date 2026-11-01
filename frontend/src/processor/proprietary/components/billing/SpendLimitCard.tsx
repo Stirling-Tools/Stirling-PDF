@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Card } from "@app/ui";
+import { Banner, Button, Card } from "@editor/ui";
 import {
   currencySymbol,
   formatMinor,
@@ -8,9 +8,9 @@ import {
   MeterBar,
   meterState,
   SpendCapControl as SharedSpendCapControl,
-} from "@app/billing";
-import type { Wallet } from "@portal/api/billing";
-import { updateCap } from "@portal/api/billing";
+} from "@editor/billing";
+import type { Wallet } from "@processor/api/billing";
+import { updateCap } from "@processor/api/billing";
 
 interface Props {
   wallet: Wallet;

@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
-import type { SavedSignature } from "@app/types/signature";
-import type { SignatureTileAction } from "@app/components/tools/sign/wallet/SignatureTile";
+import type { SavedSignature } from "@editor/types/signature";
+import type { SignatureTileAction } from "@editor/components/tools/sign/wallet/SignatureTile";
 
 interface PlaceActionContext {
   t: TFunction;

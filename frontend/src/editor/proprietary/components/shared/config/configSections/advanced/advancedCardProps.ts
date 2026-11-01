@@ -1,4 +1,4 @@
-import type { AdvancedSettingsData } from "@app/components/shared/config/configSections/advanced/advancedSettings";
+import type { AdvancedSettingsData } from "@editor/components/shared/config/configSections/advanced/advancedSettings";
 
 /**
  * What every card on the Advanced page needs from the page that owns them.

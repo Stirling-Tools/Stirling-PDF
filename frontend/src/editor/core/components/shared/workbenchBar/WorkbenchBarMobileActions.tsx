@@ -1,8 +1,8 @@
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/types";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { WorkbenchBarActionsProps } from "@editor/components/shared/workbenchBar/types";
 
 /**
  * Mobile version of the workbench bar's global actions: the icon row won't fit

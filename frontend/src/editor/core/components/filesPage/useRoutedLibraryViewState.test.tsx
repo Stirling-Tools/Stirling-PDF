@@ -8,9 +8,9 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
-import { useRoutedLibraryViewState } from "@app/components/filesPage/useRoutedLibraryViewState";
-import type { FileId } from "@app/types/file";
-import type { FolderId } from "@app/types/folder";
+import { useRoutedLibraryViewState } from "@editor/components/filesPage/useRoutedLibraryViewState";
+import type { FileId } from "@editor/types/file";
+import type { FolderId } from "@editor/types/folder";
 
 function setup(initialEntries: string[]) {
   return renderHook(

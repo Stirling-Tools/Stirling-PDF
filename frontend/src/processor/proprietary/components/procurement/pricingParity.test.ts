@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { QuoteConfigInput } from "@portal/api/procurement";
-import { previewAnnualMinor } from "@portal/components/procurement/QuoteBuilder";
-import { priceQuote } from "@portal/mocks/handlers/procurementSaas";
+import type { QuoteConfigInput } from "@processor/api/procurement";
+import { previewAnnualMinor } from "@processor/components/procurement/QuoteBuilder";
+import { priceQuote } from "@processor/mocks/handlers/procurementSaas";
 
 /**
  * The D71 run-based curve is written three times: the authoritative Java engine

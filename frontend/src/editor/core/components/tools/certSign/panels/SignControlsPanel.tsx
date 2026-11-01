@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Group, Menu, Modal, Text } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { Tooltip } from "@app/ui/Tooltip";
-import { StatusBadge } from "@app/ui/StatusBadge";
-import "@app/components/shared/signing/signingDetail.css";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { Tooltip } from "@editor/ui/Tooltip";
+import { StatusBadge } from "@editor/ui/StatusBadge";
+import "@editor/components/shared/signing/signingDetail.css";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import {
   DEFAULT_PARAMETERS,
   type SignParameters,
-} from "@app/hooks/tools/sign/useSignParameters";
+} from "@editor/hooks/tools/sign/useSignParameters";
 import {
   useSavedSignatures,
   type SavedSignature,
-} from "@app/hooks/tools/sign/useSavedSignatures";
-import { SignatureCreationStep } from "@app/components/tools/certSign/steps/SignatureCreationStep";
-import { type SignatureType } from "@app/components/shared/wetSignature/SignatureTypeSelector";
+} from "@editor/hooks/tools/sign/useSavedSignatures";
+import { SignatureCreationStep } from "@editor/components/tools/certSign/steps/SignatureCreationStep";
+import { type SignatureType } from "@editor/components/shared/wetSignature/SignatureTypeSelector";
 
 interface SignControlsPanelProps {
   placementMode: boolean;

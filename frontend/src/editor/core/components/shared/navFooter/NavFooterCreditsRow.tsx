@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
-import { ProgressBar } from "@app/ui";
-import "@app/components/shared/navFooter/NavFooterCreditsRow.css";
+import { ProgressBar } from "@editor/ui";
+import "@editor/components/shared/navFooter/NavFooterCreditsRow.css";
 
 export interface NavFooterCredits {
   /** Free credits still available to spend. */

@@ -4,7 +4,7 @@ import {
   FIELD_W,
   type GameStatus,
   type Palette,
-} from "@app/components/easterEgg/brickGame/brickGameEngine";
+} from "@editor/components/easterEgg/brickGame/brickGameEngine";
 
 const PALETTE: Palette = {
   markSoft: "#1",

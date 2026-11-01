@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useAllFiles, useFileSelection } from "@app/contexts/FileContext";
-import type { FileId } from "@app/types/file";
-import { useNavigationState } from "@app/contexts/NavigationContext";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { useAllFiles, useFileSelection } from "@editor/contexts/FileContext";
+import type { FileId } from "@editor/types/file";
+import { useNavigationState } from "@editor/contexts/NavigationContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
 
 type Loader = (file: File) => unknown;
 // The workbench fileId is what lets save write the edit back to the

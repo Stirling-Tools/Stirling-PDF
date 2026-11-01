@@ -9,12 +9,12 @@ import {
   Tooltip,
   Divider,
 } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
+import { Icon } from "@editor/ui/Icon";
+import SectionBlock from "@editor/components/tools/getPdfInfo/shared/SectionBlock";
 import type {
   PdfCompliance,
   PdfComplianceSummary,
-} from "@app/types/getPdfInfo";
+} from "@editor/types/getPdfInfo";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 

@@ -11,19 +11,19 @@ import {
   vi,
 } from "vitest";
 import { PDFDocument, PDFHeader, StandardFonts } from "@cantoo/pdf-lib";
-import { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextCommand";
-import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
-import { PdfiumTextReader } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextReader";
-import { exportToBlob } from "@app/tools/pdfTextEditor/util/exportPdf";
-import { readPdfiumAccess } from "@app/utils/pdfiumAccess";
-import { readEncryptionDictionary as protection } from "@app/tests/helpers/pdf-encryption";
+import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { PdfiumSave } from "@editor/tools/pdfTextEditor/pdfium/PdfiumSave";
+import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
+import { readPdfiumAccess } from "@editor/utils/pdfiumAccess";
+import { readEncryptionDictionary as protection } from "@editor/tests/helpers/pdf-encryption";
 
 vi.mock(
-  "@app/tools/pdfTextEditor/charcode/CharcodeStrategy",
+  "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy",
   async (importOriginal) => ({
     ...(await importOriginal<
-      typeof import("@app/tools/pdfTextEditor/charcode/CharcodeStrategy")
+      typeof import("@editor/tools/pdfTextEditor/charcode/CharcodeStrategy")
     >()),
     getActiveCharcodeStrategy: () => "helvetica",
   }),

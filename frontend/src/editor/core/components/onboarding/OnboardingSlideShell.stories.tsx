@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import OnboardingSlideShell, {
   ShellHero,
   type ShellButton,
-} from "@app/components/onboarding/OnboardingSlideShell";
+} from "@editor/components/onboarding/OnboardingSlideShell";
 
 const meta = {
   title: "Onboarding/Slide Shell",

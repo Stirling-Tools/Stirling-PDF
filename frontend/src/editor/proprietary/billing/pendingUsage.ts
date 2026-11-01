@@ -1,4 +1,4 @@
-import type { Wallet } from "@app/billing/types";
+import type { Wallet } from "@editor/billing/types";
 
 /** Pending usage consumes the remaining free grant and prepaid pool before the meter. */
 export function pendingMeteredUnits(

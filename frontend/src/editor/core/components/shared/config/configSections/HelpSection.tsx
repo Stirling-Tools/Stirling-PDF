@@ -1,9 +1,9 @@
 import React from "react";
 import { Group, Paper, Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { requestStartTour } from "@app/constants/events";
+import { Icon } from "@editor/ui/Icon";
+import { requestStartTour } from "@editor/constants/events";
 
 interface HelpSectionProps {
   isAdmin: boolean;

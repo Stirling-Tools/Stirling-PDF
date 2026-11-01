@@ -5,11 +5,11 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useOs } from "@app/hooks/useOs";
+import { useOs } from "@editor/hooks/useOs";
 import {
   DESKTOP_DOWNLOAD_OPTIONS,
   desktopDownloadForOs,
-} from "@app/components/onboarding/desktopDownloadOptions";
+} from "@editor/components/onboarding/desktopDownloadOptions";
 
 interface OsInfo {
   label: string;

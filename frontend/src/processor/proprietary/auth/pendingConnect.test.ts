@@ -3,7 +3,7 @@ import {
   clearPendingConnect,
   readPendingConnect,
   rememberConnect,
-} from "@app/portal/auth/pendingConnect";
+} from "@editor/portal/auth/pendingConnect";
 
 const pending = {
   ownerId: "owner",

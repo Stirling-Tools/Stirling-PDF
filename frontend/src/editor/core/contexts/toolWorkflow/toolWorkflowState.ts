@@ -1,7 +1,7 @@
-import { type ToolPanelMode } from "@app/constants/toolPanel";
-import { preferencesService } from "@app/services/preferencesService";
-import { stripBasePath } from "@app/constants/app";
-import { READER_PATH } from "@app/routes/readerRoute";
+import { type ToolPanelMode } from "@editor/constants/toolPanel";
+import { preferencesService } from "@editor/services/preferencesService";
+import { stripBasePath } from "@editor/constants/app";
+import { READER_PATH } from "@editor/routes/readerRoute";
 
 export interface ToolWorkflowState {
   // UI State

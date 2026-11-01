@@ -9,9 +9,9 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import "@app/ui/Toast.css";
+import "@editor/ui/Toast.css";
 
 export type ToastTone = "info" | "success" | "warning" | "danger";
 

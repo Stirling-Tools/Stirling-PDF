@@ -1,7 +1,7 @@
 import { SegmentedControl as MantineSegmentedControl } from "@mantine/core";
 import type { CSSProperties, ReactNode } from "react";
-import { CONTROL_HEIGHT } from "@app/ui/controlSizes";
-import "@app/ui/SegmentedControl.css";
+import { CONTROL_HEIGHT } from "@editor/ui/controlSizes";
+import "@editor/ui/SegmentedControl.css";
 
 /** Same accent dial as Button. Only the active segment is accented. */
 export type SegmentedAccent =

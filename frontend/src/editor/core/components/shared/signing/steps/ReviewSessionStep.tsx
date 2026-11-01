@@ -1,10 +1,10 @@
 import { Stack, Text, Group, Divider, TextInput } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import type { SignatureSettings } from "@app/components/tools/certSign/SignatureSettingsInput";
-import type { FileState } from "@app/types/file";
-import { formatFileSize } from "@app/utils/fileUtils";
+import { Icon } from "@editor/ui/Icon";
+import type { SignatureSettings } from "@editor/components/tools/certSign/SignatureSettingsInput";
+import type { FileState } from "@editor/types/file";
+import { formatFileSize } from "@editor/utils/fileUtils";
 
 interface ReviewSessionStepProps {
   selectedFile: FileState;

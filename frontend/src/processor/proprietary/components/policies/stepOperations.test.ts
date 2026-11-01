@@ -6,8 +6,8 @@ import {
   emptyOperationValues,
   operationById,
   searchOperations,
-} from "@portal/components/policies/stepOperations";
-import { CREATABLE_CONNECTION_TYPES } from "@portal/components/sources/connectionTypes";
+} from "@processor/components/policies/stepOperations";
+import { CREATABLE_CONNECTION_TYPES } from "@processor/components/sources/connectionTypes";
 
 const t = (key: string) => key;
 

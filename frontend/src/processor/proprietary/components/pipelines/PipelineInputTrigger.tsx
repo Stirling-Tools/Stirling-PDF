@@ -3,8 +3,8 @@
 
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { FormField, Input, Select } from "@app/ui";
+import { Icon } from "@editor/ui/Icon";
+import { FormField, Input, Select } from "@editor/ui";
 
 export type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
 export type EditorRunOn = "upload" | "export";

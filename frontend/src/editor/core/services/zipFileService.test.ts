@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
-import { zipFileService } from "@app/services/zipFileService";
+import { zipFileService } from "@editor/services/zipFileService";
 
 // jsdom's Blob.slice(...).arrayBuffer() returns an empty buffer in this
 // version, so a real Blob would never reach the magic-byte branch under test.

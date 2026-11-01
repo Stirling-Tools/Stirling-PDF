@@ -1,7 +1,7 @@
 import { describe, test, expect } from "vitest";
-import { usesOfficeEngine } from "@app/utils/convertUtils";
-import { buildConvertFormData } from "@app/hooks/tools/convert/useConvertOperation";
-import { defaultParameters } from "@app/hooks/tools/convert/useConvertParameters";
+import { usesOfficeEngine } from "@editor/utils/convertUtils";
+import { buildConvertFormData } from "@editor/hooks/tools/convert/useConvertOperation";
+import { defaultParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 
 describe("Stirling Office Convert switch", () => {
   test("applies to Office conversions only", () => {

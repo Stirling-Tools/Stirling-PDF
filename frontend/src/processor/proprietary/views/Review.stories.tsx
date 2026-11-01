@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
 import { screen } from "storybook/test";
-import { Review } from "@portal/views/Review";
+import { Review } from "@processor/views/Review";
 
 const meta: Meta<typeof Review> = {
   title: "Portal/Views/Review",

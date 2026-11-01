@@ -1,15 +1,19 @@
 import { Text, Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button, type ButtonVariant, type ButtonAccent } from "@app/ui/Button";
+import {
+  Button,
+  type ButtonVariant,
+  type ButtonAccent,
+} from "@editor/ui/Button";
 import OperationButton, {
   OperationButtonProps,
   operationButtonVariantMap,
   operationButtonAccentMap,
-} from "@app/components/tools/shared/OperationButton";
-import { StirlingFile } from "@app/types/fileContext";
-import { useAllFiles } from "@app/contexts/FileContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useNavigationState } from "@app/contexts/NavigationContext";
+} from "@editor/components/tools/shared/OperationButton";
+import { StirlingFile } from "@editor/types/fileContext";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useNavigationState } from "@editor/contexts/NavigationContext";
 
 export interface ScopedOperationButtonProps extends OperationButtonProps {
   selectedFiles: StirlingFile[];

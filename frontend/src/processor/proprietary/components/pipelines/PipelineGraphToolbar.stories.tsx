@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PipelineGraphToolbar } from "@portal/components/pipelines/PipelineGraphToolbar";
+import { PipelineGraphToolbar } from "@processor/components/pipelines/PipelineGraphToolbar";
 
 const meta: Meta<typeof PipelineGraphToolbar> = {
   title: "Portal/Pipelines/PipelineGraphToolbar",

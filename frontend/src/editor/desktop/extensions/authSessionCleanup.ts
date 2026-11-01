@@ -1,4 +1,4 @@
-import { authService } from "@app/services/authService";
+import { authService } from "@editor/services/authService";
 
 /**
  * Desktop-specific auth cleanup hooks.

@@ -3,33 +3,33 @@ import {
   createNewStirlingFileStub,
   createStirlingFile,
   type StirlingFileStub,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 import {
   recordRunStart,
   resetPolicyRuns,
-} from "@app/components/policies/policyRunStore";
-import { registerPolicyWorkspace } from "@app/services/policyBlockRegistry";
+} from "@editor/components/policies/policyRunStore";
+import { registerPolicyWorkspace } from "@editor/services/policyBlockRegistry";
 import {
   PolicyBlockedError,
   assertFilesNotBlocked,
-} from "@app/services/policyFileGuard";
-import { updatePolicy } from "@app/services/policyStorage";
-import { downloadFile } from "@app/services/downloadService";
-import { uploadHistoryChain } from "@app/services/serverStorageUpload";
-import { fileStorage } from "@app/services/fileStorage";
-import { buildHistoryBundle } from "@app/services/serverStorageBundle";
-import apiClient from "@app/services/apiClient";
+} from "@editor/services/policyFileGuard";
+import { updatePolicy } from "@editor/services/policyStorage";
+import { downloadFile } from "@editor/services/downloadService";
+import { uploadHistoryChain } from "@editor/services/serverStorageUpload";
+import { fileStorage } from "@editor/services/fileStorage";
+import { buildHistoryBundle } from "@editor/services/serverStorageBundle";
+import apiClient from "@editor/services/apiClient";
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { post: vi.fn(), put: vi.fn() },
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { getHistoryChainStubs: vi.fn(), getStirlingFile: vi.fn() },
 }));
-vi.mock("@app/services/serverStorageBundle", () => ({
+vi.mock("@editor/services/serverStorageBundle", () => ({
   buildHistoryBundle: vi.fn(),
 }));
-vi.mock("@app/i18n", () => ({ default: { t: (key: string) => key } }));
+vi.mock("@editor/i18n", () => ({ default: { t: (key: string) => key } }));
 
 let files: StirlingFileStub[];
 let unregister: () => void;

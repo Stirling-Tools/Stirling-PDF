@@ -14,9 +14,9 @@ vi.mock("react-i18next", () => ({
 // Stub the API layer so no real request is made; capture the create payload.
 // vi.hoisted keeps the mock fn defined before the hoisted vi.mock factory runs.
 const { createApiKey } = vi.hoisted(() => ({ createApiKey: vi.fn() }));
-vi.mock("@portal/api/infrastructure", () => ({ createApiKey }));
+vi.mock("@processor/api/infrastructure", () => ({ createApiKey }));
 
-import { CreateKeyModal } from "@portal/components/infrastructure/CreateKeyModal";
+import { CreateKeyModal } from "@processor/components/infrastructure/CreateKeyModal";
 
 const K = "portal.infrastructure.createKey";
 

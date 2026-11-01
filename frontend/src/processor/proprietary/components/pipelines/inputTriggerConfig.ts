@@ -1,9 +1,9 @@
-import type { TriggerConfig } from "@portal/api/pipelines";
+import type { TriggerConfig } from "@processor/api/pipelines";
 import {
   MANUAL,
   type ScheduleUnit,
   type WorkingInput,
-} from "@portal/components/pipelines/PipelineInputTrigger";
+} from "@processor/components/pipelines/PipelineInputTrigger";
 
 export function parseTrigger(trigger: TriggerConfig | null): {
   triggerType: string;

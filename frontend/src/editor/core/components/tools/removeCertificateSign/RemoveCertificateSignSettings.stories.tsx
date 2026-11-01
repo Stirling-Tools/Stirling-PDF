@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import RemoveCertificateSignSettings from "@app/components/tools/removeCertificateSign/RemoveCertificateSignSettings";
-import { RemoveCertificateSignParameters } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters";
+import RemoveCertificateSignSettings from "@editor/components/tools/removeCertificateSign/RemoveCertificateSignSettings";
+import { RemoveCertificateSignParameters } from "@editor/hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters";
 
 const baseParameters: RemoveCertificateSignParameters = {};
 

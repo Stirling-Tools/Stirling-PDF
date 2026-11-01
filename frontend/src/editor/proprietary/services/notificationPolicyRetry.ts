@@ -1,15 +1,18 @@
 import {
   appliedPoliciesFor,
   recordRunStart,
-} from "@app/components/policies/policyRunStore";
-import { orderedRewritingPolicies } from "@app/data/classificationPolicy";
-import { fileStorage } from "@app/services/fileStorage";
-import { loadPolicies, rawStoredPolicies } from "@app/services/policyStorage";
+} from "@editor/components/policies/policyRunStore";
+import { orderedRewritingPolicies } from "@editor/data/classificationPolicy";
+import { fileStorage } from "@editor/services/fileStorage";
+import {
+  loadPolicies,
+  rawStoredPolicies,
+} from "@editor/services/policyStorage";
 import {
   resolvePolicyRunTarget,
   runStoredPolicy,
-} from "@app/services/policyApi";
-import type { FileId } from "@app/types/file";
+} from "@editor/services/policyApi";
+import type { FileId } from "@editor/types/file";
 
 // No stash needed: the row names the policy and the reference the bytes are stored under.
 

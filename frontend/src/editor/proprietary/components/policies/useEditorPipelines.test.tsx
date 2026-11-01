@@ -4,12 +4,12 @@ import {
   recordRunStart,
   resetPolicyRuns,
   updateRun,
-} from "@app/components/policies/policyRunStore";
-import type { PolicyState } from "@app/types/policies";
+} from "@editor/components/policies/policyRunStore";
+import type { PolicyState } from "@editor/types/policies";
 
 const cache = vi.hoisted(() => ({ value: {} as Record<string, PolicyState> }));
 
-vi.mock("@app/services/policyStorage", () => ({
+vi.mock("@editor/services/policyStorage", () => ({
   loadPolicies: () => cache.value,
   onPoliciesChange: () => () => {},
 }));
@@ -17,7 +17,7 @@ const i18nMock = vi.hoisted(() => ({
   t: (_key: string, fallback: string) => fallback,
 }));
 vi.mock("react-i18next", () => ({ useTranslation: () => i18nMock }));
-vi.mock("@app/services/policyCatalog", () => ({
+vi.mock("@editor/services/policyCatalog", () => ({
   loadPolicyCatalog: () => ({
     categories: [
       { id: "classification", label: "Classification" },
@@ -26,7 +26,7 @@ vi.mock("@app/services/policyCatalog", () => ({
   }),
 }));
 
-import { useEditorPipelines } from "@app/components/policies/useEditorPipelines";
+import { useEditorPipelines } from "@editor/components/policies/useEditorPipelines";
 
 const policy = (over: Partial<PolicyState> = {}): PolicyState => ({
   configured: true,

@@ -1,5 +1,5 @@
 import { createContext, useContext, type MutableRefObject } from "react";
-import type { PdfRenderMode } from "@app/services/preferencesService";
+import type { PdfRenderMode } from "@editor/services/preferencesService";
 import type {
   ScrollActions,
   ZoomActions,
@@ -12,7 +12,7 @@ import type {
   BookmarkActions,
   AttachmentActions,
   PrintActions,
-} from "@app/contexts/viewer/viewerActions";
+} from "@editor/contexts/viewer/viewerActions";
 import type {
   BridgeRef,
   BridgeApiMap,
@@ -31,7 +31,7 @@ import type {
   AttachmentState,
   DocumentPermissionsState,
   PdfPermissionFlag,
-} from "@app/contexts/viewer/viewerBridges";
+} from "@editor/contexts/viewer/viewerBridges";
 import type { SpreadMode } from "@embedpdf/plugin-spread/react";
 
 /**

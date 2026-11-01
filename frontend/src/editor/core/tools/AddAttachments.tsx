@@ -1,18 +1,18 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
-import { useFileContext } from "@app/contexts/file/fileHooks";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
+import { useFileContext } from "@editor/contexts/file/fileHooks";
 import {
   createToolFlow,
   type MiddleStepConfig,
-} from "@app/components/tools/shared/createToolFlow";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useAddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
-import { useAddAttachmentsOperation } from "@app/hooks/tools/addAttachments/useAddAttachmentsOperation";
-import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
-import AddAttachmentsSettings from "@app/components/tools/addAttachments/AddAttachmentsSettings";
-import { useAddAttachmentsTips } from "@app/components/tooltips/useAddAttachmentsTips";
+} from "@editor/components/tools/shared/createToolFlow";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
+import { useAddAttachmentsParameters } from "@editor/hooks/tools/addAttachments/useAddAttachmentsParameters";
+import { useAddAttachmentsOperation } from "@editor/hooks/tools/addAttachments/useAddAttachmentsOperation";
+import { useAccordionSteps } from "@editor/hooks/tools/shared/useAccordionSteps";
+import AddAttachmentsSettings from "@editor/components/tools/addAttachments/AddAttachmentsSettings";
+import { useAddAttachmentsTips } from "@editor/components/tooltips/useAddAttachmentsTips";
 
 const AddAttachments = ({
   onPreviewFile,

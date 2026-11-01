@@ -1,5 +1,5 @@
-import { apiClient } from "@app/portal/api/http";
-import type { LinkedInstanceRow } from "@app/types/linkedInstance";
+import { apiClient } from "@editor/portal/api/http";
+import type { LinkedInstanceRow } from "@editor/types/linkedInstance";
 
 export type { LinkedInstanceRow };
 

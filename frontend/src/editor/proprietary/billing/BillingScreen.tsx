@@ -1,21 +1,21 @@
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Skeleton } from "@app/ui";
+import { Skeleton } from "@editor/ui";
 import {
   ComparePlansModal,
   type ComparePlan,
-} from "@app/billing/ComparePlansModal";
-import { formatMinor, formatPeriodDate } from "@app/billing/format";
-import { KvRow } from "@app/billing/KvRow";
-import { TeamPlanRow } from "@app/billing/TeamPlanRow";
-import { ProcessorPlanRow } from "@app/billing/ProcessorPlanRow";
-import { estimatedBillWithPending } from "@app/billing/pendingUsage";
-import { fleetUsersInUse } from "@app/billing/fleetSeats";
-import type { ServerPlan } from "@app/billing/serverPlan";
-import type { Wallet } from "@app/billing/types";
-import type { LegacyTeamAllowance } from "@app/types/legacyBilling";
-import "@app/billing/billing-screen.css";
+} from "@editor/billing/ComparePlansModal";
+import { formatMinor, formatPeriodDate } from "@editor/billing/format";
+import { KvRow } from "@editor/billing/KvRow";
+import { TeamPlanRow } from "@editor/billing/TeamPlanRow";
+import { ProcessorPlanRow } from "@editor/billing/ProcessorPlanRow";
+import { estimatedBillWithPending } from "@editor/billing/pendingUsage";
+import { fleetUsersInUse } from "@editor/billing/fleetSeats";
+import type { ServerPlan } from "@editor/billing/serverPlan";
+import type { Wallet } from "@editor/billing/types";
+import type { LegacyTeamAllowance } from "@editor/types/legacyBilling";
+import "@editor/billing/billing-screen.css";
 
 export interface BillingScreenProps {
   /** Host-specific occupied seats; null means unavailable, undefined uses the wallet. */

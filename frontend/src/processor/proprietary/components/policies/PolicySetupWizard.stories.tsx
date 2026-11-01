@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
   decorateForStory,
-} from "@portal/components/policies/storyFixtures";
-import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
+} from "@processor/components/policies/storyFixtures";
+import { PolicySetupWizard } from "@processor/components/policies/PolicySetupWizard";
 
 const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
 const classification = POLICY_CATEGORIES.find(

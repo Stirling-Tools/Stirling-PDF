@@ -2,19 +2,19 @@ import React from "react";
 import i18n from "i18next";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   ViewerContext: React.createContext(null),
 }));
-vi.mock("@app/services/fileStorage", () => ({ fileStorage: {} }));
-vi.mock("@app/data/processorEntitySearch", () => ({
+vi.mock("@editor/services/fileStorage", () => ({ fileStorage: {} }));
+vi.mock("@editor/data/processorEntitySearch", () => ({
   useProcessorEntityGroups: vi.fn(),
 }));
-vi.mock("@app/data/settingsContentSearch", () => ({
+vi.mock("@editor/data/settingsContentSearch", () => ({
   findSettingsContentMatch: () => null,
   buildMatchSnippet: vi.fn(),
 }));
 
-import { rankSettingsResults } from "@app/hooks/useSuperSearch";
+import { rankSettingsResults } from "@editor/hooks/useSuperSearch";
 
 describe("self-hosted Users settings search", () => {
   it.each([false, true])(

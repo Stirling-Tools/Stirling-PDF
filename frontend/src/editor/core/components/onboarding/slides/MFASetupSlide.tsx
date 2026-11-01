@@ -14,19 +14,19 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { QRCodeSVG } from "qrcode.react";
 import { useTranslation } from "react-i18next";
-import { SlideConfig } from "@app/types/types";
-import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
-import { accountService } from "@app/services/accountService";
-import { useAccountLogout } from "@app/extensions/accountLogout";
-import { useAuth } from "@app/auth/UseSession";
-import { Icon } from "@app/ui/Icon";
-import { BASE_PATH, withBasePath } from "@app/constants/app";
-import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
-import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
-import i18n from "@app/i18n";
+import { SlideConfig } from "@editor/types/types";
+import { UNIFIED_CIRCLE_CONFIG } from "@editor/components/onboarding/slides/unifiedBackgroundConfig";
+import { accountService } from "@editor/services/accountService";
+import { useAccountLogout } from "@editor/extensions/accountLogout";
+import { useAuth } from "@editor/auth/UseSession";
+import { Icon } from "@editor/ui/Icon";
+import { BASE_PATH, withBasePath } from "@editor/constants/app";
+import styles from "@editor/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
+import { MfaSetupResponse } from "@editor/responses/Mfa/MfaResponse";
+import i18n from "@editor/i18n";
 
 interface MFASetupSlideProps {
   onMfaSetupComplete?: () => void;

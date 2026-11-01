@@ -1,5 +1,5 @@
 import { forwardRef, type HTMLAttributes } from "react";
-import "@app/ui/Surface.css";
+import "@editor/ui/Surface.css";
 
 export interface SurfaceProps extends HTMLAttributes<HTMLDivElement> {
   /** Element to render; `section`/`article`/`aside` when the box is a landmark. */

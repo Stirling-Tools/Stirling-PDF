@@ -1,18 +1,18 @@
-import apiClient from "@app/services/apiClient";
-import { ToolRegistry } from "@app/data/toolsTaxonomy";
-import { ToolId } from "@app/types/toolId";
-import { AUTOMATION_CONSTANTS } from "@app/constants/automation";
-import { AutomationFileProcessor } from "@app/utils/automationFileProcessor";
-import { ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import apiClient from "@editor/services/apiClient";
+import { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { ToolId } from "@editor/types/toolId";
+import { AUTOMATION_CONSTANTS } from "@editor/constants/automation";
+import { AutomationFileProcessor } from "@editor/utils/automationFileProcessor";
+import { ToolType } from "@editor/hooks/tools/shared/useToolOperation";
 import {
   type ErasedToolParams,
   type MultiFileToolOperationConfig,
   type SingleFileToolOperationConfig,
-} from "@app/hooks/tools/shared/toolOperationTypes";
-import { zipFileService } from "@app/services/zipFileService";
-import { processResponse } from "@app/utils/toolResponseProcessor";
-import { extractErrorMessage } from "@app/utils/toolErrorHandler";
-import { type AutomationConfig } from "@app/types/automation";
+} from "@editor/hooks/tools/shared/toolOperationTypes";
+import { zipFileService } from "@editor/services/zipFileService";
+import { processResponse } from "@editor/utils/toolResponseProcessor";
+import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
+import { type AutomationConfig } from "@editor/types/automation";
 
 export const processMultiFileResponse = async (
   responseData: Blob,

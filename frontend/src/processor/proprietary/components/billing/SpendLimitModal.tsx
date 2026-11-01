@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Modal } from "@app/ui";
-import { updateCap, type Wallet } from "@portal/api/billing";
-import { ProcessorSpendFields } from "@portal/components/billing/ProcessorSpendFields";
+import { Banner, Button, Modal } from "@editor/ui";
+import { updateCap, type Wallet } from "@processor/api/billing";
+import { ProcessorSpendFields } from "@processor/components/billing/ProcessorSpendFields";
 
 /** Changes the existing ceiling without opening another checkout. */
 export function SpendLimitModal({

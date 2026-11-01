@@ -1,14 +1,14 @@
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Avatar } from "@app/ui/Avatar";
-import { Icon } from "@app/ui/Icon";
-import { StatusBadge } from "@app/ui/StatusBadge";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Avatar } from "@editor/ui/Avatar";
+import { Icon } from "@editor/ui/Icon";
+import { StatusBadge } from "@editor/ui/StatusBadge";
 import type {
   ParticipantInfo,
   SigningParticipantPreview,
-} from "@app/types/signingSession";
-import { getFileColor } from "@app/utils/fileColors";
-import "@app/components/shared/signing/signingDetail.css";
+} from "@editor/types/signingSession";
+import { getFileColor } from "@editor/utils/fileColors";
+import "@editor/components/shared/signing/signingDetail.css";
 
 interface ParticipantListPanelProps {
   participants: (SigningParticipantPreview & { email?: string })[];

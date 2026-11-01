@@ -9,7 +9,7 @@ import {
   coreEntryY,
   type Geo,
   type Rect,
-} from "@portal/components/processor-flow/flowTypes";
+} from "@processor/components/processor-flow/flowTypes";
 
 /** Measures card edges into a wrapper-relative {@link Geo} and builds the SVG
  *  wires; returns the refs + wires. The particle loop reads the same `geoRef`. */

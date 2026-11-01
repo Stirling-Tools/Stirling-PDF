@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
+import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
 
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
 
-import OCRSettings from "@app/components/tools/ocr/OCRSettings";
-import AdvancedOCRSettings from "@app/components/tools/ocr/AdvancedOCRSettings";
+import OCRSettings from "@editor/components/tools/ocr/OCRSettings";
+import AdvancedOCRSettings from "@editor/components/tools/ocr/AdvancedOCRSettings";
 
-import { useOCRParameters } from "@app/hooks/tools/ocr/useOCRParameters";
-import { useOCROperation } from "@app/hooks/tools/ocr/useOCROperation";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useOCRTips } from "@app/components/tooltips/useOCRTips";
-import { useAdvancedOCRTips } from "@app/components/tooltips/useAdvancedOCRTips";
+import { useOCRParameters } from "@editor/hooks/tools/ocr/useOCRParameters";
+import { useOCROperation } from "@editor/hooks/tools/ocr/useOCROperation";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useOCRTips } from "@editor/components/tooltips/useOCRTips";
+import { useAdvancedOCRTips } from "@editor/components/tooltips/useAdvancedOCRTips";
 
 const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();

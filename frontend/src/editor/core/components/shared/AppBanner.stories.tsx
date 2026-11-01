@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { AppBanner } from "@app/components/shared/AppBanner";
+import { AppBanner } from "@editor/components/shared/AppBanner";
 
 const meta = {
   title: "Shared/AppBanner",

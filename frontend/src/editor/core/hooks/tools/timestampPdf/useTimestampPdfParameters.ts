@@ -1,8 +1,8 @@
-import { BaseParameters } from "@app/types/parameters";
+import { BaseParameters } from "@editor/types/parameters";
 import {
   useBaseParameters,
   BaseParametersHook,
-} from "@app/hooks/tools/shared/useBaseParameters";
+} from "@editor/hooks/tools/shared/useBaseParameters";
 
 // Fallback presets used only when AppConfig hasn't loaded yet.
 // The real presets are served by the backend via /api/v1/config/app-config

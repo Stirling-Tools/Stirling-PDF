@@ -1,5 +1,5 @@
-import { PlanTierGroup } from "@app/services/licenseService";
-import { SavingsCalculation } from "@app/components/shared/stripeCheckout/types/checkout";
+import { PlanTierGroup } from "@editor/services/licenseService";
+import { SavingsCalculation } from "@editor/components/shared/stripeCheckout/types/checkout";
 
 /**
  * Calculate savings for yearly vs monthly plans

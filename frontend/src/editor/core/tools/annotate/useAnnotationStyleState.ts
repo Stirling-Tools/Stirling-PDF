@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import type { AnnotationToolId } from "@app/components/viewer/viewerTypes";
+import type { AnnotationToolId } from "@editor/components/viewer/viewerTypes";
 
 type Size = { width: number; height: number };
 
@@ -70,6 +70,8 @@ export interface AnnotationStyleStateReturn {
   buildToolOptions: BuildToolOptionsFn;
   getActiveColor: (target: string | null) => string;
 }
+
+const ARROW_LINE_WIDTH = 3;
 
 export const useAnnotationStyleState = (
   cssToPdfSize?: (size: Size) => Size,
@@ -189,7 +191,10 @@ export const useAnnotationStyleState = (
             color: shapeStrokeColor,
             strokeColor: shapeStrokeColor,
             opacity: shapeStrokeOpacity / 100,
-            borderWidth: shapeThickness,
+            // The arrowhead is drawn at 9x the line width, so the shape
+            // thickness makes it oversized.
+            borderWidth:
+              toolId === "lineArrow" ? ARROW_LINE_WIDTH : shapeThickness,
             ...metadata,
           };
         case "stamp": {

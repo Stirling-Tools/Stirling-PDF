@@ -2,7 +2,7 @@ import { useMemo, type ReactNode } from "react";
 import {
   useWorkbenchBarButtons,
   type WorkbenchBarButtonWithAction,
-} from "@app/hooks/useWorkbenchBarButtons";
+} from "@editor/hooks/useWorkbenchBarButtons";
 
 export interface FileLibraryWorkbenchBarButtonsOptions {
   /** Names the folder being shown. Null where the library places it itself. */

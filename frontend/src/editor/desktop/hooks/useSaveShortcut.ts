@@ -3,10 +3,10 @@ import {
   useFileSelector,
   useFileSelectors,
   useFileActions,
-} from "@app/contexts/FileContext";
+} from "@editor/contexts/FileContext";
 // Save through the export gateway so a "run on export" policy enforces before
 // the file is written out (no-op when no such policy is active).
-import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
+import { downloadFileWithPolicy as downloadFile } from "@editor/services/exportWithPolicy";
 
 /**
  * Desktop-only keyboard shortcut: Ctrl/Cmd+S to save selected files

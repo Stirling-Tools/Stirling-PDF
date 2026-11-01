@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Modal } from "@app/ui";
-import { SubcategoryId } from "@app/data/toolsTaxonomy";
-import { type ExecutableTool } from "@app/hooks/tools/shared/toolAutomation";
-import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
-import "@portal/views/PipelineBuilder.css";
+import { Modal } from "@editor/ui";
+import { SubcategoryId } from "@editor/data/toolsTaxonomy";
+import { type ExecutableTool } from "@editor/hooks/tools/shared/toolAutomation";
+import { ToolPicker } from "@processor/components/pipelines/ToolPicker";
+import "@processor/views/PipelineBuilder.css";
 
 const tools: ExecutableTool[] = [
   {

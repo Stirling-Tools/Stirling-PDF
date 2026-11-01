@@ -3,8 +3,8 @@
  * a policy step needs only these two parameters, typed against the generated request model.
  */
 
-import type { BidirectionalToolConfig } from "@app/hooks/tools/shared/toolOperationDescriptor";
-import type { ToolApiParams, ToolEndpoint } from "@app/types/toolApiTypes";
+import type { BidirectionalToolConfig } from "@editor/hooks/tools/shared/toolOperationDescriptor";
+import type { ToolApiParams, ToolEndpoint } from "@editor/types/toolApiTypes";
 
 const ENDPOINT = "/api/v1/convert/pdf/pdfa" satisfies ToolEndpoint;
 type PdfaApiParams = ToolApiParams[typeof ENDPOINT];

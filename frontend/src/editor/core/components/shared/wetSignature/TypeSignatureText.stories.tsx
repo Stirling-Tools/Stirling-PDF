@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { TypeSignatureText } from "@app/components/shared/wetSignature/TypeSignatureText";
+import { TypeSignatureText } from "@editor/components/shared/wetSignature/TypeSignatureText";
 
 const meta = {
   title: "Shared/WetSignature/TypeSignatureText",

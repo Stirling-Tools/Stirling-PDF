@@ -13,12 +13,12 @@ import {
   writeUtf16,
   readAnnotRectAdjusted,
   parseRectToCss,
-} from "@app/services/pdfiumService";
+} from "@editor/services/pdfiumService";
 import {
   FPDF_ANNOT_LINK,
   PDFACTION_GOTO,
   PDFACTION_URI,
-} from "@app/utils/pdfiumBitmapUtils";
+} from "@editor/utils/pdfiumBitmapUtils";
 
 export type LinkType = "internal" | "external" | "unknown";
 export type LinkBorderStyle =

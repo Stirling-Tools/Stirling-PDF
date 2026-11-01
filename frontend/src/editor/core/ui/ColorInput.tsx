@@ -8,8 +8,8 @@ import {
   ColorInput as MantineColorInput,
   type ColorInputProps as MantineColorInputProps,
 } from "@mantine/core";
-import { useInputAria } from "@app/ui/ariaForwarding";
-import "@app/ui/MantineForms.css";
+import { useInputAria } from "@editor/ui/ariaForwarding";
+import "@editor/ui/MantineForms.css";
 
 const SUI_INPUT_VARS = {
   "--input-bg": "var(--c-input-bg)",

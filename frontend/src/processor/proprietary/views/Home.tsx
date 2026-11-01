@@ -1,8 +1,8 @@
-import { useTier } from "@portal/contexts/TierContext";
-import { HomeHero } from "@portal/components/HomeHero";
-import { HomeGreeting } from "@portal/components/HomeGreeting";
-import { ProcessorFlow } from "@portal/components/ProcessorFlow";
-import "@portal/views/Home.css";
+import { useTier } from "@processor/contexts/TierContext";
+import { HomeHero } from "@processor/components/HomeHero";
+import { HomeGreeting } from "@processor/components/HomeGreeting";
+import { ProcessorFlow } from "@processor/components/ProcessorFlow";
+import "@processor/views/Home.css";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Home view                                                                */

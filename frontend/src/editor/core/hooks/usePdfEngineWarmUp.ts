@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
-import { FileStoreContext } from "@app/contexts/file/contexts";
-import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
+import { FileStoreContext } from "@editor/contexts/file/contexts";
+import { startEagerWasmCompilation } from "@editor/services/wasmPrecompiler";
 
 /**
  * Starts the PDFium WASM download and compile only once a document is actually

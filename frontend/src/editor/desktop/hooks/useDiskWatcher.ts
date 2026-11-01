@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
-import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
+import { useAllFiles, useFileActions } from "@editor/contexts/FileContext";
 import {
   onDiskFilesChanged,
   watchDiskPaths,
-} from "@app/services/desktopFileLink";
+} from "@editor/services/desktopFileLink";
 
 // Watches disk originals of open files: every other reconcile is user-triggered, so
 // an edit or delete under an open file otherwise goes unnoticed until a rebuild.

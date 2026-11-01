@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 
-vi.mock("@app/portal/auth/saasSupabase", () => ({
+vi.mock("@editor/portal/auth/saasSupabase", () => ({
   ensureSaasSupabase: vi.fn(),
 }));
 
@@ -61,8 +61,8 @@ class BrowserChannel extends EventTarget {
   }
 }
 
-let storage: typeof import("@app/auth/supabase/supabaseClient");
-let session: typeof import("@app/portal/auth/portalSaasSession");
+let storage: typeof import("@editor/auth/supabase/supabaseClient");
+let session: typeof import("@editor/portal/auth/portalSaasSession");
 let stopClients: (() => Promise<void>)[];
 let windowListeners: [string, EventListenerOrEventListenerObject][];
 
@@ -79,8 +79,8 @@ beforeEach(async () => {
     },
   );
   vi.stubGlobal("BroadcastChannel", BrowserChannel);
-  storage = await import("@app/auth/supabase/supabaseClient");
-  session = await import("@app/portal/auth/portalSaasSession");
+  storage = await import("@editor/auth/supabase/supabaseClient");
+  session = await import("@editor/portal/auth/portalSaasSession");
 });
 
 afterEach(async () => {
@@ -186,7 +186,7 @@ it.each(["same tab", "another tab"])(
     let otherStorage = storage;
     if (tab === "another tab") {
       vi.resetModules();
-      otherStorage = await import("@app/auth/supabase/supabaseClient");
+      otherStorage = await import("@editor/auth/supabase/supabaseClient");
       const otherClient = otherStorage.configureSupabase(config);
       stopClients.push(() => otherClient.auth.stopAutoRefresh());
       await otherClient.auth.getSession();

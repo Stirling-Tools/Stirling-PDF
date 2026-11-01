@@ -1,13 +1,13 @@
 import { useState, useCallback } from "react";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
-import { fileStorage } from "@app/services/fileStorage";
-import { pruneMissingRecentFiles } from "@app/services/pruneMissingRecentFiles";
-import { StirlingFileStub, StirlingFile } from "@app/types/fileContext";
-import { FileId } from "@app/types/fileContext";
-import apiClient from "@app/services/apiClient";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useAuth } from "@app/auth/UseSession";
-import { useDiskLinkReconcile } from "@app/hooks/useDiskLinkReconcile";
+import { useIndexedDB } from "@editor/contexts/IndexedDBContext";
+import { fileStorage } from "@editor/services/fileStorage";
+import { pruneMissingRecentFiles } from "@editor/services/pruneMissingRecentFiles";
+import { StirlingFileStub, StirlingFile } from "@editor/types/fileContext";
+import { FileId } from "@editor/types/fileContext";
+import apiClient from "@editor/services/apiClient";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useAuth } from "@editor/auth/UseSession";
+import { useDiskLinkReconcile } from "@editor/hooks/useDiskLinkReconcile";
 
 interface StoredFileResponse {
   id: number;

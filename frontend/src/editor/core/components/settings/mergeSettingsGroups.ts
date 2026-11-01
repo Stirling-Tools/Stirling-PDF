@@ -1,4 +1,4 @@
-import type { ConfigNavSection } from "@app/components/shared/config/types";
+import type { ConfigNavSection } from "@editor/components/shared/config/types";
 
 /**
  * Folds another layer's settings groups into the build's own. Groups with a

@@ -1,7 +1,7 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "node:path";
-import { DATABASE_CONFIGS } from "@app/services/indexedDBManager";
+import { DATABASE_CONFIGS } from "@editor/services/indexedDBManager";
 
 /** Screenshot review of /files surfaces; dumps PNGs to screenshots/files-page. */
 

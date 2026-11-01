@@ -1,9 +1,9 @@
-import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
 import {
   HORIZONTAL_PADDING_RATIO,
   VERTICAL_PADDING_RATIO,
-} from "@app/constants/signConstants";
-import { loadImage } from "@app/utils/canvasImage";
+} from "@editor/constants/signConstants";
+import { loadImage } from "@editor/utils/canvasImage";
 
 export interface SignaturePreview {
   dataUrl: string;

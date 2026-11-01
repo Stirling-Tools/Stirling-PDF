@@ -1,8 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { SessionActionsPanel } from "@app/components/tools/certSign/panels/SessionActionsPanel";
-import type { ParticipantInfo, SessionDetail } from "@app/types/signingSession";
+import { SessionActionsPanel } from "@editor/components/tools/certSign/panels/SessionActionsPanel";
+import type {
+  ParticipantInfo,
+  SessionDetail,
+} from "@editor/types/signingSession";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
 
 // Guard unsaved edits on BOTH exit routes.
 //

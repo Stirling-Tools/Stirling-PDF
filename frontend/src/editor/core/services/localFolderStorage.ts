@@ -9,11 +9,11 @@ import {
   folderKind,
   createFolderId,
   pickFolderColor,
-} from "@app/types/folder";
+} from "@editor/types/folder";
 import {
   indexedDBManager,
   DATABASE_CONFIGS,
-} from "@app/services/indexedDBManager";
+} from "@editor/services/indexedDBManager";
 
 /** One directory, one key — regardless of how the picker spelled the path. */
 export function directoryKey(directory: string): string {

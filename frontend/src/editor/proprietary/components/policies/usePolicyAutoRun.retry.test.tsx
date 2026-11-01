@@ -3,12 +3,12 @@ import { renderHook, act } from "@testing-library/react";
 
 // The auto-run hook reaches into several contexts + the network; stub those so we can drive just
 // the queue-rejection retry path against the REAL run store.
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: [] }),
   useFileManagement: () => ({ addFiles: vi.fn() }),
   useFileContext: () => ({ consumeFiles: vi.fn() }),
 }));
-vi.mock("@app/hooks/usePolicies", () => ({
+vi.mock("@editor/hooks/usePolicies", () => ({
   usePolicies: () => ({
     policies: {
       security: {
@@ -21,31 +21,31 @@ vi.mock("@app/hooks/usePolicies", () => ({
     },
   }),
 }));
-vi.mock("@app/services/policyApi", () => ({
+vi.mock("@editor/services/policyApi", () => ({
   runStoredPolicy: vi.fn(),
   getPolicyRun: vi.fn(),
   downloadPolicyOutput: vi.fn(),
   resolvePolicyRunTarget: () => "saas",
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: vi.fn(),
     getStirlingFileStub: vi.fn().mockResolvedValue(null),
   },
 }));
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: vi.fn() }),
 }));
 
-import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
+import { usePolicyAutoRun } from "@editor/components/policies/usePolicyAutoRun";
 import {
   recordRunStart,
   getRun,
   resetPolicyRuns,
   usePolicyRuns,
-} from "@app/components/policies/policyRunStore";
-import { runStoredPolicy, getPolicyRun } from "@app/services/policyApi";
-import { fileStorage } from "@app/services/fileStorage";
+} from "@editor/components/policies/policyRunStore";
+import { runStoredPolicy, getPolicyRun } from "@editor/services/policyApi";
+import { fileStorage } from "@editor/services/fileStorage";
 
 const getRunApi = vi.mocked(getPolicyRun);
 const runStored = vi.mocked(runStoredPolicy);

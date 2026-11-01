@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { markOnboardingCompleted } from "@app/components/onboarding/orchestrator/onboardingStorage";
+import { markOnboardingCompleted } from "@editor/components/onboarding/orchestrator/onboardingStorage";
 
 const SESSION_KEY = "onboarding::bypass-all";
 const PARAM_KEY = "bypassOnboarding";

@@ -5,7 +5,7 @@ import {
   expectConsole,
   formatArgs,
   matches,
-} from "@app/tests/failOnConsole";
+} from "@editor/tests/failOnConsole";
 
 describe("failOnConsole", () => {
   describe("matches", () => {

@@ -1,20 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
-import { LinkAccountCard } from "@portal/components/account-link/LinkAccountCard";
-import type { UseAccountLink } from "@portal/hooks/useAccountLink";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
+import { LinkAccountCard } from "@processor/components/account-link/LinkAccountCard";
+import type { UseAccountLink } from "@processor/hooks/useAccountLink";
 
 const { auth, openLinkModal, unlink } = vi.hoisted(() => ({
   auth: { user: { orgOwner: false } },
   openLinkModal: vi.fn(),
   unlink: vi.fn(),
 }));
-vi.mock("@app/auth/context", () => ({ useAuth: () => auth }));
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@editor/auth/context", () => ({ useAuth: () => auth }));
+vi.mock("@processor/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal }),
 }));
 
-vi.mock("@portal/hooks/useLinkedAccountEmail", () => ({
+vi.mock("@processor/hooks/useLinkedAccountEmail", () => ({
   useLinkedAccountEmail: () => null,
 }));
 

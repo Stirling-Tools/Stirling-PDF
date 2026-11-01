@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { WithOrgOwner } from "@portal/test/WithOrgOwner";
-import type { UseAccountLink } from "@portal/hooks/useAccountLink";
-import { LinkAccountCard } from "@portal/components/account-link/LinkAccountCard";
-import "@portal/views/AccountLink.css";
+import { WithOrgOwner } from "@processor/test/WithOrgOwner";
+import type { UseAccountLink } from "@processor/hooks/useAccountLink";
+import { LinkAccountCard } from "@processor/components/account-link/LinkAccountCard";
+import "@processor/views/AccountLink.css";
 
 // A no-op UseAccountLink for static stories; overridden per story.
 const base: UseAccountLink = {

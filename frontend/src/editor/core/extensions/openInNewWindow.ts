@@ -1,4 +1,4 @@
-import { StirlingFileStub } from "@app/types/fileContext";
+import { StirlingFileStub } from "@editor/types/fileContext";
 
 export interface OpenInNewWindowApi {
   /** Whether this file can be opened in a separate window. */

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Tabs, type TabItem } from "@app/ui/Tabs";
+import { Tabs, type TabItem } from "@editor/ui/Tabs";
 
 const baseItems: TabItem[] = [
   { key: "deployed", label: "Deployed", count: 6 },

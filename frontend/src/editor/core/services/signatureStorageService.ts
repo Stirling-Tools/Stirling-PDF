@@ -1,7 +1,7 @@
 import axios from "axios";
-import apiClient from "@app/services/apiClient";
-import type { SavedSignature } from "@app/types/signature";
-import { readResponseHeader } from "@app/services/shareBundleUtils";
+import apiClient from "@editor/services/apiClient";
+import type { SavedSignature } from "@editor/types/signature";
+import { readResponseHeader } from "@editor/services/shareBundleUtils";
 
 export type StorageType = "backend" | "localStorage";
 

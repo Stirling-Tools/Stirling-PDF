@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAuth } from "@app/auth/UseSession";
+import { useAuth } from "@editor/auth/UseSession";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, EmptyState, Skeleton, StatusBadge, Tooltip } from "@app/ui";
+import { Button, EmptyState, Skeleton, StatusBadge, Tooltip } from "@editor/ui";
 import {
   claimTeamOwnership,
   changeMemberRole,
@@ -13,34 +13,34 @@ import {
   type PendingInvitation,
   type PortalAccessState,
   type RoleId,
-} from "@portal/api/users";
-import { usersBackend } from "@app/portal/usersBackend";
+} from "@processor/api/users";
+import { usersBackend } from "@editor/portal/usersBackend";
 import {
   createGrant,
   revokeGrant,
   type ResourceGrant,
-} from "@portal/api/access";
-import { deleteTeam as apiDeleteTeam, type Team } from "@portal/api/teams";
-import { errorMessage } from "@portal/api/http";
-import { usersCapabilities as buildCaps } from "@app/portal/usersCapabilities";
-import type { UsersCapabilities } from "@portal/api/usersCapabilities";
-import { useSeatManagement } from "@app/portal/seatManagement";
-import { UsersDirectory } from "@portal/components/users/UsersDirectory";
-import { PendingInvitations } from "@portal/components/users/PendingInvitations";
-import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
-import { NewTeamModal } from "@portal/components/users/NewTeamModal";
-import { ResetPasswordModal } from "@portal/components/users/ResetPasswordModal";
-import { MoveToTeamModal } from "@portal/components/users/MoveToTeamModal";
-import { RenameTeamModal } from "@portal/components/users/RenameTeamModal";
-import { ConfirmModal } from "@portal/components/users/ConfirmModal";
-import { seatsLabel } from "@portal/components/users/format";
-import { useUsersData } from "@portal/views/usersData";
+} from "@processor/api/access";
+import { deleteTeam as apiDeleteTeam, type Team } from "@processor/api/teams";
+import { errorMessage } from "@processor/api/http";
+import { usersCapabilities as buildCaps } from "@editor/portal/usersCapabilities";
+import type { UsersCapabilities } from "@processor/api/usersCapabilities";
+import { useSeatManagement } from "@editor/portal/seatManagement";
+import { UsersDirectory } from "@processor/components/users/UsersDirectory";
+import { PendingInvitations } from "@processor/components/users/PendingInvitations";
+import { InviteMemberModal } from "@processor/components/users/InviteMemberModal";
+import { NewTeamModal } from "@processor/components/users/NewTeamModal";
+import { ResetPasswordModal } from "@processor/components/users/ResetPasswordModal";
+import { MoveToTeamModal } from "@processor/components/users/MoveToTeamModal";
+import { RenameTeamModal } from "@processor/components/users/RenameTeamModal";
+import { ConfirmModal } from "@processor/components/users/ConfirmModal";
+import { seatsLabel } from "@processor/components/users/format";
+import { useUsersData } from "@processor/views/usersData";
 import {
   OwnershipTransferModal,
   type OwnershipStatus,
-} from "@app/components/shared/ownership/OwnershipTransferModal";
-import { ownershipAdapter, pendingOwnership } from "@portal/api/ownership";
-import { useUI } from "@portal/contexts/UIContext";
+} from "@editor/components/shared/ownership/OwnershipTransferModal";
+import { ownershipAdapter, pendingOwnership } from "@processor/api/ownership";
+import { useUI } from "@processor/contexts/UIContext";
 
 interface Confirm {
   title: string;

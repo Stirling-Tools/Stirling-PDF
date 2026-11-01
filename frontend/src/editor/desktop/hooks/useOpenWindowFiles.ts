@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
-import { fileOpenService } from "@app/services/fileOpenService";
-import { fileStorage } from "@app/services/fileStorage";
-import { materializeServerStubs } from "@app/services/fileSyncService";
-import { useFileActions } from "@app/contexts/file/fileHooks";
-import { StirlingFileStub } from "@app/types/fileContext";
-import { FileId } from "@app/types/file";
+import { fileOpenService } from "@editor/services/fileOpenService";
+import { fileStorage } from "@editor/services/fileStorage";
+import { materializeServerStubs } from "@editor/services/fileSyncService";
+import { useFileActions } from "@editor/contexts/file/fileHooks";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { FileId } from "@editor/types/file";
 
 /**
  * Desktop-only: when a window is spawned via "Open in new window" from the My

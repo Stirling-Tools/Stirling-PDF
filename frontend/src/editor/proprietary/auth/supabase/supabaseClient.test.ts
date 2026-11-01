@@ -19,7 +19,7 @@ import {
   clearSupabaseSession,
   configureSupabase,
   getSupabaseClient,
-} from "@app/auth/supabase/supabaseClient";
+} from "@editor/auth/supabase/supabaseClient";
 
 const config = { url: "https://project.supabase.co", key: "public-key" };
 const key = "sb-project-auth-token";
@@ -125,10 +125,10 @@ describe("browser session isolation", () => {
   it("prevents another tab's pending refresh from restoring a logged-out session", async () => {
     // Each tab has its own module state but shares the origin's localStorage.
     vi.resetModules();
-    const firstTab = await import("@app/auth/supabase/supabaseClient");
+    const firstTab = await import("@editor/auth/supabase/supabaseClient");
     firstTab.configureSupabase(config);
     vi.resetModules();
-    const secondTab = await import("@app/auth/supabase/supabaseClient");
+    const secondTab = await import("@editor/auth/supabase/supabaseClient");
     secondTab.configureSupabase(config);
     const secondStorage = createClient.mock.calls[1][2].auth.storage;
     secondStorage.setItem(key, "old-owner");
@@ -146,7 +146,7 @@ describe("browser session isolation", () => {
 
   it("reads the in-memory fallback when persistent storage rejects writes", async () => {
     vi.resetModules();
-    const client = await import("@app/auth/supabase/supabaseClient");
+    const client = await import("@editor/auth/supabase/supabaseClient");
     client.configureSupabase(config);
     const storage = createClient.mock.calls[0][2].auth.storage;
     vi.spyOn(localStorage, "setItem").mockImplementation(() => {
@@ -158,10 +158,10 @@ describe("browser session isolation", () => {
 
   it("rejects a late cross-tab write even before its storage event is delivered", async () => {
     vi.resetModules();
-    const firstTab = await import("@app/auth/supabase/supabaseClient");
+    const firstTab = await import("@editor/auth/supabase/supabaseClient");
     firstTab.configureSupabase(config);
     vi.resetModules();
-    const secondTab = await import("@app/auth/supabase/supabaseClient");
+    const secondTab = await import("@editor/auth/supabase/supabaseClient");
     secondTab.configureSupabase(config);
     const previous = createClient.mock.calls[1][2].auth.storage;
     previous.setItem(key, "old-session");
@@ -178,7 +178,7 @@ describe("browser session isolation", () => {
 
   it("does not recover stale disk credentials after deletion fails", async () => {
     vi.resetModules();
-    const client = await import("@app/auth/supabase/supabaseClient");
+    const client = await import("@editor/auth/supabase/supabaseClient");
     client.configureSupabase(config);
     createClient.mock.calls[0][2].auth.storage.setItem(key, "old-session");
     vi.spyOn(localStorage, "removeItem").mockImplementation(() => {
@@ -191,7 +191,7 @@ describe("browser session isolation", () => {
 
   it("clears the other tab's client when it receives the invalidation event", async () => {
     vi.resetModules();
-    const client = await import("@app/auth/supabase/supabaseClient");
+    const client = await import("@editor/auth/supabase/supabaseClient");
     client.configureSupabase(config);
     window.dispatchEvent(
       new StorageEvent("storage", {

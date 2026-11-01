@@ -15,12 +15,12 @@ const post = vi.fn();
  */
 let transport: (...args: unknown[]) => unknown = (...args) => post(...args);
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { post: (...args: unknown[]) => transport(...args) },
 }));
 
 const { reportToolFailure, reportFilesRemoved, errorCodeOf } =
-  await import("@app/services/failureReporting");
+  await import("@editor/services/failureReporting");
 
 /** An axios-shaped rejection carrying a Problem Details body. */
 function problemDetail(errorCode: string, extra: Record<string, unknown> = {}) {

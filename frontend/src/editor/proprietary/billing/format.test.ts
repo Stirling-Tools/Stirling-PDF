@@ -7,7 +7,7 @@ import {
   bundleListMinor,
   bundlePriceMinor,
   computeBundleQuote,
-} from "@app/billing";
+} from "@editor/billing";
 
 /**
  * The run-based prepaid brain must mirror the marketing calculator (users → volume,

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { FlowModal } from "@portal/components/shared/FlowModal";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { FlowModal } from "@processor/components/shared/FlowModal";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 
 /**
  * The shell backs every procurement and trial dialog, so its dismissal paths and its header

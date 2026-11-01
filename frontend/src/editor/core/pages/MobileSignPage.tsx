@@ -12,17 +12,17 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { Button as DSButton } from "@app/ui/Button";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Button as DSButton } from "@editor/ui/Button";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
-import { LogoIcon } from "@app/components/shared/LogoIcon";
-import { Wordmark } from "@app/components/shared/Wordmark";
-import { Icon } from "@app/ui/Icon";
+import { LogoIcon } from "@editor/components/shared/LogoIcon";
+import { Wordmark } from "@editor/components/shared/Wordmark";
+import { Icon } from "@editor/ui/Icon";
 import {
   MobileDrawCanvas,
   type MobileDrawCanvasHandle,
-} from "@app/components/mobileSign/MobileDrawCanvas";
-import apiClient from "@app/services/apiClient";
+} from "@editor/components/mobileSign/MobileDrawCanvas";
+import apiClient from "@editor/services/apiClient";
 
 // Use the configured API base (e.g. api.stirling.com), not the page origin.
 const API_BASE = (apiClient.defaults.baseURL ?? "").replace(/\/+$/, "");

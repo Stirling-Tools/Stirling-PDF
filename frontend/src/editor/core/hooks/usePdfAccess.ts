@@ -3,7 +3,7 @@ import {
   getPdfAccess,
   pdfAccessRevision,
   subscribePdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
 /** Observe session access without persisting the password in document metadata. */
 export function usePdfAccess(file: Blob | string | null | undefined) {

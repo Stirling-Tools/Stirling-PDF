@@ -1,4 +1,4 @@
-import { apiClient, HttpError } from "@portal/api/http";
+import { apiClient, HttpError } from "@processor/api/http";
 
 /**
  * Admin API for storage encryption at rest. Mirrors the Spring surface added in

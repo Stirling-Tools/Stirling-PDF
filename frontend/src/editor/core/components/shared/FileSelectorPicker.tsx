@@ -1,35 +1,35 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Box, Popover, ScrollArea, Text, Loader } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import {
   createStirlingFile,
   createFileId,
   createNewStirlingFileStub,
-} from "@app/types/fileContext";
-import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
-import { useAllFiles } from "@app/contexts/FileContext";
-import { useFileContext } from "@app/contexts/file/fileHooks";
-import { useFileManager } from "@app/hooks/useFileManager";
-import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
-import { fileStorage } from "@app/services/fileStorage";
-import apiClient from "@app/services/apiClient";
+} from "@editor/types/fileContext";
+import type { StirlingFile, StirlingFileStub } from "@editor/types/fileContext";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import { useFileContext } from "@editor/contexts/file/fileHooks";
+import { useFileManager } from "@editor/hooks/useFileManager";
+import { useFileThumbnail } from "@editor/hooks/useFileThumbnail";
+import { fileStorage } from "@editor/services/fileStorage";
+import apiClient from "@editor/services/apiClient";
 import {
   parseContentDispositionFilename,
   extractLatestFilesFromBundle,
   readResponseHeader,
-} from "@app/services/shareBundleUtils";
-import { truncateCenter } from "@app/utils/textUtils";
-import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+} from "@editor/services/shareBundleUtils";
+import { truncateCenter } from "@editor/utils/textUtils";
+import { generateThumbnailForFile } from "@editor/utils/thumbnailUtils";
 import {
   assertFilesNotBlocked,
   policySourceIds,
-} from "@app/services/policyFileGuard";
-import { alert } from "@app/components/toast";
-import styles from "@app/components/shared/FileSelectorPicker.module.css";
-import "@app/components/shared/FileSidebarFileItem.css";
+} from "@editor/services/policyFileGuard";
+import { alert } from "@editor/components/toast";
+import styles from "@editor/components/shared/FileSelectorPicker.module.css";
+import "@editor/components/shared/FileSidebarFileItem.css";
 
 const LS_TAB = "filePicker.tab";
 const LS_SORT = "filePicker.sort";

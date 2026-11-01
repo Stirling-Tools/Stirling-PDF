@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { walletQuery } from "@app/portal/queries/wallet";
-import type { Tier } from "@app/portal/contexts/TierContext";
+import { walletQuery } from "@editor/portal/queries/wallet";
+import type { Tier } from "@editor/portal/contexts/TierContext";
 
 /**
  * The plan tier the portal runs on, SaaS flavor: the signed-in account IS the

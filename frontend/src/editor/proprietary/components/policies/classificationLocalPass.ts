@@ -5,23 +5,23 @@
  * (fields to write + whether the AI server run is still needed).
  */
 
-import { fileStorage } from "@app/services/fileStorage";
-import { classifyFileHeuristically } from "@app/services/heuristic/heuristicClassification";
-import { meterAutomationRun } from "@app/services/automationMeter";
+import { fileStorage } from "@editor/services/fileStorage";
+import { classifyFileHeuristically } from "@editor/services/heuristic/heuristicClassification";
+import { meterAutomationRun } from "@editor/services/automationMeter";
 import {
   isDispatched,
   markDispatched,
   recordRunStart,
   updateRun,
-} from "@app/components/policies/policyRunStore";
-import type { FileId } from "@app/types/file";
-import type { StirlingFile } from "@app/types/fileContext";
-import type { HeuristicConfidence } from "@app/services/heuristic/types";
+} from "@editor/components/policies/policyRunStore";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFile } from "@editor/types/fileContext";
+import type { HeuristicConfidence } from "@editor/services/heuristic/types";
 import {
   CLASSIFICATION_POLICY_KEY,
   localVerdictNeedsEscalation,
-} from "@app/data/classificationPolicy";
-import type { LocalPass } from "@app/components/policies/policyLocalPass";
+} from "@editor/data/classificationPolicy";
+import type { LocalPass } from "@editor/components/policies/policyLocalPass";
 
 /** How long to wait for an upload's bytes to land in IndexedDB (20 × 250ms ≈ 5s).
  *  The stub can surface in the file list a beat before its bytes are committed. */

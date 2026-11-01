@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PrepayModalHeader } from "@portal/components/billing/PrepayModalHeader";
-import "@portal/components/billing/billing.css";
+import { PrepayModalHeader } from "@processor/components/billing/PrepayModalHeader";
+import "@processor/components/billing/billing.css";
 
 const meta: Meta<typeof PrepayModalHeader> = {
   title: "Portal/Billing/PrepayModalHeader",

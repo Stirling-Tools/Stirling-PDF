@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Center, Text } from "@mantine/core";
-import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
+import { DocumentReadyWrapper } from "@editor/components/viewer/DocumentReadyWrapper";
 
 /**
  * Outside of a live `<EmbedPDF>` tree the document-manager plugin never

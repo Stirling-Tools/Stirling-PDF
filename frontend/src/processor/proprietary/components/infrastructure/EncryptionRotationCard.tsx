@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Card, Modal } from "@app/ui";
-import { RUNBOOK_ROTATION } from "@portal/api/storageEncryption";
-import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
+import { Banner, Button, Card, Modal } from "@editor/ui";
+import { RUNBOOK_ROTATION } from "@processor/api/storageEncryption";
+import { SectionHeader } from "@processor/components/infrastructure/SectionHeader";
 
 export interface EncryptionRotationCardProps {
   masterKeyVersion: number | null;

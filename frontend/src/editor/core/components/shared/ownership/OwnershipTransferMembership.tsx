@@ -1,9 +1,9 @@
 import { Trans, useTranslation } from "react-i18next";
-import type { OwnershipTransferFlow } from "@app/components/shared/ownership/useOwnershipTransfer";
+import type { OwnershipTransferFlow } from "@editor/components/shared/ownership/useOwnershipTransfer";
 import { Tooltip } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 /** Describes invitation readiness without implying that entering an email sends an invitation. */
 export function OwnershipTransferMembership({

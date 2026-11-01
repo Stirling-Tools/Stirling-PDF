@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Tooltip, Popover, TextInput, Stack } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import type { SelectionSelectionMenuProps } from "@embedpdf/plugin-selection/react";
 import { useSelectionCapability } from "@embedpdf/plugin-selection/react";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
@@ -14,24 +14,24 @@ import {
   PdfBlendMode,
   uuidV4,
 } from "@embedpdf/models";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useRedaction } from "@app/contexts/RedactionContext";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useRedaction } from "@editor/contexts/RedactionContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import {
   defaultParameters,
   RedactParameters,
-} from "@app/hooks/tools/redact/useRedactParameters";
-import { MARKUP_ANNOTATION_COLORS } from "@app/components/viewer/annotationDefaults";
-import { alert } from "@app/components/toast";
-import { getExternalHref } from "@app/utils/externalUrl";
+} from "@editor/hooks/tools/redact/useRedactParameters";
+import { MARKUP_ANNOTATION_COLORS } from "@editor/components/viewer/annotationDefaults";
+import { alert } from "@editor/components/toast";
+import { getExternalHref } from "@editor/utils/externalUrl";
 import {
   READ_ALOUD_FROM_SELECTION_EVENT,
   glyphPositionRatio,
   type ReadAloudFromSelectionDetail,
-} from "@app/components/viewer/readAloudFromSelection";
-import "@app/components/viewer/TextSelectionMenu.css";
+} from "@editor/components/viewer/readAloudFromSelection";
+import "@editor/components/viewer/TextSelectionMenu.css";
 
 export type TextSelectionMenuProps = SelectionSelectionMenuProps & {
   documentId?: string;

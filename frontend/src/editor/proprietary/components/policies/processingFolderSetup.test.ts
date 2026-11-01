@@ -4,11 +4,14 @@ import {
   folderSetupEntry,
   mergeFolderSteps,
   sortFolderPresets,
-} from "@app/components/policies/processingFolderSetup";
-import { policyStepFromWire, policyStepToWire } from "@app/policies/operations";
-import type { ProcessingRecordSummary } from "@app/hooks/useProcessingFolders";
+} from "@editor/components/policies/processingFolderSetup";
+import {
+  policyStepFromWire,
+  policyStepToWire,
+} from "@editor/policies/operations";
+import type { ProcessingRecordSummary } from "@editor/hooks/useProcessingFolders";
 
-import { assemblePolicies } from "@app/policies/overview";
+import { assemblePolicies } from "@editor/policies/overview";
 
 const catalogue = assemblePolicies([], []).catalogue;
 const preset = (id: string) =>

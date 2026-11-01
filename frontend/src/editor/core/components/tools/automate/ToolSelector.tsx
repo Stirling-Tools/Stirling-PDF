@@ -6,13 +6,13 @@ import {
   ToolRegistry,
   SubcategoryId,
   getToolSupportsAutomate,
-} from "@app/data/toolsTaxonomy";
-import { useToolSections } from "@app/hooks/useToolSections";
-import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
-import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
-import ToolButton from "@app/components/tools/toolPicker/ToolButton";
-import { ToolId } from "@app/types/toolId";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+} from "@editor/data/toolsTaxonomy";
+import { useToolSections } from "@editor/hooks/useToolSections";
+import { renderToolButtons } from "@editor/components/tools/shared/renderToolButtons";
+import ToolSearch from "@editor/components/tools/toolPicker/ToolSearch";
+import ToolButton from "@editor/components/tools/toolPicker/ToolButton";
+import { ToolId } from "@editor/types/toolId";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface ToolSelectorProps {
   onSelect: (toolKey: string) => void;

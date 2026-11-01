@@ -1,9 +1,9 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { useLibraryViewState } from "@app/components/filesPage/useLibraryViewState";
-import type { FolderId } from "@app/types/folder";
-import type { FileId } from "@app/types/file";
-import type { FilesPageTab } from "@app/contexts/FilesPageContext";
+import { useLibraryViewState } from "@editor/components/filesPage/useLibraryViewState";
+import type { FolderId } from "@editor/types/folder";
+import type { FileId } from "@editor/types/file";
+import type { FilesPageTab } from "@editor/contexts/FilesPageContext";
 
 describe("library view memory", () => {
   it("keeps a pending destination's filter updates separate from the visible routed tab", () => {

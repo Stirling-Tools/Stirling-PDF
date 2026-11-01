@@ -8,8 +8,8 @@
  * for a fetch to move definitions server-side without touching any component.
  */
 
-import { POLICY_CATEGORIES } from "@app/data/policyDefinitions";
-import type { PolicyCategory } from "@app/types/policies";
+import { POLICY_CATEGORIES } from "@editor/data/policyDefinitions";
+import type { PolicyCategory } from "@editor/types/policies";
 
 export interface PolicyCatalog {
   /** Available policy types, in display order. */

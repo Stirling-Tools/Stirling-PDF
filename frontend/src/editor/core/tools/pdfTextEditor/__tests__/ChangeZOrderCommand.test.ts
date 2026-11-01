@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { ChangeZOrderCommand } from "@app/tools/pdfTextEditor/commands/ChangeZOrderCommand";
-import { Page } from "@app/tools/pdfTextEditor/model/Page";
-import { ImageObject } from "@app/tools/pdfTextEditor/model/ImageObject";
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import { ChangeZOrderCommand } from "@editor/tools/pdfTextEditor/commands/ChangeZOrderCommand";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
 // Fake PDFium module backing the page object list with a plain array of
 // pointers (index 0 = painted first = bottom, last = top).

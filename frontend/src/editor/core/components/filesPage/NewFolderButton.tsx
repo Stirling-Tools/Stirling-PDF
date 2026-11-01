@@ -1,12 +1,12 @@
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import type { ReactNode } from "react";
 import { Menu, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
-import type { FolderId, FolderKind } from "@app/types/folder";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import type { FolderId, FolderKind } from "@editor/types/folder";
 
 export interface NewFolderButtonProps {
   label: string;

@@ -1,4 +1,4 @@
-import { expect } from "@app/tests/helpers/stub-test-base";
+import { expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 
 /** Switch the PDF text editor to Wrap width mode, then return to the Selected tab. */

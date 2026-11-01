@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { hasAcroForm } from "@app/utils/asciiBytes";
+import { hasAcroForm } from "@editor/utils/asciiBytes";
 
 const bytes = (text: string) => new TextEncoder().encode(text);
 

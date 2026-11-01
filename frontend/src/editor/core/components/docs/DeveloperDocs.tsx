@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, EmptyState } from "@app/ui";
-import { DocsNav } from "@app/components/docs/DocsNav";
-import { DocsSection } from "@app/components/docs/DocsSection";
-import { DocsToc } from "@app/components/docs/DocsToc";
-import { MarkdownDoc } from "@app/components/docs/MarkdownDoc";
-import { extractHeadings } from "@app/docs/headings";
-import { firstDocId, loadDoc, loadDocsNav } from "@app/docs/manifest/registry";
-import "@app/components/docs/DeveloperDocs.css";
+import { Button, EmptyState } from "@editor/ui";
+import { DocsNav } from "@editor/components/docs/DocsNav";
+import { DocsSection } from "@editor/components/docs/DocsSection";
+import { DocsToc } from "@editor/components/docs/DocsToc";
+import { MarkdownDoc } from "@editor/components/docs/MarkdownDoc";
+import { extractHeadings } from "@editor/docs/headings";
+import {
+  firstDocId,
+  loadDoc,
+  loadDocsNav,
+} from "@editor/docs/manifest/registry";
+import "@editor/components/docs/DeveloperDocs.css";
 
 /**
  * Developer Docs — a markdown browser over the docs manifest generated from the

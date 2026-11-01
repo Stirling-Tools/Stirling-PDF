@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { MetricCard } from "@app/ui/MetricCard";
+import { MetricCard } from "@editor/ui/MetricCard";
 
 const meta: Meta<typeof MetricCard> = {
   title: "Primitives/MetricCard",

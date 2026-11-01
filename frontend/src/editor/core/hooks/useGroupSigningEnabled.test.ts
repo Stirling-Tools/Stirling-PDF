@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useGroupSigningState } from "@app/hooks/useGroupSigningEnabled";
+import { useGroupSigningState } from "@editor/hooks/useGroupSigningEnabled";
 
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({
     config: { storageGroupSigningEnabled: true },
     loading: false,
   }),
 }));
 const authState = vi.hoisted(() => ({ isAnonymous: false }));
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => authState }));
+vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => authState }));
 
 describe("useGroupSigningState", () => {
   beforeEach(() => {

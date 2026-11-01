@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { describe, expect, test, vi, beforeEach } from "vitest";
-import { expectConsole } from "@app/tests/failOnConsole";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import { expectConsole } from "@editor/tests/failOnConsole";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 // A save writes onto the watched path, so the watcher reports our own write as
 // an external change. The save must mute the path, and unmute if it failed.
@@ -17,20 +17,20 @@ const getDiskFileState = vi.hoisted(() =>
     modifiedMs: 9000,
   })),
 );
-vi.mock("@app/services/desktopFileLink", () => ({
+vi.mock("@editor/services/desktopFileLink", () => ({
   desktopFileLinkingSupported: true,
   getDiskFileState,
   readFileFromDisk: vi.fn(async () => new Uint8Array([1, 2, 3]).buffer),
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { updateFileMetadata: vi.fn(async () => true) },
 }));
 
-import { saveToLocalPath } from "@app/services/localFileSaveService";
+import { saveToLocalPath } from "@editor/services/localFileSaveService";
 import {
   syncLinkedFileFromDisk,
   __resetSelfWrites,
-} from "@app/services/diskFileSync";
+} from "@editor/services/diskFileSync";
 
 const PATH = "C:/docs/report.pdf";
 const bytes = new Uint8Array([1, 2, 3]);

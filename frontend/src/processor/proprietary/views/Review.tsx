@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { FileRunEventList } from "@portal/components/failures/FileRunEventList";
-import "@portal/components/failures/failures.css";
-import "@portal/views/Review.css";
+import { FileRunEventList } from "@processor/components/failures/FileRunEventList";
+import "@processor/components/failures/failures.css";
+import "@processor/views/Review.css";
 
 /** What the processor needs a human to look at. Recorded failures today; held files
  * and approvals are meant to join them here. */

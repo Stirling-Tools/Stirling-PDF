@@ -1,5 +1,5 @@
-import { useFreeTierBalance } from "@portal/hooks/useFreeTierBalance";
-import { FreeTierBalanceSummary } from "@app/components/account-link/FreeTierBalanceSummary";
+import { useFreeTierBalance } from "@processor/hooks/useFreeTierBalance";
+import { FreeTierBalanceSummary } from "@editor/components/account-link/FreeTierBalanceSummary";
 
 /** Reads the Processor ledger and omits unavailable figures. */
 export function FreeTierExhaustedSummary() {

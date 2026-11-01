@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CertificateConfigModal } from "@app/components/tools/certSign/modals/CertificateConfigModal";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
+import { CertificateConfigModal } from "@editor/components/tools/certSign/modals/CertificateConfigModal";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
 
 const meta = {
   title: "Tools/CertSign/Modals/CertificateConfigModal",

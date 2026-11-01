@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { Avatar } from "@app/ui/Avatar";
-import type { QuickNavIdentity } from "@app/contexts/QuickNavHostContext";
-import "@app/components/shared/quickNav/QuickNavRailAccount.css";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { Avatar } from "@editor/ui/Avatar";
+import type { QuickNavIdentity } from "@editor/contexts/QuickNavHostContext";
+import "@editor/components/shared/quickNav/QuickNavRailAccount.css";
 
 export interface QuickNavRailAccountProps {
   onOpen: () => void;

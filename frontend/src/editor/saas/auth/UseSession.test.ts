@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
 import type { TFunction } from "i18next";
-import { deriveDisplayName, type User } from "@app/auth/UseSession";
+import { deriveDisplayName, type User } from "@editor/auth/UseSession";
 
 // Stub t() that returns the fallback string passed to it.
 const t: TFunction = ((_key: string, fallback?: string) =>

@@ -1,5 +1,5 @@
-import type { IconName } from "@app/ui/Icon";
-import { WorkbenchType } from "@app/types/workbench";
+import type { IconName } from "@editor/ui/Icon";
+import { WorkbenchType } from "@editor/types/workbench";
 
 /** Shared shape for the workbench bar's file-level global actions (print,
  *  export, save-as, close) so the mobile and desktop clusters stay in step. */

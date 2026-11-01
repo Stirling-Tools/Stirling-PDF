@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Card } from "@app/ui";
-import type { AgentSkill } from "@portal/api/docs";
-import { DocsSection } from "@core/components/docs/DocsSection";
+import { Card } from "@editor/ui";
+import type { AgentSkill } from "@processor/api/docs";
+import { DocsSection } from "@editor-core/components/docs/DocsSection";
 
 export function SkillsSection({ skills }: { skills: AgentSkill[] }) {
   const { t } = useTranslation();

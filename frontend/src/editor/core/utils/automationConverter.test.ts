@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect } from "vitest";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { expectConsole } from "@editor/tests/failOnConsole";
 import {
   convertToAutomationConfig,
   convertToFolderScanningConfig,
@@ -12,9 +12,9 @@ import {
   parseAutomationConfigJson,
   parseAutomationFile,
   parseFolderScanningConfig,
-} from "@app/utils/automationConverter";
-import { AutomationConfig } from "@app/types/automation";
-import type { ToolRegistry } from "@app/data/toolsTaxonomy";
+} from "@editor/utils/automationConverter";
+import { AutomationConfig } from "@editor/types/automation";
+import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
 
 // Minimal stub registry — only the fields automationConverter actually reads.
 const registry = {

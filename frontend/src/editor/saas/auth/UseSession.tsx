@@ -9,23 +9,23 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { supabase } from "@app/auth/supabase";
+import { supabase } from "@editor/auth/supabase";
 import type {
   Session,
   User as SupabaseUser,
   AuthError,
 } from "@supabase/supabase-js";
-import { synchronizeUserUpgrade } from "@app/services/userService";
+import { synchronizeUserUpgrade } from "@editor/services/userService";
 import {
   syncOAuthAvatar,
   getProfilePictureMetadata,
   getProviderAvatarUrl,
   type ProfilePictureMetadata,
-} from "@app/services/avatarSyncService";
+} from "@editor/services/avatarSyncService";
 import {
   resumeWorkbenchSession,
   suspendWorkbenchSession,
-} from "@app/services/workbenchSession";
+} from "@editor/services/workbenchSession";
 
 // Extend Supabase User to include optional username for compatibility
 export type User = SupabaseUser & { username?: string };

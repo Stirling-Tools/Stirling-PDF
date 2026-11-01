@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
-import { HttpError } from "@app/portal/api/http";
+import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
+import { HttpError } from "@editor/portal/api/http";
 import { useLocation } from "react-router-dom";
-import { withBasePath } from "@app/constants/app";
-import { startConnect, startReauth } from "@app/portal/api/link";
-import { rememberConnect } from "@app/portal/auth/pendingConnect";
+import { withBasePath } from "@editor/constants/app";
+import { startConnect, startReauth } from "@editor/portal/api/link";
+import { rememberConnect } from "@editor/portal/auth/pendingConnect";
 
 interface ConnectHandoff {
   /** Stays true through a successful hand-off: the page is leaving, so nothing resolves. */

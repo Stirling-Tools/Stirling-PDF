@@ -3,10 +3,10 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { getToolOgImage } from "@app/data/ogImage";
-import { CORE_LINK_TOOL_IDS } from "@app/types/toolId";
+import { getToolOgImage } from "@editor/data/ogImage";
+import { CORE_LINK_TOOL_IDS } from "@editor/types/toolId";
 // Build tooling (plain ESM, node:fs only) - import the helpers for coverage.
-// oxlint-disable-next-line no-restricted-imports -- build script lives outside the @app alias root
+// oxlint-disable-next-line no-restricted-imports -- build script lives outside the @editor alias root
 import {
   buildBodyContent,
   buildJsonLd,

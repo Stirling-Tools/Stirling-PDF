@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PendingInvitations } from "@portal/components/users/PendingInvitations";
-import type { PendingInvitation } from "@portal/api/users";
+import { PendingInvitations } from "@processor/components/users/PendingInvitations";
+import type { PendingInvitation } from "@processor/api/users";
 
 const INVITATIONS: PendingInvitation[] = [
   {

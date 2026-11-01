@@ -1,20 +1,23 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, InfoTooltip, Modal } from "@app/ui";
-import { Icon } from "@app/ui/Icon";
-import { folderKind, type FolderRecord } from "@app/types/folder";
-import { useAiClassificationEnabled } from "@app/hooks/useAiClassificationEnabled";
-import type { PolicySetupResult, CatalogueEntry } from "@app/policies/catalog";
+import { Banner, Button, InfoTooltip, Modal } from "@editor/ui";
+import { Icon } from "@editor/ui/Icon";
+import { folderKind, type FolderRecord } from "@editor/types/folder";
+import { useAiClassificationEnabled } from "@editor/hooks/useAiClassificationEnabled";
+import type {
+  PolicySetupResult,
+  CatalogueEntry,
+} from "@editor/policies/catalog";
 import {
   PolicyRoutingDestinations,
   type RoutingDestination,
-} from "@app/components/policies/PolicyRoutingDestinations";
-import { FolderPolicySetupConfig } from "@app/components/policies/FolderPolicySetupConfig";
-import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
+} from "@editor/components/policies/PolicyRoutingDestinations";
+import { FolderPolicySetupConfig } from "@editor/components/policies/FolderPolicySetupConfig";
+import { PolicySetupWizard } from "@editor/components/policies/PolicySetupWizard";
 import {
   ProcessingFolderPicker,
   type ProcessingFolderPickerProps,
-} from "@app/components/policies/ProcessingFolderPicker";
+} from "@editor/components/policies/ProcessingFolderPicker";
 import {
   sortFolderPresets,
   presetProcessingRecord,
@@ -25,9 +28,9 @@ import {
   processingFolderForTarget,
   isValidProcessingFolderName,
   type ProcessingFolderTarget,
-} from "@app/components/policies/processingFolderSetup";
-import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
-import "@app/components/policies/FolderProcessingSetup.css";
+} from "@editor/components/policies/processingFolderSetup";
+import { policyCategoryIcon } from "@editor/components/policies/policyCategoryIcon";
+import "@editor/components/policies/FolderProcessingSetup.css";
 
 export interface ProcessingFolderWizardProps extends Omit<
   ProcessingFolderPickerProps,

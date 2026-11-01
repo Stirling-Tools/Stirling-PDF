@@ -1,21 +1,21 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { SettingsCard } from "@app/components/shared/config/SettingsCard";
+import { SettingsCard } from "@editor/components/shared/config/SettingsCard";
 import { Stack, Loader } from "@mantine/core";
-import { alert } from "@app/components/toast";
-import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
-import { useRestartServer } from "@app/components/shared/config/useRestartServer";
-import { useAdminSettings } from "@app/hooks/useAdminSettings";
-import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
-import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
-import apiClient from "@app/services/apiClient";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import { AdvancedSettingsData } from "@app/components/shared/config/configSections/advanced/advancedSettings";
-import { AdvancedFeatureFlagsCard } from "@app/components/shared/config/configSections/advanced/AdvancedFeatureFlagsCard";
-import { AdvancedProcessingCard } from "@app/components/shared/config/configSections/advanced/AdvancedProcessingCard";
-import { AdvancedTempFilesCard } from "@app/components/shared/config/configSections/advanced/AdvancedTempFilesCard";
-import { AdvancedProcessExecutorCard } from "@app/components/shared/config/configSections/advanced/AdvancedProcessExecutorCard";
-import "@app/components/shared/config/configSections/advanced/AdminAdvancedPage.css";
+import { alert } from "@editor/components/toast";
+import RestartConfirmationModal from "@editor/components/shared/config/RestartConfirmationModal";
+import { useRestartServer } from "@editor/components/shared/config/useRestartServer";
+import { useAdminSettings } from "@editor/hooks/useAdminSettings";
+import { useSettingsDirty } from "@editor/hooks/useSettingsDirty";
+import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsStickyFooter";
+import apiClient from "@editor/services/apiClient";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
+import { AdvancedSettingsData } from "@editor/components/shared/config/configSections/advanced/advancedSettings";
+import { AdvancedFeatureFlagsCard } from "@editor/components/shared/config/configSections/advanced/AdvancedFeatureFlagsCard";
+import { AdvancedProcessingCard } from "@editor/components/shared/config/configSections/advanced/AdvancedProcessingCard";
+import { AdvancedTempFilesCard } from "@editor/components/shared/config/configSections/advanced/AdvancedTempFilesCard";
+import { AdvancedProcessExecutorCard } from "@editor/components/shared/config/configSections/advanced/AdvancedProcessExecutorCard";
+import "@editor/components/shared/config/configSections/advanced/AdminAdvancedPage.css";
 
 /**
  * Advanced and Database, previously two nav rows over one object: both read

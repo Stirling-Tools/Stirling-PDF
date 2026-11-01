@@ -1,19 +1,19 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import ConvertSettings from "@app/components/tools/convert/ConvertSettings";
-import { defaultParameters } from "@app/hooks/tools/convert/useConvertParameters";
+import ConvertSettings from "@editor/components/tools/convert/ConvertSettings";
+import { defaultParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 
 const state = vi.hoisted(() => ({ localOnly: true }));
-vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => state.localOnly,
 }));
-vi.mock("@app/contexts/PreferencesContext", () => ({
+vi.mock("@editor/contexts/PreferencesContext", () => ({
   usePreferences: () => ({
     preferences: { hideUnavailableConversions: false },
   }),
 }));
-vi.mock("@app/hooks/useEndpointConfig", () => ({
+vi.mock("@editor/hooks/useEndpointConfig", () => ({
   useMultipleEndpointsEnabled: () => ({
     endpointStatus: {
       "pdf-to-img": true,
@@ -22,14 +22,14 @@ vi.mock("@app/hooks/useEndpointConfig", () => ({
     },
   }),
 }));
-vi.mock("@app/hooks/useConversionCloudStatus", () => ({
+vi.mock("@editor/hooks/useConversionCloudStatus", () => ({
   useConversionCloudStatus: () => ({
     availability: {},
     cloudStatus: {},
     localOnly: {},
   }),
 }));
-vi.mock("@app/ui/Icon", () => ({ Icon: () => null }));
+vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
 
 beforeEach(() => {
   state.localOnly = true;

@@ -1,1 +1,1 @@
-export { PipelineTemplateCard } from "@app/components/policies/PipelineTemplateCard";
+export { PipelineTemplateCard } from "@editor/components/policies/PipelineTemplateCard";

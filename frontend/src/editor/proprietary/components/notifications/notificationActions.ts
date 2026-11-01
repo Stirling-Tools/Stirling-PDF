@@ -1,25 +1,25 @@
 import { useCallback, useContext, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { withBasePath } from "@app/constants/app";
+import { withBasePath } from "@editor/constants/app";
 import {
   FileActionsContext,
   FileStoreContext,
-} from "@app/contexts/file/contexts";
-import { NavigationActionsContext } from "@app/contexts/NavigationContext";
-import { ViewerContext } from "@app/contexts/ViewerContext";
-import { getToolUrlPath } from "@app/data/toolsTaxonomy";
+} from "@editor/contexts/file/contexts";
+import { NavigationActionsContext } from "@editor/contexts/NavigationContext";
+import { ViewerContext } from "@editor/contexts/ViewerContext";
+import { getToolUrlPath } from "@editor/data/toolsTaxonomy";
 import {
   PORTAL_BASENAME,
   PORTAL_REVIEW_PATH,
-} from "@app/routes/portalBasename";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
-import { fileStorage } from "@app/services/fileStorage";
-import { rerunPolicy } from "@app/services/notificationPolicyRetry";
-import { dispatchNotificationAction } from "@app/services/notifications";
-import { isValidToolId, type ToolId } from "@app/types/toolId";
-import type { FileId } from "@app/types/file";
+} from "@editor/routes/portalBasename";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
+import { HAS_PORTAL } from "@editor/routes/hasPortal";
+import { fileStorage } from "@editor/services/fileStorage";
+import { rerunPolicy } from "@editor/services/notificationPolicyRetry";
+import { dispatchNotificationAction } from "@editor/services/notifications";
+import { isValidToolId, type ToolId } from "@editor/types/toolId";
+import type { FileId } from "@editor/types/file";
 import {
   RESOLUTIONS,
   canRetry,
@@ -28,14 +28,14 @@ import {
   retryTargetOf,
   toolOf,
   unavailable,
-} from "@app/components/notifications/resolutions";
+} from "@editor/components/notifications/resolutions";
 import {
   closesPanelFor,
   type ClientActionOutcome,
   type ClientActionRegistry,
   type ClientActionSpec,
   type NotificationActionContext,
-} from "@core/components/notifications/notificationActions";
+} from "@editor-core/components/notifications/notificationActions";
 
 export {
   closesPanelFor,

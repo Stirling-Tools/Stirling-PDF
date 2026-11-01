@@ -1,16 +1,19 @@
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { useAllFiles } from "@app/contexts/FileContext";
-import { useFileSelectors } from "@app/contexts/file/fileHooks";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
-import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { createQuickKey, type StirlingFileStub } from "@app/types/fileContext";
-import thumbnailStyles from "@app/components/fileEditor/FileEditorThumbnail.module.css";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import { useFileSelectors } from "@editor/contexts/file/fileHooks";
+import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
+import { useFileThumbnail } from "@editor/hooks/useFileThumbnail";
+import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import {
+  createQuickKey,
+  type StirlingFileStub,
+} from "@editor/types/fileContext";
+import thumbnailStyles from "@editor/components/fileEditor/FileEditorThumbnail.module.css";
 
 /** Picks one PDF without navigating away; library imports use the normal FileContext ingestion path. */
 export function SigningDocumentPicker({

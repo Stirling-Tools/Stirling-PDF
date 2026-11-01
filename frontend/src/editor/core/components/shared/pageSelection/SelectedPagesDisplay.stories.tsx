@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SelectedPagesDisplay from "@app/components/shared/pageSelection/SelectedPagesDisplay";
+import SelectedPagesDisplay from "@editor/components/shared/pageSelection/SelectedPagesDisplay";
 
 const displayDocument = {
   pages: [

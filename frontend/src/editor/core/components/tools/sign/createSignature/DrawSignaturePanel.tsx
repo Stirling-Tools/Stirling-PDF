@@ -7,22 +7,22 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { VisuallyHidden } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { InkSwatches } from "@app/components/tools/sign/createSignature/InkSwatches";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { InkSwatches } from "@editor/components/tools/sign/createSignature/InkSwatches";
 import {
   DEFAULT_INK,
   type InkColor,
-} from "@app/components/tools/sign/createSignature/signatureStyles";
+} from "@editor/components/tools/sign/createSignature/signatureStyles";
 import {
   useSignaturePad,
   type PenWidth,
-} from "@app/components/tools/sign/createSignature/useSignaturePad";
-import type { SignaturePanelHandle } from "@app/components/tools/sign/createSignature/types";
-import { ControlLabel } from "@app/components/tools/sign/createSignature/ControlLabel";
-import styles from "@app/components/tools/sign/createSignature/DrawSignaturePanel.module.css";
+} from "@editor/components/tools/sign/createSignature/useSignaturePad";
+import type { SignaturePanelHandle } from "@editor/components/tools/sign/createSignature/types";
+import { ControlLabel } from "@editor/components/tools/sign/createSignature/ControlLabel";
+import styles from "@editor/components/tools/sign/createSignature/DrawSignaturePanel.module.css";
 
 const PEN_DOT_SIZES: Record<PenWidth, number> = {
   fine: 4,

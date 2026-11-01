@@ -1,10 +1,10 @@
-import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
-import type { FileId } from "@app/types/file";
+import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
+import type { FileId } from "@editor/types/file";
 import type {
   FileContextActions,
   StirlingFileStub,
-} from "@app/types/fileContext";
-import type { ToolId } from "@app/types/toolId";
+} from "@editor/types/fileContext";
+import type { ToolId } from "@editor/types/toolId";
 
 // Both mark the result `derivedFromTool`, which keeps `usePolicyAutoRun` off it.
 

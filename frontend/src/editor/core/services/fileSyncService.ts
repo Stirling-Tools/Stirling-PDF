@@ -5,19 +5,19 @@
  * flight and so local-only files survive offline.
  */
 
-import apiClient from "@app/services/apiClient";
-import { fileStorage } from "@app/services/fileStorage";
-import { alert } from "@app/components/toast";
+import apiClient from "@editor/services/apiClient";
+import { fileStorage } from "@editor/services/fileStorage";
+import { alert } from "@editor/components/toast";
 import i18n from "i18next";
-import { StirlingFileStub, StirlingFile } from "@app/types/fileContext";
-import { FileId } from "@app/types/fileContext";
-import { FolderId, parseFolderId } from "@app/types/folder";
-import { virtualFolderStorage } from "@app/services/virtualFolderStorage";
+import { StirlingFileStub, StirlingFile } from "@editor/types/fileContext";
+import { FileId } from "@editor/types/fileContext";
+import { FolderId, parseFolderId } from "@editor/types/folder";
+import { virtualFolderStorage } from "@editor/services/virtualFolderStorage";
 import {
   isZipBundle,
   loadShareBundleEntries,
   parseContentDispositionFilename,
-} from "@app/services/shareBundleUtils";
+} from "@editor/services/shareBundleUtils";
 
 /**
  * Trust-boundary parser for folderId values coming back from the server.

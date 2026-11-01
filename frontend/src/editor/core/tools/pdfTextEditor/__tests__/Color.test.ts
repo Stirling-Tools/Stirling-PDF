@@ -6,7 +6,7 @@ import {
   equalsRGBA,
   parseCssColor,
   toCssHex,
-} from "@app/tools/pdfTextEditor/model/Color";
+} from "@editor/tools/pdfTextEditor/model/Color";
 
 describe("Color", () => {
   it("parses #rrggbb", () => {

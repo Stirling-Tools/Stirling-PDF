@@ -2,17 +2,17 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   AddAttachmentsParameters,
   DEFAULT_ADD_ATTACHMENTS_PARAMETERS,
-} from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
+} from "@editor/hooks/tools/addAttachments/useAddAttachmentsParameters";
 
 const ENDPOINT = "/api/v1/misc/add-attachments" satisfies ToolEndpoint;
 type AddAttachmentsApiParams = ToolApiParams[typeof ENDPOINT];

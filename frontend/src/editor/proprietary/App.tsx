@@ -1,36 +1,38 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
-import { AppProviders } from "@app/components/AppProviders";
-import { AppLayout } from "@app/components/AppLayout";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { ThemeProvider } from "@app/components/shared/ThemeProvider";
+import { AppProviders } from "@editor/components/AppProviders";
+import { AppLayout } from "@editor/components/AppLayout";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { ThemeProvider } from "@editor/components/shared/ThemeProvider";
 
-const Landing = lazy(() => import("@app/routes/Landing"));
-const Login = lazy(() => import("@app/routes/Login"));
-const AuthCallback = lazy(() => import("@app/routes/AuthCallback"));
-const InviteAccept = lazy(() => import("@app/routes/InviteAccept"));
-const ShareLinkPage = lazy(() => import("@app/routes/ShareLinkPage"));
+const Landing = lazy(() => import("@editor/routes/Landing"));
+const Login = lazy(() => import("@editor/routes/Login"));
+const AuthCallback = lazy(() => import("@editor/routes/AuthCallback"));
+const InviteAccept = lazy(() => import("@editor/routes/InviteAccept"));
+const ShareLinkPage = lazy(() => import("@editor/routes/ShareLinkPage"));
 const ParticipantView = lazy(
-  () => import("@app/components/workflow/ParticipantView"),
+  () => import("@editor/components/workflow/ParticipantView"),
 );
-const Onboarding = lazy(() => import("@app/components/onboarding/Onboarding"));
+const Onboarding = lazy(
+  () => import("@editor/components/onboarding/Onboarding"),
+);
 
-const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
-const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
-import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
-import { AppFrame } from "@app/components/layout/AppFrame";
-import { NoAppChrome } from "@app/components/layout/NoAppChrome";
-import { RootGate } from "@app/routes/RootGate";
+const MobileScannerPage = lazy(() => import("@editor/pages/MobileScannerPage"));
+const MobileSignPage = lazy(() => import("@editor/pages/MobileSignPage"));
+import { getAdminRouteExtensions } from "@editor/routes/adminRouteExtensions";
+import { AppFrame } from "@editor/components/layout/AppFrame";
+import { NoAppChrome } from "@editor/components/layout/NoAppChrome";
+import { RootGate } from "@editor/routes/RootGate";
 
 // Import global styles
-import "@app/styles/tailwind.css";
-import "@app/styles/cookieconsent.css";
-import "@app/styles/index.css";
-import "@app/auth/ui/auth-theme.css";
+import "@editor/styles/tailwind.css";
+import "@editor/styles/cookieconsent.css";
+import "@editor/styles/index.css";
+import "@editor/auth/ui/auth-theme.css";
 
 // Import file ID debugging helpers (development only)
-import "@app/utils/fileIdSafety";
+import "@editor/utils/fileIdSafety";
 
 // Minimal providers for public, no-auth pages (mobile scanner, participant
 // signing) - no API calls, no authentication

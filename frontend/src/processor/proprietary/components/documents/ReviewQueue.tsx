@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import {
   Button,
   EmptyState,
@@ -9,12 +9,12 @@ import {
   Skeleton,
   Tabs,
   type TabItem,
-} from "@app/ui";
-import type { DocumentStatus, ReviewDocument } from "@portal/api/documents";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { ReviewQueueTable } from "@portal/components/documents/ReviewQueueTable";
-import { DocumentDrawer } from "@portal/components/documents/DocumentDrawer";
-import { SourceModal } from "@portal/components/sources/SourceModal";
+} from "@editor/ui";
+import type { DocumentStatus, ReviewDocument } from "@processor/api/documents";
+import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
+import { ReviewQueueTable } from "@processor/components/documents/ReviewQueueTable";
+import { DocumentDrawer } from "@processor/components/documents/DocumentDrawer";
+import { SourceModal } from "@processor/components/sources/SourceModal";
 
 type QueueFilter = "all" | "flagged" | "processed" | "in-review";
 

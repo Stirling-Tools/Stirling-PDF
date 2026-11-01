@@ -1,4 +1,4 @@
-import { tauriBackendService } from "@app/services/tauriBackendService";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
 
 /**
  * Desktop shadow: the webview has no /fonts of its own, but the bundled backend

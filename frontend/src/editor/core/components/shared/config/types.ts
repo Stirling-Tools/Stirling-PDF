@@ -1,5 +1,5 @@
 import type React from "react";
-import type { IconName } from "@app/ui/Icon";
+import type { IconName } from "@editor/ui/Icon";
 
 // Single source of truth for all valid nav keys
 export const VALID_NAV_KEYS = [

@@ -6,7 +6,7 @@ import {
   bindPdfAccess,
   getPdfAccess,
   pdfAccessLifetime,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 import {
   StirlingFileStub,
   FileContextAction,
@@ -16,31 +16,31 @@ import {
   createQuickKey,
   createStirlingFile,
   ProcessedFileMetadata,
-} from "@app/types/fileContext";
-import { FileId, ToolOperation } from "@app/types/file";
-import { generateThumbnailPairWithMetadata } from "@app/utils/thumbnailUtils";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/pdfParseLimit";
+} from "@editor/types/fileContext";
+import { FileId, ToolOperation } from "@editor/types/file";
+import { generateThumbnailPairWithMetadata } from "@editor/utils/thumbnailUtils";
+import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/pdfParseLimit";
 import {
   beginDamageCheck,
   settleDamageCheck,
-} from "@app/services/pendingDamageChecks";
-import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
-import { buildQuickKeySet } from "@app/contexts/file/fileSelectors";
-import { StirlingFile } from "@app/types/fileContext";
-import { fileStorage } from "@app/services/fileStorage";
-import { zipFileService } from "@app/services/zipFileService";
-import { FileAnalyzer } from "@app/services/fileAnalyzer";
-import { trackPdfUploaded } from "@app/services/analytics";
+} from "@editor/services/pendingDamageChecks";
+import { FileLifecycleManager } from "@editor/contexts/file/lifecycle";
+import { buildQuickKeySet } from "@editor/contexts/file/fileSelectors";
+import { StirlingFile } from "@editor/types/fileContext";
+import { fileStorage } from "@editor/services/fileStorage";
+import { zipFileService } from "@editor/services/zipFileService";
+import { FileAnalyzer } from "@editor/services/fileAnalyzer";
+import { trackPdfUploaded } from "@editor/services/analytics";
 import {
   reportBulkAddProgress,
   clearBulkAddProgress,
-} from "@app/services/bulkAddProgress";
+} from "@editor/services/bulkAddProgress";
 import {
   type ReconcilePort,
   reconcileBeforeOpen,
   reconcileOpenFiles,
   sourceLinkForNewFile,
-} from "@app/contexts/file/storedFileReconciler";
+} from "@editor/contexts/file/storedFileReconciler";
 const DEBUG = process.env.NODE_ENV === "development";
 /** How long a file may sit unhydrated before the console says so. Reporting only:
  *  the read is never abandoned, because large files legitimately take time. */
@@ -590,7 +590,7 @@ export async function addFiles(
         } else {
           try {
             const { generateThumbnailForFile } =
-              await import("@app/utils/thumbnailUtils");
+              await import("@editor/utils/thumbnailUtils");
             thumbnail = await generateThumbnailForFile(targetFile);
           } catch (error) {
             console.warn(

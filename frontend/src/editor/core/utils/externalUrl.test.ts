@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { getExternalHref, toSafeExternalUrl } from "@app/utils/externalUrl";
+import { getExternalHref, toSafeExternalUrl } from "@editor/utils/externalUrl";
 
 describe("externalUrl", () => {
   test("accepts http/https/mailto URLs", () => {

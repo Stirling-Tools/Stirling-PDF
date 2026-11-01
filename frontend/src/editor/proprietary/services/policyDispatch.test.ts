@@ -1,20 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { runPolicyOnFile } from "@app/services/policyDispatch";
-import { runStoredPolicy } from "@app/services/policyApi";
-import { fileStorage } from "@app/services/fileStorage";
-import { isFileBlocked } from "@app/services/policyBlockRegistry";
-import * as runStore from "@app/components/policies/policyRunStore";
+import { runPolicyOnFile } from "@editor/services/policyDispatch";
+import { runStoredPolicy } from "@editor/services/policyApi";
+import { fileStorage } from "@editor/services/fileStorage";
+import { isFileBlocked } from "@editor/services/policyBlockRegistry";
+import * as runStore from "@editor/components/policies/policyRunStore";
 import {
   createNewStirlingFileStub,
   createStirlingFile,
-} from "@app/types/fileContext";
-import { dispatchableFileId } from "@app/components/policies/policyLocalPass";
+} from "@editor/types/fileContext";
+import { dispatchableFileId } from "@editor/components/policies/policyLocalPass";
 
-vi.mock("@app/services/policyApi", () => ({
+vi.mock("@editor/services/policyApi", () => ({
   runStoredPolicy: vi.fn(),
   resolvePolicyRunTarget: () => "local",
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { getStirlingFile: vi.fn(), getStirlingFileStub: vi.fn() },
 }));
 

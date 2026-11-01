@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { useIsScrolled } from "@app/hooks/useIsScrolled";
+import { useIsScrolled } from "@editor/hooks/useIsScrolled";
 
 function Harness({ mounted }: { mounted: boolean }) {
   const { scrolled, scrollRef } = useIsScrolled();

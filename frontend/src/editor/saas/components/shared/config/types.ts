@@ -1,8 +1,8 @@
 import type {
   ConfigNavItem as CoreConfigNavItem,
   ConfigNavSection as CoreConfigNavSection,
-} from "@core/components/shared/config/types";
-import { VALID_NAV_KEYS as CORE_NAV_KEYS } from "@core/components/shared/config/types";
+} from "@editor-core/components/shared/config/types";
+import { VALID_NAV_KEYS as CORE_NAV_KEYS } from "@editor-core/components/shared/config/types";
 
 // SaaS adds an "overview" account section and an "mcp" integrations tab. All
 // other keys (including ones SaaS doesn't render today) come from core -

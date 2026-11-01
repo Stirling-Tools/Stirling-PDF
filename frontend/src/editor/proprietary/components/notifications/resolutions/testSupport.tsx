@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
-import type { NotificationActionContext } from "@app/components/notifications/notificationActions";
+import type { NotificationActionContext } from "@editor/components/notifications/notificationActions";
 import type {
   AppNotification,
   NotificationActionOffer,
-} from "@app/services/notifications";
-import type { RetryPayload } from "@app/services/notificationRetry";
+} from "@editor/services/notifications";
+import type { RetryPayload } from "@editor/services/notificationRetry";
 
 // Fixtures shared by the registry test and each resolution's own. The mocks stay in the test
 // files: vi.mock is hoisted per file, so a helper cannot own them.

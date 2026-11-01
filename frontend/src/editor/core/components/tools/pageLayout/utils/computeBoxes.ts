@@ -1,4 +1,4 @@
-import { PageLayoutParameters } from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
+import { PageLayoutParameters } from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
 
 export type Box = {
   x: number;

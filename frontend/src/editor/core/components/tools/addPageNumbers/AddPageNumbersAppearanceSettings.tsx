@@ -4,9 +4,9 @@
 
 import { Stack, Select, TextInput, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddPageNumbersParameters } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { AddPageNumbersParameters } from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface AddPageNumbersAppearanceSettingsProps {
   parameters: AddPageNumbersParameters;

@@ -1,11 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useCallback, useState } from "react";
 import { Stack, Text, Divider, ColorInput } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useSignature } from "@app/contexts/SignatureContext";
-import { useNavigationGuard } from "@app/contexts/NavigationContext";
+import { Button } from "@editor/ui/Button";
+import {
+  useRedaction,
+  useRedactionMode,
+} from "@editor/contexts/RedactionContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useSignature } from "@editor/contexts/SignatureContext";
+import { useNavigationGuard } from "@editor/contexts/NavigationContext";
 
 interface ManualRedactionControlsProps {
   disabled?: boolean;

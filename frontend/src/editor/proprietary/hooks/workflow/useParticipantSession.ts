@@ -4,7 +4,7 @@ import workflowService, {
   WorkflowSessionResponse,
   ParticipantResponse,
   SignatureSubmissionRequest,
-} from "@app/services/workflowService";
+} from "@editor/services/workflowService";
 
 export interface UseParticipantSessionResult {
   session: WorkflowSessionResponse | null;

@@ -1,10 +1,10 @@
 import React from "react";
 import { Group, MultiSelect, Stack, SimpleGrid, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { DateInput } from "@mantine/dates";
 import { useTranslation } from "react-i18next";
-import { AuditFilters } from "@app/services/auditService";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { AuditFilters } from "@editor/services/auditService";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 // Helper to format date as YYYY-MM-DD in local time (avoids DST/UTC issues)
 const formatDateToYMD = (date: Date): string => {

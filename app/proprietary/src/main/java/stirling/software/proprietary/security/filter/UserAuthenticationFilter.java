@@ -300,17 +300,23 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         // For API routes, only skip filter for these public endpoints
         String[] publicApiPatterns = {
-            contextPath + "/api/v1/info/status",
-            contextPath + "/api/v1/auth/login",
-            contextPath + "/api/v1/auth/refresh",
-            contextPath + "/api/v1/auth/me",
-            contextPath + "/api/v1/invite/validate",
-            contextPath + "/api/v1/invite/accept",
-            contextPath + "/api/v1/ui-data/footer-info"
+            "/api/v1/info/status",
+            "/api/v1/auth/login",
+            "/api/v1/auth/refresh",
+            "/api/v1/auth/me",
+            "/api/v1/invite/validate",
+            "/api/v1/invite/accept",
+            "/api/v1/ui-data/footer-info"
         };
 
+        String normalizedUri;
+        try {
+            normalizedUri = RequestUriUtils.normalizeUri(contextPath, uri);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
         for (String pattern : publicApiPatterns) {
-            if (uri.startsWith(pattern)) {
+            if (normalizedUri.startsWith(pattern)) {
                 return true;
             }
         }

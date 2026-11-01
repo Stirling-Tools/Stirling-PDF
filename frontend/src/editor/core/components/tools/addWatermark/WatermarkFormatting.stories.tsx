@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import WatermarkFormatting from "@app/components/tools/addWatermark/WatermarkFormatting";
-import { defaultParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
+import WatermarkFormatting from "@editor/components/tools/addWatermark/WatermarkFormatting";
+import { defaultParameters } from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
 
 const meta = {
   title: "Tools/AddWatermark/WatermarkFormatting",

@@ -1,4 +1,4 @@
-import { useSaasAppConfig } from "@app/hooks/useSaasAppConfig";
+import { useSaasAppConfig } from "@editor/hooks/useSaasAppConfig";
 
 /** Desktop classification runs on the connected SaaS deployment. */
 export function useAiClassificationEnabled(): boolean {

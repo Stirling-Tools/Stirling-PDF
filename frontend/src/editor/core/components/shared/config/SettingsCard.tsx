@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
-import { Icon } from "@app/ui/Icon";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import "@app/components/shared/config/SettingsCard.css";
+import { Icon } from "@editor/ui/Icon";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import "@editor/components/shared/config/SettingsCard.css";
 
 export interface SettingsCardProps {
   /** The card's `#slug`, and the id the nav's card list jumps to. */

@@ -9,8 +9,8 @@ import {
   clearWorkbenchSession,
   suspendWorkbenchSession,
   resumeWorkbenchSession,
-} from "@app/services/workbenchSession";
-import type { StirlingFileStub } from "@app/types/fileContext";
+} from "@editor/services/workbenchSession";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 const SESSION_KEY = "stirling.workbench.session";
 

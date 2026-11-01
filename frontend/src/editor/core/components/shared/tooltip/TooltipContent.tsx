@@ -1,6 +1,6 @@
 import React from "react";
-import styles from "@app/components/shared/tooltip/Tooltip.module.css";
-import { TooltipTip } from "@app/types/tips";
+import styles from "@editor/components/shared/tooltip/Tooltip.module.css";
+import { TooltipTip } from "@editor/types/tips";
 
 interface TooltipContentProps {
   content?: React.ReactNode;

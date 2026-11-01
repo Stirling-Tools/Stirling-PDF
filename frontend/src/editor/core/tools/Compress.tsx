@@ -1,16 +1,16 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import CompressSettings from "@app/components/tools/compress/CompressSettings";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import CompressSettings from "@editor/components/tools/compress/CompressSettings";
 import {
   useCompressParameters,
   usedStrongestCompression,
-} from "@app/hooks/tools/compress/useCompressParameters";
-import { useCompressOperation } from "@app/hooks/tools/compress/useCompressOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useCompressTips } from "@app/components/tooltips/useCompressTips";
-import { useUnreducedOutputs } from "@app/hooks/tools/compress/useUnreducedOutputs";
-import { NoReductionNotice } from "@app/components/tools/compress/NoReductionNotice";
+} from "@editor/hooks/tools/compress/useCompressParameters";
+import { useCompressOperation } from "@editor/hooks/tools/compress/useCompressOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useCompressTips } from "@editor/components/tooltips/useCompressTips";
+import { useUnreducedOutputs } from "@editor/hooks/tools/compress/useUnreducedOutputs";
+import { NoReductionNotice } from "@editor/components/tools/compress/NoReductionNotice";
 
 const Compress = (props: BaseToolProps) => {
   const { t } = useTranslation();

@@ -2,22 +2,22 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AddToLibraryModal } from "@app/components/filesPage/AddToLibraryModal";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import { AddToLibraryModal } from "@editor/components/filesPage/AddToLibraryModal";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 const state = vi.hoisted(() => ({
   move: vi.fn(),
   alert: vi.fn(),
   dismiss: vi.fn(),
 }));
-vi.mock("@app/contexts/FilesPageContext", () => ({
+vi.mock("@editor/contexts/FilesPageContext", () => ({
   useFilesPage: () => ({ moveFilesTo: state.move }),
 }));
-vi.mock("@app/components/toast", () => ({
+vi.mock("@editor/components/toast", () => ({
   alert: state.alert,
   dismissToast: state.dismiss,
 }));
-vi.mock("@app/components/filesPage/LibraryFilePicker", () => ({
+vi.mock("@editor/components/filesPage/LibraryFilePicker", () => ({
   LibraryFilePicker: ({
     destination,
   }: {

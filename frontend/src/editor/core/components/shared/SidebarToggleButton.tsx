@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { SidebarToggleIcon } from "@editor/components/shared/SidebarToggleIcon";
 
 export interface SidebarToggleButtonProps {
   collapsed?: boolean;

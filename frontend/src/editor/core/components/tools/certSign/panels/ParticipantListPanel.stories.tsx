@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ParticipantListPanel } from "@app/components/tools/certSign/panels/ParticipantListPanel";
-import type { ParticipantInfo } from "@app/types/signingSession";
+import { ParticipantListPanel } from "@editor/components/tools/certSign/panels/ParticipantListPanel";
+import type { ParticipantInfo } from "@editor/types/signingSession";
 
 const meta = {
   title: "CertSign/ParticipantListPanel",

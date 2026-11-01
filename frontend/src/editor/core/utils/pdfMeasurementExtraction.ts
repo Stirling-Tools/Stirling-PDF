@@ -11,9 +11,9 @@ import type {
   PageMeasureScales,
   PageScaleInfo,
   ViewportScale,
-} from "@app/utils/measurementTypes";
-import { getUnitFactor } from "@app/utils/measurementUtils";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
+} from "@editor/utils/measurementTypes";
+import { getUnitFactor } from "@editor/utils/measurementUtils";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
 
 type PdfMeasurementObjects = Pick<
   typeof import("@cantoo/pdf-lib"),

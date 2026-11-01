@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 
 /* icons for the demos */
 const Plus = () => <Icon name="plus" size="1em" />;

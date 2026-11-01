@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
-} from "@portal/components/policies/storyFixtures";
-import { PipelineTemplateCard } from "@portal/components/pipelines/PipelineTemplateCard";
+} from "@processor/components/policies/storyFixtures";
+import { PipelineTemplateCard } from "@processor/components/pipelines/PipelineTemplateCard";
 
 const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
 const routing = POLICY_CATEGORIES.find((c) => c.id === "routing")!;

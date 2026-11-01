@@ -1,7 +1,7 @@
 import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AdjustContrastParameters } from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
-import SliderWithInput from "@app/components/shared/sliderWithInput/SliderWithInput";
+import { AdjustContrastParameters } from "@editor/hooks/tools/adjustContrast/useAdjustContrastParameters";
+import SliderWithInput from "@editor/components/shared/sliderWithInput/SliderWithInput";
 
 interface Props {
   parameters: AdjustContrastParameters;

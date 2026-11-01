@@ -1,7 +1,7 @@
 import { useCallback } from "react";
-import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
-import { useAttachmentManager } from "@app/hooks/tools/addAttachments/useAttachmentManager";
-import { AttachmentManagerUI } from "@app/components/tools/addAttachments/AttachmentManagerUI";
+import { AddAttachmentsParameters } from "@editor/hooks/tools/addAttachments/useAddAttachmentsParameters";
+import { useAttachmentManager } from "@editor/hooks/tools/addAttachments/useAttachmentManager";
+import { AttachmentManagerUI } from "@editor/components/tools/addAttachments/AttachmentManagerUI";
 
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;

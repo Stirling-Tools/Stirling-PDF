@@ -4,8 +4,8 @@
  * are derived live from the user's real files, not defined here.
  */
 
-import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
-import type { PolicyCategory } from "@app/types/policies";
+import { policyCategoryIcon } from "@editor/components/policies/policyCategoryIcon";
+import type { PolicyCategory } from "@editor/types/policies";
 
 const ICON_SIZE = "1rem";
 

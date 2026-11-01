@@ -18,6 +18,8 @@ permissions:
 jobs:
   frontend-a11y:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble@sha256:6446946a1d9fd62d9ae501312a2d76a43ee688542b21622056a372959b65d63d
     timeout-minutes: 25
     steps:
       - name: Harden Runner
@@ -31,6 +33,8 @@ jobs:
           fetch-depth: 0
           # Blobs load lazily; full-history fetch otherwise pulls every branch's files.
           filter: blob:none
+      - name: Trust the workspace for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Set up Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -39,6 +43,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        with:
+          version: 3.54.0
       - name: a11y gate (changed stories)
         run: task frontend:storybook:a11y:changed -- origin/${{ github.base_ref || 'main' }}
       - name: Upload scan reports

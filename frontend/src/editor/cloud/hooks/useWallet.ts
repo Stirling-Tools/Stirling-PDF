@@ -35,7 +35,7 @@
  * When the hook is rendered outside the saas app (e.g. on {@code
  * /dev/payg-preview} during local design work) the {@code AppConfigContext}
  * provider is not mounted and no backend is available. The hook detects that
- * via the {@code @app/hooks/walletDevPreview} seam and, when it returns a live
+ * via the {@code @editor/hooks/walletDevPreview} seam and, when it returns a live
  * channel, falls back to a synthesised snapshot whose subscription state is
  * read from {@code localStorage}. The detection + synthesis (which read
  * {@code import.meta.env}, {@code window.location} and web storage — all banned
@@ -45,11 +45,11 @@
  */
 import { useCallback, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import apiClient from "@app/services/apiClient";
-import { qk } from "@app/query/keys";
-import { createPortalSession } from "@app/services/billing";
-import { openExternal } from "@app/platform/openExternal";
-import { getWalletDevPreview } from "@app/hooks/walletDevPreview";
+import apiClient from "@editor/services/apiClient";
+import { qk } from "@editor/query/keys";
+import { createPortalSession } from "@editor/services/billing";
+import { openExternal } from "@editor/platform/openExternal";
+import { getWalletDevPreview } from "@editor/hooks/walletDevPreview";
 import type {
   Wallet,
   WalletStatus,
@@ -57,11 +57,11 @@ import type {
   WalletMember,
   WalletCategoryBreakdown,
   WalletActivityRow,
-} from "@app/billing";
+} from "@editor/billing";
 
 // ─── Public types ───────────────────────────────────────────────────────
-// The wallet contract lives in @app/billing (shared with the admin portal).
-// Re-exported so existing `@app/hooks/useWallet` importers keep their imports.
+// The wallet contract lives in @editor/billing (shared with the admin portal).
+// Re-exported so existing `@editor/hooks/useWallet` importers keep their imports.
 export type {
   Wallet,
   WalletStatus,
@@ -93,10 +93,10 @@ export interface UseWalletResult {
   updateCap: (capUsd: number | null) => Promise<void>;
   /**
    * Mint a Stripe Customer Portal session and send the user to it. Mints the
-   * session via the {@code @app/services/billing} seam (passing the caller's
+   * session via the {@code @editor/services/billing} seam (passing the caller's
    * {@code teamId}, which the PAYG portal edge function needs to resolve the
    * team outside Spring Security) and opens the returned URL via the
-   * {@code @app/platform/openExternal} seam — so web and desktop each route it
+   * {@code @editor/platform/openExternal} seam — so web and desktop each route it
    * the platform-appropriate way (new tab on web, system browser on desktop).
    * Throws on error so the caller can show a friendly toast — notably 404
    * {@code team_not_subscribed}.
@@ -117,7 +117,7 @@ const WALLET_POLL_MS = 30_000;
 export function useWallet(enabled = true): UseWalletResult {
   // Resolved once: the dev-preview side-channel when rendered outside the real
   // app (saas /dev/payg-preview route), else null (every real build + desktop).
-  // The detection + synthesis live behind the @app/hooks/walletDevPreview seam
+  // The detection + synthesis live behind the @editor/hooks/walletDevPreview seam
   // because they read import.meta.env / window.location / localStorage, which
   // cloud/ may not touch directly.
   const devPreview = useRef(getWalletDevPreview()).current;

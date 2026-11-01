@@ -1,7 +1,7 @@
 import { Stack, NumberInput, ColorInput, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface RedactAdvancedSettingsProps {
   parameters: RedactParameters;

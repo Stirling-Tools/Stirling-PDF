@@ -7,15 +7,15 @@ import {
   writeFile,
 } from "@tauri-apps/plugin-fs";
 import { invoke } from "@tauri-apps/api/core";
-import { getDiskFileState } from "@app/services/desktopFileLink";
+import { getDiskFileState } from "@editor/services/desktopFileLink";
 import {
   readDiskFile,
   isWithinMount,
   type DiskFileEntry,
-} from "@app/services/localFolderContents";
-import { generateId } from "@app/utils/generateId";
-import { beginSelfWrite, endSelfWrite } from "@app/services/diskFileSync";
-import { directoryKey } from "@app/services/localFolderStorage";
+} from "@editor/services/localFolderContents";
+import { generateId } from "@editor/utils/generateId";
+import { beginSelfWrite, endSelfWrite } from "@editor/services/diskFileSync";
+import { directoryKey } from "@editor/services/localFolderStorage";
 
 /** A directory and one filename returned by the filesystem. */
 export function processingPath(directory: string, name: string): string {

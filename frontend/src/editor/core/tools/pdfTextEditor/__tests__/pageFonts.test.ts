@@ -3,8 +3,8 @@ import { describe, it, expect } from "vitest";
 import {
   analyzePageFonts,
   missingAlnumFromCmap,
-} from "@app/tools/pdfTextEditor/util/pageFonts";
-import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/util/pageFonts";
+import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 
 function mkRun(id: string, fontId: string, fontSubset = false) {
   return {

@@ -1,16 +1,16 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Modal, Stack, Text, Group, Alert } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 
-import { alert } from "@app/components/toast";
-import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import { uploadHistoryChain } from "@app/services/serverStorageUpload";
-import { fileStorage } from "@app/services/fileStorage";
-import { useFileActions } from "@app/contexts/FileContext";
-import type { FileId } from "@app/types/file";
+import { alert } from "@editor/components/toast";
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import { uploadHistoryChain } from "@editor/services/serverStorageUpload";
+import { fileStorage } from "@editor/services/fileStorage";
+import { useFileActions } from "@editor/contexts/FileContext";
+import type { FileId } from "@editor/types/file";
 
 interface UploadToServerModalProps {
   opened: boolean;

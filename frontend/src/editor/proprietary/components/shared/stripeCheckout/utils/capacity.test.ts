@@ -6,7 +6,7 @@ import {
   usersForBlocks,
   blocksForUsers,
   shouldOfferEnterprise,
-} from "@app/components/shared/stripeCheckout/utils/capacity";
+} from "@editor/components/shared/stripeCheckout/utils/capacity";
 
 describe("usersForBlocks", () => {
   it("multiplies blocks by the block size", () => {

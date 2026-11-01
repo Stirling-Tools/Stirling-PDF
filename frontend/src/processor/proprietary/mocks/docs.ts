@@ -12,7 +12,7 @@
  * enterprise is negotiated ("Custom"). The rest of the content is tier-neutral.
  */
 
-import type { Tier } from "@portal/contexts/TierContext";
+import type { Tier } from "@processor/contexts/TierContext";
 import type {
   AgentSkill,
   ApiErrorRow,
@@ -23,7 +23,7 @@ import type {
   Playbook,
   RateLimit,
   Sdk,
-} from "@portal/api/docs";
+} from "@processor/api/docs";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Navigation                                                               */

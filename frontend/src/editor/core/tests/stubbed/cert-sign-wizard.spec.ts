@@ -1,5 +1,5 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
 

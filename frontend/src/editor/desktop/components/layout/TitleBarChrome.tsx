@@ -2,9 +2,9 @@ import { useCallback, useMemo, useState, type ReactNode } from "react";
 import {
   TitleBarStripContext,
   type TitleBarStripSlots,
-} from "@app/contexts/TitleBarStripContext";
-import { TitleBarStrip } from "@app/components/layout/TitleBarStrip";
-import styles from "@app/components/layout/TitleBarStrip.module.css";
+} from "@editor/contexts/TitleBarStripContext";
+import { TitleBarStrip } from "@editor/components/layout/TitleBarStrip";
+import styles from "@editor/components/layout/TitleBarStrip.module.css";
 
 /**
  * Desktop app frame: the window title-bar strip as a full-width row above the

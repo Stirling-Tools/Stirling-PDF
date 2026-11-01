@@ -4,18 +4,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   FormFillProvider,
   useFormFill,
-} from "@app/tools/formFill/FormFillContext";
-import { useFormAutoMode } from "@app/tools/formFill/useFormAutoMode";
-import type { FormField } from "@app/tools/formFill/types";
+} from "@editor/tools/formFill/FormFillContext";
+import { useFormAutoMode } from "@editor/tools/formFill/useFormAutoMode";
+import type { FormField } from "@editor/tools/formFill/types";
 
 const { fetchBackend } = vi.hoisted(() => ({ fetchBackend: vi.fn() }));
-vi.mock("@app/tools/formFill/providers/PdfBoxFormProvider", () => ({
+vi.mock("@editor/tools/formFill/providers/PdfBoxFormProvider", () => ({
   PdfBoxFormProvider: class {
     name = "pdfbox";
     fetchFields = fetchBackend;
   },
 }));
-vi.mock("@app/tools/formFill/providers/PdfiumFormProvider", () => ({
+vi.mock("@editor/tools/formFill/providers/PdfiumFormProvider", () => ({
   PdfiumFormProvider: class {
     name = "pdfium";
     async fetchFields() {
@@ -23,8 +23,8 @@ vi.mock("@app/tools/formFill/providers/PdfiumFormProvider", () => ({
     }
   },
 }));
-vi.mock("@app/tools/formFill/formApi", () => ({ applyFieldEdits: vi.fn() }));
-vi.mock("@app/services/pdfiumService", () => ({
+vi.mock("@editor/tools/formFill/formApi", () => ({ applyFieldEdits: vi.fn() }));
+vi.mock("@editor/services/pdfiumService", () => ({
   fetchSignatureFieldsWithAppearances: vi.fn(),
 }));
 

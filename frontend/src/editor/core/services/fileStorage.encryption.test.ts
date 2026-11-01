@@ -3,20 +3,20 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   fileStorage,
   type StoredStirlingFileRecord,
-} from "@app/services/fileStorage";
+} from "@editor/services/fileStorage";
 import {
   indexedDBManager,
   DATABASE_CONFIGS,
-} from "@app/services/indexedDBManager";
+} from "@editor/services/indexedDBManager";
 import {
   createNewStirlingFileStub,
   createStirlingFile,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 import {
   clearPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
 afterEach(async () => {
   clearPdfAccess();

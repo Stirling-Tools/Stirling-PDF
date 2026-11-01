@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { authService, UserInfo } from "@app/services/authService";
-import { buildOAuthCallbackHtml } from "@app/utils/oauthCallbackHtml";
-import { ProviderMark } from "@app/auth/ui/ProviderMark";
-import { STIRLING_SAAS_URL } from "@app/constants/connection";
-import { Button } from "@app/ui/Button";
-import "@app/components/SetupWizard/desktopOAuth.css";
+import { authService, UserInfo } from "@editor/services/authService";
+import { buildOAuthCallbackHtml } from "@editor/utils/oauthCallbackHtml";
+import { ProviderMark } from "@editor/auth/ui/ProviderMark";
+import { STIRLING_SAAS_URL } from "@editor/constants/connection";
+import { Button } from "@editor/ui/Button";
+import "@editor/components/SetupWizard/desktopOAuth.css";
 
 type KnownProviderId =
   | "google"

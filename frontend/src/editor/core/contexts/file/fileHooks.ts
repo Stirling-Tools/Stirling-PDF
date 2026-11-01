@@ -12,14 +12,14 @@ import {
   FileStateStore,
   FileContextStateValue,
   FileContextActionsValue,
-} from "@app/contexts/file/contexts";
+} from "@editor/contexts/file/contexts";
 import {
   StirlingFileStub,
   StirlingFile,
   FileContextState,
   FileContextSelectors,
-} from "@app/types/fileContext";
-import { FileId } from "@app/types/file";
+} from "@editor/types/fileContext";
+import { FileId } from "@editor/types/file";
 
 const GUARD_MISUSE = process.env.NODE_ENV !== "production";
 

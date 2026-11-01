@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useState } from "react";
-import type { ProcessingFolderCreation } from "@core/hooks/useProcessingFolderCreation";
+import type { ProcessingFolderCreation } from "@editor-core/hooks/useProcessingFolderCreation";
 
 export type { ProcessingFolderCreation };
 
@@ -7,7 +7,7 @@ export const canCreateProcessingFolders = true;
 
 const Setup = lazy(async () => {
   const module =
-    await import("@app/components/policies/ProcessingFolderSetupFlow");
+    await import("@editor/components/policies/ProcessingFolderSetupFlow");
   return { default: module.ProcessingFolderSetupFlow };
 });
 

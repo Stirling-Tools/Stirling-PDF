@@ -1,15 +1,15 @@
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { Avatar, NavSurface } from "@app/ui";
-import { BrandMark } from "@app/components/shared/BrandMark";
-import { type AppSwitchTarget } from "@app/components/shared/AppSwitch";
+import { Icon } from "@editor/ui/Icon";
+import { Avatar, NavSurface } from "@editor/ui";
+import { BrandMark } from "@editor/components/shared/BrandMark";
+import { type AppSwitchTarget } from "@editor/components/shared/AppSwitch";
 import {
   NavFooterCreditsRow,
   type NavFooterCredits,
-} from "@app/components/shared/navFooter/NavFooterCreditsRow";
-import "@app/components/shared/navFooter/NavFooter.css";
+} from "@editor/components/shared/navFooter/NavFooterCreditsRow";
+import "@editor/components/shared/navFooter/NavFooter.css";
 
 export interface NavFooterAppLink {
   /** The app this footer is NOT in — the one the row opens. */

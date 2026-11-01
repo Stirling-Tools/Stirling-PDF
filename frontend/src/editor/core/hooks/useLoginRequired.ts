@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { alert } from "@app/components/toast";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { alert } from "@editor/components/toast";
 import { useTranslation } from "react-i18next";
 
 /**

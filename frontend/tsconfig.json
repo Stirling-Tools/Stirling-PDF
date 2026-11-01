@@ -30,13 +30,13 @@
     // "rootDir": "./",                                  /* Specify the root folder within your source files. */
     "moduleResolution": "bundler" /* Specify how TypeScript looks up a file from a given module specifier. */,
     "paths": {
-      "@app/*": [
+      "@editor/*": [
         "./src/editor/desktop/*",
         "./src/editor/proprietary/*",
         "./src/editor/core/*"
       ],
-      "@proprietary/*": ["./src/editor/proprietary/*"],
-      "@core/*": ["./src/editor/core/*"]
+      "@editor-proprietary/*": ["./src/editor/proprietary/*"],
+      "@editor-core/*": ["./src/editor/core/*"]
     },
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */

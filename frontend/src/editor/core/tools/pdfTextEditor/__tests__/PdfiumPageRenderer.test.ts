@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PdfiumPageRenderer } from "@app/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
+import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 
 // A4 in PDF points.
 const A4_W = 595;

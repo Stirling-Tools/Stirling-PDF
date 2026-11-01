@@ -1,17 +1,17 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { fromLatin1, toLatin1 } from "@app/tools/pdfTextEditor/pdfdoc/bytes";
-import { RawPdf } from "@app/tools/pdfTextEditor/pdfdoc/raw";
+import { fromLatin1, toLatin1 } from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
+import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   appendRevision,
   plainObject,
   streamObject,
-} from "@app/tools/pdfTextEditor/pdfdoc/revision";
+} from "@editor/tools/pdfTextEditor/pdfdoc/revision";
 import {
   buildXrefStreamPdf,
   singleContentPdf,
   streamBody,
-} from "@app/tools/pdfTextEditor/__tests__/pdfFixtures";
+} from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 /** The property that makes an incremental revision safe for signed files. */
 function prefixIsIntact(before: Uint8Array, after: Uint8Array): boolean {

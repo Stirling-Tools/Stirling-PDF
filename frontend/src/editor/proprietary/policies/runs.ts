@@ -8,7 +8,7 @@ import type {
   PolicyActivityItem,
   PolicyRunView,
   PolicyStats,
-} from "@app/policies/types";
+} from "@editor/policies/types";
 
 function relativeTime(epochMs: number): string {
   if (!epochMs) return "Just now";

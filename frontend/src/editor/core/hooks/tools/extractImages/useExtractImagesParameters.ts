@@ -1,4 +1,4 @@
-import { useBaseParameters } from "@app/hooks/tools/shared/useBaseParameters";
+import { useBaseParameters } from "@editor/hooks/tools/shared/useBaseParameters";
 
 export interface ExtractImagesParameters {
   format: "png" | "jpg" | "gif";

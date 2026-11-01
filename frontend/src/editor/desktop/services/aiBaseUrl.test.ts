@@ -7,36 +7,36 @@ const mocks = vi.hoisted(() => ({
   authenticated: true,
 }));
 
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentConfig: async () => ({ local_processing_only: false }),
     getCurrentMode: async () => mocks.mode,
     getServerConfig: async () => mocks.serverConfig,
   },
 }));
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: {
     isAuthenticated: async () => mocks.authenticated,
     awaitRefreshIfInProgress: async () => {},
   },
 }));
-vi.mock("@app/services/tauriBackendService", () => ({
+vi.mock("@editor/services/tauriBackendService", () => ({
   tauriBackendService: {},
 }));
-vi.mock("@app/services/endpointAvailabilityService", () => ({
+vi.mock("@editor/services/endpointAvailabilityService", () => ({
   endpointAvailabilityService: {},
 }));
-vi.mock("@app/services/selfHostedServerMonitor", () => ({
+vi.mock("@editor/services/selfHostedServerMonitor", () => ({
   selfHostedServerMonitor: {},
 }));
-vi.mock("@app/i18n", () => ({
+vi.mock("@editor/i18n", () => ({
   default: { t: (_key: string, fallback: string) => fallback },
 }));
-vi.mock("@app/constants/connection", () => ({
+vi.mock("@editor/constants/connection", () => ({
   STIRLING_SAAS_BACKEND_API_URL: "https://api.saas.test/",
 }));
 
-import { getAiBaseUrl } from "@app/services/aiBaseUrl";
+import { getAiBaseUrl } from "@editor/services/aiBaseUrl";
 
 describe("getAiBaseUrl", () => {
   beforeEach(() => {

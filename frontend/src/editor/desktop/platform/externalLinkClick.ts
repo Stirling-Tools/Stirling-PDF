@@ -1,8 +1,8 @@
 import type { MouseEvent } from "react";
-import { openExternal } from "@app/platform/openExternal";
+import { openExternal } from "@editor/platform/openExternal";
 
 /**
- * Desktop (Tauri) override of the @app/platform/externalLinkClick seam.
+ * Desktop (Tauri) override of the @editor/platform/externalLinkClick seam.
  *
  * The app runs inside a Tauri webview, which traps a `target="_blank"` anchor
  * inside our own window. Intercept the click and hand the URL to the OS browser

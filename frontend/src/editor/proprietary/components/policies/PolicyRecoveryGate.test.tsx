@@ -11,9 +11,9 @@ import { createInstance } from "i18next";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "smol-toml";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import { createNewStirlingFileStub } from "@app/types/fileContext";
-import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import { createNewStirlingFileStub } from "@editor/types/fileContext";
+import type { PolicyRunRecord } from "@editor/components/policies/policyRunStore";
 
 const translations = parse(
   readFileSync(
@@ -41,50 +41,52 @@ const harness = vi.hoisted(() => ({
   setPreviewFile: vi.fn(),
   selectors: { getStirlingFileStubs: (): StirlingFileStub[] => harness.files },
 }));
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ user: harness.user }),
 }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: harness.files }),
   useFileSelectors: () => harness.selectors,
   useFileManagement: () => ({ removeFiles: harness.removeFiles }),
 }));
-vi.mock("@app/contexts/HotkeyContext", () => ({
+vi.mock("@editor/contexts/HotkeyContext", () => ({
   useHotkeys: () => ({
     pauseHotkeys: harness.pauseHotkeys,
     resumeHotkeys: harness.resumeHotkeys,
     areHotkeysPaused: false,
   }),
 }));
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationActions: () => ({ actions: harness.navigation }),
 }));
-vi.mock("@app/contexts/ToolWorkflowContext", () => ({
+vi.mock("@editor/contexts/ToolWorkflowContext", () => ({
   useToolWorkflow: () => ({ setPreviewFile: harness.setPreviewFile }),
 }));
-vi.mock("@app/services/policyDispatch", () => ({ runPolicyOnFile: vi.fn() }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/policyDispatch", () => ({
+  runPolicyOnFile: vi.fn(),
+}));
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { getStirlingFileStub: vi.fn() },
 }));
-vi.mock("@app/services/policyCatalog", () => ({
+vi.mock("@editor/services/policyCatalog", () => ({
   loadPolicyCatalog: () => ({
     categories: [{ id: "security", label: "Security" }],
   }),
 }));
-import { PolicyRecoveryGate } from "@app/components/policies/PolicyRecoveryGate";
+import { PolicyRecoveryGate } from "@editor/components/policies/PolicyRecoveryGate";
 import {
   recordRunStart,
   resetPolicyRuns,
   updateRun,
-} from "@app/components/policies/policyRunStore";
-import { updatePolicy } from "@app/services/policyStorage";
+} from "@editor/components/policies/policyRunStore";
+import { updatePolicy } from "@editor/services/policyStorage";
 import {
   isFileBlocked,
   isEditorPolicyBlocked,
   registerPolicyFileUsage,
-} from "@app/services/policyBlockRegistry";
-import { runPolicyOnFile } from "@app/services/policyDispatch";
-import { fileStorage } from "@app/services/fileStorage";
+} from "@editor/services/policyBlockRegistry";
+import { runPolicyOnFile } from "@editor/services/policyDispatch";
+import { fileStorage } from "@editor/services/fileStorage";
 
 function failed(
   file: StirlingFileStub,

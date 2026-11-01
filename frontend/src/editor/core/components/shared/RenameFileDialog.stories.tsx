@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
+import { RenameFileDialog } from "@editor/components/shared/RenameFileDialog";
 
 const meta = {
   title: "Shared/RenameFileDialog",

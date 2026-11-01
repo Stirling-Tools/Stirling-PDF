@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { OverviewHeader } from "@app/components/shared/config/OverviewHeader";
+import { OverviewHeader } from "@editor/components/shared/config/OverviewHeader";
 
 const meta = {
   title: "Shared/Config/OverviewHeader",

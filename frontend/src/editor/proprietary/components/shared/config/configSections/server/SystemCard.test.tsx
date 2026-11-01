@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 
-vi.mock("@app/contexts/PreferencesContext", () => ({
+vi.mock("@editor/contexts/PreferencesContext", () => ({
   usePreferences: () => ({ preferences: {}, updatePreference: vi.fn() }),
 }));
 vi.mock("react-i18next", async (importOriginal) => ({
@@ -13,8 +13,8 @@ vi.mock("react-i18next", async (importOriginal) => ({
   }),
 }));
 
-import { SystemCard } from "@app/components/shared/config/configSections/server/SystemCard";
-import type { GeneralSettingsData } from "@app/components/shared/config/configSections/server/serverSettings";
+import { SystemCard } from "@editor/components/shared/config/configSections/server/SystemCard";
+import type { GeneralSettingsData } from "@editor/components/shared/config/configSections/server/serverSettings";
 
 function renderWithLocale(defaultLocale: string) {
   const settings = { ui: {}, system: { defaultLocale } } as GeneralSettingsData;

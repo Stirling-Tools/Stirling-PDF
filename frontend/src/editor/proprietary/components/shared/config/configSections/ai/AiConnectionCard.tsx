@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { Icon, type IconName } from "@app/ui/Icon";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import {
   TextInput,
@@ -11,17 +11,17 @@ import {
   Text,
   Group,
 } from "@mantine/core";
-import { alert } from "@app/components/toast";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import apiClient from "@app/services/apiClient";
-import { Button } from "@app/ui/Button";
-import { StatusBadge } from "@app/ui/StatusBadge";
+import { alert } from "@editor/components/toast";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import apiClient from "@editor/services/apiClient";
+import { Button } from "@editor/ui/Button";
+import { StatusBadge } from "@editor/ui/StatusBadge";
 import { Switch, Anchor } from "@mantine/core";
-import { useAuth } from "@app/auth/context";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
-import { useAccountLinked } from "@app/components/shared/config/configSections/ai/useAiEngineStatus";
-import type { AiCardProps } from "@app/components/shared/config/configSections/ai/aiCardProps";
-import "@app/components/shared/config/configSections/ai/AiModeOption.css";
+import { useAuth } from "@editor/auth/context";
+import { HAS_PORTAL } from "@editor/routes/hasPortal";
+import { useAccountLinked } from "@editor/components/shared/config/configSections/ai/useAiEngineStatus";
+import type { AiCardProps } from "@editor/components/shared/config/configSections/ai/aiCardProps";
+import "@editor/components/shared/config/configSections/ai/AiModeOption.css";
 
 /** The three places AI could run. Only two of them exist. */
 type AiMode = "off" | "self" | "cloud";

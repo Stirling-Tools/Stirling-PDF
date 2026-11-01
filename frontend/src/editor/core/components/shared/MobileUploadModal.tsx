@@ -1,10 +1,10 @@
 import { useCallback } from "react";
 import { Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { Icon } from "@app/ui/Icon";
-import MobileTransferModal from "@app/components/shared/MobileTransferModal";
-import { convertImageToPdf, isImageFile } from "@app/utils/imageToPdfUtils";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { Icon } from "@editor/ui/Icon";
+import MobileTransferModal from "@editor/components/shared/MobileTransferModal";
+import { convertImageToPdf, isImageFile } from "@editor/utils/imageToPdfUtils";
 
 interface MobileUploadModalProps {
   opened: boolean;

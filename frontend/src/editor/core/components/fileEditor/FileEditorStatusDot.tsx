@@ -1,4 +1,4 @@
-import { StirlingFileStub } from "@app/types/fileContext";
+import { StirlingFileStub } from "@editor/types/fileContext";
 
 interface FileEditorStatusDotProps {
   file: StirlingFileStub;

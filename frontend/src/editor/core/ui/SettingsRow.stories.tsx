@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SettingsRow } from "@app/ui/SettingsRow";
-import { ToggleSwitch } from "@app/ui/ToggleSwitch";
-import { Select } from "@app/ui/Select";
-import { Card } from "@app/ui/Card";
+import { SettingsRow } from "@editor/ui/SettingsRow";
+import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
+import { Select } from "@editor/ui/Select";
+import { Card } from "@editor/ui/Card";
 
 const meta: Meta<typeof SettingsRow> = {
   title: "Primitives/SettingsRow",

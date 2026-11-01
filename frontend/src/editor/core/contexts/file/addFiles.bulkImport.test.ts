@@ -1,9 +1,9 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import type { FileContextState } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import { createNewStirlingFileStub } from "@app/types/fileContext";
-import { expectConsole } from "@app/tests/failOnConsole";
+import type { FileContextState } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import { createNewStirlingFileStub } from "@editor/types/fileContext";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 // A bulk import the user is not looking at (the onboarding Downloads sweep) must not
 // parse every PDF a second time for a thumbnail, nor keep hundreds of Files in memory
@@ -13,18 +13,21 @@ const storeStirlingFile = vi.hoisted(() => vi.fn());
 const getStirlingFile = vi.hoisted(() => vi.fn());
 const generateThumbnailPairWithMetadata = vi.hoisted(() => vi.fn());
 const isPDFEncrypted = vi.hoisted(() => vi.fn());
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { storeStirlingFile, getStirlingFile, updateThumbnail: vi.fn() },
 }));
-vi.mock("@app/utils/thumbnailUtils", () => ({
+vi.mock("@editor/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata,
   generateThumbnailForFile: vi.fn(),
 }));
-vi.mock("@app/services/fileAnalyzer", () => ({
+vi.mock("@editor/services/fileAnalyzer", () => ({
   FileAnalyzer: { isPDFEncrypted },
 }));
 
-import { addFiles, addStirlingFileStubs } from "@app/contexts/file/fileActions";
+import {
+  addFiles,
+  addStirlingFileStubs,
+} from "@editor/contexts/file/fileActions";
 
 function harness() {
   const state = {

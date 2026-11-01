@@ -7,7 +7,7 @@ import {
   useRegisterQuickNavView,
   useSuppressQuickNavRail,
   type QuickNavIdentity,
-} from "@app/contexts/QuickNavHostContext";
+} from "@editor/contexts/QuickNavHostContext";
 
 function Probe({ onRead }: { onRead: (value: unknown) => void }) {
   const host = useQuickNavHost();

@@ -2,10 +2,10 @@ import { renderHook } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
 const state = vi.hoisted(() => ({ localOnly: true }));
-vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => state.localOnly,
 }));
-vi.mock("@core/contexts/AppConfigContext", () => ({
+vi.mock("@editor-core/contexts/AppConfigContext", () => ({
   AppConfigProvider: () => null,
   useAppConfig: () => ({
     config: {
@@ -20,7 +20,7 @@ vi.mock("@core/contexts/AppConfigContext", () => ({
     },
   }),
 }));
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 test("managed privacy overrides server document features while preserving account capabilities", () => {
   state.localOnly = true;

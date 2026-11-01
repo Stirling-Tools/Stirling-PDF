@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Checkbox, FormField, Input, Modal, Select } from "@app/ui";
+import { Button, Checkbox, FormField, Input, Modal, Select } from "@editor/ui";
 import {
   createMember,
   fetchUsers,
   ROLE_LABEL,
   type AuthType,
-} from "@portal/api/users";
-import { usersBackend } from "@app/portal/usersBackend";
-import { createGrant } from "@portal/api/access";
-import { errorMessage } from "@portal/api/http";
-import type { Team } from "@portal/api/teams";
-import { useTier } from "@portal/contexts/TierContext";
-import "@portal/views/Users.css";
+} from "@processor/api/users";
+import { usersBackend } from "@editor/portal/usersBackend";
+import { createGrant } from "@processor/api/access";
+import { errorMessage } from "@processor/api/http";
+import type { Team } from "@processor/api/teams";
+import { useTier } from "@processor/contexts/TierContext";
+import "@processor/views/Users.css";
 
 interface InviteMemberModalProps {
   open: boolean;

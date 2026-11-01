@@ -5,7 +5,7 @@ import {
   revealPickerTool,
   waitForElement,
   waitForHighlightable,
-} from "@app/components/onboarding/tourUtils";
+} from "@editor/components/onboarding/tourUtils";
 
 describe("tourUtils", () => {
   beforeEach(() => {

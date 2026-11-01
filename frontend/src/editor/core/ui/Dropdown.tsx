@@ -14,7 +14,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import "@app/ui/Dropdown.css";
+import "@editor/ui/Dropdown.css";
 
 type Alignment = "start" | "end";
 

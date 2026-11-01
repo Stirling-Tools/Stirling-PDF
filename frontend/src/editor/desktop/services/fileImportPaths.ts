@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
+import { pendingFilePathMappings } from "@editor/services/pendingFilePathMappings";
 
 interface FileDropBridge {
   postMessageWithAdditionalObjects(message: string, objects: File[]): void;

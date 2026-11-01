@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSettings";
-import { defaultParameters } from "@app/hooks/tools/convert/useConvertParameters";
+import ConvertToCbzSettings from "@editor/components/tools/convert/ConvertToCbzSettings";
+import { defaultParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 
 const meta = {
   title: "Tools/Convert/ConvertToCbzSettings",

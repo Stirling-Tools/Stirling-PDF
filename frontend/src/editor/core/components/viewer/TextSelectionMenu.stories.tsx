@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { SelectionSelectionMenuProps } from "@embedpdf/plugin-selection/react";
-import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
+import { TextSelectionMenu } from "@editor/components/viewer/TextSelectionMenu";
 
 function baseProps(
   overrides: Partial<SelectionSelectionMenuProps> = {},

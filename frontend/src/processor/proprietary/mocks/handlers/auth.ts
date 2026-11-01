@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from "msw";
-import { MOCK_ADMIN, MOCK_SESSION } from "@portal/mocks/auth";
+import { MOCK_ADMIN, MOCK_SESSION } from "@processor/mocks/auth";
 
 /**
  * Mock auth endpoints mirroring the Spring backend's contract. In mock mode the

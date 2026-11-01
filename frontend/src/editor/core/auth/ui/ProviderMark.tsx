@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
-import { Icon } from "@app/ui/Icon";
-import { oauthIconName } from "@app/auth/ui/oauthIcons";
+import { Icon } from "@editor/ui/Icon";
+import { oauthIconName } from "@editor/auth/ui/oauthIcons";
 
 interface ProviderMarkProps {
   /** Provider icon filename, e.g. "google.svg". */

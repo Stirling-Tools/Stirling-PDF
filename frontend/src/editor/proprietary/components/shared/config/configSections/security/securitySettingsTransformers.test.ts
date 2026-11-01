@@ -1,14 +1,14 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import {
   fetchConnectionsSettings,
   saveConnectionsSettings,
   fetchSecuritySettings,
   saveSecuritySettings,
-} from "@app/components/shared/config/configSections/security/securitySettingsTransformers";
+} from "@editor/components/shared/config/configSections/security/securitySettingsTransformers";
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: vi.fn() },
 }));
 

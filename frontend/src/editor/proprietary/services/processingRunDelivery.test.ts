@@ -3,12 +3,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const fetchRuns = vi.fn();
 const fetchOutput = vi.fn();
-vi.mock("@app/services/processingFolderApi", () => ({
+vi.mock("@editor/services/processingFolderApi", () => ({
   fetchProcessingFolderRuns: (policyId: string) => fetchRuns(policyId),
   fetchRunOutputFile: (output: unknown) => fetchOutput(output),
 }));
 
-import { deliverSweepResults } from "@app/services/processingRunDelivery";
+import { deliverSweepResults } from "@editor/services/processingRunDelivery";
 
 /** A settled run with one output, in the shape the runs feed returns. */
 const completedRun = (runId: string) => ({

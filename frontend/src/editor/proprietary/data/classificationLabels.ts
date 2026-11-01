@@ -1,4 +1,4 @@
-import type { IconName } from "@app/ui/Icon";
+import type { IconName } from "@editor/ui/Icon";
 // Classification labels. The SOURCE OF TRUTH is the co-located static JSON
 // (`classificationLabels.json`), imported here and shaped into typed objects —
 // edit THAT file, not this one. It's a fixed, built-in vocabulary shared by
@@ -17,7 +17,7 @@ import type { IconName } from "@app/ui/Icon";
 // sees it. `families` are presentational sidebar roll-ups (referencing labels by
 // id) the classifier never sees.
 
-import labelsData from "@app/data/classificationLabels.json";
+import labelsData from "@editor/data/classificationLabels.json";
 
 export interface ClassificationLabel {
   /** Stable identity (slug) — the value on the wire, stored on the doc, and

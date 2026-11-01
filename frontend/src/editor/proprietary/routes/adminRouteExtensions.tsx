@@ -1,12 +1,12 @@
 import { lazy } from "react";
 import type { ReactElement } from "react";
 import { Route } from "react-router-dom";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
+import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
+import { HAS_PORTAL } from "@editor/routes/hasPortal";
 
 const PortalApp = HAS_PORTAL
   ? lazy(async () => {
-      const m = await import("@portal/PortalApp");
+      const m = await import("@processor/PortalApp");
       return { default: m.PortalApp };
     })
   : null;
@@ -14,7 +14,7 @@ const PortalApp = HAS_PORTAL
 const ProcurementRedirect = HAS_PORTAL
   ? lazy(async () => {
       const m =
-        await import("@portal/components/procurement/ProcurementRedirect");
+        await import("@processor/components/procurement/ProcurementRedirect");
       return { default: m.ProcurementRedirect };
     })
   : null;
@@ -24,7 +24,7 @@ const ProcurementRedirect = HAS_PORTAL
  */
 const ConnectCallback = HAS_PORTAL
   ? lazy(async () => {
-      const m = await import("@portal/views/ConnectCallback");
+      const m = await import("@processor/views/ConnectCallback");
       return { default: m.default };
     })
   : null;

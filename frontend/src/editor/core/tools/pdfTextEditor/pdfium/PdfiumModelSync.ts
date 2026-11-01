@@ -1,8 +1,8 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { PdfiumTextReader } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextReader";
-import type { GroupingMode } from "@app/tools/pdfTextEditor/types";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import type { GroupingMode } from "@editor/tools/pdfTextEditor/types";
 
 // Re-read a page from PDFium and fold the result onto the EXISTING run objects
 // instead of replacing them.

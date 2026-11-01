@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import TableOfContentsSection from "@app/components/tools/getPdfInfo/sections/TableOfContentsSection";
-import type { PdfTocEntry } from "@app/types/getPdfInfo";
+import TableOfContentsSection from "@editor/components/tools/getPdfInfo/sections/TableOfContentsSection";
+import type { PdfTocEntry } from "@editor/types/getPdfInfo";
 
 const tocArray: PdfTocEntry[] = [
   { Title: "Chapter 1: Introduction" },

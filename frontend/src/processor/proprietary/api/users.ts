@@ -1,9 +1,9 @@
-// The bare i18next singleton (the same instance @app/i18n initializes at
+// The bare i18next singleton (the same instance @editor/i18n initializes at
 // startup), imported directly so this data module doesn't pull i18n's
 // init side effects into unit tests that mock react-i18next.
 import i18n from "i18next";
-import { apiClient } from "@portal/api/http";
-import type { Tier } from "@portal/contexts/TierContext";
+import { apiClient } from "@processor/api/http";
+import type { Tier } from "@processor/contexts/TierContext";
 
 /** The four org roles, most → least privileged, mapped onto the backend's
  *  authorities + team leadership. Order drives the role select and grid. */

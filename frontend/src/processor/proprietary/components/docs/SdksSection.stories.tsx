@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { docsContentFor } from "@portal/mocks/docs";
-import { SdksSection } from "@portal/components/docs/SdksSection";
-import "@core/components/docs/DeveloperDocs.css";
+import { docsContentFor } from "@processor/mocks/docs";
+import { SdksSection } from "@processor/components/docs/SdksSection";
+import "@editor-core/components/docs/DeveloperDocs.css";
 
 const { sdks } = docsContentFor("pro");
 

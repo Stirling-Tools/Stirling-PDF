@@ -1,4 +1,4 @@
-import type { IconName } from "@app/ui/Icon";
+import type { IconName } from "@editor/ui/Icon";
 
 /**
  * Types for automation functionality
@@ -28,7 +28,7 @@ export interface AutomationTool {
 }
 
 export type AutomationStep =
-  (typeof import("@app/constants/automation").AUTOMATION_STEPS)[keyof typeof import("@app/constants/automation").AUTOMATION_STEPS];
+  (typeof import("@editor/constants/automation").AUTOMATION_STEPS)[keyof typeof import("@editor/constants/automation").AUTOMATION_STEPS];
 
 export interface AutomationStepData {
   step: AutomationStep;

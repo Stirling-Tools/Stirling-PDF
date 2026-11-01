@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FormField, Input, Select } from "@app/ui";
-import { PipelineInspector } from "@portal/components/pipelines/PipelineInspector";
+import { FormField, Input, Select } from "@editor/ui";
+import { PipelineInspector } from "@processor/components/pipelines/PipelineInspector";
 
 const meta: Meta<typeof PipelineInspector> = {
   title: "Portal/Pipelines/PipelineInspector",

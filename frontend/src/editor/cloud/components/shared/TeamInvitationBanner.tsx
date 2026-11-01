@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Group, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { AppBanner } from "@app/components/shared/AppBanner";
-import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
+import { Icon } from "@editor/ui/Icon";
+import { AppBanner } from "@editor/components/shared/AppBanner";
+import { useSaaSTeam } from "@editor/contexts/SaaSTeamContext";
 
 /**
  * SaaS-web team invitation banner. Shown at the top of the app when the

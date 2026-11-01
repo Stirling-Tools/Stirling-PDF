@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { useConnectedServer } from "@app/hooks/useConnectedServer";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { useConnectedServer } from "@editor/hooks/useConnectedServer";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 
 /** Desktop: folder processing runs on the connected server, so it waits for one. Fails closed
  *  while the connection resolves, or the Downloads offer probes the bundled backend for nothing. */

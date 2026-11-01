@@ -7,11 +7,11 @@ import {
   Modal,
   Divider,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
-import { supabase } from "@app/auth/supabase";
-import { Z_INDEX_OVER_SETTINGS_MODAL } from "@app/styles/zIndex";
+import { useAuth } from "@editor/auth/UseSession";
+import { supabase } from "@editor/auth/supabase";
+import { Z_INDEX_OVER_SETTINGS_MODAL } from "@editor/styles/zIndex";
 
 const PasswordSecurity: React.FC = () => {
   const { t } = useTranslation();

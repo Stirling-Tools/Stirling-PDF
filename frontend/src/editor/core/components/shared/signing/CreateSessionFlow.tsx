@@ -2,17 +2,17 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Collapse } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip } from "@app/ui/Tooltip";
-import { SigningParticipantPicker } from "@app/components/shared/signing/SigningParticipantPicker";
-import { useIsMobile } from "@app/hooks/useIsMobile";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/ui/Tooltip";
+import { SigningParticipantPicker } from "@editor/components/shared/signing/SigningParticipantPicker";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
 import SignatureSettingsInput, {
   type SignatureSettings,
-} from "@app/components/tools/certSign/SignatureSettingsInput";
-import type { FileState } from "@app/types/file";
-import "@app/components/shared/signing/signing.css";
+} from "@editor/components/tools/certSign/SignatureSettingsInput";
+import type { FileState } from "@editor/types/file";
+import "@editor/components/shared/signing/signing.css";
 
 interface CreateSessionFlowProps {
   documentPicker: ReactNode;

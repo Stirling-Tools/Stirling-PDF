@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { classificationCondition } from "@app/data/classificationConditions";
+import { classificationCondition } from "@editor/data/classificationConditions";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, it, expect } from "vitest";
@@ -8,8 +8,8 @@ import {
   fromWirePolicy,
   policyInputs,
   EDITOR_SOURCE_ID,
-} from "@app/policies/codec";
-import type { PolicyDecodedState, WirePolicy } from "@app/policies/types";
+} from "@editor/policies/codec";
+import type { PolicyDecodedState, WirePolicy } from "@editor/policies/types";
 
 const FULL_STATE: PolicyDecodedState = {
   id: "pol_123",

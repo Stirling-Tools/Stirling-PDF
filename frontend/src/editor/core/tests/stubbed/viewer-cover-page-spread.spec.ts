@@ -1,6 +1,6 @@
 import path from "path";
 import type { Page } from "@playwright/test";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 
 const THREE_PAGE_PDF = path.join(
   import.meta.dirname,

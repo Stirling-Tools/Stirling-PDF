@@ -1,4 +1,4 @@
-import type { SigningMenuItem } from "@app/utils/signingItems";
+import type { SigningMenuItem } from "@editor/utils/signingItems";
 
 export interface QuickNavIdentity {
   displayName: string;

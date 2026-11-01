@@ -10,21 +10,21 @@ import { useTranslation } from "react-i18next";
 import {
   GraphNode,
   type NodeRunState,
-} from "@portal/components/pipelines/graph/GraphNode";
+} from "@processor/components/pipelines/graph/GraphNode";
 import {
   GraphEdge,
   type ChainWarning,
-} from "@portal/components/pipelines/graph/GraphEdge";
-import { GraphPlaceholderNode } from "@portal/components/pipelines/graph/GraphPlaceholderNode";
+} from "@processor/components/pipelines/graph/GraphEdge";
+import { GraphPlaceholderNode } from "@processor/components/pipelines/graph/GraphPlaceholderNode";
 import {
   NODE_HEIGHT,
   NODE_WIDTH,
   layoutChain,
   reorderMany,
   stepIndexOf,
-} from "@portal/components/pipelines/graph/pipelineLayout";
-import { useStepDraggable } from "@portal/components/pipelines/graph/useChainDragDrop";
-import "@portal/components/pipelines/graph/PipelineGraph.css";
+} from "@processor/components/pipelines/graph/pipelineLayout";
+import { useStepDraggable } from "@processor/components/pipelines/graph/useChainDragDrop";
+import "@processor/components/pipelines/graph/PipelineGraph.css";
 
 // The wire renders it, but callers build it, so it is re-exported from the graph they talk to.
 export type { ChainWarning };

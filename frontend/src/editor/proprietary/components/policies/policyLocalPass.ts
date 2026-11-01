@@ -5,10 +5,10 @@
  * without knowing what it computes; the policy-specific logic lives entirely inside the pass.
  */
 
-import type { FileId } from "@app/types/file";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import { CLASSIFICATION_POLICY_KEY } from "@app/data/classificationPolicy";
-import { classificationLocalPass } from "@app/components/policies/classificationLocalPass";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import { CLASSIFICATION_POLICY_KEY } from "@editor/data/classificationPolicy";
+import { classificationLocalPass } from "@editor/components/policies/classificationLocalPass";
 
 export interface LocalPassResult {
   /** Fields to merge onto the file's stub and stored metadata. Opaque to the engine. */

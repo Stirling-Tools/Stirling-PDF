@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { IconPicker, type IconPickerOption } from "@app/ui/IconPicker";
+import { IconPicker, type IconPickerOption } from "@editor/ui/IconPicker";
 
 const OPTIONS: IconPickerOption[] = [
   {

@@ -4,21 +4,21 @@ import {
   pdfAccessLifetime,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfAccessService";
-import apiClient from "@app/services/apiClient";
+} from "@editor/services/pdfAccessService";
+import apiClient from "@editor/services/apiClient";
 import axios, { type CancelToken } from "axios";
 import i18n from "i18next";
 
-import type { StirlingFile } from "@app/types/fileContext";
+import type { StirlingFile } from "@editor/types/fileContext";
 import { PdfPermissionFlag } from "@embedpdf/models";
-import { zipFileService } from "@app/services/zipFileService";
+import { zipFileService } from "@editor/services/zipFileService";
 
 import {
   hasPdfPermissionOverride,
   pdfAllows,
-} from "@app/services/pdfPermissions";
-import { isDamagedPdfError } from "@app/utils/pdfDamage";
-import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
+} from "@editor/services/pdfPermissions";
+import { isDamagedPdfError } from "@editor/utils/pdfDamage";
+import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
 
 const SUPPORTED_ENDPOINTS = new Set([
   "/api/v1/security/add-password",

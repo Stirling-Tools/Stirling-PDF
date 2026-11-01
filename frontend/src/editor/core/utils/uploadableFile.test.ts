@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { uploadableFile } from "@app/utils/uploadableFile";
+import { uploadableFile } from "@editor/utils/uploadableFile";
 
 /** jsdom's Blob has no text(). */
 const textOf = (file: File) =>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import apiClient from "@app/services/apiClient";
-import { alert } from "@app/components/toast";
+import apiClient from "@editor/services/apiClient";
+import { alert } from "@editor/components/toast";
 import { useTranslation } from "react-i18next";
 
 export function useApiKey() {

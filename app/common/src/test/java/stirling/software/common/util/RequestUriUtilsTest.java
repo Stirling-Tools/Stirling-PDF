@@ -59,6 +59,12 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsStaticResource_percentEncodedApiRoute_notStatic() {
+        assertFalse(RequestUriUtils.isStaticResource("/%61pi/v1/general/files/report.png"));
+        assertFalse(RequestUriUtils.isStaticResource("/app", "/%61pp/a%70i/v1/x.js"));
+    }
+
+    @Test
     void testIsStaticResource_apiStatusEndpoint() {
         assertTrue(RequestUriUtils.isStaticResource("/api/v1/info/status"));
     }
@@ -98,6 +104,15 @@ class RequestUriUtilsTest {
     @Test
     void testIsFrontendRoute_apiPath() {
         assertFalse(RequestUriUtils.isFrontendRoute("", "/api/v1/convert"));
+    }
+
+    @Test
+    void testIsFrontendRoute_percentEncodedApiPath() {
+        assertFalse(RequestUriUtils.isFrontendRoute("", "/%61pi/v1/info/load/all"));
+        assertFalse(RequestUriUtils.isFrontendRoute("", "/a%70%69/v1/info/load/all"));
+        assertFalse(RequestUriUtils.isFrontendRoute("/app", "/app/%61pi/v1/info/load/all"));
+        assertFalse(RequestUriUtils.isFrontendRoute("/app", "/%61pp/api/v1/info/load/all"));
+        assertFalse(RequestUriUtils.isFrontendRoute("", "/%61ctuator/prometheus"));
     }
 
     @Test
@@ -198,6 +213,34 @@ class RequestUriUtilsTest {
         // The webhook source receiver authenticates each delivery by HMAC signature, not a session.
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/webhooks/whk_abc123", ""));
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/api/v1/webhooks/whk_abc123", "/app"));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_mobileScannerPhoneCallsOnly() {
+        // The phone has no credentials; everything the desktop calls stays behind login.
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/validate-session/abc", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/upload/abc", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/app/api/v1/mobile-scanner/upload/abc", "/app"));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/create-session/abc", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/files/abc", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/download/abc/a.jpg", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/session/abc", ""));
+        // Anything beyond a bare session id stays protected, whatever the firewall allows.
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/upload/abc/../../files/abc", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/upload/abc/extra", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/upload/", ""));
     }
 
     @Test
@@ -358,5 +401,80 @@ class RequestUriUtilsTest {
         assertFalse(
                 RequestUriUtils.isPublicAuthEndpoint(
                         "/invite/06a20e7e-2e35-4e26-be7d-2dce14f28f1g", ""));
+    }
+
+    @Test
+    void testNormalizeUri_decodesAndStripsContextPath() {
+        assertEquals(
+                "/api/v1/info/load/all",
+                RequestUriUtils.normalizeUri("", "/%61pi/v1/info/load/all"));
+        assertEquals(
+                "/api/v1/info/load/all",
+                RequestUriUtils.normalizeUri(null, "/%61pi/v1/info/load/all"));
+        assertEquals(
+                "/actuator/prometheus", RequestUriUtils.normalizeUri("", "/%61ctuator/prometheus"));
+        assertEquals("/api/x.png", RequestUriUtils.normalizeUri("", "/a%70i/x.png"));
+        assertEquals("/api/v1/x", RequestUriUtils.normalizeUri("/app", "/app/%61pi/v1/x"));
+        assertEquals("/api/v1/x", RequestUriUtils.normalizeUri("/app", "/%61pp/api/v1/x"));
+        assertEquals("/files/abc", RequestUriUtils.normalizeUri("/app", "/app/files/abc"));
+        assertEquals("/", RequestUriUtils.normalizeUri("", "/"));
+    }
+
+    @Test
+    void testNormalizeUri_malformedEscapeThrows() {
+        assertThrows(
+                IllegalArgumentException.class, () -> RequestUriUtils.normalizeUri("", "/%zz"));
+        assertThrows(
+                IllegalArgumentException.class, () -> RequestUriUtils.normalizeUri("", "/api%"));
+    }
+
+    @Test
+    void testEncodedApiPaths_areNeitherPublicNorFrontend() {
+        for (String uri :
+                new String[] {
+                    "/%61pi/v1/info/load/all", "/%61ctuator/prometheus", "/a%70i/x.png"
+                }) {
+            assertFalse(RequestUriUtils.isFrontendRoute("", uri), uri);
+            assertFalse(RequestUriUtils.isStaticResource("", uri), uri);
+            assertFalse(RequestUriUtils.isPublicAuthEndpoint(uri, ""), uri);
+            assertFalse(RequestUriUtils.isFrontendRoute("/app", "/app" + uri), uri);
+            assertFalse(RequestUriUtils.isStaticResource("/app", "/app" + uri), uri);
+            assertFalse(RequestUriUtils.isPublicAuthEndpoint("/app" + uri, "/app"), uri);
+        }
+    }
+
+    @Test
+    void testMalformedEscape_failsClosed() {
+        assertFalse(RequestUriUtils.isFrontendRoute("", "/%zz"));
+        assertFalse(RequestUriUtils.isStaticResource("", "/%zz.png"));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/login%zz", ""));
+        assertTrue(RequestUriUtils.isApiRequest("", "/%zz"));
+    }
+
+    @Test
+    void testIsApiRequest() {
+        assertTrue(RequestUriUtils.isApiRequest("", "/api/v1/info/load/all"));
+        assertTrue(RequestUriUtils.isApiRequest("", "/%61pi/v1/info/load/all"));
+        assertTrue(RequestUriUtils.isApiRequest("/app", "/app/a%70i/v1/x"));
+        assertFalse(RequestUriUtils.isApiRequest("", "/"));
+        assertFalse(RequestUriUtils.isApiRequest("", "/login"));
+        assertFalse(RequestUriUtils.isApiRequest("/app", "/app/files/abc"));
+    }
+
+    @Test
+    void testLegitimateRoutes_classifyAsBefore() {
+        for (String ctx : new String[] {"", "/app"}) {
+            assertTrue(RequestUriUtils.isFrontendRoute(ctx, ctx + "/"), ctx);
+            assertTrue(RequestUriUtils.isFrontendRoute(ctx, ctx + "/files/abc"), ctx);
+            assertTrue(RequestUriUtils.isFrontendRoute(ctx, ctx + "/processor"), ctx);
+            assertTrue(RequestUriUtils.isStaticResource(ctx, ctx + "/login"), ctx);
+            assertTrue(RequestUriUtils.isStaticResource(ctx, ctx + "/processor"), ctx);
+            assertTrue(RequestUriUtils.isPublicAuthEndpoint(ctx + "/login", ctx), ctx);
+            assertTrue(RequestUriUtils.isStaticResource(ctx, ctx + "/api/v1/info/status"), ctx);
+            assertFalse(RequestUriUtils.isFrontendRoute(ctx, ctx + "/api/v1/info/load/all"), ctx);
+            assertFalse(RequestUriUtils.isFrontendRoute(ctx, ctx + "/actuator/prometheus"), ctx);
+            assertFalse(
+                    RequestUriUtils.isPublicAuthEndpoint(ctx + "/api/v1/info/load/all", ctx), ctx);
+        }
     }
 }

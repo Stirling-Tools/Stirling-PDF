@@ -1,7 +1,7 @@
 import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Session, User } from "@supabase/supabase-js";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 /**
  * Request-count tests for {@link AuthProvider}'s data loading. It used to fetch
@@ -20,7 +20,7 @@ const onAuthStateChange = vi.fn();
 const supabaseSignOut = vi.fn();
 const unsubscribe = vi.fn();
 
-vi.mock("@app/auth/supabase", () => ({
+vi.mock("@editor/auth/supabase", () => ({
   supabase: {
     auth: {
       getSession: () => getSession(),
@@ -39,7 +39,7 @@ vi.mock("@app/auth/supabase", () => ({
 const syncOAuthAvatar = vi.fn();
 const getProfilePictureMetadata = vi.fn();
 
-vi.mock("@app/services/avatarSyncService", () => ({
+vi.mock("@editor/services/avatarSyncService", () => ({
   syncOAuthAvatar: (...args: unknown[]) => syncOAuthAvatar(...args),
   getProfilePictureMetadata: (...args: unknown[]) =>
     getProfilePictureMetadata(...args),
@@ -48,15 +48,15 @@ vi.mock("@app/services/avatarSyncService", () => ({
 
 const synchronizeUserUpgrade = vi.fn();
 
-vi.mock("@app/services/userService", () => ({
+vi.mock("@editor/services/userService", () => ({
   synchronizeUserUpgrade: (...args: unknown[]) =>
     synchronizeUserUpgrade(...args),
 }));
 
 // Imported after the mocks so the provider picks them up.
-const { AuthProvider, useAuth } = await import("@app/auth/UseSession");
+const { AuthProvider, useAuth } = await import("@editor/auth/UseSession");
 const { writeWorkbenchSession, readWorkbenchSession, resumeWorkbenchSession } =
-  await import("@app/services/workbenchSession");
+  await import("@editor/services/workbenchSession");
 
 /** Surfaces `loading` so a test can assert on it rather than on the container. */
 function LoadingProbe() {

@@ -1,18 +1,18 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import CreatePortfolioSettings from "@app/components/tools/createPortfolio/CreatePortfolioSettings";
-import { useCreatePortfolioParameters } from "@app/hooks/tools/createPortfolio/useCreatePortfolioParameters";
-import { useCreatePortfolioOperation } from "@app/hooks/tools/createPortfolio/useCreatePortfolioOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useCreatePortfolioTips } from "@app/components/tooltips/useCreatePortfolioTips";
+import { Button } from "@editor/ui/Button";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import CreatePortfolioSettings from "@editor/components/tools/createPortfolio/CreatePortfolioSettings";
+import { useCreatePortfolioParameters } from "@editor/hooks/tools/createPortfolio/useCreatePortfolioParameters";
+import { useCreatePortfolioOperation } from "@editor/hooks/tools/createPortfolio/useCreatePortfolioOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useCreatePortfolioTips } from "@editor/components/tooltips/useCreatePortfolioTips";
 import {
   useNavigationState,
   useNavigationActions,
-} from "@app/contexts/NavigationContext";
+} from "@editor/contexts/NavigationContext";
 
 const CreatePortfolio = (props: BaseToolProps) => {
   const { t } = useTranslation();

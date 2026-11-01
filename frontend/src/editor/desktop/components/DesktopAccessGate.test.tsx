@@ -8,13 +8,13 @@ import {
 import { beforeEach, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
-import type { AuthStatus } from "@app/services/authService";
-import { DesktopAccessGate } from "@app/components/DesktopAccessGate";
-import { QuickNavRailHost } from "@app/components/shared/quickNav/QuickNavRailHost";
+import type { AuthStatus } from "@editor/services/authService";
+import { DesktopAccessGate } from "@editor/components/DesktopAccessGate";
+import { QuickNavRailHost } from "@editor/components/shared/quickNav/QuickNavRailHost";
 import {
   QuickNavHostProvider,
   useRegisterQuickNavView,
-} from "@app/contexts/QuickNavHostContext";
+} from "@editor/contexts/QuickNavHostContext";
 
 const state = vi.hoisted(() => ({
   getConfig: vi.fn(),
@@ -22,13 +22,13 @@ const state = vi.hoisted(() => ({
   expired: vi.fn(),
   onAuth: (_status: AuthStatus) => {},
 }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentConfig: state.getConfig,
     subscribeToModeChanges: () => () => {},
   },
 }));
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: {
     getAuthStatus: () => "unauthenticated",
     subscribeToAuth: (listener: (status: AuthStatus) => void) => {
@@ -46,7 +46,7 @@ vi.mock("@mantine/core", () => ({
   Text: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   Loader: () => <div>Loading</div>,
 }));
-vi.mock("@app/ui/Button", () => ({
+vi.mock("@editor/ui/Button", () => ({
   Button: ({
     children,
     onClick,
@@ -55,20 +55,20 @@ vi.mock("@app/ui/Button", () => ({
     onClick: () => void;
   }) => <button onClick={onClick}>{children}</button>,
 }));
-vi.mock("@app/components/SetupWizard", () => ({
+vi.mock("@editor/components/SetupWizard", () => ({
   SetupWizard: () => <div>Required sign-in</div>,
 }));
-vi.mock("@app/hooks/useConnectedServer", () => ({
+vi.mock("@editor/hooks/useConnectedServer", () => ({
   useConnectedServer: () => true,
 }));
-vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => false,
 }));
-vi.mock("@app/ui/Icon", () => ({ Icon: () => null }));
-vi.mock("@app/components/shared/signing/SignMenu", () => ({
+vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
+vi.mock("@editor/components/shared/signing/SignMenu", () => ({
   SignMenu: () => null,
 }));
-vi.mock("@app/components/shared/quickNav/QuickNavRailContainer", () => ({
+vi.mock("@editor/components/shared/quickNav/QuickNavRailContainer", () => ({
   QuickNavRailContainer: () => <nav aria-label="App navigation" />,
 }));
 

@@ -1,5 +1,5 @@
-import { FileId } from "@app/types/file";
-import { FolderId } from "@app/types/folder";
+import { FileId } from "@editor/types/file";
+import { FolderId } from "@editor/types/folder";
 
 /**
  * Custom MIME used to flag drag operations originating inside the

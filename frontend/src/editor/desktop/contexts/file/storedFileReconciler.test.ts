@@ -1,31 +1,31 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 // The three hooks that carry a record's link to its disk original around the
 // app. They have no other home now, so a change here is a silent one.
 
 const getDiskFileState = vi.hoisted(() => vi.fn());
-vi.mock("@app/services/desktopFileLink", () => ({
+vi.mock("@editor/services/desktopFileLink", () => ({
   desktopFileLinkingSupported: true,
   getDiskFileState,
   readFileFromDisk: vi.fn(async () => null),
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: vi.fn(),
     deleteStirlingFile: vi.fn(),
     updateFileMetadata: vi.fn(async () => true),
   },
 }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 
-import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
+import { pendingFilePathMappings } from "@editor/services/pendingFilePathMappings";
 import {
   persistedSourceFields,
   inheritedSourceLink,
   sourceLinkForNewFile,
-} from "@app/contexts/file/storedFileReconciler";
+} from "@editor/contexts/file/storedFileReconciler";
 
 const PATH = "C:/docs/report.pdf";
 let file: File;

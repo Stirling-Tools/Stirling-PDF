@@ -1,14 +1,14 @@
 import { Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui/Button";
-import { EditorFileSwitcher } from "@app/tools/pdfTextEditor/components/EditorFileSwitcher";
-import type { Controller } from "@app/tools/pdfTextEditor/components/toolbar/toolbarShared";
-import { useEditorSession } from "@app/tools/pdfTextEditor/store/EditorSession";
-import { NotificationBell } from "@app/components/notifications/NotificationBell";
-import { useIsPhone } from "@app/hooks/useIsMobile";
-import "@app/tools/pdfTextEditor/components/EditorTopBar.css";
-import "@app/tools/pdfTextEditor/components/MobileEditor.css";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { EditorFileSwitcher } from "@editor/tools/pdfTextEditor/components/EditorFileSwitcher";
+import type { Controller } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
+import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import { NotificationBell } from "@editor/components/notifications/NotificationBell";
+import { useIsPhone } from "@editor/hooks/useIsMobile";
+import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
+import "@editor/tools/pdfTextEditor/components/MobileEditor.css";
 
 interface Props {
   controller: Controller;

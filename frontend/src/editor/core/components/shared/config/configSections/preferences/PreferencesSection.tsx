@@ -1,18 +1,18 @@
 import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { SettingsCard } from "@app/components/shared/config/SettingsCard";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { AdminSetupBanner } from "@app/components/shared/config/configSections/preferences/AdminSetupBanner";
-import { AppearanceCard } from "@app/components/shared/config/configSections/preferences/AppearanceCard";
-import { EditorDefaultsCard } from "@app/components/shared/config/configSections/preferences/EditorDefaultsCard";
-import { DownloadsCard } from "@app/components/shared/config/configSections/preferences/DownloadsCard";
-import { SoftwareUpdatesCard } from "@app/components/shared/config/configSections/preferences/SoftwareUpdatesCard";
-import { HotkeysCard } from "@app/components/shared/config/configSections/preferences/HotkeysCard";
+import { SettingsCard } from "@editor/components/shared/config/SettingsCard";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { AdminSetupBanner } from "@editor/components/shared/config/configSections/preferences/AdminSetupBanner";
+import { AppearanceCard } from "@editor/components/shared/config/configSections/preferences/AppearanceCard";
+import { EditorDefaultsCard } from "@editor/components/shared/config/configSections/preferences/EditorDefaultsCard";
+import { DownloadsCard } from "@editor/components/shared/config/configSections/preferences/DownloadsCard";
+import { SoftwareUpdatesCard } from "@editor/components/shared/config/configSections/preferences/SoftwareUpdatesCard";
+import { HotkeysCard } from "@editor/components/shared/config/configSections/preferences/HotkeysCard";
 import type {
   DesktopInstall,
   DesktopUpdateModeControl,
-} from "@app/components/shared/config/configSections/preferences/preferencesCardProps";
-import "@app/components/shared/config/configSections/preferences/PreferencesSection.css";
+} from "@editor/components/shared/config/configSections/preferences/preferencesCardProps";
+import "@editor/components/shared/config/configSections/preferences/PreferencesSection.css";
 
 export interface PreferencesSectionProps {
   /** SaaS: login is always on, so the "turn login on" banner never applies. */

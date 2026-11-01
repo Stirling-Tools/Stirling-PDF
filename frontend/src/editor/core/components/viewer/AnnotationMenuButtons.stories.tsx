@@ -5,7 +5,7 @@ import {
   AttachCommentButton,
   CommentButton,
   LinkButton,
-} from "@app/components/viewer/AnnotationMenuButtons";
+} from "@editor/components/viewer/AnnotationMenuButtons";
 
 // This module has no single default-exported component -- it's a set of small
 // action-icon buttons shared by the annotation menu. Document each separately.

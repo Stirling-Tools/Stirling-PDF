@@ -4,8 +4,8 @@ import {
   useDocumentManagerCapability,
 } from "@embedpdf/plugin-document-manager/react";
 import { PdfErrorCode } from "@embedpdf/models";
-import { useFileActions } from "@app/contexts/FileContext";
-import type { FileId } from "@app/types/file";
+import { useFileActions } from "@editor/contexts/FileContext";
+import type { FileId } from "@editor/types/file";
 
 /** Retry EmbedPDF's original encrypted document after the shared session prompt authenticates it. */
 export function PdfPasswordBridge({

@@ -1,8 +1,8 @@
 import {
   SignatureValidationBackendResult,
   SignatureValidationSignature,
-} from "@app/types/validateSignature";
-import type { StirlingFile } from "@app/types/fileContext";
+} from "@editor/types/validateSignature";
+import type { StirlingFile } from "@editor/types/fileContext";
 
 export const RESULT_JSON_FILENAME = "signature-validation.json";
 export const CSV_FILENAME = "signature-validation.csv";

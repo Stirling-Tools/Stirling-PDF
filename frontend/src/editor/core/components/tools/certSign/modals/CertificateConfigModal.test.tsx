@@ -1,15 +1,15 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { CertificateConfigModal } from "@app/components/tools/certSign/modals/CertificateConfigModal";
+import { CertificateConfigModal } from "@editor/components/tools/certSign/modals/CertificateConfigModal";
 
 const { post, t } = vi.hoisted(() => ({
   post: vi.fn(),
   t: (key: string, fallback?: string) => fallback ?? key,
 }));
-vi.mock("@app/services/apiClient", () => ({ default: { post } }));
+vi.mock("@editor/services/apiClient", () => ({ default: { post } }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t }) }));
-vi.mock("@app/components/tools/certSign/CertificateSelector", () => ({
+vi.mock("@editor/components/tools/certSign/CertificateSelector", () => ({
   CertificateSelector: (props: {
     onCertTypeChange: (value: string) => void;
     onP12FileChange: (file: File) => void;

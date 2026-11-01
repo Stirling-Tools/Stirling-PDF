@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AdjustPageScaleSettings from "@app/components/tools/adjustPageScale/AdjustPageScaleSettings";
+import AdjustPageScaleSettings from "@editor/components/tools/adjustPageScale/AdjustPageScaleSettings";
 import {
   AdjustPageScaleParameters,
   PageSize,
-} from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+} from "@editor/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 
 const meta = {
   title: "Tools/AdjustPageScale/AdjustPageScaleSettings",

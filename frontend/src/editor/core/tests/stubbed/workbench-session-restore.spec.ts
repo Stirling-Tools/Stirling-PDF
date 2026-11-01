@@ -1,5 +1,5 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
 import path from "path";
 
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
@@ -11,7 +11,7 @@ const SAMPLES = [
   "annotations_out_of_order.pdf",
 ].map((name) => path.join(FIXTURES_DIR, name));
 
-// Read from the running app, not imported: a spec resolves @app/* to a different layer than
+// Read from the running app, not imported: a spec resolves @editor/* to a different layer than
 // the browser build does, so an imported WORKBENCH_SESSION_RESTORE can disagree with reality.
 async function restoreEnabled(
   page: import("@playwright/test").Page,

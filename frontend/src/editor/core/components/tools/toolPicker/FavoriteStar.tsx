@@ -1,8 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import type { ActionIconSize } from "@app/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import type { ActionIconSize } from "@editor/ui/ActionIcon";
 type FavoriteStarSize = "xs" | ActionIconSize;
 const SIZE_MAP: Record<FavoriteStarSize, ActionIconSize> = {
   xs: "sm",

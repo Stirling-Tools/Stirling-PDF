@@ -1,9 +1,9 @@
 import { useId } from "react";
 import { Stack, Text, Select, ColorInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
-import { alphabetOptions } from "@app/constants/addWatermarkConstants";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { AddWatermarkParameters } from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
+import { alphabetOptions } from "@editor/constants/addWatermarkConstants";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface WatermarkTextStyleProps {
   parameters: AddWatermarkParameters;

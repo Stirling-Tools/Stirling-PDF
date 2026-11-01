@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import { LibraryFilePicker } from "@app/components/filesPage/LibraryFilePicker";
-import { LibraryPickerModal } from "@app/components/filesPage/LibraryPickerModal";
+import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
+import { LibraryFilePicker } from "@editor/components/filesPage/LibraryFilePicker";
+import { LibraryPickerModal } from "@editor/components/filesPage/LibraryPickerModal";
 
 interface FileManagerProps {
   selectedTool?: { supportedFormats?: string[] } | null;

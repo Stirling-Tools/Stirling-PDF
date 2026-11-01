@@ -13,36 +13,36 @@ import {
   saveProcessingFolder,
   sweepProcessingFolder,
   type ProcessingFolder,
-} from "@app/services/processingFolderApi";
-import { useFileHandler } from "@app/hooks/useFileHandler";
-import { qk } from "@app/query/keys";
+} from "@editor/services/processingFolderApi";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
+import { qk } from "@editor/query/keys";
 import {
   currentRunIds,
   deliverSweepResults,
-} from "@app/services/processingRunDelivery";
-import { folderKind, type FolderRecord } from "@app/types/folder";
-import { directoryKey } from "@app/services/localFolderStorage";
-import { extractErrorMessage } from "@app/utils/toolErrorHandler";
-import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
-import { useProcessingFolders as useInertProcessingFolders } from "@core/hooks/useProcessingFolders";
-// The core stub declares the contract this shadows; import it from @core
-// explicitly, since @app/hooks/useProcessingFolders resolves back to this file.
+} from "@editor/services/processingRunDelivery";
+import { folderKind, type FolderRecord } from "@editor/types/folder";
+import { directoryKey } from "@editor/services/localFolderStorage";
+import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
+import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
+import { useProcessingFolders as useInertProcessingFolders } from "@editor-core/hooks/useProcessingFolders";
+// The core stub declares the contract this shadows; import it from @editor-core
+// explicitly, since @editor/hooks/useProcessingFolders resolves back to this file.
 import type {
   MountedFileState,
   ProcessingRecordSummary as CoreProcessingRecordSummary,
   ProcessingFolderState,
   ProcessingFoldersApi as CoreProcessingFoldersApi,
   ProcessingRunInfo,
-} from "@core/hooks/useProcessingFolders";
+} from "@editor-core/hooks/useProcessingFolders";
 
-// Consumers import the contract's types from @app, which resolves here — re-export them.
+// Consumers import the contract's types from @editor, which resolves here — re-export them.
 export type {
   MountedFileState,
   ProcessingFolderState,
   ProcessingRunInfo,
-} from "@core/hooks/useProcessingFolders";
+} from "@editor-core/hooks/useProcessingFolders";
 
-import type { WireRoutingRule } from "@app/policies/types";
+import type { WireRoutingRule } from "@editor/policies/types";
 
 /** Processing configuration retained when copying or reopening a template. */
 export interface ProcessingRecordSummary extends CoreProcessingRecordSummary {

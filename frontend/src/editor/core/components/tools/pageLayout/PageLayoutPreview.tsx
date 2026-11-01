@@ -1,5 +1,5 @@
-import { PageLayoutParameters } from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
-import LayoutPreview from "@app/components/tools/pageLayout/LayoutPreview";
+import { PageLayoutParameters } from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
+import LayoutPreview from "@editor/components/tools/pageLayout/LayoutPreview";
 import { Stack } from "@mantine/core";
 
 export default function PageLayoutPreview({

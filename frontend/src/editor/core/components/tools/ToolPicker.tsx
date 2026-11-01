@@ -1,21 +1,21 @@
 import React, { useMemo, useRef } from "react";
 import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
-import "@app/components/tools/toolPicker/ToolPicker.css";
-import { useToolSections } from "@app/hooks/useToolSections";
-import type { SubcategoryGroup } from "@app/hooks/useToolSections";
-import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
-import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
-import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
-import ToolButton from "@app/components/tools/toolPicker/ToolButton";
-import { LazyToolSection } from "@app/components/tools/toolPicker/LazyToolSection";
-import { useToolWorkflowData } from "@app/contexts/ToolWorkflowContext";
-import { useIsScrolled } from "@app/hooks/useIsScrolled";
-import { ToolId } from "@app/types/toolId";
-import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
-import { ToolPickerFooterExtensions } from "@app/components/tools/toolPicker/ToolPickerFooterExtensions";
+import { Button } from "@editor/ui/Button";
+import { ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
+import "@editor/components/tools/toolPicker/ToolPicker.css";
+import { useToolSections } from "@editor/hooks/useToolSections";
+import type { SubcategoryGroup } from "@editor/hooks/useToolSections";
+import { useFavoriteToolItems } from "@editor/hooks/tools/useFavoriteToolItems";
+import NoToolsFound from "@editor/components/tools/shared/NoToolsFound";
+import { renderToolButtons } from "@editor/components/tools/shared/renderToolButtons";
+import ToolButton from "@editor/components/tools/toolPicker/ToolButton";
+import { LazyToolSection } from "@editor/components/tools/toolPicker/LazyToolSection";
+import { useToolWorkflowData } from "@editor/contexts/ToolWorkflowContext";
+import { useIsScrolled } from "@editor/hooks/useIsScrolled";
+import { ToolId } from "@editor/types/toolId";
+import { getSubcategoryLabel } from "@editor/data/toolsTaxonomy";
+import { ToolPickerFooterExtensions } from "@editor/components/tools/toolPicker/ToolPickerFooterExtensions";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;

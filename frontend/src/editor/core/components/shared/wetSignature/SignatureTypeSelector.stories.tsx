@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   SignatureTypeSelector,
   type SignatureType,
-} from "@app/components/shared/wetSignature/SignatureTypeSelector";
+} from "@editor/components/shared/wetSignature/SignatureTypeSelector";
 
 const meta: Meta<typeof SignatureTypeSelector> = {
   title: "Shared/WetSignature/SignatureTypeSelector",

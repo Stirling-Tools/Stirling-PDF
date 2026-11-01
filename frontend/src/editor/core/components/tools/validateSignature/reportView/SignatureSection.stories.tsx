@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SignatureSection from "@app/components/tools/validateSignature/reportView/SignatureSection";
-import type { SignatureValidationSignature } from "@app/types/validateSignature";
+import SignatureSection from "@editor/components/tools/validateSignature/reportView/SignatureSection";
+import type { SignatureValidationSignature } from "@editor/types/validateSignature";
 
 const buildSignature = (
   overrides: Partial<SignatureValidationSignature> = {},

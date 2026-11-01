@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { OptionCard } from "@app/ui";
-import type { CatalogueEntry } from "@app/policies/catalog";
-import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
+import { Icon } from "@editor/ui/Icon";
+import { OptionCard } from "@editor/ui";
+import type { CatalogueEntry } from "@editor/policies/catalog";
+import { policyCategoryIcon } from "@editor/components/policies/policyCategoryIcon";
 
 interface PipelineTemplateCardProps {
   entry: CatalogueEntry;

@@ -2,9 +2,9 @@
 import type {
   FileWithPath,
   FileDialogOptions,
-} from "@core/services/fileDialogService";
-import { createQuickKey } from "@app/types/fileContext";
-import { getDocumentFileDialogFilter } from "@app/utils/fileDialogUtils";
+} from "@editor-core/services/fileDialogService";
+import { createQuickKey } from "@editor/types/fileContext";
+import { getDocumentFileDialogFilter } from "@editor/utils/fileDialogUtils";
 
 export type { FileWithPath, FileDialogOptions };
 

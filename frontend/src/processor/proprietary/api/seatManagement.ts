@@ -1,5 +1,5 @@
 /** Whether this build can change the licensed seat count in-app, and how to start
- *  that. Resolved at build time via `@app/portal/seatManagement`. */
+ *  that. Resolved at build time via `@editor/portal/seatManagement`. */
 export interface SeatManagement {
   /** False when the deployment has no in-app seat flow; hide the control. */
   available: boolean;

@@ -94,6 +94,7 @@ jobs:
             VITE_INCLUDE_PORTAL=true
             VITE_SUPABASE_URL=${{ steps.config.outputs.supabase_url }}
             VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
+            VITE_ACCESSIBILITY_EDITING=true
           platforms: linux/amd64
 
       - name: Build and push AI engine image

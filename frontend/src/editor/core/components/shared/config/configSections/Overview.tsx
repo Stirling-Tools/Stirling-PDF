@@ -1,8 +1,8 @@
 import React from "react";
 import { Stack, Text, Code, Group, Badge, Alert, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { OverviewHeader } from "@app/components/shared/config/OverviewHeader";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { OverviewHeader } from "@editor/components/shared/config/OverviewHeader";
 
 const Overview: React.FC = () => {
   const { t } = useTranslation();

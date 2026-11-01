@@ -5,7 +5,7 @@ import type {
   AnnotationSelection,
   AnnotationObject,
   AnnotationEvent,
-} from "@app/components/viewer/viewerTypes";
+} from "@editor/components/viewer/viewerTypes";
 
 interface UseAnnotationSelectionParams {
   annotationApiRef: React.RefObject<AnnotationAPI | null>;

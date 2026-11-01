@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { useAuth } from "@app/auth/UseSession";
-import { isUserAnonymous } from "@app/auth/supabase";
-import { withBasePath } from "@app/constants/app";
-import "@app/components/auth/GuestUserBanner.css";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { useAuth } from "@editor/auth/UseSession";
+import { isUserAnonymous } from "@editor/auth/supabase";
+import { withBasePath } from "@editor/constants/app";
+import "@editor/components/auth/GuestUserBanner.css";
 
 interface GuestUserBannerProps {
   className?: string;

@@ -10,7 +10,7 @@
  * stay null and never surface in the table.
  */
 
-import type { Tier } from "@portal/contexts/TierContext";
+import type { Tier } from "@processor/contexts/TierContext";
 import type {
   DocAuditEvent,
   DocAuditKind,
@@ -19,7 +19,7 @@ import type {
   DocumentsSummary,
   ProductType,
   ReviewDocument,
-} from "@portal/api/documents";
+} from "@processor/api/documents";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Domain types                                                             */

@@ -12,15 +12,15 @@ import {
   uuidV4,
   type PdfAnnotationObject,
 } from "@embedpdf/models";
-import { useSignature } from "@app/contexts/SignatureContext";
+import { useSignature } from "@editor/contexts/SignatureContext";
 import type {
   SignatureAPI,
   AnnotationRect,
-} from "@app/components/viewer/viewerTypes";
-import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
-import { usePlacedSignatureTracking } from "@app/components/viewer/hooks/usePlacedSignatureTracking";
+} from "@editor/components/viewer/viewerTypes";
+import type { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
+import { usePlacedSignatureTracking } from "@editor/components/viewer/hooks/usePlacedSignatureTracking";
 
 // The signature tools stash the source image on stamp annotations via custom fields
 type StampAnnotation = PdfAnnotationObject & {

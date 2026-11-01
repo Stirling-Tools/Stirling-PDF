@@ -1,8 +1,8 @@
 import React from "react";
 import { Text, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { formatPrice } from "@app/components/shared/stripeCheckout/utils/pricingUtils";
-import { PRICE_FONT_WEIGHT } from "@app/components/shared/stripeCheckout/utils/cardStyles";
+import { formatPrice } from "@editor/components/shared/stripeCheckout/utils/pricingUtils";
+import { PRICE_FONT_WEIGHT } from "@editor/components/shared/stripeCheckout/utils/cardStyles";
 
 interface SimplePriceProps {
   mode: "simple";

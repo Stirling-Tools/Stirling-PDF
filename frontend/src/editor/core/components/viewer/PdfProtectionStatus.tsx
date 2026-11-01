@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { Group, Modal, Stack, Text } from "@mantine/core";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { ProtectedPdfFileCard } from "@app/components/shared/ProtectedPdfFileCard";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { ProtectedPdfFileCard } from "@editor/components/shared/ProtectedPdfFileCard";
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { useFileActions } from "@app/contexts/FileContext";
-import { useToolWorkflowActions } from "@app/contexts/ToolWorkflowContext";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import type { StirlingFile } from "@app/types/fileContext";
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
-import { hasPdfPermissionOverride } from "@app/services/pdfPermissions";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { useFileActions } from "@editor/contexts/FileContext";
+import { useToolWorkflowActions } from "@editor/contexts/ToolWorkflowContext";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import type { StirlingFile } from "@editor/types/fileContext";
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@editor/styles/zIndex";
+import { hasPdfPermissionOverride } from "@editor/services/pdfPermissions";
 
 /** Persistent document settings; authentication is requested only when an action needs it. */
 export function PdfProtectionStatus({ file }: { file: StirlingFile }) {

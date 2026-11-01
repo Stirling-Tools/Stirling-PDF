@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { column, DataTable, type DataTableColumn } from "@app/ui";
-import { type Extraction, type ReviewDocument } from "@portal/api/documents";
+import { Icon } from "@editor/ui/Icon";
+import { column, DataTable, type DataTableColumn } from "@editor/ui";
+import { type Extraction, type ReviewDocument } from "@processor/api/documents";
 import {
   confidencePct,
   confidenceTone,
-} from "@portal/components/documents/format";
+} from "@processor/components/documents/format";
 
 interface DocumentExtractionsProps {
   doc: ReviewDocument;

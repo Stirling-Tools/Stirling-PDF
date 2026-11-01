@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import apiClient from "@app/services/apiClient";
-import { useFileContext } from "@app/contexts/file/fileHooks";
-import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
-import type { StirlingFile } from "@app/types/fileContext";
-import { extractErrorMessage } from "@app/utils/toolErrorHandler";
+import apiClient from "@editor/services/apiClient";
+import { useFileContext } from "@editor/contexts/file/fileHooks";
+import { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
+import type { StirlingFile } from "@editor/types/fileContext";
+import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
 import {
   SignatureValidationBackendResult,
   SignatureValidationFileResult,
   SignatureValidationReportEntry,
-} from "@app/types/validateSignature";
-import { ValidateSignatureParameters } from "@app/hooks/tools/validateSignature/useValidateSignatureParameters";
-import { buildReportEntries } from "@app/hooks/tools/validateSignature/utils/signatureReportBuilder";
-import { createReportPdf } from "@app/hooks/tools/validateSignature/signatureReportPdf";
-import { createCsvFile as buildCsvFile } from "@app/hooks/tools/validateSignature/utils/signatureCsv";
+} from "@editor/types/validateSignature";
+import { ValidateSignatureParameters } from "@editor/hooks/tools/validateSignature/useValidateSignatureParameters";
+import { buildReportEntries } from "@editor/hooks/tools/validateSignature/utils/signatureReportBuilder";
+import { createReportPdf } from "@editor/hooks/tools/validateSignature/signatureReportPdf";
+import { createCsvFile as buildCsvFile } from "@editor/hooks/tools/validateSignature/utils/signatureCsv";
 import {
   normalizeBackendResult,
   RESULT_JSON_FILENAME,
-} from "@app/hooks/tools/validateSignature/utils/signatureUtils";
+} from "@editor/hooks/tools/validateSignature/utils/signatureUtils";
 
 export interface ValidateSignatureOperationHook extends ToolOperationHook<ValidateSignatureParameters> {
   results: SignatureValidationReportEntry[];

@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, Stack } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import i18n from "i18next";
 
 interface ErrorBoundaryState {

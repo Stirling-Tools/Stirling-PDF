@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import PlanCard from "@app/components/shared/config/configSections/plan/PlanCard";
-import type { PlanTierGroup } from "@app/services/licenseService";
+import PlanCard from "@editor/components/shared/config/configSections/plan/PlanCard";
+import type { PlanTierGroup } from "@editor/services/licenseService";
 
 const freePlanGroup: PlanTierGroup = {
   tier: "free",

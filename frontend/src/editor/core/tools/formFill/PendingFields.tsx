@@ -2,21 +2,21 @@
 import { useEffect, useRef, useState } from "react";
 import { Stack, Text, Group, Collapse, Paper, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import {
   pendingSelectionName,
   pendingIdFrom,
-} from "@app/tools/formFill/pendingSelection";
-import { useFormFill } from "@app/tools/formFill/FormFillContext";
+} from "@editor/tools/formFill/pendingSelection";
+import { useFormFill } from "@editor/tools/formFill/FormFillContext";
 import {
   FIELD_TYPE_ICON,
   FIELD_TYPE_COLOR,
-} from "@app/tools/formFill/fieldMeta";
-import { FormFieldPropertyEditor } from "@app/tools/formFill/FormFieldPropertyEditor";
-import type { NewFieldDefinition } from "@app/tools/formFill/types";
-import styles from "@app/tools/formFill/FormFill.module.css";
+} from "@editor/tools/formFill/fieldMeta";
+import { FormFieldPropertyEditor } from "@editor/tools/formFill/FormFieldPropertyEditor";
+import type { NewFieldDefinition } from "@editor/tools/formFill/types";
+import styles from "@editor/tools/formFill/FormFill.module.css";
 
 export function PendingFields() {
   const { t } = useTranslation();

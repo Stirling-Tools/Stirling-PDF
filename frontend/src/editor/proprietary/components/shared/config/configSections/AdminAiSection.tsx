@@ -1,30 +1,30 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { SettingsCard } from "@app/components/shared/config/SettingsCard";
+import { SettingsCard } from "@editor/components/shared/config/SettingsCard";
 import { Stack, Loader } from "@mantine/core";
-import { StatusBadge } from "@app/ui/StatusBadge";
-import { alert } from "@app/components/toast";
-import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
-import { useRestartServer } from "@app/components/shared/config/useRestartServer";
-import { useAdminSettings } from "@app/hooks/useAdminSettings";
-import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
-import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
-import apiClient from "@app/services/apiClient";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import { StatusBadge } from "@editor/ui/StatusBadge";
+import { alert } from "@editor/components/toast";
+import RestartConfirmationModal from "@editor/components/shared/config/RestartConfirmationModal";
+import { useRestartServer } from "@editor/components/shared/config/useRestartServer";
+import { useAdminSettings } from "@editor/hooks/useAdminSettings";
+import { useSettingsDirty } from "@editor/hooks/useSettingsDirty";
+import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsStickyFooter";
+import apiClient from "@editor/services/apiClient";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
 import {
   AiEngineSettingsData,
   AiEngineApiResponse,
   clampMin,
   savedToastBody,
-} from "@app/components/shared/config/configSections/aiEngineSettings";
-import { AiConnectionCard } from "@app/components/shared/config/configSections/ai/AiConnectionCard";
-import { AiStatusCard } from "@app/components/shared/config/configSections/ai/AiStatusCard";
-import { AiAboutNotice } from "@app/components/shared/config/configSections/ai/AiAboutNotice";
-import { AiCapabilitiesCard } from "@app/components/shared/config/configSections/ai/AiCapabilitiesCard";
-import { AiModelsCard } from "@app/components/shared/config/configSections/ai/AiModelsCard";
-import { AiDocumentsCard } from "@app/components/shared/config/configSections/ai/AiDocumentsCard";
-import { AiLimitsCard } from "@app/components/shared/config/configSections/ai/AiLimitsCard";
-import "@app/components/shared/config/configSections/ai/AdminAiSection.css";
+} from "@editor/components/shared/config/configSections/aiEngineSettings";
+import { AiConnectionCard } from "@editor/components/shared/config/configSections/ai/AiConnectionCard";
+import { AiStatusCard } from "@editor/components/shared/config/configSections/ai/AiStatusCard";
+import { AiAboutNotice } from "@editor/components/shared/config/configSections/ai/AiAboutNotice";
+import { AiCapabilitiesCard } from "@editor/components/shared/config/configSections/ai/AiCapabilitiesCard";
+import { AiModelsCard } from "@editor/components/shared/config/configSections/ai/AiModelsCard";
+import { AiDocumentsCard } from "@editor/components/shared/config/configSections/ai/AiDocumentsCard";
+import { AiLimitsCard } from "@editor/components/shared/config/configSections/ai/AiLimitsCard";
+import "@editor/components/shared/config/configSections/ai/AdminAiSection.css";
 
 /** Keys the backend applies only on restart; everything else is pushed live. */
 const RESTART_KEYS = [

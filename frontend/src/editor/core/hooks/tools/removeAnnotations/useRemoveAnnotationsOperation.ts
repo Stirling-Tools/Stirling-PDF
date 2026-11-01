@@ -3,18 +3,18 @@ import {
   useToolOperation,
   defineCustomTool,
   CustomProcessorResult,
-} from "@app/hooks/tools/shared/useToolOperation";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   RemoveAnnotationsParameters,
   defaultParameters,
-} from "@app/hooks/tools/removeAnnotations/useRemoveAnnotationsParameters";
+} from "@editor/hooks/tools/removeAnnotations/useRemoveAnnotationsParameters";
 import {
   getPdfiumModule,
   openRawDocumentSafe,
   closeDocAndFreeBuffer,
   saveRawDocument,
-} from "@app/services/pdfiumService";
+} from "@editor/services/pdfiumService";
 
 // Client-side PDF processing using PDFium WASM
 const removeAnnotationsProcessor = async (

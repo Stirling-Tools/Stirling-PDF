@@ -15,17 +15,17 @@ const mocks = vi.hoisted(() => ({
   launchFilesPending: false,
 }));
 
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getLeafStirlingFileStubs: mocks.getLeafStirlingFileStubs,
     getStirlingFileStub: mocks.getStirlingFileStub,
   },
 }));
-vi.mock("@app/components/toast", () => ({ alert: mocks.alert }));
-vi.mock("@app/services/launchFiles", () => ({
+vi.mock("@editor/components/toast", () => ({ alert: mocks.alert }));
+vi.mock("@editor/services/launchFiles", () => ({
   launchFilesPending: async () => mocks.launchFilesPending,
 }));
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationState: () => ({ workbench: mocks.workbench }),
   useNavigationActions: () => ({
     actions: { restoreWorkbench: mocks.restoreWorkbench },
@@ -34,23 +34,23 @@ vi.mock("@app/contexts/NavigationContext", () => ({
 vi.mock("react-router-dom", () => ({
   useLocation: () => ({ pathname: mocks.pathname }),
 }));
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ user: mocks.authUser, loading: mocks.authLoading }),
 }));
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => ({
     activeFileId: mocks.activeFileId,
     setActiveFileId: mocks.setActiveFileId,
   }),
 }));
 
-import { WorkbenchSessionPersistence } from "@app/components/session/WorkbenchSessionPersistence";
-import { fingerprintOwner } from "@app/services/workbenchSession";
+import { WorkbenchSessionPersistence } from "@editor/components/session/WorkbenchSessionPersistence";
+import { fingerprintOwner } from "@editor/services/workbenchSession";
 import {
   FileStoreContext,
   FileActionsContext,
-} from "@app/contexts/file/contexts";
-import type { StirlingFileStub } from "@app/types/fileContext";
+} from "@editor/contexts/file/contexts";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 const SESSION_KEY = "stirling.workbench.session";
 

@@ -1,23 +1,23 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { useAuth } from "@app/auth/UseSession";
-import { useChecklistInviteTarget } from "@app/components/onboarding/checklistInviteTarget";
+import { Icon } from "@editor/ui/Icon";
+import { useAuth } from "@editor/auth/UseSession";
+import { useChecklistInviteTarget } from "@editor/components/onboarding/checklistInviteTarget";
 import {
   useChecklistSetupItem,
   type ChecklistItem,
-} from "@app/components/onboarding/checklistSetupItem";
-import { useAccountCreatedAt } from "@app/components/onboarding/accountCreatedAt";
+} from "@editor/components/onboarding/checklistSetupItem";
+import { useAccountCreatedAt } from "@editor/components/onboarding/accountCreatedAt";
 import {
   getFlowDismissedAt,
   getFlowProgress,
   markFlowDismissed,
   setStepDone,
-} from "@app/components/onboarding/orchestrator/onboardingStorage";
-import { openAppSettings } from "@app/utils/appSettings";
-import { requestStartTour } from "@app/constants/events";
-import stirlingMark from "@app/assets/brand/modern-logo/logo512.png";
-import styles from "@app/components/onboarding/OnboardingChecklist.module.css";
+} from "@editor/components/onboarding/orchestrator/onboardingStorage";
+import { openAppSettings } from "@editor/utils/appSettings";
+import { requestStartTour } from "@editor/constants/events";
+import stirlingMark from "@editor/assets/brand/modern-logo/logo512.png";
+import styles from "@editor/components/onboarding/OnboardingChecklist.module.css";
 
 const FLOW_ID = "saas-checklist";
 const STEP_INVITE_TEAM = "invite-team";

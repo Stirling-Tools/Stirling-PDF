@@ -1,13 +1,13 @@
-import FreeEditorSlide from "@app/components/onboarding/slides/FreeEditorSlide";
-import UsageSnapshotSlide from "@app/components/onboarding/slides/UsageSnapshotSlide";
-import TeamSlide from "@app/components/onboarding/slides/TeamSlide";
-import DesktopInstallSlide from "@app/components/onboarding/slides/DesktopInstallSlide";
+import FreeEditorSlide from "@editor/components/onboarding/slides/FreeEditorSlide";
+import UsageSnapshotSlide from "@editor/components/onboarding/slides/UsageSnapshotSlide";
+import TeamSlide from "@editor/components/onboarding/slides/TeamSlide";
+import DesktopInstallSlide from "@editor/components/onboarding/slides/DesktopInstallSlide";
 import type {
   OSOption,
   ButtonDefinition as ButtonDefinitionBase,
   HeroDefinition as HeroDefinitionBase,
   SlideDefinition as SlideDefinitionBase,
-} from "@app/components/onboarding/onboardingSlideTypes";
+} from "@editor/components/onboarding/onboardingSlideTypes";
 
 export type { OSOption };
 

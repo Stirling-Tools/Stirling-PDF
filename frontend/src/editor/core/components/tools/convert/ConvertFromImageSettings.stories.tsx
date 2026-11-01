@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ConvertFromImageSettings from "@app/components/tools/convert/ConvertFromImageSettings";
+import ConvertFromImageSettings from "@editor/components/tools/convert/ConvertFromImageSettings";
 import {
   ConvertParameters,
   defaultParameters,
-} from "@app/hooks/tools/convert/useConvertParameters";
+} from "@editor/hooks/tools/convert/useConvertParameters";
 
 const meta: Meta<typeof ConvertFromImageSettings> = {
   title: "Tools/Convert/ConvertFromImageSettings",

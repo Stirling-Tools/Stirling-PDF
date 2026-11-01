@@ -5,7 +5,7 @@
  * unless it is certain it improved them. A document this cannot understand
  * is opened exactly as it arrived, which is always a valid outcome.
  */
-import { consolidateContents } from "@app/tools/pdfTextEditor/pdfdoc/passes/consolidateContents";
+import { consolidateContents } from "@editor/tools/pdfTextEditor/pdfdoc/passes/consolidateContents";
 
 /**
  * Above this the parse the passes need costs more than the repairs are worth,

@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { Switch, type SwitchProps } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import "@app/components/shared/config/SettingsToggleRow.css";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import "@editor/components/shared/config/SettingsToggleRow.css";
 
 export interface SettingsToggleRowProps {
   label: ReactNode;

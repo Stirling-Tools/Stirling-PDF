@@ -10,13 +10,13 @@ import {
   Badge,
   SimpleGrid,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
-import { FileId } from "@app/types/file";
-import type { StoredStirlingFileRecord } from "@app/services/fileStorage";
-import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
+import { FileId } from "@editor/types/file";
+import type { StoredStirlingFileRecord } from "@editor/services/fileStorage";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 
 type StoredFileItem = Partial<StoredStirlingFileRecord> & {
   id: FileId;

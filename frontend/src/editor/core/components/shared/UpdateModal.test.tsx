@@ -1,11 +1,14 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { MachineInfo, UpdateSummary } from "@app/services/updateService";
+import type {
+  MachineInfo,
+  UpdateSummary,
+} from "@editor/services/updateService";
 
 const getFullUpdateInfo = vi.fn();
 
-vi.mock("@app/services/updateService", () => ({
+vi.mock("@editor/services/updateService", () => ({
   updateService: {
     getFullUpdateInfo: (...args: unknown[]) => getFullUpdateInfo(...args),
     getDownloadUrl: () => null,
@@ -13,7 +16,7 @@ vi.mock("@app/services/updateService", () => ({
   },
 }));
 
-import UpdateModal from "@app/components/shared/UpdateModal";
+import UpdateModal from "@editor/components/shared/UpdateModal";
 
 const summary: UpdateSummary = {
   latest_version: "2.0.0",

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { NavSurface } from "@app/ui/NavSurface";
-import { NavItem } from "@app/ui/NavItem";
+import { NavSurface } from "@editor/ui/NavSurface";
+import { NavItem } from "@editor/ui/NavItem";
 
 function Dot() {
   return (

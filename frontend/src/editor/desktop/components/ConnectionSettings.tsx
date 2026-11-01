@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Stack, Card, Badge, Text, Group } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import {
   connectionModeService,
   ConnectionConfig,
-} from "@app/services/connectionModeService";
-import { authService, UserInfo } from "@app/services/authService";
-import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
-import { useAuth } from "@app/auth/UseSession";
+} from "@editor/services/connectionModeService";
+import { authService, UserInfo } from "@editor/services/authService";
+import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
+import { useAuth } from "@editor/auth/UseSession";
 
 export const ConnectionSettings: React.FC = () => {
   const { t } = useTranslation();

@@ -12,16 +12,16 @@ import {
   Table,
   Badge,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import auditService, {
   AuditEvent,
   AuditFilters,
-} from "@app/services/auditService";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import { useAuditFilters } from "@app/hooks/useAuditFilters";
-import AuditFiltersForm from "@app/components/shared/config/configSections/audit/AuditFiltersForm";
-import { Icon, type IconName } from "@app/ui/Icon";
+} from "@editor/services/auditService";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import { useAuditFilters } from "@editor/hooks/useAuditFilters";
+import AuditFiltersForm from "@editor/components/shared/config/configSections/audit/AuditFiltersForm";
+import { Icon, type IconName } from "@editor/ui/Icon";
 
 interface AuditEventsTableProps {
   loginEnabled?: boolean;

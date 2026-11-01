@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { computeReadAloudHighlightRect } from "@app/components/viewer/readAloudHighlight";
+import { computeReadAloudHighlightRect } from "@editor/components/viewer/readAloudHighlight";
 
 describe("computeReadAloudHighlightRect", () => {
   it("returns page-relative coordinates for an unrotated text item", () => {

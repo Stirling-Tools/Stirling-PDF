@@ -2,9 +2,9 @@ import {
   PdfiumDocument,
   PdfiumFont,
   PdfiumImage,
-} from "@app/services/pdfiumDocBuilder";
+} from "@editor/services/pdfiumDocBuilder";
 import type { TFunction } from "i18next";
-import { colorPalette } from "@app/hooks/tools/validateSignature/utils/pdfPalette";
+import { colorPalette } from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
 
 interface StartPageParams {
   doc: PdfiumDocument;

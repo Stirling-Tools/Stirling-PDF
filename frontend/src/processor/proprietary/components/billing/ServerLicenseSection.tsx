@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLicense } from "@app/contexts/LicenseContext";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
-import { KvRow } from "@app/billing/KvRow";
-import { Banner, Button, Spinner } from "@app/ui";
-import { Modal } from "@app/ui/Modal";
+import { useLicense } from "@editor/contexts/LicenseContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import LicenseKeySection from "@editor/components/shared/config/configSections/plan/LicenseKeySection";
+import { KvRow } from "@editor/billing/KvRow";
+import { Banner, Button, Spinner } from "@editor/ui";
+import { Modal } from "@editor/ui/Modal";
 
 /** The caller must restrict this server-local license surface to administrators. */
 export function ServerLicenseSection({ onSaved }: { onSaved: () => void }) {

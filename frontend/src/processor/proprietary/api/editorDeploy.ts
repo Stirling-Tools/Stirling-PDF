@@ -1,5 +1,5 @@
-import { apiClient } from "@portal/api/http";
-import type { Tier } from "@portal/contexts/TierContext";
+import { apiClient } from "@processor/api/http";
+import type { Tier } from "@processor/contexts/TierContext";
 
 /*
  * This surface manages the org's deployment of the Stirling PDF *Editor*

@@ -1,10 +1,10 @@
 // Pure grouping logic for the Files sidebar, split from the React seam module so it can be imported (and unit-tested) without pulling in the category-picker component and its heavy UI deps.
 
-import { DEFAULT_LABEL_ICON } from "@app/data/labelIcons";
-import { accentColor, accentCycleColor } from "@app/utils/accentColors";
-import type { SidebarCategory } from "@app/services/fileSidebarCategories";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileSidebarGroup } from "@core/components/shared/fileSidebarGrouping";
+import { DEFAULT_LABEL_ICON } from "@editor/data/labelIcons";
+import { accentColor, accentCycleColor } from "@editor/utils/accentColors";
+import type { SidebarCategory } from "@editor/services/fileSidebarCategories";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileSidebarGroup } from "@editor-core/components/shared/fileSidebarGrouping";
 
 export type { FileSidebarGroup };
 

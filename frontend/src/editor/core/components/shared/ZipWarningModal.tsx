@@ -1,7 +1,7 @@
 import { Modal, Text, Group, Stack } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { CSSProperties } from "react";
 
 interface ZipWarningModalProps {

@@ -1,5 +1,5 @@
-import { Icon, type IconName } from "@app/ui/Icon";
-import { accentColor } from "@app/utils/accentColors";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import { accentColor } from "@editor/utils/accentColors";
 
 export type FileDocVariant =
   | "pdf"

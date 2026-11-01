@@ -1,4 +1,4 @@
-import { availableOutputModes } from "@portal/components/pipelines/outputModes";
+import { availableOutputModes } from "@processor/components/pipelines/outputModes";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,19 +11,19 @@ import {
   type ModalWidth,
   Select,
   Spinner,
-} from "@app/ui";
-import { errorMessage } from "@portal/api/http";
+} from "@editor/ui";
+import { errorMessage } from "@processor/api/http";
 import {
   createSource,
   deleteSource,
   fetchSource,
   isFolderAccessDeniedError,
   type Source,
-} from "@portal/api/sources";
-import { getSettingsUrl } from "@app/utils/settingsNavigation";
+} from "@processor/api/sources";
+import { getSettingsUrl } from "@editor/utils/settingsNavigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { qk } from "@portal/queries/keys";
-import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
+import { qk } from "@processor/queries/keys";
+import { creatableSourceTypes } from "@processor/components/sources/creatableSourceTypes";
 import {
   COMING_SOON_SOURCE_TYPES,
   CREATABLE_SOURCE_TYPES,
@@ -31,20 +31,20 @@ import {
   WEBHOOK_SOURCE_TYPE,
   type CreatableSourceType,
   type SourceFieldDef,
-} from "@portal/components/sources/sourceTypes";
-import { BrandMark } from "@portal/components/BrandMarks";
-import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
-import { ConnectionPicker } from "@portal/components/sources/ConnectionPicker";
-import { ConnectionForm } from "@portal/components/sources/ConnectionForm";
+} from "@processor/components/sources/sourceTypes";
+import { BrandMark } from "@processor/components/BrandMarks";
+import { S3ConnectionPicker } from "@processor/components/sources/S3ConnectionPicker";
+import { ConnectionPicker } from "@processor/components/sources/ConnectionPicker";
+import { ConnectionForm } from "@processor/components/sources/ConnectionForm";
 import {
   CREATABLE_CONNECTION_TYPES,
   buildConnectionConfig,
   connectionFormValid,
   emptyConnectionValues,
   type CreatableConnectionType,
-} from "@portal/components/sources/connectionTypes";
-import { createIntegration } from "@portal/api/integrations";
-import "@portal/components/sources/SourceModal.css";
+} from "@processor/components/sources/connectionTypes";
+import { createIntegration } from "@processor/api/integrations";
+import "@processor/components/sources/SourceModal.css";
 
 function webhookUrl(webhookId: string): string {
   return `${window.location.origin}/api/v1/webhooks/${webhookId}`;

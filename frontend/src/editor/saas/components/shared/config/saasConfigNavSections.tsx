@@ -3,17 +3,17 @@ import { type TFunction } from "i18next";
 import {
   createPreferencesNavSection,
   type ConfigNavSection,
-} from "@core/components/shared/config/configNavSections";
-import type { ConfigNavItem } from "@app/components/shared/config/types";
-import PasswordSecurity from "@app/components/shared/config/configSections/PasswordSecurity";
-import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
-import McpSection from "@app/components/shared/config/configSections/McpSection";
-import HelpSection from "@app/components/shared/config/configSections/HelpSection";
-import LegalSection from "@app/components/shared/config/configSections/LegalSection";
+} from "@editor-core/components/shared/config/configNavSections";
+import type { ConfigNavItem } from "@editor/components/shared/config/types";
+import PasswordSecurity from "@editor/components/shared/config/configSections/PasswordSecurity";
+import ApiKeys from "@editor/components/shared/config/configSections/ApiKeys";
+import McpSection from "@editor/components/shared/config/configSections/McpSection";
+import HelpSection from "@editor/components/shared/config/configSections/HelpSection";
+import LegalSection from "@editor/components/shared/config/configSections/LegalSection";
 import {
   createCloudBillingSection,
   createCloudTeamNavItem,
-} from "@app/components/shared/config/cloudConfigNavSections";
+} from "@editor/components/shared/config/cloudConfigNavSections";
 
 type OverviewComponent = React.ComponentType<{ onLogoutClick: () => void }>;
 

@@ -12,7 +12,7 @@
  * runtime validators.
  */
 
-import type { Tier } from "@app/tokens/tokens";
+import type { Tier } from "@editor/tokens/tokens";
 
 /** Canonical vertical keys — these map 1:1 to category-accent CSS variables. */
 export type VerticalKey =

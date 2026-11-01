@@ -1,4 +1,4 @@
-import * as server from "@proprietary/services/processingFolderApi";
+import * as server from "@editor-proprietary/services/processingFolderApi";
 export type {
   ProcessingFolderStep,
   ProcessingFolder,
@@ -8,13 +8,13 @@ export type {
   ProcessingFolderRun,
   MountedFile,
   RevertAllOutcome,
-} from "@proprietary/services/processingFolderApi";
+} from "@editor-proprietary/services/processingFolderApi";
 export {
   CLASSIFY_OPERATION,
   classificationDefaults,
   fetchRunOutputFile,
-} from "@proprietary/services/processingFolderApi";
-import { localProcessingFolderStorage as storage } from "@app/services/localProcessingFolderStorage";
+} from "@editor-proprietary/services/processingFolderApi";
+import { localProcessingFolderStorage as storage } from "@editor/services/localProcessingFolderStorage";
 import {
   cancelLocalProcessingRuns,
   deleteLocalProcessingFolder,
@@ -24,8 +24,8 @@ import {
   revertLocalProcessingFile,
   saveLocalProcessingFolder,
   sweepLocalProcessingFolder,
-} from "@app/services/localProcessingFolders";
-import { listDirectory } from "@app/services/localFolderContents";
+} from "@editor/services/localProcessingFolders";
+import { listDirectory } from "@editor/services/localFolderContents";
 
 /** Combines connected-server folders with this account's desktop watches. A server hiccup
  *  must not hide the local watches, so the remote list is fetched independently and its

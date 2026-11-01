@@ -3,8 +3,11 @@
 
 import path from "path";
 import type { Page } from "@playwright/test";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { dismissTourTooltip, uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import {
+  dismissTourTooltip,
+  uploadFiles,
+} from "@editor/tests/helpers/ui-helpers";
 
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");

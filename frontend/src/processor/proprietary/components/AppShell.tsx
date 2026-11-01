@@ -1,18 +1,18 @@
 import { useEffect, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
-import { ActionIcon } from "@app/ui";
-import { Sidebar } from "@portal/components/Sidebar";
-import { PortalSearchBar } from "@portal/components/PortalSearchBar";
-import { useUI } from "@portal/contexts/UIContext";
-import { Icon } from "@app/ui/Icon";
-import { Logo } from "@app/ui/Logo";
-import "@app/components/layout/WorkspaceFrame.css";
-import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
-import "@portal/components/AppShell.css";
-import { NotificationBell } from "@app/components/notifications/NotificationBell";
-import { useIsPhone } from "@app/hooks/useIsMobile";
-import { ConnectAccountRail } from "@portal/components/ConnectAccountRail";
+import { ActionIcon } from "@editor/ui";
+import { Sidebar } from "@processor/components/Sidebar";
+import { PortalSearchBar } from "@processor/components/PortalSearchBar";
+import { useUI } from "@processor/contexts/UIContext";
+import { Icon } from "@editor/ui/Icon";
+import { Logo } from "@editor/ui/Logo";
+import "@editor/components/layout/WorkspaceFrame.css";
+import { QuickNavHostBridge } from "@editor/components/shared/quickNav/QuickNavHostBridge";
+import "@processor/components/AppShell.css";
+import { NotificationBell } from "@editor/components/notifications/NotificationBell";
+import { useIsPhone } from "@editor/hooks/useIsMobile";
+import { ConnectAccountRail } from "@processor/components/ConnectAccountRail";
 
 /**
  * Compact header shown only under the mobile breakpoint (CSS-hidden on

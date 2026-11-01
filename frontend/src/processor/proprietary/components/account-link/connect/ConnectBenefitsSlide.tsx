@@ -1,1 +1,1 @@
-export { ConnectBenefitsSlide } from "@app/components/account-link/ConnectBenefitsSlide";
+export { ConnectBenefitsSlide } from "@editor/components/account-link/ConnectBenefitsSlide";

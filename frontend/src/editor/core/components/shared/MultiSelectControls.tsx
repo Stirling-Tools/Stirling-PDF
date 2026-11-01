@@ -1,5 +1,5 @@
 import { Box, Group, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 
 interface MultiSelectControlsProps {

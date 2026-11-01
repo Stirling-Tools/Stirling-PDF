@@ -5,7 +5,7 @@
  * and may reference a parent folder; a `null` parent means the root.
  */
 
-import { generateId } from "@app/utils/generateId";
+import { generateId } from "@editor/utils/generateId";
 
 declare const folderTag: unique symbol;
 export type FolderId = string & { readonly [folderTag]: "FolderId" };

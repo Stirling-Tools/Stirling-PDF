@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { ToggleSwitch } from "@app/ui/ToggleSwitch";
-import { INK_COLORS } from "@app/components/tools/sign/createSignature/signatureStyles";
-import type { UploadCleanup } from "@app/utils/signatureImage";
-import { ControlLabel } from "@app/components/tools/sign/createSignature/ControlLabel";
-import styles from "@app/components/tools/sign/createSignature/UploadSignaturePanel.module.css";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
+import { INK_COLORS } from "@editor/components/tools/sign/createSignature/signatureStyles";
+import type { UploadCleanup } from "@editor/utils/signatureImage";
+import { ControlLabel } from "@editor/components/tools/sign/createSignature/ControlLabel";
+import styles from "@editor/components/tools/sign/createSignature/UploadSignaturePanel.module.css";
 
 export type InkChoice = "original" | "black" | "blue";
 

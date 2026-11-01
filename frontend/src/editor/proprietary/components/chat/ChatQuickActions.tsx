@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { useAllFiles } from "@app/contexts/FileContext";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import { detectFileExtension, isPdfFile } from "@app/utils/fileUtils";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
+import { detectFileExtension, isPdfFile } from "@editor/utils/fileUtils";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 interface QuickAction {
   key: string;

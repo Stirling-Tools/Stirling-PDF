@@ -1,13 +1,13 @@
 import React from "react";
 import { Card, Text, Stack, Divider, Tooltip } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { PlanTierGroup, LicenseInfo } from "@app/services/licenseService";
-import { PricingBadge } from "@app/components/shared/stripeCheckout/components/PricingBadge";
-import { PriceDisplay } from "@app/components/shared/stripeCheckout/components/PriceDisplay";
-import { calculateDisplayPricing } from "@app/components/shared/stripeCheckout/utils/pricingUtils";
-import { getBaseCardStyle } from "@app/components/shared/stripeCheckout/utils/cardStyles";
-import { isEnterpriseBlockedForFree as checkIsEnterpriseBlockedForFree } from "@app/utils/planTierUtils";
+import { PlanTierGroup, LicenseInfo } from "@editor/services/licenseService";
+import { PricingBadge } from "@editor/components/shared/stripeCheckout/components/PricingBadge";
+import { PriceDisplay } from "@editor/components/shared/stripeCheckout/components/PriceDisplay";
+import { calculateDisplayPricing } from "@editor/components/shared/stripeCheckout/utils/pricingUtils";
+import { getBaseCardStyle } from "@editor/components/shared/stripeCheckout/utils/cardStyles";
+import { isEnterpriseBlockedForFree as checkIsEnterpriseBlockedForFree } from "@editor/utils/planTierUtils";
 
 interface PlanCardProps {
   planGroup: PlanTierGroup;

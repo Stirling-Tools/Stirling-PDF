@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { Tooltip, type FloatingPosition } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import "@app/ui/InfoTooltip.css";
+import "@editor/ui/InfoTooltip.css";
 
 export interface InfoTooltipProps {
   /** The explanation shown in the tooltip on hover/focus. */

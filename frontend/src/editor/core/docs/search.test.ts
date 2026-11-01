@@ -5,7 +5,7 @@ import {
   searchDocs,
   toPlainText,
   type SearchDoc,
-} from "@app/docs/search";
+} from "@editor/docs/search";
 
 const DOCS: SearchDoc[] = [
   {

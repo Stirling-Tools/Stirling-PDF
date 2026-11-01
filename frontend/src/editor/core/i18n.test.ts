@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@app/i18n/tomlBackend", () => ({
+vi.mock("@editor/i18n/tomlBackend", () => ({
   default: {
     type: "backend",
     init() {},
@@ -14,8 +14,8 @@ vi.mock("@app/i18n/tomlBackend", () => ({
   },
 }));
 
-import i18n, { updateSupportedLanguages } from "@app/i18n";
-import { I18N_STORAGE_KEYS, LanguageSource } from "@app/i18n/languages";
+import i18n, { updateSupportedLanguages } from "@editor/i18n";
+import { I18N_STORAGE_KEYS, LanguageSource } from "@editor/i18n/languages";
 
 describe("updateSupportedLanguages", () => {
   beforeEach(() => {

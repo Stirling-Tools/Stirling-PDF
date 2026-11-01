@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, FormField, Input, Modal } from "@app/ui";
-import { usersBackend } from "@app/portal/usersBackend";
-import { errorMessage } from "@portal/api/http";
-import "@portal/views/Users.css";
+import { Button, FormField, Input, Modal } from "@editor/ui";
+import { usersBackend } from "@editor/portal/usersBackend";
+import { errorMessage } from "@processor/api/http";
+import "@processor/views/Users.css";
 
 interface RenameTeamModalProps {
   open: boolean;

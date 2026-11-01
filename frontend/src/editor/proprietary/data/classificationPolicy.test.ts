@@ -6,8 +6,8 @@ import {
   orderedRewritingPolicies,
   policyDeliversOutputFiles,
   policyRewritesDocument,
-} from "@app/data/classificationPolicy";
-import type { PoliciesByKey } from "@app/types/policies";
+} from "@editor/data/classificationPolicy";
+import type { PoliciesByKey } from "@editor/types/policies";
 
 const rewriter = (order: number) =>
   ({

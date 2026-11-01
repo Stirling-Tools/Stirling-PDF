@@ -3,7 +3,7 @@ import type {
   TableCellSnapshot,
   TableSnapshot,
   TextRunSnapshot,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
 
 // Recognizes tabular layouts from a page's text runs. PDF has no native table
 // object, so a "table" here is a derived grid: runs that line up into shared

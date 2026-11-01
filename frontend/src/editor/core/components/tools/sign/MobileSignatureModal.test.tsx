@@ -12,9 +12,9 @@ import { render, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import MobileSignatureModal, {
   type MobileSignaturePayload,
-} from "@app/components/tools/sign/MobileSignatureModal";
-import apiClient from "@app/services/apiClient";
-import { expectConsole } from "@app/tests/failOnConsole";
+} from "@editor/components/tools/sign/MobileSignatureModal";
+import apiClient from "@editor/services/apiClient";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 // Render the English fallbacks (the test i18n instance has no loaded locale).
 vi.mock("react-i18next", () => ({
@@ -24,7 +24,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: {
     defaults: { baseURL: "http://localhost:8080" },
     post: vi.fn(),
@@ -33,7 +33,7 @@ vi.mock("@app/services/apiClient", () => ({
   },
 }));
 
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { enableMobileSignature: true } }),
 }));
 

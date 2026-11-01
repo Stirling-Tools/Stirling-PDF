@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CodeBlock } from "@app/ui/CodeBlock";
+import { CodeBlock } from "@editor/ui/CodeBlock";
 
 const CURL_EXAMPLE = `curl https://api.stirling.com/v1/coi \\
   -H "Authorization: Bearer sk_live_a3f8..." \\

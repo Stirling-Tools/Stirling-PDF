@@ -1,29 +1,29 @@
 import { beforeEach, expect, test, vi } from "vitest";
-import type { ToolRegistry } from "@app/data/toolsTaxonomy";
+import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
 const mocks = vi.hoisted(() => ({
   submit: vi.fn(),
   wait: vi.fn(),
   download: vi.fn(),
   local: vi.fn(),
 }));
-vi.mock("@core/utils/automationExecutor", () => ({
+vi.mock("@editor-core/utils/automationExecutor", () => ({
   executeToolOperation: mocks.local,
   executeToolOperationWithPrefix: mocks.local,
   processMultiFileResponse: vi.fn(),
 }));
-vi.mock("@app/services/serverAutomationSession", () => ({
+vi.mock("@editor/services/serverAutomationSession", () => ({
   getServerAutomationSession: async () => ({
     key: "owner",
     baseUrl: "https://server.test",
   }),
 }));
-vi.mock("@app/services/serverPipeline", () => ({
+vi.mock("@editor/services/serverPipeline", () => ({
   submitServerPipeline: mocks.submit,
   waitForServerPipeline: mocks.wait,
   downloadServerPipelineOutput: mocks.download,
 }));
-import { executeAutomationSequence } from "@app/utils/automationExecutor";
-import { ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import { executeAutomationSequence } from "@editor/utils/automationExecutor";
+import { ToolType } from "@editor/hooks/tools/shared/useToolOperation";
 
 beforeEach(() => {
   vi.resetAllMocks();

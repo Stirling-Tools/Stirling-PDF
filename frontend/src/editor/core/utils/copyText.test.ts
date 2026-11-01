@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { copyText } from "@app/utils/copyText";
+import { copyText } from "@editor/utils/copyText";
 
 function setSecureContext(secure: boolean) {
   Object.defineProperty(window, "isSecureContext", {

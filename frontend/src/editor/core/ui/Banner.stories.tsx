@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Banner } from "@app/ui/Banner";
-import { Button } from "@app/ui/Button";
+import { Banner } from "@editor/ui/Banner";
+import { Button } from "@editor/ui/Button";
 
 const meta: Meta<typeof Banner> = {
   title: "Primitives/Banner",

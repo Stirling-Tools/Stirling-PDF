@@ -1,4 +1,4 @@
-import { clearStoredToken, getStoredToken } from "@app/auth";
+import { clearStoredToken, getStoredToken } from "@editor/auth";
 
 /**
  * Transport config for {@code apiClient.local} — the flavor seam behind "this

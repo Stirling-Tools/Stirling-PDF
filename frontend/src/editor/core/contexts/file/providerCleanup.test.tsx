@@ -3,7 +3,10 @@ import { StrictMode, useEffect, useRef } from "react";
 import { act, render } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { expect, it, vi } from "vitest";
-import { FileContextProvider, useFileActions } from "@app/contexts/FileContext";
+import {
+  FileContextProvider,
+  useFileActions,
+} from "@editor/contexts/FileContext";
 
 function OwnedResource({ url }: { url: string }) {
   const { actions } = useFileActions();

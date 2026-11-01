@@ -1,4 +1,4 @@
-import type { FontDescriptor } from "@app/tools/pdfTextEditor/types";
+import type { FontDescriptor } from "@editor/tools/pdfTextEditor/types";
 
 // A handle to a font inside a PDFium document. `pointer` is the FPDF_FONT
 // handle. `owned` decides whether `dispose` should call `FPDFFont_Close`.

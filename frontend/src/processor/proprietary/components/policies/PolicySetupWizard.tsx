@@ -3,15 +3,18 @@
  * lookup that gates Purview steps, the Purview inline config and the portal's error copy.
  */
 
-import { PolicySetupWizard as SharedPolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
-import type { CatalogueEntry, PolicySetupResult } from "@portal/api/policies";
-import { fetchIntegrations } from "@portal/api/integrations";
-import { errorMessage } from "@portal/api/http";
-import { useAsync } from "@portal/hooks/useAsync";
+import { PolicySetupWizard as SharedPolicySetupWizard } from "@editor/components/policies/PolicySetupWizard";
+import type {
+  CatalogueEntry,
+  PolicySetupResult,
+} from "@processor/api/policies";
+import { fetchIntegrations } from "@processor/api/integrations";
+import { errorMessage } from "@processor/api/http";
+import { useAsync } from "@processor/hooks/useAsync";
 import { useMemo } from "react";
-import { PolicySetupConnections } from "@portal/components/policies/PolicySetupConnections";
-import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
-import { PolicyRoutingConfig } from "@portal/components/policies/PolicyRoutingConfig";
+import { PolicySetupConnections } from "@processor/components/policies/PolicySetupConnections";
+import { PolicyPurviewConfig } from "@processor/components/policies/PolicyPurviewConfig";
+import { PolicyRoutingConfig } from "@processor/components/policies/PolicyRoutingConfig";
 
 interface PolicySetupWizardProps {
   entry: CatalogueEntry | null;

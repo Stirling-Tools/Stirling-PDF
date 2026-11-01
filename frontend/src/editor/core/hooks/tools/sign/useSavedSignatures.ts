@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import i18n from "i18next";
-import { generateId } from "@app/utils/generateId";
+import { generateId } from "@editor/utils/generateId";
 import {
   signatureStorageService,
   type StorageType,
-} from "@app/services/signatureStorageService";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+} from "@editor/services/signatureStorageService";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import type {
   SavedSignature,
   SavedSignaturePayload,
   SavedSignatureType,
   SignatureScope,
-} from "@app/types/signature";
+} from "@editor/types/signature";
 
 export const MAX_SAVED_SIGNATURES_BACKEND = 20; // Backend limit per user
 export const MAX_SAVED_SIGNATURES_LOCALSTORAGE = 10; // LocalStorage limit

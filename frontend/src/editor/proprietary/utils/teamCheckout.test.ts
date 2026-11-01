@@ -6,16 +6,16 @@ const { verify, resync, info, requiresLocal } = vi.hoisted(() => ({
   info: vi.fn(),
   requiresLocal: vi.fn(),
 }));
-vi.mock("@app/services/teamPlanActivation", () => ({
+vi.mock("@editor/services/teamPlanActivation", () => ({
   requiresLocalTeamActivation: requiresLocal,
 }));
-vi.mock("@app/services/serverPlanCheckout", () => ({
+vi.mock("@editor/services/serverPlanCheckout", () => ({
   verifyTeamCheckout: verify,
 }));
-vi.mock("@app/services/licenseService", () => ({
+vi.mock("@editor/services/licenseService", () => ({
   default: { resyncLicense: resync, getLicenseInfo: info },
 }));
-import { pollTeamCheckout } from "@app/utils/licenseCheckoutUtils";
+import { pollTeamCheckout } from "@editor/utils/licenseCheckoutUtils";
 
 beforeEach(() => {
   requiresLocal.mockReset().mockResolvedValue(true);

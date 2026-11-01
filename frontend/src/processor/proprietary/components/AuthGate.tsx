@@ -1,9 +1,9 @@
 import { type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { RequirePortalAccess } from "@app/auth";
-import { Spinner } from "@app/ui";
-import { EDITOR_URL } from "@portal/auth/editorUrl";
+import { RequirePortalAccess } from "@editor/auth";
+import { Spinner } from "@editor/ui";
+import { EDITOR_URL } from "@processor/auth/editorUrl";
 
 // Stable module-level ref; RequirePortalAccess calls it from an effect.
 function redirectToEditor(): void {

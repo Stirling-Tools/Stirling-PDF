@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { DataRow } from "@app/ui/DataRow";
-import { ChipFlow } from "@app/ui/ChipFlow";
-import { Card } from "@app/ui/Card";
+import { DataRow } from "@editor/ui/DataRow";
+import { ChipFlow } from "@editor/ui/ChipFlow";
+import { Card } from "@editor/ui/Card";
 
 const meta: Meta<typeof DataRow> = {
   title: "Primitives/DataRow",

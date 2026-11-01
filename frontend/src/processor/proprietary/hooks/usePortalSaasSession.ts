@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 import {
   getPortalSaasSessionState,
   subscribePortalSaasSession,
-} from "@app/portal/auth/portalSaasSession";
+} from "@editor/portal/auth/portalSaasSession";
 
 /** Reactive browser authorization, independent of the instance's link status. */
 export function usePortalSaasSession() {

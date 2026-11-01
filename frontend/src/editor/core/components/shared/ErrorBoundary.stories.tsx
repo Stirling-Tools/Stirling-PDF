@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Text } from "@mantine/core";
-import ErrorBoundary from "@app/components/shared/ErrorBoundary";
+import ErrorBoundary from "@editor/components/shared/ErrorBoundary";
 
 const meta: Meta<typeof ErrorBoundary> = {
   title: "Shared/ErrorBoundary",

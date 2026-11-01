@@ -3,7 +3,7 @@ import {
   loadPolicies,
   updatePolicy,
   onPoliciesChange,
-} from "@app/services/policyStorage";
+} from "@editor/services/policyStorage";
 
 describe("policyStorage", () => {
   beforeEach(() => {

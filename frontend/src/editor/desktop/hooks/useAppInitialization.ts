@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { useOpenedFile } from "@app/hooks/useOpenedFile";
-import { fileOpenService } from "@app/services/fileOpenService";
-import { useFileManagement } from "@app/contexts/file/fileHooks";
-import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
-import { captureDroppedFilePaths } from "@app/services/fileImportPaths";
-import { endLoadingLaunchFiles } from "@app/services/launchFiles";
+import { useOpenedFile } from "@editor/hooks/useOpenedFile";
+import { fileOpenService } from "@editor/services/fileOpenService";
+import { useFileManagement } from "@editor/contexts/file/fileHooks";
+import { pendingFilePathMappings } from "@editor/services/pendingFilePathMappings";
+import { captureDroppedFilePaths } from "@editor/services/fileImportPaths";
+import { endLoadingLaunchFiles } from "@editor/services/launchFiles";
 
 /**
  * App initialization hook

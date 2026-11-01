@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import EmailPasswordForm from "@app/auth/ui/EmailPasswordForm";
-import "@app/auth/ui/auth.css";
+import EmailPasswordForm from "@editor/auth/ui/EmailPasswordForm";
+import "@editor/auth/ui/auth.css";
 
 /**
  * The email/password/MFA fields shared by the login and signup auth forms

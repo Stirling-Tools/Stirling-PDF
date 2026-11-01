@@ -8,10 +8,10 @@
 
 import React, { type ReactNode } from "react";
 import { TourProvider, useTour, type StepType } from "@reactour/tour";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
 import type { TFunction } from "i18next";
-import i18n from "@app/i18n";
+import i18n from "@editor/i18n";
 
 /**
  * Renders tour copy that uses <strong> for emphasis as real React elements,

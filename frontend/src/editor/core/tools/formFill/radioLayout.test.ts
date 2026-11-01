@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { radioOptionRects } from "@app/tools/formFill/formCoordinateUtils";
+import { radioOptionRects } from "@editor/tools/formFill/formCoordinateUtils";
 
 /**
  * These mirror FormUtilsRadioCaptionTest on the Java side. If the two layouts drift, the create

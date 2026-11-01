@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SpendLimitCard } from "@portal/components/billing/SpendLimitCard";
-import { subscribedWallet } from "@portal/components/billing/walletFixtures";
-import type { Wallet } from "@portal/api/billing";
-import "@portal/components/billing/billing.css";
+import { SpendLimitCard } from "@processor/components/billing/SpendLimitCard";
+import { subscribedWallet } from "@processor/components/billing/walletFixtures";
+import type { Wallet } from "@processor/api/billing";
+import "@processor/components/billing/billing.css";
 
 const meta: Meta<typeof SpendLimitCard> = {
   title: "Portal/Billing/SpendLimitCard",

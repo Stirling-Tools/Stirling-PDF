@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
-import KeyValueList from "@app/components/tools/getPdfInfo/shared/KeyValueList";
+import SectionBlock from "@editor/components/tools/getPdfInfo/shared/SectionBlock";
+import KeyValueList from "@editor/components/tools/getPdfInfo/shared/KeyValueList";
 
 const meta = {
   title: "Tools/GetPdfInfo/Shared/SectionBlock",

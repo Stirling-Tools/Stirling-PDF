@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import FilePickerModal from "@app/components/shared/FilePickerModal";
-import type { FileId } from "@app/types/file";
+import FilePickerModal from "@editor/components/shared/FilePickerModal";
+import type { FileId } from "@editor/types/file";
 
 const mockStoredFiles = [
   {

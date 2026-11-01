@@ -1,7 +1,7 @@
 import { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
-import { BlankTrackPage } from "@app/components/pageTracks/types";
-import styles from "@app/components/pageTracks/PageTracks.module.css";
+import { BlankTrackPage } from "@editor/components/pageTracks/types";
+import styles from "@editor/components/pageTracks/PageTracks.module.css";
 
 interface BlankPagePreviewProps {
   page: BlankTrackPage;

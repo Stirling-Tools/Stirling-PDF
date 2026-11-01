@@ -1,9 +1,9 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { TeamSubscriptionChange } from "@app/billing/TeamSubscriptionChange";
-import { teamSubscriptionChange } from "@app/services/serverPlanCheckout";
+import { TeamSubscriptionChange } from "@editor/billing/TeamSubscriptionChange";
+import { teamSubscriptionChange } from "@editor/services/serverPlanCheckout";
 
-vi.mock("@app/services/serverPlanCheckout", () => ({
+vi.mock("@editor/services/serverPlanCheckout", () => ({
   teamSubscriptionChange: vi.fn(),
 }));
 vi.mock("react-i18next", () => ({
@@ -14,7 +14,7 @@ vi.mock("react-i18next", () => ({
       ),
   }),
 }));
-vi.mock("@app/ui", () => ({
+vi.mock("@editor/ui", () => ({
   Banner: ({
     title,
     action,

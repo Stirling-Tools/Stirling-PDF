@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
+import RestartConfirmationModal from "@editor/components/shared/config/RestartConfirmationModal";
 
 const meta = {
   title: "Shared/Config/RestartConfirmationModal",

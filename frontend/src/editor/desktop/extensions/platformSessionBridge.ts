@@ -1,7 +1,7 @@
-import { STIRLING_SAAS_URL } from "@app/constants/connection";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { authService } from "@app/services/authService";
-import type { PlatformSessionUser } from "@proprietary/extensions/platformSessionBridge";
+import { STIRLING_SAAS_URL } from "@editor/constants/connection";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { authService } from "@editor/services/authService";
+import type { PlatformSessionUser } from "@editor-proprietary/extensions/platformSessionBridge";
 
 export async function isDesktopSaaSAuthMode(): Promise<boolean> {
   try {

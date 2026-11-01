@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import AuthCallback from "@app/routes/AuthCallback";
+import AuthCallback from "@editor/routes/AuthCallback";
 import {
   POST_LOGIN_REDIRECT_STORAGE_KEY,
   springAuth,
-} from "@app/auth/spring/springAuthClient";
-import { expectConsole } from "@app/tests/failOnConsole";
+} from "@editor/auth/spring/springAuthClient";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 // Mock springAuth; keep the real redirect-path helpers.
-vi.mock("@app/auth/spring/springAuthClient", async () => {
+vi.mock("@editor/auth/spring/springAuthClient", async () => {
   const actual = await vi.importActual<
-    typeof import("@app/auth/spring/springAuthClient")
-  >("@app/auth/spring/springAuthClient");
+    typeof import("@editor/auth/spring/springAuthClient")
+  >("@editor/auth/spring/springAuthClient");
   return {
     ...actual,
     springAuth: {
@@ -200,6 +200,85 @@ describe("AuthCallback", () => {
     });
     // Stored path is single-use
     expect(sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
+  });
+
+  it("should restore SSO auto-login after a completed sign-in", async () => {
+    const mockToken = "oauth-jwt-token";
+    window.location.hash = `#access_token=${mockToken}`;
+    sessionStorage.setItem("stirling_sso_auto_login_attempts", "1");
+    sessionStorage.setItem("stirling_sso_auto_login_errors", "1");
+
+    vi.mocked(springAuth.getSession).mockResolvedValueOnce({
+      data: {
+        session: {
+          user: {
+            id: "123",
+            email: "oauth@example.com",
+            username: "oauthuser",
+            role: "USER",
+          },
+          access_token: mockToken,
+          expires_in: 3600,
+          expires_at: Date.now() + 3600000,
+        },
+      },
+      error: null,
+    });
+
+    render(
+      <BrowserRouter>
+        <AuthCallback />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalled();
+    });
+    expect(
+      sessionStorage.getItem("stirling_sso_auto_login_attempts"),
+    ).toBeNull();
+    expect(sessionStorage.getItem("stirling_sso_auto_login_errors")).toBeNull();
+  });
+
+  it("should complete sign-in when session storage is blocked", async () => {
+    const mockToken = "oauth-jwt-token";
+    window.location.hash = `#access_token=${mockToken}`;
+
+    vi.mocked(springAuth.getSession).mockResolvedValueOnce({
+      data: {
+        session: {
+          user: {
+            id: "123",
+            email: "oauth@example.com",
+            username: "oauthuser",
+            role: "USER",
+          },
+          access_token: mockToken,
+          expires_in: 3600,
+          expires_at: Date.now() + 3600000,
+        },
+      },
+      error: null,
+    });
+    vi.spyOn(window, "sessionStorage", "get").mockImplementation(() => {
+      throw new DOMException("blocked", "SecurityError");
+    });
+
+    try {
+      render(
+        <BrowserRouter>
+          <AuthCallback />
+        </BrowserRouter>,
+      );
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith("/editor", {
+          replace: true,
+        });
+      });
+    } finally {
+      vi.restoreAllMocks();
+    }
   });
 
   it("should fall back to the editor when the stored post-login path is unsafe", async () => {

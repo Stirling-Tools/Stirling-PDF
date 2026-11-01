@@ -1,8 +1,8 @@
 import { Modal, Stack, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "@app/ui/Button";
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
+import { Button } from "@editor/ui/Button";
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@editor/styles/zIndex";
 
 interface DiskConflictModalProps {
   opened: boolean;

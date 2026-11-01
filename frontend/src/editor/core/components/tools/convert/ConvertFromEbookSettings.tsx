@@ -1,6 +1,6 @@
 import { Stack, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
+import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 
 interface ConvertFromEbookSettingsProps {
   parameters: ConvertParameters;

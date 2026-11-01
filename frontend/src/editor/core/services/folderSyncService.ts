@@ -6,8 +6,8 @@
  * {@link folderStorage}.
  */
 
-import apiClient from "@app/services/apiClient";
-import { FolderId, FolderRecord, parseFolderId } from "@app/types/folder";
+import apiClient from "@editor/services/apiClient";
+import { FolderId, FolderRecord, parseFolderId } from "@editor/types/folder";
 
 interface ServerFolder {
   id: string;

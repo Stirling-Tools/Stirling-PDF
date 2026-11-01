@@ -11,9 +11,9 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("@portal/api/storageEncryption", async (importOriginal) => {
+vi.mock("@processor/api/storageEncryption", async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import("@portal/api/storageEncryption")>();
+    await importOriginal<typeof import("@processor/api/storageEncryption")>();
   return {
     ...actual,
     fetchEncryptionStatus: vi.fn(),
@@ -21,19 +21,19 @@ vi.mock("@portal/api/storageEncryption", async (importOriginal) => {
   };
 });
 
-import { baseQueryOptions } from "@app/query/queryClient";
+import { baseQueryOptions } from "@editor/query/queryClient";
 import {
   fetchEncryptionStatus,
   fetchMigrationStatus,
   type MigrationState,
   type MigrationStatus,
   type StorageEncryptionStatus,
-} from "@portal/api/storageEncryption";
-import { EncryptionPanel } from "@portal/components/infrastructure/EncryptionPanel";
+} from "@processor/api/storageEncryption";
+import { EncryptionPanel } from "@processor/components/infrastructure/EncryptionPanel";
 import {
   resetTabVisibility,
   setTabHidden,
-} from "@app/tests/utils/tabVisibility";
+} from "@editor/tests/utils/tabVisibility";
 
 const POLL_MS = 2000;
 const status = vi.mocked(fetchEncryptionStatus);

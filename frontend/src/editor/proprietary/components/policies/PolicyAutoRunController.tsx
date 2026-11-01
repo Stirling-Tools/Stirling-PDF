@@ -1,6 +1,6 @@
-import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
-import { usePolicyLocalPasses } from "@app/components/policies/usePolicyLocalPasses";
-import { PolicyRecoveryGate } from "@app/components/policies/PolicyRecoveryGate";
+import { usePolicyAutoRun } from "@editor/components/policies/usePolicyAutoRun";
+import { usePolicyLocalPasses } from "@editor/components/policies/usePolicyLocalPasses";
+import { PolicyRecoveryGate } from "@editor/components/policies/PolicyRecoveryGate";
 
 /**
  * Runs policies and recovery once per editor, independent of the active tool or sidebar.

@@ -1,8 +1,8 @@
 import type { CSSProperties, ReactNode } from "react";
 import { ActionIcon, Menu } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import type { IconBadgeAccent } from "@app/ui/IconBadge";
-import "@app/ui/PanelHeader.css";
+import { Icon } from "@editor/ui/Icon";
+import type { IconBadgeAccent } from "@editor/ui/IconBadge";
+import "@editor/ui/PanelHeader.css";
 
 export interface PanelHeaderMenuItem {
   /** Stable key; falls back to the item index. */

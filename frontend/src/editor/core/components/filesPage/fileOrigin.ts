@@ -1,5 +1,5 @@
-import { StirlingFileStub } from "@app/types/fileContext";
-import type { FolderId, FolderRecord } from "@app/types/folder";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import type { FolderId, FolderRecord } from "@editor/types/folder";
 
 export type FileOrigin = "local" | "cloud" | "shared-with-me";
 

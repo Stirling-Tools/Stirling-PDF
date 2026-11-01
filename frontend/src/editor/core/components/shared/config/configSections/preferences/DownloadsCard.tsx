@@ -1,8 +1,8 @@
 import { useEffect, useId, useState } from "react";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { NumberInput, Paper, Stack, Switch, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { usePreferences } from "@app/contexts/PreferencesContext";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 

@@ -1,8 +1,8 @@
-import { SlideId } from "@app/components/onboarding/saasOnboardingFlowConfig";
+import { SlideId } from "@editor/components/onboarding/saasOnboardingFlowConfig";
 import {
   resolveFlowIds,
   type FlowStep,
-} from "@app/components/onboarding/onboardingSlideTypes";
+} from "@editor/components/onboarding/onboardingSlideTypes";
 
 export interface SaasFlowInputs {
   /** Free-tier wallet with allowance remaining this period — show the usage meter. */

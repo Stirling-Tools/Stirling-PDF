@@ -1,4 +1,4 @@
-import { UIProvider } from "@portal/contexts/UIContext";
+import { UIProvider } from "@processor/contexts/UIContext";
 import {
   afterAll,
   afterEach,
@@ -17,12 +17,12 @@ import { setupServer } from "msw/node";
 import {
   teamSaasHandlers,
   resetTeamSaasStore,
-} from "@portal/mocks/handlers/teamSaas";
+} from "@processor/mocks/handlers/teamSaas";
 import {
   getPortalQueryClient,
   resetPortalQueryClient,
-} from "@portal/queryClient";
-import { qk } from "@portal/queries/keys";
+} from "@processor/queryClient";
+import { qk } from "@processor/queries/keys";
 
 /**
  * The migration's payoff, as assertions: revisiting the Users view serves the
@@ -30,29 +30,31 @@ import { qk } from "@portal/queries/keys";
  * one /team/my resolve. Same SaaS mocks as Users.saas.test.tsx.
  */
 
-vi.mock("@app/auth", () => ({
+vi.mock("@editor/auth", () => ({
   getStoredToken: () => null,
   clearStoredToken: vi.fn(),
 }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => null,
   configureSupabase: vi.fn(),
 }));
-vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
+vi.mock("@processor/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 
-vi.mock("@app/portal/usersCapabilities", async () => ({
+vi.mock("@editor/portal/usersCapabilities", async () => ({
   usersCapabilities:
-    // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @app alias
+    // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @editor alias
     (await import("../../../editor/saas/portal/usersCapabilities"))
       .usersCapabilities,
 }));
-vi.mock("@app/portal/usersBackend", async () => ({
+vi.mock("@editor/portal/usersBackend", async () => ({
   usersBackend:
-    // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @app alias
+    // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @editor alias
     (await import("../../../editor/saas/portal/usersBackend")).usersBackend,
 }));
 
-vi.mock("@portal/contexts/TierContext", () => ({
+vi.mock("@processor/contexts/TierContext", () => ({
   useTier: () => ({ tier: "pro" }),
 }));
 
@@ -68,7 +70,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { Users } from "@portal/views/Users";
+import { Users } from "@processor/views/Users";
 
 const server = setupServer(...teamSaasHandlers);
 

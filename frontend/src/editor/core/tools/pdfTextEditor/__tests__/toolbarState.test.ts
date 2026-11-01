@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
-import { deriveToolbarState } from "@app/tools/pdfTextEditor/util/toolbarState";
+import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
 import type {
   PageSnapshot,
   SelectionState,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
 
 function mkRun(id: string, fontId: string, fontSize = 12) {
   return {

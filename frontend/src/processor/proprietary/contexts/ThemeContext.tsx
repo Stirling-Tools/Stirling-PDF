@@ -6,12 +6,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { preferencesService } from "@app/services/preferencesService";
+import { preferencesService } from "@editor/services/preferencesService";
 import {
   getSystemTheme,
   resolveColorScheme,
   type ThemeMode,
-} from "@app/constants/theme";
+} from "@editor/constants/theme";
 
 export type Theme = "light" | "dark";
 

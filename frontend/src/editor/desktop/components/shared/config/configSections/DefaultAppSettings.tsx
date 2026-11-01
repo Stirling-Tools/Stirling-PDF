@@ -1,8 +1,8 @@
 import React from "react";
 import { Paper, Text, Group, Stack } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { useDefaultApp } from "@app/hooks/useDefaultApp";
+import { useDefaultApp } from "@editor/hooks/useDefaultApp";
 
 export const DefaultAppSettings: React.FC = () => {
   const { t } = useTranslation();

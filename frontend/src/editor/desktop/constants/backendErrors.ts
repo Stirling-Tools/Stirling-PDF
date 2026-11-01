@@ -1,4 +1,4 @@
-import i18n from "@app/i18n";
+import i18n from "@editor/i18n";
 
 export const BACKEND_NOT_READY_CODE = "BACKEND_NOT_READY" as const;
 

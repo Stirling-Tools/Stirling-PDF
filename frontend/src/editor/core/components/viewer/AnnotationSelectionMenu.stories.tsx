@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
+import { AnnotationSelectionMenu } from "@editor/components/viewer/AnnotationSelectionMenu";
 
 // AnnotationSelectionMenu reads the active document, which defaults to null outside a live EmbedPDF session.
 const meta = {

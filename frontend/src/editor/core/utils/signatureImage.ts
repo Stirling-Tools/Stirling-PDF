@@ -1,4 +1,4 @@
-import { removeWhiteBackground } from "@app/utils/imageTransparency";
+import { removeWhiteBackground } from "@editor/utils/imageTransparency";
 import {
   createCanvas,
   hasCanvasInk,
@@ -8,7 +8,7 @@ import {
   rotateCanvas,
   scaleCanvasToFit,
   trimCanvas,
-} from "@app/utils/canvasImage";
+} from "@editor/utils/canvasImage";
 
 export const SIGNATURE_TRIM_PADDING = 6;
 const MAX_UPLOAD_SIDE = 1200;

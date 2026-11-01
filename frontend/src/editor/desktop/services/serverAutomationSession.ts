@@ -1,5 +1,5 @@
-import { authService } from "@app/services/authService";
-import { operationRouter } from "@app/services/operationRouter";
+import { authService } from "@editor/services/authService";
+import { operationRouter } from "@editor/services/operationRouter";
 
 export interface ServerAutomationSession {
   baseUrl: string;

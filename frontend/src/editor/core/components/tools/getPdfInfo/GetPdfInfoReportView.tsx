@@ -6,14 +6,14 @@ import type {
   PdfInfoReportEntry,
   PdfInfoBackendData,
   ParsedPdfSections,
-} from "@app/types/getPdfInfo";
-import "@app/components/tools/validateSignature/reportView/styles.css";
-import SummarySection from "@app/components/tools/getPdfInfo/sections/SummarySection";
-import KeyValueSection from "@app/components/tools/getPdfInfo/sections/KeyValueSection";
-import TableOfContentsSection from "@app/components/tools/getPdfInfo/sections/TableOfContentsSection";
-import OtherSection from "@app/components/tools/getPdfInfo/sections/OtherSection";
-import PerPageSection from "@app/components/tools/getPdfInfo/sections/PerPageSection";
-import ComplianceSection from "@app/components/tools/getPdfInfo/sections/ComplianceSection";
+} from "@editor/types/getPdfInfo";
+import "@editor/components/tools/validateSignature/reportView/styles.css";
+import SummarySection from "@editor/components/tools/getPdfInfo/sections/SummarySection";
+import KeyValueSection from "@editor/components/tools/getPdfInfo/sections/KeyValueSection";
+import TableOfContentsSection from "@editor/components/tools/getPdfInfo/sections/TableOfContentsSection";
+import OtherSection from "@editor/components/tools/getPdfInfo/sections/OtherSection";
+import PerPageSection from "@editor/components/tools/getPdfInfo/sections/PerPageSection";
+import ComplianceSection from "@editor/components/tools/getPdfInfo/sections/ComplianceSection";
 
 /** Valid section anchor IDs for navigation */
 const VALID_ANCHORS = new Set([

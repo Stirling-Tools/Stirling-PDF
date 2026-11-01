@@ -7,20 +7,20 @@ const state = vi.hoisted(() => ({
   portalAccess: false,
 }));
 
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ user: { id: "owner-1" }, signOut: vi.fn() }),
 }));
-vi.mock("@app/contexts/SaaSTeamContext", () => ({
+vi.mock("@editor/contexts/SaaSTeamContext", () => ({
   useSaaSTeam: () => ({ isTeamLeader: state.owner, loading: state.loading }),
 }));
-vi.mock("@app/hooks/usePortalAccess", () => ({
+vi.mock("@editor/hooks/usePortalAccess", () => ({
   usePortalAccessState: () => ({ granted: state.portalAccess, settled: true }),
 }));
-vi.mock("@app/auth/supabase", () => ({ isUserAnonymous: () => false }));
-vi.mock("@app/components/shared/config/configSections/Overview", () => ({
+vi.mock("@editor/auth/supabase", () => ({ isUserAnonymous: () => false }));
+vi.mock("@editor/components/shared/config/configSections/Overview", () => ({
   default: () => null,
 }));
-vi.mock("@app/components/shared/config/saasConfigNavSections", () => ({
+vi.mock("@editor/components/shared/config/saasConfigNavSections", () => ({
   createSaasConfigNavSections: () => [
     {
       title: "Legal",
@@ -28,7 +28,7 @@ vi.mock("@app/components/shared/config/saasConfigNavSections", () => ({
     },
   ],
 }));
-vi.mock("@app/components/settings/portalSettingsNav", () => ({
+vi.mock("@editor/components/settings/portalSettingsNav", () => ({
   buildPortalSettingsSections: () => [
     {
       id: "workspace",
@@ -47,7 +47,7 @@ vi.mock("@app/components/settings/portalSettingsNav", () => ({
   portalSupersededSectionKeys: () => [],
 }));
 
-import { useSettingsNav } from "@app/components/settings/useSettingsNav";
+import { useSettingsNav } from "@editor/components/settings/useSettingsNav";
 
 describe("Connected instances settings navigation", () => {
   beforeEach(() => {

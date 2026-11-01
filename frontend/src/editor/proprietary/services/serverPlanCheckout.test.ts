@@ -11,17 +11,17 @@ const { invoke, getAccessToken } = vi.hoisted(() => ({
   getAccessToken: vi.fn(),
 }));
 
-vi.mock("@app/services/supabaseClient", () => ({
+vi.mock("@editor/services/supabaseClient", () => ({
   isSupabaseConfigured: true,
   supabase: { functions: { invoke } },
 }));
 
-vi.mock("@app/auth/session", () => ({ getAccessToken }));
+vi.mock("@editor/auth/session", () => ({ getAccessToken }));
 
 import {
   createServerPlanCheckoutSession,
   verifyTeamCheckout,
-} from "@app/services/serverPlanCheckout";
+} from "@editor/services/serverPlanCheckout";
 
 const plan = {
   lookupKey: "selfhosted:team:yearly",

@@ -8,7 +8,7 @@ import {
 import {
   bindPdfViewerSource,
   withPdfViewerAccess,
-} from "@app/components/viewer/pdfViewerAccess";
+} from "@editor/components/viewer/pdfViewerAccess";
 import {
   clearPdfAccess,
   forgetPdfAccess,
@@ -16,12 +16,14 @@ import {
   rememberPdfAccess,
   rememberPlainPdfExport,
   ensureLocalPdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
-import { createStirlingFile } from "@app/types/fileContext";
+import { createStirlingFile } from "@editor/types/fileContext";
 
-vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
+vi.mock("@editor/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@editor/services/pdfAccessService")
+  >()),
   ensureLocalPdfAccess: vi.fn(),
 }));
 const document: PdfDocumentObject = {

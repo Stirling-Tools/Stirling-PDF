@@ -3,18 +3,18 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   ExtractImagesParameters,
   defaultParameters,
-} from "@app/hooks/tools/extractImages/useExtractImagesParameters";
-import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
+} from "@editor/hooks/tools/extractImages/useExtractImagesParameters";
+import { useToolResources } from "@editor/hooks/tools/shared/useToolResources";
 
 const ENDPOINT = "/api/v1/misc/extract-images" satisfies ToolEndpoint;
 type ExtractImagesApiParams = ToolApiParams[typeof ENDPOINT];

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { isConditionComplete } from "@app/conditions/validation";
+import { isConditionComplete } from "@editor/conditions/validation";
 import {
   classificationCondition,
   requiresClassification,
-} from "@app/data/classificationConditions";
-import type { Condition } from "@app/conditions/types";
+} from "@editor/data/classificationConditions";
+import type { Condition } from "@editor/conditions/types";
 
 describe("document conditions", () => {
   it("requires classification only for classifier-produced facts", () => {

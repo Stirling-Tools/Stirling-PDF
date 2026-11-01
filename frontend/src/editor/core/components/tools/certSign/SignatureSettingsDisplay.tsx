@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Stack, Paper, Text, Group, Badge } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 interface SignatureSettingsDisplayProps {
   showSignature: boolean;
   pageNumber?: number | null;

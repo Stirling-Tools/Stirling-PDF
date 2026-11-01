@@ -2,12 +2,12 @@ import {
   buildChangeMetadataFormData,
   changeMetadataToApiParams,
   changeMetadataFromApiParams,
-} from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
+} from "@editor/hooks/tools/changeMetadata/useChangeMetadataOperation";
 import {
   ChangeMetadataParameters,
   defaultParameters,
-} from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
-import { TrappedStatus } from "@app/types/metadata";
+} from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { TrappedStatus } from "@editor/types/metadata";
 import { describe, expect, test } from "vitest";
 
 describe("buildChangeMetadataFormData", () => {

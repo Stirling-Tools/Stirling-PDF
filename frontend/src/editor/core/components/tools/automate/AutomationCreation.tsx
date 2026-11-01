@@ -9,23 +9,23 @@ import {
   Divider,
   Modal,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Z_INDEX_AUTOMATE_MODAL } from "@app/styles/zIndex";
-import { Icon } from "@app/ui/Icon";
-import { ToolRegistry } from "@app/data/toolsTaxonomy";
-import ToolConfigurationModal from "@app/components/tools/automate/ToolConfigurationModal";
-import ToolList from "@app/components/tools/automate/ToolList";
-import IconSelector from "@app/components/tools/automate/IconSelector";
+import { Button } from "@editor/ui/Button";
+import { Z_INDEX_AUTOMATE_MODAL } from "@editor/styles/zIndex";
+import { Icon } from "@editor/ui/Icon";
+import { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import ToolConfigurationModal from "@editor/components/tools/automate/ToolConfigurationModal";
+import ToolList from "@editor/components/tools/automate/ToolList";
+import IconSelector from "@editor/components/tools/automate/IconSelector";
 import {
   AutomationConfig,
   AutomationMode,
   AutomationTool,
-} from "@app/types/automation";
-import { useAutomationForm } from "@app/hooks/tools/automate/useAutomationForm";
+} from "@editor/types/automation";
+import { useAutomationForm } from "@editor/hooks/tools/automate/useAutomationForm";
 import {
   downloadAutomationConfig,
   downloadFolderScanningConfig,
-} from "@app/utils/automationConverter";
+} from "@editor/utils/automationConverter";
 
 interface AutomationCreationProps {
   mode: AutomationMode;
@@ -119,7 +119,7 @@ export default function AutomationCreation({
 
     try {
       const { automationStorage } =
-        await import("@app/services/automationStorage");
+        await import("@editor/services/automationStorage");
       let savedAutomation;
 
       if (mode === AutomationMode.EDIT && existingAutomation) {

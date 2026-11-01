@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import styles from "@app/components/runLocation/RunLocation.module.css";
+import styles from "@editor/components/runLocation/RunLocation.module.css";
 
 /**
  * Eases its height to fit whatever it holds. CSS cannot transition to `auto`,

@@ -4,21 +4,21 @@
  * Forces correct usage patterns through service API design
  */
 
-import { FileId, BaseFileMetadata } from "@app/types/file";
-import { FolderId } from "@app/types/folder";
+import { FileId, BaseFileMetadata } from "@editor/types/file";
+import { FolderId } from "@editor/types/folder";
 import {
   StirlingFile,
   StirlingFileStub,
   createStirlingFile,
   type ClassificationConfidence,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 import {
   indexedDBManager,
   DATABASE_CONFIGS,
-} from "@app/services/indexedDBManager";
-import { alert } from "@app/components/toast";
+} from "@editor/services/indexedDBManager";
+import { alert } from "@editor/components/toast";
 import i18n from "i18next";
-import { getPdfAccess } from "@app/services/pdfAccessService";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
 
 /**
  * Storage record - single source of truth

@@ -9,22 +9,22 @@ import {
 } from "vitest";
 import { act, render, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createAppQueryClient } from "@app/query/queryClient";
+import { createAppQueryClient } from "@editor/query/queryClient";
 import {
   resetTabVisibility,
   setTabHidden,
-} from "@app/tests/utils/tabVisibility";
+} from "@editor/tests/utils/tabVisibility";
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
 }));
 
-import apiClient from "@app/services/apiClient";
-import { qk } from "@app/query/keys";
+import apiClient from "@editor/services/apiClient";
+import { qk } from "@editor/query/keys";
 import {
   useFormDetectionModelStatus,
   type FormDetectionModelStatus,
-} from "@app/hooks/useFormDetectionModelStatus";
+} from "@editor/hooks/useFormDetectionModelStatus";
 
 const POLL_MS = 1500;
 

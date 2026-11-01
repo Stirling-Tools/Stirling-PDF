@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import apiClient from "@app/services/apiClient";
-import { useFileContext } from "@app/contexts/file/fileHooks";
-import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
-import type { StirlingFile } from "@app/types/fileContext";
-import { extractErrorMessage } from "@app/utils/toolErrorHandler";
-import { PdfInfoReportEntry, INFO_JSON_FILENAME } from "@app/types/getPdfInfo";
-import type { GetPdfInfoParameters } from "@app/hooks/tools/getPdfInfo/useGetPdfInfoParameters";
+import apiClient from "@editor/services/apiClient";
+import { useFileContext } from "@editor/contexts/file/fileHooks";
+import { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
+import type { StirlingFile } from "@editor/types/fileContext";
+import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
+import {
+  PdfInfoReportEntry,
+  INFO_JSON_FILENAME,
+} from "@editor/types/getPdfInfo";
+import type { GetPdfInfoParameters } from "@editor/hooks/tools/getPdfInfo/useGetPdfInfoParameters";
 
 export interface GetPdfInfoOperationHook extends ToolOperationHook<GetPdfInfoParameters> {
   results: PdfInfoReportEntry[];

@@ -1,4 +1,4 @@
-import type { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
+import type { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 
 export type Controller = ReturnType<typeof useToolbarController>;
 

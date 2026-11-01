@@ -1,13 +1,13 @@
-import { apiClient } from "@portal/api/http";
-import type { Wallet } from "@app/billing";
+import { apiClient } from "@processor/api/http";
+import type { Wallet } from "@editor/billing";
 
 /**
  * Real wallet + billing surface. All calls go to apiClient.saas — the hosted
  * SaaS Java backend, authed by the admin's Supabase JWT. The wallet contract
- * itself lives in {@code @app/billing} (shared with the editor cloud surface).
+ * itself lives in {@code @editor/billing} (shared with the editor cloud surface).
  */
 
-// Re-export the shared contract so existing `@portal/api/billing` importers keep working.
+// Re-export the shared contract so existing `@processor/api/billing` importers keep working.
 export type {
   Wallet,
   WalletStatus,
@@ -17,7 +17,7 @@ export type {
   WalletActivityRow,
   TeamHolding,
   ProcessorHolding,
-} from "@app/billing";
+} from "@editor/billing";
 
 export async function fetchWallet(): Promise<Wallet> {
   return apiClient.saas.json<Wallet>("/api/v1/payg/wallet");

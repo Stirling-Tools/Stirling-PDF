@@ -1,43 +1,47 @@
 import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { Box, Loader, Center, Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useAllFiles } from "@app/contexts/FileContext";
+import { Button } from "@editor/ui/Button";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
+import { useAllFiles } from "@editor/contexts/FileContext";
 import {
   useNavigationState,
   useNavigationActions,
-} from "@app/contexts/NavigationContext";
-import { isBaseWorkbench } from "@app/types/workbench";
-import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
-import { useIsPhone } from "@app/hooks/useIsMobile";
-import styles from "@app/components/layout/Workbench.module.css";
+} from "@editor/contexts/NavigationContext";
+import { isBaseWorkbench } from "@editor/types/workbench";
+import { VIEWER_SUPPORTED_EXTENSIONS } from "@editor/utils/fileUtils";
+import { useIsPhone } from "@editor/hooks/useIsMobile";
+import styles from "@editor/components/layout/Workbench.module.css";
 
-import WorkbenchBar from "@app/components/shared/WorkbenchBar";
-import { useWorkbenchTakeover } from "@app/components/layout/WorkbenchTakeover";
+import WorkbenchBar from "@editor/components/shared/WorkbenchBar";
+import { useWorkbenchTakeover } from "@editor/components/layout/WorkbenchTakeover";
 import {
   useIsWorkbenchFileDragOver,
   useWorkbenchFileDrop,
-} from "@app/components/layout/useWorkbenchFileDrop";
-import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
-import WorkbenchFloatingSearch from "@app/components/shared/WorkbenchFloatingSearch";
-import LandingPage from "@app/components/shared/LandingPage";
-import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
-import { NotificationBell } from "@app/components/notifications/NotificationBell";
+} from "@editor/components/layout/useWorkbenchFileDrop";
+import { useTitleBarStrip } from "@editor/contexts/TitleBarStripContext";
+import WorkbenchFloatingSearch from "@editor/components/shared/WorkbenchFloatingSearch";
+import LandingPage from "@editor/components/shared/LandingPage";
+import DismissAllErrorsButton from "@editor/components/shared/DismissAllErrorsButton";
+import { NotificationBell } from "@editor/components/notifications/NotificationBell";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageTracks are only needed once a file
 // is open. Lazy-loading keeps all of that out of the initial bundle.
 const SigningWorkspace = lazy(
-  () => import("@app/components/shared/signing/SigningWorkspace"),
+  () => import("@editor/components/shared/signing/SigningWorkspace"),
 );
-const FileEditor = lazy(() => import("@app/components/fileEditor/FileEditor"));
-const PageTracks = lazy(() => import("@app/components/pageTracks/PageTracks"));
-const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
+const FileEditor = lazy(
+  () => import("@editor/components/fileEditor/FileEditor"),
+);
+const PageTracks = lazy(
+  () => import("@editor/components/pageTracks/PageTracks"),
+);
+const Viewer = lazy(() => import("@editor/components/viewer/Viewer"));
 const FileManagerView = lazy(
-  () => import("@app/components/filesPage/FileManagerView"),
+  () => import("@editor/components/filesPage/FileManagerView"),
 );
 
 // No props needed - component uses contexts directly

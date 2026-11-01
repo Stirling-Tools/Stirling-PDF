@@ -386,7 +386,7 @@ interface FakeOptions {
   failFor?: number;
   failWrite?: string;
   alreadyRemoved?: string[];
-  /** The history pr-turn.ts reads to re-check waiting-on-author. */
+  /** The history pr-turn.ts reads for waiting-on-author; the PR's own label events by default. */
   turnItems?: TurnItem[];
   /** What pulls.listFiles returns, for a PR over the size limit in total. */
   files?: ChangedFile[];
@@ -405,7 +405,7 @@ function fakeGitHub(
     failFor,
     failWrite,
     alreadyRemoved = [],
-    turnItems = STILL_WAITING,
+    turnItems,
     files = [],
     comments = [],
     writers = [],
@@ -419,17 +419,24 @@ function fakeGitHub(
     calls.push(call);
     writeTimes.push(Date.now());
   };
+  const turnHistory = (number: unknown): TurnItem[] =>
+    turnItems ??
+    (prs.find((pr) => pr.number === number)?.timeline ?? []).flatMap((event) =>
+      event.__typename === "LabeledEvent" || event.__typename === "UnlabeledEvent"
+        ? [{ __typename: event.__typename, createdAt: event.createdAt, label: event.label }]
+        : [],
+    );
   const graphql = async (query: string, variables: Record<string, unknown>) => {
     if (query.includes("pullRequests(states: OPEN")) {
       const nodes = prs.map((pr) => ({ number: pr.number }));
       return { repository: { pullRequests: { pageInfo: { hasNextPage: false, endCursor: null }, nodes } } };
     }
     if (query.includes("reviews(last")) {
-      const reviews = { nodes: turnItems.filter((item) => item.__typename === "PullRequestReview") };
+      const reviews = { nodes: turnHistory(variables.number).filter((item) => item.__typename === "PullRequestReview") };
       return { repository: { pullRequest: { author: { login: "contributor" }, headRefOid: "head-sha", reviews } } };
     }
     if (query.includes("REVIEW_DISMISSED_EVENT")) {
-      const nodes = turnItems.filter((item) => item.__typename !== "PullRequestReview");
+      const nodes = turnHistory(variables.number).filter((item) => item.__typename !== "PullRequestReview");
       return { repository: { pullRequest: { timelineItems: { pageInfo: { hasPreviousPage: false, startCursor: null }, nodes } } } };
     }
     if (variables.number === failFor) throw new Error("boom");
@@ -457,7 +464,7 @@ function fakeGitHub(
       pulls: {
         get: async () => {
           reads.mergeable += 1;
-          return { data: { mergeable, mergeable_state: mergeableState, labels: [], head: { ref: "feature", repo: null } } };
+          return { data: { mergeable, mergeable_state: mergeableState } };
         },
         update: async ({ pull_number }) => write(`close #${pull_number}`),
         listFiles: async ({ page }) => ({ data: page === 1 ? files : [] }),
@@ -582,6 +589,35 @@ describe("triage run", () => {
     const { github, calls } = fakeGitHub([pr], { turnItems: [...STILL_WAITING, reply] });
     await triage(github);
     assert.deepEqual(calls, ["unlabel #1 waiting-on-author", "unlabel #1 Stale PR"]);
+  });
+
+  describe("waiting-on-author from a review", () => {
+    const changesRequested: TurnItem = {
+      __typename: "PullRequestReview",
+      submittedAt: daysAgo(10),
+      state: "CHANGES_REQUESTED",
+      authorCanPushToRepository: true,
+      author: PERSON,
+      commit: { oid: "head-sha" },
+    };
+
+    it("adds the label, and dates the turn from then rather than warning at once", async () => {
+      const { github, calls } = fakeGitHub([pullRequest()], { turnItems: [changesRequested] });
+      await triage(github);
+      assert.deepEqual(calls, ["label #1 waiting-on-author"]);
+    });
+
+    it("only reports it in a dry run", async () => {
+      const { github, calls } = fakeGitHub([pullRequest()], { turnItems: [changesRequested] });
+      await triage(github, { live: false });
+      assert.deepEqual(calls, []);
+    });
+
+    it("leaves a draft alone", async () => {
+      const { github, calls } = fakeGitHub([pullRequest({ isDraft: true })], { turnItems: [changesRequested] });
+      await triage(github);
+      assert.deepEqual(calls, []);
+    });
   });
 
   it("reads a timeline longer than one page", async () => {

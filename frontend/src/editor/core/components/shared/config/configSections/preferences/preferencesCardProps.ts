@@ -3,7 +3,7 @@ import type {
   DesktopInstallCanInstall,
   DesktopInstallProgress,
   DesktopInstallState,
-} from "@app/components/shared/UpdateModal";
+} from "@editor/components/shared/UpdateModal";
 
 /**
  * Desktop-only: user-facing update policy control, rendered inside the Software

@@ -2,22 +2,22 @@ import { useEffect, useMemo, useRef } from "react";
 import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import apiClient from "@app/services/apiClient";
-import { useAuth } from "@app/auth/UseSession";
-import { useFileActions } from "@app/contexts/FileContext";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { alert } from "@app/components/toast";
-import type { StirlingFile } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import { fileStorage } from "@app/services/fileStorage";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import apiClient from "@editor/services/apiClient";
+import { useAuth } from "@editor/auth/UseSession";
+import { useFileActions } from "@editor/contexts/FileContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { alert } from "@editor/components/toast";
+import type { StirlingFile } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import { fileStorage } from "@editor/services/fileStorage";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 import {
   getShareBundleEntryRootId,
   isZipBundle,
   loadShareBundleEntries,
   parseContentDispositionFilename,
   readResponseHeader,
-} from "@app/services/shareBundleUtils";
+} from "@editor/services/shareBundleUtils";
 
 interface ShareLinkLoaderProps {
   token: string;

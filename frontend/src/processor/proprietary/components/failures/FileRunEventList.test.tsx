@@ -6,11 +6,11 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import type {
   FailureActionOffer,
   FileRunEvent,
-} from "@portal/api/fileRunEvents";
+} from "@processor/api/fileRunEvents";
 
 /** The review table: its states, its copy, faceted filtering, and acting on a row. */
 
@@ -18,8 +18,8 @@ const fetchFileRunEvents = vi.fn();
 const applyFileRunEventAction = vi.fn();
 
 // Spread the real module: the queries layer also reads its status helpers.
-vi.mock("@portal/api/fileRunEvents", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@portal/api/fileRunEvents")>()),
+vi.mock("@processor/api/fileRunEvents", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@processor/api/fileRunEvents")>()),
   fetchFileRunEvents: (...args: unknown[]) => fetchFileRunEvents(...args),
   applyFileRunEventAction: (...args: unknown[]) =>
     applyFileRunEventAction(...args),
@@ -29,7 +29,7 @@ vi.mock("@portal/api/fileRunEvents", async (importOriginal) => ({
 const sourcesData = vi.fn<
   () => { sources: { id: string; name: string }[] } | null
 >(() => null);
-vi.mock("@portal/queries/sources", () => ({
+vi.mock("@processor/queries/sources", () => ({
   useSources: () => ({ data: sourcesData(), loading: false, error: null }),
 }));
 
@@ -71,7 +71,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-// The table reads through the shared query hooks and @app/ui needs Mantine.
+// The table reads through the shared query hooks and @editor/ui needs Mantine.
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, {
     wrapper: ({ children }) => (
@@ -82,7 +82,7 @@ const render = (ui: Parameters<typeof baseRender>[0]) =>
   });
 
 const { FileRunEventList } =
-  await import("@portal/components/failures/FileRunEventList");
+  await import("@processor/components/failures/FileRunEventList");
 
 function offer(overrides: Partial<FailureActionOffer>): FailureActionOffer {
   return {

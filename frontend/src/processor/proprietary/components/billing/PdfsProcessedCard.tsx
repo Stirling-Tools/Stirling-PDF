@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Card } from "@app/ui";
-import { formatMinor } from "@app/billing";
-import type { Wallet, WalletCategoryBreakdown } from "@portal/api/billing";
-import type { LocalUsage } from "@portal/api/link";
+import { Card } from "@editor/ui";
+import { formatMinor } from "@editor/billing";
+import type { Wallet, WalletCategoryBreakdown } from "@processor/api/billing";
+import type { LocalUsage } from "@processor/api/link";
 
 /**
  * "PDFs processed this period" headline (the input-file count) plus a summary line

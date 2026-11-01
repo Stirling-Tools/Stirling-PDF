@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ServerLicenseSlide from "@app/components/onboarding/slides/ServerLicenseSlide";
-import type { LicenseNotice } from "@app/types/types";
+import ServerLicenseSlide from "@editor/components/onboarding/slides/ServerLicenseSlide";
+import type { LicenseNotice } from "@editor/types/types";
 
 interface ServerLicenseStageProps {
   licenseNotice?: LicenseNotice;

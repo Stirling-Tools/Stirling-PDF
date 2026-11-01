@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useUnsavedChanges } from "@app/contexts/UnsavedChangesContext";
+import { useUnsavedChanges } from "@editor/contexts/UnsavedChangesContext";
 
 interface UseSettingsDirtyReturn<T> {
   isDirty: boolean;

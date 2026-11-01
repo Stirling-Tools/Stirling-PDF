@@ -1,12 +1,12 @@
 import React, { useCallback } from "react";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
-import { useNavigationState } from "@app/contexts/NavigationContext";
-import { Tooltip } from "@app/components/shared/Tooltip";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { useWorkbenchBar } from "@editor/contexts/WorkbenchBarContext";
+import { useNavigationState } from "@editor/contexts/NavigationContext";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import type {
   WorkbenchBarButtonConfig,
   WorkbenchBarRenderContext,
-} from "@app/types/workbenchBar";
+} from "@editor/types/workbenchBar";
 
 /**
  * Mini toolbar rendered at the top of the ToolPanel when in viewer mode.

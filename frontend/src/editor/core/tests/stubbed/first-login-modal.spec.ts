@@ -1,5 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
-import { mockAppApis, seedCookieConsent } from "@app/tests/helpers/api-stubs";
+import {
+  mockAppApis,
+  seedCookieConsent,
+} from "@editor/tests/helpers/api-stubs";
 
 /**
  * The InitialOnboardingModal opens to the FirstLoginSlide when the

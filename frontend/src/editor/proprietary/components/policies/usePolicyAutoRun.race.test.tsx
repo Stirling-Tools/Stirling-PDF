@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import type { ClassificationConfidence } from "@app/types/fileContext";
+import type { ClassificationConfidence } from "@editor/types/fileContext";
 
 /**
  * Mid-run race: classification is in flight (its labelled output is still
@@ -36,7 +36,7 @@ const mocks = vi.hoisted(() => ({
   bumpRevision: vi.fn(),
 }));
 
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.workspace }),
   useFileManagement: () => ({
     addFiles: mocks.addFiles,
@@ -44,10 +44,10 @@ vi.mock("@app/contexts/FileContext", () => ({
   }),
   useFileContext: () => ({ consumeFiles: mocks.consumeFiles }),
 }));
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: mocks.bumpRevision }),
 }));
-vi.mock("@app/hooks/usePolicies", () => ({
+vi.mock("@editor/hooks/usePolicies", () => ({
   usePolicies: () => ({
     policies: {
       classification: {
@@ -63,14 +63,14 @@ vi.mock("@app/hooks/usePolicies", () => ({
     },
   }),
 }));
-vi.mock("@app/services/policyApi", () => ({
+vi.mock("@editor/services/policyApi", () => ({
   runStoredPolicy: mocks.runStoredPolicy,
   getPolicyRun: mocks.getPolicyRun,
   listPolicyRuns: mocks.listPolicyRuns,
   downloadPolicyOutput: mocks.downloadPolicyOutput,
   resolvePolicyRunTarget: () => "saas",
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: mocks.getStirlingFile,
     getStirlingFileStub: mocks.getStirlingFileStub,
@@ -78,21 +78,21 @@ vi.mock("@app/services/fileStorage", () => ({
     updateFileMetadata: mocks.updateFileMetadata,
   },
 }));
-vi.mock("@app/services/fileStubHelpers", () => ({
+vi.mock("@editor/services/fileStubHelpers", () => ({
   createStirlingFilesAndStubs: mocks.createStirlingFilesAndStubs,
 }));
-vi.mock("@app/services/fileClassification", () => ({
+vi.mock("@editor/services/fileClassification", () => ({
   readClassificationLabelsFromFile: vi.fn().mockResolvedValue(["Invoice"]),
 }));
 
-import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
+import { usePolicyAutoRun } from "@editor/components/policies/usePolicyAutoRun";
 import {
   usePolicyRuns,
   resetPolicyRuns,
   recordRunStart,
   updateRun,
-} from "@app/components/policies/policyRunStore";
-import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
+} from "@editor/components/policies/policyRunStore";
+import type { PolicyRunRecord } from "@editor/components/policies/policyRunStore";
 
 let latestRuns: PolicyRunRecord[] = [];
 function Harness() {

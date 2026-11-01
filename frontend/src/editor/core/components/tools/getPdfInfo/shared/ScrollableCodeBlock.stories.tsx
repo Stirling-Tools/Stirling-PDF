@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ScrollableCodeBlock from "@app/components/tools/getPdfInfo/shared/ScrollableCodeBlock";
+import ScrollableCodeBlock from "@editor/components/tools/getPdfInfo/shared/ScrollableCodeBlock";
 
 const meta = {
   title: "Tools/GetPdfInfo/Shared/ScrollableCodeBlock",

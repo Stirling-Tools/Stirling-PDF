@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SignaturePlacementOverlay } from "@app/components/viewer/SignaturePlacementOverlay";
-import { SignatureProvider } from "@app/contexts/SignatureContext";
-import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import { SignaturePlacementOverlay } from "@editor/components/viewer/SignaturePlacementOverlay";
+import { SignatureProvider } from "@editor/contexts/SignatureContext";
+import type { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
 
 const textSignature: SignParameters = {
   signatureType: "text",

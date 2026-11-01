@@ -1,9 +1,9 @@
 import { Select, Stack, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { PageLayoutParameters } from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
-import { getPagesPerSheetOptions } from "@app/components/tools/pageLayout/constants";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
-import ButtonSelector from "@app/components/shared/ButtonSelector";
+import { PageLayoutParameters } from "@editor/hooks/tools/pageLayout/usePageLayoutParameters";
+import { getPagesPerSheetOptions } from "@editor/components/tools/pageLayout/constants";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 
 export default function PageLayoutSettings({
   parameters,

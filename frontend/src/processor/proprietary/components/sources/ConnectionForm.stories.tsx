@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ConnectionForm } from "@portal/components/sources/ConnectionForm";
+import { ConnectionForm } from "@processor/components/sources/ConnectionForm";
 import {
   CREATABLE_CONNECTION_TYPES,
   emptyConnectionValues,
-} from "@portal/components/sources/connectionTypes";
+} from "@processor/components/sources/connectionTypes";
 
 const s3Type = CREATABLE_CONNECTION_TYPES.find((type) => type.id === "s3")!;
 const apiType = CREATABLE_CONNECTION_TYPES.find((type) => type.id === "api")!;

@@ -1,13 +1,13 @@
 import { useImperativeHandle, forwardRef, useEffect, useRef } from "react";
 import { useHistoryCapability } from "@embedpdf/plugin-history/react";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
-import { useSignature } from "@app/contexts/SignatureContext";
+import { useSignature } from "@editor/contexts/SignatureContext";
 import { uuidV4, PdfAnnotationSubtype } from "@embedpdf/models";
 import type { PdfAnnotationObject } from "@embedpdf/models";
 import type {
   HistoryAPI,
   AnnotationEvent,
-} from "@app/components/viewer/viewerTypes";
+} from "@editor/components/viewer/viewerTypes";
 
 // Signature stamps carry an image data-URL under app-specific fields the
 // installed annotation types don't declare; `object` mirrors the selection
@@ -19,8 +19,8 @@ type SignatureAnnotation = PdfAnnotationObject & {
 import {
   ANNOTATION_RECREATION_DELAY_MS,
   ANNOTATION_VERIFICATION_DELAY_MS,
-} from "@app/constants/app";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+} from "@editor/constants/app";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 
 /**
  * Connects the PDF history (undo/redo) plugin to the shared ViewerContext.

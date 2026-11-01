@@ -1,11 +1,11 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Affine, PageRect } from "@app/tools/pdfTextEditor/types";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Affine, PageRect } from "@editor/tools/pdfTextEditor/types";
 import {
   imageMatrixBounds,
   remapImageMatrix,
-} from "@app/tools/pdfTextEditor/model/affine";
-import { retargetClipPath } from "@app/tools/pdfTextEditor/util/objectTransform";
+} from "@editor/tools/pdfTextEditor/model/affine";
+import { retargetClipPath } from "@editor/tools/pdfTextEditor/util/objectTransform";
 
 /** Set an image object's transform to an absolute target. */
 export class SetImageTransformCommand implements Command {

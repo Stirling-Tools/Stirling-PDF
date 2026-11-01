@@ -8,9 +8,9 @@ import {
 import type React from "react";
 
 import { MantineProvider } from "@mantine/core";
-import { HttpError } from "@portal/api/http";
-import { Integrations } from "@portal/views/Integrations";
-import type { IntegrationConfig } from "@portal/api/integrations";
+import { HttpError } from "@processor/api/http";
+import { Integrations } from "@processor/views/Integrations";
+import type { IntegrationConfig } from "@processor/api/integrations";
 
 vi.mock("@mantine/hooks", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@mantine/hooks")>()),
@@ -37,7 +37,7 @@ vi.mock("react-i18next", () => ({
 const fetchIntegrations = vi.fn();
 const deleteIntegration = vi.fn();
 const capabilities = vi.fn();
-vi.mock("@portal/api/integrations", () => ({
+vi.mock("@processor/api/integrations", () => ({
   fetchIntegrations: () => fetchIntegrations(),
   fetchIntegrationCapabilities: () => capabilities(),
   fetchS3Connections: () => Promise.resolve([]),

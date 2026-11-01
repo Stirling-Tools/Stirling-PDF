@@ -2,14 +2,14 @@ import { Stack, NumberInput, Select } from "@mantine/core";
 import {
   SegmentedControl,
   type SegmentedOption,
-} from "@app/ui/SegmentedControl";
+} from "@editor/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import {
   AdjustPageScaleParameters,
   Orientation,
   PageSize,
-} from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+} from "@editor/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface AdjustPageScaleSettingsProps {
   parameters: AdjustPageScaleParameters;

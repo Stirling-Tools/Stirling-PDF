@@ -12,27 +12,27 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
-import { fileStorage } from "@app/services/fileStorage";
-import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
-import { scheduleIdle } from "@app/utils/scheduleIdle";
-import { usePolicies } from "@app/hooks/usePolicies";
-import { runPolicyOnFile } from "@app/services/policyDispatch";
+import { useAllFiles, useFileManagement } from "@editor/contexts/FileContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useIndexedDB } from "@editor/contexts/IndexedDBContext";
+import { fileStorage } from "@editor/services/fileStorage";
+import { useAiEngineEnabled } from "@editor/hooks/useAiEngineEnabled";
+import { scheduleIdle } from "@editor/utils/scheduleIdle";
+import { usePolicies } from "@editor/hooks/usePolicies";
+import { runPolicyOnFile } from "@editor/services/policyDispatch";
 import {
   dispatchableFileId,
   localPassFor,
   type LocalPass,
-} from "@app/components/policies/policyLocalPass";
-import { policyRequiresAiEngine } from "@app/data/classificationPolicy";
-import { editorTriggerOf } from "@app/policies/runOn";
-import type { StirlingFileStub } from "@app/types/fileContext";
+} from "@editor/components/policies/policyLocalPass";
+import { policyRequiresAiEngine } from "@editor/data/classificationPolicy";
+import { editorTriggerOf } from "@editor/policies/runOn";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 import {
   damageChecksVersion,
   isDamageCheckPending,
   subscribeToDamageChecks,
-} from "@app/services/pendingDamageChecks";
+} from "@editor/services/pendingDamageChecks";
 
 /** Files processed per idle pass, so a large upload drains over several ticks instead of janking. */
 const LOCAL_PASS_BATCH = 3;

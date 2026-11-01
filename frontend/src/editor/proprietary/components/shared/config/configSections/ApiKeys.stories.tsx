@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse, delay } from "msw";
-import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
+import ApiKeys from "@editor/components/shared/config/configSections/ApiKeys";
 
 /**
  * Config section showing the user's API key, with copy/refresh actions and

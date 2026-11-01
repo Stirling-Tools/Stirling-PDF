@@ -1,5 +1,5 @@
 import { Badge, Tooltip } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 
 interface CloudBadgeProps {

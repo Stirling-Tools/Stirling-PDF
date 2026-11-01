@@ -1,7 +1,7 @@
-import "@app/billing/MeterBar.css";
+import "@editor/billing/MeterBar.css";
 import type { ReactNode } from "react";
-import type { MeterState } from "@app/billing/format";
-import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
+import type { MeterState } from "@editor/billing/format";
+import { StatusBadge, type StatusTone } from "@editor/ui/StatusBadge";
 
 // Meter state → the shared StatusBadge tone (contrast-tuned per theme).
 const STATE_TONE: Record<MeterState, StatusTone> = {

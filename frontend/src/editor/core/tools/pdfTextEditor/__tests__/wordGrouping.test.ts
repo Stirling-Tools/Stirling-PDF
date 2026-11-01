@@ -4,7 +4,7 @@ import {
   endsWithSpace,
   groupWords,
   type WordLeaf,
-} from "@app/tools/pdfTextEditor/util/wordGrouping";
+} from "@editor/tools/pdfTextEditor/util/wordGrouping";
 
 const FONT_SIZE = 20;
 const GLYPH_WIDTH = 10;

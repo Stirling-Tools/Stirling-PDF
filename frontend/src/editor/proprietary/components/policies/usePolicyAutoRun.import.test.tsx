@@ -21,7 +21,7 @@ const mocks = vi.hoisted(() => ({
   createStirlingFilesAndStubs: vi.fn(),
 }));
 
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.fileStubs }),
   useFileManagement: () => ({
     addFiles: mocks.addFiles,
@@ -29,10 +29,10 @@ vi.mock("@app/contexts/FileContext", () => ({
   }),
   useFileContext: () => ({ consumeFiles: mocks.consumeFiles }),
 }));
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: mocks.bumpRevision }),
 }));
-vi.mock("@app/hooks/usePolicies", () => ({
+vi.mock("@editor/hooks/usePolicies", () => ({
   usePolicies: () => ({
     policies: {
       security: {
@@ -47,14 +47,14 @@ vi.mock("@app/hooks/usePolicies", () => ({
     },
   }),
 }));
-vi.mock("@app/services/policyApi", () => ({
+vi.mock("@editor/services/policyApi", () => ({
   runStoredPolicy: vi.fn(),
   getPolicyRun: vi.fn(),
   listPolicyRuns: mocks.listPolicyRuns,
   downloadPolicyOutput: mocks.downloadPolicyOutput,
   resolvePolicyRunTarget: () => "saas",
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: mocks.getStirlingFile,
     getStirlingFileStub: mocks.getStirlingFileStub,
@@ -62,17 +62,17 @@ vi.mock("@app/services/fileStorage", () => ({
     persistVersionedOutputs: mocks.persistVersionedOutputs,
   },
 }));
-vi.mock("@app/services/fileStubHelpers", () => ({
+vi.mock("@editor/services/fileStubHelpers", () => ({
   createStirlingFilesAndStubs: mocks.createStirlingFilesAndStubs,
 }));
 
-import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
+import { usePolicyAutoRun } from "@editor/components/policies/usePolicyAutoRun";
 import {
   recordRunStart,
   getRun,
   updateRun,
   resetPolicyRuns,
-} from "@app/components/policies/policyRunStore";
+} from "@editor/components/policies/policyRunStore";
 
 /** Seed a finished run (one output) so the import effect fires on mount. */
 function recordCompletedRun() {

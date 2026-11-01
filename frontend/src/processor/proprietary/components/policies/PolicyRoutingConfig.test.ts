@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { triggerFor } from "@portal/components/policies/PolicyRoutingConfig";
+import { triggerFor } from "@processor/components/policies/PolicyRoutingConfig";
 
 describe("triggerFor", () => {
   it("uses the schedule contract accepted by the backend", () => {

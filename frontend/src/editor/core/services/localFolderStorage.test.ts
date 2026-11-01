@@ -4,11 +4,11 @@ import { IDBFactory } from "fake-indexeddb";
 import {
   localFolderStorage,
   directoryKey,
-} from "@app/services/localFolderStorage";
+} from "@editor/services/localFolderStorage";
 import {
   indexedDBManager,
   DATABASE_CONFIGS,
-} from "@app/services/indexedDBManager";
+} from "@editor/services/indexedDBManager";
 
 /**
  * A mount is a pointer at a directory, and one directory must never have two pointers —

@@ -1,9 +1,9 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
+import { useDropzoneFiles } from "@editor/hooks/useDropzoneFiles";
 
 const { alert } = vi.hoisted(() => ({ alert: vi.fn() }));
-vi.mock("@app/components/toast", () => ({ alert }));
+vi.mock("@editor/components/toast", () => ({ alert }));
 
 describe("drop failure reporting", () => {
   it("reports partial failures outside a modal while retaining readable files", async () => {

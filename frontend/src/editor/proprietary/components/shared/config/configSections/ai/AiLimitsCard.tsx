@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { NumberInput, Stack, Paper, Group } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import type { AiEngineLimits } from "@app/components/shared/config/configSections/aiEngineSettings";
-import type { AiCardProps } from "@app/components/shared/config/configSections/ai/aiCardProps";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import type { AiEngineLimits } from "@editor/components/shared/config/configSections/aiEngineSettings";
+import type { AiCardProps } from "@editor/components/shared/config/configSections/ai/aiCardProps";
 
 /** Guardrails on request size and concurrency. Pushed to the engine live. */
 export function AiLimitsCard({

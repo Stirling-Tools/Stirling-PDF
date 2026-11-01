@@ -1,8 +1,8 @@
 import React from "react";
 import { Trans } from "react-i18next";
-import { SlideConfig } from "@app/types/types";
-import { createLightSlideBackground } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
-import styles from "@app/components/onboarding/slides/SaasOnboardingSlides.module.css";
+import { SlideConfig } from "@editor/types/types";
+import { createLightSlideBackground } from "@editor/components/onboarding/slides/unifiedBackgroundConfig";
+import styles from "@editor/components/onboarding/slides/SaasOnboardingSlides.module.css";
 
 // Stirling logo red (sampled from modern-logo/logo512.png)
 const FREE_EDITOR_BACKGROUND = createLightSlideBackground(

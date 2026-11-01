@@ -2,8 +2,8 @@ import i18n from "i18next";
 import {
   isEditorPolicyBlocked,
   isFileBlocked,
-} from "@app/services/policyBlockRegistry";
-export { policySourceIds } from "@app/services/policyBlockRegistry";
+} from "@editor/services/policyBlockRegistry";
+export { policySourceIds } from "@editor/services/policyBlockRegistry";
 
 /** A required policy prevents using or exporting the document. */
 export class PolicyBlockedError extends Error {

@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Text, Stack, SimpleGrid, Tooltip, Popover } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { iconMap, iconOptions } from "@app/components/tools/automate/iconMap";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import {
+  iconMap,
+  iconOptions,
+} from "@editor/components/tools/automate/iconMap";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface IconSelectorProps {
   value?: string;

@@ -6,14 +6,14 @@ const { getCurrentModeMock, subscribeToModeChangesMock } = vi.hoisted(() => ({
   subscribeToModeChangesMock: vi.fn(),
 }));
 
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentMode: getCurrentModeMock,
     subscribeToModeChanges: subscribeToModeChangesMock,
   },
 }));
 
-import { useConfirmedSaaSMode } from "@app/hooks/useConfirmedSaaSMode";
+import { useConfirmedSaaSMode } from "@editor/hooks/useConfirmedSaaSMode";
 
 describe("useConfirmedSaaSMode", () => {
   beforeEach(() => {

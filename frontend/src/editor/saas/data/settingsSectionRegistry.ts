@@ -1,4 +1,4 @@
-import { type SettingsSectionEntry } from "@core/data/settingsSectionRegistry";
+import { type SettingsSectionEntry } from "@editor-core/data/settingsSectionRegistry";
 
 export type { SettingsSectionEntry };
 

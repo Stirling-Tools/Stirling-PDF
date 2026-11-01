@@ -1,16 +1,16 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import { useGoogleDrivePicker } from "@app/hooks/useGoogleDrivePicker";
-import { allowConsole } from "@app/tests/failOnConsole";
+import { useGoogleDrivePicker } from "@editor/hooks/useGoogleDrivePicker";
+import { allowConsole } from "@editor/tests/failOnConsole";
 
 const service = vi.hoisted(() => ({
   initialize: vi.fn().mockResolvedValue(undefined),
   openPicker: vi.fn(),
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { googleDriveEnabled: true } }),
 }));
-vi.mock("@app/services/googleDrivePickerService", () => ({
+vi.mock("@editor/services/googleDrivePickerService", () => ({
   extractGoogleDriveBackendConfig: () => ({}),
   isGoogleDriveConfigured: () => true,
   getGoogleDriveConfig: () => ({}),

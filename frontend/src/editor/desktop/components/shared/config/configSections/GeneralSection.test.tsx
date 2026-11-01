@@ -1,20 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
-import { SoftwareUpdatesCard } from "@app/components/shared/config/configSections/preferences/SoftwareUpdatesCard";
-import type { PreferencesSectionProps } from "@app/components/shared/config/configSections/preferences/PreferencesSection";
+import GeneralSection from "@editor/components/shared/config/configSections/GeneralSection";
+import { SoftwareUpdatesCard } from "@editor/components/shared/config/configSections/preferences/SoftwareUpdatesCard";
+import type { PreferencesSectionProps } from "@editor/components/shared/config/configSections/preferences/PreferencesSection";
 import {
   desktopUpdateService,
   type UpdateModeInfo,
-} from "@app/services/desktopUpdateService";
-import { updateService } from "@app/services/updateService";
+} from "@editor/services/desktopUpdateService";
+import { updateService } from "@editor/services/updateService";
 
 const { checkTauriUpdate } = vi.hoisted(() => ({
   checkTauriUpdate: vi.fn().mockResolvedValue(false),
 }));
 
-vi.mock("@app/hooks/useDesktopInstall", () => ({
+vi.mock("@editor/hooks/useDesktopInstall", () => ({
   useDesktopInstall: () => ({
     state: "idle",
     progress: null,
@@ -25,14 +25,14 @@ vi.mock("@app/hooks/useDesktopInstall", () => ({
     checkTauriUpdate,
   }),
 }));
-vi.mock("@app/services/desktopUpdateService", () => ({
+vi.mock("@editor/services/desktopUpdateService", () => ({
   desktopUpdateService: {
     getUpdateModeInfo: vi.fn(),
     setUpdateMode: vi.fn(),
   },
 }));
 vi.mock(
-  "@core/components/shared/config/configSections/preferences/PreferencesSection",
+  "@editor-core/components/shared/config/configSections/preferences/PreferencesSection",
   () => ({
     default: ({
       hideUpdateSection,
@@ -48,20 +48,22 @@ vi.mock(
   }),
 );
 vi.mock(
-  "@app/components/shared/config/configSections/DefaultAppSettings",
+  "@editor/components/shared/config/configSections/DefaultAppSettings",
   () => ({
     DefaultAppSettings: () => null,
   }),
 );
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { appVersion: "3.0.1" } }),
 }));
 vi.mock("@tauri-apps/api/app", () => ({
   getVersion: vi.fn().mockResolvedValue("3.0.1"),
 }));
-vi.mock("@app/hooks/useSaaSMode", () => ({ useSaaSMode: () => true }));
-vi.mock("@app/components/shared/UpdateModal", () => ({ default: () => null }));
-vi.mock("@app/ui/Icon", () => ({ Icon: () => null }));
+vi.mock("@editor/hooks/useSaaSMode", () => ({ useSaaSMode: () => true }));
+vi.mock("@editor/components/shared/UpdateModal", () => ({
+  default: () => null,
+}));
+vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));

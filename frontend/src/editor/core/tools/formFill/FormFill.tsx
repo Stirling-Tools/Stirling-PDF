@@ -18,44 +18,44 @@ import {
   Tooltip,
   Stack,
 } from "@mantine/core";
-import { createToolSteps } from "@app/components/tools/shared/ToolStep";
-import { UnsavedChangesDialog } from "@app/components/shared/UnsavedChangesDialog";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { createToolSteps } from "@editor/components/tools/shared/ToolStep";
+import { UnsavedChangesDialog } from "@editor/components/shared/UnsavedChangesDialog";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
 import {
   useFormFill,
   useAllFormValues,
-} from "@app/tools/formFill/FormFillContext";
-import { useNavigation } from "@app/contexts/NavigationContext";
-import { useFieldShortcuts } from "@app/tools/formFill/useFieldShortcuts";
-import { serverMessage } from "@app/tools/formFill/useFormCommit";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { useAllFiles, useFileState } from "@app/contexts/FileContext";
+} from "@editor/tools/formFill/FormFillContext";
+import { useNavigation } from "@editor/contexts/NavigationContext";
+import { useFieldShortcuts } from "@editor/tools/formFill/useFieldShortcuts";
+import { serverMessage } from "@editor/tools/formFill/useFormCommit";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { useAllFiles, useFileState } from "@editor/contexts/FileContext";
 import { Skeleton } from "@mantine/core";
-import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
-import type { BaseToolProps } from "@app/types/tool";
-import type { FormField } from "@app/tools/formFill/types";
-import { FieldInput } from "@app/tools/formFill/FieldInput";
+import { isStirlingFile, getFormFillFileId } from "@editor/types/fileContext";
+import type { BaseToolProps } from "@editor/types/tool";
+import type { FormField } from "@editor/tools/formFill/types";
+import { FieldInput } from "@editor/tools/formFill/FieldInput";
 import {
   FIELD_TYPE_ICON,
   FIELD_TYPE_COLOR,
-} from "@app/tools/formFill/fieldMeta";
-import { Icon } from "@app/ui/Icon";
+} from "@editor/tools/formFill/fieldMeta";
+import { Icon } from "@editor/ui/Icon";
 import {
   extractFormFieldsCsv,
   extractFormFieldsXlsx,
-} from "@app/tools/formFill/formApi";
-import type { FormMode } from "@app/tools/formFill/types";
-import { FormFieldCreatePanel } from "@app/tools/formFill/FormFieldCreatePanel";
-import { FormFieldModifyPanel } from "@app/tools/formFill/FormFieldModifyPanel";
-import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
-import { dispatchFormApply } from "@app/tools/formFill/formFillEvents";
-import { useFormAutoMode } from "@app/tools/formFill/useFormAutoMode";
-import styles from "@app/tools/formFill/FormFill.module.css";
+} from "@editor/tools/formFill/formApi";
+import type { FormMode } from "@editor/tools/formFill/types";
+import { FormFieldCreatePanel } from "@editor/tools/formFill/FormFieldCreatePanel";
+import { FormFieldModifyPanel } from "@editor/tools/formFill/FormFieldModifyPanel";
+import { assertFilesNotBlocked } from "@editor/services/policyFileGuard";
+import { dispatchFormApply } from "@editor/tools/formFill/formFillEvents";
+import { useFormAutoMode } from "@editor/tools/formFill/useFormAutoMode";
+import styles from "@editor/tools/formFill/FormFill.module.css";
 
 // ---------------------------------------------------------------------------
 // Mode tabs — extensible for future form tools

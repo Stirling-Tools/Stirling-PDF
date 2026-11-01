@@ -1,7 +1,7 @@
 import { useId } from "react";
 import { Stack, Text, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
+import { AddWatermarkParameters } from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
 
 interface WatermarkStyleSettingsProps {
   parameters: AddWatermarkParameters;

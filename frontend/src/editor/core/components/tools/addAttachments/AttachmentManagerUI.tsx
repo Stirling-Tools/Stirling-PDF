@@ -9,13 +9,13 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { Button as DSButton } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { FilePicker } from "@app/ui/FilePicker";
-import { AttachmentRow } from "@app/components/tools/addAttachments/AttachmentRow";
-import { DraftAttachmentRow } from "@app/hooks/tools/addAttachments/useAttachmentManager";
+import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { Button as DSButton } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { FilePicker } from "@editor/ui/FilePicker";
+import { AttachmentRow } from "@editor/components/tools/addAttachments/AttachmentRow";
+import { DraftAttachmentRow } from "@editor/hooks/tools/addAttachments/useAttachmentManager";
 
 export interface AttachmentManagerUIProps {
   rows: DraftAttachmentRow[];

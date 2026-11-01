@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AttachmentSidebar } from "@app/components/viewer/AttachmentSidebar";
+import { AttachmentSidebar } from "@editor/components/viewer/AttachmentSidebar";
 
 const mocks = vi.hoisted(() => ({
   setActiveFileId: vi.fn(),
@@ -26,18 +26,18 @@ const viewer = vi.hoisted(() => ({
   toggleAttachmentSidebar: vi.fn(),
 }));
 
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => ({ ...viewer, setActiveFileId: mocks.setActiveFileId }),
 }));
 
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => ({ files: mocks.libraryFiles }),
   useFileManagement: () => ({ addFiles: mocks.addFiles }),
 }));
 
 const toolWorkflow = vi.hoisted(() => ({ handleToolSelectForced: vi.fn() }));
 
-vi.mock("@app/contexts/ToolWorkflowContext", () => ({
+vi.mock("@editor/contexts/ToolWorkflowContext", () => ({
   useToolWorkflow: () => ({
     ...toolWorkflow,
     previewFile: null,
@@ -48,13 +48,13 @@ vi.mock("@app/contexts/ToolWorkflowContext", () => ({
 
 // The real shell wraps the list in a Mantine ScrollArea, which re-renders
 // without bound under jsdom's zero-sized layout.
-vi.mock("@app/components/viewer/SidebarBase", () => ({
+vi.mock("@editor/components/viewer/SidebarBase", () => ({
   SidebarBase: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
 }));
 
-vi.mock("@app/utils/portfolioMembers", () => ({
+vi.mock("@editor/utils/portfolioMembers", () => ({
   readPortfolioMemberBytes: mocks.readPortfolioMemberBytes,
 }));
 

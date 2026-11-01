@@ -1,4 +1,4 @@
-import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
+import type { FileItemPolicyRef } from "@editor/components/shared/PolicyBadges";
 
 /** Minimal provenance shape needed to resolve a file's inherited badges. */
 export type LineageStub = {

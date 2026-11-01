@@ -1,4 +1,4 @@
-import type { UsersCapabilities } from "@portal/api/usersCapabilities";
+import type { UsersCapabilities } from "@processor/api/usersCapabilities";
 
 /**
  * Self-hosted (proprietary) build: org-admin scope - the full set. Matches the

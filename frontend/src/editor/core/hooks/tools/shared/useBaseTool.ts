@@ -1,10 +1,10 @@
 import { useEffect, useCallback, useRef } from "react";
-import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
-import { BaseToolProps } from "@app/types/tool";
-import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
-import { BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
-import { StirlingFile } from "@app/types/fileContext";
+import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
+import { BaseToolProps } from "@editor/types/tool";
+import { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
+import { BaseParametersHook } from "@editor/hooks/tools/shared/useBaseParameters";
+import { StirlingFile } from "@editor/types/fileContext";
 
 interface BaseToolReturn<
   TParams,

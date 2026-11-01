@@ -1,35 +1,35 @@
 import { useNavigate } from "react-router-dom";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Alert, Center, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { SigningSessionsTable } from "@app/components/shared/signing/SigningSessionsTable";
-import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
-import { useAuth } from "@app/auth/UseSession";
-import { useSigningSessionController } from "@app/hooks/signing/useSigningSessionController";
-import { useAllFiles } from "@app/contexts/FileContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useNavigationGuard } from "@app/contexts/NavigationContext";
-import { SigningDocumentPicker } from "@app/components/shared/signing/SigningDocumentPicker";
-import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
-import { CreateSessionFlow } from "@app/components/shared/signing/CreateSessionFlow";
-import { SessionDetailPanel } from "@app/components/tools/certSign/panels/SessionDetailPanel";
-import SignRequestPanel from "@app/components/tools/certSign/panels/SignRequestPanel";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { SigningSessionsTable } from "@editor/components/shared/signing/SigningSessionsTable";
+import { useGroupSigningEnabled } from "@editor/hooks/useGroupSigningEnabled";
+import { useAuth } from "@editor/auth/UseSession";
+import { useSigningSessionController } from "@editor/hooks/signing/useSigningSessionController";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useNavigationGuard } from "@editor/contexts/NavigationContext";
+import { SigningDocumentPicker } from "@editor/components/shared/signing/SigningDocumentPicker";
+import { useSigningOverlay } from "@editor/contexts/SigningOverlayContext";
+import { CreateSessionFlow } from "@editor/components/shared/signing/CreateSessionFlow";
+import { SessionDetailPanel } from "@editor/components/tools/certSign/panels/SessionDetailPanel";
+import SignRequestPanel from "@editor/components/tools/certSign/panels/SignRequestPanel";
 import {
   collectSigningItems,
   getSigningItemToOpen,
   type SigningItem,
-} from "@app/utils/signingItems";
-import { useSigningActivity } from "@app/hooks/signing/useSigningActivity";
+} from "@editor/utils/signingItems";
+import { useSigningActivity } from "@editor/hooks/signing/useSigningActivity";
 import {
   requestSigningIntent,
   usePendingSigningIntent,
-} from "@app/utils/pendingSigningIntent";
-import "@app/components/shared/signing/signing.css";
+} from "@editor/utils/pendingSigningIntent";
+import "@editor/components/shared/signing/signing.css";
 
-const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
+const Viewer = lazy(() => import("@editor/components/viewer/Viewer"));
 
 /** Guests are told to sign in rather than that the server has signing off. */
 function SigningUnavailableNotice() {

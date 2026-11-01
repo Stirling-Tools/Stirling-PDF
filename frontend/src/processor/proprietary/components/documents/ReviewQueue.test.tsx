@@ -7,11 +7,11 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
-import type { ReviewDocument } from "@portal/api/documents";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { UIProvider } from "@portal/contexts/UIContext";
-import { ReviewQueue } from "@portal/components/documents/ReviewQueue";
+import type { ReviewDocument } from "@processor/api/documents";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
+import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
+import { UIProvider } from "@processor/contexts/UIContext";
+import { ReviewQueue } from "@processor/components/documents/ReviewQueue";
 
 // Deterministic i18n: keys returned verbatim.
 vi.mock("react-i18next", () => ({
@@ -29,10 +29,10 @@ vi.mock("react-router-dom", async (importOriginal) => {
 
 // Isolate ReviewQueue's own branching: stub the heavy children so the test
 // doesn't need TierProvider (DocumentDrawer → useTier) or the real table body.
-vi.mock("@portal/components/documents/DocumentDrawer", () => ({
+vi.mock("@processor/components/documents/DocumentDrawer", () => ({
   DocumentDrawer: () => null,
 }));
-vi.mock("@portal/components/documents/ReviewQueueTable", () => ({
+vi.mock("@processor/components/documents/ReviewQueueTable", () => ({
   ReviewQueueTable: () => null,
 }));
 

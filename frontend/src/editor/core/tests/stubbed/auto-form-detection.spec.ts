@@ -3,11 +3,11 @@ import {
   bypassOnboarding,
   mockAppApis,
   seedCookieConsent,
-} from "@app/tests/helpers/api-stubs";
+} from "@editor/tests/helpers/api-stubs";
 import {
   SETTINGS_SURFACE,
   revealPickerTool,
-} from "@app/tests/helpers/ui-helpers";
+} from "@editor/tests/helpers/ui-helpers";
 
 /**
  * Stubbed coverage for the tool tile (shown even when the endpoint is disabled, so the tool stays

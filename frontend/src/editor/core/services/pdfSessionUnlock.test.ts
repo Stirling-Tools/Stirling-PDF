@@ -1,30 +1,30 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import axios from "axios";
 import JSZip from "jszip";
-import { zipFileService } from "@app/services/zipFileService";
-import { createStirlingFile } from "@app/types/fileContext";
+import { zipFileService } from "@editor/services/zipFileService";
+import { createStirlingFile } from "@editor/types/fileContext";
 import {
   clearPdfAccess,
   forgetPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 import {
   hasPdfPermissionOverride,
   pdfAllows,
-} from "@app/services/pdfPermissions";
+} from "@editor/services/pdfPermissions";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
   assertPdfSessionEditable,
   preflightPdfOperation,
   changePdfSecurity,
-} from "@app/services/pdfSessionUnlock";
+} from "@editor/services/pdfSessionUnlock";
 import { PdfPermissionFlag } from "@embedpdf/models";
 
-vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@editor/services/apiClient", () => ({ default: { post: vi.fn() } }));
 const post = vi.mocked(apiClient.post);
 const access: PdfAccess = {
   password: " password\n",

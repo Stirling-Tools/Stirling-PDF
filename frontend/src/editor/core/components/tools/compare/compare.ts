@@ -1,7 +1,10 @@
-import type { TokenBoundingBox, WordHighlightEntry } from "@app/types/compare";
-import type { FileId } from "@app/types/file";
-import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
-import type { PagePreview } from "@app/types/compare";
+import type {
+  TokenBoundingBox,
+  WordHighlightEntry,
+} from "@editor/types/compare";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFile, StirlingFileStub } from "@editor/types/fileContext";
+import type { PagePreview } from "@editor/types/compare";
 
 /** Normalize rotation to [0, 360). */
 export const normalizeRotation = (deg: number | undefined | null): number => {

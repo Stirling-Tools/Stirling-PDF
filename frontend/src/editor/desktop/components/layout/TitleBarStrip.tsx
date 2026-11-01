@@ -2,9 +2,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isTauri } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { getDesktopOs, DesktopOs } from "@app/services/platformService";
-import styles from "@app/components/layout/TitleBarStrip.module.css";
+import { Icon } from "@editor/ui/Icon";
+import { getDesktopOs, DesktopOs } from "@editor/services/platformService";
+import styles from "@editor/components/layout/TitleBarStrip.module.css";
 
 // Seed the OS side from the UA so the correct reservation (macOS lights left /
 // Windows controls right) is present on the first frame; getDesktopOs() confirms

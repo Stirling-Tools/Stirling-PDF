@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
+import ErrorNotification from "@editor/components/tools/shared/ErrorNotification";
 
 const meta = {
   title: "ToolsShared/ErrorNotification",

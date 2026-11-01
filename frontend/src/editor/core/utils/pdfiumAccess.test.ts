@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { PdfPermissionFlag as Permission } from "@embedpdf/models";
-import { readPdfiumAccess } from "@app/utils/pdfiumAccess";
-import { pdfAllows, canPrintPdf } from "@app/services/pdfPermissions";
+import { readPdfiumAccess } from "@editor/utils/pdfiumAccess";
+import { pdfAllows, canPrintPdf } from "@editor/services/pdfPermissions";
 
 function moduleFor(
   permissions: number,

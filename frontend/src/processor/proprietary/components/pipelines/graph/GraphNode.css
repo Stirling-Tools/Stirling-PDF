@@ -1,5 +1,5 @@
 /**
- * Graph-only extras layered on the shared NodeCard tile (see @app/ui/NodeCard): the config warning
+ * Graph-only extras layered on the shared NodeCard tile (see @editor/ui/NodeCard): the config warning
  * line, drag dimming, the remove control and run-state glyphs. The surface, selection ring and
  * icon/title/detail layout all live in NodeCard.
  */

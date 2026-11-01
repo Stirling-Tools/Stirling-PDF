@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import TeamSection from "@app/components/shared/config/configSections/TeamSection";
+import TeamSection from "@editor/components/shared/config/configSections/TeamSection";
 
 const { post, refreshTeams, refreshSession, teamState } = vi.hoisted(() => ({
   teamState: { available: true, loading: false },
@@ -10,11 +10,11 @@ const { post, refreshTeams, refreshSession, teamState } = vi.hoisted(() => ({
   refreshSession: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("@app/services/apiClient", () => ({ default: { post } }));
-vi.mock("@app/auth/teamSession", () => ({
+vi.mock("@editor/services/apiClient", () => ({ default: { post } }));
+vi.mock("@editor/auth/teamSession", () => ({
   useTeamAuth: () => ({ refreshAfterMembershipChange: refreshSession }),
 }));
-vi.mock("@app/contexts/SaaSTeamContext", () => ({
+vi.mock("@editor/contexts/SaaSTeamContext", () => ({
   useSaaSTeam: () => ({
     currentTeam: teamState.available
       ? { teamId: 9, name: "Acme", seatsUsed: 2 }

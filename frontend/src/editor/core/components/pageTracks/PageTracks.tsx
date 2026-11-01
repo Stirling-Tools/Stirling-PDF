@@ -23,45 +23,45 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { useFileActions, useFileState } from "@app/contexts/FileContext";
+import { useFileActions, useFileState } from "@editor/contexts/FileContext";
 import {
   useNavigationActions,
   useNavigationGuard,
-} from "@app/contexts/NavigationContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useWheelZoom } from "@app/hooks/useWheelZoom";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { truncateCenter } from "@app/utils/textUtils";
-import { FileId } from "@app/types/file";
-import { WorkbenchExportFile } from "@app/types/workbenchBar";
-import { useWorkbenchViewFileActions } from "@app/hooks/useWorkbenchViewFileActions";
-import { CloseFilesConfirmModal } from "@app/components/shared/CloseFilesConfirmModal";
-import { alert } from "@app/components/toast";
-import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
+} from "@editor/contexts/NavigationContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useWheelZoom } from "@editor/hooks/useWheelZoom";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { truncateCenter } from "@editor/utils/textUtils";
+import { FileId } from "@editor/types/file";
+import { WorkbenchExportFile } from "@editor/types/workbenchBar";
+import { useWorkbenchViewFileActions } from "@editor/hooks/useWorkbenchViewFileActions";
+import { CloseFilesConfirmModal } from "@editor/components/shared/CloseFilesConfirmModal";
+import { alert } from "@editor/components/toast";
+import { downloadFileWithPolicy } from "@editor/services/exportWithPolicy";
 import {
   PolicyBlockedError,
   assertFilesNotBlocked,
-} from "@app/services/policyFileGuard";
+} from "@editor/services/policyFileGuard";
 import {
   SelectedPagesLayout,
   buildSelectedPagesFiles,
   buildTrackFile,
   policyIdsForPages,
   policyIdsForTracks,
-} from "@app/components/pageTracks/buildTrackFile";
-import { tracksEntangledWith } from "@app/components/pageTracks/trackWorkspaceReducer";
-import { useTrackWorkspace } from "@app/components/pageTracks/hooks/useTrackWorkspace";
-import { useTrackSelection } from "@app/components/pageTracks/hooks/useTrackSelection";
-import { useTrackThumbnails } from "@app/components/pageTracks/hooks/useTrackThumbnails";
-import { useTrackSave } from "@app/components/pageTracks/hooks/useTrackSave";
-import { usePageTracksShortcuts } from "@app/components/pageTracks/hooks/usePageTracksShortcuts";
-import { usePageTracksWorkbenchBarButtons } from "@app/components/pageTracks/hooks/usePageTracksWorkbenchBarButtons";
-import { Track, totalPageCount } from "@app/components/pageTracks/types";
-import { opensAsTrack } from "@app/components/pageTracks/trackFileKind";
-import TrackRow, { DropHint } from "@app/components/pageTracks/TrackRow";
-import { DisabledFileTrack } from "@app/components/pageTracks/DisabledFileTrack";
-import { renameStoredFile } from "@app/services/renameStoredFile";
-import styles from "@app/components/pageTracks/PageTracks.module.css";
+} from "@editor/components/pageTracks/buildTrackFile";
+import { tracksEntangledWith } from "@editor/components/pageTracks/trackWorkspaceReducer";
+import { useTrackWorkspace } from "@editor/components/pageTracks/hooks/useTrackWorkspace";
+import { useTrackSelection } from "@editor/components/pageTracks/hooks/useTrackSelection";
+import { useTrackThumbnails } from "@editor/components/pageTracks/hooks/useTrackThumbnails";
+import { useTrackSave } from "@editor/components/pageTracks/hooks/useTrackSave";
+import { usePageTracksShortcuts } from "@editor/components/pageTracks/hooks/usePageTracksShortcuts";
+import { usePageTracksWorkbenchBarButtons } from "@editor/components/pageTracks/hooks/usePageTracksWorkbenchBarButtons";
+import { Track, totalPageCount } from "@editor/components/pageTracks/types";
+import { opensAsTrack } from "@editor/components/pageTracks/trackFileKind";
+import TrackRow, { DropHint } from "@editor/components/pageTracks/TrackRow";
+import { DisabledFileTrack } from "@editor/components/pageTracks/DisabledFileTrack";
+import { renameStoredFile } from "@editor/services/renameStoredFile";
+import styles from "@editor/components/pageTracks/PageTracks.module.css";
 
 const PAGE_PREFIX = "page:";
 const TRACK_PREFIX = "track:";

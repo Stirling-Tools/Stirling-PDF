@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import type { LinkedInstanceRow } from "@app/types/linkedInstance";
-import "@app/components/settings/AccountConnectionLayout.css";
+import { Button } from "@editor/ui/Button";
+import type { LinkedInstanceRow } from "@editor/types/linkedInstance";
+import "@editor/components/settings/AccountConnectionLayout.css";
 
 interface Props {
   instance: LinkedInstanceRow;

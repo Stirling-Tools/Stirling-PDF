@@ -2,12 +2,12 @@ import { useMemo } from "react";
 import {
   useTranslatedToolCatalog as useCoreCatalog,
   type TranslatedToolCatalog,
-} from "@core/data/useTranslatedToolRegistry";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
-import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
-import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+} from "@editor-core/data/useTranslatedToolRegistry";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
+import { useMultipleEndpointsEnabled } from "@editor/hooks/useEndpointConfig";
+import type { ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
 
-export type { TranslatedToolCatalog } from "@core/data/useTranslatedToolRegistry";
+export type { TranslatedToolCatalog } from "@editor-core/data/useTranslatedToolRegistry";
 
 /** Hide server-only tools from every catalogue consumer, including search and favourites. */
 export function useTranslatedToolCatalog(): TranslatedToolCatalog {

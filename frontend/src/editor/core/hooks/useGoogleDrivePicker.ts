@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import {
   getGoogleDrivePickerService,
   isGoogleDriveConfigured,
   getGoogleDriveConfig,
   extractGoogleDriveBackendConfig,
-} from "@app/services/googleDrivePickerService";
+} from "@editor/services/googleDrivePickerService";
 
 interface UseGoogleDrivePickerOptions {
   multiple?: boolean;

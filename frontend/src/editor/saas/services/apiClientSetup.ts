@@ -1,5 +1,5 @@
 import type { AxiosInstance } from "axios";
-import { getAccessToken } from "@app/auth/session";
+import { getAccessToken } from "@editor/auth/session";
 
 /** SaaS auth headers for raw fetch() calls — access token from current session. */
 export async function getAuthHeaders(): Promise<Record<string, string>> {

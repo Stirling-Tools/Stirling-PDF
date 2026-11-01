@@ -1,5 +1,5 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { getDroppedBase14Chars } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { getDroppedBase14Chars } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 
 // Only losses that are HIGH-confidence under the save path: signatures (the
 // save goes incremental), XFA, encryption, and characters an edit had to drop.

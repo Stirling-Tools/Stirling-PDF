@@ -1,4 +1,4 @@
-import type { Wallet } from "@app/billing/types";
+import type { Wallet } from "@editor/billing/types";
 
 /** Free monthly grant, leader view. Override per story. */
 export const freeWallet: Wallet = {

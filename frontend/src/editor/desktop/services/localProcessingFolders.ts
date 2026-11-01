@@ -1,25 +1,25 @@
-import { directoryKey } from "@app/services/localFolderStorage";
+import { directoryKey } from "@editor/services/localFolderStorage";
 import {
   isWithinMount,
   listDirectory,
   readDiskFile,
   writeDiskFile,
-} from "@app/services/localFolderContents";
+} from "@editor/services/localFolderContents";
 import {
   localProcessingFolderStorage as storage,
   type LocalProcessingFolder,
   type LocalProcessingFile,
-} from "@app/services/localProcessingFolderStorage";
+} from "@editor/services/localProcessingFolderStorage";
 import {
   getServerAutomationSession,
   requireAutomationSession,
   type ServerAutomationSession,
-} from "@app/services/serverAutomationSession";
+} from "@editor/services/serverAutomationSession";
 import {
   submitServerPipeline,
   waitForServerPipeline,
   downloadServerPipelineOutput,
-} from "@app/services/serverPipeline";
+} from "@editor/services/serverPipeline";
 import {
   archiveProcessingInput,
   processingFileState,
@@ -30,15 +30,15 @@ import {
   removeProcessingOutput,
   requireUnchangedProcessingFile,
   sameProcessingFile,
-} from "@app/services/localProcessingDelivery";
+} from "@editor/services/localProcessingDelivery";
 import type {
   ProcessingFolderStep,
   SaveProcessingFolderRequest,
   SweepOutcome,
-} from "@app/services/processingFolderApi";
-import type { BackendPipelineStep } from "@app/services/policyPipeline";
-import { generateId } from "@app/utils/generateId";
-import { reconcileLocalProcessingOriginals } from "@app/services/localProcessingOriginals";
+} from "@editor/services/processingFolderApi";
+import type { BackendPipelineStep } from "@editor/services/policyPipeline";
+import { generateId } from "@editor/utils/generateId";
+import { reconcileLocalProcessingOriginals } from "@editor/services/localProcessingOriginals";
 
 const running = new Map<string, Promise<void>>();
 const cancelled = new Set<string>();

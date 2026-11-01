@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SessionDetailPanel } from "@app/components/tools/certSign/panels/SessionDetailPanel";
-import type { SigningDetailData } from "@app/hooks/signing/useSigningSessionController";
-import type { SessionDetail } from "@app/types/signingSession";
+import { SessionDetailPanel } from "@editor/components/tools/certSign/panels/SessionDetailPanel";
+import type { SigningDetailData } from "@editor/hooks/signing/useSigningSessionController";
+import type { SessionDetail } from "@editor/types/signingSession";
 
 const baseSession: SessionDetail = {
   sessionId: "session-1",

@@ -8,10 +8,10 @@ import {
   ThemeIcon,
   Tooltip,
 } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
-import { isEnforcedPolicy } from "@app/services/policyStorage";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { policyCategoryIcon } from "@editor/components/policies/policyCategoryIcon";
+import { isEnforcedPolicy } from "@editor/services/policyStorage";
 import { useTranslation } from "react-i18next";
 
 interface PolicyEnforcingOverlayProps {

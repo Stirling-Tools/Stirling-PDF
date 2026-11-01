@@ -1,10 +1,10 @@
-import { AccountConnectionRefresh } from "@app/portal/components/account-link/AccountConnectionNotice";
+import { AccountConnectionRefresh } from "@editor/portal/components/account-link/AccountConnectionNotice";
 import { useLocation } from "react-router-dom";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { ErrorBoundary } from "@app/portal/components/ErrorBoundary";
-import { AppShell } from "@app/portal/components/AppShell";
-import { ViewRouter } from "@app/portal/ViewRouter";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { ErrorBoundary } from "@editor/portal/components/ErrorBoundary";
+import { AppShell } from "@editor/portal/components/AppShell";
+import { ViewRouter } from "@editor/portal/ViewRouter";
 
 /**
  * The routed view, wrapped in an error boundary so a single view crashing can't

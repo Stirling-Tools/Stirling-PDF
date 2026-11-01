@@ -3,12 +3,12 @@
 
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { accentColor } from "@app/utils/accentColors";
+import { accentColor } from "@editor/utils/accentColors";
 import {
   groupColour,
   type ClassificationDemoGroupCount,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSweep";
-import styles from "@app/components/onboarding/classificationDemo/classificationDemo.module.css";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSweep";
+import styles from "@editor/components/onboarding/classificationDemo/classificationDemo.module.css";
 
 const SIZE = 260;
 const RADIUS = 108;

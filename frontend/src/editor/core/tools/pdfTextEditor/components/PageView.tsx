@@ -1,19 +1,27 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { PdfiumPageRenderer } from "@app/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
-import { TextRunOverlay } from "@app/tools/pdfTextEditor/components/TextRunOverlay";
-import { TableOverlay } from "@app/tools/pdfTextEditor/components/TableOverlay";
-import { ImageHandle } from "@app/tools/pdfTextEditor/components/ImageHandle";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import { ShapeHandle } from "@app/tools/pdfTextEditor/components/ShapeHandle";
-import { AnnotationOutline } from "@app/tools/pdfTextEditor/components/AnnotationOutline";
-import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
-import { PageGuides } from "@app/tools/pdfTextEditor/components/PageRulers";
-import { useDevicePixelRatio } from "@app/tools/pdfTextEditor/hooks/useDevicePixelRatio";
+import { Button } from "@editor/ui/Button";
+import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type {
+  PageSnapshot,
+  TextRange,
+} from "@editor/tools/pdfTextEditor/types";
+import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
+import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
+import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
+import {
+  imageAttention,
+  type ImageAttention,
+} from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import { ImageHandle } from "@editor/tools/pdfTextEditor/components/ImageHandle";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import { ShapeHandle } from "@editor/tools/pdfTextEditor/components/ShapeHandle";
+import { AnnotationOutline } from "@editor/tools/pdfTextEditor/components/AnnotationOutline";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { PageGuides } from "@editor/tools/pdfTextEditor/components/PageRulers";
+import { useDevicePixelRatio } from "@editor/tools/pdfTextEditor/hooks/useDevicePixelRatio";
 
 interface PageViewProps {
   document: EditorDocument;
@@ -25,7 +33,7 @@ interface PageViewProps {
   /** Fires when the page's bitmap finishes its first render. */
   onFirstRendered?: (pageIndex: number) => void;
   scale: number;
-  widthMode: import("@app/tools/pdfTextEditor/types").WidthMode;
+  widthMode: import("@editor/tools/pdfTextEditor/types").WidthMode;
   /** Show the page rulers and alignment guides. */
   showRulers?: boolean;
   selectedRunIds: string[];
@@ -44,6 +52,10 @@ interface PageViewProps {
     dy: number,
   ) => void;
   onEditRun: (pageIndex: number, runId: string, nextText: string) => void;
+  /** The characters selected inside a run's box, while it has focus. */
+  onSelectRunText?: (runId: string, range: TextRange | null) => void;
+  /** The characters selected inside the one selected run. */
+  selectedTextRange?: TextRange | null;
   /** Ctrl+drag committed; dx/dy in PDF points. */
   onMoveRun?: (
     pageIndex: number,
@@ -97,6 +109,8 @@ export function PageView({
   onSelectShape,
   onMoveShape,
   onEditRun,
+  onSelectRunText,
+  selectedTextRange,
   onMoveRun,
   onWrapRun,
   onResizeRun,
@@ -106,6 +120,15 @@ export function PageView({
   onFirstRendered,
 }: PageViewProps) {
   const { t } = useTranslation();
+  const imageAttentions = useMemo(() => {
+    const out = new Map<string, ImageAttention>();
+    if (!ACCESSIBILITY_EDITING) return out;
+    for (const image of page.images) {
+      const attention = imageAttention(document, image);
+      if (attention) out.set(image.id, attention);
+    }
+    return out;
+  }, [document, page]);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   // `raster` is the CSS layout size; the bitmap itself renders at deviceScale
@@ -379,6 +402,7 @@ export function PageView({
             onTransformCommit={(next) =>
               onTransformImage?.(page.pageIndex, image.id, next)
             }
+            attention={imageAttentions.get(image.id) ?? null}
           />
         ))}
         {/* Grid + empty-cell editors sit below the run overlays so filled
@@ -403,6 +427,16 @@ export function PageView({
             highlighted={highlightedRunId === run.id}
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
             onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
+            onTextRangeChange={
+              ACCESSIBILITY_EDITING
+                ? (range) => onSelectRunText?.(run.id, range)
+                : undefined
+            }
+            textRange={
+              selectedRunIds.length === 1 && selectedRunIds[0] === run.id
+                ? selectedTextRange
+                : null
+            }
             onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
             onWrap={(maxWidthPt) =>
               onWrapRun?.(page.pageIndex, run.id, maxWidthPt)

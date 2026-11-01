@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth";
-import { Button } from "@app/ui";
-import { formatPeriodDate } from "@app/billing";
-import { useAccountLinkBlock } from "@app/services/accountLinkBlock";
-import { useFreeTierBalance } from "@portal/hooks/useFreeTierBalance";
-import { useLinkOptional } from "@portal/contexts/LinkContext";
-import { useUI } from "@portal/contexts/UIContext";
-import "@portal/components/ConnectAccountRail.css";
+import { useAuth } from "@editor/auth";
+import { Button } from "@editor/ui";
+import { formatPeriodDate } from "@editor/billing";
+import { useAccountLinkBlock } from "@editor/services/accountLinkBlock";
+import { useFreeTierBalance } from "@processor/hooks/useFreeTierBalance";
+import { useLinkOptional } from "@processor/contexts/LinkContext";
+import { useUI } from "@processor/contexts/UIContext";
+import "@processor/components/ConnectAccountRail.css";
 
 /** The exhausted allowance stays actionable across Processor routes, even after the dialog closes. */
 export function ConnectAccountRail() {

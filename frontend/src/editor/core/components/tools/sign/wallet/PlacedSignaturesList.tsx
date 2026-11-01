@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { DrawingControls } from "@app/components/annotation/shared/DrawingControls";
-import type { PlacedSignature } from "@app/contexts/SignatureContext";
-import type { HistoryAvailability } from "@app/hooks/useHistoryAvailability";
-import styles from "@app/components/tools/sign/wallet/PlacedSignaturesList.module.css";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { DrawingControls } from "@editor/components/annotation/shared/DrawingControls";
+import type { PlacedSignature } from "@editor/contexts/SignatureContext";
+import type { HistoryAvailability } from "@editor/hooks/useHistoryAvailability";
+import styles from "@editor/components/tools/sign/wallet/PlacedSignaturesList.module.css";
 
 interface PlacedSignaturesListProps {
   placed: PlacedSignature[];

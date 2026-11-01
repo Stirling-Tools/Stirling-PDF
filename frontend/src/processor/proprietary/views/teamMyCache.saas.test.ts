@@ -13,9 +13,9 @@ import { http, HttpResponse } from "msw";
 import {
   getPortalQueryClient,
   resetPortalQueryClient,
-} from "@portal/queryClient";
-import { qk } from "@portal/queries/keys";
-import { usersBackend } from "@app/portal/usersBackend";
+} from "@processor/queryClient";
+import { qk } from "@processor/queries/keys";
+import { usersBackend } from "@editor/portal/usersBackend";
 
 /**
  * The SaaS team resolution (/team/my) is read through the shared query cache so
@@ -27,19 +27,19 @@ import { usersBackend } from "@app/portal/usersBackend";
  */
 
 // Keep apiClient.local's transport hermetic (no real token at import).
-vi.mock("@app/auth", () => ({
+vi.mock("@editor/auth", () => ({
   getStoredToken: () => null,
   clearStoredToken: vi.fn(),
 }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => null,
   configureSupabase: vi.fn(),
 }));
-// The portal test project's @app points at proprietary; resolve the flavor seam
+// The portal test project's @editor points at proprietary; resolve the flavor seam
 // to the real SaaS backend (same approach as Users.saas.test).
-vi.mock("@app/portal/usersBackend", async () => ({
+vi.mock("@editor/portal/usersBackend", async () => ({
   usersBackend:
-    // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @app alias
+    // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @editor alias
     (await import("../../../editor/saas/portal/usersBackend")).usersBackend,
 }));
 

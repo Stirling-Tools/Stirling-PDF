@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
-import { AuthProvider } from "@app/auth";
-import { AuthGate } from "@portal/components/AuthGate";
+import { AuthProvider } from "@editor/auth";
+import { AuthGate } from "@processor/components/AuthGate";
 
 /**
  * The self-hosted Processor owns its Spring session provider and uses the shared

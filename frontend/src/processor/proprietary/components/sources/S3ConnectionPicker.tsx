@@ -1,4 +1,4 @@
-import { ConnectionPicker } from "@portal/components/sources/ConnectionPicker";
+import { ConnectionPicker } from "@processor/components/sources/ConnectionPicker";
 
 /**
  * The S3 slot on a source or pipeline output. A thin alias over {@link ConnectionPicker} so the

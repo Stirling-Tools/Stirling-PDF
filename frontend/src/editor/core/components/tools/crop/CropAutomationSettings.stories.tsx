@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import CropAutomationSettings from "@app/components/tools/crop/CropAutomationSettings";
+import CropAutomationSettings from "@editor/components/tools/crop/CropAutomationSettings";
 import {
   CropParameters,
   defaultParameters,
-} from "@app/hooks/tools/crop/useCropParameters";
+} from "@editor/hooks/tools/crop/useCropParameters";
 
 const meta = {
   title: "Tools/Crop/CropAutomationSettings",

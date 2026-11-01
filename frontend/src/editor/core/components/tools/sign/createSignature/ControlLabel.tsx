@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import styles from "@app/components/tools/sign/createSignature/ControlLabel.module.css";
+import styles from "@editor/components/tools/sign/createSignature/ControlLabel.module.css";
 
 interface ControlLabelProps {
   id?: string;

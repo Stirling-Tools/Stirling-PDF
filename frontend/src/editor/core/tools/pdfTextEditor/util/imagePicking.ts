@@ -1,6 +1,6 @@
 // Picking and decoding a replacement image. The toolbar renders in the
 // workbench, a different React tree from the panel owning the file inputs.
-import type { DecodedImage } from "@app/utils/pdfiumBitmapUtils";
+import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
 
 export interface PickedImage {
   decoded: DecodedImage;

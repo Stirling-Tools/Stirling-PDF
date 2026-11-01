@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
-import { clearPolicies } from "@app/services/policyStorage";
-import { resetPolicyRuns } from "@app/components/policies/policyRunStore";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import { clearPolicies } from "@editor/services/policyStorage";
+import { resetPolicyRuns } from "@editor/components/policies/policyRunStore";
 
 /**
  * Drops cached responses when the backend behind them changes. operationRouter

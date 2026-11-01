@@ -1,19 +1,19 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dropzone } from "@mantine/dropzone";
-import { FilePicker } from "@app/ui/FilePicker";
-import { Icon } from "@app/ui/Icon";
-import { formatFileSize, readFileAsDataUrl } from "@app/utils/fileUtils";
-import { TransparentPreview } from "@app/components/tools/sign/createSignature/TransparentPreview";
+import { FilePicker } from "@editor/ui/FilePicker";
+import { Icon } from "@editor/ui/Icon";
+import { formatFileSize, readFileAsDataUrl } from "@editor/utils/fileUtils";
+import { TransparentPreview } from "@editor/components/tools/sign/createSignature/TransparentPreview";
 import {
   DEFAULT_CLEANUP,
   UploadCleanupOptions,
   toUploadCleanup,
   type CleanupSettings,
-} from "@app/components/tools/sign/createSignature/UploadCleanupOptions";
-import { useCleanedSignatureImage } from "@app/components/tools/sign/createSignature/useCleanedSignatureImage";
-import type { UploadPanelHandle } from "@app/components/tools/sign/createSignature/types";
-import styles from "@app/components/tools/sign/createSignature/UploadSignaturePanel.module.css";
+} from "@editor/components/tools/sign/createSignature/UploadCleanupOptions";
+import { useCleanedSignatureImage } from "@editor/components/tools/sign/createSignature/useCleanedSignatureImage";
+import type { UploadPanelHandle } from "@editor/components/tools/sign/createSignature/types";
+import styles from "@editor/components/tools/sign/createSignature/UploadSignaturePanel.module.css";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const MAX_UPLOAD_MB = 10;

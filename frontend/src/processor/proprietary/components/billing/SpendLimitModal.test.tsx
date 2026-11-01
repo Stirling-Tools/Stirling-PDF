@@ -1,13 +1,13 @@
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SpendLimitModal } from "@portal/components/billing/SpendLimitModal";
-import { StripeCheckoutModal } from "@portal/components/billing/StripeCheckoutModal";
-import { subscribedWallet } from "@app/billing/walletFixtures";
+import { SpendLimitModal } from "@processor/components/billing/SpendLimitModal";
+import { StripeCheckoutModal } from "@processor/components/billing/StripeCheckoutModal";
+import { subscribedWallet } from "@editor/billing/walletFixtures";
 
 const updateCap = vi.hoisted(() => vi.fn());
-vi.mock("@portal/api/billing", () => ({ updateCap }));
-vi.mock("@portal/billing/stripe", () => ({
+vi.mock("@processor/api/billing", () => ({ updateCap }));
+vi.mock("@processor/billing/stripe", () => ({
   getStripePublishableKey: () => null,
   fetchCheckoutPricing: async () => ({
     currency: "usd",

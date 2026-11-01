@@ -7,7 +7,7 @@ import {
   lerpPose,
   logoPose,
   paddlePose,
-} from "@app/components/easterEgg/brickGame/brickGameGeometry";
+} from "@editor/components/easterEgg/brickGame/brickGameGeometry";
 
 const spanX = (quad: Quad) => ({
   min: Math.min(...quad.map((p) => p.x)),

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
-import "@portal/views/Procurement.css";
+import { QuoteBuilder } from "@processor/components/procurement/QuoteBuilder";
+import "@processor/views/Procurement.css";
 
 /**
  * The enterprise quote builder. The "Review quote" step calls the SaaS backend, answered here by

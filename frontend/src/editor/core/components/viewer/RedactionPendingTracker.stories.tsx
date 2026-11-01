@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { RedactionPendingTracker } from "@app/components/viewer/RedactionPendingTracker";
+import { RedactionPendingTracker } from "@editor/components/viewer/RedactionPendingTracker";
 
 // RedactionPendingTracker reads the active document, which defaults to null outside a live EmbedPDF session.
 const meta = {

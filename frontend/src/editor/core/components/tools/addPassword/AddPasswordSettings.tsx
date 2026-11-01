@@ -1,7 +1,7 @@
 import { Stack, PasswordInput, Select, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { AddPasswordParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { AddPasswordParameters } from "@editor/hooks/tools/addPassword/useAddPasswordParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface AddPasswordSettingsProps {
   parameters: AddPasswordParameters;

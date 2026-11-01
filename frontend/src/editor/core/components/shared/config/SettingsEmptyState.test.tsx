@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { SettingsEmptyState } from "@app/components/shared/config/SettingsEmptyState";
+import { SettingsEmptyState } from "@editor/components/shared/config/SettingsEmptyState";
 
 describe("SettingsEmptyState", () => {
   test("states the situation without claiming anything is wrong", () => {

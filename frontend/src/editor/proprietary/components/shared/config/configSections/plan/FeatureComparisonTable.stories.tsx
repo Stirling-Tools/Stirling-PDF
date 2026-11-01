@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import FeatureComparisonTable from "@app/components/shared/config/configSections/plan/FeatureComparisonTable";
-import type { PlanFeature } from "@app/types/license";
+import FeatureComparisonTable from "@editor/components/shared/config/configSections/plan/FeatureComparisonTable";
+import type { PlanFeature } from "@editor/types/license";
 
 const features: PlanFeature[] = [
   { name: "PDF merge & split", included: true },

@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactElement } from "react";
-import { NonPdfViewer } from "@app/components/viewer/NonPdfViewer";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { NavigationProvider } from "@app/contexts/NavigationContext";
-import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
+import { NonPdfViewer } from "@editor/components/viewer/NonPdfViewer";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { NavigationProvider } from "@editor/contexts/NavigationContext";
+import { ToolWorkflowProvider } from "@editor/contexts/ToolWorkflowContext";
 
 /**
  * NonPdfViewer reads tool availability (for the "Convert to PDF" action) via

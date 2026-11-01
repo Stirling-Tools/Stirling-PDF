@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import type { AuthStatus } from "@app/services/authService";
-import type { ConnectionMode } from "@app/services/connectionModeService";
+import type { AuthStatus } from "@editor/services/authService";
+import type { ConnectionMode } from "@editor/services/connectionModeService";
 const state = vi.hoisted(() => ({
   localOnly: false,
   mode: "local" as ConnectionMode,
@@ -9,10 +9,10 @@ const state = vi.hoisted(() => ({
   authListener: (_status: AuthStatus, _user?: { username: string }) => {},
   modeListener: () => {},
 }));
-vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => state.localOnly,
 }));
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: {
     isAuthenticated: vi.fn(async () => state.authenticated),
     subscribeToAuth: (listener: (status: AuthStatus) => void) => {
@@ -22,7 +22,7 @@ vi.mock("@app/services/authService", () => ({
     },
   },
 }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCachedMode: () => null,
     getCurrentMode: vi.fn(async () => state.mode),
@@ -32,7 +32,7 @@ vi.mock("@app/services/connectionModeService", () => ({
     },
   },
 }));
-import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
+import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
 
 describe("desktop automation availability", () => {
   beforeEach(() => {

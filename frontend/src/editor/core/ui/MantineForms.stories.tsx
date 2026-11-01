@@ -1,12 +1,12 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FormField } from "@app/ui/FormField";
-import { Stack } from "@app/ui/Stack";
-import { MultiSelect } from "@app/ui/MultiSelect";
-import { NumberInput } from "@app/ui/NumberInput";
-import { ColorInput } from "@app/ui/ColorInput";
-import { Select } from "@app/ui/Select";
-import { Slider } from "@app/ui/Slider";
+import { FormField } from "@editor/ui/FormField";
+import { Stack } from "@editor/ui/Stack";
+import { MultiSelect } from "@editor/ui/MultiSelect";
+import { NumberInput } from "@editor/ui/NumberInput";
+import { ColorInput } from "@editor/ui/ColorInput";
+import { Select } from "@editor/ui/Select";
+import { Slider } from "@editor/ui/Slider";
 
 const PII_OPTIONS = [
   { value: "ssn", label: "Social Security Number" },

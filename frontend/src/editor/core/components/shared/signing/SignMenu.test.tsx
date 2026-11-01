@@ -1,10 +1,10 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import { SignMenu } from "@app/components/shared/signing/SignMenu";
+import { SignMenu } from "@editor/components/shared/signing/SignMenu";
 import {
   collectSigningItems,
   type SigningMenuItem,
-} from "@app/utils/signingItems";
+} from "@editor/utils/signingItems";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

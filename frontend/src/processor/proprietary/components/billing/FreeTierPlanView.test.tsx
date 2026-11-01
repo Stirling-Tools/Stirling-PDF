@@ -4,9 +4,9 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, useLocation } from "react-router-dom";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
-import type { ServerPlan } from "@app/billing/serverPlan";
-import { qk } from "@portal/queries/keys";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
+import type { ServerPlan } from "@editor/billing/serverPlan";
+import { qk } from "@processor/queries/keys";
 
 /**
  * The unlinked usage page renders the shared billing screen from the instance's own ledger and
@@ -22,14 +22,16 @@ const { fetchFreeTier, fetchFleetStats, fetchUsers, openLinkModal, auth } =
     auth: { isAdmin: true },
   }));
 
-vi.mock("@app/auth", () => ({ useAuth: () => auth }));
+vi.mock("@editor/auth", () => ({ useAuth: () => auth }));
 
-vi.mock("@portal/api/link", () => ({ fetchFreeTier }));
-vi.mock("@portal/queries/infrastructure", () => ({
+vi.mock("@processor/api/link", () => ({ fetchFreeTier }));
+vi.mock("@processor/queries/infrastructure", () => ({
   useFleetStats: () => ({ data: null, loading: false, error: null }),
 }));
-vi.mock("@app/portal/usersBackend", () => ({ usersBackend: { fetchUsers } }));
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@editor/portal/usersBackend", () => ({
+  usersBackend: { fetchUsers },
+}));
+vi.mock("@processor/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal }),
 }));
 vi.mock("react-i18next", () => ({
@@ -43,8 +45,8 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { HttpError } from "@portal/api/http";
-import { FreeTierPlanView } from "@portal/components/billing/FreeTierPlanView";
+import { HttpError } from "@processor/api/http";
+import { FreeTierPlanView } from "@processor/components/billing/FreeTierPlanView";
 
 const BALANCE = {
   grantUnits: 500,

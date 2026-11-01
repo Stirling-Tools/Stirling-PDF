@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ProcurementAgreement } from "@portal/components/procurement/ProcurementAgreement";
-import type { QuoteResult } from "@portal/api/procurement";
-import "@portal/views/Procurement.css";
+import { ProcurementAgreement } from "@processor/components/procurement/ProcurementAgreement";
+import type { QuoteResult } from "@processor/api/procurement";
+import "@processor/views/Procurement.css";
 
 const quote: QuoteResult = {
   quoteId: 488,

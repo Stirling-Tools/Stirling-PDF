@@ -1,8 +1,15 @@
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Collapsible, FormField, Input, Select } from "@app/ui";
-import type { PolicyParams } from "@app/policies/operations";
-import { getSettingsUrl } from "@app/utils/settingsNavigation";
+import {
+  Banner,
+  Button,
+  Collapsible,
+  FormField,
+  Input,
+  Select,
+} from "@editor/ui";
+import type { PolicyParams } from "@editor/policies/operations";
+import { getSettingsUrl } from "@editor/utils/settingsNavigation";
 
 export type IngestionDestination = "builtin" | "external" | "export";
 

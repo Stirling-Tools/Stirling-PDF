@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { alert } from "@app/components/toast";
-import apiClient from "@app/services/apiClient";
+import { alert } from "@editor/components/toast";
+import apiClient from "@editor/services/apiClient";
 
 export function useRestartServer() {
   const { t } = useTranslation();

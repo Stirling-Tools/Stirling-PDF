@@ -1,8 +1,8 @@
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ScanHint } from "@app/tools/pdfTextEditor/components/ScanHint";
-import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
+import { ScanHint } from "@editor/tools/pdfTextEditor/components/ScanHint";
+import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 
 function scanPage(hasText = false): PageSnapshot {
   return {

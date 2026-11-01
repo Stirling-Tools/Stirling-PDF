@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { PortalViewProviders } from "@portal/test/TestQueryProvider";
+import { PortalViewProviders } from "@processor/test/TestQueryProvider";
 
 /**
  * An unlinked instance still runs pipelines on its own grant, so nothing asks for an account up
@@ -9,7 +9,7 @@ import { PortalViewProviders } from "@portal/test/TestQueryProvider";
  */
 const { connect } = vi.hoisted(() => ({ connect: vi.fn() }));
 
-vi.mock("@portal/hooks/useConnectGate", () => ({
+vi.mock("@processor/hooks/useConnectGate", () => ({
   useConnectGate: () => ({
     gated: true,
     loading: false,
@@ -37,13 +37,13 @@ vi.mock("react-i18next", () => ({
 
 const fetchPipelines = vi.fn();
 const fetchPipeline = vi.fn();
-vi.mock("@portal/api/pipelines", () => ({
+vi.mock("@processor/api/pipelines", () => ({
   fetchPipelines: () => fetchPipelines(),
   fetchPipeline: (id: string) => fetchPipeline(id),
   fetchPolicyPermissions: () => Promise.resolve({ canManagePolicies: true }),
 }));
 
-import { Pipelines } from "@portal/views/Pipelines";
+import { Pipelines } from "@processor/views/Pipelines";
 
 const PIPELINE = {
   id: "plc-1",

@@ -1,6 +1,6 @@
-import { fileStorage } from "@app/services/fileStorage";
-import type { FileId } from "@app/types/file";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import { fileStorage } from "@editor/services/fileStorage";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 /**
  * Renames a stored file, then its open workspace copy. Storage is written

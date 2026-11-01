@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useChecklistInviteTarget } from "@app/components/onboarding/checklistInviteTarget";
+import { useChecklistInviteTarget } from "@editor/components/onboarding/checklistInviteTarget";
 
 const { team } = vi.hoisted(() => ({
   team: vi.fn<
@@ -12,10 +12,10 @@ const { team } = vi.hoisted(() => ({
   >(),
 }));
 
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ isAnonymous: false }),
 }));
-vi.mock("@app/contexts/SaaSTeamContext", () => ({ useSaaSTeam: team }));
+vi.mock("@editor/contexts/SaaSTeamContext", () => ({ useSaaSTeam: team }));
 
 describe("useChecklistInviteTarget", () => {
   beforeEach(() => {

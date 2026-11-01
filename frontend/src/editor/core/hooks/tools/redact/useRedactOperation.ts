@@ -2,18 +2,18 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   validateRedactParameters,
   RedactParameters,
   defaultParameters,
-} from "@app/hooks/tools/redact/useRedactParameters";
+} from "@editor/hooks/tools/redact/useRedactParameters";
 
 // Automatic redaction is the only mode that calls the backend; manual redaction
 // is handled client-side by EmbedPDF in the viewer.

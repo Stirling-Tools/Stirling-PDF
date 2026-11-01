@@ -1,4 +1,4 @@
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 
 interface BrandTileProps {
   /** CSS length. Omit to let the caller's CSS size it. */

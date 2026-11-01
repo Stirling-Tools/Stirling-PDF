@@ -1,9 +1,9 @@
 import { Fragment } from "react";
 import { Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
-import { isMacLike, type HotkeyBinding } from "@app/utils/hotkeys";
-import "@app/tools/pdfTextEditor/components/HelpOverlay.css";
+import HotkeyDisplay from "@editor/components/hotkeys/HotkeyDisplay";
+import { isMacLike, type HotkeyBinding } from "@editor/utils/hotkeys";
+import "@editor/tools/pdfTextEditor/components/HelpOverlay.css";
 
 interface HelpOverlayProps {
   opened: boolean;

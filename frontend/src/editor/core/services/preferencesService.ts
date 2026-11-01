@@ -1,8 +1,8 @@
 import {
   type ToolPanelMode,
   DEFAULT_TOOL_PANEL_MODE,
-} from "@app/constants/toolPanel";
-import { type ThemeMode } from "@app/constants/theme";
+} from "@editor/constants/toolPanel";
+import { type ThemeMode } from "@editor/constants/theme";
 
 export type PdfRenderMode = "normal" | "dark" | "sepia";
 

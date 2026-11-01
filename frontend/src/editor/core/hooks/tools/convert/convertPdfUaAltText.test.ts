@@ -6,14 +6,14 @@
  */
 
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { convertProcessor } from "@app/hooks/tools/convert/useConvertOperation";
+import { convertProcessor } from "@editor/hooks/tools/convert/useConvertOperation";
 import {
   defaultParameters,
   type ConvertParameters,
-} from "@app/hooks/tools/convert/useConvertParameters";
+} from "@editor/hooks/tools/convert/useConvertParameters";
 
 const api = vi.hoisted(() => ({ post: vi.fn() }));
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: {
     post: api.post,
     get: vi.fn(),

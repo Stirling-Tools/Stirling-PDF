@@ -3,20 +3,20 @@ import { useTranslation } from "react-i18next";
 import {
   defineCustomTool,
   useToolOperation,
-} from "@app/hooks/tools/shared/useToolOperation";
-import type { ToolApiParams } from "@app/types/toolApiTypes";
-import apiClient from "@app/services/apiClient";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/useToolOperation";
+import type { ToolApiParams } from "@editor/types/toolApiTypes";
+import apiClient from "@editor/services/apiClient";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   emitSummary,
   parseSummary,
-} from "@app/services/formDetection/progress";
+} from "@editor/services/formDetection/progress";
 import {
   AutoFormDetectionParameters,
   defaultParameters,
   resolveConfidence,
   sensitivityFor,
-} from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionParameters";
+} from "@editor/hooks/tools/autoFormDetection/useAutoFormDetectionParameters";
 
 const DETECT_ENDPOINT = "/api/v1/form/form-detection/detect";
 

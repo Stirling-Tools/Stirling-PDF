@@ -12,27 +12,27 @@ import {
   FileContextProvider,
   useFileActions,
   useFileSelectors,
-} from "@app/contexts/FileContext";
-import apiClient from "@app/services/apiClient";
+} from "@editor/contexts/FileContext";
+import apiClient from "@editor/services/apiClient";
 import {
   getPdfAccess,
   rememberPdfAccess,
   bindPdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
-import { fileStorage } from "@app/services/fileStorage";
-import { generateProcessedFileMetadata } from "@app/contexts/file/fileActions";
-import { generateThumbnailPairWithMetadata } from "@app/utils/thumbnailUtils";
+import { fileStorage } from "@editor/services/fileStorage";
+import { generateProcessedFileMetadata } from "@editor/contexts/file/fileActions";
+import { generateThumbnailPairWithMetadata } from "@editor/utils/thumbnailUtils";
 import {
   createStirlingFile,
   createNewStirlingFileStub,
   type FileId,
   type StirlingFileStub,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 import {
   isAwaitingUnlock,
   setPendingUnlocks,
-} from "@app/services/pendingUnlocks";
+} from "@editor/services/pendingUnlocks";
 
 const observed = vi.hoisted(() => ({
   isEncrypted: true,
@@ -44,8 +44,10 @@ const observed = vi.hoisted(() => ({
 const id = "editor-encrypted" as FileId;
 const localInspection = vi.hoisted(() => vi.fn());
 
-vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
+vi.mock("@editor/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@editor/services/pdfAccessService")
+  >()),
   inspectLocalPdfAccess: async (
     file: File,
     password: string,
@@ -56,18 +58,18 @@ vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
   }),
 }));
 
-vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
-vi.mock("@app/utils/thumbnailUtils", () => ({
+vi.mock("@editor/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@editor/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata: vi.fn(),
 }));
 
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => null,
 }));
-vi.mock("@app/hooks/tools/shared/useResolutionContinuation", () => ({
+vi.mock("@editor/hooks/tools/shared/useResolutionContinuation", () => ({
   useResolutionContinuation: () => vi.fn(),
 }));
-vi.mock("@app/hooks/useZipConfirmation", () => ({
+vi.mock("@editor/hooks/useZipConfirmation", () => ({
   useZipConfirmation: () => ({
     confirmationState: { opened: false },
     requestConfirmation: vi.fn(),
@@ -75,10 +77,10 @@ vi.mock("@app/hooks/useZipConfirmation", () => ({
     handleCancel: vi.fn(),
   }),
 }));
-vi.mock("@app/components/shared/ZipWarningModal", () => ({
+vi.mock("@editor/components/shared/ZipWarningModal", () => ({
   default: () => null,
 }));
-vi.mock("@app/components/shared/EncryptedPdfUnlockModal", () => ({
+vi.mock("@editor/components/shared/EncryptedPdfUnlockModal", () => ({
   default: ({
     opened,
     onSkip,
@@ -129,9 +131,9 @@ vi.mock("@app/components/shared/EncryptedPdfUnlockModal", () => ({
       </>
     ) : null,
 }));
-vi.mock("@app/contexts/file/fileActions", async (importOriginal) => {
+vi.mock("@editor/contexts/file/fileActions", async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import("@app/contexts/file/fileActions")>();
+    await importOriginal<typeof import("@editor/contexts/file/fileActions")>();
   return {
     ...actual,
     generateProcessedFileMetadata: vi

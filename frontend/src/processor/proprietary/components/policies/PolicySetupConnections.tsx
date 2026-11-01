@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import type { PolicySetupConfigProps } from "@app/components/policies/PolicySetupWizard";
-import { PolicySetupInput } from "@portal/components/policies/PolicySetupInput";
-import { PolicySetupOutput } from "@portal/components/policies/PolicySetupOutput";
+import type { PolicySetupConfigProps } from "@editor/components/policies/PolicySetupWizard";
+import { PolicySetupInput } from "@processor/components/policies/PolicySetupInput";
+import { PolicySetupOutput } from "@processor/components/policies/PolicySetupOutput";
 
 interface Props extends PolicySetupConfigProps {
   folderName?: string;

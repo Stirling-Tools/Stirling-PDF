@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "path";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 
 interface SwapSamplerState {
   swapMs: number;

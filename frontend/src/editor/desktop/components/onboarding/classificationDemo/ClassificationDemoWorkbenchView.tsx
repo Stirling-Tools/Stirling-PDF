@@ -1,32 +1,32 @@
 /** The sweep, rendered in place of the workbench canvas with the rails either side.
  *  A takeover, not a registered view: unregistering an active view ejects mid-sweep. */
 
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
-import { BrandMark } from "@app/components/shared/BrandMark";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { BrandMark } from "@editor/components/shared/BrandMark";
 import {
   claimRun,
   sweptPaths,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSession";
-import { startBackgroundClassification } from "@app/components/onboarding/classificationDemo/backgroundClassification";
-import { useClassificationDemo } from "@app/components/onboarding/classificationDemo/useClassificationDemo";
-import type { ClassificationDemoViewData } from "@app/components/onboarding/classificationDemo/classificationDemoShared";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSession";
+import { startBackgroundClassification } from "@editor/components/onboarding/classificationDemo/backgroundClassification";
+import { useClassificationDemo } from "@editor/components/onboarding/classificationDemo/useClassificationDemo";
+import type { ClassificationDemoViewData } from "@editor/components/onboarding/classificationDemo/classificationDemoShared";
 import {
   ClassificationDemoBreakdown,
   ClassificationDemoChart,
   useSliceColours,
-} from "@app/components/onboarding/classificationDemo/ClassificationDemoChart";
+} from "@editor/components/onboarding/classificationDemo/ClassificationDemoChart";
 import {
   CategoryTicker,
   FollowUpPanel,
   ProcessingCounts,
   ProcessingHero,
   useProcessingLabel,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSlides";
-import styles from "@app/components/onboarding/classificationDemo/classificationDemo.module.css";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSlides";
+import styles from "@editor/components/onboarding/classificationDemo/classificationDemo.module.css";
 
 export function ClassificationDemoWorkbenchView({
   data,

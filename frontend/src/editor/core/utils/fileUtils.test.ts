@@ -5,7 +5,7 @@ import {
   formatFileSize,
   detectNonPdfFileType,
   getFileFormats,
-} from "@app/utils/fileUtils";
+} from "@editor/utils/fileUtils";
 
 describe("fileUtils", () => {
   it("classifies using existing PDF detection, stored protection and overlapping backend categories", () => {

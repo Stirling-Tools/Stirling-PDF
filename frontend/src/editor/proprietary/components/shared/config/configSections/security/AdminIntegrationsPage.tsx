@@ -1,27 +1,27 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { SettingsCard } from "@app/components/shared/config/SettingsCard";
+import { SettingsCard } from "@editor/components/shared/config/SettingsCard";
 import { Stack, Loader } from "@mantine/core";
-import { alert } from "@app/components/toast";
-import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
-import { useRestartServer } from "@app/components/shared/config/useRestartServer";
-import { useAdminSettings } from "@app/hooks/useAdminSettings";
-import apiClient from "@app/services/apiClient";
-import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
-import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import type { ConnectionsSettingsData } from "@app/components/shared/config/configSections/security/securitySettingsTypes";
+import { alert } from "@editor/components/toast";
+import RestartConfirmationModal from "@editor/components/shared/config/RestartConfirmationModal";
+import { useRestartServer } from "@editor/components/shared/config/useRestartServer";
+import { useAdminSettings } from "@editor/hooks/useAdminSettings";
+import apiClient from "@editor/services/apiClient";
+import { useSettingsDirty } from "@editor/hooks/useSettingsDirty";
+import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsStickyFooter";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
+import type { ConnectionsSettingsData } from "@editor/components/shared/config/configSections/security/securitySettingsTypes";
 import {
   fetchConnectionsSettings,
   saveConnectionsSettings,
-} from "@app/components/shared/config/configSections/security/securitySettingsTransformers";
-import { useConnectionProviders } from "@app/components/shared/config/configSections/security/connectionProviders";
-import { LinkedServicesCard } from "@app/components/shared/config/configSections/security/LinkedServicesCard";
-import { UnlinkedServicesCard } from "@app/components/shared/config/configSections/security/UnlinkedServicesCard";
-import { MobileUploadQrCard } from "@app/components/shared/config/configSections/security/MobileUploadQrCard";
-import { McpCard } from "@app/components/shared/config/configSections/server/McpCard";
-import type { McpSettingsData } from "@app/components/shared/config/configSections/server/serverSettings";
-import "@app/components/shared/config/configSections/security/AdminSecurityPage.css";
+} from "@editor/components/shared/config/configSections/security/securitySettingsTransformers";
+import { useConnectionProviders } from "@editor/components/shared/config/configSections/security/connectionProviders";
+import { LinkedServicesCard } from "@editor/components/shared/config/configSections/security/LinkedServicesCard";
+import { UnlinkedServicesCard } from "@editor/components/shared/config/configSections/security/UnlinkedServicesCard";
+import { MobileUploadQrCard } from "@editor/components/shared/config/configSections/security/MobileUploadQrCard";
+import { McpCard } from "@editor/components/shared/config/configSections/server/McpCard";
+import type { McpSettingsData } from "@editor/components/shared/config/configSections/server/serverSettings";
+import "@editor/components/shared/config/configSections/security/AdminSecurityPage.css";
 
 /**
  * The services this server talks to: mail, Telegram, Drive, and the phone that

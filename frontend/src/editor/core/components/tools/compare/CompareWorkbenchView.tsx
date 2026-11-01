@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Loader, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useIsMobile } from "@app/hooks/useIsMobile";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
 import {
   mapChangesForDropdown,
   getFileFromSelection,
@@ -10,24 +10,24 @@ import {
   computeProgressPct,
   computeCountsText,
   computeMaxSharedPages,
-} from "@app/components/tools/compare/compare";
-import { CompareResultData, CompareWorkbenchData } from "@app/types/compare";
-import ComparePixelWorkbenchView from "@app/components/tools/compare/ComparePixelWorkbenchView";
-import { useFileContext } from "@app/contexts/file/fileHooks";
-import { useWorkbenchBarButtons } from "@app/hooks/useWorkbenchBarButtons";
-import CompareDocumentPane from "@app/components/tools/compare/CompareDocumentPane";
-import { useComparePagePreviews } from "@app/components/tools/compare/hooks/useComparePagePreviews";
-import { useComparePanZoom } from "@app/components/tools/compare/hooks/useComparePanZoom";
-import { useCompareHighlights } from "@app/components/tools/compare/hooks/useCompareHighlights";
-import { useCompareChangeNavigation } from "@app/components/tools/compare/hooks/useCompareChangeNavigation";
-import "@app/components/tools/compare/compareView.css";
-import { useCompareWorkbenchBarButtons } from "@app/components/tools/compare/hooks/useCompareWorkbenchBarButtons";
+} from "@editor/components/tools/compare/compare";
+import { CompareResultData, CompareWorkbenchData } from "@editor/types/compare";
+import ComparePixelWorkbenchView from "@editor/components/tools/compare/ComparePixelWorkbenchView";
+import { useFileContext } from "@editor/contexts/file/fileHooks";
+import { useWorkbenchBarButtons } from "@editor/hooks/useWorkbenchBarButtons";
+import CompareDocumentPane from "@editor/components/tools/compare/CompareDocumentPane";
+import { useComparePagePreviews } from "@editor/components/tools/compare/hooks/useComparePagePreviews";
+import { useComparePanZoom } from "@editor/components/tools/compare/hooks/useComparePanZoom";
+import { useCompareHighlights } from "@editor/components/tools/compare/hooks/useCompareHighlights";
+import { useCompareChangeNavigation } from "@editor/components/tools/compare/hooks/useCompareChangeNavigation";
+import "@editor/components/tools/compare/compareView.css";
+import { useCompareWorkbenchBarButtons } from "@editor/components/tools/compare/hooks/useCompareWorkbenchBarButtons";
 import {
   alert,
   updateToast,
   updateToastProgress,
   dismissToast,
-} from "@app/components/toast";
+} from "@editor/components/toast";
 
 interface CompareWorkbenchViewProps {
   data: CompareWorkbenchData | null;

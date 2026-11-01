@@ -1,13 +1,13 @@
 import { lazy, type ComponentType } from "react";
-import { StirlingFile } from "@app/types/fileContext";
-import type { ResponseHandler } from "@app/utils/toolResponseProcessor";
-import { ToolId } from "@app/types/toolId";
-import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
+import { StirlingFile } from "@editor/types/fileContext";
+import type { ResponseHandler } from "@editor/utils/toolResponseProcessor";
+import { ToolId } from "@editor/types/toolId";
+import type { ProcessingProgress } from "@editor/hooks/tools/shared/useToolState";
 import {
   TOOL_FILE_FIELDS,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/types/toolApiTypes";
+} from "@editor/types/toolApiTypes";
 
 export type { ProcessingProgress, ResponseHandler };
 

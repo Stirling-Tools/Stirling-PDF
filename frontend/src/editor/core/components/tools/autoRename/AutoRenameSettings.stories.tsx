@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AutoRenameSettings from "@app/components/tools/autoRename/AutoRenameSettings";
-import { AutoRenameParameters } from "@app/hooks/tools/autoRename/useAutoRenameParameters";
+import AutoRenameSettings from "@editor/components/tools/autoRename/AutoRenameSettings";
+import { AutoRenameParameters } from "@editor/hooks/tools/autoRename/useAutoRenameParameters";
 
 const meta = {
   title: "Tools/AutoRename/AutoRenameSettings",

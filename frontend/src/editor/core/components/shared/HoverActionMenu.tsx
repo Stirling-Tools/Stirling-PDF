@@ -1,8 +1,8 @@
 import React from "react";
 import { Tooltip } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import styles from "@app/components/shared/HoverActionMenu.module.css";
-import { Z_INDEX_HOVER_ACTION_MENU } from "@app/styles/zIndex";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import styles from "@editor/components/shared/HoverActionMenu.module.css";
+import { Z_INDEX_HOVER_ACTION_MENU } from "@editor/styles/zIndex";
 
 export interface HoverAction {
   id: string;

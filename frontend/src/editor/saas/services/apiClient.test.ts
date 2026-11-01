@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Session, AuthError } from "@supabase/supabase-js";
-import { supabase } from "@app/auth/supabase";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { supabase } from "@editor/auth/supabase";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 // Mock supabase
-vi.mock("@app/auth/supabase", () => ({
+vi.mock("@editor/auth/supabase", () => ({
   supabase: {
     auth: {
       getSession: vi.fn(),
@@ -16,9 +16,9 @@ vi.mock("@app/auth/supabase", () => ({
 // Stub apiClient's heavy UI/util deps so importing it stays cheap. None are
 // exercised here (toast, plan settings and handleHttpError paths aren't hit),
 // and re-importing the real toast graph per test made these tests time out.
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
-vi.mock("@app/utils/appSettings", () => ({ openPlanSettings: vi.fn() }));
-vi.mock("@app/services/httpErrorHandler", () => ({
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/utils/appSettings", () => ({ openPlanSettings: vi.fn() }));
+vi.mock("@editor/services/httpErrorHandler", () => ({
   handleHttpError: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -46,7 +46,7 @@ describe("apiClient", () => {
     });
 
     // Import apiClient after mocking
-    const { default: apiClient } = await import("@app/services/apiClient");
+    const { default: apiClient } = await import("@editor/services/apiClient");
 
     // Create a mock adapter to intercept the request
     const mockAdapter = vi.fn((config) => {
@@ -80,7 +80,7 @@ describe("apiClient", () => {
     });
 
     // Import apiClient after mocking
-    const { default: apiClient } = await import("@app/services/apiClient");
+    const { default: apiClient } = await import("@editor/services/apiClient");
 
     // Create a mock adapter to intercept the request
     const mockAdapter = vi.fn((config) => {
@@ -144,7 +144,7 @@ describe("apiClient", () => {
     });
 
     // Import apiClient after mocking
-    const { default: apiClient } = await import("@app/services/apiClient");
+    const { default: apiClient } = await import("@editor/services/apiClient");
 
     let requestCount = 0;
     const mockAdapter = vi.fn((config) => {
@@ -217,7 +217,7 @@ describe("apiClient", () => {
     });
 
     // Import apiClient after mocking
-    const { default: apiClient } = await import("@app/services/apiClient");
+    const { default: apiClient } = await import("@editor/services/apiClient");
 
     // On /editor when the session dies: the return path must ride along so the
     // login screen sends the user back here, not to the default landing.
@@ -268,7 +268,7 @@ describe("apiClient", () => {
       } as unknown as AuthError,
     });
 
-    const { default: apiClient } = await import("@app/services/apiClient");
+    const { default: apiClient } = await import("@editor/services/apiClient");
 
     Object.defineProperty(window, "location", {
       writable: true,

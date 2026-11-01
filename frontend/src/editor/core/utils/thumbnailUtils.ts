@@ -4,17 +4,17 @@ import {
   getPdfiumModule,
   PdfiumOpenError,
   FPDF_ERR_PASSWORD,
-} from "@app/services/pdfiumService";
+} from "@editor/services/pdfiumService";
 import {
   renderPdfiumPageDataUrl,
   readPdfiumPageMetadata,
-} from "@app/utils/pdfiumPageRender";
-import { jpegExifOrientation } from "@app/utils/jpegOrientation";
-import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { getPdfAccess } from "@app/services/pdfAccessService";
-import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
-import { isDamagedPdfError } from "@app/utils/pdfDamage";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/pdfParseLimit";
+} from "@editor/utils/pdfiumPageRender";
+import { jpegExifOrientation } from "@editor/utils/jpegOrientation";
+import { getDocumentBytes } from "@editor/services/documentBytesCache";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
+import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
+import { isDamagedPdfError } from "@editor/utils/pdfDamage";
+import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/pdfParseLimit";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)

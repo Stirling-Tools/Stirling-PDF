@@ -1,4 +1,4 @@
-import type { TeamHolding } from "@app/billing/types";
+import type { TeamHolding } from "@editor/billing/types";
 
 /** Replaces this deployment's last report with its live roster, without counting it twice. */
 export function fleetUsersInUse(

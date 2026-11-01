@@ -1,6 +1,6 @@
 import React from "react";
 import { useMantineColorScheme } from "@mantine/core";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
+import { useLogoAssets } from "@editor/hooks/useLogoAssets";
 
 interface WordmarkProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   alt?: string;

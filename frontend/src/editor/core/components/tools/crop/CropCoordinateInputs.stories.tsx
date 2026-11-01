@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
-import { Rectangle, PDFBounds } from "@app/utils/cropCoordinates";
+import CropCoordinateInputs from "@editor/components/tools/crop/CropCoordinateInputs";
+import { Rectangle, PDFBounds } from "@editor/utils/cropCoordinates";
 
 const meta = {
   title: "Tools/Crop/CropCoordinateInputs",

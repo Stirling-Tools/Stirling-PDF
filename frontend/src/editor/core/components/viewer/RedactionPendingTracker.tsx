@@ -1,7 +1,7 @@
 import { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import { useRedaction as useEmbedPdfRedaction } from "@embedpdf/plugin-redaction/react";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { useRedaction } from "@app/contexts/RedactionContext";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import { useRedaction } from "@editor/contexts/RedactionContext";
 
 export interface RedactionPendingTrackerAPI {
   /** Resolves after the document is redacted; rejects if it cannot be committed. */

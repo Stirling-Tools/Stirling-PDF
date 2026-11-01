@@ -1,9 +1,9 @@
-import i18n from "@app/i18n";
-import { alert } from "@app/components/toast";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import { operationRouter } from "@app/services/operationRouter";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
+import i18n from "@editor/i18n";
+import { alert } from "@editor/components/toast";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { operationRouter } from "@editor/services/operationRouter";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
 let lastBackendToast = 0;

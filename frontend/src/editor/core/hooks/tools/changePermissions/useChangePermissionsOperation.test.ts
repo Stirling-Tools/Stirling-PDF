@@ -4,11 +4,11 @@ import {
   changePermissionsFromApiParams,
   changePermissionsToApiParams,
   useChangePermissionsOperation,
-} from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
+} from "@editor/hooks/tools/changePermissions/useChangePermissionsOperation";
 import {
   type ChangePermissionsParameters,
   defaultParameters,
-} from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
+} from "@editor/hooks/tools/changePermissions/useChangePermissionsParameters";
 
 // Mock the useToolOperation hook
 vi.mock("../shared/useToolOperation", async () => {
@@ -36,7 +36,7 @@ import {
   ToolOperationHook,
   ToolType,
   useToolOperation,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 
 describe("useChangePermissionsOperation", () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);

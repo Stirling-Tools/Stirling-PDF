@@ -1,6 +1,6 @@
-import { apiClient } from "@portal/api/http";
-import type { StatusTone, ChipAccent } from "@app/ui";
-import type { Tier } from "@portal/contexts/TierContext";
+import { apiClient } from "@processor/api/http";
+import type { StatusTone, ChipAccent } from "@editor/ui";
+import type { Tier } from "@processor/contexts/TierContext";
 
 export type DocumentStatus = "processed" | "flagged" | "in-review" | "error";
 

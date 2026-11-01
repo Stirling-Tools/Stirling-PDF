@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getDesktopOs, DesktopOs } from "@app/services/platformService";
+import { getDesktopOs, DesktopOs } from "@editor/services/platformService";
 
 /**
  * Whether multiple windows are supported on the current OS.

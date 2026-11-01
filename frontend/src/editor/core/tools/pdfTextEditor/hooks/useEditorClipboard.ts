@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { isFocusInContentEditable } from "@app/tools/pdfTextEditor/util/dom";
+import { isFocusInContentEditable } from "@editor/tools/pdfTextEditor/util/dom";
 
 export interface EditorClipboardCallbacks {
   /** True when any run or image is selected (images cut without carrying text). */

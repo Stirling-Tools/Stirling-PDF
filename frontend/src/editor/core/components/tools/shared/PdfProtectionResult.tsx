@@ -1,7 +1,7 @@
 import { Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfAccessService";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
 
 /** Reports protection changes only for outputs whose security was verified. */
 export function PdfProtectionResult({

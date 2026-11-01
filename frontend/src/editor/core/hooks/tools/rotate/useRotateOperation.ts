@@ -2,19 +2,19 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   validateRotateParameters,
   RotateParameters,
   defaultParameters,
   normalizeAngle,
-} from "@app/hooks/tools/rotate/useRotateParameters";
+} from "@editor/hooks/tools/rotate/useRotateParameters";
 
 const ENDPOINT = "/api/v1/general/rotate-pdf" satisfies ToolEndpoint;
 type RotateApiParams = ToolApiParams[typeof ENDPOINT];

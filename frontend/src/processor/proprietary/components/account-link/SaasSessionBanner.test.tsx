@@ -1,28 +1,28 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { UIProvider, useUI } from "@app/portal/contexts/UIContext";
-import { LinkProvider } from "@app/portal/contexts/LinkContext";
-import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
+import { UIProvider, useUI } from "@editor/portal/contexts/UIContext";
+import { LinkProvider } from "@editor/portal/contexts/LinkContext";
+import { SaasSessionBanner } from "@editor/portal/components/account-link/SaasSessionBanner";
 
 const flags = vi.hoisted(() => ({ isAdmin: true, orgOwner: true }));
-vi.mock("@app/auth", () => ({
+vi.mock("@editor/auth", () => ({
   useAuth: () => ({
     isAdmin: flags.isAdmin,
     user: { orgOwner: flags.orgOwner },
   }),
 }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => null,
 }));
-vi.mock("@app/portal/auth/saasSupabase", () => ({
+vi.mock("@editor/portal/auth/saasSupabase", () => ({
   ensureSaasSupabase: vi.fn(),
 }));
 import {
   resetPortalSaasSessionState,
   withPortalSaasSession,
   SaasSessionRequiredError,
-} from "@app/portal/auth/portalSaasSession";
+} from "@editor/portal/auth/portalSaasSession";
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));

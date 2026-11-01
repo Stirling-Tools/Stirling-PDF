@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { OpacityControl } from "@app/components/annotation/shared/OpacityControl";
+import { OpacityControl } from "@editor/components/annotation/shared/OpacityControl";
 
 const meta: Meta<typeof OpacityControl> = {
   title: "Annotation/OpacityControl",

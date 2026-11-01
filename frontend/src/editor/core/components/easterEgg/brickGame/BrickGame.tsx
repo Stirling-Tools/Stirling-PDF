@@ -14,9 +14,9 @@ import {
   FIELD_W,
   type GameStatus,
   type Palette,
-} from "@app/components/easterEgg/brickGame/brickGameEngine";
-import type { Box } from "@app/components/easterEgg/brickGame/brickGameGeometry";
-import "@app/components/easterEgg/brickGame/BrickGame.css";
+} from "@editor/components/easterEgg/brickGame/brickGameEngine";
+import type { Box } from "@editor/components/easterEgg/brickGame/brickGameGeometry";
+import "@editor/components/easterEgg/brickGame/BrickGame.css";
 
 export interface BrickGameProps {
   /** Where the mark flies in from, in client coordinates. */

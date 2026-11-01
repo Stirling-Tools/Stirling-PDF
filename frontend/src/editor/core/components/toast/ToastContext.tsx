@@ -11,7 +11,7 @@ import {
   ToastApi,
   ToastInstance,
   ToastOptions,
-} from "@app/components/toast/types";
+} from "@editor/components/toast/types";
 
 function normalizeProgress(value: number | undefined): number | undefined {
   if (typeof value !== "number" || Number.isNaN(value)) return undefined;

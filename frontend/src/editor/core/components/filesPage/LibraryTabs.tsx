@@ -1,8 +1,8 @@
 import { Fragment, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
-import { Button, type ButtonProps } from "@app/ui/Button";
-import type { FilesPageTab } from "@app/contexts/FilesPageContext";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
+import { Button, type ButtonProps } from "@editor/ui/Button";
+import type { FilesPageTab } from "@editor/contexts/FilesPageContext";
 
 /** Shared view navigation; each host owns its remembered browsing state. */
 export function LibraryTabs({

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import WordsToRedactInput from "@app/components/tools/redact/WordsToRedactInput";
+import WordsToRedactInput from "@editor/components/tools/redact/WordsToRedactInput";
 
 const meta = {
   title: "Tools/Redact/WordsToRedactInput",

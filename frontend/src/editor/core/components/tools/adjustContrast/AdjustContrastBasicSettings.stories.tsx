@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AdjustContrastBasicSettings from "@app/components/tools/adjustContrast/AdjustContrastBasicSettings";
+import AdjustContrastBasicSettings from "@editor/components/tools/adjustContrast/AdjustContrastBasicSettings";
 import {
   AdjustContrastParameters,
   defaultParameters,
-} from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
+} from "@editor/hooks/tools/adjustContrast/useAdjustContrastParameters";
 
 const meta = {
   title: "Tools/AdjustContrast/AdjustContrastBasicSettings",

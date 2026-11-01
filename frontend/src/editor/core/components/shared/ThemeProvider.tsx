@@ -8,22 +8,22 @@ import {
 } from "react";
 import { MantineProvider } from "@mantine/core";
 import { useIsomorphicEffect } from "@mantine/hooks";
-import { usePreferences } from "@app/contexts/PreferencesContext";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
 import {
   mantineTheme,
   editorCssVariablesResolver,
-} from "@app/theme/mantineTheme";
-import { ToastProvider } from "@app/components/toast";
-import ToastRenderer from "@app/components/toast/ToastRenderer";
-import { ToastPortalBinder } from "@app/components/toast";
+} from "@editor/theme/mantineTheme";
+import { ToastProvider } from "@editor/components/toast";
+import ToastRenderer from "@editor/components/toast/ToastRenderer";
+import { ToastPortalBinder } from "@editor/components/toast";
 import {
   type ThemeMode,
   getSystemTheme,
   resolveColorScheme,
-} from "@app/constants/theme";
-// SUI shared design-system tokens (used by @app/ui); key on `data-theme`.
-import "@app/tokens/tokens.css";
-import "@app/theme/index.css";
+} from "@editor/constants/theme";
+// SUI shared design-system tokens (used by @editor/ui); key on `data-theme`.
+import "@editor/tokens/tokens.css";
+import "@editor/theme/index.css";
 
 interface ThemeContextType {
   themeMode: ThemeMode;

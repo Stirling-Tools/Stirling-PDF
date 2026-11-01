@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { describe, it, expect, vi } from "vitest";
-import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
-import { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
-import { sampleTableColors } from "@app/tools/pdfTextEditor/util/scanSampling";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
+import { sampleTableColors } from "@editor/tools/pdfTextEditor/util/scanSampling";
 
 describe("scanned table color sampling", () => {
   it.each([0, 90, 180, 270])(

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Box, MantineProvider } from "@mantine/core";
-import CropAreaSelector from "@app/components/tools/crop/CropAreaSelector";
-import { Rectangle, PDFBounds } from "@app/utils/cropCoordinates";
-import { mantineTheme } from "@app/theme/mantineTheme";
+import CropAreaSelector from "@editor/components/tools/crop/CropAreaSelector";
+import { Rectangle, PDFBounds } from "@editor/utils/cropCoordinates";
+import { mantineTheme } from "@editor/theme/mantineTheme";
 
 // CropAreaSelector reads theme.other.crop (overlay/handle colors), which only
 // the core app's Mantine theme defines. Nesting it here supplies that value

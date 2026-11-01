@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
-import { expectConsole } from "@app/tests/failOnConsole";
-import { editTableOfContentsFromApiParams } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
+import { expectConsole } from "@editor/tests/failOnConsole";
+import { editTableOfContentsFromApiParams } from "@editor/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
 
 describe("editTableOfContentsFromApiParams", () => {
   test("passes replaceExisting through", () => {

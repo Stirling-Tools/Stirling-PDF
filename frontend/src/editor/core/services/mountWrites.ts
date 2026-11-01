@@ -1,4 +1,4 @@
-import { writeDiskFile } from "@app/services/localFolderContents";
+import { writeDiskFile } from "@editor/services/localFolderContents";
 
 export interface MountWriteItem {
   name: string;

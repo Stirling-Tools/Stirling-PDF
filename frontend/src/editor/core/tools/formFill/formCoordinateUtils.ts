@@ -6,7 +6,7 @@
 import type {
   FormField,
   ModifyFieldDefinition,
-} from "@app/tools/formFill/types";
+} from "@editor/tools/formFill/types";
 
 export interface PixelRect {
   left: number;

@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Card, CodeBlock } from "@app/ui";
-import type { CodeSample } from "@portal/api/docs";
-import { DocsSection } from "@core/components/docs/DocsSection";
-import { LangSnippet } from "@portal/components/docs/LangSnippet";
+import { Card, CodeBlock } from "@editor/ui";
+import type { CodeSample } from "@processor/api/docs";
+import { DocsSection } from "@editor-core/components/docs/DocsSection";
+import { LangSnippet } from "@processor/components/docs/LangSnippet";
 
 export function GettingStartedSection({
   samples,

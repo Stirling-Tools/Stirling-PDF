@@ -1,4 +1,4 @@
-import { apiClient, HttpError } from "@portal/api/http";
+import { apiClient, HttpError } from "@processor/api/http";
 
 /**
  * Sources service layer: the backend contract.

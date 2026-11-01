@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PlanSelectionStage } from "@app/components/shared/stripeCheckout/stages/PlanSelectionStage";
-import { PlanTierGroup } from "@app/services/licenseService";
+import { PlanSelectionStage } from "@editor/components/shared/stripeCheckout/stages/PlanSelectionStage";
+import { PlanTierGroup } from "@editor/services/licenseService";
 
 /**
  * The plan-selection step of the Stripe checkout flow, letting the user

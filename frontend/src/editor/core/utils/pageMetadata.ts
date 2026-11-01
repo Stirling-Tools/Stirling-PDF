@@ -2,7 +2,7 @@ import {
   ProcessedFileMetadata,
   ProcessedFilePage,
   StirlingFileStub,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 
 export interface PageDimensions {
   width: number | null;

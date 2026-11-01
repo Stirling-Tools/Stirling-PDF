@@ -4,7 +4,7 @@
  * credentials. Secrets are write-only - reads return them masked, and sending
  * the mask back on update keeps the stored value.
  */
-import { apiClient } from "@portal/api/http";
+import { apiClient } from "@processor/api/http";
 
 export type IntegrationType =
   | "S3"

@@ -1,4 +1,4 @@
-import type { LicenseNotice } from "@app/types/types";
+import type { LicenseNotice } from "@editor/types/types";
 
 export const SERVER_LICENSE_REQUEST_EVENT = "stirling:server-license-requested";
 export const UPGRADE_BANNER_TEST_EVENT = "stirling:upgrade-banner-test";

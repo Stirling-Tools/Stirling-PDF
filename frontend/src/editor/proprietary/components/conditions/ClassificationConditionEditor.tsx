@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { MultiSelect } from "@app/ui";
-import { LABEL_FAMILIES } from "@app/data/classificationLabels";
-import type { MatchesAnyCondition } from "@app/conditions/types";
+import { MultiSelect } from "@editor/ui";
+import { LABEL_FAMILIES } from "@editor/data/classificationLabels";
+import type { MatchesAnyCondition } from "@editor/conditions/types";
 
 interface ClassificationConditionEditorProps {
   condition: MatchesAnyCondition;

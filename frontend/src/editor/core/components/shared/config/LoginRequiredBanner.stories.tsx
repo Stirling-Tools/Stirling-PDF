@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import LoginRequiredBanner from "@editor/components/shared/config/LoginRequiredBanner";
 
 const meta = {
   title: "Shared/Config/LoginRequiredBanner",

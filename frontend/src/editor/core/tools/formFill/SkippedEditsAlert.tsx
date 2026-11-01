@@ -3,9 +3,9 @@
  * PDF itself, so partial failures arrive in a response header, not the body.
  */
 import { Alert, List, Text } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { useFormFill } from "@app/tools/formFill/FormFillContext";
+import { useFormFill } from "@editor/tools/formFill/FormFillContext";
 
 export function SkippedEditsAlert() {
   const { t } = useTranslation();

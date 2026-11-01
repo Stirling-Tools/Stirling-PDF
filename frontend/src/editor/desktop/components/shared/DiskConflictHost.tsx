@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 
-import { DiskConflictModal } from "@app/components/shared/DiskConflictModal";
+import { DiskConflictModal } from "@editor/components/shared/DiskConflictModal";
 import {
   DiskConflictRequest,
   resolveDiskConflict,
   subscribeDiskConflicts,
-} from "@app/services/diskConflictPrompt";
+} from "@editor/services/diskConflictPrompt";
 
 /** Renders the conflict modal for whatever the hydration path has queued.
  *  Mounted once, desktop-side; renders nothing while the queue is empty. */

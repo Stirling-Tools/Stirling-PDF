@@ -4,11 +4,11 @@ import {
   adjustPageScaleFromApiParams,
   adjustPageScaleToApiParams,
   buildAdjustPageScaleFormData,
-} from "@app/hooks/tools/adjustPageScale/adjustPageScaleFormData";
+} from "@editor/hooks/tools/adjustPageScale/adjustPageScaleFormData";
 import {
   defaultParameters,
   PageSize,
-} from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+} from "@editor/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 
 const stubFile = () =>
   new File(["data"], "doc.pdf", { type: "application/pdf" });

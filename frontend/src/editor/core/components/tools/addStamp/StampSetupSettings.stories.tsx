@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import StampSetupSettings from "@app/components/tools/addStamp/StampSetupSettings";
+import StampSetupSettings from "@editor/components/tools/addStamp/StampSetupSettings";
 import {
   AddStampParameters,
   defaultParameters,
-} from "@app/components/tools/addStamp/useAddStampParameters";
+} from "@editor/components/tools/addStamp/useAddStampParameters";
 
 const meta = {
   title: "Tools/AddStamp/StampSetupSettings",

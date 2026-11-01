@@ -9,13 +9,16 @@ import React, {
   ReactNode,
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { DEFAULT_APP_CONFIG, fetchAppConfig } from "@app/api/config";
-import { qk } from "@app/query/keys";
+import { DEFAULT_APP_CONFIG, fetchAppConfig } from "@editor/api/config";
+import { qk } from "@editor/query/keys";
 import i18n from "i18next";
-import { CONFIG_STALE_TIME } from "@app/query/staleTime";
-import type { AppConfig, AppConfigBootstrapMode } from "@app/types/appConfig";
-import { useJwtConfigSync } from "@app/hooks/useJwtConfigSync";
-import { setPdfAccessPolicy } from "@app/services/pdfAccessService";
+import { CONFIG_STALE_TIME } from "@editor/query/staleTime";
+import type {
+  AppConfig,
+  AppConfigBootstrapMode,
+} from "@editor/types/appConfig";
+import { useJwtConfigSync } from "@editor/hooks/useJwtConfigSync";
+import { setPdfAccessPolicy } from "@editor/services/pdfAccessService";
 
 export interface AppConfigRetryOptions {
   maxRetries?: number;

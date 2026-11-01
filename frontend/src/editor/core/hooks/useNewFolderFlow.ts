@@ -1,11 +1,14 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useFolders } from "@app/contexts/FolderContext";
-import { useFilesPage } from "@app/contexts/FilesPageContext";
-import { canPickDirectory, pickDirectory } from "@app/services/directoryPicker";
-import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
-import { folderKind } from "@app/types/folder";
+import { useFolders } from "@editor/contexts/FolderContext";
+import { useFilesPage } from "@editor/contexts/FilesPageContext";
+import {
+  canPickDirectory,
+  pickDirectory,
+} from "@editor/services/directoryPicker";
+import { useServerFolderBlock } from "@editor/hooks/useServerFolderBlock";
+import { folderKind } from "@editor/types/folder";
 
 /**
  * Mounts and opens picked directories; otherwise opens the creation dialog.

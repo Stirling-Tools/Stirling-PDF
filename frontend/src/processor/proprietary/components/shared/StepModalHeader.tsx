@@ -1,1 +1,1 @@
-export { StepModalHeader } from "@app/components/shared/StepModalHeader";
+export { StepModalHeader } from "@editor/components/shared/StepModalHeader";

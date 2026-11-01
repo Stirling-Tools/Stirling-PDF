@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import "@app/ui/CodeBlock.css";
+import "@editor/ui/CodeBlock.css";
 
 export type CodeLang =
   | "json"

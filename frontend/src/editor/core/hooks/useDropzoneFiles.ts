@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { alert } from "@app/components/toast";
-import { getDropzoneFiles } from "@app/utils/getDropzoneFiles";
+import { alert } from "@editor/components/toast";
+import { getDropzoneFiles } from "@editor/utils/getDropzoneFiles";
 
 /**
  * Keeps readable files when entries fail; reports errors through onError or a toast.

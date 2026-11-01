@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Icon } from "@app/ui/Icon";
-import { ToolPanelHeader } from "@app/components/shared/ToolPanelHeader";
+import { Icon } from "@editor/ui/Icon";
+import { ToolPanelHeader } from "@editor/components/shared/ToolPanelHeader";
 
 const meta: Meta<typeof ToolPanelHeader> = {
   title: "Shared/ToolPanelHeader",

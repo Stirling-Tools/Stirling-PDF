@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ZipWarningModal from "@app/components/shared/ZipWarningModal";
+import ZipWarningModal from "@editor/components/shared/ZipWarningModal";
 
 const meta: Meta<typeof ZipWarningModal> = {
   title: "Shared/ZipWarningModal",

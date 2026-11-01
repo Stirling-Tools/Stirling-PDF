@@ -1,9 +1,9 @@
-import { BaseParameters } from "@app/types/parameters";
-import { TrappedStatus, CustomMetadataEntry } from "@app/types/metadata";
+import { BaseParameters } from "@editor/types/parameters";
+import { TrappedStatus, CustomMetadataEntry } from "@editor/types/metadata";
 import {
   useBaseParameters,
   BaseParametersHook,
-} from "@app/hooks/tools/shared/useBaseParameters";
+} from "@editor/hooks/tools/shared/useBaseParameters";
 
 export interface ChangeMetadataParameters extends BaseParameters {
   // Standard PDF metadata fields

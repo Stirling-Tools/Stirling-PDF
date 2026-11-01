@@ -1,16 +1,16 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useClipboard } from "@mantine/hooks";
-import { useAuth } from "@app/auth";
-import { Button } from "@app/ui";
-import { FlowModal } from "@app/components/shared/FlowModal";
-import { StepModalHeader } from "@app/components/shared/StepModalHeader";
-import { CreditPromptPipelines } from "@app/components/account-link/CreditPromptPipelines";
-import { ConnectBenefitsSlide } from "@app/components/account-link/ConnectBenefitsSlide";
+import { useAuth } from "@editor/auth";
+import { Button } from "@editor/ui";
+import { FlowModal } from "@editor/components/shared/FlowModal";
+import { StepModalHeader } from "@editor/components/shared/StepModalHeader";
+import { CreditPromptPipelines } from "@editor/components/account-link/CreditPromptPipelines";
+import { ConnectBenefitsSlide } from "@editor/components/account-link/ConnectBenefitsSlide";
 import {
   acknowledgeAccountLinkPrompt,
   type AccountLinkBlockContext,
-} from "@app/services/accountLinkBlock";
+} from "@editor/services/accountLinkBlock";
 
 export interface ExhaustedAccountLinkModalProps {
   /** Browser linking requires the server owner; native hosts supply their own action. */

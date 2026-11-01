@@ -1,16 +1,16 @@
 import i18n from "i18next";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
   cloneParagraphLineSlot,
   type ParagraphLineSlot,
   type TextRun,
-} from "@app/tools/pdfTextEditor/model/TextRun";
+} from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
   buildLineSlotsFromDescriptors,
   type LineSlotDescriptor,
   medianLineHeightFromBaselines,
-} from "@app/tools/pdfTextEditor/pdfium/ParagraphGrouper";
+} from "@editor/tools/pdfTextEditor/pdfium/ParagraphGrouper";
 
 /** Merge the selected runs on a single page into one virtual paragraph. */
 interface RunSnapshot {

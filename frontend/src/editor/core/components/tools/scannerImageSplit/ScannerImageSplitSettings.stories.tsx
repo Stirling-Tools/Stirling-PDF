@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ScannerImageSplitSettings from "@app/components/tools/scannerImageSplit/ScannerImageSplitSettings";
-import { ScannerImageSplitParameters } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitParameters";
+import ScannerImageSplitSettings from "@editor/components/tools/scannerImageSplit/ScannerImageSplitSettings";
+import { ScannerImageSplitParameters } from "@editor/hooks/tools/scannerImageSplit/useScannerImageSplitParameters";
 
 const buildParameters = (
   overrides: Partial<ScannerImageSplitParameters> = {},

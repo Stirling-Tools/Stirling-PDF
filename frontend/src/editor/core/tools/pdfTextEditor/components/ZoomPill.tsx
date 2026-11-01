@@ -1,12 +1,12 @@
 import { Group, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
-import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
+import { Button } from "@editor/ui/Button";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import {
   clampRenderScale,
   fitToWidthScale,
-} from "@app/tools/pdfTextEditor/util/fitToWidth";
+} from "@editor/tools/pdfTextEditor/util/fitToWidth";
 
 const Z_STEP = 0.25;
 

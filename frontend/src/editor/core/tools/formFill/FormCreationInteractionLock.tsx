@@ -5,7 +5,7 @@
 import { useEffect } from "react";
 import { useInteractionManagerCapability } from "@embedpdf/plugin-interaction-manager/react";
 
-import { useFormFill } from "@app/tools/formFill/FormFillContext";
+import { useFormFill } from "@editor/tools/formFill/FormFillContext";
 
 export function FormCreationInteractionLock() {
   const { mode, creationType } = useFormFill();

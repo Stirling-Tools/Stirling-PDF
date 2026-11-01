@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Container } from "@mantine/core";
-import { useFileHandler } from "@app/hooks/useFileHandler";
-import MobileUploadModal from "@app/components/shared/MobileUploadModal";
-import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
-import { Logo } from "@app/ui/Logo";
-import { LandingActions } from "@app/components/shared/LandingActions";
-import "@app/components/shared/LandingPage.css";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
+import MobileUploadModal from "@editor/components/shared/MobileUploadModal";
+import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
+import { Logo } from "@editor/ui/Logo";
+import { LandingActions } from "@editor/components/shared/LandingActions";
+import "@editor/components/shared/LandingPage.css";
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();

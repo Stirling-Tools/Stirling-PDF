@@ -6,8 +6,8 @@ vi.mock("@tauri-apps/plugin-shell", () => ({
   open: (url: string) => shellOpenMock(url),
 }));
 
-import { openExternalTab } from "@app/platform/openExternalTab";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { openExternalTab } from "@editor/platform/openExternalTab";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 describe("openExternalTab (desktop/Tauri)", () => {
   afterEach(() => {

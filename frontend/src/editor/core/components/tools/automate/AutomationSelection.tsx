@@ -1,18 +1,21 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Title, Stack, Divider } from "@mantine/core";
-import AutomationEntry from "@app/components/tools/automate/AutomationEntry";
-import AutomationImportModal from "@app/components/tools/automate/AutomationImportModal";
-import { useSuggestedAutomations } from "@app/hooks/tools/automate/useSuggestedAutomations";
-import { AutomationConfig, SuggestedAutomation } from "@app/types/automation";
-import { iconMap } from "@app/components/tools/automate/iconMap";
-import { iconKeyForSuggestedAutomation } from "@app/components/tools/automate/suggestedAutomationIcon";
-import { ToolRegistry } from "@app/data/toolsTaxonomy";
+import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
+import AutomationImportModal from "@editor/components/tools/automate/AutomationImportModal";
+import { useSuggestedAutomations } from "@editor/hooks/tools/automate/useSuggestedAutomations";
+import {
+  AutomationConfig,
+  SuggestedAutomation,
+} from "@editor/types/automation";
+import { iconMap } from "@editor/components/tools/automate/iconMap";
+import { iconKeyForSuggestedAutomation } from "@editor/components/tools/automate/suggestedAutomationIcon";
+import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import {
   downloadAutomationConfig,
   downloadFolderScanningConfig,
-} from "@app/utils/automationConverter";
-import type { ImportableAutomation } from "@app/hooks/tools/automate/useSavedAutomations";
+} from "@editor/utils/automationConverter";
+import type { ImportableAutomation } from "@editor/hooks/tools/automate/useSavedAutomations";
 
 interface AutomationSelectionProps {
   savedAutomations: AutomationConfig[];

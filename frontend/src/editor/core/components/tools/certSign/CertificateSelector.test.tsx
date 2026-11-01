@@ -4,12 +4,12 @@ import { beforeEach, expect, it, vi } from "vitest";
 import {
   CertificateSelector,
   type CertificateType,
-} from "@app/components/tools/certSign/CertificateSelector";
+} from "@editor/components/tools/certSign/CertificateSelector";
 
 const { config } = vi.hoisted(() => ({
   config: { runningProOrHigher: false, serverCertificateEnabled: true },
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config }),
 }));
 vi.mock("react-i18next", () => ({
@@ -17,7 +17,7 @@ vi.mock("react-i18next", () => ({
     t: (key: string, fallback?: string) => fallback ?? key,
   }),
 }));
-vi.mock("@app/components/shared/FileUploadButton", () => ({
+vi.mock("@editor/components/shared/FileUploadButton", () => ({
   default: () => <button>Upload certificate file</button>,
 }));
 

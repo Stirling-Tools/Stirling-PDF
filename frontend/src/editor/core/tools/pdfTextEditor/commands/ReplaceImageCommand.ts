@@ -1,16 +1,19 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { ImageObject } from "@app/tools/pdfTextEditor/model/ImageObject";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { Affine, PageRect } from "@app/tools/pdfTextEditor/types";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { Affine, PageRect } from "@editor/tools/pdfTextEditor/types";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { DecodedImage } from "@app/utils/pdfiumBitmapUtils";
+import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
 import {
   embedBitmapImageOnPage,
   embedJpegImageOnPage,
-} from "@app/utils/pdfiumBitmapUtils";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
-import { copyTagMarks } from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+} from "@editor/utils/pdfiumBitmapUtils";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import { copyTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 interface ZOrderModule {
   FPDFPage_InsertObjectAtIndex?: (

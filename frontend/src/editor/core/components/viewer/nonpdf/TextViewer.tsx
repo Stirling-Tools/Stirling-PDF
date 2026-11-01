@@ -11,8 +11,8 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
-import { formatFileSize } from "@app/utils/fileUtils";
-import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
+import { formatFileSize } from "@editor/utils/fileUtils";
+import { renderMarkdown } from "@editor/components/viewer/nonpdf/MarkdownRenderer";
 
 interface TextViewerProps {
   file: File;

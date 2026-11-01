@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Group, Modal, Radio, Stack, Text } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui/Button";
 
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { DeleteScope } from "@app/services/serverStorageDelete";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { DeleteScope } from "@editor/services/serverStorageDelete";
 
 interface DeleteFilesDialogProps {
   opened: boolean;

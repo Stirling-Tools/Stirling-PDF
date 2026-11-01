@@ -1,15 +1,15 @@
 import {
   isBoldFamily,
   isItalicFamily,
-} from "@app/tools/pdfTextEditor/util/fontFamily";
-import { canToggleItalic } from "@app/tools/pdfTextEditor/util/fontCapability";
-import type { LocalFont } from "@app/tools/pdfTextEditor/util/localFonts";
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { canToggleItalic } from "@editor/tools/pdfTextEditor/util/fontCapability";
+import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
 import type {
   PageSnapshot,
   RGBA,
   SelectionState,
   ToolbarState,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
 
 export const EMPTY_TOOLBAR: ToolbarState = {
   fontFamily: null,

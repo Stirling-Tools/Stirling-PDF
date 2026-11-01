@@ -1,5 +1,5 @@
 /**
- * No-op stub kept only to satisfy useToolOperation's @app/hooks/useCreditCheck
+ * No-op stub kept only to satisfy useToolOperation's @editor/hooks/useCreditCheck
  * import. There is no pre-flight credit/usage check anymore — PAYG is enforced
  * server-side (the BE returns 402 FEATURE_DEGRADED / PAYG_LIMIT_REACHED, which
  * paygErrorInterceptor turns into the usage-limit modal). Always allows.

@@ -3,21 +3,21 @@ import {
   fromLatin1,
   toLatin1,
   undoPngPredictor,
-} from "@app/tools/pdfTextEditor/pdfdoc/bytes";
+} from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
 import {
   RawPdf,
   arrayItems,
   removeDictEntry,
   setDictEntry,
   spliceValue,
-} from "@app/tools/pdfTextEditor/pdfdoc/raw";
+} from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   buildClassicPdf,
   buildXrefStreamPdf,
   singleContentPdf,
   splitContentPdf,
   streamBody,
-} from "@app/tools/pdfTextEditor/__tests__/pdfFixtures";
+} from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 describe("RawPdf.parse", () => {
   it("indexes objects and resolves the catalogue of a classic-xref file", async () => {
@@ -114,6 +114,16 @@ describe("RawPdf.valueSpan", () => {
     const body = "<< /Type /Page /Kids [1 0 R 2 0 R] >>";
     expect(pdf?.dictName(body, "Type")).toBe("Page");
     expect(pdf?.valueSpan(body, "Kids")?.text).toBe("[1 0 R 2 0 R]");
+  });
+
+  it("does not take a name value for the key it spells", async () => {
+    const pdf = await RawPdf.parse(singleContentPdf());
+    const body = "<< /Type /StructElem /S /P /P 9 0 R >>";
+    expect(pdf?.dictName(body, "S")).toBe("P");
+    expect(pdf?.dictRef(body, "P")).toBe(9);
+    expect(setDictEntry(body, "P", "10 0 R")).toBe(
+      "<< /Type /StructElem /S /P /P 10 0 R >>",
+    );
   });
 });
 

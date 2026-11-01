@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { BASE_PATH } from "@app/constants/app";
+import { BASE_PATH } from "@editor/constants/app";
 
 const LOGO_FOLDER = "modern-logo";
 

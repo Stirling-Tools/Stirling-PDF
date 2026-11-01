@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   defaultParameters,
   validateCropParameters,
-} from "@app/hooks/tools/crop/useCropParameters";
+} from "@editor/hooks/tools/crop/useCropParameters";
 
 describe("validateCropParameters", () => {
   test("accepts 'all' and valid ranges with a valid crop area", () => {

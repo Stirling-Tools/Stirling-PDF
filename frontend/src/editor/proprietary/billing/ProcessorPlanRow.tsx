@@ -5,10 +5,10 @@ import {
   formatMoneyMajor,
   formatPeriodDate,
   remainingMeter,
-} from "@app/billing/format";
-import { MeterRow } from "@app/billing/MeterRow";
-import { estimatedBillWithPending } from "@app/billing/pendingUsage";
-import type { Wallet } from "@app/billing/types";
+} from "@editor/billing/format";
+import { MeterRow } from "@editor/billing/MeterRow";
+import { estimatedBillWithPending } from "@editor/billing/pendingUsage";
+import type { Wallet } from "@editor/billing/types";
 
 /** One tranche of the row's breakdown: a labelled figure over its own small bar. */
 function Tranche({

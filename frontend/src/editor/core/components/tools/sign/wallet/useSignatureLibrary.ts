@@ -1,21 +1,21 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { alert } from "@app/components/toast";
-import { useSavedSignatures } from "@app/hooks/tools/sign/useSavedSignatures";
-import { useDefaultSignature } from "@app/hooks/tools/sign/useDefaultSignature";
-import { uniqueName } from "@app/utils/uniqueName";
-import type { SavedSignature } from "@app/types/signature";
+import { alert } from "@editor/components/toast";
+import { useSavedSignatures } from "@editor/hooks/tools/sign/useSavedSignatures";
+import { useDefaultSignature } from "@editor/hooks/tools/sign/useDefaultSignature";
+import { uniqueName } from "@editor/utils/uniqueName";
+import type { SavedSignature } from "@editor/types/signature";
 import type {
   CreatedSignature,
   SaveChoice,
-} from "@app/components/tools/sign/createSignature/types";
+} from "@editor/components/tools/sign/createSignature/types";
 import {
   DRAFT_KEY,
   createdToPayload,
   savedToPayload,
   toWalletEntry,
   type WalletEntry,
-} from "@app/components/tools/sign/wallet/walletEntry";
+} from "@editor/components/tools/sign/wallet/walletEntry";
 
 function ownFirstDefault(
   signatures: SavedSignature[],

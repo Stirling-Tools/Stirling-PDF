@@ -4,13 +4,13 @@ import { renderHook, act } from "@testing-library/react";
 import {
   FileStoreContext,
   type FileStateStore,
-} from "@app/contexts/file/contexts";
-import type { FileContextState } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+} from "@editor/contexts/file/contexts";
+import type { FileContextState } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const mockStartEagerWasmCompilation = vi.fn();
 
-vi.mock("@app/services/wasmPrecompiler", () => ({
+vi.mock("@editor/services/wasmPrecompiler", () => ({
   startEagerWasmCompilation: () => mockStartEagerWasmCompilation(),
 }));
 
@@ -58,7 +58,7 @@ describe("usePdfEngineWarmUp", () => {
   test("warms up immediately when files already exist in store", async () => {
     const store = createMockStore(["file-1" as FileId]);
     const { usePdfEngineWarmUp } =
-      await import("@app/hooks/usePdfEngineWarmUp");
+      await import("@editor/hooks/usePdfEngineWarmUp");
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <FileStoreContext.Provider value={store}>
@@ -74,7 +74,7 @@ describe("usePdfEngineWarmUp", () => {
   test("fetches nothing when the page is only visited", async () => {
     const store = createMockStore([]);
     const { usePdfEngineWarmUp } =
-      await import("@app/hooks/usePdfEngineWarmUp");
+      await import("@editor/hooks/usePdfEngineWarmUp");
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <FileStoreContext.Provider value={store}>
@@ -94,7 +94,7 @@ describe("usePdfEngineWarmUp", () => {
   test("does not warm up for pointer input outside the file picker", async () => {
     const store = createMockStore([]);
     const { usePdfEngineWarmUp } =
-      await import("@app/hooks/usePdfEngineWarmUp");
+      await import("@editor/hooks/usePdfEngineWarmUp");
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <FileStoreContext.Provider value={store}>
@@ -115,7 +115,7 @@ describe("usePdfEngineWarmUp", () => {
   test("warms up when the file picker is opened", async () => {
     const store = createMockStore([]);
     const { usePdfEngineWarmUp } =
-      await import("@app/hooks/usePdfEngineWarmUp");
+      await import("@editor/hooks/usePdfEngineWarmUp");
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <FileStoreContext.Provider value={store}>
@@ -148,7 +148,7 @@ describe("usePdfEngineWarmUp", () => {
   test("triggers early when file is added to store", async () => {
     const store = createMockStore([]);
     const { usePdfEngineWarmUp } =
-      await import("@app/hooks/usePdfEngineWarmUp");
+      await import("@editor/hooks/usePdfEngineWarmUp");
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <FileStoreContext.Provider value={store}>
@@ -170,7 +170,7 @@ describe("usePdfEngineWarmUp", () => {
   test("warms up only for an OS file drag, not an internal drag", async () => {
     const store = createMockStore([]);
     const { usePdfEngineWarmUp } =
-      await import("@app/hooks/usePdfEngineWarmUp");
+      await import("@editor/hooks/usePdfEngineWarmUp");
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <FileStoreContext.Provider value={store}>
@@ -198,7 +198,7 @@ describe("usePdfEngineWarmUp", () => {
   test("warms up when the file picker takes focus", async () => {
     const store = createMockStore([]);
     const { usePdfEngineWarmUp } =
-      await import("@app/hooks/usePdfEngineWarmUp");
+      await import("@editor/hooks/usePdfEngineWarmUp");
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <FileStoreContext.Provider value={store}>

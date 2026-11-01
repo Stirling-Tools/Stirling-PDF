@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import OCRSettings from "@app/components/tools/ocr/OCRSettings";
-import { OCRParameters } from "@app/hooks/tools/ocr/useOCRParameters";
+import OCRSettings from "@editor/components/tools/ocr/OCRSettings";
+import { OCRParameters } from "@editor/hooks/tools/ocr/useOCRParameters";
 
 const buildParameters = (
   overrides: Partial<OCRParameters> = {},

@@ -1,24 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 
-import { useSuggestedTools } from "@app/hooks/useSuggestedTools";
-import { useToolRecommendations } from "@app/hooks/useToolRecommendations";
-import { useNavigationState } from "@app/contexts/NavigationContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import type { ToolAvailabilityMap } from "@app/hooks/useToolManagement";
-import type { ToolId } from "@app/types/toolId";
-import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+import { useSuggestedTools } from "@editor/hooks/useSuggestedTools";
+import { useToolRecommendations } from "@editor/hooks/useToolRecommendations";
+import { useNavigationState } from "@editor/contexts/NavigationContext";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import type { ToolAvailabilityMap } from "@editor/hooks/useToolManagement";
+import type { ToolId } from "@editor/types/toolId";
+import type { ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
 
-vi.mock("@app/hooks/useToolRecommendations", () => ({
+vi.mock("@editor/hooks/useToolRecommendations", () => ({
   useToolRecommendations: vi.fn(),
 }));
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationState: vi.fn(),
 }));
-vi.mock("@app/contexts/ToolWorkflowContext", () => ({
+vi.mock("@editor/contexts/ToolWorkflowContext", () => ({
   useToolWorkflow: vi.fn(),
 }));
-vi.mock("@app/hooks/useToolNavigation", () => ({
+vi.mock("@editor/hooks/useToolNavigation", () => ({
   useToolNavigation: () => ({
     getToolNavigation: (toolId: string) => ({
       href: `/${toolId}`,

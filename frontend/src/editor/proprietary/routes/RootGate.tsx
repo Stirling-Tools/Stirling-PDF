@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import { resolveRootTarget } from "@app/utils/loginLanding";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import { resolveRootTarget } from "@editor/utils/loginLanding";
 
 /** A decision, tagged with the visit it was made for so it can never go stale. */
 interface Decision {

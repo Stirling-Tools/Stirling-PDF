@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import type { PdfAttachmentObject } from "@embedpdf/models";
 
-import { readPortfolioMembers } from "@app/utils/portfolioMembers";
-import { isPdfFile } from "@app/utils/fileUtils";
+import { readPortfolioMembers } from "@editor/utils/portfolioMembers";
+import { isPdfFile } from "@editor/utils/fileUtils";
 
 // Keeps a portfolio pinned while its members are read, so the panel outlives
 // opening one. Members match by name; their file ids are assigned after the click.

@@ -7,7 +7,7 @@
  */
 
 import { describe, test, expect } from "vitest";
-import { fitThumbs, THUMB_SIZES } from "@app/utils/mobileScannerThumbs";
+import { fitThumbs, THUMB_SIZES } from "@editor/utils/mobileScannerThumbs";
 
 const TOTALS = [1, 3, 9, 21, 40];
 const VIEWPORTS = [

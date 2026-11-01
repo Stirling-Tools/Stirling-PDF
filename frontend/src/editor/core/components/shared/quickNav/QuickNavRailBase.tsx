@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode, type ReactElement, type Ref } from "react";
 import { useTranslation } from "react-i18next";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import "@app/components/shared/quickNav/QuickNavRail.css";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import "@editor/components/shared/quickNav/QuickNavRail.css";
 
 export type QuickNavTarget = "reader" | "editor" | "files" | "processor";
 

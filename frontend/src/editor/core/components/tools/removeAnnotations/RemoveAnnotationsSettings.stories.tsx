@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import RemoveAnnotationsSettings from "@app/components/tools/removeAnnotations/RemoveAnnotationsSettings";
+import RemoveAnnotationsSettings from "@editor/components/tools/removeAnnotations/RemoveAnnotationsSettings";
 
 const meta = {
   title: "Tools/RemoveAnnotations/RemoveAnnotationsSettings",

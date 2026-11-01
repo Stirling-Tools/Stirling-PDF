@@ -1,5 +1,5 @@
-import { rgb } from "@app/services/pdfiumDocBuilder";
-import type { SignatureStatusKind } from "@app/hooks/tools/validateSignature/utils/signatureStatus";
+import { rgb } from "@editor/services/pdfiumDocBuilder";
+import type { SignatureStatusKind } from "@editor/hooks/tools/validateSignature/utils/signatureStatus";
 
 type RgbTuple = [number, number, number];
 

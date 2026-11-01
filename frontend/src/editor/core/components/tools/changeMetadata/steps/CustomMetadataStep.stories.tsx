@@ -1,12 +1,12 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import CustomMetadataStep from "@app/components/tools/changeMetadata/steps/CustomMetadataStep";
+import CustomMetadataStep from "@editor/components/tools/changeMetadata/steps/CustomMetadataStep";
 import {
   ChangeMetadataParameters,
   defaultParameters,
   createCustomMetadataFunctions,
-} from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
-import { CustomMetadataEntry } from "@app/types/metadata";
+} from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { CustomMetadataEntry } from "@editor/types/metadata";
 
 const meta = {
   title: "Tools/ChangeMetadata/CustomMetadataStep",

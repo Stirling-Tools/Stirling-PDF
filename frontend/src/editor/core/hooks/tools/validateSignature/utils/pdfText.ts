@@ -1,4 +1,4 @@
-import { PdfiumFont } from "@app/services/pdfiumDocBuilder";
+import { PdfiumFont } from "@editor/services/pdfiumDocBuilder";
 
 export const wrapText = (
   text: string,

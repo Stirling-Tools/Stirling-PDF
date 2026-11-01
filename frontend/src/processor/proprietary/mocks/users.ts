@@ -12,14 +12,14 @@
  * these fixtures can be deleted (or kept as test seeds).
  */
 
-import type { Tier } from "@portal/contexts/TierContext";
+import type { Tier } from "@processor/contexts/TierContext";
 import type {
   AccessControls,
   Member,
   UsersResponse,
   UsersSummary,
-} from "@portal/api/users";
-import { ROLES } from "@portal/api/users";
+} from "@processor/api/users";
+import { ROLES } from "@processor/api/users";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Roles & members                                                          */

@@ -12,8 +12,8 @@ import {
   getPdfiumModule,
   writeUtf16,
   saveRawDocument,
-} from "@app/services/pdfiumService";
-import { embedBitmapImageOnPage } from "@app/utils/pdfiumBitmapUtils";
+} from "@editor/services/pdfiumService";
+import { embedBitmapImageOnPage } from "@editor/utils/pdfiumBitmapUtils";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 
 // ---------------------------------------------------------------------------

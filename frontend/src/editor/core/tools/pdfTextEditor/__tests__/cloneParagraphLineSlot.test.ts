@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   cloneParagraphLineSlot,
   type ParagraphLineSlot,
-} from "@app/tools/pdfTextEditor/model/TextRun";
+} from "@editor/tools/pdfTextEditor/model/TextRun";
 
 function mkSlot(): ParagraphLineSlot {
   return {

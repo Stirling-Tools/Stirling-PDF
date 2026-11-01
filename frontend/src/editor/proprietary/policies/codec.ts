@@ -13,13 +13,13 @@
  * found it; only `policyInputs` turns a selection into a binding.
  */
 
-import { resolveRunOn } from "@app/policies/runOn";
+import { resolveRunOn } from "@editor/policies/runOn";
 import type {
   PolicyDecodedState,
   WireOutputOptions,
   WirePipelineInput,
   WirePolicy,
-} from "@app/policies/types";
+} from "@editor/policies/types";
 
 const DEFAULTS = {
   maxRetries: 3,

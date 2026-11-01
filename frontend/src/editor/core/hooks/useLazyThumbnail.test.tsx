@@ -1,13 +1,13 @@
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
-import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
-import { createStirlingFile, type FileId } from "@app/types/fileContext";
+import { generateThumbnailForFile } from "@editor/utils/thumbnailUtils";
+import { useLazyThumbnail } from "@editor/hooks/useLazyThumbnail";
+import { createStirlingFile, type FileId } from "@editor/types/fileContext";
 import {
   clearPdfAccess,
   forgetPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
 const storage = vi.hoisted(() => ({
   loadFile: vi.fn(),
@@ -15,14 +15,14 @@ const storage = vi.hoisted(() => ({
 }));
 const management = vi.hoisted(() => ({ updateStirlingFileStub: vi.fn() }));
 const selectors = vi.hoisted(() => ({ getFile: vi.fn() }));
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => storage,
 }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useFileManagement: () => management,
   useFileSelectors: () => selectors,
 }));
-vi.mock("@app/utils/thumbnailUtils", () => ({
+vi.mock("@editor/utils/thumbnailUtils", () => ({
   generateThumbnailForFile: vi.fn(),
 }));
 
@@ -85,7 +85,7 @@ describe("protected cached thumbnails", () => {
     const file = createStirlingFile(new File(["encrypted"], "private.pdf"), id);
     selectors.getFile.mockReturnValue(file);
     const { generateThumbnailForFile } =
-      await import("@app/utils/thumbnailUtils");
+      await import("@editor/utils/thumbnailUtils");
     vi.mocked(generateThumbnailForFile).mockResolvedValue(thumbnail);
     const { result, rerender } = renderHook(() =>
       useLazyThumbnail(id, file.size, undefined, true),

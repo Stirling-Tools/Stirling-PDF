@@ -3,8 +3,8 @@ import type { useTranslation } from "react-i18next";
 import type {
   FileActionsContext,
   FileStoreContext,
-} from "@app/contexts/file/contexts";
-import { fileStorage } from "@app/services/fileStorage";
+} from "@editor/contexts/file/contexts";
+import { fileStorage } from "@editor/services/fileStorage";
 import {
   clearRetryPayload,
   kindClaims,
@@ -13,27 +13,27 @@ import {
   type RetryOutcome,
   type RetryOutputFile,
   type RetryPayload,
-} from "@app/services/notificationRetry";
+} from "@editor/services/notificationRetry";
 import {
   canPlacePolicy,
   rechainPolicyOnDocument,
   type PolicyRerunOutcome,
   type PolicyRetryTarget,
-} from "@app/services/notificationPolicyRetry";
-import { reportKnownFailure } from "@app/services/failureReporting";
-import { reportNotificationResolved } from "@app/services/notifications";
-import type { FileId } from "@app/types/file";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import { isValidToolId, type ToolId } from "@app/types/toolId";
+} from "@editor/services/notificationPolicyRetry";
+import { reportKnownFailure } from "@editor/services/failureReporting";
+import { reportNotificationResolved } from "@editor/services/notifications";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import { isValidToolId, type ToolId } from "@editor/types/toolId";
 import type {
   ClientActionOutcome,
   ClientActionSpec,
   NotificationActionContext,
-} from "@app/components/notifications/notificationActions";
+} from "@editor/components/notifications/notificationActions";
 import {
   addToWorkbench,
   versionUnder,
-} from "@app/components/notifications/resolutions/adopt";
+} from "@editor/components/notifications/resolutions/adopt";
 
 // A resolution is decrypt's shape with the fix swapped out: produce a fixed document, take it
 // into the workbench, re-run what failed, then tell the server. The differences between fixes

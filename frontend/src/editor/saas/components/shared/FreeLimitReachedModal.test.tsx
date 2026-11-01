@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import type { Wallet } from "@app/hooks/useWallet";
+import type { Wallet } from "@editor/hooks/useWallet";
 
 // The modal resolves through the saas cascade to the cloud impl
 // (src/cloud/components/shared/FreeLimitReachedModal.tsx). It calls
-// @app/hooks/useWallet directly and bails out (renders null) until a wallet
+// @editor/hooks/useWallet directly and bails out (renders null) until a wallet
 // resolves, so the only mock the smoke test needs is the wallet hook — the
 // rest of the subtree (AnimatedSlideBackground, FreeMeterPanel, MUI icon) is
 // pure CSS/SVG/divs and renders fine under jsdom.
@@ -45,17 +45,17 @@ const wallet: Wallet = {
 
 const useWalletMock = vi.fn();
 
-vi.mock("@app/hooks/useWallet", () => ({
+vi.mock("@editor/hooks/useWallet", () => ({
   useWallet: () => useWalletMock(),
 }));
 
 // navigateToSettings is only invoked on CTA click; stub it so the smoke test
 // never touches real settings/router plumbing.
-vi.mock("@app/utils/settingsNavigation", () => ({
+vi.mock("@editor/utils/settingsNavigation", () => ({
   navigateToSettings: vi.fn(),
 }));
 
-import { FreeLimitReachedModal } from "@app/components/shared/FreeLimitReachedModal";
+import { FreeLimitReachedModal } from "@editor/components/shared/FreeLimitReachedModal";
 
 const renderModal = () =>
   render(

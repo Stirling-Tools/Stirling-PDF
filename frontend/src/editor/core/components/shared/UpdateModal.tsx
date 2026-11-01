@@ -14,9 +14,9 @@ import {
   Divider,
   Anchor,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import {
@@ -25,9 +25,9 @@ import {
   FullUpdateInfo,
   MachineInfo,
   VersionUpdate,
-} from "@app/services/updateService";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import { handleExternalLinkClick } from "@app/platform/externalLinkClick";
+} from "@editor/services/updateService";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import { handleExternalLinkClick } from "@editor/platform/externalLinkClick";
 export type DesktopInstallState =
   | "idle"
   | "downloading"

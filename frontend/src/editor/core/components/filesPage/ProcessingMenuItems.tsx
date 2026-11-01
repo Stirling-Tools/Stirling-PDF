@@ -1,8 +1,8 @@
 import { Menu } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 
-import { ProcessingFolderState } from "@app/hooks/useProcessingFolders";
+import { ProcessingFolderState } from "@editor/hooks/useProcessingFolders";
 
 /**
  * The processing entries of a folder's action menu, carried by every folder kind

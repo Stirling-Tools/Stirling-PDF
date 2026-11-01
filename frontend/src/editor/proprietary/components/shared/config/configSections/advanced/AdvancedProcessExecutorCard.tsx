@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
+import { SettingsFieldLabel } from "@editor/components/shared/config/SettingsFieldLabel";
 import { NumberInput, Stack, Paper, Accordion } from "@mantine/core";
-import type { AdvancedCardProps } from "@app/components/shared/config/configSections/advanced/advancedCardProps";
+import type { AdvancedCardProps } from "@editor/components/shared/config/configSections/advanced/advancedCardProps";
 
 /** Per-executor concurrency and timeouts. */
 export function AdvancedProcessExecutorCard({

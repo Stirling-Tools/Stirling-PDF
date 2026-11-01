@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   assertIncrementalAppend,
   assertSavedPdf,
-} from "@app/tools/pdfTextEditor/util/savedBytes";
+} from "@editor/tools/pdfTextEditor/util/savedBytes";
 
 function ascii(text: string): Uint8Array {
   const out = new Uint8Array(text.length);

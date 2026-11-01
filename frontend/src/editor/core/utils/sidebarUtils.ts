@@ -1,4 +1,4 @@
-import { SidebarRefs, SidebarState, SidebarInfo } from "@app/types/sidebar";
+import { SidebarRefs, SidebarState, SidebarInfo } from "@editor/types/sidebar";
 
 /**
  * Gets the All tools sidebar information using React refs and state

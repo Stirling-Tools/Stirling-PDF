@@ -1,10 +1,10 @@
 import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ShareManagementModal from "@app/components/shared/ShareManagementModal";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import { FileContextProvider } from "@app/contexts/FileContext";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import ShareManagementModal from "@editor/components/shared/ShareManagementModal";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import { FileContextProvider } from "@editor/contexts/FileContext";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const mockFile: StirlingFileStub = {
   id: "story-file-1" as FileId,

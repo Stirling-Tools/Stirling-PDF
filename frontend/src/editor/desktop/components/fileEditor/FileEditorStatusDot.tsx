@@ -1,8 +1,8 @@
 import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { StirlingFileStub } from "@app/types/fileContext";
-import { diskLinkState } from "@app/services/diskLinkState";
-import styles from "@app/components/fileEditor/FileEditorThumbnail.module.css";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { diskLinkState } from "@editor/services/diskLinkState";
+import styles from "@editor/components/fileEditor/FileEditorThumbnail.module.css";
 
 interface FileEditorStatusDotProps {
   file: StirlingFileStub;

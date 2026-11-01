@@ -1,11 +1,11 @@
 import { describe, expect, test, beforeEach } from "vitest";
 import "fake-indexeddb/auto";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 import {
   DATABASE_CONFIGS,
   indexedDBManager,
-} from "@app/services/indexedDBManager";
+} from "@editor/services/indexedDBManager";
 
 /**
  * Regression test for the IDB v2->v4 migration silent-clobber bug fixed in

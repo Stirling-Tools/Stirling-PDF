@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   DEFAULT_DATASOURCE,
   isEmbeddedH2Database,
-} from "@app/components/shared/config/configSections/advanced/advancedSettings";
+} from "@editor/components/shared/config/configSections/advanced/advancedSettings";
 
 describe("isEmbeddedH2Database", () => {
   test("a stock install with no datasource block is embedded", () => {

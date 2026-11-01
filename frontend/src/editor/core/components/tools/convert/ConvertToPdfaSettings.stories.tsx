@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
-import { defaultParameters } from "@app/hooks/tools/convert/useConvertParameters";
+import ConvertToPdfaSettings from "@editor/components/tools/convert/ConvertToPdfaSettings";
+import { defaultParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 
 const meta = {
   title: "Tools/Convert/ConvertToPdfaSettings",

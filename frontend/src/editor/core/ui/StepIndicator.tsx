@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import "@app/ui/StepIndicator.css";
+import "@editor/ui/StepIndicator.css";
 
 export interface StepIndicatorProps {
   /** Total number of steps. */

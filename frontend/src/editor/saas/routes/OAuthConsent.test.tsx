@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 const fetchMock = vi.fn();
 let search = "?authorization_id=auth-123";
 
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({
     session: { access_token: "token-abc" },
     loading: false,
@@ -18,7 +18,7 @@ vi.mock("@app/auth/UseSession", () => ({
   }),
 }));
 
-vi.mock("@app/hooks/useTranslation", () => ({
+vi.mock("@editor/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (_key: string, fallback?: unknown) =>
       typeof fallback === "string"
@@ -27,18 +27,18 @@ vi.mock("@app/hooks/useTranslation", () => ({
   }),
 }));
 
-vi.mock("@app/hooks/useDocumentMeta", () => ({ useDocumentMeta: () => {} }));
+vi.mock("@editor/hooks/useDocumentMeta", () => ({ useDocumentMeta: () => {} }));
 
-vi.mock("@app/routes/authShared/AuthLayout", () => ({
+vi.mock("@editor/routes/authShared/AuthLayout", () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock("@app/auth/ui/ErrorMessage", () => ({
+vi.mock("@editor/auth/ui/ErrorMessage", () => ({
   default: ({ error }: { error?: string | null }) =>
     error ? <div role="alert">{error}</div> : null,
 }));
 
-vi.mock("@app/ui/Button", () => ({
+vi.mock("@editor/ui/Button", () => ({
   Button: ({ children, ...rest }: { children: ReactNode }) => (
     <button {...rest}>{children}</button>
   ),
@@ -56,7 +56,7 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-const OAuthConsent = (await import("@app/routes/OAuthConsent")).default;
+const OAuthConsent = (await import("@editor/routes/OAuthConsent")).default;
 
 const json = (status: number, body: unknown) =>
   Promise.resolve({

@@ -2,8 +2,8 @@ import {
   familyOf,
   flipItalic,
   isItalicFamily,
-} from "@app/tools/pdfTextEditor/util/fontFamily";
-import { helveticaVariantFor } from "@app/tools/pdfTextEditor/util/helveticaVariant";
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { helveticaVariantFor } from "@editor/tools/pdfTextEditor/util/helveticaVariant";
 import {
   faceStyleFlags,
   getLocalFontBytes,
@@ -12,7 +12,7 @@ import {
   pickLocalFontFace,
   splitRequested,
   type LocalFont,
-} from "@app/tools/pdfTextEditor/util/localFonts";
+} from "@editor/tools/pdfTextEditor/util/localFonts";
 
 // Whether a style change is actually possible for a run's face, and in which
 // family. The toolbar asks before offering the control: replacing a document's

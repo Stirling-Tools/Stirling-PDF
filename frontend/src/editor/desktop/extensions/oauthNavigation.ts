@@ -1,5 +1,5 @@
-import { authService } from "@app/services/authService";
-import { connectionModeService } from "@app/services/connectionModeService";
+import { authService } from "@editor/services/authService";
+import { connectionModeService } from "@editor/services/connectionModeService";
 
 /**
  * Desktop-specific OAuth navigation: prefer popup/system browser, avoid hijacking main webview.

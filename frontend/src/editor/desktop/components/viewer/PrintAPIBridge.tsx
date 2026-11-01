@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { usePrintCapability } from "@embedpdf/plugin-print/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
-import { printPdfNatively } from "@app/services/nativePrintService";
-import { DesktopOs, getDesktopOs } from "@app/services/platformService";
-import { PrintAPIBridgeProps } from "@core/components/viewer/PrintAPIBridge";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
+import { printPdfNatively } from "@editor/services/nativePrintService";
+import { DesktopOs, getDesktopOs } from "@editor/services/platformService";
+import { PrintAPIBridgeProps } from "@editor-core/components/viewer/PrintAPIBridge";
 
 export function PrintAPIBridge({ file, url, fileName }: PrintAPIBridgeProps) {
   const { provides: print } = usePrintCapability();

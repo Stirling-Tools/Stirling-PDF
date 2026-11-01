@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { WithOrgOwner } from "@portal/test/WithOrgOwner";
+import { WithOrgOwner } from "@processor/test/WithOrgOwner";
 import { http, HttpResponse } from "msw";
-import { AccountLinkProvider } from "@portal/contexts/AccountLinkContext";
-import { AccountLinkPanel } from "@portal/components/account-link/AccountLinkPanel";
-import { listInstances } from "@portal/mocks/link";
-import "@portal/views/AccountLink.css";
+import { AccountLinkProvider } from "@processor/contexts/AccountLinkContext";
+import { AccountLinkPanel } from "@processor/components/account-link/AccountLinkPanel";
+import { listInstances } from "@processor/mocks/link";
+import "@processor/views/AccountLink.css";
 
 // AccountLinkPanel reads the shared account-link instance from context (the
 // preview only supplies LinkProvider), so wrap it in AccountLinkProvider here.

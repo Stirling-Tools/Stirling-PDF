@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
-import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
-import { createFolderId, type FolderRecord } from "@app/types/folder";
+import { MoveToFolderDialog } from "@editor/components/filesPage/MoveToFolderDialog";
+import { createFolderId, type FolderRecord } from "@editor/types/folder";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),

@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { ClassificationProgressRing } from "@app/components/quickNav/ClassificationProgressRing";
+import { ClassificationProgressRing } from "@editor/components/quickNav/ClassificationProgressRing";
 import {
   dismissBackgroundClassification,
   useBackgroundClassification,
-} from "@app/components/onboarding/classificationDemo/backgroundClassification";
+} from "@editor/components/onboarding/classificationDemo/backgroundClassification";
 
 /** Rail entry for a folder sweep still classifying after onboarding handed the canvas
  *  back. Renders nothing when no sweep is live. */

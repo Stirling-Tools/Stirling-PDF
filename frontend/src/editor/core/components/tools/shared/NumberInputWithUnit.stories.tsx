@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import NumberInputWithUnit from "@app/components/tools/shared/NumberInputWithUnit";
+import NumberInputWithUnit from "@editor/components/tools/shared/NumberInputWithUnit";
 
 const meta = {
   title: "Tools/Shared/NumberInputWithUnit",

@@ -7,11 +7,11 @@ import {
   Popover,
   useMantineTheme,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
-import { FORMAT_GROUP_LABEL_KEYS } from "@app/constants/convertConstants";
+import { Icon } from "@editor/ui/Icon";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { FORMAT_GROUP_LABEL_KEYS } from "@editor/constants/convertConstants";
 
 interface FormatOption {
   value: string;

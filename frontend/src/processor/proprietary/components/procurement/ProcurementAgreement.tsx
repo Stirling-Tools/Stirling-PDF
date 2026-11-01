@@ -2,18 +2,18 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Button } from "@app/ui";
+import { Button } from "@editor/ui";
 import {
   fetchAgreementDocument,
   fetchAgreementPdf,
   recordAgreementSignature,
   type QuoteResult,
-} from "@portal/api/procurement";
-import { Icon } from "@app/ui/Icon";
-import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
-import { useAsync } from "@portal/hooks/useAsync";
-import "@portal/theme/surface.css";
-import "@portal/views/Procurement.css";
+} from "@processor/api/procurement";
+import { Icon } from "@editor/ui/Icon";
+import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
+import { useAsync } from "@processor/hooks/useAsync";
+import "@processor/theme/surface.css";
+import "@processor/views/Procurement.css";
 
 /**
  * The agreement (security) step: the buyer reviews the full Stirling Enterprise Agreement — Master

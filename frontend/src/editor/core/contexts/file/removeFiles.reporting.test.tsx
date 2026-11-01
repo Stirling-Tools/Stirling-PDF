@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, act } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { FileContextProvider } from "@app/contexts/FileContext";
-import { useFileActions } from "@app/contexts/file/fileHooks";
-import type { FileContextActions } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import { FileContextProvider } from "@editor/contexts/FileContext";
+import { useFileActions } from "@editor/contexts/file/fileHooks";
+import type { FileContextActions } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 /**
  * `removeFiles` deletes a document or merely takes it out of the workbench, told apart only by
@@ -12,13 +12,13 @@ import type { FileId } from "@app/types/file";
  */
 
 const reportFilesRemoved = vi.fn();
-vi.mock("@app/services/failureReporting", () => ({
+vi.mock("@editor/services/failureReporting", () => ({
   reportFilesRemoved: (fileIds: string[]) => reportFilesRemoved(fileIds),
   reportToolFailure: vi.fn(),
 }));
 
 // IndexedDB, which jsdom has none of. Stubbed so the delete branch can run to the end.
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   // FileContext subscribes to this to drop files whose bytes are unreadable.
   onRecordUnreadable: () => () => {},
   fileStorage: {

@@ -10,12 +10,12 @@ import {
   Modal,
   type DataTableColumn,
   type StatusTone,
-} from "@app/ui";
-import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
+} from "@editor/ui";
+import { SectionHeader } from "@processor/components/infrastructure/SectionHeader";
 import type {
   EncryptionKeyInfo,
   EncryptionKeyStatus,
-} from "@portal/api/storageEncryption";
+} from "@processor/api/storageEncryption";
 
 const STATUS_TONE: Record<EncryptionKeyStatus, StatusTone> = {
   ACTIVE: "success",

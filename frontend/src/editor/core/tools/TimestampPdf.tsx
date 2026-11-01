@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import TimestampPdfSettings from "@app/components/tools/timestampPdf/TimestampPdfSettings";
-import { useTimestampPdfParameters } from "@app/hooks/tools/timestampPdf/useTimestampPdfParameters";
-import { useTimestampPdfOperation } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import TimestampPdfSettings from "@editor/components/tools/timestampPdf/TimestampPdfSettings";
+import { useTimestampPdfParameters } from "@editor/hooks/tools/timestampPdf/useTimestampPdfParameters";
+import { useTimestampPdfOperation } from "@editor/hooks/tools/timestampPdf/useTimestampPdfOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 
 const TimestampPdf = (props: BaseToolProps) => {
   const { t } = useTranslation();

@@ -1,9 +1,9 @@
-import { defineSingleFileTool } from "@app/hooks/tools/shared/useToolOperation";
+import { defineSingleFileTool } from "@editor/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
+} from "@editor/hooks/tools/shared/toolApiMapping";
 
 /**
  * Classification as an ordinary pipeline step.

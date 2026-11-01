@@ -4,8 +4,8 @@ import { useTranslation } from "react-i18next";
 import {
   TimestampPdfParameters,
   FALLBACK_TSA_PRESETS,
-} from "@app/hooks/tools/timestampPdf/useTimestampPdfParameters";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+} from "@editor/hooks/tools/timestampPdf/useTimestampPdfParameters";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 interface TimestampPdfSettingsProps {
   parameters: TimestampPdfParameters;

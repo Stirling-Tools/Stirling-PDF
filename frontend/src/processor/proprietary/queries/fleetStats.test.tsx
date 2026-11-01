@@ -2,8 +2,8 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
-import { useFleetStats } from "@portal/queries/infrastructure";
-import { fetchFleetStats } from "@portal/api/fleetStats";
+import { useFleetStats } from "@processor/queries/infrastructure";
+import { fetchFleetStats } from "@processor/api/fleetStats";
 
 const state = vi.hoisted<{
   auth: {
@@ -27,8 +27,8 @@ const state = vi.hoisted<{
   json: vi.fn(),
 }));
 
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => state.auth }));
-vi.mock("@portal/api/http", () => ({
+vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => state.auth }));
+vi.mock("@processor/api/http", () => ({
   apiClient: { local: { json: state.json }, saas: { json: state.json } },
 }));
 

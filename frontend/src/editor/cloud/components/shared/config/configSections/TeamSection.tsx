@@ -10,24 +10,24 @@ import {
   Menu,
   Avatar,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { StatusBadge } from "@app/ui/StatusBadge";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { StatusBadge } from "@editor/ui/StatusBadge";
 import { useTranslation } from "react-i18next";
-import { useTeamAuth } from "@app/auth/teamSession";
+import { useTeamAuth } from "@editor/auth/teamSession";
 import {
   useSaaSTeam,
   type TeamInvitation,
   type TeamMember,
-} from "@app/contexts/SaaSTeamContext";
-import { Icon } from "@app/ui/Icon";
+} from "@editor/contexts/SaaSTeamContext";
+import { Icon } from "@editor/ui/Icon";
 import {
   OwnershipTransferModal,
   type CloudOwnershipStatus,
-} from "@app/components/shared/ownership/OwnershipTransferModal";
-import apiClient from "@app/services/apiClient";
-import { useTeamAvatarUrls } from "@app/hooks/useTeamAvatarUrls";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+} from "@editor/components/shared/ownership/OwnershipTransferModal";
+import apiClient from "@editor/services/apiClient";
+import { useTeamAvatarUrls } from "@editor/hooks/useTeamAvatarUrls";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

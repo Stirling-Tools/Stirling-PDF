@@ -1,8 +1,8 @@
 import React from "react";
 import { Stack, Text, Divider, Card, Group, Anchor } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useSuggestedTools } from "@app/hooks/useSuggestedTools";
-import { ToolIcon } from "@app/components/shared/ToolIcon";
+import { useSuggestedTools } from "@editor/hooks/useSuggestedTools";
+import { ToolIcon } from "@editor/components/shared/ToolIcon";
 
 export function SuggestedToolsSection(): React.ReactElement {
   const { t } = useTranslation();

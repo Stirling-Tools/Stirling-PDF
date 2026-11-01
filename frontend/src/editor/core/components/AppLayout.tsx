@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
-import { useBanner } from "@app/contexts/BannerContext";
-import NavigationWarningModal from "@app/components/shared/NavigationWarningModal";
-import { TitleBarSearch } from "@app/components/layout/TitleBarSearch";
+import { useBanner } from "@editor/contexts/BannerContext";
+import NavigationWarningModal from "@editor/components/shared/NavigationWarningModal";
+import { TitleBarSearch } from "@editor/components/layout/TitleBarSearch";
 
 interface AppLayoutProps {
   children: ReactNode;

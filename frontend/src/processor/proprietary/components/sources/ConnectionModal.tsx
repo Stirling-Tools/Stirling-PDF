@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Modal } from "@app/ui";
-import { errorMessage } from "@portal/api/http";
+import { Banner, Button, Modal } from "@editor/ui";
+import { errorMessage } from "@processor/api/http";
 import {
   createIntegration,
   updateIntegration,
   type IntegrationCapabilities,
   type IntegrationConfig,
-} from "@portal/api/integrations";
-import { ConnectionTypePicker } from "@portal/components/sources/ConnectionTypePicker";
-import { ConnectionForm } from "@portal/components/sources/ConnectionForm";
-import "@portal/components/sources/connections.css";
+} from "@processor/api/integrations";
+import { ConnectionTypePicker } from "@processor/components/sources/ConnectionTypePicker";
+import { ConnectionForm } from "@processor/components/sources/ConnectionForm";
+import "@processor/components/sources/connections.css";
 import {
   CREATABLE_CONNECTION_TYPES,
   buildConnectionConfig,
@@ -20,7 +20,7 @@ import {
   creatableConnectionTypes,
   emptyConnectionValues,
   type CreatableConnectionType,
-} from "@portal/components/sources/connectionTypes";
+} from "@processor/components/sources/connectionTypes";
 
 /**
  * The one place connections are created and edited, for every type.

@@ -3,7 +3,7 @@ import { renderHook, act } from "@testing-library/react";
 import {
   useRemovePasswordParameters,
   defaultParameters,
-} from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+} from "@editor/hooks/tools/removePassword/useRemovePasswordParameters";
 
 describe("useRemovePasswordParameters", () => {
   test("should initialize with default parameters", () => {

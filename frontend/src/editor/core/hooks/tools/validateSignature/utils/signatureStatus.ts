@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { SignatureValidationSignature } from "@app/types/validateSignature";
+import type { SignatureValidationSignature } from "@editor/types/validateSignature";
 
 export type SignatureStatusKind = "valid" | "warning" | "invalid" | "neutral";
 

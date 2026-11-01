@@ -3,7 +3,7 @@ import { MantineProvider } from "@mantine/core";
 import {
   mantineTheme,
   suiCssVariablesResolver,
-} from "@portal/theme/mantineTheme";
+} from "@processor/theme/mantineTheme";
 
 export interface SuiProviderProps {
   /**
@@ -16,7 +16,7 @@ export interface SuiProviderProps {
 
 /**
  * Sets up the SUI design system for a subtree. Mantine is an implementation
- * detail of the SUI components (@app/ui); this provider applies the SUI-token
+ * detail of the SUI components (@editor/ui); this provider applies the SUI-token
  * theme and remaps Mantine's neutral palette (dropdown/popover surfaces,
  * borders, text) onto SUI tokens so floating elements follow the SUI palette
  * in both colour schemes.

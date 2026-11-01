@@ -1,10 +1,10 @@
 import { TextInput, Text, Flex, Switch } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { usePageSelectionTips } from "@app/components/tooltips/usePageSelectionTips";
-import classes from "@app/components/shared/pageSelection/BulkSelectionPanel.module.css";
+import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { usePageSelectionTips } from "@editor/components/tooltips/usePageSelectionTips";
+import classes from "@editor/components/shared/pageSelection/BulkSelectionPanel.module.css";
 
 interface PageSelectionInputProps {
   csvInput: string;

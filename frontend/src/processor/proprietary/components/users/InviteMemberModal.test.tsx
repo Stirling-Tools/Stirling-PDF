@@ -12,25 +12,25 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("@portal/contexts/TierContext", () => ({
+vi.mock("@processor/contexts/TierContext", () => ({
   useTier: () => ({ tier: "pro" }),
 }));
 
 // The modal only calls these on submit; stub so imports resolve and no fetch fires.
-vi.mock("@portal/api/users", () => ({
+vi.mock("@processor/api/users", () => ({
   createMember: vi.fn(),
   fetchUsers: vi.fn().mockResolvedValue({ members: [] }),
   ROLE_LABEL: { member: "Member", admin: "Admin" },
 }));
 // The email invite now routes through the usersBackend seam.
-vi.mock("@app/portal/usersBackend", () => ({
+vi.mock("@editor/portal/usersBackend", () => ({
   usersBackend: { inviteMember: vi.fn() },
 }));
-vi.mock("@portal/api/access", () => ({ createGrant: vi.fn() }));
+vi.mock("@processor/api/access", () => ({ createGrant: vi.fn() }));
 
-import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
-import { createMember } from "@portal/api/users";
-import type { Team } from "@portal/api/teams";
+import { InviteMemberModal } from "@processor/components/users/InviteMemberModal";
+import { createMember } from "@processor/api/users";
+import type { Team } from "@processor/api/teams";
 
 const TEAMS: Team[] = [{ id: 1, name: "Default", userCount: 1, owners: [] }];
 

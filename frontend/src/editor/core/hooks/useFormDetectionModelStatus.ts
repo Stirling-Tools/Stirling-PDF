@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import apiClient from "@app/services/apiClient";
-import { qk } from "@app/query/keys";
+import apiClient from "@editor/services/apiClient";
+import { qk } from "@editor/query/keys";
 
 export interface FormDetectionCatalogEntry {
   id: string;

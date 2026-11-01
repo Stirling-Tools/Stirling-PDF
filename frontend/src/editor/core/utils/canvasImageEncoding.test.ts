@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   lossyEncodeOptions,
   resetCanvasEncodingProbe,
-} from "@app/utils/canvasImageEncoding";
+} from "@editor/utils/canvasImageEncoding";
 
 /** An engine that can't encode a format returns PNG instead of throwing, so
  *  only the returned Blob's `type` reveals what happened. */

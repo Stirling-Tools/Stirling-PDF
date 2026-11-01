@@ -1,5 +1,8 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 // The overlay used to collapse every document font to one of three generic CSS
 // stacks, so editing text visibly changed its shape. PDFium will hand back the

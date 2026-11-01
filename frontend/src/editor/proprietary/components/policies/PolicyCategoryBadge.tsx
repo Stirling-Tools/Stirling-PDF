@@ -1,6 +1,6 @@
-import type { PolicyCategory } from "@app/policies/catalog";
-import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
-import "@app/components/policies/PolicyCategoryBadge.css";
+import type { PolicyCategory } from "@editor/policies/catalog";
+import { policyCategoryIcon } from "@editor/components/policies/policyCategoryIcon";
+import "@editor/components/policies/PolicyCategoryBadge.css";
 
 export function PolicyCategoryBadge({
   category,

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import UserSelector from "@app/components/shared/UserSelector";
+import UserSelector from "@editor/components/shared/UserSelector";
 
 /**
  * Fetches `/api/v1/user/users` on mount — unmocked here, so stories render

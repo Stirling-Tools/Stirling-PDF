@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { Box, ScrollArea, Text, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import "@app/components/viewer/SidebarBase.css";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import "@editor/components/viewer/SidebarBase.css";
 
-import { Icon, isIconName, type IconName } from "@app/ui/Icon";
+import { Icon, isIconName, type IconName } from "@editor/ui/Icon";
 export const SIDEBAR_WIDTH = "15rem";
 
 export interface SidebarBaseProps {

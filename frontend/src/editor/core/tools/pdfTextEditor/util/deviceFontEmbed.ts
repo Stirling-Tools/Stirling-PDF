@@ -1,18 +1,21 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { RGBA } from "@app/tools/pdfTextEditor/types";
-import { FontRef } from "@app/tools/pdfTextEditor/model/FontRef";
-import { parseTrueTypeCmap } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
-import { writeUtf16 } from "@app/services/pdfiumService";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { RGBA } from "@editor/tools/pdfTextEditor/types";
+import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
+import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import { writeUtf16 } from "@editor/services/pdfiumService";
 import {
   getLocalFontBytes,
   loadLocalFontBytes,
-} from "@app/tools/pdfTextEditor/util/localFonts";
+} from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
   isBoldFamily,
   isItalicFamily,
-} from "@app/tools/pdfTextEditor/util/fontFamily";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 // Embed the fonts installed on the user's device instead of substituting the
 // nearest standard face. Reading the file is async, so the emit uses the cache.

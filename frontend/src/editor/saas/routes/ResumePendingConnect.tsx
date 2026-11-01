@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@app/auth/UseSession";
-import { readPendingConnect } from "@app/routes/pendingConnect";
+import { useAuth } from "@editor/auth/UseSession";
+import { readPendingConnect } from "@editor/routes/pendingConnect";
 
 /**
  * Sends a newly signed-in visitor back to the approval page they were pulled away

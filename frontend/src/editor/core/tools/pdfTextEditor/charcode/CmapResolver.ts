@@ -2,9 +2,12 @@ import type {
   CharcodeResolver,
   CharcodeResolveResult,
   ResolverContext,
-} from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
-import { sha256Hex } from "@app/tools/pdfTextEditor/util/sha256";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
+import { sha256Hex } from "@editor/tools/pdfTextEditor/util/sha256";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 /** Strategy 1: parse the embedded font's cmap table. */
 

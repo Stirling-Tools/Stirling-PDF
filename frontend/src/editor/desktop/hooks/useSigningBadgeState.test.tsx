@@ -1,38 +1,41 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useSyncQuickNavAccount } from "@app/components/shared/quickNav/useSyncQuickNavAccount";
+import { useSyncQuickNavAccount } from "@editor/components/shared/quickNav/useSyncQuickNavAccount";
 import {
   QuickNavHostProvider,
   useQuickNavHost,
-} from "@app/contexts/QuickNavHostContext";
-import { fetchSigningSessions, type SigningSessions } from "@app/api/signing";
-import { authService } from "@app/services/authService";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { alert } from "@app/components/toast";
-import { expectConsole } from "@app/tests/failOnConsole";
+} from "@editor/contexts/QuickNavHostContext";
+import {
+  fetchSigningSessions,
+  type SigningSessions,
+} from "@editor/api/signing";
+import { authService } from "@editor/services/authService";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { alert } from "@editor/components/toast";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({ user: { id: "ada" }, loading: false, displayName: "Ada" }),
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({
     config: { storageGroupSigningEnabled: true },
     loading: false,
     refetch: vi.fn().mockResolvedValue(undefined),
   }),
 }));
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: { isAuthenticated: vi.fn(), subscribeToAuth: vi.fn() },
 }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentMode: vi.fn(),
     subscribeToModeChanges: vi.fn(),
   },
 }));
-vi.mock("@app/api/signing", () => ({ fetchSigningSessions: vi.fn() }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/api/signing", () => ({ fetchSigningSessions: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 
 const UNREAD: SigningSessions = {
   signRequests: [],

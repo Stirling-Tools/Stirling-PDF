@@ -4,8 +4,8 @@ import { describe, it, expect } from "vitest";
 // Resolves through the saas cascade to the cloud impl
 // (src/cloud/components/onboarding/saasFlowResolver.ts). No saas-level shadow
 // exists, so this exercises the migrated cloud pure-function directly.
-import { resolveSaasFlow } from "@app/components/onboarding/saasFlowResolver";
-import type { SlideId } from "@app/components/onboarding/saasOnboardingFlowConfig";
+import { resolveSaasFlow } from "@editor/components/onboarding/saasFlowResolver";
+import type { SlideId } from "@editor/components/onboarding/saasOnboardingFlowConfig";
 
 describe("resolveSaasFlow — hideDesktopInstall", () => {
   // The four-slide superset (all conditions on) makes the desktop-install

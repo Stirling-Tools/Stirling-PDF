@@ -1,14 +1,14 @@
 import i18n from "i18next";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { RGBA } from "@app/tools/pdfTextEditor/types";
-import { PdfiumTextWriter } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
-import { collectMemberPtrs } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { RGBA } from "@editor/tools/pdfTextEditor/types";
+import { PdfiumTextWriter } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
+import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { readObjFill } from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
 import {
   setScanOverride,
   type ScanOverride,
-} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 
 export class SetColourCommand implements Command {
   readonly type = "set-colour";
@@ -108,27 +108,5 @@ export class SetColourCommand implements Command {
     return i18n.t("pdfTextEditor.commands.setColour", "Set colour on {{run}}", {
       run: this.runId,
     });
-  }
-}
-
-/** Read an object's current fill colour (0-255 RGBA), or null on failure. */
-export function readObjFill(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-  objPtr: number,
-): RGBA | null {
-  const r = scratchPtr(m, SCRATCH.colourR, 4);
-  const g = scratchPtr(m, SCRATCH.colourG, 4);
-  const b = scratchPtr(m, SCRATCH.colourB, 4);
-  const a = scratchPtr(m, SCRATCH.colourA, 4);
-  try {
-    if (!m.FPDFPageObj_GetFillColor(objPtr, r, g, b, a)) return null;
-    return {
-      r: m.pdfium.getValue(r, "i32"),
-      g: m.pdfium.getValue(g, "i32"),
-      b: m.pdfium.getValue(b, "i32"),
-      a: m.pdfium.getValue(a, "i32"),
-    };
-  } catch {
-    return null;
   }
 }

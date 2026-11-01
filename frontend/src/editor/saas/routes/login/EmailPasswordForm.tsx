@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import "@app/auth/ui/auth.css";
-import "@app/routes/authShared/saas-auth.css";
-import { Button } from "@app/ui/Button";
+import "@editor/auth/ui/auth.css";
+import "@editor/routes/authShared/saas-auth.css";
+import { Button } from "@editor/ui/Button";
 
 interface EmailPasswordFormProps {
   email: string;

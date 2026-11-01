@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   UPGRADE_BANNER_ALERT_EVENT,
   type UpgradeBannerAlertPayload,
-} from "@app/constants/events";
+} from "@editor/constants/events";
 
 export interface LicenseAlertState {
   active: boolean;

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HomeGreeting } from "@portal/components/HomeGreeting";
+import { HomeGreeting } from "@processor/components/HomeGreeting";
 
 const meta = {
   title: "Portal/Home/HomeGreeting",

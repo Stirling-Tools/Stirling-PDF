@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Icon } from "@app/ui/Icon";
-import { MetricStrip } from "@app/ui/MetricStrip";
-import { MetricCard } from "@app/ui/MetricCard";
+import { Icon } from "@editor/ui/Icon";
+import { MetricStrip } from "@editor/ui/MetricStrip";
+import { MetricCard } from "@editor/ui/MetricCard";
 
 function ShieldIcon() {
   return <Icon name="shield-check" size={22} />;

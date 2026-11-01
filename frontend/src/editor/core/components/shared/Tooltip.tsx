@@ -7,16 +7,16 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { addEventListenerWithCleanup } from "@app/utils/genericUtils";
-import { useTooltipPosition } from "@app/hooks/useTooltipPosition";
-import { TooltipTip } from "@app/types/tips";
-import { TooltipContent } from "@app/components/shared/tooltip/TooltipContent";
-import { useOptionalSidebarContext } from "@app/contexts/SidebarContext";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
-import styles from "@app/components/shared/tooltip/Tooltip.module.css";
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { addEventListenerWithCleanup } from "@editor/utils/genericUtils";
+import { useTooltipPosition } from "@editor/hooks/useTooltipPosition";
+import { TooltipTip } from "@editor/types/tips";
+import { TooltipContent } from "@editor/components/shared/tooltip/TooltipContent";
+import { useOptionalSidebarContext } from "@editor/contexts/SidebarContext";
+import { useLogoAssets } from "@editor/hooks/useLogoAssets";
+import styles from "@editor/components/shared/tooltip/Tooltip.module.css";
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@editor/styles/zIndex";
 
 // The wrapped child's own event handlers, which Tooltip forwards to after
 // running its own trigger logic. Kept partial since any given child may set none.

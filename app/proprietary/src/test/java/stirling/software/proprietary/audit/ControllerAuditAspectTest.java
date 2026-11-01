@@ -251,6 +251,24 @@ class ControllerAuditAspectTest {
             assertThat(data).containsEntry("errorType", "IllegalStateException");
             assertThat(data).containsEntry("errorMessage", "boom");
         }
+
+        @Test
+        @DisplayName("failure while capturing context leaves nothing in the MDC")
+        void captureFailureRestoresMdc() throws Throwable {
+            ProceedingJoinPoint jp = joinPointFor("postEndpoint");
+            when(auditService.shouldAudit(any(), any(Method.class), eq(auditConfig)))
+                    .thenReturn(true);
+            when(auditService.captureCurrentPrincipal()).thenReturn("alice");
+            when(auditService.captureCurrentOrigin()).thenThrow(new IllegalStateException("boom"));
+
+            assertThatThrownBy(() -> aspect.auditPostMethod(jp))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("boom");
+
+            assertThat(MDC.get("auditPrincipal")).isNull();
+            assertThat(MDC.get("auditOrigin")).isNull();
+            verify(jp, never()).proceed();
+        }
     }
 
     @Nested

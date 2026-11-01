@@ -1,5 +1,5 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { PdfAccess } from "@app/services/pdfAccessService";
+import type { PdfAccess } from "@editor/services/pdfAccessService";
 
 /** Reads the authenticated document without reopening it or changing its protection. */
 export function readPdfiumAccess(

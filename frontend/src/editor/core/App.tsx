@@ -1,24 +1,24 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
-import { AppProviders } from "@app/components/AppProviders";
-import { AppFrame } from "@app/components/layout/AppFrame";
-import { AppLayout } from "@app/components/AppLayout";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import { ThemeProvider } from "@app/components/shared/ThemeProvider";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { AppRoot } from "@app/components/layout/AppRoot";
-import Onboarding from "@app/components/onboarding/Onboarding";
+import { AppProviders } from "@editor/components/AppProviders";
+import { AppFrame } from "@editor/components/layout/AppFrame";
+import { AppLayout } from "@editor/components/AppLayout";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import { ThemeProvider } from "@editor/components/shared/ThemeProvider";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { AppRoot } from "@editor/components/layout/AppRoot";
+import Onboarding from "@editor/components/onboarding/Onboarding";
 
-const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
-const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
+const MobileScannerPage = lazy(() => import("@editor/pages/MobileScannerPage"));
+const MobileSignPage = lazy(() => import("@editor/pages/MobileSignPage"));
 
 // Import global styles
-import "@app/styles/tailwind.css";
-import "@app/styles/cookieconsent.css";
-import "@app/styles/index.css";
+import "@editor/styles/tailwind.css";
+import "@editor/styles/cookieconsent.css";
+import "@editor/styles/index.css";
 
 // Import file ID debugging helpers (development only)
-import "@app/utils/fileIdSafety";
+import "@editor/utils/fileIdSafety";
 
 // Minimal providers for the public, no-auth mobile-scanner page - no API
 // calls, no authentication

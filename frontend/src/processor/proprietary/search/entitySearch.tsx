@@ -1,33 +1,37 @@
 import {
   PROCESSOR_SEARCH_INDEX,
   isPortalEntityScopeAccessible,
-} from "@app/data/processorSearchIndex";
+} from "@editor/data/processorSearchIndex";
 import {
   PORTAL_ENTITY_SCOPE_DEFS,
   PORTAL_DOCS_SCOPE_ID,
   type SuperSearchGroup,
   type SuperSearchResult,
-} from "@app/types/superSearch";
-import { rankByFuzzy } from "@app/utils/fuzzySearch";
+} from "@editor/types/superSearch";
+import { rankByFuzzy } from "@editor/utils/fuzzySearch";
 import {
   assemblePolicies,
   fetchPoliciesList,
   fetchPolicyRuns,
   type CatalogueEntry,
-} from "@portal/api/policies";
-import { fetchPipelines, type PipelineView } from "@portal/api/pipelines";
-import { fetchSources, type SourceView } from "@portal/api/sources";
-import type { Member } from "@portal/api/users";
+} from "@processor/api/policies";
+import { fetchPipelines, type PipelineView } from "@processor/api/pipelines";
+import { fetchSources, type SourceView } from "@processor/api/sources";
+import type { Member } from "@processor/api/users";
 // Flavor-resolved users backend: self-hosted reads the proprietary admin
 // endpoints, SaaS the invitation-based team endpoints (the admin ones 403
 // there for the always-ROLE_USER sessions).
-import { usersBackend } from "@app/portal/usersBackend";
-import { Icon } from "@app/ui/Icon";
-import type { Tier } from "@portal/contexts/TierContext";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { DOCS_PATH } from "@app/routes/docsRoute";
-import { allDocs, loadDocsNav } from "@core/docs/manifest/registry";
-import { searchDocs, toPlainText, type SearchDoc } from "@core/docs/search";
+import { usersBackend } from "@editor/portal/usersBackend";
+import { Icon } from "@editor/ui/Icon";
+import type { Tier } from "@processor/contexts/TierContext";
+import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
+import { DOCS_PATH } from "@editor/routes/docsRoute";
+import { allDocs, loadDocsNav } from "@editor-core/docs/manifest/registry";
+import {
+  searchDocs,
+  toPlainText,
+  type SearchDoc,
+} from "@editor-core/docs/search";
 
 /**
  * The Processor's entity search: users, policies, pipelines and sources,

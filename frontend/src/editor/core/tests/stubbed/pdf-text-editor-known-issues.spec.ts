@@ -1,9 +1,12 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
-import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
-import { waitForEditorReady } from "@app/tests/stubbed/editorReady";
-import { downloadBytes, saveAndDownload } from "@app/tests/stubbed/saveHelpers";
+import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
+import { waitForEditorReady } from "@editor/tests/stubbed/editorReady";
+import {
+  downloadBytes,
+  saveAndDownload,
+} from "@editor/tests/stubbed/saveHelpers";
 
 // REGRESSION suite for the 12 issues found by the QA sweep of the PDF text
 // editor - all since fixed.

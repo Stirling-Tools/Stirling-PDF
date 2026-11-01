@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
   findVisiblePageIndex,
   isFocusInContentEditable,
   isFocusInFormField,
   pageElements,
-} from "@app/tools/pdfTextEditor/util/dom";
+} from "@editor/tools/pdfTextEditor/util/dom";
 
 interface KeyboardShortcutCallbacks {
   store: EditorStore;

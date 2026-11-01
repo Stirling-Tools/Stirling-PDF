@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
-import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
+import { SettingsFieldLabel } from "@editor/components/shared/config/SettingsFieldLabel";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { NumberInput, Stack, Paper, Group, Select } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import type { SecurityCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import type { SecurityCardProps } from "@editor/components/shared/config/configSections/security/securityCardProps";
 
 /** Whether login is required at all, and how a failed one is throttled. */
 export function AuthenticationCard({

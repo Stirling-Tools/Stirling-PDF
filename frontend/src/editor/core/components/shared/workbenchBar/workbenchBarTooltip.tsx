@@ -1,8 +1,8 @@
 import React from "react";
 import { Group, Loader, Progress, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip } from "@app/components/shared/Tooltip";
+import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 
 /** Wrap a bar control in the bar's standard tooltip, or pass it through when
  *  the caller has no tooltip to show. */

@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon, Button, Dropdown, IconPicker, Input } from "@app/ui";
-import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
-import { PIPELINE_ICON_OPTIONS } from "@portal/components/pipelines/pipelineIcon";
-import { EnforceAsPolicyControl } from "@portal/components/pipelines/EnforceAsPolicyControl";
-import "@portal/components/pipelines/PipelineEditHeader.css";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon, Button, Dropdown, IconPicker, Input } from "@editor/ui";
+import { PipelineBlockerTooltip } from "@processor/components/pipelines/PipelineBlockerTooltip";
+import { PIPELINE_ICON_OPTIONS } from "@processor/components/pipelines/pipelineIcon";
+import { EnforceAsPolicyControl } from "@processor/components/pipelines/EnforceAsPolicyControl";
+import "@processor/components/pipelines/PipelineEditHeader.css";
 
 export interface PipelineEditHeaderProps {
   name: string;

@@ -204,6 +204,7 @@ import MonitorCloud from "lucide-static/icons/monitor-cloud.svg?react";
 import MonitorSmartphone from "lucide-static/icons/monitor-smartphone.svg?react";
 import Moon from "lucide-static/icons/moon.svg?react";
 import Move from "lucide-static/icons/move.svg?react";
+import MoveUpRight from "lucide-static/icons/move-up-right.svg?react";
 import Music from "lucide-static/icons/music.svg?react";
 import Network from "lucide-static/icons/network.svg?react";
 import Newspaper from "lucide-static/icons/newspaper.svg?react";
@@ -277,6 +278,7 @@ import Shrink from "lucide-static/icons/shrink.svg?react";
 import Sigma from "lucide-static/icons/sigma.svg?react";
 import Signature from "lucide-static/icons/signature.svg?react";
 import Siren from "lucide-static/icons/siren.svg?react";
+import Slash from "lucide-static/icons/slash.svg?react";
 import SlidersHorizontal from "lucide-static/icons/sliders-horizontal.svg?react";
 import Sparkle from "lucide-static/icons/sparkle.svg?react";
 import Sparkles from "lucide-static/icons/sparkles.svg?react";
@@ -347,78 +349,78 @@ import Zap from "lucide-static/icons/zap.svg?react";
 import ZoomIn from "lucide-static/icons/zoom-in.svg?react";
 import ZoomOut from "lucide-static/icons/zoom-out.svg?react";
 
-import AnnotationOff from "@app/icons/svg/stirling/annotation-off.svg?react";
-import Api from "@app/icons/svg/stirling/api.svg?react";
-import Automate from "@app/icons/svg/stirling/automate.svg?react";
-import Cpu from "@app/icons/svg/stirling/cpu.svg?react";
-import Editor from "@app/icons/svg/stirling/editor.svg?react";
-import FileConvert from "@app/icons/svg/stirling/file-convert.svg?react";
-import FileDocArchive from "@app/icons/svg/stirling/file-doc-archive.svg?react";
-import FileDocCode from "@app/icons/svg/stirling/file-doc-code.svg?react";
-import FileDocImage from "@app/icons/svg/stirling/file-doc-image.svg?react";
-import FileDocSheet from "@app/icons/svg/stirling/file-doc-sheet.svg?react";
-import FileDocText from "@app/icons/svg/stirling/file-doc-text.svg?react";
-import FileHtml from "@app/icons/svg/stirling/file-html.svg?react";
-import FileLockOpen from "@app/icons/svg/stirling/file-lock-open.svg?react";
-import FormScan from "@app/icons/svg/stirling/form-scan.svg?react";
-import FilePdf from "@app/icons/svg/stirling/file-pdf.svg?react";
-import Ftp from "@app/icons/svg/stirling/ftp.svg?react";
-import ImageCompare from "@app/icons/svg/stirling/image-compare.svg?react";
-import LineWeight from "@app/icons/svg/stirling/line-weight.svg?react";
-import LockOpenPassword from "@app/icons/svg/stirling/lock-open-password.svg?react";
-import MoveItemDown from "@app/icons/svg/stirling/move-item-down.svg?react";
-import OverlayPages from "@app/icons/svg/stirling/overlay-pages.svg?react";
-import Password from "@app/icons/svg/stirling/password.svg?react";
-import Polyline from "@app/icons/svg/stirling/polyline.svg?react";
-import QrCode from "@app/icons/svg/stirling/qr-code.svg?react";
-import Redact from "@app/icons/svg/stirling/redact.svg?react";
-import RadioChecked from "@app/icons/svg/stirling/radio-checked.svg?react";
-import RemoveSelection from "@app/icons/svg/stirling/remove-selection.svg?react";
-import ReplaceText from "@app/icons/svg/stirling/replace-text.svg?react";
-import SelectAll from "@app/icons/svg/stirling/select-all.svg?react";
-import Sftp from "@app/icons/svg/stirling/sftp.svg?react";
-import SinglePage from "@app/icons/svg/stirling/single-page.svg?react";
-import StirlingMark from "@app/icons/svg/stirling/stirling-mark.svg?react";
-import StirlingMarkThinking from "@app/icons/svg/stirling/stirling-mark-thinking.svg?react";
-import StirlingTile from "@app/icons/svg/stirling/stirling-tile.svg?react";
-import UsersPlus from "@app/icons/svg/stirling/users-plus.svg?react";
-import Watermark from "@app/icons/svg/stirling/watermark.svg?react";
+import AnnotationOff from "@editor/icons/svg/stirling/annotation-off.svg?react";
+import Api from "@editor/icons/svg/stirling/api.svg?react";
+import Automate from "@editor/icons/svg/stirling/automate.svg?react";
+import Cpu from "@editor/icons/svg/stirling/cpu.svg?react";
+import Editor from "@editor/icons/svg/stirling/editor.svg?react";
+import FileConvert from "@editor/icons/svg/stirling/file-convert.svg?react";
+import FileDocArchive from "@editor/icons/svg/stirling/file-doc-archive.svg?react";
+import FileDocCode from "@editor/icons/svg/stirling/file-doc-code.svg?react";
+import FileDocImage from "@editor/icons/svg/stirling/file-doc-image.svg?react";
+import FileDocSheet from "@editor/icons/svg/stirling/file-doc-sheet.svg?react";
+import FileDocText from "@editor/icons/svg/stirling/file-doc-text.svg?react";
+import FileHtml from "@editor/icons/svg/stirling/file-html.svg?react";
+import FileLockOpen from "@editor/icons/svg/stirling/file-lock-open.svg?react";
+import FormScan from "@editor/icons/svg/stirling/form-scan.svg?react";
+import FilePdf from "@editor/icons/svg/stirling/file-pdf.svg?react";
+import Ftp from "@editor/icons/svg/stirling/ftp.svg?react";
+import ImageCompare from "@editor/icons/svg/stirling/image-compare.svg?react";
+import LineWeight from "@editor/icons/svg/stirling/line-weight.svg?react";
+import LockOpenPassword from "@editor/icons/svg/stirling/lock-open-password.svg?react";
+import MoveItemDown from "@editor/icons/svg/stirling/move-item-down.svg?react";
+import OverlayPages from "@editor/icons/svg/stirling/overlay-pages.svg?react";
+import Password from "@editor/icons/svg/stirling/password.svg?react";
+import Polyline from "@editor/icons/svg/stirling/polyline.svg?react";
+import QrCode from "@editor/icons/svg/stirling/qr-code.svg?react";
+import Redact from "@editor/icons/svg/stirling/redact.svg?react";
+import RadioChecked from "@editor/icons/svg/stirling/radio-checked.svg?react";
+import RemoveSelection from "@editor/icons/svg/stirling/remove-selection.svg?react";
+import ReplaceText from "@editor/icons/svg/stirling/replace-text.svg?react";
+import SelectAll from "@editor/icons/svg/stirling/select-all.svg?react";
+import Sftp from "@editor/icons/svg/stirling/sftp.svg?react";
+import SinglePage from "@editor/icons/svg/stirling/single-page.svg?react";
+import StirlingMark from "@editor/icons/svg/stirling/stirling-mark.svg?react";
+import StirlingMarkThinking from "@editor/icons/svg/stirling/stirling-mark-thinking.svg?react";
+import StirlingTile from "@editor/icons/svg/stirling/stirling-tile.svg?react";
+import UsersPlus from "@editor/icons/svg/stirling/users-plus.svg?react";
+import Watermark from "@editor/icons/svg/stirling/watermark.svg?react";
 
-import Apple from "@app/icons/svg/third-party/apple.svg?react";
-import Authentik from "@app/icons/svg/third-party/authentik.svg?react";
-import Box from "@app/icons/svg/third-party/box.svg?react";
-import Clamav from "@app/icons/svg/third-party/clamav.svg?react";
-import Cloudmersive from "@app/icons/svg/third-party/cloudmersive.svg?react";
-import Cloudmersiveadvanced from "@app/icons/svg/third-party/cloudmersiveadvanced.svg?react";
-import Cloudron from "@app/icons/svg/third-party/cloudron.svg?react";
-import Confluence from "@app/icons/svg/third-party/confluence.svg?react";
-import Consigno from "@app/icons/svg/third-party/consigno.svg?react";
-import Discord from "@app/icons/svg/third-party/discord.svg?react";
-import Dropbox from "@app/icons/svg/third-party/dropbox.svg?react";
-import Elastic from "@app/icons/svg/third-party/elastic.svg?react";
-import Github from "@app/icons/svg/third-party/github.svg?react";
-import Google from "@app/icons/svg/third-party/google.svg?react";
-import Googlechat from "@app/icons/svg/third-party/googlechat.svg?react";
-import Googledrive from "@app/icons/svg/third-party/googledrive.svg?react";
-import Jira from "@app/icons/svg/third-party/jira.svg?react";
-import Keycloak from "@app/icons/svg/third-party/keycloak.svg?react";
-import Linux from "@app/icons/svg/third-party/linux.svg?react";
-import Mailgun from "@app/icons/svg/third-party/mailgun.svg?react";
-import Microsoft from "@app/icons/svg/third-party/microsoft.svg?react";
-import N8n from "@app/icons/svg/third-party/n8n.svg?react";
-import Nextcloud from "@app/icons/svg/third-party/nextcloud.svg?react";
-import Onedrive from "@app/icons/svg/third-party/onedrive.svg?react";
-import Presidio from "@app/icons/svg/third-party/presidio.svg?react";
-import Purview from "@app/icons/svg/third-party/purview.svg?react";
-import S3 from "@app/icons/svg/third-party/s3.svg?react";
-import Sendgrid from "@app/icons/svg/third-party/sendgrid.svg?react";
-import Sharepoint from "@app/icons/svg/third-party/sharepoint.svg?react";
-import Slack from "@app/icons/svg/third-party/slack.svg?react";
-import Splunk from "@app/icons/svg/third-party/splunk.svg?react";
-import Sumologic from "@app/icons/svg/third-party/sumologic.svg?react";
-import Teams from "@app/icons/svg/third-party/teams.svg?react";
-import Windows from "@app/icons/svg/third-party/windows.svg?react";
-import Zapier from "@app/icons/svg/third-party/zapier.svg?react";
+import Apple from "@editor/icons/svg/third-party/apple.svg?react";
+import Authentik from "@editor/icons/svg/third-party/authentik.svg?react";
+import Box from "@editor/icons/svg/third-party/box.svg?react";
+import Clamav from "@editor/icons/svg/third-party/clamav.svg?react";
+import Cloudmersive from "@editor/icons/svg/third-party/cloudmersive.svg?react";
+import Cloudmersiveadvanced from "@editor/icons/svg/third-party/cloudmersiveadvanced.svg?react";
+import Cloudron from "@editor/icons/svg/third-party/cloudron.svg?react";
+import Confluence from "@editor/icons/svg/third-party/confluence.svg?react";
+import Consigno from "@editor/icons/svg/third-party/consigno.svg?react";
+import Discord from "@editor/icons/svg/third-party/discord.svg?react";
+import Dropbox from "@editor/icons/svg/third-party/dropbox.svg?react";
+import Elastic from "@editor/icons/svg/third-party/elastic.svg?react";
+import Github from "@editor/icons/svg/third-party/github.svg?react";
+import Google from "@editor/icons/svg/third-party/google.svg?react";
+import Googlechat from "@editor/icons/svg/third-party/googlechat.svg?react";
+import Googledrive from "@editor/icons/svg/third-party/googledrive.svg?react";
+import Jira from "@editor/icons/svg/third-party/jira.svg?react";
+import Keycloak from "@editor/icons/svg/third-party/keycloak.svg?react";
+import Linux from "@editor/icons/svg/third-party/linux.svg?react";
+import Mailgun from "@editor/icons/svg/third-party/mailgun.svg?react";
+import Microsoft from "@editor/icons/svg/third-party/microsoft.svg?react";
+import N8n from "@editor/icons/svg/third-party/n8n.svg?react";
+import Nextcloud from "@editor/icons/svg/third-party/nextcloud.svg?react";
+import Onedrive from "@editor/icons/svg/third-party/onedrive.svg?react";
+import Presidio from "@editor/icons/svg/third-party/presidio.svg?react";
+import Purview from "@editor/icons/svg/third-party/purview.svg?react";
+import S3 from "@editor/icons/svg/third-party/s3.svg?react";
+import Sendgrid from "@editor/icons/svg/third-party/sendgrid.svg?react";
+import Sharepoint from "@editor/icons/svg/third-party/sharepoint.svg?react";
+import Slack from "@editor/icons/svg/third-party/slack.svg?react";
+import Splunk from "@editor/icons/svg/third-party/splunk.svg?react";
+import Sumologic from "@editor/icons/svg/third-party/sumologic.svg?react";
+import Teams from "@editor/icons/svg/third-party/teams.svg?react";
+import Windows from "@editor/icons/svg/third-party/windows.svg?react";
+import Zapier from "@editor/icons/svg/third-party/zapier.svg?react";
 
 type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -635,6 +637,7 @@ export const ICONS = {
   "monitor-smartphone": { Component: MonitorSmartphone, kind: "lucide" },
   moon: { Component: Moon, kind: "lucide" },
   move: { Component: Move, kind: "lucide" },
+  "move-up-right": { Component: MoveUpRight, kind: "lucide" },
   music: { Component: Music, kind: "lucide" },
   network: { Component: Network, kind: "lucide" },
   newspaper: { Component: Newspaper, kind: "lucide" },
@@ -708,6 +711,7 @@ export const ICONS = {
   sigma: { Component: Sigma, kind: "lucide" },
   signature: { Component: Signature, kind: "lucide" },
   siren: { Component: Siren, kind: "lucide" },
+  slash: { Component: Slash, kind: "lucide" },
   "sliders-horizontal": { Component: SlidersHorizontal, kind: "lucide" },
   sparkle: { Component: Sparkle, kind: "lucide" },
   sparkles: { Component: Sparkles, kind: "lucide" },

@@ -8,22 +8,22 @@ const mockFiles: { files: unknown[]; fileStubs: unknown[] } = {
   fileStubs: [],
 };
 
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => mockViewer,
 }));
 
-vi.mock("@app/contexts/NavigationContext", () => ({
+vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationState: () => mockNavigation,
 }));
 
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => mockFiles,
 }));
 
 import {
   useViewScopedFiles,
   useViewScopedFileStubs,
-} from "@app/hooks/tools/shared/useViewScopedFiles";
+} from "@editor/hooks/tools/shared/useViewScopedFiles";
 
 const file = (id: string) => ({ fileId: id, name: `${id}.pdf` });
 const stub = (id: string) => ({

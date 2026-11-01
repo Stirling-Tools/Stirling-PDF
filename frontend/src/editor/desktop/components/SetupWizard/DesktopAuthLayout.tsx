@@ -1,5 +1,5 @@
 import React from "react";
-import { AuthShell } from "@app/auth/ui/AuthShell";
+import { AuthShell } from "@editor/auth/ui/AuthShell";
 
 interface DesktopAuthLayoutProps {
   children: React.ReactNode;

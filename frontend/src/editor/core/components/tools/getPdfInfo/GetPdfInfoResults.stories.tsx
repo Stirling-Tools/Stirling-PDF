@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import GetPdfInfoResults from "@app/components/tools/getPdfInfo/GetPdfInfoResults";
-import type { GetPdfInfoOperationHook } from "@app/hooks/tools/getPdfInfo/useGetPdfInfoOperation";
-import type { PdfInfoReportEntry } from "@app/types/getPdfInfo";
+import GetPdfInfoResults from "@editor/components/tools/getPdfInfo/GetPdfInfoResults";
+import type { GetPdfInfoOperationHook } from "@editor/hooks/tools/getPdfInfo/useGetPdfInfoOperation";
+import type { PdfInfoReportEntry } from "@editor/types/getPdfInfo";
 
 const mockEntry: PdfInfoReportEntry = {
   fileId: "file-1",

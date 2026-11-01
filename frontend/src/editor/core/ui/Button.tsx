@@ -13,8 +13,8 @@ import {
   type ControlFontSize,
   type ControlPadding,
   resolveFontSize,
-} from "@app/ui/controlSizes";
-import "@app/ui/Button.css";
+} from "@editor/ui/controlSizes";
+import "@editor/ui/Button.css";
 
 /** primary=solid, secondary=outlined, tertiary=ghost (tinted hover), quiet=plain (no bg, hovers to text colour). */
 export type ButtonVariant = "primary" | "secondary" | "tertiary" | "quiet";

@@ -1,9 +1,9 @@
-import { Icon } from "@app/ui/Icon";
-import type { FlowOutcomeKey } from "@portal/api/processorFlow";
+import { Icon } from "@editor/ui/Icon";
+import type { FlowOutcomeKey } from "@processor/api/processorFlow";
 import {
   EDITOR_TYPE,
   ICON_SIZE,
-} from "@portal/components/processor-flow/flowTypes";
+} from "@processor/components/processor-flow/flowTypes";
 
 /** Icon for a live source node, keyed off its `type`. */
 export function SourceIcon({ type }: { type: string }) {

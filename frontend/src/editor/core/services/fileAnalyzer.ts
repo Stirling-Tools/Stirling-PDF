@@ -1,8 +1,8 @@
-import { FileAnalysis, ProcessingStrategy } from "@app/types/processing";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { getPdfAccess } from "@app/services/pdfAccessService";
+import { FileAnalysis, ProcessingStrategy } from "@editor/types/processing";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
 
-import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
+import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 
 export class FileAnalyzer {

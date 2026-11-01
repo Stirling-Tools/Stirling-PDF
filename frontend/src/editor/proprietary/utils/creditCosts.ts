@@ -1,4 +1,4 @@
-import { ToolId } from "@app/types/toolId";
+import { ToolId } from "@editor/types/toolId";
 
 // Credit costs based on ResourceWeight enum from backend
 export const CREDIT_COSTS = {

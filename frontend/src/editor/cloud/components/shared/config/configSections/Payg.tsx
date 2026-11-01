@@ -17,21 +17,21 @@
  */
 import React, { useState } from "react";
 import { Alert, Badge, Group, Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { useRenderCount } from "@app/hooks/useRenderCount";
-import { Icon } from "@app/ui/Icon";
-import { alert as showToast } from "@app/components/toast";
+import { Button } from "@editor/ui/Button";
+import { useRenderCount } from "@editor/hooks/useRenderCount";
+import { Icon } from "@editor/ui/Icon";
+import { alert as showToast } from "@editor/components/toast";
 import {
   PrepaidCapacityMeterPanel,
   prepaidSnapshotFromWallet,
-} from "@app/components/shared/config/configSections/usageMeters";
-// Relative (not @app/*) so the co-located CSS + sibling component resolve directly.
+} from "@editor/components/shared/config/configSections/usageMeters";
+// Relative (not @editor/*) so the co-located CSS + sibling component resolve directly.
 // oxlint-disable-next-line no-restricted-imports
 import "./Payg.css";
 // oxlint-disable-next-line no-restricted-imports
 import SpendCapControl from "./SpendCapControl";
 import { useTranslation } from "react-i18next";
-import type { Wallet } from "@app/hooks/useWallet";
+import type { Wallet } from "@editor/hooks/useWallet";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 

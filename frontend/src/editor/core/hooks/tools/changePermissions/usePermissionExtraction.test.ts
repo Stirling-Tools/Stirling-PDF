@@ -4,17 +4,19 @@ import { PdfPermissionFlag } from "@embedpdf/models";
 import {
   defaultParameters,
   useChangePermissionsParameters,
-} from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
-import { usePermissionExtraction } from "@app/hooks/tools/changePermissions/usePermissionExtraction";
+} from "@editor/hooks/tools/changePermissions/useChangePermissionsParameters";
+import { usePermissionExtraction } from "@editor/hooks/tools/changePermissions/usePermissionExtraction";
 import {
   ensureLocalPdfAccess,
   clearPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
-vi.mock("@app/services/pdfAccessService", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/services/pdfAccessService")>()),
+vi.mock("@editor/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@editor/services/pdfAccessService")
+  >()),
   ensureLocalPdfAccess: vi.fn(),
 }));
 const inspect = vi.mocked(ensureLocalPdfAccess);

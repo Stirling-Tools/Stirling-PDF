@@ -1,4 +1,4 @@
-import { apiClient } from "@portal/api/http";
+import { apiClient } from "@processor/api/http";
 
 /**
  * Recorded policy and pipeline failures, mirroring the backend `FileRunEventView`.

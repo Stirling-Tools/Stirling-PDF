@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
-import LanguagePicker from "@app/components/tools/ocr/LanguagePicker";
+import LanguagePicker from "@editor/components/tools/ocr/LanguagePicker";
 
 const meta = {
   title: "Tools/OCR/LanguagePicker",

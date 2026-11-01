@@ -10,14 +10,14 @@ import React, {
 import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
 import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
-import { useLocalPdfiumEngine } from "@app/hooks/useLocalPdfiumEngine";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useLocalPdfiumEngine } from "@editor/hooks/useLocalPdfiumEngine";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import {
   bindPdfViewerSource,
   withPdfViewerAccess,
-} from "@app/components/viewer/pdfViewerAccess";
-import { useSignaturePreviewHistory } from "@app/hooks/signing/useSignaturePreviewHistory";
+} from "@editor/components/viewer/pdfViewerAccess";
+import { useSignaturePreviewHistory } from "@editor/hooks/signing/useSignaturePreviewHistory";
 
 // Import the essential plugins
 import {
@@ -38,11 +38,11 @@ import {
   TilingPluginPackage,
 } from "@embedpdf/plugin-tiling/react";
 import { PanPluginPackage } from "@embedpdf/plugin-pan/react";
-import { VIEWER_PAN_CONFIG } from "@app/components/viewer/viewerPanConfig";
+import { VIEWER_PAN_CONFIG } from "@editor/components/viewer/viewerPanConfig";
 import {
   ViewerGlobalPointerProvider,
   ViewerPagePointerProvider,
-} from "@app/components/viewer/ViewerPointerProviders";
+} from "@editor/components/viewer/ViewerPointerProviders";
 import { SpreadPluginPackage, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { SearchPluginPackage } from "@embedpdf/plugin-search/react";
 import { ThumbnailPluginPackage } from "@embedpdf/plugin-thumbnail/react";
@@ -65,24 +65,24 @@ import {
   PdfAnnotationSubtype,
 } from "@embedpdf/models";
 import type { PdfAnnotationObject, Rect } from "@embedpdf/models";
-import { registerAnnotationTools } from "@app/components/viewer/annotationTools";
+import { registerAnnotationTools } from "@editor/components/viewer/annotationTools";
 import {
   RedactionPluginPackage,
   RedactionLayer,
 } from "@embedpdf/plugin-redaction/react";
-import { CustomSearchLayer } from "@app/components/viewer/CustomSearchLayer";
-import { ZoomAPIBridge } from "@app/components/viewer/ZoomAPIBridge";
+import { CustomSearchLayer } from "@editor/components/viewer/CustomSearchLayer";
+import { ZoomAPIBridge } from "@editor/components/viewer/ZoomAPIBridge";
 import { Center, Loader, Stack, Text } from "@mantine/core";
-import { ScrollAPIBridge } from "@app/components/viewer/ScrollAPIBridge";
-import { SelectionAPIBridge } from "@app/components/viewer/SelectionAPIBridge";
-import { PanAPIBridge } from "@app/components/viewer/PanAPIBridge";
-import { SpreadAPIBridge } from "@app/components/viewer/SpreadAPIBridge";
-import { SearchAPIBridge } from "@app/components/viewer/SearchAPIBridge";
-import { ThumbnailAPIBridge } from "@app/components/viewer/ThumbnailAPIBridge";
-import { RotateAPIBridge } from "@app/components/viewer/RotateAPIBridge";
-import { SignatureAPIBridge } from "@app/components/viewer/SignatureAPIBridge";
-import { AnnotationAPIBridge } from "@app/components/viewer/AnnotationAPIBridge";
-import { HistoryAPIBridge } from "@app/components/viewer/HistoryAPIBridge";
+import { ScrollAPIBridge } from "@editor/components/viewer/ScrollAPIBridge";
+import { SelectionAPIBridge } from "@editor/components/viewer/SelectionAPIBridge";
+import { PanAPIBridge } from "@editor/components/viewer/PanAPIBridge";
+import { SpreadAPIBridge } from "@editor/components/viewer/SpreadAPIBridge";
+import { SearchAPIBridge } from "@editor/components/viewer/SearchAPIBridge";
+import { ThumbnailAPIBridge } from "@editor/components/viewer/ThumbnailAPIBridge";
+import { RotateAPIBridge } from "@editor/components/viewer/RotateAPIBridge";
+import { SignatureAPIBridge } from "@editor/components/viewer/SignatureAPIBridge";
+import { AnnotationAPIBridge } from "@editor/components/viewer/AnnotationAPIBridge";
+import { HistoryAPIBridge } from "@editor/components/viewer/HistoryAPIBridge";
 import type {
   SignatureAPI,
   AnnotationAPI,
@@ -90,59 +90,59 @@ import type {
   HistoryAPI,
   SignaturePreview,
   SignatureOverlayAPI,
-} from "@app/components/viewer/viewerTypes";
+} from "@editor/components/viewer/viewerTypes";
 import {
   SignaturePreviewLayer,
   type SignaturePreviewLayerProps,
-} from "@app/components/viewer/SignaturePreviewLayer";
-import { ExportAPIBridge } from "@app/components/viewer/ExportAPIBridge";
-import { BookmarkAPIBridge } from "@app/components/viewer/BookmarkAPIBridge";
-import { AttachmentAPIBridge } from "@app/components/viewer/AttachmentAPIBridge";
-import { PrintAPIBridge } from "@app/components/viewer/PrintAPIBridge";
-import { isPdfFile } from "@app/utils/fileUtils";
+} from "@editor/components/viewer/SignaturePreviewLayer";
+import { ExportAPIBridge } from "@editor/components/viewer/ExportAPIBridge";
+import { BookmarkAPIBridge } from "@editor/components/viewer/BookmarkAPIBridge";
+import { AttachmentAPIBridge } from "@editor/components/viewer/AttachmentAPIBridge";
+import { PrintAPIBridge } from "@editor/components/viewer/PrintAPIBridge";
+import { isPdfFile } from "@editor/utils/fileUtils";
 import { useTranslation } from "react-i18next";
-import { LinkLayer } from "@app/components/viewer/LinkLayer";
-import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandler";
-import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
-import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
-import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvents";
-import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
-import { PdfPasswordBridge } from "@app/components/viewer/PdfPasswordBridge";
-import { isStirlingFile } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import { pdfAllows, canPrintPdf } from "@app/services/pdfPermissions";
+import { LinkLayer } from "@editor/components/viewer/LinkLayer";
+import { TextSelectionHandler } from "@editor/components/viewer/TextSelectionHandler";
+import { RedactionSelectionMenu } from "@editor/components/viewer/RedactionSelectionMenu";
+import { AnnotationSelectionMenu } from "@editor/components/viewer/AnnotationSelectionMenu";
+import { AnnotationMenuEvents } from "@editor/components/viewer/AnnotationMenuEvents";
+import { DocumentSwapBridge } from "@editor/components/viewer/DocumentSwapBridge";
+import { PdfPasswordBridge } from "@editor/components/viewer/PdfPasswordBridge";
+import { isStirlingFile } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import { pdfAllows, canPrintPdf } from "@editor/services/pdfPermissions";
 
 import { PdfPermissionFlag } from "@embedpdf/models";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 
 import {
   DocumentRestoreBridge,
   type DocumentRestoreEvent,
   type DocumentRestoreRequest,
-} from "@app/components/viewer/DocumentRestoreBridge";
-import { AnnotationDeletedMenu } from "@app/components/viewer/AnnotationDeletedMenu";
-import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
+} from "@editor/components/viewer/DocumentRestoreBridge";
+import { AnnotationDeletedMenu } from "@editor/components/viewer/AnnotationDeletedMenu";
+import { TextSelectionMenu } from "@editor/components/viewer/TextSelectionMenu";
 import {
   RedactionPendingTracker,
   RedactionPendingTrackerAPI,
-} from "@app/components/viewer/RedactionPendingTracker";
-import { RedactionAPIBridge } from "@app/components/viewer/RedactionAPIBridge";
-import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPermissionsAPIBridge";
-import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
-import { InitialDocumentLoadBridge } from "@app/components/viewer/InitialDocumentLoadBridge";
-import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
-import { useFontFallbackConfig } from "@app/hooks/useFontFallbackConfig";
-import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
-import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
-import { FormCreationInteractionLock } from "@app/tools/formFill/FormCreationInteractionLock";
-import { FormFieldCreationOverlay } from "@app/tools/formFill/FormFieldCreationOverlay";
-import { FormFieldEditOverlay } from "@app/tools/formFill/FormFieldEditOverlay";
-import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOverlay";
-import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
-import { CommentsSidebar } from "@app/components/viewer/CommentsSidebar";
-import { CommentAuthorProvider } from "@app/contexts/CommentAuthorContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { accountService } from "@app/services/accountService";
+} from "@editor/components/viewer/RedactionPendingTracker";
+import { RedactionAPIBridge } from "@editor/components/viewer/RedactionAPIBridge";
+import { DocumentPermissionsAPIBridge } from "@editor/components/viewer/DocumentPermissionsAPIBridge";
+import { DocumentReadyWrapper } from "@editor/components/viewer/DocumentReadyWrapper";
+import { InitialDocumentLoadBridge } from "@editor/components/viewer/InitialDocumentLoadBridge";
+import ToolLoadingFallback from "@editor/components/tools/ToolLoadingFallback";
+import { useFontFallbackConfig } from "@editor/hooks/useFontFallbackConfig";
+import { pdfiumWasmUrl } from "@editor/services/wasmPrecompiler";
+import { FormFieldOverlay } from "@editor/tools/formFill/FormFieldOverlay";
+import { FormCreationInteractionLock } from "@editor/tools/formFill/FormCreationInteractionLock";
+import { FormFieldCreationOverlay } from "@editor/tools/formFill/FormFieldCreationOverlay";
+import { FormFieldEditOverlay } from "@editor/tools/formFill/FormFieldEditOverlay";
+import { ButtonAppearanceOverlay } from "@editor/tools/formFill/ButtonAppearanceOverlay";
+import SignatureFieldOverlay from "@editor/components/viewer/SignatureFieldOverlay";
+import { CommentsSidebar } from "@editor/components/viewer/CommentsSidebar";
+import { CommentAuthorProvider } from "@editor/contexts/CommentAuthorContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { accountService } from "@editor/services/accountService";
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;

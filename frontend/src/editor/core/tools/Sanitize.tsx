@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import SanitizeSettings from "@app/components/tools/sanitize/SanitizeSettings";
-import { useSanitizeParameters } from "@app/hooks/tools/sanitize/useSanitizeParameters";
-import { useSanitizeOperation } from "@app/hooks/tools/sanitize/useSanitizeOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import SanitizeSettings from "@editor/components/tools/sanitize/SanitizeSettings";
+import { useSanitizeParameters } from "@editor/hooks/tools/sanitize/useSanitizeParameters";
+import { useSanitizeOperation } from "@editor/hooks/tools/sanitize/useSanitizeOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 
 const Sanitize = (props: BaseToolProps) => {
   const { t } = useTranslation();

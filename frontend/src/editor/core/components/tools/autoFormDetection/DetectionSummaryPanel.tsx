@@ -1,8 +1,8 @@
 import { Group, Stack, Text } from "@mantine/core";
-import { Icon, type IconName } from "@app/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { Banner } from "@app/ui/Banner";
-import { DetectionSummary } from "@app/services/formDetection/progress";
+import { Banner } from "@editor/ui/Banner";
+import { DetectionSummary } from "@editor/services/formDetection/progress";
 
 const TYPE_META: Record<
   string,

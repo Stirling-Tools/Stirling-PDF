@@ -3,9 +3,9 @@ import type {
   DiskFileState,
   DiskUnavailableReason,
   PresentDiskFileState,
-} from "@core/services/desktopFileLink";
+} from "@editor-core/services/desktopFileLink";
 
-// Desktop side of the file-link seam; overrides the core no-op via @app alias
+// Desktop side of the file-link seam; overrides the core no-op via @editor alias
 // order so disk-opened files stay 1:1 instead of drifting from IndexedDB.
 
 export type { DiskFileState, DiskUnavailableReason, PresentDiskFileState };

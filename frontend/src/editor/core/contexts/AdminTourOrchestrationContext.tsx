@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 
 interface AdminTourOrchestrationContextType {
   // State management

@@ -1,20 +1,20 @@
 import type { ReactNode } from "react";
-import type { ServerPlan } from "@app/billing/serverPlan";
+import type { ServerPlan } from "@editor/billing/serverPlan";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@app/auth";
-import { qk } from "@portal/queries/keys";
+import { useAuth } from "@editor/auth";
+import { qk } from "@processor/queries/keys";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Card } from "@app/ui";
-import { BillingScreen } from "@app/billing";
-import type { Wallet } from "@app/billing/types";
-import { fetchFreeTier, type FreeTierBalance } from "@portal/api/link";
-import { useFleetStats } from "@portal/queries/infrastructure";
-import { usersBackend } from "@app/portal/usersBackend";
-import { HttpError } from "@portal/api/http";
-import { useUI } from "@portal/contexts/UIContext";
-import "@portal/components/billing/FreeTierPlanView.css";
+import { Banner, Button, Card } from "@editor/ui";
+import { BillingScreen } from "@editor/billing";
+import type { Wallet } from "@editor/billing/types";
+import { fetchFreeTier, type FreeTierBalance } from "@processor/api/link";
+import { useFleetStats } from "@processor/queries/infrastructure";
+import { usersBackend } from "@editor/portal/usersBackend";
+import { HttpError } from "@processor/api/http";
+import { useUI } from "@processor/contexts/UIContext";
+import "@processor/components/billing/FreeTierPlanView.css";
 
 /** {@code forbidden} is an outcome, not a failure: the endpoint is admin-only. */
 type Load =

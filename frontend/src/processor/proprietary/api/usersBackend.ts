@@ -9,23 +9,23 @@
  * (`/api/v1/team/{my,invite,{id}/members,{id}/invitations,...}`) as a team
  * leader. Both go through `apiClient.local` (flavor-aware transport).
  *
- * Resolved at build time via the `@app/*` alias, same as `usersCapabilities`:
+ * Resolved at build time via the `@editor/*` alias, same as `usersCapabilities`:
  * `src/editor/proprietary/portal/usersBackend.ts` (self-hosted) and
  * `src/editor/saas/portal/usersBackend.ts` (SaaS). This module is just the shared
  * contract; only the flavor-divergent operations live here. Self-hosted-only
  * actions (role changes, suspend, password reset, MFA, grants, create/delete
- * team) stay in `@portal/api/{users,teams}` and are gated off on SaaS via
+ * team) stay in `@processor/api/{users,teams}` and are gated off on SaaS via
  * `usersCapabilities`.
  */
-import type { Tier } from "@portal/contexts/TierContext";
-import type { Team } from "@portal/api/teams";
+import type { Tier } from "@processor/contexts/TierContext";
+import type { Team } from "@processor/api/teams";
 import type {
   AdminAuthConfig,
   InviteResult,
   Member,
   RoleId,
   UsersResponse,
-} from "@portal/api/users";
+} from "@processor/api/users";
 
 export interface UsersBackend {
   /** Roster + summary + (SaaS) pending invitations, adapted onto UsersResponse. */

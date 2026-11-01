@@ -3,19 +3,19 @@ import { Stack, Text } from "@mantine/core";
 import {
   createToolSteps,
   ToolStepProvider,
-} from "@app/components/tools/shared/ToolStep";
-import { ScopedOperationButton } from "@app/components/tools/shared/ScopedOperationButton";
-import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/components/tools/shared/ToolStep";
+import { ScopedOperationButton } from "@editor/components/tools/shared/ScopedOperationButton";
+import { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
 import {
   ToolWorkflowTitle,
   ToolWorkflowTitleProps,
-} from "@app/components/tools/shared/ToolWorkflowTitle";
-import { StirlingFile } from "@app/types/fileContext";
-import type { TooltipTip } from "@app/types/tips";
-import type { ExecuteDisabledReason } from "@app/hooks/tools/shared/toolOperationTypes";
-import classes from "@app/components/tools/shared/createToolFlow.module.css";
-import { ToolFileEligibility } from "@app/contexts/ToolFileEligibilityContext";
-import { PdfProtectionResult } from "@app/components/tools/shared/PdfProtectionResult";
+} from "@editor/components/tools/shared/ToolWorkflowTitle";
+import { StirlingFile } from "@editor/types/fileContext";
+import type { TooltipTip } from "@editor/types/tips";
+import type { ExecuteDisabledReason } from "@editor/hooks/tools/shared/toolOperationTypes";
+import classes from "@editor/components/tools/shared/createToolFlow.module.css";
+import { ToolFileEligibility } from "@editor/contexts/ToolFileEligibilityContext";
+import { PdfProtectionResult } from "@editor/components/tools/shared/PdfProtectionResult";
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];

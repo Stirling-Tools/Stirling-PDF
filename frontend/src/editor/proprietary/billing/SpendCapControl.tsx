@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui";
 import {
   DEFAULT_CAP_PRESETS,
   currencySymbol,
   docCapForMoney,
   formatMinor,
-} from "@app/billing/format";
+} from "@editor/billing/format";
 
 /** Copy the control renders. The editor passes i18n strings; the portal uses the defaults. */
 export interface SpendCapControlLabels {

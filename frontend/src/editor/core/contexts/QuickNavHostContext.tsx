@@ -1,10 +1,10 @@
-import type { ToolId } from "@app/types/toolId";
+import type { ToolId } from "@editor/types/toolId";
 import {
   EMPTY_QUICK_NAV_ACCOUNT,
   updateQuickNavAccount,
   type QuickNavAccount,
   type QuickNavAccountUpdate,
-} from "@app/contexts/quickNavAccount";
+} from "@editor/contexts/quickNavAccount";
 import {
   createContext,
   useCallback,
@@ -20,7 +20,7 @@ import {
 export type QuickNavEntryId = ToolId | "sharedSign";
 export type QuickNavToolReasons = Partial<Record<QuickNavEntryId, string>>;
 
-export type { QuickNavIdentity } from "@app/contexts/quickNavAccount";
+export type { QuickNavIdentity } from "@editor/contexts/quickNavAccount";
 
 export interface QuickNavViewData {
   readerMode: boolean;

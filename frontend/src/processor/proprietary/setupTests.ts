@@ -3,7 +3,7 @@ import { vi } from "vitest";
 import i18n from "i18next";
 
 // The shims `src/index.tsx` installs - see core/setupTests.ts.
-import "@app/utils/engineShims";
+import "@editor/utils/engineShims";
 
 // Modules outside React call i18n.t directly; no resources means the English defaults render.
 void i18n.init({

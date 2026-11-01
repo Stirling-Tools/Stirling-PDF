@@ -1,19 +1,19 @@
 // @vitest-environment node
 import { beforeEach, expect, test, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ post: vi.fn(), get: vi.fn() }));
-vi.mock("@app/services/apiClient", () => ({ default: mocks }));
-vi.mock("@app/services/serverAutomationSession", () => ({
+vi.mock("@editor/services/apiClient", () => ({ default: mocks }));
+vi.mock("@editor/services/serverAutomationSession", () => ({
   requireAutomationSession: vi.fn(),
 }));
-vi.mock("@app/services/usageLimitBridge", () => ({
+vi.mock("@editor/services/usageLimitBridge", () => ({
   dispatchPaygLimitReached: vi.fn(),
 }));
 import {
   submitServerPipeline,
   waitForServerPipeline,
   downloadServerPipelineOutput,
-} from "@app/services/serverPipeline";
-import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
+} from "@editor/services/serverPipeline";
+import { dispatchPaygLimitReached } from "@editor/services/usageLimitBridge";
 const session = { key: "account", baseUrl: "https://connected.test" };
 beforeEach(() => vi.clearAllMocks());
 

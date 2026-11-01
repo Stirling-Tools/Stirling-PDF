@@ -4,13 +4,13 @@ import {
   SubcategoryId,
   type ToolRegistry,
   type ToolRegistryEntry,
-} from "@app/data/toolsTaxonomy";
-import { type ToolId } from "@app/types/toolId";
+} from "@editor/data/toolsTaxonomy";
+import { type ToolId } from "@editor/types/toolId";
 import {
   asRegistryConfig,
   ToolType,
-} from "@app/hooks/tools/shared/toolOperationTypes";
-import { objectToFormData } from "@app/hooks/tools/shared/toolApiMapping";
+} from "@editor/hooks/tools/shared/toolOperationTypes";
+import { objectToFormData } from "@editor/hooks/tools/shared/toolApiMapping";
 import {
   activeFileFields,
   deserializeToolStep,
@@ -19,22 +19,22 @@ import {
   serializeToolStep,
   stepNeedsConfiguring,
   type WorkingToolStep,
-} from "@app/hooks/tools/shared/toolAutomation";
-import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
-import { defaultParameters as compressDefaults } from "@app/hooks/tools/compress/useCompressParameters";
-import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
-import { SPLIT_METHODS } from "@app/constants/splitConstants";
-import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
-import { autoRotateOperationConfig } from "@app/hooks/tools/autoRotate/useAutoRotateOperation";
-import { defaultParameters as autoRotateDefaults } from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
-import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
-import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
-import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
-import { defaultParameters as convertDefaults } from "@app/hooks/tools/convert/useConvertParameters";
-import { overlayPdfsOperationConfig } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
-import { defaultParameters as overlayDefaults } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
-import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
-import { defaultParameters as certSignDefaults } from "@app/hooks/tools/certSign/useCertSignParameters";
+} from "@editor/hooks/tools/shared/toolAutomation";
+import { compressOperationConfig } from "@editor/hooks/tools/compress/useCompressOperation";
+import { defaultParameters as compressDefaults } from "@editor/hooks/tools/compress/useCompressParameters";
+import { splitOperationConfig } from "@editor/hooks/tools/split/useSplitOperation";
+import { SPLIT_METHODS } from "@editor/constants/splitConstants";
+import { redactOperationConfig } from "@editor/hooks/tools/redact/useRedactOperation";
+import { autoRotateOperationConfig } from "@editor/hooks/tools/autoRotate/useAutoRotateOperation";
+import { defaultParameters as autoRotateDefaults } from "@editor/hooks/tools/autoRotate/useAutoRotateParameters";
+import { addPasswordOperationConfig } from "@editor/hooks/tools/addPassword/useAddPasswordOperation";
+import { changePermissionsOperationConfig } from "@editor/hooks/tools/changePermissions/useChangePermissionsOperation";
+import { convertOperationConfig } from "@editor/hooks/tools/convert/useConvertOperation";
+import { defaultParameters as convertDefaults } from "@editor/hooks/tools/convert/useConvertParameters";
+import { overlayPdfsOperationConfig } from "@editor/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
+import { defaultParameters as overlayDefaults } from "@editor/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
+import { certSignOperationConfig } from "@editor/hooks/tools/certSign/useCertSignOperation";
+import { defaultParameters as certSignDefaults } from "@editor/hooks/tools/certSign/useCertSignParameters";
 
 function entry(over: Partial<ToolRegistryEntry>): ToolRegistryEntry {
   return {

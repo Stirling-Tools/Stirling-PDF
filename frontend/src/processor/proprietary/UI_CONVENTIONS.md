@@ -1,15 +1,15 @@
 # Portal UI conventions — SUI vs Mantine
 
 The portal has one component source from the caller's point of view: **SUI
-(`@app/ui`)**. Under the hood there are two kinds of SUI component. The rule:
+(`@editor/ui`)**. Under the hood there are two kinds of SUI component. The rule:
 
 > **Simple, presentational, brand-defining UI → hand-rolled SUI components.
 > Complex, stateful, or accessibility-hard widgets → Mantine, wrapped behind a
-> locked SUI interface.** Either way, callers import from `@app/ui`. Mantine is
+> locked SUI interface.** Either way, callers import from `@editor/ui`. Mantine is
 > an implementation detail of the design system — feature code never imports
 > `@mantine/core` directly.
 
-Theme wiring lives in one place: `SuiProvider` (`@portal/theme/SuiProvider`)
+Theme wiring lives in one place: `SuiProvider` (`@processor/theme/SuiProvider`)
 applies the SUI-token Mantine theme, remaps Mantine's neutral palette
 (dropdown/popover surfaces, borders, text) onto SUI tokens via
 `suiCssVariablesResolver`, and takes the resolved light/dark scheme so Mantine
@@ -51,7 +51,7 @@ template):
 
 When a feature needs a Mantine widget that has no wrapper yet (`Modal`,
 `Drawer`, `Menu`, `Stepper`, `Tooltip`, `@mantine/dates`,
-`@mantine/dropzone`, …), add the wrapper to `@app/ui` following this contract
+`@mantine/dropzone`, …), add the wrapper to `@editor/ui` following this contract
 rather than importing Mantine in feature code. Hooks are the exception:
 prefer `@mantine/hooks` (`useDisclosure`, `useClickOutside`, `useHotkeys`, …)
 over hand-rolling, imported directly.

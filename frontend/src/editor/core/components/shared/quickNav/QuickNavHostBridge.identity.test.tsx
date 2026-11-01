@@ -2,14 +2,14 @@ import { act, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { useAuth } from "@app/auth/UseSession";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
+import type { useAuth } from "@editor/auth/UseSession";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
 import {
   QuickNavHostProvider,
   useQuickNavHost,
-} from "@app/contexts/QuickNavHostContext";
-import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
-import { QuickNavRailAccount } from "@app/components/shared/quickNav/QuickNavRailAccount";
+} from "@editor/contexts/QuickNavHostContext";
+import { QuickNavHostBridge } from "@editor/components/shared/quickNav/QuickNavHostBridge";
+import { QuickNavRailAccount } from "@editor/components/shared/quickNav/QuickNavRailAccount";
 
 const auth = vi.hoisted<
   Pick<ReturnType<typeof useAuth>, "displayName" | "loading" | "isAnonymous">
@@ -20,15 +20,15 @@ const picture = vi.hoisted<{ url: string | null; loading: boolean }>(() => ({
 }));
 const getAccountData = vi.hoisted(() => vi.fn());
 
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => auth }));
-vi.mock("@app/hooks/useProfilePictureUrl", () => ({
+vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => auth }));
+vi.mock("@editor/hooks/useProfilePictureUrl", () => ({
   useProfilePictureUrl: () => picture.url,
   useProfilePictureLoading: () => picture.loading,
 }));
-vi.mock("@app/services/accountService", () => ({
+vi.mock("@editor/services/accountService", () => ({
   accountService: { getAccountData },
 }));
-vi.mock("@app/services/thumbnailGenerationService", () => ({
+vi.mock("@editor/services/thumbnailGenerationService", () => ({
   thumbnailGenerationService: { generateThumbnails: vi.fn(async () => []) },
 }));
 

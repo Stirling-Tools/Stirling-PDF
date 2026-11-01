@@ -1,16 +1,16 @@
 import { useEffect, type ReactNode } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
+import { Button } from "@editor/ui";
 import {
   FLOW_JOURNEY,
   type DealStage,
   type ProcurementSnapshot,
-} from "@portal/api/procurement";
-import { warmCalendly } from "@portal/components/procurement/CalendlyInline";
-import { openApiUrl } from "@portal/api/externalUrl";
-import "@portal/theme/surface.css";
-import "@portal/views/Procurement.css";
+} from "@processor/api/procurement";
+import { warmCalendly } from "@processor/components/procurement/CalendlyInline";
+import { openApiUrl } from "@processor/api/externalUrl";
+import "@processor/theme/surface.css";
+import "@processor/views/Procurement.css";
 
 /** What each stage asks of the buyer, read out in the stage sentence. */
 const STAGE_SENTENCE: Record<DealStage, string> = {

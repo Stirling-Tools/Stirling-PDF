@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { Logo } from "@app/ui/Logo";
-import styles from "@app/components/runLocation/RunLocation.module.css";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { Logo } from "@editor/ui/Logo";
+import styles from "@editor/components/runLocation/RunLocation.module.css";
 
 interface RunLocationStepLayoutProps {
   title: ReactNode;

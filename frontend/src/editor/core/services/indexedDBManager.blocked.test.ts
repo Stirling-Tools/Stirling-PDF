@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import "fake-indexeddb/auto";
-import { expectConsole } from "@app/tests/failOnConsole";
-import type { DatabaseConfig } from "@app/services/indexedDBManager";
+import { expectConsole } from "@editor/tests/failOnConsole";
+import type { DatabaseConfig } from "@editor/services/indexedDBManager";
 
 /**
  * A blocked open fires `blocked` and then nothing at all - no success, no error -
@@ -38,7 +38,8 @@ afterEach(() => {
 describe("openDatabase — blocked by another connection", () => {
   test("rejects with something actionable instead of hanging", async () => {
     expectConsole.warn(/blocked by another connection/);
-    const { indexedDBManager } = await import("@app/services/indexedDBManager");
+    const { indexedDBManager } =
+      await import("@editor/services/indexedDBManager");
     const held = await holdOlderVersion("blocked-db");
 
     vi.useFakeTimers();
@@ -58,7 +59,8 @@ describe("openDatabase — blocked by another connection", () => {
   });
 
   test("dedupes concurrent callers onto one connection", async () => {
-    const { indexedDBManager } = await import("@app/services/indexedDBManager");
+    const { indexedDBManager } =
+      await import("@editor/services/indexedDBManager");
     const spy = vi.spyOn(indexedDB, "open");
 
     // Racing in the same tick is the case registration-after-await could not

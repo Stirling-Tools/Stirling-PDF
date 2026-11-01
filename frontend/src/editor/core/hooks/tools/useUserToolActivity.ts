@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { ToolId } from "@app/types/toolId";
+import { ToolId } from "@editor/types/toolId";
 
 const RECENT_TOOLS_KEY = "stirlingpdf.recentTools";
 const FAVORITE_TOOLS_KEY = "stirlingpdf.favoriteTools";

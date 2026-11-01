@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AddWatermarkSingleStepSettings from "@app/components/tools/addWatermark/AddWatermarkSingleStepSettings";
+import AddWatermarkSingleStepSettings from "@editor/components/tools/addWatermark/AddWatermarkSingleStepSettings";
 import {
   AddWatermarkParameters,
   defaultParameters,
-} from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
+} from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
 
 const meta = {
   title: "Tools/AddWatermark/AddWatermarkSingleStepSettings",

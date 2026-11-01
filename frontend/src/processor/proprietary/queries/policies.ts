@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { qk } from "@portal/queries/keys";
-import { toAsyncState } from "@portal/queries/adapters";
-import type { AsyncState } from "@portal/hooks/useAsync";
+import { qk } from "@processor/queries/keys";
+import { toAsyncState } from "@processor/queries/adapters";
+import type { AsyncState } from "@processor/hooks/useAsync";
 import {
   assemblePolicies,
   fetchPoliciesList,
@@ -10,7 +10,7 @@ import {
   type PoliciesResponse,
   type PolicyRunView,
   type WirePolicy,
-} from "@portal/api/policies";
+} from "@processor/api/policies";
 
 /** Base query: the flat stored-policy records (GET /api/v1/policies). */
 export function usePoliciesList(): AsyncState<WirePolicy[]> {

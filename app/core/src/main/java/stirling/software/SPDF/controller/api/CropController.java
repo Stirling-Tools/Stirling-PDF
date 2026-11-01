@@ -35,6 +35,7 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.LimitedPDFRenderer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -180,7 +181,7 @@ public class CropController {
 
             try (PDDocument newDocument =
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
-                PDFRenderer renderer = new PDFRenderer(sourceDocument);
+                PDFRenderer renderer = new LimitedPDFRenderer(sourceDocument);
                 renderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
                 LayerUtility layerUtility = new LayerUtility(newDocument);
                 BitSet pagesToCrop = pageSelection(request, sourceDocument);

@@ -1,8 +1,8 @@
 import { Popover, TextInput } from "@mantine/core";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
 
 /** The host owns the query so it survives switching between list and grid views. */
 export function FilenameSearch({

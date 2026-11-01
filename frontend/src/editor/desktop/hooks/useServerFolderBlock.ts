@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
-import { connectionModeService } from "@app/services/connectionModeService";
-import type { ConnectionMode } from "@app/services/connectionModeService";
-import { useServerFolderBlock as useCoreServerFolderBlock } from "@core/hooks/useServerFolderBlock";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import type { ConnectionMode } from "@editor/services/connectionModeService";
+import { useServerFolderBlock as useCoreServerFolderBlock } from "@editor-core/hooks/useServerFolderBlock";
 
 /**
  * Desktop's blocker speaks in connection modes: local mode has no server at all, so

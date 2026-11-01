@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ConnectionTypePicker } from "@portal/components/sources/ConnectionTypePicker";
+import { ConnectionTypePicker } from "@processor/components/sources/ConnectionTypePicker";
 import {
   CREATABLE_CONNECTION_TYPES,
   presetConnectionTypes,
-} from "@portal/components/sources/connectionTypes";
+} from "@processor/components/sources/connectionTypes";
 
 const meta = {
   title: "Portal/Sources/ConnectionTypePicker",

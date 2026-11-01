@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Avatar } from "@app/ui/Avatar";
-import { Icon } from "@app/ui/Icon";
-import "@app/components/shared/signing/signingDetail.css";
+import { Avatar } from "@editor/ui/Avatar";
+import { Icon } from "@editor/ui/Icon";
+import "@editor/components/shared/signing/signingDetail.css";
 
 interface SigningSessionHeaderProps {
   documentName: string;

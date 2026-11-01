@@ -2,16 +2,16 @@ import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getToolUrlPath } from "@app/data/toolsTaxonomy";
-import { isPortalEntityScopeAccessible } from "@app/data/processorSearchIndex";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { getToolUrlPath } from "@editor/data/toolsTaxonomy";
+import { isPortalEntityScopeAccessible } from "@editor/data/processorSearchIndex";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
 import {
   assembleSuperSearchGroups,
   rankSettingsResults,
   rankToolResults,
   useSearchScopeFilter,
-} from "@app/hooks/useSuperSearch";
+} from "@editor/hooks/useSuperSearch";
 import {
   PORTAL_ENTITY_SCOPE_DEFS,
   PORTAL_DOCS_SCOPE_ID,
@@ -21,21 +21,21 @@ import {
   type SuperSearchQueryOptions,
   type SuperSearchScope,
   type UseSuperSearchResult,
-} from "@app/types/superSearch";
-import type { ToolId } from "@app/types/toolId";
-import { assignLocation, openExternalUrl } from "@app/utils/safeNavigation";
-import { usersBackend } from "@app/portal/usersBackend";
+} from "@editor/types/superSearch";
+import type { ToolId } from "@editor/types/toolId";
+import { assignLocation, openExternalUrl } from "@editor/utils/safeNavigation";
+import { usersBackend } from "@editor/portal/usersBackend";
 import {
   assemblePolicies,
   fetchPoliciesList,
   fetchPolicyRuns,
-} from "@portal/api/policies";
-import { fetchPipelines } from "@portal/api/pipelines";
-import { fetchSources } from "@portal/api/sources";
-import { EDITOR_IS_SAME_APP, EDITOR_URL } from "@portal/auth/editorUrl";
-import { useTier } from "@portal/contexts/TierContext";
-import { useUI } from "@portal/contexts/UIContext";
-import { qk } from "@portal/queries/keys";
+} from "@processor/api/policies";
+import { fetchPipelines } from "@processor/api/pipelines";
+import { fetchSources } from "@processor/api/sources";
+import { EDITOR_IS_SAME_APP, EDITOR_URL } from "@processor/auth/editorUrl";
+import { useTier } from "@processor/contexts/TierContext";
+import { useUI } from "@processor/contexts/UIContext";
+import { qk } from "@processor/queries/keys";
 import {
   buildProcessorEntityGroups,
   defaultPortalEntityScopes,
@@ -43,7 +43,7 @@ import {
   isVisiblePortalScope,
   withPortalEntityDependencies,
   type ProcessorEntities,
-} from "@portal/search/entitySearch";
+} from "@processor/search/entitySearch";
 
 const EDITOR_GROUP_ORDER: SuperSearchGroupId[] = ["tools"];
 const SETTINGS_GROUP_ORDER: SuperSearchGroupId[] = ["settings"];

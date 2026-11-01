@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import { usePrintCapability } from "@embedpdf/plugin-print/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 
 export interface PrintAPIBridgeProps {
   file?: File | Blob;

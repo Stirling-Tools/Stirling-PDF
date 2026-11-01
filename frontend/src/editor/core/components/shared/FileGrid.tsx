@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Box, Flex, Group, Text, TextInput, Select } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import FileCard from "@app/components/shared/FileCard";
-import { StirlingFileStub } from "@app/types/fileContext";
-import { FileId } from "@app/types/file";
+import { Icon } from "@editor/ui/Icon";
+import FileCard from "@editor/components/shared/FileCard";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { FileId } from "@editor/types/file";
 
 interface FileGridProps {
   files: Array<{ file: File; record?: StirlingFileStub }>;

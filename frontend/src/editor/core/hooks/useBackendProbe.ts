@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { BASE_PATH } from "@app/constants/app";
+import { BASE_PATH } from "@editor/constants/app";
 
 type BackendStatus = "up" | "starting" | "down";
 

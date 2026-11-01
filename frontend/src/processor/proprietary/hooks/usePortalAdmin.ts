@@ -1,5 +1,5 @@
-import { useAuth } from "@app/auth/UseSession";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAuth } from "@editor/auth/UseSession";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 /**
  * Whether the signed-in account administers this instance.

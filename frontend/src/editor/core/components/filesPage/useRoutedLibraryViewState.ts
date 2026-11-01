@@ -1,8 +1,8 @@
 import { useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useLibraryViewState } from "@app/components/filesPage/useLibraryViewState";
-import type { FilesPageTab } from "@app/contexts/FilesPageContext";
-import type { FolderId } from "@app/types/folder";
+import { useLibraryViewState } from "@editor/components/filesPage/useLibraryViewState";
+import type { FilesPageTab } from "@editor/contexts/FilesPageContext";
+import type { FolderId } from "@editor/types/folder";
 
 function tabFromSearch(search: string): FilesPageTab {
   const view = new URLSearchParams(search).get("view");

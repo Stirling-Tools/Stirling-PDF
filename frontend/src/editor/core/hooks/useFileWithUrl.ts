@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from "react";
-import { isFileObject } from "@app/types/fileContext";
+import { isFileObject } from "@editor/types/fileContext";
 
 /**
  * Hook to convert a File object to { file: File; url: string } format

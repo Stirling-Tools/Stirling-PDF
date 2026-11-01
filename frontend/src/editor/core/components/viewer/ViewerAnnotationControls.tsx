@@ -1,29 +1,32 @@
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { ViewerContext } from "@app/contexts/ViewerContext";
-import { useSignature } from "@app/contexts/SignatureContext";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { ViewerContext } from "@editor/contexts/ViewerContext";
+import { useSignature } from "@editor/contexts/SignatureContext";
 import {
   useAllFiles,
   useFileSelectors,
   useFileContext,
-} from "@app/contexts/FileContext";
-import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
+} from "@editor/contexts/FileContext";
+import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
 import {
   useNavigationState,
   useNavigationGuard,
   useNavigationActions,
-} from "@app/contexts/NavigationContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useRedactionMode, useRedaction } from "@app/contexts/RedactionContext";
+} from "@editor/contexts/NavigationContext";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import {
+  useRedactionMode,
+  useRedaction,
+} from "@editor/contexts/RedactionContext";
 import {
   defaultParameters,
   RedactParameters,
-} from "@app/hooks/tools/redact/useRedactParameters";
+} from "@editor/hooks/tools/redact/useRedactParameters";
 import { RedactionMode } from "@embedpdf/plugin-redaction";
 
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 interface ViewerAnnotationControlsProps {
   currentView: string;
   disabled?: boolean;

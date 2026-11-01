@@ -3,7 +3,7 @@
  * Generates and persists a unique UUID in localStorage for WAU tracking
  */
 
-import { generateId } from "@app/utils/generateId";
+import { generateId } from "@editor/utils/generateId";
 
 const BROWSER_ID_KEY = "stirling_browser_id";
 

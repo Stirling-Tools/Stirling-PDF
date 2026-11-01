@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PdfsProcessedCard } from "@portal/components/billing/PdfsProcessedCard";
-import { subscribedWallet } from "@portal/components/billing/walletFixtures";
-import "@portal/components/billing/billing.css";
+import { PdfsProcessedCard } from "@processor/components/billing/PdfsProcessedCard";
+import { subscribedWallet } from "@processor/components/billing/walletFixtures";
+import "@processor/components/billing/billing.css";
 
 const meta: Meta<typeof PdfsProcessedCard> = {
   title: "Portal/Billing/PdfsProcessedCard",

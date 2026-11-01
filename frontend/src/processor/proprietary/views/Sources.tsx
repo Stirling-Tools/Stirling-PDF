@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { Icon } from "@app/ui/Icon";
-import { Button, Skeleton } from "@app/ui";
-import { useSectionFlags } from "@portal/hooks/useAsync";
-import { useSources } from "@portal/queries/sources";
-import { type SourceView } from "@portal/api/sources";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { SourcesTable } from "@portal/components/sources/SourcesTable";
-import { SourceModal } from "@portal/components/sources/SourceModal";
-import "@portal/views/Sources.css";
+import { Icon } from "@editor/ui/Icon";
+import { Button, Skeleton } from "@editor/ui";
+import { useSectionFlags } from "@processor/hooks/useAsync";
+import { useSources } from "@processor/queries/sources";
+import { type SourceView } from "@processor/api/sources";
+import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
+import { SourcesTable } from "@processor/components/sources/SourcesTable";
+import { SourceModal } from "@processor/components/sources/SourceModal";
+import "@processor/views/Sources.css";
 
 export function Sources() {
   const { t } = useTranslation();

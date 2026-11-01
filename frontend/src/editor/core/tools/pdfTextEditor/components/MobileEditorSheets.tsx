@@ -1,10 +1,10 @@
 import { useEffect, type ComponentProps } from "react";
 import { Drawer } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { EditorSidebar } from "@app/tools/pdfTextEditor/components/EditorSidebar";
-import { FormatGroup } from "@app/tools/pdfTextEditor/components/toolbar/FormatGroup";
-import { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
-import "@app/tools/pdfTextEditor/components/MobileEditor.css";
+import { EditorSidebar } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
+import { FormatGroup } from "@editor/tools/pdfTextEditor/components/toolbar/FormatGroup";
+import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
+import "@editor/tools/pdfTextEditor/components/MobileEditor.css";
 
 type SidebarProps = ComponentProps<typeof EditorSidebar>;
 

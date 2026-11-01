@@ -1,15 +1,15 @@
 import { Box } from "@mantine/core";
-import CoreViewer from "@core/components/viewer/Viewer";
-import type { ViewerProps } from "@core/components/viewer/Viewer";
-import type { EmbedPdfViewerProps } from "@core/components/viewer/EmbedPdfViewer";
-import { useViewer } from "@app/contexts/ViewerContext";
+import CoreViewer from "@editor-core/components/viewer/Viewer";
+import type { ViewerProps } from "@editor-core/components/viewer/Viewer";
+import type { EmbedPdfViewerProps } from "@editor-core/components/viewer/EmbedPdfViewer";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import {
   POLICY_IN_FLIGHT_STATUSES,
   usePolicyRuns,
   type PolicyRunRecord,
-} from "@app/components/policies/policyRunStore";
-import { isClassificationPolicy } from "@app/data/classificationPolicy";
-import { PolicyEnforcementOverlay } from "@app/components/viewer/PolicyEnforcementOverlay";
+} from "@editor/components/policies/policyRunStore";
+import { isClassificationPolicy } from "@editor/data/classificationPolicy";
+import { PolicyEnforcementOverlay } from "@editor/components/viewer/PolicyEnforcementOverlay";
 
 type SignatureOverlayPassThrough = Pick<
   EmbedPdfViewerProps,

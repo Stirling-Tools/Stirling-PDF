@@ -1,7 +1,7 @@
 import path from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
 import { PDFDocument, PDFName } from "@cantoo/pdf-lib";
-import { test as base, expect } from "@app/tests/helpers/stub-test-base";
+import { test as base, expect } from "@editor/tests/helpers/stub-test-base";
 
 const test = base.extend({
   page: async ({ page }, use) => {

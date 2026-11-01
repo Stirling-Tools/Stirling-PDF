@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Button, Card, Modal } from "@app/ui";
-import { PrepayModalHeader } from "@portal/components/billing/PrepayModalHeader";
+import { Button, Card, Modal } from "@editor/ui";
+import { PrepayModalHeader } from "@processor/components/billing/PrepayModalHeader";
 
 /** A clickable door-card (Card-as-button, matching ComponentCard's a11y pattern). */
 function DoorCard({

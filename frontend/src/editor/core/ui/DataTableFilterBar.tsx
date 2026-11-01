@@ -1,11 +1,11 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Chip } from "@app/ui/Chip";
-import { Dropdown } from "@app/ui/Dropdown";
-import { Icon } from "@app/ui/Icon";
-import { Input } from "@app/ui/Input";
-import "@app/ui/DataTableFilterBar.css";
+import { Button } from "@editor/ui/Button";
+import { Chip } from "@editor/ui/Chip";
+import { Dropdown } from "@editor/ui/Dropdown";
+import { Icon } from "@editor/ui/Icon";
+import { Input } from "@editor/ui/Input";
+import "@editor/ui/DataTableFilterBar.css";
 
 /** Faceted filtering for {@link DataTable}'s `toolbar` slot. Facets chain; counts answer "if I picked this next". */
 

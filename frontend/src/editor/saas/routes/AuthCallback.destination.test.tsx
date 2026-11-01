@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render } from "@testing-library/react";
-import AuthCallback from "@app/routes/AuthCallback";
-import { supabase } from "@app/auth/supabase";
+import AuthCallback from "@editor/routes/AuthCallback";
+import { supabase } from "@editor/auth/supabase";
 import {
   rememberPendingDestination,
   resetPendingDestinationForTests,
-} from "@app/services/pendingDestination";
+} from "@editor/services/pendingDestination";
 import {
   clearPendingConnect,
   rememberPendingConnect,
-} from "@app/routes/pendingConnect";
+} from "@editor/routes/pendingConnect";
 
 /*
  * Where a completed sign-in lands. An inserted branch that swallows the no-param
@@ -22,7 +22,7 @@ vi.mock("react-router-dom", async () => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-vi.mock("@app/utils/loginLanding", () => ({
+vi.mock("@editor/utils/loginLanding", () => ({
   resolveLandingPath: vi.fn().mockResolvedValue("/processor"),
 }));
 

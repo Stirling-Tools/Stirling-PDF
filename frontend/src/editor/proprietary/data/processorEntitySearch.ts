@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TFunction } from "i18next";
-import { useScopedFetchCache } from "@app/hooks/useScopedFetchCache";
-import type { SuperSearchGroup } from "@app/types/superSearch";
+import { useScopedFetchCache } from "@editor/hooks/useScopedFetchCache";
+import type { SuperSearchGroup } from "@editor/types/superSearch";
 import type {
   PortalEntityItems,
   PortalEntityScopeId,
-} from "@portal/search/entitySearch";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
+} from "@processor/search/entitySearch";
+import { HAS_PORTAL } from "@editor/routes/hasPortal";
 
-type EntitySearchModule = typeof import("@portal/search/entitySearch");
+type EntitySearchModule = typeof import("@processor/search/entitySearch");
 
 const NO_GROUPS: SuperSearchGroup[] = [];
 const NO_SCOPES: readonly PortalEntityScopeId[] = [];
@@ -43,7 +43,7 @@ export function useProcessorEntityGroups(
   useEffect(() => {
     if (!active || modRef.current) return;
     let cancelled = false;
-    void import("@portal/search/entitySearch").then((loaded) => {
+    void import("@processor/search/entitySearch").then((loaded) => {
       if (cancelled) return;
       modRef.current = loaded;
       setMod(loaded);
@@ -65,7 +65,7 @@ export function useProcessorEntityGroups(
   const fetchScope = useCallback(
     async (scopeId: PortalEntityScopeId): Promise<PortalEntityItems> => {
       const loaded =
-        modRef.current ?? (await import("@portal/search/entitySearch"));
+        modRef.current ?? (await import("@processor/search/entitySearch"));
       return loaded.fetchPortalEntityScope(scopeId, "free");
     },
     [],

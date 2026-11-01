@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Icon } from "@app/ui/Icon";
-import { PanelHeader } from "@app/ui/PanelHeader";
-import { StatusBadge } from "@app/ui/StatusBadge";
-import { Button } from "@app/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { PanelHeader } from "@editor/ui/PanelHeader";
+import { StatusBadge } from "@editor/ui/StatusBadge";
+import { Button } from "@editor/ui/Button";
 
 const meta: Meta<typeof PanelHeader> = {
   title: "Primitives/PanelHeader",

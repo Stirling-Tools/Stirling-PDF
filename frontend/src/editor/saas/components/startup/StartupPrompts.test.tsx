@@ -2,16 +2,16 @@ import { cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import { StartupPrompts } from "@app/components/startup/StartupPrompts";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import { StartupPrompts } from "@editor/components/startup/StartupPrompts";
 
 const h = vi.hoisted(() => ({
   anonymous: false,
   get: vi.fn(),
   consent: vi.fn(),
 }));
-vi.mock("@app/services/apiClient", () => ({ default: { get: h.get } }));
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/services/apiClient", () => ({ default: { get: h.get } }));
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({
     user: { id: "cloud-user" },
     isAnonymous: h.anonymous,
@@ -19,13 +19,15 @@ vi.mock("@app/auth/UseSession", () => ({
     signOut: vi.fn(),
   }),
 }));
-vi.mock("@app/hooks/useCookieConsentInitialization", () => ({
+vi.mock("@editor/hooks/useCookieConsentInitialization", () => ({
   useCookieConsentInitialization: () => h.consent(),
 }));
-vi.mock("@app/hooks/usePosthogTracking", () => ({
+vi.mock("@editor/hooks/usePosthogTracking", () => ({
   usePosthogTracking: () => {},
 }));
-vi.mock("@app/hooks/useScarfTracking", () => ({ useScarfTracking: () => {} }));
+vi.mock("@editor/hooks/useScarfTracking", () => ({
+  useScarfTracking: () => {},
+}));
 
 afterEach(() => {
   cleanup();

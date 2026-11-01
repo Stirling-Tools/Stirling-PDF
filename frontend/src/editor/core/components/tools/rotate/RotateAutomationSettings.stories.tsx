@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import RotateAutomationSettings from "@app/components/tools/rotate/RotateAutomationSettings";
-import { RotateParameters } from "@app/hooks/tools/rotate/useRotateParameters";
+import RotateAutomationSettings from "@editor/components/tools/rotate/RotateAutomationSettings";
+import { RotateParameters } from "@editor/hooks/tools/rotate/useRotateParameters";
 
 const meta = {
   title: "Tools/Rotate/RotateAutomationSettings",

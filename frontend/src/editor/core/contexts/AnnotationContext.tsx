@@ -9,7 +9,7 @@ import React, {
 import type {
   AnnotationAPI,
   AnnotationToolId,
-} from "@app/components/viewer/viewerTypes";
+} from "@editor/components/viewer/viewerTypes";
 
 interface AnnotationContextValue {
   annotationApiRef: React.RefObject<AnnotationAPI | null>;

@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { StatusBadge } from "@app/ui";
+import { StatusBadge } from "@editor/ui";
 import {
   DOC_AUDIT_LABEL,
   DOC_AUDIT_TONE,
   type ReviewDocument,
-} from "@portal/api/documents";
+} from "@processor/api/documents";
 
 /** Lifecycle timeline for a single document, oldest first. */
 export function DocumentAudit({ doc }: { doc: ReviewDocument }) {

@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => false,
 }));
 
@@ -8,7 +8,7 @@ const { useConnectedServerMock } = vi.hoisted(() => ({
   useConnectedServerMock: vi.fn(),
 }));
 
-vi.mock("@app/hooks/useConnectedServer", () => ({
+vi.mock("@editor/hooks/useConnectedServer", () => ({
   useConnectedServer: useConnectedServerMock,
 }));
 vi.mock("react-i18next", () => ({
@@ -17,7 +17,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
+import { useServerProcessingBlock } from "@editor/hooks/useServerProcessingBlock";
 
 describe("useServerProcessingBlock", () => {
   beforeEach(() => {

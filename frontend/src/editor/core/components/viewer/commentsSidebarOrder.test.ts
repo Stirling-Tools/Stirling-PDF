@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 
-import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
+import { compareEntriesByVisualOrder } from "@editor/components/viewer/commentsSidebarOrder";
 
 function entry(id: string, x: number, y: number) {
   return {

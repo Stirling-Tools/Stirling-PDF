@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { retireLegacyFolderWorker } from "@app/services/retireLegacyFolderWorker";
+import { retireLegacyFolderWorker } from "@editor/services/retireLegacyFolderWorker";
 
 const legacyScript = new URL("/sw-folder-retry.js", window.location.origin)
   .href;

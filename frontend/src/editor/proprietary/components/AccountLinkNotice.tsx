@@ -10,22 +10,22 @@ import { useTranslation } from "react-i18next";
 import { Stack, Text } from "@mantine/core";
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@app/auth";
-import apiClient from "@app/services/apiClient";
-import { Button } from "@app/ui/Button";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { FreeTierBalanceSummary } from "@app/components/account-link/FreeTierBalanceSummary";
-import type { FreeTierBalance } from "@app/components/account-link/FreeTierBalanceSummary";
+import { useAuth } from "@editor/auth";
+import apiClient from "@editor/services/apiClient";
+import { Button } from "@editor/ui/Button";
+import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
+import { FreeTierBalanceSummary } from "@editor/components/account-link/FreeTierBalanceSummary";
+import type { FreeTierBalance } from "@editor/components/account-link/FreeTierBalanceSummary";
 import {
   acknowledgeAccountLinkPrompt,
   clearBlockIfAllowanceRemains,
   useAccountLinkBlock,
-} from "@app/services/accountLinkBlock";
+} from "@editor/services/accountLinkBlock";
 
 // Lazy: the linking UI drags in the account-link context tree and the Supabase
 // SDK, neither of which the notice needs until a prompt actually opens.
 const loadEditorLinkModal = () =>
-  import("@app/components/account-link/EditorLinkModal").then((module) => ({
+  import("@editor/components/account-link/EditorLinkModal").then((module) => ({
     default: module.EditorLinkModal,
   }));
 

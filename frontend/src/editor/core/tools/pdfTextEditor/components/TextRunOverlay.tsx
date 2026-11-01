@@ -1,48 +1,55 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
+  TextRange,
   TextRunSnapshot,
   WidthMode,
-} from "@app/tools/pdfTextEditor/types";
-import { toCssHex } from "@app/tools/pdfTextEditor/model/Color";
-import type { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
+} from "@editor/tools/pdfTextEditor/types";
+import { toCssHex } from "@editor/tools/pdfTextEditor/model/Color";
+import type { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import {
   resolveLang,
   useSpellcheckPreference,
-} from "@app/tools/pdfTextEditor/util/spellcheck";
+} from "@editor/tools/pdfTextEditor/util/spellcheck";
 import {
   embeddedFaceFamily,
   onEmbeddedFaceLoaded,
-} from "@app/tools/pdfTextEditor/util/embeddedFace";
-import { nearestStandardFont } from "@app/tools/pdfTextEditor/util/fontFamily";
-import { fitTextToWidth, NO_FIT } from "@app/tools/pdfTextEditor/util/fitText";
+} from "@editor/tools/pdfTextEditor/util/embeddedFace";
+import { nearestStandardFont } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  fitTextToWidth,
+  NO_FIT,
+} from "@editor/tools/pdfTextEditor/util/fitText";
 import {
   sampleRunBackground,
   toOpaqueCss,
-} from "@app/tools/pdfTextEditor/util/canvasBackground";
-import { buildExactLines } from "@app/tools/pdfTextEditor/util/exactLayout";
-import { stackLineBoxes } from "@app/tools/pdfTextEditor/util/lineLayout";
+} from "@editor/tools/pdfTextEditor/util/canvasBackground";
+import { buildExactLines } from "@editor/tools/pdfTextEditor/util/exactLayout";
+import { stackLineBoxes } from "@editor/tools/pdfTextEditor/util/lineLayout";
 import {
   isLinePainted,
   normalizeContainerCaret,
   type PaintLine,
   paintLines,
+  highlightTextRange,
   paintPlainText,
   plainCaretOffset,
+  plainDomRange,
+  plainSelectionRange,
   readOverlayText,
   refitEditedTokens,
   refitTokens,
   restoreCaretOffset,
-} from "@app/tools/pdfTextEditor/util/overlayPainter";
+} from "@editor/tools/pdfTextEditor/util/overlayPainter";
 import {
   cssFontShorthand,
   measureFontMetrics,
   measureLongestTokenWidth,
   measureMaxLineWidth,
   resetTextMetricsCache,
-} from "@app/tools/pdfTextEditor/util/textMetrics";
-import { MIN_WRAP_WIDTH_EM } from "@app/tools/pdfTextEditor/commands/ReflowWrapCommand";
-import "@app/tools/pdfTextEditor/components/TextRunOverlay.css";
+} from "@editor/tools/pdfTextEditor/util/textMetrics";
+import { MIN_WRAP_WIDTH_EM } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import "@editor/tools/pdfTextEditor/components/TextRunOverlay.css";
 
 const RENDER_MODE_INVISIBLE = 3;
 
@@ -314,6 +321,10 @@ interface TextRunOverlayProps {
   onWrap?: (maxWidthPt: number) => void;
   /** Fires when the user drags the right edge to a new width, in PDF points. */
   onResize?: (widthPt: number) => void;
+  /** Fires while the box has focus, as the characters selected inside it change. */
+  onTextRangeChange?: (range: TextRange | null) => void;
+  /** The characters selected inside the box, highlighted while it has no focus. */
+  textRange?: TextRange | null;
 }
 
 /**
@@ -365,6 +376,8 @@ export function TextRunOverlay({
   onMove,
   onWrap,
   onResize,
+  onTextRangeChange,
+  textRange,
 }: TextRunOverlayProps) {
   const { t } = useTranslation();
   // Subscribed, so toggling the preference re-renders every overlay.
@@ -372,6 +385,21 @@ export function TextRunOverlay({
   const ref = useRef<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
+  // Only while focused: blurring clears the browser's selection, and the
+  // range must outlive that for the inspector to act on it.
+  useEffect(() => {
+    if (!focused || !onTextRangeChange) return;
+    const report = () => {
+      const el = ref.current;
+      const selection = window.getSelection();
+      if (!el || !selection?.focusNode || !el.contains(selection.focusNode)) {
+        return;
+      }
+      onTextRangeChange(plainSelectionRange(el));
+    };
+    document.addEventListener("selectionchange", report);
+    return () => document.removeEventListener("selectionchange", report);
+  }, [focused, onTextRangeChange]);
   // Masking a run the user has only clicked into swaps real PDF ink for a
   // CSS approximation, so hold the pristine bitmap until an actual edit.
   const [touched, setTouchedState] = useState(false);
@@ -636,6 +664,16 @@ export function TextRunOverlay({
     // dispatching a spurious wrap that also wipes the redo stack.
     if (caret !== null && ownsFocus) restoreCaretOffset(el, caret);
   }, [run.text, freshExact, font, fontSizePx, touched, faceEpoch]);
+
+  // After the paint above, which replaces the nodes a range would hold. The
+  // browser's own selection goes with the focus, as when the inspector is
+  // used, so the stored range is painted in its place.
+  useEffect(() => {
+    const el = ref.current;
+    if (focused || !textRange || !el) return;
+    const range = plainDomRange(el, textRange);
+    return range ? highlightTextRange(range) : undefined;
+  }, [focused, textRange, run.text, freshExact, font, fontSizePx, faceEpoch]);
 
   const anchor = transform.apply(run.matrix.e, run.matrix.f);
   const flowLeft = anchor.x * scale;
@@ -938,23 +976,6 @@ export function TextRunOverlay({
         ) {
           caretToEnd(el, sel);
         }
-        // Backend strategy: pre-warm the per-char charcode cache for the whole
-        // page in the background.
-        void (async () => {
-          try {
-            const [
-              { getActiveCharcodeStrategy },
-              { prewarmBackendCacheForPage },
-            ] = await Promise.all([
-              import("@app/tools/pdfTextEditor/charcode/CharcodeStrategy"),
-              import("@app/tools/pdfTextEditor/charcode/charcodeRegistry"),
-            ]);
-            if (getActiveCharcodeStrategy() !== "backend") return;
-            await prewarmBackendCacheForPage(run.pageIndex);
-          } catch {
-            /* prewarm is best-effort, never block focus */
-          }
-        })();
       }}
       onBlur={(e) => {
         setTouched(false);

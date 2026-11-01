@@ -6,7 +6,7 @@ import {
   getPortalQueryClient,
   resetPortalQueryClient,
   tryGetPortalQueryClient,
-} from "@portal/queryClient";
+} from "@processor/queryClient";
 
 const fetchThing = vi.fn(async () => "loaded");
 

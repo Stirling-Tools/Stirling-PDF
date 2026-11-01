@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import "@app/components/tools/validateSignature/reportView/styles.css";
-import FieldBlock from "@app/components/tools/validateSignature/reportView/FieldBlock";
+import "@editor/components/tools/validateSignature/reportView/styles.css";
+import FieldBlock from "@editor/components/tools/validateSignature/reportView/FieldBlock";
 
 const formatDate = (value?: string | null) => {
   if (!value) return "--";

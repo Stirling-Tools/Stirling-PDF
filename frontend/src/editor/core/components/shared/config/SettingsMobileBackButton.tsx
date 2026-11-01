@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 
 interface SettingsMobileBackButtonProps {
   /** Only the mobile two-pane layout has a nav pane to go back to. */

@@ -2,8 +2,8 @@
 import { describe, expect, it } from "vitest";
 import { PanPluginPackage } from "@embedpdf/plugin-pan";
 import { initialState as interactionManagerInitialState } from "@embedpdf/plugin-interaction-manager";
-import { VIEWER_PAN_CONFIG } from "@app/components/viewer/viewerPanConfig";
-import { POINTER_MODE } from "@app/components/viewer/ViewerPointerProviders";
+import { VIEWER_PAN_CONFIG } from "@editor/components/viewer/viewerPanConfig";
+import { POINTER_MODE } from "@editor/components/viewer/ViewerPointerProviders";
 
 describe("viewer pan plugin config", () => {
   it("overrides the plugin default so pan never becomes the interaction default", () => {

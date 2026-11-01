@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { KvRow, formatPeriodDate } from "@app/billing";
+import { KvRow, formatPeriodDate } from "@editor/billing";
 import {
   fetchBillingDetails,
   fetchPaymentMethod,
   type BillingDetails,
   type PaymentMethod,
   type Wallet,
-} from "@portal/api/billing";
+} from "@processor/api/billing";
 
 /**
  * The Payment section for the portal host, read off the Stripe mirror.

@@ -6,8 +6,8 @@ import type {
   ElementType,
   ReactNode,
 } from "react";
-import { CONTROL_HEIGHT } from "@app/ui/controlSizes";
-import "@app/ui/ActionIcon.css";
+import { CONTROL_HEIGHT } from "@editor/ui/controlSizes";
+import "@editor/ui/ActionIcon.css";
 
 /** Icon-only button (square) — same variant/accent dials as Button. */
 export type ActionIconVariant = "primary" | "secondary" | "tertiary" | "quiet";

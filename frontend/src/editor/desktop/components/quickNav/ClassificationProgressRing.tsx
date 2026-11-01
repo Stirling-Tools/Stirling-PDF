@@ -2,11 +2,11 @@
  *  proportion to the folder done, the percentage inside, and a tick that takes it away. */
 
 import { useEffect, useState } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import "@app/components/shared/quickNav/QuickNavRail.css";
-import styles from "@app/components/quickNav/ClassificationProgressRing.module.css";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import "@editor/components/shared/quickNav/QuickNavRail.css";
+import styles from "@editor/components/quickNav/ClassificationProgressRing.module.css";
 
 const SIZE = 32;
 const STROKE = 3;

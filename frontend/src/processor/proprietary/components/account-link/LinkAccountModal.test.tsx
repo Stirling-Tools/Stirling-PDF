@@ -5,10 +5,10 @@ import {
   UIProvider,
   useUI,
   type LinkModalMode,
-} from "@app/portal/contexts/UIContext";
-import { PortalTestProviders } from "@app/portal/test/TestQueryProvider";
-import { HttpError } from "@app/portal/api/http";
-import { readPendingConnect } from "@app/portal/auth/pendingConnect";
+} from "@editor/portal/contexts/UIContext";
+import { PortalTestProviders } from "@editor/portal/test/TestQueryProvider";
+import { HttpError } from "@editor/portal/api/http";
+import { readPendingConnect } from "@editor/portal/auth/pendingConnect";
 
 /** The step machine: what drives each step, and what must not skip or repeat one. */
 const { startConnect, startReauth, fetchWallet, EMAIL } = vi.hoisted(() => ({
@@ -18,7 +18,7 @@ const { startConnect, startReauth, fetchWallet, EMAIL } = vi.hoisted(() => ({
   EMAIL: "admin@acme.example",
 }));
 
-vi.mock("@portal/hooks/useFreeTierBalance", () => ({
+vi.mock("@processor/hooks/useFreeTierBalance", () => ({
   useFreeTierBalance: () => ({
     data: {
       grantUnits: 500,
@@ -27,17 +27,17 @@ vi.mock("@portal/hooks/useFreeTierBalance", () => ({
     },
   }),
 }));
-vi.mock("@app/ui", async () => ({
-  ...(await import("@app/ui/Button")),
-  ...(await import("@app/ui/Banner")),
-  ...(await import("@app/ui/Modal")),
-  ...(await import("@app/ui/Skeleton")),
-  ...(await import("@app/ui/Spinner")),
+vi.mock("@editor/ui", async () => ({
+  ...(await import("@editor/ui/Button")),
+  ...(await import("@editor/ui/Banner")),
+  ...(await import("@editor/ui/Modal")),
+  ...(await import("@editor/ui/Skeleton")),
+  ...(await import("@editor/ui/Spinner")),
 }));
 
-vi.mock("@app/portal/api/link", () => ({ startConnect, startReauth }));
-vi.mock("@app/portal/api/billing", () => ({ fetchWallet }));
-vi.mock("@app/portal/auth/saasSupabase", () => ({
+vi.mock("@editor/portal/api/link", () => ({ startConnect, startReauth }));
+vi.mock("@editor/portal/api/billing", () => ({ fetchWallet }));
+vi.mock("@editor/portal/auth/saasSupabase", () => ({
   isSaasSupabaseConfigured: true,
   // Step 3 reads the connected account's email off this session.
   ensureSaasSupabase: () => ({
@@ -54,16 +54,16 @@ vi.mock("@app/portal/auth/saasSupabase", () => ({
 import {
   clearAccountLinkBlock,
   reportFreeTierExhausted,
-} from "@app/services/accountLinkBlock";
+} from "@editor/services/accountLinkBlock";
 import {
   LinkAccountModal,
   LinkAccountModalHost,
-} from "@app/portal/components/account-link/LinkAccountModal";
-import type { ConnectOutcome } from "@app/portal/components/account-link/ConnectCallbackView";
-import { freeWallet } from "@app/portal/components/billing/walletFixtures";
+} from "@editor/portal/components/account-link/LinkAccountModal";
+import type { ConnectOutcome } from "@editor/portal/components/account-link/ConnectCallbackView";
+import { freeWallet } from "@editor/portal/components/billing/walletFixtures";
 
 const ownership = vi.hoisted(() => ({ isAdmin: true, orgOwner: true }));
-vi.mock("@app/auth", () => ({
+vi.mock("@editor/auth", () => ({
   useAuth: () => ({
     ...ownership,
     user: { orgOwner: ownership.orgOwner },
@@ -85,8 +85,8 @@ function HostedModal() {
 
 const AUTHORIZE = "http://localhost:5174/link?request=req-1";
 const deployment = vi.hoisted(() => ({ basePath: "" }));
-vi.mock("@app/constants/app", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/constants/app")>()),
+vi.mock("@editor/constants/app", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@editor/constants/app")>()),
   withBasePath: (path: string) => `${deployment.basePath}${path}`,
 }));
 

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import PerPageSection from "@app/components/tools/getPdfInfo/sections/PerPageSection";
-import type { PdfPerPageInfo } from "@app/types/getPdfInfo";
+import PerPageSection from "@editor/components/tools/getPdfInfo/sections/PerPageSection";
+import type { PdfPerPageInfo } from "@editor/types/getPdfInfo";
 
 const perPage: PdfPerPageInfo = {
   "Page 1": {

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
-import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSearch";
-import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
-import "@app/components/viewer/readerRail/ReaderSuperSearch.css";
+import SuperSearch from "@editor/components/shared/superSearch/SuperSearch";
+import { openSuperSearch } from "@editor/components/shared/superSearch/openSuperSearch";
+import { useEditorSearchScopes } from "@editor/hooks/useSuperSearch";
+import "@editor/components/viewer/readerRail/ReaderSuperSearch.css";
 
 /**
  * Super search over the document being read. The workbench bar that normally

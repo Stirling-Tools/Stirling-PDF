@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { PortalSettingsSectionHost } from "@portal/components/settings/PortalSettingsSectionHost";
-import { useLinkOptional } from "@portal/contexts/LinkContext";
-import { useAccountLinkOptional } from "@portal/contexts/AccountLinkContext";
-import { useUI } from "@portal/contexts/UIContext";
+import { PortalSettingsSectionHost } from "@processor/components/settings/PortalSettingsSectionHost";
+import { useLinkOptional } from "@processor/contexts/LinkContext";
+import { useAccountLinkOptional } from "@processor/contexts/AccountLinkContext";
+import { useUI } from "@processor/contexts/UIContext";
 
-vi.mock("@portal/contexts/usePlanTier", () => ({ usePlanTier: () => "free" }));
+vi.mock("@processor/contexts/usePlanTier", () => ({
+  usePlanTier: () => "free",
+}));
 
 function AccountState() {
   const link = useLinkOptional();

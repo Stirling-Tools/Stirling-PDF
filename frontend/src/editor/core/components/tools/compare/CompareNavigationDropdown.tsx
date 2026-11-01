@@ -1,7 +1,7 @@
 import { Combobox, ScrollArea, useCombobox } from "@mantine/core";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { NavigationDropdownProps } from "@app/types/compare";
+import type { NavigationDropdownProps } from "@editor/types/compare";
 
 const CompareNavigationDropdown = ({
   changes,

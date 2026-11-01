@@ -5,8 +5,8 @@
 
 import React from "react";
 import { Text, Tooltip, Badge, Group } from "@mantine/core";
-import { ToolOperation } from "@app/types/file";
-import { toolOperationLabel } from "@app/utils/toolOperationLabel";
+import { ToolOperation } from "@editor/types/file";
+import { toolOperationLabel } from "@editor/utils/toolOperationLabel";
 import { useTranslation } from "react-i18next";
 
 interface ToolChainProps {

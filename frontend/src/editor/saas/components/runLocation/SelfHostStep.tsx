@@ -1,9 +1,9 @@
 import { useState, type CSSProperties } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { CodeBlock } from "@app/ui/CodeBlock";
-import { Icon } from "@app/ui/Icon";
-import { Select } from "@app/ui/Select";
+import { Button } from "@editor/ui/Button";
+import { CodeBlock } from "@editor/ui/CodeBlock";
+import { Icon } from "@editor/ui/Icon";
+import { Select } from "@editor/ui/Select";
 import {
   DOCKER_COMPOSE_FILE,
   dockerRunCommand,
@@ -11,9 +11,9 @@ import {
   JAR_RUN_COMMAND,
   SELF_HOST_GUIDES,
   SERVER_JAR_URL,
-} from "@app/constants/selfHosting";
-import { RunLocationStepLayout } from "@app/components/runLocation/RunLocationStepLayout";
-import styles from "@app/components/runLocation/RunLocation.module.css";
+} from "@editor/constants/selfHosting";
+import { RunLocationStepLayout } from "@editor/components/runLocation/RunLocationStepLayout";
+import styles from "@editor/components/runLocation/RunLocation.module.css";
 
 type SelfHostMethod = "docker" | "compose" | "kubernetes" | "manual";
 

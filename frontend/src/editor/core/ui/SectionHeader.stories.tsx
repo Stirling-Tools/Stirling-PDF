@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SectionHeader } from "@app/ui/SectionHeader";
+import { SectionHeader } from "@editor/ui/SectionHeader";
 
 const meta: Meta<typeof SectionHeader> = {
   title: "Primitives/SectionHeader",

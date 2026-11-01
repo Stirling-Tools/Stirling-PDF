@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
-import { useAuth } from "@app/auth/UseSession";
-import { getDisabledLabel } from "@app/components/tools/fullscreen/shared";
+import { useMultipleEndpointsEnabled } from "@editor/hooks/useEndpointConfig";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useGroupSigningEnabled } from "@editor/hooks/useGroupSigningEnabled";
+import { useAuth } from "@editor/auth/UseSession";
+import { getDisabledLabel } from "@editor/components/tools/fullscreen/shared";
 import type {
   QuickNavToolReasons,
   QuickNavEntryId,
-} from "@app/contexts/QuickNavHostContext";
-import type { ToolId } from "@app/types/toolId";
+} from "@editor/contexts/QuickNavHostContext";
+import type { ToolId } from "@editor/types/toolId";
 
 const ENTRY_ENDPOINTS = {
   automate: ["automate"],

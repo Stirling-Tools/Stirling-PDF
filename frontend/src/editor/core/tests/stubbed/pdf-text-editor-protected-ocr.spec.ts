@@ -1,5 +1,5 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { waitForEditorReady } from "@app/tests/stubbed/editorReady";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { waitForEditorReady } from "@editor/tests/stubbed/editorReady";
 import path from "path";
 
 // qpdf --encrypt scan-password scan-password 256 -- scanned-no-ocr.pdf scanned-no-ocr-encrypted.pdf

@@ -1,14 +1,14 @@
 import { useTranslation } from "react-i18next";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
-import { Dropdown, type DropdownTriggerProps } from "@app/ui/Dropdown";
-import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
-import type { ToolId } from "@app/types/toolId";
-import type { SigningIntent } from "@app/utils/pendingSigningIntent";
-import type { SigningMenuItem } from "@app/utils/signingItems";
-import { SignMenuPersonalSection } from "@app/components/shared/signing/SignMenuPersonalSection";
-import { SignMenuSessionsSection } from "@app/components/shared/signing/SignMenuSessionsSection";
-import { useSignMenuSessions } from "@app/components/shared/signing/useSignMenuSessions";
-import "@app/components/shared/signing/signing.css";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
+import { Dropdown, type DropdownTriggerProps } from "@editor/ui/Dropdown";
+import type { QuickNavToolReasons } from "@editor/contexts/QuickNavHostContext";
+import type { ToolId } from "@editor/types/toolId";
+import type { SigningIntent } from "@editor/utils/pendingSigningIntent";
+import type { SigningMenuItem } from "@editor/utils/signingItems";
+import { SignMenuPersonalSection } from "@editor/components/shared/signing/SignMenuPersonalSection";
+import { SignMenuSessionsSection } from "@editor/components/shared/signing/SignMenuSessionsSection";
+import { useSignMenuSessions } from "@editor/components/shared/signing/useSignMenuSessions";
+import "@editor/components/shared/signing/signing.css";
 
 interface SignMenuProps {
   children: DropdownTriggerProps["children"];

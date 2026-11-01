@@ -1,32 +1,32 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
-import { QuickNavRailHost } from "@app/components/shared/quickNav/QuickNavRailHost";
-import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
+import { QuickNavRailHost } from "@editor/components/shared/quickNav/QuickNavRailHost";
+import type { QuickNavEntry } from "@editor/components/shared/quickNav/QuickNavRailBase";
 import {
   QuickNavHostProvider,
   useRegisterQuickNavView,
   type QuickNavHostActions,
-} from "@app/contexts/QuickNavHostContext";
-import { consumeProcessingFolderCreationRequest } from "@app/utils/pendingProcessingFolderCreation";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+} from "@editor/contexts/QuickNavHostContext";
+import { consumeProcessingFolderCreationRequest } from "@editor/utils/pendingProcessingFolderCreation";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 
 const capability = vi.hoisted(() => ({ available: true }));
 const connected = vi.hoisted(() => ({ value: true }));
 const privacy = vi.hoisted(() => ({ localOnly: false }));
-vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => privacy.localOnly,
 }));
-vi.mock("@app/hooks/useProcessingFolderCreation", () => ({
+vi.mock("@editor/hooks/useProcessingFolderCreation", () => ({
   get canCreateProcessingFolders() {
     return capability.available;
   },
 }));
-vi.mock("@app/hooks/useConnectedServer", () => ({
+vi.mock("@editor/hooks/useConnectedServer", () => ({
   useConnectedServer: () => connected.value,
 }));
-vi.mock("@app/ui/Icon", () => ({ Icon: () => null }));
-vi.mock("@app/components/shared/quickNav/QuickNavRailContainer", () => ({
+vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
+vi.mock("@editor/components/shared/quickNav/QuickNavRailContainer", () => ({
   QuickNavRailContainer: ({ groups }: { groups: QuickNavEntry[][] }) => (
     <>
       {groups.flat().map((entry) => (

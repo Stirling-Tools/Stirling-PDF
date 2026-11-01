@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import "@portal/theme/surface.css";
+import { Icon } from "@editor/ui/Icon";
+import "@processor/theme/surface.css";
 
 /**
  * Card-form stand-in shown on the checkout payment step when no Stripe publishable key is configured

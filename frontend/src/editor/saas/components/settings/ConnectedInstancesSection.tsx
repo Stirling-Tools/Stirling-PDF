@@ -2,13 +2,13 @@ import { useId, useState } from "react";
 import { isAxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
-import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
-import apiClient from "@app/services/apiClient";
-import type { LinkedInstanceRow } from "@app/types/linkedInstance";
-import { Banner, Button, EmptyState, Input, Modal, Skeleton } from "@app/ui";
-import { ConnectedInstanceRow } from "@app/components/settings/ConnectedInstanceRow";
-import { AccountConnectionLayout } from "@app/components/settings/AccountConnectionLayout";
+import { useAuth } from "@editor/auth/UseSession";
+import { useSaaSTeam } from "@editor/contexts/SaaSTeamContext";
+import apiClient from "@editor/services/apiClient";
+import type { LinkedInstanceRow } from "@editor/types/linkedInstance";
+import { Banner, Button, EmptyState, Input, Modal, Skeleton } from "@editor/ui";
+import { ConnectedInstanceRow } from "@editor/components/settings/ConnectedInstanceRow";
+import { AccountConnectionLayout } from "@editor/components/settings/AccountConnectionLayout";
 
 const BASE = "/api/v1/account-link/instances";
 

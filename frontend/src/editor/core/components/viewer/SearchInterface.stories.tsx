@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SearchInterface } from "@app/components/viewer/SearchInterface";
+import { SearchInterface } from "@editor/components/viewer/SearchInterface";
 
 // SearchInterface reads ViewerContext via useContext with optional chaining
 // throughout, so it renders fine without a ViewerProvider mounted — search

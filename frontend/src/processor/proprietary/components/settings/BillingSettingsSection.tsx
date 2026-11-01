@@ -1,1 +1,1 @@
-export { PortalBillingGate as BillingSettingsSection } from "@portal/components/billing/PortalBillingGate";
+export { PortalBillingGate as BillingSettingsSection } from "@processor/components/billing/PortalBillingGate";

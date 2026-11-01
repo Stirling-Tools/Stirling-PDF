@@ -1,5 +1,5 @@
 import { isTauri } from "@tauri-apps/api/core";
-import type { PickedDirectory } from "@app/services/directoryPicker";
+import type { PickedDirectory } from "@editor/services/directoryPicker";
 
 interface WebviewBridge {
   postMessageWithAdditionalObjects: (message: string, objects: File[]) => void;

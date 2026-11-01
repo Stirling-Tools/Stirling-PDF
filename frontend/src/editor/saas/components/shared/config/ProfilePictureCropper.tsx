@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Modal, Stack, Slider, Alert, Text, Box } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import Cropper from "react-easy-crop";
-import { getCroppedImage, type Area } from "@app/utils/cropImage";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { getCroppedImage, type Area } from "@editor/utils/cropImage";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 interface ProfilePictureCropperProps {
   file: File | null;

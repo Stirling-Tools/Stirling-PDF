@@ -2,39 +2,42 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { useAuth } from "@app/auth/UseSession";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
+import type { useAuth } from "@editor/auth/UseSession";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
 import {
   QuickNavHostProvider,
   useQuickNavHost,
-} from "@app/contexts/QuickNavHostContext";
-import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
-import { fetchSigningSessions, type SigningSessions } from "@app/api/signing";
-import { alert } from "@app/components/toast";
-import { markSigningItemSeen } from "@app/services/signingSeenStore";
-import { expectConsole } from "@app/tests/failOnConsole";
+} from "@editor/contexts/QuickNavHostContext";
+import { QuickNavHostBridge } from "@editor/components/shared/quickNav/QuickNavHostBridge";
+import {
+  fetchSigningSessions,
+  type SigningSessions,
+} from "@editor/api/signing";
+import { alert } from "@editor/components/toast";
+import { markSigningItemSeen } from "@editor/services/signingSeenStore";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 const auth = vi.hoisted<Pick<ReturnType<typeof useAuth>, "user" | "loading">>(
   () => ({ user: { id: "ada" }, loading: false }),
 );
 const access = vi.hoisted(() => ({ granted: true, settled: true }));
 
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({
     ...auth,
     displayName: auth.user?.id ?? null,
     isAnonymous: false,
   }),
 }));
-vi.mock("@app/hooks/usePortalAccess", () => ({
+vi.mock("@editor/hooks/usePortalAccess", () => ({
   usePortalAccessState: () => access,
 }));
-vi.mock("@app/api/signing", () => ({ fetchSigningSessions: vi.fn() }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
-vi.mock("@app/components/shared/quickNav/useQuickNavToolReasons", () => ({
+vi.mock("@editor/api/signing", () => ({ fetchSigningSessions: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/components/shared/quickNav/useQuickNavToolReasons", () => ({
   useQuickNavToolReasons: () => null,
 }));
-vi.mock("@app/services/thumbnailGenerationService", () => ({
+vi.mock("@editor/services/thumbnailGenerationService", () => ({
   thumbnailGenerationService: { generateThumbnails: vi.fn(async () => []) },
 }));
 

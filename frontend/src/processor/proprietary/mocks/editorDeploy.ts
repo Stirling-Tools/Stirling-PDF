@@ -12,14 +12,14 @@
  * and these fixtures can be deleted (or kept as test seeds).
  */
 
-import type { Tier } from "@portal/contexts/TierContext";
+import type { Tier } from "@processor/contexts/TierContext";
 import type {
   DeploymentSummary,
   DeploymentTarget,
   EditorDeploymentResponse,
   EditorInstance,
   PairingOption,
-} from "@portal/api/editorDeploy";
+} from "@processor/api/editorDeploy";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Snippet builders                                                         */

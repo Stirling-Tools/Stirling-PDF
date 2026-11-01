@@ -1,7 +1,7 @@
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { PasswordPromptModal } from "@app/tools/pdfTextEditor/components/PasswordPromptModal";
+import { PasswordPromptModal } from "@editor/tools/pdfTextEditor/components/PasswordPromptModal";
 
 describe("password retry dismissal", () => {
   it("blocks every dismissal while loading and enables them after loading", () => {

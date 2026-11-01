@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps } from "@app/types/tool";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps } from "@editor/types/tool";
 
-import { useAutoRenameParameters } from "@app/hooks/tools/autoRename/useAutoRenameParameters";
-import { useAutoRenameOperation } from "@app/hooks/tools/autoRename/useAutoRenameOperation";
-import { useAutoRenameTips } from "@app/components/tooltips/useAutoRenameTips";
+import { useAutoRenameParameters } from "@editor/hooks/tools/autoRename/useAutoRenameParameters";
+import { useAutoRenameOperation } from "@editor/hooks/tools/autoRename/useAutoRenameOperation";
+import { useAutoRenameTips } from "@editor/components/tooltips/useAutoRenameTips";
 
 const AutoRename = (props: BaseToolProps) => {
   const { t } = useTranslation();

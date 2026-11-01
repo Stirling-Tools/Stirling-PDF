@@ -4,9 +4,9 @@ import {
   useDocumentManagerCapability,
 } from "@embedpdf/plugin-document-manager/react";
 import { Center, Group, Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { isDamagedPdfError } from "@app/utils/pdfDamage";
+import { isDamagedPdfError } from "@editor/utils/pdfDamage";
 
 interface DocumentReadyWrapperProps {
   children: (documentId: string) => React.ReactNode;

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import UsageAnalyticsTable from "@app/components/shared/config/configSections/usage/UsageAnalyticsTable";
-import type { EndpointStatistic } from "@app/services/usageAnalyticsService";
+import UsageAnalyticsTable from "@editor/components/shared/config/configSections/usage/UsageAnalyticsTable";
+import type { EndpointStatistic } from "@editor/services/usageAnalyticsService";
 
 const ENDPOINTS: EndpointStatistic[] = [
   { endpoint: "/api/v1/general/merge-pdfs", visits: 1284, percentage: 34.12 },

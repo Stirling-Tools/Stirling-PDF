@@ -4,7 +4,7 @@ import JSZip from "jszip";
 const post = vi.fn();
 const isAxiosErrorMock = vi.fn();
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { post: (...args: unknown[]) => post(...args) },
 }));
 
@@ -20,7 +20,7 @@ const {
   addAttachments,
   applyBatchAttachmentOps,
   parseBlobError,
-} = await import("@app/services/attachmentService");
+} = await import("@editor/services/attachmentService");
 
 function pdfFile(name = "doc.pdf"): File {
   return new File([new Uint8Array([37, 80, 68, 70])], name, {

@@ -1,6 +1,6 @@
 import React from "react";
 import { useMantineColorScheme } from "@mantine/core";
-import { useLogoPath } from "@app/hooks/useLogoPath";
+import { useLogoPath } from "@editor/hooks/useLogoPath";
 
 interface LogoIconProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   alt?: string;

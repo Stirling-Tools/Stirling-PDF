@@ -1,5 +1,5 @@
-import { useWallet as useCloudWallet } from "@cloud/hooks/useWallet";
-import { useConfirmedSaaSMode } from "@app/hooks/useConfirmedSaaSMode";
+import { useWallet as useCloudWallet } from "@editor-cloud/hooks/useWallet";
+import { useConfirmedSaaSMode } from "@editor/hooks/useConfirmedSaaSMode";
 
 export type {
   UseWalletResult,
@@ -9,7 +9,7 @@ export type {
   WalletMember,
   WalletCategoryBreakdown,
   WalletActivityRow,
-} from "@cloud/hooks/useWallet";
+} from "@editor-cloud/hooks/useWallet";
 
 /** Local and self-hosted backends do not provide cloud billing. */
 export function useWallet(enabled = true) {

@@ -2,7 +2,7 @@ import type {
   Affine,
   PageRect,
   ShapeObjectSnapshot,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
 
 /** A vector path object on a page; `bounds` is in raw PDF page space. */
 export class ShapeObject {

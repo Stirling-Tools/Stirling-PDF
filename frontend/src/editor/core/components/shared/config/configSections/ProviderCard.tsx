@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
-import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
+import { SettingsFieldLabel } from "@editor/components/shared/config/SettingsFieldLabel";
 import {
   Paper,
   Group,
@@ -13,15 +13,15 @@ import {
   TagsInput,
   Anchor,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import EditableSecretField from "@app/components/shared/EditableSecretField";
+import EditableSecretField from "@editor/components/shared/EditableSecretField";
 import {
   Provider,
   ProviderField,
-} from "@app/components/shared/config/configSections/providerDefinitions";
+} from "@editor/components/shared/config/configSections/providerDefinitions";
 
-import { Icon, isIconName } from "@app/ui/Icon";
+import { Icon, isIconName } from "@editor/ui/Icon";
 interface ProviderCardProps {
   provider: Provider;
   isConfigured: boolean;

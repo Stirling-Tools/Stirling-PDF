@@ -1,4 +1,4 @@
-import { StorageStats } from "@app/services/fileStorage";
+import { StorageStats } from "@editor/services/fileStorage";
 
 /**
  * Storage operation types for incremental updates

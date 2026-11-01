@@ -6,7 +6,7 @@
  */
 
 import type { ReactNode } from "react";
-import type { ToolEndpoint } from "@app/types/toolApiTypes";
+import type { ToolEndpoint } from "@editor/types/toolApiTypes";
 
 /** Static definition of a policy category (the "what it does"). */
 export interface PolicyCategory {

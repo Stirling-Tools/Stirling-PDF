@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { useFleetStatsAccess } from "@portal/hooks/useFleetStatsAccess";
+import { useFleetStatsAccess } from "@processor/hooks/useFleetStatsAccess";
 
 const state = vi.hoisted<{
   auth: {
@@ -19,7 +19,7 @@ const state = vi.hoisted<{
     isAnonymous: false,
   },
 }));
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => state.auth }));
+vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => state.auth }));
 
 beforeEach(() => {
   state.auth = {

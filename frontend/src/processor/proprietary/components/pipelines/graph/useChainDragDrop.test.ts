@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   createDragClickGuard,
   fillDragPreview,
-} from "@portal/components/pipelines/graph/useChainDragDrop";
+} from "@processor/components/pipelines/graph/useChainDragDrop";
 
 /** Stands in for the graph's rendered cards, which the preview clones out of the DOM. */
 function renderCards(labels: string[]) {

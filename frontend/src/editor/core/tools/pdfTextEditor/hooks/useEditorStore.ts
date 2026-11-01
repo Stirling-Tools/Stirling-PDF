@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
+import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 
 let __singleton: EditorStore | null = null;
 let __disposeTimer: ReturnType<typeof setTimeout> | null = null;

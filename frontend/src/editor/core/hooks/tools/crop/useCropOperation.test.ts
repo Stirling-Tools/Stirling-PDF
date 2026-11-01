@@ -2,11 +2,11 @@ import { describe, expect, test } from "vitest";
 import {
   cropFromApiParams,
   cropToApiParams,
-} from "@app/hooks/tools/crop/useCropOperation";
+} from "@editor/hooks/tools/crop/useCropOperation";
 import {
   CropParameters,
   defaultParameters,
-} from "@app/hooks/tools/crop/useCropParameters";
+} from "@editor/hooks/tools/crop/useCropParameters";
 
 describe("crop mappers", () => {
   // With autoCrop on the coordinates aren't sent, so they must not resurface on

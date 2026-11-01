@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
-import { ensureCookieConsent } from "@app/tests/helpers/login";
-import { bypassOnboarding } from "@app/tests/helpers/api-stubs";
-import { openSettings } from "@app/tests/helpers/ui-helpers";
+import { ensureCookieConsent } from "@editor/tests/helpers/login";
+import { bypassOnboarding } from "@editor/tests/helpers/api-stubs";
+import { openSettings } from "@editor/tests/helpers/ui-helpers";
 
 /**
  * License-gated feature surface validation. Drives the actual UI rather

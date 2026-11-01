@@ -1,5 +1,5 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { openSettings, closeSettings } from "@app/tests/helpers/ui-helpers";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openSettings, closeSettings } from "@editor/tests/helpers/ui-helpers";
 
 /**
  * Consolidated settings-page coverage. Was previously three files

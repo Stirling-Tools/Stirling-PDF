@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import FirstLoginSlide from "@app/components/onboarding/slides/FirstLoginSlide";
+import FirstLoginSlide from "@editor/components/onboarding/slides/FirstLoginSlide";
 
 // FirstLoginSlide is a slide-content factory (returns a SlideConfig), not a
 // component, so wrap it to render its `body` the way the real onboarding shell

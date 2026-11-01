@@ -5,8 +5,8 @@ import {
   formatMinor,
   formatPeriodDate,
   type InvoiceRowState,
-} from "@app/billing";
-import { fetchInvoices, type Invoice } from "@portal/api/billing";
+} from "@editor/billing";
+import { fetchInvoices, type Invoice } from "@processor/api/billing";
 
 const LIMIT = 6;
 

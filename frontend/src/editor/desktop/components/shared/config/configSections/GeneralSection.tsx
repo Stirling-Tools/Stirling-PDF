@@ -3,14 +3,14 @@ import { Stack, Alert } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import PreferencesSection, {
   type PreferencesSectionProps,
-} from "@core/components/shared/config/configSections/preferences/PreferencesSection";
-import { DefaultAppSettings } from "@app/components/shared/config/configSections/DefaultAppSettings";
-import { useDesktopInstall } from "@app/hooks/useDesktopInstall";
+} from "@editor-core/components/shared/config/configSections/preferences/PreferencesSection";
+import { DefaultAppSettings } from "@editor/components/shared/config/configSections/DefaultAppSettings";
+import { useDesktopInstall } from "@editor/hooks/useDesktopInstall";
 import {
   desktopUpdateService,
   type UpdateMode,
   type UpdateModeInfo,
-} from "@app/services/desktopUpdateService";
+} from "@editor/services/desktopUpdateService";
 
 /**
  * Desktop Preferences page: the lower layers' props plus file defaults, the Tauri

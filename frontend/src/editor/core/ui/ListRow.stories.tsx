@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ListRow } from "@app/ui/ListRow";
-import { Card } from "@app/ui/Card";
-import { StatusBadge } from "@app/ui/StatusBadge";
+import { ListRow } from "@editor/ui/ListRow";
+import { Card } from "@editor/ui/Card";
+import { StatusBadge } from "@editor/ui/StatusBadge";
 
 const meta: Meta<typeof ListRow> = {
   title: "Primitives/ListRow",

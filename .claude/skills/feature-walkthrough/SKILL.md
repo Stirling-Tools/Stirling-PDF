@@ -92,6 +92,6 @@ Give the doc path and a short chat summary. Offer to `SendUserFile` it.
 - **True to the code.** Every claim traces to a file you read; cite `path:line`.
   No fabricated migration/version history.
 - **Newcomer-first.** Define repo-specific terms (FileContext, `useToolOperation`,
-  the `@app/*` layer cascade, stubbed vs live tests) on first use.
+  the `@editor/*` layer cascade, stubbed vs live tests) on first use.
 - **Show, don't assert.** Prefer a diagram + a real example over adjectives.
 - Don't commit the `walkthrough/` output unless asked.

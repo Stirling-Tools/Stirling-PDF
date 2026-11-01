@@ -1,4 +1,7 @@
-import type { SavedSignatureType, SignatureScope } from "@app/types/signature";
+import type {
+  SavedSignatureType,
+  SignatureScope,
+} from "@editor/types/signature";
 
 export type CreateTab = "draw" | "type" | "upload" | "phone";
 

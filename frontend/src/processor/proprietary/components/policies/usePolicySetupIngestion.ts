@@ -1,13 +1,16 @@
 import { useState, type ComponentProps } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { PolicySetupConfigProps } from "@app/components/policies/PolicySetupWizard";
+import type { PolicySetupConfigProps } from "@editor/components/policies/PolicySetupWizard";
 import type {
   PolicyIngestionConfig,
   IngestionDestination,
-} from "@app/components/policies/PolicyIngestionConfig";
-import { ingestChunkingConfigured } from "@app/policies/ingestOperation";
-import { policyStepFromWire, policyStepToWire } from "@app/policies/operations";
-import { fetchDocparseCapabilities } from "@portal/api/docparse";
+} from "@editor/components/policies/PolicyIngestionConfig";
+import { ingestChunkingConfigured } from "@editor/policies/ingestOperation";
+import {
+  policyStepFromWire,
+  policyStepToWire,
+} from "@editor/policies/operations";
+import { fetchDocparseCapabilities } from "@processor/api/docparse";
 
 interface Props extends Pick<PolicySetupConfigProps, "result" | "onChange"> {
   folderName?: string;

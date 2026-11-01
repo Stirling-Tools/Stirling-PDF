@@ -10,22 +10,22 @@ import { useZoom, ZoomMode } from "@embedpdf/plugin-zoom/react";
 import type { Point, ZoomLevel } from "@embedpdf/plugin-zoom";
 import { useSpread, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { useScroll } from "@embedpdf/plugin-scroll/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import type { ZoomAPIWrapper } from "@app/contexts/viewer/viewerBridges";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { useAllFiles, useFileSelection } from "@app/contexts/FileContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import type { ZoomAPIWrapper } from "@editor/contexts/viewer/viewerBridges";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import { useAllFiles, useFileSelection } from "@editor/contexts/FileContext";
 import {
   determineAutoZoom,
   DEFAULT_FALLBACK_ZOOM,
   DEFAULT_VISIBILITY_THRESHOLD,
   useFitWidthResize,
-} from "@app/utils/viewerZoom";
-import { getFirstPageAspectRatioFromStub } from "@app/utils/pageMetadata";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+} from "@editor/utils/viewerZoom";
+import { getFirstPageAspectRatioFromStub } from "@editor/utils/pageMetadata";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 import {
   preferencesService,
   type ViewerZoomSetting,
-} from "@app/services/preferencesService";
+} from "@editor/services/preferencesService";
 
 function isFitMode(level: ZoomLevel): boolean {
   return level === ZoomMode.FitWidth || level === ZoomMode.FitPage;

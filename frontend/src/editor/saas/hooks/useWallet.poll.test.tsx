@@ -2,24 +2,24 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, cleanup, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { expectConsole } from "@editor/tests/failOnConsole";
 import {
   resetTabVisibility,
   setTabHidden,
-} from "@app/tests/utils/tabVisibility";
+} from "@editor/tests/utils/tabVisibility";
 
 const get = vi.fn();
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: (...args: unknown[]) => get(...args) },
 }));
-vi.mock("@app/hooks/walletDevPreview", () => ({
+vi.mock("@editor/hooks/walletDevPreview", () => ({
   getWalletDevPreview: () => null,
 }));
-vi.mock("@app/services/billing", () => ({ createPortalSession: vi.fn() }));
-vi.mock("@app/platform/openExternal", () => ({ openExternal: vi.fn() }));
+vi.mock("@editor/services/billing", () => ({ createPortalSession: vi.fn() }));
+vi.mock("@editor/platform/openExternal", () => ({ openExternal: vi.fn() }));
 
-const { useWallet } = await import("@app/hooks/useWallet");
-const { createAppQueryClient } = await import("@app/query/queryClient");
+const { useWallet } = await import("@editor/hooks/useWallet");
+const { createAppQueryClient } = await import("@editor/query/queryClient");
 
 /** The hook reads through the shared cache, so it needs the app's own client. */
 function wrapper({ children }: { children: ReactNode }) {

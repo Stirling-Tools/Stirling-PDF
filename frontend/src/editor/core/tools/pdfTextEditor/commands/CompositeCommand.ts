@@ -2,8 +2,8 @@ import i18n from "i18next";
 import {
   RolledBackError,
   type Command,
-} from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+} from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
 /** Groups several already-applied commands into one undo/redo step. */
 export class CompositeCommand implements Command {

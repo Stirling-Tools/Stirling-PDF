@@ -1,25 +1,25 @@
 import { useState, useEffect } from "react";
 import { Stack, Text, Box, Group, Center, Checkbox } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { CropParametersHook } from "@app/hooks/tools/crop/useCropParameters";
+import { Icon } from "@editor/ui/Icon";
+import { CropParametersHook } from "@editor/hooks/tools/crop/useCropParameters";
 import {
   useViewScopedFiles,
   useViewScopedFileStubs,
-} from "@app/hooks/tools/shared/useViewScopedFiles";
-import CropAreaSelector from "@app/components/tools/crop/CropAreaSelector";
-import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
-import CropPageSelection from "@app/components/tools/crop/CropPageSelection";
-import { DEFAULT_CROP_AREA } from "@app/constants/cropConstants";
-import { PAGE_SIZES } from "@app/constants/pageSizeConstants";
+} from "@editor/hooks/tools/shared/useViewScopedFiles";
+import CropAreaSelector from "@editor/components/tools/crop/CropAreaSelector";
+import CropCoordinateInputs from "@editor/components/tools/crop/CropCoordinateInputs";
+import CropPageSelection from "@editor/components/tools/crop/CropPageSelection";
+import { DEFAULT_CROP_AREA } from "@editor/constants/cropConstants";
+import { PAGE_SIZES } from "@editor/constants/pageSizeConstants";
 import {
   calculatePDFBounds,
   PDFBounds,
   Rectangle,
-} from "@app/utils/cropCoordinates";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
+} from "@editor/utils/cropCoordinates";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
 
 interface CropSettingsProps {
   parameters: CropParametersHook;

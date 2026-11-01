@@ -1,4 +1,4 @@
-export * from "@core/query/staleTime";
+export * from "@editor-core/query/staleTime";
 
 // Desktop keys don't pin a backend (see DesktopQueryCacheReset), so expire as a
 // backstop. 5 min matches endpointAvailabilityService and saasAppConfigService.

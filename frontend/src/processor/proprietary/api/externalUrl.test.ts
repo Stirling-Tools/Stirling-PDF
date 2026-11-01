@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { openApiUrl } from "@portal/api/externalUrl";
+import { openApiUrl } from "@processor/api/externalUrl";
 
 function spyOpen() {
   return vi.spyOn(window, "open").mockImplementation(() => null);

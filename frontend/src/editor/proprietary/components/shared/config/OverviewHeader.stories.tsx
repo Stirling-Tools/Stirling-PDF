@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { OverviewHeader } from "@app/components/shared/config/OverviewHeader";
-import { AuthContext } from "@app/auth/context";
-import type { AuthContextValue } from "@app/auth/types";
+import { OverviewHeader } from "@editor/components/shared/config/OverviewHeader";
+import { AuthContext } from "@editor/auth/context";
+import type { AuthContextValue } from "@editor/auth/types";
 
 /**
  * Header for the application configuration page: title, description, and

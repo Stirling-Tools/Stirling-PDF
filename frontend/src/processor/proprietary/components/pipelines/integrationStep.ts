@@ -13,14 +13,14 @@
  * rather than showing them as an opaque "unknown step".
  */
 
-import type { ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
-import type { WorkingToolStep } from "@app/hooks/tools/shared/toolAutomation";
+import type { ErasedToolParams } from "@editor/hooks/tools/shared/toolOperationTypes";
+import type { WorkingToolStep } from "@editor/hooks/tools/shared/toolAutomation";
 import {
   buildStepParameters,
   emptyOperationValues,
   operationById,
   type StepOperation,
-} from "@portal/components/policies/stepOperations";
+} from "@processor/components/policies/stepOperations";
 
 /** The one endpoint every catalogue operation dispatches through. */
 export const INTEGRATION_ENDPOINT = "/api/v1/integration/external-api-call";

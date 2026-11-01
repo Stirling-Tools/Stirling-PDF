@@ -1,16 +1,16 @@
-import { classificationCondition } from "@app/data/classificationConditions";
+import { classificationCondition } from "@editor/data/classificationConditions";
 import { describe, expect, it, vi } from "vitest";
 import {
   fireEvent,
   render as baseRender,
   screen,
 } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import {
   RoutingRules,
   RoutingSection,
-} from "@portal/components/policies/RoutingRules";
-import type { WireRoutingRule } from "@app/policies/types";
+} from "@processor/components/policies/RoutingRules";
+import type { WireRoutingRule } from "@editor/policies/types";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

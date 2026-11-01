@@ -9,28 +9,28 @@ import {
   ScrollArea,
   Tooltip,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useFormFill } from "@app/tools/formFill/FormFillContext";
+import { Icon } from "@editor/ui/Icon";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useFormFill } from "@editor/tools/formFill/FormFillContext";
 import type {
   FormField,
   ModifyFieldDefinition,
-} from "@app/tools/formFill/types";
+} from "@editor/tools/formFill/types";
 import {
   FIELD_TYPE_ICON,
   FIELD_TYPE_COLOR,
-} from "@app/tools/formFill/fieldMeta";
+} from "@editor/tools/formFill/fieldMeta";
 import {
   FormFieldPropertyEditor,
   type EditableFieldProps,
-} from "@app/tools/formFill/FormFieldPropertyEditor";
-import { isTextEntryTarget } from "@app/tools/formFill/usePageScale";
-import { PendingFields } from "@app/tools/formFill/PendingFields";
-import { SkippedEditsAlert } from "@app/tools/formFill/SkippedEditsAlert";
-import styles from "@app/tools/formFill/FormFill.module.css";
+} from "@editor/tools/formFill/FormFieldPropertyEditor";
+import { isTextEntryTarget } from "@editor/tools/formFill/usePageScale";
+import { PendingFields } from "@editor/tools/formFill/PendingFields";
+import { SkippedEditsAlert } from "@editor/tools/formFill/SkippedEditsAlert";
+import styles from "@editor/tools/formFill/FormFill.module.css";
 
 interface FormFieldModifyPanelProps {
   currentFile: File | Blob | null;

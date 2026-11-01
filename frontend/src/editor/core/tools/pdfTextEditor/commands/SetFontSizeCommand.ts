@@ -1,12 +1,12 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { collectMemberPtrs } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 import {
   scanDrawnSize,
   setScanOverride,
   type ScanOverride,
-} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 
 /** Scale a text run so its effective on-page size matches `nextSize`. */
 export class SetFontSizeCommand implements Command {
@@ -146,7 +146,7 @@ export class SetFontSizeCommand implements Command {
 
 /** Mirror the PDFium object scaling in the run's model bookkeeping. */
 function rescaleRunModel(
-  run: import("@app/tools/pdfTextEditor/model/TextRun").TextRun,
+  run: import("@editor/tools/pdfTextEditor/model/TextRun").TextRun,
   s: number,
   ax: number,
   ay: number,

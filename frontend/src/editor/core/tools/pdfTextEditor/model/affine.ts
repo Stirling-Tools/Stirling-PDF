@@ -1,4 +1,4 @@
-import type { Affine, PageRect } from "@app/tools/pdfTextEditor/types";
+import type { Affine, PageRect } from "@editor/tools/pdfTextEditor/types";
 
 const IDENTITY: Affine = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
 

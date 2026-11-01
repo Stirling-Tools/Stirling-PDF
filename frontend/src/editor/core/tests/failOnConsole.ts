@@ -94,7 +94,7 @@ export function installFailOnConsole(): void {
       `Test produced unexpected console output:\n${lines}\n\n` +
         "If the log is expected, capture it with expectConsole.error/warn " +
         "(contract) or allowConsole.error/warn (incidental) from " +
-        "@app/tests/failOnConsole.",
+        "@editor/tests/failOnConsole.",
     );
   });
 }

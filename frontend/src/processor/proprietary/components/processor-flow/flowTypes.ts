@@ -1,4 +1,4 @@
-import type { FlowOutcomeKey } from "@portal/api/processorFlow";
+import type { FlowOutcomeKey } from "@processor/api/processorFlow";
 
 /** Which lens the visualiser is showing. */
 export type Lens = "flow" | "sankey";

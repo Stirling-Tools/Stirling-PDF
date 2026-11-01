@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ConnectBenefitsSlide } from "@portal/components/account-link/connect/ConnectBenefitsSlide";
+import { ConnectBenefitsSlide } from "@processor/components/account-link/connect/ConnectBenefitsSlide";
 
 const meta: Meta<typeof ConnectBenefitsSlide> = {
   title: "Portal/AccountLink/Connect/BenefitsSlide",

@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { FileId, StirlingFileStub } from "@app/types/fileContext";
+import type { FileId, StirlingFileStub } from "@editor/types/fileContext";
 
 const updateFileMetadata = vi.fn().mockResolvedValue(true);
 const markFileAsLeaf = vi.fn().mockResolvedValue(true);
 
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { updateFileMetadata, markFileAsLeaf },
 }));
 
-const { undoConsumeFiles } = await import("@app/contexts/file/fileActions");
+const { undoConsumeFiles } = await import("@editor/contexts/file/fileActions");
 
 const stub = (id: string, localFilePath?: string) =>
   ({

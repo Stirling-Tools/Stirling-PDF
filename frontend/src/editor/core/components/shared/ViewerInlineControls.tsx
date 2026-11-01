@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Slider } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useNavigationState } from "@app/contexts/NavigationContext";
-import { Icon } from "@app/ui/Icon";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useNavigationState } from "@editor/contexts/NavigationContext";
+import { Icon } from "@editor/ui/Icon";
 /**
  * Compact zoom controls rendered inline in the WorkbenchBar when the current workbench is "viewer".
  */

@@ -1,5 +1,5 @@
-import { stripBasePath, withBasePath } from "@app/constants/app";
-import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
+import { stripBasePath, withBasePath } from "@editor/constants/app";
+import { isSafePostLoginRedirect } from "@editor/services/postLoginRedirect";
 
 /** Keep the attended page as the destination for normal app sign-in. */
 export function redirectToLogin(): void {

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Icon, type IconName } from "@app/ui/Icon";
-import styles from "@app/components/tools/sign/wallet/SignatureWallet.module.css";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import styles from "@editor/components/tools/sign/wallet/SignatureWallet.module.css";
 
 interface SignatureSectionProps {
   title: string;

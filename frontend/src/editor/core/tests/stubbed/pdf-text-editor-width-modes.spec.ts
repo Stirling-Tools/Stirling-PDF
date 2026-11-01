@@ -1,7 +1,7 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
-import { selectWrapWidthMode } from "@app/tests/stubbed/widthModeHelpers";
+import { selectWrapWidthMode } from "@editor/tests/stubbed/widthModeHelpers";
 
 // The sidebar promises two distinct behaviours:
 //

@@ -9,7 +9,7 @@
 import type {
   FailureActionOffer,
   FileRunEvent,
-} from "@portal/api/fileRunEvents";
+} from "@processor/api/fileRunEvents";
 
 const HOUR = 3_600_000;
 

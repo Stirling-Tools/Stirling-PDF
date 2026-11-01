@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ShowJSView from "@app/components/tools/showJS/ShowJSView";
+import ShowJSView from "@editor/components/tools/showJS/ShowJSView";
 
 const SAMPLE_SCRIPT = `function greet(name) {
   // say hello

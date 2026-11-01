@@ -1,4 +1,4 @@
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 /**
  * Whether the AI engine is enabled, per the backend's app-config.

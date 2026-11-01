@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ChipFlow } from "@app/ui/ChipFlow";
+import { ChipFlow } from "@editor/ui/ChipFlow";
 
 const meta: Meta<typeof ChipFlow> = {
   title: "Primitives/ChipFlow",

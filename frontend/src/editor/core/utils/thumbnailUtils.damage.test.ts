@@ -5,15 +5,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const openRawDocumentSafe = vi.hoisted(() => vi.fn());
 const getDocumentBytes = vi.hoisted(() => vi.fn());
-vi.mock("@app/services/pdfiumService", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/services/pdfiumService")>()),
+vi.mock("@editor/services/pdfiumService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@editor/services/pdfiumService")>()),
   getPdfiumModule: vi.fn().mockResolvedValue({}),
   openRawDocumentSafe,
 }));
-vi.mock("@app/services/documentBytesCache", () => ({ getDocumentBytes }));
+vi.mock("@editor/services/documentBytesCache", () => ({ getDocumentBytes }));
 
-import { PdfiumOpenError } from "@app/services/pdfiumService";
-import { generateThumbnailPairWithMetadata } from "@app/utils/thumbnailUtils";
+import { PdfiumOpenError } from "@editor/services/pdfiumService";
+import { generateThumbnailPairWithMetadata } from "@editor/utils/thumbnailUtils";
 
 const FORMAT_ERROR = 3;
 const pdf = (body: string) =>

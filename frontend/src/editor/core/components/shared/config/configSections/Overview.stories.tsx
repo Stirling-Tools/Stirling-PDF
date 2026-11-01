@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import Overview from "@app/components/shared/config/configSections/Overview";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
+import Overview from "@editor/components/shared/config/configSections/Overview";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
 
 // Reads config via useAppConfig() — no props. Wrap in AppConfigProvider with
 // autoFetch off so stories render a fixed config instead of hitting the API.

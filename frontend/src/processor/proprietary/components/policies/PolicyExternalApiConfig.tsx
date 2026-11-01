@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Banner, Button, FormField, Input, Select } from "@app/ui";
-import { fetchIntegrationCapabilities } from "@portal/api/integrations";
-import { ConnectionPicker } from "@portal/components/sources/ConnectionPicker";
+import { Icon } from "@editor/ui/Icon";
+import { Banner, Button, FormField, Input, Select } from "@editor/ui";
+import { fetchIntegrationCapabilities } from "@processor/api/integrations";
+import { ConnectionPicker } from "@processor/components/sources/ConnectionPicker";
 import {
   CONNECTION_CATEGORIES,
   type ConnectionCategory,
-} from "@portal/components/sources/connectionTypes";
-import { BrandMark } from "@portal/components/BrandMarks";
-import "@portal/theme/surface.css";
-import "@portal/components/sources/connections.css";
+} from "@processor/components/sources/connectionTypes";
+import { BrandMark } from "@processor/components/BrandMarks";
+import "@processor/theme/surface.css";
+import "@processor/components/sources/connections.css";
 import {
   STEP_OPERATIONS,
   buildStepParameters,
@@ -20,7 +20,7 @@ import {
   searchOperations,
   type ExternalApiStepParams,
   type StepOperation,
-} from "@portal/components/policies/stepOperations";
+} from "@processor/components/policies/stepOperations";
 
 /**
  * Configures a "send the document to another system" step.

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { documentsFor } from "@portal/mocks/documents";
-import { ReviewQueueTable } from "@portal/components/documents/ReviewQueueTable";
-import "@portal/views/Documents.css";
+import { documentsFor } from "@processor/mocks/documents";
+import { ReviewQueueTable } from "@processor/components/documents/ReviewQueueTable";
+import "@processor/views/Documents.css";
 
 const DOCS = documentsFor("enterprise");
 

@@ -1,12 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { Page } from "@playwright/test";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import {
   installTauri,
   dismissModals,
   setDisk,
-} from "@app/tests/helpers/tauriDiskStub";
+} from "@editor/tests/helpers/tauriDiskStub";
 
 const PATH = "C:/Docs/report.pdf";
 const BYTES = Array.from(

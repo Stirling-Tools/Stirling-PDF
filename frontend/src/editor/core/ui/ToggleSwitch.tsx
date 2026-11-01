@@ -1,5 +1,5 @@
 import { useId } from "react";
-import "@app/ui/ToggleSwitch.css";
+import "@editor/ui/ToggleSwitch.css";
 
 export interface ToggleSwitchProps {
   checked: boolean;

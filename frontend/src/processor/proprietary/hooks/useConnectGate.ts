@@ -1,10 +1,10 @@
 import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { apiClient, errorMessage } from "@portal/api/http";
-import { qk } from "@portal/queries/keys";
-import { useLinkOptional } from "@portal/contexts/LinkContext";
-import { useUI } from "@portal/contexts/UIContext";
-import { useAccountLinkOptional } from "@portal/contexts/AccountLinkContext";
+import { apiClient, errorMessage } from "@processor/api/http";
+import { qk } from "@processor/queries/keys";
+import { useLinkOptional } from "@processor/contexts/LinkContext";
+import { useUI } from "@processor/contexts/UIContext";
+import { useAccountLinkOptional } from "@processor/contexts/AccountLinkContext";
 
 interface AppConfigShape {
   accountLinkAvailable?: boolean;

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { BillingScreen } from "@app/billing/BillingScreen";
-import { freeWallet } from "@app/billing/walletFixtures";
+import { BillingScreen } from "@editor/billing/BillingScreen";
+import { freeWallet } from "@editor/billing/walletFixtures";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

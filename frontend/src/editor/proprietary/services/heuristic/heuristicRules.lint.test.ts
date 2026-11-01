@@ -2,13 +2,13 @@
 // malformed rules, so authoring mistakes must fail here instead.
 
 import { beforeAll, describe, expect, it } from "vitest";
-import { compileRegex } from "@app/services/heuristic/heuristicEngine";
+import { compileRegex } from "@editor/services/heuristic/heuristicEngine";
 import {
   LANGUAGE_PACKS,
   PACK_LANGUAGES,
   loadCoreRules,
-} from "@app/services/heuristic/rules/index";
-import languages from "@app/services/heuristic/rules/languages.json";
+} from "@editor/services/heuristic/rules/index";
+import languages from "@editor/services/heuristic/rules/languages.json";
 
 interface RawRule {
   text?: string;

@@ -1,8 +1,8 @@
 // A signed form whose /AcroForm lives in a compressed object stream has no
 // literal marker in its bytes, so the signature overlay must confirm the
 // catalog before deciding the document has nothing to render.
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
 import path from "node:path";
 
 const FIXTURE = path.join(

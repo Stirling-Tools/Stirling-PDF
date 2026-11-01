@@ -3,7 +3,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import type {
   LocalProcessingFile,
   LocalProcessingFolder,
-} from "@app/services/localProcessingFolderStorage";
+} from "@editor/services/localProcessingFolderStorage";
 
 const mocks = vi.hoisted(() => ({
   exists: vi.fn(),
@@ -18,22 +18,22 @@ const mocks = vi.hoisted(() => ({
   present: new Set<string>(),
 }));
 vi.mock("@tauri-apps/plugin-fs", () => mocks);
-vi.mock("@app/services/localFolderContents", () => ({
+vi.mock("@editor/services/localFolderContents", () => ({
   isWithinMount: mocks.mounted,
 }));
-vi.mock("@app/services/serverAutomationSession", () => ({
+vi.mock("@editor/services/serverAutomationSession", () => ({
   requireAutomationSession: mocks.session,
 }));
-vi.mock("@app/services/localProcessingFolderStorage", () => ({
+vi.mock("@editor/services/localProcessingFolderStorage", () => ({
   localProcessingFolderStorage: {
     saveFile: mocks.save,
     deleteFile: mocks.delete,
   },
 }));
-vi.mock("@app/services/localProcessingDelivery", () => ({
+vi.mock("@editor/services/localProcessingDelivery", () => ({
   processingPath: (directory: string, name: string) => `${directory}/${name}`,
 }));
-import { reconcileLocalProcessingOriginals } from "@app/services/localProcessingOriginals";
+import { reconcileLocalProcessingOriginals } from "@editor/services/localProcessingOriginals";
 
 const DAY = 24 * 60 * 60 * 1000;
 const START = Date.UTC(2026, 8, 1);

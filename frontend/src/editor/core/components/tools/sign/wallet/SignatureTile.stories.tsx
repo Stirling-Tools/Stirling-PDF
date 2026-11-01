@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   NewSignatureTile,
   SignatureTile,
-} from "@app/components/tools/sign/wallet/SignatureTile";
+} from "@editor/components/tools/sign/wallet/SignatureTile";
 
 // icon-lint-allow: storybook-fixture -- Fake signature image for the wallet tile stories.
 const SIGNATURE =

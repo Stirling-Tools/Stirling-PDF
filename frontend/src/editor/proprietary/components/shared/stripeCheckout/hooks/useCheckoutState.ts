@@ -1,10 +1,10 @@
 import { useState, useCallback, useRef } from "react";
-import { PlanTierGroup } from "@app/services/licenseService";
+import { PlanTierGroup } from "@editor/services/licenseService";
 import {
   CheckoutState,
   PollingStatus,
   CheckoutStage,
-} from "@app/components/shared/stripeCheckout/types/checkout";
+} from "@editor/components/shared/stripeCheckout/types/checkout";
 
 /**
  * Centralized state management hook for checkout flow

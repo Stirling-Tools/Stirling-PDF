@@ -1,7 +1,7 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 
 export type LineAlignMode = "left" | "center-h" | "right";
 

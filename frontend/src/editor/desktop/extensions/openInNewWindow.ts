@@ -1,7 +1,7 @@
-import { StirlingFileStub } from "@app/types/fileContext";
-import { fileOpenService } from "@app/services/fileOpenService";
-import { useMultiWindowSupported } from "@app/hooks/useMultiWindowSupported";
-import type { OpenInNewWindowApi } from "@core/extensions/openInNewWindow";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { fileOpenService } from "@editor/services/fileOpenService";
+import { useMultiWindowSupported } from "@editor/hooks/useMultiWindowSupported";
+import type { OpenInNewWindowApi } from "@editor-core/extensions/openInNewWindow";
 
 /**
  * Desktop build: open a stored file in a new Tauri window. The new window loads

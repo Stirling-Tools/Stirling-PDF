@@ -3,9 +3,9 @@
  * Used by both embedded and hosted checkout flows
  */
 
-import licenseService, { LicenseInfo } from "@app/services/licenseService";
-import { verifyTeamCheckout } from "@app/services/serverPlanCheckout";
-import { requiresLocalTeamActivation } from "@app/services/teamPlanActivation";
+import licenseService, { LicenseInfo } from "@editor/services/licenseService";
+import { verifyTeamCheckout } from "@editor/services/serverPlanCheckout";
+import { requiresLocalTeamActivation } from "@editor/services/teamPlanActivation";
 
 /** Waits for account capacity, then refreshes the linked server without requesting a licence key. */
 export async function pollTeamCheckout(

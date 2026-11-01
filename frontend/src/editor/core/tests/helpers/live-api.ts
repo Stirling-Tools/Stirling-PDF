@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
-import { login, skipOnboarding } from "@app/tests/helpers/login";
-import type { AppConfig } from "@app/types/appConfig";
+import { login, skipOnboarding } from "@editor/tests/helpers/login";
+import type { AppConfig } from "@editor/types/appConfig";
 
 /** Playwright's request client does not inherit the app's localStorage bearer token. */
 export async function liveApiHeaders(

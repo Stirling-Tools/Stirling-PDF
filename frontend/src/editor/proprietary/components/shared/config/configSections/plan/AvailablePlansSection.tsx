@@ -1,20 +1,20 @@
 import React, { useState, useMemo } from "react";
 import { Collapse, Select, Group } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import licenseService, {
   PlanTier,
   PlanTierGroup,
   LicenseInfo,
   mapLicenseToTier,
-} from "@app/services/licenseService";
-import PlanCard from "@app/components/shared/config/configSections/plan/PlanCard";
-import FeatureComparisonTable from "@app/components/shared/config/configSections/plan/FeatureComparisonTable";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+} from "@editor/services/licenseService";
+import PlanCard from "@editor/components/shared/config/configSections/plan/PlanCard";
+import FeatureComparisonTable from "@editor/components/shared/config/configSections/plan/FeatureComparisonTable";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import {
   isCurrentTier as checkIsCurrentTier,
   isDowngrade as checkIsDowngrade,
-} from "@app/utils/planTierUtils";
+} from "@editor/utils/planTierUtils";
 
 interface AvailablePlansSectionProps {
   plans: PlanTier[];

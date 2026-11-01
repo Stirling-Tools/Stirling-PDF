@@ -2,14 +2,14 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@app/*": ["../../editor/proprietary/*", "../../editor/core/*"],
-      "@app/portal/*": [
+      "@editor/*": ["../../editor/proprietary/*", "../../editor/core/*"],
+      "@editor/portal/*": [
         "../../editor/proprietary/portal/*",
         "../../editor/core/portal/*",
         "../../processor/proprietary/*"
       ],
-      "@portal/*": ["../../processor/proprietary/*"],
-      "@core/*": ["../../editor/core/*"]
+      "@processor/*": ["../../processor/proprietary/*"],
+      "@editor-core/*": ["../../editor/core/*"]
     }
   },
   "include": [

@@ -1,12 +1,15 @@
 import { useEffect, useImperativeHandle } from "react";
 import { useRedaction as useEmbedPdfRedaction } from "@embedpdf/plugin-redaction/react";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
-import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
-import { useNavigationState } from "@app/contexts/NavigationContext";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import {
+  useRedaction,
+  useRedactionMode,
+} from "@editor/contexts/RedactionContext";
+import { useNavigationState } from "@editor/contexts/NavigationContext";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
-import { leaveRedactionMode } from "@app/components/viewer/leaveRedactionMode";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
+import { leaveRedactionMode } from "@editor/components/viewer/leaveRedactionMode";
 
 /**
  * Bridges between the EmbedPDF redaction plugin and the Stirling-PDF RedactionContext.

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AvailablePlansSection from "@app/components/shared/config/configSections/plan/AvailablePlansSection";
-import type { PlanTier } from "@app/services/licenseService";
+import AvailablePlansSection from "@editor/components/shared/config/configSections/plan/AvailablePlansSection";
+import type { PlanTier } from "@editor/services/licenseService";
 
 const FEATURES = [
   { name: "PDF conversion", included: true },

@@ -1,4 +1,4 @@
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 
 interface SidebarToggleIconProps {
   /** Square size in px. */

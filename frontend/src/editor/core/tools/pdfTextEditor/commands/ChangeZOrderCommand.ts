@@ -1,6 +1,6 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { collectMemberPtrs } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 
 export type ZOrderMode =
   | "to-front" // top of stack (rendered last, on top of everything)
@@ -124,7 +124,7 @@ export class ChangeZOrderCommand implements Command {
   }
 
   private resolveMemberPtrs(
-    page: import("@app/tools/pdfTextEditor/model/Page").Page,
+    page: import("@editor/tools/pdfTextEditor/model/Page").Page,
   ): Set<number> {
     if (this.runId) {
       const run = page.runs.find((r) => r.id === this.runId);

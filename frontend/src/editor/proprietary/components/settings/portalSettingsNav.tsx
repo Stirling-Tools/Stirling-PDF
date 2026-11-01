@@ -1,19 +1,19 @@
 import { Suspense, lazy, type ComponentType } from "react";
 import type { TFunction } from "i18next";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
 import type {
   ConfigNavItem,
   ConfigNavSection,
   NavKey,
-} from "@app/components/shared/config/types";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
+} from "@editor/components/shared/config/types";
+import { HAS_PORTAL } from "@editor/routes/hasPortal";
 
 // Only the components come from the portal, and only through `lazy` behind the
 // build flag: a static value import here would drag the portal chunk into every
 // proprietary bundle, including ones built without the processor. The nav
 // metadata stays static so the sidebar can be laid out without loading them.
 type PortalSectionModule =
-  typeof import("@portal/components/settings/portalSettingsSections");
+  typeof import("@processor/components/settings/portalSettingsSections");
 
 function portalSection(
   pick: (m: PortalSectionModule) => ComponentType | null,
@@ -22,7 +22,7 @@ function portalSection(
   if (requiresProcessor && !HAS_PORTAL) return null;
   const Lazy = lazy(async () => {
     const m =
-      await import("@portal/components/settings/portalSettingsSections");
+      await import("@processor/components/settings/portalSettingsSections");
     const Picked = pick(m);
     return { default: Picked ?? (() => null) };
   });

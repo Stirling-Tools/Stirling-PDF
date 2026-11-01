@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useThumbnailCapability } from "@embedpdf/plugin-thumbnail/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 
 /**
  * ThumbnailAPIBridge - Updated for embedPDF v2.6.0

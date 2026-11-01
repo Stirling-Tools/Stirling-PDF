@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import auditService, { AuditFilters } from "@app/services/auditService";
+import auditService, { AuditFilters } from "@editor/services/auditService";
 
 /**
  * Shared hook for managing audit filters across components

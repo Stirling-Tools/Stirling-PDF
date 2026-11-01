@@ -1,5 +1,5 @@
-import { readFileAsDataUrl } from "@app/utils/fileUtils";
-import type { MobileSignaturePayload } from "@app/components/tools/sign/MobileSignatureModal";
+import { readFileAsDataUrl } from "@editor/utils/fileUtils";
+import type { MobileSignaturePayload } from "@editor/components/tools/sign/MobileSignatureModal";
 
 const TEXT_FONTS = new Set([
   "Helvetica",

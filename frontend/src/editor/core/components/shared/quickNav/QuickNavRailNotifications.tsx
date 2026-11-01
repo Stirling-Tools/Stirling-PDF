@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { RailButton } from "@app/components/shared/quickNav/QuickNavRailBase";
-import { useNotifications } from "@app/hooks/useNotifications";
-import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
-import { NOTIFICATIONS_PANEL_ID } from "@app/components/notifications/NotificationPanel";
+import { Icon } from "@editor/ui/Icon";
+import { RailButton } from "@editor/components/shared/quickNav/QuickNavRailBase";
+import { useNotifications } from "@editor/hooks/useNotifications";
+import { useNotificationsAvailable } from "@editor/components/notifications/useNotificationsAvailable";
+import { NOTIFICATIONS_PANEL_ID } from "@editor/components/notifications/NotificationPanel";
 
 export interface QuickNavRailNotificationsProps {
   onToggle?: () => void;

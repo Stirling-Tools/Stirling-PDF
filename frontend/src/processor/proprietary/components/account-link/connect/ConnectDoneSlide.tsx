@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { MeterBar, remainingMeter } from "@app/billing";
-import { fetchWallet, type Wallet } from "@portal/api/billing";
-import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import "@portal/components/billing/billing.css";
-import "@app/components/account-link/connect.css";
+import { MeterBar, remainingMeter } from "@editor/billing";
+import { fetchWallet, type Wallet } from "@processor/api/billing";
+import { useLinkedAccountEmail } from "@processor/hooks/useLinkedAccountEmail";
+import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
+import "@processor/components/billing/billing.css";
+import "@editor/components/account-link/connect.css";
 
 interface Props {
   /** Closes the dialog first, so a next step does not land behind the overlay. */

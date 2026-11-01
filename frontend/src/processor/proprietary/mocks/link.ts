@@ -22,7 +22,7 @@ import type {
   LinkStatus,
   LinkedInstanceRow,
   LocalUsage,
-} from "@portal/api/link";
+} from "@processor/api/link";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Mock store — link/unlink/revoke mutate this so the surface feels live     */

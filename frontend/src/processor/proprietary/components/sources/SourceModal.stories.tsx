@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SourceModal } from "@portal/components/sources/SourceModal";
+import { SourceModal } from "@processor/components/sources/SourceModal";
 
 // SourceModal calls useQueryClient() to invalidate source queries after a save;
 // the global preview doesn't set up react-query, so provide a client here.

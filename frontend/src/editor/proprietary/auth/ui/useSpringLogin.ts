@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { springAuth } from "@app/auth/spring/springAuthClient";
-import { getSpringAuthConfig } from "@app/auth/config";
-import type { OAuthProvider } from "@app/auth/spring/oauthTypes";
+import { springAuth } from "@editor/auth/spring/springAuthClient";
+import { getSpringAuthConfig } from "@editor/auth/config";
+import type { OAuthProvider } from "@editor/auth/spring/oauthTypes";
 
 /**
  * Shape of the backend's `/api/v1/proprietary/ui-data/login` response. Only the

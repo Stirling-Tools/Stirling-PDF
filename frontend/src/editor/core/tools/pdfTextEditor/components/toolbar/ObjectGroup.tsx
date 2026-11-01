@@ -1,11 +1,11 @@
 import { Menu, Tooltip } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import {
   NO_SHRINK,
   type Controller,
-} from "@app/tools/pdfTextEditor/components/toolbar/toolbarShared";
+} from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 
 export function ObjectGroup({ controller }: { controller: Controller }) {
   const { t } = useTranslation();

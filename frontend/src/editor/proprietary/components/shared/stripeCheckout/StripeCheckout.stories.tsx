@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import StripeCheckout from "@app/components/shared/stripeCheckout/StripeCheckout";
-import type { PlanTierGroup } from "@app/services/licenseService";
+import StripeCheckout from "@editor/components/shared/stripeCheckout/StripeCheckout";
+import type { PlanTierGroup } from "@editor/services/licenseService";
 
 const PLAN_GROUP: PlanTierGroup = {
   tier: "server",

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { CapacityStage } from "@app/components/shared/stripeCheckout/stages/CapacityStage";
-import { PlanTier } from "@app/services/licenseService";
+import { CapacityStage } from "@editor/components/shared/stripeCheckout/stages/CapacityStage";
+import { PlanTier } from "@editor/services/licenseService";
 
 /**
  * The capacity step of the Stripe checkout, between billing period and payment. Only the Team tier

@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { DealStatusHero } from "@portal/components/procurement/DealStatusHero";
-import type { ProcurementSnapshot } from "@portal/api/procurement";
+import { DealStatusHero } from "@processor/components/procurement/DealStatusHero";
+import type { ProcurementSnapshot } from "@processor/api/procurement";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -14,7 +14,7 @@ vi.mock("react-i18next", () => ({
     },
   }),
 }));
-vi.mock("@portal/components/procurement/CalendlyInline", () => ({
+vi.mock("@processor/components/procurement/CalendlyInline", () => ({
   warmCalendly: vi.fn(),
 }));
 

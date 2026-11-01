@@ -1,4 +1,4 @@
-import { FileId } from "@app/types/file";
+import { FileId } from "@editor/types/file";
 
 /** Page size in PDF points, before the page's rotation is applied. */
 export interface PageSize {

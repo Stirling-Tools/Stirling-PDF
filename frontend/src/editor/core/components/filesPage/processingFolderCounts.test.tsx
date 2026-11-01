@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { createAppQueryClient } from "@app/query/queryClient";
-import { useProcessingFolderCounts } from "@app/components/filesPage/processingFolderCounts";
+import { createAppQueryClient } from "@editor/query/queryClient";
+import { useProcessingFolderCounts } from "@editor/components/filesPage/processingFolderCounts";
 import {
   resetTabVisibility,
   setTabHidden,
-} from "@app/tests/utils/tabVisibility";
+} from "@editor/tests/utils/tabVisibility";
 
 const COUNTS = '{"processing":1,"done":2}';
 const POLL_MS = 5000;

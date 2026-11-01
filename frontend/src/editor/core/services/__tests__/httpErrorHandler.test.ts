@@ -1,19 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { alert } from "@app/components/toast";
-import { handleHttpError } from "@app/services/httpErrorHandler";
+import { alert } from "@editor/components/toast";
+import { handleHttpError } from "@editor/services/httpErrorHandler";
 import {
   clearAccountLinkBlock,
   useAccountLinkBlock,
-} from "@app/services/accountLinkBlock";
+} from "@editor/services/accountLinkBlock";
 import { act, renderHook } from "@testing-library/react";
 
 // Only the toast surface matters here; the rest of the handler's graph is
 // heavy UI that these cases never reach.
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
-vi.mock("@app/services/specialErrorToasts", () => ({
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/services/specialErrorToasts", () => ({
   showSpecialErrorToast: vi.fn().mockReturnValue(false),
 }));
-vi.mock("@app/services/saasErrorInterceptor", () => ({
+vi.mock("@editor/services/saasErrorInterceptor", () => ({
   handleSaaSError: vi.fn().mockReturnValue(false),
 }));
 

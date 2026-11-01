@@ -9,7 +9,7 @@ import {
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 
-vi.mock("@app/hooks/useSuperSearch", () => ({
+vi.mock("@editor/hooks/useSuperSearch", () => ({
   useSuperSearch: vi.fn(() => ({
     groups: [],
     flatResults: [],
@@ -17,16 +17,16 @@ vi.mock("@app/hooks/useSuperSearch", () => ({
   })),
 }));
 
-vi.mock("@app/utils/hotkeys", () => ({
+vi.mock("@editor/utils/hotkeys", () => ({
   isMacLike: () => false,
 }));
 
-import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
-import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSearch";
+import SuperSearch from "@editor/components/shared/superSearch/SuperSearch";
+import { openSuperSearch } from "@editor/components/shared/superSearch/openSuperSearch";
 import type {
   SuperSearchQueryOptions,
   SuperSearchScope,
-} from "@app/hooks/useSuperSearch";
+} from "@editor/hooks/useSuperSearch";
 
 interface TestResult {
   key: string;

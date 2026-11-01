@@ -16,8 +16,8 @@ import {
   Stack,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useFieldValue } from "@app/tools/formFill/FormFillContext";
-import type { FormField } from "@app/tools/formFill/types";
+import { useFieldValue } from "@editor/tools/formFill/FormFillContext";
+import type { FormField } from "@editor/tools/formFill/types";
 
 function FieldInputInner({
   field,

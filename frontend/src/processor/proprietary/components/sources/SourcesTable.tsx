@@ -5,13 +5,13 @@ import {
   DataTable,
   type DataTableColumn,
   type StatusTone,
-} from "@app/ui";
-import type { SourceStatus, SourceView } from "@portal/api/sources";
+} from "@editor/ui";
+import type { SourceStatus, SourceView } from "@processor/api/sources";
 import {
   EDITOR_SOURCE_TYPE,
   sourceTypeMeta,
-} from "@portal/components/sources/sourceTypes";
-import { SourceTypeIcon } from "@portal/components/sources/SourceTypeIcon";
+} from "@processor/components/sources/sourceTypes";
+import { SourceTypeIcon } from "@processor/components/sources/SourceTypeIcon";
 
 const STATUS_TONE: Record<SourceStatus, StatusTone> = {
   active: "success",

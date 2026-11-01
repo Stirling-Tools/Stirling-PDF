@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Banner } from "@app/ui/Banner";
-import { openExternal } from "@app/platform/openExternal";
-import { connectionModeService } from "@app/services/connectionModeService";
+import { Button } from "@editor/ui/Button";
+import { Banner } from "@editor/ui/Banner";
+import { openExternal } from "@editor/platform/openExternal";
+import { connectionModeService } from "@editor/services/connectionModeService";
 
 /** Billing runs on the web because desktop does not ship the processor's billing UI. */
 export function BillingSettingsSection({

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 
 // Unit coverage for the raw-PDF <-> display (CropBox/rotation) transform that
 // fixes the spirit-sx positioning bug.

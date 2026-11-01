@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
+import { ImageUploader } from "@editor/components/annotation/shared/ImageUploader";
 
 const meta = {
   title: "Annotation/Shared/ImageUploader",

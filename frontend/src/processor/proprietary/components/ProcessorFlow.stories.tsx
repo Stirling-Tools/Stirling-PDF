@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
-import { ProcessorFlow } from "@portal/components/ProcessorFlow";
+import { ProcessorFlow } from "@processor/components/ProcessorFlow";
 import type {
   FlowOutcome,
   FlowPolicy,
   ProcessorFlow as ProcessorFlowModel,
-} from "@portal/api/processorFlow";
+} from "@processor/api/processorFlow";
 
 /** Home processor visualiser, backed by the global portal MSW handlers.
  *  Particles animate via rAF (paused for hidden tabs — view in a focused tab). */

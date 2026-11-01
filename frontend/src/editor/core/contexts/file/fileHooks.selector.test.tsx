@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, act } from "@testing-library/react";
 import { useEffect } from "react";
 import { MantineProvider } from "@mantine/core";
-import { FileContextProvider } from "@app/contexts/FileContext";
+import { FileContextProvider } from "@editor/contexts/FileContext";
 import {
   useAllFiles,
   useFileContext,
@@ -10,10 +10,10 @@ import {
   useFileSelectors,
   useStirlingFileStub,
   useFileActions,
-} from "@app/contexts/file/fileHooks";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import type { FileContextAction } from "@app/types/fileContext";
+} from "@editor/contexts/file/fileHooks";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import type { FileContextAction } from "@editor/types/fileContext";
 
 /**
  * Proves the selector-subscription contract: a consumer re-renders only when

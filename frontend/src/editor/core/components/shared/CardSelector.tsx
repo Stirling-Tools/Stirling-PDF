@@ -1,6 +1,6 @@
 import { Stack, Card, Text, Flex } from "@mantine/core";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { TooltipTip } from "@app/types/tips";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { TooltipTip } from "@editor/types/tips";
 import { useTranslation } from "react-i18next";
 
 export interface CardOption<T = string> {

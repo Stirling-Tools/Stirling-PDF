@@ -2,13 +2,13 @@
  * High-performance thumbnail generation service using main thread processing
  */
 
-import { FileId } from "@app/types/file";
-import { getPdfAccess } from "@app/services/pdfAccessService";
+import { FileId } from "@editor/types/file";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
 import {
   openRawDocumentSafe,
   closeRawDocument,
-} from "@app/services/pdfiumService";
-import { renderPdfiumPageDataUrl } from "@app/utils/pdfiumPageRender";
+} from "@editor/services/pdfiumService";
+import { renderPdfiumPageDataUrl } from "@editor/utils/pdfiumPageRender";
 
 export interface ThumbnailResult {
   pageNumber: number;

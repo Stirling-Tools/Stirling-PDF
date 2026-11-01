@@ -1,5 +1,5 @@
-import type { StatusTone } from "@app/ui";
-import type { FileRunEventStatus } from "@portal/api/fileRunEvents";
+import type { StatusTone } from "@editor/ui";
+import type { FileRunEventStatus } from "@processor/api/fileRunEvents";
 
 /** How a closed failure was settled. Must stay in sync with the server's terminal statuses. */
 

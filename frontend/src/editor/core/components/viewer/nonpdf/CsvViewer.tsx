@@ -9,10 +9,10 @@ import {
   Table,
   Text,
 } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 
-import { formatFileSize } from "@app/utils/fileUtils";
+import { formatFileSize } from "@editor/utils/fileUtils";
 
 // ─── CSV parser ───────────────────────────────────────────────────────────────
 

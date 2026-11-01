@@ -9,12 +9,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const json = vi.fn();
 
-vi.mock("@portal/api/http", () => ({
+vi.mock("@processor/api/http", () => ({
   apiClient: { local: { json: (...args: unknown[]) => json(...args) } },
 }));
 
 const { applyFileRunEventAction, fetchFileRunEvents } =
-  await import("@portal/api/fileRunEvents");
+  await import("@processor/api/fileRunEvents");
 
 describe("fileRunEvents api", () => {
   beforeEach(() => json.mockReset());

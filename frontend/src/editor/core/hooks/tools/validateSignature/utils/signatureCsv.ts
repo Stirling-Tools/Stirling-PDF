@@ -1,10 +1,10 @@
-import { SignatureValidationReportEntry } from "@app/types/validateSignature";
+import { SignatureValidationReportEntry } from "@editor/types/validateSignature";
 import {
   CSV_FILENAME,
   booleanToString,
   escapeCsvValue,
   keyUsagesToString,
-} from "@app/hooks/tools/validateSignature/utils/signatureUtils";
+} from "@editor/hooks/tools/validateSignature/utils/signatureUtils";
 
 const buildCsvRows = (
   entries: SignatureValidationReportEntry[],

@@ -2,8 +2,8 @@ import { describe, expect, test, vi } from "vitest";
 import type {
   FileContextState,
   StirlingFileStub,
-} from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+} from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 /**
  * A clicked file is only visible once hydration DISPATCHES: the workbench reads
@@ -16,11 +16,11 @@ const getStirlingFile = vi.hoisted(() => vi.fn());
 const generateThumbnailPairWithMetadata = vi.hoisted(() =>
   vi.fn(() => new Promise(() => {})),
 );
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { getStirlingFile },
 }));
 /** The stall under test: the page parse never settles. */
-vi.mock("@app/utils/thumbnailUtils", () => ({
+vi.mock("@editor/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata,
 }));
 
@@ -41,7 +41,7 @@ async function harness(ids: string[], encrypted = false) {
       new File(["%PDF-1.7"], `${id}.pdf`, { type: "application/pdf" }),
   );
   const { addStirlingFileStubs } =
-    await import("@app/contexts/file/fileActions");
+    await import("@editor/contexts/file/fileActions");
 
   const stubs = ids.map(stub);
   if (encrypted)

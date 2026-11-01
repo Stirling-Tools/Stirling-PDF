@@ -6,7 +6,7 @@ import {
   LinkProvider,
   useApplyLinkFacts,
   useLink,
-} from "@portal/contexts/LinkContext";
+} from "@processor/contexts/LinkContext";
 
 describe("deriveLinkState", () => {
   it("maps raw facts to the three link states", () => {

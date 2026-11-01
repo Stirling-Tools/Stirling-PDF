@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@app/auth/UseSession";
-import { openExternal } from "@app/platform/openExternal";
-import { qk } from "@app/query/keys";
+import { useAuth } from "@editor/auth/UseSession";
+import { openExternal } from "@editor/platform/openExternal";
+import { qk } from "@editor/query/keys";
 import {
   createLegacyPortalSession,
   fetchLegacySubscriptions,
-} from "@app/services/legacyBilling";
-import type { LegacyBillingState } from "@app/types/legacyBilling";
+} from "@editor/services/legacyBilling";
+import type { LegacyBillingState } from "@editor/types/legacyBilling";
 
 const REFRESH_INTERVAL_MS = 30_000;
 

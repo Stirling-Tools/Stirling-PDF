@@ -3,8 +3,11 @@ import {
   hasUnseenSigningActivity,
   markSigningItemSeen,
   subscribeSigningSeen,
-} from "@app/services/signingSeenStore";
-import { collectSigningItems, type SigningItem } from "@app/utils/signingItems";
+} from "@editor/services/signingSeenStore";
+import {
+  collectSigningItems,
+  type SigningItem,
+} from "@editor/utils/signingItems";
 
 const session = {
   kind: "session",

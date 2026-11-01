@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   clampMin,
   savedToastBody,
-} from "@app/components/shared/config/configSections/aiEngineSettings";
+} from "@editor/components/shared/config/configSections/aiEngineSettings";
 
 describe("clampMin", () => {
   it("keeps a valid integer unchanged", () => {

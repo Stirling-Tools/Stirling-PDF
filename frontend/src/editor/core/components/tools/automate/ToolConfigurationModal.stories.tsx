@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { TextInput } from "@mantine/core";
-import ToolConfigurationModal from "@app/components/tools/automate/ToolConfigurationModal";
+import ToolConfigurationModal from "@editor/components/tools/automate/ToolConfigurationModal";
 import {
   ToolRegistry,
   ToolCategoryId,
   SubcategoryId,
-} from "@app/data/toolsTaxonomy";
+} from "@editor/data/toolsTaxonomy";
 import {
   ToolAutomationSettingsProps,
   ErasedToolParams,
-} from "@app/hooks/tools/shared/toolOperationTypes";
+} from "@editor/hooks/tools/shared/toolOperationTypes";
 
 const meta = {
   title: "Tools/Automate/ToolConfigurationModal",

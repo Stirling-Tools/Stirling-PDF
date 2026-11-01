@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AdvancedSelectionPanel from "@app/components/shared/pageSelection/AdvancedSelectionPanel";
+import AdvancedSelectionPanel from "@editor/components/shared/pageSelection/AdvancedSelectionPanel";
 
 const meta = {
   title: "Shared/PageSelection/AdvancedSelectionPanel",

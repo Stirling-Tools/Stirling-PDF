@@ -1,7 +1,7 @@
 import { useCallback, useRef } from "react";
-import { FileId } from "@app/types/fileContext";
-import { useAllFiles } from "@app/contexts/file/fileHooks";
-import type { DetachedOpenFile } from "@app/services/pruneMissingRecentFiles";
+import { FileId } from "@editor/types/fileContext";
+import { useAllFiles } from "@editor/contexts/file/fileHooks";
+import type { DetachedOpenFile } from "@editor/services/pruneMissingRecentFiles";
 
 // Wiring the file list and the recent-files list share for reconciling their
 // records. Only the detach handler is build-specific; the open-file set the

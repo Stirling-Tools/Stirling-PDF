@@ -2,9 +2,9 @@
  *  {@code FreeEditorSlide} minus Policies, which the Processor owns and desktop lacks. */
 
 import { Trans } from "react-i18next";
-import { SlideConfig } from "@app/types/types";
-import { UNIFIED_LIGHT_BACKGROUND } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
-import styles from "@app/components/onboarding/slides/WelcomeSlide.module.css";
+import { SlideConfig } from "@editor/types/types";
+import { UNIFIED_LIGHT_BACKGROUND } from "@editor/components/onboarding/slides/unifiedBackgroundConfig";
+import styles from "@editor/components/onboarding/slides/WelcomeSlide.module.css";
 
 const WelcomeSlideTitle = () => (
   <Trans

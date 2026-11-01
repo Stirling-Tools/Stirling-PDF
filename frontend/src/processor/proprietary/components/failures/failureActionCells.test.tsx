@@ -6,14 +6,14 @@ import {
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import type { TFunction } from "i18next";
-import { renderCellActions } from "@app/ui";
-import { buildFailureActionCells } from "@portal/components/failures/failureActionCells";
+import { renderCellActions } from "@editor/ui";
+import { buildFailureActionCells } from "@processor/components/failures/failureActionCells";
 import type {
   FailureActionOffer,
   FileRunEvent,
-} from "@portal/api/fileRunEvents";
+} from "@processor/api/fileRunEvents";
 
-// @app/ui buttons are Mantine wrappers, so they need the provider in the tree.
+// @editor/ui buttons are Mantine wrappers, so they need the provider in the tree.
 const render = (
   ui: Parameters<typeof baseRender>[0],
   options?: Parameters<typeof baseRender>[1],

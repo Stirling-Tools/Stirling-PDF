@@ -1,29 +1,29 @@
 import { useTranslation } from "react-i18next";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 import { useState } from "react";
-import { SignMenu } from "@app/components/shared/signing/SignMenu";
-import { requestSigningIntent } from "@app/utils/pendingSigningIntent";
+import { SignMenu } from "@editor/components/shared/signing/SignMenu";
+import { requestSigningIntent } from "@editor/utils/pendingSigningIntent";
 import { useLocation, useNavigate } from "react-router-dom";
-import { QuickNavRailContainer } from "@app/components/shared/quickNav/QuickNavRailContainer";
-import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
-import type { ToolId } from "@app/types/toolId";
-import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
-import { requestReaderMode } from "@app/utils/pendingReaderMode";
+import { QuickNavRailContainer } from "@editor/components/shared/quickNav/QuickNavRailContainer";
+import type { QuickNavEntry } from "@editor/components/shared/quickNav/QuickNavRailBase";
+import type { ToolId } from "@editor/types/toolId";
+import { useQuickNavHost } from "@editor/contexts/QuickNavHostContext";
+import { requestReaderMode } from "@editor/utils/pendingReaderMode";
 import {
   saveEditorReturnPath,
   takeEditorReturnPath,
-} from "@app/services/workbenchSession";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
-import { DOCS_PATH, HAS_DOCS } from "@app/routes/docsRoute";
-import { stripBasePath } from "@app/constants/app";
-import { canCreateProcessingFolders } from "@app/hooks/useProcessingFolderCreation";
-import { requestProcessingFolderCreation } from "@app/utils/pendingProcessingFolderCreation";
-import { requestProcessorSignup } from "@app/services/processorSignup";
-import { useConnectedServer } from "@app/hooks/useConnectedServer";
+} from "@editor/services/workbenchSession";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
+import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
+import { HAS_PORTAL } from "@editor/routes/hasPortal";
+import { DOCS_PATH, HAS_DOCS } from "@editor/routes/docsRoute";
+import { stripBasePath } from "@editor/constants/app";
+import { canCreateProcessingFolders } from "@editor/hooks/useProcessingFolderCreation";
+import { requestProcessingFolderCreation } from "@editor/utils/pendingProcessingFolderCreation";
+import { requestProcessorSignup } from "@editor/services/processorSignup";
+import { useConnectedServer } from "@editor/hooks/useConnectedServer";
 
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 const SIZE = "1.125rem";
 
 /** Entries come from the URL, not either app's context, so the rail survives a switch. */

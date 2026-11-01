@@ -1,37 +1,37 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { SettingsCard } from "@app/components/shared/config/SettingsCard";
+import { SettingsCard } from "@editor/components/shared/config/SettingsCard";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Badge, Loader, Stack } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
-import { alert } from "@app/components/toast";
-import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
-import { useRestartServer } from "@app/components/shared/config/useRestartServer";
-import { useAdminSettings } from "@app/hooks/useAdminSettings";
-import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
-import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
-import apiClient from "@app/services/apiClient";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import { useUnsavedChanges } from "@app/contexts/UnsavedChangesContext";
-import { qk } from "@app/query/keys";
-import { toUnderscoreLanguages } from "@app/i18n";
+import { alert } from "@editor/components/toast";
+import RestartConfirmationModal from "@editor/components/shared/config/RestartConfirmationModal";
+import { useRestartServer } from "@editor/components/shared/config/useRestartServer";
+import { useAdminSettings } from "@editor/hooks/useAdminSettings";
+import { useSettingsDirty } from "@editor/hooks/useSettingsDirty";
+import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsStickyFooter";
+import apiClient from "@editor/services/apiClient";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
+import { useUnsavedChanges } from "@editor/contexts/UnsavedChangesContext";
+import { qk } from "@editor/query/keys";
+import { toUnderscoreLanguages } from "@editor/i18n";
 import type {
   EndpointsSettingsData,
   FolderAccessSettingsData,
   GeneralSettingsData,
   StorageSharingSettingsData,
   UiDefaultsSettingsData,
-} from "@app/components/shared/config/configSections/server/serverSettings";
-import { SystemCard } from "@app/components/shared/config/configSections/server/SystemCard";
-import { UserDefaultsCard } from "@app/components/shared/config/configSections/server/UserDefaultsCard";
-import { EndpointManagementCard } from "@app/components/shared/config/configSections/server/EndpointManagementCard";
-import { StorageSharingCard } from "@app/components/shared/config/configSections/server/StorageSharingCard";
-import { FolderAccessCard } from "@app/components/shared/config/configSections/server/FolderAccessCard";
-import { CustomPathsCard } from "@app/components/shared/config/configSections/server/CustomPathsCard";
-import { CustomMetadataCard } from "@app/components/shared/config/configSections/server/CustomMetadataCard";
-import { ServerCertificateCard } from "@app/components/shared/config/configSections/server/ServerCertificateCard";
-import AdminFormDetectionSection from "@app/components/shared/config/configSections/AdminFormDetectionSection";
-import "@app/components/shared/config/configSections/server/AdminSystemSection.css";
+} from "@editor/components/shared/config/configSections/server/serverSettings";
+import { SystemCard } from "@editor/components/shared/config/configSections/server/SystemCard";
+import { UserDefaultsCard } from "@editor/components/shared/config/configSections/server/UserDefaultsCard";
+import { EndpointManagementCard } from "@editor/components/shared/config/configSections/server/EndpointManagementCard";
+import { StorageSharingCard } from "@editor/components/shared/config/configSections/server/StorageSharingCard";
+import { FolderAccessCard } from "@editor/components/shared/config/configSections/server/FolderAccessCard";
+import { CustomPathsCard } from "@editor/components/shared/config/configSections/server/CustomPathsCard";
+import { CustomMetadataCard } from "@editor/components/shared/config/configSections/server/CustomMetadataCard";
+import { ServerCertificateCard } from "@editor/components/shared/config/configSections/server/ServerCertificateCard";
+import AdminFormDetectionSection from "@editor/components/shared/config/configSections/AdminFormDetectionSection";
+import "@editor/components/shared/config/configSections/server/AdminSystemSection.css";
 
 /** Every admin section this page drafts, and so every key a save invalidates. */
 const SECTION_NAMES = [

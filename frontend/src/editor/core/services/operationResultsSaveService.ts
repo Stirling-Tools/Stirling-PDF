@@ -1,5 +1,8 @@
-import type { FileId, StirlingFileStub } from "@app/types/fileContext";
-import { downloadFromUrl, DownloadResult } from "@app/services/downloadService";
+import type { FileId, StirlingFileStub } from "@editor/types/fileContext";
+import {
+  downloadFromUrl,
+  DownloadResult,
+} from "@editor/services/downloadService";
 
 export interface OperationSaveContext {
   downloadUrl: string | null;

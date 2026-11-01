@@ -1,4 +1,4 @@
-import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
+import { isSafePostLoginRedirect } from "@editor/services/postLoginRedirect";
 
 /**
  * Remembers the in-app path a visitor was heading for, so an auth detour can return

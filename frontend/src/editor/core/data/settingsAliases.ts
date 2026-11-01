@@ -1,4 +1,4 @@
-import type { NavKey } from "@app/components/shared/config/types";
+import type { NavKey } from "@editor/components/shared/config/types";
 
 /**
  * Retired section keys and the section that now holds their content, so a

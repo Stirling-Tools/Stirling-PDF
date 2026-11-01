@@ -6,8 +6,8 @@ import {
   isWordChar,
   replaceMatch,
   replaceMatches,
-} from "@app/tools/pdfTextEditor/util/textMatching";
-import type { TextMatch } from "@app/tools/pdfTextEditor/util/textMatching";
+} from "@editor/tools/pdfTextEditor/util/textMatching";
+import type { TextMatch } from "@editor/tools/pdfTextEditor/util/textMatching";
 
 const RESUME_ACCENTED = "résumé";
 const RESUME_DECOMPOSED = "résumé";

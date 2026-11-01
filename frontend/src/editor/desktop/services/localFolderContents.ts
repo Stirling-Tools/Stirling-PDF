@@ -11,14 +11,14 @@ import {
 import {
   directoryKey,
   localFolderStorage,
-} from "@core/services/localFolderStorage";
+} from "@editor-core/services/localFolderStorage";
 import type {
   DiskDirEntry,
   DiskFileEntry,
   DiskListing,
   ListDirectoryOptions,
-} from "@core/services/localFolderContents";
-import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
+} from "@editor-core/services/localFolderContents";
+import { pendingFilePathMappings } from "@editor/services/pendingFilePathMappings";
 export type { DiskDirEntry, DiskFileEntry, DiskListing, ListDirectoryOptions };
 
 /**

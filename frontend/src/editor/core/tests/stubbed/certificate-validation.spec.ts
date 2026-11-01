@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
-import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
+import { suppressNativeFilePicker } from "@editor/tests/helpers/ui-helpers";
 
 // ---------------------------------------------------------------------------
 // Test fixtures — pre-generated keystores in test-fixtures/certs/

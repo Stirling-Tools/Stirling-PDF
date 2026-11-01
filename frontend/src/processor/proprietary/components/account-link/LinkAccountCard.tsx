@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useAuth } from "@app/auth/context";
-import { Icon } from "@app/ui/Icon";
+import { useAuth } from "@editor/auth/context";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, InfoTooltip, Modal, Skeleton } from "@app/ui";
-import "@app/components/settings/AccountConnectionLayout.css";
-import type { UseAccountLink } from "@portal/hooks/useAccountLink";
-import { useUI } from "@portal/contexts/UIContext";
-import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
+import { Banner, Button, InfoTooltip, Modal, Skeleton } from "@editor/ui";
+import "@editor/components/settings/AccountConnectionLayout.css";
+import type { UseAccountLink } from "@processor/hooks/useAccountLink";
+import { useUI } from "@processor/contexts/UIContext";
+import { useLinkedAccountEmail } from "@processor/hooks/useLinkedAccountEmail";
 
 interface Props {
   link: UseAccountLink;

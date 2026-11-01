@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import PenSizeSelector from "@app/components/tools/sign/PenSizeSelector";
+import PenSizeSelector from "@editor/components/tools/sign/PenSizeSelector";
 
 const meta = {
   title: "Tools/Sign/PenSizeSelector",

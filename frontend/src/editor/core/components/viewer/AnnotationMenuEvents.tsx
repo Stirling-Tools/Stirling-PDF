@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import type { AnnotationMenuAnchor } from "@app/components/viewer/viewerTypes";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import type { AnnotationMenuAnchor } from "@editor/components/viewer/viewerTypes";
 
 interface AnnotationMenuEventsProps {
   /** Last on-screen anchor for an annotation, even after it was deselected. */

@@ -1,18 +1,22 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { resolveLandingPath } from "@app/utils/loginLanding";
+import { resolveLandingPath } from "@editor/utils/loginLanding";
 import { useTranslation } from "react-i18next";
 import {
   consumePostLoginRedirectPath,
   springAuth,
-} from "@app/auth/spring/springAuthClient";
-import { handleAuthCallbackSuccess } from "@app/extensions/authCallback";
-import { AuthShell } from "@app/auth/ui/AuthShell";
-import { Spinner } from "@app/ui/Spinner";
-import { withBasePath } from "@app/constants/app";
-import "@app/auth/ui/auth.css";
-import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
-import i18n from "@app/i18n";
+} from "@editor/auth/spring/springAuthClient";
+import { handleAuthCallbackSuccess } from "@editor/extensions/authCallback";
+import {
+  hasSignedOutInThisTab,
+  resetSsoAutoLoginCounts,
+} from "@editor/auth/ssoAutoLogin";
+import { AuthShell } from "@editor/auth/ui/AuthShell";
+import { Spinner } from "@editor/ui/Spinner";
+import { withBasePath } from "@editor/constants/app";
+import "@editor/auth/ui/auth.css";
+import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import i18n from "@editor/i18n";
 
 /**
  * OAuth Callback Handler
@@ -31,11 +35,7 @@ export default function AuthCallback() {
     const elapsed = () => `${(performance.now() - startedAt).toFixed(0)}ms`;
 
     const handleCallback = async () => {
-      if (
-        typeof window !== "undefined" &&
-        window.sessionStorage.getItem("stirling_sso_auto_login_logged_out") ===
-          "1"
-      ) {
+      if (hasSignedOutInThisTab()) {
         navigate("/login", {
           replace: true,
           state: {
@@ -95,6 +95,7 @@ export default function AuthCallback() {
         }
 
         await handleAuthCallbackSuccess(token);
+        resetSsoAutoLoginCounts();
 
         // Wait for all context providers to process jwt-available event
         // This prevents infinite render loop when coming from cross-domain SAML redirect

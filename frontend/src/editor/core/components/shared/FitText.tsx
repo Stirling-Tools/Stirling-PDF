@@ -1,5 +1,5 @@
 import React, { CSSProperties, useCallback, useMemo, useRef } from "react";
-import { useAdjustFontSizeToFit } from "@app/components/shared/fitText/textFit";
+import { useAdjustFontSizeToFit } from "@editor/components/shared/fitText/textFit";
 
 type FitTextProps = {
   text: string;

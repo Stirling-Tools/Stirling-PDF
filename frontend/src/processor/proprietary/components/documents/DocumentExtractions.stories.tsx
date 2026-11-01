@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { Extraction } from "@portal/api/documents";
-import { documentsFor } from "@portal/mocks/documents";
-import { DocumentExtractions } from "@portal/components/documents/DocumentExtractions";
-import "@portal/views/Documents.css";
+import type { Extraction } from "@processor/api/documents";
+import { documentsFor } from "@processor/mocks/documents";
+import { DocumentExtractions } from "@processor/components/documents/DocumentExtractions";
+import "@processor/views/Documents.css";
 
 const ALL = documentsFor("enterprise");
 

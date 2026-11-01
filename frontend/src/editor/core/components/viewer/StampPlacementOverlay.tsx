@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Box } from "@mantine/core";
-import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import type { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
 import {
   buildSignaturePreview,
   SignaturePreview,
-} from "@app/utils/signaturePreview";
-import { useSignature } from "@app/contexts/SignatureContext";
-import { fitPlacedSignatureSize } from "@app/utils/signatureImage";
+} from "@editor/utils/signaturePreview";
+import { useSignature } from "@editor/contexts/SignatureContext";
+import { fitPlacedSignatureSize } from "@editor/utils/signatureImage";
 import {
   MAX_PREVIEW_WIDTH_RATIO,
   MAX_PREVIEW_HEIGHT_RATIO,
@@ -14,7 +14,7 @@ import {
   MAX_PREVIEW_HEIGHT_REM,
   MIN_SIGNATURE_DIMENSION_REM,
   OVERLAY_EDGE_PADDING_REM,
-} from "@app/constants/signConstants";
+} from "@editor/constants/signConstants";
 
 // Convert rem to pixels using browser's base font size (typically 16px)
 const remToPx = (rem: number) =>

@@ -1,10 +1,10 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
-import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
-import { FREE_LIMIT_MODAL_EVENT } from "@app/components/usageLimitModals";
-import { handleHttpError } from "@app/services/httpErrorHandler";
+import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
+import { FREE_LIMIT_MODAL_EVENT } from "@editor/components/usageLimitModals";
+import { handleHttpError } from "@editor/services/httpErrorHandler";
 
 // The non-PAYG path delegates to core; stub it so these cases stay isolated.
-vi.mock("@core/services/httpErrorHandler", () => ({
+vi.mock("@editor-core/services/httpErrorHandler", () => ({
   handleHttpError: vi.fn().mockResolvedValue(false),
 }));
 

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   RedactionSelectionMenu,
   type RedactionSelectionMenuProps,
-} from "@app/components/viewer/RedactionSelectionMenu";
+} from "@editor/components/viewer/RedactionSelectionMenu";
 
 // RedactionSelectionMenu renders only when there's an active document ID
 // (ActiveDocumentContext) and a selected redaction annotation from the live

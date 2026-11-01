@@ -1,5 +1,8 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 /** Maps a page's raw PDF object coordinates to "display-PDF" space. */
 export interface DisplayTransformData {

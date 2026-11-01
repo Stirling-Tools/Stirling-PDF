@@ -1,14 +1,14 @@
-import { EditorDeliverySelect } from "@portal/components/pipelines/EditorDeliverySelect";
+import { EditorDeliverySelect } from "@processor/components/pipelines/EditorDeliverySelect";
 import {
   parseTrigger,
   buildTriggerFor,
-} from "@portal/components/pipelines/inputTriggerConfig";
-import { requiresClassification } from "@app/data/classificationConditions";
-import { isConditionComplete } from "@app/conditions/validation";
+} from "@processor/components/pipelines/inputTriggerConfig";
+import { requiresClassification } from "@editor/data/classificationConditions";
+import { isConditionComplete } from "@editor/conditions/validation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import {
   ActionIcon,
   Banner,
@@ -17,8 +17,8 @@ import {
   Modal,
   Select,
   Spinner,
-} from "@app/ui";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+} from "@editor/ui";
+import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
 import {
   activeFileFields,
   assetRef,
@@ -32,19 +32,19 @@ import {
   type ExecutableTool,
   type SupportingFileBindings,
   type WorkingToolStep,
-} from "@app/hooks/tools/shared/toolAutomation";
+} from "@editor/hooks/tools/shared/toolAutomation";
 import {
   getToolFormatLabel,
   getToolFormatListLabel,
-} from "@app/utils/toolIOLabels";
+} from "@editor/utils/toolIOLabels";
 import {
   chainOutputFormat,
   diagnosticsForStep,
   hasBlockingDiagnostics,
   validateToolChain,
   type ToolDiagnostic,
-} from "@app/utils/toolIOCompat";
-import { errorMessage } from "@portal/api/http";
+} from "@editor/utils/toolIOCompat";
+import { errorMessage } from "@processor/api/http";
 import {
   deletePipeline,
   fetchPipeline,
@@ -61,35 +61,35 @@ import {
   type TestRunAsset,
   type TriggerInfo,
   type TriggerOutcome,
-} from "@portal/api/pipelines";
+} from "@processor/api/pipelines";
 import {
   listPipelineAssets,
   uploadPipelineAsset,
   type PolicyAsset,
-} from "@portal/api/pipelineAssets";
-import { clearProcessedHistory } from "@portal/api/policies";
-import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
-import { RoutingSection } from "@portal/components/policies/RoutingRules";
-import type { WireRoutingRule } from "@app/policies/types";
-import { availableOutputModes } from "@portal/components/pipelines/outputModes";
-import { type SourceView } from "@portal/api/sources";
-import { useSources } from "@portal/queries/sources";
-import { useCanManagePolicies } from "@portal/queries/policyPermissions";
-import { isReadableSource } from "@portal/components/sources/sourceTypes";
-import { SourceModal } from "@portal/components/sources/SourceModal";
-import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
-import { useAsync } from "@portal/hooks/useAsync";
-import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
+} from "@processor/api/pipelineAssets";
+import { clearProcessedHistory } from "@processor/api/policies";
+import { DestinationPicker } from "@processor/components/pipelines/DestinationPicker";
+import { RoutingSection } from "@processor/components/policies/RoutingRules";
+import type { WireRoutingRule } from "@editor/policies/types";
+import { availableOutputModes } from "@processor/components/pipelines/outputModes";
+import { type SourceView } from "@processor/api/sources";
+import { useSources } from "@processor/queries/sources";
+import { useCanManagePolicies } from "@processor/queries/policyPermissions";
+import { isReadableSource } from "@processor/components/sources/sourceTypes";
+import { SourceModal } from "@processor/components/sources/SourceModal";
+import { EDITOR_SOURCE_TYPE } from "@processor/components/sources/sourceTypes";
+import { useAsync } from "@processor/hooks/useAsync";
+import { useAiEngineEnabled } from "@processor/hooks/useAiEngineEnabled";
 import { useQueryClient } from "@tanstack/react-query";
-import { qk } from "@portal/queries/keys";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
-import { canonicalPipelineIconKey } from "@portal/components/pipelines/pipelineIcon";
-import { PipelineCreateHeader } from "@portal/components/pipelines/PipelineCreateHeader";
-import { PipelineEditHeader } from "@portal/components/pipelines/PipelineEditHeader";
-import { PipelineGraphToolbar } from "@portal/components/pipelines/PipelineGraphToolbar";
-import { PipelineInspector } from "@portal/components/pipelines/PipelineInspector";
-import { PipelineDefinitionModal } from "@portal/components/pipelines/PipelineDefinitionModal";
+import { qk } from "@processor/queries/keys";
+import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
+import { humanizeOperation } from "@processor/components/pipelines/pipelineOperations";
+import { canonicalPipelineIconKey } from "@processor/components/pipelines/pipelineIcon";
+import { PipelineCreateHeader } from "@processor/components/pipelines/PipelineCreateHeader";
+import { PipelineEditHeader } from "@processor/components/pipelines/PipelineEditHeader";
+import { PipelineGraphToolbar } from "@processor/components/pipelines/PipelineGraphToolbar";
+import { PipelineInspector } from "@processor/components/pipelines/PipelineInspector";
+import { PipelineDefinitionModal } from "@processor/components/pipelines/PipelineDefinitionModal";
 import {
   PipelineGraph,
   selectedSteps,
@@ -97,35 +97,35 @@ import {
   type ChainWarning,
   type GraphSelection,
   type GraphStepContent,
-} from "@portal/components/pipelines/graph/PipelineGraph";
+} from "@processor/components/pipelines/graph/PipelineGraph";
 import {
   PipelineStepSettings,
   type ParamsUpdate,
-} from "@portal/components/pipelines/PipelineStepSettings";
-import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
-import { BrandMark } from "@portal/components/BrandMarks";
-import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
+} from "@processor/components/pipelines/PipelineStepSettings";
+import { ToolPicker } from "@processor/components/pipelines/ToolPicker";
+import { BrandMark } from "@processor/components/BrandMarks";
+import { STEP_OPERATIONS } from "@processor/components/policies/stepOperations";
 import {
   integrationStepConfigured,
   isIntegrationStep,
   newIntegrationStep,
   stepOperation,
-} from "@portal/components/pipelines/integrationStep";
+} from "@processor/components/pipelines/integrationStep";
 import {
   isIngestStep,
   ingestStepConfigured,
   needsCorpusDestination,
   vectorDestinationConfigured,
   prepareVectorDestination,
-} from "@portal/components/pipelines/docparseStep";
+} from "@processor/components/pipelines/docparseStep";
 import {
   MANUAL,
   MANUAL_OPTION,
   PipelineInputTrigger,
   type EditorRunOn,
   type WorkingInput,
-} from "@portal/components/pipelines/PipelineInputTrigger";
-import "@portal/views/PipelineBuilder.css";
+} from "@processor/components/pipelines/PipelineInputTrigger";
+import "@processor/views/PipelineBuilder.css";
 
 const TERMINAL_STATUSES = new Set(["COMPLETED", "FAILED", "CANCELLED"]);
 const POLL_INTERVAL_MS = 1500;

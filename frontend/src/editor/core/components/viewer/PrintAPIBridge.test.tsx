@@ -1,9 +1,9 @@
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPermissionsAPIBridge";
-import { PrintAPIBridge } from "@app/components/viewer/PrintAPIBridge";
-import { canPrintPdf } from "@app/services/pdfPermissions";
-import { PdfPermissionFlag } from "@app/contexts/viewer/viewerBridges";
+import { DocumentPermissionsAPIBridge } from "@editor/components/viewer/DocumentPermissionsAPIBridge";
+import { PrintAPIBridge } from "@editor/components/viewer/PrintAPIBridge";
+import { canPrintPdf } from "@editor/services/pdfPermissions";
+import { PdfPermissionFlag } from "@editor/contexts/viewer/viewerBridges";
 
 const mock = vi.hoisted(() => ({
   print: vi.fn(),
@@ -13,10 +13,10 @@ const mock = vi.hoisted(() => ({
 vi.mock("@embedpdf/plugin-print/react", () => ({
   usePrintCapability: () => ({ provides: { print: mock.print } }),
 }));
-vi.mock("@app/contexts/ViewerContext", () => ({
+vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => ({ registerBridge: mock.register }),
 }));
-vi.mock("@app/components/viewer/hooks/useDocumentReady", () => ({
+vi.mock("@editor/components/viewer/hooks/useDocumentReady", () => ({
   useDocumentReady: () => mock.ready,
 }));
 beforeEach(() => {

@@ -1,7 +1,7 @@
 import { test as base, expect } from "@playwright/test";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
+import { suppressNativeFilePicker } from "@editor/tests/helpers/ui-helpers";
 
 /**
  * Custom test fixture that:
@@ -22,7 +22,7 @@ import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
  *     same test (login → tool page → preview) accumulates instead of
  *     starting fresh.
  *
- * Usage: import { test, expect } from '@app/tests/helpers/test-base';
+ * Usage: import { test, expect } from '@editor/tests/helpers/test-base';
  */
 const COVERAGE_ENABLED = process.env.PW_COVERAGE === "1";
 

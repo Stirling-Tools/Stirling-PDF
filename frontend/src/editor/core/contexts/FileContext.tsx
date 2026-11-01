@@ -32,15 +32,15 @@ import {
   StirlingFileStub,
   StirlingFile,
   createStirlingFile,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 
 // Import modular components
 import {
   fileContextReducer,
   initialFileContextState,
   withReducerIdentityGuard,
-} from "@app/contexts/file/FileReducer";
-import { createFileSelectors } from "@app/contexts/file/fileSelectors";
+} from "@editor/contexts/file/FileReducer";
+import { createFileSelectors } from "@editor/contexts/file/fileSelectors";
 import {
   addFiles,
   addStirlingFileStubs,
@@ -52,21 +52,21 @@ import {
   createProcessedFile,
   generateProcessedFileMetadata,
   hydrateMetadataFor,
-} from "@app/contexts/file/fileActions";
-import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
+} from "@editor/contexts/file/fileActions";
+import { FileLifecycleManager } from "@editor/contexts/file/lifecycle";
 import {
   FileStoreContext,
   FileActionsContext,
   type FileStateStore,
-} from "@app/contexts/file/contexts";
+} from "@editor/contexts/file/contexts";
 import {
   IndexedDBProvider,
   useIndexedDB,
-} from "@app/contexts/IndexedDBContext";
-import { fileStorage, onRecordUnreadable } from "@app/services/fileStorage";
-import { useZipConfirmation } from "@app/hooks/useZipConfirmation";
-import ZipWarningModal from "@app/components/shared/ZipWarningModal";
-import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
+} from "@editor/contexts/IndexedDBContext";
+import { fileStorage, onRecordUnreadable } from "@editor/services/fileStorage";
+import { useZipConfirmation } from "@editor/hooks/useZipConfirmation";
+import ZipWarningModal from "@editor/components/shared/ZipWarningModal";
+import EncryptedPdfUnlockModal from "@editor/components/shared/EncryptedPdfUnlockModal";
 import { useTranslation } from "react-i18next";
 import {
   inspectLocalPdfAccess,
@@ -78,19 +78,19 @@ import {
   pdfAccessLifetime,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfAccessService";
-import { alert } from "@app/components/toast";
-import { hasPdfPermissionOverride } from "@app/services/pdfPermissions";
+} from "@editor/services/pdfAccessService";
+import { alert } from "@editor/components/toast";
+import { hasPdfPermissionOverride } from "@editor/services/pdfPermissions";
 
-import { reportFilesRemoved } from "@app/services/failureReporting";
+import { reportFilesRemoved } from "@editor/services/failureReporting";
 import {
   addPendingUnlocks,
   setPendingUnlocks,
-} from "@app/services/pendingUnlocks";
-import { handlePasswordError } from "@app/utils/toolErrorHandler";
-import apiClient from "@app/services/apiClient";
-import { buildRemovePasswordFormData } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
-import { combineAbortSignals } from "@app/utils/combineAbortSignals";
+} from "@editor/services/pendingUnlocks";
+import { handlePasswordError } from "@editor/utils/toolErrorHandler";
+import apiClient from "@editor/services/apiClient";
+import { buildRemovePasswordFormData } from "@editor/hooks/tools/removePassword/buildRemovePasswordFormData";
+import { combineAbortSignals } from "@editor/utils/combineAbortSignals";
 
 // Inner provider component that has access to IndexedDB
 function FileContextInner({
@@ -1433,4 +1433,4 @@ export {
   useSelectedFiles,
   // Primary API hooks for tools
   useFileContext,
-} from "@app/contexts/file/fileHooks";
+} from "@editor/contexts/file/fileHooks";

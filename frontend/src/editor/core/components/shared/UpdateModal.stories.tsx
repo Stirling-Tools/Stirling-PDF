@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import UpdateModal from "@app/components/shared/UpdateModal";
-import type { UpdateSummary, MachineInfo } from "@app/services/updateService";
+import UpdateModal from "@editor/components/shared/UpdateModal";
+import type {
+  UpdateSummary,
+  MachineInfo,
+} from "@editor/services/updateService";
 
 const UPDATE_SUMMARY: UpdateSummary = {
   latest_version: "2.5.0",

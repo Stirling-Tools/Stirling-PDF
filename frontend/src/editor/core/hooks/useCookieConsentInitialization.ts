@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { BASE_PATH } from "@app/constants/app";
-import { getSystemTheme } from "@app/constants/theme";
-import { useAppConfig, type AppConfig } from "@app/contexts/AppConfigContext";
+import { BASE_PATH } from "@editor/constants/app";
+import { getSystemTheme } from "@editor/constants/theme";
+import {
+  useAppConfig,
+  type AppConfig,
+} from "@editor/contexts/AppConfigContext";
 import {
   Z_INDEX_COOKIE_CONSENT_BANNER,
   Z_INDEX_COOKIE_PREFERENCES_MODAL,
-} from "@app/styles/zIndex";
-import { TOUR_STATE_EVENT, type TourStatePayload } from "@app/constants/events";
-import { getCookieConsentOverrides } from "@app/extensions/cookieConsentConfig";
+} from "@editor/styles/zIndex";
+import {
+  TOUR_STATE_EVENT,
+  type TourStatePayload,
+} from "@editor/constants/events";
+import { getCookieConsentOverrides } from "@editor/extensions/cookieConsentConfig";
 
 // The library owns document-level DOM. Its promise and assets must outlive either
 // app's provider stack, including a navigation while the script is still loading.

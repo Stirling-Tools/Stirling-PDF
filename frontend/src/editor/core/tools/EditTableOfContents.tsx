@@ -1,32 +1,32 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { downloadFile } from "@app/services/downloadService";
-import { Icon } from "@app/ui/Icon";
-import { alert } from "@app/components/toast";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { downloadFile } from "@editor/services/downloadService";
+import { Icon } from "@editor/ui/Icon";
+import { alert } from "@editor/components/toast";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
 import EditTableOfContentsWorkbenchView, {
   EditTableOfContentsWorkbenchViewData,
-} from "@app/components/tools/editTableOfContents/EditTableOfContentsWorkbenchView";
-import EditTableOfContentsSettings from "@app/components/tools/editTableOfContents/EditTableOfContentsSettings";
-import { useEditTableOfContentsParameters } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsParameters";
-import { useEditTableOfContentsOperation } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import apiClient from "@app/services/apiClient";
+} from "@editor/components/tools/editTableOfContents/EditTableOfContentsWorkbenchView";
+import EditTableOfContentsSettings from "@editor/components/tools/editTableOfContents/EditTableOfContentsSettings";
+import { useEditTableOfContentsParameters } from "@editor/hooks/tools/editTableOfContents/useEditTableOfContentsParameters";
+import { useEditTableOfContentsOperation } from "@editor/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import apiClient from "@editor/services/apiClient";
 import {
   BookmarkPayload,
   BookmarkNode,
   hydrateBookmarkPayload,
   serializeBookmarkNodes,
-} from "@app/utils/editTableOfContents";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
+} from "@editor/utils/editTableOfContents";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
 import {
   useNavigationActions,
   useNavigationState,
-} from "@app/contexts/NavigationContext";
-import { useFileSelection } from "@app/contexts/FileContext";
-import { isStirlingFile } from "@app/types/fileContext";
+} from "@editor/contexts/NavigationContext";
+import { useFileSelection } from "@editor/contexts/FileContext";
+import { isStirlingFile } from "@editor/types/fileContext";
 
 const extractBookmarks = async (file: File): Promise<BookmarkPayload[]> => {
   const formData = new FormData();

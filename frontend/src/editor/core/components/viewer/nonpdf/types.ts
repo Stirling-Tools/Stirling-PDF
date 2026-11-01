@@ -1,8 +1,8 @@
 import React from "react";
 import i18n from "i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 
-import type { NonPdfFileType } from "@app/utils/fileUtils";
+import type { NonPdfFileType } from "@editor/utils/fileUtils";
 
 export interface FileTypeMeta {
   label: string;

@@ -1,20 +1,20 @@
 // @vitest-environment node
 import { describe, expect, test, vi, beforeEach } from "vitest";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 const { fetchMock, getModeMock } = vi.hoisted(() => ({
   fetchMock: vi.fn(),
   getModeMock: vi.fn(),
 }));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: fetchMock }));
-vi.mock("@app/constants/connection", () => ({
+vi.mock("@editor/constants/connection", () => ({
   STIRLING_SAAS_BACKEND_API_URL: "https://api.saas.test",
 }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: { getCurrentMode: getModeMock },
 }));
 
-import { saasAppConfigService } from "@app/services/saasAppConfigService";
+import { saasAppConfigService } from "@editor/services/saasAppConfigService";
 
 function okConfig(body: Record<string, unknown>) {
   return { ok: true, status: 200, json: async () => body };

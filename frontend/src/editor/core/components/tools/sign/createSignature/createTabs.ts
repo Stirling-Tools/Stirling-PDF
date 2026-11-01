@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
-import type { IconName } from "@app/ui/Icon";
-import type { CreateTab } from "@app/components/tools/sign/createSignature/types";
+import type { IconName } from "@editor/ui/Icon";
+import type { CreateTab } from "@editor/components/tools/sign/createSignature/types";
 
 export const CREATE_TAB_ICONS: Record<CreateTab, IconName> = {
   draw: "signature",

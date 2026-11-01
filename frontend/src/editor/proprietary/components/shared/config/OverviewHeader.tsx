@@ -1,8 +1,8 @@
 import { Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
-import { withBasePath } from "@app/constants/app";
+import { useAuth } from "@editor/auth/UseSession";
+import { withBasePath } from "@editor/constants/app";
 
 export function OverviewHeader() {
   const { t } = useTranslation();

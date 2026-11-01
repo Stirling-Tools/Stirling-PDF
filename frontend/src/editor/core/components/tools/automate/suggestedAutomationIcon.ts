@@ -1,4 +1,4 @@
-import { type IconKey } from "@app/components/tools/automate/iconMap";
+import { type IconKey } from "@editor/components/tools/automate/iconMap";
 
 /**
  * The saved-config icon key (an {@link iconMap} key) for a built-in suggested

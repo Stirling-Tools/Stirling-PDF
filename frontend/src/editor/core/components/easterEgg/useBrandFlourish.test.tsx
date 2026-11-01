@@ -2,14 +2,14 @@ import { renderHook } from "@testing-library/react";
 import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import { FileStoreContext } from "@app/contexts/file/contexts";
-import type { FileStateStore } from "@app/contexts/file/contexts";
-import type { FileContextState } from "@app/types/fileContext";
-import { useBrandFlourish } from "@app/components/easterEgg/useBrandFlourish";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import { FileStoreContext } from "@editor/contexts/file/contexts";
+import type { FileStateStore } from "@editor/contexts/file/contexts";
+import type { FileContextState } from "@editor/types/fileContext";
+import { useBrandFlourish } from "@editor/components/easterEgg/useBrandFlourish";
 import type { ReactNode } from "react";
 
-vi.mock("@app/services/thumbnailGenerationService", () => ({
+vi.mock("@editor/services/thumbnailGenerationService", () => ({
   thumbnailGenerationService: { generateThumbnails: vi.fn(async () => []) },
 }));
 

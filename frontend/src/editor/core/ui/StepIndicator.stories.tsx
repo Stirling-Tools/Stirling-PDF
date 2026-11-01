@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { StepIndicator } from "@app/ui/StepIndicator";
+import { StepIndicator } from "@editor/ui/StepIndicator";
 
 const meta: Meta<typeof StepIndicator> = {
   title: "Primitives/StepIndicator",

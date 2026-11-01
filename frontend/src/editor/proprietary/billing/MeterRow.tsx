@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Tooltip } from "@app/ui/Tooltip";
+import { Tooltip } from "@editor/ui/Tooltip";
 
 export type MeterRowTone = "free" | "paid" | "warn";
 

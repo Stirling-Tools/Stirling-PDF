@@ -8,7 +8,7 @@ import {
   reorderMany,
   stepIndexOf,
   stepNodeId,
-} from "@portal/components/pipelines/graph/pipelineLayout";
+} from "@processor/components/pipelines/graph/pipelineLayout";
 
 describe("layoutChain", () => {
   test("an empty chain reserves the first step's row for the placeholder", () => {

@@ -1,23 +1,23 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { StatusBadge } from "@app/ui/StatusBadge";
-import { SigningSessionHeader } from "@app/components/shared/signing/SigningSessionHeader";
-import { alert } from "@app/components/toast";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { StatusBadge } from "@editor/ui/StatusBadge";
+import { SigningSessionHeader } from "@editor/components/shared/signing/SigningSessionHeader";
+import { alert } from "@editor/components/toast";
 import type {
   SignatureOverlayAPI,
   SignaturePreview,
-} from "@app/components/viewer/viewerTypes";
-import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
-import { useFileActions } from "@app/contexts/file/fileHooks";
-import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
-import SignControlsPanel from "@app/components/tools/certSign/panels/SignControlsPanel";
-import { CertificateConfigModal } from "@app/components/tools/certSign/modals/CertificateConfigModal";
-import type { CertificateSubmitData } from "@app/components/tools/certSign/modals/CertificateConfigModal";
-import type { SigningRequestData } from "@app/hooks/signing/useSigningSessionController";
-import { getSubmittedSignaturePreviews } from "@app/utils/signingPreviews";
-import { ParticipantListPanel } from "@app/components/tools/certSign/panels/ParticipantListPanel";
+} from "@editor/components/viewer/viewerTypes";
+import { useSigningOverlay } from "@editor/contexts/SigningOverlayContext";
+import { useFileActions } from "@editor/contexts/file/fileHooks";
+import { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
+import SignControlsPanel from "@editor/components/tools/certSign/panels/SignControlsPanel";
+import { CertificateConfigModal } from "@editor/components/tools/certSign/modals/CertificateConfigModal";
+import type { CertificateSubmitData } from "@editor/components/tools/certSign/modals/CertificateConfigModal";
+import type { SigningRequestData } from "@editor/hooks/signing/useSigningSessionController";
+import { getSubmittedSignaturePreviews } from "@editor/utils/signingPreviews";
+import { ParticipantListPanel } from "@editor/components/tools/certSign/panels/ParticipantListPanel";
 
 interface SignRequestPanelProps {
   data: SigningRequestData;

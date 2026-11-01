@@ -1,1 +1,1 @@
-export { availableOutputModes } from "@app/policies/outputModes";
+export { availableOutputModes } from "@editor/policies/outputModes";

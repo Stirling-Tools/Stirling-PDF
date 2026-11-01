@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack, Text, Group, Modal } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Tooltip } from "@app/ui/Tooltip";
-import { StatusBadge } from "@app/ui/StatusBadge";
-import { ProgressBar } from "@app/ui/ProgressBar";
-import { SigningSessionHeader } from "@app/components/shared/signing/SigningSessionHeader";
-import { alert } from "@app/components/toast";
-import { Icon } from "@app/ui/Icon";
-import { ParticipantListPanel } from "@app/components/tools/certSign/panels/ParticipantListPanel";
-import { SessionActionsPanel } from "@app/components/tools/certSign/panels/SessionActionsPanel";
-import { AddParticipantsFlow } from "@app/components/tools/certSign/modals/AddParticipantsFlow";
-import type { SigningDetailData } from "@app/hooks/signing/useSigningSessionController";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Tooltip } from "@editor/ui/Tooltip";
+import { StatusBadge } from "@editor/ui/StatusBadge";
+import { ProgressBar } from "@editor/ui/ProgressBar";
+import { SigningSessionHeader } from "@editor/components/shared/signing/SigningSessionHeader";
+import { alert } from "@editor/components/toast";
+import { Icon } from "@editor/ui/Icon";
+import { ParticipantListPanel } from "@editor/components/tools/certSign/panels/ParticipantListPanel";
+import { SessionActionsPanel } from "@editor/components/tools/certSign/panels/SessionActionsPanel";
+import { AddParticipantsFlow } from "@editor/components/tools/certSign/modals/AddParticipantsFlow";
+import type { SigningDetailData } from "@editor/hooks/signing/useSigningSessionController";
 
 interface SessionDetailPanelProps {
   data: SigningDetailData;

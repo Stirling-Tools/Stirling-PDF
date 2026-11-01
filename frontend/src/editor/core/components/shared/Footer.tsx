@@ -1,8 +1,8 @@
 import { Flex } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useCookieConsent } from "@app/hooks/useCookieConsent";
-import { useFooterInfo } from "@app/hooks/useFooterInfo";
-import { Button } from "@app/ui/Button";
+import { useCookieConsent } from "@editor/hooks/useCookieConsent";
+import { useFooterInfo } from "@editor/hooks/useFooterInfo";
+import { Button } from "@editor/ui/Button";
 
 interface FooterProps {
   privacyPolicy?: string;

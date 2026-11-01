@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Icon, type IconName } from "@app/ui/Icon";
-import "@app/components/shared/config/SettingsEmptyState.css";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import "@editor/components/shared/config/SettingsEmptyState.css";
 
 export interface SettingsEmptyStateProps {
   title: ReactNode;

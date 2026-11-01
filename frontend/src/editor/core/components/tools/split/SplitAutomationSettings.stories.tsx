@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SplitAutomationSettings from "@app/components/tools/split/SplitAutomationSettings";
+import SplitAutomationSettings from "@editor/components/tools/split/SplitAutomationSettings";
 import {
   defaultParameters,
   SplitParameters,
-} from "@app/hooks/tools/split/useSplitParameters";
-import { SPLIT_METHODS } from "@app/constants/splitConstants";
+} from "@editor/hooks/tools/split/useSplitParameters";
+import { SPLIT_METHODS } from "@editor/constants/splitConstants";
 
 const meta = {
   title: "Tools/Split/SplitAutomationSettings",

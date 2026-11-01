@@ -3,45 +3,47 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type {
   AppNotification,
   NotificationActionOffer,
-} from "@app/services/notifications";
-import type { SucceededToolRun } from "@app/hooks/tools/shared/useResolutionContinuation";
+} from "@editor/services/notifications";
+import type { SucceededToolRun } from "@editor/hooks/tools/shared/useResolutionContinuation";
 
 // A manual run that IS an open failure's fix closes the row, under the rules the bell obeys.
 
 const fetchNotifications = vi.fn();
 const reportNotificationResolved = vi.fn();
-vi.mock("@app/services/notifications", () => ({
+vi.mock("@editor/services/notifications", () => ({
   fetchNotifications: (...args: unknown[]) => fetchNotifications(...args),
   reportNotificationResolved: (...args: unknown[]) =>
     reportNotificationResolved(...args),
 }));
 
 const refreshNotificationsNow = vi.fn();
-vi.mock("@app/hooks/useNotifications", () => ({
+vi.mock("@editor/hooks/useNotifications", () => ({
   refreshNotificationsNow: () => refreshNotificationsNow(),
 }));
 
 const loadRetryPayload = vi.fn();
-vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
+vi.mock("@editor/services/notificationRetry", async (importOriginal) => ({
   // The real stashMatchesKind: pure, and part of the behaviour under test.
-  ...(await importOriginal<typeof import("@app/services/notificationRetry")>()),
+  ...(await importOriginal<
+    typeof import("@editor/services/notificationRetry")
+  >()),
   loadRetryPayload: (fileId: string) => loadRetryPayload(fileId),
 }));
 
 const rechainPolicyOnDocument = vi.fn();
 const canPlacePolicy = vi.fn();
-vi.mock("@app/services/notificationPolicyRetry", () => ({
+vi.mock("@editor/services/notificationPolicyRetry", () => ({
   canPlacePolicy: (...args: unknown[]) => canPlacePolicy(...args),
   rechainPolicyOnDocument: (...args: unknown[]) =>
     rechainPolicyOnDocument(...args),
 }));
 
-vi.mock("@app/hooks/useAiEngineEnabled", () => ({
+vi.mock("@editor/hooks/useAiEngineEnabled", () => ({
   useAiEngineEnabled: () => true,
 }));
 
 const { useResolutionContinuation } =
-  await import("@app/hooks/tools/shared/useResolutionContinuation");
+  await import("@editor/hooks/tools/shared/useResolutionContinuation");
 
 function offer(
   id: string,

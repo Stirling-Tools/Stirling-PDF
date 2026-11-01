@@ -1,38 +1,38 @@
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
-import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
-import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
-import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
-import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
-import { LocalProcessingFolders } from "@app/components/LocalProcessingFolders";
-import { DiskConflictHost } from "@app/components/shared/DiskConflictHost";
-import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
-import { DesktopSaasOnboardingBootstrap } from "@app/components/DesktopSaasOnboardingBootstrap";
-import { ClassificationBackgroundRunner } from "@app/components/onboarding/classificationDemo/ClassificationBackgroundRunner";
-import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
-import { SignInModal } from "@app/components/SignInModal";
-import { DesktopAccessGate } from "@app/components/DesktopAccessGate";
-import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
-import { ToolActionsContext } from "@app/contexts/ToolActionsContext";
-import { useFirstLaunchCheck } from "@app/hooks/useFirstLaunchCheck";
-import { useBackendInitializer } from "@app/hooks/useBackendInitializer";
-import { DESKTOP_DEFAULT_APP_CONFIG } from "@app/config/defaultAppConfig";
+import { AppProviders as ProprietaryAppProviders } from "@editor-proprietary/components/AppProviders";
+import { DesktopConfigSync } from "@editor/components/DesktopConfigSync";
+import { DesktopQueryCacheReset } from "@editor/components/DesktopQueryCacheReset";
+import { DesktopBannerInitializer } from "@editor/components/DesktopBannerInitializer";
+import { SaveShortcutListener } from "@editor/components/SaveShortcutListener";
+import { LocalProcessingFolders } from "@editor/components/LocalProcessingFolders";
+import { DiskConflictHost } from "@editor/components/shared/DiskConflictHost";
+import { DesktopOnboardingModal } from "@editor/components/DesktopOnboardingModal";
+import { DesktopSaasOnboardingBootstrap } from "@editor/components/DesktopSaasOnboardingBootstrap";
+import { ClassificationBackgroundRunner } from "@editor/components/onboarding/classificationDemo/ClassificationBackgroundRunner";
+import UsageLimitModalHost from "@editor/components/UsageLimitModalHost";
+import { SignInModal } from "@editor/components/SignInModal";
+import { DesktopAccessGate } from "@editor/components/DesktopAccessGate";
+import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
+import { ToolActionsContext } from "@editor/contexts/ToolActionsContext";
+import { useFirstLaunchCheck } from "@editor/hooks/useFirstLaunchCheck";
+import { useBackendInitializer } from "@editor/hooks/useBackendInitializer";
+import { DESKTOP_DEFAULT_APP_CONFIG } from "@editor/config/defaultAppConfig";
 import {
   connectionModeService,
   JWT_EXPIRED_PROMPTED_KEY,
   type ConnectionConfig,
-} from "@app/services/connectionModeService";
-import { STIRLING_SAAS_URL } from "@app/constants/connection";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
-import { authService } from "@app/services/authService";
-import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
+} from "@editor/services/connectionModeService";
+import { STIRLING_SAAS_URL } from "@editor/constants/connection";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import { authService } from "@editor/services/authService";
+import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isTauri } from "@tauri-apps/api/core";
-import { SaaSTeamProvider } from "@app/contexts/SaaSTeamContext";
-import UpdateModal from "@core/components/shared/UpdateModal";
-import { useDesktopUpdatePopup } from "@app/hooks/useDesktopUpdatePopup";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { SaaSTeamProvider } from "@editor/contexts/SaaSTeamContext";
+import UpdateModal from "@editor-core/components/shared/UpdateModal";
+import { useDesktopUpdatePopup } from "@editor/hooks/useDesktopUpdatePopup";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 
 // Common tool endpoints to preload for faster first-use
 const COMMON_TOOL_ENDPOINTS = [
@@ -399,7 +399,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
             <DesktopSaasOnboardingBootstrap connectionMode={connectionMode} />
             <ClassificationBackgroundRunner />
             {/* Always-mounted host for the PAYG usage-limit modals (free-limit /
-              spend-cap). Resolves to the cloud implementation via @app; listens
+              spend-cap). Resolves to the cloud implementation via @editor; listens
               for both the imperative open events (direct-call 402s) and the
               usageLimitBridge event (server-side policy/AI run 402s). */}
             <UsageLimitModalHost />

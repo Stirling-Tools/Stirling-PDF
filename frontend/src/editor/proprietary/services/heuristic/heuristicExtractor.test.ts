@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const createDocument = vi.fn();
 const destroyDocument = vi.fn();
-vi.mock("@app/services/pdfWorkerManager", () => {
+vi.mock("@editor/services/pdfWorkerManager", () => {
   class PdfOpenTimeout extends Error {
     constructor(timeoutMs: number) {
       super(`PDF did not open within ${timeoutMs}ms`);
@@ -45,7 +45,7 @@ vi.mock("@app/services/pdfWorkerManager", () => {
 import {
   extractHeuristicDoc,
   OPEN_TIMEOUT_MS,
-} from "@app/services/heuristic/heuristicExtractor";
+} from "@editor/services/heuristic/heuristicExtractor";
 
 const never = <T>() => new Promise<T>(() => {});
 const item = (str: string) => ({

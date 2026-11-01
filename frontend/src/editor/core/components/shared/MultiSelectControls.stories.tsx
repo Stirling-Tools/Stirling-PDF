@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import MultiSelectControls from "@app/components/shared/MultiSelectControls";
+import MultiSelectControls from "@editor/components/shared/MultiSelectControls";
 
 const meta: Meta<typeof MultiSelectControls> = {
   title: "Shared/MultiSelectControls",

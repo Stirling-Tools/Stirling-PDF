@@ -1,28 +1,28 @@
 import { useEffect, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
 import SignSettings, {
   SignatureSource,
-} from "@app/components/tools/sign/SignSettings";
+} from "@editor/components/tools/sign/SignSettings";
 import {
   DEFAULT_PARAMETERS,
   useSignParameters,
   SignParameters,
-} from "@app/hooks/tools/sign/useSignParameters";
-import { useSignOperation } from "@app/hooks/tools/sign/useSignOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { ToolId } from "@app/types/toolId";
-import { useNavigation } from "@app/contexts/NavigationContext";
-import { useSignature } from "@app/contexts/SignatureContext";
-import { useFileContext } from "@app/contexts/FileContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { flattenSignatures } from "@app/utils/signatureFlattening";
-import { SignatureWallet } from "@app/components/tools/sign/wallet/SignatureWallet";
-import SharedSigningLauncher from "@app/components/shared/signing/SharedSigningLauncher";
-import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
-import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
-import { alert } from "@app/components/toast";
+} from "@editor/hooks/tools/sign/useSignParameters";
+import { useSignOperation } from "@editor/hooks/tools/sign/useSignOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { ToolId } from "@editor/types/toolId";
+import { useNavigation } from "@editor/contexts/NavigationContext";
+import { useSignature } from "@editor/contexts/SignatureContext";
+import { useFileContext } from "@editor/contexts/FileContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { flattenSignatures } from "@editor/utils/signatureFlattening";
+import { SignatureWallet } from "@editor/components/tools/sign/wallet/SignatureWallet";
+import SharedSigningLauncher from "@editor/components/shared/signing/SharedSigningLauncher";
+import { SuggestedToolsSection } from "@editor/components/tools/shared/SuggestedToolsSection";
+import { useGroupSigningEnabled } from "@editor/hooks/useGroupSigningEnabled";
+import { alert } from "@editor/components/toast";
 
 export type StampToolConfig = {
   toolId: ToolId;

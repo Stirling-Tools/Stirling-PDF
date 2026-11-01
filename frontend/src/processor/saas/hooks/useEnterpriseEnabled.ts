@@ -2,8 +2,8 @@
 // license bean. Shadows the self-hosted app-config version so Enterprise-only
 // surfaces (e.g. Infrastructure > Audit) unlock for enterprise-plan tenants.
 
-import { useTier } from "@portal/contexts/TierContext";
-import type { EnterpriseState } from "@portal-proprietary/hooks/useEnterpriseEnabled";
+import { useTier } from "@processor/contexts/TierContext";
+import type { EnterpriseState } from "@processor-proprietary/hooks/useEnterpriseEnabled";
 
 export type { EnterpriseState };
 

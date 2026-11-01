@@ -5,16 +5,16 @@
  * using the file ids in the run view.
  */
 
-import apiClient from "@app/services/apiClient";
-import { uploadableFile } from "@app/utils/uploadableFile";
-import { getPolicyOutputBaseUrl } from "@app/services/policyOutputBaseUrl";
-import type { AccountLinkBlockSource } from "@app/services/accountLinkBlock";
-import { policyCreditContext } from "@app/services/policyCreditContext";
+import apiClient from "@editor/services/apiClient";
+import { uploadableFile } from "@editor/utils/uploadableFile";
+import { getPolicyOutputBaseUrl } from "@editor/services/policyOutputBaseUrl";
+import type { AccountLinkBlockSource } from "@editor/services/accountLinkBlock";
+import { policyCreditContext } from "@editor/services/policyCreditContext";
 import type {
   BackendPolicy,
   PolicyExecutionTarget,
   PolicyRunView,
-} from "@app/services/policyPipeline";
+} from "@editor/services/policyPipeline";
 
 interface JobResponse {
   async: boolean;

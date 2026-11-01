@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { HttpError } from "@app/portal/api/http";
+import { HttpError } from "@editor/portal/api/http";
 import type { ReactNode } from "react";
-import { PortalRosterHost } from "@app/portal/components/settings/PortalRosterHost";
-import { PortalSettingsSectionHost } from "@app/portal/components/settings/PortalSettingsSectionHost";
+import { PortalRosterHost } from "@editor/portal/components/settings/PortalRosterHost";
+import { PortalSettingsSectionHost } from "@editor/portal/components/settings/PortalSettingsSectionHost";
 import { act, render, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
-import { UIProvider, useUI } from "@app/portal/contexts/UIContext";
-import type { ConnectOutcome } from "@app/portal/components/account-link/ConnectCallbackView";
-import { rememberConnect } from "@app/portal/auth/pendingConnect";
+import { UIProvider, useUI } from "@editor/portal/contexts/UIContext";
+import type { ConnectOutcome } from "@editor/portal/components/account-link/ConnectCallbackView";
+import { rememberConnect } from "@editor/portal/auth/pendingConnect";
 import { AuthApiError } from "@supabase/supabase-js";
 
 /** A live session token rides in the fragment: strip it at once, refuse what cannot be verified. */
@@ -24,44 +24,47 @@ const { completeConnect, startConnect, setSession, refresh, client } =
     };
   });
 
-vi.mock("@app/portal/api/link", () => ({ completeConnect, startConnect }));
-vi.mock("@app/portal/auth/saasSupabase", () => ({
+vi.mock("@editor/portal/api/link", () => ({ completeConnect, startConnect }));
+vi.mock("@editor/portal/auth/saasSupabase", () => ({
   ensureSaasSupabase: () => client,
 }));
-vi.mock("@app/auth/supabase/supabaseClient", () => ({
+vi.mock("@editor/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => client,
   clearSupabaseSession: vi.fn(),
 }));
-vi.mock("@app/portal/contexts/AccountLinkContext", () => ({
+vi.mock("@editor/portal/contexts/AccountLinkContext", () => ({
   AccountLinkProvider: ({ children }: { children: ReactNode }) => children,
   useAccountLinkContext: () => ({ refresh }),
 }));
 
 const ownership = vi.hoisted(() => ({ orgOwner: true }));
-vi.mock("@app/auth", () => ({
+vi.mock("@editor/auth", () => ({
   useAuth: () => ({
     user: { id: "owner", orgOwner: ownership.orgOwner },
     isAdmin: true,
     loading: false,
   }),
 }));
-vi.mock("@app/portal/auth/accountLinkSession", () => ({
+vi.mock("@editor/portal/auth/accountLinkSession", () => ({
   bindAccountLinkSession: vi.fn(),
   clearAccountLinkSession: vi.fn(),
 }));
-vi.mock("@app/portal/components/account-link/AccountConnectionNotice", () => ({
-  AccountConnectionRefresh: () => null,
-  AccountConnectionNotice: () => null,
-}));
-vi.mock("@app/portal/components/account-link/SaasSessionBanner", () => ({
+vi.mock(
+  "@editor/portal/components/account-link/AccountConnectionNotice",
+  () => ({
+    AccountConnectionRefresh: () => null,
+    AccountConnectionNotice: () => null,
+  }),
+);
+vi.mock("@editor/portal/components/account-link/SaasSessionBanner", () => ({
   SaasSessionBanner: () => null,
 }));
-vi.mock("@app/portal/components/account-link/LinkAccountModal", () => ({
+vi.mock("@editor/portal/components/account-link/LinkAccountModal", () => ({
   LinkAccountModalHost: () => null,
 }));
 
-import ConnectCallback from "@app/portal/views/ConnectCallback";
-import { ConnectCallbackHost } from "@app/portal/components/account-link/ConnectCallbackHost";
+import ConnectCallback from "@editor/portal/views/ConnectCallback";
+import { ConnectCallbackHost } from "@editor/portal/components/account-link/ConnectCallbackHost";
 
 const NONCE = "the-nonce";
 

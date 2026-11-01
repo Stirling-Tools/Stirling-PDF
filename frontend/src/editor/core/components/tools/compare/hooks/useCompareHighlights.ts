@@ -5,7 +5,7 @@ import type {
   CompareResultData,
   CompareChangeOption,
   PagePreview,
-} from "@app/types/compare";
+} from "@editor/types/compare";
 
 interface MetaGroupMap {
   base: Map<number, string>;

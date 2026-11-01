@@ -1,4 +1,4 @@
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
 
 export type ConnectMode = "link" | "reauth";
 export interface PendingConnect {

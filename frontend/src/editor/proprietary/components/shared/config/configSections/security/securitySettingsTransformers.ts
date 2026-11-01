@@ -1,10 +1,10 @@
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import type {
   ConnectionsSettingsData,
   LegalSettingsData,
   PrivacySettingsData,
   SecuritySettingsData,
-} from "@app/components/shared/config/configSections/security/securitySettingsTypes";
+} from "@editor/components/shared/config/configSections/security/securitySettingsTypes";
 
 // The fetch/save transformers for the merged page's four sub-fetches, kept out
 // of the page file so it reads as hooks, one draft, one save.

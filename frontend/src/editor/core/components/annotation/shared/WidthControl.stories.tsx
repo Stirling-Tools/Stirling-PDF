@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { WidthControl } from "@app/components/annotation/shared/WidthControl";
+import { WidthControl } from "@editor/components/annotation/shared/WidthControl";
 
 const meta: Meta<typeof WidthControl> = {
   title: "Annotation/WidthControl",

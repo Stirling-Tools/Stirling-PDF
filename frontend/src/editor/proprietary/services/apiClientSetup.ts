@@ -1,7 +1,7 @@
 import { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
-import { stripBasePath, withBasePath } from "@app/constants/app";
-import { getBrowserId } from "@app/utils/browserIdentifier";
-import { setPostLoginRedirectPath } from "@app/auth/spring/springAuthClient";
+import { stripBasePath, withBasePath } from "@editor/constants/app";
+import { getBrowserId } from "@editor/utils/browserIdentifier";
+import { setPostLoginRedirectPath } from "@editor/auth/spring/springAuthClient";
 
 let isRefreshing = false;
 let failedQueue: Array<{

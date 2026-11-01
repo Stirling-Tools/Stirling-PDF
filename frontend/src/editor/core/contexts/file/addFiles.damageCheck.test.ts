@@ -3,31 +3,31 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import type {
   FileContextAction,
   FileContextState,
-} from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
-import { isDamageCheckPending } from "@app/services/pendingDamageChecks";
+} from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
+import { isDamageCheckPending } from "@editor/services/pendingDamageChecks";
 
 // Damage is only known once hydration has parsed a file, so the check must be open before the
 // upload is published (or a policy could read the file first) and must close however hydration ends.
 
 const generateThumbnailPairWithMetadata = vi.hoisted(() => vi.fn());
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     storeStirlingFile: vi.fn().mockResolvedValue(undefined),
     updateThumbnail: vi.fn(),
   },
 }));
-vi.mock("@app/utils/thumbnailUtils", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@app/utils/thumbnailUtils")>()),
+vi.mock("@editor/utils/thumbnailUtils", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@editor/utils/thumbnailUtils")>()),
   generateThumbnailPairWithMetadata,
   generateThumbnailForFile: vi.fn(),
 }));
-vi.mock("@app/services/fileAnalyzer", () => ({
+vi.mock("@editor/services/fileAnalyzer", () => ({
   FileAnalyzer: { isPDFEncrypted: vi.fn().mockResolvedValue(false) },
 }));
 
-import { addFiles } from "@app/contexts/file/fileActions";
-import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
+import { addFiles } from "@editor/contexts/file/fileActions";
+import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
 
 function harness() {
   const state = {

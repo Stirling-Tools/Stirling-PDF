@@ -1,4 +1,4 @@
-import { SidebarRefs } from "@app/types/sidebar";
+import { SidebarRefs } from "@editor/types/sidebar";
 
 export function useWorkbenchBarTooltipSide(
   _sidebarRefs?: SidebarRefs,

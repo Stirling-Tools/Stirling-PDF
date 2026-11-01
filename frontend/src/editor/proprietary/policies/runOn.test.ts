@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { defaultRunOn, resolveRunOn } from "@app/policies/runOn";
+import { defaultRunOn, resolveRunOn } from "@editor/policies/runOn";
 
 describe("defaultRunOn", () => {
   it("defaults Security and Compliance to export", () => {

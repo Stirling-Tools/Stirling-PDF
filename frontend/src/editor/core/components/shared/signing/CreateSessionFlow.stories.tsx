@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CreateSessionFlow } from "@app/components/shared/signing/CreateSessionFlow";
-import type { FileState } from "@app/types/file";
+import { CreateSessionFlow } from "@editor/components/shared/signing/CreateSessionFlow";
+import type { FileState } from "@editor/types/file";
 
 const mockFile: FileState = {
   name: "contract.pdf",

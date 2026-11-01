@@ -1,5 +1,5 @@
-import apiClient from "@app/services/apiClient";
-import { UserSummary } from "@app/types/signingSession";
+import apiClient from "@editor/services/apiClient";
+import { UserSummary } from "@editor/types/signingSession";
 
 export async function fetchUsers(): Promise<UserSummary[]> {
   const response = await apiClient.get<UserSummary[]>("/api/v1/user/users");

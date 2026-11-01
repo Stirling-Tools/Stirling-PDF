@@ -7,11 +7,11 @@
 
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
-import { mockAppApis } from "@app/tests/helpers/api-stubs";
+import { mockAppApis } from "@editor/tests/helpers/api-stubs";
 import {
   suppressNativeFilePicker,
   revealPickerTool,
-} from "@app/tests/helpers/ui-helpers";
+} from "@editor/tests/helpers/ui-helpers";
 
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");

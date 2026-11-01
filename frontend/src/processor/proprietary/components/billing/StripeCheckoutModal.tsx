@@ -1,21 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Modal, Skeleton, Spinner } from "@app/ui";
+import { Banner, Button, Modal, Skeleton, Spinner } from "@editor/ui";
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js";
-import { updateCap } from "@portal/api/billing";
+import { updateCap } from "@processor/api/billing";
 import {
   createCheckoutSession,
   fetchCheckoutPricing,
   getStripePublishableKey,
   loadStripeOnce,
   type CheckoutPricing,
-} from "@portal/billing/stripe";
-import { CardPlaceholder } from "@portal/components/billing/CardPlaceholder";
-import { ProcessorSpendFields } from "@portal/components/billing/ProcessorSpendFields";
-import { PrepayModalHeader } from "@portal/components/billing/PrepayModalHeader";
+} from "@processor/billing/stripe";
+import { CardPlaceholder } from "@processor/components/billing/CardPlaceholder";
+import { ProcessorSpendFields } from "@processor/components/billing/ProcessorSpendFields";
+import { PrepayModalHeader } from "@processor/components/billing/PrepayModalHeader";
 
 interface Props {
   open: boolean;

@@ -1,9 +1,12 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import { createHash } from "crypto";
 import { readFileSync } from "fs";
 import path from "path";
-import { downloadBytes, saveAndDownload } from "@app/tests/stubbed/saveHelpers";
+import {
+  downloadBytes,
+  saveAndDownload,
+} from "@editor/tests/stubbed/saveHelpers";
 
 // Opening a file and pressing save is not an edit, so it must not rewrite the
 // file. Routed through the full PDFium serialiser it changed the bytes of 8 of

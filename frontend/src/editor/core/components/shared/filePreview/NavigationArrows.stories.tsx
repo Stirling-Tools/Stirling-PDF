@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import NavigationArrows from "@app/components/shared/filePreview/NavigationArrows";
+import NavigationArrows from "@editor/components/shared/filePreview/NavigationArrows";
 
 const meta = {
   title: "Shared/FilePreview/NavigationArrows",

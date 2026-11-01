@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { VersionTimeline } from "@app/components/filesPage/VersionTimeline";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId, ToolOperation } from "@app/types/file";
+import { VersionTimeline } from "@editor/components/filesPage/VersionTimeline";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId, ToolOperation } from "@editor/types/file";
 
 const buildFileStub = (
   overrides: Partial<StirlingFileStub> = {},

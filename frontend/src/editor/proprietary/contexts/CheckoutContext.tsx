@@ -15,27 +15,27 @@ import licenseService, {
   LicenseInfo,
   mapLicenseToTier,
   PlanTier,
-} from "@app/services/licenseService";
+} from "@editor/services/licenseService";
 
 const StripeCheckout = lazy(() =>
-  import("@app/components/shared/stripeCheckout").then((m) => ({
+  import("@editor/components/shared/stripeCheckout").then((m) => ({
     default: m.StripeCheckout,
   })),
 );
-import { userManagementService } from "@app/services/userManagementService";
-import { alert } from "@app/components/toast";
+import { userManagementService } from "@editor/services/userManagementService";
+import { alert } from "@editor/components/toast";
 import {
   pollLicenseKeyWithBackoff,
   activateLicenseKey,
   resyncExistingLicense,
   pollTeamCheckout,
-} from "@app/utils/licenseCheckoutUtils";
-import { useLicense } from "@app/contexts/LicenseContext";
-import { getPreferredCurrency } from "@app/utils/currencyDetection";
+} from "@editor/utils/licenseCheckoutUtils";
+import { useLicense } from "@editor/contexts/LicenseContext";
+import { getPreferredCurrency } from "@editor/utils/currencyDetection";
 import {
   usePlanFeatures,
   usePlanHighlights,
-} from "@app/constants/planConstants";
+} from "@editor/constants/planConstants";
 
 export interface CheckoutOptions {
   /** Resolves the linked customer's currency using the caller's billing session. */
@@ -354,7 +354,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         // Avoid a static import: it would pull the Supabase SDK onto the startup
         // path of every build, including installs that never reach checkout.
         const { isSupabaseConfigured } =
-          await import("@app/services/supabaseClient");
+          await import("@editor/services/supabaseClient");
         if (!isSupabaseConfigured) {
           throw new Error(
             "Checkout is not available. Supabase is not configured.",

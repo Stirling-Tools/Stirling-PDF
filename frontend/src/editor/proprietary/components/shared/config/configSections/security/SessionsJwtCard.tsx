@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { NumberInput, Stack, Paper, Group } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import type { SecurityCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import type { SecurityCardProps } from "@editor/components/shared/config/configSections/security/securityCardProps";
 
 /** How long a signed-in session lives, and the JWT knobs behind it. */
 export function SessionsJwtCard({

@@ -1,4 +1,4 @@
-import type { FormField } from "@app/tools/formFill/types";
+import type { FormField } from "@editor/tools/formFill/types";
 
 /**
  * Reads the ZIP that /edit-fields?includeFields=true returns: the edited PDF stored, the field

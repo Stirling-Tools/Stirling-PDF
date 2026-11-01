@@ -9,7 +9,7 @@
  * inputs and fires on upload/export via `/run`.
  */
 
-import type { Condition } from "@app/conditions/types";
+import type { Condition } from "@editor/conditions/types";
 
 // ── Wire types (match Policy.java / PipelineStep.java / PolicyRunView.java) ──
 

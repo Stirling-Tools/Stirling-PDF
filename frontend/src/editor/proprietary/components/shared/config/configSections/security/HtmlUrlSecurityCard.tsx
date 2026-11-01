@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import {
   Stack,
   Paper,
@@ -10,10 +10,10 @@ import {
   Accordion,
   Textarea,
 } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import type { SecurityCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
-import type { SecuritySettingsData } from "@app/components/shared/config/configSections/security/securitySettingsTypes";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import type { SecurityCardProps } from "@editor/components/shared/config/configSections/security/securityCardProps";
+import type { SecuritySettingsData } from "@editor/components/shared/config/configSections/security/securitySettingsTypes";
 
 type UrlSecurity = NonNullable<
   NonNullable<SecuritySettingsData["html"]>["urlSecurity"]

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import LanguageSelector from "@app/components/shared/LanguageSelector";
+import LanguageSelector from "@editor/components/shared/LanguageSelector";
 
 const meta = {
   title: "Shared/LanguageSelector",

@@ -1,16 +1,16 @@
 import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { authService } from "@app/services/authService";
+import { authService } from "@editor/services/authService";
 import OnboardingSlideShell, {
   ShellHero,
   type ShellButton,
-} from "@app/components/onboarding/OnboardingSlideShell";
-import { SetupWizard } from "@app/components/SetupWizard";
-import WelcomeSlide from "@app/components/onboarding/slides/WelcomeSlide";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { ClassificationDemoModal } from "@app/components/onboarding/classificationDemo/ClassificationDemoModal";
-import { useBypassOnboarding } from "@app/components/onboarding/useBypassOnboarding";
-import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
+} from "@editor/components/onboarding/OnboardingSlideShell";
+import { SetupWizard } from "@editor/components/SetupWizard";
+import WelcomeSlide from "@editor/components/onboarding/slides/WelcomeSlide";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { ClassificationDemoModal } from "@editor/components/onboarding/classificationDemo/ClassificationDemoModal";
+import { useBypassOnboarding } from "@editor/components/onboarding/useBypassOnboarding";
+import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
 
 /** Bumped whenever the welcome copy changes materially: it means "has seen the current
  *  welcome", not "has launched before". The old key is left behind, not migrated. */

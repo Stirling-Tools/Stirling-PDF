@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, CodeBlock, Modal, SegmentedControl } from "@app/ui";
-import { EDITOR_URL } from "@portal/auth/editorUrl";
-import { markEditorInstalled } from "@portal/hooks/useEditorInstalled";
-import { DOWNLOAD_URLS } from "@app/constants/downloads";
+import { Button, CodeBlock, Modal, SegmentedControl } from "@editor/ui";
+import { EDITOR_URL } from "@processor/auth/editorUrl";
+import { markEditorInstalled } from "@processor/hooks/useEditorInstalled";
+import { DOWNLOAD_URLS } from "@editor/constants/downloads";
 import {
   dockerRunCommand,
   HELM_INSTALL_COMMAND,
@@ -11,9 +11,9 @@ import {
   SELF_HOST_GUIDES,
   SERVER_JAR_URL,
   type DockerImageTag,
-} from "@app/constants/selfHosting";
-import { Icon, type IconName } from "@app/ui/Icon";
-import "@portal/components/DownloadEditorModal.css";
+} from "@editor/constants/selfHosting";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import "@processor/components/DownloadEditorModal.css";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Install commands + guides (code isn't translated; only labels are)       */

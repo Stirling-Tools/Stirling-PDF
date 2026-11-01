@@ -12,9 +12,9 @@ import {
   FileInput,
   Select,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { useParticipantSession } from "@app/hooks/workflow/useParticipantSession";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { useParticipantSession } from "@editor/hooks/workflow/useParticipantSession";
+import { Icon } from "@editor/ui/Icon";
 interface ParticipantViewProps {
   token: string;
 }

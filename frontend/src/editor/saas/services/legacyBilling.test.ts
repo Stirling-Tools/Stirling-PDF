@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createLegacyPortalSession,
   fetchLegacySubscriptions,
-} from "@app/services/legacyBilling";
+} from "@editor/services/legacyBilling";
 
 const query = {
   select: vi.fn(),
@@ -14,10 +14,10 @@ const query = {
 const from = vi.fn();
 const invoke = vi.fn();
 const getTeam = vi.fn();
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: (...args: unknown[]) => getTeam(...args) },
 }));
-vi.mock("@app/auth/supabase", () => ({
+vi.mock("@editor/auth/supabase", () => ({
   supabase: {
     from: (...args: unknown[]) => from(...args),
     functions: { invoke: (...args: unknown[]) => invoke(...args) },

@@ -2,11 +2,11 @@ import { describe, expect, test } from "vitest";
 import {
   addWatermarkFromApiParams,
   addWatermarkToApiParams,
-} from "@app/hooks/tools/addWatermark/useAddWatermarkOperation";
+} from "@editor/hooks/tools/addWatermark/useAddWatermarkOperation";
 import {
   AddWatermarkParameters,
   defaultParameters,
-} from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
+} from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
 
 describe("addWatermark mappers", () => {
   // opacity 33 exercises the percentage <-> fraction conversion (/100, *100),

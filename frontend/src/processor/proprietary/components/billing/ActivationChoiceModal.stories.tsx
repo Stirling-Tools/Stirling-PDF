@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ActivationChoiceModal } from "@portal/components/billing/ActivationChoiceModal";
-import "@portal/components/billing/billing.css";
+import { ActivationChoiceModal } from "@processor/components/billing/ActivationChoiceModal";
+import "@processor/components/billing/billing.css";
 
 const meta: Meta<typeof ActivationChoiceModal> = {
   title: "Portal/Billing/ActivationChoiceModal",

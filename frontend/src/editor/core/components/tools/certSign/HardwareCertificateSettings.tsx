@@ -9,16 +9,16 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
+import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import {
   getHardwareSigningCapabilities,
   HardwareCertificateInfo,
   listPkcs11Certificates,
   listWindowsCertificates,
   Pkcs11LibraryInfo,
-} from "@app/services/hardwareSigningService";
+} from "@editor/services/hardwareSigningService";
 
 interface HardwareCertificateSettingsProps {
   parameters: CertSignParameters;

@@ -1,9 +1,9 @@
-import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
 import { useTranslation } from "react-i18next";
-import { NavItem } from "@app/ui";
-import { useUI } from "@app/portal/contexts/UIContext";
-import { useLink } from "@app/portal/contexts/LinkContext";
-import { Icon } from "@app/ui/Icon";
+import { NavItem } from "@editor/ui";
+import { useUI } from "@editor/portal/contexts/UIContext";
+import { useLink } from "@editor/portal/contexts/LinkContext";
+import { Icon } from "@editor/ui/Icon";
 /**
  * Sidebar-footer link-account CTA. Only visible when the org is unlinked — once
  * linked, the linked-instances row + plan badge already communicate the state,

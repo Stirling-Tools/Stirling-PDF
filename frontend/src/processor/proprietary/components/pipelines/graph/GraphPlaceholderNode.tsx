@@ -1,6 +1,6 @@
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui";
-import "@portal/components/pipelines/graph/GraphPlaceholderNode.css";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui";
+import "@processor/components/pipelines/graph/GraphPlaceholderNode.css";
 
 export interface GraphPlaceholderNodeProps {
   label: string;

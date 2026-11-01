@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import "@app/ui/ListRow.css";
-import type { StatusTone } from "@app/ui/StatusBadge";
+import "@editor/ui/ListRow.css";
+import type { StatusTone } from "@editor/ui/StatusBadge";
 
 export interface ListRowProps {
   /** Leading visual (icon/avatar), shown in a tone-tinted square. */

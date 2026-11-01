@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { Icon, isIconName, type IconName } from "@app/ui/Icon";
+import { Icon, isIconName, type IconName } from "@editor/ui/Icon";
 
 /** Ids whose registry name differs from the id itself. */
 const ID_ALIASES: Record<string, IconName> = {

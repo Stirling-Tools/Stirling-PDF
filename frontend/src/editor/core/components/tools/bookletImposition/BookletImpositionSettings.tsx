@@ -8,10 +8,10 @@ import {
   NumberInput,
   Checkbox,
 } from "@mantine/core";
-import { Collapsible } from "@app/ui/Collapsible";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import { BookletImpositionParameters } from "@app/hooks/tools/bookletImposition/useBookletImpositionParameters";
-import ButtonSelector from "@app/components/shared/ButtonSelector";
+import { Collapsible } from "@editor/ui/Collapsible";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { BookletImpositionParameters } from "@editor/hooks/tools/bookletImposition/useBookletImpositionParameters";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 
 interface BookletImpositionSettingsProps {
   parameters: BookletImpositionParameters;

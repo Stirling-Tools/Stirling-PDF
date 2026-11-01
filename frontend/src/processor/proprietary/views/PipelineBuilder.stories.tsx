@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Route, Routes } from "react-router-dom";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { PipelineBuilder } from "@portal/views/PipelineBuilder";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import { PipelineBuilder } from "@processor/views/PipelineBuilder";
 
 /**
  * Renders the builder at a specific path so its `:id` route param resolves the

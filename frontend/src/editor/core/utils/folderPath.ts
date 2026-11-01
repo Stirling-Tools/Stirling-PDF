@@ -1,4 +1,4 @@
-import type { FolderId, FolderRecord } from "@app/types/folder";
+import type { FolderId, FolderRecord } from "@editor/types/folder";
 
 /** Root-first chain including the selected folder; stops at missing parents and cycles. */
 export function getFolderChain(

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Button, Modal } from "@app/ui";
-import "@portal/views/Users.css";
+import { Button, Modal } from "@editor/ui";
+import "@processor/views/Users.css";
 
 interface ConfirmModalProps {
   open: boolean;

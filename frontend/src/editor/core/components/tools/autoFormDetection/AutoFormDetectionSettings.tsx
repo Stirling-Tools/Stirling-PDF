@@ -1,11 +1,11 @@
 import { Stack, Text, Group } from "@mantine/core";
-import { Icon, type IconName } from "@app/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import {
   AutoFormDetectionParameters,
   DetectionSensitivity,
-} from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionParameters";
+} from "@editor/hooks/tools/autoFormDetection/useAutoFormDetectionParameters";
 
 interface AutoFormDetectionSettingsProps {
   parameters: AutoFormDetectionParameters;

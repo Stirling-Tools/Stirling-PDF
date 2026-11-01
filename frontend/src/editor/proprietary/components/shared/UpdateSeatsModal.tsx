@@ -8,9 +8,9 @@ import {
   Group,
   NumberInput,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 interface UpdateSeatsModalProps {
   opened: boolean;

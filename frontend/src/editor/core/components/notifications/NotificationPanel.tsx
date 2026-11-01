@@ -1,13 +1,13 @@
 import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import DividerWithText from "@app/components/shared/DividerWithText";
-import { useNotifications } from "@app/hooks/useNotifications";
-import type { ClientActionRegistry } from "@app/components/notifications/notificationActions";
+import DividerWithText from "@editor/components/shared/DividerWithText";
+import { useNotifications } from "@editor/hooks/useNotifications";
+import type { ClientActionRegistry } from "@editor/components/notifications/notificationActions";
 import {
   NotificationItem,
   type PasswordPrompt,
-} from "@app/components/notifications/NotificationItem";
-import "@app/components/notifications/NotificationBell.css";
+} from "@editor/components/notifications/NotificationItem";
+import "@editor/components/notifications/NotificationBell.css";
 
 /** Named so a trigger in another tree can point at it with aria-controls. */
 export const NOTIFICATIONS_PANEL_ID = "quick-nav-notifications-panel";

@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { useRemoveImageParameters } from "@app/hooks/tools/removeImage/useRemoveImageParameters";
-import { useRemoveImageOperation } from "@app/hooks/tools/removeImage/useRemoveImageOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { useRemoveImageParameters } from "@editor/hooks/tools/removeImage/useRemoveImageParameters";
+import { useRemoveImageOperation } from "@editor/hooks/tools/removeImage/useRemoveImageOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 
 const RemoveImage = (props: BaseToolProps) => {
   const { t } = useTranslation();

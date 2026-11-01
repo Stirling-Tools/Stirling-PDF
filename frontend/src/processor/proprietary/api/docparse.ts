@@ -1,4 +1,4 @@
-import { apiClient } from "@portal/api/http";
+import { apiClient } from "@processor/api/http";
 
 export interface DocparseCapabilities {
   enabled: boolean;

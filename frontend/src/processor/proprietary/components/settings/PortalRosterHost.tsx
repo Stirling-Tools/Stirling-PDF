@@ -1,16 +1,16 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { getPortalQueryClient } from "@portal/queryClient";
-import { LinkProvider } from "@portal/contexts/LinkContext";
-import { TierProvider } from "@portal/contexts/TierContext";
-import { ErrorBoundary } from "@portal/components/ErrorBoundary";
-import { UIProvider, useUI } from "@portal/contexts/UIContext";
-import "@portal/theme/base.css";
-import "@portal/components/settings/PortalSettingsSectionHost.css";
+import { getPortalQueryClient } from "@processor/queryClient";
+import { LinkProvider } from "@processor/contexts/LinkContext";
+import { TierProvider } from "@processor/contexts/TierContext";
+import { ErrorBoundary } from "@processor/components/ErrorBoundary";
+import { UIProvider, useUI } from "@processor/contexts/UIContext";
+import "@processor/theme/base.css";
+import "@processor/components/settings/PortalSettingsSectionHost.css";
 
 const PortalRosterLinkFlow = lazy(
-  () => import("@portal/components/settings/PortalRosterLinkFlow"),
+  () => import("@processor/components/settings/PortalRosterLinkFlow"),
 );
 
 function RequestedLinkFlow() {

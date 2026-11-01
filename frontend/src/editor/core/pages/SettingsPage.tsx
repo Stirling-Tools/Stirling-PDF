@@ -6,35 +6,35 @@ import React, {
   Suspense,
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import { useSectionHeadings } from "@app/components/settings/useSectionHeadings";
-import { useActiveHeading } from "@app/components/settings/useActiveHeading";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import { useSectionHeadings } from "@editor/components/settings/useSectionHeadings";
+import { useActiveHeading } from "@editor/components/settings/useActiveHeading";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import LoginRequiredBanner from "@editor/components/shared/config/LoginRequiredBanner";
 import { Badge, Tooltip } from "@mantine/core";
-import { SettingsMobileBackButton } from "@app/components/shared/config/SettingsMobileBackButton";
-import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChevron";
-import { useSettingsNav } from "@app/components/settings/useSettingsNav";
-import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
-import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
-import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
-import type { NavKey } from "@app/components/shared/config/types";
-import { useIsMobile } from "@app/hooks/useIsMobile";
-import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
+import { SettingsMobileBackButton } from "@editor/components/shared/config/SettingsMobileBackButton";
+import { SettingsNavChevron } from "@editor/components/shared/config/SettingsNavChevron";
+import { useSettingsNav } from "@editor/components/settings/useSettingsNav";
+import SuperSearch from "@editor/components/shared/superSearch/SuperSearch";
+import { useEditorSearchScopes } from "@editor/hooks/useSuperSearch";
+import { useTitleBarStrip } from "@editor/contexts/TitleBarStripContext";
+import type { NavKey } from "@editor/components/shared/config/types";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import { useLicenseAlert } from "@editor/hooks/useLicenseAlert";
 import {
   UnsavedChangesProvider,
   useUnsavedChanges,
-} from "@app/contexts/UnsavedChangesContext";
-import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { READER_PATH } from "@app/routes/readerRoute";
-import { usePreferences } from "@app/contexts/PreferencesContext";
-import { stripBasePath } from "@app/constants/app";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import "@app/components/shared/config/settingsSections.css";
-import "@app/pages/SettingsPage.css";
+} from "@editor/contexts/UnsavedChangesContext";
+import { QuickNavHostBridge } from "@editor/components/shared/quickNav/QuickNavHostBridge";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
+import { READER_PATH } from "@editor/routes/readerRoute";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { stripBasePath } from "@editor/constants/app";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import "@editor/components/shared/config/settingsSections.css";
+import "@editor/pages/SettingsPage.css";
 
 const ANCHOR_POLL_MS = 150;
 const ANCHOR_WAIT_MS = 5000;

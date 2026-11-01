@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 
 test.describe("4. PDF Tool Pages - Common Patterns", () => {
   test.describe("4.1 Tool Page - File Upload Required Before Processing", () => {

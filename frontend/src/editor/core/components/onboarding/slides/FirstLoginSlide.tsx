@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Stack, PasswordInput, Alert, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import i18n from "i18next";
-import { SlideConfig } from "@app/types/types";
-import { Icon } from "@app/ui/Icon";
-import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
-import { accountService } from "@app/services/accountService";
-import { alert as showToast } from "@app/components/toast";
-import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
+import { SlideConfig } from "@editor/types/types";
+import { Icon } from "@editor/ui/Icon";
+import { UNIFIED_CIRCLE_CONFIG } from "@editor/components/onboarding/slides/unifiedBackgroundConfig";
+import { accountService } from "@editor/services/accountService";
+import { alert as showToast } from "@editor/components/toast";
+import styles from "@editor/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 
 interface FirstLoginSlideProps {
   username: string;

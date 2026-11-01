@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
-import { refreshNotificationsNow } from "@app/hooks/useNotifications";
-import { closesPanelFor } from "@app/components/notifications/notificationActions";
-import type { PasswordPrompt } from "@app/components/notifications/NotificationItem";
+import EncryptedPdfUnlockModal from "@editor/components/shared/EncryptedPdfUnlockModal";
+import { refreshNotificationsNow } from "@editor/hooks/useNotifications";
+import { closesPanelFor } from "@editor/components/notifications/notificationActions";
+import type { PasswordPrompt } from "@editor/components/notifications/NotificationItem";
 
 /**
  * The password an action asked for, owned above the panel rather than by the row that offered it:

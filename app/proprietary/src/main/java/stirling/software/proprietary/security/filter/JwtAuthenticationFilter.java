@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.filter;
 
+import static stirling.software.common.util.RequestUriUtils.isApiRequest;
 import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint;
 import static stirling.software.common.util.RequestUriUtils.isStaticResource;
 import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
@@ -87,7 +88,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // No JWT token and not a public endpoint
                 // For API requests, return 401 JSON
                 String acceptHeader = request.getHeader("Accept");
-                if (requestURI.startsWith(contextPath + "/api/")
+                if (isApiRequest(contextPath, requestURI)
                         || (acceptHeader != null && acceptHeader.contains("application/json"))) {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json");

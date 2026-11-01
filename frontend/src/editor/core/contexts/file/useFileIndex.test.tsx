@@ -3,13 +3,13 @@ import { render, act } from "@testing-library/react";
 import {
   FileStoreContext,
   type FileStateStore,
-} from "@app/contexts/file/contexts";
-import { useFileIndex } from "@app/contexts/file/fileHooks";
+} from "@editor/contexts/file/contexts";
+import { useFileIndex } from "@editor/contexts/file/fileHooks";
 import type {
   FileContextSelectors,
   FileContextState,
-} from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+} from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 /**
  * useFileIndex replaced a render-time `selectors.getFiles()` read in

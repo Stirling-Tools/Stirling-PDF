@@ -4,7 +4,7 @@
  * funnels through here first and drops anything outside the allowlist.
  *
  * Pure helpers only — opening the URL is a platform concern and lives behind
- * the @app/platform/openExternalTab seam.
+ * the @editor/platform/openExternalTab seam.
  */
 const ALLOWED_EXTERNAL_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
 

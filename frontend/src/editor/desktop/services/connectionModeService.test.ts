@@ -2,15 +2,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ConnectionModeService,
   LOCAL_MODE_STORAGE_KEY,
-} from "@app/services/connectionModeService";
+} from "@editor/services/connectionModeService";
 
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
 vi.mock("@tauri-apps/api/core", () => ({ invoke, isTauri: () => true }));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
-vi.mock("@app/services/endpointAvailabilityService", () => ({
+vi.mock("@editor/services/endpointAvailabilityService", () => ({
   endpointAvailabilityService: { clearCache: vi.fn() },
 }));
-vi.mock("@app/services/selfHostedServerMonitor", () => ({
+vi.mock("@editor/services/selfHostedServerMonitor", () => ({
   selfHostedServerMonitor: { start: vi.fn() },
 }));
 

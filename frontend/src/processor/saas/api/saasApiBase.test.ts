@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { saasApiBase } from "@portal/api/saasApiBase";
+import { saasApiBase } from "@processor/api/saasApiBase";
 
 describe("saasApiBase — SaaS build (one backend, VITE_API_BASE_URL)", () => {
   afterEach(() => vi.unstubAllEnvs());

@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
-import { FolderRecord } from "@app/types/folder";
-import { ProcessingFolderState } from "@app/hooks/useProcessingFolders";
-import { FolderAppearanceModal } from "@app/components/filesPage/FolderAppearanceModal";
-import { ProcessingMenuItems } from "@app/components/filesPage/ProcessingMenuItems";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Button } from "@app/ui/Button";
+import { FolderRecord } from "@editor/types/folder";
+import { ProcessingFolderState } from "@editor/hooks/useProcessingFolders";
+import { FolderAppearanceModal } from "@editor/components/filesPage/FolderAppearanceModal";
+import { ProcessingMenuItems } from "@editor/components/filesPage/ProcessingMenuItems";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
 
 interface FolderMenuProps {
   folder: FolderRecord;

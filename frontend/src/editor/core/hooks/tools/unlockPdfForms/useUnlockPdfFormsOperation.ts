@@ -2,17 +2,17 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   defineSingleFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   fileOnlyMapping,
   objectToFormData,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   UnlockPdfFormsParameters,
   defaultParameters,
-} from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsParameters";
+} from "@editor/hooks/tools/unlockPdfForms/useUnlockPdfFormsParameters";
 
 const ENDPOINT = "/api/v1/misc/unlock-pdf-forms" satisfies ToolEndpoint;
 

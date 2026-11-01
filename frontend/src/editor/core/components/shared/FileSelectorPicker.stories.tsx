@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FileSelectorPicker } from "@app/components/shared/FileSelectorPicker";
-import { FileContextProvider } from "@app/contexts/FileContext";
+import { FileSelectorPicker } from "@editor/components/shared/FileSelectorPicker";
+import { FileContextProvider } from "@editor/contexts/FileContext";
 
 /**
  * Reads from FileContext (workbench files) and IndexedDBContext (persisted

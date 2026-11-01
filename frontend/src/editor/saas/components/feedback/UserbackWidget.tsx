@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import Userback from "@userback/widget";
-import { useAuth } from "@app/auth/UseSession";
+import { useAuth } from "@editor/auth/UseSession";
 
 interface UserbackWidgetProps {
   token: string;

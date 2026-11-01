@@ -49,7 +49,7 @@ vi.mock("@embedpdf/pdfium", () => ({
   init: vi.fn(async () => pdfium.makeModule()),
 }));
 
-vi.mock("@app/services/wasmPrecompiler", () => ({
+vi.mock("@editor/services/wasmPrecompiler", () => ({
   pdfiumWasmModulePromise: Promise.resolve(null),
   startEagerWasmCompilation: vi.fn(),
   pdfiumWasmUrl: "mem://pdfium-test.wasm",
@@ -62,8 +62,8 @@ import {
   releaseSharedDocument,
   releaseSharedDocumentWhenIdle,
   resetPdfiumModule,
-} from "@app/services/pdfiumService";
-import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
+} from "@editor/services/pdfiumService";
+import { runPdfiumScan } from "@editor/services/pdfiumScanQueue";
 
 const closeCalls = () => pdfium.state.closeCalls;
 const freeCalls = () => pdfium.state.freeCalls;

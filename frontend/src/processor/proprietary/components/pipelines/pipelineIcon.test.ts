@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { canonicalPipelineIconKey } from "@portal/components/pipelines/pipelineIcon";
+import { canonicalPipelineIconKey } from "@processor/components/pipelines/pipelineIcon";
 
 describe("canonicalPipelineIconKey", () => {
   it("maps a category id to the picker's canonical key", () => {

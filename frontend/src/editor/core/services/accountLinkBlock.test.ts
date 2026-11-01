@@ -5,7 +5,7 @@ import {
   clearAccountLinkBlock,
   reportFreeTierExhausted,
   useAccountLinkBlock,
-} from "@app/services/accountLinkBlock";
+} from "@editor/services/accountLinkBlock";
 
 const cause = {
   pipelineId: "rotate",

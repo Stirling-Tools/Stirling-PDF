@@ -1,12 +1,12 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import {
   PolicyEnforcingTooltip,
   renderWithTooltip,
-} from "@app/components/shared/workbenchBar/workbenchBarTooltip";
-import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/types";
+} from "@editor/components/shared/workbenchBar/workbenchBarTooltip";
+import { WorkbenchBarActionsProps } from "@editor/components/shared/workbenchBar/types";
 
 interface WorkbenchBarDesktopActionsProps extends WorkbenchBarActionsProps {
   /** Percentage through the enforcing policy run, when it reports steps. */

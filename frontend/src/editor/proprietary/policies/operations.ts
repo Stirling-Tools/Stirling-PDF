@@ -7,21 +7,21 @@
 import {
   describeToolOperation,
   type BidirectionalToolConfig,
-} from "@app/hooks/tools/shared/toolOperationDescriptor";
-import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
-import { sanitizeOperationConfig } from "@app/hooks/tools/sanitize/useSanitizeOperation";
-import { timestampPdfOperationConfig } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
-import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAddWatermarkOperation";
-import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
-import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
-import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
+} from "@editor/hooks/tools/shared/toolOperationDescriptor";
+import { redactOperationConfig } from "@editor/hooks/tools/redact/useRedactOperation";
+import { sanitizeOperationConfig } from "@editor/hooks/tools/sanitize/useSanitizeOperation";
+import { timestampPdfOperationConfig } from "@editor/hooks/tools/timestampPdf/useTimestampPdfOperation";
+import { addWatermarkOperationConfig } from "@editor/hooks/tools/addWatermark/useAddWatermarkOperation";
+import { ocrOperationConfig } from "@editor/hooks/tools/ocr/useOCROperation";
+import { flattenOperationConfig } from "@editor/hooks/tools/flatten/useFlattenOperation";
+import { compressOperationConfig } from "@editor/hooks/tools/compress/useCompressOperation";
 import {
   INGEST_ENDPOINT,
   ingestOperationConfig,
-} from "@app/policies/ingestOperation";
-import { pdfaOperationConfig } from "@app/policies/pdfaOperation";
-import type { ToolEndpoint } from "@app/types/toolApiTypes";
-import type { WirePipelineStep } from "@app/policies/types";
+} from "@editor/policies/ingestOperation";
+import { pdfaOperationConfig } from "@editor/policies/pdfaOperation";
+import type { ToolEndpoint } from "@editor/types/toolApiTypes";
+import type { WirePipelineStep } from "@editor/policies/types";
 
 /**
  * Endpoints for AI-dispatched policy tools. Intentionally NOT part of the generated

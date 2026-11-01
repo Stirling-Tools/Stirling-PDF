@@ -1,4 +1,4 @@
-import type { AppConfig } from "@app/contexts/AppConfigContext";
+import type { AppConfig } from "@editor/contexts/AppConfigContext";
 
 interface LicenseInfo {
   licenseType: string;

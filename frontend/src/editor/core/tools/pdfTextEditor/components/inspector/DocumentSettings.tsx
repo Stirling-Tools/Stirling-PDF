@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { Box, Collapse, Group, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { ToggleSwitch } from "@app/ui/ToggleSwitch";
-import { Icon } from "@app/ui/Icon";
-import { SpellcheckControl } from "@app/tools/pdfTextEditor/components/SpellcheckControl";
+import { Button } from "@editor/ui/Button";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
+import { Icon } from "@editor/ui/Icon";
+import { SpellcheckControl } from "@editor/tools/pdfTextEditor/components/SpellcheckControl";
 import {
   Section,
   SectionLabel,
-} from "@app/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
-import type { GroupingMode, WidthMode } from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+import type {
+  GroupingMode,
+  WidthMode,
+} from "@editor/tools/pdfTextEditor/types";
 
 interface Props {
   groupingMode: GroupingMode;

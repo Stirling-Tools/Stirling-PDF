@@ -8,77 +8,77 @@ import {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
-import { useSidebarContext } from "@app/contexts/SidebarContext";
-import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
-import { getToolOgImage } from "@app/data/ogImage";
-import urlSeoOverrides from "@app/data/urlSeoOverrides.json";
-import { useBaseUrl } from "@app/hooks/useBaseUrl";
-import { useIsMobile, useIsTouch } from "@app/hooks/useIsMobile";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { LogoIcon } from "@app/components/shared/LogoIcon";
-import { Wordmark } from "@app/components/shared/Wordmark";
-import { useFileContext } from "@app/contexts/file/fileHooks";
+import { useSidebarContext } from "@editor/contexts/SidebarContext";
+import { useDocumentMeta } from "@editor/hooks/useDocumentMeta";
+import { getToolOgImage } from "@editor/data/ogImage";
+import urlSeoOverrides from "@editor/data/urlSeoOverrides.json";
+import { useBaseUrl } from "@editor/hooks/useBaseUrl";
+import { useIsMobile, useIsTouch } from "@editor/hooks/useIsMobile";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { LogoIcon } from "@editor/components/shared/LogoIcon";
+import { Wordmark } from "@editor/components/shared/Wordmark";
+import { useFileContext } from "@editor/contexts/file/fileHooks";
 import {
   useNavigationState,
   useNavigationActions,
   useNavigationGuard,
-} from "@app/contexts/NavigationContext";
-import { isApplyingRestoredView } from "@app/services/workbenchSession";
-import { useViewer } from "@app/contexts/ViewerContext";
+} from "@editor/contexts/NavigationContext";
+import { isApplyingRestoredView } from "@editor/services/workbenchSession";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { Icon } from "@app/ui/Icon";
-import RightSidebar from "@app/components/tools/RightSidebar";
-import { ReaderRail } from "@app/components/viewer/readerRail/ReaderRail";
-import { ReaderSuperSearch } from "@app/components/viewer/readerRail/ReaderSuperSearch";
-import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
-import Workbench from "@app/components/layout/Workbench";
-import FileSidebar from "@app/components/shared/FileSidebar";
-import FileManager from "@app/components/FileManager";
+import { Icon } from "@editor/ui/Icon";
+import RightSidebar from "@editor/components/tools/RightSidebar";
+import { ReaderRail } from "@editor/components/viewer/readerRail/ReaderRail";
+import { ReaderSuperSearch } from "@editor/components/viewer/readerRail/ReaderSuperSearch";
+import { useTitleBarStrip } from "@editor/contexts/TitleBarStripContext";
+import Workbench from "@editor/components/layout/Workbench";
+import FileSidebar from "@editor/components/shared/FileSidebar";
+import FileManager from "@editor/components/FileManager";
 import {
   getStartupNavigationAction,
   getDefaultWorkbenchForFileCount,
-} from "@app/utils/homePageNavigation";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { READER_PATH } from "@app/routes/readerRoute";
-import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
-import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
-import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
-import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
-import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
-import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
-import { SignMenu } from "@app/components/shared/signing/SignMenu";
-import { useOpenSigning } from "@app/hooks/signing/useOpenSigning";
-import { usePreferences } from "@app/contexts/PreferencesContext";
+} from "@editor/utils/homePageNavigation";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
+import { READER_PATH } from "@editor/routes/readerRoute";
+import { HomePageExtensions } from "@editor/components/home/HomePageExtensions";
+import { PolicyAutoRunController } from "@editor/components/policies/PolicyAutoRunController";
+import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
+import { QuickNavHostBridge } from "@editor/components/shared/quickNav/QuickNavHostBridge";
+import type { QuickNavToolReasons } from "@editor/contexts/QuickNavHostContext";
+import { useQuickNavHost } from "@editor/contexts/QuickNavHostContext";
+import { SignMenu } from "@editor/components/shared/signing/SignMenu";
+import { useOpenSigning } from "@editor/hooks/signing/useOpenSigning";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
 import {
   getToolDisabledReason,
   getDisabledLabel,
-} from "@app/components/tools/fullscreen/shared";
+} from "@editor/components/tools/fullscreen/shared";
 import {
   consumeReaderModeFromPreference,
   consumeReaderModeRequest,
-} from "@app/utils/pendingReaderMode";
+} from "@editor/utils/pendingReaderMode";
 import {
   FilesPageProvider,
   useFilesPage,
-} from "@app/contexts/FilesPageContext";
-import { useFolders } from "@app/contexts/FolderContext";
-import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
-import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
-import MobileUploadModal from "@app/components/shared/MobileUploadModal";
-import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
-import { useAuth } from "@app/auth/UseSession";
-import { canPickDirectory } from "@app/services/directoryPicker";
-import { useLibraryUpload } from "@app/components/filesPage/useLibraryUpload";
-import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
-import { consumeProcessingFolderCreationRequest } from "@app/utils/pendingProcessingFolderCreation";
-import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
+} from "@editor/contexts/FilesPageContext";
+import { useFolders } from "@editor/contexts/FolderContext";
+import { useNewFolderFlow } from "@editor/hooks/useNewFolderFlow";
+import { NewFolderButton } from "@editor/components/filesPage/NewFolderButton";
+import MobileUploadModal from "@editor/components/shared/MobileUploadModal";
+import { useLibraryRefresh } from "@editor/hooks/useLibraryRefresh";
+import { useAuth } from "@editor/auth/UseSession";
+import { canPickDirectory } from "@editor/services/directoryPicker";
+import { useLibraryUpload } from "@editor/components/filesPage/useLibraryUpload";
+import { useProcessingFolderCreation } from "@editor/hooks/useProcessingFolderCreation";
+import { consumeProcessingFolderCreationRequest } from "@editor/utils/pendingProcessingFolderCreation";
+import type { FileSidebarProps } from "@editor/components/shared/FileSidebar";
 
-import { Button } from "@app/ui/Button";
-import "@app/components/layout/WorkspaceFrame.css";
-import "@app/pages/HomePage.css";
+import { Button } from "@editor/ui/Button";
+import "@editor/components/layout/WorkspaceFrame.css";
+import "@editor/pages/HomePage.css";
 
 const SWIPE_HINT_SEEN_STORAGE_KEY = "stirling.mobileSwipeHintSeen";
 

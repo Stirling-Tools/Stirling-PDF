@@ -3,12 +3,12 @@ import {
   ChangePermissionsParametersHook,
   useChangePermissionsParameters,
   validateChangePermissionsParameters,
-} from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
-import { BaseParameters } from "@app/types/parameters";
+} from "@editor/hooks/tools/changePermissions/useChangePermissionsParameters";
+import { BaseParameters } from "@editor/types/parameters";
 import {
   useBaseParameters,
   BaseParametersHook,
-} from "@app/hooks/tools/shared/useBaseParameters";
+} from "@editor/hooks/tools/shared/useBaseParameters";
 
 export interface AddPasswordParameters extends BaseParameters {
   password: string;

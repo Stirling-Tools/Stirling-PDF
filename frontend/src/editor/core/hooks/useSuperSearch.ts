@@ -11,38 +11,41 @@ import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "@app/auth/UseSession";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { ViewerContext } from "@app/contexts/ViewerContext";
-import { usePortalAccess } from "@app/hooks/usePortalAccess";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useFileActions } from "@app/contexts/file/fileHooks";
-import { fileStorage } from "@app/services/fileStorage";
-import { FileDocIcon } from "@app/components/shared/FileDocIcon";
-import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
-import { detectFileExtension } from "@app/utils/fileUtils";
-import { openExternalUrl } from "@app/utils/safeNavigation";
+import { useAuth } from "@editor/auth/UseSession";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { ViewerContext } from "@editor/contexts/ViewerContext";
+import { usePortalAccess } from "@editor/hooks/usePortalAccess";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useFileActions } from "@editor/contexts/file/fileHooks";
+import { fileStorage } from "@editor/services/fileStorage";
+import { FileDocIcon } from "@editor/components/shared/FileDocIcon";
+import { getFileDocVariant } from "@editor/components/shared/filePreview/getFileTypeIcon";
+import { detectFileExtension } from "@editor/utils/fileUtils";
+import { openExternalUrl } from "@editor/utils/safeNavigation";
 import {
   rankByFuzzy,
   idToWords,
   FUZZY_MIN_SCORE,
-} from "@app/utils/fuzzySearch";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { ToolId } from "@app/types/toolId";
-import { isComingSoonTool, type ToolRegistry } from "@app/data/toolsTaxonomy";
-import { SETTINGS_SEARCH_INDEX } from "@app/data/settingsSearchIndex";
-import { SETTINGS_SECTION_REGISTRY } from "@app/data/settingsSectionRegistry";
+} from "@editor/utils/fuzzySearch";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { ToolId } from "@editor/types/toolId";
+import {
+  isComingSoonTool,
+  type ToolRegistry,
+} from "@editor/data/toolsTaxonomy";
+import { SETTINGS_SEARCH_INDEX } from "@editor/data/settingsSearchIndex";
+import { SETTINGS_SECTION_REGISTRY } from "@editor/data/settingsSectionRegistry";
 import {
   buildMatchSnippet,
   findSettingsContentMatch,
-} from "@app/data/settingsContentSearch";
+} from "@editor/data/settingsContentSearch";
 import {
   PROCESSOR_SEARCH_INDEX,
   isPortalEntityScopeAccessible,
   type ProcessorSearchEntry,
-} from "@app/data/processorSearchIndex";
-import { useProcessorEntityGroups } from "@app/data/processorEntitySearch";
+} from "@editor/data/processorSearchIndex";
+import { useProcessorEntityGroups } from "@editor/data/processorEntitySearch";
 import {
   PORTAL_ENTITY_SCOPE_DEFS,
   PORTAL_DOCS_SCOPE_ID,
@@ -53,7 +56,7 @@ import {
   type SuperSearchResult,
   type SuperSearchScope,
   type UseSuperSearchResult,
-} from "@app/types/superSearch";
+} from "@editor/types/superSearch";
 
 // Re-exported so existing consumers keep one import site; the definitions
 // live in the types leaf (see that module for why).

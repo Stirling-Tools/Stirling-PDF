@@ -11,9 +11,9 @@ import type {
   AnnotationRect,
   AnnotationSelection,
   ClearDocumentAnnotationsResult,
-} from "@app/components/viewer/viewerTypes";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
-import { MARKUP_ANNOTATION_COLORS } from "@app/components/viewer/annotationDefaults";
+} from "@editor/components/viewer/viewerTypes";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
+import { MARKUP_ANNOTATION_COLORS } from "@editor/components/viewer/annotationDefaults";
 
 type NoteIcon = NonNullable<AnnotationToolOptions["icon"]>;
 
@@ -323,8 +323,11 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
   polyline: (options) => ({
     type: PdfAnnotationSubtype.POLYLINE,
     color: options?.color ?? "#1565c0",
+    strokeColor: options?.color ?? "#1565c0",
     opacity: options?.opacity ?? 1,
     borderWidth: options?.borderWidth ?? 2,
+    strokeWidth: options?.borderWidth ?? 2,
+    lineWidth: options?.borderWidth ?? 2,
     ...withCustomData(options),
   }),
   polygon: (options) => ({

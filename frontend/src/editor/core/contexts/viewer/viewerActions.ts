@@ -4,7 +4,7 @@ import {
   ViewerBridgeRegistry,
   ScrollState,
   ZoomState,
-} from "@app/contexts/viewer/viewerBridges";
+} from "@editor/contexts/viewer/viewerBridges";
 import { PdfBookmarkObject, PdfAttachmentObject } from "@embedpdf/models";
 import { ZoomLevel, Point } from "@embedpdf/plugin-zoom";
 import { FormattedSelection } from "@embedpdf/plugin-selection";

@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { isUnfiledLocalFile } from "@app/components/filesPage/fileOrigin";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import { createFolderId, type FolderRecord } from "@app/types/folder";
+import { isUnfiledLocalFile } from "@editor/components/filesPage/fileOrigin";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import { createFolderId, type FolderRecord } from "@editor/types/folder";
 
 describe("isUnfiledLocalFile", () => {
   const folderId = createFolderId();

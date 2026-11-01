@@ -1,17 +1,17 @@
 import React from "react";
 import { Stack, Text, Grid, Paper, Alert, Divider } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { PlanTierGroup } from "@app/services/licenseService";
-import { SavingsCalculation } from "@app/components/shared/stripeCheckout/types/checkout";
-import { PricingBadge } from "@app/components/shared/stripeCheckout/components/PricingBadge";
-import { PriceDisplay } from "@app/components/shared/stripeCheckout/components/PriceDisplay";
+import { PlanTierGroup } from "@editor/services/licenseService";
+import { SavingsCalculation } from "@editor/components/shared/stripeCheckout/types/checkout";
+import { PricingBadge } from "@editor/components/shared/stripeCheckout/components/PricingBadge";
+import { PriceDisplay } from "@editor/components/shared/stripeCheckout/components/PriceDisplay";
 import {
   formatPrice,
   calculateMonthlyEquivalent,
   calculateTotalWithSeats,
-} from "@app/components/shared/stripeCheckout/utils/pricingUtils";
-import { getClickablePaperStyle } from "@app/components/shared/stripeCheckout/utils/cardStyles";
+} from "@editor/components/shared/stripeCheckout/utils/pricingUtils";
+import { getClickablePaperStyle } from "@editor/components/shared/stripeCheckout/utils/cardStyles";
 
 interface PlanSelectionStageProps {
   planGroup: PlanTierGroup;

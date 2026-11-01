@@ -1,12 +1,12 @@
 // @vitest-environment node
 import { expect, it, vi } from "vitest";
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
-vi.mock("@app/services/supabaseClient", () => ({
+vi.mock("@editor/services/supabaseClient", () => ({
   supabase: { functions: { invoke } },
   isSupabaseConfigured: () => true,
 }));
-vi.mock("@app/services/apiClient", () => ({ default: {} }));
-import licenseService from "@app/services/licenseService";
+vi.mock("@editor/services/apiClient", () => ({ default: {} }));
+import licenseService from "@editor/services/licenseService";
 
 it.each([
   ["usd", 9900, "$", 99],

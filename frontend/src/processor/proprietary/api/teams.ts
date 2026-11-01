@@ -1,4 +1,4 @@
-import { apiClient } from "@portal/api/http";
+import { apiClient } from "@processor/api/http";
 
 /**
  * Teams service layer. The roster groups people under teams, each with a Team

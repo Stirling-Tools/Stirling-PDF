@@ -20,8 +20,8 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { ProcessingCounts } from "@app/components/onboarding/classificationDemo/classificationDemoSlides";
-import type { ClassificationDemoProgress } from "@app/components/onboarding/classificationDemo/classificationDemoSweep";
+import { ProcessingCounts } from "@editor/components/onboarding/classificationDemo/classificationDemoSlides";
+import type { ClassificationDemoProgress } from "@editor/components/onboarding/classificationDemo/classificationDemoSweep";
 
 const progress = (
   over: Partial<ClassificationDemoProgress>,

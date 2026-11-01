@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import { useFileActions } from "@app/contexts/FileContext";
-import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
+import { useFileActions } from "@editor/contexts/FileContext";
+import type { StirlingFile, StirlingFileStub } from "@editor/types/fileContext";
 
 export const useFileHandler = () => {
   const { actions } = useFileActions();

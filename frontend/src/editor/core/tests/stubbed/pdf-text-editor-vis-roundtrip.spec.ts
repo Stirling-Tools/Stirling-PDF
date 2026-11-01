@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import {
@@ -6,7 +6,7 @@ import {
   saveAndDownload,
   stashCurrentDocument,
   waitForReopenedPage,
-} from "@app/tests/stubbed/saveHelpers";
+} from "@editor/tests/stubbed/saveHelpers";
 
 // Save round-trip fidelity, judged on PIXELS.
 //

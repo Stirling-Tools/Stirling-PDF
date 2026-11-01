@@ -3,8 +3,8 @@ import {
   PaymentStageCard,
   LiveStageCard,
   LicensePanel,
-} from "@portal/components/procurement/ProcurementStages";
-import "@portal/views/Procurement.css";
+} from "@processor/components/procurement/ProcurementStages";
+import "@processor/views/Procurement.css";
 
 /**
  * The three small presentational pieces used inside the procurement takeover

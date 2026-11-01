@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { TextInput, Stack, Paper, Text, Group, Alert } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import type { LegalCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
+import { Icon } from "@editor/ui/Icon";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import type { LegalCardProps } from "@editor/components/shared/config/configSections/security/securityCardProps";
 
 /**
  * Links to the instance's own legal documents. The responsibility warning sits

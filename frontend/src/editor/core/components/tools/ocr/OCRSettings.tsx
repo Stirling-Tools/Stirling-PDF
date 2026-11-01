@@ -1,9 +1,9 @@
 import React from "react";
 import { Stack, Select, Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import LanguagePicker from "@app/components/tools/ocr/LanguagePicker";
-import { OCRParameters } from "@app/hooks/tools/ocr/useOCRParameters";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import LanguagePicker from "@editor/components/tools/ocr/LanguagePicker";
+import { OCRParameters } from "@editor/hooks/tools/ocr/useOCRParameters";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface OCRSettingsProps {
   parameters: OCRParameters;

@@ -7,18 +7,18 @@
  */
 
 import { useTranslation } from "react-i18next";
-import { Icon, type IconName } from "@app/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import type {
   SlideDefinition,
   ButtonAction,
   ButtonDefinition,
-} from "@app/components/onboarding/onboardingFlowConfig";
-import type { OnboardingRuntimeState } from "@app/components/onboarding/orchestrator/onboardingConfig";
-import type { SlideConfig } from "@app/types/types";
+} from "@editor/components/onboarding/onboardingFlowConfig";
+import type { OnboardingRuntimeState } from "@editor/components/onboarding/orchestrator/onboardingConfig";
+import type { SlideConfig } from "@editor/types/types";
 import OnboardingSlideShell, {
   ShellHero,
   type ShellButton,
-} from "@app/components/onboarding/OnboardingSlideShell";
+} from "@editor/components/onboarding/OnboardingSlideShell";
 interface OnboardingModalSlideProps {
   slideDefinition: SlideDefinition;
   slideContent: SlideConfig;

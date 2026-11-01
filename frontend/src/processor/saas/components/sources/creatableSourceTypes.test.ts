@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-// Resolves to the SaaS override (src/portal-saas) via the @portal cascade.
-import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
+// Resolves to the SaaS override (src/portal-saas) via the @processor cascade.
+import { creatableSourceTypes } from "@processor/components/sources/creatableSourceTypes";
 
 describe("creatableSourceTypes (SaaS)", () => {
   it("never offers folder sources: hosted deployments do not read the server filesystem", () => {

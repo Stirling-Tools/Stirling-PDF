@@ -1,7 +1,7 @@
 import {
   configureSupabase,
   getSupabaseClient,
-} from "@app/auth/supabase/supabaseClient";
+} from "@editor/auth/supabase/supabaseClient";
 
 // The browser's SaaS billing session is independent of its local Spring login.
 const url = import.meta.env.VITE_SUPABASE_URL;

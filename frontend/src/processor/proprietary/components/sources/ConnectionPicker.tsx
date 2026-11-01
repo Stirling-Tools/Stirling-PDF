@@ -1,16 +1,16 @@
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Select } from "@app/ui";
-import { errorMessage } from "@portal/api/http";
+import { Banner, Button, Select } from "@editor/ui";
+import { errorMessage } from "@processor/api/http";
 import {
   fetchIntegrations,
   type IntegrationConfig,
   type IntegrationType,
-} from "@portal/api/integrations";
-import { ConnectionModal } from "@portal/components/sources/ConnectionModal";
-import { connectionTypeOf } from "@portal/components/sources/connectionTypes";
-import "@portal/components/sources/connections.css";
+} from "@processor/api/integrations";
+import { ConnectionModal } from "@processor/components/sources/ConnectionModal";
+import { connectionTypeOf } from "@processor/components/sources/connectionTypes";
+import "@processor/components/sources/connections.css";
 
 /**
  * Selects a stored connection of one type by id — an S3 bucket for a source, a Purview tenant for a

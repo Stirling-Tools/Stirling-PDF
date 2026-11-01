@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import HoverActionMenu, {
   type HoverAction,
-} from "@app/components/shared/HoverActionMenu";
-import { Icon } from "@app/ui/Icon";
+} from "@editor/components/shared/HoverActionMenu";
+import { Icon } from "@editor/ui/Icon";
 
 const actions: HoverAction[] = [
   {

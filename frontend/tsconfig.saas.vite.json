@@ -2,13 +2,13 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@app/*": [
+      "@editor/*": [
         "./src/editor/saas/*",
         "./src/editor/cloud/*",
         "./src/editor/proprietary/*",
         "./src/editor/core/*"
       ],
-      "@app/portal/*": [
+      "@editor/portal/*": [
         "./src/editor/saas/portal/*",
         "./src/editor/cloud/portal/*",
         "./src/editor/proprietary/portal/*",
@@ -16,11 +16,14 @@
         "./src/processor/saas/*",
         "./src/processor/proprietary/*"
       ],
-      "@portal/*": ["./src/processor/saas/*", "./src/processor/proprietary/*"],
-      "@portal-proprietary/*": ["./src/processor/proprietary/*"],
-      "@cloud/*": ["./src/editor/cloud/*"],
-      "@proprietary/*": ["./src/editor/proprietary/*"],
-      "@core/*": ["./src/editor/core/*"]
+      "@processor/*": [
+        "./src/processor/saas/*",
+        "./src/processor/proprietary/*"
+      ],
+      "@processor-proprietary/*": ["./src/processor/proprietary/*"],
+      "@editor-cloud/*": ["./src/editor/cloud/*"],
+      "@editor-proprietary/*": ["./src/editor/proprietary/*"],
+      "@editor-core/*": ["./src/editor/core/*"]
     }
   },
   "exclude": [

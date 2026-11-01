@@ -1,5 +1,5 @@
 import type { Decorator } from "@storybook/react-vite";
-import { AuthContext, useAuth } from "@app/auth/context";
+import { AuthContext, useAuth } from "@editor/auth/context";
 
 /** Account-link stories default to the owner; orgOwner: false previews another administrator. */
 export const WithOrgOwner: Decorator = (Story, context) => {

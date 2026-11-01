@@ -1,44 +1,44 @@
 import { useMemo } from "react";
 import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
+import { useMultipleEndpointsEnabled } from "@editor/hooks/useEndpointConfig";
 import {
   isImageFormat,
   isWebFormat,
   getAvailableToExtensions as defaultGetAvailableToExtensions,
   usesOfficeEngine,
-} from "@app/utils/convertUtils";
-import { getConversionEndpoints } from "@app/data/toolsTaxonomy";
-import { usePreferences } from "@app/contexts/PreferencesContext";
-import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
-import GroupedFormatDropdown from "@app/components/tools/convert/GroupedFormatDropdown";
-import ConvertToImageSettings from "@app/components/tools/convert/ConvertToImageSettings";
-import ConvertFromImageSettings from "@app/components/tools/convert/ConvertFromImageSettings";
-import ConvertFromWebSettings from "@app/components/tools/convert/ConvertFromWebSettings";
-import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromEmailSettings";
-import ConvertFromCbzSettings from "@app/components/tools/convert/ConvertFromCbzSettings";
-import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSettings";
-import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
-import ConvertToPdfUaSettings from "@app/components/tools/convert/ConvertToPdfUaSettings";
-import ConvertToPdfxSettings from "@app/components/tools/convert/ConvertToPdfxSettings";
-import ConvertFromCbrSettings from "@app/components/tools/convert/ConvertFromCbrSettings";
-import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSettings";
-import ConvertFromEbookSettings from "@app/components/tools/convert/ConvertFromEbookSettings";
-import ConvertFromSvgSettings from "@app/components/tools/convert/ConvertFromSvgSettings";
-import ConvertToEpubSettings from "@app/components/tools/convert/ConvertToEpubSettings";
-import ConvertOfficeEngineSettings from "@app/components/tools/convert/ConvertOfficeEngineSettings";
-import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
+} from "@editor/utils/convertUtils";
+import { getConversionEndpoints } from "@editor/data/toolsTaxonomy";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { useConversionCloudStatus } from "@editor/hooks/useConversionCloudStatus";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
+import GroupedFormatDropdown from "@editor/components/tools/convert/GroupedFormatDropdown";
+import ConvertToImageSettings from "@editor/components/tools/convert/ConvertToImageSettings";
+import ConvertFromImageSettings from "@editor/components/tools/convert/ConvertFromImageSettings";
+import ConvertFromWebSettings from "@editor/components/tools/convert/ConvertFromWebSettings";
+import ConvertFromEmailSettings from "@editor/components/tools/convert/ConvertFromEmailSettings";
+import ConvertFromCbzSettings from "@editor/components/tools/convert/ConvertFromCbzSettings";
+import ConvertToCbzSettings from "@editor/components/tools/convert/ConvertToCbzSettings";
+import ConvertToPdfaSettings from "@editor/components/tools/convert/ConvertToPdfaSettings";
+import ConvertToPdfUaSettings from "@editor/components/tools/convert/ConvertToPdfUaSettings";
+import ConvertToPdfxSettings from "@editor/components/tools/convert/ConvertToPdfxSettings";
+import ConvertFromCbrSettings from "@editor/components/tools/convert/ConvertFromCbrSettings";
+import ConvertToCbrSettings from "@editor/components/tools/convert/ConvertToCbrSettings";
+import ConvertFromEbookSettings from "@editor/components/tools/convert/ConvertFromEbookSettings";
+import ConvertFromSvgSettings from "@editor/components/tools/convert/ConvertFromSvgSettings";
+import ConvertToEpubSettings from "@editor/components/tools/convert/ConvertToEpubSettings";
+import ConvertOfficeEngineSettings from "@editor/components/tools/convert/ConvertOfficeEngineSettings";
+import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
   EXTENSION_TO_ENDPOINT,
   COLOR_TYPES,
   OUTPUT_OPTIONS,
   FIT_OPTIONS,
-} from "@app/constants/convertConstants";
-import { StirlingFile } from "@app/types/fileContext";
+} from "@editor/constants/convertConstants";
+import { StirlingFile } from "@editor/types/fileContext";
 
 interface ConvertSettingsProps {
   parameters: ConvertParameters;

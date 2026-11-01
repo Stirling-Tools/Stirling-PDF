@@ -1,58 +1,62 @@
-import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { fetch } from "@tauri-apps/plugin-http";
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import {
   fetchNotifications,
   reportNotificationResolved,
-} from "@app/services/notifications";
-import { fetchSigningSessions } from "@app/api/signing";
+} from "@editor/services/notifications";
+import { fetchSigningSessions } from "@editor/api/signing";
 import {
   fetchMountedFiles,
   fetchProcessingFolderRuns,
-} from "@app/services/processingFolderApi";
-import { alert } from "@app/components/toast";
-import { operationRouter } from "@app/services/operationRouter";
-import { allowConsole } from "@app/tests/failOnConsole";
-import { useWallet } from "@app/hooks/useWallet";
-import { connectionModeService } from "@app/services/connectionModeService";
+} from "@editor/services/processingFolderApi";
+import { alert } from "@editor/components/toast";
+import { operationRouter } from "@editor/services/operationRouter";
+import { allowConsole } from "@editor/tests/failOnConsole";
+import { useWallet } from "@editor/hooks/useWallet";
+import { connectionModeService } from "@editor/services/connectionModeService";
 
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
-vi.mock("@app/services/apiClientConfig", () => ({ getApiBaseUrl: () => "" }));
-vi.mock("@app/services/tauriLocalProxy", () => ({
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/services/apiClientConfig", () => ({
+  getApiBaseUrl: () => "",
+}));
+vi.mock("@editor/services/tauriLocalProxy", () => ({
   shouldUseFastLocalTransport: () => false,
 }));
-vi.mock("@app/services/localFolderContents", () => ({ readDiskFile: vi.fn() }));
-vi.mock("@app/services/billing", () => ({ createPortalSession: vi.fn() }));
-vi.mock("@app/platform/openExternal", () => ({ openExternal: vi.fn() }));
-vi.mock("@app/hooks/walletDevPreview", () => ({
+vi.mock("@editor/services/localFolderContents", () => ({
+  readDiskFile: vi.fn(),
+}));
+vi.mock("@editor/services/billing", () => ({ createPortalSession: vi.fn() }));
+vi.mock("@editor/platform/openExternal", () => ({ openExternal: vi.fn() }));
+vi.mock("@editor/hooks/walletDevPreview", () => ({
   getWalletDevPreview: () => null,
 }));
-vi.mock("@app/auth/session", () => ({
+vi.mock("@editor/auth/session", () => ({
   getAccessToken: async () => "test-token",
 }));
-vi.mock("@app/services/authService", () => ({
+vi.mock("@editor/services/authService", () => ({
   authService: {
     awaitRefreshIfInProgress: async () => {},
   },
 }));
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentConfig: async () => ({ local_processing_only: false }),
     getCurrentMode: vi.fn(),
     subscribeToModeChanges: vi.fn(() => () => {}),
   },
 }));
-vi.mock("@app/services/tauriBackendService", () => ({
+vi.mock("@editor/services/tauriBackendService", () => ({
   tauriBackendService: {
     isOnline: true,
     getBackendStatus: () => "healthy",
     getBackendPort: () => 8080,
   },
 }));
-vi.mock("@app/services/operationRouter", () => ({
+vi.mock("@editor/services/operationRouter", () => ({
   operationRouter: {
     isSelfHostedMode: async () => false,
     isSaaSMode: async () => true,
@@ -60,11 +64,11 @@ vi.mock("@app/services/operationRouter", () => ({
     shouldSkipBackendReadyCheck: async () => true,
   },
 }));
-vi.mock("@app/constants/connection", () => ({
+vi.mock("@editor/constants/connection", () => ({
   STIRLING_SAAS_URL: "https://saas.test",
   STIRLING_SAAS_BACKEND_API_URL: "https://api.saas.test",
 }));
-vi.mock("@app/i18n", () => ({
+vi.mock("@editor/i18n", () => ({
   default: { t: (_key: string, fallback: string) => fallback },
 }));
 

@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Locator, Page, Route } from "@playwright/test";
 
 /** The AI agent docked at the foot of the file sidebar, and how it opens and closes. */

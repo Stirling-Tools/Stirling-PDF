@@ -1,6 +1,6 @@
 import React from "react";
-import { AuthShell } from "@app/auth/ui/AuthShell";
-import Footer from "@app/components/shared/Footer";
+import { AuthShell } from "@editor/auth/ui/AuthShell";
+import Footer from "@editor/components/shared/Footer";
 
 interface AuthLayoutProps {
   children: React.ReactNode;

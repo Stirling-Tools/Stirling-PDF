@@ -1,13 +1,13 @@
 import { Stack } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import {
   SignatureTypeSelector,
   SignatureType,
-} from "@app/components/shared/wetSignature/SignatureTypeSelector";
-import { DrawSignatureCanvas } from "@app/components/shared/wetSignature/DrawSignatureCanvas";
-import { UploadSignatureImage } from "@app/components/shared/wetSignature/UploadSignatureImage";
-import { TypeSignatureText } from "@app/components/shared/wetSignature/TypeSignatureText";
+} from "@editor/components/shared/wetSignature/SignatureTypeSelector";
+import { DrawSignatureCanvas } from "@editor/components/shared/wetSignature/DrawSignatureCanvas";
+import { UploadSignatureImage } from "@editor/components/shared/wetSignature/UploadSignatureImage";
+import { TypeSignatureText } from "@editor/components/shared/wetSignature/TypeSignatureText";
 
 interface SignatureCreationStepProps {
   signatureType: SignatureType;

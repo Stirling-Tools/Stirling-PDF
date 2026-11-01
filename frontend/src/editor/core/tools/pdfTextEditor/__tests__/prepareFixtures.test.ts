@@ -1,9 +1,9 @@
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { toLatin1 } from "@app/tools/pdfTextEditor/pdfdoc/bytes";
-import { RawPdf } from "@app/tools/pdfTextEditor/pdfdoc/raw";
-import { prepareForEditing } from "@app/tools/pdfTextEditor/pdfdoc/prepareForEditing";
+import { toLatin1 } from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
+import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
+import { prepareForEditing } from "@editor/tools/pdfTextEditor/pdfdoc/prepareForEditing";
 
 // Held to the real corpus, not hand-built fixtures: whatever the load-time
 // repair returns must still be the same document.

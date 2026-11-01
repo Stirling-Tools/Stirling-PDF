@@ -1,4 +1,4 @@
-import { FileId } from "@app/types/fileContext";
+import { FileId } from "@editor/types/fileContext";
 
 // Bridge from the non-React hydration path to a modal, mirroring the toast
 // seam. A divergence is a decision, so it must not be dismissable like a toast.

@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useFolders } from "@app/contexts/FolderContext";
+import { useFolders } from "@editor/contexts/FolderContext";
 import {
   beginSweep,
   isSweepCurrent,
@@ -14,8 +14,8 @@ import {
   updateSweep,
   useClassificationDemoSweep,
   type ClassificationDemoStatus,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSession";
-import { useFileHandler } from "@app/hooks/useFileHandler";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSession";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
 import {
   CLASSIFICATION_DEMO_BATCH_SIZE,
   mergeOutcomes,
@@ -23,7 +23,7 @@ import {
   runClassificationDemoSweep,
   type ClassificationDemoOutcome,
   type ClassificationDemoProgress,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSweep";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSweep";
 
 export interface ClassificationDemoState {
   status: ClassificationDemoStatus;

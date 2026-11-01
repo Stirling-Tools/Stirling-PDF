@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ClassificationCategoryManager } from "@app/components/policies/ClassificationCategoryManager";
-import type { SidebarCategory } from "@app/services/fileSidebarCategories";
+import { ClassificationCategoryManager } from "@editor/components/policies/ClassificationCategoryManager";
+import type { SidebarCategory } from "@editor/services/fileSidebarCategories";
 
 const CATEGORIES: SidebarCategory[] = [
   { id: "finance", name: "Financial", icon: "banknote", labelKeys: [] },

@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { fetch } from "@tauri-apps/plugin-http";
-import { alert } from "@app/components/toast";
+import { alert } from "@editor/components/toast";
 import i18n from "i18next";
 
 export type BackendStatus = "stopped" | "starting" | "healthy" | "unhealthy";

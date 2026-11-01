@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { createFolderId, type FolderRecord } from "@app/types/folder";
-import { getFolderChain, getFolderPath } from "@app/utils/folderPath";
+import { createFolderId, type FolderRecord } from "@editor/types/folder";
+import { getFolderChain, getFolderPath } from "@editor/utils/folderPath";
 
 const root: FolderRecord = {
   id: createFolderId(),

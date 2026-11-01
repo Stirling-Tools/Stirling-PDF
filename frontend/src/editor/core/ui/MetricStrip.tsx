@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import "@app/ui/Surface.css";
-import "@app/ui/MetricStrip.css";
+import "@editor/ui/Surface.css";
+import "@editor/ui/MetricStrip.css";
 
 export interface MetricStripProps {
   children: ReactNode;

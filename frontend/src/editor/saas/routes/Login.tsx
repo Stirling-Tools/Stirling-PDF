@@ -1,33 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { resolveLandingPath } from "@app/utils/loginLanding";
-import { supabase, signInAnonymously } from "@app/auth/supabase";
-import { Button } from "@app/ui/Button";
-import { useAuth } from "@app/auth/UseSession";
-import { useTranslation } from "@app/hooks/useTranslation";
-import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
-import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/auth/ui/auth.css";
-import "@app/routes/authShared/saas-auth.css";
+import { resolveLandingPath } from "@editor/utils/loginLanding";
+import { supabase, signInAnonymously } from "@editor/auth/supabase";
+import { Button } from "@editor/ui/Button";
+import { useAuth } from "@editor/auth/UseSession";
+import { useTranslation } from "@editor/hooks/useTranslation";
+import { useDocumentMeta } from "@editor/hooks/useDocumentMeta";
+import AuthLayout from "@editor/routes/authShared/AuthLayout";
+import "@editor/auth/ui/auth.css";
+import "@editor/routes/authShared/saas-auth.css";
 import {
   absoluteWithBasePath,
   getBaseUrl,
   withBasePath,
-} from "@app/constants/app";
-import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
+} from "@editor/constants/app";
+import { isSafePostLoginRedirect } from "@editor/services/postLoginRedirect";
 import {
   rememberPendingDestination,
   takePendingDestination,
-} from "@app/services/pendingDestination";
-import { Icon } from "@app/ui/Icon";
+} from "@editor/services/pendingDestination";
+import { Icon } from "@editor/ui/Icon";
 
 // Import login components
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
-import OAuthButtons from "@app/routes/login/OAuthButtons";
-import LoggedInState from "@app/routes/login/LoggedInState";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import ErrorMessage from "@editor/auth/ui/ErrorMessage";
+import EmailPasswordForm from "@editor/routes/login/EmailPasswordForm";
+import OAuthButtons from "@editor/routes/login/OAuthButtons";
+import LoggedInState from "@editor/routes/login/LoggedInState";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
   const navigate = useNavigate();

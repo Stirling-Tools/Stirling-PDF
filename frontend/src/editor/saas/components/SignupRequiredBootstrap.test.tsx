@@ -9,19 +9,19 @@ import type { FocusEvent } from "react";
 import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
-import { SidebarChat } from "@app/components/chat/SidebarChat";
-import { useToolRunComplete } from "@app/hooks/useToolRunComplete";
-import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
-import { QuickNavRailHost } from "@app/components/shared/quickNav/QuickNavRailHost";
-import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
+import SignupRequiredBootstrap from "@editor/components/SignupRequiredBootstrap";
+import { SidebarChat } from "@editor/components/chat/SidebarChat";
+import { useToolRunComplete } from "@editor/hooks/useToolRunComplete";
+import { useProcessingFolderCreation } from "@editor/hooks/useProcessingFolderCreation";
+import { QuickNavRailHost } from "@editor/components/shared/quickNav/QuickNavRailHost";
+import type { QuickNavEntry } from "@editor/components/shared/quickNav/QuickNavRailBase";
 
 const auth = vi.hoisted(() => ({
   isAnonymous: true,
   user: { id: "guest-signup-test" },
 }));
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => auth }));
-vi.mock("@app/contexts/QuickNavHostContext", () => ({
+vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => auth }));
+vi.mock("@editor/contexts/QuickNavHostContext", () => ({
   useQuickNavHost: () => ({
     appMounted: true,
     isAnonymous: auth.isAnonymous,
@@ -29,24 +29,24 @@ vi.mock("@app/contexts/QuickNavHostContext", () => ({
     actions: { current: {} },
   }),
 }));
-vi.mock("@app/ui/Icon", () => ({ Icon: () => null }));
-vi.mock("@app/components/chat/ChatContext", () => ({
+vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
+vi.mock("@editor/components/chat/ChatContext", () => ({
   useChat: () => ({ messages: [], isLoading: false, clearChat: () => {} }),
 }));
-vi.mock("@app/components/chat/ChatPanel", () => ({
+vi.mock("@editor/components/chat/ChatPanel", () => ({
   ChatPanel: ({
     onComposerFocus,
   }: {
     onComposerFocus: (event: FocusEvent<HTMLTextAreaElement>) => void;
   }) => <textarea aria-label="Ask Stirling Agent" onFocus={onComposerFocus} />,
 }));
-vi.mock("@app/components/policies/ProcessingFolderSetupFlow", () => ({
+vi.mock("@editor/components/policies/ProcessingFolderSetupFlow", () => ({
   ProcessingFolderSetupFlow: () => <div>Processing folder wizard</div>,
 }));
-vi.mock("@app/hooks/useAiEngineEnabled", () => ({
+vi.mock("@editor/hooks/useAiEngineEnabled", () => ({
   useAiEngineEnabled: () => true,
 }));
-vi.mock("@app/components/shared/quickNav/QuickNavRailContainer", () => ({
+vi.mock("@editor/components/shared/quickNav/QuickNavRailContainer", () => ({
   QuickNavRailContainer: ({ groups }: { groups: QuickNavEntry[][] }) => (
     <>
       {groups.flat().map((entry) => (

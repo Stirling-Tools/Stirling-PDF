@@ -1,5 +1,5 @@
-import { useAuth } from "@app/auth/context";
-import type { PortalAccessState } from "@core/hooks/usePortalAccess";
+import { useAuth } from "@editor/auth/context";
+import type { PortalAccessState } from "@editor-core/hooks/usePortalAccess";
 
 export type { PortalAccessState };
 

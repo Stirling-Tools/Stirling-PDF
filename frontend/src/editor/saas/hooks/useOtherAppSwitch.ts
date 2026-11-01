@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom";
-import { usePortalAccess } from "@app/hooks/usePortalAccess";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
-import { saveEditorReturnPath } from "@app/services/workbenchSession";
-import { type NavFooterAppLink } from "@app/components/shared/navFooter/NavFooter";
-import { useAuth } from "@app/auth/UseSession";
-import { requestProcessorSignup } from "@app/services/processorSignup";
+import { usePortalAccess } from "@editor/hooks/usePortalAccess";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
+import { HAS_PORTAL } from "@editor/routes/hasPortal";
+import { saveEditorReturnPath } from "@editor/services/workbenchSession";
+import { type NavFooterAppLink } from "@editor/components/shared/navFooter/NavFooter";
+import { useAuth } from "@editor/auth/UseSession";
+import { requestProcessorSignup } from "@editor/services/processorSignup";
 
 /**
  * SaaS: the editor's Supabase context never fetches /me, so processor access

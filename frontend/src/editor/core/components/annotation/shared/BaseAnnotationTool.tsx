@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Stack, Alert, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { DrawingControls } from "@app/components/annotation/shared/DrawingControls";
-import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
-import { usePDFAnnotation } from "@app/components/annotation/providers/PDFAnnotationProvider";
-import { useSignature } from "@app/contexts/SignatureContext";
-import { useHistoryAvailability } from "@app/hooks/useHistoryAvailability";
+import { DrawingControls } from "@editor/components/annotation/shared/DrawingControls";
+import { ColorPicker } from "@editor/components/annotation/shared/ColorPicker";
+import { usePDFAnnotation } from "@editor/components/annotation/providers/PDFAnnotationProvider";
+import { useSignature } from "@editor/contexts/SignatureContext";
+import { useHistoryAvailability } from "@editor/hooks/useHistoryAvailability";
 
 export interface AnnotationToolConfig {
   enableDrawing?: boolean;

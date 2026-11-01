@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
 import type { TFunction } from "i18next";
-import { computeSignatureStatus } from "@app/hooks/tools/validateSignature/utils/signatureStatus";
-import type { SignatureValidationSignature } from "@app/types/validateSignature";
+import { computeSignatureStatus } from "@editor/hooks/tools/validateSignature/utils/signatureStatus";
+import type { SignatureValidationSignature } from "@editor/types/validateSignature";
 
 // t() stub: return the provided default string (2nd arg) so labels are stable.
 const t = ((_key: string, def?: string) =>

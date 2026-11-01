@@ -7,7 +7,7 @@ import {
   normalizeLanguageCode,
   supportedLanguages,
   toUnderscoreFormat,
-} from "@app/i18n/languages";
+} from "@editor/i18n/languages";
 
 const LOCALES_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

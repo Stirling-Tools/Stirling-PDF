@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PolicyBadges } from "@app/components/shared/PolicyBadges";
-import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
+import { PolicyBadges } from "@editor/components/shared/PolicyBadges";
+import type { FileItemPolicyRef } from "@editor/components/shared/PolicyBadges";
 
 // Real catalog category ids, so each badge renders its own shared glyph
 // (policyCategoryIcon) rather than the unknown-category fallback. Accents mirror

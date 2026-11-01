@@ -3,25 +3,25 @@ import { act, cleanup, render, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: vi.fn(), post: vi.fn(), patch: vi.fn() },
 }));
-vi.mock("@app/services/billing", () => ({ createPortalSession: vi.fn() }));
-vi.mock("@app/platform/openExternal", () => ({ openExternal: vi.fn() }));
-vi.mock("@app/hooks/walletDevPreview", () => ({
+vi.mock("@editor/services/billing", () => ({ createPortalSession: vi.fn() }));
+vi.mock("@editor/platform/openExternal", () => ({ openExternal: vi.fn() }));
+vi.mock("@editor/hooks/walletDevPreview", () => ({
   getWalletDevPreview: () => null,
 }));
 
-import apiClient from "@app/services/apiClient";
-import { createAppQueryClient } from "@app/query/queryClient";
+import apiClient from "@editor/services/apiClient";
+import { createAppQueryClient } from "@editor/query/queryClient";
 // The saas cascade resolves this to cloud/hooks/useWallet, the build that ships
 // it; cloud/ has no test project of its own.
-import { useWallet, type Wallet } from "@app/hooks/useWallet";
+import { useWallet, type Wallet } from "@editor/hooks/useWallet";
 import {
   resetTabVisibility,
   setTabHidden,
-} from "@app/tests/utils/tabVisibility";
-import { expectConsole } from "@app/tests/failOnConsole";
+} from "@editor/tests/utils/tabVisibility";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 const POLL_MS = 30_000;
 const get = vi.mocked(apiClient.get);

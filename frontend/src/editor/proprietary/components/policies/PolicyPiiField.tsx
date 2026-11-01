@@ -1,7 +1,7 @@
-import { MultiSelect } from "@app/ui/MultiSelect";
+import { MultiSelect } from "@editor/ui/MultiSelect";
 import { useTranslation } from "react-i18next";
-import { PII_PRESETS } from "@app/data/policyDefinitions";
-import type { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
+import { PII_PRESETS } from "@editor/data/policyDefinitions";
+import type { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
 
 /** The set of preset regexes — used to separate preset words from custom ones. */
 export const PRESET_PATTERNS = new Set(PII_PRESETS.map((p) => p.pattern));

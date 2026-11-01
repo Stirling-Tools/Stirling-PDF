@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Checkbox, FormField, Input, Modal } from "@app/ui";
-import { resetMemberPassword, type Member } from "@portal/api/users";
-import { errorMessage } from "@portal/api/http";
-import "@portal/views/Users.css";
+import { Button, Checkbox, FormField, Input, Modal } from "@editor/ui";
+import { resetMemberPassword, type Member } from "@processor/api/users";
+import { errorMessage } from "@processor/api/http";
+import "@processor/views/Users.css";
 
 interface ResetPasswordModalProps {
   open: boolean;

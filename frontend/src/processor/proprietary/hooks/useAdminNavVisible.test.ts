@@ -2,11 +2,11 @@ import { describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 
 const admin = { is: false };
-vi.mock("@portal/hooks/usePortalAdmin", () => ({
+vi.mock("@processor/hooks/usePortalAdmin", () => ({
   usePortalAdmin: () => admin.is,
 }));
 
-import { useAdminNavVisible } from "@portal/hooks/useAdminNavVisible";
+import { useAdminNavVisible } from "@processor/hooks/useAdminNavVisible";
 
 describe("useAdminNavVisible (self-hosted)", () => {
   it("follows server-admin status, which is what the gated entries mean", () => {

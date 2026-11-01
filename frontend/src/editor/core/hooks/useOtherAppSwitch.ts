@@ -1,4 +1,4 @@
-import { type NavFooterAppLink } from "@app/components/shared/navFooter/NavFooter";
+import { type NavFooterAppLink } from "@editor/components/shared/navFooter/NavFooter";
 
 /**
  * The sibling app this build can switch to (editor ⇄ processor), or null when

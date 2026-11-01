@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import { Stack, Text, Image } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 interface UploadSignatureImageProps {
   signature: string | null;
   onChange: (signature: string | null) => void;

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SectionDivider } from "@app/ui/SectionDivider";
+import { SectionDivider } from "@editor/ui/SectionDivider";
 
 const meta: Meta<typeof SectionDivider> = {
   title: "Primitives/SectionDivider",

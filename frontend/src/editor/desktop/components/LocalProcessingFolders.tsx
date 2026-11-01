@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
-import { scanLocalProcessingFolders } from "@app/services/localProcessingFolders";
+import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
+import { scanLocalProcessingFolders } from "@editor/services/localProcessingFolders";
 
 /** Polls local directories while signed in, including after reconnects and app restarts. */
 export function LocalProcessingFolders() {

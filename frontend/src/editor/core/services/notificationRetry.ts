@@ -1,16 +1,16 @@
-import apiClient from "@app/services/apiClient";
-import { fileStorage } from "@app/services/fileStorage";
+import apiClient from "@editor/services/apiClient";
+import { fileStorage } from "@editor/services/fileStorage";
 import {
   indexedDBManager,
   type DatabaseConfig,
-} from "@app/services/indexedDBManager";
-import { zipFileService } from "@app/services/zipFileService";
+} from "@editor/services/indexedDBManager";
+import { zipFileService } from "@editor/services/zipFileService";
 import {
   REMOVE_PASSWORD_ENDPOINT,
   REPAIR_ENDPOINT,
-} from "@app/constants/toolEndpoints";
-import type { FileId } from "@app/types/file";
-import { uploadableFile } from "@app/utils/uploadableFile";
+} from "@editor/constants/toolEndpoints";
+import type { FileId } from "@editor/types/file";
+import { uploadableFile } from "@editor/utils/uploadableFile";
 
 /** What the bell needs to retry a reported failure. The server keeps none of it. */
 export interface RetryPayload {
@@ -58,7 +58,9 @@ export const KIND_ERROR_CODES: Record<string, readonly string[]> = {
   STEP_CANNOT_RENDER_PAGE: ["E054"],
   STEP_TOOL_FAILED: ["E044", "E051", "E052", "E060", "E077", "E083"],
   STEP_INTERRUPTED: ["E053"],
-  STEP_PAGE_TOO_LARGE: ["E081"],
+  STEP_PAGE_TOO_LARGE: ["E081", "E084", "E085"],
+  INPUT_IMAGE_TOO_LARGE: ["E086"],
+  INPUT_DECOMPRESSES_TOO_LARGE: ["E087"],
   STEP_MISCONFIGURED: ["E040", "E041", "E043", "E050", "E070", "E072"],
 };
 

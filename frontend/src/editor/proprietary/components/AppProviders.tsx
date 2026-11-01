@@ -1,15 +1,15 @@
 import {
   AppProviders as CoreAppProviders,
   AppProvidersProps,
-} from "@core/components/AppProviders";
-import { AuthProvider } from "@app/auth/UseSession";
-import { LicenseProvider } from "@app/contexts/LicenseContext";
-import { CheckoutProvider } from "@app/contexts/CheckoutContext";
-import { UpgradeBannerInitializer } from "@app/components/shared/UpgradeBannerInitializer";
-import { ServerExperienceProvider } from "@app/contexts/ServerExperienceContext";
-import { UpdateSeatsProvider } from "@app/contexts/UpdateSeatsContext";
-import { ChatProvider } from "@app/components/chat/ChatContext";
-import { AccountLinkNotice } from "@app/components/AccountLinkNotice";
+} from "@editor-core/components/AppProviders";
+import { AuthProvider } from "@editor/auth/UseSession";
+import { LicenseProvider } from "@editor/contexts/LicenseContext";
+import { CheckoutProvider } from "@editor/contexts/CheckoutContext";
+import { UpgradeBannerInitializer } from "@editor/components/shared/UpgradeBannerInitializer";
+import { ServerExperienceProvider } from "@editor/contexts/ServerExperienceContext";
+import { UpdateSeatsProvider } from "@editor/contexts/UpdateSeatsContext";
+import { ChatProvider } from "@editor/components/chat/ChatContext";
+import { AccountLinkNotice } from "@editor/components/AccountLinkNotice";
 
 export function AppProviders({
   children,

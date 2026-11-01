@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AuthShell } from "@app/auth/ui/AuthShell";
-import { Button } from "@app/ui/Button";
-import { Icon, type IconName } from "@app/ui/Icon";
-import { RunLocationStepLayout } from "@app/components/runLocation/RunLocationStepLayout";
-import { AnimatedHeight } from "@app/components/runLocation/AnimatedHeight";
-import { DesktopDownloadStep } from "@app/components/runLocation/DesktopDownloadStep";
-import { SelfHostStep } from "@app/components/runLocation/SelfHostStep";
-import { markRunLocationChosen } from "@app/components/runLocation/runLocationChosen";
-import styles from "@app/components/runLocation/RunLocation.module.css";
+import { AuthShell } from "@editor/auth/ui/AuthShell";
+import { Button } from "@editor/ui/Button";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import { RunLocationStepLayout } from "@editor/components/runLocation/RunLocationStepLayout";
+import { AnimatedHeight } from "@editor/components/runLocation/AnimatedHeight";
+import { DesktopDownloadStep } from "@editor/components/runLocation/DesktopDownloadStep";
+import { SelfHostStep } from "@editor/components/runLocation/SelfHostStep";
+import { markRunLocationChosen } from "@editor/components/runLocation/runLocationChosen";
+import styles from "@editor/components/runLocation/RunLocation.module.css";
 
 type RunLocation = "browser" | "computer" | "server";
 

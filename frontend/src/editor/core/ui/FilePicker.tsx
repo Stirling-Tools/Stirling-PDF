@@ -1,7 +1,7 @@
 import { FileButton as MantineFileButton } from "@mantine/core";
 import type { ForwardedRef, InputHTMLAttributes, ReactNode } from "react";
-import { Button } from "@app/ui/Button";
-import type { ButtonProps } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
+import type { ButtonProps } from "@editor/ui/Button";
 
 type TriggerButtonProps = Omit<
   ButtonProps,

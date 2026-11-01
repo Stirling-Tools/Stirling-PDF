@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Box } from "@mantine/core";
-import DocumentStack from "@app/components/shared/filePreview/DocumentStack";
+import DocumentStack from "@editor/components/shared/filePreview/DocumentStack";
 
 const meta = {
   title: "Shared/FilePreview/DocumentStack",

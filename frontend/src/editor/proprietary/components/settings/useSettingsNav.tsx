@@ -1,17 +1,17 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useSettingsNav as useCoreSettingsNav } from "@core/components/settings/useSettingsNav";
-import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
-import { usePortalAccessState } from "@app/hooks/usePortalAccess";
-import { useAuth } from "@app/auth/context";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useRosterAvailable } from "@app/hooks/useRosterAvailable";
-import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
+import { useSettingsNav as useCoreSettingsNav } from "@editor-core/components/settings/useSettingsNav";
+import type { SettingsNav } from "@editor/components/settings/settingsNavTypes";
+import { usePortalAccessState } from "@editor/hooks/usePortalAccess";
+import { useAuth } from "@editor/auth/context";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useRosterAvailable } from "@editor/hooks/useRosterAvailable";
+import { mergeSettingsGroups } from "@editor/components/settings/mergeSettingsGroups";
 import {
   buildPortalSettingsSections,
   PORTAL_SECTION_ALIASES,
   portalSupersededSectionKeys,
-} from "@app/components/settings/portalSettingsNav";
+} from "@editor/components/settings/portalSettingsNav";
 
 export type { SettingsNav };
 

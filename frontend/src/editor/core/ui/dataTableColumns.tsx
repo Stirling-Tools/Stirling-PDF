@@ -1,11 +1,11 @@
 import { Fragment, type ReactNode } from "react";
-import { Icon } from "@app/ui/Icon";
-import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
-import { Chip, type ChipAccent } from "@app/ui/Chip";
-import { Button } from "@app/ui/Button";
-import { Dropdown } from "@app/ui/Dropdown";
-import { ProgressBar } from "@app/ui/ProgressBar";
-import { Select, type SelectOption } from "@app/ui/Select";
+import { Icon } from "@editor/ui/Icon";
+import { StatusBadge, type StatusTone } from "@editor/ui/StatusBadge";
+import { Chip, type ChipAccent } from "@editor/ui/Chip";
+import { Button } from "@editor/ui/Button";
+import { Dropdown } from "@editor/ui/Dropdown";
+import { ProgressBar } from "@editor/ui/ProgressBar";
+import { Select, type SelectOption } from "@editor/ui/Select";
 
 /**
  * The column vocabulary for {@link DataTable}. Call-sites pick a cell KIND and

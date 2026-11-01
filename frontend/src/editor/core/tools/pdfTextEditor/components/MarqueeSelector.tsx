@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 
 interface MarqueeSelectorProps {
   store: EditorStore;

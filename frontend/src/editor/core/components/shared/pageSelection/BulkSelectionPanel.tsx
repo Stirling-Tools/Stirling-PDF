@@ -1,9 +1,9 @@
 import { useState } from "react";
-import classes from "@app/components/shared/pageSelection/BulkSelectionPanel.module.css";
-import PageSelectionInput from "@app/components/shared/pageSelection/PageSelectionInput";
-import SelectedPagesDisplay from "@app/components/shared/pageSelection/SelectedPagesDisplay";
-import PageSelectionSyntaxHint from "@app/components/shared/PageSelectionSyntaxHint";
-import AdvancedSelectionPanel from "@app/components/shared/pageSelection/AdvancedSelectionPanel";
+import classes from "@editor/components/shared/pageSelection/BulkSelectionPanel.module.css";
+import PageSelectionInput from "@editor/components/shared/pageSelection/PageSelectionInput";
+import SelectedPagesDisplay from "@editor/components/shared/pageSelection/SelectedPagesDisplay";
+import PageSelectionSyntaxHint from "@editor/components/shared/PageSelectionSyntaxHint";
+import AdvancedSelectionPanel from "@editor/components/shared/pageSelection/AdvancedSelectionPanel";
 
 interface BulkSelectionPanelProps {
   csvInput: string;

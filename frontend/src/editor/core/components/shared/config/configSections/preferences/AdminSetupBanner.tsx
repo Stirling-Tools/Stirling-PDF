@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { Anchor, Code, Group, Paper, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
 

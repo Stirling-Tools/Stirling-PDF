@@ -1,4 +1,4 @@
-import { useAuth } from "@app/auth/UseSession";
+import { useAuth } from "@editor/auth/UseSession";
 
 /** SaaS returns team-scoped statistics to signed-in members as well as leaders. */
 export function useFleetStatsAccess(): string | null {

@@ -1,8 +1,8 @@
 import { useLayoutEffect, type PropsWithChildren, type RefObject } from "react";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import type { HistoryAPI } from "@app/components/viewer/viewerTypes";
-import { useHistoryAvailability } from "@app/hooks/useHistoryAvailability";
+import type { HistoryAPI } from "@editor/components/viewer/viewerTypes";
+import { useHistoryAvailability } from "@editor/hooks/useHistoryAvailability";
 
 describe("useHistoryAvailability", () => {
   it("subscribes to a bridge installed during commit and follows its updates", () => {

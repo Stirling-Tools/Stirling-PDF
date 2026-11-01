@@ -10,10 +10,10 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
-import ConvertToPdfUaSettings from "@app/components/tools/convert/ConvertToPdfUaSettings";
-import { defaultParameters } from "@app/hooks/tools/convert/useConvertParameters";
-import type { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
-import type { StirlingFile } from "@app/types/fileContext";
+import ConvertToPdfUaSettings from "@editor/components/tools/convert/ConvertToPdfUaSettings";
+import { defaultParameters } from "@editor/hooks/tools/convert/useConvertParameters";
+import type { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
+import type { StirlingFile } from "@editor/types/fileContext";
 
 // Render the English fallbacks (the test i18n instance has no loaded locale).
 vi.mock("react-i18next", () => ({
@@ -28,10 +28,10 @@ vi.mock("react-i18next", () => ({
 }));
 
 const api = vi.hoisted(() => ({ post: vi.fn() }));
-vi.mock("@app/services/apiClient", () => ({ default: { post: api.post } }));
+vi.mock("@editor/services/apiClient", () => ({ default: { post: api.post } }));
 
 // The real hook parses the PDF in a worker, which is not what this file is about.
-vi.mock("@app/hooks/usePdfSignatureDetection", () => ({
+vi.mock("@editor/hooks/usePdfSignatureDetection", () => ({
   usePdfSignatureDetection: () => ({
     hasDigitalSignatures: false,
     isChecking: false,

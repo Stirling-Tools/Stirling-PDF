@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { patchRequestIdleCallback } from "@app/utils/patchRequestIdleCallback";
+import { patchRequestIdleCallback } from "@editor/utils/patchRequestIdleCallback";
 
 /** Two things must hold: it stands in where the API is absent, and it never
  *  displaces a real implementation. */

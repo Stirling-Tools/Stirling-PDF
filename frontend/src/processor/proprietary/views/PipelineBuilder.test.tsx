@@ -1,4 +1,4 @@
-import { classificationCondition } from "@app/data/classificationConditions";
+import { classificationCondition } from "@editor/data/classificationConditions";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fireEvent,
@@ -6,15 +6,15 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { qk } from "@portal/queries/keys";
-import type { Policy, TriggerOutcome } from "@portal/api/pipelines";
-import type { Source, SourceView } from "@portal/api/sources";
-import type { ToolRegistryCatalog } from "@app/contexts/ToolRegistryContext";
-import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
-import { PipelineBuilder } from "@portal/views/PipelineBuilder";
+import { qk } from "@processor/queries/keys";
+import type { Policy, TriggerOutcome } from "@processor/api/pipelines";
+import type { Source, SourceView } from "@processor/api/sources";
+import type { ToolRegistryCatalog } from "@editor/contexts/ToolRegistryContext";
+import type { ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
+import { PipelineBuilder } from "@processor/views/PipelineBuilder";
 
 const render = (
   ui: Parameters<typeof baseRender>[0],
@@ -29,7 +29,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("@portal/hooks/useAiEngineEnabled", () => ({
+vi.mock("@processor/hooks/useAiEngineEnabled", () => ({
   useAiEngineEnabled: () => ({
     enabled: true,
     classificationEnabled: true,
@@ -45,7 +45,7 @@ const triggerPipeline = vi.fn();
 const fetchRun = vi.fn();
 const runPipelineTest = vi.fn();
 const fetchRunOutput = vi.fn();
-vi.mock("@portal/api/pipelines", () => ({
+vi.mock("@processor/api/pipelines", () => ({
   fetchPipeline: (id: string) => fetchPipeline(id),
   fetchTriggers: () => fetchTriggers(),
   savePipeline: (policy: unknown) => savePipeline(policy),
@@ -59,24 +59,24 @@ vi.mock("@portal/api/pipelines", () => ({
 
 const uploadPipelineAsset = vi.fn();
 const listPipelineAssets = vi.fn();
-vi.mock("@portal/api/pipelineAssets", () => ({
+vi.mock("@processor/api/pipelineAssets", () => ({
   uploadPipelineAsset: (file: File) => uploadPipelineAsset(file),
   listPipelineAssets: () => listPipelineAssets(),
 }));
 
 const fetchSources = vi.fn();
-vi.mock("@portal/api/sources", () => ({
+vi.mock("@processor/api/sources", () => ({
   fetchSources: () => fetchSources(),
 }));
 
 const clearProcessedHistory = vi.fn();
-vi.mock("@portal/api/policies", () => ({
+vi.mock("@processor/api/policies", () => ({
   clearProcessedHistory: (id: string) => clearProcessedHistory(id),
 }));
 
 const fetchS3Connections = vi.fn();
 const createIntegration = vi.fn();
-vi.mock("@portal/api/integrations", () => ({
+vi.mock("@processor/api/integrations", () => ({
   fetchIntegrations: () => fetchS3Connections(),
   // Custom-API authoring is a server decision; these tests assert the default view.
   fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
@@ -86,7 +86,7 @@ vi.mock("@portal/api/integrations", () => ({
 
 // The destination picker just selects saved sources; stub its three affordances
 // (pick, create, edit) to buttons, keeping this suite focused on the builder.
-vi.mock("@portal/components/pipelines/DestinationPicker", () => ({
+vi.mock("@processor/components/pipelines/DestinationPicker", () => ({
   DestinationPicker: ({
     value,
     onChange,
@@ -120,7 +120,7 @@ let createdSource: Source;
 // The source modal has its own suite; stub it to the two things the builder
 // depends on - the record it was opened on, and the sources-cache invalidation
 // that follows a save (which is how a new source reaches the pickers).
-vi.mock("@portal/components/sources/SourceModal", () => ({
+vi.mock("@processor/components/sources/SourceModal", () => ({
   SourceModal: ({
     open,
     sourceId,
@@ -150,7 +150,7 @@ vi.mock("@portal/components/sources/SourceModal", () => ({
 }));
 
 // One editable tool, Compress, so the picker and step settings have something to render.
-vi.mock("@app/contexts/ToolRegistryContext", () => {
+vi.mock("@editor/contexts/ToolRegistryContext", () => {
   const compress = {
     name: "Compress",
     icon: null,

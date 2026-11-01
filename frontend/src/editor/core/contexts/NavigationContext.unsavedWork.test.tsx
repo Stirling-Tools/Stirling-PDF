@@ -2,15 +2,18 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, act } from "@testing-library/react";
 
-vi.mock("@app/contexts/ToolRegistryContext", () => ({
+vi.mock("@editor/contexts/ToolRegistryContext", () => ({
   useToolRegistry: () => ({ allTools: {} }),
 }));
 
 import {
   NavigationProvider,
   useNavigation,
-} from "@app/contexts/NavigationContext";
-import { hasUnsavedWork, __resetUnsavedWork } from "@app/services/unsavedWork";
+} from "@editor/contexts/NavigationContext";
+import {
+  hasUnsavedWork,
+  __resetUnsavedWork,
+} from "@editor/services/unsavedWork";
 
 // The bug this pins: every editor marks itself dirty on NavigationContext, while
 // the disk reconciliation read FileContext's own flag - which nothing sets. An

@@ -1,15 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import { useRemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
-import { useRemovePasswordOperation } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
-import { useRemovePasswordTips } from "@app/components/tooltips/useRemovePasswordTips";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import { useRemovePasswordParameters } from "@editor/hooks/tools/removePassword/useRemovePasswordParameters";
+import { useRemovePasswordOperation } from "@editor/hooks/tools/removePassword/useRemovePasswordOperation";
+import { useRemovePasswordTips } from "@editor/components/tooltips/useRemovePasswordTips";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 import { PasswordInput, Stack, Text } from "@mantine/core";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfAccessService";
-import { useFileContext } from "@app/contexts/FileContext";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
+import { useFileContext } from "@editor/contexts/FileContext";
 
 const RemovePassword = (props: BaseToolProps) => {
   const { t } = useTranslation();

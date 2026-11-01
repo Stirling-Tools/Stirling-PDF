@@ -1,11 +1,11 @@
 // Heuristic (non-AI) document classifier: string/regex/structural scoring over
 // extracted text, filename and metadata. Rules lazy-load per detected language.
 
-import LANGUAGE_DATA from "@app/services/heuristic/rules/languages.json";
+import LANGUAGE_DATA from "@editor/services/heuristic/rules/languages.json";
 import {
   LANGUAGE_PACKS,
   loadCoreRules,
-} from "@app/services/heuristic/rules/index";
+} from "@editor/services/heuristic/rules/index";
 import type {
   HeuristicConfidence,
   HeuristicDoc,
@@ -13,7 +13,7 @@ import type {
   HeuristicResult,
   LanguageCandidate,
   LanguageDetection,
-} from "@app/services/heuristic/types";
+} from "@editor/services/heuristic/types";
 
 export type {
   HeuristicConfidence,

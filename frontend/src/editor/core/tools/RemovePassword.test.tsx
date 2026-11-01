@@ -2,14 +2,17 @@ import type { ReactNode } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import RemovePassword from "@app/tools/RemovePassword";
-import apiClient from "@app/services/apiClient";
+import RemovePassword from "@editor/tools/RemovePassword";
+import apiClient from "@editor/services/apiClient";
 import {
   clearPdfAccess,
   rememberPdfAccess,
   type PdfAccess,
-} from "@app/services/pdfAccessService";
-import { createStirlingFile, type StirlingFile } from "@app/types/fileContext";
+} from "@editor/services/pdfAccessService";
+import {
+  createStirlingFile,
+  type StirlingFile,
+} from "@editor/types/fileContext";
 
 const state = vi.hoisted(() => ({
   files: [] as StirlingFile[],
@@ -18,22 +21,25 @@ const state = vi.hoisted(() => ({
   requestOwner: vi.fn(),
   ownerPassword: "owner",
 }));
-vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@editor/services/apiClient", () => ({ default: { post: vi.fn() } }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useFileContext: () => ({
     actions: { requestPdfOwnerAccess: state.requestOwner },
   }),
 }));
-vi.mock("@app/hooks/tools/removePassword/useRemovePasswordOperation", () => ({
-  useRemovePasswordOperation: vi.fn(),
-}));
-vi.mock("@app/components/tooltips/useRemovePasswordTips", () => ({
+vi.mock(
+  "@editor/hooks/tools/removePassword/useRemovePasswordOperation",
+  () => ({
+    useRemovePasswordOperation: vi.fn(),
+  }),
+);
+vi.mock("@editor/components/tooltips/useRemovePasswordTips", () => ({
   useRemovePasswordTips: () => ({}),
 }));
-vi.mock("@app/hooks/tools/shared/useBaseTool", () => ({
+vi.mock("@editor/hooks/tools/shared/useBaseTool", () => ({
   useBaseTool: () => ({
     selectedFiles: state.files,
     hasFiles: true,
@@ -46,7 +52,7 @@ vi.mock("@app/hooks/tools/shared/useBaseTool", () => ({
     },
   }),
 }));
-vi.mock("@app/components/tools/shared/createToolFlow", () => ({
+vi.mock("@editor/components/tools/shared/createToolFlow", () => ({
   createToolFlow: (config: {
     steps: { content: ReactNode }[];
     executeButton: { paramsValid: boolean; onClick: () => Promise<void> };

@@ -1,16 +1,16 @@
 import { memo, useState, useEffect } from "react";
-import CoreToolButton from "@core/components/tools/toolPicker/ToolButton";
-import { getToolDisabledReason } from "@app/components/tools/fullscreen/shared";
+import CoreToolButton from "@editor-core/components/tools/toolPicker/ToolButton";
+import { getToolDisabledReason } from "@editor/components/tools/fullscreen/shared";
 import {
   useToolWorkflowActions,
   useToolWorkflowData,
-} from "@app/contexts/ToolWorkflowContext";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+} from "@editor/contexts/ToolWorkflowContext";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 import {
   connectionModeService,
   type ConnectionMode,
-} from "@app/services/connectionModeService";
+} from "@editor/services/connectionModeService";
 
 type CoreToolButtonProps = React.ComponentProps<typeof CoreToolButton>;
 

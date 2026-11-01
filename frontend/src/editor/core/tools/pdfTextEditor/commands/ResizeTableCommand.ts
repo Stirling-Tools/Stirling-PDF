@@ -1,8 +1,8 @@
-import { locateTable } from "@app/tools/pdfTextEditor/util/locateTable";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
+import { locateTable } from "@editor/tools/pdfTextEditor/util/locateTable";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
 import {
   moveColumnEdge,
   moveRowEdge,
@@ -10,7 +10,7 @@ import {
   resizeRowTrack,
   scaleColumnEdges,
   scaleRowEdges,
-} from "@app/tools/pdfTextEditor/util/tableGeometry";
+} from "@editor/tools/pdfTextEditor/util/tableGeometry";
 import {
   absoluteFontScale,
   applyCellPlacement,
@@ -19,8 +19,8 @@ import {
   redrawGrid,
   setTableEdges,
   shiftRunBy,
-} from "@app/tools/pdfTextEditor/commands/tableHelpers";
-import { SetFontSizeCommand } from "@app/tools/pdfTextEditor/commands/SetFontSizeCommand";
+} from "@editor/tools/pdfTextEditor/commands/tableHelpers";
+import { SetFontSizeCommand } from "@editor/tools/pdfTextEditor/commands/SetFontSizeCommand";
 
 // A geometry gesture, in PDF points. "col-edge"/"row-edge" move one internal
 // boundary, resizing only the two tracks it separates; "scale" resizes the

@@ -1,18 +1,18 @@
 import type { ReactNode } from "react";
 import { Fragment, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Skeleton } from "@app/ui";
-import { useTier } from "@portal/contexts/TierContext";
-import { EDITOR_URL } from "@portal/auth/editorUrl";
+import { Button, Skeleton } from "@editor/ui";
+import { useTier } from "@processor/contexts/TierContext";
+import { EDITOR_URL } from "@processor/auth/editorUrl";
 import {
   useEditorDeployment,
   useFleetStats,
-} from "@portal/queries/infrastructure";
-import { type EditorInstance } from "@portal/api/editorDeploy";
-import { DownloadEditorModal } from "@portal/components/DownloadEditorModal";
-import "@portal/theme/surface.css";
-import { BrandTile } from "@app/components/shared/BrandTile";
-import "@portal/components/EditorStatusCard.css";
+} from "@processor/queries/infrastructure";
+import { type EditorInstance } from "@processor/api/editorDeploy";
+import { DownloadEditorModal } from "@processor/components/DownloadEditorModal";
+import "@processor/theme/surface.css";
+import { BrandTile } from "@editor/components/shared/BrandTile";
+import "@processor/components/EditorStatusCard.css";
 
 /** The instance to headline: the busiest healthy one, else the first. */
 function primaryInstance(instances: EditorInstance[]): EditorInstance | null {

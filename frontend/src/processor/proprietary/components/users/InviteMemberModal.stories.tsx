@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
-import type { Team } from "@portal/api/teams";
+import { InviteMemberModal } from "@processor/components/users/InviteMemberModal";
+import type { Team } from "@processor/api/teams";
 
 const TEAMS: Team[] = [
   { id: 1, name: "Default", userCount: 4, owners: [] },

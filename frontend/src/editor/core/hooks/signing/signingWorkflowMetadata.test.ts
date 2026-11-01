@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildWorkflowMetadata } from "@app/hooks/signing/useSigningSessionController";
+import { buildWorkflowMetadata } from "@editor/hooks/signing/useSigningSessionController";
 
 describe("buildWorkflowMetadata", () => {
   it("carries every appearance setting the owner configured", () => {

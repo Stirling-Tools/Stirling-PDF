@@ -1,8 +1,8 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PolicyPiiField } from "@app/components/policies/PolicyPiiField";
-import { PII_PRESETS } from "@app/data/policyDefinitions";
-import type { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
+import { PolicyPiiField } from "@editor/components/policies/PolicyPiiField";
+import { PII_PRESETS } from "@editor/data/policyDefinitions";
+import type { RedactParameters } from "@editor/hooks/tools/redact/useRedactParameters";
 
 const BASE_PARAMETERS: RedactParameters = {
   mode: "automatic",

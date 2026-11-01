@@ -1,10 +1,10 @@
 import type React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
-import { FileContextProvider } from "@app/contexts/FileContext";
-import { FolderProvider } from "@app/contexts/FolderContext";
-import { FilesPageProvider } from "@app/contexts/FilesPageContext";
-import { ROOT_FOLDER_ID } from "@app/types/folder";
+import { FolderTreeSidebar } from "@editor/components/filesPage/FolderTreeSidebar";
+import { FileContextProvider } from "@editor/contexts/FileContext";
+import { FolderProvider } from "@editor/contexts/FolderContext";
+import { FilesPageProvider } from "@editor/contexts/FilesPageContext";
+import { ROOT_FOLDER_ID } from "@editor/types/folder";
 
 /** Folder and library providers need IndexedDB; no seeded folders leaves only the pinned views. */
 function withFolderContexts(Story: () => React.JSX.Element) {

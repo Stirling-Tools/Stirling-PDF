@@ -3,10 +3,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   decodedToState,
   fetchPoliciesByCategory,
-} from "@app/services/policyBackend";
+} from "@editor/services/policyBackend";
 
 const listPolicies = vi.fn();
-vi.mock("@app/services/policyApi", () => ({
+vi.mock("@editor/services/policyApi", () => ({
   listPolicies: () => listPolicies(),
 }));
 

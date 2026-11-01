@@ -1,4 +1,4 @@
-import { useAuth } from "@app/auth/UseSession";
+import { useAuth } from "@editor/auth/UseSession";
 
 /** Guests cannot load or run policies, including browser-side classification. */
 export function usePoliciesEnabled(): boolean {

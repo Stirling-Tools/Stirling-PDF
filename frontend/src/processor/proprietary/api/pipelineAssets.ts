@@ -1,5 +1,5 @@
-import { apiClient } from "@portal/api/http";
-import { type AssetId } from "@app/hooks/tools/shared/toolAutomation";
+import { apiClient } from "@processor/api/http";
+import { type AssetId } from "@editor/hooks/tools/shared/toolAutomation";
 
 export { type AssetId };
 

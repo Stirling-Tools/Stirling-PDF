@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Anchor, Group, Stack, Text, Paper } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import ApiKeySection from "@app/components/shared/config/configSections/apiKeys/ApiKeySection";
-import RefreshModal from "@app/components/shared/config/configSections/apiKeys/RefreshModal";
-import useApiKey from "@app/components/shared/config/configSections/apiKeys/hooks/useApiKey";
-import SkeletonLoader from "@app/components/shared/SkeletonLoader";
+import { Button } from "@editor/ui/Button";
+import ApiKeySection from "@editor/components/shared/config/configSections/apiKeys/ApiKeySection";
+import RefreshModal from "@editor/components/shared/config/configSections/apiKeys/RefreshModal";
+import useApiKey from "@editor/components/shared/config/configSections/apiKeys/hooks/useApiKey";
+import SkeletonLoader from "@editor/components/shared/SkeletonLoader";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
-import { isUserAnonymous } from "@app/auth/supabase";
+import { useAuth } from "@editor/auth/UseSession";
+import { isUserAnonymous } from "@editor/auth/supabase";
 
 export default function ApiKeys() {
   const [copied, setCopied] = useState<string | null>(null);

@@ -8,8 +8,8 @@ import {
   Group,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import NumberInputWithUnit from "@app/components/tools/shared/NumberInputWithUnit";
-import { RemoveBlanksParameters } from "@app/hooks/tools/removeBlanks/useRemoveBlanksParameters";
+import NumberInputWithUnit from "@editor/components/tools/shared/NumberInputWithUnit";
+import { RemoveBlanksParameters } from "@editor/hooks/tools/removeBlanks/useRemoveBlanksParameters";
 
 interface RemoveBlanksSettingsProps {
   parameters: RemoveBlanksParameters;

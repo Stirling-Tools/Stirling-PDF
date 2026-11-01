@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useAuth } from "@app/auth";
-import { AuthContext } from "@app/auth/context";
+import { useAuth } from "@editor/auth";
+import { AuthContext } from "@editor/auth/context";
 import { http, HttpResponse } from "msw";
-import { LinkAccountModal } from "@portal/components/account-link/LinkAccountModal";
+import { LinkAccountModal } from "@processor/components/account-link/LinkAccountModal";
 
 const meta: Meta<typeof LinkAccountModal> = {
   title: "Portal/AccountLink/LinkAccountModal",

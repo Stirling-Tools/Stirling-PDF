@@ -1,4 +1,4 @@
-import "@app/components/shared/dividerWithText/DividerWithText.css";
+import "@editor/components/shared/dividerWithText/DividerWithText.css";
 
 interface TextDividerProps {
   text?: string;

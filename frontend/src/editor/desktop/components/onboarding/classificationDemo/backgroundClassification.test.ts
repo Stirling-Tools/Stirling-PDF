@@ -8,7 +8,7 @@ import {
   resetBackgroundClassificationForTests,
   startBackgroundClassification,
   type StartBackgroundClassificationOptions,
-} from "@app/components/onboarding/classificationDemo/backgroundClassification";
+} from "@editor/components/onboarding/classificationDemo/backgroundClassification";
 
 const request: StartBackgroundClassificationOptions = {
   directory: "/Users/me/Downloads",

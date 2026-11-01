@@ -11,7 +11,7 @@ import {
   TableTd,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { EndpointStatistic } from "@app/services/usageAnalyticsService";
+import { EndpointStatistic } from "@editor/services/usageAnalyticsService";
 
 interface UsageAnalyticsTableProps {
   data: EndpointStatistic[];

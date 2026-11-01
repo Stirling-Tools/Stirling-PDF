@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { LibraryPickerModal } from "@app/components/filesPage/LibraryPickerModal";
-import { LibraryFilePicker } from "@app/components/filesPage/LibraryFilePicker";
-import { useFilesPage } from "@app/contexts/FilesPageContext";
-import { alert, dismissToast } from "@app/components/toast";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FolderId } from "@app/types/folder";
+import { LibraryPickerModal } from "@editor/components/filesPage/LibraryPickerModal";
+import { LibraryFilePicker } from "@editor/components/filesPage/LibraryFilePicker";
+import { useFilesPage } from "@editor/contexts/FilesPageContext";
+import { alert, dismissToast } from "@editor/components/toast";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FolderId } from "@editor/types/folder";
 
 /** Uploads continue after dismissal, without changing the underlying library navigation. */
 export function AddToLibraryModal({

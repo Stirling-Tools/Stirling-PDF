@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ToolChain from "@app/components/shared/ToolChain";
-import { ToolOperation } from "@app/types/file";
+import ToolChain from "@editor/components/shared/ToolChain";
+import { ToolOperation } from "@editor/types/file";
 
 function op(toolId: ToolOperation["toolId"], timestamp: number): ToolOperation {
   return { toolId, timestamp };

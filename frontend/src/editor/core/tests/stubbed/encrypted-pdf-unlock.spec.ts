@@ -9,8 +9,8 @@ import fs from "fs";
 import { createHash } from "node:crypto";
 import { PDFDocument } from "@cantoo/pdf-lib";
 import JSZip from "jszip";
-import { mockAppApis } from "@app/tests/helpers/api-stubs";
-import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
+import { mockAppApis } from "@editor/tests/helpers/api-stubs";
+import { suppressNativeFilePicker } from "@editor/tests/helpers/ui-helpers";
 
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const ENCRYPTED_PDF = path.join(FIXTURES_DIR, "encrypted.pdf");

@@ -1,8 +1,8 @@
 import { type RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
-import type { FlowOutcome } from "@portal/api/processorFlow";
-import { OutcomeIcon } from "@portal/components/processor-flow/FlowIcons";
+import { Button } from "@editor/ui";
+import type { FlowOutcome } from "@processor/api/processorFlow";
+import { OutcomeIcon } from "@processor/components/processor-flow/FlowIcons";
 
 interface FlowOutcomesProps {
   outcomes: FlowOutcome[];

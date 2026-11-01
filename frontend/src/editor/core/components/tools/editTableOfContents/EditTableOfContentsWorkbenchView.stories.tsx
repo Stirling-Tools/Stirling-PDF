@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import EditTableOfContentsWorkbenchView, {
   type EditTableOfContentsWorkbenchViewData,
-} from "@app/components/tools/editTableOfContents/EditTableOfContentsWorkbenchView";
-import { createBookmarkNode } from "@app/utils/editTableOfContents";
+} from "@editor/components/tools/editTableOfContents/EditTableOfContentsWorkbenchView";
+import { createBookmarkNode } from "@editor/utils/editTableOfContents";
 
 const meta = {
   title: "Tools/EditTableOfContents/EditTableOfContentsWorkbenchView",

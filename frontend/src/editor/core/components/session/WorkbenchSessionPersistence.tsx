@@ -5,20 +5,20 @@ import { useTranslation } from "react-i18next";
 import {
   FileStoreContext,
   type FileStateStore,
-} from "@app/contexts/file/contexts";
-import { useFileActions } from "@app/contexts/FileContext";
+} from "@editor/contexts/file/contexts";
+import { useFileActions } from "@editor/contexts/FileContext";
 import {
   useNavigationActions,
   useNavigationState,
-} from "@app/contexts/NavigationContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useAuth } from "@app/auth/UseSession";
+} from "@editor/contexts/NavigationContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useAuth } from "@editor/auth/UseSession";
 import { useLocation } from "react-router-dom";
-import { isAuthRoute } from "@app/constants/routes";
-import { fileStorage } from "@app/services/fileStorage";
-import { alert } from "@app/components/toast";
-import { WORKBENCH_SESSION_RESTORE } from "@app/constants/featureFlags";
-import { launchFilesPending } from "@app/services/launchFiles";
+import { isAuthRoute } from "@editor/constants/routes";
+import { fileStorage } from "@editor/services/fileStorage";
+import { alert } from "@editor/components/toast";
+import { WORKBENCH_SESSION_RESTORE } from "@editor/constants/featureFlags";
+import { launchFilesPending } from "@editor/services/launchFiles";
 import {
   beginRestoredView,
   clearWorkbenchSession,
@@ -29,10 +29,10 @@ import {
   originalIdOf,
   readWorkbenchSession,
   writeWorkbenchSession,
-} from "@app/services/workbenchSession";
-import type { WorkbenchType } from "@app/types/workbench";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+} from "@editor/services/workbenchSession";
+import type { WorkbenchType } from "@editor/types/workbench";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const WRITE_DEBOUNCE_MS = 300;
 

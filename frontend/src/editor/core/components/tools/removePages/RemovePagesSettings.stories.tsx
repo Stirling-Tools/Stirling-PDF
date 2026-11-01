@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import RemovePagesSettings from "@app/components/tools/removePages/RemovePagesSettings";
-import { RemovePagesParameters } from "@app/hooks/tools/removePages/useRemovePagesParameters";
+import RemovePagesSettings from "@editor/components/tools/removePages/RemovePagesSettings";
+import { RemovePagesParameters } from "@editor/hooks/tools/removePages/useRemovePagesParameters";
 
 const meta = {
   title: "Tools/RemovePages/RemovePagesSettings",

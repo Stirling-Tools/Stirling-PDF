@@ -1,10 +1,10 @@
-import { useAuth } from "@app/auth/UseSession";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { StartupSetup } from "@app/components/startup/StartupSetup";
-import LoginAgreementModal from "@app/components/shared/LoginAgreementModal";
-import { useCookieConsentInitialization } from "@app/hooks/useCookieConsentInitialization";
-import { usePosthogTracking } from "@app/hooks/usePosthogTracking";
-import { useScarfTracking } from "@app/hooks/useScarfTracking";
+import { useAuth } from "@editor/auth/UseSession";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { StartupSetup } from "@editor/components/startup/StartupSetup";
+import LoginAgreementModal from "@editor/components/shared/LoginAgreementModal";
+import { useCookieConsentInitialization } from "@editor/hooks/useCookieConsentInitialization";
+import { usePosthogTracking } from "@editor/hooks/usePosthogTracking";
+import { useScarfTracking } from "@editor/hooks/useScarfTracking";
 
 function StartupTracking() {
   useCookieConsentInitialization();

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import RemoveBlanksSettings from "@app/components/tools/removeBlanks/RemoveBlanksSettings";
-import { RemoveBlanksParameters } from "@app/hooks/tools/removeBlanks/useRemoveBlanksParameters";
+import RemoveBlanksSettings from "@editor/components/tools/removeBlanks/RemoveBlanksSettings";
+import { RemoveBlanksParameters } from "@editor/hooks/tools/removeBlanks/useRemoveBlanksParameters";
 
 const buildParameters = (
   overrides: Partial<RemoveBlanksParameters> = {},

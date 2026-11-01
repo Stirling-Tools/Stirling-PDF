@@ -3,9 +3,9 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
 import { useHistoryCapability } from "@embedpdf/plugin-history/react";
-import { Icon } from "@app/ui/Icon";
-import type { AnnotationMenuAnchor } from "@app/components/viewer/viewerTypes";
-import "@app/components/viewer/TextSelectionMenu.css";
+import { Icon } from "@editor/ui/Icon";
+import type { AnnotationMenuAnchor } from "@editor/components/viewer/viewerTypes";
+import "@editor/components/viewer/TextSelectionMenu.css";
 
 interface AnnotationDeletedMenuProps {
   anchor: AnnotationMenuAnchor | null;

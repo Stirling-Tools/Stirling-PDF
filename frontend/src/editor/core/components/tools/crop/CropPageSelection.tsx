@@ -1,7 +1,7 @@
 import { Stack, TextInput } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
-import { validatePageNumbers } from "@app/utils/pageSelection";
+import { validatePageNumbers } from "@editor/utils/pageSelection";
 
 interface CropPageSelectionProps {
   value: string;

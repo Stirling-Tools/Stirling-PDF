@@ -1,6 +1,6 @@
 import { Stack, Text, Tooltip } from "@mantine/core";
-import FitText from "@app/components/shared/FitText";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import FitText from "@editor/components/shared/FitText";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 
 export interface ButtonOption<T> {
   value: T;

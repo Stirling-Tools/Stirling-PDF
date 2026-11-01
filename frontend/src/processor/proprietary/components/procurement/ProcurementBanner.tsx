@@ -1,6 +1,6 @@
-import { useUI } from "@portal/contexts/UIContext";
-import { DealStatusHero } from "@portal/components/procurement/DealStatusHero";
-import type { ProcurementController } from "@portal/components/procurement/useProcurement";
+import { useUI } from "@processor/contexts/UIContext";
+import { DealStatusHero } from "@processor/components/procurement/DealStatusHero";
+import type { ProcurementController } from "@processor/components/procurement/useProcurement";
 
 /**
  * The deal-status hero and the dialogs must share the same controller instance.

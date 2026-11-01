@@ -1,18 +1,18 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import { useDownloadsProcessing } from "@app/hooks/useDownloadsProcessing";
+import { useDownloadsProcessing } from "@editor/hooks/useDownloadsProcessing";
 import {
   claimRun,
   endClassificationDemo,
   useClassificationDemoSession,
-} from "@app/components/onboarding/classificationDemo/classificationDemoSession";
-import { resolveDownloadsDirectory } from "@app/components/onboarding/classificationDemo/classificationDemoSweep";
+} from "@editor/components/onboarding/classificationDemo/classificationDemoSession";
+import { resolveDownloadsDirectory } from "@editor/components/onboarding/classificationDemo/classificationDemoSweep";
 import { readDir } from "@tauri-apps/plugin-fs";
 
 vi.mock("@tauri-apps/plugin-fs", () => ({ readDir: vi.fn() }));
 
 vi.mock(
-  "@app/components/onboarding/classificationDemo/classificationDemoSweep",
+  "@editor/components/onboarding/classificationDemo/classificationDemoSweep",
   () => ({
     CLASSIFICATION_DEMO_BATCH_SIZE: 10,
     resolveDownloadsDirectory: vi.fn(),

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AuditEventsTable from "@app/components/shared/config/configSections/audit/AuditEventsTable";
+import AuditEventsTable from "@editor/components/shared/config/configSections/audit/AuditEventsTable";
 
 /**
  * Table of audit events with sorting, an event-details modal, and pagination.

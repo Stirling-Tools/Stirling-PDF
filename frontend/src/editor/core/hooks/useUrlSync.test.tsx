@@ -2,24 +2,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useRef, type ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
-import type { ToolId } from "@app/types/toolId";
+import type { ToolId } from "@editor/types/toolId";
 
 const h = vi.hoisted(() => ({
   toolRoute: vi.fn(() => "/compress"),
   editorHomeRoute: vi.fn(() => null),
 }));
 
-vi.mock("@app/utils/urlRouting", () => ({
+vi.mock("@editor/utils/urlRouting", () => ({
   parseToolRoute: () => ({ workbench: "fileEditor", toolId: null }),
   toolRoute: h.toolRoute,
   editorHomeRoute: h.editorHomeRoute,
 }));
-vi.mock("@app/utils/scarfTracking", () => ({ firePixel: vi.fn() }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/utils/scarfTracking", () => ({ firePixel: vi.fn() }));
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { premiumEnabled: true } }),
 }));
 
-import { useNavigationUrlSync } from "@app/hooks/useUrlSync";
+import { useNavigationUrlSync } from "@editor/hooks/useUrlSync";
 
 const registry = {
   read: { name: "Read", workbench: "viewer" },

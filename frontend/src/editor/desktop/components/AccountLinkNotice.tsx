@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AccountLinkNotice as SelfHostedAccountLinkNotice } from "@proprietary/components/AccountLinkNotice";
+import { AccountLinkNotice as SelfHostedAccountLinkNotice } from "@editor-proprietary/components/AccountLinkNotice";
 import {
   connectionModeService,
   type ConnectionConfig,
-} from "@app/services/connectionModeService";
+} from "@editor/services/connectionModeService";
 import {
   clearAccountLinkBlock,
   useAccountLinkBlock,
-} from "@app/services/accountLinkBlock";
-import { useAuth } from "@app/auth";
-import apiClient from "@app/services/apiClient";
-import { openExternal } from "@app/platform/openExternal";
-import { alert } from "@app/components/toast";
-import type { FreeTierBalance } from "@app/components/account-link/FreeTierBalanceSummary";
+} from "@editor/services/accountLinkBlock";
+import { useAuth } from "@editor/auth";
+import apiClient from "@editor/services/apiClient";
+import { openExternal } from "@editor/platform/openExternal";
+import { alert } from "@editor/components/toast";
+import type { FreeTierBalance } from "@editor/components/account-link/FreeTierBalanceSummary";
 
 function billingUrl(config: ConnectionConfig): string | null {
   if (config.mode !== "selfhosted" || !config.server_config?.url) return null;

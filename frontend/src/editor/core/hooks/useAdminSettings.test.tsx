@@ -2,15 +2,15 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useAdminSettings } from "@app/hooks/useAdminSettings";
-import { qk } from "@app/query/keys";
+import { useAdminSettings } from "@editor/hooks/useAdminSettings";
+import { qk } from "@editor/query/keys";
 import {
   fetchAdminSection,
   putAdminSection,
   putAdminSettings,
-} from "@app/api/adminSettings";
+} from "@editor/api/adminSettings";
 
-vi.mock("@app/api/adminSettings", () => ({
+vi.mock("@editor/api/adminSettings", () => ({
   fetchAdminSection: vi.fn(),
   putAdminSection: vi.fn(),
   putAdminSettings: vi.fn(),

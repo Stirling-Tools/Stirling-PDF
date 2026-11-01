@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Logo } from "@app/ui/Logo";
+import { Logo } from "@editor/ui/Logo";
 
 const meta: Meta<typeof Logo> = {
   title: "Brand/Logo",

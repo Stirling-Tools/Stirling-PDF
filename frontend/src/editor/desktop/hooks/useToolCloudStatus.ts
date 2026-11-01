@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 
 /**
  * Desktop hook to check if a tool endpoint will use cloud backend

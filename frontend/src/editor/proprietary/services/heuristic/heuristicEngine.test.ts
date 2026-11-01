@@ -5,8 +5,8 @@ import {
   classifyHeuristic,
   detectLanguage,
   ensureRulesLoaded,
-} from "@app/services/heuristic/heuristicEngine";
-import type { HeuristicDoc } from "@app/services/heuristic/types";
+} from "@editor/services/heuristic/heuristicEngine";
+import type { HeuristicDoc } from "@editor/services/heuristic/types";
 
 beforeAll(async () => {
   await ensureRulesLoaded();

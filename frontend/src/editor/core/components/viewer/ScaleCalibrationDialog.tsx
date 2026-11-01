@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Group, Modal, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import type { MeasureScale, PagePoint } from "@app/utils/measurementTypes";
+import { Button } from "@editor/ui/Button";
+import type { MeasureScale, PagePoint } from "@editor/utils/measurementTypes";
 import {
   getUnitOptions,
   formatPaperDistance,
   validateRealDistance,
   calculateCalibratedScale,
   generateScaleLabel,
-} from "@app/utils/measurementUtils";
+} from "@editor/utils/measurementUtils";
 import {
   getLastCalibrationUnit,
   setLastCalibrationUnit,
-} from "@app/utils/measurementPreferences";
+} from "@editor/utils/measurementPreferences";
 
 // Result of user drawing measurement on PDF (from RulerOverlay)
 export interface ScaleCalibrationMeasurement {

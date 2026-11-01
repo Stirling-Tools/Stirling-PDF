@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
+import ToolLoadingFallback from "@editor/components/tools/ToolLoadingFallback";
 
 const meta: Meta<typeof ToolLoadingFallback> = {
   title: "Tools/ToolLoadingFallback",

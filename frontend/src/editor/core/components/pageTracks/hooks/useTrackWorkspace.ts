@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useMemo, useReducer } from "react";
-import { useFileState } from "@app/contexts/FileContext";
-import { FileId } from "@app/types/file";
-import { PageSize, TrackSource } from "@app/components/pageTracks/types";
-import { ProcessedFilePage } from "@app/types/fileContext";
-import { getPdfAccess } from "@app/services/pdfAccessService";
-import { isPdfFile } from "@app/utils/fileUtils";
-import { isPageImage } from "@app/components/pageTracks/trackFileKind";
+import { useFileState } from "@editor/contexts/FileContext";
+import { FileId } from "@editor/types/file";
+import { PageSize, TrackSource } from "@editor/components/pageTracks/types";
+import { ProcessedFilePage } from "@editor/types/fileContext";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
+import { isPdfFile } from "@editor/utils/fileUtils";
+import { isPageImage } from "@editor/components/pageTracks/trackFileKind";
 import {
   changedTrackIds,
   initialTrackEditorState,
   TrackEditorAction,
   TrackEditorState,
   trackEditorReducer,
-} from "@app/components/pageTracks/trackWorkspaceReducer";
+} from "@editor/components/pageTracks/trackWorkspaceReducer";
 
 export interface TrackWorkspaceHook {
   state: TrackEditorState;

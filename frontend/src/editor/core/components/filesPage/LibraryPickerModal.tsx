@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Modal } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { Z_INDEX_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
+import { Z_INDEX_FILE_MANAGER_MODAL } from "@editor/styles/zIndex";
 
 /** Unmounts tentative picker state on close; external pickers temporarily own focus. */
 export function LibraryPickerModal({

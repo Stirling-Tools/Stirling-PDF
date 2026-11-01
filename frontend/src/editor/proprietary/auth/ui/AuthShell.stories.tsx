@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { AuthShell } from "@app/auth/ui/AuthShell";
+import { AuthShell } from "@editor/auth/ui/AuthShell";
 
 /**
  * The login card shell shared by the editor and the portal: a centered card

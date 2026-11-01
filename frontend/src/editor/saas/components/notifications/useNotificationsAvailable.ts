@@ -1,4 +1,4 @@
-import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
+import { useQuickNavHost } from "@editor/contexts/QuickNavHostContext";
 
 /** The rail lives outside auth providers, so it reads the account published by the mounted app. */
 export function useNotificationsAvailable(): boolean {

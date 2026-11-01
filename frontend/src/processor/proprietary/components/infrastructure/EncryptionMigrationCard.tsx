@@ -8,14 +8,14 @@ import {
   StatTile,
   Modal,
   StatusBadge,
-} from "@app/ui";
-import { InfoHint } from "@portal/components/InfoHint";
-import type { StatusTone } from "@app/ui";
-import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
+} from "@editor/ui";
+import { InfoHint } from "@processor/components/InfoHint";
+import type { StatusTone } from "@editor/ui";
+import { SectionHeader } from "@processor/components/infrastructure/SectionHeader";
 import type {
   MigrationState,
   MigrationStatus,
-} from "@portal/api/storageEncryption";
+} from "@processor/api/storageEncryption";
 
 const STATE_TONE: Record<MigrationState, StatusTone> = {
   IDLE: "neutral",

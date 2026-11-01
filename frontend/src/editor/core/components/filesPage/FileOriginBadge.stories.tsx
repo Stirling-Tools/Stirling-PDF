@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
+import { FileOriginBadge } from "@editor/components/filesPage/FileOriginBadge";
 
 const meta: Meta<typeof FileOriginBadge> = {
   title: "FilesPage/FileOriginBadge",

@@ -8,11 +8,11 @@ import {
   PasswordInput,
   Divider,
 } from "@mantine/core";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { DrawingCanvas } from "@app/components/annotation/shared/DrawingCanvas";
-import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
-import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
-import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { DrawingCanvas } from "@editor/components/annotation/shared/DrawingCanvas";
+import { ImageUploader } from "@editor/components/annotation/shared/ImageUploader";
+import { TextInputWithFont } from "@editor/components/annotation/shared/TextInputWithFont";
+import { ColorPicker } from "@editor/components/annotation/shared/ColorPicker";
 
 type SignatureType = "canvas" | "image" | "text";
 type CertificateType = "SERVER" | "USER_CERT" | "UPLOAD";

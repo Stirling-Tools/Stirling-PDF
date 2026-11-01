@@ -1,18 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Mock the network + the run store so we can drive the poll loop deterministically.
-vi.mock("@app/services/policyApi", async (orig) => ({
-  ...(await orig<typeof import("@app/services/policyApi")>()),
+vi.mock("@editor/services/policyApi", async (orig) => ({
+  ...(await orig<typeof import("@editor/services/policyApi")>()),
   getPolicyRun: vi.fn(),
 }));
-vi.mock("@app/components/policies/policyRunStore", async (orig) => ({
-  ...(await orig<typeof import("@app/components/policies/policyRunStore")>()),
+vi.mock("@editor/components/policies/policyRunStore", async (orig) => ({
+  ...(await orig<
+    typeof import("@editor/components/policies/policyRunStore")
+  >()),
   updateRun: vi.fn(),
 }));
 
-import { poll } from "@app/components/policies/usePolicyAutoRun";
-import { getPolicyRun } from "@app/services/policyApi";
-import { updateRun } from "@app/components/policies/policyRunStore";
+import { poll } from "@editor/components/policies/usePolicyAutoRun";
+import { getPolicyRun } from "@editor/services/policyApi";
+import { updateRun } from "@editor/components/policies/policyRunStore";
 
 const getRun = vi.mocked(getPolicyRun);
 const update = vi.mocked(updateRun);

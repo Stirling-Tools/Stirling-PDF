@@ -1,12 +1,12 @@
 import {
   AdjustPageScaleParameters,
   PageSize,
-} from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
+} from "@editor/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
+} from "@editor/hooks/tools/shared/toolApiMapping";
 
 export const ADJUST_PAGE_SCALE_ENDPOINT =
   "/api/v1/general/scale-pages" satisfies ToolEndpoint;

@@ -5,14 +5,14 @@ import type {
   PolicyRunView,
   WirePipelineStep,
   WirePolicy,
-} from "@app/policies/types";
+} from "@editor/policies/types";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Seed data — real backend wire format                                      */
 /* ──────────────────────────────────────────────────────────────────────── */
 
 // Literal wire steps (not derived from the catalogue) so this fixtures module stays independent of
-// @portal/api/policies and its heavy tool-operation import graph.
+// @processor/api/policies and its heavy tool-operation import graph.
 const SECURITY_STEPS: WirePipelineStep[] = [
   {
     operation: "/api/v1/security/auto-redact",

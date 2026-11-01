@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import {
   ColorInput,
   Group,
@@ -9,14 +9,17 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { parseCssColor, toCssHex } from "@app/tools/pdfTextEditor/model/Color";
-import { familyOf } from "@app/tools/pdfTextEditor/util/fontFamily";
-import { FontFamilySelect } from "@app/tools/pdfTextEditor/components/FontFamilySelect";
+import { Button } from "@editor/ui/Button";
+import {
+  parseCssColor,
+  toCssHex,
+} from "@editor/tools/pdfTextEditor/model/Color";
+import { familyOf } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { FontFamilySelect } from "@editor/tools/pdfTextEditor/components/FontFamilySelect";
 import {
   NO_SHRINK,
   type Controller,
-} from "@app/tools/pdfTextEditor/components/toolbar/toolbarShared";
+} from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 
 interface FormatGroupProps {
   controller: Controller;

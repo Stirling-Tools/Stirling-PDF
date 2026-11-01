@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Card, CodeBlock } from "@app/ui";
-import { DocsSection } from "@core/components/docs/DocsSection";
+import { Card, CodeBlock } from "@editor/ui";
+import { DocsSection } from "@editor-core/components/docs/DocsSection";
 
 export function WebhooksSection() {
   const { t } = useTranslation();

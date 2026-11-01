@@ -7,20 +7,20 @@ import {
   type ReactElement,
 } from "react";
 import { Text, Loader, Stack } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
-import { createQuickKey, isStirlingFile } from "@app/types/fileContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useAllFiles, useFileManagement } from "@editor/contexts/FileContext";
+import { createQuickKey, isStirlingFile } from "@editor/types/fileContext";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { PdfAttachmentObject } from "@embedpdf/models";
 import { useTranslation } from "react-i18next";
-import { SidebarBase } from "@app/components/viewer/SidebarBase";
-import { detectNonPdfFileType, isPdfFile } from "@app/utils/fileUtils";
-import { readPortfolioMemberBytes } from "@app/utils/portfolioMembers";
-import { downloadFile } from "@app/services/downloadService";
-import "@app/components/viewer/AttachmentSidebar.css";
+import { SidebarBase } from "@editor/components/viewer/SidebarBase";
+import { detectNonPdfFileType, isPdfFile } from "@editor/utils/fileUtils";
+import { readPortfolioMemberBytes } from "@editor/utils/portfolioMembers";
+import { downloadFile } from "@editor/services/downloadService";
+import "@editor/components/viewer/AttachmentSidebar.css";
 
 interface AttachmentSidebarProps {
   visible: boolean;

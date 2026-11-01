@@ -16,10 +16,10 @@ const mocks = vi.hoisted(() => ({
   getStirlingFile: vi.fn(),
 }));
 
-vi.mock("@app/hooks/useAiEngineEnabled", () => ({
+vi.mock("@editor/hooks/useAiEngineEnabled", () => ({
   useAiEngineEnabled: () => true,
 }));
-vi.mock("@app/contexts/FileContext", () => ({
+vi.mock("@editor/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.workspace }),
   useFileManagement: () => ({
     addFiles: vi.fn(),
@@ -27,10 +27,10 @@ vi.mock("@app/contexts/FileContext", () => ({
   }),
   useFileContext: () => ({ consumeFiles: vi.fn() }),
 }));
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: vi.fn() }),
 }));
-vi.mock("@app/hooks/usePolicies", () => ({
+vi.mock("@editor/hooks/usePolicies", () => ({
   usePolicies: () => ({
     policies: {
       security: {
@@ -47,14 +47,14 @@ vi.mock("@app/hooks/usePolicies", () => ({
     },
   }),
 }));
-vi.mock("@app/services/policyApi", () => ({
+vi.mock("@editor/services/policyApi", () => ({
   runStoredPolicy: mocks.runStoredPolicy,
   getPolicyRun: mocks.getPolicyRun,
   listPolicyRuns: mocks.listPolicyRuns,
   downloadPolicyOutput: vi.fn(),
   resolvePolicyRunTarget: () => "saas",
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: mocks.getStirlingFile,
     getStirlingFileStub: vi.fn().mockResolvedValue(null),
@@ -63,11 +63,11 @@ vi.mock("@app/services/fileStorage", () => ({
   },
 }));
 
-import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
+import { usePolicyAutoRun } from "@editor/components/policies/usePolicyAutoRun";
 import {
   markDispatched,
   resetPolicyRuns,
-} from "@app/components/policies/policyRunStore";
+} from "@editor/components/policies/policyRunStore";
 
 beforeEach(() => {
   localStorage.clear();

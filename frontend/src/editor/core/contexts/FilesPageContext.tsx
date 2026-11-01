@@ -1,4 +1,4 @@
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 import React, {
   createContext,
   useCallback,
@@ -12,37 +12,37 @@ import { useTranslation } from "react-i18next";
 import i18n from "i18next";
 import { useNavigate } from "react-router-dom";
 
-import { FileId } from "@app/types/file";
-import { StirlingFileStub } from "@app/types/fileContext";
+import { FileId } from "@editor/types/file";
+import { StirlingFileStub } from "@editor/types/fileContext";
 import {
   FolderId,
   FolderKind,
   FolderRecord,
   ROOT_FOLDER_ID,
   folderKind,
-} from "@app/types/folder";
-import { fileStorage } from "@app/services/fileStorage";
-import { writeIntoMount } from "@app/services/mountWrites";
-import { folderSyncService } from "@app/services/folderSyncService";
-import { uploadHistoryChain } from "@app/services/serverStorageUpload";
-import { reconcileServerFiles } from "@app/services/fileSyncService";
-import { pruneMissingRecentFiles } from "@app/services/pruneMissingRecentFiles";
+} from "@editor/types/folder";
+import { fileStorage } from "@editor/services/fileStorage";
+import { writeIntoMount } from "@editor/services/mountWrites";
+import { folderSyncService } from "@editor/services/folderSyncService";
+import { uploadHistoryChain } from "@editor/services/serverStorageUpload";
+import { reconcileServerFiles } from "@editor/services/fileSyncService";
+import { pruneMissingRecentFiles } from "@editor/services/pruneMissingRecentFiles";
 import {
   deleteServerFile,
   type DeleteScope,
-} from "@app/services/serverStorageDelete";
+} from "@editor/services/serverStorageDelete";
 import {
   useIndexedDB,
   useIndexedDBRevision,
-} from "@app/contexts/IndexedDBContext";
-import { useFileActions } from "@app/contexts/file/fileHooks";
-import { useDiskLinkReconcile } from "@app/hooks/useDiskLinkReconcile";
-import { useCoalescedCallback } from "@app/hooks/useCoalescedCallback";
-import { useFolders } from "@app/contexts/FolderContext";
-import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
-import { useRoutedLibraryViewState } from "@app/components/filesPage/useRoutedLibraryViewState";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useAuth } from "@app/auth/UseSession";
+} from "@editor/contexts/IndexedDBContext";
+import { useFileActions } from "@editor/contexts/file/fileHooks";
+import { useDiskLinkReconcile } from "@editor/hooks/useDiskLinkReconcile";
+import { useCoalescedCallback } from "@editor/hooks/useCoalescedCallback";
+import { useFolders } from "@editor/contexts/FolderContext";
+import { getFileOrigin } from "@editor/components/filesPage/fileOrigin";
+import { useRoutedLibraryViewState } from "@editor/components/filesPage/useRoutedLibraryViewState";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useAuth } from "@editor/auth/UseSession";
 
 export const FILES_PAGE_VIEW_MODES = ["grid", "list"] as const;
 export type FilesPageViewMode = (typeof FILES_PAGE_VIEW_MODES)[number];

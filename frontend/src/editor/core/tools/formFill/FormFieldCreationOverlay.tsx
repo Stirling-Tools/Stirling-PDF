@@ -9,28 +9,28 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { useFormFill } from "@app/tools/formFill/FormFillContext";
-import { pendingSelectionName } from "@app/tools/formFill/pendingSelection";
-import type { CreatableFieldType } from "@app/tools/formFill/types";
+import { useFormFill } from "@editor/tools/formFill/FormFillContext";
+import { pendingSelectionName } from "@editor/tools/formFill/pendingSelection";
+import type { CreatableFieldType } from "@editor/tools/formFill/types";
 import {
   pixelsToBackendRect,
   backendRectToPixels,
   clampPixelRect,
   roundPdfRect,
   type PixelRect,
-} from "@app/tools/formFill/formCoordinateUtils";
+} from "@editor/tools/formFill/formCoordinateUtils";
 import {
   collectSnapTargets,
   snapMove,
   type SnapGuide,
-} from "@app/tools/formFill/formSnapUtils";
+} from "@editor/tools/formFill/formSnapUtils";
 import {
   usePageScale,
   getLocalPoint,
   isTextEntryTarget,
-} from "@app/tools/formFill/usePageScale";
-import { SnapGuides } from "@app/tools/formFill/SnapGuides";
-import { FORM_COLORS } from "@app/tools/formFill/formFieldColors";
+} from "@editor/tools/formFill/usePageScale";
+import { SnapGuides } from "@editor/tools/formFill/SnapGuides";
+import { FORM_COLORS } from "@editor/tools/formFill/formFieldColors";
 
 interface FormFieldCreationOverlayProps {
   documentId: string;

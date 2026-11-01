@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
-vi.mock("@app/services/specialErrorToasts", () => ({
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/services/specialErrorToasts", () => ({
   showSpecialErrorToast: vi.fn(() => false),
 }));
-vi.mock("@app/services/saasErrorInterceptor", () => ({
+vi.mock("@editor/services/saasErrorInterceptor", () => ({
   handleSaaSError: vi.fn(() => false),
 }));
-vi.mock("@app/services/errorUtils", () => ({
+vi.mock("@editor/services/errorUtils", () => ({
   broadcastErroredFiles: vi.fn(),
   extractErrorFileIds: vi.fn(() => []),
   normalizeAxiosErrorData: vi.fn(async (d: unknown) => d),
@@ -34,7 +34,7 @@ async function loadAt(base: string, pathname: string) {
     },
   });
   vi.resetModules();
-  return (await import("@app/services/httpErrorHandler")).handleHttpError;
+  return (await import("@editor/services/httpErrorHandler")).handleHttpError;
 }
 
 const unauthorized = {

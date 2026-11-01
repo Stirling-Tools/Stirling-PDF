@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
-import { buildLabelGroups } from "@app/components/shared/fileSidebarGroupingLogic";
-import type { SidebarCategory } from "@app/services/fileSidebarCategories";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import { buildLabelGroups } from "@editor/components/shared/fileSidebarGroupingLogic";
+import type { SidebarCategory } from "@editor/services/fileSidebarCategories";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 // The grouping only reads id/lastModified/classificationLabels. classificationLabels
 // hold label IDS (a file's stored classification), and categories key on ids too.

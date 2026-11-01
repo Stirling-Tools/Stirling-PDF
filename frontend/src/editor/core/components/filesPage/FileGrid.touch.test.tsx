@@ -1,17 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render as baseRender } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { FileGrid } from "@app/components/filesPage/FileGrid";
-import { FileContextProvider } from "@app/contexts/FileContext";
-import type { FileId } from "@app/types/file";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import { FileGrid } from "@editor/components/filesPage/FileGrid";
+import { FileContextProvider } from "@editor/contexts/FileContext";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
-vi.mock("@app/hooks/useIsMobile", () => ({
+vi.mock("@editor/hooks/useIsMobile", () => ({
   useIsMobile: () => true,
   useIsPhone: () => true,
   useIsTouch: () => true,
 }));
-vi.mock("@app/components/shared/PolicyBadges", () => ({
+vi.mock("@editor/components/shared/PolicyBadges", () => ({
   PolicyBadges: () => null,
 }));
 

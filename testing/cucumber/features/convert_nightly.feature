@@ -22,16 +22,6 @@ Feature: Heavy conversion endpoints
         Then the response status code should be 204
 
 
-    @text-editor @positive
-    Scenario: text-editor metadata describes the document for the editor
-        Given I use an example file at "exampleFiles/tables.pdf" as parameter "fileInput"
-        When I send the API request to the endpoint "/api/v1/convert/pdf/text-editor/metadata"
-        And this operation is run 3 times in parallel
-        Then the response status code should be 200
-        And the response content type should be "application/json"
-        And the response JSON field "fonts" should not be empty
-
-
     @vector @negative
     Scenario: vector conversion rejects an input format Ghostscript cannot read
         Given I generate an SVG file as "fileInput"

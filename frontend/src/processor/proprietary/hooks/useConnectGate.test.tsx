@@ -1,8 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
-import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { UIProvider } from "@portal/contexts/UIContext";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
+import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
+import { UIProvider } from "@processor/contexts/UIContext";
 
 /**
  * The gate answers two questions, and conflating them is the failure that matters: an instance
@@ -10,12 +10,12 @@ import { UIProvider } from "@portal/contexts/UIContext";
  * Pipelines, Policies, Users, Sources and Integrations on every default install with no way out.
  */
 const { json } = vi.hoisted(() => ({ json: vi.fn() }));
-vi.mock("@portal/api/http", () => ({
+vi.mock("@processor/api/http", () => ({
   apiClient: { local: { json } },
   errorMessage: (e: unknown) => String(e),
 }));
 
-import { useConnectGate } from "@portal/hooks/useConnectGate";
+import { useConnectGate } from "@processor/hooks/useConnectGate";
 
 function Probe() {
   const { gated, loading, available, error, retry } = useConnectGate();

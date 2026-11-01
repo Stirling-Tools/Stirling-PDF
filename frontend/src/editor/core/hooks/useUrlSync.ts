@@ -4,15 +4,15 @@
 
 import { useEffect, useCallback, useRef, type MutableRefObject } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ToolId } from "@app/types/toolId";
+import { ToolId } from "@editor/types/toolId";
 import {
   parseToolRoute,
   toolRoute,
   editorHomeRoute,
-} from "@app/utils/urlRouting";
-import { ToolRegistry } from "@app/data/toolsTaxonomy";
-import { firePixel } from "@app/utils/scarfTracking";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
+} from "@editor/utils/urlRouting";
+import { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { firePixel } from "@editor/utils/scarfTracking";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 /**
  * Hook to sync workbench and tool with URL using registry

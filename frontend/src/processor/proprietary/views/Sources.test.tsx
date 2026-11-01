@@ -4,12 +4,12 @@ import {
   render as baseRender,
   screen,
 } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { ReactNode } from "react";
-import type { SourcesResponse } from "@portal/api/sources";
-import { Sources } from "@portal/views/Sources";
-import { UIProvider } from "@portal/contexts/UIContext";
+import type { SourcesResponse } from "@processor/api/sources";
+import { Sources } from "@processor/views/Sources";
+import { UIProvider } from "@processor/contexts/UIContext";
 
 // The view uses the shared query hooks and the embedded SourceModal reads
 // useUI(), so wrap the query client + Mantine + the UI context.
@@ -32,7 +32,7 @@ vi.mock("react-i18next", () => ({
 
 const fetchSources = vi.fn();
 const fetchSource = vi.fn();
-vi.mock("@portal/api/sources", () => ({
+vi.mock("@processor/api/sources", () => ({
   fetchSources: () => fetchSources(),
   fetchSource: (id: string) => fetchSource(id),
   createSource: vi.fn(),
@@ -41,7 +41,7 @@ vi.mock("@portal/api/sources", () => ({
 }));
 
 const fetchS3Connections = vi.fn();
-vi.mock("@portal/api/integrations", () => ({
+vi.mock("@processor/api/integrations", () => ({
   fetchIntegrations: () => fetchS3Connections(),
   // Custom-API authoring is a server decision; these tests assert the default view.
   fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),

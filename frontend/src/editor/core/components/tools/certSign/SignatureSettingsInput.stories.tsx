@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import SignatureSettingsInput, {
   SignatureSettings,
-} from "@app/components/tools/certSign/SignatureSettingsInput";
+} from "@editor/components/tools/certSign/SignatureSettingsInput";
 
 const meta = {
   title: "Tools/CertSign/SignatureSettingsInput",

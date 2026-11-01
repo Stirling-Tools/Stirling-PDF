@@ -1,20 +1,20 @@
 import { useTranslation } from "react-i18next";
-import type { SavedSignature } from "@app/types/signature";
-import { SignatureSection } from "@app/components/tools/sign/wallet/SignatureSection";
+import type { SavedSignature } from "@editor/types/signature";
+import { SignatureSection } from "@editor/components/tools/sign/wallet/SignatureSection";
 import {
   NewSignatureTile,
   SignatureTile,
-} from "@app/components/tools/sign/wallet/SignatureTile";
+} from "@editor/components/tools/sign/wallet/SignatureTile";
 import {
   draftSignatureActions,
   savedSignatureActions,
-} from "@app/components/tools/sign/wallet/signatureTileActions";
-import type { SignatureLibrary } from "@app/components/tools/sign/wallet/useSignatureLibrary";
-import type { SignaturePlacement } from "@app/components/tools/sign/wallet/useSignaturePlacement";
+} from "@editor/components/tools/sign/wallet/signatureTileActions";
+import type { SignatureLibrary } from "@editor/components/tools/sign/wallet/useSignatureLibrary";
+import type { SignaturePlacement } from "@editor/components/tools/sign/wallet/useSignaturePlacement";
 import {
   DRAFT_KEY,
   toWalletEntry,
-} from "@app/components/tools/sign/wallet/walletEntry";
+} from "@editor/components/tools/sign/wallet/walletEntry";
 
 interface SignatureLibraryViewProps {
   library: SignatureLibrary;

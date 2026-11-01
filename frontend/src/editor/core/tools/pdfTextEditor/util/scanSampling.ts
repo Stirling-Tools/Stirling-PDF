@@ -2,8 +2,8 @@ import type {
   PageRect,
   RGBA,
   TableSnapshot,
-} from "@app/tools/pdfTextEditor/types";
-import type { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
+} from "@editor/tools/pdfTextEditor/types";
+import type { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 
 /** What a scan actually looks like inside one cell. */
 export interface CellColors {

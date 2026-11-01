@@ -1,8 +1,8 @@
 import React from "react";
-import { FileDocIcon } from "@app/components/shared/FileDocIcon";
-import type { FileDocVariant } from "@app/components/shared/FileDocIcon";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import { detectFileExtension } from "@app/utils/fileUtils";
+import { FileDocIcon } from "@editor/components/shared/FileDocIcon";
+import type { FileDocVariant } from "@editor/components/shared/FileDocIcon";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import { detectFileExtension } from "@editor/utils/fileUtils";
 
 export const SPREADSHEET_EXTS = new Set(["csv", "xls", "xlsx", "ods"]);
 export const DOC_EXTS = new Set([

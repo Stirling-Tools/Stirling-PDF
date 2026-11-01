@@ -1,5 +1,5 @@
-import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
-import { getCachedFontGlyphMap } from "@app/tools/pdfTextEditor/charcode/CmapResolver";
+import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
+import { getCachedFontGlyphMap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 
 // Editability status of a font as the PDF text editor can determine it purely
 // client-side (from PDFium), without the backend JSON font model.

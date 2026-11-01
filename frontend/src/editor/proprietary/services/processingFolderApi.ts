@@ -3,9 +3,9 @@
  * The backend composes the source + policy pair behind the route.
  */
 
-import type { WireRoutingRule } from "@app/policies/types";
-import apiClient from "@app/services/apiClient";
-import { readDiskFile } from "@app/services/localFolderContents";
+import type { WireRoutingRule } from "@editor/policies/types";
+import apiClient from "@editor/services/apiClient";
+import { readDiskFile } from "@editor/services/localFolderContents";
 
 /** The classify step: identifies the document's type and tags it. No parameters. */
 export const CLASSIFY_OPERATION = "/api/v1/ai/tools/classify-and-label";

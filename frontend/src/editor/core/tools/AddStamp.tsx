@@ -3,20 +3,20 @@ import { useTranslation } from "react-i18next";
 import {
   createToolFlow,
   type MiddleStepConfig,
-} from "@app/components/tools/shared/createToolFlow";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
-import { useAddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
-import { useAddStampOperation } from "@app/components/tools/addStamp/useAddStampOperation";
+} from "@editor/components/tools/shared/createToolFlow";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
+import { useAddStampParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
+import { useAddStampOperation } from "@editor/components/tools/addStamp/useAddStampOperation";
 import { Stack, Text } from "@mantine/core";
-import StampPreview from "@app/components/tools/addStamp/StampPreview";
-import styles from "@app/components/tools/addStamp/StampPreview.module.css";
-import ButtonSelector from "@app/components/shared/ButtonSelector";
-import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
-import ObscuredOverlay from "@app/components/shared/ObscuredOverlay";
-import StampSetupSettings from "@app/components/tools/addStamp/StampSetupSettings";
-import StampPositionFormattingSettings from "@app/components/tools/addStamp/StampPositionFormattingSettings";
+import StampPreview from "@editor/components/tools/addStamp/StampPreview";
+import styles from "@editor/components/tools/addStamp/StampPreview.module.css";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
+import { useAccordionSteps } from "@editor/hooks/tools/shared/useAccordionSteps";
+import ObscuredOverlay from "@editor/components/shared/ObscuredOverlay";
+import StampSetupSettings from "@editor/components/tools/addStamp/StampSetupSettings";
+import StampPositionFormattingSettings from "@editor/components/tools/addStamp/StampPositionFormattingSettings";
 
 const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
@@ -109,8 +109,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       isVisible: hasFiles || hasResults,
       content: (
         <Stack gap="md" justify="space-between">
-          {/* Mode toggle: Quick grid vs Custom drag - only show for image stamps */}
-          {params.parameters.stampType === "image" && (
+          {params.parameters.stampType !== "text" && (
             <ButtonSelector
               value={quickPositionModeSelected ? "quick" : "custom"}
               onChange={(v: "quick" | "custom") => {
@@ -130,7 +129,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             />
           )}
 
-          {params.parameters.stampType === "image" &&
+          {params.parameters.stampType !== "text" &&
             customPositionModeSelected && (
               <div className={styles.informationContainer}>
                 <Text className={styles.informationText}>
@@ -141,7 +140,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
                 </Text>
               </div>
             )}
-          {params.parameters.stampType === "image" &&
+          {params.parameters.stampType !== "text" &&
             !customPositionModeSelected && (
               <div className={styles.informationContainer}>
                 <Text className={styles.informationText}>
@@ -163,7 +162,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           <ObscuredOverlay
             obscured={
               accordion.currentStep === AddStampStep.POSITION_FORMATTING &&
-              ((params.parameters.stampType === "text" &&
+              ((params.parameters.stampType !== "image" &&
                 params.parameters.stampText.trim().length === 0) ||
                 (params.parameters.stampType === "image" &&
                   !params.parameters.stampImage))

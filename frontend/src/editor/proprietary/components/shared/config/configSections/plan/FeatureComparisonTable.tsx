@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Badge, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { PlanFeature } from "@app/services/licenseService";
+import { PlanFeature } from "@editor/services/licenseService";
 
 interface PlanWithFeatures {
   name: string;

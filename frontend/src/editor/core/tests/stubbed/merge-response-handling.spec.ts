@@ -1,10 +1,10 @@
 import type { Page, Route } from "@playwright/test";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import {
   uploadFiles,
   switchToEditorIfViewerMode,
   runToolAndWaitForReview,
-} from "@app/tests/helpers/ui-helpers";
+} from "@editor/tests/helpers/ui-helpers";
 import path from "path";
 import fs from "fs";
 

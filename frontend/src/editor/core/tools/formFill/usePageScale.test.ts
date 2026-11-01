@@ -6,7 +6,7 @@ import { describe, it, expect } from "vitest";
 import {
   getLocalPoint,
   isTextEntryTarget,
-} from "@app/tools/formFill/usePageScale";
+} from "@editor/tools/formFill/usePageScale";
 
 /** An element whose un-rotated box is w x h, as it appears on screen after `turns`. */
 function rotatedElement(w: number, h: number, turns: number): HTMLElement {

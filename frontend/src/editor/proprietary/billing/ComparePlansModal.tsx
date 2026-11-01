@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Modal } from "@app/ui";
+import { Button, Modal } from "@editor/ui";
 
 export type ComparePlan = "free" | "team" | "enterprise";
 

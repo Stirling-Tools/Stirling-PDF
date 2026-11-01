@@ -1,5 +1,5 @@
-import { URL_TO_TOOL_MAP } from "@app/utils/urlMapping";
-import { BASE_PATH } from "@app/constants/app";
+import { URL_TO_TOOL_MAP } from "@editor/utils/urlMapping";
+import { BASE_PATH } from "@editor/constants/app";
 
 // "bpp" or "" — BASE_PATH without leading slash.
 const SUBPATH = BASE_PATH.replace(/^\//, "");

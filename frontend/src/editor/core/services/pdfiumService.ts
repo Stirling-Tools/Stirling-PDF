@@ -17,10 +17,13 @@ import {
   pdfiumWasmModulePromise,
   startEagerWasmCompilation,
   pdfiumWasmUrl,
-} from "@app/services/wasmPrecompiler";
-import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
+} from "@editor/services/wasmPrecompiler";
+import { runPdfiumScan } from "@editor/services/pdfiumScanQueue";
 import i18n from "i18next";
-import type { FormField, WidgetCoordinates } from "@app/tools/formFill/types";
+import type {
+  FormField,
+  WidgetCoordinates,
+} from "@editor/tools/formFill/types";
 
 export interface ExtendedPdfiumRuntime {
   HEAPU8: Uint8Array;

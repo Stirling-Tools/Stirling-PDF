@@ -4,7 +4,7 @@ import {
   CertificateSelector,
   CertificateType,
   UploadFormat,
-} from "@app/components/tools/certSign/CertificateSelector";
+} from "@editor/components/tools/certSign/CertificateSelector";
 
 const meta = {
   title: "Tools/CertSign/CertificateSelector",

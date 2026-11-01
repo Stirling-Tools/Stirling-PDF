@@ -1,11 +1,11 @@
 import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
-import { FileContextProvider } from "@app/contexts/FileContext";
-import { NavigationProvider } from "@app/contexts/NavigationContext";
-import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import { VersionHistoryModal } from "@editor/components/filesPage/VersionHistoryModal";
+import { FileContextProvider } from "@editor/contexts/FileContext";
+import { NavigationProvider } from "@editor/contexts/NavigationContext";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const mockFile: StirlingFileStub = {
   id: "file-3" as FileId,

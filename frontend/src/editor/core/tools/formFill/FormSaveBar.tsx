@@ -11,13 +11,13 @@
  */
 import React, { useCallback, useState } from "react";
 import { Stack, Group, Text, Transition, Paper, Badge } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { useFormFill } from "@app/tools/formFill/FormFillContext";
-import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
-import { getFormFillFileId } from "@app/types/fileContext";
+import { Icon } from "@editor/ui/Icon";
+import { useFormFill } from "@editor/tools/formFill/FormFillContext";
+import { downloadFileWithPolicy } from "@editor/services/exportWithPolicy";
+import { getFormFillFileId } from "@editor/types/fileContext";
 
 interface FormSaveBarProps {
   /** The current file being viewed */

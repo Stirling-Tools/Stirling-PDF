@@ -3,20 +3,20 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
-vi.mock("@app/services/processingFolderApi", () => ({
+vi.mock("@editor/services/processingFolderApi", () => ({
   fetchProcessingFolderRuns: vi.fn(),
 }));
 
-import { createAppQueryClient } from "@app/query/queryClient";
+import { createAppQueryClient } from "@editor/query/queryClient";
 import {
   fetchProcessingFolderRuns,
   type ProcessingFolderRun,
-} from "@app/services/processingFolderApi";
-import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
+} from "@editor/services/processingFolderApi";
+import { FolderSweepWall } from "@editor/components/policies/SweepRunWall";
 import {
   resetTabVisibility,
   setTabHidden,
-} from "@app/tests/utils/tabVisibility";
+} from "@editor/tests/utils/tabVisibility";
 
 const POLL_MS = 2000;
 const fetchRuns = vi.mocked(fetchProcessingFolderRuns);

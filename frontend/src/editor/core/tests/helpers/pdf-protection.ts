@@ -1,9 +1,9 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { init } from "@embedpdf/pdfium";
-import { readEncryptionDictionary } from "@app/tests/helpers/pdf-encryption";
+import { readEncryptionDictionary } from "@editor/tests/helpers/pdf-encryption";
 import type { Page } from "@playwright/test";
-import { liveApiHeaders } from "@app/tests/helpers/live-api";
+import { liveApiHeaders } from "@editor/tests/helpers/live-api";
 
 const require = createRequire(import.meta.url);
 const modulePromise = readFile(

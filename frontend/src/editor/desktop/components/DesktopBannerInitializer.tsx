@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import { useBanner } from "@app/contexts/BannerContext";
-import UpgradeBanner from "@app/components/shared/UpgradeBanner";
-import { TeamInvitationBanner } from "@app/components/shared/TeamInvitationBanner";
-import { SelfHostedOfflineBanner } from "@app/components/shared/SelfHostedOfflineBanner";
+import { useBanner } from "@editor/contexts/BannerContext";
+import UpgradeBanner from "@editor/components/shared/UpgradeBanner";
+import { TeamInvitationBanner } from "@editor/components/shared/TeamInvitationBanner";
+import { SelfHostedOfflineBanner } from "@editor/components/shared/SelfHostedOfflineBanner";
 
 export function DesktopBannerInitializer() {
   const { setBanner } = useBanner();

@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { Anchor, Paper, Stack } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import type { StorageSharingCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
+import type { StorageSharingCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
 
 /**
  * Server-side file storage and what may be shared from it. The Frontend URL it

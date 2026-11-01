@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ReviewSessionStep } from "@app/components/shared/signing/steps/ReviewSessionStep";
-import type { FileState } from "@app/types/file";
-import type { SignatureSettings } from "@app/components/tools/certSign/SignatureSettingsInput";
+import { ReviewSessionStep } from "@editor/components/shared/signing/steps/ReviewSessionStep";
+import type { FileState } from "@editor/types/file";
+import type { SignatureSettings } from "@editor/components/tools/certSign/SignatureSettingsInput";
 
 const selectedFile: FileState = {
   name: "contract-agreement.pdf",

@@ -1,12 +1,12 @@
 import { describe, expect, test, beforeEach } from "vitest";
 import "fake-indexeddb/auto";
 import { IDBFactory } from "fake-indexeddb";
-import { virtualFolderStorage } from "@app/services/virtualFolderStorage";
-import { folderStorage } from "@app/services/folderStorage";
+import { virtualFolderStorage } from "@editor/services/virtualFolderStorage";
+import { folderStorage } from "@editor/services/folderStorage";
 import {
   indexedDBManager,
   DATABASE_CONFIGS,
-} from "@app/services/indexedDBManager";
+} from "@editor/services/indexedDBManager";
 
 /**
  * Virtual folders have no server to be authoritative, so the invariants the

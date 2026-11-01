@@ -1,4 +1,4 @@
-import { apiClient } from "@portal/api/http";
+import { apiClient } from "@processor/api/http";
 
 /**
  * Access-control service layer: the ResourceGrant ACL the portal admin drives.

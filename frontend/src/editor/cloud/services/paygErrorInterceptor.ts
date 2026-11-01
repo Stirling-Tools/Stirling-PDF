@@ -25,7 +25,7 @@
 import {
   openFreeLimitModal,
   openSpendCapModal,
-} from "@app/components/usageLimitModals";
+} from "@editor/components/usageLimitModals";
 
 /**
  * Possible PAYG entitlement sentinels the EntitlementGuard returns.

@@ -1,15 +1,15 @@
 import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
 import { useInteractionManagerCapability } from "@embedpdf/plugin-interaction-manager/react";
 import {
   Z_INDEX_SIGNATURE_OVERLAY,
   Z_INDEX_SIGNATURE_OVERLAY_DELETE,
   Z_INDEX_SIGNATURE_OVERLAY_HANDLE,
-} from "@app/styles/zIndex";
-import type { SignaturePreview } from "@app/components/viewer/viewerTypes";
+} from "@editor/styles/zIndex";
+import type { SignaturePreview } from "@editor/components/viewer/viewerTypes";
 
 const DEFAULT_COLOR = "rgb(0, 122, 204)";
 const RESIZE_HANDLES = [

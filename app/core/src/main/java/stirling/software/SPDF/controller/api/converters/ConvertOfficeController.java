@@ -92,17 +92,37 @@ public class ConvertOfficeController {
             baseName = "input";
         }
 
-        // create temporary working directory
+        // The caller deletes it on success: the returned PDF lives in it.
         Path workDir = Files.createTempDirectory("office2pdf_");
+        boolean converted = false;
+        try {
+            File pdf =
+                    convertInWorkDir(
+                            inputFile, useStirlingOfficeConvert, extensionLower, baseName, workDir);
+            converted = true;
+            return pdf;
+        } finally {
+            if (!converted) {
+                FileUtils.deleteQuietly(workDir.toFile());
+            }
+        }
+    }
+
+    private File convertInWorkDir(
+            MultipartFile inputFile,
+            Boolean useStirlingOfficeConvert,
+            String extensionLower,
+            String baseName,
+            Path workDir)
+            throws IOException, InterruptedException {
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
         if (officeToPdfService.handles(extensionLower, useStirlingOfficeConvert)) {
-            if (convertInProcess(inputFile, extensionLower, workDir, inputPath, outputPath)) {
+            if (convertInProcess(inputFile, extensionLower, inputPath, outputPath)) {
                 return outputPath.toFile();
             }
         } else if (!officeConversionService.libreOfficeAvailable()) {
-            FileUtils.deleteQuietly(workDir.toFile());
             throw ExceptionUtils.createLibreOfficeRequiredException(extensionLower);
         }
 
@@ -221,33 +241,20 @@ public class ConvertOfficeController {
 
     /** False when LibreOffice should retry the file; the original upload is converted as is. */
     private boolean convertInProcess(
-            MultipartFile inputFile,
-            String extension,
-            Path workDir,
-            Path inputPath,
-            Path outputPath)
+            MultipartFile inputFile, String extension, Path inputPath, Path outputPath)
             throws IOException {
-        try {
-            // Same sanitizing and ZIP budget as the LibreOffice path; a refused file never falls
-            // back.
-            if (officeDocumentSanitizer.isSanitizableExtension(extension)) {
-                Files.write(
-                        inputPath,
-                        officeDocumentSanitizer.sanitize(inputFile.getBytes(), extension));
-            } else {
-                Files.copy(
-                        inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
-            }
-        } catch (IOException | RuntimeException e) {
-            FileUtils.deleteQuietly(workDir.toFile());
-            throw e;
+        // Same sanitizing and ZIP budget as the LibreOffice path; a refused file never falls back.
+        if (officeDocumentSanitizer.isSanitizableExtension(extension)) {
+            Files.write(
+                    inputPath, officeDocumentSanitizer.sanitize(inputFile.getBytes(), extension));
+        } else {
+            Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
         }
         try {
             officeToPdfService.convert(inputPath, outputPath);
             return true;
         } catch (IOException | RuntimeException e) {
             if (!officeToPdfService.canFallBack(e)) {
-                FileUtils.deleteQuietly(workDir.toFile());
                 throw e;
             }
             log.warn(

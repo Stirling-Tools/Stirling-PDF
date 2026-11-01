@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { allowConsole } from "@app/tests/failOnConsole";
+import { allowConsole } from "@editor/tests/failOnConsole";
 
 // Controllable auth state for the mocked provider. `portalAccess` is the collapsed
 // context value (raw user.portalAccess ?? isAdminRole(role)); `user.portalAccess`
@@ -20,20 +20,22 @@ const authState: {
   user: null,
 };
 
-vi.mock("@app/auth", () => ({
+vi.mock("@editor/auth", () => ({
   // Passthrough — we drive gating via the mocked useAuth below.
   AuthProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@app/auth/context", () => ({ useAuth: () => authState }));
+vi.mock("@editor/auth/context", () => ({ useAuth: () => authState }));
 // Passthrough too — the real one builds a Supabase client at import time, which
 // needs env this suite deliberately does not set.
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   AuthProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@app/ui", () => ({ Spinner: () => null }));
-vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
+vi.mock("@editor/ui", () => ({ Spinner: () => null }));
+vi.mock("@processor/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 
-import { PortalAuthBoundary } from "@portal/auth/PortalAuthBoundary";
+import { PortalAuthBoundary } from "@processor/auth/PortalAuthBoundary";
 
 function renderBoundary() {
   render(

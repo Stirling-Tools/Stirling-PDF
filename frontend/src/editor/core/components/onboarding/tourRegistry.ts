@@ -1,10 +1,10 @@
 import type { StepType } from "@reactour/tour";
 import type { TFunction } from "i18next";
-import type { useTourOrchestration } from "@app/contexts/TourOrchestrationContext";
-import type { useAdminTourOrchestration } from "@app/contexts/AdminTourOrchestrationContext";
-import { createAdminStepsConfig } from "@app/components/onboarding/adminStepsConfig";
-import { createUserStepsConfig } from "@app/components/onboarding/userStepsConfig";
-import { createWhatsNewStepsConfig } from "@app/components/onboarding/whatsNewStepsConfig";
+import type { useTourOrchestration } from "@editor/contexts/TourOrchestrationContext";
+import type { useAdminTourOrchestration } from "@editor/contexts/AdminTourOrchestrationContext";
+import { createAdminStepsConfig } from "@editor/components/onboarding/adminStepsConfig";
+import { createUserStepsConfig } from "@editor/components/onboarding/userStepsConfig";
+import { createWhatsNewStepsConfig } from "@editor/components/onboarding/whatsNewStepsConfig";
 
 type WorkbenchTourActions = ReturnType<typeof useTourOrchestration>;
 type AdminTourActions = ReturnType<typeof useAdminTourOrchestration>;

@@ -1,12 +1,12 @@
 import { useCallback, useRef } from "react";
-import { FileId } from "@app/types/fileContext";
-import { useAllFiles, useFileActions } from "@app/contexts/file/fileHooks";
+import { FileId } from "@editor/types/fileContext";
+import { useAllFiles, useFileActions } from "@editor/contexts/file/fileHooks";
 import {
   detachedFields,
   notifyOpenFileDeleted,
   saveOrphanAsCopy,
-} from "@app/services/diskFileSync";
-import type { DetachedOpenFile } from "@app/services/pruneMissingRecentFiles";
+} from "@editor/services/diskFileSync";
+import type { DetachedOpenFile } from "@editor/services/pruneMissingRecentFiles";
 
 // Shared reconcile wiring for the files page and the recent-files list: the detach
 // must reach the workbench stub too, or saves keep writing to the deleted path.

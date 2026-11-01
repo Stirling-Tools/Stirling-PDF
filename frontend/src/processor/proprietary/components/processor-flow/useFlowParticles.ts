@@ -1,5 +1,5 @@
 import { useEffect, useRef, type RefObject } from "react";
-import type { FlowOutcomeKey } from "@portal/api/processorFlow";
+import type { FlowOutcomeKey } from "@processor/api/processorFlow";
 import {
   cbez,
   coreEntryY,
@@ -14,7 +14,7 @@ import {
   type Lens,
   type Particle,
   type Point,
-} from "@portal/components/processor-flow/flowTypes";
+} from "@processor/components/processor-flow/flowTypes";
 
 interface FlowParticlesOptions {
   geoRef: RefObject<Geo | null>;

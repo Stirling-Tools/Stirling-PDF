@@ -23,13 +23,13 @@ import { useDocumentState } from "@embedpdf/core/react";
 import {
   useFormFill,
   useFieldValue,
-} from "@app/tools/formFill/FormFillContext";
-import { useViewer } from "@app/contexts/ViewerContext";
+} from "@editor/tools/formFill/FormFillContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import type {
   FormField,
   WidgetCoordinates,
   ButtonAction,
-} from "@app/tools/formFill/types";
+} from "@editor/tools/formFill/types";
 
 /**
  * Execute PDF JavaScript in a minimally sandboxed context.

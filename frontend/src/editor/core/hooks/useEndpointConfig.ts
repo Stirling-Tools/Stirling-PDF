@@ -3,12 +3,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchEndpointEnabled,
   fetchEndpointsAvailability,
-} from "@app/api/config";
-import { qk } from "@app/query/keys";
+} from "@editor/api/config";
+import { qk } from "@editor/query/keys";
 import i18n from "i18next";
-import { CONFIG_STALE_TIME } from "@app/query/staleTime";
-import { useJwtConfigSync } from "@app/hooks/useJwtConfigSync";
-import type { EndpointAvailabilityDetails } from "@app/types/endpointAvailability";
+import { CONFIG_STALE_TIME } from "@editor/query/staleTime";
+import { useJwtConfigSync } from "@editor/hooks/useJwtConfigSync";
+import type { EndpointAvailabilityDetails } from "@editor/types/endpointAvailability";
 
 const OPTIMISTIC: EndpointAvailabilityDetails = { enabled: true, reason: null };
 

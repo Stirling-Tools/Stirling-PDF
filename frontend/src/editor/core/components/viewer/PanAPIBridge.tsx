@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { usePan } from "@embedpdf/plugin-pan/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 
 /**
  * Connects the PDF pan (hand tool) plugin to the shared ViewerContext.

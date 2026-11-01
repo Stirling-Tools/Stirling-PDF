@@ -8,12 +8,12 @@
  *
  * Used in the dedicated formFill tool mode.
  */
-import type { FormField } from "@app/tools/formFill/types";
-import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
+import type { FormField } from "@editor/tools/formFill/types";
+import type { IFormDataProvider } from "@editor/tools/formFill/providers/types";
 import {
   fetchFormFieldsWithCoordinates,
   fillFormFields,
-} from "@app/tools/formFill/formApi";
+} from "@editor/tools/formFill/formApi";
 
 export class PdfBoxFormProvider implements IFormDataProvider {
   readonly name = "pdfbox";

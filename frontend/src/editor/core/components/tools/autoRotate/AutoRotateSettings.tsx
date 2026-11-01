@@ -1,11 +1,11 @@
 import { Stack, Text, NumberInput } from "@mantine/core";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { Checkbox } from "@app/ui/Checkbox";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { Checkbox } from "@editor/ui/Checkbox";
 import { useTranslation } from "react-i18next";
 import {
   AutoRotateParametersHook,
   AutoRotateDetectionMode,
-} from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
+} from "@editor/hooks/tools/autoRotate/useAutoRotateParameters";
 
 interface AutoRotateSettingsProps {
   parameters: AutoRotateParametersHook;

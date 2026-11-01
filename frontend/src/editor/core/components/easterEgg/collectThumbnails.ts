@@ -1,4 +1,4 @@
-import type { StirlingFileStub } from "@app/types/fileContext";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 /** The wall is 13x3, so more thumbnails than that would never be seen. */
 export const MAX_THUMBNAILS = 39;

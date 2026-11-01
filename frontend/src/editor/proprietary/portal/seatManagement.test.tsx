@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
-import type { LicenseInfo } from "@app/types/license";
+import type { LicenseInfo } from "@editor/types/license";
 
 const updateSeats = vi.hoisted(() => ({
   value: undefined as
@@ -11,14 +11,14 @@ const license = vi.hoisted(() => ({
   value: undefined as { licenseInfo: LicenseInfo | null } | undefined,
 }));
 
-vi.mock("@app/contexts/UpdateSeatsContext", () => ({
+vi.mock("@editor/contexts/UpdateSeatsContext", () => ({
   useOptionalUpdateSeats: () => updateSeats.value,
 }));
-vi.mock("@app/contexts/LicenseContext", () => ({
+vi.mock("@editor/contexts/LicenseContext", () => ({
   useOptionalLicense: () => license.value,
 }));
 
-import { useSeatManagement } from "@app/portal/seatManagement";
+import { useSeatManagement } from "@editor/portal/seatManagement";
 
 const provider = { openUpdateSeats: vi.fn(async () => {}), isLoading: false };
 

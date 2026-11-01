@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Select } from "@app/ui";
-import { RoutingRules } from "@app/components/policies/RoutingRules";
-import type { RoutingSetup } from "@app/components/policies/PolicySetupWizard";
+import { Select } from "@editor/ui";
+import { RoutingRules } from "@editor/components/policies/RoutingRules";
+import type { RoutingSetup } from "@editor/components/policies/PolicySetupWizard";
 
 export interface RoutingDestination {
   id: string;

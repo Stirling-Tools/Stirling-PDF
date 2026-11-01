@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ProgressBar } from "@app/ui/ProgressBar";
+import { ProgressBar } from "@editor/ui/ProgressBar";
 
 const meta: Meta<typeof ProgressBar> = {
   title: "Primitives/ProgressBar",

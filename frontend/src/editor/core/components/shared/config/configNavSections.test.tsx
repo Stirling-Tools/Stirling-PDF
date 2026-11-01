@@ -4,10 +4,10 @@ import type { TFunction } from "i18next";
 import {
   createPreferencesNavSection,
   extendPreferences,
-} from "@app/components/shared/config/configNavSections";
+} from "@editor/components/shared/config/configNavSections";
 import PreferencesSection, {
   type PreferencesSectionProps,
-} from "@app/components/shared/config/configSections/preferences/PreferencesSection";
+} from "@editor/components/shared/config/configSections/preferences/PreferencesSection";
 
 const t = ((key: string, fallback?: string) =>
   fallback ?? key) as unknown as TFunction<"translation", undefined>;

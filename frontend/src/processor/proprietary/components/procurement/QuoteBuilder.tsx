@@ -1,18 +1,18 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
-import { Icon } from "@app/ui/Icon";
-import { money } from "@portal/components/procurement/format";
+import { Button } from "@editor/ui";
+import { Icon } from "@editor/ui/Icon";
+import { money } from "@processor/components/procurement/format";
 import {
   buildQuote,
   recordLegalConsent,
   type QuoteConfigInput,
   type QuoteResult,
-} from "@portal/api/procurement";
-import { LegalDocumentModal } from "@portal/components/procurement/ProcurementExtras";
-import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
-import "@portal/theme/surface.css";
-import "@portal/views/Procurement.css";
+} from "@processor/api/procurement";
+import { LegalDocumentModal } from "@processor/components/procurement/ProcurementExtras";
+import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
+import "@processor/theme/surface.css";
+import "@processor/views/Procurement.css";
 
 const STEPS = ["volume", "plan", "details", "review"] as const;
 const DETAILS_STEP = 2;

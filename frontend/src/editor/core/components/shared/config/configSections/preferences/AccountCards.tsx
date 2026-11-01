@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Icon } from "@app/ui/Icon";
-import { SettingsCard } from "@app/components/shared/config/SettingsCard";
+import { Icon } from "@editor/ui/Icon";
+import { SettingsCard } from "@editor/components/shared/config/SettingsCard";
 import {
   Alert,
   Box,
@@ -12,16 +12,16 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { alert as showToast } from "@app/components/toast";
-import { useAuth } from "@app/auth/UseSession";
-import { accountService } from "@app/services/accountService";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { alert as showToast } from "@editor/components/toast";
+import { useAuth } from "@editor/auth/UseSession";
+import { accountService } from "@editor/services/accountService";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import { QRCodeSVG } from "qrcode.react";
-import { useAccountLogout } from "@app/extensions/accountLogout";
-import { BASE_PATH, withBasePath } from "@app/constants/app";
-import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
+import { useAccountLogout } from "@editor/extensions/accountLogout";
+import { BASE_PATH, withBasePath } from "@editor/constants/app";
+import { MfaSetupResponse } from "@editor/responses/Mfa/MfaResponse";
 
 /** The signed-in user's shape is layer-specific, so read fields defensively. */
 function userField(source: unknown, key: string): string | undefined {

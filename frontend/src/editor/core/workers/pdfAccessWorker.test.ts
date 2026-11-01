@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import type { PdfAccessRequest } from "@app/workers/pdfAccessWorker";
+import type { PdfAccessRequest } from "@editor/workers/pdfAccessWorker";
 
 const init = vi.hoisted(() => vi.fn());
 vi.mock("@embedpdf/pdfium", () => ({ init }));
-vi.mock("@app/utils/pdfiumAccess", () => ({
+vi.mock("@editor/utils/pdfiumAccess", () => ({
   readPdfiumAccess: () => ({ encrypted: false }),
 }));
 
@@ -37,7 +37,7 @@ beforeEach(async () => {
   vi.clearAllMocks();
   vi.stubGlobal("self", scope);
   vi.stubGlobal("fetch", vi.fn());
-  await import("@app/workers/pdfAccessWorker");
+  await import("@editor/workers/pdfAccessWorker");
 });
 afterEach(() => {
   vi.restoreAllMocks();

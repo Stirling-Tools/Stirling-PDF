@@ -13,7 +13,7 @@ import { describe, test, expect } from "vitest";
 import {
   buildMobileRouteUrl,
   buildMobileScannerUrl,
-} from "@app/utils/mobileScannerUrl";
+} from "@editor/utils/mobileScannerUrl";
 
 const sessionId = "abc-123";
 

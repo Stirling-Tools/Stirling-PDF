@@ -1,4 +1,4 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import path from "path";
 // Independent parser for the round-trip cross-check: the same @cantoo/pdf-lib
 // the fixture generators use.
@@ -6,7 +6,7 @@ import { PDFDocument } from "@cantoo/pdf-lib";
 import {
   stashCurrentDocument,
   waitForReopenedPage,
-} from "@app/tests/stubbed/saveHelpers";
+} from "@editor/tests/stubbed/saveHelpers";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
@@ -5988,8 +5988,8 @@ test.describe("PDF text editor - stress: overlay box width hugs the text", () =>
 });
 
 test.describe("PDF text editor - F-duplication regression (Sample.pdf tagline)", () => {
-  // This regression guards against the bug fixed by gating the per-char
-  // backend-emit branch on `!reuse`.
+  // This regression guards against duplicate glyphs when typing into a tagline
+  // run.
   test("typing a single F at end of tagline produces exactly one F", async ({
     page,
   }) => {

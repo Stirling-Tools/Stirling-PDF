@@ -1,4 +1,4 @@
-import { ProcessingError } from "@app/types/processing";
+import { ProcessingError } from "@editor/types/processing";
 import i18n from "i18next";
 
 export class ProcessingErrorHandler {

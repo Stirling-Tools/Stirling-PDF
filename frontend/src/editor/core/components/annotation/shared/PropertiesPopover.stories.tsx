@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PropertiesPopover } from "@app/components/annotation/shared/PropertiesPopover";
+import { PropertiesPopover } from "@editor/components/annotation/shared/PropertiesPopover";
 
 const meta = {
   title: "Annotation/Shared/PropertiesPopover",

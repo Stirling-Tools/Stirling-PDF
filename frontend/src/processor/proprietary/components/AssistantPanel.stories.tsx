@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect } from "react";
 import { http, HttpResponse, delay } from "msw";
-import { AssistantPanel } from "@portal/components/AssistantPanel";
-import { useUI } from "@portal/contexts/UIContext";
+import { AssistantPanel } from "@processor/components/AssistantPanel";
+import { useUI } from "@processor/contexts/UIContext";
 
 function ForceOpen() {
   const { openAssistant } = useUI();

@@ -7,7 +7,7 @@ import {
   lerpPose,
   logoPose,
   paddlePose,
-} from "@app/components/easterEgg/brickGame/brickGameGeometry";
+} from "@editor/components/easterEgg/brickGame/brickGameGeometry";
 
 /**
  * Knock a stack of pages apart with the Stirling mark.

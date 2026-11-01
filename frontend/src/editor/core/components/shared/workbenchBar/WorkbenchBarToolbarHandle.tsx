@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui/Button";
 
 interface WorkbenchBarToolbarHandleProps {
   isMobile: boolean;

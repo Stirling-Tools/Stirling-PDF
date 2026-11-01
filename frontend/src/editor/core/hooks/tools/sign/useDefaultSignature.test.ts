@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
-import { useDefaultSignature } from "@app/hooks/tools/sign/useDefaultSignature";
+import { useDefaultSignature } from "@editor/hooks/tools/sign/useDefaultSignature";
 
 const KEY = "stirling:sign:default-signature-id";
 

@@ -1,5 +1,5 @@
 import React from "react";
-import type { FileId } from "@app/types/file";
+import type { FileId } from "@editor/types/file";
 
 /** "bar-lead" follows the view switcher, for content naming what the view is showing;
  *  "bar" renders among the bar's own actions on the right; top/middle/bottom are lanes

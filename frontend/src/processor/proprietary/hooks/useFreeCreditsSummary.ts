@@ -1,24 +1,24 @@
-import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLink } from "@app/portal/contexts/LinkContext";
-import { walletQuery } from "@app/portal/queries/wallet";
+import { useLink } from "@editor/portal/contexts/LinkContext";
+import { walletQuery } from "@editor/portal/queries/wallet";
 import {
   readCachedCredits,
   writeCachedCredits,
   type CachedCredits,
-} from "@app/services/navFooterCache";
-import { type NavFooterCredits } from "@app/components/shared/navFooter/NavFooterCreditsRow";
+} from "@editor/services/navFooterCache";
+import { type NavFooterCredits } from "@editor/components/shared/navFooter/NavFooterCreditsRow";
 
 /**
  * Free credits left on this team's allowance, for the processor's sidebar
  * footer meter. Null hides the meter.
  *
  * This is the portal's own seam rather than the editor's {@code
- * @app/hooks/useFreeCreditsSummary}, because self-hosted resolves {@code @app/*}
+ * @editor/hooks/useFreeCreditsSummary}, because self-hosted resolves {@code @editor/*}
  * as proprietary → core: the cloud wallet hook isn't in that cascade, and the
  * implementation can't move down into proprietary either, since core/desktop
- * builds ship no portal and must never resolve {@code @portal}. Keeping it here
+ * builds ship no portal and must never resolve {@code @processor}. Keeping it here
  * means only builds that actually have a processor pull in the wallet read.
  *
  * Self-hosted reads the same {@code GET /api/v1/payg/wallet} the Usage page's

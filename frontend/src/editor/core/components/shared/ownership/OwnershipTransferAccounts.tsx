@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import type { OwnershipTransferFlow } from "@app/components/shared/ownership/useOwnershipTransfer";
+import type { OwnershipTransferFlow } from "@editor/components/shared/ownership/useOwnershipTransfer";
 import { Combobox } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { Icon } from "@editor/ui/Icon";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 /** Keeps local identity separate from the editable cloud account; focusing only loads candidates. */
 export function OwnershipTransferAccounts({

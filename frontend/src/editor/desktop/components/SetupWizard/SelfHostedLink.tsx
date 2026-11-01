@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import "@app/auth/ui/auth.css";
+import { Button } from "@editor/ui/Button";
+import "@editor/auth/ui/auth.css";
 
 interface SelfHostedLinkProps {
   onClick: () => void;

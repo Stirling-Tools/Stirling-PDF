@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import type { FileId } from "@app/types/file";
-import { useFileManagement, useFileSelectors } from "@app/contexts/FileContext";
-import { useIndexedDB } from "@app/contexts/IndexedDBContext";
-import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
-import { readDiskFile } from "@app/services/localFolderContents";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfAccessService";
+import type { FileId } from "@editor/types/file";
+import {
+  useFileManagement,
+  useFileSelectors,
+} from "@editor/contexts/FileContext";
+import { useIndexedDB } from "@editor/contexts/IndexedDBContext";
+import { generateThumbnailForFile } from "@editor/utils/thumbnailUtils";
+import { readDiskFile } from "@editor/services/localFolderContents";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
 
 const THUMBNAIL_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
 

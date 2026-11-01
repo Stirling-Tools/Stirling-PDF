@@ -1,6 +1,6 @@
 import React from "react";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import FitText from "@app/components/shared/FitText";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import FitText from "@editor/components/shared/FitText";
 
 interface QuickAccessButtonProps {
   icon: React.ReactNode;

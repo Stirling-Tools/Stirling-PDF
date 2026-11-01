@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
+import { ColorPicker } from "@editor/components/annotation/shared/ColorPicker";
 
 const meta = {
   title: "Annotation/Shared/ColorPicker",

@@ -1,16 +1,16 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
-import { generateId } from "@app/utils/generateId";
+import { generateId } from "@editor/utils/generateId";
 import { listen } from "@tauri-apps/api/event";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { tauriBackendService } from "@app/services/tauriBackendService";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
 import axios from "axios";
-import tauriHttpClient from "@app/services/tauriHttpClient";
+import tauriHttpClient from "@editor/services/tauriHttpClient";
 import {
   DESKTOP_DEEP_LINK_CALLBACK,
   STIRLING_SAAS_URL,
   SUPABASE_KEY,
-} from "@app/constants/connection";
+} from "@editor/constants/connection";
 
 export interface UserInfo {
   username: string;

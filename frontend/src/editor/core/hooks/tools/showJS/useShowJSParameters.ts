@@ -1,8 +1,8 @@
 import {
   useBaseParameters,
   type BaseParametersHook,
-} from "@app/hooks/tools/shared/useBaseParameters";
-import { BaseParameters } from "@app/types/parameters";
+} from "@editor/hooks/tools/shared/useBaseParameters";
+import { BaseParameters } from "@editor/types/parameters";
 
 export interface ShowJSParameters extends BaseParameters {
   // Extends BaseParameters - ready for future parameter additions if needed

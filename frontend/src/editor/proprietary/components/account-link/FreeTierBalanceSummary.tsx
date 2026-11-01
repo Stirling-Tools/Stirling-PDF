@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { formatPeriodDate, MeterBar, remainingMeter } from "@app/billing";
+import { formatPeriodDate, MeterBar, remainingMeter } from "@editor/billing";
 
 /** Local server allowance; figures are never inferred from an exhausted response. */
 export interface FreeTierBalance {

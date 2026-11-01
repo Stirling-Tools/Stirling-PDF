@@ -1,6 +1,6 @@
-import { DOWNLOAD_URLS } from "@app/constants/downloads";
-import type { OS } from "@app/hooks/useOs";
-import type { OSOption } from "@app/components/onboarding/slides/DesktopInstallTitle";
+import { DOWNLOAD_URLS } from "@editor/constants/downloads";
+import type { OS } from "@editor/hooks/useOs";
+import type { OSOption } from "@editor/components/onboarding/slides/DesktopInstallTitle";
 
 export const DESKTOP_DOWNLOAD_OPTIONS: OSOption[] = [
   { label: "Windows", url: DOWNLOAD_URLS.WINDOWS, value: "windows" },

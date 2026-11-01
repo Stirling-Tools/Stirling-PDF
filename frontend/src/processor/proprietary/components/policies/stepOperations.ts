@@ -16,8 +16,8 @@
  * `{{placeholder}}` resolution — which also gives the operator `{{document.*}}` and `{{run.*}}`.
  */
 
-import type { IntegrationType } from "@portal/api/integrations";
-import type { ConnectionCategory } from "@portal/components/sources/connectionTypes";
+import type { IntegrationType } from "@processor/api/integrations";
+import type { ConnectionCategory } from "@processor/components/sources/connectionTypes";
 
 /**
  * The complete parameter set of the `external-api-call` step. Every key is present and every

@@ -2,24 +2,24 @@ import { useState } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Menu, Tooltip } from "@mantine/core";
-import { ActionIcon, Button } from "@app/ui";
-import { Icon } from "@app/ui/Icon";
+import { ActionIcon, Button } from "@editor/ui";
+import { Icon } from "@editor/ui/Icon";
 import {
   isResolvableHere,
   refreshNotificationsNow,
-} from "@app/hooks/useNotifications";
-import type { NotificationDocumentState } from "@app/hooks/useNotifications";
+} from "@editor/hooks/useNotifications";
+import type { NotificationDocumentState } from "@editor/hooks/useNotifications";
 import {
   closesPanelFor,
   type ClientActionRegistry,
   type ClientActionSpec,
   type NotificationActionContext,
-} from "@app/components/notifications/notificationActions";
-import { promoteActions } from "@app/components/notifications/notificationActionSlots";
+} from "@editor/components/notifications/notificationActions";
+import { promoteActions } from "@editor/components/notifications/notificationActionSlots";
 import type {
   AppNotification,
   NotificationActionOffer,
-} from "@app/services/notifications";
+} from "@editor/services/notifications";
 
 /** An action that asked for a password, with everything running it needs. */
 export interface PasswordPrompt {

@@ -1,12 +1,12 @@
 import { isAxiosError } from "axios";
-import { handleHttpError as coreHandleHttpError } from "@core/services/httpErrorHandler";
+import { handleHttpError as coreHandleHttpError } from "@editor-core/services/httpErrorHandler";
 import {
   classifyPaygError,
   handlePaygError,
-} from "@app/services/paygErrorInterceptor";
-import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
-import { alert } from "@app/components/toast";
-import i18n from "@app/i18n";
+} from "@editor/services/paygErrorInterceptor";
+import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
+import { alert } from "@editor/components/toast";
+import i18n from "@editor/i18n";
 
 /**
  * Desktop authentication uses token refresh and the sign-in modal, so 401s must

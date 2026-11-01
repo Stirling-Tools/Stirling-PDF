@@ -2,7 +2,7 @@
  * Type safety declarations to prevent file.name/UUID confusion
  */
 
-import { FileId, StirlingFile } from "@app/types/fileContext";
+import { FileId, StirlingFile } from "@editor/types/fileContext";
 
 declare global {
   namespace FileIdSafety {

@@ -1,6 +1,6 @@
 import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
-import { Card, type CardProps } from "@app/ui/Card";
-import "@app/ui/OptionCard.css";
+import { Card, type CardProps } from "@editor/ui/Card";
+import "@editor/ui/OptionCard.css";
 
 export interface OptionCardProps {
   /** Leading glyph, shown in a tinted chip. */

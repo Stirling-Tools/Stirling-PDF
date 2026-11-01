@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   parseSuperSearchQuery,
   rebuildSuperSearchQuery,
-} from "@app/components/shared/superSearch/superSearchFilters";
-import type { SuperSearchScope } from "@app/hooks/useSuperSearch";
+} from "@editor/components/shared/superSearch/superSearchFilters";
+import type { SuperSearchScope } from "@editor/hooks/useSuperSearch";
 
 const SCOPES: SuperSearchScope[] = [
   { id: "portal-policies", label: "Policies", aliases: ["policy", "policies"] },

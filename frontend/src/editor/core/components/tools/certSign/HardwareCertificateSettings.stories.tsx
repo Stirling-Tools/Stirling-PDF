@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import HardwareCertificateSettings from "@app/components/tools/certSign/HardwareCertificateSettings";
-import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
+import HardwareCertificateSettings from "@editor/components/tools/certSign/HardwareCertificateSettings";
+import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 
 const baseParameters: CertSignParameters = {
   signMode: "DEVICE",

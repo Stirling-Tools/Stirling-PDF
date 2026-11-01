@@ -12,7 +12,7 @@ vi.mock("pdfjs-dist/legacy/build/pdf.mjs", () => ({
 import {
   pdfWorkerManager,
   PdfOpenTimeout,
-} from "@app/services/pdfWorkerManager";
+} from "@editor/services/pdfWorkerManager";
 
 /** A loading task that never opens, so only a timeout can end the wait. */
 function stalledTask() {

@@ -6,11 +6,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { navigateToSettings } from "@app/utils/settingsNavigation";
-import type { NavKey } from "@app/components/shared/config/types";
-import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
-import type { ConnectOutcome } from "@app/portal/components/account-link/ConnectCallbackView";
-import { clearPendingConnect } from "@app/portal/auth/pendingConnect";
+import { navigateToSettings } from "@editor/utils/settingsNavigation";
+import type { NavKey } from "@editor/components/shared/config/types";
+import type { AccountLinkBlockContext } from "@editor/services/accountLinkBlock";
+import type { ConnectOutcome } from "@editor/portal/components/account-link/ConnectCallbackView";
+import { clearPendingConnect } from "@editor/portal/auth/pendingConnect";
 
 /**
  * Why the dialog is open. All three run the same handshake; the mode only chooses the pitch.

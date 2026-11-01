@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { render as baseRender, screen } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import {
   PipelineInspector,
   type PipelineInspectorProps,
-} from "@portal/components/pipelines/PipelineInspector";
+} from "@processor/components/pipelines/PipelineInspector";
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: PortalTestProviders });

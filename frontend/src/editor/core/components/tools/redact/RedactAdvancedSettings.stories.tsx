@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import RedactAdvancedSettings from "@app/components/tools/redact/RedactAdvancedSettings";
+import RedactAdvancedSettings from "@editor/components/tools/redact/RedactAdvancedSettings";
 import {
   RedactParameters,
   defaultParameters,
-} from "@app/hooks/tools/redact/useRedactParameters";
+} from "@editor/hooks/tools/redact/useRedactParameters";
 
 const meta = {
   title: "Tools/Redact/RedactAdvancedSettings",

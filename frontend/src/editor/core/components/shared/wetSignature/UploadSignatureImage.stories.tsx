@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { UploadSignatureImage } from "@app/components/shared/wetSignature/UploadSignatureImage";
+import { UploadSignatureImage } from "@editor/components/shared/wetSignature/UploadSignatureImage";
 
 const meta = {
   title: "Shared/WetSignature/UploadSignatureImage",

@@ -5,7 +5,7 @@ import {
   encodeRgbaAsPng,
   isExternalImageEditSupported,
   startExternalImageEdit,
-} from "@app/tools/pdfTextEditor/util/externalImageEdit";
+} from "@editor/tools/pdfTextEditor/util/externalImageEdit";
 
 const POLL_MS = 500;
 

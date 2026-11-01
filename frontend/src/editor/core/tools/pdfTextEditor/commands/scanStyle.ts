@@ -1,14 +1,14 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
-import type { PageRect, RGBA } from "@app/tools/pdfTextEditor/types";
-import { renderLuma } from "@app/tools/pdfTextEditor/pdfium/BackgroundSampler";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
+import { renderLuma } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   emitFillRect,
   emitTextLine,
   measureObjSpanPt,
   removeAndDestroyObject,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 
 // Picking and placing a face that passes for scanned text.
 

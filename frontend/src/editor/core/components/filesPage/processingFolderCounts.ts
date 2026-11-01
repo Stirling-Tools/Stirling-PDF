@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { qk } from "@app/query/keys";
+import { qk } from "@editor/query/keys";
 
 export type ProcessingCounts = Record<string, number>;
 

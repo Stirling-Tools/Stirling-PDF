@@ -4,7 +4,7 @@
  * so every consumer renders them through <Icon> and they work in both the
  * editor and the portal bundles.
  */
-import type { IconName } from "@app/ui/Icon";
+import type { IconName } from "@editor/ui/Icon";
 
 /** Filename used for a provider with no bundled artwork. */
 export const GENERIC_PROVIDER_ICON = "oidc.svg";

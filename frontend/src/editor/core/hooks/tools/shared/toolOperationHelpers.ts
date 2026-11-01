@@ -5,7 +5,7 @@ import {
   createStirlingFile,
   ProcessedFileMetadata,
   createNewStirlingFileStub,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 
 /**
  * Builds parallel inputFileIds and inputStirlingFileStubs arrays from the valid input files.

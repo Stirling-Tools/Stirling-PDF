@@ -1,7 +1,7 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
-import { uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
 
 // 4.2 "Active file selection does not work while in the editor". Three defects:
 // the editor re-pinned its own workbench view on EVERY navigation change; the

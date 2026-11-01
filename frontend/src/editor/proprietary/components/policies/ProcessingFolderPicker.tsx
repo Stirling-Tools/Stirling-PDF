@@ -1,38 +1,38 @@
 import { useId, useRef, useState } from "react";
 import { VisuallyHidden } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Banner, Button, FormField, Input } from "@app/ui";
-import { Icon } from "@app/ui/Icon";
-import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
-import { FolderListRow } from "@app/components/filesPage/FolderListRow";
-import { FolderProcessingTag } from "@app/components/filesPage/FolderProcessingTag";
-import type { ProcessingRecordSummary } from "@app/hooks/useProcessingFolders";
+import { ActionIcon, Banner, Button, FormField, Input } from "@editor/ui";
+import { Icon } from "@editor/ui/Icon";
+import { NewFolderButton } from "@editor/components/filesPage/NewFolderButton";
+import { FolderListRow } from "@editor/components/filesPage/FolderListRow";
+import { FolderProcessingTag } from "@editor/components/filesPage/FolderProcessingTag";
+import type { ProcessingRecordSummary } from "@editor/hooks/useProcessingFolders";
 import {
   createFolderId,
   diskFolderId,
   folderKind,
   type FolderId,
   type FolderRecord,
-} from "@app/types/folder";
-import type { PickedDirectory } from "@app/services/directoryPicker";
+} from "@editor/types/folder";
+import type { PickedDirectory } from "@editor/services/directoryPicker";
 import {
   canDropDirectory,
   directoryFromDrop,
-} from "@app/services/directoryDrop";
-import { directoryKey } from "@app/services/localFolderStorage";
-import { getFolderChain } from "@app/utils/folderPath";
-import { extractErrorMessage } from "@app/utils/toolErrorHandler";
+} from "@editor/services/directoryDrop";
+import { directoryKey } from "@editor/services/localFolderStorage";
+import { getFolderChain } from "@editor/utils/folderPath";
+import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
 import {
   processingFolderPath,
   processingFolderForTarget,
   isValidProcessingFolderName,
   type ProcessingFolderTarget,
-} from "@app/components/policies/processingFolderSetup";
-import { useFolderPickerBack } from "@app/components/policies/useFolderPickerBack";
-import { ProcessingFolderLocationPicker } from "@app/components/policies/ProcessingFolderLocationPicker";
-import { ProcessingFolderActionCard } from "@app/components/policies/ProcessingFolderActionCard";
-import type { DownloadsProcessing } from "@app/hooks/useDownloadsProcessing";
-import "@app/components/filesPage/FilesPage.css";
+} from "@editor/components/policies/processingFolderSetup";
+import { useFolderPickerBack } from "@editor/components/policies/useFolderPickerBack";
+import { ProcessingFolderLocationPicker } from "@editor/components/policies/ProcessingFolderLocationPicker";
+import { ProcessingFolderActionCard } from "@editor/components/policies/ProcessingFolderActionCard";
+import type { DownloadsProcessing } from "@editor/hooks/useDownloadsProcessing";
+import "@editor/components/filesPage/FilesPage.css";
 
 type AddedFolder = {
   folder: FolderRecord;

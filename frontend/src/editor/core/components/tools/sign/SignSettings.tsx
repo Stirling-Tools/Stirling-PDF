@@ -9,39 +9,39 @@ import {
   Group,
   Box,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
-import { useSignature } from "@app/contexts/SignatureContext";
-import { useHistoryAvailability } from "@app/hooks/useHistoryAvailability";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { Button } from "@editor/ui/Button";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
+import { useSignature } from "@editor/contexts/SignatureContext";
+import { useHistoryAvailability } from "@editor/hooks/useHistoryAvailability";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import {
   PLACEMENT_ACTIVATION_DELAY,
   FILE_SWITCH_ACTIVATION_DELAY,
-} from "@app/constants/signConstants";
+} from "@editor/constants/signConstants";
 
 // Import the new reusable components
-import { DrawingCanvas } from "@app/components/annotation/shared/DrawingCanvas";
-import { DrawingControls } from "@app/components/annotation/shared/DrawingControls";
-import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
-import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
-import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
+import { DrawingCanvas } from "@editor/components/annotation/shared/DrawingCanvas";
+import { DrawingControls } from "@editor/components/annotation/shared/DrawingControls";
+import { ImageUploader } from "@editor/components/annotation/shared/ImageUploader";
+import { TextInputWithFont } from "@editor/components/annotation/shared/TextInputWithFont";
+import { ColorPicker } from "@editor/components/annotation/shared/ColorPicker";
 import {
   useSavedSignatures,
   SavedSignature,
   SavedSignaturePayload,
   SavedSignatureType,
   AddSignatureResult,
-} from "@app/hooks/tools/sign/useSavedSignatures";
-import { SavedSignaturesSection } from "@app/components/tools/sign/SavedSignaturesSection";
+} from "@editor/hooks/tools/sign/useSavedSignatures";
+import { SavedSignaturesSection } from "@editor/components/tools/sign/SavedSignaturesSection";
 import MobileSignatureModal, {
   type MobileSignaturePayload,
-} from "@app/components/tools/sign/MobileSignatureModal";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useIsMobile } from "@app/hooks/useIsMobile";
-import { buildSignaturePreview } from "@app/utils/signaturePreview";
+} from "@editor/components/tools/sign/MobileSignatureModal";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import { buildSignaturePreview } from "@editor/utils/signaturePreview";
 
-import { Icon, type IconName } from "@app/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 type SignatureDrafts = {
   canvas?: string;
   image?: string;

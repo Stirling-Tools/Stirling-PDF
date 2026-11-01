@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { ProcurementSnapshot } from "@portal/api/procurement";
+import type { ProcurementSnapshot } from "@processor/api/procurement";
 import {
   LicenseModal,
   ScheduleCallModal,
   TrialSetupModal,
   TrialManageModal,
-} from "@portal/components/procurement/ProcurementExtras";
-import "@portal/views/Procurement.css";
+} from "@processor/components/procurement/ProcurementExtras";
+import "@processor/views/Procurement.css";
 
 /**
  * The small centred dialogs that hang off the deal-status hero's quick actions: the licence key,

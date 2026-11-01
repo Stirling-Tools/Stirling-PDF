@@ -1,13 +1,13 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Text, Stack, Group } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { AutomationTool } from "@app/types/automation";
-import { ToolRegistry } from "@app/data/toolsTaxonomy";
-import { ToolId } from "@app/types/toolId";
-import ToolSelector from "@app/components/tools/automate/ToolSelector";
-import AutomationEntry from "@app/components/tools/automate/AutomationEntry";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { AutomationTool } from "@editor/types/automation";
+import { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { ToolId } from "@editor/types/toolId";
+import ToolSelector from "@editor/components/tools/automate/ToolSelector";
+import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
 
 interface ToolListProps {
   tools: AutomationTool[];

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { extractPDFMetadata } from "@app/services/pdfMetadataService";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
-import { ChangeMetadataParameters } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { extractPDFMetadata } from "@editor/services/pdfMetadataService";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
+import { ChangeMetadataParameters } from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
 
 interface MetadataExtractionParams {
   updateParameter: <K extends keyof ChangeMetadataParameters>(

@@ -1,24 +1,24 @@
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Banner, Chip } from "@app/ui";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { SidebarProvider } from "@app/contexts/SidebarContext";
-import { type ToolRegistry } from "@app/data/toolsTaxonomy";
-import { type ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
+import { Icon } from "@editor/ui/Icon";
+import { Banner, Chip } from "@editor/ui";
+import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
+import { SidebarProvider } from "@editor/contexts/SidebarContext";
+import { type ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { type ErasedToolParams } from "@editor/hooks/tools/shared/toolOperationTypes";
 import {
   activeFileFields,
   assetRefIds,
   extractStepFiles,
   type WorkingToolStep,
-} from "@app/hooks/tools/shared/toolAutomation";
+} from "@editor/hooks/tools/shared/toolAutomation";
 
-import { PolicyExternalApiConfig } from "@portal/components/policies/PolicyExternalApiConfig";
-import { isIntegrationStep } from "@portal/components/pipelines/integrationStep";
-import { isIngestStep } from "@portal/components/pipelines/docparseStep";
-import { IngestStepConfig } from "@portal/components/pipelines/IngestStepConfig";
-import type { ExternalApiStepParams } from "@portal/components/policies/stepOperations";
-import "@portal/components/pipelines/PipelineStepSettings.css";
+import { PolicyExternalApiConfig } from "@processor/components/policies/PolicyExternalApiConfig";
+import { isIntegrationStep } from "@processor/components/pipelines/integrationStep";
+import { isIngestStep } from "@processor/components/pipelines/docparseStep";
+import { IngestStepConfig } from "@processor/components/pipelines/IngestStepConfig";
+import type { ExternalApiStepParams } from "@processor/components/policies/stepOperations";
+import "@processor/components/pipelines/PipelineStepSettings.css";
 
 /**
  * A params update: the next params outright, or a merge from the latest params. Settings UIs fire

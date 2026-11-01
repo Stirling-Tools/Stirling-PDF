@@ -1,6 +1,6 @@
-import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
-import { AppProvidersProps } from "@core/components/AppProviders";
-import { SaaSTeamProvider } from "@app/contexts/SaaSTeamContext";
+import { AppProviders as ProprietaryAppProviders } from "@editor-proprietary/components/AppProviders";
+import { AppProvidersProps } from "@editor-core/components/AppProviders";
+import { SaaSTeamProvider } from "@editor/contexts/SaaSTeamContext";
 
 export function AppProviders({
   children,

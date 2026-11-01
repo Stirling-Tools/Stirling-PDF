@@ -5,12 +5,12 @@ import {
   isSigningItemClosed,
   needsSignature,
   type SigningItem,
-} from "@app/utils/signingItems";
+} from "@editor/utils/signingItems";
 import {
   EMPTY_QUICK_NAV_ACCOUNT,
   updateQuickNavAccount,
-} from "@app/contexts/quickNavAccount";
-import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
+} from "@editor/contexts/quickNavAccount";
+import { getStartupNavigationAction } from "@editor/utils/homePageNavigation";
 
 const request = {
   kind: "request",

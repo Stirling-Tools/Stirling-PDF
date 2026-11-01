@@ -1,6 +1,6 @@
-import { recordToolUsage } from "@app/api/toolRecommendations";
-import type { ToolId } from "@app/types/toolId";
-import type { FileId, ToolOperation } from "@app/types/file";
+import { recordToolUsage } from "@editor/api/toolRecommendations";
+import type { ToolId } from "@editor/types/toolId";
+import type { FileId, ToolOperation } from "@editor/types/file";
 
 // Module store rather than a context: tool completions happen deep in operation
 // hooks, and every consumer only needs to know one happened. Which tool the

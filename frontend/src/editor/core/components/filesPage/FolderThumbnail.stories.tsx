@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
-import { FOLDER_COLOR_PALETTE } from "@app/types/folder";
+import { FolderThumbnail } from "@editor/components/filesPage/FolderThumbnail";
+import { FOLDER_COLOR_PALETTE } from "@editor/types/folder";
 
 const meta = {
   title: "FilesPage/FolderThumbnail",

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { ToolId } from "@app/types/toolId";
-import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+import { ToolId } from "@editor/types/toolId";
+import { ToolRegistryEntry } from "@editor/data/toolsTaxonomy";
 
 export function useFavoriteToolItems(
   favoriteTools: ToolId[],

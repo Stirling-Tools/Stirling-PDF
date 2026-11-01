@@ -3,11 +3,11 @@ import { describe, it, expect } from "vitest";
 import {
   planParagraphEdit,
   planPartialEdit,
-} from "@app/tools/pdfTextEditor/commands/partialEdit";
+} from "@editor/tools/pdfTextEditor/commands/partialEdit";
 import {
   TextRun,
   type ParagraphLineSlot,
-} from "@app/tools/pdfTextEditor/model/TextRun";
+} from "@editor/tools/pdfTextEditor/model/TextRun";
 
 /** Regression coverage for the mushroom-life.pdf "line collapse" bug. */
 

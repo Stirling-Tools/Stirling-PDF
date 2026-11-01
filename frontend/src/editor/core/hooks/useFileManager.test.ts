@@ -1,33 +1,33 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useFileManager } from "@app/hooks/useFileManager";
-import apiClient from "@app/services/apiClient";
+import { useFileManager } from "@editor/hooks/useFileManager";
+import apiClient from "@editor/services/apiClient";
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: vi.fn() },
 }));
-vi.mock("@app/contexts/IndexedDBContext", () => ({
+vi.mock("@editor/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({}),
 }));
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { getLeafStirlingFileStubs: vi.fn(async () => []) },
 }));
-vi.mock("@app/services/pruneMissingRecentFiles", () => ({
+vi.mock("@editor/services/pruneMissingRecentFiles", () => ({
   pruneMissingRecentFiles: vi.fn(async (stubs: unknown[]) => stubs),
 }));
-vi.mock("@app/hooks/useDiskLinkReconcile", () => ({
+vi.mock("@editor/hooks/useDiskLinkReconcile", () => ({
   useDiskLinkReconcile: () => ({
     openFileIdsRef: { current: [] },
     onOpenFilesDetached: vi.fn(),
   }),
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({
     config: { storageEnabled: true, storageShareLinksEnabled: true },
   }),
 }));
 const authState = vi.hoisted(() => ({ isAnonymous: false }));
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => authState }));
+vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => authState }));
 
 const mockGet = vi.mocked(apiClient.get);
 

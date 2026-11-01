@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, EmptyState } from "@app/ui";
+import { Button, EmptyState } from "@editor/ui";
 
 /**
  * Default fallback for {@link ErrorBoundary}. Split into a function component so

@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   PORTAL_BASENAME,
   PORTAL_REVIEW_PATH,
-} from "@app/routes/portalBasename";
+} from "@editor/routes/portalBasename";
 
 export type ViewId =
   | "home"

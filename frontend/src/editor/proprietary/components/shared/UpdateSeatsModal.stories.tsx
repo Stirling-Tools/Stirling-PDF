@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import UpdateSeatsModal from "@app/components/shared/UpdateSeatsModal";
+import UpdateSeatsModal from "@editor/components/shared/UpdateSeatsModal";
 
 /**
  * Modal for adjusting enterprise seat count, redirecting to the Stripe billing portal on confirm.

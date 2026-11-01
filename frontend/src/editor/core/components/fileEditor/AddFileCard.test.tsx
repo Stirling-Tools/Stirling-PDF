@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
-import AddFileCard from "@app/components/fileEditor/AddFileCard";
+import AddFileCard from "@editor/components/fileEditor/AddFileCard";
 
 const mocks = vi.hoisted(() => ({
   openFilesModal: vi.fn(),
@@ -19,30 +19,30 @@ vi.mock("react-i18next", () => ({
     t: (key: string, fallback?: string) => fallback ?? key,
   }),
 }));
-vi.mock("@app/contexts/FilesModalContext", () => ({
+vi.mock("@editor/contexts/FilesModalContext", () => ({
   useFilesModalContext: () => ({ openFilesModal: mocks.openFilesModal }),
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: mocks.config }),
 }));
-vi.mock("@app/hooks/useIsMobile", () => ({ useIsPhone: () => false }));
-vi.mock("@app/hooks/useProcessingFolderCreation", () => ({
+vi.mock("@editor/hooks/useIsMobile", () => ({ useIsPhone: () => false }));
+vi.mock("@editor/hooks/useProcessingFolderCreation", () => ({
   useProcessingFolderCreation: () => ({
     open: mocks.canCreateFolders ? mocks.openFolderCreation : undefined,
     dialog: null,
   }),
 }));
-vi.mock("@app/components/policies/usePoliciesEnabled", () => ({
+vi.mock("@editor/components/policies/usePoliciesEnabled", () => ({
   usePoliciesEnabled: () => mocks.signedIn,
 }));
-vi.mock("@app/services/openFilesFromDisk", () => ({
+vi.mock("@editor/services/openFilesFromDisk", () => ({
   openFilesFromDisk: mocks.openFilesFromDisk,
 }));
-vi.mock("@app/components/shared/MobileUploadModal", () => ({
+vi.mock("@editor/components/shared/MobileUploadModal", () => ({
   default: ({ opened }: { opened: boolean }) =>
     opened ? <div>mobile upload modal</div> : null,
 }));
-vi.mock("@app/ui/Logo", () => ({ Logo: () => null }));
+vi.mock("@editor/ui/Logo", () => ({ Logo: () => null }));
 
 function renderCard(onFilesSelected = vi.fn()) {
   render(

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Icon } from "@app/ui/Icon";
-import "@app/ui/Collapsible.css";
+import { Icon } from "@editor/ui/Icon";
+import "@editor/ui/Collapsible.css";
 
 export interface CollapsibleProps {
   /** Whether the section is expanded. Controlled — pair with `onToggle`. */

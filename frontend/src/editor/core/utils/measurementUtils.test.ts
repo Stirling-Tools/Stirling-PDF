@@ -7,7 +7,7 @@ import {
   convertUnit,
   deriveRatioFromFactor,
   parsePresetRatio,
-} from "@app/utils/measurementUtils";
+} from "@editor/utils/measurementUtils";
 
 describe("measurementUtils", () => {
   describe("calculateScaleFactor", () => {

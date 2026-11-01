@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { uniqueName } from "@app/utils/uniqueName";
+import { uniqueName } from "@editor/utils/uniqueName";
 
 describe("uniqueName", () => {
   it("keeps a free name as it is", () => {

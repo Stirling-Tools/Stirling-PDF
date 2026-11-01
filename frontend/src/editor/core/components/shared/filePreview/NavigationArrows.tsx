@@ -1,8 +1,8 @@
 import React from "react";
 import { Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
 export interface NavigationArrowsProps {
   onPrevious: () => void;
   onNext: () => void;

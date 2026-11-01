@@ -4,4 +4,4 @@ export {
   usePortalAccessState,
   usePortalAccess,
   type PortalAccessState,
-} from "@core/hooks/usePortalAccess";
+} from "@editor-core/hooks/usePortalAccess";

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import {
   containsEncryptMarker,
   looksEncryptedFromTrailer,
-} from "@app/utils/pdfEncryptionProbe";
+} from "@editor/utils/pdfEncryptionProbe";
 
 /** PDF-shaped bytes with `trailer` written at the very end. */
 function bytesEndingWith(trailer: string, size: number): Uint8Array {

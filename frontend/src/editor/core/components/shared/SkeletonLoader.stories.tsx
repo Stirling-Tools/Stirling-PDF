@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SkeletonLoader from "@app/components/shared/SkeletonLoader";
+import SkeletonLoader from "@editor/components/shared/SkeletonLoader";
 
 const meta: Meta<typeof SkeletonLoader> = {
   title: "Shared/SkeletonLoader",

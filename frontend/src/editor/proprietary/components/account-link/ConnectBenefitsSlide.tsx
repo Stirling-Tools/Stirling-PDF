@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import "@app/components/account-link/connect.css";
+import "@editor/components/account-link/connect.css";
 
 /** Linking benefits distinguish the free team allowance from optional paid capacity. */
 export function ConnectBenefitsSlide() {

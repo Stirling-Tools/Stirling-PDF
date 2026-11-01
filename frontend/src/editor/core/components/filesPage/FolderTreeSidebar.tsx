@@ -1,29 +1,29 @@
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 import { Menu } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { FolderThumbnail } from "@editor/components/filesPage/FolderThumbnail";
 
-import { useFolders } from "@app/contexts/FolderContext";
-import { FileId } from "@app/types/file";
+import { useFolders } from "@editor/contexts/FolderContext";
+import { FileId } from "@editor/types/file";
 import {
   FolderId,
   folderKind,
   FolderRecord,
   FolderTreeNode,
   ROOT_FOLDER_ID,
-} from "@app/types/folder";
-import { useFilesPage } from "@app/contexts/FilesPageContext";
+} from "@editor/types/folder";
+import { useFilesPage } from "@editor/contexts/FilesPageContext";
 import {
   FILES_PAGE_DRAG_TYPE,
   parseFilesPageDragPayload,
   serialiseFilesPageDragPayload,
-} from "@app/components/filesPage/dragDrop";
-import { useDropTarget } from "@app/components/filesPage/useDropTarget";
-import "@app/components/filesPage/FolderTreeSidebar.css";
-import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
+} from "@editor/components/filesPage/dragDrop";
+import { useDropTarget } from "@editor/components/filesPage/useDropTarget";
+import "@editor/components/filesPage/FolderTreeSidebar.css";
+import { useOpenFolder } from "@editor/components/filesPage/useOpenFolder";
 
 /** Bound recursion to protect rendering from corrupted folder hierarchies. */
 const MAX_TREE_DEPTH = 50;

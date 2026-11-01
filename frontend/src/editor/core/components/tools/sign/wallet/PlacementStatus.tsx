@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Banner } from "@app/ui/Banner";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { Banner } from "@editor/ui/Banner";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 
 interface PlacementStatusProps {
   placing: string | null;

@@ -4,7 +4,7 @@ import {
   isSigningItemClosed,
   canReceiveSigningActivity,
   type SigningMenuItem,
-} from "@app/utils/signingItems";
+} from "@editor/utils/signingItems";
 
 export type SessionTab = "active" | "unread" | "closed";
 

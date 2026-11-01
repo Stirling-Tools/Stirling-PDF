@@ -1,13 +1,16 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Input } from "@app/ui/Input";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { truncateCenter } from "@app/utils/textUtils";
-import { ILLEGAL_FILE_NAME_CHARS, splitFileName } from "@app/utils/fileUtils";
-import styles from "@app/components/pageTracks/PageTracks.module.css";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Input } from "@editor/ui/Input";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { truncateCenter } from "@editor/utils/textUtils";
+import {
+  ILLEGAL_FILE_NAME_CHARS,
+  splitFileName,
+} from "@editor/utils/fileUtils";
+import styles from "@editor/components/pageTracks/PageTracks.module.css";
 
 interface TrackNameFieldProps {
   name: string;

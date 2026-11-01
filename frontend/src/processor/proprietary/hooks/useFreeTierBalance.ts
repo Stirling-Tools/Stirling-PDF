@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@app/auth";
-import { fetchFreeTier } from "@portal/api/link";
-import { useConnectGate } from "@portal/hooks/useConnectGate";
-import { qk } from "@portal/queries/keys";
+import { useAuth } from "@editor/auth";
+import { fetchFreeTier } from "@processor/api/link";
+import { useConnectGate } from "@processor/hooks/useConnectGate";
+import { qk } from "@processor/queries/keys";
 import {
   FREE_TIER_EXHAUSTED_EVENT,
   clearBlockIfAllowanceRemains,
-} from "@app/services/accountLinkBlock";
+} from "@editor/services/accountLinkBlock";
 
 /** Admin-only local ledger; refreshes after a block and at rollover without reading a cloud wallet. */
 export function useFreeTierBalance() {

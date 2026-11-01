@@ -9,11 +9,11 @@ import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
-import ConnectApprove from "@app/routes/ConnectApprove";
-import { ResumePendingConnect } from "@app/routes/ResumePendingConnect";
-import { readPendingConnect } from "@app/routes/pendingConnect";
-import type { PendingConnect } from "@app/routes/ConnectApproveView";
-import apiClient from "@app/services/apiClient";
+import ConnectApprove from "@editor/routes/ConnectApprove";
+import { ResumePendingConnect } from "@editor/routes/ResumePendingConnect";
+import { readPendingConnect } from "@editor/routes/pendingConnect";
+import type { PendingConnect } from "@editor/routes/ConnectApproveView";
+import apiClient from "@editor/services/apiClient";
 
 const { signOut, session, replace } = vi.hoisted(() => ({
   signOut: vi.fn(),
@@ -25,7 +25,7 @@ const { signOut, session, replace } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@app/auth/UseSession", () => ({
+vi.mock("@editor/auth/UseSession", () => ({
   useAuth: () => ({
     session,
     user: { email: "member@example.com" },
@@ -34,21 +34,21 @@ vi.mock("@app/auth/UseSession", () => ({
   }),
 }));
 
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: { get: vi.fn(), post: vi.fn() },
 }));
 
-vi.mock("@app/hooks/useDocumentMeta", () => ({ useDocumentMeta: vi.fn() }));
+vi.mock("@editor/hooks/useDocumentMeta", () => ({ useDocumentMeta: vi.fn() }));
 
-vi.mock("@app/routes/authShared/AuthLayout", () => ({
+vi.mock("@editor/routes/authShared/AuthLayout", () => ({
   default: ({ children }: { children: ReactNode }) => children,
 }));
 
-vi.mock("@app/ui", async () => ({
-  ...(await import("@app/ui/Banner")),
-  ...(await import("@app/ui/Button")),
-  ...(await import("@app/ui/Checkbox")),
-  ...(await import("@app/ui/Spinner")),
+vi.mock("@editor/ui", async () => ({
+  ...(await import("@editor/ui/Banner")),
+  ...(await import("@editor/ui/Button")),
+  ...(await import("@editor/ui/Checkbox")),
+  ...(await import("@editor/ui/Spinner")),
 }));
 
 const pending: PendingConnect & { status: "PENDING" } = {

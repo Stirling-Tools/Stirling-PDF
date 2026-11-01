@@ -1,11 +1,15 @@
 import { Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button, type ButtonVariant, type ButtonAccent } from "@app/ui/Button";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { useBackendHealth } from "@app/hooks/useBackendHealth";
-import { CloudBadge } from "@app/components/shared/CloudBadge";
-import type { ExecuteDisabledReason } from "@app/hooks/tools/shared/toolOperationTypes";
-import { useToolActions } from "@app/contexts/ToolActionsContext";
+import {
+  Button,
+  type ButtonVariant,
+  type ButtonAccent,
+} from "@editor/ui/Button";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { useBackendHealth } from "@editor/hooks/useBackendHealth";
+import { CloudBadge } from "@editor/components/shared/CloudBadge";
+import type { ExecuteDisabledReason } from "@editor/hooks/tools/shared/toolOperationTypes";
+import { useToolActions } from "@editor/contexts/ToolActionsContext";
 
 export interface OperationButtonProps {
   onClick?: () => void;

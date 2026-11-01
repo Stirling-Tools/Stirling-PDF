@@ -1,25 +1,25 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { Tooltip } from "@mantine/core";
-import { ActionIcon, NavItem, NavSurface } from "@app/ui";
-import { SidebarToggleButton } from "@app/components/shared/SidebarToggleButton";
-import { Logo } from "@app/ui/Logo";
-import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
-import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
-import { useFreeCreditsSummary } from "@portal/hooks/useFreeCreditsSummary";
-import { useAdminNavVisible } from "@portal/hooks/useAdminNavVisible";
-import { useOpenPlan } from "@portal/hooks/useOpenPlan";
+import { ActionIcon, NavItem, NavSurface } from "@editor/ui";
+import { SidebarToggleButton } from "@editor/components/shared/SidebarToggleButton";
+import { Logo } from "@editor/ui/Logo";
+import { NavFooter } from "@editor/components/shared/navFooter/NavFooter";
+import { useAccountIdentity } from "@editor/hooks/useAccountIdentity";
+import { useFreeCreditsSummary } from "@processor/hooks/useFreeCreditsSummary";
+import { useAdminNavVisible } from "@processor/hooks/useAdminNavVisible";
+import { useOpenPlan } from "@processor/hooks/useOpenPlan";
 import { useTranslation } from "react-i18next";
-import { useView, type ViewId } from "@portal/contexts/ViewContext";
-import { useUI } from "@portal/contexts/UIContext";
-import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
-import { Icon } from "@app/ui/Icon";
+import { useView, type ViewId } from "@processor/contexts/ViewContext";
+import { useUI } from "@processor/contexts/UIContext";
+import { LinkAccountFooterItem } from "@processor/components/LinkAccountFooterItem";
+import { Icon } from "@editor/ui/Icon";
 import {
   GROUP_PROCESSOR,
   GROUP_PLATFORM,
   type NavEntry,
   type NavGroup,
-} from "@portal/components/sidebarGroups";
-import "@portal/components/Sidebar.css";
+} from "@processor/components/sidebarGroups";
+import "@processor/components/Sidebar.css";
 
 // Empty groups are dropped: a flavor (or a move to the settings page) can leave
 // one with nothing in it, and an empty card is not a section.

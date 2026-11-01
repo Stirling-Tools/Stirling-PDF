@@ -8,12 +8,12 @@
  * `policyPipeline` decodes on read.
  */
 
-import * as policyApi from "@app/services/policyApi";
+import * as policyApi from "@editor/services/policyApi";
 import {
   fromBackendPolicy,
   type DecodedPolicy,
-} from "@app/services/policyPipeline";
-import type { PolicyState } from "@app/types/policies";
+} from "@editor/services/policyPipeline";
+import type { PolicyState } from "@editor/types/policies";
 
 /**
  * Fetch every stored policy and decode it, keyed by its catalog category. If two

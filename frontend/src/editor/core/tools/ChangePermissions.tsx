@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { Checkbox, Group, Stack, PasswordInput, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
-import { useChangePermissionsParameters } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
-import { useChangePermissionsOperation } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
-import { usePermissionExtraction } from "@app/hooks/tools/changePermissions/usePermissionExtraction";
-import { useChangePermissionsTips } from "@app/components/tooltips/useChangePermissionsTips";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfAccessService";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import ChangePermissionsSettings from "@editor/components/tools/changePermissions/ChangePermissionsSettings";
+import { useChangePermissionsParameters } from "@editor/hooks/tools/changePermissions/useChangePermissionsParameters";
+import { useChangePermissionsOperation } from "@editor/hooks/tools/changePermissions/useChangePermissionsOperation";
+import { usePermissionExtraction } from "@editor/hooks/tools/changePermissions/usePermissionExtraction";
+import { useChangePermissionsTips } from "@editor/components/tooltips/useChangePermissionsTips";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
 
 const ChangePermissions = (props: BaseToolProps) => {
   const { t } = useTranslation();

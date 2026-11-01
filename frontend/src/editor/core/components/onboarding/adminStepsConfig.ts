@@ -4,7 +4,7 @@ import {
   besideCentered,
   waitForElement,
   waitForHighlightable,
-} from "@app/components/onboarding/tourUtils";
+} from "@editor/components/onboarding/tourUtils";
 
 export enum AdminTourStep {
   WELCOME,

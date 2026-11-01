@@ -1,12 +1,12 @@
 import React from "react";
 import { Menu, Loader, Group, Text, Tooltip } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import FitText from "@app/components/shared/FitText";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { FileId } from "@app/types/file";
-import { truncateCenter } from "@app/utils/textUtils";
+import { Icon } from "@editor/ui/Icon";
+import FitText from "@editor/components/shared/FitText";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { FileId } from "@editor/types/file";
+import { truncateCenter } from "@editor/utils/textUtils";
 
 interface FileDropdownMenuProps {
   displayName: string;

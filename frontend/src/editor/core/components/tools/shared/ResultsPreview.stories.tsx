@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import ResultsPreview, {
   ReviewFile,
-} from "@app/components/tools/shared/ResultsPreview";
+} from "@editor/components/tools/shared/ResultsPreview";
 
 function makeFile(name: string, type: string, size: number): File {
   return new File([new Uint8Array(size)], name, { type });

@@ -1,10 +1,10 @@
 import type { CSSProperties } from "react";
-import { Icon } from "@app/ui/Icon";
-import wordmarkLightUrl from "@app/assets/brand/branding-logo/wordmark-light.svg";
-import wordmarkDarkUrl from "@app/assets/brand/branding-logo/wordmark-dark.svg";
+import { Icon } from "@editor/ui/Icon";
+import wordmarkLightUrl from "@editor/assets/brand/branding-logo/wordmark-light.svg";
+import wordmarkDarkUrl from "@editor/assets/brand/branding-logo/wordmark-dark.svg";
 // The mark takes its two fills from the brand mark's path classes.
-import "@app/components/shared/BrandMark.css";
-import "@app/ui/Logo.css";
+import "@editor/components/shared/BrandMark.css";
+import "@editor/ui/Logo.css";
 
 /** iconOnly = mark; textOnly = "Stirling" wordmark; iconAndText = both. */
 export type LogoVariant = "iconOnly" | "iconAndText" | "textOnly";

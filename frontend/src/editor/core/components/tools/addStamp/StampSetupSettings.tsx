@@ -14,14 +14,18 @@ import {
   Box,
   Paper,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
-import ButtonSelector from "@app/components/shared/ButtonSelector";
-import styles from "@app/components/tools/addStamp/StampPreview.module.css";
-import { getDefaultFontSizeForAlphabet } from "@app/components/tools/addStamp/StampPreviewUtils";
-import { useFileWithUrl } from "@app/hooks/useFileWithUrl";
-import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
-import { alphabetOptions } from "@app/constants/addWatermarkConstants";
+import { Button } from "@editor/ui/Button";
+import {
+  AddStampParameters,
+  DEFAULT_QR_SIZE,
+  isQrContentWithinLimit,
+} from "@editor/components/tools/addStamp/useAddStampParameters";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
+import styles from "@editor/components/tools/addStamp/StampPreview.module.css";
+import { getDefaultFontSizeForAlphabet } from "@editor/components/tools/addStamp/StampPreviewUtils";
+import { useFileWithUrl } from "@editor/hooks/useFileWithUrl";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { alphabetOptions } from "@editor/constants/addWatermarkConstants";
 
 const STAMP_TEMPLATES = [
   {
@@ -235,10 +239,16 @@ const StampSetupSettings = ({
         </Text>
         <ButtonSelector
           value={parameters.stampType}
-          onChange={(v: "text" | "image") => onParameterChange("stampType", v)}
+          onChange={(v: "text" | "image" | "qr") => {
+            onParameterChange("stampType", v);
+            if (v === "qr" && parameters.fontSize < DEFAULT_QR_SIZE) {
+              onParameterChange("fontSize", DEFAULT_QR_SIZE);
+            }
+          }}
           options={[
             { value: "text", label: t("watermark.type.1", "Text") },
             { value: "image", label: t("watermark.type.2", "Image") },
+            { value: "qr", label: t("AddStampRequest.qrCode", "QR Code") },
           ]}
           disabled={disabled}
           textClassName={styles.modeToggleButtonText}
@@ -661,6 +671,31 @@ const StampSetupSettings = ({
             }}
           />
         </>
+      )}
+
+      {parameters.stampType === "qr" && (
+        <Textarea
+          label={t("AddStampRequest.qrContent", "QR Code Content")}
+          description={t(
+            "AddStampRequest.qrContentDescription",
+            "Text or link to encode. Dynamic variables such as @filename and @page_number are supported.",
+          )}
+          value={parameters.stampText}
+          onChange={(e) =>
+            onParameterChange("stampText", e.currentTarget.value)
+          }
+          error={
+            isQrContentWithinLimit(parameters.stampText)
+              ? undefined
+              : t(
+                  "AddStampRequest.qrContentTooLong",
+                  "Too long to fit in a QR code. Shorten the content.",
+                )
+          }
+          autosize
+          minRows={2}
+          disabled={disabled}
+        />
       )}
 
       {parameters.stampType === "image" && (

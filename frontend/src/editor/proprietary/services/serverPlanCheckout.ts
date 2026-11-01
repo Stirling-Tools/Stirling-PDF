@@ -1,9 +1,9 @@
 /** Account-owned Team checkout and the separate installed Enterprise licence checkout. */
-import { getAccessToken } from "@app/auth/session";
+import { getAccessToken } from "@editor/auth/session";
 
 // Avoid a static import: it would pull the Supabase SDK onto the startup path of
 // every build, including installs that never reach checkout.
-const loadSupabaseClient = () => import("@app/services/supabaseClient");
+const loadSupabaseClient = () => import("@editor/services/supabaseClient");
 
 /**
  * A Team-plan checkout, sized in user blocks rather than seats.

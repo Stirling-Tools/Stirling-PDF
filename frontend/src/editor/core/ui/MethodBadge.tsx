@@ -1,4 +1,4 @@
-import "@app/ui/MethodBadge.css";
+import "@editor/ui/MethodBadge.css";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 

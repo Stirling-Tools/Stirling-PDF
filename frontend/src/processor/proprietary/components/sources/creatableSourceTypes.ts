@@ -1,7 +1,7 @@
 import {
   CREATABLE_SOURCE_TYPES,
   type CreatableSourceType,
-} from "@portal/components/sources/sourceTypes";
+} from "@processor/components/sources/sourceTypes";
 
 /**
  * The source types the connect wizard offers. An extension point: deployments

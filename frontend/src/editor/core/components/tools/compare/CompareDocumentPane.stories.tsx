@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import CompareDocumentPane from "@app/components/tools/compare/CompareDocumentPane";
-import type { PagePreview } from "@app/types/compare";
+import CompareDocumentPane from "@editor/components/tools/compare/CompareDocumentPane";
+import type { PagePreview } from "@editor/types/compare";
 
 // 1x1 transparent PNG so the pane's <img> resolves without a network request.
 const PLACEHOLDER_PAGE_IMAGE =

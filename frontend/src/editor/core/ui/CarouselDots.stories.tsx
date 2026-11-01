@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CarouselDots } from "@app/ui/CarouselDots";
+import { CarouselDots } from "@editor/ui/CarouselDots";
 
 const meta: Meta<typeof CarouselDots> = {
   title: "Primitives/CarouselDots",

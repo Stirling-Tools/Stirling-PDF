@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
-import { diskLinkState } from "@app/services/diskLinkState";
+import { diskLinkState } from "@editor/services/diskLinkState";
 
 describe("diskLinkState", () => {
   it("is 'none' for a file that never came from disk", () => {

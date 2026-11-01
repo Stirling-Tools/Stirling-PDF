@@ -1,5 +1,5 @@
-import { saasApiBase } from "@portal/api/saasApiBase";
-import { getPortalSaasToken } from "@portal/auth/portalSaasSession";
+import { saasApiBase } from "@processor/api/saasApiBase";
+import { getPortalSaasToken } from "@processor/auth/portalSaasSession";
 
 /**
  * SaaS build: there is no separate local instance — {@code apiClient.local} IS the

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SingleLargePageSettings from "@app/components/tools/singleLargePage/SingleLargePageSettings";
-import type { SingleLargePageParameters } from "@app/hooks/tools/singleLargePage/useSingleLargePageParameters";
+import SingleLargePageSettings from "@editor/components/tools/singleLargePage/SingleLargePageSettings";
+import type { SingleLargePageParameters } from "@editor/hooks/tools/singleLargePage/useSingleLargePageParameters";
 
 const parameters: SingleLargePageParameters = {};
 

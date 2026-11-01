@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { Modal } from "@app/ui/Modal";
-import styles from "@app/components/tools/sign/wallet/SignatureWallet.module.css";
+import { Button } from "@editor/ui/Button";
+import { Modal } from "@editor/ui/Modal";
+import styles from "@editor/components/tools/sign/wallet/SignatureWallet.module.css";
 
 interface DeleteSignatureModalProps {
   name: string;

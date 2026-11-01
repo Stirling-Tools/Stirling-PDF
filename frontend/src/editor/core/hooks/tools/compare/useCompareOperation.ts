@@ -10,15 +10,15 @@ import {
   CompareWorkerResponse,
   CompareWorkerWarnings,
   REMOVAL_HIGHLIGHT,
-} from "@app/types/compare";
+} from "@editor/types/compare";
 import {
   runPixelCompare,
   revokePixelResult,
-} from "@app/services/pixelCompareService";
-import { CompareParameters } from "@app/hooks/tools/compare/useCompareParameters";
-import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
-import type { StirlingFile } from "@app/types/fileContext";
-import { useFileContext } from "@app/contexts/file/fileHooks";
+} from "@editor/services/pixelCompareService";
+import { CompareParameters } from "@editor/hooks/tools/compare/useCompareParameters";
+import { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
+import type { StirlingFile } from "@editor/types/fileContext";
+import { useFileContext } from "@editor/contexts/file/fileHooks";
 import {
   aggregateTotals,
   buildChanges,
@@ -26,9 +26,9 @@ import {
   extractContentFromPdf,
   getWorkerErrorCode,
   filterTokensForDiff,
-} from "@app/hooks/tools/compare/operationUtils";
-import { alert, dismissToast } from "@app/components/toast";
-import CompareWorkerCtor from "@app/workers/compareWorker?worker";
+} from "@editor/hooks/tools/compare/operationUtils";
+import { alert, dismissToast } from "@editor/components/toast";
+import CompareWorkerCtor from "@editor/workers/compareWorker?worker";
 const LONG_RUNNING_PAGE_THRESHOLD = 2000;
 
 export interface CompareOperationHook extends ToolOperationHook<CompareParameters> {
@@ -69,7 +69,7 @@ export const useCompareOperation = (): CompareOperationHook => {
   } | null>(null);
   const pixelSignalRef = useRef<{ cancelled: boolean }>({ cancelled: false });
   const pixelResultRef = useRef<
-    import("@app/types/compare").CompareResultPixelData | null
+    import("@editor/types/compare").CompareResultPixelData | null
   >(null);
 
   const revokePixelUrls = useCallback(() => {

@@ -3,20 +3,20 @@ import { waitFor, renderHook, act } from "@testing-library/react";
 import {
   AppConfigProvider,
   useAppConfig,
-} from "@app/contexts/AppConfigContext";
-import apiClient from "@app/services/apiClient";
-import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
-import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
+} from "@editor/contexts/AppConfigContext";
+import apiClient from "@editor/services/apiClient";
+import { allowConsole, expectConsole } from "@editor/tests/failOnConsole";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
 import {
   getPdfAccess,
   rememberPdfAccess,
   clearPdfAccess,
-} from "@app/services/pdfAccessService";
+} from "@editor/services/pdfAccessService";
 
 // Mock apiClient
-vi.mock("@app/services/apiClient");
+vi.mock("@editor/services/apiClient");
 
 describe("AppConfigContext", () => {
   beforeEach(() => {

@@ -1,4 +1,4 @@
-import type { ChipAccent } from "@app/ui";
+import type { ChipAccent } from "@editor/ui";
 
 /**
  * Per-type presentation + create-form metadata. User-facing copy is stored as

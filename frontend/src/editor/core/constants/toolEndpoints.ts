@@ -1,4 +1,4 @@
-import type { ToolEndpoint } from "@app/types/toolApiTypes";
+import type { ToolEndpoint } from "@editor/types/toolApiTypes";
 
 // Shared by the tool hooks and the notification retry service. The service cannot import the
 // hooks that would otherwise define these: useToolOperation imports the service, so it would be

@@ -1,10 +1,10 @@
 import { Modal, Stack, Text, Group, List } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import {
   describeSaveRisks,
   type SaveRisks,
-} from "@app/tools/pdfTextEditor/util/documentRisks";
+} from "@editor/tools/pdfTextEditor/util/documentRisks";
 
 interface SaveRiskModalProps {
   /** Non-null opens the modal; null keeps it closed. */

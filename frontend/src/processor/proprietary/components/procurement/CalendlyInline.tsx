@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Spinner } from "@app/ui";
-import { loadScript } from "@app/utils/scriptLoader";
+import { Spinner } from "@editor/ui";
+import { loadScript } from "@editor/utils/scriptLoader";
 
 /**
  * Inline Calendly scheduler. Lazily loads Calendly's widget.js (only once the embed mounts, i.e. when

@@ -1,12 +1,12 @@
 import { Stack, Group } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import {
   CertificateSelector,
   CertificateType,
   UploadFormat,
-} from "@app/components/tools/certSign/CertificateSelector";
+} from "@editor/components/tools/certSign/CertificateSelector";
 
 interface CertificateSelectionStepProps {
   certType: CertificateType;

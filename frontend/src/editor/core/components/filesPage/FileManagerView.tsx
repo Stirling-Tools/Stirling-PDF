@@ -1,5 +1,5 @@
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
-import { Icon } from "@app/ui/Icon";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
+import { Icon } from "@editor/ui/Icon";
 import React, {
   useCallback,
   useEffect,
@@ -10,89 +10,89 @@ import React, {
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Drawer, Menu, Tooltip } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useMediaQuery } from "@mantine/hooks";
-import { FilesToolbarBulkMenu } from "@app/components/filesPage/FilesToolbarBulkMenu";
-import { FilesToolbarCount } from "@app/components/filesPage/FilesToolbarCount";
-import { FolderMenu } from "@app/components/filesPage/FolderMenu";
-import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
-import { useFileLibraryWorkbenchBarButtons } from "@app/components/filesPage/useFileLibraryWorkbenchBarButtons";
+import { FilesToolbarBulkMenu } from "@editor/components/filesPage/FilesToolbarBulkMenu";
+import { FilesToolbarCount } from "@editor/components/filesPage/FilesToolbarCount";
+import { FolderMenu } from "@editor/components/filesPage/FolderMenu";
+import { NewFolderButton } from "@editor/components/filesPage/NewFolderButton";
+import { useFileLibraryWorkbenchBarButtons } from "@editor/components/filesPage/useFileLibraryWorkbenchBarButtons";
 
-import { useAuth } from "@app/auth/UseSession";
-import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
-import { useFolders } from "@app/contexts/FolderContext";
-import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
-import { useFileActions } from "@app/contexts/file/fileHooks";
-import { useAllFiles } from "@app/contexts/FileContext";
-import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
-import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
+import { useAuth } from "@editor/auth/UseSession";
+import { useSharingEnabled } from "@editor/hooks/useSharingEnabled";
+import { useFolders } from "@editor/contexts/FolderContext";
+import { useOpenFolder } from "@editor/components/filesPage/useOpenFolder";
+import { useFileActions } from "@editor/contexts/file/fileHooks";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
+import { useDropzoneFiles } from "@editor/hooks/useDropzoneFiles";
+import { openFilesFromDisk } from "@editor/services/openFilesFromDisk";
 import {
   useNavigationActions,
   useNavigationGuard,
-} from "@app/contexts/NavigationContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useFilesPage } from "@app/contexts/FilesPageContext";
-import { useLibraryFiles } from "@app/components/filesPage/useLibraryFiles";
-import { useFolderFileStates } from "@app/components/filesPage/useFolderFileStates";
-import { useDiskFolder } from "@app/components/filesPage/useDiskFolder";
-import { LibraryToolbar } from "@app/components/filesPage/LibraryToolbar";
-import { LibraryTabs } from "@app/components/filesPage/LibraryTabs";
-import { useLibraryScrollPosition } from "@app/components/filesPage/useLibraryScrollPosition";
+} from "@editor/contexts/NavigationContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useFilesPage } from "@editor/contexts/FilesPageContext";
+import { useLibraryFiles } from "@editor/components/filesPage/useLibraryFiles";
+import { useFolderFileStates } from "@editor/components/filesPage/useFolderFileStates";
+import { useDiskFolder } from "@editor/components/filesPage/useDiskFolder";
+import { LibraryToolbar } from "@editor/components/filesPage/LibraryToolbar";
+import { LibraryTabs } from "@editor/components/filesPage/LibraryTabs";
+import { useLibraryScrollPosition } from "@editor/components/filesPage/useLibraryScrollPosition";
 
-import { FileId } from "@app/types/file";
-import { StirlingFileStub } from "@app/types/fileContext";
+import { FileId } from "@editor/types/file";
+import { StirlingFileStub } from "@editor/types/fileContext";
 import {
   FolderId,
   FolderRecord,
   ROOT_FOLDER_ID,
   folderKind,
-} from "@app/types/folder";
+} from "@editor/types/folder";
 
 import {
   FileGrid,
   FilesPageEntry,
   type DiskFileState,
-} from "@app/components/filesPage/FileGrid";
-import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
-import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
-import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
-import { useConnectedServer } from "@app/hooks/useConnectedServer";
-import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
-import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
-import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
-import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
-import { AddToLibraryModal } from "@app/components/filesPage/AddToLibraryModal";
-import { isBrowserOnlyFile } from "@app/components/filesPage/fileOrigin";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { canPickDirectory } from "@app/services/directoryPicker";
-import { isDiskFolderId } from "@app/types/folder";
-import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
-import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
-import { useLibraryUpload } from "@app/components/filesPage/useLibraryUpload";
+} from "@editor/components/filesPage/FileGrid";
+import { useProcessingFolders } from "@editor/hooks/useProcessingFolders";
+import { FolderProcessingSetup } from "@editor/components/policies/FolderProcessingSetup";
+import { useServerProcessingBlock } from "@editor/hooks/useServerProcessingBlock";
+import { useConnectedServer } from "@editor/hooks/useConnectedServer";
+import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
+import { FolderSweepWall } from "@editor/components/policies/SweepRunWall";
+import { RestoreOriginalsDialog } from "@editor/components/filesPage/RestoreOriginalsDialog";
+import { FileDetailsPanel } from "@editor/components/filesPage/FileDetailsPanel";
+import { AddToLibraryModal } from "@editor/components/filesPage/AddToLibraryModal";
+import { isBrowserOnlyFile } from "@editor/components/filesPage/fileOrigin";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { canPickDirectory } from "@editor/services/directoryPicker";
+import { isDiskFolderId } from "@editor/types/folder";
+import { useNewFolderFlow } from "@editor/hooks/useNewFolderFlow";
+import { useLibraryRefresh } from "@editor/hooks/useLibraryRefresh";
+import { useLibraryUpload } from "@editor/components/filesPage/useLibraryUpload";
 import {
   readDiskFile,
   type DiskFileEntry,
-} from "@app/services/localFolderContents";
-import { useIsMobile } from "@app/hooks/useIsMobile";
-import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
-import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
-import { libraryEntries } from "@app/components/filesPage/libraryEntries";
-import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
-import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
-import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
-import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
-import { duplicateStoredFile } from "@app/utils/duplicateFile";
-import { downloadFileFromStorage } from "@app/utils/downloadUtils";
-import { renameStoredFile } from "@app/services/renameStoredFile";
-import { materializeServerStubs } from "@app/services/fileSyncService";
+} from "@editor/services/localFolderContents";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import { MoveToFolderDialog } from "@editor/components/filesPage/MoveToFolderDialog";
+import { FolderNameDialog } from "@editor/components/filesPage/FolderNameDialog";
+import { libraryEntries } from "@editor/components/filesPage/libraryEntries";
+import { DeleteFolderDialog } from "@editor/components/filesPage/DeleteFolderDialog";
+import { DeleteFilesDialog } from "@editor/components/filesPage/DeleteFilesDialog";
+import { VersionHistoryModal } from "@editor/components/filesPage/VersionHistoryModal";
+import { RenameFileDialog } from "@editor/components/shared/RenameFileDialog";
+import { duplicateStoredFile } from "@editor/utils/duplicateFile";
+import { downloadFileFromStorage } from "@editor/utils/downloadUtils";
+import { renameStoredFile } from "@editor/services/renameStoredFile";
+import { materializeServerStubs } from "@editor/services/fileSyncService";
 import {
   FILES_PAGE_DRAG_TYPE,
   parseFilesPageDragPayload,
-} from "@app/components/filesPage/dragDrop";
-import { clearFilesPageReturnRoute } from "@app/components/filesPage/filesPageReturnRoute";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import "@app/components/filesPage/FilesPage.css";
+} from "@editor/components/filesPage/dragDrop";
+import { clearFilesPageReturnRoute } from "@editor/components/filesPage/filesPageReturnRoute";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
+import "@editor/components/filesPage/FilesPage.css";
 
 export default function FileManagerView() {
   const { t } = useTranslation();

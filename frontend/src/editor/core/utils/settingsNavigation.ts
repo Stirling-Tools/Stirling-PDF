@@ -1,5 +1,5 @@
-import { NavKey } from "@app/components/shared/config/types";
-import { stripBasePath, withBasePath } from "@app/constants/app";
+import { NavKey } from "@editor/components/shared/config/types";
+import { stripBasePath, withBasePath } from "@editor/constants/app";
 
 /**
  * Go to the settings page from outside the router — modals, services, and

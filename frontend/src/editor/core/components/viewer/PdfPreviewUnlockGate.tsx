@@ -7,14 +7,14 @@ import {
 } from "react";
 import { Center, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
-import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
-import { useFileActions } from "@app/contexts/FileContext";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
-import { getPdfAccess } from "@app/services/pdfAccessService";
-import { looksEncryptedFromTrailer } from "@app/utils/pdfEncryptionProbe";
-import { handlePasswordError } from "@app/utils/toolErrorHandler";
+import { Button } from "@editor/ui/Button";
+import EncryptedPdfUnlockModal from "@editor/components/shared/EncryptedPdfUnlockModal";
+import ToolLoadingFallback from "@editor/components/tools/ToolLoadingFallback";
+import { useFileActions } from "@editor/contexts/FileContext";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
+import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
+import { handlePasswordError } from "@editor/utils/toolErrorHandler";
 
 interface PreviewState {
   file: File;

@@ -1,15 +1,15 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { qk } from "@portal/queries/keys";
-import { toAsyncState } from "@portal/queries/adapters";
-import type { AsyncState } from "@portal/hooks/useAsync";
+import { qk } from "@processor/queries/keys";
+import { toAsyncState } from "@processor/queries/adapters";
+import type { AsyncState } from "@processor/hooks/useAsync";
 import {
   applyFileRunEventAction,
   fetchFileRunEvents,
   isClosedStatus,
   type FileRunEvent,
   type FileRunEventScope,
-} from "@portal/api/fileRunEvents";
-import { HttpError } from "@portal/api/http";
+} from "@processor/api/fileRunEvents";
+import { HttpError } from "@processor/api/http";
 
 /** How many rows one page of the review surface asks for. */
 const PAGE_SIZE = 50;

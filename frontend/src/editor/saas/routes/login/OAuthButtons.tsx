@@ -1,8 +1,8 @@
-import { oauthProviders } from "@app/constants/authProviders";
-import { useTranslation } from "@app/hooks/useTranslation";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { Button } from "@app/ui/Button";
-import { ProviderMark } from "@app/auth/ui/ProviderMark";
+import { oauthProviders } from "@editor/constants/authProviders";
+import { useTranslation } from "@editor/hooks/useTranslation";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { Button } from "@editor/ui/Button";
+import { ProviderMark } from "@editor/auth/ui/ProviderMark";
 
 // Exports for compatibility with proprietary code
 export const DEBUG_SHOW_ALL_PROVIDERS = false;

@@ -1,4 +1,4 @@
-import { availableOutputModes } from "@app/policies/outputModes";
+import { availableOutputModes } from "@editor/policies/outputModes";
 
 /** Destination types supported by the connected processing backend. */
 export function usePolicyOutputModes() {

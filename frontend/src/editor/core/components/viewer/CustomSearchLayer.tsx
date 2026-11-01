@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useDocumentState } from "@embedpdf/core/react";
 import { useSearch } from "@embedpdf/plugin-search/react";
-import { SEARCH_CONSTANTS } from "@app/components/viewer/constants/search";
+import { SEARCH_CONSTANTS } from "@editor/components/viewer/constants/search";
 
 interface SearchLayerProps {
   documentId?: string;

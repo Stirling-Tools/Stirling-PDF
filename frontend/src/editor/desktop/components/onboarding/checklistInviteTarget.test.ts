@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useChecklistInviteTarget } from "@app/components/onboarding/checklistInviteTarget";
+import { useChecklistInviteTarget } from "@editor/components/onboarding/checklistInviteTarget";
 
 interface UserCount {
   totalUsers: number | null;
@@ -12,16 +12,16 @@ const { userCount } = vi.hoisted(() => ({
   userCount: vi.fn<() => UserCount>(),
 }));
 
-vi.mock("@cloud/components/onboarding/checklistInviteTarget", () => ({
+vi.mock("@editor-cloud/components/onboarding/checklistInviteTarget", () => ({
   useChecklistInviteTarget: () => ({ loading: false, target: null }),
 }));
-vi.mock("@app/hooks/useSelfHostedAuth", () => ({
+vi.mock("@editor/hooks/useSelfHostedAuth", () => ({
   useSelfHostedAuth: () => ({ isSelfHosted: true, isAuthenticated: true }),
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { enableLogin: true, isAdmin: true } }),
 }));
-vi.mock("@app/hooks/useServerExperience", () => ({
+vi.mock("@editor/hooks/useServerExperience", () => ({
   useServerExperience: userCount,
 }));
 

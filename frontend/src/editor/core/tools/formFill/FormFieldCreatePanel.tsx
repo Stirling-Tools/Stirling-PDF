@@ -1,17 +1,17 @@
 /** Left panel for "create" mode; drawing happens in FormFieldCreationOverlay. */
 import { Text, Group, Alert, Tooltip } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { useFormFill } from "@app/tools/formFill/FormFillContext";
+import { Icon } from "@editor/ui/Icon";
+import { useFormFill } from "@editor/tools/formFill/FormFillContext";
 import {
   CREATABLE_FIELD_TYPES,
   type CreatableFieldType,
-} from "@app/tools/formFill/types";
-import { FIELD_TYPE_ICON } from "@app/tools/formFill/fieldMeta";
-import { PendingFields } from "@app/tools/formFill/PendingFields";
-import { SkippedEditsAlert } from "@app/tools/formFill/SkippedEditsAlert";
-import styles from "@app/tools/formFill/FormFill.module.css";
+} from "@editor/tools/formFill/types";
+import { FIELD_TYPE_ICON } from "@editor/tools/formFill/fieldMeta";
+import { PendingFields } from "@editor/tools/formFill/PendingFields";
+import { SkippedEditsAlert } from "@editor/tools/formFill/SkippedEditsAlert";
+import styles from "@editor/tools/formFill/FormFill.module.css";
 
 interface FormFieldCreatePanelProps {
   currentFile: File | Blob | null;

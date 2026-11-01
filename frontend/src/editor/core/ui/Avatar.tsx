@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "@app/ui/Avatar.css";
+import "@editor/ui/Avatar.css";
 
 export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type AvatarTone =

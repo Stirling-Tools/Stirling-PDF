@@ -9,9 +9,9 @@ import React, {
   ReactNode,
 } from "react";
 import { useLocation } from "react-router-dom";
-import licenseService, { LicenseInfo } from "@app/services/licenseService";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { getSimulatedLicenseInfo } from "@app/testing/serverExperienceSimulations";
+import licenseService, { LicenseInfo } from "@editor/services/licenseService";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { getSimulatedLicenseInfo } from "@editor/testing/serverExperienceSimulations";
 
 interface LicenseContextValue {
   licenseInfo: LicenseInfo | null;

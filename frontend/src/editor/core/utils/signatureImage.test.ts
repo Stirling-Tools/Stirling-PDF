@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   deriveInitials,
   fitPlacedSignatureSize,
-} from "@app/utils/signatureImage";
+} from "@editor/utils/signatureImage";
 
 describe("deriveInitials", () => {
   it("takes the first letters of the first and last names", () => {

@@ -1,9 +1,9 @@
 import { useSyncExternalStore, type DragEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileSelectors } from "@app/contexts/FileContext";
-import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
-import { alert } from "@app/components/toast";
+import { useFileSelectors } from "@editor/contexts/FileContext";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
+import { useDropzoneFiles } from "@editor/hooks/useDropzoneFiles";
+import { alert } from "@editor/components/toast";
 
 // One drag state shared by every surface given these handlers (the workbench
 // and the file sidebar), so the overlay the workbench draws stays up while the

@@ -2,4 +2,4 @@ export {
   RoutingRules,
   RoutingSection,
   blankRoutingRule,
-} from "@app/components/policies/RoutingRules";
+} from "@editor/components/policies/RoutingRules";

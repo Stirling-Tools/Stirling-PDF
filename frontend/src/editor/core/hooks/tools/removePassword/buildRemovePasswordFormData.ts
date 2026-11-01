@@ -1,12 +1,12 @@
 import {
   RemovePasswordParameters,
   defaultParameters,
-} from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+} from "@editor/hooks/tools/removePassword/useRemovePasswordParameters";
 import {
   objectToFormData,
   type ToolApiParams,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { REMOVE_PASSWORD_ENDPOINT } from "@app/constants/toolEndpoints";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { REMOVE_PASSWORD_ENDPOINT } from "@editor/constants/toolEndpoints";
 
 export { REMOVE_PASSWORD_ENDPOINT };
 type RemovePasswordApiParams = ToolApiParams[typeof REMOVE_PASSWORD_ENDPOINT];

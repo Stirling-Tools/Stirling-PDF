@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { Icon } from "@editor/ui/Icon";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import {
   TextInput,
   Textarea,
@@ -14,10 +14,10 @@ import {
   Code,
   List,
 } from "@mantine/core";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import type { McpAuthData } from "@app/components/shared/config/configSections/server/serverSettings";
-import type { McpCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import type { McpAuthData } from "@editor/components/shared/config/configSections/server/serverSettings";
+import type { McpCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
 
 /** Parse a comma/space/newline separated list into a string[]. */
 function parseOpList(raw: string): string[] {

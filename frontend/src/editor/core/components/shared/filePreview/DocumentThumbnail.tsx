@@ -1,12 +1,12 @@
 import React from "react";
 import { Box, Center, Loader, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { getFileTypeIcon } from "@app/components/shared/filePreview/getFileTypeIcon";
-import { StirlingFileStub } from "@app/types/fileContext";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { detectFileExtension } from "@app/utils/fileUtils";
-import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { Icon } from "@editor/ui/Icon";
+import { getFileTypeIcon } from "@editor/components/shared/filePreview/getFileTypeIcon";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { detectFileExtension } from "@editor/utils/fileUtils";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 
 export interface DocumentThumbnailProps {
   file: File | StirlingFileStub | null;

@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { fileContextReducer } from "@app/contexts/file/FileReducer";
+import { fileContextReducer } from "@editor/contexts/file/FileReducer";
 import type {
   FileContextAction,
   FileContextState,
   StirlingFileStub,
-} from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+} from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 /**
  * Classification is non-blocking: while it runs, the user can manually run a

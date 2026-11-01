@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import FileMetadata from "@app/components/tools/shared/FileMetadata";
+import FileMetadata from "@editor/components/tools/shared/FileMetadata";
 
 const buildFile = (name = "report.pdf", type = "application/pdf"): File =>
   new File(["%PDF-1.4 mock content"], name, {

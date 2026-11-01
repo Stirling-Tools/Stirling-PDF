@@ -1,8 +1,8 @@
 import { Fragment } from "react";
 import type { ReactNode } from "react";
-import { Chip } from "@app/ui/Chip";
-import type { ChipAccent, ChipSize } from "@app/ui/Chip";
-import "@app/ui/ChipFlow.css";
+import { Chip } from "@editor/ui/Chip";
+import type { ChipAccent, ChipSize } from "@editor/ui/Chip";
+import "@editor/ui/ChipFlow.css";
 
 export interface ChipFlowProps {
   items: ReactNode[];

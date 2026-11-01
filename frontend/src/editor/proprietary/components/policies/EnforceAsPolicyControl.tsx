@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { InfoTooltip, ToggleSwitch } from "@app/ui";
-import "@app/components/policies/EnforceAsPolicyControl.css";
+import { InfoTooltip, ToggleSwitch } from "@editor/ui";
+import "@editor/components/policies/EnforceAsPolicyControl.css";
 
 export interface EnforceAsPolicyControlProps {
   /** Org-mandated policy (see Policy.required). */

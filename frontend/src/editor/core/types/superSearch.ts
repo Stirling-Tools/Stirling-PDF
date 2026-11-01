@@ -1,5 +1,5 @@
 import type React from "react";
-import type { IconName } from "@app/ui/Icon";
+import type { IconName } from "@editor/ui/Icon";
 
 /**
  * The super search's shared contract: what a results provider returns and the

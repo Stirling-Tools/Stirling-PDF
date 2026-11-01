@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import AddWatermarkSingleStepSettings from "@app/components/tools/addWatermark/AddWatermarkSingleStepSettings";
-import type { AddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
+import AddWatermarkSingleStepSettings from "@editor/components/tools/addWatermark/AddWatermarkSingleStepSettings";
+import type { AddWatermarkParameters } from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
 
 interface PolicyWatermarkConfigProps {
   parameters: AddWatermarkParameters;

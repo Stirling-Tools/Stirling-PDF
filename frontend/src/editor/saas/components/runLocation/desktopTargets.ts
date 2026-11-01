@@ -1,4 +1,4 @@
-import { DOWNLOAD_URLS } from "@app/constants/downloads";
+import { DOWNLOAD_URLS } from "@editor/constants/downloads";
 
 export type DesktopPlatform = "mac" | "windows" | "linux";
 

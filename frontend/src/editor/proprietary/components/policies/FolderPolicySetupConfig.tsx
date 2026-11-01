@@ -1,1 +1,1 @@
-export { PolicySetupConnections as FolderPolicySetupConfig } from "@portal/components/policies/PolicySetupConnections";
+export { PolicySetupConnections as FolderPolicySetupConfig } from "@processor/components/policies/PolicySetupConnections";

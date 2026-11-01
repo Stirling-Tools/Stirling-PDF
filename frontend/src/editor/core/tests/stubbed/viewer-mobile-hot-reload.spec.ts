@@ -1,5 +1,5 @@
 import path from "path";
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 
 const FIXTURES = path.join(import.meta.dirname, "../test-fixtures");
 const MULTIPAGE_PDF = path.join(FIXTURES, "annotations_out_of_order.pdf");

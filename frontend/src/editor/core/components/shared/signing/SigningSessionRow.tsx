@@ -1,9 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { Icon, type IconName } from "@app/ui/Icon";
-import type { SigningIntent } from "@app/utils/pendingSigningIntent";
-import { needsSignature, type SigningMenuItem } from "@app/utils/signingItems";
-import { signingStatus } from "@app/utils/signingStatus";
-import { SigningActivityDot } from "@app/components/shared/signing/SigningActivityDot";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import type { SigningIntent } from "@editor/utils/pendingSigningIntent";
+import {
+  needsSignature,
+  type SigningMenuItem,
+} from "@editor/utils/signingItems";
+import { signingStatus } from "@editor/utils/signingStatus";
+import { SigningActivityDot } from "@editor/components/shared/signing/SigningActivityDot";
 
 interface SigningSessionRowProps {
   item: SigningMenuItem;

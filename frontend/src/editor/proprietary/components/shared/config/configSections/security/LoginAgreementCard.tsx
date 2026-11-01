@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Stack, Paper, Divider } from "@mantine/core";
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
-import LoginAgreementEditor from "@app/components/shared/config/configSections/LoginAgreementEditor";
-import type { LegalCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
+import LoginAgreementEditor from "@editor/components/shared/config/configSections/LoginAgreementEditor";
+import type { LegalCardProps } from "@editor/components/shared/config/configSections/security/securityCardProps";
 
 /** The disclaimer users accept after signing in, and its per-language text. */
 export function LoginAgreementCard({

@@ -1,15 +1,15 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { FolderPolicySetupConfig } from "@app/components/policies/FolderPolicySetupConfig";
-import type { PolicySetupResult } from "@app/policies/catalog";
-import { policyStep, policyStepToWire } from "@app/policies/operations";
+import { FolderPolicySetupConfig } from "@editor/components/policies/FolderPolicySetupConfig";
+import type { PolicySetupResult } from "@editor/policies/catalog";
+import { policyStep, policyStepToWire } from "@editor/policies/operations";
 
 vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: vi.fn() },
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));
-vi.mock("@app/services/apiClient", () => ({
+vi.mock("@editor/services/apiClient", () => ({
   default: {
     get: () =>
       Promise.resolve({
@@ -21,7 +21,7 @@ vi.mock("@app/services/apiClient", () => ({
       }),
   },
 }));
-vi.mock("@app/ui", () => ({
+vi.mock("@editor/ui", () => ({
   FormField: ({
     label,
     children,
@@ -46,7 +46,7 @@ vi.mock("@app/ui", () => ({
     onClick: () => void;
   }) => <button onClick={onClick}>{children}</button>,
 }));
-vi.mock("@app/components/policies/PolicyIngestionConfig", () => ({
+vi.mock("@editor/components/policies/PolicyIngestionConfig", () => ({
   PolicyIngestionConfig: ({
     onTargetChange,
     allowExternal,

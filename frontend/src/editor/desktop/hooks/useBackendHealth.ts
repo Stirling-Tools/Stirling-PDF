@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
-import { backendHealthMonitor } from "@app/services/backendHealthMonitor";
-import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import { connectionModeService } from "@app/services/connectionModeService";
-import type { BackendHealthState } from "@app/types/backendHealth";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { backendHealthMonitor } from "@editor/services/backendHealthMonitor";
+import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import type { BackendHealthState } from "@editor/types/backendHealth";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 
 /**
  * Hook to read backend health state for UI (Run button, BackendHealthIndicator).

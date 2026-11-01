@@ -1,6 +1,6 @@
 import { Stack, Checkbox, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ChangePermissionsParameters } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
+import { ChangePermissionsParameters } from "@editor/hooks/tools/changePermissions/useChangePermissionsParameters";
 
 interface ChangePermissionsSettingsProps {
   parameters: ChangePermissionsParameters;

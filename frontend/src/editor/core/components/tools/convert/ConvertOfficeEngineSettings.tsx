@@ -1,7 +1,7 @@
 import { Switch } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 
 interface ConvertOfficeEngineSettingsProps {
   parameters: ConvertParameters;

@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import EmailPasswordForm from "@app/auth/ui/EmailPasswordForm";
-import DividerWithText from "@app/components/shared/DividerWithText";
-import { DesktopOAuthButtons } from "@app/components/SetupWizard/DesktopOAuthButtons";
-import { SelfHostedLink } from "@app/components/SetupWizard/SelfHostedLink";
-import { UserInfo } from "@app/services/authService";
-import { Button } from "@app/ui/Button";
-import "@app/auth/ui/auth.css";
+import LoginHeader from "@editor/routes/login/LoginHeader";
+import ErrorMessage from "@editor/auth/ui/ErrorMessage";
+import EmailPasswordForm from "@editor/auth/ui/EmailPasswordForm";
+import DividerWithText from "@editor/components/shared/DividerWithText";
+import { DesktopOAuthButtons } from "@editor/components/SetupWizard/DesktopOAuthButtons";
+import { SelfHostedLink } from "@editor/components/SetupWizard/SelfHostedLink";
+import { UserInfo } from "@editor/services/authService";
+import { Button } from "@editor/ui/Button";
+import "@editor/auth/ui/auth.css";
 
 interface SaaSLoginScreenProps {
   serverUrl: string;

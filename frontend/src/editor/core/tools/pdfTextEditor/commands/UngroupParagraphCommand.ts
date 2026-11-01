@@ -1,12 +1,12 @@
 import i18n from "i18next";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
   cloneParagraphLineSlot,
   type ParagraphLineSlot,
   TextRun,
-} from "@app/tools/pdfTextEditor/model/TextRun";
-import { readTagMarks } from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+} from "@editor/tools/pdfTextEditor/model/TextRun";
+import { readTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 /** Split a paragraph-grouped run back into one editable run per source line. */
 interface RepSnapshot {

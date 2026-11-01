@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import apiClient from "@app/services/apiClient";
-import { useAuth } from "@app/auth/UseSession";
+import apiClient from "@editor/services/apiClient";
+import { useAuth } from "@editor/auth/UseSession";
 import {
   readCachedOtherApp,
   writeCachedOtherApp,
-} from "@app/services/navFooterCache";
-import { qk } from "@app/query/keys";
-import type { PortalAccessState } from "@core/hooks/usePortalAccess";
+} from "@editor/services/navFooterCache";
+import { qk } from "@editor/query/keys";
+import type { PortalAccessState } from "@editor-core/hooks/usePortalAccess";
 
 export type { PortalAccessState };
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
 import type { PDFDocumentProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
-import { PagePreview } from "@app/types/compare";
+import { PagePreview } from "@editor/types/compare";
 
 const DISPLAY_SCALE = 1;
 const BATCH_SIZE = 10; // Render 10 pages at a time

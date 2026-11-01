@@ -1,9 +1,9 @@
-import { useProcessingFolderCreation as useBaseProcessingFolderCreation } from "@proprietary/hooks/useProcessingFolderCreation";
-import { useAuth } from "@app/auth/UseSession";
-import { requestProcessorSignup } from "@app/services/processorSignup";
+import { useProcessingFolderCreation as useBaseProcessingFolderCreation } from "@editor-proprietary/hooks/useProcessingFolderCreation";
+import { useAuth } from "@editor/auth/UseSession";
+import { requestProcessorSignup } from "@editor/services/processorSignup";
 
-export { canCreateProcessingFolders } from "@proprietary/hooks/useProcessingFolderCreation";
-export type { ProcessingFolderCreation } from "@proprietary/hooks/useProcessingFolderCreation";
+export { canCreateProcessingFolders } from "@editor-proprietary/hooks/useProcessingFolderCreation";
+export type { ProcessingFolderCreation } from "@editor-proprietary/hooks/useProcessingFolderCreation";
 
 /** Both landing-page and editor actions require an account before mounting the setup wizard. */
 export function useProcessingFolderCreation() {

@@ -1,5 +1,5 @@
-import { useLink, type LinkState } from "@portal/contexts/LinkContext";
-import type { Tier } from "@portal/contexts/TierContext";
+import { useLink, type LinkState } from "@processor/contexts/LinkContext";
+import type { Tier } from "@processor/contexts/TierContext";
 
 /** Maps the self-hosted link/subscription state onto the portal tier. */
 function tierFromLinkState(linkState: LinkState): Tier {

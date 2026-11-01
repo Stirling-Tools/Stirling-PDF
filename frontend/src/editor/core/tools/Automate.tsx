@@ -1,29 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 
 import {
   createToolFlow,
   type MiddleStepConfig,
-} from "@app/components/tools/shared/createToolFlow";
-import { createFilesToolStep } from "@app/components/tools/shared/FilesToolStep";
-import AutomationSelection from "@app/components/tools/automate/AutomationSelection";
-import AutomationCreation from "@app/components/tools/automate/AutomationCreation";
-import AutomationRun from "@app/components/tools/automate/AutomationRun";
+} from "@editor/components/tools/shared/createToolFlow";
+import { createFilesToolStep } from "@editor/components/tools/shared/FilesToolStep";
+import AutomationSelection from "@editor/components/tools/automate/AutomationSelection";
+import AutomationCreation from "@editor/components/tools/automate/AutomationCreation";
+import AutomationRun from "@editor/components/tools/automate/AutomationRun";
 
-import { useAutomateOperation } from "@app/hooks/tools/automate/useAutomateOperation";
-import { BaseToolProps } from "@app/types/tool";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
-import { useSavedAutomations } from "@app/hooks/tools/automate/useSavedAutomations";
+import { useAutomateOperation } from "@editor/hooks/tools/automate/useAutomateOperation";
+import { BaseToolProps } from "@editor/types/tool";
+import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
+import { useSavedAutomations } from "@editor/hooks/tools/automate/useSavedAutomations";
 import {
   AutomationConfig,
   AutomationStepData,
   AutomationMode,
   AutomationStep,
-} from "@app/types/automation";
-import { AUTOMATION_STEPS } from "@app/constants/automation";
+} from "@editor/types/automation";
+import { AUTOMATION_STEPS } from "@editor/constants/automation";
 
 const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();

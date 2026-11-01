@@ -1,14 +1,14 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import { readFile } from "node:fs/promises";
-import { waitForEditorReady } from "@app/tests/stubbed/editorReady";
+import { waitForEditorReady } from "@editor/tests/stubbed/editorReady";
 import {
   downloadBytes,
   saveAndDownload,
   stashCurrentDocument,
   waitForReopenedPage,
-} from "@app/tests/stubbed/saveHelpers";
+} from "@editor/tests/stubbed/saveHelpers";
 
 // Editing OCR text on a scanned page. OCR adds invisible text (Tr 3) under or
 // over the scan image, so re-emitting it invisibly changed nothing on screen.

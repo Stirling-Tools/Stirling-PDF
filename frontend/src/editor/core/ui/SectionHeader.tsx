@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Icon } from "@app/ui/Icon";
-import "@app/ui/SectionHeader.css";
+import { Icon } from "@editor/ui/Icon";
+import "@editor/ui/SectionHeader.css";
 
 export interface SectionHeaderProps {
   /** Uppercase eyebrow title. */

@@ -1,18 +1,18 @@
 import { useState, useCallback, useMemo } from "react";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
-import { usePreferences } from "@app/contexts/PreferencesContext";
+import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
 import {
   getAllEndpoints,
   isComingSoonTool,
   type ToolRegistryEntry,
   type ToolRegistry,
-} from "@app/data/toolsTaxonomy";
-import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
-import { useSelfHostedToolAvailability } from "@app/hooks/useSelfHostedToolAvailability";
-import { useSaaSMode } from "@app/hooks/useSaaSMode";
-import { FileId } from "@app/types/file";
-import { ToolId } from "@app/types/toolId";
-import type { EndpointDisableReason } from "@app/types/endpointAvailability";
+} from "@editor/data/toolsTaxonomy";
+import { useMultipleEndpointsEnabled } from "@editor/hooks/useEndpointConfig";
+import { useSelfHostedToolAvailability } from "@editor/hooks/useSelfHostedToolAvailability";
+import { useSaaSMode } from "@editor/hooks/useSaaSMode";
+import { FileId } from "@editor/types/file";
+import { ToolId } from "@editor/types/toolId";
+import type { EndpointDisableReason } from "@editor/types/endpointAvailability";
 
 export type ToolDisableCause =
   | "disabledByAdmin"

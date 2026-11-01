@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SignatureStatusBadge from "@app/components/tools/validateSignature/reportView/SignatureStatusBadge";
-import type { SignatureValidationSignature } from "@app/types/validateSignature";
+import SignatureStatusBadge from "@editor/components/tools/validateSignature/reportView/SignatureStatusBadge";
+import type { SignatureValidationSignature } from "@editor/types/validateSignature";
 
 const baseSignature: SignatureValidationSignature = {
   id: "sig-1",

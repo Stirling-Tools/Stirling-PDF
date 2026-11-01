@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { DrawingControls } from "@app/components/annotation/shared/DrawingControls";
+import { DrawingControls } from "@editor/components/annotation/shared/DrawingControls";
 
 const meta: Meta<typeof DrawingControls> = {
   title: "Annotation/DrawingControls",

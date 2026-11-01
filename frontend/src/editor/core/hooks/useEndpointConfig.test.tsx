@@ -1,16 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
-import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
 import {
   useEndpointEnabled,
   useMultipleEndpointsEnabled,
-} from "@app/hooks/useEndpointConfig";
+} from "@editor/hooks/useEndpointConfig";
 import {
   fetchEndpointEnabled,
   fetchEndpointsAvailability,
-} from "@app/api/config";
+} from "@editor/api/config";
 
-vi.mock("@app/api/config", () => ({
+vi.mock("@editor/api/config", () => ({
   fetchEndpointEnabled: vi.fn(),
   fetchEndpointsAvailability: vi.fn(),
 }));

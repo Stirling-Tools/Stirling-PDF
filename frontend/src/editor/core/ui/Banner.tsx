@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import "@app/ui/Banner.css";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import "@editor/ui/Banner.css";
 
 export type BannerTone = "info" | "success" | "warning" | "danger" | "neutral";
 

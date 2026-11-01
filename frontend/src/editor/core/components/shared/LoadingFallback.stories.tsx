@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
 
 /** Full-screen splash shown while i18next Suspense is loading translations. */
 const meta: Meta<typeof LoadingFallback> = {

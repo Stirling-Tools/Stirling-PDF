@@ -1,6 +1,9 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { fitTextToWidth, NO_FIT } from "@app/tools/pdfTextEditor/util/fitText";
+import {
+  fitTextToWidth,
+  NO_FIT,
+} from "@editor/tools/pdfTextEditor/util/fitText";
 
 describe("fitTextToWidth", () => {
   it("leaves text alone when it already matches", () => {

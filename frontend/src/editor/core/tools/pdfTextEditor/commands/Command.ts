@@ -1,4 +1,4 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 
 // Every user-initiated mutation goes through a Command so it can be recorded,
 // replayed, and reverted by the HistoryStack.

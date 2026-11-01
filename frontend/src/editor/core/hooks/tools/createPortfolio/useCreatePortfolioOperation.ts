@@ -2,17 +2,17 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   defineMultiFileTool,
-} from "@app/hooks/tools/shared/useToolOperation";
+} from "@editor/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
   type ToolApiParams,
   type ToolEndpoint,
-} from "@app/hooks/tools/shared/toolApiMapping";
-import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+} from "@editor/hooks/tools/shared/toolApiMapping";
+import { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 import {
   CreatePortfolioParameters,
   DEFAULT_CREATE_PORTFOLIO_PARAMETERS,
-} from "@app/hooks/tools/createPortfolio/useCreatePortfolioParameters";
+} from "@editor/hooks/tools/createPortfolio/useCreatePortfolioParameters";
 
 const ENDPOINT = "/api/v1/misc/create-portfolio" satisfies ToolEndpoint;
 type CreatePortfolioApiParams = ToolApiParams[typeof ENDPOINT];

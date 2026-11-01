@@ -1,11 +1,11 @@
 import "fake-indexeddb/auto";
 import { IDBFactory } from "fake-indexeddb";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { fileStorage } from "@app/services/fileStorage";
+import { fileStorage } from "@editor/services/fileStorage";
 import {
   createNewStirlingFileStub,
   createStirlingFile,
-} from "@app/types/fileContext";
+} from "@editor/types/fileContext";
 
 // classificationLocked is what stops a policy reclassifying a file the onboarding demo
 // already settled. The upload auto-run checks the lock and not the labels, so a lock lost

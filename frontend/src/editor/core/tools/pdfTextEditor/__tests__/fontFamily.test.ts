@@ -4,7 +4,7 @@ import {
   flipBold,
   flipItalic,
   nearestStandardFont,
-} from "@app/tools/pdfTextEditor/util/fontFamily";
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
 
 // The base-14 combined styles have EXACT PostScript spellings (Times uses
 // Roman/Italic/BoldItalic; Helvetica/Courier use Oblique/BoldOblique).

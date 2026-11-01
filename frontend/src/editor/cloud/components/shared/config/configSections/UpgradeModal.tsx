@@ -18,9 +18,9 @@
  */
 import React, { Suspense, useState } from "react";
 import { createPortal } from "react-dom";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 // oxlint-disable-next-line no-restricted-imports
 import "./UpgradeModal.css";
@@ -32,7 +32,7 @@ import SpendCapControl from "./SpendCapControl";
 // chunk-graph reasoning.
 const StripeCheckoutPanel = React.lazy(
   () =>
-    import("@app/components/shared/config/configSections/StripeCheckoutPanel"),
+    import("@editor/components/shared/config/configSections/StripeCheckoutPanel"),
 );
 
 interface UpgradeModalProps {

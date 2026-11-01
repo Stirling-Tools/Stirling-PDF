@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Icon, type IconName } from "@app/ui/Icon";
-import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
-import type { ToolId } from "@app/types/toolId";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import type { QuickNavToolReasons } from "@editor/contexts/QuickNavHostContext";
+import type { ToolId } from "@editor/types/toolId";
 
 interface SignToolButtonProps {
   icon: IconName;

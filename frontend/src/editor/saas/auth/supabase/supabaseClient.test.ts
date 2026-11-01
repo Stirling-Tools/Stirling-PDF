@@ -2,7 +2,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 const sdk = vi.hoisted(() => ({
   auth: { signOut: vi.fn().mockResolvedValue({ error: null }) },
 }));
-vi.mock("@app/auth/supabase", () => ({
+vi.mock("@editor/auth/supabase", () => ({
   supabase: sdk,
   getCurrentUser: vi.fn(),
   isUserAnonymous: vi.fn(),
@@ -12,7 +12,7 @@ import {
   configureSupabase,
   getSupabaseClient,
   clearSupabaseSession,
-} from "@app/auth/supabase/supabaseClient";
+} from "@editor/auth/supabase/supabaseClient";
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();

@@ -1,23 +1,26 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@app/tools/pdfTextEditor/model/Page";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type {
   ParagraphLineSlot,
   TextRun,
-} from "@app/tools/pdfTextEditor/model/TextRun";
+} from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
   cssFontSpecFor,
   emitTextLine,
   inkFromRun,
   isVerifiedPerCharPtr,
   measureObjRightEdgePt,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   fallbackFamilyFor,
   fallbackFontIdFor,
-} from "@app/tools/pdfTextEditor/util/fontCapability";
-import { writeUtf16 } from "@app/services/pdfiumService";
-import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
-import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+} from "@editor/tools/pdfTextEditor/util/fontCapability";
+import { writeUtf16 } from "@editor/services/pdfiumService";
+import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import {
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 /** Set the text of an EXISTING PDFium text object, preserving its font. */
 export function setObjText(
@@ -729,7 +732,7 @@ export function applyPartialEditPlan(
       const origWidth = origBounds.right - origBounds.x;
       const modText = op.text;
       // Read the object's own font BEFORE we touch it, so a fallback re-emit
-      // can reuse the same embedded font via the charcode/backend path.
+      // can reuse the same embedded font via the charcode path.
       const modFontPtr = objFontPtr(m, ptr);
       setObjText(m, ptr, modText);
       if (Math.abs(offset) > 0.05) {
@@ -867,8 +870,7 @@ export function applyPartialEditPlan(
       // Heuristic: a working visible glyph is at least ~0.15 * fontSize wide.
       const nonWhitespaceLen = insertText.replace(/\s/g, "").length;
       const minExpected = nonWhitespaceLen * run.fontSize * 0.15;
-      // Skip the tofu retry when ALL returned ptrs came from the per-char
-      // backend emit branch in emitTextLine.
+      // Skip the tofu retry when every returned ptr is already verified.
       const allVerified =
         ptrs.length > 0 && ptrs.every((p) => isVerifiedPerCharPtr(p));
       if (

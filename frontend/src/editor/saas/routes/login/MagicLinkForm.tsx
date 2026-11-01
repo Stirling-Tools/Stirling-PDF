@@ -1,7 +1,7 @@
-import { Button } from "@app/ui/Button";
-import { useTranslation } from "@app/hooks/useTranslation";
-import "@app/auth/ui/auth.css";
-import "@app/routes/authShared/saas-auth.css";
+import { Button } from "@editor/ui/Button";
+import { useTranslation } from "@editor/hooks/useTranslation";
+import "@editor/auth/ui/auth.css";
+import "@editor/routes/authShared/saas-auth.css";
 
 interface MagicLinkFormProps {
   showMagicLink: boolean;

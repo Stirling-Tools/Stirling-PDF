@@ -1,10 +1,10 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon, Button, FilePicker, Spinner } from "@app/ui";
-import { type RunOutputFile } from "@portal/api/pipelines";
-import "@portal/components/pipelines/PipelineGraphToolbar.css";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon, Button, FilePicker, Spinner } from "@editor/ui";
+import { type RunOutputFile } from "@processor/api/pipelines";
+import "@processor/components/pipelines/PipelineGraphToolbar.css";
 
 /**
  * A test run's outcome. Whole-pipeline, not per-node: the backend reports one flat list of files

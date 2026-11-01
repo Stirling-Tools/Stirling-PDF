@@ -13,7 +13,7 @@ import { useSyncExternalStore } from "react";
 import type {
   PolicyExecutionTarget,
   PolicyRunStatus,
-} from "@app/services/policyPipeline";
+} from "@editor/services/policyPipeline";
 
 export interface PolicyRunRecord {
   runId: string;

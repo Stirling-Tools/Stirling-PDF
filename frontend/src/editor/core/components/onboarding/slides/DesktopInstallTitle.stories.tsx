@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   DesktopInstallTitle,
   type OSOption,
-} from "@app/components/onboarding/slides/DesktopInstallTitle";
+} from "@editor/components/onboarding/slides/DesktopInstallTitle";
 
 const OS_OPTIONS: OSOption[] = [
   { label: "macOS (Apple Silicon)", url: "#mac-arm", value: "mac-arm" },

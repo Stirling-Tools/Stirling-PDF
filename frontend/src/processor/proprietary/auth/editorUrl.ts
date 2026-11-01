@@ -1,5 +1,5 @@
-import { withBasePath } from "@app/constants/app";
-import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { withBasePath } from "@editor/constants/app";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 
 const CONFIGURED_EDITOR_URL = import.meta.env.VITE_EDITOR_URL || "";
 

@@ -5,8 +5,8 @@ import {
   prepareVectorDestination,
   ingestStepConfigured,
   vectorDestinationConfigured,
-} from "@portal/components/pipelines/docparseStep";
-import { isReadableSource } from "@portal/components/sources/sourceTypes";
+} from "@processor/components/pipelines/docparseStep";
+import { isReadableSource } from "@processor/components/sources/sourceTypes";
 
 describe("vector database destinations", () => {
   it.each([

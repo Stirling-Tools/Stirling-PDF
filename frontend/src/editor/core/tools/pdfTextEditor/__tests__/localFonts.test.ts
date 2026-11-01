@@ -4,8 +4,8 @@ import {
   isLocalFontAccessSupported,
   listLocalFonts,
   resetLocalFontsCache,
-} from "@app/tools/pdfTextEditor/util/localFonts";
-import type { LocalFont } from "@app/tools/pdfTextEditor/util/localFonts";
+} from "@editor/tools/pdfTextEditor/util/localFonts";
+import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
 
 type QueryStub = () => Promise<unknown[]>;
 

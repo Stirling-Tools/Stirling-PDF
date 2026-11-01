@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import BookletImpositionSettings from "@app/components/tools/bookletImposition/BookletImpositionSettings";
+import BookletImpositionSettings from "@editor/components/tools/bookletImposition/BookletImpositionSettings";
 import {
   BookletImpositionParameters,
   defaultParameters,
-} from "@app/hooks/tools/bookletImposition/useBookletImpositionParameters";
+} from "@editor/hooks/tools/bookletImposition/useBookletImpositionParameters";
 
 const meta = {
   title: "Tools/BookletImposition/BookletImpositionSettings",

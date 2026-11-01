@@ -1,5 +1,5 @@
 import { useCallback, useReducer } from "react";
-import type { SignaturePreview } from "@app/components/viewer/viewerTypes";
+import type { SignaturePreview } from "@editor/components/viewer/viewerTypes";
 
 interface PreviewHistory {
   past: SignaturePreview[][];

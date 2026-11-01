@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import FitText from "@app/components/shared/FitText";
+import FitText from "@editor/components/shared/FitText";
 
 const meta: Meta<typeof FitText> = {
   title: "Shared/FitText",

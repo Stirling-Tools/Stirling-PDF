@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import "@app/auth/ui/auth.css";
+import ErrorMessage from "@editor/auth/ui/ErrorMessage";
+import "@editor/auth/ui/auth.css";
 
 /**
  * The inline error banner the auth forms render when a submission fails

@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   buildPolicyBadgeMap,
   reusePolicyBadgeArrays,
-} from "@app/hooks/usePolicyFileBadges";
-import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
+} from "@editor/hooks/usePolicyFileBadges";
+import type { PolicyRunRecord } from "@editor/components/policies/policyRunStore";
 
 const labels = new Map([
   ["security", "Security"],

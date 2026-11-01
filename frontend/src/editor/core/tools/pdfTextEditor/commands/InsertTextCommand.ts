@@ -1,14 +1,14 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { BLACK } from "@app/tools/pdfTextEditor/model/Color";
-import { writeUtf16 } from "@app/services/pdfiumService";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { BLACK } from "@editor/tools/pdfTextEditor/model/Color";
+import { writeUtf16 } from "@editor/services/pdfiumService";
 import {
   counterPageRotation,
   rotateObjectAbout,
   sanitizeForBase14,
-} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { emitFallbackTextObject } from "@app/tools/pdfTextEditor/util/fallbackFont";
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { emitFallbackTextObject } from "@editor/tools/pdfTextEditor/util/fallbackFont";
 
 const DEFAULT_FAMILY = "Helvetica";
 const DEFAULT_SIZE = 12;

@@ -1,4 +1,4 @@
-import { AppRoot } from "@app/components/layout/AppRoot";
+import { AppRoot } from "@editor/components/layout/AppRoot";
 
 /**
  * Desktop override of Landing.

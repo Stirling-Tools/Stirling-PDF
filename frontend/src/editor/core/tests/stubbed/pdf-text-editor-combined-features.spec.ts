@@ -1,10 +1,10 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type {
   EditorMatrix,
   EditorTestWindow,
-} from "@app/tests/stubbed/editorTestTypes";
+} from "@editor/tests/stubbed/editorTestTypes";
 
 // Combined-feature regression suite: the new editor features AND their
 // interaction with the 12 bug fixes.
@@ -173,12 +173,6 @@ async function undoSize(page: Page): Promise<number> {
 }
 
 test.describe("PDF text editor - combined feature set", () => {
-  // Editor edits fire encode-charcodes; with no backend an UNMOCKED call 401s
-  // and redirects to login, unmounting the editor.
-  test.beforeEach(async ({ page }) => {
-    await page.route("**/encode-charcodes", (route) => route.abort());
-  });
-
   test("image insert (real png) adds an image, then rotate-cw changes its matrix and undo reverts", async ({
     page,
   }) => {

@@ -2,7 +2,7 @@ import type {
   CharcodeResolver,
   CharcodeResolveResult,
   ResolverContext,
-} from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
+} from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 
 // Strategy 2: scrape Unicode→charcode mappings by walking the page's existing
 // text via PDFium's text page API.

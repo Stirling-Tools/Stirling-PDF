@@ -1,7 +1,7 @@
-import type { IconName } from "@app/ui/Icon";
+import type { IconName } from "@editor/ui/Icon";
 // Extension seam for how the Files sidebar groups its list; core returns null (one flat, recency-sorted list) and a higher layer overrides this to group by classification. The shared sidebar just renders whatever groups it's handed.
 
-import type { StirlingFileStub } from "@app/types/fileContext";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 export interface FileSidebarGroup {
   /** Stable key for collapse state + React keys. */

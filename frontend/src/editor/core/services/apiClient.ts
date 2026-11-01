@@ -1,7 +1,7 @@
 import axios from "axios";
-import { handleHttpError } from "@app/services/httpErrorHandler";
-import { setupApiInterceptors } from "@app/services/apiClientSetup";
-import { getApiBaseUrl } from "@app/services/apiClientConfig";
+import { handleHttpError } from "@editor/services/httpErrorHandler";
+import { setupApiInterceptors } from "@editor/services/apiClientSetup";
+import { getApiBaseUrl } from "@editor/services/apiClientConfig";
 
 // Create axios instance with default config
 const apiClient = axios.create({

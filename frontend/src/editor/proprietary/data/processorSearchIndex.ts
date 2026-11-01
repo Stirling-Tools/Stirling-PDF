@@ -1,20 +1,20 @@
 import {
   PORTAL_BASENAME,
   PORTAL_REVIEW_PATH,
-} from "@app/routes/portalBasename";
-import { DOCS_PATH } from "@app/routes/docsRoute";
+} from "@editor/routes/portalBasename";
+import { DOCS_PATH } from "@editor/routes/docsRoute";
 // A static leaf module (its portal import is type-only), so it doesn't pull
-// the lazy portal chunk into the main bundle the way @portal/* values would.
-import { usersCapabilities } from "@app/portal/usersCapabilities";
-import type { ProcessorSearchEntry } from "@core/data/processorSearchIndex";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
+// the lazy portal chunk into the main bundle the way @processor/* values would.
+import { usersCapabilities } from "@editor/portal/usersCapabilities";
+import type { ProcessorSearchEntry } from "@editor-core/data/processorSearchIndex";
+import { HAS_PORTAL } from "@editor/routes/hasPortal";
 
 export type { ProcessorSearchEntry };
 
 /**
  * The portal's in-app views. Deliberately a static mirror of the portal's nav
  * (labels via the same portal.nav.* keys its sidebar uses) rather than an
- * import from @portal/* — referencing the portal package here would pull the
+ * import from @processor/* — referencing the portal package here would pull the
  * lazy portal chunk into the main bundle.
  */
 const VIEWS: ProcessorSearchEntry[] = [

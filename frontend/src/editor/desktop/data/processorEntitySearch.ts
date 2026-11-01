@@ -3,4 +3,4 @@
  * admin-route seam) — shadow the entity search back to core's empty stub so
  * the super search never fetches or offers Processor entities on desktop.
  */
-export { useProcessorEntityGroups } from "@core/data/processorEntitySearch";
+export { useProcessorEntityGroups } from "@editor-core/data/processorEntitySearch";

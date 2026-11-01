@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode } from "react";
-import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
 
 interface PDFAnnotationContextValue {
   // Drawing mode management

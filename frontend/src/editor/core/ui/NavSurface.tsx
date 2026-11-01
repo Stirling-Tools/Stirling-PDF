@@ -1,5 +1,5 @@
 import { forwardRef, type HTMLAttributes } from "react";
-import "@app/ui/NavSurface.css";
+import "@editor/ui/NavSurface.css";
 
 export interface NavSurfaceProps extends HTMLAttributes<HTMLDivElement> {
   /** Element to render; `section`/`aside`/`nav` when the box is a landmark. */

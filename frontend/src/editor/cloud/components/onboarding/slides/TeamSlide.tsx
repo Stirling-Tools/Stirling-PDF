@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Badge, TextInput } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { SlideConfig } from "@app/types/types";
-import { createLightSlideBackground } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
-import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
-import styles from "@app/components/onboarding/slides/SaasOnboardingSlides.module.css";
+import { SlideConfig } from "@editor/types/types";
+import { createLightSlideBackground } from "@editor/components/onboarding/slides/unifiedBackgroundConfig";
+import { useSaaSTeam } from "@editor/contexts/SaaSTeamContext";
+import styles from "@editor/components/onboarding/slides/SaasOnboardingSlides.module.css";
 
 const TEAM_BACKGROUND = createLightSlideBackground([79, 70, 229], "#E0E7FF");
 

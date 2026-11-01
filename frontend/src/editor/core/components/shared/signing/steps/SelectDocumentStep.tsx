@@ -1,9 +1,9 @@
 import { Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import type { FileState } from "@app/types/file";
-import { formatFileSize } from "@app/utils/fileUtils";
+import { Icon } from "@editor/ui/Icon";
+import type { FileState } from "@editor/types/file";
+import { formatFileSize } from "@editor/utils/fileUtils";
 
 interface SelectDocumentStepProps {
   selectedFiles: FileState[];

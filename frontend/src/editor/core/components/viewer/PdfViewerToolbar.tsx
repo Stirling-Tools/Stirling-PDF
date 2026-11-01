@@ -3,12 +3,12 @@ import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
 import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useTranslation } from "react-i18next";
 import { SpreadMode } from "@embedpdf/plugin-spread/react";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useIsPhone } from "@app/hooks/useIsMobile";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import "@app/components/viewer/PdfViewerToolbar.css";
-import { Icon } from "@app/ui/Icon";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useIsPhone } from "@editor/hooks/useIsMobile";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import "@editor/components/viewer/PdfViewerToolbar.css";
+import { Icon } from "@editor/ui/Icon";
 
 // Sizing constants for the page number input
 const MIN_PAGE_DIGITS = 2;

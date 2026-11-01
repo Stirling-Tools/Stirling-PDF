@@ -1,28 +1,28 @@
 import { Suspense, lazy, useCallback, useMemo, useState } from "react";
 import { Modal, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import { useAuth } from "@app/auth/UseSession";
-import { usePortalAccessState } from "@app/hooks/usePortalAccess";
-import { isUserAnonymous } from "@app/auth/supabase";
-import Overview from "@app/components/shared/config/configSections/Overview";
-import { createSaasConfigNavSections } from "@app/components/shared/config/saasConfigNavSections";
-import { withBasePath } from "@app/constants/app";
-import { Z_INDEX_OVER_SETTINGS_MODAL } from "@app/styles/zIndex";
-import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
+import { Button } from "@editor/ui/Button";
+import { useAuth } from "@editor/auth/UseSession";
+import { usePortalAccessState } from "@editor/hooks/usePortalAccess";
+import { isUserAnonymous } from "@editor/auth/supabase";
+import Overview from "@editor/components/shared/config/configSections/Overview";
+import { createSaasConfigNavSections } from "@editor/components/shared/config/saasConfigNavSections";
+import { withBasePath } from "@editor/constants/app";
+import { Z_INDEX_OVER_SETTINGS_MODAL } from "@editor/styles/zIndex";
+import type { SettingsNav } from "@editor/components/settings/settingsNavTypes";
 import {
   buildPortalSettingsSections,
   PORTAL_SECTION_ALIASES,
   portalSupersededSectionKeys,
-} from "@app/components/settings/portalSettingsNav";
-import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
-import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import { BASE_SECTION_ALIASES } from "@app/data/settingsAliases";
-import type { NavKey } from "@app/components/shared/config/types";
+} from "@editor/components/settings/portalSettingsNav";
+import { mergeSettingsGroups } from "@editor/components/settings/mergeSettingsGroups";
+import { useSaaSTeam } from "@editor/contexts/SaaSTeamContext";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import { BASE_SECTION_ALIASES } from "@editor/data/settingsAliases";
+import type { NavKey } from "@editor/components/shared/config/types";
 
 const ConnectedInstancesSection = lazy(
-  () => import("@app/components/settings/ConnectedInstancesSection"),
+  () => import("@editor/components/settings/ConnectedInstancesSection"),
 );
 
 export type { SettingsNav };

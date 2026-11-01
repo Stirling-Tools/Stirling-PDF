@@ -6,8 +6,8 @@ import type {
   SourceStatus,
   SourceView,
   SourcesResponse,
-} from "@portal/api/sources";
-import { sampleDailySeries } from "@portal/mocks/sampleDailySeries";
+} from "@processor/api/sources";
+import { sampleDailySeries } from "@processor/mocks/sampleDailySeries";
 
 /**
  * Stateful mock for the Sources surface so the portal works fully offline with

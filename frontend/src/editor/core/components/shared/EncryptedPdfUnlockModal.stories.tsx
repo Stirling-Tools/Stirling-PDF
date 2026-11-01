@@ -1,6 +1,6 @@
 import { useState, type ComponentProps } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
+import EncryptedPdfUnlockModal from "@editor/components/shared/EncryptedPdfUnlockModal";
 
 const meta = {
   title: "Shared/EncryptedPdfUnlockModal",

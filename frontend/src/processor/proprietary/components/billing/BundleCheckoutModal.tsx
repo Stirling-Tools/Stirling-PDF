@@ -10,7 +10,7 @@ import {
   NumberInput,
   Select,
   Skeleton,
-} from "@app/ui";
+} from "@editor/ui";
 import {
   BUNDLE_PIPELINE_TIERS,
   BUNDLE_POLICY_POSTURES,
@@ -22,13 +22,13 @@ import {
   formatMinor,
   formatMoneyMajor,
   currencySymbol,
-} from "@app/billing";
-import type { Wallet } from "@app/portal/api/billing";
-import { stripeMinorUnitScale } from "@app/utils/stripeCurrency";
+} from "@editor/billing";
+import type { Wallet } from "@editor/portal/api/billing";
+import { stripeMinorUnitScale } from "@editor/utils/stripeCurrency";
 import {
   getPreferredCurrency,
   setCachedCurrency,
-} from "@app/utils/currencyDetection";
+} from "@editor/utils/currencyDetection";
 import {
   acceptBundleStripeQuote,
   cancelBundleQuote,
@@ -43,8 +43,8 @@ import {
   type BundleInvoice,
   type BundleQuote,
   type BundleStripeQuote,
-} from "@app/portal/billing/stripe";
-import "@app/portal/theme/surface.css";
+} from "@editor/portal/billing/stripe";
+import "@editor/portal/theme/surface.css";
 
 const DEFAULT_POOL_CREDITS = 1_200_000;
 const DEFAULT_USERS = 25;

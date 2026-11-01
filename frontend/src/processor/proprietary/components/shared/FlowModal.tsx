@@ -1,1 +1,1 @@
-export { FlowModal } from "@app/components/shared/FlowModal";
+export { FlowModal } from "@editor/components/shared/FlowModal";

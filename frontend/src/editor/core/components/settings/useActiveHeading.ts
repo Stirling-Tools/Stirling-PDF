@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { SectionHeading } from "@app/components/settings/useSectionHeadings";
+import type { SectionHeading } from "@editor/components/settings/useSectionHeadings";
 
 /** Where in the scroll container a card counts as the one being read. */
 const ACTIVE_LINE = 120;

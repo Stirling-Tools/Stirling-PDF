@@ -1,10 +1,10 @@
 import { useEffect, useId, type ReactNode } from "react";
-import { Icon } from "@app/ui/Icon";
+import { Icon } from "@editor/ui/Icon";
 import { createPortal } from "react-dom";
 import { FocusTrap } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui/Button";
-import "@app/ui/Drawer.css";
+import { Button } from "@editor/ui/Button";
+import "@editor/ui/Drawer.css";
 
 export type DrawerSide = "right" | "left";
 export type DrawerWidth = "sm" | "md" | "lg";

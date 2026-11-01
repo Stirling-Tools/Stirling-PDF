@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { type OAuthProvider } from "@app/auth/spring/oauthTypes";
-import { Button as DSButton } from "@app/ui/Button";
-import { GENERIC_PROVIDER_ICON } from "@app/auth/ui/oauthIcons";
-import { ProviderMark } from "@app/auth/ui/ProviderMark";
+import { Icon } from "@editor/ui/Icon";
+import { type OAuthProvider } from "@editor/auth/spring/oauthTypes";
+import { Button as DSButton } from "@editor/ui/Button";
+import { GENERIC_PROVIDER_ICON } from "@editor/auth/ui/oauthIcons";
+import { ProviderMark } from "@editor/auth/ui/ProviderMark";
 
 // Debug flag to show all providers for UI testing
 // Set to true to see all SSO options regardless of backend configuration

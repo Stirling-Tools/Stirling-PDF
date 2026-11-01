@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 
-import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
-import { FOLDER_COLOR_PALETTE, FolderRecord } from "@app/types/folder";
+import { FolderAppearancePicker } from "@editor/components/filesPage/FolderAppearancePicker";
+import { FOLDER_COLOR_PALETTE, FolderRecord } from "@editor/types/folder";
 
 const folder: FolderRecord = {
   id: "folder-1" as FolderRecord["id"],

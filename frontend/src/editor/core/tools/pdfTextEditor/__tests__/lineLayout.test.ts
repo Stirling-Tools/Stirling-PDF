@@ -3,7 +3,7 @@ import {
   fitTokenAdvance,
   NO_TOKEN_FIT,
   stackLineBoxes,
-} from "@app/tools/pdfTextEditor/util/lineLayout";
+} from "@editor/tools/pdfTextEditor/util/lineLayout";
 
 function renderedAdvance(
   charCount: number,

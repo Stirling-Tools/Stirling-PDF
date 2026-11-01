@@ -1,12 +1,16 @@
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { applyStructureEdits } from "@app/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
-import { repairStructure } from "@app/tools/pdfTextEditor/pdfdoc/passes/repairStructure";
-import { preserveShadings } from "@app/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
-import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
+import i18n from "i18next";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import {
+  StructureEditError,
+  applyStructureEdits,
+} from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
+import { repairStructure } from "@editor/tools/pdfTextEditor/pdfdoc/passes/repairStructure";
+import { preserveShadings } from "@editor/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
+import { PdfiumSave } from "@editor/tools/pdfTextEditor/pdfium/PdfiumSave";
 import {
   assertIncrementalAppend,
   assertSavedPdf,
-} from "@app/tools/pdfTextEditor/util/savedBytes";
+} from "@editor/tools/pdfTextEditor/util/savedBytes";
 
 /** Serialize the editor document to a Blob plus the download filename. */
 export async function exportToBlob(
@@ -39,7 +43,20 @@ export async function exportToBlob(
 
   // Throws rather than dropping them: a description the user wrote that the
   // saved file silently lacks is worse than a save that reports it failed.
-  bytes = await applyStructureEdits(bytes, structureEdits);
+  try {
+    bytes = await applyStructureEdits(bytes, structureEdits);
+  } catch (err) {
+    if (!(err instanceof StructureEditError)) throw err;
+    // Its failures name pages and MCIDs: for a bug report, not for the user.
+    console.error(err);
+    throw new Error(
+      i18n.t(
+        "pdfTextEditor.inspector.accessibility.saveFailed",
+        "Your accessibility changes couldn't be saved, so the file wasn't saved. Undo them and try again.",
+      ),
+      { cause: err },
+    );
+  }
 
   // After the edits: when the content an element described was deleted, the
   // repair removes the ParentTree slot an edit to that element is addressed by,

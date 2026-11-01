@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 import {
   MAX_THUMBNAILS,
   planThumbnails,
-} from "@app/components/easterEgg/collectThumbnails";
+} from "@editor/components/easterEgg/collectThumbnails";
 
 /** Only the thumbnail-bearing fields matter to the planner. */
 function stub(options: {

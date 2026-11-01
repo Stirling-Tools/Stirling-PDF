@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
-import { useFreeTierExhaustedPrompt } from "@app/portal/hooks/useFreeTierExhaustedPrompt";
-import { LinkProvider } from "@app/portal/contexts/LinkContext";
-import { TierProvider } from "@app/portal/contexts/TierContext";
-import { UIProvider } from "@app/portal/contexts/UIContext";
-import { AccountLinkProvider } from "@app/portal/contexts/AccountLinkContext";
-import { AccountLinkSessionBoundary } from "@app/portal/components/account-link/AccountLinkSessionBoundary";
-import { ConnectCallbackHost } from "@app/portal/components/account-link/ConnectCallbackHost";
-import { AccountConnectionRefresh } from "@app/portal/components/account-link/AccountConnectionNotice";
-import { LinkAccountModalHost } from "@app/portal/components/account-link/LinkAccountModal";
+import { useFreeTierExhaustedPrompt } from "@editor/portal/hooks/useFreeTierExhaustedPrompt";
+import { LinkProvider } from "@editor/portal/contexts/LinkContext";
+import { TierProvider } from "@editor/portal/contexts/TierContext";
+import { UIProvider } from "@editor/portal/contexts/UIContext";
+import { AccountLinkProvider } from "@editor/portal/contexts/AccountLinkContext";
+import { AccountLinkSessionBoundary } from "@editor/portal/components/account-link/AccountLinkSessionBoundary";
+import { ConnectCallbackHost } from "@editor/portal/components/account-link/ConnectCallbackHost";
+import { AccountConnectionRefresh } from "@editor/portal/components/account-link/AccountConnectionNotice";
+import { LinkAccountModalHost } from "@editor/portal/components/account-link/LinkAccountModal";
 
 function SettingsLinkModalHost() {
   const { pathname } = useLocation();

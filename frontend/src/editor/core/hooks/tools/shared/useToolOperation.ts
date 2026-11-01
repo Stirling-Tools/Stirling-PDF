@@ -1,65 +1,65 @@
 import { useCallback, useRef, useEffect, useContext } from "react";
-import apiClient from "@app/services/apiClient";
+import apiClient from "@editor/services/apiClient";
 import {
   assertFilesNotBlocked,
   policySourceIds,
-} from "@app/services/policyFileGuard";
+} from "@editor/services/policyFileGuard";
 import { useTranslation } from "react-i18next";
-import { useFileContext } from "@app/contexts/FileContext";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
-import { ViewerContext } from "@app/contexts/ViewerContext";
-import { toolAcceptsFile } from "@app/utils/toolIOCompat";
+import { useFileContext } from "@editor/contexts/FileContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { ViewerContext } from "@editor/contexts/ViewerContext";
+import { toolAcceptsFile } from "@editor/utils/toolIOCompat";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
   preflightPdfOperation,
-} from "@app/services/pdfSessionUnlock";
-import { useToolState } from "@app/hooks/tools/shared/useToolState";
+} from "@editor/services/pdfSessionUnlock";
+import { useToolState } from "@editor/hooks/tools/shared/useToolState";
 import {
   useToolApiCalls,
   type ApiCallsConfig,
-} from "@app/hooks/tools/shared/useToolApiCalls";
-import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
+} from "@editor/hooks/tools/shared/useToolApiCalls";
+import { useToolResources } from "@editor/hooks/tools/shared/useToolResources";
 import {
   extractErrorMessage,
   handle422Error,
   isSignupRequiredError,
-} from "@app/utils/toolErrorHandler";
+} from "@editor/utils/toolErrorHandler";
 import {
   StirlingFile,
   extractFiles,
   FileId,
   StirlingFileStub,
-} from "@app/types/fileContext";
-import { FILE_EVENTS } from "@app/services/errorUtils";
+} from "@editor/types/fileContext";
+import { FILE_EVENTS } from "@editor/services/errorUtils";
 import {
   errorCodeOf,
   reportToolFailure,
   wasCancelled,
-} from "@app/services/failureReporting";
-import { stashRetryPayload } from "@app/services/notificationRetry";
-import { refreshNotificationsNow } from "@app/hooks/useNotifications";
-import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
-import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
-import { zipFileService } from "@app/services/zipFileService";
-import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
+} from "@editor/services/failureReporting";
+import { stashRetryPayload } from "@editor/services/notificationRetry";
+import { refreshNotificationsNow } from "@editor/hooks/useNotifications";
+import { useResolutionContinuation } from "@editor/hooks/tools/shared/useResolutionContinuation";
+import { useNotificationsAvailable } from "@editor/components/notifications/useNotificationsAvailable";
+import { zipFileService } from "@editor/services/zipFileService";
+import { getFilenameWithoutExtension } from "@editor/utils/fileUtils";
 import {
   createChildStub,
   generateProcessedFileMetadata,
-} from "@app/contexts/file/fileActions";
-import { createNewStirlingFileStub } from "@app/types/fileContext";
-import { ToolOperation } from "@app/types/file";
-import { ensureBackendReady } from "@app/services/backendReadinessGuard";
-import { trackEditorOperation } from "@app/services/analytics";
-import { notifyToolCompleted } from "@app/services/toolUsageTracker";
-import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
-import { useCreditCheck } from "@app/hooks/useCreditCheck";
-import { useToolRunComplete } from "@app/hooks/useToolRunComplete";
-import { notifyPdfProcessingComplete } from "@app/services/desktopNotificationService";
+} from "@editor/contexts/file/fileActions";
+import { createNewStirlingFileStub } from "@editor/types/fileContext";
+import { ToolOperation } from "@editor/types/file";
+import { ensureBackendReady } from "@editor/services/backendReadinessGuard";
+import { trackEditorOperation } from "@editor/services/analytics";
+import { notifyToolCompleted } from "@editor/services/toolUsageTracker";
+import { useWillUseCloud } from "@editor/hooks/useWillUseCloud";
+import { useCreditCheck } from "@editor/hooks/useCreditCheck";
+import { useToolRunComplete } from "@editor/hooks/useToolRunComplete";
+import { notifyPdfProcessingComplete } from "@editor/services/desktopNotificationService";
 import {
   buildInputTracking,
   buildOutputPairs,
-} from "@app/hooks/tools/shared/toolOperationHelpers";
+} from "@editor/hooks/tools/shared/toolOperationHelpers";
 import {
   ToolType,
   defineSingleFileTool,
@@ -73,7 +73,7 @@ import {
   CustomToolOperationConfig,
   ProcessingProgress,
   ResponseHandler,
-} from "@app/hooks/tools/shared/toolOperationTypes";
+} from "@editor/hooks/tools/shared/toolOperationTypes";
 
 export {
   ToolType,
@@ -93,7 +93,7 @@ export type {
 };
 
 // Re-export for backwards compatibility
-export { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+export { createStandardErrorHandler } from "@editor/utils/toolErrorHandler";
 
 /**
  * Shared hook for tool operations providing consistent error handling, progress tracking,

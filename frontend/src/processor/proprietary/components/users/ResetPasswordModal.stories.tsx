@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ResetPasswordModal } from "@portal/components/users/ResetPasswordModal";
-import type { Member } from "@portal/api/users";
+import { ResetPasswordModal } from "@processor/components/users/ResetPasswordModal";
+import type { Member } from "@processor/api/users";
 
 const MEMBER: Member = {
   id: "3",

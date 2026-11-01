@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   cleanUpSignatureImage,
   type UploadCleanup,
-} from "@app/utils/signatureImage";
+} from "@editor/utils/signatureImage";
 
 interface CleanedImage {
   dataUrl: string | null;

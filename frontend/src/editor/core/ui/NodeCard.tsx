@@ -1,8 +1,8 @@
 import type { HTMLAttributes, MouseEvent, ReactNode, Ref } from "react";
-import { Button } from "@app/ui/Button";
-import { IconBadge, type IconBadgeAccent } from "@app/ui/IconBadge";
-import "@app/ui/Surface.css";
-import "@app/ui/NodeCard.css";
+import { Button } from "@editor/ui/Button";
+import { IconBadge, type IconBadgeAccent } from "@editor/ui/IconBadge";
+import "@editor/ui/Surface.css";
+import "@editor/ui/NodeCard.css";
 
 /** Border tone. `selected` (a separate prop) overrides this with the primary ring. */
 export type NodeCardTone = "default" | "warning";

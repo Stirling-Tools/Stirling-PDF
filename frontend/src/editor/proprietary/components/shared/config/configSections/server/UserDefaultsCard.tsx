@@ -1,13 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { Stack, Paper } from "@mantine/core";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import "@app/components/shared/config/SettingsToggleRow.css";
-import type { UiDefaultsCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
-import type { ToolPanelMode } from "@app/constants/toolPanel";
-import type { StartupView } from "@app/services/preferencesService";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import "@editor/components/shared/config/SettingsToggleRow.css";
+import type { UiDefaultsCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
+import type { ToolPanelMode } from "@editor/constants/toolPanel";
+import type { StartupView } from "@editor/services/preferencesService";
 
 /**
  * Starting values for four per-user preferences. Its own `ui` draft, kept apart

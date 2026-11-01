@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { NonPdfBanner } from "@app/components/viewer/nonpdf/NonPdfBanner";
+import { NonPdfBanner } from "@editor/components/viewer/nonpdf/NonPdfBanner";
 
 const meta = {
   title: "Viewer/NonPdf/NonPdfBanner",

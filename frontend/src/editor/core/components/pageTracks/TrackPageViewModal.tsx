@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
 import { Modal, Loader, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Tooltip } from "@app/components/shared/Tooltip";
-import { useFileSelectors } from "@app/contexts/FileContext";
-import { thumbnailGenerationService } from "@app/services/thumbnailGenerationService";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { useFileSelectors } from "@editor/contexts/FileContext";
+import { thumbnailGenerationService } from "@editor/services/thumbnailGenerationService";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import {
   TrackPage,
   isSourcePage,
   sourcePageKey,
-} from "@app/components/pageTracks/types";
-import { isPageImage } from "@app/components/pageTracks/trackFileKind";
-import { BlankPagePreview } from "@app/components/pageTracks/BlankPagePreview";
-import { TrackThumbnailStore } from "@app/components/pageTracks/hooks/useTrackThumbnails";
-import styles from "@app/components/pageTracks/PageTracks.module.css";
+} from "@editor/components/pageTracks/types";
+import { isPageImage } from "@editor/components/pageTracks/trackFileKind";
+import { BlankPagePreview } from "@editor/components/pageTracks/BlankPagePreview";
+import { TrackThumbnailStore } from "@editor/components/pageTracks/hooks/useTrackThumbnails";
+import styles from "@editor/components/pageTracks/PageTracks.module.css";
 
 interface TrackPageViewModalProps {
   /** The track's pages, so the modal can page through them. */

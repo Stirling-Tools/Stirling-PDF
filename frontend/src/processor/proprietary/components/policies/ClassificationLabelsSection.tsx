@@ -1,1 +1,1 @@
-export * from "@app/components/policies/ClassificationLabelsSection";
+export * from "@editor/components/policies/ClassificationLabelsSection";

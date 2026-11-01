@@ -10,23 +10,23 @@ import {
   MetricStrip,
   Tabs,
   type TabItem,
-} from "@app/ui";
-import { useTier } from "@portal/contexts/TierContext";
-import { useSectionFlags } from "@portal/hooks/useAsync";
-import { useAuditLog } from "@portal/queries/infrastructure";
-import { HttpError } from "@portal/api/http";
+} from "@editor/ui";
+import { useTier } from "@processor/contexts/TierContext";
+import { useSectionFlags } from "@processor/hooks/useAsync";
+import { useAuditLog } from "@processor/queries/infrastructure";
+import { HttpError } from "@processor/api/http";
 import {
   type AuditCategory,
   type AuditEvent,
-} from "@portal/api/infrastructure";
-import { AuditExportModal } from "@portal/components/infrastructure/AuditExportModal";
-import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
+} from "@processor/api/infrastructure";
+import { AuditExportModal } from "@processor/components/infrastructure/AuditExportModal";
+import { SectionHeader } from "@processor/components/infrastructure/SectionHeader";
 import {
   AUDIT_CAT_LABEL,
   AUDIT_STATUS_LABEL,
   AUDIT_TONE,
-} from "@portal/components/infrastructure/infraFormat";
-import "@portal/components/infrastructure/infrastructure.css";
+} from "@processor/components/infrastructure/infraFormat";
+import "@processor/components/infrastructure/infrastructure.css";
 
 type AuditFilter = "all" | AuditCategory;
 

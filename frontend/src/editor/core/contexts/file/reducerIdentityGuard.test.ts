@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { withReducerIdentityGuard } from "@app/contexts/file/FileReducer";
+import { withReducerIdentityGuard } from "@editor/contexts/file/FileReducer";
 import type {
   FileContextState,
   FileContextAction,
   StirlingFileStub,
-} from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+} from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const stub = (id: string): StirlingFileStub =>
   ({ id: id as FileId, name: `${id}.pdf` }) as StirlingFileStub;

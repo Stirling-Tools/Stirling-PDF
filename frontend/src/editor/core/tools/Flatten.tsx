@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import FlattenSettings from "@app/components/tools/flatten/FlattenSettings";
-import { useFlattenParameters } from "@app/hooks/tools/flatten/useFlattenParameters";
-import { useFlattenOperation } from "@app/hooks/tools/flatten/useFlattenOperation";
-import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
-import { useFlattenTips } from "@app/components/tooltips/useFlattenTips";
-import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
+import FlattenSettings from "@editor/components/tools/flatten/FlattenSettings";
+import { useFlattenParameters } from "@editor/hooks/tools/flatten/useFlattenParameters";
+import { useFlattenOperation } from "@editor/hooks/tools/flatten/useFlattenOperation";
+import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
+import { useFlattenTips } from "@editor/components/tooltips/useFlattenTips";
+import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 
 const Flatten = (props: BaseToolProps) => {
   const { t } = useTranslation();

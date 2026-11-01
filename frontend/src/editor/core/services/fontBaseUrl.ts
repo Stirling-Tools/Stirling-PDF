@@ -1,5 +1,5 @@
-import { getApiBaseUrl } from "@app/services/apiClientConfig";
-import { BASE_PATH } from "@app/constants/app";
+import { getApiBaseUrl } from "@editor/services/apiClientConfig";
+import { BASE_PATH } from "@editor/constants/app";
 
 /**
  * Base URL for the PDFium fallback fonts. The backend serves the TrueType set

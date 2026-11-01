@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
-import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
+import { SettingsToggleRow } from "@editor/components/shared/config/SettingsToggleRow";
+import { SettingsFieldLabel } from "@editor/components/shared/config/SettingsFieldLabel";
 import { NumberInput, Stack, Paper, TextInput } from "@mantine/core";
-import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import type { AdvancedCardProps } from "@app/components/shared/config/configSections/advanced/advancedCardProps";
+import { useLoginRequired } from "@editor/hooks/useLoginRequired";
+import type { AdvancedCardProps } from "@editor/components/shared/config/configSections/advanced/advancedCardProps";
 
 /** Where temp files live and when they are swept. */
 export function AdvancedTempFilesCard({

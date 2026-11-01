@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { ConnectAccountRail } from "@portal/components/ConnectAccountRail";
+import { ConnectAccountRail } from "@processor/components/ConnectAccountRail";
 import {
   clearAccountLinkBlock,
   reportFreeTierExhausted,
-} from "@app/services/accountLinkBlock";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+} from "@editor/services/accountLinkBlock";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 
 const mocks = vi.hoisted(() => ({
   isAdmin: true,
@@ -15,15 +15,17 @@ const mocks = vi.hoisted(() => ({
     | undefined,
   openLinkModal: vi.fn(),
 }));
-vi.mock("@app/auth", () => ({ useAuth: () => ({ isAdmin: mocks.isAdmin }) }));
-vi.mock("@app/ui", async () => ({ ...(await import("@app/ui/Button")) }));
-vi.mock("@portal/hooks/useFreeTierBalance", () => ({
+vi.mock("@editor/auth", () => ({
+  useAuth: () => ({ isAdmin: mocks.isAdmin }),
+}));
+vi.mock("@editor/ui", async () => ({ ...(await import("@editor/ui/Button")) }));
+vi.mock("@processor/hooks/useFreeTierBalance", () => ({
   useFreeTierBalance: () => ({ data: mocks.balance }),
 }));
-vi.mock("@portal/contexts/LinkContext", () => ({
+vi.mock("@processor/contexts/LinkContext", () => ({
   useLinkOptional: () => ({ isLinked: mocks.linked }),
 }));
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@processor/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: mocks.openLinkModal }),
 }));
 vi.mock("react-i18next", () => ({

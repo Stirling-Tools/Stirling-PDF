@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { connectionModeService } from "@app/services/connectionModeService";
+import { connectionModeService } from "@editor/services/connectionModeService";
 
 /** Local mode's accounts are this machine's, not an org's, so the roster waits
  *  for a server or cloud connection - and for the mode, to avoid a flash. */

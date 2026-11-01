@@ -1,4 +1,7 @@
-import { getDefaultWorkbench, type WorkbenchType } from "@app/types/workbench";
+import {
+  getDefaultWorkbench,
+  type WorkbenchType,
+} from "@editor/types/workbench";
 
 export type StartupWorkbench = "viewer" | "fileEditor";
 

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
-import { helveticaVariantFor } from "@app/tools/pdfTextEditor/util/helveticaVariant";
+import { helveticaVariantFor } from "@editor/tools/pdfTextEditor/util/helveticaVariant";
 
 // The base-14 fallback used to map EVERY source font to a Helvetica variant.
 describe("helveticaVariantFor", () => {

@@ -3,4 +3,4 @@ export {
   classifyAccountLinkBlock,
   reportAccountLinkBlock,
   type AccountLinkBlockReason,
-} from "@app/services/accountLinkBlock";
+} from "@editor/services/accountLinkBlock";

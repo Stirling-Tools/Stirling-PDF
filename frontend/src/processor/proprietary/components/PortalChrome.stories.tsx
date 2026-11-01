@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PortalChrome } from "@portal/components/PortalChrome";
+import { PortalChrome } from "@processor/components/PortalChrome";
 
 const meta = {
   title: "Portal/Shell/PortalChrome",

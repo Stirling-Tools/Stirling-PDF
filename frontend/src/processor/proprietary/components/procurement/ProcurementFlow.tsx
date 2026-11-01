@@ -1,22 +1,22 @@
 import { useTranslation } from "react-i18next";
-import { Banner, Button, EmptyState, Skeleton } from "@app/ui";
-import { useUI } from "@app/portal/contexts/UIContext";
-import { useLinkedAccountEmail } from "@app/portal/hooks/useLinkedAccountEmail";
-import { ProcurementAgreement } from "@app/portal/components/procurement/ProcurementAgreement";
+import { Banner, Button, EmptyState, Skeleton } from "@editor/ui";
+import { useUI } from "@editor/portal/contexts/UIContext";
+import { useLinkedAccountEmail } from "@editor/portal/hooks/useLinkedAccountEmail";
+import { ProcurementAgreement } from "@editor/portal/components/procurement/ProcurementAgreement";
 import {
   DocumentsModal,
   LicenseModal,
   ScheduleCallModal,
   TrialManageModal,
   TrialSetupModal,
-} from "@app/portal/components/procurement/ProcurementExtras";
-import { ProcurementModal } from "@app/portal/components/procurement/ProcurementModal";
+} from "@editor/portal/components/procurement/ProcurementExtras";
+import { ProcurementModal } from "@editor/portal/components/procurement/ProcurementModal";
 import {
   LiveStageCard,
   PaymentStageCard,
-} from "@app/portal/components/procurement/ProcurementStages";
-import { QuoteBuilder } from "@app/portal/components/procurement/QuoteBuilder";
-import type { ProcurementController } from "@app/portal/components/procurement/useProcurement";
+} from "@editor/portal/components/procurement/ProcurementStages";
+import { QuoteBuilder } from "@editor/portal/components/procurement/QuoteBuilder";
+import type { ProcurementController } from "@editor/portal/components/procurement/useProcurement";
 
 /**
  * The procurement takeover flow: the full-screen journey modal (quote builder →

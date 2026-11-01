@@ -1,4 +1,4 @@
-import { withBasePath } from "@app/constants/app";
+import { withBasePath } from "@editor/constants/app";
 
 /** A single point in image space, as returned by jscanify corner detection. */
 export interface JscanifyPoint {

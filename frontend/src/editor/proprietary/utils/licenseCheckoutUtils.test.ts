@@ -1,16 +1,16 @@
 // @vitest-environment node
 import { expect, it, vi } from "vitest";
-import { pollTeamCheckout } from "@app/utils/licenseCheckoutUtils";
-import { verifyTeamCheckout } from "@app/services/serverPlanCheckout";
-import { requiresLocalTeamActivation } from "@app/services/teamPlanActivation";
+import { pollTeamCheckout } from "@editor/utils/licenseCheckoutUtils";
+import { verifyTeamCheckout } from "@editor/services/serverPlanCheckout";
+import { requiresLocalTeamActivation } from "@editor/services/teamPlanActivation";
 
-vi.mock("@app/services/serverPlanCheckout", () => ({
+vi.mock("@editor/services/serverPlanCheckout", () => ({
   verifyTeamCheckout: vi.fn(),
 }));
-vi.mock("@app/services/teamPlanActivation", () => ({
+vi.mock("@editor/services/teamPlanActivation", () => ({
   requiresLocalTeamActivation: vi.fn(),
 }));
-vi.mock("@app/services/licenseService", () => ({ default: {} }));
+vi.mock("@editor/services/licenseService", () => ({ default: {} }));
 
 it("reports a scheduled reduction without activating the lower allowance early", async () => {
   vi.mocked(verifyTeamCheckout).mockResolvedValue({

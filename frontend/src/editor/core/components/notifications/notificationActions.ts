@@ -1,5 +1,5 @@
-import type { AppNotification } from "@app/services/notifications";
-import type { RetryPayload } from "@app/services/notificationRetry";
+import type { AppNotification } from "@editor/services/notifications";
+import type { RetryPayload } from "@editor/services/notificationRetry";
 
 /**
  * Keyed by action rather than by row, because the server decides what a kind offers: adding a kind is

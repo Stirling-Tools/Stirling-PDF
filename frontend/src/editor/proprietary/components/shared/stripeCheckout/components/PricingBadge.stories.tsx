@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PricingBadge } from "@app/components/shared/stripeCheckout/components/PricingBadge";
+import { PricingBadge } from "@editor/components/shared/stripeCheckout/components/PricingBadge";
 
 /**
  * The small badge overlaid on pricing plan cards (current plan, popular, savings).

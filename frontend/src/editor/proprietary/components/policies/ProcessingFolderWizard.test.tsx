@@ -10,25 +10,25 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ProcessingFolderWizard,
   type ProcessingFolderWizardProps,
-} from "@app/components/policies/ProcessingFolderWizard";
-import { createFolderId, type FolderRecord } from "@app/types/folder";
+} from "@editor/components/policies/ProcessingFolderWizard";
+import { createFolderId, type FolderRecord } from "@editor/types/folder";
 
-import { assemblePolicies } from "@app/policies/overview";
-import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
+import { assemblePolicies } from "@editor/policies/overview";
+import { PolicySetupWizard } from "@editor/components/policies/PolicySetupWizard";
 import {
   classificationCondition,
   documentFieldCondition,
-} from "@app/data/classificationConditions";
-import { POLICY_CATEGORIES } from "@app/policies/catalog";
-import { directoryFromDrop } from "@app/services/directoryDrop";
+} from "@editor/data/classificationConditions";
+import { POLICY_CATEGORIES } from "@editor/policies/catalog";
+import { directoryFromDrop } from "@editor/services/directoryDrop";
 
 const classification = vi.hoisted(() => ({ available: true }));
-vi.mock("@app/hooks/useAiClassificationEnabled", () => ({
+vi.mock("@editor/hooks/useAiClassificationEnabled", () => ({
   useAiClassificationEnabled: () => classification.available,
 }));
 // The output panel is covered by its own tests; here it stands in for the wiring and the gate.
 const setupConfigValid = vi.hoisted(() => ({ value: true }));
-vi.mock("@app/components/policies/FolderPolicySetupConfig", async () => {
+vi.mock("@editor/components/policies/FolderPolicySetupConfig", async () => {
   const { useEffect } = await vi.importActual<typeof import("react")>("react");
   return {
     FolderPolicySetupConfig: ({
@@ -52,12 +52,12 @@ beforeEach(() => {
   setupConfigValid.value = true;
 });
 
-vi.mock("@app/services/directoryDrop", () => ({
+vi.mock("@editor/services/directoryDrop", () => ({
   canDropDirectory: true,
   directoryFromDrop: vi.fn(),
 }));
 
-vi.mock("@app/components/policies/useFolderPickerBack", () => ({
+vi.mock("@editor/components/policies/useFolderPickerBack", () => ({
   useFolderPickerBack: (_enabled: boolean, onBack: () => boolean) => onBack,
 }));
 

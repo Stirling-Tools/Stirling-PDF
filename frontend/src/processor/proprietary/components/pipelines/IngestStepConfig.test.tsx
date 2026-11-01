@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { IngestStepConfig } from "@portal/components/pipelines/IngestStepConfig";
+import { IngestStepConfig } from "@processor/components/pipelines/IngestStepConfig";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { aiEngineEnabled: true }, loading: false }),
 }));
 

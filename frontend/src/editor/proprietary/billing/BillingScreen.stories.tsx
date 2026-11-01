@@ -1,16 +1,16 @@
-import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
+import { ManageBillingButton } from "@editor/components/shared/ManageBillingButton";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { BillingScreen } from "@app/billing/BillingScreen";
-import { KvRow } from "@app/billing/KvRow";
-import { InvoiceRow } from "@app/billing/InvoiceRow";
+import { BillingScreen } from "@editor/billing/BillingScreen";
+import { KvRow } from "@editor/billing/KvRow";
+import { InvoiceRow } from "@editor/billing/InvoiceRow";
 import {
   freeWallet,
   prepaidWallet,
   subscribedWallet,
-} from "@app/billing/walletFixtures";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
-import { LicenseProvider } from "@app/contexts/LicenseContext";
-import { ServerLicenseSection } from "@portal/components/billing/ServerLicenseSection";
+} from "@editor/billing/walletFixtures";
+import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import { LicenseProvider } from "@editor/contexts/LicenseContext";
+import { ServerLicenseSection } from "@processor/components/billing/ServerLicenseSection";
 import { http, HttpResponse } from "msw";
 
 const meta: Meta<typeof BillingScreen> = {

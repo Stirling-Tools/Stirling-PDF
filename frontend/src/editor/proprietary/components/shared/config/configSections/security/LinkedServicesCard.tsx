@@ -1,11 +1,11 @@
 import { Stack } from "@mantine/core";
-import ProviderCard from "@app/components/shared/config/configSections/ProviderCard";
-import type { Provider } from "@app/components/shared/config/configSections/providerDefinitions";
+import ProviderCard from "@editor/components/shared/config/configSections/ProviderCard";
+import type { Provider } from "@editor/components/shared/config/configSections/providerDefinitions";
 import {
   getProviderSettings,
   updateProviderSettings,
-} from "@app/components/shared/config/configSections/security/connectionProviders";
-import type { ConnectionsCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
+} from "@editor/components/shared/config/configSections/security/connectionProviders";
+import type { ConnectionsCardProps } from "@editor/components/shared/config/configSections/security/securityCardProps";
 
 interface LinkedServicesCardProps extends ConnectionsCardProps {
   /** Already-configured providers, filtered by the page. */

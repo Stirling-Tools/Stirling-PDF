@@ -10,17 +10,17 @@ import {
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
-import { AccountLinkNotice } from "@app/components/AccountLinkNotice";
-import { baseQueryOptions } from "@app/query/queryClient";
+import { AccountLinkNotice } from "@editor/components/AccountLinkNotice";
+import { baseQueryOptions } from "@editor/query/queryClient";
 import {
   clearAccountLinkBlock,
   reportFreeTierExhausted,
   useAccountLinkBlock,
-} from "@app/services/accountLinkBlock";
+} from "@editor/services/accountLinkBlock";
 
 // The notice renders the linking modal through React.lazy; warming it here
 // keeps the first assertion from racing the chunk import.
-await import("@app/components/account-link/EditorLinkModal");
+await import("@editor/components/account-link/EditorLinkModal");
 
 const { alert, begin, auth, get } = vi.hoisted(() => ({
   alert: vi.fn(),
@@ -28,19 +28,19 @@ const { alert, begin, auth, get } = vi.hoisted(() => ({
   get: vi.fn(),
   auth: { isAdmin: true, loading: false },
 }));
-vi.mock("@app/auth", () => ({
+vi.mock("@editor/auth", () => ({
   useAuth: () => ({
     ...auth,
     user: { orgOwner: auth.isAdmin },
     loading: false,
   }),
 }));
-vi.mock("@app/components/toast", () => ({ alert }));
-vi.mock("@app/services/apiClient", () => ({ default: { get } }));
-vi.mock("@portal/hooks/useConnectHandoff", () => ({
+vi.mock("@editor/components/toast", () => ({ alert }));
+vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
+vi.mock("@processor/hooks/useConnectHandoff", () => ({
   useConnectHandoff: () => ({ begin, busy: false, error: null }),
 }));
-vi.mock("@portal/auth/saasSupabase", () => ({
+vi.mock("@processor/auth/saasSupabase", () => ({
   isSaasSupabaseConfigured: true,
 }));
 vi.mock("react-i18next", () => ({
@@ -52,10 +52,10 @@ vi.mock("react-i18next", () => ({
       ),
   }),
 }));
-vi.mock("@app/ui", async () => ({
-  ...(await import("@app/ui/Button")),
-  ...(await import("@app/ui/Modal")),
-  ...(await import("@app/ui/Banner")),
+vi.mock("@editor/ui", async () => ({
+  ...(await import("@editor/ui/Button")),
+  ...(await import("@editor/ui/Modal")),
+  ...(await import("@editor/ui/Banner")),
 }));
 
 function LocationProbe() {

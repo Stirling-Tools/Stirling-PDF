@@ -1,15 +1,15 @@
 /** The ingest step uses an endpoint step because it has no editor tool-registry entry. */
 
-import type { ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
-import type { WorkingToolStep } from "@app/hooks/tools/shared/toolAutomation";
+import type { ErasedToolParams } from "@editor/hooks/tools/shared/toolOperationTypes";
+import type { WorkingToolStep } from "@editor/hooks/tools/shared/toolAutomation";
 
-import type { IngestApiRequest } from "@app/types/toolApiTypes";
+import type { IngestApiRequest } from "@editor/types/toolApiTypes";
 import {
   INGEST_ENDPOINT,
   INGEST_DEFAULTS,
   ingestChunkingConfigured,
-} from "@app/policies/ingestOperation";
-export { INGEST_ENDPOINT } from "@app/policies/ingestOperation";
+} from "@editor/policies/ingestOperation";
+export { INGEST_ENDPOINT } from "@editor/policies/ingestOperation";
 
 /** Parameters the ingest endpoint binds, as the builder holds them. */
 export type IngestStepParams = IngestApiRequest;

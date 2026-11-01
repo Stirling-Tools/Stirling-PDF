@@ -1,14 +1,14 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Card, Divider, Group, Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
-import { BookmarkNode } from "@app/utils/editTableOfContents";
-import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
-import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
-import BookmarkEditor from "@app/components/tools/editTableOfContents/BookmarkEditor";
-import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
-import { downloadFromUrl } from "@app/services/downloadService";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { BookmarkNode } from "@editor/utils/editTableOfContents";
+import ErrorNotification from "@editor/components/tools/shared/ErrorNotification";
+import ResultsPreview from "@editor/components/tools/shared/ResultsPreview";
+import BookmarkEditor from "@editor/components/tools/editTableOfContents/BookmarkEditor";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
+import { downloadFromUrl } from "@editor/services/downloadService";
 
 export interface EditTableOfContentsWorkbenchViewData {
   bookmarks: BookmarkNode[];

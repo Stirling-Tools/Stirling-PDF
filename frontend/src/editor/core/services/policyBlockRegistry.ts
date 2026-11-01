@@ -1,4 +1,4 @@
-import type { StirlingFileStub } from "@app/types/fileContext";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 /** Register documents retained outside the workspace until their owning tool releases them. */
 export function registerPolicyFileUsage(

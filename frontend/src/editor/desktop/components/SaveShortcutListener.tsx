@@ -1,8 +1,8 @@
-import { useSaveShortcut } from "@app/hooks/useSaveShortcut";
-import { useExitWarning } from "@app/hooks/useExitWarning";
-import { useNewWindowShortcut } from "@app/hooks/useNewWindowShortcut";
-import { useOpenWindowFiles } from "@app/hooks/useOpenWindowFiles";
-import { useDiskWatcher } from "@app/hooks/useDiskWatcher";
+import { useSaveShortcut } from "@editor/hooks/useSaveShortcut";
+import { useExitWarning } from "@editor/hooks/useExitWarning";
+import { useNewWindowShortcut } from "@editor/hooks/useNewWindowShortcut";
+import { useOpenWindowFiles } from "@editor/hooks/useOpenWindowFiles";
+import { useDiskWatcher } from "@editor/hooks/useDiskWatcher";
 
 /**
  * Desktop-only component that sets up keyboard shortcuts and exit warnings

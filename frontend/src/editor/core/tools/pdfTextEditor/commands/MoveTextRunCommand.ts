@@ -1,11 +1,11 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { collectMemberPtrs } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 import {
   setScanOverride,
   type ScanOverride,
-} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 
 /** Translate a text run by (dx, dy) in PDF page-space points. */
 export class MoveTextRunCommand implements Command {
@@ -97,7 +97,7 @@ export class MoveTextRunCommand implements Command {
 
   /** Shift the run's matrix/bounds + per-line + sub-run model by (dx, dy). */
   private shiftModel(
-    run: import("@app/tools/pdfTextEditor/model/TextRun").TextRun,
+    run: import("@editor/tools/pdfTextEditor/model/TextRun").TextRun,
     dx: number,
     dy: number,
   ): void {

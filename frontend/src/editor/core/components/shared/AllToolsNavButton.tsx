@@ -1,14 +1,14 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { Icon } from "@editor/ui/Icon";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import {
   useNavigationState,
   useNavigationActions,
-} from "@app/contexts/NavigationContext";
-import { useSidebarNavigation } from "@app/hooks/useSidebarNavigation";
-import { handleUnlessSpecialClick } from "@app/utils/clickHandlers";
-import QuickAccessButton from "@app/components/shared/quickAccessBar/QuickAccessButton";
+} from "@editor/contexts/NavigationContext";
+import { useSidebarNavigation } from "@editor/hooks/useSidebarNavigation";
+import { handleUnlessSpecialClick } from "@editor/utils/clickHandlers";
+import QuickAccessButton from "@editor/components/shared/quickAccessBar/QuickAccessButton";
 
 interface AllToolsNavButtonProps {
   activeButton: string;

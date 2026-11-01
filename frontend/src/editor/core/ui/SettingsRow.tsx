@@ -1,5 +1,5 @@
 import { cloneElement, isValidElement, useId, type ReactNode } from "react";
-import "@app/ui/SettingsRow.css";
+import "@editor/ui/SettingsRow.css";
 
 export interface SettingsRowProps {
   /** Left-aligned setting name. */

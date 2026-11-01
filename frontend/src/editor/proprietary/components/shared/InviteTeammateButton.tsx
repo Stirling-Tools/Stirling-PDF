@@ -1,13 +1,13 @@
 import { lazy, Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { InviteTeammateButtonProps } from "@core/components/shared/InviteTeammateButton";
-import { useAuth } from "@app/auth/UseSession";
-import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
-import { Button, Modal } from "@app/ui";
-import { Icon } from "@app/ui/Icon";
+import type { InviteTeammateButtonProps } from "@editor-core/components/shared/InviteTeammateButton";
+import { useAuth } from "@editor/auth/UseSession";
+import { useSaaSTeam } from "@editor/contexts/SaaSTeamContext";
+import { Button, Modal } from "@editor/ui";
+import { Icon } from "@editor/ui/Icon";
 
 const InviteTeammateFlow = lazy(
-  () => import("@portal/components/users/InviteTeammateFlow"),
+  () => import("@processor/components/users/InviteTeammateFlow"),
 );
 
 /** Keeps the signing draft mounted while the deployment's account flow is open. */

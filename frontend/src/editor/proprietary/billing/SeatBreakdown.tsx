@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { TeamHolding } from "@app/billing/types";
+import type { TeamHolding } from "@editor/billing/types";
 
 /** Shows report freshness; only this deployment can substitute a live local count. */
 export function SeatBreakdown({

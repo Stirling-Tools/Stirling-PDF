@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getLatestBundleQuote,
   type LatestBundleQuote,
-} from "@portal/billing/stripe";
+} from "@processor/billing/stripe";
 
 /**
  * Where a team sits in the prepaid-bundle purchase:

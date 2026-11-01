@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import "@app/components/shared/ToolPanelHeader.css";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import "@editor/components/shared/ToolPanelHeader.css";
 
 export interface ToolPanelHeaderProps {
   /** Glyph rendered in the tinted circular badge at the header's leading edge. */

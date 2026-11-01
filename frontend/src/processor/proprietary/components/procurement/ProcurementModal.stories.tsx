@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Button, Card } from "@app/ui";
-import { ProcurementModal } from "@portal/components/procurement/ProcurementModal";
+import { Button, Card } from "@editor/ui";
+import { ProcurementModal } from "@processor/components/procurement/ProcurementModal";
 
 /**
  * The full-screen takeover modal shell. Rendered always-open here to verify the panel has a solid

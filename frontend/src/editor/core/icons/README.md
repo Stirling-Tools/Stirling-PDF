@@ -4,7 +4,7 @@ Read this before adding, changing or styling any icon.
 
 ## TL;DR rules
 
-1. **Render every icon with `<Icon name="…" />`** from `@app/ui/Icon`. There is one icon component and one icon set.
+1. **Render every icon with `<Icon name="…" />`** from `@editor/ui/Icon`. There is one icon component and one icon set.
 2. **Never write an `<svg>` in a `.ts`/`.tsx` file.** Icons are `.svg` files under `svg/stirling/` or `svg/third-party/`. There are two exceptions, and each needs an `icon-lint-allow: <category> -- <reason>` comment above the `<svg`: `runtime-generated-svg` for geometry computed at runtime (rulers, rings, charts), and `storybook-fixture` for svg text that builds a story's fake image, allowed only in `.stories.tsx`. Nothing else can be silenced.
 3. **Size with the `size` prop, never `fontSize`.** The old icons were font glyphs; `<Icon>` sizes via `width`/`height`, so `style={{ fontSize }}` does nothing at all.
 4. **A name has to be in `icons.ts`.** Adding one is two lines: the `?react` import and the map entry. `IconName` comes from that map, so anything missing is a compile error.
@@ -29,11 +29,11 @@ Neither is a styling escape hatch: reach for `filled` only where the outline alr
 
 ## Files
 
-The component lives with the other shared primitives, in `core/ui/Icon.tsx` — import it from `@app/ui/Icon`, the same way you import `@app/ui/Button`. This folder holds the icon sources and the map that names them.
+The component lives with the other shared primitives, in `core/ui/Icon.tsx` — import it from `@editor/ui/Icon`, the same way you import `@editor/ui/Button`. This folder holds the icon sources and the map that names them.
 
 | File | Role |
 |---|---|
-| `core/ui/Icon.tsx` | The only icon component, plus `isIconName()`. Re-exports `IconName`, so `@app/ui/Icon` is the single import. |
+| `core/ui/Icon.tsx` | The only icon component, plus `isIconName()`. Re-exports `IconName`, so `@editor/ui/Icon` is the single import. |
 | `icons.ts` | Name → component and where it came from (lucide, ours, a brand mark). Every icon the app can render, and the source of `IconName`. |
 | `icons.config.ts` | Stroke weight and default size. |
 | `colorless.ts` / `colorless.css` | The `colorless` class, which dims a brand mark for a disabled source. |

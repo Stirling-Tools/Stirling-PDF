@@ -1,7 +1,7 @@
 import { fireEvent, render } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { afterEach, expect, it, vi } from "vitest";
-import { DrawSignatureCanvas } from "@app/components/shared/wetSignature/DrawSignatureCanvas";
+import { DrawSignatureCanvas } from "@editor/components/shared/wetSignature/DrawSignatureCanvas";
 
 afterEach(() => vi.restoreAllMocks());
 

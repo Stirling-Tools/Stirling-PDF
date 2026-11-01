@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import SelectPages from "@app/components/shared/pageSelection/SelectPages";
+import SelectPages from "@editor/components/shared/pageSelection/SelectPages";
 
 const meta = {
   title: "Shared/PageSelection/SelectPages",

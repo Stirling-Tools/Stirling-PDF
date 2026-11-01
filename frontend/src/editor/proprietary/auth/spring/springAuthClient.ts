@@ -7,25 +7,25 @@
  * - No email confirmation flow (auto-confirmed on registration)
  *
  * This is the platform-agnostic engine. The HTTP transport, base path and
- * platform-specific behaviour are injected via `@app/auth/config` so the
+ * platform-specific behaviour are injected via `@editor/auth/config` so the
  * same code backs the editor (which injects its apiClient + desktop bridge)
  * and the portal (web defaults).
  */
 
 import { AxiosError, type AxiosRequestConfig } from "axios";
 import i18n from "i18next";
-import { getSpringAuthConfig } from "@app/auth/config";
-import { JWT_STORAGE_KEY } from "@app/auth/httpClient";
-import { type OAuthProvider } from "@app/auth/spring/oauthTypes";
-import { resetOAuthState } from "@app/auth/spring/oauthStorage";
-import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
+import { getSpringAuthConfig } from "@editor/auth/config";
+import { JWT_STORAGE_KEY } from "@editor/auth/httpClient";
+import { type OAuthProvider } from "@editor/auth/spring/oauthTypes";
+import { resetOAuthState } from "@editor/auth/spring/oauthStorage";
+import { isSafePostLoginRedirect } from "@editor/services/postLoginRedirect";
 import type {
   AuthUser as User,
   AuthSession as Session,
   AuthError,
   AuthResponse,
   AuthChangeEvent,
-} from "@app/auth/types";
+} from "@editor/auth/types";
 
 export type { User, Session, AuthError, AuthResponse, AuthChangeEvent };
 
@@ -103,9 +103,9 @@ function persistRedirectPath(path: string): void {
   }
 }
 
-// The safe-return-path rule lives in the shared @app/services/postLoginRedirect
+// The safe-return-path rule lives in the shared @editor/services/postLoginRedirect
 // extension point (proprietary override adds the Spring SSO routes). Re-exported
-// here so existing importers via @app/auth keep resolving it.
+// here so existing importers via @editor/auth keep resolving it.
 export { isSafePostLoginRedirect };
 
 export function setPostLoginRedirectPath(
@@ -512,7 +512,7 @@ class SpringAuthClient {
       // from skipping the local cleanup below.
       try {
         const { clearSupabaseSession } =
-          await import("@app/auth/supabase/supabaseClient");
+          await import("@editor/auth/supabase/supabaseClient");
         clearSupabaseSession();
       } catch {
         // Nothing loaded means nothing to clear.

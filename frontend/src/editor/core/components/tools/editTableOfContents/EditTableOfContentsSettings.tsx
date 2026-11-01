@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Divider, Stack, Switch, Text, Tooltip } from "@mantine/core";
-import { Button as DSButton } from "@app/ui/Button";
-import { FilePicker } from "@app/ui/FilePicker";
-import { Icon } from "@app/ui/Icon";
-import { BookmarkNode } from "@app/utils/editTableOfContents";
+import { Button as DSButton } from "@editor/ui/Button";
+import { FilePicker } from "@editor/ui/FilePicker";
+import { Icon } from "@editor/ui/Icon";
+import { BookmarkNode } from "@editor/utils/editTableOfContents";
 
 interface EditTableOfContentsSettingsProps {
   bookmarks: BookmarkNode[];

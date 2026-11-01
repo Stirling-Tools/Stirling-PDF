@@ -1,70 +1,70 @@
 import {
   assertFilesNotBlocked,
   policySourceIds,
-} from "@app/services/policyFileGuard";
+} from "@editor/services/policyFileGuard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { downloadFile } from "@app/services/downloadService";
-import { assertPdfSessionEditable } from "@app/services/pdfSessionUnlock";
+import { Icon } from "@editor/ui/Icon";
+import { downloadFile } from "@editor/services/downloadService";
+import { assertPdfSessionEditable } from "@editor/services/pdfSessionUnlock";
 import {
   getPdfAccess,
   rememberPdfAccess,
-} from "@app/services/pdfAccessService";
-import { useFileContext, useFileSelection } from "@app/contexts/FileContext";
-import { useViewer } from "@app/contexts/ViewerContext";
-import { useToolWorkflowActions } from "@app/contexts/ToolWorkflowContext";
-import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
-import type { FileId } from "@app/types/file";
-import type { ToolId } from "@app/types/toolId";
-import type { BaseToolProps } from "@app/types/tool";
-import { useEditorStore } from "@app/tools/pdfTextEditor/hooks/useEditorStore";
-import { useEditorOcr } from "@app/tools/pdfTextEditor/hooks/useEditorOcr";
-import { setEditorSession } from "@app/tools/pdfTextEditor/store/EditorSession";
-import { useIsMobile } from "@app/hooks/useIsMobile";
+} from "@editor/services/pdfAccessService";
+import { useFileContext, useFileSelection } from "@editor/contexts/FileContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useToolWorkflowActions } from "@editor/contexts/ToolWorkflowContext";
+import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
+import type { FileId } from "@editor/types/file";
+import type { ToolId } from "@editor/types/toolId";
+import type { BaseToolProps } from "@editor/types/tool";
+import { useEditorStore } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
+import { useEditorOcr } from "@editor/tools/pdfTextEditor/hooks/useEditorOcr";
+import { setEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
 import {
   useDocumentLoader,
   ensureAllPagesRead,
-} from "@app/tools/pdfTextEditor/hooks/useDocumentLoader";
-import { useAutoLoadFile } from "@app/tools/pdfTextEditor/hooks/useAutoLoadFile";
-import { useWorkbenchPin } from "@app/tools/pdfTextEditor/hooks/useWorkbenchPin";
-import { useUnsavedChangesGuard } from "@app/tools/pdfTextEditor/hooks/useUnsavedChangesGuard";
-import { useEditorTestGlobal } from "@app/tools/pdfTextEditor/hooks/useEditorTestGlobal";
-import { useSelectionActions } from "@app/tools/pdfTextEditor/hooks/useSelectionActions";
-import { useEditorKeyboardShortcuts } from "@app/tools/pdfTextEditor/hooks/useEditorKeyboardShortcuts";
-import { useEditorClipboard } from "@app/tools/pdfTextEditor/hooks/useEditorClipboard";
-import { SaveRiskModal } from "@app/tools/pdfTextEditor/components/SaveRiskModal";
-import { DiscardChangesModal } from "@app/tools/pdfTextEditor/components/DiscardChangesModal";
-import { HelpOverlay } from "@app/tools/pdfTextEditor/components/HelpOverlay";
-import { PasswordPromptModal } from "@app/tools/pdfTextEditor/components/PasswordPromptModal";
-import { PermissionsPasswordButton } from "@app/tools/pdfTextEditor/components/PermissionsPasswordButton";
-import { EditorPanelActions } from "@app/tools/pdfTextEditor/components/EditorPanelActions";
-import { EditorSidebar } from "@app/tools/pdfTextEditor/components/EditorSidebar";
-import { MobileEditorSheets } from "@app/tools/pdfTextEditor/components/MobileEditorSheets";
-import { EditorFileInputs } from "@app/tools/pdfTextEditor/components/EditorFileInputs";
-import { PageStage } from "@app/tools/pdfTextEditor/components/PageStage";
-import { InsertImageCommand } from "@app/tools/pdfTextEditor/commands/InsertImageCommand";
-import { InsertTextCommand } from "@app/tools/pdfTextEditor/commands/InsertTextCommand";
-import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
-import { jpegExifOrientation } from "@app/utils/jpegOrientation";
-import { MergeRunsCommand } from "@app/tools/pdfTextEditor/commands/MergeRunsCommand";
-import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/commands/UngroupParagraphCommand";
-import { exportToBlob } from "@app/tools/pdfTextEditor/util/exportPdf";
-import { assertEditorOcrAllowed } from "@app/tools/pdfTextEditor/util/ocrProtection";
-import { clampRenderScale } from "@app/tools/pdfTextEditor/util/fitToWidth";
+} from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { useAutoLoadFile } from "@editor/tools/pdfTextEditor/hooks/useAutoLoadFile";
+import { useWorkbenchPin } from "@editor/tools/pdfTextEditor/hooks/useWorkbenchPin";
+import { useUnsavedChangesGuard } from "@editor/tools/pdfTextEditor/hooks/useUnsavedChangesGuard";
+import { useEditorTestGlobal } from "@editor/tools/pdfTextEditor/hooks/useEditorTestGlobal";
+import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
+import { useEditorKeyboardShortcuts } from "@editor/tools/pdfTextEditor/hooks/useEditorKeyboardShortcuts";
+import { useEditorClipboard } from "@editor/tools/pdfTextEditor/hooks/useEditorClipboard";
+import { SaveRiskModal } from "@editor/tools/pdfTextEditor/components/SaveRiskModal";
+import { DiscardChangesModal } from "@editor/tools/pdfTextEditor/components/DiscardChangesModal";
+import { HelpOverlay } from "@editor/tools/pdfTextEditor/components/HelpOverlay";
+import { PasswordPromptModal } from "@editor/tools/pdfTextEditor/components/PasswordPromptModal";
+import { PermissionsPasswordButton } from "@editor/tools/pdfTextEditor/components/PermissionsPasswordButton";
+import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/EditorPanelActions";
+import { EditorSidebar } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
+import { MobileEditorSheets } from "@editor/tools/pdfTextEditor/components/MobileEditorSheets";
+import { EditorFileInputs } from "@editor/tools/pdfTextEditor/components/EditorFileInputs";
+import { PageStage } from "@editor/tools/pdfTextEditor/components/PageStage";
+import { InsertImageCommand } from "@editor/tools/pdfTextEditor/commands/InsertImageCommand";
+import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { jpegExifOrientation } from "@editor/utils/jpegOrientation";
+import { MergeRunsCommand } from "@editor/tools/pdfTextEditor/commands/MergeRunsCommand";
+import { UngroupParagraphCommand } from "@editor/tools/pdfTextEditor/commands/UngroupParagraphCommand";
+import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
+import { assertEditorOcrAllowed } from "@editor/tools/pdfTextEditor/util/ocrProtection";
+import { clampRenderScale } from "@editor/tools/pdfTextEditor/util/fitToWidth";
 import {
   detectSaveRisks,
   hasSaveRisks,
   type SaveRisks,
-} from "@app/tools/pdfTextEditor/util/documentRisks";
-import { preloadFallbackFontBytes } from "@app/tools/pdfTextEditor/util/fallbackFont";
-import { visiblePageNumber } from "@app/tools/pdfTextEditor/util/dom";
+} from "@editor/tools/pdfTextEditor/util/documentRisks";
+import { preloadFallbackFontBytes } from "@editor/tools/pdfTextEditor/util/fallbackFont";
+import { visiblePageNumber } from "@editor/tools/pdfTextEditor/util/dom";
 import type {
   GroupingMode,
   SelectionState,
   WidthMode,
-} from "@app/tools/pdfTextEditor/types";
+} from "@editor/tools/pdfTextEditor/types";
 
 const WORKBENCH_ID = "custom:pdfTextEditor" as const;
 const WORKBENCH_VIEW_ID = "pdfTextEditorWorkbench";

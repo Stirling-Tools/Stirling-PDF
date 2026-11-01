@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { generateId } from "@app/utils/generateId";
+import { generateId } from "@editor/utils/generateId";
 
 function sanitizeFileName(fileName: string) {
   const cleaned = fileName.replace(/[^A-Za-z0-9._-]+/g, "_");

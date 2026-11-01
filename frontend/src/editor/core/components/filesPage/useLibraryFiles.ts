@@ -1,18 +1,18 @@
 import { useMemo } from "react";
-import { useFolders } from "@app/contexts/FolderContext";
+import { useFolders } from "@editor/contexts/FolderContext";
 import type {
   FilesPageOriginFilter,
   FilesPageSortMode,
   FilesPageTab,
-} from "@app/contexts/FilesPageContext";
-import type { StirlingFileStub } from "@app/types/fileContext";
-import { FolderId, folderKind } from "@app/types/folder";
-import type { DiskFileEntry } from "@app/services/localFolderContents";
-import { libraryFileDate } from "@app/components/filesPage/libraryFileDate";
+} from "@editor/contexts/FilesPageContext";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import { FolderId, folderKind } from "@editor/types/folder";
+import type { DiskFileEntry } from "@editor/services/localFolderContents";
+import { libraryFileDate } from "@editor/components/filesPage/libraryFileDate";
 import {
   getFileOrigin,
   isUnfiledLocalFile,
-} from "@app/components/filesPage/fileOrigin";
+} from "@editor/components/filesPage/fileOrigin";
 
 export interface LibraryFilters {
   currentFolderId: FolderId | null;

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { DealStatusHero } from "@portal/components/procurement/DealStatusHero";
-import type { ProcurementSnapshot } from "@portal/api/procurement";
-import { BillingScreen } from "@app/billing/BillingScreen";
-import { freeWallet } from "@app/billing/walletFixtures";
+import { DealStatusHero } from "@processor/components/procurement/DealStatusHero";
+import type { ProcurementSnapshot } from "@processor/api/procurement";
+import { BillingScreen } from "@editor/billing/BillingScreen";
+import { freeWallet } from "@editor/billing/walletFixtures";
 
 const base: ProcurementSnapshot = {
   dealId: 1,

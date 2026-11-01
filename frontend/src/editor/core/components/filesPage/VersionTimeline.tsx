@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge, Group, Menu, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { FileId, ToolOperation } from "@app/types/file";
-import { toolOperationLabel } from "@app/utils/toolOperationLabel";
-import { StirlingFileStub } from "@app/types/fileContext";
-import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
-import { downloadFileFromStorage } from "@app/utils/downloadUtils";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { FileId, ToolOperation } from "@editor/types/file";
+import { toolOperationLabel } from "@editor/utils/toolOperationLabel";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { formatFileSize, getFileDate } from "@editor/utils/fileUtils";
+import { downloadFileFromStorage } from "@editor/utils/downloadUtils";
 
 export function DetailField({
   label,

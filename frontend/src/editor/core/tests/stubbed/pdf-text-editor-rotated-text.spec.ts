@@ -1,7 +1,7 @@
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import type { Page, Route } from "@playwright/test";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import type { Page } from "@playwright/test";
 import path from "path";
-import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
+import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 
 // Editing OBJECT-rotated text must keep the rotation, not force the re-emitted
 // glyphs upright.
@@ -32,7 +32,6 @@ test("editing rotated text keeps its rotation through save+reopen", async ({
   const errs: string[] = [];
   page.on("pageerror", (e) => errs.push(e.message));
 
-  await page.route("**/encode-charcodes", (route: Route) => route.abort());
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 20_000,
@@ -108,7 +107,6 @@ test("inserting text on a /Rotate 90 page lands upright (counter-rotated)", asyn
   page: Page;
 }) => {
   test.setTimeout(90_000);
-  await page.route("**/encode-charcodes", (route: Route) => route.abort());
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 20_000,

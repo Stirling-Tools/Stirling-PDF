@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { LoadingFallback } from "@app/components/shared/LoadingFallback";
-import { resolveLandingPath } from "@app/utils/loginLanding";
+import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import { resolveLandingPath } from "@editor/utils/loginLanding";
 
 export default function LoggedInState() {
   const navigate = useNavigate();

@@ -1,4 +1,4 @@
-vi.mock("@app/ui/ActionIcon", () => ({
+vi.mock("@editor/ui/ActionIcon", () => ({
   ActionIcon: ({
     children,
     onClick,
@@ -16,13 +16,13 @@ vi.mock("@app/ui/ActionIcon", () => ({
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
-import type { PlanTierGroup } from "@app/services/licenseService";
+import type { PlanTierGroup } from "@editor/services/licenseService";
 const service = vi.hoisted(() => ({
   getLicenseInfo: vi.fn(),
   createCheckoutSession: vi.fn(),
 }));
-vi.mock("@app/services/licenseService", () => ({ default: service }));
-vi.mock("@app/hooks/useIsMobile", () => ({ useIsMobile: () => false }));
+vi.mock("@editor/services/licenseService", () => ({ default: service }));
+vi.mock("@editor/hooks/useIsMobile", () => ({ useIsMobile: () => false }));
 vi.mock("@mantine/core", () => ({
   Modal: ({ children, title }: { children: ReactNode; title?: ReactNode }) => (
     <div>
@@ -34,27 +34,27 @@ vi.mock("@mantine/core", () => ({
   Group: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 vi.mock(
-  "@app/components/shared/stripeCheckout/hooks/useLicensePolling",
+  "@editor/components/shared/stripeCheckout/hooks/useLicensePolling",
   () => ({ useLicensePolling: () => ({}) }),
 );
 vi.mock(
-  "@app/components/shared/stripeCheckout/hooks/useCheckoutSession",
+  "@editor/components/shared/stripeCheckout/hooks/useCheckoutSession",
   () => ({
     useCheckoutSession: () => ({
       createCheckoutSession: service.createCheckoutSession,
     }),
   }),
 );
-vi.mock("@app/components/shared/stripeCheckout/stages/PaymentStage", () => ({
+vi.mock("@editor/components/shared/stripeCheckout/stages/PaymentStage", () => ({
   PaymentStage: () => <div>Payment details</div>,
 }));
-vi.mock("@app/components/shared/stripeCheckout/stages/SuccessStage", () => ({
+vi.mock("@editor/components/shared/stripeCheckout/stages/SuccessStage", () => ({
   SuccessStage: () => null,
 }));
-vi.mock("@app/components/shared/stripeCheckout/stages/ErrorStage", () => ({
+vi.mock("@editor/components/shared/stripeCheckout/stages/ErrorStage", () => ({
   ErrorStage: () => null,
 }));
-vi.mock("@app/components/shared/stripeCheckout/stages/EmailStage", () => ({
+vi.mock("@editor/components/shared/stripeCheckout/stages/EmailStage", () => ({
   EmailStage: ({
     emailInput,
     setEmailInput,
@@ -76,7 +76,7 @@ vi.mock("@app/components/shared/stripeCheckout/stages/EmailStage", () => ({
   ),
 }));
 vi.mock(
-  "@app/components/shared/stripeCheckout/stages/PlanSelectionStage",
+  "@editor/components/shared/stripeCheckout/stages/PlanSelectionStage",
   () => ({
     PlanSelectionStage: ({
       onSelectPlan,
@@ -90,29 +90,32 @@ vi.mock(
     ),
   }),
 );
-vi.mock("@app/components/shared/stripeCheckout/stages/CapacityStage", () => ({
-  CapacityStage: ({
-    serverQuantity,
-    periodPicker,
-    currentLimit,
-    onContinue,
-  }: {
-    serverQuantity: number;
-    periodPicker?: ReactNode;
-    currentLimit: number;
-    onContinue: () => void;
-  }) => (
-    <div>
-      {periodPicker}
-      Capacity: {serverQuantity} blocks; current: {currentLimit}
-      <button onClick={onContinue}>Continue to payment</button>
-    </div>
-  ),
-}));
-vi.mock("@app/components/shared/StepModalHeader", () => ({
+vi.mock(
+  "@editor/components/shared/stripeCheckout/stages/CapacityStage",
+  () => ({
+    CapacityStage: ({
+      serverQuantity,
+      periodPicker,
+      currentLimit,
+      onContinue,
+    }: {
+      serverQuantity: number;
+      periodPicker?: ReactNode;
+      currentLimit: number;
+      onContinue: () => void;
+    }) => (
+      <div>
+        {periodPicker}
+        Capacity: {serverQuantity} blocks; current: {currentLimit}
+        <button onClick={onContinue}>Continue to payment</button>
+      </div>
+    ),
+  }),
+);
+vi.mock("@editor/components/shared/StepModalHeader", () => ({
   StepModalHeader: ({ aside }: { aside?: ReactNode }) => <div>{aside}</div>,
 }));
-import StripeCheckout from "@app/components/shared/stripeCheckout/StripeCheckout";
+import StripeCheckout from "@editor/components/shared/stripeCheckout/StripeCheckout";
 const planGroup: PlanTierGroup = {
   tier: "server",
   name: "Team",

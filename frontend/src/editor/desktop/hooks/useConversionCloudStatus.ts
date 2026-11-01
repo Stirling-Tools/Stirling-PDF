@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
-import { connectionModeService } from "@app/services/connectionModeService";
-import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
-import { tauriBackendService } from "@app/services/tauriBackendService";
-import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
-import { EXTENSION_TO_ENDPOINT } from "@app/constants/convertConstants";
-import { getEndpointName } from "@app/utils/convertUtils";
-import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
-import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import { EXTENSION_TO_ENDPOINT } from "@editor/constants/convertConstants";
+import { getEndpointName } from "@editor/utils/convertUtils";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
+import { useMultipleEndpointsEnabled } from "@editor/hooks/useEndpointConfig";
 
 /**
  * Comprehensive conversion status data

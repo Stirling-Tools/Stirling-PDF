@@ -1,7 +1,7 @@
-import type { StirlingFileStub } from "@app/types/fileContext";
-import type { PolicyState } from "@app/types/policies";
-import { toolIOFor } from "@app/types/toolIO";
-import { toolAcceptsFile } from "@app/utils/toolIOCompat";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { PolicyState } from "@editor/types/policies";
+import { toolIOFor } from "@editor/types/toolIO";
+import { toolAcceptsFile } from "@editor/utils/toolIOCompat";
 
 /** Automatic enforcement requires a known first step that accepts the current file. */
 export function policyAcceptsFile(

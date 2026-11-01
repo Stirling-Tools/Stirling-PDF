@@ -1,4 +1,4 @@
-import api from "@app/services/apiClient";
+import api from "@editor/services/apiClient";
 
 export interface ParticipantResponse {
   id: number;

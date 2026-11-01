@@ -4,8 +4,11 @@ import path from "node:path";
 
 import { PDFDocument, StandardFonts } from "@cantoo/pdf-lib";
 
-import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { uploadFiles, dismissTourTooltip } from "@app/tests/helpers/ui-helpers";
+import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import {
+  uploadFiles,
+  dismissTourTooltip,
+} from "@editor/tests/helpers/ui-helpers";
 
 // 4 portrait pages whose intrinsic /Rotate is 0, 90, 270, 180.
 const ROTATED_PDF = path.join(

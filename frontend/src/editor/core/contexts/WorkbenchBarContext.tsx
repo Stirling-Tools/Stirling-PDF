@@ -9,7 +9,7 @@ import {
   WorkbenchBarAction,
   WorkbenchBarButtonConfig,
   WorkbenchViewFileActions,
-} from "@app/types/workbenchBar";
+} from "@editor/types/workbenchBar";
 
 interface WorkbenchBarContextValue {
   buttons: WorkbenchBarButtonConfig[];

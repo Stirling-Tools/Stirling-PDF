@@ -1,4 +1,4 @@
-import type { BackendHealthState } from "@app/types/backendHealth";
+import type { BackendHealthState } from "@editor/types/backendHealth";
 
 export function useBackendHealth(): BackendHealthState {
   return {

@@ -1,10 +1,10 @@
 import type { MouseEvent, ReactNode, Ref } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { ActionIcon, NodeCard } from "@app/ui";
-import { type IconBadgeAccent } from "@app/ui/IconBadge";
-import type { GraphNodeKind } from "@portal/components/pipelines/graph/pipelineLayout";
-import "@portal/components/pipelines/graph/GraphNode.css";
+import { Icon } from "@editor/ui/Icon";
+import { ActionIcon, NodeCard } from "@editor/ui";
+import { type IconBadgeAccent } from "@editor/ui/IconBadge";
+import type { GraphNodeKind } from "@processor/components/pipelines/graph/pipelineLayout";
+import "@processor/components/pipelines/graph/GraphNode.css";
 
 /** How a node is faring in the current or last test run. */
 export type NodeRunState = "running" | "done" | "failed";

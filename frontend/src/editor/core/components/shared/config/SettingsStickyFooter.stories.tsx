@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
+import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsStickyFooter";
 
 const meta = {
   title: "Shared/Config/SettingsStickyFooter",

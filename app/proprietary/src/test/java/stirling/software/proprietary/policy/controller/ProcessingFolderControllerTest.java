@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -74,6 +75,7 @@ import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.repository.FolderRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 import stirling.software.proprietary.storage.service.FileStorageService;
+import stirling.software.proprietary.util.SecretMasker;
 
 /**
  * Tests for {@link ProcessingFolderController}: the source + policy pair composes and tears down
@@ -196,7 +198,8 @@ class ProcessingFolderControllerTest {
                         List.of(),
                         sourceStore,
                         assetStore,
-                        toolChainValidator);
+                        toolChainValidator,
+                        new ApplicationProperties());
         controller =
                 new ProcessingFolderController(
                         policyStore,
@@ -211,7 +214,9 @@ class ProcessingFolderControllerTest {
                         accessGuard,
                         folderAccessGuard,
                         new SourceAccessGuard(userService, properties, policyManagementAuthority),
-                        properties);
+                        properties,
+                        StepSecrets.forSecrets(
+                                Map.of("/api/v1/security/add-password", Set.of("password"))));
     }
 
     @Test
@@ -1140,6 +1145,27 @@ class ProcessingFolderControllerTest {
         lenient().when(file.getSizeBytes()).thenReturn(100L);
         lenient().when(file.getUpdatedAt()).thenReturn(LocalDateTime.of(2026, 1, 1, 0, 0));
         return file;
+    }
+
+    @Test
+    void refusesAStepPasswordCopiedFromAMaskedPolicyRead() {
+        var copied =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        true,
+                        List.of(
+                                new PipelineStep(
+                                        "/api/v1/security/add-password",
+                                        Map.of("password", SecretMasker.REDACTED),
+                                        Map.of())),
+                        Map.of("mode", "new_version"));
+
+        assertThatThrownBy(() -> controller.save(copied))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("enter the password again");
+        assertThat(policyStore.all()).isEmpty();
     }
 
     private static ProcessingFolderController.SaveProcessingFolderRequest request(

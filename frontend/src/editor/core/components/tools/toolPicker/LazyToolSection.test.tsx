@@ -9,7 +9,7 @@ import { MantineProvider } from "@mantine/core";
 import { createRef } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { LazyToolSection } from "@app/components/tools/toolPicker/LazyToolSection";
+import { LazyToolSection } from "@editor/components/tools/toolPicker/LazyToolSection";
 
 class MockIntersectionObserver {
   static instances: MockIntersectionObserver[] = [];

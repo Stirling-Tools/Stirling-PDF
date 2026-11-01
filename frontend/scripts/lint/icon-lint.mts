@@ -279,7 +279,7 @@ for (const file of files) {
       for (const banned of BANNED_IMPORTS) {
         if (line.includes(banned) && !inIconsDir) {
           problems.push(
-            `${rel(file)}:${i + 1}: imports ${banned}. Use <Icon name="…" /> from @app/ui/Icon.`,
+            `${rel(file)}:${i + 1}: imports ${banned}. Use <Icon name="…" /> from @editor/ui/Icon.`,
           );
         }
       }

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { expect, it, vi } from "vitest";
-import SignControlsPanel from "@app/components/tools/certSign/panels/SignControlsPanel";
+import SignControlsPanel from "@editor/components/tools/certSign/panels/SignControlsPanel";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -9,7 +9,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("@app/hooks/tools/sign/useSavedSignatures", () => ({
+vi.mock("@editor/hooks/tools/sign/useSavedSignatures", () => ({
   useSavedSignatures: () => ({
     savedSignatures: [],
     addSignature: vi.fn(),

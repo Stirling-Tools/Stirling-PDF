@@ -1,14 +1,14 @@
 import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTier } from "@portal/contexts/TierContext";
-import type { AsyncState } from "@portal/hooks/useAsync";
-import { toAsyncState } from "@portal/queries/adapters";
-import { qk } from "@portal/queries/keys";
-import { usersBackend } from "@app/portal/usersBackend";
-import { fetchGrants, type ResourceGrant } from "@portal/api/access";
-import { usersCapabilities as caps } from "@app/portal/usersCapabilities";
-import type { AdminAuthConfig, UsersResponse } from "@portal/api/users";
-import type { Team } from "@portal/api/teams";
+import { useTier } from "@processor/contexts/TierContext";
+import type { AsyncState } from "@processor/hooks/useAsync";
+import { toAsyncState } from "@processor/queries/adapters";
+import { qk } from "@processor/queries/keys";
+import { usersBackend } from "@editor/portal/usersBackend";
+import { fetchGrants, type ResourceGrant } from "@processor/api/access";
+import { usersCapabilities as caps } from "@editor/portal/usersCapabilities";
+import type { AdminAuthConfig, UsersResponse } from "@processor/api/users";
+import type { Team } from "@processor/api/teams";
 
 /** The four resources the Users page renders, plus a post-mutation refresh. */
 export interface UsersData {

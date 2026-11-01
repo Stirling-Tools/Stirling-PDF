@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Banner, Button } from "@app/ui";
-import { formatCountdown } from "@portal/components/documents/format";
+import { Icon } from "@editor/ui/Icon";
+import { Banner, Button } from "@editor/ui";
+import { formatCountdown } from "@processor/components/documents/format";
 
 interface ElevationBannerProps {
   /** Seconds left on the active grant, or null when no grant is active. */

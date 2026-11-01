@@ -1,15 +1,15 @@
 import { StrictMode, type ReactNode } from "react";
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { useCookieConsentInitialization } from "@app/hooks/useCookieConsentInitialization";
-import { useCookieConsent } from "@app/hooks/useCookieConsent";
-import { TOUR_STATE_EVENT } from "@app/constants/events";
+import { useCookieConsentInitialization } from "@editor/hooks/useCookieConsentInitialization";
+import { useCookieConsent } from "@editor/hooks/useCookieConsent";
+import { TOUR_STATE_EVENT } from "@editor/constants/events";
 
 const h = vi.hoisted(() => ({
   config: { enableAnalytics: false, enablePosthog: true, enableScarf: true },
   translate: (key: string) => key,
 }));
-vi.mock("@app/contexts/AppConfigContext", () => ({
+vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: h.config }),
 }));
 vi.mock("react-i18next", () => ({

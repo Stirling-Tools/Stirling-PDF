@@ -1,4 +1,4 @@
-import { Button } from "@app/ui/Button";
+import { Button } from "@editor/ui/Button";
 interface NavigationLinkProps {
   onClick: () => void;
   text: string;

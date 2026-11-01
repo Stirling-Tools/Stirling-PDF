@@ -5,9 +5,9 @@ import {
   DataTable,
   type DataTableColumn,
   type StatusTone,
-} from "@app/ui";
-import { pipelineIcon } from "@portal/components/pipelines/pipelineIcon";
-import type { PipelineStatus, PipelineView } from "@portal/api/pipelines";
+} from "@editor/ui";
+import { pipelineIcon } from "@processor/components/pipelines/pipelineIcon";
+import type { PipelineStatus, PipelineView } from "@processor/api/pipelines";
 
 const STATUS_TONE: Record<PipelineStatus, StatusTone> = {
   active: "success",

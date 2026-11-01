@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { documentsFor } from "@portal/mocks/documents";
-import { DocumentDrawer } from "@portal/components/documents/DocumentDrawer";
-import "@portal/views/Documents.css";
+import { documentsFor } from "@processor/mocks/documents";
+import { DocumentDrawer } from "@processor/components/documents/DocumentDrawer";
+import "@processor/views/Documents.css";
 
 const ALL = documentsFor("enterprise");
 const NON_SENSITIVE = ALL.find((d) => !d.sensitive)!;

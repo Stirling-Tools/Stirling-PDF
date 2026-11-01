@@ -8,9 +8,9 @@ import {
   Group,
   Box,
 } from "@mantine/core";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
-import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
+import { ColorPicker } from "@editor/components/annotation/shared/ColorPicker";
 
 interface TextInputWithFontProps {
   text: string;

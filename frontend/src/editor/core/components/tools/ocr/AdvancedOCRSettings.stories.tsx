@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import AdvancedOCRSettings from "@app/components/tools/ocr/AdvancedOCRSettings";
+import AdvancedOCRSettings from "@editor/components/tools/ocr/AdvancedOCRSettings";
 
 const meta = {
   title: "Tools/Ocr/AdvancedOCRSettings",

@@ -9,10 +9,10 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
+import { Icon } from "@editor/ui/Icon";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@editor/types/folder";
 
 interface MoveToFolderDialogProps {
   opened: boolean;

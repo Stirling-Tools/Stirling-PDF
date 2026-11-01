@@ -1,21 +1,21 @@
 /** Account-owned legacy billing can coexist with the current team's wallet. */
-import { BillingScreen } from "@app/billing/BillingScreen";
+import { BillingScreen } from "@editor/billing/BillingScreen";
 import React, { useCallback } from "react";
 import { Center, Group, Loader, Stack } from "@mantine/core";
-import { Banner, Button } from "@app/ui";
+import { Banner, Button } from "@editor/ui";
 import { useTranslation } from "react-i18next";
-import { useWallet } from "@app/hooks/useWallet";
-import { useLegacySubscriptions } from "@app/hooks/useLegacySubscriptions";
-import { LegacySubscriptionPlan } from "@app/components/shared/config/LegacySubscriptionPlan";
-import { useRenderCount } from "@app/hooks/useRenderCount";
+import { useWallet } from "@editor/hooks/useWallet";
+import { useLegacySubscriptions } from "@editor/hooks/useLegacySubscriptions";
+import { LegacySubscriptionPlan } from "@editor/components/shared/config/LegacySubscriptionPlan";
+import { useRenderCount } from "@editor/hooks/useRenderCount";
 import {
   PaygLeader,
   PaygMember,
-} from "@app/components/shared/config/configSections/Payg";
+} from "@editor/components/shared/config/configSections/Payg";
 import {
   PaygFreeLeader,
   PaygFreeMember,
-} from "@app/components/shared/config/configSections/PaygFree";
+} from "@editor/components/shared/config/configSections/PaygFree";
 
 const Plan: React.FC = () => {
   useRenderCount("Plan");

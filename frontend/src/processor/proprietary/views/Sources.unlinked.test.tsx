@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { PortalViewProviders } from "@portal/test/TestQueryProvider";
+import { PortalViewProviders } from "@processor/test/TestQueryProvider";
 
 /**
  * Connecting a source needs no Stirling account: the source is stored on this instance, and the
@@ -10,7 +10,7 @@ import { PortalViewProviders } from "@portal/test/TestQueryProvider";
  */
 const { connect } = vi.hoisted(() => ({ connect: vi.fn() }));
 
-vi.mock("@portal/hooks/useConnectGate", () => ({
+vi.mock("@processor/hooks/useConnectGate", () => ({
   useConnectGate: () => ({
     gated: true,
     loading: false,
@@ -33,21 +33,21 @@ vi.mock("react-i18next", () => ({
 }));
 
 const fetchSources = vi.fn();
-vi.mock("@portal/api/sources", () => ({
+vi.mock("@processor/api/sources", () => ({
   fetchSources: () => fetchSources(),
   fetchSource: vi.fn(),
   createSource: vi.fn(),
   deleteSource: vi.fn(),
   isFolderAccessDeniedError: () => false,
 }));
-vi.mock("@portal/api/integrations", () => ({
+vi.mock("@processor/api/integrations", () => ({
   fetchIntegrations: () => Promise.resolve([]),
   fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
   fetchS3Connections: () => Promise.resolve([]),
   deleteIntegration: vi.fn(),
 }));
 
-import { Sources } from "@portal/views/Sources";
+import { Sources } from "@processor/views/Sources";
 
 const EDITOR_ROW = {
   id: "editor",

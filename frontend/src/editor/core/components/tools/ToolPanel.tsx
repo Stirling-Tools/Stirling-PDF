@@ -1,15 +1,15 @@
 import { ScrollArea } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import ToolPicker from "@app/components/tools/ToolPicker";
-import SearchResults from "@app/components/tools/SearchResults";
-import ToolRenderer from "@app/components/tools/ToolRenderer";
-import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
-import { ToolPanelViewerBar } from "@app/components/tools/ToolPanelViewerBar";
-import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSearch";
-import { ActionIcon } from "@app/ui/ActionIcon";
-import { Icon } from "@app/ui/Icon";
-import { ToolId } from "@app/types/toolId";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import ToolPicker from "@editor/components/tools/ToolPicker";
+import SearchResults from "@editor/components/tools/SearchResults";
+import ToolRenderer from "@editor/components/tools/ToolRenderer";
+import ToolSearch from "@editor/components/tools/toolPicker/ToolSearch";
+import { ToolPanelViewerBar } from "@editor/components/tools/ToolPanelViewerBar";
+import { openSuperSearch } from "@editor/components/shared/superSearch/openSuperSearch";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { ToolId } from "@editor/types/toolId";
 
 interface ToolPanelProps {
   /** Whether to expand into the full categorised tools view (with search). */

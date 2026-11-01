@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render } from "@testing-library/react";
-import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { usePlanTier } from "@portal/contexts/usePlanTier";
+import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
+import { usePlanTier } from "@processor/contexts/usePlanTier";
 
 function Probe() {
   return <span data-testid="tier">{usePlanTier()}</span>;

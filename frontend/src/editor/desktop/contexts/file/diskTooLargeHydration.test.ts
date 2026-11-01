@@ -2,8 +2,8 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
 import type {
   FileContextState,
   StirlingFileStub,
-} from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+} from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 // Opening a linked file too large to re-read serves a copy we know is stale, so
 // the open path has to say so exactly as the watcher does.
@@ -12,26 +12,26 @@ const AUTO_RELOAD_MAX_BYTES = 512 * 1024 * 1024;
 
 const getDiskFileState = vi.hoisted(() => vi.fn());
 const readFileFromDisk = vi.hoisted(() => vi.fn(async () => null));
-vi.mock("@app/services/desktopFileLink", () => ({
+vi.mock("@editor/services/desktopFileLink", () => ({
   desktopFileLinkingSupported: true,
   getDiskFileState,
   readFileFromDisk,
 }));
 
 const getStirlingFile = vi.hoisted(() => vi.fn());
-vi.mock("@app/services/fileStorage", () => ({
+vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile,
     deleteStirlingFile: vi.fn(async () => undefined),
     updateFileMetadata: vi.fn(async () => true),
   },
 }));
-vi.mock("@app/utils/thumbnailUtils", () => ({
+vi.mock("@editor/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata: () => new Promise(() => {}),
 }));
 
 const alert = vi.hoisted(() => vi.fn());
-vi.mock("@app/components/toast", () => ({ alert }));
+vi.mock("@editor/components/toast", () => ({ alert }));
 
 const PATH = "C:/docs/huge.pdf";
 const STALE_BYTES = "%PDF-old";
@@ -70,7 +70,7 @@ async function hydrate(diskSize: number) {
 
   vi.resetModules();
   const { addStirlingFileStubs } =
-    await import("@app/contexts/file/fileActions");
+    await import("@editor/contexts/file/fileActions");
 
   const state = {
     files: { ids: [], byId: {} },

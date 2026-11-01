@@ -1,21 +1,21 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@app/ui/Icon";
-import { Button, Input } from "@app/ui";
+import { Icon } from "@editor/ui/Icon";
+import { Button, Input } from "@editor/ui";
 import {
   getSubcategoryLabel,
   SUBCATEGORY_ORDER,
   type SubcategoryId,
-} from "@app/data/toolsTaxonomy";
-import { type ExecutableTool } from "@app/hooks/tools/shared/toolAutomation";
-import { toolAcceptsFormat } from "@app/utils/toolIOCompat";
-import { getToolFormatLabel } from "@app/utils/toolIOLabels";
-import { type ToolFormat } from "@app/types/toolIO";
+} from "@editor/data/toolsTaxonomy";
+import { type ExecutableTool } from "@editor/hooks/tools/shared/toolAutomation";
+import { toolAcceptsFormat } from "@editor/utils/toolIOCompat";
+import { getToolFormatLabel } from "@editor/utils/toolIOLabels";
+import { type ToolFormat } from "@editor/types/toolIO";
 import {
   searchOperations,
   type StepOperation,
-} from "@portal/components/policies/stepOperations";
-import { BrandMark } from "@portal/components/BrandMarks";
+} from "@processor/components/policies/stepOperations";
+import { BrandMark } from "@processor/components/BrandMarks";
 
 interface ToolPickerProps {
   tools: ExecutableTool[];

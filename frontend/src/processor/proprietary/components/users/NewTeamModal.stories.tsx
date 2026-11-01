@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { NewTeamModal } from "@portal/components/users/NewTeamModal";
+import { NewTeamModal } from "@processor/components/users/NewTeamModal";
 
 const meta: Meta<typeof NewTeamModal> = {
   title: "Portal/Users/NewTeamModal",

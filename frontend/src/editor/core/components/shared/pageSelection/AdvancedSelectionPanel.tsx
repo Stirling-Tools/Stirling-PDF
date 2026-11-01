@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Flex } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import classes from "@app/components/shared/pageSelection/BulkSelectionPanel.module.css";
+import classes from "@editor/components/shared/pageSelection/BulkSelectionPanel.module.css";
 import {
   appendExpression,
   insertOperatorSmart,
@@ -10,9 +10,9 @@ import {
   everyNthExpression,
   rangeExpression,
   LogicalOperator,
-} from "@app/utils/bulkselection/selectionBuilders";
-import SelectPages from "@app/components/shared/pageSelection/SelectPages";
-import OperatorsSection from "@app/components/shared/pageSelection/OperatorsSection";
+} from "@editor/utils/bulkselection/selectionBuilders";
+import SelectPages from "@editor/components/shared/pageSelection/SelectPages";
+import OperatorsSection from "@editor/components/shared/pageSelection/OperatorsSection";
 
 interface AdvancedSelectionPanelProps {
   csvInput: string;

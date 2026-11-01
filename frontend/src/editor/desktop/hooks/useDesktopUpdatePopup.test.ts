@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { expectConsole } from "@app/tests/failOnConsole";
+import { expectConsole } from "@editor/tests/failOnConsole";
 
 // ── Mocks (hoisted by vi.mock) ──────────────────────────────────────────────
 const invokeMock = vi.fn();
@@ -23,27 +23,27 @@ vi.mock("@tauri-apps/api/app", () => ({
   getVersion: () => getVersionMock(),
 }));
 
-vi.mock("@app/services/updateService", () => ({
+vi.mock("@editor/services/updateService", () => ({
   updateService: {
     getUpdateSummary: (...args: unknown[]) => getUpdateSummaryMock(...args),
     compareVersions: (a: string, b: string) => (a === b ? 0 : a > b ? 1 : -1),
   },
 }));
 
-vi.mock("@app/services/desktopUpdateService", () => ({
+vi.mock("@editor/services/desktopUpdateService", () => ({
   desktopUpdateService: {
     getUpdateMode: () => getUpdateModeMock(),
     canInstallUpdates: () => canInstallUpdatesMock(),
   },
 }));
 
-vi.mock("@app/services/connectionModeService", () => ({
+vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentMode: () => getCurrentModeMock(),
   },
 }));
 
-import { useDesktopUpdatePopup } from "@app/hooks/useDesktopUpdatePopup";
+import { useDesktopUpdatePopup } from "@editor/hooks/useDesktopUpdatePopup";
 
 /** Flush pending microtasks so awaited promises settle. */
 async function flushMicrotasks() {

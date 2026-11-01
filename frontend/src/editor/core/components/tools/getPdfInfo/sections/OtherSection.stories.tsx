@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import OtherSection from "@app/components/tools/getPdfInfo/sections/OtherSection";
-import type { PdfOtherInfo } from "@app/types/getPdfInfo";
+import OtherSection from "@editor/components/tools/getPdfInfo/sections/OtherSection";
+import type { PdfOtherInfo } from "@editor/types/getPdfInfo";
 
 const populatedOther: PdfOtherInfo = {
   Attachments: [

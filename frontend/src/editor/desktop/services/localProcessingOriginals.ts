@@ -5,15 +5,15 @@ import {
   remove,
   type FileInfo,
 } from "@tauri-apps/plugin-fs";
-import { directoryKey } from "@app/services/localFolderStorage";
-import { isWithinMount } from "@app/services/localFolderContents";
-import { processingPath } from "@app/services/localProcessingDelivery";
+import { directoryKey } from "@editor/services/localFolderStorage";
+import { isWithinMount } from "@editor/services/localFolderContents";
+import { processingPath } from "@editor/services/localProcessingDelivery";
 import {
   localProcessingFolderStorage as storage,
   type LocalProcessingFile,
   type LocalProcessingFolder,
-} from "@app/services/localProcessingFolderStorage";
-import { requireAutomationSession } from "@app/services/serverAutomationSession";
+} from "@editor/services/localProcessingFolderStorage";
+import { requireAutomationSession } from "@editor/services/serverAutomationSession";
 
 const RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 const TERMINAL = new Set(["COMPLETED", "FAILED", "CANCELLED"]);

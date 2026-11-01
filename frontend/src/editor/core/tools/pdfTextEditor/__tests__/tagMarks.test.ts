@@ -10,19 +10,19 @@ import {
   vi,
 } from "vitest";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
+import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { PdfiumSave } from "@editor/tools/pdfTextEditor/pdfium/PdfiumSave";
 import {
   applyTagMarks,
   copyTagMarks,
   readTagMarks,
-} from "@app/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-import { emitTextLine } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { allowConsole } from "@app/tests/failOnConsole";
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { emitTextLine } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { allowConsole } from "@editor/tests/failOnConsole";
 import {
   buildClassicPdf,
   streamBody,
-} from "@app/tools/pdfTextEditor/__tests__/pdfFixtures";
+} from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 // Runs against the real PDFium build: whether the generator writes a mark back
 // out is the behaviour under test, and a mock would only restate the intent.

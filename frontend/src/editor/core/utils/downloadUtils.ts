@@ -1,9 +1,9 @@
-import { StirlingFileStub } from "@app/types/fileContext";
-import { fileStorage } from "@app/services/fileStorage";
-import { zipFileService } from "@app/services/zipFileService";
-import { downloadFile } from "@app/services/downloadService";
-import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
-import { enforceExportPolicies } from "@app/services/policyExport";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { fileStorage } from "@editor/services/fileStorage";
+import { zipFileService } from "@editor/services/zipFileService";
+import { downloadFile } from "@editor/services/downloadService";
+import { downloadFileWithPolicy } from "@editor/services/exportWithPolicy";
+import { enforceExportPolicies } from "@editor/services/policyExport";
 
 /**
  * Downloads a blob as a file using browser download API

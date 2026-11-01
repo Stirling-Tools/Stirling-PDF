@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import {
   requestSigningIntent,
   type SigningIntent,
-} from "@app/utils/pendingSigningIntent";
+} from "@editor/utils/pendingSigningIntent";
 
 /** Queue the intent only after any unsaved-work prompt has been accepted. */
 export function useOpenSigning() {

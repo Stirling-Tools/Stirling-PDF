@@ -13,15 +13,15 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { UsersDirectory } from "@portal/components/users/UsersDirectory";
-import type { Member } from "@portal/api/users";
-import type { Team } from "@portal/api/teams";
+import { UsersDirectory } from "@processor/components/users/UsersDirectory";
+import type { Member } from "@processor/api/users";
+import type { Team } from "@processor/api/teams";
 // Prove the gating against the real flavor capability files. The portal vitest
-// project resolves @app to proprietary and has no @saas alias, so the SaaS set is
-// reached by path; the self-hosted set uses the @proprietary alias.
+// project resolves @editor to proprietary and has no @saas alias, so the SaaS set is
+// reached by path; the self-hosted set uses the @editor-proprietary alias.
 // oxlint-disable-next-line no-restricted-imports
 import { usersCapabilities as saasCaps } from "../../../../editor/saas/portal/usersCapabilities";
-import { usersCapabilities as selfHostedCaps } from "@proprietary/portal/usersCapabilities";
+import { usersCapabilities as selfHostedCaps } from "@editor-proprietary/portal/usersCapabilities";
 
 const MEMBER: Member = {
   id: "2",

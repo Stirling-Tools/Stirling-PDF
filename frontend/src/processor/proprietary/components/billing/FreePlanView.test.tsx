@@ -2,10 +2,10 @@ import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { FreePlanView } from "@portal/components/billing/FreePlanView";
-import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
-import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
-import type { LatestBundleQuote } from "@portal/billing/stripe";
+import { FreePlanView } from "@processor/components/billing/FreePlanView";
+import { BundleCheckoutModal } from "@processor/components/billing/BundleCheckoutModal";
+import { freeWallet, subscribedWallet } from "@editor/billing/walletFixtures";
+import type { LatestBundleQuote } from "@processor/billing/stripe";
 
 const api = vi.hoisted(() => ({
   fetchBundlePricing: vi.fn(),
@@ -17,8 +17,8 @@ const api = vi.hoisted(() => ({
   upsertBundleQuote: vi.fn(),
   createCheckoutSession: vi.fn(),
 }));
-vi.mock("@portal/billing/stripe", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@portal/billing/stripe")>()),
+vi.mock("@processor/billing/stripe", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@processor/billing/stripe")>()),
   ...api,
   getStripePublishableKey: () => null,
 }));

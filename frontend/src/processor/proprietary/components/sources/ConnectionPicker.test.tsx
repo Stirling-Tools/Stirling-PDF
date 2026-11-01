@@ -6,7 +6,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { ConnectionPicker } from "@portal/components/sources/ConnectionPicker";
+import { ConnectionPicker } from "@processor/components/sources/ConnectionPicker";
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: MantineProvider });
@@ -19,14 +19,14 @@ vi.mock("react-i18next", () => ({
 }));
 
 const fetchIntegrations = vi.fn();
-vi.mock("@portal/api/integrations", () => ({
+vi.mock("@processor/api/integrations", () => ({
   fetchIntegrations: () => fetchIntegrations(),
   fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
   createIntegration: vi.fn(),
   updateIntegration: vi.fn(),
 }));
 
-vi.mock("@portal/api/http", () => ({
+vi.mock("@processor/api/http", () => ({
   errorMessage: (e: unknown) => String(e),
 }));
 

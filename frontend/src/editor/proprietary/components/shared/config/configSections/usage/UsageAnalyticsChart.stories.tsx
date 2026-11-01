@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import UsageAnalyticsChart from "@app/components/shared/config/configSections/usage/UsageAnalyticsChart";
+import UsageAnalyticsChart from "@editor/components/shared/config/configSections/usage/UsageAnalyticsChart";
 
 /**
  * Bar chart summarising endpoint usage counts.

@@ -1,7 +1,7 @@
 import { fetch } from "@tauri-apps/plugin-http";
-import { STIRLING_SAAS_BACKEND_API_URL } from "@app/constants/connection";
-import { connectionModeService } from "@app/services/connectionModeService";
-import type { AppConfig } from "@app/types/appConfig";
+import { STIRLING_SAAS_BACKEND_API_URL } from "@editor/constants/connection";
+import { connectionModeService } from "@editor/services/connectionModeService";
+import type { AppConfig } from "@editor/types/appConfig";
 
 /**
  * General fetch+cache of the SaaS backend's app-config for the desktop app.

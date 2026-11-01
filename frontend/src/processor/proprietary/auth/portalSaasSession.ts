@@ -3,7 +3,7 @@ import {
   getPortalSessionClient,
   ensurePortalSessionClient,
   handlePortalSessionRequired,
-} from "@app/portal/auth/sessionClient";
+} from "@editor/portal/auth/sessionClient";
 
 let refreshPromise: Promise<string | null> | null = null;
 let generation = 0;

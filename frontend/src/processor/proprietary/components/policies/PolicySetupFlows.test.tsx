@@ -6,13 +6,13 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
-import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
+import { PortalTestProviders } from "@processor/test/TestQueryProvider";
+import { PolicySetupWizard } from "@processor/components/policies/PolicySetupWizard";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
   type CatalogueEntry,
-} from "@portal/api/policies";
+} from "@processor/api/policies";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -27,20 +27,20 @@ const api = vi.hoisted(() => ({
   sources: vi.fn(),
   source: vi.fn(),
 }));
-vi.mock("@portal/api/docparse", () => ({
+vi.mock("@processor/api/docparse", () => ({
   fetchDocparseCapabilities: api.capabilities,
 }));
-vi.mock("@portal/api/sources", async (original) => ({
-  ...(await original<typeof import("@portal/api/sources")>()),
+vi.mock("@processor/api/sources", async (original) => ({
+  ...(await original<typeof import("@processor/api/sources")>()),
   fetchSources: api.sources,
   fetchSource: api.source,
 }));
-vi.mock("@portal/api/integrations", async (original) => ({
-  ...(await original<typeof import("@portal/api/integrations")>()),
+vi.mock("@processor/api/integrations", async (original) => ({
+  ...(await original<typeof import("@processor/api/integrations")>()),
   fetchIntegrations: () => Promise.resolve([]),
 }));
-vi.mock("@portal/api/pipelines", async (original) => ({
-  ...(await original<typeof import("@portal/api/pipelines")>()),
+vi.mock("@processor/api/pipelines", async (original) => ({
+  ...(await original<typeof import("@processor/api/pipelines")>()),
   fetchTriggers: () =>
     Promise.resolve([
       { type: "schedule", requiresSource: false, supportedSourceTypes: [] },

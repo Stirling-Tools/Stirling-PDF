@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,12 +12,12 @@ import {
   TextInput,
   MultiSelect,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { alert } from "@app/components/toast";
-import PendingBadge from "@app/components/shared/config/PendingBadge";
-import apiClient from "@app/services/apiClient";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import type { AdvancedCardProps } from "@app/components/shared/config/configSections/advanced/advancedCardProps";
+import { Button } from "@editor/ui/Button";
+import { alert } from "@editor/components/toast";
+import PendingBadge from "@editor/components/shared/config/PendingBadge";
+import apiClient from "@editor/services/apiClient";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import type { AdvancedCardProps } from "@editor/components/shared/config/configSections/advanced/advancedCardProps";
 
 /**
  * Image DPI and the OCR tessdata directory. The language list and its

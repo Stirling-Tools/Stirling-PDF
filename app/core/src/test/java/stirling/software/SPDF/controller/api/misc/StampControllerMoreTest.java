@@ -18,6 +18,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,6 +32,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.RGBLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.qrcode.QRCodeReader;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
 import stirling.software.common.model.ApplicationProperties;
@@ -317,6 +323,132 @@ class StampControllerMoreTest {
             req.setStampType("IMAGE");
             req.setStampImage(pngImage("logo.png"));
             assertValidPdf(stampController.addStamp(req), 1);
+        }
+    }
+
+    @Nested
+    @DisplayName("QR code stamp")
+    class QrStamp {
+
+        private String stampAndDecodeQr(AddStampRequest req) throws Exception {
+            BufferedImage rendered;
+            try (InputStream is = stampController.addStamp(req).getBody().getInputStream();
+                    PDDocument result = Loader.loadPDF(is.readAllBytes())) {
+                rendered = new PDFRenderer(result).renderImageWithDPI(0, 144);
+            }
+            int width = rendered.getWidth();
+            int height = rendered.getHeight();
+            int[] pixels = rendered.getRGB(0, 0, width, height, null, 0, width);
+            BinaryBitmap bitmap =
+                    new BinaryBitmap(
+                            new HybridBinarizer(new RGBLuminanceSource(width, height, pixels)));
+            return new QRCodeReader().decode(bitmap).getText();
+        }
+
+        @Test
+        @DisplayName("multi-byte content survives the UTF-8 round trip")
+        void qrStampEncodesUtf8() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("日本語 café ✓");
+            req.setFontSize(200f);
+            req.setOpacity(1f);
+            assertThat(stampAndDecodeQr(req)).isEqualTo("日本語 café ✓");
+        }
+
+        @Test
+        @DisplayName("a rotated QR code still decodes")
+        void rotatedQrStampDecodes() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("https://stirlingpdf.com/@filename");
+            req.setFontSize(200f);
+            req.setRotation(90f);
+            req.setOpacity(1f);
+            assertThat(stampAndDecodeQr(req)).isEqualTo("https://stirlingpdf.com/input");
+        }
+
+        @Test
+        @DisplayName("QR content whose placeholders resolve to nothing is rejected")
+        void rejectsContentExpandingToBlank() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("@author");
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("must be provided");
+        }
+
+        @Test
+        @DisplayName("draws a QR code that decodes back to the resolved stamp text")
+        void qrStampDecodesToContent() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("https://stirlingpdf.com/@filename");
+            req.setFontSize(200f);
+            req.setOpacity(1f);
+
+            assertThat(stampAndDecodeQr(req)).isEqualTo("https://stirlingpdf.com/input");
+        }
+
+        @Test
+        @DisplayName("blank QR content is rejected")
+        void rejectsBlankContent() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("   ");
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("QR content over the length limit is rejected")
+        void rejectsOverlongContent() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("a".repeat(1001));
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("QR content is limited by UTF-8 bytes, not characters")
+        void rejectsMultiByteContentOverByteLimit() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("日".repeat(334)); // 1002 bytes in 334 characters
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("bytes");
+        }
+
+        @Test
+        @DisplayName("a non-positive QR size falls back to the default size")
+        void qrStampZeroFontSizeFallsBackToDefaultSize() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setStampType("qr");
+            req.setStampText("https://stirlingpdf.com/@filename");
+            req.setFontSize(0f);
+            req.setOpacity(1f);
+
+            assertThat(stampAndDecodeQr(req)).isEqualTo("https://stirlingpdf.com/input");
+        }
+
+        @Test
+        @DisplayName("QR content expanded past the byte limit by placeholders is rejected")
+        void rejectsExpandedContentOverByteLimit() throws Exception {
+            MockMultipartFile longName =
+                    new MockMultipartFile(
+                            "fileInput",
+                            "a".repeat(200) + ".pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            buildPdf(1));
+            AddStampRequest req = baseRequest(longName);
+            req.setStampType("qr");
+            req.setStampText("@filename@filename@filename@filename@filename@filename");
+            assertThatThrownBy(() -> stampController.addStamp(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("bytes");
         }
     }
 

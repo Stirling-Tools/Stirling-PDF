@@ -1,11 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useSignatureLibrary } from "@app/components/tools/sign/wallet/useSignatureLibrary";
+import { useSignatureLibrary } from "@editor/components/tools/sign/wallet/useSignatureLibrary";
 import type {
   CreatedSignature,
   SaveChoice,
-} from "@app/components/tools/sign/createSignature/types";
-import type { SavedSignature } from "@app/types/signature";
+} from "@editor/components/tools/sign/createSignature/types";
+import type { SavedSignature } from "@editor/types/signature";
 
 const mocks = vi.hoisted(() => ({
   addSignature: vi.fn(),
@@ -17,14 +17,14 @@ const mocks = vi.hoisted(() => ({
   defaultId: "saved",
 }));
 
-vi.mock("@app/components/toast", () => ({ alert: mocks.alert }));
-vi.mock("@app/hooks/tools/sign/useDefaultSignature", () => ({
+vi.mock("@editor/components/toast", () => ({ alert: mocks.alert }));
+vi.mock("@editor/hooks/tools/sign/useDefaultSignature", () => ({
   useDefaultSignature: () => ({
     defaultId: mocks.defaultId,
     setDefaultId: mocks.setDefaultId,
   }),
 }));
-vi.mock("@app/hooks/tools/sign/useSavedSignatures", () => ({
+vi.mock("@editor/hooks/tools/sign/useSavedSignatures", () => ({
   useSavedSignatures: () => ({
     savedSignatures: [],
     ownCount: mocks.ownCount,

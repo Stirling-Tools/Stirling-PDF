@@ -11,15 +11,15 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("@tauri-apps/plugin-fs", () => ({ ...mocks, mkdir: vi.fn() }));
 vi.mock("@tauri-apps/api/core", () => ({ invoke: mocks.invoke }));
-vi.mock("@app/services/desktopFileLink", () => ({
+vi.mock("@editor/services/desktopFileLink", () => ({
   getDiskFileState: mocks.diskState,
 }));
-vi.mock("@app/services/localFolderContents", () => ({
+vi.mock("@editor/services/localFolderContents", () => ({
   readDiskFile: vi.fn(),
   writeDiskFile: vi.fn(),
   isWithinMount: mocks.mounted,
 }));
-vi.mock("@app/services/diskFileSync", () => ({
+vi.mock("@editor/services/diskFileSync", () => ({
   beginSelfWrite: vi.fn(),
   endSelfWrite: vi.fn(),
 }));
@@ -30,7 +30,7 @@ import {
   restoreProcessingFile,
   removeProcessingOutput,
   readProcessingOriginal,
-} from "@app/services/localProcessingDelivery";
+} from "@editor/services/localProcessingDelivery";
 
 const input = {
   path: "/downloads/a.pdf",
