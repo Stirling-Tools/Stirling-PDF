@@ -321,10 +321,23 @@ test.describe("PDF text editor - tables", () => {
 
     // Handle 2 is the lower edge of body row 1. It must also be selectable
     // without a pointer so keyboard users can choose the deletion target.
-    const rowHandle = page.getByTestId(`pdf-editor-table-row-handle-${tableId}-2`);
-    await expect(rowHandle).toHaveAttribute("aria-label", "Select row 1 for deletion");
-    await rowHandle.focus();
+    const otherRowHandle = page.getByTestId(
+      `pdf-editor-table-row-handle-${tableId}-3`,
+    );
+    await otherRowHandle.focus();
     await page.keyboard.press("Enter");
+    await expect(otherRowHandle).toHaveAttribute("data-selected", "true");
+
+    const rowHandle = page.getByTestId(
+      `pdf-editor-table-row-handle-${tableId}-2`,
+    );
+    await expect(rowHandle).toHaveAttribute(
+      "aria-label",
+      "Select row 1 for deletion",
+    );
+    // Assistive technology can activate the handle with a click that has no
+    // preceding pointer or keyboard event; it must still change the target.
+    await rowHandle.dispatchEvent("click", { detail: 0 });
     await expect(rowHandle).toHaveAttribute("data-selected", "true");
     await page.getByTestId(`pdf-editor-table-del-row-${tableId}`).click();
     await page.waitForFunction(
