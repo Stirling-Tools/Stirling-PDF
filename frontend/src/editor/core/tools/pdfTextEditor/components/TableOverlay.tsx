@@ -540,10 +540,10 @@ function EditableTable({
                 "pdfTextEditor.table.resizeColumn",
                 "Drag to resize this column (Alt: share with the next)",
               )}
-              selectionLabel={t(
-                "pdfTextEditor.table.selectColumn",
-                `Select column ${Math.max(1, i - 1)} for deletion`,
-              )}
+              selectionLabel={t("pdfTextEditor.table.selectColumn", {
+                defaultValue: "Select column {{number}} for deletion",
+                number: Math.max(1, i - 1) + 1,
+              })}
               cursor="col-resize"
               orientation="vertical"
               offset={d.active && drag ? drag.dx : 0}
@@ -573,10 +573,10 @@ function EditableTable({
                 "pdfTextEditor.table.resizeRow",
                 "Drag to resize this row (Alt: share with the next)",
               )}
-              selectionLabel={t(
-                "pdfTextEditor.table.selectRow",
-                `Select row ${Math.max(1, i - 1)} for deletion`,
-              )}
+              selectionLabel={t("pdfTextEditor.table.selectRow", {
+                defaultValue: "Select row {{number}} for deletion",
+                number: Math.max(1, i - 1) + 1,
+              })}
               cursor="row-resize"
               orientation="horizontal"
               offset={d.active && drag ? drag.dy : 0}
