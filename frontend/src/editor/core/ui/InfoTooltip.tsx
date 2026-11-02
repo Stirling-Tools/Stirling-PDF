@@ -104,6 +104,9 @@ export function InfoTooltip({
   // still over the panel must not close it either.
   const hoveredRef = useRef(false);
   const focusedRef = useRef(false);
+  // Only explicit dismissals should pull focus back to the trigger. Tabbing
+  // away closes the preview and must leave focus on the next control.
+  const returnFocusRef = useRef(true);
 
   const clearTimers = useCallback(() => {
     if (openTimer.current) clearTimeout(openTimer.current);
@@ -112,13 +115,17 @@ export function InfoTooltip({
     closeTimer.current = null;
   }, []);
 
-  const closeNow = useCallback(() => {
-    clearTimers();
-    ignoreFocusOpenUntil.current = Date.now() + 250;
-    focusedRef.current = false;
-    setPinned(false);
-    setOpened(false);
-  }, [clearTimers]);
+  const closeNow = useCallback(
+    (returnFocus = true) => {
+      clearTimers();
+      returnFocusRef.current = returnFocus;
+      ignoreFocusOpenUntil.current = Date.now() + 250;
+      focusedRef.current = false;
+      setPinned(false);
+      setOpened(false);
+    },
+    [clearTimers],
+  );
 
   useEffect(() => clearTimers, [clearTimers]);
 
@@ -143,7 +150,10 @@ export function InfoTooltip({
       closeTimer.current = null;
     }
     if (opened) return;
-    openTimer.current = setTimeout(() => setOpened(true), OPEN_DELAY_MS);
+    openTimer.current = setTimeout(() => {
+      returnFocusRef.current = true;
+      setOpened(true);
+    }, OPEN_DELAY_MS);
   }, [disabled, opened]);
 
   const scheduleClose = useCallback(() => {
@@ -154,7 +164,7 @@ export function InfoTooltip({
     }
     // closeNow, not a bare setOpened: returnFocus puts focus back on the
     // trigger, whose onFocus must be suppressed or the panel reopens instantly.
-    closeTimer.current = setTimeout(closeNow, CLOSE_DELAY_MS);
+    closeTimer.current = setTimeout(() => closeNow(false), CLOSE_DELAY_MS);
   }, [closeNow, pinned]);
 
   const handlePointerEnter = useCallback(() => {
@@ -175,6 +185,7 @@ export function InfoTooltip({
   const handleFocus = useCallback(() => {
     if (disabled || Date.now() < ignoreFocusOpenUntil.current) return;
     focusedRef.current = true;
+    returnFocusRef.current = true;
     clearTimers();
     setOpened(true);
   }, [clearTimers, disabled]);
@@ -192,14 +203,25 @@ export function InfoTooltip({
       event.stopPropagation();
       clearTimers();
       focusedRef.current = true;
+      returnFocusRef.current = true;
       if (pinned) {
-        closeNow();
+        closeNow(true);
         return;
       }
       setOpened(true);
       setPinned(true);
     },
     [clearTimers, closeNow, pinned],
+  );
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key !== "Escape" || !opened) return;
+      event.preventDefault();
+      event.stopPropagation();
+      closeNow(true);
+    },
+    [closeNow, opened],
   );
 
   useEffect(() => {
@@ -247,6 +269,7 @@ export function InfoTooltip({
       onFocus: handleFocus,
       onBlur: handleBlur,
       onClick: handleClick,
+      onKeyDown: handleKeyDown,
       "aria-label": accessibleName,
     },
   );
@@ -261,7 +284,7 @@ export function InfoTooltip({
     <Popover
       opened={opened}
       onChange={(next) => {
-        if (!next) closeNow();
+        if (!next) closeNow(true);
       }}
       position={resolvedPosition}
       offset={8}
@@ -274,7 +297,7 @@ export function InfoTooltip({
       shadow="md"
       zIndex={zIndex}
       trapFocus={false}
-      returnFocus
+      returnFocus={returnFocusRef.current}
       closeOnClickOutside
       closeOnEscape
       transitionProps={{ duration: 120, transition: "fade" }}
@@ -292,7 +315,7 @@ export function InfoTooltip({
           <button
             type="button"
             className="sui-info-panel__close"
-            onClick={closeNow}
+            onClick={() => closeNow(true)}
             aria-label={t("common.close", "Close")}
           >
             <Icon name="x" size={14} strokeWidth={2} />

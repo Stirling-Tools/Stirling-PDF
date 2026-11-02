@@ -70,6 +70,17 @@ test.describe("InfoTooltip", () => {
     await expect(panel).toBeHidden();
   });
 
+  test("Escape closes a focused preview before pinning", async ({ page }) => {
+    const trigger = page.locator("button.sui-info:visible").first();
+    await trigger.focus();
+    const panel = page.getByRole("dialog");
+    await expect(panel).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(panel).toBeHidden();
+    await expect(trigger).toBeFocused();
+  });
+
   test("long guides scroll inside the panel", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 650 });
     await page.goto("/", { waitUntil: "domcontentloaded" });
