@@ -1,20 +1,16 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
@@ -254,6 +250,7 @@ public class MergeController {
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
         boolean generateToc = request.isGenerateToc();
+        boolean generateTocPage = request.isGenerateTocPage();
 
         MultipartFile[] files = request.getFileInput();
         if (files == null) {
@@ -295,6 +292,11 @@ public class MergeController {
                     ExceptionUtils.logException("PDF pre-validate", e);
                     invalidIndexes.add(index);
                 }
+            }
+
+            if (generateTocPage) {
+                File tocPage = generateTocPage();
+                inputPaths.addFirst(tocPage.toPath());
             }
 
             int[] pageCounts;
@@ -383,6 +385,24 @@ public class MergeController {
                 GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
 
         return WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
+    }
+
+    private File generateTocPage() throws IOException {
+        File tocPage = tempFileManager.createTempFile(".pdf");
+
+        try (PDDocument document = new PDDocument()) {
+
+            PDPage blankPage = new PDPage(PDRectangle.A4);
+
+            document.addPage(blankPage);
+
+            try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                document.save(baos);
+
+                Files.write(tocPage.toPath(), baos.toByteArray());
+            }
+        }
+        return tocPage;
     }
 
     private boolean isImageFile(MultipartFile file) {
