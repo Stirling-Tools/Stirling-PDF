@@ -25,11 +25,11 @@ public class PdfToPdfUaRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Document language as a BCP-47 tag, for example en-GB. Applied only when the"
+                    "Document language as a BCP-47 tag, for example en-US. Applied only when the"
                             + " document does not already declare one, unless overrideLanguage is"
                             + " set.",
-            defaultValue = "en-GB")
-    private String language = "en-GB";
+            defaultValue = "en-US")
+    private String language = "en-US";
 
     @Schema(
             description =

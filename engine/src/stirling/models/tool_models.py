@@ -1149,8 +1149,8 @@ class PdfToUaParams(ApiModel):
         description="How to treat images with no description. require-alt leaves them undescribed so the report asks for input; mark-decorative treats every image as decoration.",
     )
     language: str = Field(
-        "en-GB",
-        description="Document language as a BCP-47 tag, for example en-GB. Applied only when the document does not already declare one, unless overrideLanguage is set.",
+        "en-US",
+        description="Document language as a BCP-47 tag, for example en-US. Applied only when the document does not already declare one, unless overrideLanguage is set.",
     )
     override_language: bool = Field(
         False,
