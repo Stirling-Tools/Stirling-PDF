@@ -135,9 +135,9 @@ class RearrangePagesPDFControllerTest {
         assertDoesNotThrow(
                 () ->
                         stirling.software.common.util.GeneralUtils.requireValidPageSelection(
-                                "1,2-3,all,2n+1,2-, 1 - 3 ,1,5", 3));
+                                "1,2-3,all,2n+1,2-, 1 - 3 ,1,5,0,0-2", 3));
         // 5 alone matches nothing; "1,5" above is fine because page 1 exists.
-        for (String bad : List.of("0", "-1", "not-a-page", "99", "5-9", "0,1", "3-2", "5")) {
+        for (String bad : List.of("0", "-1", "not-a-page", "99", "5-9", ",,", "3-2", "5")) {
             assertThrows(
                     IllegalArgumentException.class,
                     () ->
