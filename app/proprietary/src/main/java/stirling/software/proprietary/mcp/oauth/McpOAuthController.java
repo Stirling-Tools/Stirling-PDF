@@ -34,6 +34,8 @@ import io.swagger.v3.oas.annotations.Hidden;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import stirling.software.proprietary.audit.AuditLevel;
+import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.mcp.oauth.model.McpAuthorizationRequest;
 import stirling.software.proprietary.mcp.oauth.model.McpOAuthClient;
 import stirling.software.proprietary.mcp.oauth.model.McpOAuthGrant;
@@ -228,6 +230,7 @@ public class McpOAuthController {
             value = "/token",
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
+    @Audited(level = AuditLevel.BASIC, includeArgs = false, includeResult = false)
     public ResponseEntity<Map<String, Object>> token(
             @RequestParam(name = "grant_type", required = false) String grantType,
             @RequestParam(name = "code", required = false) String code,
