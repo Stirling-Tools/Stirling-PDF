@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "@editor/ui/Icon";
 import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import {
   TextInput,
