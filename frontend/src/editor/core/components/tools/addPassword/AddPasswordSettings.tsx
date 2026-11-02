@@ -1,6 +1,8 @@
-import { Stack, PasswordInput, Select, Text } from "@mantine/core";
+import { useState } from "react";
+import { Stack, PasswordInput, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPasswordParameters } from "@editor/hooks/tools/addPassword/useAddPasswordParameters";
+import { Collapsible } from "@editor/ui/Collapsible";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 
 interface AddPasswordSettingsProps {
@@ -20,6 +22,7 @@ const AddPasswordSettings = ({
   showOwnerPassword = true,
 }: AddPasswordSettingsProps) => {
   const { t } = useTranslation();
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   return (
     <Stack gap="md">
@@ -58,54 +61,55 @@ const AddPasswordSettings = ({
         )}
       </Stack>
 
-      <details>
-        <summary>
-          <Text component="span" size="xs">
-            {t("encryptedPdfUnlock.advanced", "Advanced")}
-          </Text>
-        </summary>
-        <Select
-          size="xs"
-          label={t(
-            "addPassword.encryption.keyLength.label",
-            "Encryption Key Length",
-          )}
-          value={parameters.keyLength.toString()}
-          onChange={(value) => {
-            if (value) {
-              onParameterChange("keyLength", parseInt(value));
-            }
-          }}
-          disabled={disabled}
-          data={[
-            {
-              value: "40",
-              label: t(
-                "addPassword.encryption.keyLength.40bit",
-                "40-bit (Low)",
-              ),
-            },
-            {
-              value: "128",
-              label: t(
-                "addPassword.encryption.keyLength.128bit",
-                "128-bit (Standard)",
-              ),
-            },
-            {
-              value: "256",
-              label: t(
-                "addPassword.encryption.keyLength.256bit",
-                "256-bit (High)",
-              ),
-            },
-          ]}
-          comboboxProps={{
-            withinPortal: true,
-            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-          }}
-        />
-      </details>
+      <Collapsible
+        open={advancedOpen}
+        onToggle={() => setAdvancedOpen((open) => !open)}
+        header={t("encryptedPdfUnlock.advanced", "Advanced")}
+      >
+        <Stack gap="md" inert={!advancedOpen}>
+          <Select
+            size="xs"
+            label={t(
+              "addPassword.encryption.keyLength.label",
+              "Encryption Key Length",
+            )}
+            value={parameters.keyLength.toString()}
+            onChange={(value) => {
+              if (value) {
+                onParameterChange("keyLength", parseInt(value));
+              }
+            }}
+            disabled={disabled}
+            data={[
+              {
+                value: "40",
+                label: t(
+                  "addPassword.encryption.keyLength.40bit",
+                  "40-bit (Low)",
+                ),
+              },
+              {
+                value: "128",
+                label: t(
+                  "addPassword.encryption.keyLength.128bit",
+                  "128-bit (Standard)",
+                ),
+              },
+              {
+                value: "256",
+                label: t(
+                  "addPassword.encryption.keyLength.256bit",
+                  "256-bit (High)",
+                ),
+              },
+            ]}
+            comboboxProps={{
+              withinPortal: true,
+              zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+            }}
+          />
+        </Stack>
+      </Collapsible>
     </Stack>
   );
 };
