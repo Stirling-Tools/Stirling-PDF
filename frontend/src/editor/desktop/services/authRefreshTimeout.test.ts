@@ -113,6 +113,8 @@ describe("keyring timeouts", () => {
   });
 });
 
+const storedAccessToken = `header.${btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }))}.signature`;
+
 describe.each(["self-hosted", "Supabase"] as const)(
   "%s refresh recovery",
   (provider) => {
@@ -136,12 +138,18 @@ describe.each(["self-hosted", "Supabase"] as const)(
       postMock.mockReset();
       axiosPostMock.mockReset();
       localStorage.clear();
-      localStorage.setItem("stirling_jwt", "stored-access-token");
+      localStorage.setItem("stirling_jwt", storedAccessToken);
       localStorage.setItem("stirling_refresh_token", "stored-refresh-token");
       invokeMock.mockImplementation(async (command: string) => {
-        if (command === "get_auth_token") return "stored-access-token";
+        if (command === "get_auth_token") return storedAccessToken;
         if (command === "get_refresh_token") return "stored-refresh-token";
         if (command === "get_user_info") return { username: "tester" };
+        if (command === "get_connection_config") {
+          return {
+            mode: provider === "Supabase" ? "saas" : "selfhosted",
+            require_sign_in: false,
+          };
+        }
         return null;
       });
     });
@@ -152,11 +160,6 @@ describe.each(["self-hosted", "Supabase"] as const)(
       ["network failure", { code: "ERR_NETWORK" }],
       ["server error", { response: { status: 503 } }],
       ["rate limit", { response: { status: 429 } }],
-      [
-        "unrelated bad request",
-        { response: { status: 400, data: { error: "bad_json" } } },
-      ],
-      ["permission error", { response: { status: 403 } }],
     ])("preserves credentials after a %s", async (_label, details) => {
       request.mockRejectedValue({ isAxiosError: true, ...details });
       expectConsole.error(/token refresh failed/i);
@@ -165,8 +168,8 @@ describe.each(["self-hosted", "Supabase"] as const)(
 
       await expect(refresh()).resolves.toBe(false);
 
-      expect(listener).toHaveBeenLastCalledWith("unauthenticated", null);
-      expect(localStorage.getItem("stirling_jwt")).toBe("stored-access-token");
+      expect(listener).toHaveBeenLastCalledWith("authenticated", null);
+      expect(localStorage.getItem("stirling_jwt")).toBe(storedAccessToken);
       expect(localStorage.getItem("stirling_refresh_token")).toBe(
         "stored-refresh-token",
       );
@@ -181,18 +184,23 @@ describe.each(["self-hosted", "Supabase"] as const)(
       { status: 400, data: { error: "invalid_grant" } },
       { status: 400, data: { error_code: "refresh_token_not_found" } },
       { status: 400, data: { code: "refresh_token_already_used" } },
-    ])("clears credentials after confirmed rejection: %j", async (response) => {
-      request.mockRejectedValue({ isAxiosError: true, response });
-      expectConsole.error(/token refresh failed/i);
+      { status: 400, data: { error: "bad_json" } },
+      { status: 403 },
+    ])(
+      "clears credentials after a non-transient failure: %j",
+      async (response) => {
+        request.mockRejectedValue({ isAxiosError: true, response });
+        expectConsole.error(/token refresh failed/i);
 
-      await expect(refresh()).resolves.toBe(false);
+        await expect(refresh()).resolves.toBe(false);
 
-      expect(invokeMock).toHaveBeenCalledWith("clear_auth_token");
-      expect(invokeMock).toHaveBeenCalledWith("clear_refresh_token");
-      expect(localStorage.getItem("stirling_jwt")).toBeNull();
-      expect(localStorage.getItem("stirling_refresh_token")).toBeNull();
-      expect(request).toHaveBeenCalledTimes(1);
-    });
+        expect(invokeMock).toHaveBeenCalledWith("clear_auth_token");
+        expect(invokeMock).toHaveBeenCalledWith("clear_refresh_token");
+        expect(localStorage.getItem("stirling_jwt")).toBeNull();
+        expect(localStorage.getItem("stirling_refresh_token")).toBeNull();
+        expect(request).toHaveBeenCalledTimes(1);
+      },
+    );
 
     it("cancels timed-out requests before allowing a retry", async () => {
       let activeRequests = 0;
@@ -227,7 +235,7 @@ describe.each(["self-hosted", "Supabase"] as const)(
 
       request.mockResolvedValueOnce(success);
       vi.spyOn(authService, "getAuthToken").mockResolvedValue(
-        "stored-access-token",
+        storedAccessToken,
       );
       await expect(refresh()).resolves.toBe(true);
       expect(request).toHaveBeenCalledTimes(2);
@@ -240,7 +248,10 @@ describe.each(["self-hosted", "Supabase"] as const)(
         finishRead = resolve;
       });
       if (provider === "Supabase") {
-        invokeMock.mockReturnValueOnce(read);
+        const base = invokeMock.getMockImplementation()!;
+        invokeMock.mockImplementation((command: string) =>
+          command === "get_refresh_token" ? read : base(command),
+        );
       } else {
         vi.spyOn(authService, "getAuthToken").mockReturnValueOnce(read);
       }
