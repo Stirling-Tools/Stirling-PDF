@@ -51,9 +51,12 @@ class McpSchemaAdjusterTest {
                 "cert-sign",
                 """
                 {"properties":{"certType":{"type":"string",
+                  "description":"JKS needs jksFile. WINDOWS_STORE/PKCS11: desktop app only.",
                   "enum":["SERVER","PEM","PKCS12","PFX","JKS","WINDOWS_STORE","PKCS11"]},
+                  "password":{"type":"string",
+                  "description":"Keystore password, or the PKCS11 token PIN. Not needed for SERVER or WINDOWS_STORE."},
                   "pkcs11LibraryPath":{"type":"string"},"pkcs11Slot":{"type":"integer"},
-                  "alias":{"type":"string"}}}
+                  "alias":{"type":"string","description":"Required for WINDOWS_STORE."}}}
                 """);
     }
 
@@ -68,11 +71,10 @@ class McpSchemaAdjusterTest {
     }
 
     @Test
-    void aServerOffersItsOwnCertificateButNoDesktopTokens() {
+    void aServerOffersItsOwnCertificateButNoLocalCertificateStores() {
         ServerCertificateServiceInterface server = mock(ServerCertificateServiceInterface.class);
         when(server.isEnabled()).thenReturn(true);
-        McpSchemaAdjuster adjuster =
-                new McpSchemaAdjuster(provider(server), "Server-jar", provider(null));
+        McpSchemaAdjuster adjuster = new McpSchemaAdjuster(provider(server), provider(null));
         OperationMeta original = certSign();
 
         OperationMeta fitted = adjuster.adjust(original);
@@ -85,16 +87,27 @@ class McpSchemaAdjusterTest {
     }
 
     @Test
-    void noServerCertificateWhenItIsSwitchedOffAndTokensOnTheDesktop() {
+    void localCertificateStoresAreNeverOfferedOverMcpEvenOnTheDesktop() {
         ServerCertificateServiceInterface server = mock(ServerCertificateServiceInterface.class);
         when(server.isEnabled()).thenReturn(false);
-        McpSchemaAdjuster adjuster =
-                new McpSchemaAdjuster(provider(server), "Client-win", provider(null));
+        String previous = System.setProperty("STIRLING_PDF_TAURI_MODE", "true");
+        try {
+            McpSchemaAdjuster adjuster = new McpSchemaAdjuster(provider(server), provider(null));
 
-        List<String> types = certTypes(adjuster.adjust(certSign()));
+            OperationMeta fitted = adjuster.adjust(certSign());
 
-        assertFalse(types.contains("SERVER"));
-        assertTrue(types.contains("PKCS11"));
+            assertEquals(List.of("PEM", "PKCS12", "PFX", "JKS"), certTypes(fitted));
+            assertFalse(fitted.paramSchema().get("properties").has("pkcs11Slot"));
+            String schema = fitted.paramSchema().toString();
+            assertFalse(schema.contains("WINDOWS_STORE"), schema);
+            assertFalse(schema.contains("PKCS11"), schema);
+        } finally {
+            if (previous == null) {
+                System.clearProperty("STIRLING_PDF_TAURI_MODE");
+            } else {
+                System.setProperty("STIRLING_PDF_TAURI_MODE", previous);
+            }
+        }
     }
 
     @Test
@@ -104,7 +117,7 @@ class McpSchemaAdjusterTest {
         Files.createFile(tessdata.resolve("osd.traineddata"));
         RuntimePathConfig paths = mock(RuntimePathConfig.class);
         when(paths.getTessDataPath()).thenReturn(tessdata.toString());
-        McpSchemaAdjuster adjuster = new McpSchemaAdjuster(provider(null), null, provider(paths));
+        McpSchemaAdjuster adjuster = new McpSchemaAdjuster(provider(null), provider(paths));
         OperationMeta ocr =
                 op(
                         "ocr-pdf",
@@ -119,7 +132,7 @@ class McpSchemaAdjusterTest {
 
     @Test
     void otherOperationsPassThroughUnchanged() {
-        McpSchemaAdjuster adjuster = new McpSchemaAdjuster(provider(null), null, provider(null));
+        McpSchemaAdjuster adjuster = new McpSchemaAdjuster(provider(null), provider(null));
         OperationMeta compress = op("compress-pdf", "{\"properties\":{}}");
 
         assertSame(compress, adjuster.adjust(compress));

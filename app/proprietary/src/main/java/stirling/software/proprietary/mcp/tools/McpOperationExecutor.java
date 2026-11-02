@@ -76,22 +76,12 @@ public class McpOperationExecutor {
     }
 
     public ObjectNode execute(OperationMeta meta, JsonNode arguments, McpCallContext context) {
-        // Ask for passwords before fetching any input, so a prompt costs no download.
-        McpPasswordPrompt.Outcome secrets =
-                McpPasswordPrompt.apply(
-                        mapper,
-                        meta,
-                        arguments == null ? null : arguments.get("parameters"),
-                        context);
-        if (secrets.response() != null) {
-            return secrets.response();
-        }
+        JsonNode parameters = arguments == null ? null : arguments.get("parameters");
         if (jobs == null) {
-            return run(meta, arguments, context, secrets.parameters());
+            return run(meta, arguments, context, parameters);
         }
         String owner = context == null ? null : context.stirlingUserId();
-        return jobs.run(
-                meta.id(), owner, () -> run(meta, arguments, context, secrets.parameters()));
+        return jobs.run(meta.id(), owner, () -> run(meta, arguments, context, parameters));
     }
 
     private ObjectNode run(
@@ -126,40 +116,12 @@ public class McpOperationExecutor {
         return result;
     }
 
-    /**
-     * Runs {@code steps} in order on one input, each step's file feeding the next, as one job.
-     * Passwords for every step are asked for together before anything runs.
-     */
+    /** Runs {@code steps} in order on one input, each step's file feeding the next, as one job. */
     public ObjectNode executePipeline(
             List<McpPipelineStep> steps, JsonNode arguments, McpCallContext context) {
         List<JsonNode> parameters = new ArrayList<>();
-        ObjectNode prompts = null;
-        for (int i = 0; i < steps.size(); i++) {
-            McpPipelineStep step = steps.get(i);
-            McpPasswordPrompt.Outcome secrets =
-                    McpPasswordPrompt.apply(
-                            mapper,
-                            step.meta(),
-                            step.parameters(),
-                            context,
-                            McpPasswordPrompt.INPUT_KEY + "_" + i);
-            ObjectNode response = secrets.response();
-            if (response != null
-                    && !"input_required".equals(response.path("resultType").asText())) {
-                return response;
-            }
-            if (response != null) {
-                if (prompts == null) {
-                    prompts = response;
-                } else {
-                    ((ObjectNode) prompts.get("inputRequests"))
-                            .setAll((ObjectNode) response.get("inputRequests"));
-                }
-            }
-            parameters.add(secrets.parameters());
-        }
-        if (prompts != null) {
-            return prompts;
+        for (McpPipelineStep step : steps) {
+            parameters.add(step.parameters());
         }
         String label = steps.get(steps.size() - 1).meta().id();
         if (jobs == null) {

@@ -6,10 +6,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +27,8 @@ import tools.jackson.databind.node.ObjectNode;
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class McpSchemaAdjuster {
 
-    private static final Set<String> DESKTOP_CERT_TYPES = Set.of("WINDOWS_STORE", "PKCS11");
+    // Signing with the machine's own certificate store or a plugged-in token stays a local action.
+    private static final Set<String> LOCAL_ONLY_CERT_TYPES = Set.of("WINDOWS_STORE", "PKCS11");
     // Inherited or shared request fields these endpoints never read.
     private static final Map<String, String> UNUSED =
             Map.of(
@@ -37,15 +37,12 @@ public class McpSchemaAdjuster {
                     "merge-pdfs", "clientFileIds");
 
     private final ObjectProvider<ServerCertificateServiceInterface> serverCertificate;
-    private final String machineType;
     private final ObjectProvider<RuntimePathConfig> paths;
 
     public McpSchemaAdjuster(
             ObjectProvider<ServerCertificateServiceInterface> serverCertificate,
-            @Autowired(required = false) @Qualifier("machineType") String machineType,
             ObjectProvider<RuntimePathConfig> paths) {
         this.serverCertificate = serverCertificate;
-        this.machineType = machineType;
         this.paths = paths;
     }
 
@@ -60,9 +57,23 @@ public class McpSchemaAdjuster {
                     + " yyyy/MM/dd HH:mm:ss. Custom keys go in allRequestParams as a JSON object."
                     + " deleteAll=true removes all metadata, including XMP.";
 
+    private static final String CERT_SIGN_DETAILS =
+            "Adds a digital signature to the PDF and returns the signed file. certType SERVER"
+                    + " signs with this server's own certificate, so no file or password is"
+                    + " needed, and the signer shown is the server's organisation rather than the"
+                    + " user. PEM, PKCS12/PFX and JKS sign with an uploaded certificate and key."
+                    + " A Windows certificate or a hardware token can't be used from a chat app;"
+                    + " the user signs with those in Stirling PDF itself. Make signing the last"
+                    + " change to the file: any later edit invalidates the signature. Set"
+                    + " showSignature to add a visible signature box on pageNumber.";
+
     /** Usage notes for describe that replace the endpoint's own, where MCP behaves differently. */
     public static String details(String operation) {
-        return "update-metadata".equals(operation) ? METADATA_DETAILS : null;
+        return switch (operation) {
+            case "update-metadata" -> METADATA_DETAILS;
+            case "cert-sign" -> CERT_SIGN_DETAILS;
+            default -> null;
+        };
     }
 
     /** The operation as this server can run it; the cached original is never changed. */
@@ -96,22 +107,42 @@ public class McpSchemaAdjuster {
         }
         ServerCertificateServiceInterface server = serverCertificate.getIfAvailable();
         boolean serverCert = server != null && server.isEnabled();
-        boolean desktop = isDesktop();
         ArrayNode kept = schema.arrayNode();
         for (JsonNode value : properties.path("certType").get("enum")) {
             String type = value.asText();
-            if (("SERVER".equals(type) && !serverCert)
-                    || (DESKTOP_CERT_TYPES.contains(type) && !desktop)) {
+            if (("SERVER".equals(type) && !serverCert) || LOCAL_ONLY_CERT_TYPES.contains(type)) {
                 continue;
             }
             kept.add(value);
         }
         ((ObjectNode) properties.get("certType")).set("enum", kept);
-        if (!desktop) {
-            properties.remove("pkcs11LibraryPath");
-            properties.remove("pkcs11Slot");
-        }
+        properties.remove("pkcs11LibraryPath");
+        properties.remove("pkcs11Slot");
+        describe(
+                properties,
+                "certType",
+                description -> description.replace(" WINDOWS_STORE/PKCS11: desktop app only.", ""));
+        describe(
+                properties,
+                "password",
+                description ->
+                        description
+                                .replace(", or the PKCS11 token PIN", "")
+                                .replace("SERVER or WINDOWS_STORE", "SERVER"));
+        describe(
+                properties,
+                "alias",
+                description ->
+                        "The alias of the certificate to sign with, when the keystore holds several.");
         return schema;
+    }
+
+    private static void describe(
+            ObjectNode properties, String field, UnaryOperator<String> rewrite) {
+        if (properties.get(field) instanceof ObjectNode property
+                && property.hasNonNull("description")) {
+            property.put("description", rewrite.apply(property.get("description").asText()));
+        }
     }
 
     private static ObjectNode metadata(ObjectNode original) {
@@ -154,12 +185,6 @@ public class McpSchemaAdjuster {
             }
         }
         return schema;
-    }
-
-    /** Hardware tokens only work for the desktop app; same test as HardwareKeyStoreService. */
-    private boolean isDesktop() {
-        return Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))
-                || (machineType != null && machineType.startsWith("Client-"));
     }
 
     /** Only installed languages work; others are silently dropped by the OCR step. */

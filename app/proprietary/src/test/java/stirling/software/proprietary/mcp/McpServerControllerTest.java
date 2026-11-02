@@ -209,7 +209,7 @@ class McpServerControllerTest {
     }
 
     @Test
-    void appClientsWithFormsKeepPasswordsAndLinksOutOfTheChat() {
+    void formClientsAreToldToAskForPasswordsInChatAndSeeResultCards() {
         JsonNode caps =
                 mapper.createObjectNode()
                         .<tools.jackson.databind.node.ObjectNode>set(
@@ -221,9 +221,10 @@ class McpServerControllerTest {
                                                 "io.modelcontextprotocol/ui",
                                                 mapper.createObjectNode()));
 
-        String instructions = controller.instructions(caps, true);
+        String instructions = controller.instructions(caps);
 
-        assertTrue(instructions.contains("Never ask the user"), instructions);
+        assertTrue(instructions.contains("ask the user for it and pass it in"), instructions);
+        assertFalse(instructions.contains("in a form"), instructions);
         assertTrue(instructions.contains("Results appear as a card"), instructions);
     }
 

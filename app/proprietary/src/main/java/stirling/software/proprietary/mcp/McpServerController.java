@@ -266,8 +266,7 @@ public class McpServerController {
         result.set("capabilities", capabilities());
         result.set("serverInfo", serverInfo());
         result.put(
-                "instructions",
-                instructions(params == null ? null : params.get("capabilities"), false));
+                "instructions", instructions(params == null ? null : params.get("capabilities")));
         return result;
     }
 
@@ -278,20 +277,18 @@ public class McpServerController {
         JsonNode meta = params == null ? null : params.get("_meta");
         result.put(
                 "instructions",
-                instructions(
-                        meta == null ? null : meta.get(McpModernProtocol.CAPABILITIES_KEY), true));
+                instructions(meta == null ? null : meta.get(McpModernProtocol.CAPABILITIES_KEY)));
         return result;
     }
 
     /** Workflow hints for the model's system prompt; tool descriptions cover the details. */
     String instructions() {
-        return instructions(null, true);
+        return instructions(null);
     }
 
-    /** Hints match the client: only 2026-07-28 clients can answer a form, few render the card. */
-    String instructions(JsonNode clientCapabilities, boolean modern) {
+    /** Hints match the client: few render the in-chat card. */
+    String instructions(JsonNode clientCapabilities) {
         McpCallContext client = new McpCallContext(null, Set.of(), false, clientCapabilities, null);
-        boolean known = clientCapabilities != null && clientCapabilities.isObject();
         List<String> hints = new ArrayList<>();
         hints.add("Stirling PDF processes the user's documents in their Stirling PDF account.");
         hints.add(
@@ -320,20 +317,9 @@ public class McpServerController {
         hints.add(
                 "- If a result is pending with a jobId, call stirling_job_status about every 30"
                         + " seconds until it finishes.");
-        // Without a form (older protocol or plain clients) the user must give the password in chat.
-        if (modern && known && client.canElicitForm()) {
-            hints.add(
-                    "- Never ask the user to paste a PDF password into the chat; Stirling asks for"
-                            + " it itself in a form.");
-        } else if (known || !modern) {
-            hints.add(
-                    "- If an operation needs a PDF password, ask the user for it and pass it in"
-                            + " 'parameters'.");
-        } else {
-            hints.add(
-                    "- Stirling asks for PDF passwords itself in a form when the app supports one;"
-                            + " only if no form appears, ask the user and pass it in 'parameters'.");
-        }
+        hints.add(
+                "- If an operation needs a PDF password, ask the user for it and pass it in"
+                        + " 'parameters'.");
         if (available("stirling_run_pipeline")) {
             hints.add(
                     "- For several operations on one file (or each piece of a split), send them"
