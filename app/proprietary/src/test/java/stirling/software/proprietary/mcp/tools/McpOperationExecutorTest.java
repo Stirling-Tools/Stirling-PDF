@@ -421,7 +421,7 @@ class McpOperationExecutorTest {
     }
 
     @Test
-    void passwordPrompt_returnsBeforeAnyFetchOrDispatch() throws Exception {
+    void aPasswordOperationNeverShowsAFormEvenToAFormClient() throws Exception {
         ObjectNode schema = mapper.createObjectNode();
         schema.putObject("properties")
                 .putObject("password")
@@ -440,14 +440,15 @@ class McpOperationExecutorTest {
         McpCallContext formClient =
                 new McpCallContext(
                         "alice", Set.of(), false, mapper.readTree("{\"elicitation\":{}}"), null);
-        ObjectNode args = mapper.createObjectNode();
-        args.putObject("inputFile").put("download_url", "https://files.oaiusercontent.com/a");
+        when(files.user(formClient)).thenReturn(alice);
+        when(files.load(alice, "1")).thenReturn(new McpFiles.Loaded("IN".getBytes(), "a.pdf"));
+        ObjectNode args = mapper.createObjectNode().put("fileId", "1");
+        args.putObject("parameters").put("password", "from-chat");
 
         ObjectNode result = executor.execute(removePassword, args, formClient);
 
-        assertEquals("input_required", result.get("resultType").asText());
-        verify(fetcher, never()).fetch(anyString());
-        verify(api, never()).post(anyString(), any());
+        assertFalse(result.has("inputRequests"), result.toString());
+        verify(api).post(eq("/api/v1/security/remove-password"), any());
     }
 
     @Test
