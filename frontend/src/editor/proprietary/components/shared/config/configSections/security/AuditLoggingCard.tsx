@@ -90,7 +90,7 @@ export function AuditLoggingCard({
                 />
               </Group>
             }
-            value={settings?.audit?.retentionDays || 90}
+            value={settings?.audit?.retentionDays ?? 90}
             onChange={(value) =>
               setSettings({
                 ...settings,

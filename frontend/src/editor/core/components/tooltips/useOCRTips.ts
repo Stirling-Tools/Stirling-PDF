@@ -40,16 +40,16 @@ export const useOCRTips = (): TooltipContent => {
       {
         title: t("ocr.tooltip.output.title", "Output"),
         description: t(
-          "ocr.tooltip.output.text",
+          "ocr.tooltip.output.summary",
           "OCR always returns a searchable PDF with the recognised text behind the original page image.",
         ),
         bullets: [
           t(
-            "ocr.tooltip.output.bullet1",
+            "ocr.tooltip.output.textFile",
             "Enable Create a text file in Advanced to also get a .txt sidecar, delivered with the PDF in a ZIP.",
           ),
           t(
-            "ocr.tooltip.output.bullet2",
+            "ocr.tooltip.output.compatibilityMode",
             "Compatibility Mode in Advanced embeds the text as a separate layer for readers that expect it.",
           ),
         ],

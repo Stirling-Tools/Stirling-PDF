@@ -94,11 +94,16 @@ export function InfoTooltip({
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const [bodyEl, setBodyEl] = useState<HTMLDivElement | null>(null);
   // Closing returns focus to the trigger. Without this guard that programmatic
   // focus reopens the panel we just closed, so Escape and outside clicks would
   // appear to do nothing.
   const ignoreFocusOpenUntil = useRef(0);
+  // Hover and focus both keep an unpinned preview open. Pointer leave must not
+  // close help the user reached by keyboard, and a blur while the pointer is
+  // still over the panel must not close it either.
+  const hoveredRef = useRef(false);
+  const focusedRef = useRef(false);
 
   const clearTimers = useCallback(() => {
     if (openTimer.current) clearTimeout(openTimer.current);
@@ -110,27 +115,26 @@ export function InfoTooltip({
   const closeNow = useCallback(() => {
     clearTimers();
     ignoreFocusOpenUntil.current = Date.now() + 250;
+    focusedRef.current = false;
     setPinned(false);
     setOpened(false);
   }, [clearTimers]);
 
   useEffect(() => clearTimers, [clearTimers]);
 
-  // Native, non-passive: React's wheel handler cannot stop the page behind the
-  // panel from scrolling. While the body has overflow, the wheel belongs to it.
+  // Native, non-passive: React's wheel handler cannot keep the page behind the
+  // panel still while the body owns the gesture. The body keeps its native
+  // scroll; only the chained scroll past its end is suppressed.
   useEffect(() => {
-    if (!opened) return;
-    const body = bodyRef.current;
-    if (!body) return;
+    if (!bodyEl) return;
     const handleWheel = (event: WheelEvent) => {
-      if (body.scrollHeight > body.clientHeight) {
-        event.preventDefault();
+      if (bodyEl.scrollHeight > bodyEl.clientHeight) {
         event.stopPropagation();
       }
     };
-    body.addEventListener("wheel", handleWheel, { passive: false });
-    return () => body.removeEventListener("wheel", handleWheel);
-  }, [opened]);
+    bodyEl.addEventListener("wheel", handleWheel);
+    return () => bodyEl.removeEventListener("wheel", handleWheel);
+  }, [bodyEl]);
 
   const scheduleOpen = useCallback(() => {
     if (disabled) return;
@@ -143,15 +147,18 @@ export function InfoTooltip({
   }, [disabled, opened]);
 
   const scheduleClose = useCallback(() => {
-    if (pinned) return;
+    if (pinned || hoveredRef.current || focusedRef.current) return;
     if (openTimer.current) {
       clearTimeout(openTimer.current);
       openTimer.current = null;
     }
-    closeTimer.current = setTimeout(() => setOpened(false), CLOSE_DELAY_MS);
-  }, [pinned]);
+    // closeNow, not a bare setOpened: returnFocus puts focus back on the
+    // trigger, whose onFocus must be suppressed or the panel reopens instantly.
+    closeTimer.current = setTimeout(closeNow, CLOSE_DELAY_MS);
+  }, [closeNow, pinned]);
 
   const handlePointerEnter = useCallback(() => {
+    hoveredRef.current = true;
     if (disabled) return;
     if (closeTimer.current) {
       clearTimeout(closeTimer.current);
@@ -161,20 +168,21 @@ export function InfoTooltip({
   }, [disabled, scheduleOpen]);
 
   const handlePointerLeave = useCallback(() => {
-    if (pinned) return;
+    hoveredRef.current = false;
     scheduleClose();
-  }, [pinned, scheduleClose]);
+  }, [scheduleClose]);
 
   const handleFocus = useCallback(() => {
     if (disabled || Date.now() < ignoreFocusOpenUntil.current) return;
+    focusedRef.current = true;
     clearTimers();
     setOpened(true);
   }, [clearTimers, disabled]);
 
   const handleBlur = useCallback(() => {
-    if (pinned) return;
+    focusedRef.current = false;
     scheduleClose();
-  }, [pinned, scheduleClose]);
+  }, [scheduleClose]);
 
   const handleClick = useCallback(
     (event: React.MouseEvent) => {
@@ -183,6 +191,7 @@ export function InfoTooltip({
       event.preventDefault();
       event.stopPropagation();
       clearTimers();
+      focusedRef.current = true;
       if (pinned) {
         closeNow();
         return;
@@ -277,6 +286,7 @@ export function InfoTooltip({
         data-pinned={pinned || undefined}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
+        onClick={(event) => event.stopPropagation()}
       >
         {pinned && (
           <button
@@ -297,7 +307,7 @@ export function InfoTooltip({
               <span className="sui-info-panel__title">{panelTitle}</span>
             </div>
           )}
-          <div ref={bodyRef} className="sui-info-panel__body">
+          <div ref={setBodyEl} className="sui-info-panel__body">
             {hasStructuredContent
               ? tips?.map((tip, index) => (
                   <section

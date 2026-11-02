@@ -60,7 +60,7 @@ export default function AdminAdvancedPage() {
         _pending?: Record<string, unknown>;
       } = {
         enableAlphaFunctionality: systemData.enableAlphaFunctionality || false,
-        maxDPI: systemData.maxDPI || 0,
+        maxDPI: systemData.maxDPI || 500,
         enableUrlToPDF: systemData.enableUrlToPDF || false,
         tessdataDir: systemData.tessdataDir || "",
         disableSanitize: systemData.disableSanitize || false,
@@ -85,7 +85,7 @@ export default function AdminAdvancedPage() {
           systemData._pending.enableAlphaFunctionality;
       }
       if (systemData._pending?.maxDPI !== undefined) {
-        pendingBlock.maxDPI = systemData._pending.maxDPI;
+        pendingBlock.maxDPI = systemData._pending.maxDPI || 500;
       }
       if (systemData._pending?.enableUrlToPDF !== undefined) {
         pendingBlock.enableUrlToPDF = systemData._pending.enableUrlToPDF;
@@ -117,7 +117,7 @@ export default function AdminAdvancedPage() {
     saveTransformer: (settings) => {
       const deltaSettings: Record<string, unknown> = {
         "system.enableAlphaFunctionality": settings.enableAlphaFunctionality,
-        "system.maxDPI": settings.maxDPI,
+        "system.maxDPI": settings.maxDPI || 500,
         "system.enableUrlToPDF": settings.enableUrlToPDF,
         "system.tessdataDir": settings.tessdataDir,
         "system.disableSanitize": settings.disableSanitize,

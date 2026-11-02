@@ -3027,7 +3027,7 @@ text = "Signs with the certificate configured on the server. The same tamper-evi
 title = "Server - configured certificate"
 
 [certSign.signMode.tooltip.upload]
-text = "Use your own certificate and key files. This is the option that can show as Trusted in viewers when your CA and chain are recognised."
+text = "Use your own certificate and key files. Viewer trust depends on whether the certificate chain is recognised, just as it does for a device certificate."
 title = "Upload - bring your certificate"
 
 [certSign.source]
@@ -6328,9 +6328,9 @@ text = "Optical Character Recognition (OCR) helps you turn scanned or screenshot
 title = "OCR Mode"
 
 [ocr.tooltip.output]
-bullet1 = "Enable Create a text file in Advanced to also get a .txt sidecar, delivered with the PDF in a ZIP."
-bullet2 = "Compatibility Mode in Advanced embeds the text as a separate layer for readers that expect it."
-text = "OCR always returns a searchable PDF with the recognised text behind the original page image."
+compatibilityMode = "Compatibility Mode in Advanced embeds the text as a separate layer for readers that expect it."
+summary = "OCR always returns a searchable PDF with the recognised text behind the original page image."
+textFile = "Enable Create a text file in Advanced to also get a .txt sidecar, delivered with the PDF in a ZIP."
 title = "Output"
 
 [onboarding]
@@ -12829,8 +12829,8 @@ title = "Split for Poster Print"
 [split.tooltip.bySections]
 bullet1 = "Horizontal Divisions sets columns (value + 1)"
 bullet2 = "Vertical Divisions sets rows (value + 1)"
-bullet3 = "Split Mode chooses which pages are cut; Custom lists them"
 bullet4 = "Merge combines every section into one PDF"
+splitMode = "Split Mode chooses which pages are cut; Custom lists them"
 text = "Divide each page into a grid of sections. Useful for splitting documents with multiple columns or extracting specific areas."
 title = "Split by Grid Sections"
 

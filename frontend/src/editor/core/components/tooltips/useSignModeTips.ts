@@ -25,7 +25,7 @@ export const useSignModeTips = (): TooltipContent => {
         ),
         description: t(
           "certSign.signMode.tooltip.upload.text",
-          "Use your own certificate and key files. This is the option that can show as Trusted in viewers when your CA and chain are recognised.",
+          "Use your own certificate and key files. Viewer trust depends on whether the certificate chain is recognised, just as it does for a device certificate.",
         ),
       },
       {

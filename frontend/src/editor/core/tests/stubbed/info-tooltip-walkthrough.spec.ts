@@ -34,14 +34,25 @@ async function enableRtl(page: Page): Promise<void> {
 }
 
 async function waitForPopover(page: Page): Promise<void> {
-  await page.waitForFunction(() => {
-    const panel = document.querySelector(".sui-info-panel");
-    return panel && getComputedStyle(panel).opacity === "1";
+  const panel = page.locator(".sui-info-panel");
+  await expect(panel).toBeVisible();
+  await expect
+    .poll(() => panel.evaluate((node) => getComputedStyle(node).opacity))
+    .toBe("1");
+}
+
+async function waitForToolPage(page: Page): Promise<void> {
+  // The run button only exists after the tool route has mounted. Waiting for it
+  // avoids hovering a trigger that a late hydration pass replaces.
+  await expect(page.locator('[data-tour="run-button"]')).toBeVisible({
+    timeout: 30_000,
   });
+  await expect(page.locator("button.sui-info").first()).toBeVisible();
 }
 
 async function openToolGuide(page: Page, path = "/compress"): Promise<void> {
   await page.goto(path, { waitUntil: "domcontentloaded" });
+  await waitForToolPage(page);
   await page.locator("button.sui-info").first().click();
   await waitForPopover(page);
 }
@@ -51,6 +62,7 @@ test.describe("Info tooltip walkthrough", () => {
     await page.setViewportSize({ width: 1440, height: 960 });
     await uploadFiles(page, SAMPLE);
     await page.goto("/compress", { waitUntil: "domcontentloaded" });
+    await waitForToolPage(page);
   });
 
   test("01 tool guide pinned light", async ({ page }) => {
@@ -67,7 +79,6 @@ test.describe("Info tooltip walkthrough", () => {
   });
 
   test("03 tool guide hover preview light", async ({ page }) => {
-    await page.goto("/compress", { waitUntil: "domcontentloaded" });
     await page.locator("button.sui-info").first().hover();
     await waitForPopover(page);
     await expect(page.locator(".sui-info-panel__close")).toHaveCount(0);
@@ -77,6 +88,7 @@ test.describe("Info tooltip walkthrough", () => {
   test("03b tool guide hover preview dark", async ({ page }) => {
     await enableDark(page);
     await page.goto("/compress", { waitUntil: "domcontentloaded" });
+    await waitForToolPage(page);
     await page.locator("button.sui-info").first().hover();
     await waitForPopover(page);
     await expect(page.locator(".sui-info-panel__close")).toHaveCount(0);

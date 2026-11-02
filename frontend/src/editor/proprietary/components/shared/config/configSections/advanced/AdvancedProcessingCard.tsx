@@ -274,7 +274,7 @@ export function AdvancedProcessingCard({
                 />
               </Group>
             }
-            value={settings.maxDPI || 500}
+            value={settings.maxDPI ?? 500}
             onChange={(value) =>
               setSettings({ ...settings, maxDPI: Number(value) })
             }

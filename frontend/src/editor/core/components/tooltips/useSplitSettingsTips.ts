@@ -60,7 +60,7 @@ export const useSplitSettingsTips = (
               "Vertical Divisions sets rows (value + 1)",
             ),
             t(
-              "split.tooltip.bySections.bullet3",
+              "split.tooltip.bySections.splitMode",
               "Split Mode chooses which pages are cut; Custom lists them",
             ),
             t(
