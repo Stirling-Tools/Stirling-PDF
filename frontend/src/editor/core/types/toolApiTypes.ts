@@ -963,7 +963,7 @@ export interface PdfToPdfUaRequest {
    */
   figurePolicy?: "require-alt" | "mark-decorative";
   /**
-   * Document language as a BCP-47 tag, for example en-GB. Applied only when the document does not already declare one, unless overrideLanguage is set.
+   * Document language as a BCP-47 tag, for example en-US. Applied only when the document does not already declare one, unless overrideLanguage is set.
    */
   language?: string;
   /**
