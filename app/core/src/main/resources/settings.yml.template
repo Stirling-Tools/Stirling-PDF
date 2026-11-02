@@ -190,6 +190,7 @@ system:
   stirlingOfficeConversion: false # Beta: set to 'true' to convert Office files with the built-in Stirling Office Convert (better, faster conversions using less memory) instead of LibreOffice
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
   maxPdfaConversionPages: 20000 # Most pages a PDF/A or PDF/X conversion accepts; larger documents are refused (0 = unlimited)
+  maxImageMegapixels: 0 # Largest image one page render may create, in megapixels. 0 = automatic (a quarter of the Java heap, at most 1 GB)
   corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). WARNING: leaving this empty falls back to allowing ALL origins (with credentials), it does NOT disable CORS. Set explicit origins to lock it down.
   backendUrl: "" # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
   frontendUrl: "" # Base URL of the web app, as a browser reaches it (e.g. 'https://app.example.com', or 'https://example.com/app' if served under a base path). Optional - if not set, will use backendUrl. Used for any link handed to a browser: invite and signing emails, share links, mobile QR codes, and the account-link handshake.

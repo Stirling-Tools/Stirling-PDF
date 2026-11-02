@@ -9211,9 +9211,17 @@ title = "Compliance standard not met"
 description = "Your file is damaged, so the run could not read it."
 title = "Damaged document"
 
+[portal.failures.kind.inputDecompressesTooLarge]
+description = "Part of your file decompresses to more data than this server will process. The file may be damaged."
+title = "File expands too large to process"
+
 [portal.failures.kind.inputEmpty]
 description = "Your file has no content in it, so there was nothing for the run to work on."
 title = "Empty file"
+
+[portal.failures.kind.inputImageTooLarge]
+description = "An image in your file is larger than this server will process."
+title = "Image too large to process"
 
 [portal.failures.kind.inputPasswordProtected]
 description = "Your file is password protected, so the run could not read it."
