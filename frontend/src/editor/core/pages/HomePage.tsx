@@ -115,7 +115,7 @@ type MobileView = "tools" | "workbench";
 export default function HomePage() {
   const { t, i18n } = useTranslation();
   const policiesEnabled = usePoliciesEnabled();
-  const { sidebarRefs } = useSidebarContext();
+  const { sidebarRefs, sidebarState, setFocusMode } = useSidebarContext();
 
   const { quickAccessRef } = sidebarRefs;
 
@@ -173,7 +173,7 @@ export default function HomePage() {
   }, [setReaderMode]);
   const { actions } = useNavigationActions();
 
-  const { searchInterfaceActions } = useViewer();
+  const { searchInterfaceActions, isThumbnailSidebarVisible } = useViewer();
 
   // Find in document lives in the rail, not the bar reading hides, so the
   // shortcut opens it where the reader already is. e.code, for non-QWERTY
@@ -374,12 +374,23 @@ export default function HomePage() {
   const isWorkspaceHub =
     navigationState.workbench === "myFiles" ||
     navigationState.workbench === "signing";
+  // The Pages sidebar takes the right rail slot; keeping the tool panel beside
+  // it leaves two competing rails and only a sliver of page between them.
   const hideToolPanel =
     isWorkspaceHub ||
+    isThumbnailSidebarVisible ||
     (customWorkbenchViews.find(
       (v) => v.workbenchId === navigationState.workbench,
     )?.hideToolPanel ??
       false);
+  const focusMode =
+    sidebarState.focusMode && navigationState.workbench === "viewer";
+
+  useEffect(() => {
+    if (navigationState.workbench !== "viewer" && sidebarState.focusMode) {
+      setFocusMode(false);
+    }
+  }, [navigationState.workbench, sidebarState.focusMode, setFocusMode]);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
 
@@ -822,23 +833,25 @@ export default function HomePage() {
           >
             {/* Reading leaves the document and nothing beside it, so the wing goes
                 rather than shrinking to a rail. Everywhere else it is fixed open. */}
-            {wingsMounted && navigationState.workbench !== "signing" && (
-              <div className="workspace-frame">
-                <MyFilesAwareFileSidebar
-                  ref={quickAccessRef}
-                  accountHoisted
-                  active={navigationState.workbench === "myFiles"}
-                  onOpenSettings={openSettings}
-                  onRegisterOpenFromComputer={registerOpenFromComputer}
-                />
-              </div>
-            )}
+            {wingsMounted &&
+              !focusMode &&
+              navigationState.workbench !== "signing" && (
+                <div className="workspace-frame">
+                  <MyFilesAwareFileSidebar
+                    ref={quickAccessRef}
+                    accountHoisted
+                    active={navigationState.workbench === "myFiles"}
+                    onOpenSettings={openSettings}
+                    onRegisterOpenFromComputer={registerOpenFromComputer}
+                  />
+                </div>
+              )}
             <Workbench />
             {isMobile && mobileNavigation}
             {/* The reader's rail takes the slot the tool panel holds otherwise: the
                 panel's controls are the editor's, and reading wants the viewer's.
                 Both render together only while the panel is on its way out. */}
-            {wingsMounted && !hideToolPanel && <RightSidebar />}
+            {wingsMounted && !hideToolPanel && !focusMode && <RightSidebar />}
             {readerMode && <ReaderRail />}
             {readerMode && !strip.enabled && <ReaderSuperSearch />}
           </Group>

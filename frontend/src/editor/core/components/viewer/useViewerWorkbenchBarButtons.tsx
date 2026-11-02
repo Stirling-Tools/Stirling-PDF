@@ -52,7 +52,7 @@ export function useViewerWorkbenchBarButtons(
     registerImmediatePanUpdate,
   } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(false);
-  const { sidebarRefs } = useSidebarContext();
+  const { sidebarRefs, sidebarState, setFocusMode } = useSidebarContext();
   const { position: tooltipPosition } = useWorkbenchBarTooltipSide(
     sidebarRefs,
     12,
@@ -93,6 +93,9 @@ export function useViewerWorkbenchBarButtons(
   const rotateLeftLabel = t("workbenchBar.rotateLeft", "Rotate Left");
   const rotateRightLabel = t("workbenchBar.rotateRight", "Rotate Right");
   const sidebarLabel = t("workbenchBar.toggleSidebar", "Toggle Sidebar");
+  const focusModeLabel = sidebarState.focusMode
+    ? t("viewer.exitFocusMode", "Exit focus mode")
+    : t("viewer.focusMode", "Focus mode");
   const bookmarkLabel = t(
     "workbenchBar.toggleBookmarks",
     "Bookmarks (Table of Contents)",
@@ -305,6 +308,21 @@ export function useViewerWorkbenchBarButtons(
         onClick: () => {
           viewer.toggleThumbnailSidebar();
         },
+      },
+      {
+        id: "viewer-focus-mode",
+        icon: (
+          <Icon
+            name={sidebarState.focusMode ? "shrink" : "maximize-2"}
+            size="1rem"
+          />
+        ),
+        tooltip: focusModeLabel,
+        ariaLabel: focusModeLabel,
+        section: "top" as const,
+        order: 51,
+        active: sidebarState.focusMode,
+        onClick: () => setFocusMode((value) => !value),
       },
       {
         id: "viewer-toggle-bookmarks",
@@ -565,6 +583,9 @@ export function useViewerWorkbenchBarButtons(
     rotateLeftLabel,
     rotateRightLabel,
     sidebarLabel,
+    focusModeLabel,
+    sidebarState.focusMode,
+    setFocusMode,
     bookmarkLabel,
     attachmentLabel,
     layersLabel,

@@ -33,6 +33,11 @@ export function PdfViewerToolbar({
   // Phone keeps big hit targets; on desktop the bar sits at the rails' scale.
   const buttonMinWidth = isPhone ? "3rem" : undefined;
   const buttonSize = isPhone ? "lg" : "sm";
+  const isRtl =
+    typeof document !== "undefined" && document.documentElement.dir === "rtl";
+  // The flex row reverses in RTL, so a chevron that keeps its LTR direction
+  // points across the page input instead of along the reading direction.
+  const mirrorIconStyle = isRtl ? { transform: "scaleX(-1)" } : undefined;
   const {
     getScrollState,
     getZoomState,
@@ -202,7 +207,7 @@ export function PdfViewerToolbar({
           title={t("viewer.firstPage", "First Page")}
           aria-label={t("viewer.firstPage", "First Page")}
         >
-          <Icon name="chevron-first" size={18} />
+          <Icon name="chevron-first" size={18} style={mirrorIconStyle} />
         </ActionIcon>
       )}
 
@@ -216,7 +221,7 @@ export function PdfViewerToolbar({
         title={t("viewer.previousPage", "Previous Page")}
         aria-label={t("viewer.previousPage", "Previous Page")}
       >
-        <Icon name="chevron-left" size={18} />
+        <Icon name="chevron-left" size={18} style={mirrorIconStyle} />
       </ActionIcon>
 
       {/* Page Input */}
@@ -266,7 +271,7 @@ export function PdfViewerToolbar({
         title={t("viewer.nextPage", "Next Page")}
         aria-label={t("viewer.nextPage", "Next Page")}
       >
-        <Icon name="chevron-right" size={18} />
+        <Icon name="chevron-right" size={18} style={mirrorIconStyle} />
       </ActionIcon>
 
       {/* Last Page Button */}
@@ -281,7 +286,7 @@ export function PdfViewerToolbar({
           title={t("viewer.lastPage", "Last Page")}
           aria-label={t("viewer.lastPage", "Last Page")}
         >
-          <Icon name="chevron-last" size={18} />
+          <Icon name="chevron-last" size={18} style={mirrorIconStyle} />
         </ActionIcon>
       )}
 
@@ -413,16 +418,44 @@ export function PdfViewerToolbar({
           >
             <Icon name="zoom-in" size={18} />
           </ActionIcon>
-          <span
-            style={{
-              minWidth: "2.5rem",
-              textAlign: "center",
-              fontSize: 12,
-              color: "var(--c-text-subtle)",
-            }}
-          >
-            {displayZoomPercent}%
-          </span>
+          <Menu position="top" withinPortal>
+            <Menu.Target>
+              <button
+                type="button"
+                className="pdf-viewer-toolbar__zoom-menu"
+                aria-label={t("viewer.zoom", "Zoom")}
+              >
+                {displayZoomPercent}%
+                <Icon name="chevron-down" size={12} />
+              </button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<Icon name="arrow-left-right" size={16} />}
+                rightSection={
+                  isFitWidthActive ? <Icon name="check" size={16} /> : undefined
+                }
+                onClick={handleFitWidth}
+              >
+                {t("viewer.fitWidth", "Fit to width")}
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<Icon name="scan" size={16} />}
+                rightSection={
+                  isFitPageActive ? <Icon name="check" size={16} /> : undefined
+                }
+                onClick={handleFitPage}
+              >
+                {t("viewer.fitPage", "Fit to page")}
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<Icon name="search" size={16} />}
+                onClick={() => zoomActions.setZoomLevel?.(1)}
+              >
+                {t("viewer.actualSize", "Actual size")}
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
           <Tooltip
             content={t("viewer.fitWidth", "Fit to width")}
             position="top"
@@ -478,14 +511,18 @@ export function PdfViewerToolbar({
               {t("viewer.pageNavigation", "Page navigation")}
             </Menu.Label>
             <Menu.Item
-              leftSection={<Icon name="chevron-first" size={18} />}
+              leftSection={
+                <Icon name="chevron-first" size={18} style={mirrorIconStyle} />
+              }
               disabled={scrollState.currentPage === 1}
               onClick={handleFirstPage}
             >
               {t("viewer.firstPage", "First page")}
             </Menu.Item>
             <Menu.Item
-              leftSection={<Icon name="chevron-last" size={18} />}
+              leftSection={
+                <Icon name="chevron-last" size={18} style={mirrorIconStyle} />
+              }
               disabled={scrollState.currentPage === scrollState.totalPages}
               onClick={handleLastPage}
             >

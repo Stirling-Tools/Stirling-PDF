@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { Icon } from "@editor/ui/Icon";
+import { SIDEBAR_WIDTH } from "@editor/components/viewer/SidebarBase";
 import "@editor/components/viewer/SidebarBase.css";
 
 interface ThumbnailSidebarProps {
@@ -164,7 +165,7 @@ export function ThumbnailSidebar({
             right: 0,
             top: 0,
             bottom: 0,
-            width: "15rem",
+            width: SIDEBAR_WIDTH,
             zIndex: 998,
           }}
         >

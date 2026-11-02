@@ -43,7 +43,11 @@ vi.mock("@editor/contexts/NavigationContext", () => ({
   useNavigationGuard: () => ({ requestNavigation: vi.fn() }),
 }));
 vi.mock("@editor/contexts/SidebarContext", () => ({
-  useSidebarContext: () => ({ sidebarRefs: {} }),
+  useSidebarContext: () => ({
+    sidebarRefs: {},
+    sidebarState: { focusMode: false },
+    setFocusMode: vi.fn(),
+  }),
 }));
 vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: {} }),
@@ -58,6 +62,11 @@ vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => ({
     searchInterfaceActions: {},
     setActiveFileIndex: vi.fn(),
+    isThumbnailSidebarVisible: false,
+    isBookmarkSidebarVisible: false,
+    isAttachmentSidebarVisible: false,
+    isLayerSidebarVisible: false,
+    isCommentsSidebarVisible: false,
   }),
 }));
 vi.mock("@editor/contexts/TitleBarStripContext", () => ({

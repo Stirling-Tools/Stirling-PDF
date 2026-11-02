@@ -1,6 +1,7 @@
 export interface SidebarState {
   leftPanelView: "toolPicker" | "toolContent";
   readerMode: boolean;
+  focusMode: boolean;
 }
 
 export interface SidebarRefs {
@@ -22,6 +23,7 @@ export interface SidebarContextValue {
     React.SetStateAction<"toolPicker" | "toolContent">
   >;
   setReaderMode: React.Dispatch<React.SetStateAction<boolean>>;
+  setFocusMode: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface SidebarProviderProps {

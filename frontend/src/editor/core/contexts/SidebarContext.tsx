@@ -19,13 +19,15 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
     "toolPicker" | "toolContent"
   >("toolPicker");
   const [readerMode, setReaderMode] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
 
   const sidebarState: SidebarState = useMemo(
     () => ({
       leftPanelView,
       readerMode,
+      focusMode,
     }),
-    [leftPanelView, readerMode],
+    [leftPanelView, readerMode, focusMode],
   );
 
   const sidebarRefs: SidebarRefs = useMemo(
@@ -42,6 +44,7 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
       sidebarRefs,
       setLeftPanelView,
       setReaderMode,
+      setFocusMode,
     }),
     [sidebarState, sidebarRefs, setLeftPanelView, setReaderMode],
   );

@@ -55,3 +55,29 @@
   flex-shrink: 0;
   margin: 0 0.25rem;
 }
+
+.pdf-viewer-toolbar__zoom-menu {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 2.5rem;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--c-text-subtle);
+  font: inherit;
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.pdf-viewer-toolbar__zoom-menu:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.pdf-viewer-toolbar__zoom-menu:focus-visible {
+  outline: 2px solid var(--c-accent-text);
+  outline-offset: 1px;
+}
