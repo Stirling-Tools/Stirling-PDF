@@ -149,6 +149,7 @@ public class OfficeConversionService {
                             + " ms and was stopped");
         } catch (InterruptedException e) {
             task.cancel(true);
+            joinQuietly(worker);
             Thread.currentThread().interrupt();
             throw new IOException("Conversion interrupted", e);
         } catch (ExecutionException e) {
@@ -164,6 +165,12 @@ public class OfficeConversionService {
         }
     }
 
+    /**
+     * Waits for the cancelled worker to stop touching {@code out} and the document before the
+     * caller closes them. Bounded because the legacy writer's final POI write cannot be
+     * interrupted: a worker still running after this writes to the closed stream and fails on its
+     * own abandoned thread rather than hanging the request forever.
+     */
     private static void joinQuietly(Thread worker) {
         try {
             worker.join(PPT_STOP_MILLIS);
