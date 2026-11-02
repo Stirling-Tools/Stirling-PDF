@@ -8,14 +8,22 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
+import org.bouncycastle.cms.CMSProcessableByteArray;
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.SignerInformation;
+import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -387,5 +395,94 @@ class CertSignControllerTest {
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void testSignPdfWithUnencryptedPkcs8PemKey() throws Exception {
+        ResponseEntity<Resource> response =
+                signWithPemKey(
+                        "test-key-pkcs8.pem", readResource("certs/test-key-pkcs8.pem"), "password");
+
+        assertSignedByTestCert(response);
+    }
+
+    @Test
+    void testSignPdfWithUnencryptedPkcs8PemKeyAndNoPassword() throws Exception {
+        ResponseEntity<Resource> response =
+                signWithPemKey(
+                        "test-key-pkcs8.pem", readResource("certs/test-key-pkcs8.pem"), null);
+
+        assertSignedByTestCert(response);
+    }
+
+    @Test
+    void testSignPdfWithTraditionalRsaPemKey() throws Exception {
+        ResponseEntity<Resource> response =
+                signWithPemKey(
+                        "test-key-traditional.pem",
+                        readResource("certs/test-key-traditional.pem"),
+                        "password");
+
+        assertSignedByTestCert(response);
+    }
+
+    @Test
+    void testSignPdfWithCertificateAsPemKeyThrowsError() {
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> signWithPemKey("test-cert.pem", pemCertBytes, "password"));
+
+        assertTrue(exception.getMessage().contains("PEM private key"));
+    }
+
+    private ResponseEntity<Resource> signWithPemKey(
+            String keyFileName, byte[] keyFileBytes, String password) throws Exception {
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes));
+        request.setCertType("PEM");
+        request.setPrivateKeyFile(
+                new MockMultipartFile(
+                        "privateKeyFile", keyFileName, "application/x-pem-file", keyFileBytes));
+        request.setCertFile(
+                new MockMultipartFile(
+                        "certFile", "test-cert.pem", "application/x-pem-file", pemCertBytes));
+        request.setPassword(password);
+        request.setShowSignature(false);
+        request.setReason("test");
+        request.setLocation("test");
+        request.setName("tester");
+        request.setPageNumber(1);
+        request.setShowLogo(false);
+        return certSignController.signPDFWithCert(request, httpRequest);
+    }
+
+    // A key that doesn't match the certificate still yields a signed PDF, so check the CMS
+    // signature itself against test-cert.pem.
+    private void assertSignedByTestCert(ResponseEntity<Resource> response) throws Exception {
+        assertNotNull(response.getBody());
+        byte[] signedPdf = drainBody(response);
+        X509Certificate cert =
+                (X509Certificate)
+                        CertificateFactory.getInstance("X.509")
+                                .generateCertificate(new ByteArrayInputStream(pemCertBytes));
+        try (PDDocument doc = Loader.loadPDF(signedPdf)) {
+            PDSignature signature = doc.getLastSignatureDictionary();
+            assertNotNull(signature);
+            CMSSignedData cms =
+                    new CMSSignedData(
+                            new CMSProcessableByteArray(signature.getSignedContent(signedPdf)),
+                            new ByteArrayInputStream(signature.getContents(signedPdf)));
+            SignerInformation signer = cms.getSignerInfos().getSigners().iterator().next();
+            assertTrue(signer.verify(new JcaSimpleSignerInfoVerifierBuilder().build(cert)));
+        }
+    }
+
+    private static byte[] readResource(String path) throws java.io.IOException {
+        try (InputStream is = new ClassPathResource(path).getInputStream()) {
+            return is.readAllBytes();
+        }
     }
 }

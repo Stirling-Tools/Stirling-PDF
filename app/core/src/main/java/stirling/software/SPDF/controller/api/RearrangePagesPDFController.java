@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -43,6 +44,9 @@ import stirling.software.common.util.WebResponseUtils;
 @Slf4j
 @RequiredArgsConstructor
 public class RearrangePagesPDFController {
+
+    // The new page order is built in full before any page is copied
+    private static final int MAX_OUTPUT_PAGES = 100_000;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -193,6 +197,12 @@ public class RearrangePagesPDFController {
                     "duplicateCount",
                     "must not exceed " + maxDuplicateCount);
         }
+        if ((long) totalPages * duplicateCount > MAX_OUTPUT_PAGES) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "duplicating would produce more than " + MAX_OUTPUT_PAGES + " pages");
+        }
 
         // For each page in the document
         for (int pageNum = 0; pageNum < totalPages; pageNum++) {
@@ -206,29 +216,32 @@ public class RearrangePagesPDFController {
     }
 
     private List<Integer> processSortTypes(String sortTypes, int totalPages, String pageOrder) {
+        SortTypes mode;
         try {
-            SortTypes mode = SortTypes.valueOf(sortTypes.toUpperCase(Locale.ROOT));
-            return switch (mode) {
-                case REVERSE_ORDER -> reverseOrder(totalPages);
-                case DUPLEX_SORT -> duplexSort(totalPages);
-                case BOOKLET_SORT -> bookletSort(totalPages);
-                case SIDE_STITCH_BOOKLET_SORT -> sideStitchBooklet(totalPages);
-                case ODD_EVEN_SPLIT -> oddEvenSplit(totalPages);
-                case REMOVE_FIRST -> removeFirst(totalPages);
-                case REMOVE_LAST -> removeLast(totalPages);
-                case REMOVE_FIRST_AND_LAST -> removeFirstAndLast(totalPages);
-                case DUPLICATE -> duplicate(totalPages, pageOrder);
-                default ->
-                        throw ExceptionUtils.createIllegalArgumentException(
-                                "error.invalidFormat",
-                                "Invalid {0} format: {1}",
-                                "custom mode",
-                                "unsupported");
-            };
+            mode = SortTypes.valueOf(sortTypes.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
-            log.error("Unsupported custom mode", e);
-            return null;
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "customMode must be one of " + Arrays.toString(SortTypes.values()));
         }
+        return switch (mode) {
+            case REVERSE_ORDER -> reverseOrder(totalPages);
+            case DUPLEX_SORT -> duplexSort(totalPages);
+            case BOOKLET_SORT -> bookletSort(totalPages);
+            case SIDE_STITCH_BOOKLET_SORT -> sideStitchBooklet(totalPages);
+            case ODD_EVEN_SPLIT -> oddEvenSplit(totalPages);
+            case REMOVE_FIRST -> removeFirst(totalPages);
+            case REMOVE_LAST -> removeLast(totalPages);
+            case REMOVE_FIRST_AND_LAST -> removeFirstAndLast(totalPages);
+            case DUPLICATE -> duplicate(totalPages, pageOrder);
+            default ->
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidFormat",
+                            "Invalid {0} format: {1}",
+                            "custom mode",
+                            "unsupported");
+        };
     }
 
     @AutoJobPostMapping(
@@ -263,8 +276,10 @@ public class RearrangePagesPDFController {
                 } else {
                     newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
                 }
-                log.info("newPageOrder = {}", newPageOrder);
-                log.info("totalPages = {}", totalPages);
+                log.debug(
+                        "Rearranging {} pages into {} output pages",
+                        totalPages,
+                        newPageOrder.size());
 
                 // Snapshot desired pages before mutating the tree; clone repeats (e.g. DUPLICATE)
                 // so each slot is a distinct node, not one PDPage under multiple /Kids.

@@ -196,7 +196,7 @@ public class AuthController {
                 int desktopExpiryMinutes =
                         DesktopClientUtils.getDesktopTokenExpiryMinutes(applicationProperties);
                 token = jwtService.generateToken(user.getUsername(), claims, desktopExpiryMinutes);
-                log.info(
+                log.debug(
                         "Issued DESKTOP token for user '{}': expiry={}min ({}d), keyRetention={}d",
                         username,
                         desktopExpiryMinutes,
@@ -207,7 +207,7 @@ public class AuthController {
                 token = jwtService.generateToken(user.getUsername(), claims);
                 int webExpiryMinutes =
                         DesktopClientUtils.getWebTokenExpiryMinutes(applicationProperties);
-                log.info(
+                log.debug(
                         "Issued WEB token for user '{}': expiry={}min ({}d), keyRetention={}d",
                         username,
                         webExpiryMinutes,

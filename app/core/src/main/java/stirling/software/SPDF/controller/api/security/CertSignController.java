@@ -219,10 +219,16 @@ public class CertSignController {
                                 certFile, "PEM certificate", "certificate file is required");
                 ks = KeyStore.getInstance("JKS");
                 ks.load(null);
-                PrivateKey privateKey = getPrivateKeyFromPEM(privateKeyFile.getBytes(), password);
+                // An unencrypted key needs no password, but the JKS entry still needs one.
+                keystorePassword = password != null ? password : "";
+                PrivateKey privateKey =
+                        getPrivateKeyFromPEM(privateKeyFile.getBytes(), keystorePassword);
                 Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
                 ks.setKeyEntry(
-                        "alias", privateKey, password.toCharArray(), new Certificate[] {cert});
+                        "alias",
+                        privateKey,
+                        keystorePassword.toCharArray(),
+                        new Certificate[] {cert});
                 break;
             case "PKCS12":
             case "PFX":
@@ -348,8 +354,15 @@ public class CertSignController {
                 PEMDecryptorProvider decProv =
                         new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
                 pkInfo = pemEncryptedKeyPair.decryptKeyPair(decProv).getPrivateKeyInfo();
+            } else if (pemObject instanceof PEMKeyPair pemKeyPair) {
+                pkInfo = pemKeyPair.getPrivateKeyInfo();
+            } else if (pemObject instanceof PrivateKeyInfo privateKeyInfo) {
+                pkInfo = privateKeyInfo;
             } else {
-                pkInfo = ((PEMKeyPair) pemObject).getPrivateKeyInfo();
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "PEM private key - file does not contain a private key");
             }
             return converter.getPrivateKey(pkInfo);
         }

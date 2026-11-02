@@ -1,5 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import type { Page, Route } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 import {
@@ -32,7 +32,6 @@ const LATIN_ANCHOR = "Acrobat";
 const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])/;
 
 async function gotoEditor(page: Page): Promise<Promise<unknown>> {
-  await page.route("**/encode-charcodes", (route: Route) => route.abort());
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   // Capture the fallback-font fetch (fired on mount) so we can await it before
   // editing - the embed is sync and needs the bytes cached.

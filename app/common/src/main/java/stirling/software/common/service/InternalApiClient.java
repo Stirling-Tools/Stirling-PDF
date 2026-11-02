@@ -179,15 +179,22 @@ public class InternalApiClient {
                         try {
                             TempFile tempFile =
                                     tempFileManager.createManagedTempFile("internal-api");
-                            Files.copy(
-                                    response.getBody(),
-                                    tempFile.getPath(),
-                                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                            String filename = extractFilename(response.getHeaders());
-                            TempFileResource resource = new TempFileResource(tempFile, filename);
-                            return ResponseEntity.status(response.getStatusCode())
-                                    .headers(response.getHeaders())
-                                    .body(resource);
+                            try {
+                                Files.copy(
+                                        response.getBody(),
+                                        tempFile.getPath(),
+                                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                                String filename = extractFilename(response.getHeaders());
+                                TempFileResource resource =
+                                        new TempFileResource(tempFile, filename);
+                                return ResponseEntity.status(response.getStatusCode())
+                                        .headers(response.getHeaders())
+                                        .body(resource);
+                            } catch (IOException | RuntimeException e) {
+                                // The caller never receives this file, so nobody else can delete it
+                                tempFile.close();
+                                throw e;
+                            }
                         } catch (IOException e) {
                             throw new UncheckedIOException(e);
                         }
