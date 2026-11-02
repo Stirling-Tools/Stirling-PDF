@@ -122,23 +122,25 @@ class RedactExecuteService {
                 }
             }
 
-            // Non-text operations.
+            // Non-text operations. Their boxes only cover when asked to, or when the whole
+            // output is rasterised afterwards anyway.
+            boolean boxesOnly = overlayOnly || convertToImage;
             Map<Integer, PageColumnLayout> layoutCache = new HashMap<>();
 
             if (!wipePages.isEmpty()) {
                 applyPageWipe(document, wipePages, style);
             }
 
-            for (TextRange range : ranges) {
-                applyRangeRedaction(document, range, style, layoutCache);
+            if (!ranges.isEmpty()) {
+                applyRangeRedaction(document, ranges, style, layoutCache, boxesOnly);
             }
 
-            for (ImageBox box : imageBoxes) {
-                applyImageBoxRedaction(document, box, style);
+            if (!imageBoxes.isEmpty()) {
+                applyImageBoxRedaction(document, imageBoxes, style, boxesOnly);
             }
 
             if (request.getRedactImagePages() != null) {
-                applyAllImagesRedaction(document, request.getRedactImagePages(), style);
+                applyAllImagesRedaction(document, request.getRedactImagePages(), style, boxesOnly);
             }
 
             return manualRedactionService.finalizeRedaction(
@@ -147,7 +149,8 @@ class RedactExecuteService {
                     style.getColor(),
                     style.getPadding(),
                     convertToImage,
-                    !needsOverlayOnly);
+                    !needsOverlayOnly,
+                    overlayOnly);
 
         } catch (ToolFailedException e) {
             throw e;
@@ -290,6 +293,7 @@ class RedactExecuteService {
                         pageElementBoxes.getOrDefault(idx, Collections.emptyList());
                 page.getCOSObject().removeItem(COSName.CONTENTS);
                 page.setResources(new PDResources());
+                page.setAnnotations(new ArrayList<>());
                 try (PDPageContentStream cs = new PDPageContentStream(document, page)) {
                     cs.setNonStrokingColor(pageColor);
                     if (elementBoxes.isEmpty()) {
@@ -310,49 +314,59 @@ class RedactExecuteService {
         }
     }
 
+    /**
+     * Locates every range before redacting any, so a later range's anchors are found in the
+     * original text, then redacts all their blocks in one pass.
+     */
     private void applyRangeRedaction(
             PDDocument document,
-            TextRange range,
+            List<TextRange> ranges,
             RedactStyle style,
-            Map<Integer, PageColumnLayout> layoutCache)
+            Map<Integer, PageColumnLayout> layoutCache,
+            boolean overlayOnly)
             throws IOException {
-        String rangeStart = trimOrEmpty(range.startString());
-        String rangeEnd = trimOrEmpty(range.endString());
-        log.info("[redact/execute] range redaction: start='{}' end='{}'", rangeStart, rangeEnd);
-        try {
-            List<PDFText> blocks = collectRangeBlocks(document, rangeStart, rangeEnd, layoutCache);
-            if (!blocks.isEmpty()) {
-                manualRedactionService.redactFoundText(
-                        document,
-                        blocks,
-                        style.getPadding(),
-                        ManualRedactionService.decodeOrDefault(style.getColor()),
-                        false);
-            } else {
+        List<PDFText> blocks = new ArrayList<>();
+        for (TextRange range : ranges) {
+            String rangeStart = trimOrEmpty(range.startString());
+            String rangeEnd = trimOrEmpty(range.endString());
+            log.info("[redact/execute] range redaction: start='{}' end='{}'", rangeStart, rangeEnd);
+            List<PDFText> rangeBlocks =
+                    collectRangeBlocks(document, rangeStart, rangeEnd, layoutCache);
+            if (rangeBlocks.isEmpty()) {
                 log.warn(
                         "[redact/execute] range not found: start='{}' end='{}'",
                         rangeStart,
                         rangeEnd);
             }
-        } catch (Exception e) {
-            log.warn("[redact/execute] range redaction failed: {}", e.getMessage());
+            blocks.addAll(rangeBlocks);
+        }
+        if (!blocks.isEmpty()) {
+            manualRedactionService.redactFoundText(
+                    document,
+                    blocks,
+                    style.getPadding(),
+                    ManualRedactionService.decodeOrDefault(style.getColor()),
+                    false,
+                    overlayOnly);
         }
     }
 
-    private void applyImageBoxRedaction(PDDocument document, ImageBox box, RedactStyle style)
+    private void applyImageBoxRedaction(
+            PDDocument document, List<ImageBox> imageBoxes, RedactStyle style, boolean overlayOnly)
             throws IOException {
-        List<float[]> boxes =
-                List.of(
-                        new float[] {
-                            (float) box.pageIndex(), box.x1(), box.y1(), box.x2(), box.y2()
-                        });
-        log.info("[redact/execute] image box overlay on page {}", box.pageIndex());
+        List<float[]> boxes = new ArrayList<>();
+        for (ImageBox box : imageBoxes) {
+            boxes.add(
+                    new float[] {(float) box.pageIndex(), box.x1(), box.y1(), box.x2(), box.y2()});
+        }
+        log.info("[redact/execute] {} image box(es)", boxes.size());
         Color boxColor = ManualRedactionService.decodeOrDefault(style.getColor());
-        manualRedactionService.redactImageBoxes(document, boxes, boxColor);
+        manualRedactionService.redactImageBoxes(document, boxes, boxColor, overlayOnly);
     }
 
     private void applyAllImagesRedaction(
-            PDDocument document, List<Integer> pageNumbers, RedactStyle style) throws IOException {
+            PDDocument document, List<Integer> pageNumbers, RedactStyle style, boolean overlayOnly)
+            throws IOException {
         PDPageTree allPages = document.getDocumentCatalog().getPages();
         Color imgColor = ManualRedactionService.decodeOrDefault(style.getColor());
 
@@ -388,7 +402,7 @@ class RedactExecuteService {
                 imagePageIndices.size());
 
         if (!detectedBoxes.isEmpty()) {
-            manualRedactionService.redactImageBoxes(document, detectedBoxes, imgColor);
+            manualRedactionService.redactImageBoxes(document, detectedBoxes, imgColor, overlayOnly);
         }
     }
 

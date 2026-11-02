@@ -9,10 +9,17 @@ import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -240,6 +247,58 @@ class PdfUtilsTest {
             page.setResources(resources);
 
             assertTrue(PdfUtils.hasImagesOnPage(page));
+        }
+    }
+
+    // --- rasterisePageInPlace ---
+
+    @ParameterizedTest
+    @CsvSource({"0", "90", "180", "270"})
+    void rasterisePageInPlace_looksTheSameAndKeepsThePage(int rotation) throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            page.setRotation(rotation);
+            doc.addPage(page);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                // An off-centre mark, so a wrongly turned image shows up as a mismatch.
+                cs.addRect(20, 20, 150, 60);
+                cs.fill();
+                cs.beginText();
+                cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 24);
+                cs.newLineAtOffset(72, 600);
+                cs.showText("Rasterise me");
+                cs.endText();
+            }
+            PDAnnotationLink link = new PDAnnotationLink();
+            link.setRectangle(new PDRectangle(72, 590, 200, 30));
+            page.getAnnotations().add(link);
+            BufferedImage before = new PDFRenderer(doc).renderImageWithDPI(0, 36, ImageType.GRAY);
+
+            PdfUtils.rasterisePageInPlace(doc, 0);
+
+            PDPage rasterised = doc.getPage(0);
+            assertSame(page.getCOSObject(), rasterised.getCOSObject());
+            assertEquals(rotation, rasterised.getRotation());
+            assertEquals(PDRectangle.LETTER.getWidth(), rasterised.getMediaBox().getWidth());
+            assertTrue(rasterised.getAnnotations().isEmpty());
+            assertTrue(new PDFTextStripper().getText(doc).isBlank());
+
+            BufferedImage after = new PDFRenderer(doc).renderImageWithDPI(0, 36, ImageType.GRAY);
+            assertEquals(before.getWidth(), after.getWidth());
+            assertEquals(before.getHeight(), after.getHeight());
+            int differing = 0;
+            for (int x = 0; x < before.getWidth(); x++) {
+                for (int y = 0; y < before.getHeight(); y++) {
+                    int a = before.getRaster().getSample(x, y, 0);
+                    int b = after.getRaster().getSample(x, y, 0);
+                    if (Math.abs(a - b) > 96) {
+                        differing++;
+                    }
+                }
+            }
+            assertTrue(
+                    differing < before.getWidth() * before.getHeight() / 50,
+                    differing + " pixels differ");
         }
     }
 }
