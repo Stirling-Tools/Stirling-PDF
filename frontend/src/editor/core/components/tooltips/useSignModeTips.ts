@@ -23,6 +23,8 @@ export const useSignModeTips = (): TooltipContent => {
           "certSign.signMode.tooltip.upload.title",
           "Upload - bring your certificate",
         ),
+        // New key: the legacy manual.* locale copy still carries HTML tags and
+        // the old "only uploads can show as Trusted" wording this replaces.
         description: t(
           "certSign.signMode.tooltip.upload.body",
           "Use your own certificate and key files. Viewer trust depends on whether the certificate chain is recognised, just as it does for a device certificate.",
