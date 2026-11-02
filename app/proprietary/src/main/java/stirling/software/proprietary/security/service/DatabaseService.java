@@ -279,19 +279,6 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     @Override
     public void exportDatabase() {
-        List<FileInfo> filteredBackupList =
-                new ArrayList<>(
-                        this.getBackupList().stream()
-                                .filter(
-                                        backup ->
-                                                !backup.getFileName()
-                                                        .startsWith(BACKUP_PREFIX + "user_"))
-                                .toList());
-
-        if (filteredBackupList.size() > 5) {
-            deleteOldestBackup(filteredBackupList);
-        }
-
         LocalDateTime dateNow = LocalDateTime.now();
         DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
         Path insertOutputFilePath =
@@ -307,9 +294,6 @@ public class DatabaseService implements DatabaseServiceInterface {
                     stmt.setString(1, insertOutputFilePath.toString());
                     stmt.execute();
                 }
-                backupNotificationService.notifyBackupsSuccess(
-                        "Database backup export completed",
-                        "Backup file: " + insertOutputFilePath.getFileName());
             } catch (SQLException | CannotGetJdbcConnectionException e) {
                 log.error("Error during database export: {}", e.getMessage(), e);
                 backupNotificationService.notifyBackupsFailure(
@@ -318,6 +302,7 @@ public class DatabaseService implements DatabaseServiceInterface {
                                 + insertOutputFilePath.getFileName()
                                 + " Message: "
                                 + e.getMessage());
+                return;
             } catch (CannotReadScriptException e) {
                 log.error("Error during database export: File {} not found", insertOutputFilePath);
                 backupNotificationService.notifyBackupsFailure(
@@ -326,12 +311,37 @@ public class DatabaseService implements DatabaseServiceInterface {
                                 + insertOutputFilePath.getFileName()
                                 + " not found. Message: "
                                 + e.getMessage());
+                return;
             } finally {
                 DataSourceUtils.releaseConnection(conn, dataSource);
             }
 
+            if (!verifyBackup(insertOutputFilePath)) {
+                backupNotificationService.notifyBackupsFailure(
+                        "Database backup verification failed",
+                        "Backup file: " + insertOutputFilePath.getFileName());
+                return;
+            }
+
+            List<FileInfo> filteredBackupList =
+                    new ArrayList<>(
+                            this.getBackupList().stream()
+                                    .filter(
+                                            backup ->
+                                                    !backup.getFileName()
+                                                                    .startsWith(
+                                                                            BACKUP_PREFIX + "user_")
+                                                            && !backup.getFilePathAsPath()
+                                                                    .equals(insertOutputFilePath))
+                                    .toList());
+            if (filteredBackupList.size() > 5) {
+                deleteOldestBackup(filteredBackupList);
+            }
+
+            backupNotificationService.notifyBackupsSuccess(
+                    "Database backup export completed",
+                    "Backup file: " + insertOutputFilePath.getFileName());
             log.debug("Database export completed: {}", insertOutputFilePath);
-            verifyBackup(insertOutputFilePath);
         }
     }
 
