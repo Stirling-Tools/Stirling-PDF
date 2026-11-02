@@ -183,6 +183,13 @@ class GeneralUtilsMoreTest {
         }
 
         @Test
+        @DisplayName("open-start range extends from page 1 to the specified page")
+        void openStartRange() {
+            assertEquals(
+                    List.of(1, 2, 3), GeneralUtils.parsePageList(new String[] {"-3"}, 5, true));
+        }
+
+        @Test
         @DisplayName("invalid range bounds are skipped, valid tokens remain")
         void invalidRangeSkipped() {
             List<Integer> result = GeneralUtils.parsePageList(new String[] {"x-y", "2"}, 5, true);
@@ -205,6 +212,17 @@ class GeneralUtilsMoreTest {
         @DisplayName("range partially outside the document keeps in-bounds pages")
         void rangePartlyOutOfBounds() {
             assertEquals(List.of(4, 5), GeneralUtils.parsePageList(new String[] {"4-99"}, 5, true));
+        }
+
+        @Test
+        @DisplayName("huge range bounds are clamped safely without infinite loop or overflow")
+        void hugeRangeClampedSafely() {
+            assertEquals(
+                    List.of(1, 2, 3, 4, 5),
+                    GeneralUtils.parsePageList(new String[] {"1-2147483647"}, 5, true));
+            assertEquals(
+                    List.of(1, 2, 3, 4, 5),
+                    GeneralUtils.parsePageList(new String[] {"-2147483647"}, 5, true));
         }
 
         @ParameterizedTest(name = "\"{0}\" is dropped")
