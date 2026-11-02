@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -18,7 +19,6 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
 import org.springframework.boot.webmvc.autoconfigure.error.BasicErrorController;
 import org.springframework.boot.webmvc.error.DefaultErrorAttributes;
-import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -55,7 +55,7 @@ class FallbackErrorResponseTest {
                                 .requestAttr(RequestDispatcher.ERROR_MESSAGE, internalMessage)
                                 .requestAttr(
                                         RequestDispatcher.ERROR_EXCEPTION,
-                                        new DataAccessResourceFailureException(internalMessage)))
+                                        new SQLException(internalMessage)))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").doesNotExist())
                 .andExpect(jsonPath("$.trace").doesNotExist())
