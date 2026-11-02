@@ -33,11 +33,13 @@ import stirling.software.SPDF.service.AttachmentServiceInterface;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.api.misc.AttachmentPinSpec;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfAttachmentPinUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -368,6 +370,11 @@ public class AttachmentController {
                             try {
                                 pdfAttachmentService.renameAttachment(
                                         document, renameOp.getOldName(), renameOp.getNewName());
+                                // The annotation may still carry the old file-spec name;
+                                // remove it after a successful rename so the later pin
+                                // batch cannot leave a duplicate behind.
+                                PdfAttachmentPinUtils.removePins(
+                                        document, List.of(renameOp.getOldName()));
                             } catch (IOException | RuntimeException e) {
                                 log.warn(
                                         "Batch rename from '{}' to '{}' skipped: {}",
@@ -382,6 +389,14 @@ public class AttachmentController {
 
             if (additions != null && !additions.isEmpty()) {
                 pdfAttachmentService.addAttachment(document, additions);
+            }
+
+            if (!convertToPdfA3b && opsData != null) {
+                if (opsData.getDeletions() != null) {
+                    PdfAttachmentPinUtils.removePins(document, opsData.getDeletions());
+                }
+                PdfAttachmentPinUtils.applyPins(
+                        document, opsData.getPins(), opsData.getPinRemovals());
             }
 
             String originalFileName =
@@ -399,6 +414,13 @@ public class AttachmentController {
                 try (PDDocument pdfaDocument = Loader.loadPDF(pdfaBytes)) {
                     convertPDFToPDFA.ensureEmbeddedFileCompliance(pdfaDocument);
                     ConvertPDFToPDFA.fixType1FontCharSet(pdfaDocument);
+                    // Ghostscript strips page annotations during PDF/A conversion,
+                    // so reapply pins to the converted document or the attachment
+                    // link disappears from the PDF/A output.
+                    if (opsData != null) {
+                        PdfAttachmentPinUtils.applyPins(
+                                pdfaDocument, opsData.getPins(), opsData.getPinRemovals());
+                    }
                     String outputFilename = baseFileName + "_attachments_modified_PDFA-3b.pdf";
                     return WebResponseUtils.pdfDocToWebResponse(
                             pdfaDocument, outputFilename, tempFileManager);
@@ -419,6 +441,8 @@ public class AttachmentController {
     public static class BatchOpsData {
         private List<RenameOp> renames;
         private List<String> deletions;
+        private List<AttachmentPinSpec> pins;
+        private List<String> pinRemovals;
     }
 
     @Data

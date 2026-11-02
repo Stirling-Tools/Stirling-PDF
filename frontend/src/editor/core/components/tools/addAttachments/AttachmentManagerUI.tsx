@@ -25,6 +25,7 @@ export interface AttachmentManagerUIProps {
   isSaving: boolean;
   activeAction: string | null;
   convertToPdfA3b: boolean;
+  placingPinId?: string | null;
   disabled?: boolean;
   onStageFiles: (files: File[]) => void;
   onToggleDeleteRow: (id: string) => void;
@@ -32,11 +33,14 @@ export interface AttachmentManagerUIProps {
   onRenameRow: (id: string, newName: string) => void;
   onExtractSingle: (filename: string) => Promise<void>;
   onExtractAllZip: () => Promise<void>;
+  onStartPinPlacement: (id: string) => void;
+  onClearPin: (id: string) => void;
   onSaveDraft: () => Promise<void>;
   onDiscardDraft: () => void;
   onConvertToPdfA3bChange: (val: boolean) => void;
 }
 
+/** Rows, filter and draft actions for the Add Attachments tool panel. */
 export const AttachmentManagerUI = memo(function AttachmentManagerUI({
   rows,
   hasChanges,
@@ -45,6 +49,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
   isSaving,
   activeAction,
   convertToPdfA3b,
+  placingPinId = null,
   disabled = false,
   onStageFiles,
   onToggleDeleteRow,
@@ -52,6 +57,8 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
   onRenameRow,
   onExtractSingle,
   onExtractAllZip,
+  onStartPinPlacement,
+  onClearPin,
   onSaveDraft,
   onDiscardDraft,
   onConvertToPdfA3bChange,
@@ -128,6 +135,8 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
                 originalName={row.originalName}
                 size={row.size}
                 kind={row.kind}
+                pin={row.pin}
+                isPlacingPin={row.id === placingPinId}
                 disabled={disabled || isSaving}
                 isSaving={isSaving}
                 isDownloading={activeAction === `extract-${row.originalName}`}
@@ -135,6 +144,8 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
                 onToggleDelete={onToggleDeleteRow}
                 onRestore={onRestoreRow}
                 onRename={onRenameRow}
+                onStartPinPlacement={onStartPinPlacement}
+                onClearPin={onClearPin}
               />
             ))}
           </Stack>
@@ -170,6 +181,15 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
       >
         {t("attachments.addAttachments", "Add attachments...")}
       </FilePicker>
+
+      {rows.length > 0 && (
+        <Text size="xs" c="dimmed">
+          {t(
+            "attachments.pinHint",
+            "Use the pin button on an attachment, then click a page to place a clickable link there.",
+          )}
+        </Text>
+      )}
 
       <Checkbox
         size="sm"

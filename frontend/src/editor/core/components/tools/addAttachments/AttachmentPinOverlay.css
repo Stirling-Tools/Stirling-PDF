@@ -1,0 +1,69 @@
+.attachment-pin-overlay {
+  position: fixed;
+  z-index: 40;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.attachment-pin-overlay__page {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.attachment-pin-overlay__page--active {
+  pointer-events: auto;
+  cursor: crosshair;
+  outline: 2px dashed var(--c-primary);
+  outline-offset: 2px;
+  background: color-mix(in srgb, var(--c-primary) 7%, transparent);
+}
+
+.attachment-pin-overlay__marker {
+  position: absolute;
+  display: flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-primary);
+  cursor: pointer;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 35%));
+  pointer-events: auto;
+  transform: translate(-50%, -100%);
+}
+
+.attachment-pin-overlay__marker:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.attachment-pin-overlay__marker:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.attachment-pin-overlay__banner {
+  position: absolute;
+  /* Clear the viewer tool row below the workbench bar. */
+  top: 44px;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  max-width: min(560px, calc(100vw - 32px));
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md, 8px);
+  background: var(--c-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  color: var(--c-text);
+  pointer-events: auto;
+  transform: translateX(-50%);
+}
+
+.attachment-pin-overlay__banner-text {
+  font-size: 0.875rem;
+  line-height: 1.3;
+}

@@ -1,9 +1,9 @@
 import { useState, memo } from "react";
 import {
   Group,
+  Menu,
   Text,
   TextInput,
-  Badge,
   Tooltip,
   Stack,
   Box,
@@ -13,6 +13,7 @@ import { Icon } from "@editor/ui/Icon";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { formatFileSize, detectFileExtension } from "@editor/utils/fileUtils";
 import { DraftRowKind } from "@editor/hooks/tools/addAttachments/useAttachmentManager";
+import type { AttachmentPin } from "@editor/services/attachmentService";
 
 export interface AttachmentRowProps {
   id: string;
@@ -20,6 +21,8 @@ export interface AttachmentRowProps {
   originalName: string;
   size?: number;
   kind: DraftRowKind;
+  pin?: AttachmentPin;
+  isPlacingPin?: boolean;
   disabled?: boolean;
   isSaving?: boolean;
   isDownloading?: boolean;
@@ -27,6 +30,8 @@ export interface AttachmentRowProps {
   onToggleDelete: (id: string) => void;
   onRestore: (id: string) => void;
   onRename: (id: string, newName: string) => void;
+  onStartPinPlacement?: (id: string) => void;
+  onClearPin?: (id: string) => void;
 }
 
 export const AttachmentRow = memo(function AttachmentRow({
@@ -35,6 +40,8 @@ export const AttachmentRow = memo(function AttachmentRow({
   originalName,
   size,
   kind,
+  pin,
+  isPlacingPin = false,
   disabled = false,
   isSaving = false,
   isDownloading = false,
@@ -42,6 +49,8 @@ export const AttachmentRow = memo(function AttachmentRow({
   onToggleDelete,
   onRestore,
   onRename,
+  onStartPinPlacement,
+  onClearPin,
 }: AttachmentRowProps) {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -76,13 +85,6 @@ export const AttachmentRow = memo(function AttachmentRow({
   const ext = detectFileExtension(filename);
   const isPdf = ext === "pdf";
 
-  const getBadgeColor = () => {
-    if (isStaged) return "teal";
-    if (isRenamed) return "orange";
-    if (isDeleted) return "red";
-    return "gray";
-  };
-
   const badgeText = isStaged
     ? t("attachments.badges.staged", "NEW")
     : isRenamed
@@ -90,6 +92,15 @@ export const AttachmentRow = memo(function AttachmentRow({
       : isDeleted
         ? t("attachments.badges.deleted", "DELETED")
         : null;
+
+  // The panel is narrow: when a status badge and a pin compete for the meta
+  // line, the size gives way so neither essential label truncates.
+  const metaDetails = [
+    badgeText,
+    size !== undefined && (!pin || !badgeText) ? formatFileSize(size) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <Group
@@ -195,35 +206,66 @@ export const AttachmentRow = memo(function AttachmentRow({
                 </Text>
               </Tooltip>
             </Box>
-
-            {badgeText && (
-              <Badge
-                size="xs"
-                variant="light"
-                color={getBadgeColor()}
-                style={{
-                  flexShrink: 0,
-                  fontSize: "0.68rem",
-                  letterSpacing: "0.03em",
-                  padding: "0 6px",
-                  height: 18,
-                }}
-              >
-                {badgeText}
-              </Badge>
-            )}
           </Group>
 
-          {size !== undefined && (
+          {(pin || badgeText || size !== undefined) && (
             <Text
               size="xs"
               c="dimmed"
+              truncate="end"
               style={{
+                minWidth: 0,
                 fontVariantNumeric: "tabular-nums",
                 lineHeight: 1.2,
               }}
             >
-              {formatFileSize(size)}
+              {pin && (
+                <>
+                  <Tooltip
+                    label={t("attachments.movePin", "Move pin to another page")}
+                  >
+                    <span
+                      role={onStartPinPlacement ? "button" : undefined}
+                      tabIndex={onStartPinPlacement ? 0 : undefined}
+                      data-testid="attachment-pin-link"
+                      aria-label={
+                        onStartPinPlacement
+                          ? t("attachments.movePin", "Move pin to another page")
+                          : undefined
+                      }
+                      onClick={
+                        onStartPinPlacement
+                          ? () => onStartPinPlacement(id)
+                          : undefined
+                      }
+                      onKeyDown={
+                        onStartPinPlacement
+                          ? (event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                onStartPinPlacement(id);
+                              }
+                            }
+                          : undefined
+                      }
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 2,
+                        color: "var(--c-accent-text)",
+                        cursor: onStartPinPlacement ? "pointer" : undefined,
+                      }}
+                    >
+                      <Icon name="map-pin" size={11} />
+                      {t("attachments.pinBadge", "P{{page}}", {
+                        page: pin.pageIndex + 1,
+                      })}
+                    </span>
+                  </Tooltip>
+                  {" · "}
+                </>
+              )}
+              {metaDetails}
             </Text>
           )}
         </Stack>
@@ -245,6 +287,29 @@ export const AttachmentRow = memo(function AttachmentRow({
             </Tooltip>
           ) : (
             <>
+              {!pin && onStartPinPlacement && (
+                <Tooltip
+                  label={
+                    isPlacingPin
+                      ? t("attachments.placingPinShort", "Click a page")
+                      : t("attachments.placePin", "Place pin on page")
+                  }
+                >
+                  <ActionIcon
+                    variant={isPlacingPin ? "secondary" : "tertiary"}
+                    accent={isPlacingPin ? "default" : "neutral"}
+                    size="sm"
+                    aria-label={t("attachments.placePin", "Place pin on page")}
+                    aria-pressed={isPlacingPin}
+                    data-testid={`attachment-pin-action-${id}`}
+                    onClick={() => onStartPinPlacement(id)}
+                    disabled={disabled || isSaving}
+                  >
+                    <Icon name="map-pin" size={15} />
+                  </ActionIcon>
+                </Tooltip>
+              )}
+
               {!isStaged && onExtractSingle && (
                 <Tooltip
                   label={t("attachments.downloadSingle", "Download attachment")}
@@ -265,30 +330,53 @@ export const AttachmentRow = memo(function AttachmentRow({
                 </Tooltip>
               )}
 
-              <Tooltip label={t("attachments.rename", "Rename attachment")}>
-                <ActionIcon
-                  variant="tertiary"
-                  size="sm"
-                  aria-label={t("attachments.rename", "Rename attachment")}
-                  onClick={handleStartRename}
-                  disabled={disabled || isSaving}
-                >
-                  <Icon name="pencil" size={15} />
-                </ActionIcon>
-              </Tooltip>
-
-              <Tooltip label={t("attachments.remove", "Remove attachment")}>
-                <ActionIcon
-                  variant="tertiary"
-                  accent="danger"
-                  size="sm"
-                  aria-label={t("attachments.remove", "Remove attachment")}
-                  onClick={() => onToggleDelete(id)}
-                  disabled={disabled || isSaving}
-                >
-                  <Icon name={isStaged ? "x" : "trash"} size={15} />
-                </ActionIcon>
-              </Tooltip>
+              <Menu position="bottom-end" withinPortal>
+                <Menu.Target>
+                  <ActionIcon
+                    variant="tertiary"
+                    size="sm"
+                    aria-label={t(
+                      "attachments.moreActions",
+                      "More attachment actions",
+                    )}
+                    disabled={disabled || isSaving}
+                  >
+                    <Icon name="ellipsis-vertical" size={15} />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  {pin && onStartPinPlacement && (
+                    <Menu.Item
+                      leftSection={<Icon name="map-pin" size={14} />}
+                      onClick={() => onStartPinPlacement(id)}
+                    >
+                      {t("attachments.movePin", "Move pin to another page")}
+                    </Menu.Item>
+                  )}
+                  {pin && onClearPin && (
+                    <Menu.Item
+                      leftSection={<Icon name="x" size={14} />}
+                      onClick={() => onClearPin(id)}
+                    >
+                      {t("attachments.removePin", "Remove pin")}
+                    </Menu.Item>
+                  )}
+                  <Menu.Item
+                    leftSection={<Icon name="pencil" size={14} />}
+                    onClick={handleStartRename}
+                  >
+                    {t("attachments.rename", "Rename attachment")}
+                  </Menu.Item>
+                  <Menu.Divider />
+                  <Menu.Item
+                    color="red"
+                    leftSection={<Icon name="trash" size={14} />}
+                    onClick={() => onToggleDelete(id)}
+                  >
+                    {t("attachments.remove", "Remove attachment")}
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
             </>
           )}
         </Group>

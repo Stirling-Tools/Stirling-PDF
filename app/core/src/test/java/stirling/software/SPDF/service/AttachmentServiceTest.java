@@ -12,6 +12,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -19,6 +21,8 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.misc.AttachmentInfo;
+import stirling.software.common.model.api.misc.AttachmentPinSpec;
+import stirling.software.common.util.PdfAttachmentPinUtils;
 
 class AttachmentServiceTest {
 
@@ -272,6 +276,29 @@ class AttachmentServiceTest {
             assertNotNull(info.getSize());
             assertEquals(MediaType.APPLICATION_PDF_VALUE, info.getContentType());
             assertNotNull(info.getDescription());
+        }
+    }
+
+    @Test
+    void listAttachments_ReportsPinLocation() throws IOException {
+        try (var document = new PDDocument()) {
+            document.addPage(new PDPage(new PDRectangle(200, 300)));
+            var file =
+                    new MockMultipartFile(
+                            "file",
+                            "report.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            "content".getBytes());
+            attachmentService.addAttachment(document, List.of(file));
+            PdfAttachmentPinUtils.applyPins(
+                    document, List.of(new AttachmentPinSpec("report.pdf", 0, 0.25f, 0.75f)));
+
+            List<AttachmentInfo> result = attachmentService.listAttachments(document);
+            assertEquals(1, result.size());
+            AttachmentInfo info = result.get(0);
+            assertEquals(0, info.getPinPageIndex());
+            assertEquals(0.25f, info.getPinX(), 0.001f);
+            assertEquals(0.75f, info.getPinY(), 0.001f);
         }
     }
 
