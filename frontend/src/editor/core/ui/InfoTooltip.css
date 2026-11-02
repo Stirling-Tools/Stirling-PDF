@@ -92,7 +92,9 @@
   align-items: center;
   gap: 0.625rem;
   min-height: 2.75rem;
-  padding: 0.625rem 2.75rem 0.625rem 1rem;
+  /* Inline-end padding is reserved for the close control in both directions. */
+  padding-block: 0.625rem;
+  padding-inline: 1rem 2.75rem;
   background: var(--c-surface-sunken);
   color: var(--c-text);
   border-bottom: 1px solid var(--c-border-subtle);
@@ -201,17 +203,21 @@
   margin-bottom: 0;
 }
 
+/* Each tip is its own block. The rule makes the boundary visible when a
+   section's copy runs long; spacing alone disappears in a dense panel. */
 .sui-info-panel__section + .sui-info-panel__section {
-  margin-top: 1rem;
+  margin-top: 0.875rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--c-border-subtle);
 }
 
 .sui-info-panel__section-title {
-  margin: 0 0 0.375rem;
-  color: var(--c-text-subtle);
-  font-size: 0.75rem;
+  margin: 0 0 0.5rem;
+  color: var(--c-text);
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.4;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.005em;
 }
 
 .sui-info-panel__text {
@@ -219,13 +225,18 @@
 }
 
 .sui-info-panel__list {
-  margin: 0.4375rem 0 0;
-  padding-left: 1.125rem;
+  margin: 0.5rem 0 0;
+  padding-inline-start: 1.25rem;
   list-style: disc;
 }
 
 .sui-info-panel__list li {
-  margin-top: 0.3125rem;
+  padding-inline-start: 0.125rem;
+  margin-top: 0.4375rem;
+}
+
+.sui-info-panel__list li:first-child {
+  margin-top: 0;
 }
 
 .sui-info-panel__list li::marker {
@@ -274,7 +285,7 @@
 .sui-info-panel__close {
   position: absolute;
   top: 0.5rem;
-  right: 0.5rem;
+  inset-inline-end: 0.5rem;
   z-index: 1;
   display: inline-flex;
   align-items: center;

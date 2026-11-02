@@ -40,8 +40,8 @@ async function waitForPopover(page: Page): Promise<void> {
   });
 }
 
-async function openToolGuide(page: Page): Promise<void> {
-  await page.goto("/compress", { waitUntil: "domcontentloaded" });
+async function openToolGuide(page: Page, path = "/compress"): Promise<void> {
+  await page.goto(path, { waitUntil: "domcontentloaded" });
   await page.locator("button.sui-info").first().click();
   await waitForPopover(page);
 }
@@ -138,5 +138,42 @@ test.describe("Info tooltip walkthrough", () => {
     await info.click();
     await waitForPopover(page);
     await page.screenshot({ path: shot("07_settings_field_dark") });
+  });
+
+  test("08 bullets guide light", async ({ page }) => {
+    await openToolGuide(page, "/crop");
+    await page.screenshot({ path: shot("08_bullets_guide_light") });
+  });
+
+  test("09 bullets guide dark", async ({ page }) => {
+    await enableDark(page);
+    await openToolGuide(page, "/crop");
+    await page.screenshot({ path: shot("09_bullets_guide_dark") });
+  });
+
+  test("10 bullets guide rtl", async ({ page }) => {
+    await enableRtl(page);
+    await openToolGuide(page, "/crop");
+    await page.screenshot({ path: shot("10_bullets_guide_rtl") });
+  });
+
+  test("10b bullets guide rtl dark", async ({ page }) => {
+    await enableRtl(page);
+    await enableDark(page);
+    await openToolGuide(page, "/crop");
+    await page.screenshot({ path: shot("10b_bullets_guide_rtl_dark") });
+  });
+
+  test("11 bullets guide mobile", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openToolGuide(page, "/crop");
+    await page.screenshot({ path: shot("11_bullets_guide_mobile") });
+  });
+
+  test("12 bullets guide mobile dark", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await enableDark(page);
+    await openToolGuide(page, "/crop");
+    await page.screenshot({ path: shot("12_bullets_guide_mobile_dark") });
   });
 });

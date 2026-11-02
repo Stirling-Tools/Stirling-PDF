@@ -306,12 +306,17 @@ export function InfoTooltip({
                   >
                     {tip.title &&
                       !(index === 0 && tip.title === panelTitle) && (
-                        <h3 className="sui-info-panel__section-title">
+                        <h3
+                          className="sui-info-panel__section-title"
+                          dir="auto"
+                        >
                           {tip.title}
                         </h3>
                       )}
                     {tip.description && (
-                      <p className="sui-info-panel__text">{tip.description}</p>
+                      <p className="sui-info-panel__text" dir="auto">
+                        {tip.description}
+                      </p>
                     )}
                     {tip.bullets && tip.bullets.length > 0 && (
                       <ul className="sui-info-panel__list">
@@ -327,7 +332,11 @@ export function InfoTooltip({
                     )}
                   </section>
                 ))
-              : label && <p className="sui-info-panel__text">{label}</p>}
+              : label && (
+                  <p className="sui-info-panel__text" dir="auto">
+                    {label}
+                  </p>
+                )}
             {content && <div className="sui-info-panel__extra">{content}</div>}
           </div>
         </div>
