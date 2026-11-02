@@ -2,7 +2,7 @@ import { TextInput, Text, Flex, Switch } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
-import { Tooltip } from "@editor/components/shared/Tooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { usePageSelectionTips } from "@editor/components/tooltips/usePageSelectionTips";
 import classes from "@editor/components/shared/pageSelection/BulkSelectionPanel.module.css";
 
@@ -30,26 +30,24 @@ const PageSelectionInput = ({
     <div className={classes.panelGroup}>
       {/* Header row with tooltip/title and advanced toggle */}
       <Flex justify="space-between" align="center" mb="sm">
-        <Tooltip
-          position="left"
-          offset={20}
-          header={pageSelectionTips.header}
-          portalTarget={document.body}
-          pinOnClick={true}
-          containerStyle={{ marginTop: "1rem" }}
+        <InfoTooltip
+          title={pageSelectionTips.header?.title}
           tips={pageSelectionTips.tips}
+          ariaLabel={t("bulkSelection.pageSelection.title", "Page Selection")}
+          position="left"
+          width={360}
         >
-          <Flex onClick={(e) => e.stopPropagation()} align="center" gap="xs">
+          <button type="button" className="sui-info-trigger-label">
             <Icon
               name="shield-alert"
               size="1rem"
               style={{ color: "var(--c-accent-fg)" }}
             />
-            <Text>
+            <Text component="span">
               {t("bulkSelection.pageSelection.title", "Page Selection")}
             </Text>
-          </Flex>
-        </Tooltip>
+          </button>
+        </InfoTooltip>
         {typeof advancedOpened === "boolean" && (
           <Flex align="center" gap="xs">
             <Text size="sm" c="var(--c-text-muted)">

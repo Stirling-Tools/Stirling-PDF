@@ -85,7 +85,7 @@ export function AuditLoggingCard({
                 <InfoTooltip
                   label={t(
                     "admin.settings.security.audit.retentionDays.description",
-                    "Number of days to retain audit logs",
+                    "Number of days to retain audit logs. Set 0 to keep them indefinitely.",
                   )}
                 />
               </Group>
@@ -97,7 +97,7 @@ export function AuditLoggingCard({
                 audit: { ...settings?.audit, retentionDays: Number(value) },
               })
             }
-            min={1}
+            min={0}
             max={3650}
             disabled={!loginEnabled}
           />

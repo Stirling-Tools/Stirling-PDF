@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
-import { Tooltip } from "@editor/components/shared/Tooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { Button as DSButton } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { FilePicker } from "@editor/ui/FilePicker";
@@ -178,13 +178,11 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
             <Text size="sm" c="dimmed">
               {t("attachments.convertToPdfA3b", "Convert to PDF/A-3b")}
             </Text>
-            <Tooltip
-              header={{
-                title: t(
-                  "attachments.convertToPdfA3bTooltipHeader",
-                  "About PDF/A-3b Conversion",
-                ),
-              }}
+            <InfoTooltip
+              title={t(
+                "attachments.convertToPdfA3bTooltipHeader",
+                "About PDF/A-3b Conversion",
+              )}
               tips={[
                 {
                   title: t(
@@ -197,15 +195,10 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
                   ),
                 },
               ]}
-              sidebarTooltip={true}
-              pinOnClick={true}
-            >
-              <Icon
-                name="info"
-                size={14}
-                style={{ color: "var(--icon-files-color)", cursor: "help" }}
-              />
-            </Tooltip>
+              position="right"
+              width={340}
+              iconSize={14}
+            />
           </Group>
         }
         checked={convertToPdfA3b}

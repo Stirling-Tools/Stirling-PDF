@@ -269,16 +269,16 @@ export function AdvancedProcessingCard({
                 <InfoTooltip
                   label={t(
                     "admin.settings.advanced.maxDPI.description",
-                    "Maximum DPI for image processing (0 = unlimited)",
+                    "Highest DPI the server will use when it renders a page. Lower it to bound memory and processing time; raise it for sharper output.",
                   )}
                 />
               </Group>
             }
-            value={settings.maxDPI || 0}
+            value={settings.maxDPI || 500}
             onChange={(value) =>
               setSettings({ ...settings, maxDPI: Number(value) })
             }
-            min={0}
+            min={1}
             max={3000}
             disabled={!loginEnabled}
           />

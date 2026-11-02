@@ -1,7 +1,6 @@
 import React from "react";
 import { Flex, Text, Divider } from "@mantine/core";
-import { Icon } from "@editor/ui/Icon";
-import { Tooltip } from "@editor/components/shared/Tooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { TooltipTip } from "@editor/types/tips";
 
 export interface ToolWorkflowTitleProps {
@@ -22,37 +21,25 @@ export function ToolWorkflowTitle({
   tooltip,
   description,
 }: ToolWorkflowTitleProps) {
-  const titleContent = (
-    <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
-      <Text fw={500} size="lg" p="xs">
-        {title}
-      </Text>
-      {tooltip && (
-        <Icon
-          name="info"
-          size="1.25rem"
-          style={{ color: "var(--icon-files-color)" }}
-        />
-      )}
-    </Flex>
-  );
-
   return (
     <>
-      {tooltip ? (
-        <Flex justify="center" w="100%">
-          <Tooltip
-            content={tooltip.content}
-            tips={tooltip.tips}
-            header={tooltip.header}
-            sidebarTooltip={true}
-          >
-            {titleContent}
-          </Tooltip>
+      <Flex justify="center" w="100%">
+        <Flex align="center" gap="xs">
+          <Text fw={500} size="lg" p="xs">
+            {title}
+          </Text>
+          {tooltip && (
+            <InfoTooltip
+              title={tooltip.header?.title ?? title}
+              tips={tooltip.tips}
+              content={tooltip.content}
+              position="right"
+              width={360}
+              iconSize={16}
+            />
+          )}
         </Flex>
-      ) : (
-        titleContent
-      )}
+      </Flex>
 
       <Text
         size="sm"

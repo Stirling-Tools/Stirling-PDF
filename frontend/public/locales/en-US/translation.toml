@@ -534,7 +534,6 @@ title = "Settings"
 
 [adjustPageScale.tooltip.description]
 text = "Adjust the size of PDF content and change the page dimensions."
-title = "Description"
 
 [adjustPageScale.tooltip.header]
 title = "Page Scale Settings Overview"
@@ -637,7 +636,7 @@ label = "Endpoints"
 manage = "Manage API Endpoints"
 
 [admin.settings.advanced.maxDPI]
-description = "Maximum DPI for image processing (0 = unlimited)"
+description = "Highest DPI the server will use when it renders a page. Lower it to bound memory and processing time; raise it for sharper output."
 label = "Maximum DPI"
 
 [admin.settings.advanced.processExecutor]
@@ -731,7 +730,7 @@ permissionNotice = "The tessdata path is not writable. Downloads will be opened 
 
 [admin.settings.ai]
 customProvider = "Custom (OpenAI-compatible)"
-description = "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under."
+description = "Choose where AI runs - the self-hosted Python engine or Stirling Cloud - and set the models and guardrails it uses."
 managedByCloud = "Managed by Stirling Cloud in this mode."
 managedByCloudShort = "Managed by Stirling Cloud"
 
@@ -1235,7 +1234,7 @@ description = "Generate new certificate on each application startup"
 label = "Regenerate on Startup"
 
 [admin.settings.features.serverCertificate.validity]
-description = "Number of days the certificate will be valid"
+description = "How long the generated certificate stays valid, from 1 to 3650 days. The default is 365."
 label = "Certificate Validity (days)"
 
 [admin.settings.folderAccess]
@@ -1309,7 +1308,7 @@ label = "WeasyPrint Executable"
 label = "Pipeline Directories"
 
 [admin.settings.general.customPaths.pipeline.finishedFoldersDir]
-description = "Directory where processed PDFs are outputted (leave empty for default: /pipeline/finishedFolders)"
+description = "Directory where processed PDFs are written (leave empty for the default: /pipeline/finishedFolders)"
 label = "Finished Folders Directory"
 
 [admin.settings.general.customPaths.pipeline.pipelineDir]
@@ -1654,7 +1653,7 @@ standard = "BASIC events plus: user login/logout, account changes, general GET r
 verbose = "STANDARD events plus: continuous polling calls, all GET requests, detailed timing. Warning: high log volume and performance impact."
 
 [admin.settings.security.audit.retentionDays]
-description = "Number of days to retain audit logs (0 = infinite retention)"
+description = "Number of days to retain audit logs (0 = keep indefinitely)"
 label = "Audit Retention (days)"
 
 [admin.settings.security.csrfDisabled]
@@ -1761,7 +1760,7 @@ description = "Access token lifetime in minutes for web clients (default: 1440 =
 label = "Web Token Expiry (minutes)"
 
 [admin.settings.security.loginAttemptCount]
-description = "Maximum number of failed login attempts before account lockout"
+description = "Failed login attempts before the account is locked. Use -1 to disable lockout."
 label = "Login Attempt Limit"
 
 [admin.settings.security.loginMethod]
@@ -2452,8 +2451,7 @@ title = "Auto Rotate Results"
 title = "Settings"
 
 [autoRotate.tooltip.confidenceThreshold]
-text = "How certain the check has to be before a page is turned. Lower it to rotate more pages, raise it to leave more pages untouched."
-title = "Confidence threshold"
+text = "How confident Tesseract must be before an image-only page is rotated. Pages with a readable text layer are decided without this threshold."
 
 [autoRotate.tooltip.description]
 text = "Works out which way up each page should be and turns it the right way round. Pages that are already upright are left alone."
@@ -2524,7 +2522,6 @@ error = "Failed to open billing portal"
 errorFallback = "Please try again or contact support."
 
 [bookletImposition]
-paperSizeNote = "Paper size is automatically derived from your first page."
 submit = "Create Booklet"
 tags = "booklet,imposition,printing,binding,folding,signature"
 title = "Booklet Imposition"
@@ -2583,7 +2580,6 @@ title = "Advanced Options"
 
 [bookletImposition.tooltip.description]
 text = "Creates professional booklets by arranging pages in the correct printing order. Your PDF pages are placed 2-up on landscape sheets so when folded and bound, they read in proper sequence like a real book."
-title = "What is Booklet Imposition?"
 
 [bookletImposition.tooltip.example]
 bullet1 = "Sheet 1 Front: Pages 8, 1  |  Back: Pages 2, 7"
@@ -3016,26 +3012,23 @@ pdfNotReadyDesc = "The signed PDF is being generated. Please try again in a mome
 results = "Signed PDF"
 submit = "Sign PDF"
 
-[certSign.signMode.tooltip.auto]
-text = "Signs with a server <b>self-signed</b> certificate. Same <b>tamper-evident seal</b> and <b>audit trail</b>; typically shows <b>Unverified</b> in viewers."
-title = "Auto - Zero-setup, instant system seal"
-use = "Use when: you need speed and consistent internal identity across reviews and records."
+[certSign.signMode.tooltip.device]
+text = "Uses a certificate from the local system store or a connected PKCS#11 token, so the private key never leaves the hardware it is installed on."
+title = "This device - system certificate or token"
 
 [certSign.signMode.tooltip.header]
 title = "About PDF Signatures"
 
-[certSign.signMode.tooltip.manual]
-text = "Use your own certificate files for brand-aligned identity. Can display <b>Trusted</b> when your CA/chain is recognized."
-title = "Manual - Bring your certificate"
-use = "Use for: customer-facing, legal, compliance."
-
 [certSign.signMode.tooltip.overview]
-text = "Both modes seal the document (any edits are flagged as tampering) and record who/when/how for auditing. Viewer trust depends on the certificate chain."
-title = "How signatures work"
+text = "All three sources seal the document, so any later edit is flagged as tampering, and record who signed, when and how. Whether a viewer shows the signature as trusted depends on the certificate chain."
 
-[certSign.signMode.tooltip.rule]
-text = "Need recipient <b>Trusted</b> status? <b>Manual</b>. Need a fast, tamper-evident seal and audit trail with no setup? <b>Auto</b>."
-title = "Rule of thumb"
+[certSign.signMode.tooltip.server]
+text = "Signs with the certificate configured on the server. The same tamper-evident seal and audit trail, with no per-user certificate handling."
+title = "Server - configured certificate"
+
+[certSign.signMode.tooltip.upload]
+text = "Use your own certificate and key files. This is the option that can show as Trusted in viewers when your CA and chain are recognised."
+title = "Upload - bring your certificate"
 
 [certSign.source]
 device = "This device"
@@ -3132,15 +3125,10 @@ description = "Indicates if document is prepared for high-quality printing."
 title = "Trapped Status"
 
 [changeMetadata.tooltip.customFields]
-bullet1 = "Add any custom fields relevant to your document"
-bullet2 = "Examples: Department, Project, Version, Status"
-bullet3 = "Both key and value are required for each entry"
 text = "Add your own custom key-value metadata pairs."
 title = "Custom Metadata"
 
 [changeMetadata.tooltip.dates]
-bullet1 = "Creation Date: When original document was made"
-bullet2 = "Modification Date: When last changed"
 text = "When the document was created and modified."
 title = "Date Fields"
 
@@ -3149,11 +3137,6 @@ text = "Complete metadata deletion to ensure privacy."
 title = "Remove Existing Metadata"
 
 [changeMetadata.tooltip.standardFields]
-bullet1 = "Title: Document name or heading"
-bullet2 = "Author: Person who created the document"
-bullet3 = "Subject: Brief description of content"
-bullet4 = "Keywords: Search terms for the document"
-bullet5 = "Creator/Producer: Software used to create the PDF"
 text = "Common PDF metadata fields that describe the document."
 title = "Standard Fields"
 
@@ -3655,8 +3638,10 @@ error = "Error"
 expand = "Expand"
 filterEmpty = "Nothing to filter on"
 goToSlide = "Go to slide {{number}}"
+help = "Help"
 loading = "Loading..."
 moreInformation = "More information"
+moreInformationAbout = "More information about {{topic}}"
 next = "Next"
 noData = "No data"
 nOfTotal = "{{current}} of {{total}}"
@@ -3846,22 +3831,19 @@ title = "Settings"
 
 [compress.tooltip.description]
 text = "Compression is an easy way to reduce your file size. Pick File Size to enter a target size and have us adjust quality for you. Pick Quality to set compression strength manually."
-title = "Description"
-
-[compress.tooltip.grayscale]
-text = "Select this option to convert all images to black and white, which can significantly reduce file size especially for scanned PDFs or image-heavy documents."
-title = "Grayscale"
 
 [compress.tooltip.header]
 title = "Compress Settings Overview"
 
-[compress.tooltip.lineArt]
-text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
-title = "Line Art"
+[compress.tooltip.imageOptions]
+text = "Grayscale converts images to grey, which can significantly reduce the size of scanned or image-heavy documents. Line Art uses ImageMagick for high-contrast black and white; Detail controls how much becomes black, and Edge emphasis controls edge detection."
+title = "Image options"
+
+[compress.tooltip.linearize]
+text = "Reorganises the PDF so a browser can render the first page before downloading the whole file. It improves loading speed but does not change how the pages look."
+title = "Linearize for fast web viewing"
 
 [compress.tooltip.qualityAdjustment]
-bullet1 = "Lower values preserve quality"
-bullet2 = "Higher values reduce file size"
 text = "Drag the slider to adjust the compression strength. Lower values (1-3) preserve quality but result in larger files. Higher values (7-9) shrink the file more but reduce image clarity."
 title = "Quality Adjustment"
 
@@ -4279,9 +4261,11 @@ title = "Crop Results"
 selectArea = "Select Crop Area"
 
 [crop.tooltip]
-description = "Select the area to crop from your PDF by dragging and resizing the blue overlay on the thumbnail."
+auto = "Turn on Auto-crop whitespace to skip the overlay and trim borders automatically"
+description = "Select the area to crop by dragging and resizing the blue overlay on the thumbnail, or type exact coordinates."
 drag = "Drag the overlay to move the crop area"
-precision = "Use coordinate inputs for precise positioning"
+pages = "Choose which pages to crop before running the tool"
+precision = "Use the coordinate inputs for precise positioning"
 resize = "Drag the corner and edge handles to resize"
 title = "How to Crop PDFs"
 
@@ -5269,18 +5253,10 @@ placeholder = "e.g. 150"
 title = "Flatten Results"
 
 [flatten.tooltip.description]
-bullet1 = "Text boxes become regular text (can't be edited)"
-bullet2 = "Checkboxes and buttons become pictures"
-bullet3 = "Great for final versions you don't want changed"
-bullet4 = "Ensures consistent appearance across all devices"
-text = "Flattening makes your PDF non-editable by turning fillable forms and buttons into regular text and images. The PDF will look exactly the same, but no one can change or fill in the forms anymore. Perfect for sharing completed forms, creating final documents for records, or ensuring the PDF looks the same everywhere."
+text = "By default, Flatten renders every page as an image, so forms stop working and text is no longer selectable. Choose Flatten only forms to keep text, links, bookmarks and comments intact."
 title = "What does flattening do?"
 
 [flatten.tooltip.formsOnly]
-bullet1 = "Forms become non-editable"
-bullet2 = "Links still work when clicked"
-bullet3 = "Comments and notes remain visible"
-bullet4 = "Bookmarks still help you navigate"
 text = "This option only removes the ability to fill in forms, but keeps other features working like clicking links, viewing bookmarks, and reading comments."
 title = "What does 'Flatten only forms' mean?"
 
@@ -5553,30 +5529,6 @@ count_one = "{{count}} participant selected"
 count_other = "{{count}} participants selected"
 label = "Select participants"
 placeholder = "Choose participants to sign..."
-
-[groupSigning.tooltip]
-header = "About Group Signing"
-
-[groupSigning.tooltip.finalization]
-bullet1 = "The final PDF includes all accepted signatures"
-bullet2 = "Review outstanding participants before finalizing with partial signatures"
-bullet3 = "Finalization closes the request; outstanding participants can no longer sign"
-description = "After at least one participant has signed, the owner can finalize the request and generate the signed PDF."
-title = "Finalization Process"
-
-[groupSigning.tooltip.roles]
-bullet1 = "Owner (you): Creates session, configures signature defaults, finalizes document"
-bullet2 = "Participants: Choose a certificate and optionally place a visible signature on the PDF"
-bullet3 = "Participants can adjust their signature reason and location before submitting"
-description = "The owner sets request defaults; each participant chooses their certificate and optional visible mark."
-title = "Participant Roles"
-
-[groupSigning.tooltip.sequential]
-bullet1 = "Participants do not need to wait for another signer"
-bullet2 = "Track each participant's progress in Signing Sessions"
-bullet3 = "A due date is a reminder; it does not expire access"
-description = "Assigned participants can review and sign independently, in any order."
-title = "Signing in Any Order"
 
 [guestBanner]
 dismiss = "Dismiss banner"
@@ -6339,26 +6291,27 @@ strict = "Strict (abort if text found)"
 
 [ocr.tooltip.advanced.clean]
 text = "Preprocesses the input by removing noise, enhancing contrast, and optimizing the image for better OCR recognition before processing."
-title = "Clean Input File"
 
 [ocr.tooltip.advanced.cleanFinal]
 text = "Post-processes the final PDF by removing OCR artifacts and optimizing the text layer for better readability and smaller file size."
-title = "Clean Final Output"
+
+[ocr.tooltip.advanced.cleanup]
+title = "Page cleanup"
 
 [ocr.tooltip.advanced.compatibility]
 text = "Uses OCR 'sandwich PDF' mode: results in larger files, but more reliable with certain languages and older PDF software. By default we use hOCR for smaller, modern PDFs."
-title = "Compatibility Mode"
 
 [ocr.tooltip.advanced.deskew]
 text = "Automatically corrects skewed or tilted pages to improve OCR accuracy. Useful for scanned documents that weren't perfectly aligned."
-title = "Deskew Pages"
 
 [ocr.tooltip.advanced.header]
 title = "Advanced OCR Processing"
 
+[ocr.tooltip.advanced.output]
+title = "Output"
+
 [ocr.tooltip.advanced.sidecar]
 text = "Generates a separate .txt file alongside the PDF containing all extracted text content for easy access and processing."
-title = "Create Text File"
 
 [ocr.tooltip.header]
 title = "OCR Settings Overview"
@@ -6375,10 +6328,9 @@ text = "Optical Character Recognition (OCR) helps you turn scanned or screenshot
 title = "OCR Mode"
 
 [ocr.tooltip.output]
-bullet1 = "Searchable PDF embeds text behind the original image."
-bullet2 = "HOCR XML returns a structured machine-readable file."
-bullet3 = "Plain-text sidecar creates a separate .txt file with raw content."
-text = "Decide how you want the text output formatted:"
+bullet1 = "Enable Create a text file in Advanced to also get a .txt sidecar, delivered with the PDF in a ZIP."
+bullet2 = "Compatibility Mode in Advanced embeds the text as a separate layer for readers that expect it."
+text = "OCR always returns a searchable PDF with the recognised text behind the original page image."
 title = "Output"
 
 [onboarding]
@@ -6557,19 +6509,14 @@ title = "Overlay Results"
 [overlay-pdfs.settings]
 title = "Settings"
 
-[overlay-pdfs.tooltip.counts]
-text = "Provide a positive number for each overlay file showing how many pages to take before moving to the next. Required when mode is Fixed Repeat."
-title = "Counts (Fixed Repeat only)"
-
 [overlay-pdfs.tooltip.description]
 text = "Combine a base PDF with one or more overlay PDFs. Overlays can be applied page-by-page in different modes and placed in the foreground or background."
-title = "Description"
 
 [overlay-pdfs.tooltip.header]
 title = "Overlay PDFs Overview"
 
 [overlay-pdfs.tooltip.mode]
-fixedRepeat = "Fixed Repeat Overlay: Take a set number of pages from each overlay before moving to the next. Use Counts to set the numbers."
+fixedRepeat = "Fixed Repeat Overlay: Repeat each overlay file's pages a set number of times before moving to the next overlay."
 interleaved = "Interleaved Overlay: Take one page from each overlay in turn."
 sequential = "Sequential Overlay: Use pages from the first overlay PDF until it ends, then move to the next."
 text = "Choose how to distribute overlay pages across the base PDF pages."
@@ -6776,40 +6723,6 @@ title = "Page Remover"
 
 [pageSelection.tooltip]
 description = "Choose which pages to use for the operation. Supports single pages, ranges, formulas, and the all keyword."
-
-[pageSelection.tooltip.complex]
-bullet1 = "<strong>1,3-5,8,2n</strong> → pages 1, 3–5, 8, plus evens"
-bullet2 = "<strong>10-,2n-1</strong> → from page 10 to end + odd pages"
-description = "Mix different types."
-title = "Complex Combinations"
-
-[pageSelection.tooltip.header]
-title = "Page Selection Guide"
-
-[pageSelection.tooltip.individual]
-bullet1 = "<strong>1,3,5</strong> → selects pages 1, 3, 5"
-bullet2 = "<strong>2,7,12</strong> → selects pages 2, 7, 12"
-description = "Enter numbers separated by commas."
-title = "Individual Pages"
-
-[pageSelection.tooltip.mathematical]
-bullet1 = "<strong>2n</strong> → all even pages (2, 4, 6…)"
-bullet2 = "<strong>2n-1</strong> → all odd pages (1, 3, 5…)"
-bullet3 = "<strong>3n</strong> → every 3rd page (3, 6, 9…)"
-bullet4 = "<strong>4n-1</strong> → pages 3, 7, 11, 15…"
-description = "Use n in formulas for patterns."
-title = "Mathematical Functions"
-
-[pageSelection.tooltip.ranges]
-bullet1 = "<strong>3-6</strong> → selects pages 3–6"
-bullet2 = "<strong>10-15</strong> → selects pages 10–15"
-bullet3 = "<strong>5-</strong> → selects pages 5 to end"
-description = "Use - for consecutive pages."
-title = "Page Ranges"
-
-[pageSelection.tooltip.special]
-bullet1 = "<strong>all</strong> → selects all pages"
-title = "Special Keywords"
 
 [pageTracks]
 blankPage = "Blank page"
@@ -7151,8 +7064,6 @@ upgradeCompleteMessage = "Your subscription has been upgraded successfully. Your
 upgradeSuccess = "Payment successful! Your subscription has been upgraded. The license has been updated on your server. You will receive a confirmation email shortly."
 upgradeTitle = "Upgrade to {{planName}}"
 yearly = "Yearly"
-
-[payment.addCapacity]
 
 [payment.adjustTeam]
 title = "Adjust Team plan"
@@ -7670,21 +7581,6 @@ undo = "Undo"
 undoTooltip = "Undo ({{shortcut}})"
 unlock = "Unlock selection"
 unlockTooltip = "Unlock selection - makes it editable again"
-
-[pdfTextEditor.tooltip.alpha]
-text = "This alpha viewer is still evolving-certain fonts, colors, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
-title = "Alpha Viewer"
-
-[pdfTextEditor.tooltip.header]
-title = "Preview Limitations"
-
-[pdfTextEditor.tooltip.previewVariance]
-text = "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible."
-title = "Preview Variance"
-
-[pdfTextEditor.tooltip.textFocus]
-text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
-title = "Text and Image Focus"
 
 [pdfTextEditor.zoom]
 fit = "Fit"
@@ -8427,8 +8323,6 @@ rateUnknown = "We'll show the exact price at checkout."
 [portal.billing.prepaid.consent]
 label = "I understand that when my prepaid capacity is used up or expires after 12 months, processing automatically continues at the standard metered pay-as-you-go rate (up to my spend limit) unless I cancel, and that I can cancel anytime from the billing portal."
 
-[portal.billing.prepaid.deploy]
-
 [portal.billing.prepaid.offer]
 title = "Get 12 months for the price of 10"
 
@@ -8442,15 +8336,9 @@ payOnline = "Pay online"
 poNumber = "PO number (optional)"
 poNumberPlaceholder = "e.g. PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
-
-[portal.billing.prepaid.posture]
-
 [portal.billing.prepaid.review]
 download = "Download quote (PDF)"
 downloading = "Preparing…"
-
-[portal.billing.prepaid.size]
 
 [portal.billing.processor]
 activate = "Switch on the Processor"
@@ -8546,8 +8434,6 @@ useSuggested = "Use suggested · {{amount}} / month"
 body_one = "At {{rate}}/day you reach the cap in ~{{count}} day (~{{monthEnd}} month-end). Suggested limit ~{{suggested}}."
 body_other = "At {{rate}}/day you reach the cap in ~{{count}} days (~{{monthEnd}} month-end). Suggested limit ~{{suggested}}."
 label = "Projected to exceed."
-
-[portal.billing.spendLimitModal]
 
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "Raise it now so automated processing never pauses."
@@ -11365,8 +11251,7 @@ mode = "Mode"
 title = "Redaction Method"
 
 [redact.tooltip.advanced.caseSensitive]
-text = "Only match text in the same case. 'Secret' won't match 'SECRET' when enabled, and [A-Z] in a regex only matches capitals."
-title = "Case Sensitive Matching"
+text = "Case sensitive: 'Secret' won't match 'SECRET'"
 
 [redact.tooltip.advanced.color]
 text = "Customize the appearance of redaction boxes. Black is standard, but you can choose any color. Padding adds extra space around the found text."
@@ -11379,33 +11264,25 @@ title = "Convert to PDF-Image"
 [redact.tooltip.advanced.header]
 title = "Advanced Redaction Settings"
 
+[redact.tooltip.advanced.matching]
+title = "Matching"
+
 [redact.tooltip.advanced.regex]
-bullet1 = "Example: \\d{4}-\\d{2}-\\d{2} to match any dates in YYYY-MM-DD format"
-bullet2 = "Use with caution - test thoroughly"
-text = "Enable regular expressions for advanced pattern matching. Useful for finding phone numbers, emails, or complex patterns."
-title = "Use Regex"
+bullet1 = "Use Regex for patterns such as phone numbers, emails, or \\d{4}-\\d{2}-\\d{2} dates"
 
 [redact.tooltip.advanced.wholeWord]
-text = "Only match complete words, not partial matches. 'John' won't match 'Johnson' when enabled."
-title = "Whole Word Search"
+text = "Whole word only: 'John' won't match 'Johnson'"
 
 [redact.tooltip.manual.apply]
-bullet1 = "Mark as many areas as needed before applying"
-bullet2 = "All pending redactions are applied at once"
-bullet3 = "Redactions cannot be undone after applying"
 text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
 title = "Apply Redactions"
 
 [redact.tooltip.manual.header]
 title = "Manual Redaction Controls"
 
-[redact.tooltip.manual.markArea]
-text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
-title = "Mark Area Tool"
-
-[redact.tooltip.manual.markText]
-text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
-title = "Mark Text Tool"
+[redact.tooltip.manual.mark]
+text = "Select text to mark it, or drag a rectangle for images, signatures and other shapes. Both kinds of mark are redacted together."
+title = "Select or draw in the viewer"
 
 [redact.tooltip.mode.automatic]
 text = "Automatically finds and redacts specified text throughout the document. Perfect for removing consistent sensitive information like names, addresses, or confidential markers."
@@ -11415,12 +11292,12 @@ title = "Automatic Redaction"
 title = "Redaction Method"
 
 [redact.tooltip.mode.manual]
-text = "Click and drag to manually select specific areas to redact. Gives you precise control over what gets redacted. (Coming soon)"
+text = "Select text or drag rectangles directly in the viewer. Use this when you need to see exactly what will be removed before applying the redactions."
 title = "Manual Redaction"
 
 [redact.tooltip.words]
 bullet1 = "Add one word at a time"
-bullet2 = "Press Enter or click 'Add Another' to add"
+bullet2 = "Press Enter or click '+ Add' to add"
 bullet3 = "Click × to remove words"
 
 [redact.tooltip.words.description]
@@ -11481,23 +11358,17 @@ label = "Pixel Whiteness Threshold"
 title = "Remove Blank Pages Settings"
 
 [removeBlanks.tooltip.includeBlankPages]
-bullet1 = "Useful for reviewing what was removed"
-bullet2 = "Helps verify the detection accuracy"
-bullet3 = "Can be disabled to reduce output file size"
 text = "When enabled, creates a separate PDF containing all the blank pages that were detected and removed from the original document."
 title = "Include Detected Blank Pages"
 
 [removeBlanks.tooltip.threshold]
-bullet1 = "0 = Pure black (most restrictive)"
-bullet2 = "128 = Medium gray"
-bullet3 = "255 = Pure white (least restrictive)"
-text = "Controls how white a pixel must be to be considered 'white'. This helps determine what counts as a blank area on the page."
+bullet1 = "0 = only pure white counts (strictest, fewest pages removed)"
+bullet2 = "128 = medium gray"
+bullet3 = "255 = every pixel counts as white (removes almost every image page)"
+text = "Controls how white a pixel must be to count as white. A higher value accepts more shades, so more pages are treated as blank."
 title = "Pixel Whiteness Threshold"
 
 [removeBlanks.tooltip.whitePercent]
-bullet1 = "Lower values (e.g., 80%) = More pages removed"
-bullet2 = "Higher values (e.g., 95%) = Only very blank pages removed"
-bullet3 = "Use higher values for documents with light backgrounds"
 text = "Sets the minimum percentage of white pixels required for a page to be considered blank and removed."
 title = "White Percentage Threshold"
 
@@ -11551,7 +11422,7 @@ title = "Settings"
 
 [removePages.tooltip.examples]
 bullet1 = "Remove first page: 1"
-bullet2 = "Remove last 3 pages: -3"
+bullet2 = "Remove last 3 pages: enter the final range, e.g. 498-500"
 bullet3 = "Remove every other page: 2n"
 bullet4 = "Remove specific scattered pages: 1,5,10,15"
 text = "Here are some common page selection patterns:"
@@ -11649,23 +11520,16 @@ text = "Convert the PDF from RGB color space to CMYK color space, optimized for 
 title = "Convert to CMYK"
 
 [replaceColor.tooltip.custom]
-bullet1 = "Text color - Choose the color for text elements"
-bullet2 = "Background color - Set the background color for the document"
 text = "Define your own text and background colors using the color pickers. Perfect for creating branded documents or specific accessibility requirements."
 title = "Custom Colors"
 
 [replaceColor.tooltip.description]
 text = "Transform PDF colors to improve readability and accessibility. Choose from high contrast presets, invert all colors, or create custom color schemes."
-title = "Description"
 
 [replaceColor.tooltip.header]
 title = "Replace & Invert Color Settings Overview"
 
 [replaceColor.tooltip.highContrast]
-bullet1 = "White text on black background - Classic dark mode"
-bullet2 = "Black text on white background - Standard high contrast"
-bullet3 = "Yellow text on black background - High visibility option"
-bullet4 = "Green text on black background - Alternative high contrast"
 text = "Apply predefined high contrast color combinations designed for better readability and accessibility compliance."
 title = "High Contrast"
 
@@ -11871,7 +11735,7 @@ title = "Settings"
 [scannerImageSplit.tooltip]
 headsUp = "Heads-up"
 headsUpDesc = "Overlapping photos or backgrounds very close in color to the photos can reduce accuracy-try a lighter or darker background and leave more space."
-problem1 = "Photos not detected → increase Tolerance to 30-50"
+problem1 = "Photos not detected -> lower Tolerance (try 10-20) so each photo stands out from the background"
 problem2 = "Too many false detections → increase Minimum Area to 15,000-20,000"
 problem3 = "Crops are too tight → increase Border Size to 5-10"
 problem4 = "Tilted photos not straightened → lower Angle Threshold to ~5°"
@@ -11881,15 +11745,9 @@ setupTips = "Setup tips"
 tip1 = "Use a plain, light background"
 tip2 = "Leave a small gap (≈1 cm) between photos"
 tip3 = "Scan at 300-600 DPI"
-tip4 = "Clean the scanner glass"
 title = "Photo Splitter"
-useCase1 = "Scan whole album pages in one go"
-useCase2 = "Split flatbed batches into separate files"
-useCase3 = "Break collages into individual photos"
-useCase4 = "Pull photos from documents"
 whatThisDoes = "What this does"
 whatThisDoesDesc = "Automatically finds and extracts each photo from a scanned page or composite image-no manual cropping."
-whenToUse = "When to use"
 
 [ScannerImageSplit.selectText]
 1 = "Angle Threshold:"
@@ -12684,37 +12542,6 @@ rotateRight = "Rotate right"
 trim = "Trim to signature"
 trimHint = "Crops the empty space around it"
 
-[signatureSettings.tooltip]
-header = "Signature Appearance Settings"
-
-[signatureSettings.tooltip.location]
-bullet1 = "Examples: \"New York, USA\", \"London Office\", \"Remote\""
-bullet2 = "Not the same as page position"
-bullet3 = "May be required for certain legal jurisdictions"
-description = "Optional geographic location where the signature was applied. Stored in certificate metadata."
-title = "Signature Location"
-
-[signatureSettings.tooltip.logo]
-bullet1 = "Displayed alongside signature and text"
-bullet2 = "Supports PNG, JPG formats"
-bullet3 = "Enhances professional appearance"
-description = "Add a company logo to visible signatures for branding and authenticity."
-title = "Company Logo"
-
-[signatureSettings.tooltip.reason]
-bullet1 = "Examples: \"Approval\", \"Contract Agreement\", \"Review Complete\""
-bullet2 = "Visible in PDF signature properties"
-bullet3 = "Useful for audit trails and compliance"
-description = "Optional text explaining why the document is being signed. Stored in certificate metadata."
-title = "Signature Reason"
-
-[signatureSettings.tooltip.visibility]
-bullet1 = "<b>Visible</b>: Signature appears on PDF with custom appearance"
-bullet2 = "<b>Invisible</b>: Certificate embedded without visual mark"
-bullet3 = "Invisible signatures still provide cryptographic validation"
-description = "Controls whether the signature is visible on the document or embedded invisibly."
-title = "Signature Visibility"
-
 [signingDetail]
 allSigned = "Everyone has signed. Review the document, then finalize."
 awaitingOwner = "The owner will finalize the document once they are ready."
@@ -12955,7 +12782,7 @@ chooseMethod = "Choose Method"
 settings = "Settings"
 
 [split.tooltip.byChapters]
-bullet1 = "Bookmark Level: Which level to split on (1=top level)"
+bullet1 = "Bookmark Level: 0 = top-level bookmarks only; raise it to include deeper levels"
 bullet2 = "Include Metadata: Preserve document properties"
 bullet3 = "Allow Duplicates: Handle repeated bookmark names"
 text = "Use PDF bookmarks to automatically split at chapter boundaries. Requires PDFs with bookmark structure."
@@ -12987,7 +12814,7 @@ title = "Split by Page Divider"
 [split.tooltip.byPages]
 bullet1 = "Single split points: 3,7 (splits after pages 3 and 7)"
 bullet2 = "Range split points: 3-8 (splits before page 3 and after page 8)"
-bullet3 = "Mixed: 2,5-10,15 (splits after page 2, before page 5, after page 10, and after page 15)"
+bullet3 = "Mixed: 2,5-10,15"
 text = "Split your PDF at specific page numbers. Using 'n' splits after page n. Using 'n-m' splits before page n and after page m."
 title = "Split at Page Numbers"
 
@@ -13000,9 +12827,10 @@ text = "Split large PDF pages into smaller printable chunks suitable for standar
 title = "Split for Poster Print"
 
 [split.tooltip.bySections]
-bullet1 = "Horizontal: Number of rows to create"
-bullet2 = "Vertical: Number of columns to create"
-bullet3 = "Merge: Combine all sections into one PDF"
+bullet1 = "Horizontal Divisions sets columns (value + 1)"
+bullet2 = "Vertical Divisions sets rows (value + 1)"
+bullet3 = "Split Mode chooses which pages are cut; Custom lists them"
+bullet4 = "Merge combines every section into one PDF"
 text = "Divide each page into a grid of sections. Useful for splitting documents with multiple columns or extracting specific areas."
 title = "Split by Grid Sections"
 
@@ -14063,13 +13891,6 @@ title = "Appearance Settings"
 [watermark.tooltip.file.header]
 title = "Image Upload"
 
-[watermark.tooltip.file.recommendations]
-bullet1 = "Use logos or stamps with transparent backgrounds"
-bullet2 = "Simple designs work better than complex images"
-bullet3 = "Consider the final document size when choosing resolution"
-text = "Tips for optimal image watermark results."
-title = "Best Practices"
-
 [watermark.tooltip.file.upload]
 bullet1 = "Supports common formats: PNG, JPG, GIF, BMP"
 bullet2 = "PNG with transparency works best"
@@ -14089,7 +13910,6 @@ text = "Convert the final PDF to an image-based format for enhanced security."
 title = "Security Option"
 
 [watermark.tooltip.formatting.size]
-bullet1 = "Larger sizes create more prominent watermarks"
 text = "Adjust the size of your watermark (text or image)."
 title = "Size Control"
 
@@ -14105,9 +13925,6 @@ text = "Adjust the spacing between repeated watermarks across the page."
 title = "Spacing Control"
 
 [watermark.tooltip.textStyle.color]
-bullet1 = "Light gray (#d3d3d3) for subtle watermarks"
-bullet2 = "Black or dark colors for high contrast"
-bullet3 = "Custom colors for branding purposes"
 text = "Choose a color that provides good contrast with your document content."
 title = "Color Selection"
 
@@ -14122,16 +13939,10 @@ title = "Choose Your Watermark"
 title = "Watermark Type Selection"
 
 [watermark.tooltip.type.image]
-bullet1 = "Upload any image format"
-bullet2 = "Maintains image quality"
-bullet3 = "Perfect for logos and stamps"
 text = "Use logos, stamps, or any image as a watermark. Great for branding and visual identification."
 title = "Image Watermarks"
 
 [watermark.tooltip.type.text]
-bullet1 = "Customizable fonts and languages"
-bullet2 = "Adjustable colors and transparency"
-bullet3 = "Ideal for legal or branding text"
 text = "Perfect for adding copyright notices, company names, or confidentiality labels. Supports multiple languages and custom colors."
 title = "Text Watermarks"
 

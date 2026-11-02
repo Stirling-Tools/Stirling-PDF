@@ -5,6 +5,8 @@ interface BrandMarkProps {
   /** Height of the mark (CSS length). */
   height?: string;
   className?: string;
+  /** Hide the mark from assistive tech when adjacent text already names it. */
+  decorative?: boolean;
 }
 
 /**
@@ -15,13 +17,17 @@ interface BrandMarkProps {
  * colour — a self-explaining "this opens a menu" affordance. See
  * BrandMark.css for the morph geometry.
  */
-export function BrandMark({ height = "1.6rem", className }: BrandMarkProps) {
+export function BrandMark({
+  height = "1.6rem",
+  className,
+  decorative = false,
+}: BrandMarkProps) {
   return (
     <Icon
       name="stirling-mark"
       size={height}
       className={`sui-brandmark${className ? ` ${className}` : ""}`}
-      title="Stirling"
+      title={decorative ? undefined : "Stirling"}
     />
   );
 }

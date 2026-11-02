@@ -10,7 +10,6 @@ export const useOverlayPdfsTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("overlay-pdfs.tooltip.description.title", "Description"),
         description: t(
           "overlay-pdfs.tooltip.description.text",
           "Combine a original PDF with one or more overlay PDFs. Overlays can be applied page-by-page in different modes and placed in the foreground or background.",
@@ -33,7 +32,7 @@ export const useOverlayPdfsTips = (): TooltipContent => {
           ),
           t(
             "overlay-pdfs.tooltip.mode.fixedRepeat",
-            "Fixed Repeat Overlay: Take a set number of pages from each overlay before moving to the next. Use Counts to set the numbers.",
+            "Fixed Repeat Overlay: Repeat each overlay file's pages a set number of times before moving to the next overlay.",
           ),
         ],
       },
@@ -49,16 +48,6 @@ export const useOverlayPdfsTips = (): TooltipContent => {
         description: t(
           "overlay-pdfs.tooltip.overlayFiles.text",
           "Select one or more PDFs to overlay on the original. The order of these files affects how pages are applied in Sequential and Fixed Repeat modes.",
-        ),
-      },
-      {
-        title: t(
-          "overlay-pdfs.tooltip.counts.title",
-          "Counts (Fixed Repeat only)",
-        ),
-        description: t(
-          "overlay-pdfs.tooltip.counts.text",
-          "Provide a positive number for each overlay file showing how many pages to take before moving to the next. Required when mode is Fixed Repeat.",
         ),
       },
     ],

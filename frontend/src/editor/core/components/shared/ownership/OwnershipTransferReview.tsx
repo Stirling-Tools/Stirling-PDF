@@ -1,8 +1,7 @@
 import { Trans, useTranslation } from "react-i18next";
 import type { OwnershipTransferFlow } from "@editor/components/shared/ownership/useOwnershipTransfer";
-import { Checkbox, Tooltip } from "@mantine/core";
-import { ActionIcon } from "@editor/ui/ActionIcon";
-import { Icon } from "@editor/ui/Icon";
+import { Checkbox } from "@mantine/core";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 /** Shows the scope before consent, or the remaining local step after cloud ownership commits. */
@@ -59,27 +58,17 @@ export function OwnershipTransferReview({
                           "Subscription and billing stay in place",
                         )}
                       </span>
-                      <Tooltip
-                        multiline
-                        w={300}
-                        zIndex={Z_INDEX_OVER_CONFIG_MODAL + 2}
-                        events={{ hover: true, focus: true, touch: true }}
+                      <InfoTooltip
                         label={t(
                           "ownership.billing",
                           "The subscription, wallet, payment method and existing licenses stay in place. Billing contact details do not change automatically.",
                         )}
-                      >
-                        <ActionIcon
-                          variant="quiet"
-                          size="sm"
-                          aria-label={t(
-                            "ownership.billingDetails",
-                            "Billing details",
-                          )}
-                        >
-                          <Icon name="info" size={16} />
-                        </ActionIcon>
-                      </Tooltip>
+                        ariaLabel={t(
+                          "ownership.billingDetails",
+                          "Billing details",
+                        )}
+                        zIndex={Z_INDEX_OVER_CONFIG_MODAL + 2}
+                      />
                     </div>
                     {status.cloud.linkedInstances > 1 && (
                       <div className="ownership-flow__detail">
@@ -90,32 +79,18 @@ export function OwnershipTransferReview({
                             { count: status.cloud.linkedInstances },
                           )}
                         </span>
-                        <Tooltip
-                          multiline
-                          w={300}
-                          zIndex={Z_INDEX_OVER_CONFIG_MODAL + 2}
-                          events={{
-                            hover: true,
-                            focus: true,
-                            touch: true,
-                          }}
+                        <InfoTooltip
                           label={t(
                             "ownership.instances",
                             "This team has {{count}} linked servers. Their cloud billing stays with this team; other servers' local owners do not change.",
                             { count: status.cloud.linkedInstances },
                           )}
-                        >
-                          <ActionIcon
-                            variant="quiet"
-                            size="sm"
-                            aria-label={t(
-                              "ownership.serverDetails",
-                              "Linked server details",
-                            )}
-                          >
-                            <Icon name="info" size={16} />
-                          </ActionIcon>
-                        </Tooltip>
+                          ariaLabel={t(
+                            "ownership.serverDetails",
+                            "Linked server details",
+                          )}
+                          zIndex={Z_INDEX_OVER_CONFIG_MODAL + 2}
+                        />
                       </div>
                     )}
                     <p className="ownership-flow__muted">

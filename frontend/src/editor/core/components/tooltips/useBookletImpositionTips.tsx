@@ -15,20 +15,10 @@ export const useBookletImpositionTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t(
-          "bookletImposition.tooltip.description.title",
-          "What is Booklet Imposition?",
-        ),
         description: t(
           "bookletImposition.tooltip.description.text",
           "Creates professional booklets by arranging pages in the correct printing order. Your PDF pages are placed 2-up on landscape sheets so when folded and bound, they read in proper sequence like a real book.",
         ),
-        bullets: [
-          t(
-            "bookletImposition.paperSizeNote",
-            "Paper size is automatically derived from your first page.",
-          ),
-        ],
       },
       {
         title: t(

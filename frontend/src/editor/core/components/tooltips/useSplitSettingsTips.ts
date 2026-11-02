@@ -22,12 +22,18 @@ export const useSplitSettingsTips = (
           title: t("split.tooltip.byPages.title", "Split at Page Numbers"),
           description: t(
             "split.tooltip.byPages.text",
-            "Extract specific pages or ranges from your PDF. Use commas to separate individual pages and hyphens for ranges.",
+            "Split your PDF at specific page numbers. n splits after page n; n-m splits before page n and after page m.",
           ),
           bullets: [
-            t("split.tooltip.byPages.bullet1", "Single pages: 1,3,5"),
-            t("split.tooltip.byPages.bullet2", "Page ranges: 1-5,10-15"),
-            t("split.tooltip.byPages.bullet3", "Mixed: 1,3-7,12,15-20"),
+            t(
+              "split.tooltip.byPages.bullet1",
+              "Single split points: 3,7 (splits after pages 3 and 7)",
+            ),
+            t(
+              "split.tooltip.byPages.bullet2",
+              "Range split points: 3-8 (splits before page 3 and after page 8)",
+            ),
+            t("split.tooltip.byPages.bullet3", "Mixed: 2,5-10,15"),
           ],
         },
       ],
@@ -47,15 +53,19 @@ export const useSplitSettingsTips = (
           bullets: [
             t(
               "split.tooltip.bySections.bullet1",
-              "Horizontal: Number of rows to create",
+              "Horizontal Divisions sets columns (value + 1)",
             ),
             t(
               "split.tooltip.bySections.bullet2",
-              "Vertical: Number of columns to create",
+              "Vertical Divisions sets rows (value + 1)",
             ),
             t(
               "split.tooltip.bySections.bullet3",
-              "Merge: Combine all sections into one PDF",
+              "Split Mode chooses which pages are cut; Custom lists them",
+            ),
+            t(
+              "split.tooltip.bySections.bullet4",
+              "Merge combines every section into one PDF",
             ),
           ],
         },
@@ -163,7 +173,7 @@ export const useSplitSettingsTips = (
           bullets: [
             t(
               "split.tooltip.byChapters.bullet1",
-              "Bookmark Level: Which level to split on (1=top level)",
+              "Bookmark Level: 0 = top-level bookmarks only; raise it to include deeper levels",
             ),
             t(
               "split.tooltip.byChapters.bullet2",

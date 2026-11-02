@@ -11,7 +11,7 @@ export function useCropTooltips() {
       {
         description: t(
           "crop.tooltip.description",
-          "Select the area to crop from your PDF by dragging and resizing the blue overlay on the thumbnail.",
+          "Select the area to crop by dragging and resizing the blue overlay on the thumbnail, or type exact coordinates.",
         ),
         bullets: [
           t("crop.tooltip.drag", "Drag the overlay to move the crop area"),
@@ -21,7 +21,15 @@ export function useCropTooltips() {
           ),
           t(
             "crop.tooltip.precision",
-            "Use coordinate inputs for precise positioning",
+            "Use the coordinate inputs for precise positioning",
+          ),
+          t(
+            "crop.tooltip.pages",
+            "Choose which pages to crop before running the tool",
+          ),
+          t(
+            "crop.tooltip.auto",
+            "Turn on Auto-crop whitespace to skip the overlay and trim borders automatically",
           ),
         ],
       },

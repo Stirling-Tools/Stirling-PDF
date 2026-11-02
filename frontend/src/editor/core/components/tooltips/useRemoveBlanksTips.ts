@@ -19,17 +19,17 @@ export const useRemoveBlanksTips = (): TooltipContent => {
         ),
         description: t(
           "removeBlanks.tooltip.threshold.text",
-          "Controls how white a pixel must be to be considered 'white'. This helps determine what counts as a blank area on the page.",
+          "Controls how white a pixel must be to count as white. A higher value accepts more shades, so more pages are treated as blank.",
         ),
         bullets: [
           t(
             "removeBlanks.tooltip.threshold.bullet1",
-            "0 = Pure black (most restrictive)",
+            "0 = only pure white counts (strictest, fewest pages removed)",
           ),
-          t("removeBlanks.tooltip.threshold.bullet2", "128 = Medium gray"),
+          t("removeBlanks.tooltip.threshold.bullet2", "128 = medium gray"),
           t(
             "removeBlanks.tooltip.threshold.bullet3",
-            "255 = Pure white (least restrictive)",
+            "255 = every pixel counts as white (removes almost every image page)",
           ),
         ],
       },
@@ -42,20 +42,6 @@ export const useRemoveBlanksTips = (): TooltipContent => {
           "removeBlanks.tooltip.whitePercent.text",
           "Sets the minimum percentage of white pixels required for a page to be considered blank and removed.",
         ),
-        bullets: [
-          t(
-            "removeBlanks.tooltip.whitePercent.bullet1",
-            "Lower values (e.g., 80%) = More pages removed",
-          ),
-          t(
-            "removeBlanks.tooltip.whitePercent.bullet2",
-            "Higher values (e.g., 95%) = Only very blank pages removed",
-          ),
-          t(
-            "removeBlanks.tooltip.whitePercent.bullet3",
-            "Use higher values for documents with light backgrounds",
-          ),
-        ],
       },
       {
         title: t(
@@ -66,20 +52,6 @@ export const useRemoveBlanksTips = (): TooltipContent => {
           "removeBlanks.tooltip.includeBlankPages.text",
           "When enabled, creates a separate PDF containing all the blank pages that were detected and removed from the original document.",
         ),
-        bullets: [
-          t(
-            "removeBlanks.tooltip.includeBlankPages.bullet1",
-            "Useful for reviewing what was removed",
-          ),
-          t(
-            "removeBlanks.tooltip.includeBlankPages.bullet2",
-            "Helps verify the detection accuracy",
-          ),
-          t(
-            "removeBlanks.tooltip.includeBlankPages.bullet3",
-            "Can be disabled to reduce output file size",
-          ),
-        ],
       },
     ],
   };

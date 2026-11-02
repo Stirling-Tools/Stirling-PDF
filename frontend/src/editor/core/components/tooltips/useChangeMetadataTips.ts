@@ -38,28 +38,6 @@ export const useStandardMetadataTips = (): TooltipContent => {
           "changeMetadata.tooltip.standardFields.text",
           "Common PDF metadata fields that describe the document.",
         ),
-        bullets: [
-          t(
-            "changeMetadata.tooltip.standardFields.bullet1",
-            "Title: Document name or heading",
-          ),
-          t(
-            "changeMetadata.tooltip.standardFields.bullet2",
-            "Author: Person who created the document",
-          ),
-          t(
-            "changeMetadata.tooltip.standardFields.bullet3",
-            "Subject: Brief description of content",
-          ),
-          t(
-            "changeMetadata.tooltip.standardFields.bullet4",
-            "Keywords: Search terms for the document",
-          ),
-          t(
-            "changeMetadata.tooltip.standardFields.bullet5",
-            "Creator/Producer: Software used to create the PDF",
-          ),
-        ],
       },
     ],
   };
@@ -78,16 +56,6 @@ export const useDocumentDatesTips = (): TooltipContent => {
           "changeMetadata.tooltip.dates.text",
           "When the document was created and modified.",
         ),
-        bullets: [
-          t(
-            "changeMetadata.tooltip.dates.bullet1",
-            "Creation Date: When original document was made",
-          ),
-          t(
-            "changeMetadata.tooltip.dates.bullet2",
-            "Modification Date: When last changed",
-          ),
-        ],
       },
     ],
   };
@@ -134,20 +102,6 @@ export const useAdvancedOptionsTips = (): TooltipContent => {
           "changeMetadata.tooltip.customFields.text",
           "Add your own custom key-value metadata pairs.",
         ),
-        bullets: [
-          t(
-            "changeMetadata.tooltip.customFields.bullet1",
-            "Add any custom fields relevant to your document",
-          ),
-          t(
-            "changeMetadata.tooltip.customFields.bullet2",
-            "Examples: Department, Project, Version, Status",
-          ),
-          t(
-            "changeMetadata.tooltip.customFields.bullet3",
-            "Both key and value are required for each entry",
-          ),
-        ],
       },
     ],
   };

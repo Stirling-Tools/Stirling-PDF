@@ -30,7 +30,7 @@ import {
 } from "@processor/api/storageEncryption";
 import { qk } from "@processor/queries/keys";
 import { useFoldPoll } from "@editor/query/useFoldPoll";
-import { InfoHint } from "@processor/components/InfoHint";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { SectionHeader } from "@processor/components/infrastructure/SectionHeader";
 import { EncryptionKeyTable } from "@processor/components/infrastructure/EncryptionKeyTable";
 import { EncryptionMigrationCard } from "@processor/components/infrastructure/EncryptionMigrationCard";
@@ -399,11 +399,11 @@ export function EncryptionPanel({
                       <code ref={fingerprintRef}>
                         {status.masterKeyFingerprint}
                       </code>
-                      <InfoHint
-                        content={t(
+                      <InfoTooltip
+                        label={t(
                           "portal.infrastructure.encryption.masterKey.compareNote",
                         )}
-                        label={t(
+                        ariaLabel={t(
                           "portal.infrastructure.encryption.masterKey.fingerprintHelp",
                         )}
                       />
