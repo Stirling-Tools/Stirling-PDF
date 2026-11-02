@@ -58,7 +58,7 @@ const renderTooltipTitle = (
           tips={tooltip.tips}
           content={tooltip.content}
           position="right"
-          width={360}
+          width={400}
           iconSize={16}
         />
       </Flex>

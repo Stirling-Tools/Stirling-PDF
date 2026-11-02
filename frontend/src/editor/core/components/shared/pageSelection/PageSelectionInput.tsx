@@ -35,7 +35,7 @@ const PageSelectionInput = ({
           tips={pageSelectionTips.tips}
           ariaLabel={t("bulkSelection.pageSelection.title", "Page Selection")}
           position="left"
-          width={360}
+          width={400}
         >
           <button type="button" className="sui-info-trigger-label">
             <Icon

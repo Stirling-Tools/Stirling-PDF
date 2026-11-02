@@ -91,7 +91,7 @@
   flex: 0 0 auto;
   align-items: center;
   gap: 0.625rem;
-  min-height: 2.75rem;
+  min-height: 3rem;
   /* Inline-end padding is reserved for the close control in both directions. */
   padding-block: 0.625rem;
   padding-inline: 1rem 2.75rem;
@@ -159,7 +159,7 @@
   flex: 1 1 auto;
   min-width: 0;
   color: inherit;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.35;
   letter-spacing: -0.005em;
@@ -167,7 +167,7 @@
 
 .sui-info-panel__body {
   min-height: 0;
-  padding: 1rem 1rem 1.5rem;
+  padding: 1.125rem 1.125rem 1.5rem;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
@@ -176,8 +176,8 @@
      clear of the fade once the reader reaches the end. */
   box-shadow: inset 0 -1.25rem 1rem -0.75rem var(--c-surface-raised);
   color: var(--c-text);
-  font-size: 0.875rem;
-  line-height: 1.6;
+  font-size: 0.9375rem;
+  line-height: 1.65;
   overflow-wrap: anywhere;
 }
 
@@ -206,18 +206,18 @@
 /* Each tip is its own block. The rule makes the boundary visible when a
    section's copy runs long; spacing alone disappears in a dense panel. */
 .sui-info-panel__section + .sui-info-panel__section {
-  margin-top: 0.875rem;
-  padding-top: 0.875rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
   border-top: 1px solid var(--c-border-subtle);
 }
 
 .sui-info-panel__section-title {
   margin: 0 0 0.5rem;
   color: var(--c-text);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  line-height: 1.4;
-  letter-spacing: 0.005em;
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
 }
 
 .sui-info-panel__text {
@@ -232,7 +232,7 @@
 
 .sui-info-panel__list li {
   padding-inline-start: 0.125rem;
-  margin-top: 0.4375rem;
+  margin-top: 0.5rem;
 }
 
 .sui-info-panel__list li:first-child {
