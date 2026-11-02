@@ -1,6 +1,6 @@
 /* oxlint-disable no-restricted-imports -- Node build helpers share pure rendering with the app before Vite aliases exist. */
-import type { OgManifest } from "../src/core/utils/publicPageSeo.mjs";
-export * from "../src/core/utils/publicPageSeo.mjs";
+import type { OgManifest } from "../src/editor/core/utils/publicPageSeo.mjs";
+export * from "../src/editor/core/utils/publicPageSeo.mjs";
 export function injectBody(html: string, content: string): string;
 export function prerenderOg(args: {
   distDir: string;
