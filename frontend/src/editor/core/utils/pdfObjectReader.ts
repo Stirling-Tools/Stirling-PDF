@@ -1135,10 +1135,22 @@ export class PdfFileReader {
 
     let fileKey: Uint8Array | null = null;
     if (revision <= 4) {
-      const keyLength = Math.max(
-        5,
-        Math.min(16, (takeNumber(dict, "Length") ?? 40) / 8),
-      );
+      const cf = dict.get("CF");
+      const stdCf = cf?.kind === "dict" ? cf.map.get("StdCF") : undefined;
+      const stdCfMap = stdCf?.kind === "dict" ? stdCf.map : undefined;
+      const cfm = stdCfMap ? takeName(stdCfMap, "CFM") : null;
+      // V4 carries the length on the crypt filter; AESV2 is always 128-bit.
+      const cfLength = stdCfMap ? takeNumber(stdCfMap, "Length") : null;
+      const lengthBits =
+        version === 4 && cfm === "AESV2"
+          ? 128
+          : (takeNumber(dict, "Length") ??
+            (cfLength !== null
+              ? cfLength <= 16
+                ? cfLength * 8
+                : cfLength
+              : 40));
+      const keyLength = Math.max(5, Math.min(16, lengthBits / 8));
       const permissions = takeNumber(dict, "P") ?? -1;
       const encryptMetadata =
         dict.get("EncryptMetadata")?.kind === "bool"
@@ -1724,6 +1736,10 @@ export function rewriteDictBuffer(
   }
   for (const [key, value] of additions) {
     if (edits.has(key) || seen.has(key)) continue;
+    chunks.push(" ", "/" + escapeName(key), " ", value);
+  }
+  for (const [key, value] of edits) {
+    if (value === null || seen.has(key)) continue;
     chunks.push(" ", "/" + escapeName(key), " ", value);
   }
   chunks.push(" >>");

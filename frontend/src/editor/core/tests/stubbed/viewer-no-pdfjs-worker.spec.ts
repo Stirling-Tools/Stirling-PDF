@@ -16,9 +16,7 @@ test.describe("Viewer PDF.js worker elimination & performance verification", () 
   // the request listener below misses the initial navigation it must observe.
   test.use({ autoGoto: false });
 
-  // The perf win is bundle leanness: no static pdf.js import may ride the
-  // initial bundle. pdf.js still loads on demand for features that need a
-  // real parser (layer sidebar), which the layers test below covers.
+  // No static pdf.js import may ride the initial bundle.
   test("initial app load does not download pdf.worker or vendor-pdfjs", async ({
     page,
   }) => {
@@ -35,8 +33,7 @@ test.describe("Viewer PDF.js worker elimination & performance verification", () 
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
 
-    // Let the initial bundle and its lazy chunks settle
-    await page.waitForTimeout(2_000);
+    await page.waitForLoadState("networkidle");
 
     expect(
       workerRequests,
@@ -44,9 +41,7 @@ test.describe("Viewer PDF.js worker elimination & performance verification", () 
     ).toEqual([]);
   });
 
-  // Layer detection runs on panel open, not on document open, so plain viewer
-  // opens stay pdf.js-free. Regression net: 526 KiB of pdf.js transfer per
-  // open before the deferral.
+  // Opening a document must not start any pdf.js worker.
   test("opening a PDF does not download pdf.worker or vendor-pdfjs", async ({
     page,
   }) => {
@@ -71,7 +66,7 @@ test.describe("Viewer PDF.js worker elimination & performance verification", () 
     await expect(page.locator('[data-page-index="0"]').first()).toBeVisible({
       timeout: 30_000,
     });
-    await page.waitForTimeout(2_000);
+    await page.waitForLoadState("networkidle");
 
     expect(
       workerRequests,
@@ -79,10 +74,8 @@ test.describe("Viewer PDF.js worker elimination & performance verification", () 
     ).toEqual([]);
   });
 
-  // Layers no longer need pdf.js: the sidebar walks /OCProperties through
-  // pdf-lib, which also resolves compressed catalogs. This test proves
-  // detection works on an object-stream file and that opening the sidebar
-  // downloads no worker either.
+  // The sidebar parses /OCProperties with PdfFileReader in its own worker;
+  // an object-stream catalog proves it is not a raw byte scan.
   test("layer sidebar lists layers of an object-stream-compressed file without a pdf.js worker", async ({
     page,
   }) => {

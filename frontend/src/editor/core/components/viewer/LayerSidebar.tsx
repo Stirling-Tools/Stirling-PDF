@@ -48,8 +48,8 @@ export function LayerSidebar({
   // Track whether visibility was set by user interaction (not initial load)
   const userChangedRef = useRef(false);
 
-  // Detect on panel open, not on document open: parsing runs only when the
-  // user asks for layers, so viewer opens never pay for pdf.js.
+  // Parse on panel open, not on document open: the layer worker reads the
+  // whole file, so plain viewer opens must not pay for it.
   useEffect(() => {
     if (!file || !documentCacheKey) {
       setStatus("idle");
@@ -71,8 +71,9 @@ export function LayerSidebar({
 
     let cancelled = false;
     let settled = false;
+    const controller = new AbortController();
 
-    readPdfLayers(file)
+    readPdfLayers(file, controller.signal)
       .then((layerList) => {
         settled = true;
         if (cancelled) return;
@@ -115,6 +116,7 @@ export function LayerSidebar({
 
     return () => {
       cancelled = true;
+      controller.abort();
       // A canceled load must not keep its marker: reopening the same document
       // would hit the loaded guard with status stuck at "loading".
       if (!settled && loadedKeyRef.current === documentCacheKey) {
@@ -299,7 +301,9 @@ export function LayerSidebar({
 
   const layerHeaderActions = (
     <>
-      {isApplying && <Loader size="xs" type="dots" />}
+      {(isApplying || (status === "loading" && layers.length > 0)) && (
+        <Loader size="xs" type="dots" />
+      )}
       {status === "ready" && leafIds.length > 0 && (
         <>
           <ActionIcon
@@ -346,7 +350,7 @@ export function LayerSidebar({
         </div>
       )}
 
-      {status === "loading" && (
+      {status === "loading" && layers.length === 0 && (
         <Stack
           gap="md"
           align="center"
@@ -378,8 +382,11 @@ export function LayerSidebar({
         </div>
       )}
 
-      {status === "ready" && layers.length > 0 && (
-        <div className="layer-list">
+      {(status === "ready" || status === "loading") && layers.length > 0 && (
+        <div
+          className="layer-list"
+          aria-busy={status === "loading" || undefined}
+        >
           {layers.map((layer) => renderLayer({ ...layer, depth: 0 }))}
         </div>
       )}

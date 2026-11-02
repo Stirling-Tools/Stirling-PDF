@@ -343,10 +343,12 @@ export function useViewerReadAloud(
         arrayBuffer = cachedArrayBufferRef.current;
       } else {
         arrayBuffer = await getDocumentBytes(currentFile);
+        if (session !== sessionRef.current) return null;
         cachedArrayBufferRef.current = arrayBuffer;
         cachedFileRef.current = currentFile;
       }
 
+      if (session !== sessionRef.current) return null;
       const docPtr = await ensureReadAloudDoc(currentFile, arrayBuffer);
       if (docPtr === null || session !== sessionRef.current) {
         return null;

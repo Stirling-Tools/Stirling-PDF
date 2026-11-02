@@ -127,6 +127,10 @@ async function refIdSet(
   return result;
 }
 
+// Shared across one /Order walk: a DAG of shared refs is acyclic but still
+// expands exponentially without a total cap.
+const MAX_ORDER_NODES = 10_000;
+
 // Normalizes /D/Order into the shape buildLayerTree consumes: OCG ids, nested
 // arrays, and {name, order} nodes for named groups. A labeled group is spec'd
 // as an array whose first element is its text label (`[(Maps) 5 0 R ...]`);
@@ -137,9 +141,12 @@ async function normalizeOrder(
   value: PdfValue | undefined,
   depth = 0,
   path: ReadonlySet<number> = new Set(),
+  budget: { remaining: number } = { remaining: MAX_ORDER_NODES },
 ): Promise<unknown[]> {
   const resolved = await reader.resolveValue(value);
   if (resolved?.kind !== "array" || depth > MAX_ORDER_DEPTH) return [];
+  if (budget.remaining <= 0) return [];
+  budget.remaining -= 1;
 
   let label: string | undefined;
   let start = 0;
@@ -161,6 +168,7 @@ async function normalizeOrder(
       dict.map.get("Order"),
       depth + 1,
       nextPath,
+      budget,
     ),
   });
 
@@ -173,14 +181,18 @@ async function normalizeOrder(
     const target = await reader.resolveValue(entry);
     if (entry.kind === "ref") {
       if (target?.kind === "array") {
-        result.push(await normalizeOrder(reader, target, depth + 1, nextPath));
+        result.push(
+          await normalizeOrder(reader, target, depth + 1, nextPath, budget),
+        );
       } else if (target?.kind === "dict" && target.map.has("Order")) {
         result.push(await dictNode(target, nextPath));
       } else {
         result.push(refId(entry.ref));
       }
     } else if (target?.kind === "array") {
-      result.push(await normalizeOrder(reader, target, depth + 1, path));
+      result.push(
+        await normalizeOrder(reader, target, depth + 1, path, budget),
+      );
     } else if (target?.kind === "dict") {
       result.push(await dictNode(target, path));
     }

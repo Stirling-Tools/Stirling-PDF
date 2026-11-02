@@ -110,6 +110,68 @@ describe("layerUtils", () => {
       expect(bg?.visible).toBe(false);
       expect(wm?.visible).toBe(true);
     });
+
+    it("persists when every layer is hidden", async () => {
+      const bytes = await createPdfWithLayers();
+
+      const modifiedBytes = await applyOCGVisibilityToPdf(
+        bytes.buffer as ArrayBuffer,
+        {
+          "Background Layer": false,
+          "Watermark Layer": false,
+        },
+      );
+
+      const updatedLayers = await extractLayers(
+        await toBlob(modifiedBytes).arrayBuffer(),
+      );
+
+      expect(updatedLayers).toHaveLength(2);
+      expect(updatedLayers.every((layer) => !layer.visible)).toBe(true);
+    });
+
+    it("writes a missing /ON key on the in-place rewrite path", async () => {
+      const doc = await PDFDocument.create();
+      doc.addPage([400, 400]);
+
+      const ocg1Ref = doc.context.register(
+        doc.context.obj({
+          Type: "OCG",
+          Name: PDFString.of("Background Layer"),
+        }),
+      );
+      const ocg2Ref = doc.context.register(
+        doc.context.obj({
+          Type: "OCG",
+          Name: PDFString.of("Watermark Layer"),
+        }),
+      );
+      const dDictRef = doc.context.register(
+        doc.context.obj({
+          BaseState: PDFName.of("ON"),
+          Order: [ocg1Ref, ocg2Ref],
+        }),
+      );
+      const ocPropertiesRef = doc.context.register(
+        doc.context.obj({ OCGs: [ocg1Ref, ocg2Ref], D: dDictRef }),
+      );
+      doc.catalog.set(PDFName.of("OCProperties"), ocPropertiesRef);
+
+      const bytes = await doc.save({ useObjectStreams: false });
+      const modifiedBytes = await applyOCGVisibilityToPdf(
+        bytes.buffer as ArrayBuffer,
+        {
+          "Background Layer": true,
+          "Watermark Layer": true,
+        },
+      );
+
+      const updatedLayers = await extractLayers(
+        await toBlob(modifiedBytes).arrayBuffer(),
+      );
+      expect(updatedLayers).toHaveLength(2);
+      expect(updatedLayers.every((layer) => layer.visible)).toBe(true);
+    });
   });
 
   describe("collectLeafIds", () => {

@@ -21,16 +21,31 @@ export type { LayerInfo } from "@editor/components/viewer/layerParser";
 /**
  * Reads OCG layer info for the layers panel. The parse runs in a worker so a
  * large document cannot tie up the main thread, and the worker reads the blob
- * itself, so opening the panel never pulls pdf.js or a copy of the bytes onto
- * the main thread.
+ * itself, so opening the panel never pulls the parse or a copy of the bytes
+ * onto the main thread.
  */
-export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
+export async function readPdfLayers(
+  file: Blob,
+  signal?: AbortSignal,
+): Promise<LayerInfo[]> {
   return await new Promise<LayerInfo[]>((resolve, reject) => {
     const worker = new LayerParseWorker();
-    const settle = (finish: () => void) => {
+    let settled = false;
+    function settle(finish: () => void) {
+      if (settled) return;
+      settled = true;
+      signal?.removeEventListener("abort", onAbort);
       worker.terminate();
       finish();
-    };
+    }
+    function onAbort() {
+      settle(() => reject(new DOMException("Aborted", "AbortError")));
+    }
+    if (signal?.aborted) {
+      onAbort();
+      return;
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
     worker.onmessage = (event: MessageEvent<LayerParseResponse>) => {
       const message = event.data;
       if ("error" in message) {
