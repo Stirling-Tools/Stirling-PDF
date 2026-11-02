@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { MemoryRouter } from "react-router-dom";
-import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
-import UserSelector from "@app/components/shared/UserSelector";
-import { fetchUsers } from "@app/api/users";
-import { alert } from "@app/components/toast";
+import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
+import UserSelector from "@editor/components/shared/UserSelector";
+import { fetchUsers } from "@editor/api/users";
+import { alert } from "@editor/components/toast";
 
-vi.mock("@app/api/users", () => ({ fetchUsers: vi.fn() }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@editor/api/users", () => ({ fetchUsers: vi.fn() }));
+vi.mock("@editor/components/toast", () => ({ alert: vi.fn() }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (_k: string, fallback?: string) => fallback ?? _k,
@@ -18,7 +18,7 @@ const authState = vi.hoisted(() => ({
   user: { id: "1" } as { id: string } | null,
   isAnonymous: false,
 }));
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => authState }));
+vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => authState }));
 
 const mockFetch = vi.mocked(fetchUsers);
 
