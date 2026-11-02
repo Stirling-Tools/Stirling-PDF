@@ -57,6 +57,8 @@ import org.springframework.mock.web.MockMultipartFile;
 import com.sun.net.httpserver.HttpServer;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.service.OfficeConversionService;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -1449,13 +1451,17 @@ class OfficeConversionMatrixTest {
         EndpointConfiguration endpointConfiguration = mock(EndpointConfiguration.class);
         lenient().when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
         lenient().when(endpointConfiguration.isGroupEnabled("Python")).thenReturn(false);
+        OfficeConversionService officeConversionService = mock(OfficeConversionService.class);
+        lenient().when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
         return new ConvertOfficeController(
                 mock(CustomPDFDocumentFactory.class),
                 runtimePathConfig,
                 new CustomHtmlSanitizer(ssrfProtectionService, applicationProperties),
                 new OfficeDocumentSanitizer(ssrfProtectionService, applicationProperties),
                 endpointConfiguration,
-                mock(TempFileManager.class));
+                mock(TempFileManager.class),
+                officeConversionService,
+                mock(OfficeToPdfService.class));
     }
 
     private static boolean hasImage(PDDocument document) throws IOException {

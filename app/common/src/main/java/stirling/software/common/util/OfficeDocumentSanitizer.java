@@ -82,6 +82,16 @@ public class OfficeDocumentSanitizer {
 
     private static final int COMPOUND_FILE_MINI_SECTOR_SHIFT = 6;
 
+    private static final Set<String> OOXML_EXTENSIONS =
+            Set.of(
+                    "docx", "docm", "dotx", "dotm", "xlsx", "xlsm", "xltx", "xltm", "pptx", "pptm",
+                    "potx", "potm", "ppsx", "ppsm");
+
+    private static final Set<String> ODF_EXTENSIONS =
+            Set.of(
+                    "odt", "ott", "ods", "ots", "odp", "otp", "odg", "otg", "odf", "odc", "odi",
+                    "odm");
+
     private final SsrfProtectionService ssrfProtectionService;
     private final ApplicationProperties applicationProperties;
 
@@ -90,6 +100,14 @@ public class OfficeDocumentSanitizer {
             ApplicationProperties applicationProperties) {
         this.ssrfProtectionService = ssrfProtectionService;
         this.applicationProperties = applicationProperties;
+    }
+
+    public boolean isSanitizableExtension(String extension) {
+        if (extension == null) {
+            return false;
+        }
+        String lower = extension.toLowerCase(Locale.ROOT);
+        return OOXML_EXTENSIONS.contains(lower) || ODF_EXTENSIONS.contains(lower);
     }
 
     public boolean isSanitizationEnabled() {

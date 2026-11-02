@@ -15,10 +15,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -329,7 +329,10 @@ class ConvertOfficeControllerTest {
                     .thenThrow(new ZipBombGuard.ZipBombException("too big"));
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                assertThatThrownBy(() -> controller.convertToPdf(docxFile(zipBytes("word/document.xml"))))
+                assertThatThrownBy(
+                                () ->
+                                        controller.convertToPdf(
+                                                docxFile(zipBytes("word/document.xml"))))
                         .isInstanceOf(ZipBombGuard.ZipBombException.class);
                 pe.verifyNoInteractions();
                 Mockito.verify(officeToPdfService, Mockito.never())
@@ -347,7 +350,8 @@ class ConvertOfficeControllerTest {
                     .thenThrow(new IOException("part could not be sanitized"));
             Set<Path> before = officeWorkDirs();
 
-            assertThatThrownBy(() -> controller.convertToPdf(docxFile(zipBytes("word/document.xml"))))
+            assertThatThrownBy(
+                            () -> controller.convertToPdf(docxFile(zipBytes("word/document.xml"))))
                     .isInstanceOf(IOException.class);
 
             assertThat(officeWorkDirs()).isEqualTo(before);
@@ -362,10 +366,12 @@ class ConvertOfficeControllerTest {
             Set<Path> before = officeWorkDirs();
 
             when(officeToPdfService.handles("docx", null)).thenReturn(false);
-            assertThatThrownBy(() -> controller.convertToPdf(docxFile(zipBytes("word/document.xml"))))
+            assertThatThrownBy(
+                            () -> controller.convertToPdf(docxFile(zipBytes("word/document.xml"))))
                     .isInstanceOf(SecurityException.class);
             when(officeToPdfService.handles("docx", null)).thenReturn(true);
-            assertThatThrownBy(() -> controller.convertToPdf(docxFile(zipBytes("word/document.xml"))))
+            assertThatThrownBy(
+                            () -> controller.convertToPdf(docxFile(zipBytes("word/document.xml"))))
                     .isInstanceOf(SecurityException.class);
 
             assertThat(officeWorkDirs()).isEqualTo(before);
@@ -385,7 +391,10 @@ class ConvertOfficeControllerTest {
                 ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
                 when(executor.runCommandWithOutputHandling(any(List.class))).thenReturn(result);
 
-                assertThatThrownBy(() -> controller.convertToPdf(docxFile(zipBytes("word/document.xml"))))
+                assertThatThrownBy(
+                                () ->
+                                        controller.convertToPdf(
+                                                docxFile(zipBytes("word/document.xml"))))
                         .isInstanceOf(IllegalStateException.class);
             }
 
@@ -444,7 +453,10 @@ class ConvertOfficeControllerTest {
             when(officeToPdfService.canFallBack(any())).thenReturn(false);
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                assertThatThrownBy(() -> controller.convertToPdf(docxFile(zipBytes("word/document.xml"))))
+                assertThatThrownBy(
+                                () ->
+                                        controller.convertToPdf(
+                                                docxFile(zipBytes("word/document.xml"))))
                         .isInstanceOf(IOException.class)
                         .hasMessage("unreadable");
                 pe.verifyNoInteractions();

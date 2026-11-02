@@ -23,10 +23,10 @@ import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.LoggerFactory;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.SsrfProtectionService;
@@ -350,7 +350,7 @@ class OfficeDocumentSanitizerTest {
     }
 
     @Test
-    void sanitize_rejectsRelsPartWithDoctype() throws IOException {
+    void sanitize_stripsExternalTargetFromRelsPartWithDoctype() throws IOException {
         String relsWithDoctype =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE Relationships>"
                         + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
@@ -362,7 +362,12 @@ class OfficeDocumentSanitizerTest {
                 "word/_rels/document.xml.rels", relsWithDoctype.getBytes(StandardCharsets.UTF_8));
         byte[] docx = zip(entries);
 
-        assertThrows(IOException.class, () -> sanitizer.sanitize(docx));
+        byte[] cleaned = sanitizer.sanitize(docx);
+
+        String rels =
+                new String(
+                        unzip(cleaned).get("word/_rels/document.xml.rels"), StandardCharsets.UTF_8);
+        assertFalse(rels.contains("file:///etc/hostname"));
     }
 
     @Test
