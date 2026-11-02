@@ -26,6 +26,7 @@ export const mergeToApiParams = (
   sortType: "orderProvided",
   removeCertSign: parameters.removeDigitalSignature ?? false,
   generateToc: parameters.generateTableOfContents ?? false,
+  generateTocPage: parameters.generateTableOfContentsPage ?? false,
 });
 
 // Reconstruct the tool's UI parameters from a merge-pdfs request body.
@@ -36,6 +37,8 @@ export const mergeFromApiParams = (
     apiParams.removeCertSign ?? defaultParameters.removeDigitalSignature,
   generateTableOfContents:
     apiParams.generateToc ?? defaultParameters.generateTableOfContents,
+  generateTableOfContentsPage:
+    apiParams.generateTocPage ?? defaultParameters.generateTableOfContentsPage,
 });
 
 const buildFormData = (
