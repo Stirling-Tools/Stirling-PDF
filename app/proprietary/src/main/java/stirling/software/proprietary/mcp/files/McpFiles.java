@@ -16,6 +16,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.cluster.KeyValueCache;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.FileStorage;
 import stirling.software.proprietary.mcp.McpCallContext;
@@ -28,12 +31,14 @@ import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.service.FileStorageService;
 
 /** MCP files: the user's temporary stored files when storage is usable, else the temp store. */
+@Slf4j
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class McpFiles {
 
     private static final String PUBLIC_LINK_PATH = "/api/v1/storage/share-links/";
     private static final String PRIVATE_LINK_PATH = "/share/";
+    private static final String TEMP_NAMES = "mcp-temp-file-name";
 
     /** How chat hosts name a stored file (mentions, pickers); tools take it as a fileId. */
     public static final String FILE_URI_PREFIX = "stirling://files/";
@@ -42,16 +47,19 @@ public class McpFiles {
     private final FileStorage tempStore;
     private final UserService userService;
     private final ApplicationProperties applicationProperties;
+    private final KeyValueCache cache;
 
     public McpFiles(
             FileStorageService storage,
             FileStorage tempStore,
             @Lazy UserService userService,
-            ApplicationProperties applicationProperties) {
+            ApplicationProperties applicationProperties,
+            KeyValueCache cache) {
         this.storage = storage;
         this.tempStore = tempStore;
         this.userService = userService;
         this.applicationProperties = applicationProperties;
+        this.cache = cache;
     }
 
     /** A failure whose message is safe to hand back to the model. */
@@ -132,6 +140,7 @@ public class McpFiles {
                                                     in, name, user.getUsername()))
                                     .fileId();
                 }
+                rememberTempName(fileId, name);
                 return new Saved(fileId, name, contentType, size, null, null, false, inline);
             }
             Duration ttl = Duration.ofMinutes(applicationProperties.getMcp().getResultTtlMinutes());
@@ -303,16 +312,40 @@ public class McpFiles {
                 throw new McpFileException(unknown);
             }
             if (maxBytes == Long.MAX_VALUE) {
-                return new Loaded(tempStore.retrieveBytes(fileId), fileId);
+                return new Loaded(tempStore.retrieveBytes(fileId), tempName(fileId));
             }
             limit.require(tempStore.getFileSize(fileId));
             try (InputStream in = tempStore.retrieveInputStream(fileId)) {
-                return new Loaded(limit.read(in), fileId);
+                return new Loaded(limit.read(in), tempName(fileId));
             }
         } catch (SecurityException e) {
             throw new McpFileException(unknown);
         } catch (IOException e) {
             throw new McpFileException("Could not read fileId '" + fileId + "'.");
+        }
+    }
+
+    private void rememberTempName(String fileId, String name) {
+        if (name == null || name.isBlank()) {
+            return;
+        }
+        try {
+            cache.put(
+                    TEMP_NAMES,
+                    fileId,
+                    name,
+                    Duration.ofMinutes(applicationProperties.getMcp().getResultTtlMinutes()));
+        } catch (RuntimeException e) {
+            log.warn("Could not retain an MCP temp file's name: {}", e.getMessage());
+        }
+    }
+
+    private String tempName(String fileId) {
+        try {
+            return cache.get(TEMP_NAMES, fileId).orElse(fileId);
+        } catch (RuntimeException e) {
+            log.warn("Could not read an MCP temp file's name: {}", e.getMessage());
+            return fileId;
         }
     }
 

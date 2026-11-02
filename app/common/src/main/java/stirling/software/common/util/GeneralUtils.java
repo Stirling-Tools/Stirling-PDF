@@ -816,17 +816,17 @@ public class GeneralUtils {
     }
 
     /**
-     * Rejects malformed selections (0, negatives, text, backwards ranges) and ones that match no
-     * page at all; numbers past the end are fine while something else matches, as batches mix
-     * sizes.
+     * Rejects malformed selections (negatives, text, backwards ranges, only commas) and ones that
+     * match no page at all; numbers outside the document are fine while something else matches, as
+     * batches mix sizes. A range may start at 0, which the parser reads as page 1.
      */
     public void requireValidPageSelection(String selection, int totalPages) {
         checkPageSelection(selection, totalPages, true);
     }
 
     /**
-     * Rejects only malformed selections; one that matches no page is allowed, for callers such as
-     * filters where a short file simply has nothing to match.
+     * Rejects only malformed selections, including one made only of commas; one that matches no
+     * page is allowed, for callers such as filters where a short file simply has nothing to match.
      */
     public void requireWellFormedPageSelection(String selection, int totalPages) {
         checkPageSelection(selection, totalPages, false);
@@ -837,13 +837,15 @@ public class GeneralUtils {
             return;
         }
         List<String> malformed = new ArrayList<>();
-        List<String> pastEnd = new ArrayList<>();
+        List<String> outOfRange = new ArrayList<>();
         boolean matchesAPage = false;
+        boolean hasToken = false;
         for (String raw : selection.split(",")) {
             String token = raw.trim();
             if (token.isEmpty()) {
                 continue;
             }
+            hasToken = true;
             if ("all".equalsIgnoreCase(token)) {
                 matchesAPage = matchesAPage || totalPages > 0;
                 continue;
@@ -852,19 +854,19 @@ public class GeneralUtils {
                 if (totalPages > 0 && !evaluateNFunc(token, totalPages).isEmpty()) {
                     matchesAPage = true;
                 } else {
-                    pastEnd.add(token);
+                    outOfRange.add(token);
                 }
                 continue;
             }
             switch (classifyPageToken(token, totalPages)) {
                 case IN_RANGE -> matchesAPage = true;
-                case PAST_END -> pastEnd.add(token);
+                case OUT_OF_RANGE -> outOfRange.add(token);
                 case MALFORMED -> malformed.add(token);
             }
         }
-        List<String> invalid = malformed;
+        List<String> invalid = hasToken ? malformed : List.of(selection);
         if (requireMatch && invalid.isEmpty() && !matchesAPage) {
-            invalid = pastEnd.isEmpty() ? List.of(selection) : pastEnd;
+            invalid = outOfRange.isEmpty() ? List.of(selection) : outOfRange;
         }
         if (!invalid.isEmpty()) {
             throw new IllegalArgumentException(
@@ -878,7 +880,7 @@ public class GeneralUtils {
 
     private enum PageToken {
         IN_RANGE,
-        PAST_END,
+        OUT_OF_RANGE,
         MALFORMED
     }
 
@@ -886,22 +888,21 @@ public class GeneralUtils {
         try {
             if (token.matches("\\d+")) {
                 int page = Integer.parseInt(token);
-                if (page < 1) {
-                    return PageToken.MALFORMED;
-                }
-                return page <= totalPages ? PageToken.IN_RANGE : PageToken.PAST_END;
+                return page >= 1 && page <= totalPages
+                        ? PageToken.IN_RANGE
+                        : PageToken.OUT_OF_RANGE;
             }
             if (token.matches("\\d+\\s*-\\s*\\d*")) {
                 String[] range = token.split("-", -1);
-                int start = Integer.parseInt(range[0].trim());
+                int start = Math.max(1, Integer.parseInt(range[0].trim()));
                 int end =
                         range[1].isBlank()
                                 ? Math.max(start, totalPages)
                                 : Integer.parseInt(range[1].trim());
-                if (start < 1 || end < start) {
+                if (end < start) {
                     return PageToken.MALFORMED;
                 }
-                return start <= totalPages ? PageToken.IN_RANGE : PageToken.PAST_END;
+                return start <= totalPages ? PageToken.IN_RANGE : PageToken.OUT_OF_RANGE;
             }
         } catch (NumberFormatException e) {
             return PageToken.MALFORMED;

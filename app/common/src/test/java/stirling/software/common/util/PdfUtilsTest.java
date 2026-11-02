@@ -20,7 +20,9 @@ import org.junit.jupiter.params.provider.CsvSource;
 class PdfUtilsTest {
 
     @ParameterizedTest
-    @CsvSource({"0", "-1", "abc", "3-1"})
+    @CsvSource(
+            value = {"-1", "abc", "3-1", ",,,"},
+            delimiter = ';')
     void filtersRejectMalformedSelections(String selection) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             doc.addPage(new PDPage());
@@ -32,7 +34,7 @@ class PdfUtilsTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"99", "5-10", "100n", "n+100"})
+    @CsvSource({"99", "5-10", "100n", "n+100", "0"})
     void filtersTreatPagesPastTheEndAsNoMatch(String selection) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage();

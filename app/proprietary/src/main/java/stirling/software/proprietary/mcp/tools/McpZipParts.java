@@ -87,9 +87,14 @@ final class McpZipParts {
 
     /** "pdf", "zip", "image" or "other", so agents know whether a result can be chained. */
     static String outputKind(String contentType, String name) {
-        String type = contentType == null ? "" : contentType.toLowerCase(Locale.ROOT);
+        String type =
+                contentType == null
+                        ? ""
+                        : contentType.split(";", 2)[0].trim().toLowerCase(Locale.ROOT);
         String lower = name == null ? "" : name.toLowerCase(Locale.ROOT);
-        if (type.contains("zip") || lower.endsWith(".zip")) {
+        if ("application/zip".equals(type)
+                || "application/x-zip-compressed".equals(type)
+                || lower.endsWith(".zip")) {
             return "zip";
         }
         if (type.startsWith("application/pdf") || lower.endsWith(".pdf")) {

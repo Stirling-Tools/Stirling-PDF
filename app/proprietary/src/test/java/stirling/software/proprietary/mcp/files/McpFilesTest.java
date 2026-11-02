@@ -11,6 +11,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
 
+import stirling.software.common.cluster.KeyValueCache;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.FileStorage;
 import stirling.software.proprietary.security.model.User;
@@ -41,7 +43,9 @@ class McpFilesTest {
     private final FileStorageService storage = mock(FileStorageService.class);
     private final FileStorage tempStore = mock(FileStorage.class);
     private final ApplicationProperties props = new ApplicationProperties();
-    private final McpFiles files = new McpFiles(storage, tempStore, mock(UserService.class), props);
+    private final KeyValueCache cache = mock(KeyValueCache.class);
+    private final McpFiles files =
+            new McpFiles(storage, tempStore, mock(UserService.class), props, cache);
     private final User owner = new User();
     private final StoredFile file = new StoredFile();
 
@@ -268,6 +272,25 @@ class McpFilesTest {
 
         assertArrayEquals(PDF, loaded.bytes());
         verify(storage, never()).getAccessibleFile(any(), any());
+    }
+
+    @Test
+    void aNameCacheOutageDoesNotPreventSavingOrLoadingATempFile() throws Exception {
+        props.getStorage().setEnabled(false);
+        doThrow(new IllegalStateException("unavailable"))
+                .when(cache)
+                .put(anyString(), anyString(), anyString(), any());
+        when(cache.get(anyString(), anyString()))
+                .thenThrow(new IllegalStateException("unavailable"));
+        when(tempStore.fileExists("tmp-1")).thenReturn(true);
+        when(tempStore.getFileSize("tmp-1")).thenReturn((long) PDF.length);
+        when(tempStore.retrieveInputStream("tmp-1")).thenReturn(new ByteArrayInputStream(PDF));
+
+        McpFiles.Saved saved = files.save(owner, PDF, "out.pdf", "application/pdf", true);
+        McpFiles.Loaded loaded = files.load(owner, saved.fileId());
+
+        assertArrayEquals(PDF, loaded.bytes());
+        assertEquals(saved.fileId(), loaded.name());
     }
 
     @Test
