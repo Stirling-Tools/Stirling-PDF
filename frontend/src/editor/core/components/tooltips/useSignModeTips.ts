@@ -24,7 +24,7 @@ export const useSignModeTips = (): TooltipContent => {
           "Upload - bring your certificate",
         ),
         description: t(
-          "certSign.signMode.tooltip.upload.text",
+          "certSign.signMode.tooltip.upload.body",
           "Use your own certificate and key files. Viewer trust depends on whether the certificate chain is recognised, just as it does for a device certificate.",
         ),
       },

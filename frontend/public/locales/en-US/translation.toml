@@ -3027,7 +3027,7 @@ text = "Signs with the certificate configured on the server. The same tamper-evi
 title = "Server - configured certificate"
 
 [certSign.signMode.tooltip.upload]
-text = "Use your own certificate and key files. Viewer trust depends on whether the certificate chain is recognised, just as it does for a device certificate."
+body = "Use your own certificate and key files. Viewer trust depends on whether the certificate chain is recognised, just as it does for a device certificate."
 title = "Upload - bring your certificate"
 
 [certSign.source]
