@@ -26,7 +26,15 @@ import java.util.Date;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
@@ -474,7 +482,9 @@ class CertSignControllerTest {
                 certSignController.signPDFWithCert(request, httpRequest);
 
         assertNotNull(response.getBody());
-        assertTrue(drainBody(response).length > 0);
+        byte[] signedPdf = drainBody(response);
+        assertTrue(signedPdf.length > 0);
+        assertAppearanceStreamContainsText(signedPdf, "Test");
     }
 
     @Test
@@ -503,7 +513,9 @@ class CertSignControllerTest {
                 certSignController.signPDFWithCert(request, httpRequest);
 
         assertNotNull(response.getBody());
-        assertTrue(drainBody(response).length > 0);
+        byte[] signedPdf = drainBody(response);
+        assertTrue(signedPdf.length > 0);
+        assertAppearanceStreamContainsText(signedPdf, "Křivka");
     }
 
     @Test
@@ -532,7 +544,40 @@ class CertSignControllerTest {
                 certSignController.signPDFWithCert(request, httpRequest);
 
         assertNotNull(response.getBody());
-        assertTrue(drainBody(response).length > 0);
+        byte[] signedPdf = drainBody(response);
+        assertTrue(signedPdf.length > 0);
+        assertAppearanceStreamContainsText(signedPdf, "王");
+    }
+
+    @Test
+    void testSignPdfWithVisibleSignatureAndMixedScriptSubject() throws Exception {
+        byte[] mixedCertBytes = createPkcs12WithSubject("王 and क");
+        MockMultipartFile pdfFile =
+                new MockMultipartFile(
+                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        MockMultipartFile p12File =
+                new MockMultipartFile(
+                        "p12File", "mixed-cert.p12", "application/x-pkcs12", mixedCertBytes);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setFileInput(pdfFile);
+        request.setCertType("PKCS12");
+        request.setP12File(p12File);
+        request.setPassword("password");
+        request.setShowSignature(true);
+        request.setReason("Approved");
+        request.setLocation("New Delhi");
+        request.setName("王 and क");
+        request.setPageNumber(1);
+        request.setShowLogo(false);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertNotNull(response.getBody());
+        byte[] signedPdf = drainBody(response);
+        assertTrue(signedPdf.length > 0);
+        assertAppearanceStreamContainsText(signedPdf, "王 and क");
     }
 
     private byte[] createPkcs12WithSubject(String commonName) throws Exception {
@@ -613,6 +658,80 @@ class CertSignControllerTest {
     private static byte[] readResource(String path) throws java.io.IOException {
         try (InputStream is = new ClassPathResource(path).getInputStream()) {
             return is.readAllBytes();
+        }
+    }
+
+    private static void assertAppearanceStreamContainsText(byte[] signedPdf, String expectedText)
+            throws Exception {
+        try (PDDocument doc = Loader.loadPDF(signedPdf)) {
+            PDAppearanceStream appearanceStream = null;
+            PDAcroForm acroForm = doc.getDocumentCatalog().getAcroForm();
+            if (acroForm != null) {
+                for (PDField field : acroForm.getFields()) {
+                    if (field instanceof PDSignatureField sigField) {
+                        for (PDAnnotationWidget widget : sigField.getWidgets()) {
+                            PDAppearanceStream stream = widget.getNormalAppearanceStream();
+                            if (stream != null) {
+                                appearanceStream = stream;
+                                break;
+                            }
+                        }
+                    }
+                    if (appearanceStream != null) {
+                        break;
+                    }
+                }
+            }
+            if (appearanceStream == null) {
+                for (PDPage page : doc.getPages()) {
+                    for (PDAnnotation annot : page.getAnnotations()) {
+                        if (annot instanceof PDAnnotationWidget widget) {
+                            PDAppearanceStream stream = widget.getNormalAppearanceStream();
+                            if (stream != null) {
+                                appearanceStream = stream;
+                                break;
+                            }
+                        }
+                    }
+                    if (appearanceStream != null) {
+                        break;
+                    }
+                }
+            }
+            assertNotNull(appearanceStream, "Signature widget appearance stream must be present");
+            AppearanceTextExtractor extractor = new AppearanceTextExtractor();
+            String extracted = extractor.extract(appearanceStream);
+            assertTrue(
+                    extracted.contains(expectedText),
+                    () ->
+                            "Expected appearance stream to contain '"
+                                    + expectedText
+                                    + "', but extracted: '"
+                                    + extracted
+                                    + "'");
+        }
+    }
+
+    private static class AppearanceTextExtractor extends PDFTextStripper {
+        AppearanceTextExtractor() throws java.io.IOException {
+            super();
+        }
+
+        String extract(PDAppearanceStream appearanceStream) throws java.io.IOException {
+            PDRectangle bbox = appearanceStream.getBBox();
+            if (bbox == null) {
+                bbox = new PDRectangle(200, 50);
+            }
+            try (PDDocument dummyDoc = new PDDocument()) {
+                PDPage page = new PDPage(bbox);
+                page.setResources(appearanceStream.getResources());
+                page.getCOSObject()
+                        .setItem(
+                                org.apache.pdfbox.cos.COSName.CONTENTS,
+                                appearanceStream.getCOSObject());
+                dummyDoc.addPage(page);
+                return getText(dummyDoc);
+            }
         }
     }
 }
