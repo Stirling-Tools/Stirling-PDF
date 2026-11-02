@@ -81,6 +81,37 @@ class McpUserBindingFilterTest {
     }
 
     @Test
+    void withoutTheAccountCheckAClaimNeverBecomesARealAccount() throws Exception {
+        when(users.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(user("admin")));
+        SecurityContextHolder.getContext().setAuthentication(token("x", "admin"));
+
+        new McpUserBindingFilter(users, "email", false)
+                .doFilter(
+                        new MockHttpServletRequest(),
+                        new MockHttpServletResponse(),
+                        new MockFilterChain());
+
+        assertEquals(
+                McpUserBindingFilter.UNBOUND_PREFIX + "admin",
+                SecurityContextHolder.getContext().getAuthentication().getName());
+    }
+
+    @Test
+    void withNameMatchingOffOnlyTheLinkedAccountBinds() throws Exception {
+        when(users.findBySupabaseId(any())).thenReturn(Optional.empty());
+        when(users.findByUsernameIgnoreCase("legacy@example.com"))
+                .thenReturn(Optional.of(user("legacy@example.com")));
+        SecurityContextHolder.getContext()
+                .setAuthentication(token(UUID.randomUUID().toString(), "legacy@example.com"));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        new McpUserBindingFilter(users, "email", true, false, false)
+                .doFilter(new MockHttpServletRequest(), response, new MockFilterChain());
+
+        assertEquals(403, response.getStatus());
+    }
+
+    @Test
     void guestSessionsAreToldToSignIn() throws Exception {
         Jwt jwt =
                 Jwt.withTokenValue("t")

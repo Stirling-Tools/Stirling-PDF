@@ -40,6 +40,7 @@ import stirling.software.proprietary.mcp.files.McpFiles;
 import stirling.software.proprietary.security.model.User;
 
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 class McpOperationExecutorTest {
@@ -58,6 +59,9 @@ class McpOperationExecutorTest {
     @BeforeEach
     void setUp() throws Exception {
         when(files.user(context)).thenReturn(alice);
+        when(files.inputBudget()).thenAnswer(i -> new McpFiles.InputBudget(Long.MAX_VALUE, 50));
+        when(files.load(any(), anyString(), any(McpFiles.InputBudget.class)))
+                .thenAnswer(i -> files.load(i.getArgument(0), i.getArgument(1)));
         stubSave(alice, saved(LINK, null));
         when(api.post(anyString(), any()))
                 .thenReturn(pdfResponse("OUT".getBytes(StandardCharsets.UTF_8)));
@@ -240,6 +244,36 @@ class McpOperationExecutorTest {
                 OperationMeta.Target.JAVA_ENDPOINT,
                 "/api/v1/general/merge-pdfs",
                 null);
+    }
+
+    @Test
+    void aFileIdsListOverTheFileLimitIsRefusedBeforeAnythingLoads() throws Exception {
+        when(files.inputBudget()).thenAnswer(i -> new McpFiles.InputBudget(Long.MAX_VALUE, 3));
+        ObjectNode args = mapper.createObjectNode();
+        ArrayNode ids = args.putArray("fileIds");
+        for (int i = 0; i < 20; i++) {
+            ids.add("1");
+        }
+
+        ObjectNode result = executor.execute(mergeOp(), args, context);
+
+        assertTrue(result.path("isError").asBoolean(false));
+        String text = result.get("content").get(0).get("text").asText();
+        assertTrue(text.contains("at most 3"), text);
+        verify(files, never()).load(any(), anyString());
+        verify(api, never()).post(anyString(), any());
+    }
+
+    @Test
+    void aRedirectedRefusalIsReportedWithItsReason() {
+        ResponseEntity<Void> refused =
+                ResponseEntity.status(303)
+                        .location(java.net.URI.create("/url-to-pdf?error=error.urlNotReachable"))
+                        .build();
+        assertEquals(
+                "Stirling PDF could not reach that URL.",
+                McpOperationExecutor.redirectReason(refused));
+        assertNull(McpOperationExecutor.redirectReason(ResponseEntity.ok().build()));
     }
 
     @Test

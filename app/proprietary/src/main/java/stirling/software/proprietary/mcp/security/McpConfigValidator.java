@@ -137,9 +137,10 @@ public final class McpConfigValidator {
             findings.add(
                     warn(
                             "mcp.auth.require-existing-account=false: any token your IdP signs can"
-                                    + " invoke MCP tools even if its subject has no Stirling account. Set"
-                                    + " it true unless you intend open access for every IdP-valid"
-                                    + " token."));
+                                    + " invoke MCP tools even if its subject has no Stirling account."
+                                    + " Such callers never act as a Stirling account, so they get no"
+                                    + " stored files or saved automations. Set it true unless you"
+                                    + " intend open access for every IdP-valid token."));
         }
 
         if (mcp.isScopesEnabled()) {

@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -56,7 +58,7 @@ public class McpCallObserver {
         if (perMinute <= 0 || store == null) {
             return 0;
         }
-        String key = "mcp:user:" + (user == null ? "anonymous" : user);
+        String key = user != null ? "mcp:user:" + user : "mcp:anonymous:" + remoteAddress();
         try {
             RateLimitDecision decision = store.tryConsume(key, perMinute, Duration.ofMinutes(1));
             return decision.allowed()
@@ -67,6 +69,13 @@ public class McpCallObserver {
             log.warn("MCP rate limit check failed, allowing the call: {}", e.getMessage());
             return 0;
         }
+    }
+
+    // Signed-out callers are told apart by address so one of them can't use up everyone's quota.
+    private static String remoteAddress() {
+        return RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes a
+                ? a.getRequest().getRemoteAddr()
+                : "unknown";
     }
 
     /** Records one finished call; arguments are never logged as they may hold file bytes. */

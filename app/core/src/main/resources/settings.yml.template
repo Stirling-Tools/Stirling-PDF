@@ -462,7 +462,8 @@ mcp:
   scopesEnabled: true # Enforce mcp.tools.read / mcp.tools.write scopes derived from operation category
   maxRequestBytes: 10485760 # Max size (bytes) of an incoming MCP tool request payload (default 10 MB)
   maxInlineResponseBytes: 10485760 # Max size (bytes) of a result returned inline as base64 (default 10 MB)
-  maxInputFileBytes: 524288000 # Max size (bytes) of a stored file a tool reads as input (default 500 MB). 0 = unlimited
+  maxInputFileBytes: 524288000 # Max total size (bytes) of the stored files one tool call reads as input (default 500 MB). 0 = unlimited
+  maxInputFiles: 50 # Max number of stored files one tool call may name as input. 0 = unlimited
   allowedOperations: [] # Tool allow-list (operation ids, e.g. ['compress-pdf']). Empty = all. When set, ONLY these are exposed over MCP.
   blockedOperations: [] # Tool deny-list (operation ids). Always removed from MCP even if otherwise allowed.
   storeResults: true # Keep results as the user's hidden temporary files (needs storage.enabled and security.enableLogin; falls back to the shared temp store otherwise). 'false' = always the shared temp store
@@ -487,6 +488,7 @@ mcp:
                           # issues aud=authenticated) list that audience here, e.g. ['authenticated'].
     usernameClaim: sub # JWT claim matched against a Stirling username (e.g. 'sub', 'email', 'preferred_username')
     requireExistingAccount: true # Reject tokens whose subject has no enabled Stirling account (recommended)
+    matchUnlinkedByUsername: true # Bind a token to an account with no IdP link when the username claim matches its username
     autoProvisionUsers: false # Create a DISABLED account for an unknown IdP subject instead of returning 403, so an admin can enable it. Only used when requireExistingAccount=true. Disabled accounts count toward licence seats, so leave this off if the IdP allows self sign-up
     builtin: # Only used when mode=builtin
       issuer: "" # Token issuer. Blank derives it from resourceId by stripping the trailing '/mcp'

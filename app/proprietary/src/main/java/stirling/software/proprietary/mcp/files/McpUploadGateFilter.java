@@ -9,6 +9,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.UrlPathHelper;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,6 +28,8 @@ import tools.jackson.databind.ObjectMapper;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class McpUploadGateFilter extends OncePerRequestFilter {
+
+    private static final UrlPathHelper PATHS = new UrlPathHelper();
 
     private final McpUploadLinks links;
     private final ObjectMapper mapper;
@@ -66,11 +69,8 @@ public class McpUploadGateFilter extends OncePerRequestFilter {
         }
     }
 
+    // Decoded and sanitised the way routing sees it, so %75ploads or // cannot slip past the gate.
     private static String path(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        String context = request.getContextPath();
-        return context != null && !context.isEmpty() && uri.startsWith(context)
-                ? uri.substring(context.length())
-                : uri;
+        return PATHS.getPathWithinApplication(request);
     }
 }

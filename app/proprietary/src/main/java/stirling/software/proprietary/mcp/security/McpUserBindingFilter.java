@@ -39,9 +39,17 @@ public class McpUserBindingFilter extends OncePerRequestFilter {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final UserService userService;
+
+    /**
+     * Prefix for callers bound without an account check. A colon is invalid in Stirling usernames
+     * and emails, so an unverified claim can never resolve to a real account's files.
+     */
+    public static final String UNBOUND_PREFIX = "mcp-unbound:";
+
     private final String usernameClaim;
     private final boolean requireExistingAccount;
     private final boolean autoProvisionUsers;
+    private final boolean matchUnlinkedByUsername;
 
     public McpUserBindingFilter(
             UserService userService, String usernameClaim, boolean requireExistingAccount) {
@@ -53,11 +61,21 @@ public class McpUserBindingFilter extends OncePerRequestFilter {
             String usernameClaim,
             boolean requireExistingAccount,
             boolean autoProvisionUsers) {
+        this(userService, usernameClaim, requireExistingAccount, autoProvisionUsers, true);
+    }
+
+    public McpUserBindingFilter(
+            UserService userService,
+            String usernameClaim,
+            boolean requireExistingAccount,
+            boolean autoProvisionUsers,
+            boolean matchUnlinkedByUsername) {
         this.userService = userService;
         this.usernameClaim =
                 (usernameClaim == null || usernameClaim.isBlank()) ? "sub" : usernameClaim;
         this.requireExistingAccount = requireExistingAccount;
         this.autoProvisionUsers = autoProvisionUsers;
+        this.matchUnlinkedByUsername = matchUnlinkedByUsername;
     }
 
     @Override
@@ -88,13 +106,11 @@ public class McpUserBindingFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // Prefer the canonical username from the account record; fall back to the claim when
-            // binding is off.
-            String boundUsername = username;
+            String boundUsername = UNBOUND_PREFIX + username;
             if (requireExistingAccount) {
                 // Supabase (SaaS) subjects are the stable account id; emails can change.
                 Optional<User> account = bySupabaseId(jwt.getSubject());
-                if (account.isEmpty()) {
+                if (account.isEmpty() && matchUnlinkedByUsername) {
                     // A name match linked to another Supabase id is someone else's (e.g. a reused
                     // email), so it must not bind.
                     account =

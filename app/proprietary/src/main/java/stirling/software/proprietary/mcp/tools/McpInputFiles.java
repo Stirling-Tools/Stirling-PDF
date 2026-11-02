@@ -32,15 +32,21 @@ final class McpInputFiles {
     }
 
     /** Files from the {@code fileIds} list, in order; the first failure stops the list. */
-    static List<Input> resolveList(JsonNode args, McpFiles files, User user) {
+    static List<Input> resolveList(
+            JsonNode args, McpFiles files, User user, McpFiles.InputBudget budget) {
         List<Input> inputs = new ArrayList<>();
         JsonNode ids = args == null ? null : args.get("fileIds");
         if (ids == null || !ids.isArray()) {
             return inputs;
         }
+        try {
+            budget.requireRoomFor(ids.size());
+        } catch (McpFiles.McpFileException e) {
+            return List.of(Input.fail(e.getMessage()));
+        }
         for (JsonNode id : ids) {
             try {
-                McpFiles.Loaded loaded = files.load(user, id.asText());
+                McpFiles.Loaded loaded = files.load(user, id.asText(), budget);
                 inputs.add(new Input(loaded.bytes(), loaded.name(), null));
             } catch (McpFiles.McpFileException e) {
                 return List.of(Input.fail(e.getMessage()));
@@ -54,12 +60,13 @@ final class McpInputFiles {
             McpFiles files,
             User user,
             McpFileUrlFetcher fetcher,
-            String fallbackName) {
+            String fallbackName,
+            McpFiles.InputBudget budget) {
         String fileName = McpToolSupport.textArg(args, "fileName");
         String fileId = McpToolSupport.textArg(args, "fileId");
         if (fileId != null) {
             try {
-                McpFiles.Loaded loaded = files.load(user, fileId);
+                McpFiles.Loaded loaded = files.load(user, fileId, budget);
                 return new Input(loaded.bytes(), fileName != null ? fileName : loaded.name(), null);
             } catch (McpFiles.McpFileException e) {
                 return Input.fail(e.getMessage());

@@ -13,6 +13,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.io.ByteArrayResource;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.FileStorage;
@@ -85,6 +87,31 @@ class McpFilesTest {
         when(tempStore.getFileSize("large")).thenReturn(1000L);
         assertThrows(McpFiles.McpFileException.class, () -> files.load(owner, "large", 10));
         verify(tempStore, never()).retrieveInputStream(anyString());
+    }
+
+    @Test
+    void oneCallsInputsShareOneByteBudgetCheckedBeforeEachFileIsOpened() throws Exception {
+        props.getMcp().setMaxInputFileBytes(1500);
+        file.setSizeBytes(1000);
+        when(storage.getAccessibleFile(owner, 7L)).thenReturn(file);
+        when(storage.loadFile(file)).thenReturn(new ByteArrayResource(new byte[1000]));
+        McpFiles.InputBudget budget = files.inputBudget();
+
+        files.load(owner, "7", budget);
+        McpFiles.McpFileException e =
+                assertThrows(McpFiles.McpFileException.class, () -> files.load(owner, "7", budget));
+
+        assertTrue(e.getMessage().contains("input limit for one call"), e.getMessage());
+        verify(storage, times(1)).loadFile(file);
+    }
+
+    @Test
+    void tooManyInputFilesAreRefusedBeforeAnyIsRead() {
+        props.getMcp().setMaxInputFiles(3);
+        McpFiles.InputBudget budget = files.inputBudget();
+        McpFiles.McpFileException e =
+                assertThrows(McpFiles.McpFileException.class, () -> budget.requireRoomFor(4));
+        assertTrue(e.getMessage().contains("at most 3"), e.getMessage());
     }
 
     @Test

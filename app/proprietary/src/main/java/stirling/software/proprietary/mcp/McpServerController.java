@@ -41,7 +41,7 @@ import tools.jackson.databind.node.ObjectNode;
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class McpServerController {
 
-    private static final String PREFERRED_PROTOCOL_VERSION = "2025-06-18";
+    private static final String PREFERRED_PROTOCOL_VERSION = "2025-11-25";
     private static final Set<String> SUPPORTED_PROTOCOL_VERSIONS =
             Set.of("2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05");
     private static final String SERVER_NAME = "stirling-pdf-mcp";

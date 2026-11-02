@@ -2,6 +2,7 @@ package stirling.software.proprietary.mcp.files;
 
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -56,7 +57,7 @@ public class McpUploadLinks {
         byte[] bytes = new byte[32];
         RANDOM.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-        put(token, username, "open");
+        put(token, username, "open", Instant.now().plus(TTL));
         return new Link(token, files.publicBaseUrl() + PATH + token);
     }
 
@@ -80,7 +81,7 @@ public class McpUploadLinks {
                     entry(token)
                             .filter(e -> "open".equals(e.path("state").asText()))
                             .map(e -> e.path("user").asText());
-            owner.ifPresent(user -> put(token, user, "uploading"));
+            owner.ifPresent(user -> put(token, user, "uploading", expiresAt(token)));
             return owner;
         }
     }
@@ -91,13 +92,31 @@ public class McpUploadLinks {
                 .filter(e -> "uploading".equals(e.path("state").asText()))
                 .filter(e -> username.equals(e.path("user").asText()))
                 .isPresent()) {
-            put(token, username, "open");
+            put(token, username, "open", expiresAt(token));
         }
     }
 
-    private void put(String token, String username, String state) {
-        ObjectNode entry = mapper.createObjectNode().put("user", username).put("state", state);
-        cache.put(NAMESPACE, token, entry.toString(), TTL);
+    private void put(String token, String username, String state, Instant expiresAt) {
+        Duration left = Duration.between(Instant.now(), expiresAt);
+        if (left.isNegative() || left.isZero()) {
+            cache.evict(NAMESPACE, token);
+            return;
+        }
+        ObjectNode entry =
+                mapper.createObjectNode()
+                        .put("user", username)
+                        .put("state", state)
+                        .put("expires", expiresAt.toEpochMilli());
+        cache.put(NAMESPACE, token, entry.toString(), left);
+    }
+
+    // Every write keeps the link's original deadline, so retries cannot stretch it past TTL.
+    private Instant expiresAt(String token) {
+        return entry(token)
+                .map(e -> e.path("expires").asLong(0))
+                .filter(ms -> ms > 0)
+                .map(Instant::ofEpochMilli)
+                .orElse(Instant.now());
     }
 
     /** Marks the link used, keeping the result so the assistant can collect the fileId. */
