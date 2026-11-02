@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import stirling.software.proprietary.security.model.User;
 
-/** Lookups the caches answer without a SELECT once warm. */
 public interface UserRepositoryCustom {
 
     /**
@@ -12,4 +11,6 @@ public interface UserRepositoryCustom {
      * this goes through the natural-id cache and the entity cache.
      */
     Optional<User> findByUsernameNatural(String username);
+
+    int updateUserTeamId(Long userId, Long teamId);
 }
