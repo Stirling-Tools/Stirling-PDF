@@ -83,6 +83,38 @@ dependencies {
         runtimeOnly "com.stirling:jpdfium-natives-${platform}:${jpdfiumVersion}"
     }
 
+    // In-process Tesseract (JavaCPP) so builds without the tesseract CLI, like desktop, can OCR.
+    // -PtesseractPlatforms=auto|none|<csv of JavaCPP classifiers>; auto follows the JPDFium
+    // selection above. JavaCPP publishes no musl or windows-arm64 builds.
+    api "org.bytedeco:tesseract:${tesseractJavacppVersion}"
+    def jpdfiumToJavacpp = [
+            'linux-x64'   : 'linux-x86_64',
+            'linux-arm64' : 'linux-arm64',
+            'darwin-x64'  : 'macosx-x86_64',
+            'darwin-arm64': 'macosx-arm64',
+            'windows-x64' : 'windows-x86_64',
+    ]
+    def tesseractPlatformsProp = (project.findProperty('tesseractPlatforms') ?: 'auto').toString().trim()
+    def tesseractPlatforms
+    if (tesseractPlatformsProp == 'auto') {
+        tesseractPlatforms = jpdfiumPlatforms.collect { jpdfiumToJavacpp[it] }.findAll { it }
+    } else if (tesseractPlatformsProp == 'none') {
+        tesseractPlatforms = []
+    } else {
+        tesseractPlatforms = tesseractPlatformsProp.split(',').collect { it.trim() }.findAll { it }
+    }
+    def tesseractInvalid = tesseractPlatforms.findAll { !jpdfiumToJavacpp.values().contains(it) }
+    if (tesseractInvalid) {
+        throw new GradleException("Unknown tesseractPlatforms value(s): ${tesseractInvalid.join(', ')}. " +
+                "Valid: ${jpdfiumToJavacpp.values().join(', ')}, 'auto' or 'none'.")
+    }
+    logger.lifecycle("Tesseract native platforms: ${tesseractPlatforms ? tesseractPlatforms.join(', ') : 'none'}")
+    tesseractPlatforms.each { platform ->
+        runtimeOnly "org.bytedeco:tesseract:${tesseractJavacppVersion}:${platform}"
+        runtimeOnly "org.bytedeco:leptonica:${leptonicaJavacppVersion}:${platform}"
+        runtimeOnly "org.bytedeco:javacpp:${javacppVersion}:${platform}"
+    }
+
     // Bucket4j (local in-process token bucket for RateLimitStore default impl)
     implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
 

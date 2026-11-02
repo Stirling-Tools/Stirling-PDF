@@ -345,6 +345,11 @@ jobs:
           echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported successfully."
 
+      # JavaCPP's dylibs ship unsigned inside the backend jar and fail notarization.
+      - name: Sign native libraries inside the backend jar
+        if: env.SIGN_BUNDLE == 'true' && matrix.platform == 'macos-15'
+        run: task desktop:sign:mac-natives
+
       - name: Check DMG creation dependencies (macOS only)
         if: matrix.platform == 'macos-15'
         run: |

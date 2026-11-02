@@ -6305,6 +6305,11 @@ failed = "OCR operation failed"
 
 [ocr.languagePicker]
 additionalLanguages = "Looking for additional languages?"
+downloads = "Downloads when picked"
+fromThisComputer = "Copied from Tesseract on this computer"
+installableName = "{{language}} ({{size}})"
+installFailed = "Couldn't add {{language}}: {{reason}}"
+installHint = "Languages showing a size are added when you pick them."
 loading = "Loading available languages..."
 viewSetupGuide = "View setup guide →"
 

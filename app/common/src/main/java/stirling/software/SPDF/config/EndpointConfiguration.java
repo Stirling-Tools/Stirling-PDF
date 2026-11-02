@@ -262,13 +262,17 @@ public class EndpointConfiguration {
         }
     }
 
+    /**
+     * Undoes {@link #disableGroup}. A tool group's endpoints were never disabled with it, so they
+     * are left as they are; forcing them on would override an endpoint the admin removed.
+     */
     public void enableGroup(String group) {
         if (disabledGroups.remove(group)) {
             log.debug("Enabling group: {}", group);
         }
         groupDisableReasons.remove(group);
         Set<String> endpoints = endpointGroups.get(group);
-        if (endpoints != null) {
+        if (endpoints != null && !isToolGroup(group)) {
             endpoints.forEach(this::enableEndpoint);
         }
     }
@@ -598,6 +602,9 @@ public class EndpointConfiguration {
         /* OCRmyPDF */
         addEndpointToGroup("OCRmyPDF", "ocr-pdf");
 
+        /* In-process Tesseract (JavaCPP); OCR only, auto-rotate still shells out for OSD */
+        addEndpointToGroup("TesseractNative", "ocr-pdf");
+
         // Multi-tool endpoints - endpoints that can be handled by multiple tools
         addEndpointAlternative("repair", "qpdf");
         addEndpointAlternative("repair", "Ghostscript");
@@ -608,6 +615,7 @@ public class EndpointConfiguration {
         addEndpointAlternative("crop", "Java");
         addEndpointAlternative("ocr-pdf", "tesseract");
         addEndpointAlternative("ocr-pdf", "OCRmyPDF");
+        addEndpointAlternative("ocr-pdf", "TesseractNative");
 
         // file-to-pdf has multiple implementations
         addEndpointAlternative("file-to-pdf", "LibreOffice");
@@ -703,6 +711,7 @@ public class EndpointConfiguration {
                 || "Ghostscript".equals(group)
                 || "LibreOffice".equals(group)
                 || "tesseract".equals(group)
+                || "TesseractNative".equals(group)
                 || "CLI".equals(group)
                 || "Python".equals(group)
                 || "OpenCV".equals(group)

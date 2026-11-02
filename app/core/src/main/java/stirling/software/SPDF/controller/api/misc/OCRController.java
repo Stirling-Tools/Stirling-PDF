@@ -3,11 +3,11 @@ package stirling.software.SPDF.controller.api.misc;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.zip.ZipEntry;
@@ -36,6 +36,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
+import stirling.software.SPDF.service.ocr.NativeTesseractService;
+import stirling.software.SPDF.service.ocr.OcrLanguageInstaller;
+import stirling.software.SPDF.service.ocr.OcrLanguages;
+import stirling.software.SPDF.service.ocr.OcrOptions;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -70,6 +74,8 @@ public class OCRController {
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
     private final RuntimePathConfig runtimePathConfig;
+    private final NativeTesseractService nativeTesseract;
+    private final OcrLanguageInstaller languageInstaller;
 
     private boolean isOcrMyPdfEnabled() {
         return endpointConfiguration.isGroupEnabled("OCRmyPDF");
@@ -79,18 +85,15 @@ public class OCRController {
         return endpointConfiguration.isGroupEnabled("tesseract");
     }
 
+    private boolean isNativeTesseractEnabled() {
+        return nativeTesseract != null
+                && nativeTesseract.isAvailable()
+                && endpointConfiguration.isGroupEnabled(NativeTesseractService.GROUP);
+    }
+
     /** Gets the list of available Tesseract languages from the tessdata directory */
     public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = runtimePathConfig.getTessDataPath();
-        File[] files = new File(tessdataDir).listFiles();
-        if (files == null) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(files)
-                .filter(file -> file.getName().endsWith(".traineddata"))
-                .map(file -> file.getName().replace(".traineddata", ""))
-                .filter(lang -> !"osd".equalsIgnoreCase(lang))
-                .toList();
+        return OcrLanguages.installed(runtimePathConfig.getTessDataPath());
     }
 
     @AutoJobPostMapping(
@@ -170,7 +173,26 @@ public class OCRController {
                         sidecarTextFile != null ? sidecarTextFile.getPath() : null);
                 log.info("OCRmyPDF processing completed successfully");
             }
-            // Use Tesseract only if OCRmyPDF is not available
+            // In-process Tesseract keeps the original pages, so it beats the CLI's raster output
+            else if (isNativeTesseractEnabled()) {
+                // Skipped rather than refused, like the tesseract CLI path: the built-in
+                // "secure ingestion" automation sets both, and desktop has no OCRmyPDF.
+                if (Boolean.TRUE.equals(clean) || Boolean.TRUE.equals(cleanFinal)) {
+                    log.warn("clean/cleanFinal need unpaper, which only OCRmyPDF runs; skipped");
+                }
+                processWithNativeTesseract(
+                        selectedLanguages,
+                        new OcrOptions(
+                                "force-ocr".equals(ocrType),
+                                Boolean.TRUE.equals(deskew),
+                                Boolean.TRUE.equals(rotatePages),
+                                Boolean.TRUE.equals(removeImagesAfter)),
+                        tempInputFile.getPath(),
+                        tempOutputFile.getPath(),
+                        sidecarTextFile != null ? sidecarTextFile.getPath() : null);
+                log.info("In-process Tesseract processing completed successfully");
+            }
+            // The tesseract CLI is the last resort: it rasterises every page
             else if (isTesseractEnabled()) {
                 processWithTesseract(
                         selectedLanguages,
@@ -346,6 +368,42 @@ public class OCRController {
         }
     }
 
+    // Anything but force-ocr skips pages that already have text, matching the OCRmyPDF path.
+    // clean/cleanFinal need unpaper and have no in-process equivalent.
+    private void processWithNativeTesseract(
+            List<String> selectedLanguages,
+            OcrOptions options,
+            Path tempInputFile,
+            Path tempOutputFile,
+            Path sidecarTextPath)
+            throws IOException, InterruptedException {
+        // The desktop app ships without the orientation model and fetches it on first use.
+        if (options.rotatePages() && languageInstaller != null) languageInstaller.ensureOsd();
+        try (TempDirectory tempDir = new TempDirectory(tempFileManager);
+                PDDocument document = pdfDocumentFactory.load(tempInputFile.toFile())) {
+            String sidecar =
+                    nativeTesseract.ocrDocument(
+                            tempInputFile,
+                            document,
+                            selectedLanguages,
+                            options,
+                            ocrRenderDpi(),
+                            tempDir.getPath());
+            document.save(tempOutputFile.toFile());
+            if (sidecarTextPath != null) {
+                Files.writeString(sidecarTextPath, sidecar, StandardCharsets.UTF_8);
+            }
+        }
+    }
+
+    // maxDPI is a safety ceiling for user-supplied values, not a target
+    private int ocrRenderDpi() {
+        if (applicationProperties != null && applicationProperties.getSystem() != null) {
+            return Math.min(OCR_RENDER_DPI, applicationProperties.getSystem().getMaxDPI());
+        }
+        return OCR_RENDER_DPI;
+    }
+
     private void processWithTesseract(
             List<String> selectedLanguages, String ocrType, Path tempInputFile, Path tempOutputFile)
             throws IOException, InterruptedException {
@@ -396,16 +454,7 @@ public class OCRController {
                         // Convert page to image
                         BufferedImage image;
 
-                        // maxDPI is a safety ceiling for user-supplied values, not a target
-                        int renderDpi = OCR_RENDER_DPI;
-                        if (applicationProperties != null
-                                && applicationProperties.getSystem() != null) {
-                            renderDpi =
-                                    Math.min(
-                                            renderDpi,
-                                            applicationProperties.getSystem().getMaxDPI());
-                        }
-                        final int dpi = renderDpi;
+                        final int dpi = ocrRenderDpi();
                         final int currentPageNum = pageNum;
 
                         image =
