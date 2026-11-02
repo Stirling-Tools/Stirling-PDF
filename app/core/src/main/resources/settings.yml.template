@@ -271,6 +271,10 @@ storage:
   #   Supabase Storage    -> endpoint='https://<project>.supabase.co/storage/v1/s3'
   #                          region='<project-region>' pathStyleAccess=true
   #                          (filenames with non-ASCII display fine - the storage key is opaque)
+  #   Neon Object Storage -> endpoint='https://<branch-id>.storage.<cell>.<region>.aws.neon.tech'
+  #                          region='<project-region>' pathStyleAccess=true
+  #                          (copy endpoint + region from Console > Storage or `neon env pull`;
+  #                          access key = credential token_id, secret = s3_secret_access_key)
   #   MinIO (in-cluster)  -> endpoint='http://minio:9000' region='us-east-1'
   #                          pathStyleAccess=true allowPrivateEndpoints=true
   #   Backblaze B2        -> endpoint='https://s3.<region>.backblazeb2.com'
@@ -285,7 +289,7 @@ storage:
     region: us-east-1
     accessKey: "" # blank = fall back to AWS DefaultCredentialsProvider (env / profile / IMDS)
     secretKey: ""
-    pathStyleAccess: false # true for MinIO and Supabase; false for AWS/R2/most CDNs
+    pathStyleAccess: false # true for MinIO, Supabase and Neon; false for AWS/R2/most CDNs
     allowPrivateEndpoints: false # true required when endpoint resolves to a private/loopback IP (e.g. in-cluster MinIO). SSRF guard - leave false for any internet-facing vendor.
     requestChecksumCalculation: WHEN_SUPPORTED # WHEN_SUPPORTED|WHEN_REQUIRED|DISABLED. Set WHEN_REQUIRED if your vendor rejects auto-added x-amz-checksum-* headers (older Backblaze B2, some R2 corner cases).
     responseChecksumValidation: WHEN_SUPPORTED # WHEN_SUPPORTED|WHEN_REQUIRED|DISABLED. Set WHEN_REQUIRED if you see false-positive checksum-mismatch errors on GET from a vendor that never returns checksum headers.
