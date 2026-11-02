@@ -103,6 +103,33 @@ public class PdfUtils {
         }
     }
 
+    /**
+     * Rejects, before rendering, any embedded image whose decoded raster exceeds the limit. The
+     * page render bounds the output canvas, not the intermediate raster PDFBox decodes each image
+     * into, so each image is sized here (soft masks and self-sizing codecs included) up front.
+     */
+    private void requireEmbeddedImagesFit(PDDocument document) throws IOException {
+        Set<COSDictionary> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (PDPage page : document.getPages()) {
+            requireImagesFit(page.getResources(), visited);
+        }
+    }
+
+    private void requireImagesFit(PDResources resources, Set<COSDictionary> visited)
+            throws IOException {
+        if (resources == null || !visited.add(resources.getCOSObject())) {
+            return;
+        }
+        for (COSName name : resources.getXObjectNames()) {
+            PDXObject object = resources.getXObject(name);
+            if (object instanceof PDImageXObject image) {
+                ImageMemoryLimit.requireEmbeddedImageFits(image);
+            } else if (object instanceof PDFormXObject form) {
+                requireImagesFit(form.getResources(), visited);
+            }
+        }
+    }
+
     private boolean containsImage(PDResources resources, Set<COSDictionary> visited)
             throws IOException {
         if (resources == null || !visited.add(resources.getCOSObject())) {
@@ -195,7 +222,7 @@ public class PdfUtils {
 
         try (PDDocument document = pdfDocumentFactory.load(inputStream);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            PdfImageRasterGuard.validate(document);
+            requireEmbeddedImagesFit(document);
             PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             if (!includeAnnotations) {
