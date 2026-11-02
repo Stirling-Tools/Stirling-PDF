@@ -776,24 +776,20 @@ tasks.withType(Test).configureEach {
 // ----------------------------------------------------------------------------
 
 configurations {
-    jacocoRuntimeAgent
     jacocoCli
 }
 
 dependencies {
-    // The :runtime classifier on org.jacoco.agent IS the agent jar - no
-    // unzipping required. Kept on the version the plugin already picks so
-    // agent + reporter line up exactly.
-    jacocoRuntimeAgent "org.jacoco:org.jacoco.agent:${jacoco.toolVersion}:runtime"
     jacocoCli "org.jacoco:org.jacoco.cli:${jacoco.toolVersion}"
 }
 
 tasks.register('copyJacocoAgent', Copy) {
     group = 'verification'
     description = 'Copies the JaCoCo runtime agent jar to build/jacoco/jacocoagent.jar.'
-    from configurations.jacocoRuntimeAgent
+    // Reuse the test agent artifact so mirrors and shared caches need only one agent dependency.
+    from { configurations.jacocoAgent.collect { zipTree(it) } }
+    include 'jacocoagent.jar'
     into layout.buildDirectory.dir('jacoco')
-    rename { 'jacocoagent.jar' }
 }
 
 // Aggregates an externally-produced .exec (e.g. from e2e:live or the cucumber
