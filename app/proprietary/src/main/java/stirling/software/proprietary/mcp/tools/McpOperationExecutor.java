@@ -6,7 +6,6 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -289,8 +288,10 @@ public class McpOperationExecutor {
         try (InputStream in = body.getInputStream()) {
             byte[] bytes = in.readAllBytes();
             boolean zip =
-                    name.toLowerCase(Locale.ROOT).endsWith(".zip")
-                            || (type != null && type.toString().contains("zip"));
+                    "zip"
+                            .equals(
+                                    McpZipParts.outputKind(
+                                            type == null ? null : type.toString(), name));
             if (zip) {
                 out.addAll(McpZipParts.read(bytes));
             } else {

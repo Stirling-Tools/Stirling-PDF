@@ -90,6 +90,8 @@ class McpOutputsTest {
     void outputKindTellsAgentsWhatTheyCanChain() {
         assertEquals("pdf", McpZipParts.outputKind("application/pdf", "a.pdf"));
         assertEquals("zip", McpZipParts.outputKind("application/octet-stream", "a.zip"));
+        assertEquals("zip", McpZipParts.outputKind("application/zip; charset=UTF-8", "a"));
+        assertEquals("document", McpZipParts.outputKind("application/epub+zip", "a.epub"));
         assertEquals("image", McpZipParts.outputKind("image/png", "a.png"));
         assertEquals("text", McpZipParts.outputKind("text/csv", "a.csv"));
         assertEquals("other", McpZipParts.outputKind("application/octet-stream", "a.bin"));

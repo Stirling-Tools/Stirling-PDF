@@ -1,5 +1,6 @@
 package stirling.software.proprietary.mcp.tools;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -620,6 +621,47 @@ class McpPipelineTest {
                 .post(eq("/api/v1/misc/compress-pdf"), any(MultiValueMap.class));
         assertEquals(2, result.path("structuredContent").path("files").size());
         assertTrue(text(result).contains("It made 2 files"), text(result));
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void anEpubIsCarriedToTheNextStepAsOneDocument() throws Exception {
+        for (OperationMeta operation :
+                List.of(
+                        op("pdf-to-epub", OperationCategory.CONVERT, "/api/v1/convert/pdf/epub"),
+                        op(
+                                "ebook-to-pdf",
+                                OperationCategory.CONVERT,
+                                "/api/v1/convert/ebook/pdf"))) {
+            when(catalog.findByOperationId(operation.id())).thenReturn(Optional.of(operation));
+        }
+        byte[] epub =
+                zip("mimetype", "application/epub+zip", "OEBPS/chapter.xhtml", "chapter")
+                        .getBody()
+                        .getContentAsByteArray();
+        Resource body =
+                new ByteArrayResource(epub) {
+                    @Override
+                    public String getFilename() {
+                        return "book.epub";
+                    }
+                };
+        when(api.post(eq("/api/v1/convert/pdf/epub"), any()))
+                .thenReturn(
+                        ResponseEntity.ok()
+                                .contentType(MediaType.parseMediaType("application/epub+zip"))
+                                .body(body));
+        when(api.post(eq("/api/v1/convert/ebook/pdf"), any())).thenReturn(pdf("PDF"));
+
+        ObjectNode result = run(steps("pdf-to-epub", "ebook-to-pdf"));
+
+        assertFalse(result.path("isError").asBoolean(false), result.toString());
+        ArgumentCaptor<MultiValueMap> converted = ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(api).post(eq("/api/v1/convert/ebook/pdf"), converted.capture());
+        Resource input = (Resource) converted.getValue().getFirst("fileInput");
+        assertEquals(List.of(input), converted.getValue().get("fileInput"));
+        assertEquals("book.epub", input.getFilename());
+        assertArrayEquals(epub, input.getContentAsByteArray());
     }
 
     private static ResponseEntity<Resource> zip(String... namesAndContents) throws Exception {
