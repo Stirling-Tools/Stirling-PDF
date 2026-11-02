@@ -5,11 +5,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -81,7 +84,10 @@ class AutoJobPostMappingIntegrationTest {
         when(autoJobPostMapping.resourceWeight()).thenReturn(75);
 
         MultipartFile mockFile = mock(MultipartFile.class);
+        MultipartFile copy = mock(MultipartFile.class);
         when(fileStorage.retrieveFile("test-file-id")).thenReturn(mockFile);
+        when(fileStorage.storeFile(mockFile)).thenReturn("copy-id");
+        when(fileStorage.retrieveFile("copy-id")).thenReturn(copy);
 
         when(jobExecutorService.runJobGeneric(
                         anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
@@ -106,8 +112,30 @@ class AutoJobPostMappingIntegrationTest {
         assertTrue(queueableCaptor.getValue(), "Queueable should be true");
         assertEquals(75, resourceWeightCaptor.getValue(), "Resource weight should be 75");
 
-        // Test that file was resolved
-        assertNotNull(pdfFile.getFileInput(), "File input should be set");
+        // The queued job reads its own copy, which is cleaned up with the job
+        assertSame(copy, pdfFile.getFileInput());
+        verify(request)
+                .setAttribute(
+                        eq(JobExecutorService.PENDING_INPUT_FILE_IDS_ATTR), eq(List.of("copy-id")));
+    }
+
+    @Test
+    void syncFileIdInputReadsStoredFileWithoutCopy() throws Throwable {
+        PDFFile pdfFile = new PDFFile();
+        pdfFile.setFileId("test-file-id");
+        when(joinPoint.getArgs()).thenReturn(new Object[] {pdfFile});
+        when(request.getParameter("async")).thenReturn("false");
+        when(autoJobPostMapping.retryCount()).thenReturn(1);
+        MultipartFile stored = mock(MultipartFile.class);
+        when(fileStorage.retrieveFile("test-file-id")).thenReturn(stored);
+        when(jobExecutorService.runJobGeneric(
+                        anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
+                .thenReturn(ResponseEntity.ok("success"));
+
+        autoJobAspect.wrapWithJobExecution(joinPoint, autoJobPostMapping);
+
+        assertSame(stored, pdfFile.getFileInput());
+        verify(fileStorage, never()).storeFile(any(MultipartFile.class));
     }
 
     @Test

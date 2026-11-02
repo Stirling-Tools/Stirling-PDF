@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction;
@@ -208,6 +209,37 @@ class CustomPDFDocumentFactoryMoreTest {
             }
 
             assertThat(opened).hasSize(2).allMatch(in -> in.closed);
+        }
+
+        @Test
+        @DisplayName("fails before parsing when closing the stream fails")
+        void closeFailureLeavesNoDocument() throws IOException {
+            AtomicInteger parses = new AtomicInteger();
+            CustomPDFDocumentFactory countingFactory =
+                    new CustomPDFDocumentFactory(mock(PdfMetadataService.class)) {
+                        @Override
+                        protected StreamCacheCreateFunction getStreamCacheFunction(
+                                long contentSize, MemorySnapshot mem) {
+                            parses.incrementAndGet();
+                            return super.getStreamCacheFunction(contentSize, mem);
+                        }
+                    };
+            MultipartFile file = mock(MultipartFile.class);
+            when(file.getSize()).thenReturn(CustomPDFDocumentFactory.SMALL_FILE_THRESHOLD + 1);
+            when(file.getInputStream())
+                    .thenAnswer(
+                            invocation ->
+                                    new ByteArrayInputStream(basePdfBytes) {
+                                        @Override
+                                        public void close() throws IOException {
+                                            throw new IOException("close failed");
+                                        }
+                                    });
+
+            assertThatThrownBy(() -> countingFactory.load(file, false)).hasMessage("close failed");
+            assertThatThrownBy(() -> countingFactory.load(file, (String) null))
+                    .hasMessage("close failed");
+            assertThat(parses).hasValue(0);
         }
     }
 

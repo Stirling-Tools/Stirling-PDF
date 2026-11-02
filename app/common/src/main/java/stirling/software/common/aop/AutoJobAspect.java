@@ -267,6 +267,13 @@ public class AutoJobAspect {
                     try {
                         log.debug("Using fileId {} to get file content", pdfFile.getFileId());
                         MultipartFile file = fileStorage.retrieveFile(pdfFile.getFileId());
+                        if (async) {
+                            // The stored file is read lazily, and the source may expire or be
+                            // deleted while the job is queued, so the job gets its own copy.
+                            String copyId = fileStorage.storeFile(file);
+                            recordPendingInputFile(copyId);
+                            file = fileStorage.retrieveFile(copyId);
+                        }
                         pdfFile.setFileInput(file);
                     } catch (Exception e) {
                         throw new RuntimeException(
