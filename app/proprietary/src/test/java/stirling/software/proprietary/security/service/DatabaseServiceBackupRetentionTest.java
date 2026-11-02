@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -15,6 +16,8 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -83,7 +86,20 @@ class DatabaseServiceBackupRetentionTest {
     void exportFailureRetainsExistingBackups() throws Exception {
         PreparedStatement statement = mock(PreparedStatement.class);
         when(connection.prepareStatement(anyString())).thenReturn(statement);
-        when(statement.execute()).thenThrow(new SQLException("Export failed"));
+        AtomicReference<Path> output = new AtomicReference<>();
+        doAnswer(
+                        invocation -> {
+                            output.set(Path.of(invocation.getArgument(1, String.class)));
+                            return null;
+                        })
+                .when(statement)
+                .setString(org.mockito.ArgumentMatchers.eq(1), anyString());
+        when(statement.execute())
+                .thenAnswer(
+                        invocation -> {
+                            Files.writeString(output.get(), "PARTIAL EXPORT;");
+                            throw new SQLException("Export failed");
+                        });
 
         service.exportDatabase();
 
@@ -94,6 +110,14 @@ class DatabaseServiceBackupRetentionTest {
 
     @Test
     void verificationFailureRetainsExistingBackups() throws Exception {
+        Path sameMinuteBackup =
+                backupDir.resolve(
+                        "backup_"
+                                + LocalDateTime.now()
+                                        .format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"))
+                                + ".sql");
+        String previousScript = "CREATE TABLE PREVIOUS_VERIFIED_BACKUP(ID INT);";
+        Files.writeString(sameMinuteBackup, previousScript);
         PreparedStatement statement = mock(PreparedStatement.class);
         when(connection.prepareStatement(anyString())).thenReturn(statement);
         AtomicReference<Path> output = new AtomicReference<>();
@@ -113,7 +137,9 @@ class DatabaseServiceBackupRetentionTest {
 
         service.exportDatabase();
 
-        assertExistingBackupsUnchanged();
+        assertExistingBackupsUnchanged(sameMinuteBackup);
+        assertThat(sameMinuteBackup).hasContent(previousScript);
+        assertThat(output.get()).doesNotExist();
         verify(notifications).notifyBackupsFailure(anyString(), anyString());
         verify(notifications, never()).notifyBackupsSuccess(anyString(), anyString());
     }
@@ -134,14 +160,28 @@ class DatabaseServiceBackupRetentionTest {
         }
         assertThat(userBackup).hasContent("CREATE TABLE USER_BACKUP(ID INT);");
         assertThat(service.getBackupList()).hasSize(7);
-        verify(notifications).notifyBackupsSuccess(anyString(), anyString());
+        try (var paths = Files.list(backupDir)) {
+            assertThat(paths.toList())
+                    .allSatisfy(
+                            path ->
+                                    assertThat(path.getFileName().toString())
+                                            .matches("backup_(user_)?\\d{12}\\.sql"));
+        }
+        service.exportDatabase();
+        assertThat(service.getBackupList()).hasSize(7);
+        verify(notifications, times(2)).notifyBackupsSuccess(anyString(), anyString());
         verify(notifications, never()).notifyBackupsFailure(anyString(), anyString());
     }
 
-    private void assertExistingBackupsUnchanged() throws IOException {
+    private void assertExistingBackupsUnchanged(Path... otherBackups) throws IOException {
         for (int i = 0; i < existingBackups.size(); i++) {
             assertThat(existingBackups.get(i))
                     .hasContent("CREATE TABLE OLD_BACKUP_" + i + "(ID INT);");
+        }
+        List<Path> expected = new ArrayList<>(existingBackups);
+        expected.addAll(List.of(otherBackups));
+        try (var paths = Files.list(backupDir)) {
+            assertThat(paths.toList()).containsExactlyInAnyOrderElementsOf(expected);
         }
     }
 }

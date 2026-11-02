@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.service;
 
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -286,62 +287,99 @@ public class DatabaseService implements DatabaseServiceInterface {
 
         if (isH2Database()) {
             String query = "SCRIPT SIMPLE COLUMNS DROP to ?;";
-
-            Connection conn = null;
+            Path pendingBackup;
             try {
-                conn = DataSourceUtils.getConnection(dataSource);
-                try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                    stmt.setString(1, insertOutputFilePath.toString());
-                    stmt.execute();
+                pendingBackup = Files.createTempFile(BACKUP_DIR, ".backup-", SQL_SUFFIX);
+            } catch (IOException e) {
+                log.error("Could not create database export file", e);
+                backupNotificationService.notifyBackupsFailure(
+                        "Database backup export failed", "Could not create a backup file");
+                return;
+            }
+
+            try {
+                Connection conn = null;
+                try {
+                    conn = DataSourceUtils.getConnection(dataSource);
+                    try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                        stmt.setString(1, pendingBackup.toString());
+                        stmt.execute();
+                    }
+                } catch (SQLException | CannotGetJdbcConnectionException e) {
+                    log.error("Error during database export: {}", e.getMessage(), e);
+                    backupNotificationService.notifyBackupsFailure(
+                            "Database backup export failed",
+                            "Backup file: "
+                                    + insertOutputFilePath.getFileName()
+                                    + " Message: "
+                                    + e.getMessage());
+                    return;
+                } catch (CannotReadScriptException e) {
+                    log.error("Error during database export: File {} not found", pendingBackup);
+                    backupNotificationService.notifyBackupsFailure(
+                            "Database backup export failed",
+                            "Error during database export: File "
+                                    + insertOutputFilePath.getFileName()
+                                    + " not found. Message: "
+                                    + e.getMessage());
+                    return;
+                } finally {
+                    DataSourceUtils.releaseConnection(conn, dataSource);
                 }
-            } catch (SQLException | CannotGetJdbcConnectionException e) {
-                log.error("Error during database export: {}", e.getMessage(), e);
-                backupNotificationService.notifyBackupsFailure(
-                        "Database backup export failed",
-                        "Backup file: "
-                                + insertOutputFilePath.getFileName()
-                                + " Message: "
-                                + e.getMessage());
-                return;
-            } catch (CannotReadScriptException e) {
-                log.error("Error during database export: File {} not found", insertOutputFilePath);
-                backupNotificationService.notifyBackupsFailure(
-                        "Database backup export failed",
-                        "Error during database export: File "
-                                + insertOutputFilePath.getFileName()
-                                + " not found. Message: "
-                                + e.getMessage());
-                return;
-            } finally {
-                DataSourceUtils.releaseConnection(conn, dataSource);
-            }
 
-            if (!verifyBackup(insertOutputFilePath)) {
-                backupNotificationService.notifyBackupsFailure(
-                        "Database backup verification failed",
+                if (!verifyBackup(pendingBackup)) {
+                    backupNotificationService.notifyBackupsFailure(
+                            "Database backup verification failed",
+                            "Backup file: " + insertOutputFilePath.getFileName());
+                    return;
+                }
+
+                try {
+                    Files.move(
+                            pendingBackup,
+                            insertOutputFilePath,
+                            StandardCopyOption.ATOMIC_MOVE,
+                            StandardCopyOption.REPLACE_EXISTING);
+                } catch (AtomicMoveNotSupportedException e) {
+                    Files.move(
+                            pendingBackup,
+                            insertOutputFilePath,
+                            StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                List<FileInfo> filteredBackupList =
+                        new ArrayList<>(
+                                this.getBackupList().stream()
+                                        .filter(
+                                                backup ->
+                                                        !backup.getFileName()
+                                                                        .startsWith(
+                                                                                BACKUP_PREFIX
+                                                                                        + "user_")
+                                                                && !backup.getFilePathAsPath()
+                                                                        .equals(
+                                                                                insertOutputFilePath))
+                                        .toList());
+                if (filteredBackupList.size() > 5) {
+                    deleteOldestBackup(filteredBackupList);
+                }
+
+                backupNotificationService.notifyBackupsSuccess(
+                        "Database backup export completed",
                         "Backup file: " + insertOutputFilePath.getFileName());
-                return;
+                log.debug("Database export completed: {}", insertOutputFilePath);
+            } catch (IOException e) {
+                log.error("Could not publish database backup {}", insertOutputFilePath, e);
+                backupNotificationService.notifyBackupsFailure(
+                        "Database backup export failed",
+                        "Could not publish backup file: " + insertOutputFilePath.getFileName());
+            } finally {
+                try {
+                    Files.deleteIfExists(pendingBackup);
+                } catch (IOException e) {
+                    log.warn("Could not remove incomplete database backup {}", pendingBackup, e);
+                }
             }
-
-            List<FileInfo> filteredBackupList =
-                    new ArrayList<>(
-                            this.getBackupList().stream()
-                                    .filter(
-                                            backup ->
-                                                    !backup.getFileName()
-                                                                    .startsWith(
-                                                                            BACKUP_PREFIX + "user_")
-                                                            && !backup.getFilePathAsPath()
-                                                                    .equals(insertOutputFilePath))
-                                    .toList());
-            if (filteredBackupList.size() > 5) {
-                deleteOldestBackup(filteredBackupList);
-            }
-
-            backupNotificationService.notifyBackupsSuccess(
-                    "Database backup export completed",
-                    "Backup file: " + insertOutputFilePath.getFileName());
-            log.debug("Database export completed: {}", insertOutputFilePath);
         }
     }
 
