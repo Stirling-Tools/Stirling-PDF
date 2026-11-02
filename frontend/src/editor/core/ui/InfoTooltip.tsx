@@ -224,6 +224,16 @@ export function InfoTooltip({
     [closeNow, opened],
   );
 
+  const handleDropdownKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      closeNow(true);
+    },
+    [closeNow],
+  );
+
   useEffect(() => {
     if (!opened || !pinned) return;
     // Move keyboard focus into the disclosure once it is pinned, so screen
@@ -284,7 +294,9 @@ export function InfoTooltip({
     <Popover
       opened={opened}
       onChange={(next) => {
-        if (!next) closeNow(true);
+        // Only outside clicks reach here; Escape is handled on the trigger and
+        // the dropdown so an explicit dismissal can restore focus.
+        if (!next) closeNow(false);
       }}
       position={resolvedPosition}
       offset={8}
@@ -299,7 +311,7 @@ export function InfoTooltip({
       trapFocus={false}
       returnFocus={returnFocusRef.current}
       closeOnClickOutside
-      closeOnEscape
+      closeOnEscape={false}
       transitionProps={{ duration: 120, transition: "fade" }}
     >
       <Popover.Target>{interactiveTrigger}</Popover.Target>
@@ -310,6 +322,7 @@ export function InfoTooltip({
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
         onClick={(event) => event.stopPropagation()}
+        onKeyDownCapture={handleDropdownKeyDown}
       >
         {pinned && (
           <button

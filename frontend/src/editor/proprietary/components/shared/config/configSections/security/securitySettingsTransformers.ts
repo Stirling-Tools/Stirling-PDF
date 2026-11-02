@@ -12,6 +12,7 @@ import type {
 interface SettingsSaveResult {
   sectionData: Record<string, unknown>;
   deltaSettings: Record<string, unknown>;
+  forceKeys?: string[];
 }
 
 export async function fetchSecuritySettings(): Promise<
@@ -83,6 +84,10 @@ export function saveSecuritySettings(
         ? 30
         : Math.min(audit.retentionDays, 30)
     : undefined;
+  const retentionNeedsWrite =
+    !options.enterprise &&
+    audit?.retentionDays != null &&
+    audit.retentionDays !== savedRetentionDays;
 
   const deltaSettings: Record<string, unknown> = {
     "security.enableLogin": securitySettings.enableLogin,
@@ -134,6 +139,9 @@ export function saveSecuritySettings(
   return {
     sectionData: {},
     deltaSettings,
+    forceKeys: retentionNeedsWrite
+      ? ["premium.enterpriseFeatures.audit.retentionDays"]
+      : undefined,
   };
 }
 

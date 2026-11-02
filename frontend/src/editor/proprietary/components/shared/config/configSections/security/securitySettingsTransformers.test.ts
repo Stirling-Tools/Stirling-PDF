@@ -56,6 +56,24 @@ describe("audit retention bounds", () => {
     ).deltaSettings["premium.enterpriseFeatures.audit.retentionDays"];
     expect(saved).toBe(0);
   });
+
+  it("forces the normalized retention when a downgrade leaves a stale value", () => {
+    const result = saveSecuritySettings(
+      { audit: { retentionDays: 0 } },
+      { enterprise: false },
+    );
+    expect(result.forceKeys).toContain(
+      "premium.enterpriseFeatures.audit.retentionDays",
+    );
+  });
+
+  it("does not force retention that already fits the non-Enterprise window", () => {
+    const result = saveSecuritySettings(
+      { audit: { retentionDays: 14 } },
+      { enterprise: false },
+    );
+    expect(result.forceKeys).toBeUndefined();
+  });
 });
 
 describe("SSO auto-login security setting", () => {
