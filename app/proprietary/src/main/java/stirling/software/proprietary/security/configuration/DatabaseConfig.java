@@ -84,8 +84,7 @@ public class DatabaseConfig {
     @Value("${spring.datasource.hikari.max-lifetime:1800000}")
     private long maxLifetime;
 
-    // 0 disables keepalive, as Hikari does out of the box.
-    @Value("${spring.datasource.hikari.keepalive-time:0}")
+    @Value("${spring.datasource.hikari.keepalive-time:120000}")
     private long keepaliveTime;
 
     @Value("${spring.datasource.hikari.connection-timeout:30000}")
@@ -117,9 +116,9 @@ public class DatabaseConfig {
     }
 
     /**
-     * Binds {@code spring.datasource.hikari.*} onto the pool. A remote database makes the defaults
-     * of 10 connections and no keepalive a real constraint, and today there is no way to change
-     * them. No-ops when the properties were never injected, e.g. under direct construction.
+     * Binds {@code spring.datasource.hikari.*} onto the pool, which a remote database needs to
+     * raise the 10-connection default. No-ops when the properties were never injected, e.g. under
+     * direct construction.
      */
     private DataSource applyPoolSettings(DataSource dataSource) {
         if (!(dataSource instanceof HikariDataSource hikari) || maximumPoolSize == null) {
