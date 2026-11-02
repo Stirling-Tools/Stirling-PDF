@@ -11,9 +11,11 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -57,9 +59,9 @@ class ScalePagesControllerTest {
         return ResponseEntity.ok(new ByteArrayResource(bytes));
     }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (InputStream __in = response.getBody().getInputStream()) {
             __in.transferTo(baos);
         }
         return baos.toByteArray();
@@ -102,7 +104,7 @@ class ScalePagesControllerTest {
                 .thenAnswer(
                         inv -> {
                             byte[] bytes = ((MultipartFile) inv.getArgument(0)).getBytes();
-                            return org.apache.pdfbox.Loader.loadPDF(bytes);
+                            return Loader.loadPDF(bytes);
                         });
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
                 .thenAnswer(inv -> new PDDocument());
@@ -311,6 +313,78 @@ class ScalePagesControllerTest {
 
     @ParameterizedTest
     @CsvSource({
+        "in, 8.5, 11, 612, 792",
+        "mm, 210, 297, 595.28, 841.89",
+        "cm, 20, 10, 566.93, 283.46",
+        "mm, 5080, 1.06, 14400, 3.00"
+    })
+    void testScalePages_CustomSize(
+            String unit, float width, float height, float expectedWidth, float expectedHeight)
+            throws Exception {
+        setupFactory();
+        ScalePagesRequest request = customSizeRequest(unit, width, height);
+        request.setOrientation("LANDSCAPE");
+
+        try (PDDocument output = Loader.loadPDF(drainBody(controller.scalePages(request)))) {
+            PDRectangle mediaBox = output.getPage(0).getMediaBox();
+            assertEquals(expectedWidth, mediaBox.getWidth(), 0.01);
+            assertEquals(expectedHeight, mediaBox.getHeight(), 0.01);
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            value = {
+                "mm, , 100",
+                "mm, 0, 100",
+                "mm, -5, 100",
+                "mm, 1, 100",
+                "in, 201, 10",
+                "mm, NaN, 100",
+                "in, Infinity, 10",
+                "ft, 1, 1"
+            },
+            nullValues = "")
+    void testScalePages_CustomSizeRejectsInvalidInput(String unit, Float width, Float height)
+            throws Exception {
+        setupFactory();
+        ScalePagesRequest request = customSizeRequest(unit, width, height);
+
+        assertThrows(IllegalArgumentException.class, () -> controller.scalePages(request));
+    }
+
+    @Test
+    void testScalePages_PresetSizeIgnoresCustomFields() throws Exception {
+        setupFactory();
+        ScalePagesRequest request = customSizeRequest("ft", -5f, null);
+        request.setPageSize("LETTER");
+
+        try (PDDocument output = Loader.loadPDF(drainBody(controller.scalePages(request)))) {
+            PDRectangle mediaBox = output.getPage(0).getMediaBox();
+            assertEquals(PDRectangle.LETTER.getWidth(), mediaBox.getWidth(), 0.01);
+            assertEquals(PDRectangle.LETTER.getHeight(), mediaBox.getHeight(), 0.01);
+        }
+    }
+
+    private ScalePagesRequest customSizeRequest(String unit, Float width, Float height)
+            throws IOException {
+        ScalePagesRequest request = new ScalePagesRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput",
+                        "test.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        createRealPdf(PDRectangle.A4, 1)));
+        request.setPageSize("CUSTOM");
+        request.setCustomUnit(unit);
+        request.setCustomWidth(width);
+        request.setCustomHeight(height);
+        request.setScaleFactor(1.0f);
+        return request;
+    }
+
+    @ParameterizedTest
+    @CsvSource({
         "0, false, KEEP, PORTRAIT, 1",
         "0, false, A4, PORTRAIT, 0.5",
         "0, true, A4, LANDSCAPE, 1.2",
@@ -324,12 +398,9 @@ class ScalePagesControllerTest {
         setupFactory();
         byte[] stamped = createSignaturePdf(true, rotation, cropped);
         byte[] embedded = createSignaturePdf(false, rotation, cropped);
-        try (PDDocument actual =
-                        org.apache.pdfbox.Loader.loadPDF(
-                                scalePdf(stamped, size, orientation, scale));
+        try (PDDocument actual = Loader.loadPDF(scalePdf(stamped, size, orientation, scale));
                 PDDocument expected =
-                        org.apache.pdfbox.Loader.loadPDF(
-                                scalePdf(embedded, size, orientation, scale))) {
+                        Loader.loadPDF(scalePdf(embedded, size, orientation, scale))) {
             assertEquals(2, actual.getNumberOfPages());
             assertTrue(
                     new PDFTextStripper()
@@ -382,8 +453,7 @@ class ScalePagesControllerTest {
     @ValueSource(strings = {"hidden", "noView", "missingAppearance", "emptyBounds"})
     void skipsNonVisibleStampAppearances(String kind) throws Exception {
         setupFactory();
-        try (PDDocument source =
-                org.apache.pdfbox.Loader.loadPDF(createSignaturePdf(true, 0, false))) {
+        try (PDDocument source = Loader.loadPDF(createSignaturePdf(true, 0, false))) {
             for (PDPage page : source.getPages()) {
                 var stamp = page.getAnnotations().getFirst();
                 switch (kind) {
@@ -398,8 +468,7 @@ class ScalePagesControllerTest {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             source.save(bytes);
             try (PDDocument output =
-                    org.apache.pdfbox.Loader.loadPDF(
-                            scalePdf(bytes.toByteArray(), "KEEP", "PORTRAIT", 1))) {
+                    Loader.loadPDF(scalePdf(bytes.toByteArray(), "KEEP", "PORTRAIT", 1))) {
                 BufferedImage rendered = new PDFRenderer(output).renderImage(0);
                 assertEquals(Color.WHITE.getRGB(), rendered.getRGB(75, 275));
                 assertTrue(new PDFTextStripper().getText(output).contains("Searchable text"));
@@ -411,8 +480,7 @@ class ScalePagesControllerTest {
     @ValueSource(booleans = {true, false})
     void preservesSignatureLayerVisibility(boolean enabled) throws Exception {
         setupFactory();
-        try (PDDocument source =
-                org.apache.pdfbox.Loader.loadPDF(createSignaturePdf(true, 0, false))) {
+        try (PDDocument source = Loader.loadPDF(createSignaturePdf(true, 0, false))) {
             PDOptionalContentGroup layer = new PDOptionalContentGroup("Signatures");
             PDOptionalContentProperties layers = new PDOptionalContentProperties();
             layers.addGroup(layer);
@@ -424,8 +492,7 @@ class ScalePagesControllerTest {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             source.save(bytes);
             try (PDDocument output =
-                    org.apache.pdfbox.Loader.loadPDF(
-                            scalePdf(bytes.toByteArray(), "KEEP", "PORTRAIT", 1))) {
+                    Loader.loadPDF(scalePdf(bytes.toByteArray(), "KEEP", "PORTRAIT", 1))) {
                 PDOptionalContentProperties outputLayers =
                         output.getDocumentCatalog().getOCProperties();
                 assertNotNull(outputLayers);
