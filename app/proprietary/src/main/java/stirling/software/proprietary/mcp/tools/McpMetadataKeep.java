@@ -17,9 +17,13 @@ import tools.jackson.databind.node.ObjectNode;
  * update-metadata removes every standard field a call leaves out. A chat edit names only what
  * should change, so the fields it omits are filled in from the file first.
  */
-final class McpMetadataKeep {
+public final class McpMetadataKeep {
 
-    static final String OPERATION = "update-metadata";
+    public static final String OPERATION = "update-metadata";
+
+    /** Saved steps run outside MCP, so they ask the endpoint itself to keep omitted fields. */
+    public static final String KEEP_OMITTED = "keepOmitted";
+
     // The format MetadataController reads dates in (PdfMetadataService.parseToCalendar).
     private static final DateTimeFormatter DATE =
             DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");

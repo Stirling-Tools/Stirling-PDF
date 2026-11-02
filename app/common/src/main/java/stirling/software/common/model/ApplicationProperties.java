@@ -545,8 +545,14 @@ public class ApplicationProperties {
         /** Largest file {@code stirling_download} returns inline as base64. */
         private long maxInlineResponseBytes = 10L * 1024 * 1024;
 
-        /** Largest stored file a tool reads into memory as an input; 0 or less means no limit. */
+        /**
+         * Most bytes of stored files one tool call reads into memory as inputs, summed across every
+         * file it names; 0 or less means no limit.
+         */
         private long maxInputFileBytes = 500L * 1024 * 1024;
+
+        /** Most stored files one tool call may name as inputs; 0 or less means no limit. */
+        private int maxInputFiles = 50;
 
         /** How long tool results stay downloadable before storage deletes them. */
         private int resultTtlMinutes = 60;
@@ -643,6 +649,12 @@ public class ApplicationProperties {
 
             /** Create a disabled account for an unknown IdP subject instead of a 403. */
             private boolean autoProvisionUsers = false;
+
+            /**
+             * Bind a token to an account that has no IdP link when the username claim matches its
+             * username. Off on SaaS, where web sign-in only ever uses the Supabase link.
+             */
+            private boolean matchUnlinkedByUsername = true;
 
             private Builtin builtin = new Builtin();
 

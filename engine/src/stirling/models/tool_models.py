@@ -1742,7 +1742,7 @@ class Trapped(StrEnum):
 
 class UpdateMetadataParams(ApiModel):
     """
-    Standard fields left out are cleared, so send the current values of the others too (see get-info-on-pdf). Dates use yyyy/MM/dd HH:mm:ss. deleteAll=true removes all metadata. Input:PDF Output:PDF Type:SISO
+    Standard fields left out are cleared unless keepOmitted=true, so otherwise send the current values of the others too (see get-info-on-pdf). Dates use yyyy/MM/dd HH:mm:ss. deleteAll=true removes all metadata. Input:PDF Output:PDF Type:SISO
     """
 
     all_request_params: dict[str, str] | None = Field(
@@ -1761,6 +1761,9 @@ class UpdateMetadataParams(ApiModel):
     )
     delete_all: bool = Field(
         False, description="True removes all metadata, including XMP, and ignores the other fields"
+    )
+    keep_omitted: bool = Field(
+        False, description="True keeps the current value of every standard field left out, instead of removing it"
     )
     keywords: str | None = Field(
         None, description="The keywords for the document. Omit to remove it.", examples=["keywords"]

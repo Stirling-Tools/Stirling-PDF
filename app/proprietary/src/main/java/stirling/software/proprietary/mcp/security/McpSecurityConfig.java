@@ -201,7 +201,8 @@ public class McpSecurityConfig {
                                 userService,
                                 auth.getUsernameClaim(),
                                 auth.isRequireExistingAccount(),
-                                auth.isAutoProvisionUsers()),
+                                auth.isAutoProvisionUsers(),
+                                auth.isMatchUnlinkedByUsername()),
                         BearerTokenAuthenticationFilter.class)
                 .oauth2ResourceServer(
                         oauth2 ->
@@ -258,17 +259,17 @@ public class McpSecurityConfig {
             };
         }
         String jwksUri = auth.getJwksUri();
+        // Supabase's newer signing keys are ES256; older IdPs sign with RS256.
         NimbusJwtDecoder decoder =
-                jwksUri.isBlank()
-                        ? NimbusJwtDecoder.withIssuerLocation(auth.getIssuerUri()).build()
-                        // Supabase's newer signing keys are ES256; older IdPs sign with RS256.
-                        : NimbusJwtDecoder.withJwkSetUri(jwksUri)
-                                .jwsAlgorithms(
-                                        algorithms -> {
-                                            algorithms.add(SignatureAlgorithm.RS256);
-                                            algorithms.add(SignatureAlgorithm.ES256);
-                                        })
-                                .build();
+                (jwksUri.isBlank()
+                                ? NimbusJwtDecoder.withIssuerLocation(auth.getIssuerUri())
+                                : NimbusJwtDecoder.withJwkSetUri(jwksUri))
+                        .jwsAlgorithms(
+                                algorithms -> {
+                                    algorithms.add(SignatureAlgorithm.RS256);
+                                    algorithms.add(SignatureAlgorithm.ES256);
+                                })
+                        .build();
         OAuth2TokenValidator<Jwt> defaultValidators =
                 JwtValidators.createDefaultWithIssuer(auth.getIssuerUri());
         OAuth2TokenValidator<Jwt> combined =

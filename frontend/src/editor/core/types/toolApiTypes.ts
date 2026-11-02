@@ -771,6 +771,10 @@ export interface MetadataRequest {
    */
   deleteAll?: boolean;
   /**
+   * True keeps the current value of every standard field left out, instead of removing it
+   */
+  keepOmitted?: boolean;
+  /**
    * The keywords for the document. Omit to remove it.
    */
   keywords?: string;

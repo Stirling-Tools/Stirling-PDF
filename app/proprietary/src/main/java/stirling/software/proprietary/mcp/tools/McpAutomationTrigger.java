@@ -1,6 +1,5 @@
 package stirling.software.proprietary.mcp.tools;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
@@ -33,7 +32,6 @@ import tools.jackson.databind.node.ObjectNode;
 public class McpAutomationTrigger {
 
     static final String CONFIRM_KEY = "stirling_confirm_trigger";
-    private static final Duration WAIT = Duration.ofMinutes(5);
     // A sweep over a big inbox finishes in the background; only small ones are waited for.
     private static final int MAX_AWAITED_RUNS = 5;
 
@@ -118,13 +116,14 @@ public class McpAutomationTrigger {
 
     private String resolveInputs(JsonNode args, McpCallContext context, List<MultipartFile> out) {
         User user = files.user(context);
+        McpFiles.InputBudget budget = files.inputBudget();
         List<McpInputFiles.Input> resolved = new ArrayList<>();
         if (McpInputFiles.hasSingle(args)) {
             resolved.add(
                     McpInputFiles.resolve(
-                            args, files, user, fetcher.getIfAvailable(), "input.pdf"));
+                            args, files, user, fetcher.getIfAvailable(), "input.pdf", budget));
         }
-        resolved.addAll(McpInputFiles.resolveList(args, files, user));
+        resolved.addAll(McpInputFiles.resolveList(args, files, user, budget));
         for (McpInputFiles.Input input : resolved) {
             if (input.error() != null) {
                 return input.error();
@@ -149,7 +148,7 @@ public class McpAutomationTrigger {
         }
         List<PolicyRunView> views =
                 started.runIds().size() <= MAX_AWAITED_RUNS
-                        ? automations.await(started.runIds(), WAIT)
+                        ? automations.await(started.runIds(), automations.syncWait())
                         : List.of();
         return summary(wiring, started, views, !inputs.isEmpty());
     }

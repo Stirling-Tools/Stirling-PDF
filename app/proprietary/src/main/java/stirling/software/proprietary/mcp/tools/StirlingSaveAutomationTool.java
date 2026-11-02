@@ -39,9 +39,10 @@ public class StirlingSaveAutomationTool implements McpTool {
         return "Save an automation";
     }
 
+    /** Destructive: it overwrites an automation and can attach a watch that deletes originals. */
     @Override
     public McpToolAnnotations annotations() {
-        return new McpToolAnnotations(false, false, false, false);
+        return new McpToolAnnotations(false, true, false, false);
     }
 
     @Override

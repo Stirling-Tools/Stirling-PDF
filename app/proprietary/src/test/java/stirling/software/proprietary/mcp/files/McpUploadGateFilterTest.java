@@ -89,6 +89,17 @@ class McpUploadGateFilterTest {
     }
 
     @Test
+    void anEncodedUploadPathIsStillGated() throws Exception {
+        MockHttpServletRequest request =
+                new MockHttpServletRequest("POST", "/api/v1/mcp/%75ploads/" + "A".repeat(43));
+        request.setContent(new byte[1024]);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        assertFalse(passes(request, response));
+        assertEquals(404, response.getStatus());
+    }
+
+    @Test
     void otherRequestsAreLeftAlone() throws Exception {
         MockHttpServletRequest page =
                 new MockHttpServletRequest("GET", McpUploadLinks.PATH + "A".repeat(43));

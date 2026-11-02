@@ -329,7 +329,7 @@ class McpServerControllerTest {
         ResponseEntity<?> response = controller.handle(body, new HttpHeaders());
 
         JsonNode result = mapper.valueToTree(response.getBody()).get("result");
-        assertEquals("2025-06-18", result.get("protocolVersion").asText());
+        assertEquals("2025-11-25", result.get("protocolVersion").asText());
     }
 
     @Test

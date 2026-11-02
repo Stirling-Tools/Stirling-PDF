@@ -211,15 +211,61 @@ public class McpFiles {
                 : trimmed;
     }
 
-    /** Loads a tool input, refusing files over {@code mcp.maxInputFileBytes}. */
+    /** Loads one tool input with a budget of its own; see {@link #inputBudget()}. */
     public Loaded load(User user, String fileIdOrUri) throws McpFileException {
-        long max = applicationProperties.getMcp().getMaxInputFileBytes();
-        return load(
-                user,
-                fileIdOrUri,
-                max > 0 ? max : Long.MAX_VALUE,
-                "the input limit",
-                "Use a smaller file");
+        return load(user, fileIdOrUri, inputBudget());
+    }
+
+    /**
+     * The input allowance for one tool call: {@code mcp.maxInputFiles} files and {@code
+     * mcp.maxInputFileBytes} bytes in total. Not thread-safe; one call uses it from one thread.
+     */
+    public InputBudget inputBudget() {
+        ApplicationProperties.Mcp mcp = applicationProperties.getMcp();
+        return new InputBudget(
+                mcp.getMaxInputFileBytes() > 0 ? mcp.getMaxInputFileBytes() : Long.MAX_VALUE,
+                mcp.getMaxInputFiles() > 0 ? mcp.getMaxInputFiles() : Integer.MAX_VALUE);
+    }
+
+    /** Loads a tool input, refused before any content is read if it would overspend the budget. */
+    public Loaded load(User user, String fileIdOrUri, InputBudget budget) throws McpFileException {
+        budget.requireRoomFor(1);
+        Loaded loaded =
+                load(
+                        user,
+                        fileIdOrUri,
+                        budget.remainingBytes,
+                        "the input limit for one call",
+                        "Pass fewer or smaller files");
+        budget.spend(loaded.bytes().length);
+        return loaded;
+    }
+
+    public static final class InputBudget {
+        private long remainingBytes;
+        private int remainingFiles;
+        private final int maxFiles;
+
+        public InputBudget(long maxBytes, int maxFiles) {
+            this.remainingBytes = maxBytes;
+            this.remainingFiles = maxFiles;
+            this.maxFiles = maxFiles;
+        }
+
+        /** Refuses up front when {@code count} more files would pass the per-call file limit. */
+        public void requireRoomFor(int count) throws McpFileException {
+            if (count > remainingFiles) {
+                throw new McpFileException(
+                        "Too many input files: one call can read at most "
+                                + maxFiles
+                                + ". Pass fewer files, or merge them first.");
+            }
+        }
+
+        private void spend(long bytes) {
+            remainingFiles--;
+            remainingBytes -= bytes;
+        }
     }
 
     /** Checks ownership and size before opening content; reads at most the limit plus one byte. */

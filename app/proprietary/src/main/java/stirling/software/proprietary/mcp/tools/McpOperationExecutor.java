@@ -2,6 +2,7 @@ package stirling.software.proprietary.mcp.tools;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -98,11 +100,11 @@ public class McpOperationExecutor {
         Inputs inputs =
                 McpFileParameters.takesFile(meta)
                         ? resolveInputs(arguments, user)
-                        : new Inputs(List.of(), null);
+                        : new Inputs(List.of(), null, files.inputBudget());
         if (inputs.error() != null) {
             return inputs.error();
         }
-        Call call = call(meta, inputs.files(), parameters, user);
+        Call call = call(meta, inputs.files(), parameters, user, inputs.budget());
         if (call.finding() != null) {
             return call.finding();
         }
@@ -180,7 +182,7 @@ public class McpOperationExecutor {
         // One run id, so SaaS bills the whole pipeline as one automation run.
         try (AutomationRunContext.Scope run =
                 AutomationRunContext.open(UUID.randomUUID().toString())) {
-            return runSteps(steps, parameters, resolved.files(), user, context);
+            return runSteps(steps, parameters, resolved.files(), user, context, resolved.budget());
         }
     }
 
@@ -193,7 +195,8 @@ public class McpOperationExecutor {
             List<JsonNode> parameters,
             List<McpInputFiles.Input> inputs,
             User user,
-            McpCallContext context) {
+            McpCallContext context,
+            McpFiles.InputBudget budget) {
         List<McpInputFiles.Input> current = inputs;
         ArrayNode reports = mapper.createArrayNode();
         for (int i = 0; i < steps.size(); i++) {
@@ -205,7 +208,7 @@ public class McpOperationExecutor {
                             ? List.of(current)
                             : current.stream().map(List::of).toList();
             if (last && batches.size() == 1) {
-                Call call = call(meta, batches.get(0), parameters.get(i), user);
+                Call call = call(meta, batches.get(0), parameters.get(i), user, budget);
                 if (call.error() != null) {
                     return McpResponses.prefixError(call.error(), where);
                 }
@@ -223,7 +226,7 @@ public class McpOperationExecutor {
             List<McpInputFiles.Input> next = new ArrayList<>();
             for (List<McpInputFiles.Input> batch : batches) {
                 String on = batches.size() > 1 ? "on " + batch.get(0).name() + ": " : "";
-                Call call = call(meta, batch, parameters.get(i), user);
+                Call call = call(meta, batch, parameters.get(i), user, budget);
                 if (call.error() != null) {
                     return McpResponses.prefixError(call.error(), where + on);
                 }
@@ -309,6 +312,10 @@ public class McpOperationExecutor {
             OperationMeta meta, ResponseEntity<Resource> response, List<McpInputFiles.Input> out) {
         Resource body = response.getBody();
         MediaType type = response.getHeaders().getContentType();
+        String refused = redirectReason(response);
+        if (refused != null) {
+            return refused;
+        }
         if (body == null || response.getStatusCode().value() == 204 || contentLength(body) == 0) {
             return "finished with no output: " + noOutputReason(meta.id());
         }
@@ -390,7 +397,8 @@ public class McpOperationExecutor {
         }
     }
 
-    private record Inputs(List<McpInputFiles.Input> files, ObjectNode error) {}
+    private record Inputs(
+            List<McpInputFiles.Input> files, ObjectNode error, McpFiles.InputBudget budget) {}
 
     /** A response, or an error; {@code finding} is set when a lone call should report, not fail. */
     private record Call(ResponseEntity<Resource> response, ObjectNode error, ObjectNode finding) {
@@ -400,10 +408,14 @@ public class McpOperationExecutor {
     }
 
     private Inputs resolveInputs(JsonNode arguments, User user) {
+        McpFiles.InputBudget budget = files.inputBudget();
         List<McpInputFiles.Input> inputs = new ArrayList<>();
-        List<McpInputFiles.Input> listed = McpInputFiles.resolveList(arguments, files, user);
+        List<McpInputFiles.Input> listed =
+                McpInputFiles.resolveList(arguments, files, user, budget);
         if (McpInputFiles.hasSingle(arguments) || listed.isEmpty()) {
-            inputs.add(McpInputFiles.resolve(arguments, files, user, fileUrlFetcher, "input.pdf"));
+            inputs.add(
+                    McpInputFiles.resolve(
+                            arguments, files, user, fileUrlFetcher, "input.pdf", budget));
         }
         inputs.addAll(listed);
         for (McpInputFiles.Input input : inputs) {
@@ -411,14 +423,19 @@ public class McpOperationExecutor {
                 return new Inputs(
                         null,
                         McpResponses.error(
-                                mapper, input.error(), McpResponses.Failure.INPUT_UNAVAILABLE));
+                                mapper, input.error(), McpResponses.Failure.INPUT_UNAVAILABLE),
+                        budget);
             }
         }
-        return new Inputs(inputs, null);
+        return new Inputs(inputs, null, budget);
     }
 
     private Call call(
-            OperationMeta meta, List<McpInputFiles.Input> inputs, JsonNode parameters, User user) {
+            OperationMeta meta,
+            List<McpInputFiles.Input> inputs,
+            JsonNode parameters,
+            User user,
+            McpFiles.InputBudget budget) {
         Set<String> fileFields = McpFileParameters.fileFields(meta.paramSchema());
         if (inputs.size() > 1 && !acceptsManyFiles(meta)) {
             // A second file usually belongs in the operation's own file parameter, not a merge.
@@ -469,7 +486,7 @@ public class McpOperationExecutor {
         for (McpInputFiles.Input input : inputs) {
             body.add(part, bytesResource(input.bytes(), input.name()));
         }
-        String problem = addFileParameters(body, parameters, fileFields, user);
+        String problem = addFileParameters(body, parameters, fileFields, user, budget);
         if (problem != null) {
             return new Call(
                     null,
@@ -570,6 +587,10 @@ public class McpOperationExecutor {
             User user,
             McpCallContext context) {
         Resource body = response.getBody();
+        String refused = redirectReason(response);
+        if (refused != null) {
+            return McpResponses.error(mapper, meta.id() + ": " + refused);
+        }
         if (body == null || response.getStatusCode().value() == 204 || contentLength(body) == 0) {
             return McpResponses.noOutput(mapper, meta.id(), noOutputReason(meta.id()));
         }
@@ -657,6 +678,32 @@ public class McpOperationExecutor {
     }
 
     /** Why an operation can finish with nothing to return, in words an agent can act on. */
+    /**
+     * Why an endpoint answered with a redirect instead of a file, or null when it didn't. Web forms
+     * such as url-to-pdf report refusals as a 303 back to the page with {@code ?error=}.
+     */
+    static String redirectReason(ResponseEntity<?> response) {
+        if (!response.getStatusCode().is3xxRedirection()) {
+            return null;
+        }
+        URI location = response.getHeaders().getLocation();
+        String error =
+                location == null
+                        ? null
+                        : UriComponentsBuilder.fromUri(location)
+                                .build()
+                                .getQueryParams()
+                                .getFirst("error");
+        return switch (error == null ? "" : error) {
+            case "error.endpointDisabled" -> "this server has URL to PDF turned off.";
+            case "error.invalidUrlFormat" -> "that is not a valid http or https URL.";
+            case "error.urlNotReachable" -> "Stirling PDF could not reach that URL.";
+            case "error.disallowedUrlContent" ->
+                    "the page links to content with a URL scheme Stirling PDF refuses to load.";
+            default -> "the server refused the request without making a file.";
+        };
+    }
+
     static String noOutputReason(String operation) {
         if (operation.equals("pdf-to-xlsx") || operation.equals("pdf-to-csv")) {
             return "no tables were found in the PDF. Use pdf-to-text, pdf-to-word or"
@@ -755,7 +802,8 @@ public class McpOperationExecutor {
             MultiValueMap<String, Object> body,
             JsonNode params,
             Set<String> fileFields,
-            User user) {
+            User user,
+            McpFiles.InputBudget budget) {
         if (params == null || !params.isObject()) {
             return null;
         }
@@ -770,12 +818,17 @@ public class McpOperationExecutor {
             } else {
                 ids.add(value);
             }
+            try {
+                budget.requireRoomFor(ids.size());
+            } catch (McpFiles.McpFileException e) {
+                return "'" + field + "': " + e.getMessage();
+            }
             for (JsonNode id : ids) {
                 if (!id.isTextual() || id.asText().isBlank()) {
                     return "'" + field + "' takes fileIds of files already in Stirling.";
                 }
                 try {
-                    McpFiles.Loaded loaded = files.load(user, id.asText());
+                    McpFiles.Loaded loaded = files.load(user, id.asText(), budget);
                     body.add(field, bytesResource(loaded.bytes(), loaded.name()));
                 } catch (McpFiles.McpFileException e) {
                     return "'" + field + "': " + e.getMessage();

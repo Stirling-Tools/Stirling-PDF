@@ -9,6 +9,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -33,6 +34,7 @@ import stirling.software.common.cluster.JobStore;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 import stirling.software.proprietary.mcp.catalog.OperationMeta;
+import stirling.software.proprietary.mcp.tools.McpMetadataKeep;
 import stirling.software.proprietary.mcp.tools.McpParameterCheck;
 import stirling.software.proprietary.mcp.tools.McpPipelineStep;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
@@ -47,6 +49,7 @@ import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyRun;
+import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.model.Schedule;
 import stirling.software.proprietary.policy.model.TriggerConfig;
@@ -156,7 +159,10 @@ public class McpAutomations {
         return automationId == null ? root : root + "/" + automationId;
     }
 
-    /** The tighter of the chat and saved-pipeline step caps; 0 or less means no cap. */
+    /**
+     * The tighter of the chat and saved-pipeline step caps; a cap of 0 or less is ignored, and with
+     * neither set the schema still allows at most 100.
+     */
     public int maxSteps() {
         int chat = applicationProperties.getMcp().getMaxPipelineSteps();
         int saved = applicationProperties.getPolicies().getMaxSteps();
@@ -201,7 +207,7 @@ public class McpAutomations {
     /** A saved automation's steps, ready to run as the caller. */
     public List<McpPipelineStep> stepsOf(String username, String automationId)
             throws AutomationException {
-        Policy policy = asUser(username, () -> findPolicy(automationId));
+        Policy policy = asUser(username, () -> findPolicyForRun(automationId));
         if (policy == null) {
             throw new AutomationException(
                     "Unknown automation '"
@@ -570,11 +576,25 @@ public class McpAutomations {
     private static final int MAX_LISTED_RUNS = 20;
 
     /** Waits for these runs to finish, up to {@code max}; unknown runs come back null. */
+    /** How long a chat call waits for a run before handing back its run id. */
+    public Duration syncWait() {
+        return Duration.ofSeconds(Math.max(0, applicationProperties.getMcp().getSyncWaitSeconds()));
+    }
+
     public List<PolicyRunView> await(List<String> runIds, Duration max) {
         long deadline = System.nanoTime() + max.toNanos();
         while (true) {
             List<PolicyRunView> views = runIds.stream().map(this::view).toList();
-            boolean done = views.stream().allMatch(v -> v != null && v.status().isTerminal());
+            // A run waiting for input won't move until someone answers it, so stop watching it.
+            boolean done =
+                    views.stream()
+                            .allMatch(
+                                    v ->
+                                            v != null
+                                                    && (v.status().isTerminal()
+                                                            || v.status()
+                                                                    == PolicyRunStatus
+                                                                            .WAITING_FOR_INPUT));
             if (done || System.nanoTime() > deadline) {
                 return views;
             }
@@ -691,6 +711,10 @@ public class McpAutomations {
                                         McpParameterCheck.canonical(
                                                 step.meta().paramSchema(), step.parameters()),
                                         new TypeReference<Map<String, Object>>() {});
+                if (McpMetadataKeep.OPERATION.equals(step.meta().id())) {
+                    parameters = new LinkedHashMap<>(parameters);
+                    parameters.put(McpMetadataKeep.KEEP_OMITTED, true);
+                }
                 steps.add(new PipelineStep(step.meta().endpointPath(), parameters));
             }
         }
@@ -858,6 +882,9 @@ public class McpAutomations {
                 existing != null && existing.inputs().size() == 1 ? existing.inputs().get(0) : null;
         String sourceId = draft.sourceId();
         if (sourceId == null) {
+            if (trigger != null && trigger.isNull() && current != null) {
+                return List.of(PipelineInput.manual(current.sourceId()));
+            }
             if (!hasTrigger) {
                 return existing == null ? List.of() : existing.inputs();
             }
@@ -895,6 +922,14 @@ public class McpAutomations {
             return existing == null ? List.of() : existing.outputIds();
         }
         return draft.destinationId().isBlank() ? List.of() : List.of(draft.destinationId());
+    }
+
+    private Policy findPolicyForRun(String id) {
+        PolicyController controller = policies.getIfAvailable();
+        if (controller == null || id == null || id.isBlank()) {
+            return null;
+        }
+        return controller.accessiblePolicyForRun(id).orElse(null);
     }
 
     private Policy findPolicy(String id) {

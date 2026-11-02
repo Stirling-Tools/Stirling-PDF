@@ -2,6 +2,7 @@ package stirling.software.proprietary.mcp.tools;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -102,6 +103,10 @@ class McpPipelineTest {
                                 "get-info-on-pdf",
                                 OperationCategory.SECURITY,
                                 "/api/v1/security/get-info-on-pdf"),
+                        op(
+                                "update-metadata",
+                                OperationCategory.MISC,
+                                "/api/v1/misc/update-metadata"),
                         op("summarise", OperationCategory.AI, null))) {
             when(catalog.findByOperationId(op.id())).thenReturn(Optional.of(op));
             if (op.endpointPath() != null) {
@@ -230,9 +235,10 @@ class McpPipelineTest {
 
     @Test
     void runningASavedAutomationUsesItsSteps() throws Exception {
-        when(policies.listPolicies())
+        when(policies.accessiblePolicyForRun("p1"))
                 .thenReturn(
-                        List.of(policy("p1", "Email ready", step("/api/v1/misc/compress-pdf"))));
+                        Optional.of(
+                                policy("p1", "Email ready", step("/api/v1/misc/compress-pdf"))));
 
         List<McpPipelineStep> steps = automations.stepsOf("alice", "p1");
 
@@ -397,6 +403,67 @@ class McpPipelineTest {
         assertEquals("schedule", saved.getAllValues().get(0).inputs().get(0).trigger().type());
         assertEquals("archive", saved.getAllValues().get(1).inputs().get(0).sourceId());
         assertEquals("webhook", saved.getAllValues().get(1).inputs().get(0).trigger().type());
+    }
+
+    @Test
+    void anExplicitNullTriggerStopsTheScheduleAndKeepsTheSource() throws Exception {
+        stubSaveEcho();
+        Policy scheduled =
+                new Policy(
+                        "p1",
+                        "Nightly",
+                        "admin",
+                        true,
+                        List.of(
+                                new stirling.software.proprietary.policy.model.PipelineInput(
+                                        "inbox",
+                                        new stirling.software.proprietary.policy.model
+                                                .TriggerConfig("schedule", java.util.Map.of()))),
+                        List.of(step("/api/v1/misc/compress-pdf")),
+                        OutputSpec.inline(),
+                        List.of(),
+                        1L);
+        when(policies.listPolicies()).thenReturn(List.of(scheduled));
+
+        automations.save(
+                "alice",
+                new McpAutomations.Draft("p1", null, null, null, mapper.nullNode(), null, null));
+
+        ArgumentCaptor<Policy> saved = ArgumentCaptor.forClass(Policy.class);
+        verify(policies).savePolicy(saved.capture());
+        assertEquals("inbox", saved.getValue().inputs().get(0).sourceId());
+        assertNull(saved.getValue().inputs().get(0).trigger());
+    }
+
+    @Test
+    void aTestRunOfASavedAutomationUsesItsStoredPasswordNotTheMaskedOne() throws Exception {
+        PipelineStep stored =
+                new PipelineStep(
+                        "/api/v1/misc/compress-pdf", java.util.Map.of("password", "s3cret"));
+        PipelineStep masked =
+                new PipelineStep(
+                        "/api/v1/misc/compress-pdf", java.util.Map.of("password", "********"));
+        when(policies.listPolicies()).thenReturn(List.of(policy("p1", "Lock", masked)));
+        when(policies.accessiblePolicyForRun("p1"))
+                .thenReturn(Optional.of(policy("p1", "Lock", stored)));
+
+        List<McpPipelineStep> steps = automations.stepsOf("alice", "p1");
+
+        assertEquals("s3cret", steps.get(0).parameters().path("password").asText());
+    }
+
+    @Test
+    void aSavedMetadataStepKeepsTheFieldsItLeavesOut() throws Exception {
+        stubSaveEcho();
+
+        automations.save(
+                "alice", draft(null, "Tag author", steps("update-metadata"), null, null, null));
+
+        ArgumentCaptor<Policy> saved = ArgumentCaptor.forClass(Policy.class);
+        verify(policies).savePolicy(saved.capture());
+        assertEquals(
+                true,
+                saved.getValue().steps().get(0).parameters().get(McpMetadataKeep.KEEP_OMITTED));
     }
 
     @Test

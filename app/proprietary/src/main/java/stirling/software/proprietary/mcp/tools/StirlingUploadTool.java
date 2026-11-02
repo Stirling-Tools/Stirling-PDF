@@ -130,7 +130,13 @@ public class StirlingUploadTool implements McpTool {
         try {
             User user = files.user(context);
             McpInputFiles.Input input =
-                    McpInputFiles.resolve(arguments, files, user, fileUrlFetcher, "upload.bin");
+                    McpInputFiles.resolve(
+                            arguments,
+                            files,
+                            user,
+                            fileUrlFetcher,
+                            "upload.bin",
+                            files.inputBudget());
             if (input.error() != null) {
                 return McpResponses.error(mapper, input.error());
             }
