@@ -8,12 +8,6 @@ import { useUI } from "@editor/portal/contexts/UIContext";
 vi.mock("@editor/portal/contexts/TierContext", () => ({
   TierProvider: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@editor/contexts/AppConfigContext", () => ({
-  AppConfigProvider: ({ children }: { children: ReactNode }) => children,
-}));
-vi.mock("@editor/contexts/LicenseContext", () => ({
-  LicenseProvider: ({ children }: { children: ReactNode }) => children,
-}));
 vi.mock("@editor/contexts/CheckoutContext", () => ({
   CheckoutProvider: ({ children }: { children: ReactNode }) => children,
 }));
