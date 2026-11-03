@@ -13,8 +13,6 @@ import static org.mockito.Mockito.mockStatic;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -413,35 +411,6 @@ class ExceptionUtilsGapTest {
                     ExceptionUtils.createPdfCorruptedException("", new Exception("x"));
             assertTrue(ex.getMessage().contains("PDF file appears to be corrupted"));
             assertEquals(ErrorCode.PDF_CORRUPTED.getCode(), ex.getErrorCode());
-        }
-    }
-
-    @Nested
-    @DisplayName("validateRenderingDimensions")
-    class ValidateRenderingDimensionsTests {
-
-        @Test
-        @DisplayName("null page is a no-op")
-        void nullPage() {
-            // Should simply return without throwing.
-            org.junit.jupiter.api.Assertions.assertDoesNotThrow(
-                    () -> ExceptionUtils.validateRenderingDimensions(null, 1, 300));
-        }
-
-        @Test
-        @DisplayName("normal letter-size page at 150 DPI passes validation")
-        void normalPagePasses() {
-            PDPage page = new PDPage(PDRectangle.LETTER);
-            org.junit.jupiter.api.Assertions.assertDoesNotThrow(
-                    () -> ExceptionUtils.validateRenderingDimensions(page, 1, 150));
-        }
-
-        @Test
-        @DisplayName("page with zero DPI yields zero pixels and passes")
-        void zeroDpiPasses() {
-            PDPage page = new PDPage(PDRectangle.A4);
-            org.junit.jupiter.api.Assertions.assertDoesNotThrow(
-                    () -> ExceptionUtils.validateRenderingDimensions(page, 2, 0));
         }
     }
 

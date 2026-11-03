@@ -16,11 +16,14 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
@@ -126,6 +129,60 @@ class PdfUtilsMoreTest {
                 pageResources.add(form);
 
                 assertThat(PdfUtils.getAllImages(pageResources)).hasSize(1);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("hasImagesOnPage with form XObjects")
+    class HasImagesOnPageForms {
+
+        @Test
+        @DisplayName("an image nested inside a form XObject is found")
+        void findsAnImageInsideAForm() throws IOException {
+            try (PDDocument doc = new PDDocument()) {
+                PDFormXObject form = new PDFormXObject(doc);
+                form.setResources(new PDResources());
+                BufferedImage bi = new BufferedImage(8, 8, BufferedImage.TYPE_INT_RGB);
+                form.getResources().add(LosslessFactory.createFromImage(doc, bi));
+                PDPage page = new PDPage();
+                page.setResources(new PDResources());
+                page.getResources().add(form);
+
+                assertThat(PdfUtils.hasImagesOnPage(page)).isTrue();
+            }
+        }
+
+        @Test
+        @DisplayName("a form that draws itself is walked once")
+        void stopsAtAFormThatDrawsItself() throws IOException {
+            try (PDDocument doc = new PDDocument()) {
+                PDFormXObject form = new PDFormXObject(doc);
+                form.setResources(new PDResources());
+                form.getResources().add(form);
+                PDPage page = new PDPage();
+                page.setResources(new PDResources());
+                page.getResources().add(form);
+
+                assertThat(PdfUtils.hasImagesOnPage(page)).isFalse();
+            }
+        }
+
+        @Test
+        @DisplayName("an image is found without being decoded")
+        void doesNotDecodeTheImage() throws IOException {
+            try (PDDocument doc = new PDDocument()) {
+                COSStream stream = doc.getDocument().createCOSStream();
+                stream.setItem(COSName.SUBTYPE, COSName.IMAGE);
+                stream.setInt(COSName.WIDTH, 100_000);
+                stream.setInt(COSName.HEIGHT, 100_000);
+                stream.setInt(COSName.BITS_PER_COMPONENT, 8);
+                stream.setItem(COSName.COLORSPACE, COSName.DEVICERGB);
+                PDPage page = new PDPage();
+                page.setResources(new PDResources());
+                page.getResources().add(new PDImageXObject(new PDStream(stream), null));
+
+                assertThat(PdfUtils.hasImagesOnPage(page)).isTrue();
             }
         }
     }
