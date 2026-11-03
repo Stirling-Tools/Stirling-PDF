@@ -269,6 +269,159 @@ test.describe("PDF text editor - tables", () => {
     expect(afterUndo.rows).toEqual(start.rows);
   });
 
+  test("deletes the selected middle row from a detected PDF table", async ({ page }) => {
+    test.setTimeout(180_000);
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page
+      .locator('[data-testid="pdf-editor-file-input"]')
+      .setInputFiles(
+        path.join(
+          import.meta.dirname,
+          "../test-fixtures/merged-table-sample.pdf",
+        ),
+      );
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForFunction(
+      () =>
+        (
+          window as unknown as { __editor_store: EditorStore }
+        ).__editor_store.getState().firstPageRendered,
+      undefined,
+      { timeout: 30_000 },
+    );
+
+    // Exercise the same recognized-PDF-table -> Edit -> Delete workflow as
+    // the reported issue, rather than inserting a synthetic editor table.
+    const editTable = page
+      .locator('[data-testid^="pdf-editor-recognized-table-edit-"]')
+      .first();
+    await expect(editTable).toBeVisible({ timeout: 15_000 });
+    await editTable.click();
+
+    const readTable = () =>
+      page.evaluate(() => {
+        const store = (
+          window as unknown as { __editor_store: EditorStore }
+        ).__editor_store;
+        const documentPage = store.document?.page(0);
+        const table = documentPage?.tables[0];
+        if (!documentPage || !table) throw new Error("Table adoption failed");
+        const snapshot = table.snapshot();
+        return {
+          id: table.id,
+          rows: table.rows,
+          text: snapshot.cells
+            .flatMap((cell) =>
+              cell.runIds.map(
+                (id) =>
+                  documentPage.runs.find((run) => run.id === id)?.text ?? "",
+              ),
+            )
+            .join(" "),
+        };
+      });
+
+    const before = await readTable();
+    expect(before.rows).toBe(7);
+    expect(before.text).toContain("Needs");
+    expect(before.text).toContain("Shared checkpoint");
+    // Handle 5 selects body row 4; the final row is Shared checkpoint.
+    await page
+      .getByTestId(`pdf-editor-table-row-handle-${before.id}-5`)
+      .click();
+    await page
+      .getByTestId(`pdf-editor-table-del-row-${before.id}`)
+      .click();
+
+    await expect.poll(async () => (await readTable()).rows).toBe(6);
+    const after = await readTable();
+    expect(after.text).not.toContain("Needs");
+    expect(after.text).toContain("Export proof");
+    expect(after.text).toContain("Shared checkpoint");
+  });
+
+  test("deletes the selected middle column from a detected PDF table", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page
+      .locator('[data-testid="pdf-editor-file-input"]')
+      .setInputFiles(
+        path.join(
+          import.meta.dirname,
+          "../test-fixtures/merged-table-sample.pdf",
+        ),
+      );
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForFunction(
+      () =>
+        (
+          window as unknown as { __editor_store: EditorStore }
+        ).__editor_store.getState().firstPageRendered,
+      undefined,
+      { timeout: 30_000 },
+    );
+
+    const editTable = page
+      .locator('[data-testid^="pdf-editor-recognized-table-edit-"]')
+      .first();
+    await expect(editTable).toBeVisible({ timeout: 15_000 });
+    await editTable.click();
+
+    const readTable = () =>
+      page.evaluate(() => {
+        const store = (
+          window as unknown as { __editor_store: EditorStore }
+        ).__editor_store;
+        const documentPage = store.document?.page(0);
+        const table = documentPage?.tables[0];
+        if (!documentPage || !table) throw new Error("Table adoption failed");
+        const snapshot = table.snapshot();
+        return {
+          id: table.id,
+          cols: table.cols,
+          text: snapshot.cells
+            .flatMap((cell) =>
+              cell.runIds.map(
+                (id) =>
+                  documentPage.runs.find((run) => run.id === id)?.text ?? "",
+              ),
+            )
+            .join(" "),
+        };
+      });
+
+    const before = await readTable();
+    expect(before.cols).toBe(5);
+    expect(before.text).toContain("Ada");
+    expect(before.text).toContain("18.5");
+    // Handle 3 selects middle column 2 (Owner), not the final Hours column.
+    await page
+      .getByTestId(`pdf-editor-table-col-handle-${before.id}-3`)
+      .click();
+    await page
+      .getByTestId(`pdf-editor-table-del-col-${before.id}`)
+      .click();
+
+    await expect.poll(async () => (await readTable()).cols).toBe(4);
+    const after = await readTable();
+    expect(after.text).not.toContain("Ada");
+    expect(after.text).not.toContain("Lin");
+    expect(after.text).toContain("18.5");
+    expect(after.text).toContain("45.25");
+  });
+
   test("deletes the row selected by its row handle", async ({ page }) => {
     test.setTimeout(180_000);
     await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
