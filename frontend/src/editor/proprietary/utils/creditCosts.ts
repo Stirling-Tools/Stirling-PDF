@@ -24,6 +24,7 @@ export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   devFolderScanning: CREDIT_COSTS.NONE,
   devSsoGuide: CREDIT_COSTS.NONE,
   devAirgapped: CREDIT_COSTS.NONE,
+  measure: CREDIT_COSTS.NONE,
 
   // Small operations (1 credit)
   rotate: CREDIT_COSTS.SMALL,

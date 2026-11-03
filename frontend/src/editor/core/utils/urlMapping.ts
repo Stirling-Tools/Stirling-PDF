@@ -75,6 +75,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   // Annotation and content removal
   "/annotations": "annotate",
   "/annotate": "annotate",
+  "/measure": "measure",
   "/remove-annotations": "removeAnnotations",
   "/remove-image": "removeImage",
 

@@ -275,6 +275,11 @@
       "title": "Auto Form Detection - Stirling PDF",
       "description": "Automatically detect form fields with AI and make your PDF fillable."
     },
+    "measure": {
+      "image": "/og_images/home.png",
+      "title": "Measure - Stirling PDF",
+      "description": "Measure distances, perimeters and areas on drawings, with scales and calibration"
+    },
     "multiTool": {
       "image": "/og_images/multi-tool.png",
       "title": "PDF Page Editor - Stirling PDF",
@@ -819,6 +824,7 @@
     "/pdf-text-editor": "pdfTextEditor",
     "/form-fill": "formFill",
     "/auto-form-detection": "autoFormDetection",
+    "/measure": "measure",
     "/multi-tool": "multiTool",
     "/read": "read",
     "/automate": "automate",
@@ -1109,6 +1115,10 @@
     {
       "path": "/markdown-to-pdf",
       "label": "Markdown to PDF Converter"
+    },
+    {
+      "path": "/measure",
+      "label": "Measure"
     },
     {
       "path": "/merge",

@@ -135,6 +135,7 @@ import { useFontFallbackConfig } from "@editor/hooks/useFontFallbackConfig";
 import { pdfiumWasmUrl } from "@editor/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@editor/tools/formFill/FormFieldOverlay";
 import { FormCreationInteractionLock } from "@editor/tools/formFill/FormCreationInteractionLock";
+import { MeasureInteractionLock } from "@editor/tools/measure/MeasureInteractionLock";
 import { FormFieldCreationOverlay } from "@editor/tools/formFill/FormFieldCreationOverlay";
 import { FormFieldEditOverlay } from "@editor/tools/formFill/FormFieldEditOverlay";
 import { ButtonAppearanceOverlay } from "@editor/tools/formFill/ButtonAppearanceOverlay";
@@ -1689,6 +1690,7 @@ export function LocalEmbedPDF({
             canCopy={pdfAllows(pdfAccess, PdfPermissionFlag.CopyContents)}
           />
           <FormCreationInteractionLock />
+          <MeasureInteractionLock />
           <PanAPIBridge />
           <SpreadAPIBridge />
           <SearchAPIBridge />

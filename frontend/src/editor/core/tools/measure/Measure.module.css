@@ -1,0 +1,457 @@
+/* No height or overflow: the tool renders inside ToolPanel's ScrollArea, and
+   either would pin the sticky toolbar and footer to a box that never scrolls. */
+.root {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Above the SegmentedControls further down, whose indicators stack at z-index 2+. */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem 0.625rem;
+  background: var(--c-bg-raised);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.modeLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.modeLabelText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nextStep {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-md);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.nextStepCalibrating {
+  background: var(--c-primary-subtle);
+  color: var(--c-text);
+}
+
+.drawingActions {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.drawingActions > * {
+  flex: 1;
+}
+
+.nextStepText {
+  flex: 1;
+  min-width: 0;
+}
+
+.shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.shortcutRow {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.shortcutRow dd {
+  margin: 0;
+}
+
+.shortcutRow kbd {
+  font-family: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.card,
+.inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+
+.inspector {
+  border-color: var(--c-primary);
+}
+
+.eyebrow {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-text-subtle);
+}
+
+.scaleSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.scaleSummaryText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.scaleValue {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.scaleUnit {
+  margin-left: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--c-text-muted);
+}
+
+.scaleSource {
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+}
+
+.scaleEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.presetGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.375rem;
+}
+
+.presetGrid > button {
+  min-width: 0;
+  padding-inline: 0.25rem;
+}
+
+.presetLabel {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.customCell input {
+  padding-inline: 0.25rem;
+  text-align: center;
+}
+
+.customCell[data-length="long"] input {
+  font-size: 0.75rem;
+}
+
+.customCell[data-length="longer"] input {
+  font-size: 0.6875rem;
+}
+
+.customCellActive input {
+  border-color: var(--c-primary);
+  box-shadow: inset 0 0 0 1px var(--c-primary);
+}
+
+.unitRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.orDivider {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+}
+
+.orDivider::before,
+.orDivider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--c-border-subtle);
+}
+
+.overrideList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.overrideRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+}
+
+.inspectorHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nameInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.inspectorValue {
+  margin-bottom: 0.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.inspectorValueMain {
+  font-family: "Roboto Mono", Consolas, monospace;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.inspectorValueSub {
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.numberField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.numberFieldLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+
+.numberFieldUnit {
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+}
+
+.pointTable {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.pointRow {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pointIndex {
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+  text-align: right;
+}
+
+.styleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.thickness {
+  flex: 1;
+  min-width: 6rem;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.swatch {
+  width: 1.125rem;
+  height: 1.125rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--c-surface);
+  box-shadow: 0 0 0 1px var(--c-border-strong);
+  cursor: pointer;
+}
+
+.swatchSelected {
+  box-shadow: 0 0 0 2px var(--c-accent-fg, var(--c-primary));
+}
+
+.kindIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.listSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.25rem;
+}
+
+.count {
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pageHeading {
+  padding: 0.5rem 0.5rem 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-text-subtle);
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4375rem 0.5rem;
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.listRow:hover {
+  background: var(--c-hover);
+}
+
+.listRowSelected,
+.listRowSelected:hover {
+  background: var(--c-primary-subtle);
+}
+
+.listName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+}
+
+.listValue {
+  font-family: "Roboto Mono", Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.emptyList {
+  margin: 0;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
+.settingsBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 0.25rem 0.25rem;
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--c-bg-raised);
+  border-top: 1px solid var(--c-border);
+}
+
+.footer > :first-child {
+  flex: 1;
+}

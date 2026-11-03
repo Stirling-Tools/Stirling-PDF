@@ -23,11 +23,26 @@ export interface CalibrationMetadata {
   unitUsed: string; // Unit active during calibration
 }
 
-// Single measurement between two page points on same page
+/**
+ * distance: exactly two points. perimeter: an open path of two or more points.
+ * area: a closed polygon of three or more points; the closing edge is implied.
+ */
+export type MeasurementKind = "distance" | "perimeter" | "area";
+
+/**
+ * A measurement drawn on a single page. Points are in unrotated page space
+ * (PDF points, y down from the page top), so they stay accurate at any zoom.
+ */
 export interface Measurement {
   id: string;
-  start: PagePoint;
-  end: PagePoint;
+  kind: MeasurementKind;
+  points: PagePoint[];
+  /** User-given name, shown ahead of the value. */
+  label?: string;
+  /** Hex colour; written into the PDF when measurements are saved. */
+  color?: string;
+  /** Stroke width in CSS pixels on screen and PDF points when saved. */
+  strokeWidth?: number;
 }
 
 // Viewport area with its own scale (for multi-region PDFs)
@@ -43,3 +58,32 @@ export interface PageScaleInfo {
 }
 
 export type PageMeasureScales = Map<number, PageScaleInfo>;
+
+/**
+ * User-set scales for one file. A page entry overrides `defaultScale`, which
+ * overrides any scale embedded in the PDF.
+ */
+export interface FileMeasureScales {
+  defaultScale: MeasureScale | null;
+  pageScales: Record<number, MeasureScale>;
+}
+
+export type MeasurementDisplayUnit = "auto" | string;
+
+export type MeasurementPrecision = "auto" | number;
+
+export type MeasurementLabelVisibility = "hideSmall" | "showAll" | "hideAll";
+
+export interface MeasurementDisplaySettings {
+  /** "auto" shows each value in its scale's unit, or paper mm/cm/m unscaled. */
+  displayUnit: MeasurementDisplayUnit;
+  /** Decimal places; "auto" picks them from the magnitude. */
+  precision: MeasurementPrecision;
+  labelVisibility: MeasurementLabelVisibility;
+  /** Snap to existing points and edges, and show alignment guides. */
+  snapToPoints: boolean;
+  /** Snap segments to 45-degree steps when drawn close to one. */
+  snapToAngles: boolean;
+  defaultColor: string;
+  defaultStrokeWidth: number;
+}
