@@ -9,6 +9,7 @@ import {
   getEndpointUrl,
   isConversionSupported,
   isImageFormat,
+  usesOfficeEngine,
 } from "@editor/utils/convertUtils";
 
 describe("convertUtils", () => {
@@ -31,7 +32,7 @@ describe("convertUtils", () => {
       // PDF to Data formats
       expect(getEndpointName("pdf", "csv")).toBe("pdf-to-csv");
       expect(getEndpointName("pdf", "txt")).toBe("pdf-to-text");
-      expect(getEndpointName("pdf", "rtf")).toBe("pdf-to-text");
+      expect(getEndpointName("pdf", "rtf")).toBe("pdf-to-rtf");
       expect(getEndpointName("pdf", "md")).toBe("pdf-to-markdown");
 
       // PDF to Web formats
@@ -345,6 +346,14 @@ describe("convertUtils", () => {
       expect(isImageFormat(longExtension)).toBe(false);
       expect(getEndpointName("pdf", longExtension)).toBe("");
       expect(getEndpointName(longExtension, "pdf")).toBe("file-to-pdf"); // Fallback to file to pdf
+    });
+  });
+
+  describe("usesOfficeEngine", () => {
+    test("offers the engine choice for text and RTF output", () => {
+      expect(usesOfficeEngine("pdf", "txt")).toBe(true);
+      expect(usesOfficeEngine("pdf", "rtf")).toBe(true);
+      expect(usesOfficeEngine("pdf", "xml")).toBe(false);
     });
   });
 });

@@ -15,5 +15,5 @@ public class AccessibilityReportRequest extends PDFFile {
             description = "Profile to check against",
             defaultValue = "ua1",
             allowableValues = {"ua1", "ua2"})
-    private String profile;
+    private String profile = "ua1";
 }

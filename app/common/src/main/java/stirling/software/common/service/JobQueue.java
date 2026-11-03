@@ -140,7 +140,7 @@ public class JobQueue implements SmartLifecycle {
 
     @Override
     public void start() {
-        log.info("Starting JobQueue lifecycle");
+        log.debug("Starting JobQueue lifecycle");
         if (!running) {
             initializeSchedulers();
             running = true;
