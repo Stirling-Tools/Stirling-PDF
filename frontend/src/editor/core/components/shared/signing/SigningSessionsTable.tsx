@@ -103,6 +103,7 @@ export function SigningSessionsTable({
           value === "mine"
             ? t("signWorkspace.createdByMe", "Created by me")
             : value.slice(5),
+        privateContent: true,
       },
       {
         key: "status",
