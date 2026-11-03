@@ -180,7 +180,10 @@ function TrackPageTileImpl({
       {
         id: "duplicate",
         icon: <Icon name="copy-plus" size={16} />,
-        label: t("pageTracks.duplicate.page", "Duplicate page"),
+        label:
+          selected && hasMultiSelection
+            ? t("pageTracks.duplicateSelected", "Duplicate selected pages")
+            : t("pageTracks.duplicate.page", "Duplicate page"),
         onClick: (event) => {
           event.stopPropagation();
           onDuplicatePage(page.id);
