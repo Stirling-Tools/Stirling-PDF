@@ -2,13 +2,19 @@ package stirling.software.SPDF.controller.api.converters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -29,12 +35,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.MockedStatic;
+import org.springframework.context.support.StaticMessageSource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.exception.GlobalExceptionHandler;
 import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
 import stirling.software.SPDF.model.api.converters.ConvertPDFToMarkdown;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest;
@@ -50,6 +62,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
+import stirling.software.officeconvert.topdf.OfficeToPdf;
 
 class OfficeConvertIntegrationTest {
     private static final String TEXT = "Stirling conversion content";
@@ -129,6 +142,74 @@ class OfficeConvertIntegrationTest {
                         packaged ? zip("index.md", markdown) : markdown));
         var controller = new ConvertMarkdownToPdf(factory, null, tempFiles, office, toPdf, null);
         assertPdfText(body(controller.markdownToPdf(request, true)));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"html,true,", "zip,true,", "html,false,true", "zip,false,true"})
+    void officeHtmlIgnoresSavedZoomForExplicitAndServerDefaultChoices(
+            String format, boolean serverDefault, Boolean choice) throws Exception {
+        properties.getSystem().setStirlingOfficeConversion(serverDefault);
+        byte[] html =
+                ("<html><body><p>" + TEXT + "</p></body></html>").getBytes(StandardCharsets.UTF_8);
+        HTMLToPdfRequest request = new HTMLToPdfRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput",
+                        "page." + format,
+                        "application/octet-stream",
+                        format.equals("zip") ? zip("index.html", html) : html));
+        request.setUseStirlingOfficeConvert(choice);
+        request.setZoom(1.5f);
+        var controller = new ConvertHtmlToPDF(factory, null, tempFiles, office, toPdf, null);
+
+        assertPdfText(body(controller.HtmlToPdf(request)));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"true,false", "false,true"})
+    void ebookIncompleteOutputReturnsTheReasonToTheClient(boolean truncated, boolean pageLimited)
+            throws Exception {
+        var controller =
+                new ConvertEbookToPDFController(
+                        factory,
+                        tempFiles,
+                        endpoints,
+                        mock(OfficeDocumentSanitizer.class),
+                        null,
+                        office,
+                        toPdf);
+        var mvc =
+                MockMvcBuilders.standaloneSetup(controller)
+                        .setControllerAdvice(
+                                new GlobalExceptionHandler(
+                                        new StaticMessageSource(), new MockEnvironment()))
+                        .build();
+        try (MockedStatic<OfficeToPdf> engine = mockStatic(OfficeToPdf.class)) {
+            engine.when(
+                            () ->
+                                    OfficeToPdf.convert(
+                                            any(Path.class),
+                                            any(Path.class),
+                                            any(OfficeToPdf.Options.class)))
+                    .thenReturn(new OfficeToPdf.Result(1, truncated, List.of(), pageLimited));
+
+            mvc.perform(
+                            multipart("/api/v1/convert/ebook/pdf")
+                                    .file(
+                                            new MockMultipartFile(
+                                                    "fileInput",
+                                                    "book.epub",
+                                                    "application/epub+zip",
+                                                    new byte[] {1}))
+                                    .param("useStirlingOfficeConvert", "true"))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(
+                            jsonPath("$.detail")
+                                    .value("Only part of book.epub could be converted"));
+        }
+        try (var files = Files.list(dir)) {
+            assertThat(files).isEmpty();
+        }
     }
 
     @ParameterizedTest

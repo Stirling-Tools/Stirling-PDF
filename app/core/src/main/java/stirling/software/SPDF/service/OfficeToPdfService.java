@@ -72,6 +72,7 @@ public class OfficeToPdfService {
                 && OfficeToPdf.Format.recognises(Path.of("file." + extension));
     }
 
+    /** Uses the server timeout and rejects incomplete output even without a fallback installed. */
     public void convert(Path in, Path out) throws IOException {
         convert(in, out, options());
     }
@@ -86,7 +87,7 @@ public class OfficeToPdfService {
         return OfficeToPdf.Options.defaults().timeout(Duration.ofMinutes(minutes));
     }
 
-    /** Fails when content is lost, allowing the caller to decide whether a fallback can help. */
+    /** Rejects incomplete or page-limited output; callers may retry with another converter. */
     public void convert(Path in, Path out, OfficeToPdf.Options options) throws IOException {
         OfficeToPdf.Result result = OfficeToPdf.convert(in, out, options);
         log.debug(

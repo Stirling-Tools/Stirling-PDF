@@ -95,7 +95,7 @@ class ConvertHtmlToPDFTest {
     }
 
     @Test
-    void htmlToPdf_validHtmlFile() throws Exception {
+    void htmlToPdf_standardConverterPreservesZoom() throws Exception {
         byte[] htmlContent = "<html><body>Hello</body></html>".getBytes();
         byte[] pdfBytes = "pdf-content".getBytes();
         byte[] processedPdf = "processed-pdf".getBytes();
@@ -104,6 +104,8 @@ class ConvertHtmlToPDFTest {
                 new MockMultipartFile("fileInput", "test.html", "text/html", htmlContent);
         HTMLToPdfRequest request = new HTMLToPdfRequest();
         request.setFileInput(file);
+        request.setUseStirlingOfficeConvert(false);
+        request.setZoom(1.5f);
 
         when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
         when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes))
@@ -139,6 +141,7 @@ class ConvertHtmlToPDFTest {
             ResponseEntity<Resource> response = controller.HtmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(1.5f, request.getZoom());
         }
     }
 

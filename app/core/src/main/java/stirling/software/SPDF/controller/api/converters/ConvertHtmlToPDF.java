@@ -40,6 +40,7 @@ public class ConvertHtmlToPDF {
 
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
+    /** Zoom applies to the standard converter; Office Convert ignores it. */
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/html/pdf",
@@ -71,10 +72,6 @@ public class ConvertHtmlToPDF {
 
         boolean officeConvert =
                 officeConversionService.replacesLibreOffice(request.getUseStirlingOfficeConvert());
-        if (officeConvert && Float.compare(request.getZoom(), 1f) != 0) {
-            throw new IllegalArgumentException(
-                    "Zoom is only supported by the standard HTML converter");
-        }
         byte[] pdfBytes =
                 officeConvert
                         ? officeToPdfService.convertHtml(
