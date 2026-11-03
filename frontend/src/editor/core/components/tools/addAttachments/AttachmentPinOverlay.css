@@ -5,6 +5,10 @@
   pointer-events: none;
 }
 
+.attachment-pin-overlay--placing {
+  pointer-events: auto;
+}
+
 .attachment-pin-overlay__page {
   position: absolute;
   overflow: hidden;
@@ -58,20 +62,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 34px;
+  width: 26px;
+  height: 26px;
   position: relative;
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.35));
 }
 
-.attachment-pin-overlay__marker-pin svg {
-  width: 100%;
-  height: 100%;
+.attachment-pin-overlay__marker-base {
+  color: var(--c-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .attachment-pin-overlay__marker-icon {
   position: absolute;
-  top: 7px;
+  top: 5px;
   left: 50%;
   transform: translateX(-50%);
   color: #ffffff;

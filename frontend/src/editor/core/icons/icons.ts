@@ -371,6 +371,7 @@ import LockOpenPassword from "@editor/icons/svg/stirling/lock-open-password.svg?
 import MoveItemDown from "@editor/icons/svg/stirling/move-item-down.svg?react";
 import OverlayPages from "@editor/icons/svg/stirling/overlay-pages.svg?react";
 import Password from "@editor/icons/svg/stirling/password.svg?react";
+import PinMarker from "@editor/icons/svg/stirling/pin-marker.svg?react";
 import Polyline from "@editor/icons/svg/stirling/polyline.svg?react";
 import QrCode from "@editor/icons/svg/stirling/qr-code.svg?react";
 import Redact from "@editor/icons/svg/stirling/redact.svg?react";
@@ -803,6 +804,7 @@ export const ICONS = {
   "move-item-down": { Component: MoveItemDown, kind: "stirling" },
   "overlay-pages": { Component: OverlayPages, kind: "stirling" },
   password: { Component: Password, kind: "stirling" },
+  "pin-marker": { Component: PinMarker, kind: "stirling" },
   polyline: { Component: Polyline, kind: "stirling" },
   "qr-code": { Component: QrCode, kind: "stirling" },
   redact: { Component: Redact, kind: "stirling" },

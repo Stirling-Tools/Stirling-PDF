@@ -103,17 +103,11 @@ function samePageRects(a: PageRect[], b: PageRect[]): boolean {
 export function AttachmentPinGraphic() {
   return (
     <div className="attachment-pin-overlay__marker-pin" aria-hidden="true">
-      <svg viewBox="0 0 28 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-          d="M14 34C14 34 26 21.6 26 13C26 6.37258 20.6274 1 14 1C7.37258 1 2 6.37258 2 13C2 21.6 14 34 14 34Z"
-          fill="var(--c-primary)"
-          stroke="#ffffff"
-          strokeWidth="1.75"
-        />
-        <circle cx="14" cy="13" r="8" fill="rgba(0, 0, 0, 0.12)" />
-      </svg>
+      <div className="attachment-pin-overlay__marker-base">
+        <Icon name="pin-marker" size={26} filled />
+      </div>
       <div className="attachment-pin-overlay__marker-icon">
-        <Icon name="paperclip" size={12} strokeWidth={2.4} />
+        <Icon name="paperclip" size={11} strokeWidth={2.4} />
       </div>
     </div>
   );
@@ -288,8 +282,11 @@ export function AttachmentPinOverlay({
 
   return createPortal(
     <div
-      className="attachment-pin-overlay"
+      className={`attachment-pin-overlay${
+        target ? " attachment-pin-overlay--placing" : ""
+      }`}
       data-testid="attachment-pin-overlay"
+      onClick={target ? onCancel : undefined}
       style={{
         left: viewport.left,
         top: viewport.top,
@@ -297,8 +294,12 @@ export function AttachmentPinOverlay({
         height: viewport.height,
       }}
     >
-      {target && (
-        <div className="attachment-pin-overlay__banner" role="status">
+      {target && renderedPageRects.length > 0 && (
+        <div
+          className="attachment-pin-overlay__banner"
+          role="status"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="attachment-pin-overlay__banner-badge">
             <Icon name="map-pin" size={14} />
           </div>

@@ -256,7 +256,7 @@ export function useAttachmentManager({
   );
 
   const startPinPlacement = useCallback((id: string) => {
-    setPlacingPinId(id);
+    setPlacingPinId((prev) => (prev === id ? null : id));
   }, []);
 
   const cancelPinPlacement = useCallback(() => {
