@@ -12,8 +12,8 @@ import stirling.software.common.model.api.PDFFile;
 public class RedactPdfRequest extends PDFFile {
 
     @Schema(
-            description = "List of text to redact from the PDF",
-            defaultValue = "text,text2",
+            description = "Newline-separated list of text to redact from the PDF",
+            example = "text\ntext2",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String listOfText;
 
@@ -21,25 +21,25 @@ public class RedactPdfRequest extends PDFFile {
             description = "Whether to use regex for the listOfText",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean useRegex;
+    private Boolean useRegex = false;
 
     @Schema(
             description = "Whether to use whole word search",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean wholeWordSearch;
+    private Boolean wholeWordSearch = false;
 
     @Schema(
             description = "Whether matching is case-sensitive, for plain text and regex alike",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-    private Boolean caseSensitive;
+    private Boolean caseSensitive = false;
 
     @Schema(
             description = "The color for redaction",
             defaultValue = "#000000",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private String redactColor;
+    private String redactColor = "#000000";
 
     @Schema(
             description = "Custom padding for redaction",

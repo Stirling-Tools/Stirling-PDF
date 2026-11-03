@@ -1,5 +1,6 @@
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { innermostMcid } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 
 /** Cluster adjacent text runs on a page into "line groups". */
 export interface LineGroupInfo {
@@ -8,6 +9,14 @@ export interface LineGroupInfo {
   /** Original runs collapsed into this group, in left-to-right order. */
   members: TextRun[];
 }
+
+/**
+ * The structure block a run's text belongs to. Runs with different keys are
+ * never grouped: a heading merged into its paragraph could not be tagged apart.
+ */
+export type BlockKey = (run: TextRun) => string;
+
+export const SAME_BLOCK: BlockKey = () => "";
 
 const BASELINE_TOLERANCE = 0.4;
 // Two runs on the same baseline join the same line only when the horizontal gap
@@ -67,9 +76,23 @@ function isBulletLead(run: TextRun): boolean {
   return BULLET_GLYPHS.test(run.text) && run.bounds.width <= run.fontSize;
 }
 
+/**
+ * The block a line's text belongs to, or null while it holds only bullets. A
+ * bullet decides nothing: producers commonly leave it untagged, or mark it an
+ * artifact, beside an item they tag.
+ */
+function lineBlock(members: TextRun[], blockKey: BlockKey): string | null {
+  const text = members.find((member) => !isBulletLead(member));
+  return text ? blockKey(text) : null;
+}
+
 // Sort one container's runs top-to-bottom / left-to-right and merge
 // same-baseline, close-together runs into line groups.
-function groupPartitionIntoLines(runs: TextRun[], out: LineGroupInfo[]): void {
+function groupPartitionIntoLines(
+  runs: TextRun[],
+  blockKey: BlockKey,
+  out: LineGroupInfo[],
+): void {
   const sorted = [...runs].sort((a, b) => {
     const yDiff = b.matrix.f - a.matrix.f;
     // Same-line band scaled to font size so a list bullet sitting a couple of
@@ -105,7 +128,11 @@ function groupPartitionIntoLines(runs: TextRun[], out: LineGroupInfo[]): void {
     const minNegGap = 0.25 * Math.max(ref.fontSize, 4);
     const close = gap <= effMaxGap && gap >= -minNegGap;
 
-    if (sameLine && close) {
+    const block = lineBlock(current.members, blockKey);
+    const sameBlock =
+      isBulletLead(run) || block === null || blockKey(run) === block;
+
+    if (sameLine && close && sameBlock) {
       current.members.push(run);
     } else {
       current = { representative: run, members: [run] };
@@ -116,7 +143,7 @@ function groupPartitionIntoLines(runs: TextRun[], out: LineGroupInfo[]): void {
 
 export class LineGrouper {
   /** Group a page's runs and store the result back onto the page. */
-  static apply(page: Page): LineGroupInfo[] {
+  static apply(page: Page, blockKey: BlockKey = SAME_BLOCK): LineGroupInfo[] {
     // Partition by form-xobject container BEFORE grouping.
     const partitions = new Map<number, TextRun[]>();
     for (const run of page.runs) {
@@ -128,7 +155,7 @@ export class LineGrouper {
 
     const groups: LineGroupInfo[] = [];
     for (const partition of partitions.values()) {
-      groupPartitionIntoLines(partition, groups);
+      groupPartitionIntoLines(partition, blockKey, groups);
     }
 
     // Refine: a "line" whose glyphs heavily OVERLAP in x is not real running
@@ -162,6 +189,12 @@ export class LineGrouper {
         ];
         group.representative.mergedFromCharStarts = [0];
         continue;
+      }
+      // A bullet with no tag of its own would otherwise make a tagged item
+      // read as untagged, and its text lose its tag when re-emitted.
+      const text = group.members.find((member) => !isBulletLead(member));
+      if (text && innermostMcid(group.representative.tagMarks) === null) {
+        group.representative.tagMarks = text.tagMarks;
       }
       // Snapshot per-member texts and bounds BEFORE we mutate the
       // representative.

@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { PortalProviders } from "@processor/PortalProviders";
+import { PlatformProviders } from "@editor/components/PlatformProviders";
 
 const h = vi.hoisted(() => ({
   get: vi.fn(),
@@ -16,14 +16,18 @@ const h = vi.hoisted(() => ({
     signOut: vi.fn(),
   },
 }));
-vi.mock("react-i18next", () => ({
+vi.mock("react-i18next", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-i18next")>()),
   useTranslation: () => ({
     t: (key: string) => key,
     i18n: { language: "en-US" },
   }),
 }));
 vi.mock("@editor/auth", () => ({ useAuth: () => h.auth }));
-vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => h.auth }));
+vi.mock("@editor/auth/UseSession", () => ({
+  AuthProvider: ({ children }: { children: ReactNode }) => children,
+  useAuth: () => h.auth,
+}));
 vi.mock("@editor/services/apiClient", () => ({ default: { get: h.get } }));
 vi.mock("@editor/extensions/accountLogout", () => ({
   useAccountLogout: () => vi.fn(),
@@ -91,16 +95,13 @@ it("mounts mandatory setup on a cold Processor entry without editor providers", 
       return { data: { showDefaultCredentials: true } };
     throw new Error(`Unexpected request: ${url}`);
   });
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: 0 } },
-  });
   const view = render(
     <MemoryRouter initialEntries={["/processor/policies"]}>
-      <QueryClientProvider client={client}>
-        <MantineProvider>
+      <MantineProvider>
+        <PlatformProviders>
           <PortalProviders />
-        </MantineProvider>
-      </QueryClientProvider>
+        </PlatformProviders>
+      </MantineProvider>
     </MemoryRouter>,
   );
   expect(
@@ -108,5 +109,4 @@ it("mounts mandatory setup on a cold Processor entry without editor providers", 
   ).toBeVisible();
   expect(screen.getByText("Processor")).toBeVisible();
   view.unmount();
-  client.clear();
 });
