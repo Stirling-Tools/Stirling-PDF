@@ -619,6 +619,13 @@ public class EndpointConfiguration {
             addEndpointAlternative("pdf-to-word", "Java");
             addEndpointAlternative("pdf-to-presentation", "Java");
             addEndpointAlternative("pdf-to-rtf", "Java");
+            addEndpointAlternative("pdf-to-html", "Java");
+            addEndpointAlternative("pdf-to-markdown", "Java");
+            addEndpointAlternative("pdf-to-xml", "Java");
+            addEndpointAlternative("pdf-to-pdfa", "Java");
+            addEndpointAlternative("html-to-pdf", "Java");
+            addEndpointAlternative("pdf-to-epub", "Java");
+            addEndpointAlternative("ebook-to-pdf", "Java");
         }
 
         // pdf-to-html and pdf-to-markdown can use either LibreOffice or Pdftohtml

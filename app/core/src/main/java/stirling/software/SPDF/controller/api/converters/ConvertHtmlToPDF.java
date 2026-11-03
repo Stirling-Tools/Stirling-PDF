@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.service.OfficeConversionService;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -33,6 +35,8 @@ public class ConvertHtmlToPDF {
     private final RuntimePathConfig runtimePathConfig;
 
     private final TempFileManager tempFileManager;
+    private final OfficeConversionService officeConversionService;
+    private final OfficeToPdfService officeToPdfService;
 
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
@@ -65,14 +69,23 @@ public class ConvertHtmlToPDF {
                     "error.fileFormatRequired", "File must be in {0} format", ".html or .zip");
         }
 
+        boolean officeConvert =
+                officeConversionService.replacesLibreOffice(request.getUseStirlingOfficeConvert());
+        if (officeConvert && Float.compare(request.getZoom(), 1f) != 0) {
+            throw new IllegalArgumentException(
+                    "Zoom is only supported by the standard HTML converter");
+        }
         byte[] pdfBytes =
-                FileToPdf.convertHtmlToPdf(
-                        runtimePathConfig.getWeasyPrintPath(),
-                        request,
-                        fileInput.getBytes(),
-                        originalFilename,
-                        tempFileManager,
-                        customHtmlSanitizer);
+                officeConvert
+                        ? officeToPdfService.convertHtml(
+                                fileInput.getBytes(), originalFilename.endsWith(".zip"))
+                        : FileToPdf.convertHtmlToPdf(
+                                runtimePathConfig.getWeasyPrintPath(),
+                                request,
+                                fileInput.getBytes(),
+                                originalFilename,
+                                tempFileManager,
+                                customHtmlSanitizer);
 
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 

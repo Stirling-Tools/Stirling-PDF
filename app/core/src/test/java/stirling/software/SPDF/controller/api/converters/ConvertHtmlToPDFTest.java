@@ -55,6 +55,9 @@ class ConvertHtmlToPDFTest {
     @Mock private TempFileManager tempFileManager;
     @Mock private CustomHtmlSanitizer customHtmlSanitizer;
 
+    @Mock private stirling.software.SPDF.service.OfficeConversionService officeConversionService;
+    @Mock private stirling.software.SPDF.service.OfficeToPdfService officeToPdfService;
+
     @InjectMocks private ConvertHtmlToPDF controller;
 
     @BeforeEach

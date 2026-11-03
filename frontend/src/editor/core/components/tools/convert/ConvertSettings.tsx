@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -69,6 +70,11 @@ const ConvertSettings = ({
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
+  const { config } = useAppConfig();
+  const officeConvert =
+    parameters.useStirlingOfficeConvert ??
+    config?.stirlingOfficeConversion ??
+    false;
   const { preferences } = usePreferences();
   const localProcessingOnly = useLocalProcessingOnly();
   const hideUnavailableConversions =
@@ -392,10 +398,11 @@ const ConvertSettings = ({
         )}
 
       {/* Web to PDF options */}
-      {(isWebFormat(parameters.fromExtension) &&
+      {!officeConvert &&
+      ((isWebFormat(parameters.fromExtension) &&
         parameters.toExtension === "pdf") ||
-      (parameters.isSmartDetection &&
-        parameters.smartDetectionType === "web") ? (
+        (parameters.isSmartDetection &&
+          parameters.smartDetectionType === "web")) ? (
         <>
           <Divider />
           <ConvertFromWebSettings

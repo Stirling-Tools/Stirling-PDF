@@ -77,6 +77,42 @@ test.describe("Convert Tool", () => {
     });
   });
 
+  test("offers Office Convert for supported document outputs", async ({
+    page,
+  }, testInfo) => {
+    await uploadFile(page, SAMPLE_PDF);
+    await navigateToConvert(page);
+    for (const format of [
+      "docx",
+      "pptx",
+      "xlsx",
+      "txt",
+      "rtf",
+      "md",
+      "xml",
+      "html",
+      "epub",
+      "azw3",
+      "pdfa",
+    ]) {
+      await selectToFormat(page, format);
+      const choice = page.getByTestId("stirling-office-convert-switch");
+      await expect(choice).toBeVisible();
+      await choice.check();
+      await expect(choice).toBeChecked();
+      await choice.uncheck();
+    }
+    await page.screenshot({
+      path: testInfo.outputPath("office-convert-options.png"),
+    });
+    for (const format of ["png", "pdfx"]) {
+      await selectToFormat(page, format);
+      await expect(
+        page.getByTestId("stirling-office-convert-switch"),
+      ).toHaveCount(0);
+    }
+  });
+
   test("convert button is disabled before a TO format is selected", async ({
     page,
   }) => {

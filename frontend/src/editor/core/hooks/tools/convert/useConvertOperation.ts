@@ -150,7 +150,12 @@ export const buildConvertFormData = (
     (fromExtension === "html" || fromExtension === "zip") &&
     toExtension === "pdf"
   ) {
-    formData.append("zoom", htmlOptions.zoomLevel.toString());
+    formData.append(
+      "zoom",
+      parameters.useStirlingOfficeConvert
+        ? "1"
+        : htmlOptions.zoomLevel.toString(),
+    );
   } else if (
     (fromExtension === "eml" || fromExtension === "msg") &&
     toExtension === "pdf"
