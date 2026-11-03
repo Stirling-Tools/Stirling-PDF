@@ -44,6 +44,16 @@ public class LicenseKeyChecker {
     /** The licence key's own tier, before any Team-plan promotion. Same volatile contract. */
     private volatile License licenseKeyResult = License.NORMAL;
 
+    /**
+     * premiumTier() is asked several times per page load and each miss costs a DB read, so the
+     * resolved tier is memoised briefly. Deliberately short: a link, unlink or key change is picked
+     * up within this window without any of the callers having to invalidate anything.
+     */
+    private static final long TIER_MEMO_NANOS = Duration.ofSeconds(5).toNanos();
+
+    /** nanoTime of the last successful promotion; 0 means "never resolved", so never memoised. */
+    private volatile long tierResolvedAtNanos = 0L;
+
     public LicenseKeyChecker(
             KeygenLicenseVerifier licenseService,
             ApplicationProperties applicationProperties,
@@ -131,14 +141,17 @@ public class LicenseKeyChecker {
         if (licenseKeyResult != License.NORMAL) {
             premiumEnabledResult = licenseKeyResult;
             ensurePeriodicRefresh();
+            tierResolvedAtNanos = System.nanoTime();
             return;
         }
         Integer users;
         try {
             users = purchasedTeamUsers();
         } catch (RuntimeException e) {
-            // A failed read must not revoke a known entitlement.
+            // A failed read must not revoke a known entitlement, but it must not leave an earlier
+            // stamp fresh either, or the next premiumTier() skips the retry.
             log.debug("Linked team allowance unreadable; keeping the current tier", e);
+            tierResolvedAtNanos = 0L;
             return;
         }
         boolean entitled = users != null && users > 0;
@@ -147,6 +160,7 @@ public class LicenseKeyChecker {
             ensurePeriodicRefresh();
         }
         premiumEnabledResult = entitled ? License.SERVER : License.NORMAL;
+        tierResolvedAtNanos = System.nanoTime();
     }
 
     /** Registers the periodic re-check once a licence key or linked team entitlement exists. */
@@ -206,8 +220,16 @@ public class LicenseKeyChecker {
 
     /** Resolves the effective tier after the datasource is available. */
     public License premiumTier() {
-        applyTeamPlanPromotion();
+        if (!isTierMemoFresh()) {
+            applyTeamPlanPromotion();
+        }
         return premiumEnabledResult;
+    }
+
+    // A failed promotion never stamps, so an unreadable entitlement is retried, not frozen.
+    private boolean isTierMemoFresh() {
+        long resolvedAt = tierResolvedAtNanos;
+        return resolvedAt != 0L && System.nanoTime() - resolvedAt < TIER_MEMO_NANOS;
     }
 
     public License getPremiumLicenseEnabledResult() {

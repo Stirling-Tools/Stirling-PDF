@@ -19,10 +19,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
@@ -38,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.scheduling.LazyScheduledTask;
+import stirling.software.proprietary.security.configuration.CacheConfig;
 import stirling.software.proprietary.security.model.JwtSigningKeyEntity;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 import stirling.software.proprietary.security.repository.JwtSigningKeyRepository;
@@ -53,14 +52,15 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     public static final String PUB_KEY_SUFFIX = ".pub";
 
     private final ApplicationProperties.Security.Jwt jwtProperties;
-    private final Cache verifyingKeyCache;
     private final JwtSigningKeyRepository keyRepository;
     private final boolean clusterEnabled;
     private final long activeKeyReloadMs;
     private final LazyScheduledTask keyReload;
 
-    // kid -> KeyPair; safe to cache since key material is immutable.
-    private final Map<String, KeyPair> keyPairCache = new ConcurrentHashMap<>();
+    // kid -> KeyPair. Immutable once minted, so this is bounded for exposure, not for staleness:
+    // an unbounded map kept every historic key's decrypted private half for the life of the
+    // process.
+    private final Cache keyPairCache;
 
     private volatile JwtVerificationKey activeKey;
 
@@ -72,7 +72,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             @Value("${stirling.security.jwt.activeKeyReloadMs:300000}") long activeKeyReloadMs,
             TaskScheduler scheduler) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
-        this.verifyingKeyCache = cacheManager.getCache("verifyingKeys");
+        this.keyPairCache = cacheManager.getCache(CacheConfig.SIGNING_KEYS_CACHE);
         this.keyRepository = keyRepository;
         this.clusterEnabled = clusterEnabled;
         this.activeKeyReloadMs = activeKeyReloadMs;
@@ -117,7 +117,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             }
             JwtVerificationKey adopted =
                     new JwtVerificationKey(newest.getKeyId(), newest.getVerifyingKey());
-            verifyingKeyCache.put(newest.getKeyId(), adopted);
             activeKey = adopted;
             log.info(
                     "Adopted newest JWT signing key {} from the shared DB as active",
@@ -134,10 +133,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             log.info("No JWT keys in the database, generating a new keypair");
             generateAndStoreKeypair();
             return;
-        }
-        for (JwtSigningKeyEntity key : keys) {
-            verifyingKeyCache.put(
-                    key.getKeyId(), new JwtVerificationKey(key.getKeyId(), key.getVerifyingKey()));
         }
         activeKey =
                 new JwtVerificationKey(
@@ -158,7 +153,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
             keyPairCache.put(keyId, keyPair);
             JwtVerificationKey verificationKey = new JwtVerificationKey(keyId, verifyingKey);
-            verifyingKeyCache.put(keyId, verificationKey);
             activeKey = verificationKey;
             log.info("Generated and stored new JWT keypair: {}", keyId);
             return verificationKey;
@@ -189,7 +183,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         if (!isKeystoreEnabled() || keyId == null) {
             return Optional.empty();
         }
-        KeyPair cached = keyPairCache.get(keyId);
+        KeyPair cached = keyPairCache.get(keyId, KeyPair.class);
         if (cached != null) {
             return Optional.of(cached);
         }
@@ -205,7 +199,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
                             decodePublicKey(entity.getVerifyingKey()),
                             decodePrivateKey(entity.getSigningKey()));
             keyPairCache.put(keyId, keyPair);
-            verifyingKeyCache.put(keyId, new JwtVerificationKey(keyId, entity.getVerifyingKey()));
             return Optional.of(keyPair);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             log.error("Failed to decode keypair for keyId: {}", keyId, e);
@@ -226,8 +219,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     @Override
     public void removeKey(String keyId) {
         keyRepository.deleteById(keyId);
-        verifyingKeyCache.evict(keyId);
-        keyPairCache.remove(keyId);
+        keyPairCache.evict(keyId);
     }
 
     @Override
