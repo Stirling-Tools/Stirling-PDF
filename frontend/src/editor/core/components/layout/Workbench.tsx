@@ -44,8 +44,14 @@ const FileManagerView = lazy(
   () => import("@editor/components/filesPage/FileManagerView"),
 );
 
-// No props needed - component uses contexts directly
-export default function Workbench() {
+interface WorkbenchProps {
+  /** The host draws its own controls for the open file in place of the workbench bar. */
+  hideWorkbenchBar?: boolean;
+}
+
+export default function Workbench({
+  hideWorkbenchBar = false,
+}: WorkbenchProps) {
   // A flow that owns the canvas outright (desktop onboarding's Downloads sweep).
   // Null in every other case, which is every case in core.
   const takeover = useWorkbenchTakeover();
@@ -104,7 +110,11 @@ export default function Workbench() {
   // Reading hides the bar; the rail's Reader entry is the way back. A takeover hides
   // the switcher and search too: both navigate away from a flow that must finish.
   const showWorkbenchBar =
-    topControlsAvailable && hasWorkbenchContent && !readerMode && !takeover;
+    !hideWorkbenchBar &&
+    topControlsAvailable &&
+    hasWorkbenchContent &&
+    !readerMode &&
+    !takeover;
   const showFloatingSearch =
     topControlsAvailable &&
     !hasWorkbenchContent &&
@@ -234,11 +244,14 @@ export default function Workbench() {
         </div>
       )}
       {/* Phone only: above that the rail carries the bell, and here no bar does. */}
-      {isPhone && !showWorkbenchBar && topControlsAvailable && (
-        <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>
-          <NotificationBell />
-        </div>
-      )}
+      {isPhone &&
+        !showWorkbenchBar &&
+        !hideWorkbenchBar &&
+        topControlsAvailable && (
+          <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>
+            <NotificationBell />
+          </div>
+        )}
 
       {showWorkbenchBar && (
         <div className={styles.workbenchBarShell}>

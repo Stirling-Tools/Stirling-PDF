@@ -20,3 +20,36 @@
 .phone-layout .mobile-bottom-button[data-active="true"] {
   color: var(--c-accent-fg, var(--c-primary));
 }
+
+.document-header {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.5rem;
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
+}
+
+.document-header-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border: none;
+  background: transparent;
+  color: var(--c-text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.document-header-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.document-actions .mobile-bottom-button-label {
+  white-space: nowrap;
+}
