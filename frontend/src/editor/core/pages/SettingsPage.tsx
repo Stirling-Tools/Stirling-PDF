@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "@editor/ui/Icon";
+import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
 import { useSectionHeadings } from "@editor/components/settings/useSectionHeadings";
@@ -218,6 +219,16 @@ const SettingsPageInner: React.FC = () => {
           <span className="settings-page__nav-title">
             {t("settings.title", "Settings")}
           </span>
+          {isMobile && (
+            <ActionIcon
+              variant="tertiary"
+              className="settings-page__close"
+              onClick={() => requestNavigation(leave)}
+              aria-label={t("close", "Close")}
+            >
+              <Icon name="x" size="1.25rem" />
+            </ActionIcon>
+          )}
         </div>
 
         <div className="modal-nav-scroll">
