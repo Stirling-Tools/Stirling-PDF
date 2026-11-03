@@ -30,6 +30,22 @@
     },
     {
       "moduleName": ".*",
+      "moduleLicense": "BSD 3-Clause License"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "EDL 1.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Eclipse Distribution License - v 1.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Eclipse Distribution License v. 1.0"
+    },
+    {
+      "moduleName": ".*",
       "moduleLicense": "BSD-4 License"
     },
     {

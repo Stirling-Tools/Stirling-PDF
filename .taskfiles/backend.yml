@@ -282,17 +282,17 @@ tasks:
   licenses:check:
     desc: "Check dependency licenses"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat checkLicense --no-parallel"
+      - cmd: cmd /c ".\gradlew.bat checkLicense checkLicenseSourceLinks --no-parallel"
         platforms: [windows]
-      - cmd: ./gradlew checkLicense --no-parallel
+      - cmd: ./gradlew checkLicense checkLicenseSourceLinks --no-parallel
         platforms: [linux, darwin]
 
   licenses:generate:
     desc: "Check and generate dependency license report"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat checkLicense generateLicenseReport --no-parallel"
+      - cmd: cmd /c ".\gradlew.bat checkLicense generateLicenseReport checkLicenseSourceLinks --no-parallel"
         platforms: [windows]
-      - cmd: ./gradlew checkLicense generateLicenseReport --no-parallel
+      - cmd: ./gradlew checkLicense generateLicenseReport checkLicenseSourceLinks --no-parallel
         platforms: [linux, darwin]
 
   clean:

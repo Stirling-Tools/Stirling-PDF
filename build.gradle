@@ -18,7 +18,9 @@ import groovy.xml.XmlSlurper
 import org.gradle.api.JavaVersion
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import stirling.software.gradle.CheckLicenseSourceLinks
 import stirling.software.gradle.ModuleLicenseOverrideFilter
+import stirling.software.gradle.ModuleLicenseSelectionFilter
 
 ext {
     springBootVersion = "4.1.2"
@@ -593,6 +595,7 @@ gradle.taskGraph.whenReady { graph ->
 
 def allProjects = ((subprojects as Set<Project>) + project) as Set<Project>
 def moduleLicenseOverridesFile = project.layout.projectDirectory.file("app/license-overrides.json").asFile
+def moduleLicenseSelectionsFile = project.layout.projectDirectory.file("app/license-selections.json").asFile
 
 licenseReport {
     projects = allProjects
@@ -600,15 +603,28 @@ licenseReport {
     allowedLicensesFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
     outputDir = project.layout.buildDirectory.dir("reports/dependency-license").get().asFile.path
     configurations = [ "productionRuntimeClasspath", "runtimeClasspath" ]
-    filters = [new ModuleLicenseOverrideFilter(moduleLicenseOverridesFile)]
+    filters = [
+        new ModuleLicenseOverrideFilter(moduleLicenseOverridesFile),
+        new ModuleLicenseSelectionFilter(moduleLicenseSelectionsFile)
+    ]
 }
 
 tasks.named('generateLicenseReport') {
     inputs.file(moduleLicenseOverridesFile)
+    inputs.file(moduleLicenseSelectionsFile)
 }
 
 tasks.named('checkLicensePreparation') {
     inputs.file(moduleLicenseOverridesFile)
+    inputs.file(moduleLicenseSelectionsFile)
+}
+
+tasks.register('checkLicenseSourceLinks', CheckLicenseSourceLinks) {
+    group = 'verification'
+    description = 'Checks that dependencies needing a source link have one, and that each link loads.'
+    dependsOn 'generateLicenseReport'
+    reportFile = layout.buildDirectory.file('reports/dependency-license/index.json')
+    selectionsFile = moduleLicenseSelectionsFile
 }
 
 // Configure the forked spring boot run task to properly delegate to the stirling-pdf module

@@ -7,7 +7,8 @@ license files. Some artifacts do not publish license metadata in a form the plug
 though the artifact has a known license.
 
 This directory contains the build logic used to provide narrowly scoped fallback license metadata
-for those artifacts.
+for those artifacts, and to set which license and source link the report shows for a dependency
+(see [License selections](#license-selections)).
 
 ## Files
 
@@ -17,6 +18,10 @@ for those artifacts.
 - `src/main/groovy/stirling/software/gradle/ModuleLicenseOverrideFilter.groovy` implements the
   plugin's `DependencyFilter` interface.
 - `../app/license-overrides.json` contains the actual module-specific fallback values.
+- `src/main/groovy/stirling/software/gradle/ModuleLicenseSelectionFilter.groovy` and
+  `../app/license-selections.json` set the license and source link reported for a dependency.
+- `src/main/groovy/stirling/software/gradle/CheckLicenseSourceLinks.groovy` and
+  `LicenseSourceLinks.groovy` check those source links.
 - `../app/allowed-licenses.json` defines which detected or supplied licenses are accepted by
   `checkLicense`.
 
@@ -119,6 +124,39 @@ If the new artifact publishes usable license metadata, no override is necessary.
 report or license check removes the old entry from `app/license-overrides.json` automatically. The
 file must contain only overrides that are still needed.
 
+## License selections
+
+`app/license-selections.json` sets the license and source link the report shows for a dependency.
+Without a selection, the plugin reports the alphabetically last license and URL the dependency
+declares. Entries are keyed by `group:artifact`, without a version:
+
+```json
+{
+  "org.verapdf:core": {
+    "license": "Mozilla Public License 2.0 (MPL-2.0)",
+    "sourceUrl": "https://github.com/veraPDF/veraPDF-library/tree/v{version}"
+  },
+  "org.cryptacular:cryptacular": {
+    "license": "Apache 2"
+  }
+}
+```
+
+- `license` must exactly match a license name the dependency declares. If a new version no longer
+  declares it, the license report fails.
+- `sourceUrl` is optional; `{version}` is replaced with the resolved version. Without it, the
+  report keeps the dependency's own URL.
+
+`checkLicenseSourceLinks` (part of `task backend:licenses:check`) fails when a dependency under
+MPL, EPL, CDDL, LGPL or GPL has no `sourceUrl`, or when a source link does not load. It needs
+network access.
+
+To list every license and URL a dependency declares, temporarily add
+`new JsonReportRenderer('all-licenses.json', false)` to `renderers` in the root `build.gradle` and
+run `task backend:licenses:generate`.
+
+Selections for artifacts that are no longer resolved are removed from the file automatically.
+
 ## Verification
 
 Run the filter unit tests:
@@ -131,7 +169,10 @@ The tests use `com.example:example-library` versions 1.4 and 1.7 to cover the mi
 metadata fallback, placeholder creation, version migration, preservation of a populated newer
 override, automatic cleanup after license metadata appears, exact-version matching, and concurrent
 resolved versions. They also verify removal when a dependency version disappears. A separate `1.9`
-to `1.11.0` case verifies numeric Gradle version ordering.
+to `1.11.0` case verifies numeric Gradle version ordering. `ModuleLicenseSelectionFilterTest`
+covers choosing among declared licenses, `{version}` substitution, failure on an undeclared
+license, removal of unused selections, and rejection of versioned keys. `LicenseSourceLinksTest`
+covers missing and broken source links.
 
 Run the normal backend license workflow from the repository root:
 
@@ -152,14 +193,15 @@ Also run the backend quality gate after changing the filter or its build wiring:
 task backend:check
 ```
 
-The override JSON is registered as an input of `generateLicenseReport` and
+The override and selection JSON files are registered as inputs of `generateLicenseReport` and
 `checkLicensePreparation`, so changing the file invalidates the corresponding Gradle task outputs.
 
 ## What not to do
 
-- Do not use an unversioned key. It cannot match the filter and would make the intended scope
-  ambiguous.
-- Do not use an override to replace valid license metadata published by a dependency.
+- Do not use an unversioned key in `license-overrides.json`. It cannot match the filter and would
+  make the intended scope ambiguous. (`license-selections.json` is the reverse: unversioned only.)
+- Do not use an override to replace valid license metadata published by a dependency. To choose
+  between licenses a dependency declares, use a selection.
 - Do not add an empty license to `allowed-licenses.json` merely to silence `checkLicense`; that
   would still leave the generated report without useful license information.
 - Do not exclude a dependency from the report solely because it is transitive. Runtime transitive

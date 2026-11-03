@@ -13,6 +13,9 @@ build: &build
   - build.gradle
   - gradle/spotless.gradle
   - app/(common|core|proprietary|saas)/build.gradle
+  - app/allowed-licenses.json
+  - app/license-overrides.json
+  - app/license-selections.json
   - Taskfile.yml
   - .taskfiles/backend.yml
   - .github/workflows/check-licence.yml
