@@ -1,6 +1,7 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -21,9 +22,15 @@ import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.SsrfProtectionService;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 class OfficeDocumentSanitizerTest {
 
@@ -175,6 +182,41 @@ class OfficeDocumentSanitizerTest {
     }
 
     @Test
+    void sanitize_logsOneSummaryPerPartNotOneLinePerHref() throws IOException {
+        StringBuilder content =
+                new StringBuilder(
+                        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                                + "<office:document-content"
+                                + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
+                                + " xmlns:xlink=\"http://www.w3.org/1999/xlink\">");
+        for (int i = 0; i < 1_000; i++) {
+            content.append("<a xlink:href=\"").append(EXTERNAL_URL).append("\"/>");
+        }
+        content.append("</office:document-content>");
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("content.xml", content.toString().getBytes(StandardCharsets.UTF_8));
+
+        Logger logger = (Logger) LoggerFactory.getLogger(OfficeDocumentSanitizer.class);
+        Level previousLevel = logger.getLevel();
+        logger.setLevel(Level.INFO);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            byte[] cleaned = sanitizer.sanitize(zip(entries), "odt");
+
+            String result = new String(unzip(cleaned).get("content.xml"), StandardCharsets.UTF_8);
+            assertFalse(result.contains(EXTERNAL_URL));
+            assertEquals(1, appender.list.size(), () -> appender.list.toString());
+            assertTrue(appender.list.get(0).getFormattedMessage().contains("1000"));
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+            logger.setLevel(previousLevel);
+        }
+    }
+
+    @Test
     void sanitize_odsStripsExternalXlinkHref() throws IOException {
         Map<String, byte[]> entries = new LinkedHashMap<>();
         entries.put("content.xml", ODF_CONTENT_EXTERNAL.getBytes(StandardCharsets.UTF_8));
@@ -310,6 +352,52 @@ class OfficeDocumentSanitizerTest {
         String rels =
                 new String(result.get("word/_rels/document.xml.rels"), StandardCharsets.UTF_8);
         assertTrue(rels.contains("media/image1.png"));
+    }
+
+    @Test
+    void sanitize_rejectsRelsPartWithDoctype() throws IOException {
+        String relsWithDoctype =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE Relationships>"
+                        + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+                        + "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\""
+                        + " Target=\"file:///etc/hostname\" TargetMode=\"External\"/>"
+                        + "</Relationships>";
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put(
+                "word/_rels/document.xml.rels", relsWithDoctype.getBytes(StandardCharsets.UTF_8));
+        byte[] docx = zip(entries);
+
+        assertThrows(IOException.class, () -> sanitizer.sanitize(docx, "docx"));
+    }
+
+    @Test
+    void sanitize_rejectsMalformedRelsPart() throws IOException {
+        String malformedRels =
+                "<Relationships><Relationship Id=\"rId1\" Target=\"file:///etc/hostname\""
+                        + " TargetMode=\"External\"";
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("word/_rels/document.xml.rels", malformedRels.getBytes(StandardCharsets.UTF_8));
+        byte[] docx = zip(entries);
+
+        assertThrows(IOException.class, () -> sanitizer.sanitize(docx, "docx"));
+    }
+
+    @Test
+    void sanitize_rejectsMalformedOdfPart() throws IOException {
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("content.xml", "<office:document-content>".getBytes(StandardCharsets.UTF_8));
+        byte[] odt = zip(entries);
+
+        assertThrows(IOException.class, () -> sanitizer.sanitize(odt, "odt"));
+    }
+
+    @Test
+    void sanitize_rejectsEntryNamedOutsideTheArchive() throws IOException {
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("../word/document.xml", "<w:document/>".getBytes(StandardCharsets.UTF_8));
+        byte[] docx = zip(entries);
+
+        assertThrows(IOException.class, () -> sanitizer.sanitize(docx, "docx"));
     }
 
     @Test
