@@ -29,6 +29,15 @@ describe("toolContentSearch", () => {
     expect(replaceColorPrefixes).toContain("replaceColor");
     expect(replaceColorPrefixes).toContain("home.replaceColor");
     expect(replaceColorPrefixes).toContain("replace-color");
+
+    expect(getTranslationPrefixesForToolId("scalePages")).toContain(
+      "adjustPageScale",
+    );
+    expect(getTranslationPrefixesForToolId("certSign")).toEqual([
+      "certSign",
+      "home.certSign",
+      "sign",
+    ]);
   });
 
   it("finds matches in tool content and builds appropriate snippets", () => {
@@ -72,5 +81,29 @@ describe("toolContentSearch", () => {
     expect(
       findToolContentMatch("replaceColor", "nonexistentfeature", mockT),
     ).toBe(null);
+  });
+
+  it("matches non-Latin queries against translated content", () => {
+    const mockT = ((key: string) => {
+      if (key === "annotate") {
+        return {
+          options: {
+            ink: "黒地に黄文字",
+            colour: "短边翻转",
+          },
+        };
+      }
+      return {};
+    }) as unknown as TFunction;
+
+    expect(findToolContentMatch("annotate", "黒地に黄文字", mockT)).toBe(
+      "黒地に黄文字",
+    );
+    expect(findToolContentMatch("annotate", "短边翻转", mockT)).toBe(
+      "短边翻转",
+    );
+    expect(buildToolMatchSnippet("黒地に黄文字", "黒地に黄文字")).toBe(
+      "黒地に黄文字",
+    );
   });
 });

@@ -23,7 +23,8 @@ const EXTRA_TOOL_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> = {
   scannerImageSplit: ["ScannerImageSplit"],
   autoRename: ["auto-rename"],
   annotate: ["annotation"],
-  certSign: ["sign", "signMenu", "sharedSign", "signingDetail"],
+  scalePages: ["adjustPageScale"],
+  certSign: ["sign"],
 };
 
 export const getTranslationPrefixesForToolId = (toolId: string): string[] => {
@@ -71,8 +72,8 @@ export function findToolContentMatch(
   t: TFunction,
 ): string | null {
   const normalizedQuery = normalizeSearchText(query);
-  const qWords = normalizedQuery.split(/[^a-z0-9]+/g).filter(Boolean);
-  if (qWords.length === 0) return null;
+  if (!normalizedQuery) return null;
+  const qWords = normalizedQuery.split(/[^\p{L}\p{N}]+/gu).filter(Boolean);
 
   return (
     getToolContent(toolId, t).find((text) => {
@@ -95,7 +96,7 @@ export const buildToolMatchSnippet = (text: string, query: string): string => {
   let matchIndex = normalizedText.indexOf(normalizedQuery);
 
   if (matchIndex === -1) {
-    const qWords = normalizedQuery.split(/[^a-z0-9]+/g).filter(Boolean);
+    const qWords = normalizedQuery.split(/[^\p{L}\p{N}]+/gu).filter(Boolean);
     for (const w of qWords) {
       const idx = normalizedText.indexOf(w);
       if (idx !== -1) {
