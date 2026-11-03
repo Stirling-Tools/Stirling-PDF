@@ -21,6 +21,8 @@ import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,11 +53,15 @@ import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.LimitedPDFRenderer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempDirectory;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.propertyeditor.JsonListPropertyEditor;
+
+import tools.jackson.core.type.TypeReference;
 
 @MiscApi
 @Slf4j
@@ -77,6 +83,14 @@ public class AutoRotateController {
     private final RuntimePathConfig runtimePathConfig;
     private final ApplicationProperties applicationProperties;
 
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                List.class,
+                "pageRotations",
+                new JsonListPropertyEditor<>(new TypeReference<List<PageRotation>>() {}));
+    }
+
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/auto-rotate-pdf",
@@ -94,8 +108,9 @@ public class AutoRotateController {
                     "Detects each page's orientation (embedded-text direction first, Tesseract OSD"
                             + " for scanned pages) and sets the page rotation so the content"
                             + " displays upright. With dryRun=true, returns a JSON per-page report"
-                            + " instead of the PDF. With pageRotations set, applies the given"
-                            + " corrections without running detection.")
+                            + " instead of the PDF. With pageRotations set (a JSON list such as"
+                            + " [{\"pageNumber\":3,\"rotation\":90}]), applies only those"
+                            + " clockwise turns without running detection.")
     public ResponseEntity<?> autoRotatePdf(@Valid @ModelAttribute AutoRotatePdfRequest request)
             throws IOException, InterruptedException {
         String mode =
@@ -256,7 +271,7 @@ public class AutoRotateController {
         final int renderDpi = dpi;
 
         try (TempDirectory tempDir = new TempDirectory(tempFileManager)) {
-            PDFRenderer renderer = new PDFRenderer(document);
+            PDFRenderer renderer = new LimitedPDFRenderer(document);
             renderer.setSubsamplingAllowed(true);
             // One reused path, deleted after every page: the images are throwaway input for
             // Tesseract, so a long document must not accumulate one file per page on disk.
@@ -329,6 +344,12 @@ public class AutoRotateController {
         int pageCount = document.getNumberOfPages();
         Set<Integer> seen = new HashSet<>();
         for (PageRotation entry : rotations) {
+            if (entry == null) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        ExceptionUtils.ErrorCode.INVALID_ARGUMENT,
+                        "pageRotations",
+                        "entries must not be null");
+            }
             Integer pageNumber = entry.getPageNumber();
             Integer angle = entry.getRotation();
             if (pageNumber == null
