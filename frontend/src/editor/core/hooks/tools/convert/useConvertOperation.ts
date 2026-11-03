@@ -293,6 +293,11 @@ export const convertProcessor = async (
   if (!endpoint) {
     throw new Error("Unsupported conversion format");
   }
+  // PDF to text and to RTF share a URL, so desktop routing needs the key itself.
+  const requestConfig = {
+    responseType: "blob" as const,
+    endpointName: getEndpointName(parameters.fromExtension, actualToExtension),
+  };
 
   // Convert-specific routing logic: decide batch vs individual processing
   // For PDF/X, we want to treat it similar to PDF/A (separate processing)
@@ -306,9 +311,11 @@ export const convertProcessor = async (
     for (const file of selectedFiles) {
       try {
         const formData = buildConvertFormData(parameters, [file]);
-        const response = await apiClient.post(endpoint, formData, {
-          responseType: "blob",
-        });
+        const response = await apiClient.post(
+          endpoint,
+          formData,
+          requestConfig,
+        );
 
         const convertedFile = createFileFromResponse(
           response.data,
@@ -325,9 +332,7 @@ export const convertProcessor = async (
   } else {
     // Batch processing for simple cases (image→PDF combine)
     const formData = buildConvertFormData(parameters, selectedFiles);
-    const response = await apiClient.post(endpoint, formData, {
-      responseType: "blob",
-    });
+    const response = await apiClient.post(endpoint, formData, requestConfig);
 
     const baseFilename =
       selectedFiles.length === 1 ? selectedFiles[0].name : "converted_files";
