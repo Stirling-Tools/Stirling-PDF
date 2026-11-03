@@ -25,7 +25,7 @@ public class PdfToPdfARequest extends PDFFile {
                     "Also declare PDF/UA accessibility alongside PDF/A. Only applies to the level A"
                             + " formats, and the claim is written only if it validates.",
             defaultValue = "false")
-    private Boolean pdfUa;
+    private Boolean pdfUa = false;
 
     @Schema(
             description =

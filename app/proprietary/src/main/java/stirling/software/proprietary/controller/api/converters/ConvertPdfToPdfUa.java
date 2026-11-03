@@ -82,7 +82,7 @@ public class ConvertPdfToPdfUa {
                         // Only used when the document declares no language of its own.
                         .language(
                                 request.getLanguage() == null || request.getLanguage().isBlank()
-                                        ? "en-GB"
+                                        ? "en-US"
                                         : request.getLanguage())
                         .overrideLanguage(
                                 request.getOverrideLanguage() != null
