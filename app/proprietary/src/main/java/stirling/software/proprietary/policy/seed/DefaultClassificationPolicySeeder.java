@@ -73,7 +73,7 @@ public class DefaultClassificationPolicySeeder {
             return;
         }
         policyStore.save(defaultPolicy(teamId));
-        log.info("Seeded default Classification policy for team {}", teamId);
+        log.debug("Seeded default Classification policy for team {}", teamId);
     }
 
     /**

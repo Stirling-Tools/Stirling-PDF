@@ -14,9 +14,9 @@ class AutoSplitPdfRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("duplexMode defaults to null")
-        void duplexModeDefaultsNull() {
-            assertThat(new AutoSplitPdfRequest().getDuplexMode()).isNull();
+        @DisplayName("duplexMode defaults to false")
+        void duplexModeDefaultsFalse() {
+            assertThat(new AutoSplitPdfRequest().getDuplexMode()).isFalse();
         }
     }
 

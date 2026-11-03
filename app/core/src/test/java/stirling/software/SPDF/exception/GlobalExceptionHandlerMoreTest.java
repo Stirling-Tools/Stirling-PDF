@@ -30,6 +30,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.server.ResponseStatusException;
@@ -83,6 +84,20 @@ class GlobalExceptionHandlerMoreTest {
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(resp.getBody().getProperties()).containsKey("errors");
             assertThat(resp.getBody().getProperties()).containsKey("actionRequired");
+        }
+
+        @Test
+        @DisplayName("names each failing field in the detail")
+        void detailNamesFailingFields() throws Exception {
+            BindingResult br = new BeanPropertyBindingResult(new Object(), "target");
+            br.addError(new FieldError("target", "fontSize", "Font size must be at least 1.0"));
+            MethodParameter mp = mock(MethodParameter.class);
+            MethodArgumentNotValidException ex = new MethodArgumentNotValidException(mp, br);
+
+            ResponseEntity<ProblemDetail> resp = handler.handleMethodArgumentNotValid(ex, request);
+
+            assertThat(resp.getBody().getDetail())
+                    .isEqualTo("Validation failed: fontSize: Font size must be at least 1.0");
         }
     }
 
