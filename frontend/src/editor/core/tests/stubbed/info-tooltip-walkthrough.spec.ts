@@ -78,21 +78,21 @@ test.describe("Info tooltip walkthrough", () => {
     await page.screenshot({ path: shot("02_tool_guide_pinned_dark") });
   });
 
-  test("03 tool guide hover preview light", async ({ page }) => {
-    await page.locator("button.sui-info").first().hover();
+  test("03 tool guide preview light", async ({ page }) => {
+    await page.locator("button.sui-info").first().focus();
     await waitForPopover(page);
     await expect(page.locator(".sui-info-panel__close")).toHaveCount(0);
-    await page.screenshot({ path: shot("03_tool_guide_hover_light") });
+    await page.screenshot({ path: shot("03_tool_guide_preview_light") });
   });
 
-  test("03b tool guide hover preview dark", async ({ page }) => {
+  test("03b tool guide preview dark", async ({ page }) => {
     await enableDark(page);
     await page.goto("/compress", { waitUntil: "domcontentloaded" });
     await waitForToolPage(page);
-    await page.locator("button.sui-info").first().hover();
+    await page.locator("button.sui-info").first().focus();
     await waitForPopover(page);
     await expect(page.locator(".sui-info-panel__close")).toHaveCount(0);
-    await page.screenshot({ path: shot("03b_tool_guide_hover_dark") });
+    await page.screenshot({ path: shot("03b_tool_guide_preview_dark") });
   });
 
   test("04 tool guide pinned rtl", async ({ page }) => {
