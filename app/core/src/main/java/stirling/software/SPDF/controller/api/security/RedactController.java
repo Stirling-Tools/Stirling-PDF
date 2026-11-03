@@ -145,8 +145,10 @@ public class RedactController {
             summary = "Redact text matching words or regex patterns",
             operationId = "redactPdfAuto",
             description =
-                    "Removes each match and boxes it over. Native verification failures reject"
-                            + " the request. Set convertPDFToImage=true to rasterize the output"
+                    "Attempts to remove each text match and cover it with a box. Native verification"
+                            + " failures reject the request. Other native failures may fall back to drawing"
+                            + " boxes only, leaving matched text extractable when convertPDFToImage is false"
+                            + " or unset. Set convertPDFToImage=true to rasterize the output"
                             + " and remove its extractable text layer.")
     public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request)
             throws ToolFailedException {
@@ -317,7 +319,7 @@ public class RedactController {
             summary = "Execute a unified redaction plan on a PDF",
             description =
                     "Redacts exact text, regex matches and whole pages in one request."
-                            + " ranges, imageBoxes and redactImagePages only draw boxes unless"
+                            + " The ranges, imageBoxes and redactImagePages fields only draw boxes unless"
                             + " style.convertToImage=true or style.strategy=IMAGE_FINALIZE.")
     public ResponseEntity<Resource> executeRedaction(@ModelAttribute RedactExecuteRequest request)
             throws IOException {

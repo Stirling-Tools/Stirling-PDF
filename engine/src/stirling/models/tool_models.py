@@ -120,7 +120,7 @@ class KeyLength(IntEnum):
 
 class AddPasswordParams(ApiModel):
     """
-    password is needed to open the file. For new protection, prevent* restrictions require a nonempty ownerPassword different from password. sourcePassword opens an already protected file. With preserveExisting=true on an encrypted file, omitting or leaving ownerPassword empty retains the existing passwords and changes permissions; supplying ownerPassword replaces the permissions password while retaining the opening password. Input:PDF/PDF_ENCRYPTED Output:PDF_ENCRYPTED Type:SISO
+    password sets an optional opening password; omit or leave it empty for owner-only protection with ownerPassword. For new protection, prevent* restrictions require a nonempty ownerPassword different from password. sourcePassword opens an already protected file. With preserveExisting=true on an encrypted file, omitting or leaving ownerPassword empty retains the existing passwords and changes permissions; supplying ownerPassword replaces the permissions password while retaining the opening password. Replacement requires the existing opening password in password or sourcePassword. When sourcePassword is a distinct permissions password, password must contain the source's existing opening password. Input:PDF/PDF_ENCRYPTED Output:PDF_ENCRYPTED Type:SISO
     """
 
     key_length: KeyLength = Field(KeyLength.integer_256, description="The length of the encryption key")
@@ -288,7 +288,7 @@ class AddWatermarkParams(ApiModel):
 
 class AutoRedactParams(ApiModel):
     """
-    Removes each match and boxes it over. Native verification failures reject the request. Set convertPDFToImage=true to rasterize the output and remove its extractable text layer. Input:PDF Output:PDF Type:SISO
+    Attempts to remove each text match and cover it with a box. Native verification failures reject the request. Other native failures may fall back to drawing boxes only, leaving matched text extractable when convertPDFToImage is false or unset. Set convertPDFToImage=true to rasterize the output and remove its extractable text layer. Input:PDF Output:PDF Type:SISO
     """
 
     case_sensitive: bool = Field(
@@ -1843,7 +1843,7 @@ class AutoRotatePdfParams(ApiModel):
 
 class RedactExecuteParams(ApiModel):
     """
-    Redacts exact text, regex matches and whole pages in one request. ranges, imageBoxes and redactImagePages only draw boxes unless style.convertToImage=true or style.strategy=IMAGE_FINALIZE. Input:PDF Output:PDF Type:SISO
+    Redacts exact text, regex matches and whole pages in one request. The ranges, imageBoxes and redactImagePages fields only draw boxes unless style.convertToImage=true or style.strategy=IMAGE_FINALIZE. Input:PDF Output:PDF Type:SISO
     """
 
     image_boxes: list[ImageBox] | None = Field(
