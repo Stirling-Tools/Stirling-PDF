@@ -404,11 +404,11 @@ test.describe("PDF text editor - tables", () => {
 
     const before = await readTable();
     expect(before.cols).toBe(5);
-    expect(before.text).toContain("Ada");
+    expect(before.text).toContain("Active");
     expect(before.text).toContain("18.5");
-    // Handle 3 selects middle column 2 (Owner), not the final Hours column.
+    // Handle 4 selects middle column 3 (State), not the final Hours column.
     await page
-      .getByTestId(`pdf-editor-table-col-handle-${before.id}-3`)
+      .getByTestId(`pdf-editor-table-col-handle-${before.id}-4`)
       .click();
     await page
       .getByTestId(`pdf-editor-table-del-col-${before.id}`)
@@ -416,8 +416,8 @@ test.describe("PDF text editor - tables", () => {
 
     await expect.poll(async () => (await readTable()).cols).toBe(4);
     const after = await readTable();
-    expect(after.text).not.toContain("Ada");
-    expect(after.text).not.toContain("Lin");
+    expect(after.text).not.toContain("Active");
+    expect(after.text).not.toContain("Ready");
     expect(after.text).toContain("18.5");
     expect(after.text).toContain("45.25");
   });
