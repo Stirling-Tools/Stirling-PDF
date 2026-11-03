@@ -214,8 +214,12 @@ fn set_default_macos() -> Result<String, String> {
 
 /// Installed desktop entry names vary by packaging (template vs binary name).
 #[cfg(target_os = "linux")]
-const LINUX_DESKTOP_CANDIDATES: &[&str] =
-    &["Stirling-PDF.desktop", "stirling-pdf.desktop"];
+const LINUX_DESKTOP_CANDIDATES: &[&str] = &[
+    // deb/rpm name the installed entry after productName ("Stirling PDF"), not the template file.
+    "Stirling PDF.desktop",
+    "Stirling-PDF.desktop",
+    "stirling-pdf.desktop",
+];
 
 #[cfg(target_os = "linux")]
 fn is_stirling_desktop_handler(handler: &str) -> bool {
@@ -250,7 +254,7 @@ fn resolve_linux_desktop_file() -> String {
             return (*name).to_string();
         }
     }
-    // Matches tauri.conf.json desktopTemplate
+    // Matches tauri.conf.json desktopTemplate (dev builds)
     "stirling-pdf.desktop".to_string()
 }
 
