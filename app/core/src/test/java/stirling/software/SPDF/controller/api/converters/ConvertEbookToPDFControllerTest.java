@@ -306,7 +306,7 @@ class ConvertEbookToPDFControllerTest {
         byte[] uploaded = "linked-picture-docx".getBytes(StandardCharsets.UTF_8);
         byte[] sanitized = "sanitized-docx".getBytes(StandardCharsets.UTF_8);
         when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-        when(officeDocumentSanitizer.sanitize(uploaded, "docx")).thenReturn(sanitized);
+        when(officeDocumentSanitizer.sanitize(uploaded)).thenReturn(sanitized);
 
         ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
         request.setFileInput(
@@ -341,7 +341,7 @@ class ConvertEbookToPDFControllerTest {
         when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
         byte[] uploaded = "docx".getBytes(StandardCharsets.UTF_8);
         when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
-        when(officeDocumentSanitizer.sanitize(uploaded, "docx"))
+        when(officeDocumentSanitizer.sanitize(uploaded))
                 .thenThrow(new IOException("part could not be sanitized"));
 
         ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
