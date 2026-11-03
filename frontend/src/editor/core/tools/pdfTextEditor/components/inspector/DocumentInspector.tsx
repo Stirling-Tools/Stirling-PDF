@@ -19,6 +19,8 @@ import type {
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 import type { ImageReview } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import type { HeadingOutline } from "@editor/tools/pdfTextEditor/util/headingOutline";
+import { HeadingOutlineSection } from "@editor/tools/pdfTextEditor/components/inspector/HeadingOutlineSection";
 
 interface Props {
   pages: PageSnapshot[];
@@ -31,6 +33,9 @@ interface Props {
   /** Images needing attention; null when there is nothing to review. */
   imageReview: ImageReview | null;
   onSelectNextImageToReview: () => void;
+  /** Null when there is nothing to check. */
+  headingOutline: HeadingOutline | null;
+  onSelectHeading: (index: number) => void;
 }
 
 /** Facts about the open document. Nothing here acts on a selection. */
@@ -38,6 +43,8 @@ export function DocumentInspector({
   pages,
   imageReview,
   onSelectNextImageToReview,
+  headingOutline,
+  onSelectHeading,
   ...settings
 }: Props) {
   const { t } = useTranslation();
@@ -68,6 +75,12 @@ export function DocumentInspector({
         <AccessibilitySection
           review={imageReview}
           onNext={onSelectNextImageToReview}
+        />
+      )}
+      {headingOutline && (
+        <HeadingOutlineSection
+          outline={headingOutline}
+          onSelect={onSelectHeading}
         />
       )}
       <FontsSection pages={pages} />
