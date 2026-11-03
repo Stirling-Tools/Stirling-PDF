@@ -37,6 +37,8 @@ export interface FileBlock extends StructureRole {
 export interface ElementLanguage {
   lang: string | null;
   inheritedLang: string | null;
+  /** Parent element key; null at the top of the structure tree. */
+  parent: string | null;
 }
 
 export interface FileStructure {
@@ -105,8 +107,12 @@ export async function readFileStructure(
   });
   const blocks = readBlocks(pdf, rootBody, nodeFor, byPage);
   const languages = new Map<string, ElementLanguage>();
-  for (const [num, { lang, inheritedLang }] of nodes.readNodes()) {
-    languages.set(String(num), { lang, inheritedLang });
+  for (const [num, { lang, inheritedLang, parent }] of nodes.readNodes()) {
+    languages.set(String(num), {
+      lang,
+      inheritedLang,
+      parent: parent === null ? null : String(parent),
+    });
   }
   return { pages: byPage, blocks, languages };
 }

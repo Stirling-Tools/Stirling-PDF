@@ -355,7 +355,11 @@ export class EditorDocument {
     const edit = this.blockLangs.get(block.key);
     return {
       own: edit ? edit.lang : (file?.lang ?? null),
-      inherited: file?.inheritedLang ?? this.documentLanguage(),
+      inherited: this.inheritedLanguage(
+        pageIndex,
+        block.key,
+        this.documentLanguage(),
+      ),
     };
   }
 
@@ -368,8 +372,39 @@ export class EditorDocument {
     const block = this.textLanguage(pageIndex, mcid);
     return {
       own: this.structure(pageIndex).ownLang(key),
-      inherited: block ? effectiveLanguage(block) : this.documentLanguage(),
+      inherited: this.inheritedLanguage(
+        pageIndex,
+        key,
+        block ? effectiveLanguage(block) : this.documentLanguage(),
+      ),
     };
+  }
+
+  private inheritedLanguage(
+    pageIndex: number,
+    key: string,
+    fallback: string | null,
+  ): string | null {
+    const languages = this.fileStructure?.languages;
+    const element = languages?.get(key);
+    if (!languages || !element) return fallback;
+    const edits = this.structure(pageIndex).ownLangEdits();
+    const seen = new Set([key]);
+    let parent = element.parent;
+    while (parent !== null && !seen.has(parent)) {
+      seen.add(parent);
+      const ancestor = languages.get(parent);
+      if (!ancestor) break;
+      const blockEdit = this.blockLangs.get(parent);
+      const lang = blockEdit
+        ? blockEdit.lang
+        : edits.has(parent)
+          ? edits.get(parent)!
+          : ancestor.lang;
+      if (lang !== null) return lang;
+      parent = ancestor.parent;
+    }
+    return this.documentLanguage();
   }
 
   /**
