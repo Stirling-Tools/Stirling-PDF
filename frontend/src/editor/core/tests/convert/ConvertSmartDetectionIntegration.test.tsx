@@ -182,6 +182,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "file-to-pdf",
         },
       );
 
@@ -236,6 +237,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "file-to-pdf",
         },
       );
     });
@@ -291,6 +293,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "img-to-pdf",
         },
       );
 
@@ -363,6 +366,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "file-to-pdf",
         },
       );
     });
@@ -417,6 +421,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "html-to-pdf",
         },
       );
 
@@ -568,6 +573,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "pdf-to-pdfa",
         },
       );
     });

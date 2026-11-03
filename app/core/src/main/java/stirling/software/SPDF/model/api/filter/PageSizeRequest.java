@@ -16,5 +16,5 @@ public class PageSizeRequest extends PDFComparison {
             allowableValues = {"A0", "A1", "A2", "A3", "A4", "A5", "A6", "LETTER", "LEGAL"},
             defaultValue = "A4",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private String standardPageSize;
+    private String standardPageSize = "A4";
 }
