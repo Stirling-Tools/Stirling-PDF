@@ -16,10 +16,10 @@ class MetadataRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("all fields default to null on a fresh instance")
+        @DisplayName("deleteAll defaults to false and all other fields to null")
         void defaultsNull() {
             MetadataRequest req = new MetadataRequest();
-            assertThat(req.getDeleteAll()).isNull();
+            assertThat(req.getDeleteAll()).isFalse();
             assertThat(req.getAuthor()).isNull();
             assertThat(req.getCreationDate()).isNull();
             assertThat(req.getCreator()).isNull();
