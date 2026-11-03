@@ -1,5 +1,9 @@
 import type { ScanEditState } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
-import type { TagMark } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import {
+  ARTIFACT_TAG,
+  innermostMcid,
+  type TagMark,
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import type {
   Affine,
   PageRect,
@@ -205,6 +209,10 @@ export class TextRun {
       paragraphLineLefts: this.lineLefts(),
       locked: this.locked || undefined,
       wrapWidthPt: this.wrapWidthPt ?? undefined,
+      mcid: innermostMcid(this.tagMarks) ?? undefined,
+      artifact:
+        this.tagMarks.some((tag) => tag.name === ARTIFACT_TAG) || undefined,
+      inForm: this.containerPtr !== 0 || undefined,
     };
   }
 

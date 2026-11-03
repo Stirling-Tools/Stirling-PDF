@@ -23,14 +23,14 @@ class AddStampRequestTest {
             assertThat(req.getStampType()).isNull();
             assertThat(req.getStampText()).isNull();
             assertThat(req.getStampImage()).isNull();
-            assertThat(req.getFontSize()).isEqualTo(0f);
+            assertThat(req.getFontSize()).isEqualTo(40f);
             assertThat(req.getRotation()).isEqualTo(0f);
-            assertThat(req.getOpacity()).isEqualTo(0f);
-            assertThat(req.getPosition()).isZero();
-            assertThat(req.getOverrideX()).isEqualTo(0f);
-            assertThat(req.getOverrideY()).isEqualTo(0f);
-            assertThat(req.getCustomMargin()).isNull();
-            assertThat(req.getCustomColor()).isNull();
+            assertThat(req.getOpacity()).isEqualTo(0.5f);
+            assertThat(req.getPosition()).isEqualTo(5);
+            assertThat(req.getOverrideX()).isEqualTo(-1f);
+            assertThat(req.getOverrideY()).isEqualTo(-1f);
+            assertThat(req.getCustomMargin()).isEqualTo("medium");
+            assertThat(req.getCustomColor()).isEqualTo("#d3d3d3");
         }
     }
 

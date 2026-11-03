@@ -2,7 +2,6 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -23,7 +22,6 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.schema.XMPBasicSchema;
-import org.apache.xmpbox.xml.DomXmpParser;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +50,7 @@ import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.XmpUtils;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfMerge;
 import stirling.software.jpdfium.doc.Bookmark;
@@ -195,9 +194,8 @@ public class MergeController {
 
                 PDMetadata metadata = doc.getDocumentCatalog().getMetadata();
                 if (metadata != null) {
-                    try (InputStream is = metadata.createInputStream()) {
-                        DomXmpParser parser = new DomXmpParser();
-                        XMPMetadata xmp = parser.parse(is);
+                    try {
+                        XMPMetadata xmp = XmpUtils.parse(metadata, true);
                         XMPBasicSchema basic = xmp.getXMPBasicSchema();
                         if (basic != null) {
                             if (basic.getModifyDate() != null) {
