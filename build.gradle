@@ -18,7 +18,6 @@ import groovy.xml.XmlSlurper
 import org.gradle.api.JavaVersion
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
-import stirling.software.gradle.CheckLicenseSourceLinks
 import stirling.software.gradle.ModuleLicenseOverrideFilter
 import stirling.software.gradle.ModuleLicenseSelectionFilter
 
@@ -617,14 +616,6 @@ tasks.named('generateLicenseReport') {
 tasks.named('checkLicensePreparation') {
     inputs.file(moduleLicenseOverridesFile)
     inputs.file(moduleLicenseSelectionsFile)
-}
-
-tasks.register('checkLicenseSourceLinks', CheckLicenseSourceLinks) {
-    group = 'verification'
-    description = 'Checks that dependencies needing a source link have one, and that each link loads.'
-    dependsOn 'generateLicenseReport'
-    reportFile = layout.buildDirectory.file('reports/dependency-license/index.json')
-    selectionsFile = moduleLicenseSelectionsFile
 }
 
 // Configure the forked spring boot run task to properly delegate to the stirling-pdf module

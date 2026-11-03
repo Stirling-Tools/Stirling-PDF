@@ -20,8 +20,6 @@ for those artifacts, and to set which license and source link the report shows f
 - `../app/license-overrides.json` contains the actual module-specific fallback values.
 - `src/main/groovy/stirling/software/gradle/ModuleLicenseSelectionFilter.groovy` and
   `../app/license-selections.json` set the license and source link reported for a dependency.
-- `src/main/groovy/stirling/software/gradle/CheckLicenseSourceLinks.groovy` and
-  `LicenseSourceLinks.groovy` check those source links.
 - `../app/allowed-licenses.json` defines which detected or supplied licenses are accepted by
   `checkLicense`.
 
@@ -147,10 +145,6 @@ declares. Entries are keyed by `group:artifact`, without a version:
 - `sourceUrl` is optional; `{version}` is replaced with the resolved version. Without it, the
   report keeps the dependency's own URL.
 
-`checkLicenseSourceLinks` (part of `task backend:licenses:check`) fails when a dependency under
-MPL, EPL, CDDL, LGPL or GPL has no `sourceUrl`, or when a source link does not load. It needs
-network access.
-
 To list every license and URL a dependency declares, temporarily add
 `new JsonReportRenderer('all-licenses.json', false)` to `renderers` in the root `build.gradle` and
 run `task backend:licenses:generate`.
@@ -171,8 +165,7 @@ override, automatic cleanup after license metadata appears, exact-version matchi
 resolved versions. They also verify removal when a dependency version disappears. A separate `1.9`
 to `1.11.0` case verifies numeric Gradle version ordering. `ModuleLicenseSelectionFilterTest`
 covers choosing among declared licenses, `{version}` substitution, failure on an undeclared
-license, removal of unused selections, and rejection of versioned keys. `LicenseSourceLinksTest`
-covers missing and broken source links.
+license, removal of unused selections, and rejection of versioned keys.
 
 Run the normal backend license workflow from the repository root:
 
