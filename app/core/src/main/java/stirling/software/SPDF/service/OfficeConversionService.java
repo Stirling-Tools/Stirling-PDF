@@ -30,7 +30,7 @@ import stirling.software.officeconvert.legacy.PdfToPpt;
 
 /**
  * PDF to Office in process through Stirling Office Convert, and the switch between it and the
- * legacy converters. Conversions are stopped at the LibreOffice timeout.
+ * legacy converters. Conversions use the configured LibreOffice timeout.
  */
 @Service
 @RequiredArgsConstructor
@@ -111,8 +111,6 @@ public class OfficeConversionService {
     /** A .ppt holds one slide per page; the legacy writer creates them up front. */
     static final int MAX_PPT_SLIDES = 5000;
 
-    private static final long PPT_STOP_MILLIS = 5000;
-
     /**
      * Binary PowerPoint comes from the legacy module, which the shared {@link OfficeConvert} path
      * does not cover, so the page count is bounded and the work runs under {@code
@@ -138,18 +136,23 @@ public class OfficeConversionService {
                         });
         Thread worker = Thread.ofPlatform().name("office-convert-ppt").daemon().unstarted(task);
         worker.start();
+        awaitPptConversion(task, worker, settings.timeout());
+    }
+
+    static void awaitPptConversion(FutureTask<Void> task, Thread worker, Duration timeout)
+            throws IOException {
         try {
-            task.get(settings.timeout().toNanos(), TimeUnit.NANOSECONDS);
+            task.get(timeout.toNanos(), TimeUnit.NANOSECONDS);
         } catch (TimeoutException e) {
             task.cancel(true);
-            joinQuietly(worker);
+            awaitWorkerTermination(worker);
             throw new IOException(
                     "The conversion took longer than "
-                            + settings.timeout().toMillis()
+                            + timeout.toMillis()
                             + " ms and was stopped");
         } catch (InterruptedException e) {
             task.cancel(true);
-            joinQuietly(worker);
+            awaitWorkerTermination(worker);
             Thread.currentThread().interrupt();
             throw new IOException("Conversion interrupted", e);
         } catch (ExecutionException e) {
@@ -167,14 +170,19 @@ public class OfficeConversionService {
 
     /**
      * Waits for the cancelled worker to stop touching {@code out} and the document before the
-     * caller closes them. Bounded because the legacy writer's final POI write cannot be
-     * interrupted: a worker still running after this writes to the closed stream and fails on its
-     * own abandoned thread rather than hanging the request forever.
+     * caller closes them. The legacy writer's final POI write may ignore interruption, so even a
+     * further interruption must not release resources that the worker still owns.
      */
-    private static void joinQuietly(Thread worker) {
-        try {
-            worker.join(PPT_STOP_MILLIS);
-        } catch (InterruptedException e) {
+    private static void awaitWorkerTermination(Thread worker) {
+        boolean interrupted = false;
+        while (worker.isAlive()) {
+            try {
+                worker.join();
+            } catch (InterruptedException e) {
+                interrupted = true;
+            }
+        }
+        if (interrupted) {
             Thread.currentThread().interrupt();
         }
     }

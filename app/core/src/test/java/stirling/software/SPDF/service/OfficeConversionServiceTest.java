@@ -17,6 +17,8 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.poi.hslf.usermodel.HSLFSlideShow;
+import org.apache.poi.hslf.usermodel.HSLFTextParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,6 +74,24 @@ class OfficeConversionServiceTest {
                     new String(
                             zip.getInputStream(zip.getEntry("word/document.xml")).readAllBytes());
             assertThat(body).contains("Hello from Stirling");
+        }
+    }
+
+    @Test
+    void convertsPdfToLegacyPowerPoint() throws Exception {
+        Path ppt = dir.resolve("out.ppt");
+        try (PDDocument pdf = textPdf("Hello from Stirling")) {
+            service.convert(pdf, ppt, "ppt", service.settings());
+        }
+
+        try (var in = Files.newInputStream(ppt);
+                HSLFSlideShow slides = new HSLFSlideShow(in)) {
+            assertThat(slides.getSlides()).hasSize(1);
+            assertThat(slides.getSlides().getFirst().getTextParagraphs())
+                    .anySatisfy(
+                            paragraphs ->
+                                    assertThat(HSLFTextParagraph.getText(paragraphs))
+                                            .contains("Hello from Stirling"));
         }
     }
 
