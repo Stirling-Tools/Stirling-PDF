@@ -195,7 +195,7 @@ export function LinkAccountModal({
           />
         );
       case "handoff":
-        return <ConnectHandoffGhost />;
+        return handoff.body ?? <ConnectHandoffGhost />;
       case "outcome":
         return outcome ? (
           <ConnectCallbackView

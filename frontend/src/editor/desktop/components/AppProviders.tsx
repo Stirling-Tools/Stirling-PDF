@@ -3,6 +3,7 @@ import { AppProviders as ProprietaryAppProviders } from "@editor-proprietary/com
 import { DesktopConfigSync } from "@editor/components/DesktopConfigSync";
 import { DesktopQueryCacheReset } from "@editor/components/DesktopQueryCacheReset";
 import { DesktopBannerInitializer } from "@editor/components/DesktopBannerInitializer";
+import { ProcessorStartupView } from "@editor/components/ProcessorStartupView";
 import { SaveShortcutListener } from "@editor/components/SaveShortcutListener";
 import { LocalProcessingFolders } from "@editor/components/LocalProcessingFolders";
 import { DiskConflictHost } from "@editor/components/shared/DiskConflictHost";
@@ -387,6 +388,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <DesktopAccessGate onConfigLoaded={initializeConnectionMode}>
           <SaaSTeamProvider key={appKey}>
             <DesktopConfigSync />
+            <ProcessorStartupView />
             <DesktopBannerInitializer />
             <SaveShortcutListener />
             <LocalProcessingFolders />

@@ -43,6 +43,8 @@ export type CheckoutState = {
   error?: string;
   sessionId?: string;
   loading?: boolean;
+  /** Set once checkout opened outside this page (desktop's browser), where payment now completes. */
+  hostedUrl?: string;
 };
 
 export type PollingStatus = "idle" | "polling" | "ready" | "timeout";

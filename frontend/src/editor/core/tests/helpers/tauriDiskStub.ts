@@ -24,8 +24,15 @@ export type SeedFile = {
 
 /** Fake Tauri IPC over an in-memory disk the test mutates between steps. */
 
-export async function installTauri(page: Page) {
-  await page.addInitScript(() => {
+export interface TauriStubOptions {
+  /** What `get_connection_config` answers; local mode by default. */
+  connection?: unknown;
+  /** Answers for further commands, by command name. */
+  commands?: Record<string, unknown>;
+}
+
+export async function installTauri(page: Page, options: TauriStubOptions = {}) {
+  await page.addInitScript((opts: TauriStubOptions) => {
     const w = window as any;
     w.isTauri = true;
     // Init script re-runs on every navigation, so the disk lives in sessionStorage -
@@ -71,6 +78,7 @@ export async function installTauri(page: Page) {
       unregisterListener() {},
       async invoke(cmd: string, args: any = {}, options: any = {}) {
         w.__invoked.push(cmd);
+        if (opts.commands && cmd in opts.commands) return opts.commands[cmd];
         switch (cmd) {
           case "plugin:dialog|open":
             return w.__pickedPaths ?? null;
@@ -165,7 +173,13 @@ export async function installTauri(page: Page) {
           case "get_update_mode":
             return "manual";
           case "get_connection_config":
-            return { mode: "local", serverUrl: null, setupCompleted: true };
+            return (
+              opts.connection ?? {
+                mode: "local",
+                serverUrl: null,
+                setupCompleted: true,
+              }
+            );
           default:
             return null;
         }
@@ -190,7 +204,7 @@ export async function installTauri(page: Page) {
         });
       }
     };
-  });
+  }, options);
 }
 
 export async function setDisk(page: Page, disk: Record<string, DiskEntry>) {

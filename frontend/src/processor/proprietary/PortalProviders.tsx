@@ -8,7 +8,7 @@ import { PortalChrome } from "@editor/portal/components/PortalChrome";
 import { AccountLinkSessionBoundary } from "@editor/portal/components/account-link/AccountLinkSessionBoundary";
 import { useFreeTierExhaustedPrompt } from "@editor/portal/hooks/useFreeTierExhaustedPrompt";
 import { LicenseProvider } from "@editor/contexts/LicenseContext";
-import { AppConfigProvider } from "@editor/contexts/AppConfigContext";
+import { PortalAppConfigProvider } from "@processor/contexts/PortalAppConfigProvider";
 import { StartupPrompts } from "@editor/components/startup/StartupPrompts";
 import { ServerExperienceProvider } from "@editor/contexts/ServerExperienceContext";
 import { CheckoutProvider } from "@editor/contexts/CheckoutContext";
@@ -31,7 +31,7 @@ export function PortalProviders() {
         <AccountLinkSessionBoundary>
           <UIProvider>
             <AccountLinkProvider>
-              <AppConfigProvider>
+              <PortalAppConfigProvider>
                 <LicenseProvider>
                   <CheckoutProvider>
                     <ServerExperienceProvider>
@@ -42,7 +42,7 @@ export function PortalProviders() {
                     <ConnectCallbackHost />
                   </CheckoutProvider>
                 </LicenseProvider>
-              </AppConfigProvider>
+              </PortalAppConfigProvider>
             </AccountLinkProvider>
           </UIProvider>
         </AccountLinkSessionBoundary>
