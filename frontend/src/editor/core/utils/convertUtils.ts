@@ -30,6 +30,7 @@ const OFFICE_ENGINE_ENDPOINTS = [
   "pdf-to-word",
   "pdf-to-presentation",
   "pdf-to-text",
+  "pdf-to-rtf",
   "pdf-to-xlsx",
 ];
 

@@ -50,7 +50,6 @@ async function openPdf(page: Page, file: PdfFile): Promise<void> {
 }
 
 async function openSample(page: Page): Promise<void> {
-  await page.route("**/encode-charcodes", (route) => route.abort());
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,

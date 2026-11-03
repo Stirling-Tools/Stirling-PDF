@@ -103,9 +103,12 @@ public class ConvertEmlToPDF {
                             tempOut, baseFilename + ".html", MediaType.TEXT_HTML);
                 } catch (IOException | IllegalArgumentException e) {
                     log.error("HTML conversion failed for {}", originalFilename, e);
+                    String detail =
+                            e.getMessage() == null
+                                    ? "Unknown error"
+                                    : HtmlUtils.htmlEscape(e.getMessage());
                     return errorResponse(
-                            HttpStatus.INTERNAL_SERVER_ERROR,
-                            "HTML conversion failed: " + e.getMessage());
+                            HttpStatus.INTERNAL_SERVER_ERROR, "HTML conversion failed: " + detail);
                 }
             }
 
@@ -166,9 +169,11 @@ public class ConvertEmlToPDF {
         }
     }
 
+    /** Error bodies are plain text whatever the request negotiates. */
     private ResponseEntity<Resource> errorResponse(HttpStatus status, String message) {
         byte[] body = message.getBytes(StandardCharsets.UTF_8);
         return ResponseEntity.status(status)
+                .contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8))
                 .contentLength(body.length)
                 .body(new ByteArrayResource(body));
     }
