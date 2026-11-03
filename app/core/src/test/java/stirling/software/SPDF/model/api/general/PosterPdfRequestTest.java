@@ -2,11 +2,19 @@ package stirling.software.SPDF.model.api.general;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
 
 @DisplayName("PosterPdfRequest")
 class PosterPdfRequestTest {
@@ -53,6 +61,42 @@ class PosterPdfRequestTest {
             assertThat(req.getXFactor()).isEqualTo(5);
             assertThat(req.getYFactor()).isEqualTo(7);
             assertThat(req.isRightToLeft()).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("validation")
+    class Constraints {
+
+        private final Validator validator =
+                Validation.buildDefaultValidatorFactory().getValidator();
+
+        private Set<String> violatedFields(PosterPdfRequest req) {
+            return validator.validate(req).stream()
+                    .map(v -> v.getPropertyPath().toString())
+                    .collect(Collectors.toSet());
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {1, 10})
+        @DisplayName("factors inside 1..10 are accepted")
+        void inRange(int factor) {
+            PosterPdfRequest req = new PosterPdfRequest();
+            req.setXFactor(factor);
+            req.setYFactor(factor);
+
+            assertThat(violatedFields(req)).doesNotContain("xFactor", "yFactor");
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {-1, 0, 11, 4000})
+        @DisplayName("factors outside 1..10 are rejected")
+        void outOfRange(int factor) {
+            PosterPdfRequest req = new PosterPdfRequest();
+            req.setXFactor(factor);
+            req.setYFactor(factor);
+
+            assertThat(violatedFields(req)).contains("xFactor", "yFactor");
         }
     }
 

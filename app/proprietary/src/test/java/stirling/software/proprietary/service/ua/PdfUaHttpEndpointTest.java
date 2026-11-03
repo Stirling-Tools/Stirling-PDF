@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -179,5 +181,22 @@ class PdfUaHttpEndpointTest {
                                                 "application/pdf",
                                                 new byte[0])))
                 .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @DisplayName("a document with no language is tagged en-US when the request names none")
+    void missingLanguageDefaultsToEnUs() throws Exception {
+        MvcResult result =
+                convertMvc
+                        .perform(
+                                multipart("/api/v1/convert/pdf/ua")
+                                        .file(upload(PdfUaTestDocuments.simpleDocument(), "in.pdf"))
+                                        .param("embedFonts", "false"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+        try (PDDocument document = Loader.loadPDF(result.getResponse().getContentAsByteArray())) {
+            assertEquals("en-US", document.getDocumentCatalog().getLanguage());
+        }
     }
 }
