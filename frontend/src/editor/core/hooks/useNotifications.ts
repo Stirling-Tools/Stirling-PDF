@@ -9,10 +9,7 @@ import {
   type RetryPayload,
 } from "@editor/services/notificationRetry";
 
-/**
- * One polled store for however many bells are mounted. A module store rather than a context because
- * the portal mounts its bell as a sibling of AppProviders, so there is no single tree to provide in.
- */
+/** One polled store for however many bells are mounted. */
 
 // TODO: read state is per-browser. Move it server-side when notifications get their own table.
 const POLL_INTERVAL_MS = 30_000;
@@ -220,12 +217,7 @@ function loadFresh(): void {
   });
 }
 
-/**
- * The bell sits in the quick-nav rail, which renders above AppProviders and so
- * above the query client - hence this store rather than a query. The one thing
- * the client would give for free has to be spelled out: a backgrounded tab
- * otherwise reads every 30s for the whole session, on every page.
- */
+// A backgrounded tab otherwise reads every 30s for the whole session, on every page.
 function pollIfWatching(): void {
   if (document.visibilityState === "visible") void load();
 }

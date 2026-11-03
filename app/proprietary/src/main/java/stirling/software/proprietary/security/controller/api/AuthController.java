@@ -37,7 +37,6 @@ import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.MfaCodeRequest;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPassMfa;
-import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
@@ -196,7 +195,7 @@ public class AuthController {
                 int desktopExpiryMinutes =
                         DesktopClientUtils.getDesktopTokenExpiryMinutes(applicationProperties);
                 token = jwtService.generateToken(user.getUsername(), claims, desktopExpiryMinutes);
-                log.info(
+                log.debug(
                         "Issued DESKTOP token for user '{}': expiry={}min ({}d), keyRetention={}d",
                         username,
                         desktopExpiryMinutes,
@@ -207,7 +206,7 @@ public class AuthController {
                 token = jwtService.generateToken(user.getUsername(), claims);
                 int webExpiryMinutes =
                         DesktopClientUtils.getWebTokenExpiryMinutes(applicationProperties);
-                log.info(
+                log.debug(
                         "Issued WEB token for user '{}': expiry={}min ({}d), keyRetention={}d",
                         username,
                         webExpiryMinutes,
@@ -369,6 +368,11 @@ public class AuthController {
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             User user = (User) userDetails;
+            if (!user.isEnabled()) {
+                log.warn("Token refresh rejected: user {} is disabled", username);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Token refresh failed"));
+            }
 
             Map<String, Object> newClaims = new HashMap<>();
             newClaims.put("authType", user.getAuthenticationType());
@@ -412,7 +416,7 @@ public class AuthController {
                                             "expires_in",
                                             getTokenExpirySeconds(isDesktopClient))));
 
-        } catch (AuthenticationFailureException e) {
+        } catch (AuthenticationException e) {
             log.warn("Token refresh failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Token refresh failed"));
