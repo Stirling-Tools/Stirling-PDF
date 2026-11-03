@@ -1,7 +1,5 @@
 package stirling.software.proprietary.security.filter;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -27,7 +25,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 
 import jakarta.servlet.FilterChain;
@@ -186,7 +183,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void exceptionThrown_WhenUserNotFound() throws ServletException, IOException {
+    void entryPointCalled_WhenUserNotFound() throws ServletException, IOException {
         String token = "valid-jwt-token";
         String username = "nonexistentuser";
         Map<String, Object> claims = Map.of("sub", username, "authType", "WEB");
@@ -206,15 +203,11 @@ class JwtAuthenticationFilterTest {
                     .when(SecurityContextHolder::getContext)
                     .thenReturn(securityContext);
 
-            UsernameNotFoundException result =
-                    assertThrows(
-                            UsernameNotFoundException.class,
-                            () ->
-                                    jwtAuthenticationFilter.doFilterInternal(
-                                            request, response, filterChain));
+            jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
-            assertEquals("User not found: " + username, result.getMessage());
             verify(userDetailsService).loadUserByUsername(username);
+            verify(authenticationEntryPoint)
+                    .commence(eq(request), eq(response), any(AuthenticationFailureException.class));
             verify(filterChain, never()).doFilter(request, response);
         }
     }
