@@ -512,6 +512,7 @@ export function AccountCards() {
             )}
 
             <PasswordInput
+              className={privateContentClassName}
               label={t(
                 "settings.security.password.current",
                 "Current password",
@@ -528,6 +529,7 @@ export function AccountCards() {
             />
 
             <PasswordInput
+              className={privateContentClassName}
               label={t("settings.security.password.new", "New password")}
               placeholder={t(
                 "settings.security.password.newPlaceholder",
@@ -539,6 +541,7 @@ export function AccountCards() {
             />
 
             <PasswordInput
+              className={privateContentClassName}
               label={t(
                 "settings.security.password.confirm",
                 "Confirm new password",
@@ -591,6 +594,7 @@ export function AccountCards() {
             {mfaSetupData && (
               <Stack gap="sm" align="center">
                 <Box
+                  className={privateContentClassName}
                   style={{
                     padding: "1.5rem",
                     background: "white",
@@ -612,7 +616,9 @@ export function AccountCards() {
                 </Box>
                 <Text size="sm" c="dimmed">
                   {t("account.mfa.manualKey", "Manual setup key")}:{" "}
-                  <strong>{mfaSetupData.secret}</strong>
+                  <strong className={privateContentClassName}>
+                    {mfaSetupData.secret}
+                  </strong>
                 </Text>
                 <Text size="xs" c="var(--color-amber-dark)">
                   {t(
@@ -632,6 +638,7 @@ export function AccountCards() {
               </Alert>
             )}
             <TextInput
+              className={privateContentClassName}
               label={t("account.mfa.codeLabel", "Authentication code")}
               placeholder={t(
                 "account.mfa.codePlaceholder",
@@ -688,6 +695,7 @@ export function AccountCards() {
               </Alert>
             )}
             <TextInput
+              className={privateContentClassName}
               label={t("account.mfa.codeLabel", "Authentication code")}
               placeholder={t(
                 "account.mfa.codePlaceholder",
@@ -743,6 +751,7 @@ export function AccountCards() {
             )}
 
             <TextInput
+              className={privateContentClassName}
               label={t("changeCreds.newUsername", "New Username")}
               placeholder={t("changeCreds.newUsername", "New Username")}
               value={newUsername}
@@ -753,6 +762,7 @@ export function AccountCards() {
             />
 
             <PasswordInput
+              className={privateContentClassName}
               label={t("changeCreds.oldPassword", "Current Password")}
               placeholder={t("changeCreds.oldPassword", "Current Password")}
               value={currentPasswordForUsername}
