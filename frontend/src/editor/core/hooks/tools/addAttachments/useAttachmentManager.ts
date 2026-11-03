@@ -263,7 +263,6 @@ export function useAttachmentManager({
     setPlacingPinId(null);
   }, []);
 
-  /** Store a draft pin for the target row, replacing any previous position. */
   const placePin = useCallback(
     (pageIndex: number, x: number, y: number) => {
       const target = rows.find((row) => row.id === placingPinId);
@@ -351,7 +350,6 @@ export function useAttachmentManager({
 
   const hasChanges = pendingChangesCount > 0;
 
-  /** Apply the staged batch, then reload canonical rows and pins from the server. */
   const saveDraft = useCallback(
     async (convertToPdfA3b?: boolean): Promise<boolean> => {
       if (!activeFile) return false;

@@ -40,7 +40,6 @@ const AddAttachmentsSettings = ({
     onError,
   });
 
-  /** Stage files in the manager and mirror them into the tool parameters. */
   const handleStageFiles = (files: File[]) => {
     manager.stageFiles(files);
     const updatedStaged = [...(parameters?.attachments || []), ...files];

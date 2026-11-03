@@ -40,7 +40,6 @@ export interface AttachmentManagerUIProps {
   onConvertToPdfA3bChange: (val: boolean) => void;
 }
 
-/** Rows, filter and draft actions for the Add Attachments tool panel. */
 export const AttachmentManagerUI = memo(function AttachmentManagerUI({
   rows,
   hasChanges,

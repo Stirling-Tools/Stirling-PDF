@@ -68,6 +68,29 @@ function fullViewport(): ViewportRect {
   };
 }
 
+function sameViewport(a: ViewportRect, b: ViewportRect): boolean {
+  return (
+    a.left === b.left &&
+    a.top === b.top &&
+    a.width === b.width &&
+    a.height === b.height
+  );
+}
+
+function samePageRects(a: PageRect[], b: PageRect[]): boolean {
+  return (
+    a.length === b.length &&
+    a.every(
+      (rect, index) =>
+        rect.pageIndex === b[index].pageIndex &&
+        rect.left === b[index].left &&
+        rect.top === b[index].top &&
+        rect.width === b[index].width &&
+        rect.height === b[index].height,
+    )
+  );
+}
+
 /**
  * Fixed-position pin layer over the viewer's page elements.
  *
@@ -108,6 +131,7 @@ export function AttachmentPinOverlay({
     const workbenchBar = document.querySelector<HTMLElement>(".workbench-bar");
     const workbenchBottom = workbenchBar?.getBoundingClientRect().bottom ?? 0;
 
+    let nextViewport: ViewportRect;
     if (scrollerRect) {
       const left = Math.max(0, scrollerRect.left);
       const top = Math.max(0, scrollerRect.top, workbenchBottom);
@@ -117,15 +141,18 @@ export function AttachmentPinOverlay({
         scrollerRect.bottom,
         dockTop ?? scrollerRect.bottom,
       );
-      setViewport({
+      nextViewport = {
         left,
         top,
         width: Math.max(0, right - left),
         height: Math.max(0, bottom - top),
-      });
+      };
     } else {
-      setViewport(fullViewport());
+      nextViewport = fullViewport();
     }
+    setViewport((previous) =>
+      sameViewport(previous, nextViewport) ? previous : nextViewport,
+    );
 
     const next: PageRect[] = [];
     pages.forEach((element) => {
@@ -142,7 +169,9 @@ export function AttachmentPinOverlay({
         height: rect.height,
       });
     });
-    setPageRects(next);
+    setPageRects((previous) =>
+      samePageRects(previous, next) ? previous : next,
+    );
   }, []);
 
   useEffect(() => {

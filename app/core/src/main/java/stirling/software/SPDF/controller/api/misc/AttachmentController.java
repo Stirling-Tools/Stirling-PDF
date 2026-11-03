@@ -2,7 +2,9 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.pdfbox.Loader;
@@ -370,11 +372,9 @@ public class AttachmentController {
                             try {
                                 pdfAttachmentService.renameAttachment(
                                         document, renameOp.getOldName(), renameOp.getNewName());
-                                // The annotation may still carry the old file-spec name;
-                                // remove it after a successful rename so the later pin
-                                // batch cannot leave a duplicate behind.
+                                // Remove the existing pin after the successful rename.
                                 PdfAttachmentPinUtils.removePins(
-                                        document, List.of(renameOp.getOldName()));
+                                        document, List.of(renameOp.getNewName()));
                             } catch (IOException | RuntimeException e) {
                                 log.warn(
                                         "Batch rename from '{}' to '{}' skipped: {}",
@@ -410,17 +410,33 @@ public class AttachmentController {
                             : originalFileName;
 
             if (convertToPdfA3b) {
+                Map<String, AttachmentPinSpec> preservedPins =
+                        PdfAttachmentPinUtils.findPins(document);
                 byte[] pdfaBytes = convertPDFToPDFA.convertPDDocumentToPDFA(document, "pdfa-3b");
                 try (PDDocument pdfaDocument = Loader.loadPDF(pdfaBytes)) {
                     convertPDFToPDFA.ensureEmbeddedFileCompliance(pdfaDocument);
                     ConvertPDFToPDFA.fixType1FontCharSet(pdfaDocument);
                     // Ghostscript strips page annotations during PDF/A conversion,
-                    // so reapply pins to the converted document or the attachment
-                    // link disappears from the PDF/A output.
+                    // so reapply preserved and requested pins to the converted
+                    // document or the attachment links disappear from the output.
+                    List<String> removals = new ArrayList<>();
+                    List<AttachmentPinSpec> requestedPins = new ArrayList<>();
                     if (opsData != null) {
-                        PdfAttachmentPinUtils.applyPins(
-                                pdfaDocument, opsData.getPins(), opsData.getPinRemovals());
+                        if (opsData.getDeletions() != null) {
+                            removals.addAll(opsData.getDeletions());
+                        }
+                        if (opsData.getPinRemovals() != null) {
+                            removals.addAll(opsData.getPinRemovals());
+                        }
+                        if (opsData.getPins() != null) {
+                            requestedPins.addAll(opsData.getPins());
+                        }
                     }
+
+                    List<AttachmentPinSpec> pinsToApply =
+                            PdfAttachmentPinUtils.mergePins(
+                                    preservedPins.values(), requestedPins, removals);
+                    PdfAttachmentPinUtils.applyPins(pdfaDocument, pinsToApply, removals, true);
                     String outputFilename = baseFileName + "_attachments_modified_PDFA-3b.pdf";
                     return WebResponseUtils.pdfDocToWebResponse(
                             pdfaDocument, outputFilename, tempFileManager);

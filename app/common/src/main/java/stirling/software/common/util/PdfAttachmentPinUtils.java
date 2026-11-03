@@ -1,6 +1,7 @@
 package stirling.software.common.util;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashSet;
@@ -51,6 +52,13 @@ public class PdfAttachmentPinUtils {
     private static final float PIN_WIDTH = 18f;
     private static final float PIN_HEIGHT = 18f;
 
+    /** Place pins that are visible on screen but not printed. */
+    public static int applyPins(
+            PDDocument document, List<AttachmentPinSpec> pins, Collection<String> removals)
+            throws IOException {
+        return applyPins(document, pins, removals, false);
+    }
+
     /**
      * Replace pins for the listed filenames and add the supplied pins.
      *
@@ -58,10 +66,16 @@ public class PdfAttachmentPinUtils {
      * new annotation is added. Invalid pages, coordinates and missing embedded files are logged and
      * skipped; one bad pin never blocks the rest of the batch.
      *
+     * <p>{@code printable} sets the PDF Print flag. PDF/A output needs it set, while ordinary
+     * viewer pins stay non-printable.
+     *
      * @return number of pins added
      */
     public static int applyPins(
-            PDDocument document, List<AttachmentPinSpec> pins, Collection<String> removals)
+            PDDocument document,
+            List<AttachmentPinSpec> pins,
+            Collection<String> removals,
+            boolean printable)
             throws IOException {
         removePins(document, removals);
         if (pins == null || pins.isEmpty()) {
@@ -89,10 +103,63 @@ public class PdfAttachmentPinUtils {
             PDPage page = document.getPage(pin.pageIndex());
             PDRectangle rectangle = pinRectangle(page, pin.x(), pin.y());
             page.getAnnotations()
-                    .add(createAnnotation(document, fileSpecification, pin.filename(), rectangle));
+                    .add(
+                            createAnnotation(
+                                    document,
+                                    fileSpecification,
+                                    pin.filename(),
+                                    rectangle,
+                                    printable));
             applied++;
         }
         return applied;
+    }
+
+    /**
+     * Merge pins already present in a document with pins explicitly requested for a new output.
+     *
+     * <p>Removed and deleted filenames are dropped. A requested pin replaces a preserved pin with
+     * the same filename, so a caller can move an existing pin without leaving both behind. PDF/A
+     * conversion needs this because the converted document starts without page annotations.
+     */
+    public static List<AttachmentPinSpec> mergePins(
+            Collection<AttachmentPinSpec> preserved,
+            Collection<AttachmentPinSpec> requested,
+            Collection<String> removals) {
+        Set<String> excluded = new HashSet<>();
+        if (removals != null) {
+            for (String filename : removals) {
+                if (filename != null) {
+                    excluded.add(filename.toLowerCase(Locale.ROOT));
+                }
+            }
+        }
+
+        Set<String> requestedNames = new HashSet<>();
+        if (requested != null) {
+            for (AttachmentPinSpec pin : requested) {
+                if (pin != null && pin.filename() != null) {
+                    requestedNames.add(pin.filename().toLowerCase(Locale.ROOT));
+                }
+            }
+        }
+
+        List<AttachmentPinSpec> merged = new ArrayList<>();
+        if (preserved != null) {
+            for (AttachmentPinSpec pin : preserved) {
+                if (pin == null || pin.filename() == null) {
+                    continue;
+                }
+                String filename = pin.filename().toLowerCase(Locale.ROOT);
+                if (!excluded.contains(filename) && !requestedNames.contains(filename)) {
+                    merged.add(pin);
+                }
+            }
+        }
+        if (requested != null) {
+            merged.addAll(requested);
+        }
+        return merged;
     }
 
     /**
@@ -189,16 +256,16 @@ public class PdfAttachmentPinUtils {
         return Float.isFinite(pin.x()) && Float.isFinite(pin.y());
     }
 
-    /** Build the pushpin annotation and its appearance for an embedded file. */
     private static PDAnnotationFileAttachment createAnnotation(
             PDDocument document,
             PDComplexFileSpecification fileSpecification,
             String filename,
-            PDRectangle rectangle)
+            PDRectangle rectangle,
+            boolean printable)
             throws IOException {
         PDAnnotationFileAttachment annotation = new PDAnnotationFileAttachment();
         annotation.setRectangle(rectangle);
-        annotation.setPrinted(false);
+        annotation.setPrinted(printable);
         annotation.setHidden(false);
         annotation.setNoView(false);
         annotation.setNoZoom(true);
@@ -373,7 +440,6 @@ public class PdfAttachmentPinUtils {
         return Math.max(0f, Math.min(1f, value));
     }
 
-    /** Collect the embedded-files tree, including nested kids. */
     private static Map<String, PDComplexFileSpecification> embeddedFiles(PDDocument document)
             throws IOException {
         PDDocumentCatalog catalog = document.getDocumentCatalog();
@@ -393,7 +459,6 @@ public class PdfAttachmentPinUtils {
         return files;
     }
 
-    /** Walk a name-tree node and merge every names map. */
     private static void collectFiles(
             PDNameTreeNode<PDComplexFileSpecification> node,
             Map<String, PDComplexFileSpecification> files)
@@ -432,7 +497,6 @@ public class PdfAttachmentPinUtils {
         return null;
     }
 
-    /** Prefer the Unicode name, then the legacy /F name. */
     private static String fileSpecificationName(PDFileSpecification specification) {
         if (specification instanceof PDComplexFileSpecification complex) {
             String name = complex.getFileUnicode();

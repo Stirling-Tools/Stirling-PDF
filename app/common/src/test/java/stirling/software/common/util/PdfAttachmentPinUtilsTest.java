@@ -1,6 +1,7 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -137,6 +138,56 @@ class PdfAttachmentPinUtilsTest {
             assertNotNull(pin);
             assertEquals(0.6f, pin.x(), 0.001f);
             assertEquals(0.45f, pin.y(), 0.001f);
+        }
+    }
+
+    @Test
+    void mergePinsPreservesUnchangedPinsAndLetsRequestedPinsWin() {
+        List<AttachmentPinSpec> preserved =
+                List.of(
+                        new AttachmentPinSpec("keep.pdf", 0, 0.1f, 0.2f),
+                        new AttachmentPinSpec("move.pdf", 0, 0.3f, 0.4f),
+                        new AttachmentPinSpec("remove.pdf", 0, 0.5f, 0.6f));
+        List<AttachmentPinSpec> requested =
+                List.of(
+                        new AttachmentPinSpec("move.pdf", 1, 0.7f, 0.8f),
+                        new AttachmentPinSpec("new.pdf", 0, 0.9f, 0.1f));
+
+        List<AttachmentPinSpec> merged =
+                PdfAttachmentPinUtils.mergePins(preserved, requested, List.of("remove.pdf"));
+
+        assertEquals(3, merged.size());
+        assertEquals("keep.pdf", merged.get(0).filename());
+        assertEquals(1, merged.get(1).pageIndex());
+        assertEquals(0.7f, merged.get(1).x(), 0.001f);
+        assertEquals("new.pdf", merged.get(2).filename());
+    }
+
+    @Test
+    void printFlagFollowsTheRequestedOutputMode() throws Exception {
+        try (PDDocument printable = documentWithAttachment("report.pdf")) {
+            PdfAttachmentPinUtils.applyPins(
+                    printable,
+                    List.of(new AttachmentPinSpec("report.pdf", 0, 0.4f, 0.55f)),
+                    List.of(),
+                    true);
+            PDAnnotationFileAttachment annotation =
+                    assertInstanceOf(
+                            PDAnnotationFileAttachment.class,
+                            printable.getPage(0).getAnnotations().get(0));
+            assertTrue(annotation.isPrinted());
+        }
+
+        try (PDDocument screenOnly = documentWithAttachment("report.pdf")) {
+            PdfAttachmentPinUtils.applyPins(
+                    screenOnly,
+                    List.of(new AttachmentPinSpec("report.pdf", 0, 0.4f, 0.55f)),
+                    List.of());
+            PDAnnotationFileAttachment annotation =
+                    assertInstanceOf(
+                            PDAnnotationFileAttachment.class,
+                            screenOnly.getPage(0).getAnnotations().get(0));
+            assertFalse(annotation.isPrinted());
         }
     }
 

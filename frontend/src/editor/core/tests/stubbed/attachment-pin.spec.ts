@@ -113,7 +113,7 @@ test("keeps the placement overlay inside the viewer while scrolling", async ({
   expect(before.banner.top).toBeGreaterThan(before.workbench.bottom);
   expect(before.banner.bottom).toBeLessThanOrEqual(before.overlay.bottom);
 
-  await page.evaluate(() => {
+  const scrollState = await page.evaluate(() => {
     const pageElement =
       document.querySelector<HTMLElement>("[data-page-index]");
     let scroller = pageElement?.parentElement ?? null;
@@ -123,10 +123,43 @@ test("keeps the placement overlay inside the viewer while scrolling", async ({
     ) {
       scroller = scroller.parentElement;
     }
-    if (scroller) {
-      scroller.scrollTop = 400;
-    }
+    if (!scroller) return null;
+    const beforeScroll = scroller.scrollTop;
+    scroller.scrollTop = 400;
+    return { before: beforeScroll, after: scroller.scrollTop };
   });
+  expect(scrollState).not.toBeNull();
+  if (!scrollState) return;
+  expect(scrollState.after).toBeGreaterThan(scrollState.before);
+
+  await expect
+    .poll(() =>
+      page.evaluate((initialScrollTop) => {
+        const pageElement =
+          document.querySelector<HTMLElement>("[data-page-index]");
+        const overlayPage = document.querySelector<HTMLElement>(
+          '[data-testid="attachment-pin-page"]',
+        );
+        let scroller = pageElement?.parentElement ?? null;
+        while (
+          scroller &&
+          !["auto", "scroll"].includes(getComputedStyle(scroller).overflowY)
+        ) {
+          scroller = scroller.parentElement;
+        }
+        if (!pageElement || !overlayPage || !scroller) return false;
+        const pageRect = pageElement.getBoundingClientRect();
+        const overlayRect = overlayPage.getBoundingClientRect();
+        return (
+          scroller.scrollTop > initialScrollTop &&
+          Math.abs(pageRect.top - overlayRect.top) < 1 &&
+          Math.abs(pageRect.left - overlayRect.left) < 1 &&
+          Math.abs(pageRect.width - overlayRect.width) < 1 &&
+          Math.abs(pageRect.height - overlayRect.height) < 1
+        );
+      }, scrollState.before),
+    )
+    .toBe(true);
 
   const after = await readGeometry();
   expect(after.overlay?.top).toBe(before.overlay.top);
