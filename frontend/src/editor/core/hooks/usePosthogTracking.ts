@@ -49,6 +49,8 @@ function initializePosthog(posthog: Posthog, key: string, host: string): void {
     opt_out_capturing_by_default: true,
     persistence: "memory",
     cross_subdomain_cookie: false,
+    // Supabase auth redirects carry the session tokens in the hash.
+    disable_capture_url_hashes: true,
     session_recording: { blockSelector: ".ph-sensitive" },
     // Autocapture records attributes even on ph-sensitive elements, and these
     // are the ones that carry file names, link targets and usernames. A link's
