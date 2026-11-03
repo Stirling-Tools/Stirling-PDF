@@ -126,6 +126,7 @@ class PostHogSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: ReadableSpan) -> None:
+        """Capture chat spans with request-local attribution and one trace event per trace."""
         attrs = dict(span.attributes or {})
         if attrs.get(GEN_AI_OPERATION_NAME) != "chat":
             return
