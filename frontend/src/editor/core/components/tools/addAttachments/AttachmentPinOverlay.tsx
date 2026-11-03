@@ -41,6 +41,12 @@ interface ViewportRect {
   height: number;
 }
 
+interface GhostPinState {
+  pageIndex: number;
+  xPercent: number;
+  yPercent: number;
+}
+
 function clampUnit(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
@@ -92,11 +98,29 @@ function samePageRects(a: PageRect[], b: PageRect[]): boolean {
 }
 
 /**
+ * Designed Pin Marker rendering an elevated teardrop pin with central icon.
+ */
+export function AttachmentPinGraphic() {
+  return (
+    <div className="attachment-pin-overlay__marker-pin" aria-hidden="true">
+      <svg viewBox="0 0 28 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M14 34C14 34 26 21.6 26 13C26 6.37258 20.6274 1 14 1C7.37258 1 2 6.37258 2 13C2 21.6 14 34 14 34Z"
+          fill="var(--c-primary)"
+          stroke="#ffffff"
+          strokeWidth="1.75"
+        />
+        <circle cx="14" cy="13" r="8" fill="rgba(0, 0, 0, 0.12)" />
+      </svg>
+      <div className="attachment-pin-overlay__marker-icon">
+        <Icon name="paperclip" size={12} strokeWidth={2.4} />
+      </div>
+    </div>
+  );
+}
+
+/**
  * Fixed-position pin layer over the viewer's page elements.
- *
- * <p>The viewer owns page geometry and zoom, so the layer reads `[data-page-index]` rects instead
- * of duplicating scroll and zoom math. It re-measures on scroll, resize, and DOM mutations so
- * moving the viewport while placing never leaves a stale hit target.
  */
 export function AttachmentPinOverlay({
   target,
@@ -108,6 +132,7 @@ export function AttachmentPinOverlay({
   const { t } = useTranslation();
   const [pageRects, setPageRects] = useState<PageRect[]>([]);
   const [viewport, setViewport] = useState<ViewportRect>(fullViewport);
+  const [ghostPin, setGhostPin] = useState<GhostPinState | null>(null);
   const frameRef = useRef<number | null>(null);
 
   /** Re-read page and viewer geometry after scroll, zoom, or layout changes. */
@@ -214,7 +239,10 @@ export function AttachmentPinOverlay({
   }, [measure, pins.length, target]);
 
   useEffect(() => {
-    if (!target) return;
+    if (!target) {
+      setGhostPin(null);
+      return;
+    }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onCancel();
@@ -244,6 +272,20 @@ export function AttachmentPinOverlay({
       );
     };
 
+  const handlePageMouseMove =
+    (rect: PageRect) => (event: MouseEvent<HTMLDivElement>) => {
+      if (!target) return;
+      setGhostPin({
+        pageIndex: rect.pageIndex,
+        xPercent: clampUnit((event.clientX - rect.left) / rect.width),
+        yPercent: clampUnit((event.clientY - rect.top) / rect.height),
+      });
+    };
+
+  const handlePageMouseLeave = () => {
+    setGhostPin(null);
+  };
+
   return createPortal(
     <div
       className="attachment-pin-overlay"
@@ -257,13 +299,16 @@ export function AttachmentPinOverlay({
     >
       {target && (
         <div className="attachment-pin-overlay__banner" role="status">
-          <Icon name="map-pin" size={18} />
+          <div className="attachment-pin-overlay__banner-badge">
+            <Icon name="map-pin" size={14} />
+          </div>
           <span className="attachment-pin-overlay__banner-text">
             {t(
               "attachments.placingPin",
-              "Click a page to place the pin for {{name}}",
+              "Click anywhere on a page to place pin for {{name}}",
               { name: target.name },
             )}
+            <kbd className="attachment-pin-overlay__banner-kbd">Esc</kbd>
           </span>
           <Button size="sm" variant="tertiary" type="button" onClick={onCancel}>
             {t("cancel", "Cancel")}
@@ -273,6 +318,8 @@ export function AttachmentPinOverlay({
 
       {renderedPageRects.map((rect) => {
         const pagePins = pins.filter((pin) => pin.pageIndex === rect.pageIndex);
+        const isGhostOnThisPage = ghostPin?.pageIndex === rect.pageIndex;
+
         return (
           <div
             key={rect.pageIndex}
@@ -287,10 +334,12 @@ export function AttachmentPinOverlay({
               height: rect.height,
             }}
             onClick={target ? handlePageClick(rect) : undefined}
+            onMouseMove={target ? handlePageMouseMove(rect) : undefined}
+            onMouseLeave={target ? handlePageMouseLeave : undefined}
           >
             {pagePins.map((pin) => {
               const openLabel = pin.openName
-                ? t("attachments.openPin", "Open attachment {{name}}", {
+                ? t("attachments.openPin", "Open attachment: {{name}}", {
                     name: pin.name,
                   })
                 : t(
@@ -298,7 +347,7 @@ export function AttachmentPinOverlay({
                     "Save the attachment before opening its pin",
                   );
               return (
-                <Tooltip key={pin.id} label={openLabel} withArrow>
+                <Tooltip key={pin.id} label={openLabel} withArrow offset={6}>
                   <button
                     type="button"
                     className="attachment-pin-overlay__marker"
@@ -318,11 +367,23 @@ export function AttachmentPinOverlay({
                       pointerEvents: target ? "none" : undefined,
                     }}
                   >
-                    <Icon name="map-pin" size={22} />
+                    <AttachmentPinGraphic />
                   </button>
                 </Tooltip>
               );
             })}
+
+            {target && isGhostOnThisPage && (
+              <div
+                className="attachment-pin-overlay__ghost"
+                style={{
+                  left: `${ghostPin.xPercent * 100}%`,
+                  top: `${ghostPin.yPercent * 100}%`,
+                }}
+              >
+                <AttachmentPinGraphic />
+              </div>
+            )}
           </div>
         );
       })}

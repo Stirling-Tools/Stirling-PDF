@@ -296,20 +296,52 @@ public class PdfAttachmentPinUtils {
 
     private static void drawPin(PDPageContentStream content, float width, float height)
             throws IOException {
-        float headRadius = width * 0.34f;
+        float headRadius = width * 0.42f;
         float headX = width / 2f;
-        float headY = height * 0.64f;
+        float headY = height * 0.58f;
 
-        content.setNonStrokingColor(0.231f, 0.510f, 0.965f);
-        content.moveTo(headX, 0f);
-        content.lineTo(headX - headRadius * 0.62f, headY - headRadius * 0.2f);
-        content.lineTo(headX + headRadius * 0.62f, headY - headRadius * 0.2f);
+        // Smooth teardrop body matching the modern document pin
+        content.setNonStrokingColor(0.18f, 0.48f, 0.96f);
+        content.moveTo(headX, 0.5f);
+        content.curveTo(
+                headX - headRadius * 0.35f,
+                height * 0.22f,
+                headX - headRadius,
+                headY - headRadius * 0.4f,
+                headX - headRadius,
+                headY);
+        float handle = headRadius * 0.5522848f;
+        content.curveTo(
+                headX - headRadius,
+                headY + handle,
+                headX - handle,
+                headY + headRadius,
+                headX,
+                headY + headRadius);
+        content.curveTo(
+                headX + handle,
+                headY + headRadius,
+                headX + headRadius,
+                headY + handle,
+                headX + headRadius,
+                headY);
+        content.curveTo(
+                headX + headRadius,
+                headY - headRadius * 0.4f,
+                headX + headRadius * 0.35f,
+                height * 0.22f,
+                headX,
+                0.5f);
         content.closePath();
         content.fill();
-        drawCircle(content, headX, headY, headRadius);
 
+        // Inner circle backdrop for the attachment mark
         content.setNonStrokingColor(1f, 1f, 1f);
-        drawCircle(content, headX, headY, headRadius * 0.42f);
+        drawCircle(content, headX, headY, headRadius * 0.52f);
+
+        // Center dot
+        content.setNonStrokingColor(0.18f, 0.48f, 0.96f);
+        drawCircle(content, headX, headY, headRadius * 0.26f);
     }
 
     private static void drawCircle(

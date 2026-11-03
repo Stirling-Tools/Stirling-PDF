@@ -7,6 +7,7 @@ import {
   Tooltip,
   Stack,
   Box,
+  Badge,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
@@ -93,11 +94,9 @@ export const AttachmentRow = memo(function AttachmentRow({
         ? t("attachments.badges.deleted", "DELETED")
         : null;
 
-  // The panel is narrow: when a status badge and a pin compete for the meta
-  // line, the size gives way so neither essential label truncates.
   const metaDetails = [
     badgeText,
-    size !== undefined && (!pin || !badgeText) ? formatFileSize(size) : null,
+    size !== undefined ? formatFileSize(size) : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -208,66 +207,70 @@ export const AttachmentRow = memo(function AttachmentRow({
             </Box>
           </Group>
 
-          {(pin || badgeText || size !== undefined) && (
-            <Text
-              size="xs"
-              c="dimmed"
-              truncate="end"
-              style={{
-                minWidth: 0,
-                fontVariantNumeric: "tabular-nums",
-                lineHeight: 1.2,
-              }}
-            >
-              {pin && (
-                <>
-                  <Tooltip
-                    label={t("attachments.movePin", "Move pin to another page")}
-                  >
-                    <span
-                      role={onStartPinPlacement ? "button" : undefined}
-                      tabIndex={onStartPinPlacement ? 0 : undefined}
-                      data-testid="attachment-pin-link"
-                      aria-label={
-                        onStartPinPlacement
-                          ? t("attachments.movePin", "Move pin to another page")
-                          : undefined
-                      }
-                      onClick={
-                        onStartPinPlacement
-                          ? () => onStartPinPlacement(id)
-                          : undefined
-                      }
-                      onKeyDown={
-                        onStartPinPlacement
-                          ? (event) => {
-                              if (event.key === "Enter" || event.key === " ") {
-                                event.preventDefault();
-                                onStartPinPlacement(id);
-                              }
-                            }
-                          : undefined
-                      }
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 2,
-                        color: "var(--c-accent-text)",
-                        cursor: onStartPinPlacement ? "pointer" : undefined,
-                      }}
-                    >
-                      <Icon name="map-pin" size={11} />
-                      {t("attachments.pinBadge", "P{{page}}", {
-                        page: pin.pageIndex + 1,
-                      })}
-                    </span>
-                  </Tooltip>
-                  {" · "}
-                </>
-              )}
-              {metaDetails}
-            </Text>
-          )}
+          <Group gap={6} wrap="nowrap" align="center" style={{ minWidth: 0 }}>
+            {pin && (
+              <Tooltip
+                label={t("attachments.movePin", "Move pin to another page")}
+              >
+                <Badge
+                  size="xs"
+                  variant="light"
+                  color="blue"
+                  data-testid="attachment-pin-link"
+                  role={onStartPinPlacement ? "button" : undefined}
+                  tabIndex={onStartPinPlacement ? 0 : undefined}
+                  aria-label={
+                    onStartPinPlacement
+                      ? t("attachments.movePin", "Move pin to another page")
+                      : undefined
+                  }
+                  onClick={
+                    onStartPinPlacement
+                      ? () => onStartPinPlacement(id)
+                      : undefined
+                  }
+                  onKeyDown={
+                    onStartPinPlacement
+                      ? (event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            onStartPinPlacement(id);
+                          }
+                        }
+                      : undefined
+                  }
+                  style={{
+                    cursor: onStartPinPlacement ? "pointer" : "default",
+                    textTransform: "none",
+                    fontWeight: 500,
+                    fontSize: "0.7rem",
+                    padding: "0 6px",
+                    height: 18,
+                  }}
+                  leftSection={<Icon name="map-pin" size={10} />}
+                >
+                  {t("attachments.pinBadge", "P{{page}}", {
+                    page: pin.pageIndex + 1,
+                  })}
+                </Badge>
+              </Tooltip>
+            )}
+
+            {(badgeText || size !== undefined) && (
+              <Text
+                size="xs"
+                c="dimmed"
+                truncate="end"
+                style={{
+                  minWidth: 0,
+                  fontVariantNumeric: "tabular-nums",
+                  lineHeight: 1.2,
+                }}
+              >
+                {metaDetails}
+              </Text>
+            )}
+          </Group>
         </Stack>
       )}
 
@@ -287,19 +290,25 @@ export const AttachmentRow = memo(function AttachmentRow({
             </Tooltip>
           ) : (
             <>
-              {!pin && onStartPinPlacement && (
+              {onStartPinPlacement && (
                 <Tooltip
                   label={
                     isPlacingPin
                       ? t("attachments.placingPinShort", "Click a page")
-                      : t("attachments.placePin", "Place pin on page")
+                      : pin
+                        ? t("attachments.movePin", "Move pin to another page")
+                        : t("attachments.placePin", "Place pin on page")
                   }
                 >
                   <ActionIcon
                     variant={isPlacingPin ? "secondary" : "tertiary"}
-                    accent={isPlacingPin ? "default" : "neutral"}
+                    accent={isPlacingPin || pin ? "brand" : "neutral"}
                     size="sm"
-                    aria-label={t("attachments.placePin", "Place pin on page")}
+                    aria-label={
+                      pin
+                        ? t("attachments.movePin", "Move pin to another page")
+                        : t("attachments.placePin", "Place pin on page")
+                    }
                     aria-pressed={isPlacingPin}
                     data-testid={`attachment-pin-action-${id}`}
                     onClick={() => onStartPinPlacement(id)}

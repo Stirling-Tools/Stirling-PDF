@@ -10,60 +10,151 @@
   overflow: hidden;
   border-radius: 2px;
   pointer-events: none;
+  transition:
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .attachment-pin-overlay__page--active {
   pointer-events: auto;
   cursor: crosshair;
-  outline: 2px dashed var(--c-primary);
-  outline-offset: 2px;
-  background: color-mix(in srgb, var(--c-primary) 7%, transparent);
+  outline: 2px solid var(--c-primary);
+  outline-offset: -1px;
+  background: color-mix(in srgb, var(--c-primary) 3%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-primary) 20%, transparent);
 }
 
+/* Designed Pin Marker */
 .attachment-pin-overlay__marker {
   position: absolute;
   display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--c-primary);
   cursor: pointer;
-  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 35%));
   pointer-events: auto;
   transform: translate(-50%, -100%);
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 0.18s ease;
+}
+
+.attachment-pin-overlay__marker:hover {
+  transform: translate(-50%, -108%) scale(1.08);
 }
 
 .attachment-pin-overlay__marker:disabled {
   cursor: default;
-  opacity: 0.5;
+  opacity: 0.7;
 }
 
 .attachment-pin-overlay__marker:focus-visible {
-  outline: 2px solid var(--c-primary);
-  outline-offset: 2px;
+  outline: none;
 }
 
+.attachment-pin-overlay__marker-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 34px;
+  position: relative;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.35));
+}
+
+.attachment-pin-overlay__marker-pin svg {
+  width: 100%;
+  height: 100%;
+}
+
+.attachment-pin-overlay__marker-icon {
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Ghost Preview Pin following cursor */
+.attachment-pin-overlay__ghost {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.25));
+  transition: opacity 0.15s ease;
+}
+
+/* Placement Instruction Banner */
 .attachment-pin-overlay__banner {
   position: absolute;
   /* Clear the viewer tool row below the workbench bar. */
   top: 44px;
   left: 50%;
-  z-index: 2;
+  z-index: 50;
   display: flex;
-  max-width: min(560px, calc(100vw - 32px));
+  max-width: min(580px, calc(100vw - 32px));
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 8px 14px;
   border: 1px solid var(--c-border);
-  border-radius: var(--radius-md, 8px);
+  border-radius: var(--radius-full, 9999px);
   background: var(--c-surface);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.18),
+    0 2px 6px rgba(0, 0, 0, 0.08);
   color: var(--c-text);
   pointer-events: auto;
   transform: translateX(-50%);
 }
 
+@keyframes attachmentPinBannerFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.attachment-pin-overlay__banner-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--c-primary) 15%, transparent);
+  color: var(--c-primary);
+  flex-shrink: 0;
+}
+
 .attachment-pin-overlay__banner-text {
-  font-size: 0.875rem;
+  font-size: 0.84rem;
+  font-weight: 500;
   line-height: 1.3;
+  color: var(--c-text);
+}
+
+.attachment-pin-overlay__banner-kbd {
+  font-size: 0.72rem;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-border);
+  color: var(--c-text-muted);
+  margin-left: 2px;
 }
