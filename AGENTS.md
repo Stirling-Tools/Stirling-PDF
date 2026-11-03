@@ -180,6 +180,7 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
   - `frontend/.env.proprietary` — proprietary-only vars, e.g. the admin portal's SaaS/account-link keys (layered on top of `.env` in proprietary mode)
   - `frontend/.env.saas` — SaaS-only vars (layered on top of `.env` in SaaS mode)
   - `frontend/.env.desktop` — desktop (Tauri)-only vars (layered on top of `.env` in desktop mode)
+  - `frontend/.env.mobile` — mobile (Tauri iOS/Android)-only vars (layered on top of `.env` in mobile mode)
 - These files are committed to Git and must not contain private keys
 - Local overrides (API keys, machine-specific settings) go in uncommitted sibling `.env.local` / `.env.saas.local` / `.env.desktop.local` files — Vite automatically layers them on top
 - Never use `|| 'hardcoded-fallback'` inline — put defaults in the committed env files
@@ -211,7 +212,7 @@ import { useFileContext } from "@editor-proprietary/contexts/FileContext";
 - Building layer-specific override that wraps a lower layer's component
 - Example: `import { AppProviders as CoreAppProviders } from "@editor-core/components/AppProviders"` when creating proprietary/AppProviders.tsx that extends the core version
 
-The `@editor/*` alias automatically resolves to the correct layer based on build target (core/proprietary/saas/desktop/cloud/tauri) and handles the fallback cascade — see "Frontend `cloud/` Layer" below for the full per-flavor order.
+The `@editor/*` alias automatically resolves to the correct layer based on build target (core/proprietary/saas/desktop/mobile/cloud/tauri) and handles the fallback cascade — see "Frontend `cloud/` Layer" below for the full per-flavor order.
 
 #### Frontend `cloud/` Layer
 
@@ -221,6 +222,7 @@ The `@editor/*` alias automatically resolves to the correct layer based on build
 - **proprietary** → proprietary → core
 - **saas** → saas → cloud → proprietary → core
 - **desktop** → desktop → tauri → cloud → proprietary → core
+- **mobile** → mobile → tauri → cloud → proprietary → core
 - **cloud** → cloud → proprietary → core
 
 What goes where:
@@ -231,12 +233,13 @@ What goes where:
 - **saas** — web-only: Supabase web auth, AuthCallback, avatar canvas, `window.location`.
 - **tauri** — the SHARED native-app experience for every platform built on the Tauri shell: tauriHttpClient, keyring authService, connection modes and the server-selection SetupWizard, OAuth through the system browser, managed sign-in, native-app onboarding.
 - **desktop** — desktop-only, on top of `tauri/`: the bundled backend, windows, auto-updater, default-PDF-app registration, disk sync, local processing folders.
+- **mobile** — iOS/Android-only, on top of `tauri/`: native file pickers and saving, server health and routing for a phone that has no bundled backend.
 
 `cloud/` MUST NOT import `@supabase/*`, `@tauri-apps/*`, raw `fetch`, `window.location`, `localStorage`, `sessionStorage`, or `import.meta.env.VITE_*` (all enforced by the linter). It reaches platform-specific things only via `@editor/*` seams: `services/apiClient`, `auth/session.getAccessToken`, `auth/supabase`, `platform/openExternal`, `services/billing`, `hooks/useSaaSMode` — each provided per-platform in `saas/` and `tauri/`.
 
 Rule of thumb — **move, don't copy**: share via `cloud/`, override by shadowing the same `@editor/*` path in a leaf (`saas/` or `desktop/`).
 
-A platform never builds on another platform: `desktop/` sits on `tauri/`, and a future Tauri platform does the same as a sibling of `desktop/`. `tauri/` must not depend on `desktop/`; where it needs the bundled backend it imports a seam the platform provides (`services/tauriBackendService`, `services/operationRouter`, `hooks/useBackendInitializer`).
+A platform never builds on another platform: `desktop/` and `mobile/` are siblings, each on `tauri/`, and neither is in the other's build. `tauri/` must not depend on either; where it needs the bundled backend it imports a seam the platform provides (`services/tauriBackendService`, `services/operationRouter`, `hooks/useBackendInitializer`).
 
 **Cloud feature flags on desktop.** The local `AppConfigContext` reads `/api/v1/config/app-config` from the LOCAL bundled backend, so cloud-only flags (`aiEngineEnabled`, `premiumEnabled`, …) are never seen on desktop. To read the cloud's view, use `useSaasAppConfig()` (`tauri/hooks/useSaasAppConfig.ts`, backed by the general `saasAppConfigService` — SaaS-mode-only, public endpoint, native HTTP, 5-min cache). It returns `null` outside SaaS mode, so cloud features stay off in local mode and the server keeps the on/off switch (no desktop release needed to flip a flag). In self-hosted mode the connected server's own `AppConfigContext` is the authority instead. Gate a feature behind a per-platform seam - e.g. `useAiEngineEnabled()` (core reads `useAppConfig()`, desktop reads `useAppConfig()` when signed in to a self-hosted server and `useSaasAppConfig()` otherwise) - rather than hardcoding the flag on.
 
@@ -445,8 +448,9 @@ The frontend is organized with a clear separation of concerns:
 
 - **`frontend/src/editor/tauri/`**: Code shared by every Tauri-shell platform
 - **`frontend/src/editor/desktop/`**: Desktop-only Tauri code, layered on `tauri/`
+- **`frontend/src/editor/mobile/`**: iOS/Android-only Tauri code, layered on `tauri/`
 - **`frontend/src/editor/proprietary/`**: Proprietary/licensed features
-- **`frontend/src-tauri/`**: Tauri (Rust) native desktop application code
+- **`frontend/src-tauri/`**: Tauri (Rust) native application code, shared by desktop and mobile
 - **`frontend/public/`**: Static assets served directly
   - `public/locales/`: Translation JSON files
 

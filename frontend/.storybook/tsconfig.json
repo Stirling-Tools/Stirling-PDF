@@ -11,7 +11,8 @@
   // not the proprietary one this project extends; typecheck:desktop already covers them.
   "exclude": [
     "../src/editor/desktop/**/*.stories.tsx",
-    "../src/editor/tauri/**/*.stories.tsx"
+    "../src/editor/tauri/**/*.stories.tsx",
+    "../src/editor/mobile/**/*.stories.tsx"
   ],
   "include": [
     "./**/*",

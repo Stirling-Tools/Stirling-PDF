@@ -7,8 +7,10 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { tauriBackendService } from "@editor/services/tauriBackendService";
-import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import {
+  isEndpointCheckBackendOnline,
+  subscribeToEndpointCheckReadiness,
+} from "@editor/services/endpointCheckReadiness";
 import { isBackendNotReadyError } from "@editor/constants/backendErrors";
 import { connectionModeService } from "@editor/services/connectionModeService";
 import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
@@ -31,15 +33,6 @@ const OPTIMISTIC: EndpointAvailabilityDetails = { enabled: true, reason: null };
 
 // Booleans, not the monitors' state objects — those are reassigned every poll,
 // which would defeat useSyncExternalStore's identity check.
-const subscribeReadiness = (onChange: () => void) => {
-  const unsubBackend = tauriBackendService.subscribeToStatus(onChange);
-  const unsubServer = selfHostedServerMonitor.subscribe(onChange);
-  return () => {
-    unsubBackend();
-    unsubServer();
-  };
-};
-const getBackendOnline = () => tauriBackendService.isOnline;
 const getOffline = () => isSelfHostedOffline();
 
 /**
@@ -48,10 +41,13 @@ const getOffline = () => isSelfHostedOffline();
  */
 function useBackendReadiness(localOnly: boolean) {
   const backendOnline = useSyncExternalStore(
-    subscribeReadiness,
-    getBackendOnline,
+    subscribeToEndpointCheckReadiness,
+    isEndpointCheckBackendOnline,
   );
-  const offline = useSyncExternalStore(subscribeReadiness, getOffline);
+  const offline = useSyncExternalStore(
+    subscribeToEndpointCheckReadiness,
+    getOffline,
+  );
   return {
     ready: backendOnline || (!localOnly && offline),
     backendOnline,
