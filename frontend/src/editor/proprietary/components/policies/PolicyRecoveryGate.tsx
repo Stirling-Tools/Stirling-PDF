@@ -39,6 +39,7 @@ import type { PoliciesByKey } from "@editor/types/policies";
 import type { FileId } from "@editor/types/file";
 import "@editor/components/policies/PolicyRecoveryGate.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { privateClassNameIf } from "@editor/components/shared/privateClassNameIf";
 
 /** Keeps the editor mounted but inaccessible until all open, failed inputs are recovered or closed. */
 export function PolicyRecoveryGate() {
@@ -219,11 +220,10 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
             <section className="policy-recovery__policy" key={policyKey}>
               <strong>{policyName(policyKey)}</strong>
               <p
-                className={
-                  owner && !isOwner
-                    ? `policy-recovery__hint ${privateContentClassName}`
-                    : "policy-recovery__hint"
-                }
+                className={privateClassNameIf(
+                  Boolean(owner) && !isOwner,
+                  "policy-recovery__hint",
+                )}
               >
                 {t(
                   isOwner

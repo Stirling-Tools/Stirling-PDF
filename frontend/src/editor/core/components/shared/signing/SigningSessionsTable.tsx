@@ -8,6 +8,7 @@ import {
 } from "@editor/ui/DataTableFilterBar";
 import { Icon } from "@editor/ui/Icon";
 import { Input } from "@editor/ui/Input";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import type { StatusTone } from "@editor/ui/StatusBadge";
 import {
@@ -207,7 +208,7 @@ export function SigningSessionsTable({
     <div className="signing-workspace__content">
       <div className="signing-workspace__list-heading">
         <Input
-          className="signing-workspace__search"
+          className={`signing-workspace__search ${privateContentClassName}`}
           inputSize="sm"
           leadingIcon={<Icon name="search" size={16} />}
           value={filters.filterBar.search?.value ?? ""}

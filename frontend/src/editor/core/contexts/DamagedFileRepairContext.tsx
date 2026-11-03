@@ -85,6 +85,7 @@ export function DamagedFileRepairProvider({
         }),
         privateTitle: true,
         body: operation.errorMessage ?? undefined,
+        privateBody: true,
         expandable: false,
         durationMs: 6000,
       });

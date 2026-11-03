@@ -86,11 +86,9 @@ export function DiskLinkBadge({ file, compact = false }: DiskLinkBadgeProps) {
   return (
     <Tooltip
       label={
-        state === "orphaned" ? (
-          <PrivateContent>{config.tooltip}</PrivateContent>
-        ) : (
-          config.tooltip
-        )
+        <PrivateContent enabled={state === "orphaned"}>
+          {config.tooltip}
+        </PrivateContent>
       }
       withinPortal
       multiline

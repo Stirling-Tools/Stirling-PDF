@@ -509,7 +509,7 @@ export function FileSelectorPicker({
 
           <div className={styles.searchRow}>
             <input
-              className={styles.searchInput}
+              className={`${styles.searchInput} ${privateContentClassName}`}
               type="search"
               placeholder={t("fileSelectorPicker.search", "Filter files…")}
               value={searchQuery}

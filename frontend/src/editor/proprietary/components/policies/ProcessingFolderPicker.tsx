@@ -34,6 +34,7 @@ import { ProcessingFolderActionCard } from "@editor/components/policies/Processi
 import type { DownloadsProcessing } from "@editor/hooks/useDownloadsProcessing";
 import "@editor/components/filesPage/FilesPage.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { privateClassNameIf } from "@editor/components/shared/privateClassNameIf";
 
 type AddedFolder = {
   folder: FolderRecord;
@@ -427,14 +428,9 @@ export function ProcessingFolderPicker({
                 </FormField>
                 <div className="folder-setup__new-folder-location">
                   <span>{t("processingFolders.setup.createIn")}</span>
-                  <div>
+                  <div title={parentPath} className={privateContentClassName}>
                     <Icon name="cloud" size={18} />
-                    <span
-                      title={parentPath}
-                      className={privateContentClassName}
-                    >
-                      {parentPath}
-                    </span>
+                    <span>{parentPath}</span>
                     <ProcessingFolderLocationPicker
                       folders={folders}
                       parentId={parentId}
@@ -491,11 +487,10 @@ export function ProcessingFolderPicker({
                         {index > 0 && <Icon name="chevron-right" size={14} />}
                         <button
                           type="button"
-                          className={
-                            item.id
-                              ? `files-page-breadcrumb ${privateContentClassName}`
-                              : "files-page-breadcrumb"
-                          }
+                          className={privateClassNameIf(
+                            Boolean(item.id),
+                            "files-page-breadcrumb",
+                          )}
                           aria-current={
                             item.id === currentId ? "location" : undefined
                           }

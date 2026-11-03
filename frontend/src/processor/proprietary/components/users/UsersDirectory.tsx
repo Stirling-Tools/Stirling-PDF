@@ -16,6 +16,7 @@ import {
   Tabs,
 } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import { type Member, type RoleId } from "@processor/api/users";
 import type { Team } from "@processor/api/teams";
 import type { UsersCapabilities } from "@processor/api/usersCapabilities";
@@ -597,6 +598,7 @@ export function UsersDirectory({
             {searchOpen ? (
               <Input
                 ref={searchRef}
+                className={privateContentClassName}
                 inputSize="sm"
                 value={query}
                 placeholder={t("users.filters.search", "Search people")}

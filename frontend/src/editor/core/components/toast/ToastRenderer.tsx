@@ -88,11 +88,9 @@ export default function ToastRenderer() {
                   {/* Title + count badge */}
                   <div className="toast-title-container">
                     <span>
-                      {t.privateTitle ? (
-                        <PrivateContent>{t.title}</PrivateContent>
-                      ) : (
-                        t.title
-                      )}
+                      <PrivateContent enabled={t.privateTitle}>
+                        {t.title}
+                      </PrivateContent>
                     </span>
                     {typeof t.count === "number" && t.count > 1 && (
                       <span className="toast-count-badge">{t.count}</span>
@@ -142,11 +140,9 @@ export default function ToastRenderer() {
                 {/* Body content - only show when expanded */}
                 {(t.isExpanded || !t.expandable) && (
                   <div className="toast-body">
-                    {t.privateBody ? (
-                      <PrivateContent>{t.body}</PrivateContent>
-                    ) : (
-                      t.body
-                    )}
+                    <PrivateContent enabled={t.privateBody}>
+                      {t.body}
+                    </PrivateContent>
                   </div>
                 )}
 

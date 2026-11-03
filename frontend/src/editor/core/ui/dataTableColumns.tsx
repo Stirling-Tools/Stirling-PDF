@@ -1,6 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
-import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { privateClassNameIf } from "@editor/components/shared/privateClassNameIf";
 import { Icon } from "@editor/ui/Icon";
 import { StatusBadge, type StatusTone } from "@editor/ui/StatusBadge";
 import { Chip, type ChipAccent } from "@editor/ui/Chip";
@@ -448,11 +448,10 @@ function entity<T>(
             </span>
             {note && (
               <span
-                className={
-                  o.privateNote?.(r)
-                    ? `sui-dtc__note ${privateContentClassName}`
-                    : "sui-dtc__note"
-                }
+                className={privateClassNameIf(
+                  o.privateNote?.(r),
+                  "sui-dtc__note",
+                )}
               >
                 {note}
               </span>

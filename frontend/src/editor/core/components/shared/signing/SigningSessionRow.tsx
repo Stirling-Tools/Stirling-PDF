@@ -8,6 +8,7 @@ import {
 import { signingStatus } from "@editor/utils/signingStatus";
 import { SigningActivityDot } from "@editor/components/shared/signing/SigningActivityDot";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { privateClassNameIf } from "@editor/components/shared/privateClassNameIf";
 
 interface SigningSessionRowProps {
   item: SigningMenuItem;
@@ -55,11 +56,10 @@ export function SigningSessionRow({
           </span>
           <span className="sign-menu__state">{state}</span>
           <span
-            className={
-              item.kind === "request"
-                ? `sign-menu__meta ${privateContentClassName}`
-                : "sign-menu__meta"
-            }
+            className={privateClassNameIf(
+              item.kind === "request",
+              "sign-menu__meta",
+            )}
           >
             {item.kind === "request"
               ? `${t("certSign.collab.signRequest.from", "From")}: ${item.ownerUsername}`

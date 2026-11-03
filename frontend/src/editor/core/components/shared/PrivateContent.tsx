@@ -3,6 +3,9 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
 
 interface PrivateContentProps extends React.HTMLAttributes<HTMLSpanElement> {
   children: React.ReactNode;
+  /** False renders the children unwrapped, for content that is only sometimes
+   * the user's. */
+  enabled?: boolean;
 }
 
 /**
@@ -25,10 +28,13 @@ interface PrivateContentProps extends React.HTMLAttributes<HTMLSpanElement> {
  */
 export const PrivateContent: React.FC<PrivateContentProps> = ({
   children,
+  enabled = true,
   className = "",
   style,
   ...props
 }) => {
+  if (!enabled) return <>{children}</>;
+
   const combinedClassName = className
     ? `${privateContentClassName} ${className}`
     : privateContentClassName;

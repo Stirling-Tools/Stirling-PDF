@@ -8,6 +8,7 @@ import { Input } from "@editor/ui/Input";
 import "@editor/ui/DataTableFilterBar.css";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { privateClassNameIf } from "@editor/components/shared/privateClassNameIf";
 
 /** Faceted filtering for {@link DataTable}'s `toolbar` slot. Facets chain; counts answer "if I picked this next". */
 
@@ -251,11 +252,10 @@ export function DataTableFilterBar({
                           {checked && <CheckGlyph />}
                         </span>
                         <span
-                          className={
-                            facet.privateContent
-                              ? `sui-dtfb__option-label ${privateContentClassName}`
-                              : "sui-dtfb__option-label"
-                          }
+                          className={privateClassNameIf(
+                            facet.privateContent,
+                            "sui-dtfb__option-label",
+                          )}
                         >
                           {option.label}
                         </span>
@@ -283,11 +283,9 @@ export function DataTableFilterBar({
               onRemove={() => onToggle(facet.key, value)}
             >
               {facet.label}:{" "}
-              {facet.privateContent ? (
-                <PrivateContent>{label}</PrivateContent>
-              ) : (
-                label
-              )}
+              <PrivateContent enabled={facet.privateContent}>
+                {label}
+              </PrivateContent>
             </Chip>
           ))}
           <Button variant="quiet" size="sm" onClick={onClearAll}>
