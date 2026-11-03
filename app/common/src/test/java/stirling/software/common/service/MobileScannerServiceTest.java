@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.common.service.MobileScannerService.FileMetadata;
 import stirling.software.common.service.MobileScannerService.SessionInfo;
+import stirling.software.common.service.MobileScannerService.UploadLimitException;
 
 /**
  * Unit tests for {@link MobileScannerService}. The service stores uploaded files in a temp
@@ -119,16 +122,54 @@ class MobileScannerServiceTest {
         }
 
         @Test
-        @DisplayName("expires and removes a session whose last access is in the past")
+        @DisplayName("expires and removes a session created more than the timeout ago")
         void expiredSessionRemoved() {
             service.createSession("expired");
 
-            // Force the underlying session's last access far into the past.
-            forceLastAccess("expired", System.currentTimeMillis() - (20 * 60 * 1000L));
+            forceCreatedAt("expired", System.currentTimeMillis() - (20 * 60 * 1000L));
 
             assertNull(service.validateSession("expired"));
             // After expiry the session should be gone entirely.
             assertNull(service.validateSession("expired"));
+        }
+
+        @Test
+        @DisplayName("an expired session's files are not listed or served before the sweep")
+        void expiredSessionHidesFiles() throws IOException {
+            service.createSession("gone");
+            service.uploadFiles("gone", List.of(file("a.txt", "x")));
+            forceCreatedAt("gone", System.currentTimeMillis() - (20 * 60 * 1000L));
+
+            assertTrue(service.getSessionFiles("gone").isEmpty());
+            assertThrows(IOException.class, () -> service.getFile("gone", "a.txt"));
+        }
+
+        @Test
+        @DisplayName("remainingSessionBytes reports a live session's room and -1 otherwise")
+        void remainingSessionBytes() throws IOException {
+            service.createSession("live");
+            service.uploadFiles("live", List.of(file("a.txt", "xyz")));
+            service.createSession("dead");
+            forceCreatedAt("dead", System.currentTimeMillis() - (20 * 60 * 1000L));
+
+            assertEquals(
+                    MobileScannerService.MAX_SESSION_BYTES - 3,
+                    service.remainingSessionBytes("live"));
+            assertEquals(-1, service.remainingSessionBytes("dead"));
+            assertEquals(-1, service.remainingSessionBytes("never"));
+            assertEquals(-1, service.remainingSessionBytes(null));
+        }
+
+        @Test
+        @DisplayName("reads do not push the expiry back")
+        void readsDoNotExtendExpiry() throws IOException {
+            long expiresAt = service.createSession("fixed").getExpiresAt();
+            service.uploadFiles("fixed", List.of(file("a.txt", "x")));
+
+            service.getSessionFiles("fixed");
+            service.getFile("fixed", "a.txt");
+
+            assertEquals(expiresAt, service.validateSession("fixed").getExpiresAt());
         }
     }
 
@@ -156,12 +197,42 @@ class MobileScannerServiceTest {
         }
 
         @Test
-        @DisplayName("auto-creates a session when uploading to an unregistered session ID")
-        void autoCreatesSession() throws IOException {
-            service.uploadFiles("new-session", List.of(file("a.txt", "data")));
+        @DisplayName("rejects uploads to a session that was never created")
+        void rejectsUnknownSession() {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> service.uploadFiles("new-session", List.of(file("a.txt", "data"))));
 
-            List<FileMetadata> metas = service.getSessionFiles("new-session");
-            assertEquals(1, metas.size());
+            assertNull(service.validateSession("new-session"));
+            assertFalse(Files.exists(tempDir.resolve("new-session")));
+        }
+
+        @Test
+        @DisplayName("rejects uploads to an expired session")
+        void rejectsExpiredSession() {
+            service.createSession("late");
+            forceCreatedAt("late", System.currentTimeMillis() - (20 * 60 * 1000L));
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> service.uploadFiles("late", List.of(file("a.txt", "data"))));
+        }
+
+        @Test
+        @DisplayName("accepts another batch after the first one was collected")
+        void acceptsBatchAfterCollection() throws IOException {
+            service.createSession("again");
+            service.uploadFiles("again", List.of(file("a.txt", "x")));
+            service.getFile("again", "a.txt");
+            service.deleteFileAfterDownload("again", "a.txt");
+
+            service.uploadFiles("again", List.of(file("b.txt", "y")));
+
+            assertEquals(
+                    List.of("b.txt"),
+                    service.getSessionFiles("again").stream()
+                            .map(FileMetadata::getFilename)
+                            .toList());
         }
 
         @Test
@@ -318,6 +389,46 @@ class MobileScannerServiceTest {
     }
 
     @Nested
+    @DisplayName("getFile claims")
+    class GetFileClaims {
+
+        @Test
+        @DisplayName("a file can be claimed for download only once")
+        void claimedOnce() throws IOException {
+            service.createSession("c1");
+            service.uploadFiles("c1", List.of(file("a.txt", "x")));
+
+            service.getFile("c1", "a.txt");
+
+            assertThrows(IOException.class, () -> service.getFile("c1", "a.txt"));
+        }
+
+        @Test
+        @DisplayName("a re-uploaded file with a downloaded name can be claimed again")
+        void reuploadedNameClaimable() throws IOException {
+            service.createSession("c2");
+            service.uploadFiles("c2", List.of(file("a.txt", "x"), file("b.txt", "y")));
+            service.getFile("c2", "a.txt");
+            service.deleteFileAfterDownload("c2", "a.txt");
+
+            service.uploadFiles("c2", List.of(file("a.txt", "z")));
+
+            assertDoesNotThrow(() -> service.getFile("c2", "a.txt"));
+        }
+
+        @Test
+        @DisplayName("a file on disk that the session did not store is not served")
+        void unstoredFileNotServed() throws IOException {
+            service.createSession("c3");
+            service.uploadFiles("c3", List.of(file("a.txt", "x")));
+            Files.writeString(tempDir.resolve("c3").resolve("other.txt"), "y");
+
+            assertThrows(IOException.class, () -> service.getFile("c3", "other.txt"));
+            assertDoesNotThrow(() -> service.getFile("c3", "a.txt"));
+        }
+    }
+
+    @Nested
     @DisplayName("deleteFileAfterDownload")
     class DeleteFileAfterDownload {
 
@@ -327,25 +438,49 @@ class MobileScannerServiceTest {
             service.createSession("d1");
             service.uploadFiles("d1", List.of(file("a.txt", "x"), file("b.txt", "y")));
 
+            service.getFile("d1", "a.txt");
             service.deleteFileAfterDownload("d1", "a.txt");
 
             assertFalse(Files.exists(tempDir.resolve("d1").resolve("a.txt")));
-            // Session still present because not all files have been downloaded.
             assertNotNull(service.validateSession("d1"));
         }
 
         @Test
-        @DisplayName("deletes the entire session once all files are marked downloaded")
-        void deletesSessionWhenAllDownloaded() throws IOException {
+        @DisplayName("keeps the session open once every file is downloaded")
+        void keepsSessionWhenAllDownloaded() throws IOException {
             service.createSession("d2");
             service.uploadFiles("d2", List.of(file("only.txt", "x")));
 
-            // Mark the file as downloaded via getFile, then delete it.
             service.getFile("d2", "only.txt");
             service.deleteFileAfterDownload("d2", "only.txt");
 
-            assertNull(service.validateSession("d2"));
-            assertFalse(Files.exists(tempDir.resolve("d2")));
+            assertNotNull(service.validateSession("d2"));
+            assertTrue(service.getSessionFiles("d2").isEmpty());
+            assertFalse(Files.exists(tempDir.resolve("d2").resolve("only.txt")));
+        }
+
+        @Test
+        @DisplayName("leaves an unclaimed file alone, such as a new upload to a re-created id")
+        void ignoresUnclaimedFile() throws IOException {
+            service.createSession("d4");
+            service.uploadFiles("d4", List.of(file("a.txt", "x")));
+
+            service.deleteFileAfterDownload("d4", "a.txt");
+
+            assertTrue(Files.exists(tempDir.resolve("d4").resolve("a.txt")));
+            assertEquals(1, service.getSessionFiles("d4").size());
+        }
+
+        @Test
+        @DisplayName("a released claim makes the file downloadable again")
+        void releasedClaimAllowsRetry() throws IOException {
+            service.createSession("d5");
+            service.uploadFiles("d5", List.of(file("a.txt", "x")));
+            service.getFile("d5", "a.txt");
+
+            service.releaseDownloadClaim("d5", "a.txt");
+
+            assertDoesNotThrow(() -> service.getFile("d5", "a.txt"));
         }
 
         @Test
@@ -385,6 +520,17 @@ class MobileScannerServiceTest {
         }
 
         @Test
+        @DisplayName("removes a leftover directory even when the session is unknown")
+        void removesLeftoverDirectory() throws IOException {
+            Path leftover = Files.createDirectories(tempDir.resolve("leftover"));
+            Files.write(leftover.resolve("a.jpg"), new byte[] {1});
+
+            service.deleteSession("leftover");
+
+            assertFalse(Files.exists(leftover));
+        }
+
+        @Test
         @DisplayName("is a no-op for an unknown session")
         void unknownSessionNoOp() {
             assertDoesNotThrow(() -> service.deleteSession("never-existed"));
@@ -400,7 +546,7 @@ class MobileScannerServiceTest {
         void removesExpired() throws IOException {
             service.createSession("old");
             service.uploadFiles("old", List.of(file("a.txt", "x")));
-            forceLastAccess("old", System.currentTimeMillis() - (20 * 60 * 1000L));
+            forceCreatedAt("old", System.currentTimeMillis() - (20 * 60 * 1000L));
 
             service.cleanupExpiredSessions();
 
@@ -419,10 +565,296 @@ class MobileScannerServiceTest {
         }
 
         @Test
+        @DisplayName("removes stale directories that have no live session")
+        void removesOrphanedDirectories() throws IOException {
+            Path stale = Files.createDirectories(tempDir.resolve("stale"));
+            Files.write(stale.resolve("a.jpg"), new byte[] {1});
+            Files.setLastModifiedTime(
+                    stale, FileTime.fromMillis(System.currentTimeMillis() - 20 * 60 * 1000L));
+            Path recent = Files.createDirectories(tempDir.resolve("recent"));
+            service.createSession("live");
+            service.uploadFiles("live", List.of(file("a.txt", "x")));
+            Files.setLastModifiedTime(
+                    tempDir.resolve("live"),
+                    FileTime.fromMillis(System.currentTimeMillis() - 20 * 60 * 1000L));
+
+            service.cleanupExpiredSessions();
+
+            assertFalse(Files.exists(stale));
+            assertTrue(Files.exists(recent));
+            assertTrue(Files.exists(tempDir.resolve("live").resolve("a.txt")));
+        }
+
+        @Test
         @DisplayName("does not throw when there are no sessions")
         void noSessionsNoThrow() {
             assertDoesNotThrow(() -> service.cleanupExpiredSessions());
         }
+    }
+
+    @Nested
+    @DisplayName("storage limits")
+    class StorageLimits {
+
+        private static final long MAX_FILE = MobileScannerService.MAX_FILE_BYTES;
+
+        @Test
+        @DisplayName("rejects a file over the per-file cap and stores nothing from the batch")
+        void rejectsOversizedFile() {
+            service.createSession("big");
+            UploadLimitException e =
+                    assertThrows(
+                            UploadLimitException.class,
+                            () ->
+                                    service.uploadFiles(
+                                            "big",
+                                            List.of(
+                                                    file("ok.txt", "x"),
+                                                    sized("huge.jpg", MAX_FILE + 1))));
+
+            assertFalse(e.isServerCapacity());
+            assertFalse(Files.exists(tempDir.resolve("big")));
+            assertTrue(service.getSessionFiles("big").isEmpty());
+        }
+
+        @Test
+        @DisplayName("rejects a batch that would exceed the per-session file count")
+        void rejectsTooManyFiles() throws IOException {
+            List<MultipartFile> files = new ArrayList<>();
+            for (int i = 0; i < MobileScannerService.MAX_FILES_PER_SESSION; i++) {
+                files.add(file("f" + i + ".txt", "x"));
+            }
+            service.createSession("many");
+            service.uploadFiles("many", files);
+
+            assertThrows(
+                    UploadLimitException.class,
+                    () -> service.uploadFiles("many", List.of(file("one-more.txt", "x"))));
+            assertEquals(
+                    MobileScannerService.MAX_FILES_PER_SESSION,
+                    service.getSessionFiles("many").size());
+        }
+
+        @Test
+        @DisplayName("rejects uploads past the per-session byte cap")
+        void rejectsSessionBytes() throws IOException {
+            fillSession("s", MobileScannerService.MAX_SESSION_BYTES);
+
+            UploadLimitException e =
+                    assertThrows(
+                            UploadLimitException.class,
+                            () -> service.uploadFiles("s", List.of(file("extra.txt", "x"))));
+            assertFalse(e.isServerCapacity());
+        }
+
+        @Test
+        @DisplayName("rejects uploads past the server-wide byte cap")
+        void rejectsTotalBytes() throws IOException {
+            fillServer();
+            service.createSession("other");
+
+            UploadLimitException e =
+                    assertThrows(
+                            UploadLimitException.class,
+                            () -> service.uploadFiles("other", List.of(file("a.txt", "x"))));
+            assertTrue(e.isServerCapacity());
+        }
+
+        @Test
+        @DisplayName("a downloaded file frees its bytes")
+        void downloadReleasesBytes() throws IOException {
+            fillServer();
+            service.getFile("fill-0", "f0.jpg");
+            service.deleteFileAfterDownload("fill-0", "f0.jpg");
+            service.createSession("other");
+
+            assertDoesNotThrow(() -> service.uploadFiles("other", List.of(file("a.txt", "x"))));
+        }
+
+        @Test
+        @DisplayName("deleting a session frees its bytes")
+        void deleteSessionReleasesBytes() throws IOException {
+            fillServer();
+            service.deleteSession("fill-0");
+            service.createSession("other");
+
+            assertDoesNotThrow(() -> service.uploadFiles("other", List.of(file("a.txt", "x"))));
+        }
+
+        @Test
+        @DisplayName("a reused filename releases only its own size")
+        void reusedFilenameReleasesOwnSize() throws IOException {
+            service.createSession("r");
+            service.uploadFiles("r", List.of(sized("a.jpg", MAX_FILE), file("keep.txt", "x")));
+            service.getFile("r", "a.jpg");
+            service.deleteFileAfterDownload("r", "a.jpg");
+            service.uploadFiles("r", List.of(sized("a.jpg", 10)));
+            service.getFile("r", "a.jpg");
+            service.deleteFileAfterDownload("r", "a.jpg");
+
+            assertEquals(1L, storedBytes());
+        }
+
+        @Test
+        @DisplayName("a failed write releases its reservation")
+        void failedWriteReleasesReservation() {
+            MultipartFile failing =
+                    new MockMultipartFile("file", "bad.jpg", "image/jpeg", new byte[] {1}) {
+                        @Override
+                        public long getSize() {
+                            return MAX_FILE;
+                        }
+
+                        @Override
+                        public void transferTo(Path dest) throws IOException {
+                            throw new IOException("disk full");
+                        }
+                    };
+
+            service.createSession("f");
+            assertThrows(IOException.class, () -> service.uploadFiles("f", List.of(failing)));
+            assertEquals(0L, storedBytes());
+        }
+
+        @Test
+        @DisplayName("caps the number of live sessions, but re-creating an existing id is allowed")
+        void capsSessions() {
+            for (int i = 0; i < MobileScannerService.MAX_ACTIVE_SESSIONS; i++) {
+                service.createSession("s" + i);
+            }
+
+            UploadLimitException e =
+                    assertThrows(UploadLimitException.class, () -> service.createSession("new"));
+            assertTrue(e.isServerCapacity());
+            assertDoesNotThrow(() -> service.createSession("s0"));
+        }
+
+        @Test
+        @DisplayName("expired sessions stop holding the caps before the sweep runs")
+        void expiredSessionsFreeCaps() throws IOException {
+            fillServer();
+            for (int i = 0; i < 4; i++) {
+                forceCreatedAt("fill-" + i, System.currentTimeMillis() - (20 * 60 * 1000L));
+            }
+            service.createSession("other");
+
+            assertDoesNotThrow(() -> service.uploadFiles("other", List.of(file("a.txt", "x"))));
+            assertFalse(Files.exists(tempDir.resolve("fill-0")));
+        }
+
+        @Test
+        @DisplayName("re-creating a session deletes its old files and frees their bytes")
+        void recreateDeletesOldFiles() throws IOException {
+            service.createSession("again");
+            service.uploadFiles("again", List.of(sized("a.jpg", MAX_FILE)));
+
+            service.createSession("again");
+
+            assertFalse(Files.exists(tempDir.resolve("again").resolve("a.jpg")));
+            assertTrue(service.getSessionFiles("again").isEmpty());
+            assertEquals(0L, storedBytes());
+        }
+
+        @Test
+        @DisplayName("a file written after its session was removed is deleted, not left uncounted")
+        void sessionRemovedMidUpload() {
+            MultipartFile racing =
+                    new MockMultipartFile("file", "late.jpg", "image/jpeg", new byte[] {1}) {
+                        @Override
+                        public void transferTo(Path dest) throws IOException {
+                            service.createSession("race");
+                            service.uploadFiles("race", List.of(file("new.txt", "x")));
+                            Files.write(dest, new byte[] {1});
+                        }
+                    };
+
+            service.createSession("race");
+            assertThrows(IOException.class, () -> service.uploadFiles("race", List.of(racing)));
+
+            assertFalse(Files.exists(tempDir.resolve("race").resolve("late.jpg")));
+            assertTrue(Files.exists(tempDir.resolve("race").resolve("new.txt")));
+            assertEquals(1L, storedBytes());
+        }
+
+        @Test
+        @DisplayName("same-name uploads in flight together get distinct files and byte counts")
+        void concurrentSameNameUploads() throws IOException {
+            MultipartFile outer =
+                    new MockMultipartFile("file", "dup.jpg", "image/jpeg", new byte[] {1}) {
+                        @Override
+                        public void transferTo(Path dest) throws IOException {
+                            service.uploadFiles("same", List.of(sized("dup.jpg", 10)));
+                            Files.write(dest, new byte[] {1});
+                        }
+                    };
+
+            service.createSession("same");
+            service.uploadFiles("same", List.of(outer));
+
+            assertEquals(
+                    List.of("dup-1.jpg", "dup.jpg"),
+                    service.getSessionFiles("same").stream()
+                            .map(FileMetadata::getFilename)
+                            .toList());
+            assertEquals(11L, storedBytes());
+            service.getFile("same", "dup.jpg");
+            service.deleteFileAfterDownload("same", "dup.jpg");
+            assertEquals(10L, storedBytes());
+        }
+
+        @Test
+        @DisplayName("a failed write removes the file and its reservation")
+        void failedWriteRemovesFile() {
+            MultipartFile failing =
+                    new MockMultipartFile("file", "bad.jpg", "image/jpeg", new byte[] {1}) {
+                        @Override
+                        public void transferTo(Path dest) throws IOException {
+                            throw new IOException("disk full");
+                        }
+                    };
+
+            service.createSession("fail");
+            assertThrows(IOException.class, () -> service.uploadFiles("fail", List.of(failing)));
+
+            assertFalse(Files.exists(tempDir.resolve("fail").resolve("bad.jpg")));
+            assertEquals(0L, storedBytes());
+        }
+
+        private void fillSession(String sessionId, long bytes) throws IOException {
+            List<MultipartFile> files = new ArrayList<>();
+            for (int i = 0; bytes > 0; i++) {
+                long size = Math.min(bytes, MAX_FILE);
+                files.add(sized("f" + i + ".jpg", size));
+                bytes -= size;
+            }
+            service.createSession(sessionId);
+            service.uploadFiles(sessionId, files);
+        }
+
+        private void fillServer() throws IOException {
+            long remaining = MobileScannerService.MAX_TOTAL_BYTES;
+            for (int i = 0; remaining > 0; i++) {
+                long bytes = Math.min(remaining, MobileScannerService.MAX_SESSION_BYTES);
+                fillSession("fill-" + i, bytes);
+                remaining -= bytes;
+            }
+        }
+
+        private long storedBytes() {
+            Long total = ReflectionTestUtils.invokeMethod(service, "totalStoredBytes");
+            assertNotNull(total);
+            return total;
+        }
+    }
+
+    /** A one-byte file that reports {@code size}, so caps can be tested without large writes. */
+    private MultipartFile sized(String name, long size) {
+        return new MockMultipartFile("file", name, "image/jpeg", new byte[] {1}) {
+            @Override
+            public long getSize() {
+                return size;
+            }
+        };
     }
 
     @Nested
@@ -455,17 +887,17 @@ class MobileScannerServiceTest {
     }
 
     /**
-     * Reaches into the internal SessionData for a given session and forces its lastAccessTime, used
-     * to deterministically simulate expiry without sleeping.
+     * Reaches into the internal SessionData for a given session and forces its createdAt, used to
+     * deterministically simulate expiry without sleeping.
      */
     @SuppressWarnings("unchecked")
-    private void forceLastAccess(String sessionId, long lastAccessTime) {
+    private void forceCreatedAt(String sessionId, long createdAt) {
         java.util.Map<String, Object> sessions =
                 (java.util.Map<String, Object>)
                         ReflectionTestUtils.getField(service, "activeSessions");
         assertNotNull(sessions);
         Object sessionData = sessions.get(sessionId);
         assertNotNull(sessionData, "session not found: " + sessionId);
-        ReflectionTestUtils.setField(sessionData, "lastAccessTime", lastAccessTime);
+        ReflectionTestUtils.setField(sessionData, "createdAt", createdAt);
     }
 }

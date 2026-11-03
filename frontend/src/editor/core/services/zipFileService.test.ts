@@ -20,6 +20,63 @@ function fakeBlob(bytes: number[], type = ""): Blob {
 
 const PDF_BYTES = [0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37]; // "%PDF-1.7"
 
+describe("zipFileService.isZipFile", () => {
+  test("accepts .zip whatever MIME the browser reports", () => {
+    for (const type of ["application/zip", "application/octet-stream", ""]) {
+      expect(
+        zipFileService.isZipFile(new File(["PK"], "archive.zip", { type })),
+      ).toBe(true);
+    }
+  });
+
+  test("accepts the extension case-insensitively", () => {
+    expect(zipFileService.isZipFile(new File(["PK"], "ARCHIVE.ZIP"))).toBe(
+      true,
+    );
+  });
+
+  test("rejects ZIP-based documents and comics", () => {
+    for (const name of [
+      "report.docx",
+      "sheet.xlsx",
+      "slides.pptx",
+      "notes.odt",
+      "book.epub",
+      "comic.cbz",
+      "comic.cbr",
+    ]) {
+      for (const type of ["application/zip", "application/octet-stream"]) {
+        expect(zipFileService.isZipFile(new File(["PK"], name, { type }))).toBe(
+          false,
+        );
+      }
+    }
+  });
+
+  test("rejects an untyped archive without a .zip name", () => {
+    expect(
+      zipFileService.isZipFile(
+        new File(["PK"], "download", { type: "application/zip" }),
+      ),
+    ).toBe(false);
+  });
+});
+
+describe("zipFileService.isZipFileStub", () => {
+  const stub = (name: string, type = "") =>
+    ({ name, type }) as Parameters<typeof zipFileService.isZipFileStub>[0];
+
+  test("follows the same archive-name rule as the File variant", () => {
+    expect(zipFileService.isZipFileStub(stub("archive.zip"))).toBe(true);
+    expect(
+      zipFileService.isZipFileStub(stub("report.docx", "application/zip")),
+    ).toBe(false);
+    expect(
+      zipFileService.isZipFileStub(stub("comic.cbz", "application/zip")),
+    ).toBe(false);
+  });
+});
+
 describe("zipFileService.isZipResponse", () => {
   describe("signature is authoritative", () => {
     test("PK\\x03\\x04 -> ZIP", async () => {
