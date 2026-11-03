@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { readFileSync } from "node:fs";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import path from "path";
 
@@ -794,12 +795,20 @@ test.describe("PDF text editor - tables", () => {
     });
     await page
       .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(
-        path.join(
-          import.meta.dirname,
-          "../test-fixtures/issue-8678-row-deletion-sample.pdf",
+      .setInputFiles({
+        name: "issue-8678-row-deletion-sample.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from(
+          readFileSync(
+            path.join(
+              import.meta.dirname,
+              "../test-fixtures/issue-8678-row-deletion-sample.pdf.base64",
+            ),
+            "utf8",
+          ),
+          "base64",
         ),
-      );
+      });
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
