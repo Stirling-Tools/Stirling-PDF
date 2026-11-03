@@ -1,22 +1,3 @@
-.phone-layout-stage {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  overflow: hidden;
-}
-
-/* Its own stacking context, so the viewer's raised toolbars stay under the tool sheet. */
-.phone-layout-workbench {
-  position: relative;
-  z-index: 0;
-  isolation: isolate;
-  flex: 1;
-  min-height: 0;
-  min-width: 0;
-  display: flex;
-}
-
 .phone-layout .mobile-bottom-button[data-active="true"] {
   color: var(--c-accent-fg, var(--c-primary));
 }
@@ -47,10 +28,6 @@
 .document-header-name {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.document-actions .mobile-bottom-button-label {
   white-space: nowrap;
 }
 
