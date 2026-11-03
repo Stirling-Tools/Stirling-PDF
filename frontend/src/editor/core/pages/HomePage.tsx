@@ -77,6 +77,10 @@ import { consumeProcessingFolderCreationRequest } from "@editor/utils/pendingPro
 import type { FileSidebarProps } from "@editor/components/shared/FileSidebar";
 
 import { Button } from "@editor/ui/Button";
+import {
+  INITIAL_MOBILE_VIEW,
+  type MobileView,
+} from "@editor/pages/initialMobileView";
 import "@editor/components/layout/WorkspaceFrame.css";
 import "@editor/pages/HomePage.css";
 
@@ -110,8 +114,6 @@ function readSwipeHintSeen(): boolean {
   }
 }
 
-type MobileView = "tools" | "workbench";
-
 export default function HomePage() {
   const { t, i18n } = useTranslation();
   const policiesEnabled = usePoliciesEnabled();
@@ -141,7 +143,8 @@ export default function HomePage() {
   const isMobile = useIsMobile();
   const isTouch = useIsTouch();
   const sliderRef = useRef<HTMLDivElement | null>(null);
-  const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
+  const [activeMobileView, setActiveMobileView] =
+    useState<MobileView>(INITIAL_MOBILE_VIEW);
   const isProgrammaticScroll = useRef(false);
   const location = useLocation();
   useEffect(() => {
@@ -474,7 +477,8 @@ export default function HomePage() {
       return;
     }
 
-    setActiveMobileView("tools");
+    // useIsMobile reads false on the first render, so this runs on phones too.
+    setActiveMobileView(INITIAL_MOBILE_VIEW);
     const container = sliderRef.current;
     if (container) {
       container.scrollTo({ left: 0, behavior: "auto" });
