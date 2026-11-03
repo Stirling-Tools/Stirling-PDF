@@ -58,7 +58,7 @@ public class PdfToCbzUtils {
 
     private static TempFile createCbzFromPdf(
             PDDocument document, int dpi, TempFileManager tempFileManager) throws IOException {
-        PDFRenderer pdfRenderer = new PDFRenderer(document);
+        PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
         pdfRenderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
 
         TempFile cbzTempFile = new TempFile(tempFileManager, ".cbz");

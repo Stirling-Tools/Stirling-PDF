@@ -1,5 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import type { Page, Route } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import path from "path";
 
 // End-to-end coverage for the fonts panel's client-side glyph-coverage probe.
@@ -10,7 +10,6 @@ const SUBSET = path.join(
 );
 
 async function open(page: Page, file: string): Promise<void> {
-  await page.route("**/encode-charcodes", (route: Route) => route.abort());
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 20_000,
