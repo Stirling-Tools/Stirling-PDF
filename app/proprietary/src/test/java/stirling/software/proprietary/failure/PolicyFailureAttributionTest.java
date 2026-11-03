@@ -116,7 +116,8 @@ class PolicyFailureAttributionTest {
                         internalApiClient,
                         toolMetadataService,
                         new TempFileManager(new TempFileRegistry(), props),
-                        JsonMapper.builder().build());
+                        JsonMapper.builder().build(),
+                        new ApplicationProperties());
         engine =
                 new PolicyEngine(
                         executor,

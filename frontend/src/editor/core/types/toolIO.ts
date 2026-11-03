@@ -456,11 +456,6 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
-  "/api/v1/general/edit-text": {
-    accepts: ["PDF"],
-    produces: "PDF",
-    arity: "SISO",
-  },
   "/api/v1/general/extract-bookmarks": {
     accepts: ["PDF"],
     produces: "JSON",

@@ -18,7 +18,7 @@ public class MergeMultiplePagesRequest extends PDFFile {
             type = "string",
             defaultValue = "DEFAULT",
             allowableValues = {"DEFAULT", "CUSTOM"})
-    private String mode;
+    private String mode = "DEFAULT";
 
     @Schema(
             description = "The number of pages to fit onto a single sheet in the output PDF.",
@@ -32,7 +32,7 @@ public class MergeMultiplePagesRequest extends PDFFile {
             type = "string",
             defaultValue = "BY_ROWS",
             allowableValues = {"BY_ROWS", "BY_COLUMNS"})
-    private String arrangement;
+    private String arrangement = "BY_ROWS";
 
     @Schema(
             description =
@@ -40,7 +40,7 @@ public class MergeMultiplePagesRequest extends PDFFile {
             type = "string",
             defaultValue = "LTR",
             allowableValues = {"LTR", "RTL"})
-    private String readingDirection;
+    private String readingDirection = "LTR";
 
     @Schema(
             description = "Number of rows",
@@ -49,7 +49,7 @@ public class MergeMultiplePagesRequest extends PDFFile {
             maximum = "300",
             minimum = "1",
             example = "3")
-    private int rows;
+    private int rows = 1;
 
     @Schema(
             description = "Number of columns",
@@ -58,14 +58,14 @@ public class MergeMultiplePagesRequest extends PDFFile {
             maximum = "300",
             minimum = "1",
             example = "2")
-    private int cols;
+    private int cols = 2;
 
     @Schema(
             description = "The orientation of the output PDF pages",
             type = "string",
             defaultValue = "PORTRAIT",
             allowableValues = {"PORTRAIT", "LANDSCAPE"})
-    private String orientation;
+    private String orientation = "PORTRAIT";
 
     @Schema(
             description = "Inner margin (in points) to apply around each page when merging",
@@ -113,7 +113,7 @@ public class MergeMultiplePagesRequest extends PDFFile {
             defaultValue = "1",
             minimum = "0",
             example = "2")
-    private int borderWidth;
+    private int borderWidth = 1;
 
     @Schema(description = "Boolean for if you wish to add border around the pages")
     private Boolean addBorder;

@@ -1,9 +1,7 @@
 package stirling.software.proprietary.service.ua;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +17,6 @@ import org.apache.xmpbox.type.ArrayProperty;
 import org.apache.xmpbox.type.Cardinality;
 import org.apache.xmpbox.type.PDFAPropertyType;
 import org.apache.xmpbox.type.PDFASchemaType;
-import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.PdfaLevelAServiceInterface;
+import stirling.software.common.util.XmpUtils;
 import stirling.software.proprietary.pdf.ua.PdfUaIdentificationSchema;
 import stirling.software.proprietary.pdf.ua.PdfUaProfile;
 import stirling.software.proprietary.pdf.ua.PdfUaTagger;
@@ -236,11 +234,7 @@ public class PdfaAccessibilityService implements PdfaLevelAServiceInterface {
         if (existing == null) {
             return XMPMetadata.createXMPMetadata();
         }
-        try (InputStream in = new ByteArrayInputStream(existing.toByteArray())) {
-            DomXmpParser parser = new DomXmpParser();
-            parser.setStrictParsing(false);
-            return parser.parse(in);
-        }
+        return XmpUtils.parse(existing, false);
     }
 
     private static void writeMetadata(PDDocument document, XMPMetadata xmp) throws Exception {
@@ -257,11 +251,7 @@ public class PdfaAccessibilityService implements PdfaLevelAServiceInterface {
             PDMetadata existing = document.getDocumentCatalog().getMetadata();
             XMPMetadata xmp;
             if (existing != null) {
-                try (InputStream in = new ByteArrayInputStream(existing.toByteArray())) {
-                    DomXmpParser parser = new DomXmpParser();
-                    parser.setStrictParsing(false);
-                    xmp = parser.parse(in);
-                }
+                xmp = XmpUtils.parse(existing, false);
             } else {
                 xmp = XMPMetadata.createXMPMetadata();
             }

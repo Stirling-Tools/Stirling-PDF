@@ -389,7 +389,7 @@ public class CertificateValidationService {
      */
     private void loadJavaSystemTrustStore() {
         try {
-            log.info("Loading certificates from Java system trust store");
+            log.debug("Loading certificates from Java system trust store");
 
             // Get default trust manager factory
             TrustManagerFactory tmf =
@@ -411,7 +411,7 @@ public class CertificateValidationService {
                 }
             }
 
-            log.info("Loaded {} CA certificates from Java system trust store", loadedCount);
+            log.debug("Loaded {} CA certificates from Java system trust store", loadedCount);
         } catch (Exception e) {
             log.error("Failed to load Java system trust store: {}", e.getMessage(), e);
         }
@@ -424,7 +424,7 @@ public class CertificateValidationService {
      */
     private void loadBundledMozillaCACerts() {
         try {
-            log.info("Loading bundled Mozilla CA certificates from resources");
+            log.debug("Loading bundled Mozilla CA certificates from resources");
             try (InputStream certStream =
                     getClass().getClassLoader().getResourceAsStream("certs/cacert.pem")) {
                 if (certStream == null) {
