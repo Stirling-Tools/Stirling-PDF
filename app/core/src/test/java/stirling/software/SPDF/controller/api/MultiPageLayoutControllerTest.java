@@ -86,6 +86,18 @@ class MultiPageLayoutControllerTest {
     }
 
     @Test
+    @DisplayName("Rejects pagesPerSheet 0 in DEFAULT mode")
+    void zeroPagesPerSheetThrows() {
+        MergeMultiplePagesRequest req = new MergeMultiplePagesRequest();
+        req.setMode("DEFAULT");
+        req.setPagesPerSheet(0);
+        req.setFileInput(fileWithExt);
+
+        Assertions.assertThrows(
+                IllegalArgumentException.class, () -> controller.mergeMultiplePagesIntoOne(req));
+    }
+
+    @Test
     @DisplayName("Generates PDF and filename suffix for perfect-square layout with no source pages")
     void perfectSquareNoPages() throws Exception {
         PDDocument source = new PDDocument();

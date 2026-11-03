@@ -13,6 +13,13 @@ import stirling.software.common.model.api.security.RedactionArea;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ManualRedactPdfRequest extends PDFWithPageNums {
+    // Shadows the shared "all" default: here these pages are blacked out entirely.
+    @Schema(
+            description =
+                    "Pages to black out completely, e.g. '1,3-5'. Omit to redact only the listed"
+                            + " areas.")
+    private String pageNumbers;
+
     @Schema(
             description = "A list of areas that should be redacted",
             requiredMode = Schema.RequiredMode.REQUIRED)
@@ -22,11 +29,11 @@ public class ManualRedactPdfRequest extends PDFWithPageNums {
             description = "Convert the redacted PDF to an image",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean convertPDFToImage;
+    private Boolean convertPDFToImage = false;
 
     @Schema(
             description = "The color used to fully redact certain pages",
             defaultValue = "#000000",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private String pageRedactionColor;
+    private String pageRedactionColor = "#000000";
 }
