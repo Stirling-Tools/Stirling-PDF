@@ -76,7 +76,7 @@ public class DefaultClassificationPolicySeeder {
         }
         policyStore.save(defaultPolicy(teamId));
         policyTriggerManager.notifyPoliciesChanged();
-        log.info("Seeded default Classification policy for team {}", teamId);
+        log.debug("Seeded default Classification policy for team {}", teamId);
     }
 
     /**

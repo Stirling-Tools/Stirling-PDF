@@ -59,7 +59,7 @@ public class FileMonitor {
             try {
                 Path path = Path.of(pathStr);
                 validRootDirs.add(path);
-                log.info("Monitoring directory: {}", path);
+                log.debug("Monitoring directory: {}", path);
             } catch (Exception e) {
                 log.error(
                         "Failed to initialize monitoring for path '{}': {}",
@@ -93,7 +93,7 @@ public class FileMonitor {
     private void recursivelyRegisterEntry(Path dir) throws IOException {
         WatchKey key = dir.register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
         path2KeyMapping.put(dir, key);
-        log.info("Registered directory: {}", dir);
+        log.debug("Registered directory: {}", dir);
 
         try (Stream<Path> directoryVisitor = Files.walk(dir, 1)) {
             final Iterator<Path> iterator = directoryVisitor.iterator();

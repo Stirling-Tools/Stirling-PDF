@@ -130,9 +130,6 @@ class ToolDiscovery:
         # 1. Cert-signing family: needs certificate/key files the agent can't supply, plus
         #    interactive session and hardware-token management. The whole subtree is dropped.
         "/api/v1/security/cert-sign",
-        # 2. Interactive PDF text-editor endpoints, not one-shot operations.
-        "/api/v1/convert/pdf/text-editor",
-        "/api/v1/convert/text-editor/pdf",
         # 3. Introspection / query endpoints that return metadata, a listing, or a
         #    verification verdict rather than a transformed document, so they belong to
         #    the question path, not the edit agent. (decompress is a dev-only stream op.)

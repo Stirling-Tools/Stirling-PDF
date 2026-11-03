@@ -749,7 +749,7 @@ public class FormUtils {
             }
         }
 
-        PDFRenderer renderer = new PDFRenderer(document);
+        PDFRenderer renderer = new LimitedPDFRenderer(document);
         renderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
         ApplicationProperties properties =
                 ApplicationContextProvider.getBean(ApplicationProperties.class);
@@ -3217,7 +3217,10 @@ public class FormUtils {
             }
 
             if (acroForm != null) {
-                pruneFieldReferences(acroForm.getFields(), field);
+                pruneFieldReferences(
+                        acroForm.getFields(),
+                        field,
+                        Collections.newSetFromMap(new IdentityHashMap<>()));
 
                 try {
                     COSArray fieldsArray = acroForm.getCOSObject().getCOSArray(COSName.FIELDS);
@@ -3248,16 +3251,19 @@ public class FormUtils {
         }
     }
 
-    private void pruneFieldReferences(List<PDField> fields, PDField target) {
+    // /Kids can list a field more than once or point back at an ancestor; walk each one once
+    private void pruneFieldReferences(
+            List<PDField> fields, PDField target, Set<COSDictionary> visited) {
         if (fields == null || fields.isEmpty() || target == null) return;
 
         fields.removeIf(existing -> isSameFieldReference(existing, target));
 
         for (PDField existing : List.copyOf(fields)) {
-            if (existing instanceof PDNonTerminalField nonTerminal) {
+            if (existing instanceof PDNonTerminalField nonTerminal
+                    && visited.add(nonTerminal.getCOSObject())) {
                 List<PDField> children = nonTerminal.getChildren();
                 if (children != null && !children.isEmpty()) {
-                    pruneFieldReferences(children, target);
+                    pruneFieldReferences(children, target, visited);
                 }
             }
         }
@@ -3764,7 +3770,9 @@ public class FormUtils {
         }
 
         Set<COSDictionary> liveWidgets = collectLiveWidgetDictionaries(document);
-        List<PDField> kept = pruneFieldList(fields, liveWidgets);
+        List<PDField> kept =
+                pruneFieldList(
+                        fields, liveWidgets, Collections.newSetFromMap(new IdentityHashMap<>()));
         if (kept.isEmpty()) {
             catalog.setAcroForm(null);
         } else if (kept.size() != fields.size()) {
@@ -3789,12 +3797,17 @@ public class FormUtils {
         return live;
     }
 
-    private List<PDField> pruneFieldList(List<PDField> fields, Set<COSDictionary> liveWidgets) {
+    private List<PDField> pruneFieldList(
+            List<PDField> fields, Set<COSDictionary> liveWidgets, Set<COSDictionary> visited) {
         List<PDField> kept = new ArrayList<>(fields.size());
         for (PDField field : fields) {
+            // A repeated /Kids entry or a cycle: the field was already handled, so drop the copy
+            if (!visited.add(field.getCOSObject())) {
+                continue;
+            }
             if (field instanceof PDNonTerminalField nonTerminal) {
                 List<PDField> children = nonTerminal.getChildren();
-                List<PDField> remaining = pruneFieldList(children, liveWidgets);
+                List<PDField> remaining = pruneFieldList(children, liveWidgets, visited);
                 if (remaining.isEmpty()) {
                     continue;
                 }
