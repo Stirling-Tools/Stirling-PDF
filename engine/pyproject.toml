@@ -8,7 +8,7 @@ dependencies = []
 [dependency-groups]
 # Runtime dependencies for the AI document engine service.
 engine = [
-    "cryptography>=50.0.1",
+    "cryptography>=50.0.2",
     "fastapi>=0.141.1",
     "opentelemetry-sdk>=1.39.1",
     "pgvector>=0.5.0",
@@ -51,18 +51,18 @@ cucumber = [
 tools = [
     "deep-translator>=1.11.4",
     "defusedxml>=0.7.1",
-    "fpdf2>=2.8.8",
+    "fpdf2>=2.8.9",
     "openai>=3.19.2",
     "requests>=2.34.2",
     "tomli-w>=1.2.0",
-    "tomlkit>=0.15.1",
+    "tomlkit>=0.15.2",
     "urllib3>=2.8.0",
     "unoserver>=3.7",
     "weasyprint>=70.0",
 ]
 # Release-signature verification dependencies.
 updater-signatures = [
-    "cryptography>=50.0.1",
+    "cryptography>=50.0.2",
 ]
 # Pinned repository-wide pre-commit tooling.
 pre-commit = [
