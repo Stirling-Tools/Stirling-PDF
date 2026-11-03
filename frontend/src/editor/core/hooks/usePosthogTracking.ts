@@ -51,13 +51,17 @@ function initializePosthog(posthog: Posthog, key: string, host: string): void {
     cross_subdomain_cookie: false,
     session_recording: { blockSelector: ".ph-sensitive" },
     // Autocapture records attributes even on ph-sensitive elements, and these
-    // are the ones that interpolate file, folder and field names.
+    // are the ones that carry file names, link targets and usernames. A link's
+    // href is still sent when the link is outside ph-sensitive.
     autocapture: {
       element_attribute_ignorelist: [
         "aria-label",
         "title",
         "alt",
+        "href",
+        "value",
         "data-testid",
+        "data-slot-filename",
       ],
     },
   });

@@ -88,7 +88,7 @@ export default function ToastRenderer() {
                   {/* Title + count badge */}
                   <div className="toast-title-container">
                     <span>
-                      <PrivateContent enabled={t.privateTitle}>
+                      <PrivateContent enabled={Boolean(t.privateTitle)}>
                         {t.title}
                       </PrivateContent>
                     </span>
@@ -140,7 +140,7 @@ export default function ToastRenderer() {
                 {/* Body content - only show when expanded */}
                 {(t.isExpanded || !t.expandable) && (
                   <div className="toast-body">
-                    <PrivateContent enabled={t.privateBody}>
+                    <PrivateContent enabled={Boolean(t.privateBody)}>
                       {t.body}
                     </PrivateContent>
                   </div>

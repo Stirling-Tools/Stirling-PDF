@@ -283,7 +283,7 @@ export function DataTableFilterBar({
               onRemove={() => onToggle(facet.key, value)}
             >
               {facet.label}:{" "}
-              <PrivateContent enabled={facet.privateContent}>
+              <PrivateContent enabled={Boolean(facet.privateContent)}>
                 {label}
               </PrivateContent>
             </Chip>

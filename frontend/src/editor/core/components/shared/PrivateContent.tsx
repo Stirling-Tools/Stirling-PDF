@@ -4,7 +4,7 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
 interface PrivateContentProps extends React.HTMLAttributes<HTMLSpanElement> {
   children: React.ReactNode;
   /** False renders the children unwrapped, for content that is only sometimes
-   * the user's. */
+   * the user's. Undefined counts as true, so coerce an optional flag. */
   enabled?: boolean;
 }
 
