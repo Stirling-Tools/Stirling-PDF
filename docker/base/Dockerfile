@@ -5,9 +5,11 @@
 ARG TARGETPLATFORM
 
 # Stage 1: Build and strip Calibre
-FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS calibre-build
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS calibre-build
 ARG TARGETPLATFORM
-ARG CALIBRE_VERSION=9.15.0
+ARG CALIBRE_VERSION=9.17.0
+ARG EXPAT_VERSION=2.8.4
+ARG EXPAT_SHA256=656ae1cc8da3b4ea513bb4e254f33e6243938084c0ec6239da873376b09985a7
 ARG CALIBRE_STRIP_WEBENGINE=false
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -17,7 +19,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       ca-certificates curl xz-utils libnss3 libfontconfig1 \
       libgl1 libegl1 libdbus-1-3 libasound2t64 libxcomposite1 \
       libxrandr2 libxkbcommon0 libxi6 libxtst6 libopengl0 \
-      poppler-utils tzdata; \
+      poppler-utils tzdata build-essential cmake; \
     rm -rf /var/lib/apt/lists/*; \
     \
     case "$(uname -m)" in \
@@ -38,6 +40,25 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     mkdir -p /opt/calibre; \
     tar xJf /tmp/calibre.txz -C /opt/calibre; \
     rm /tmp/calibre.txz; \
+    \
+    # Calibre loads its own Expat independently of Ubuntu's patched libexpat1.
+    EXPAT_TAG="R_$(printf '%s' "${EXPAT_VERSION}" | tr '.' '_')"; \
+    curl -fsSL --retry 3 \
+      "https://github.com/libexpat/libexpat/releases/download/${EXPAT_TAG}/expat-${EXPAT_VERSION}.tar.xz" \
+      -o /tmp/expat.tar.xz; \
+    echo "${EXPAT_SHA256}  /tmp/expat.tar.xz" | sha256sum -c -; \
+    tar xJf /tmp/expat.tar.xz -C /tmp; \
+    cmake -S "/tmp/expat-${EXPAT_VERSION}" -B /tmp/expat-build \
+      -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/expat-install \
+      -DCMAKE_INSTALL_LIBDIR=lib -DEXPAT_SHARED_LIBS=ON \
+      -DEXPAT_BUILD_TESTS=OFF -DEXPAT_BUILD_TOOLS=OFF \
+      -DEXPAT_BUILD_EXAMPLES=OFF -DEXPAT_BUILD_DOCS=OFF; \
+    cmake --build /tmp/expat-build --parallel "$(nproc)"; \
+    cmake --install /tmp/expat-build; \
+    cp -L /tmp/expat-install/lib/libexpat.so.1 /opt/calibre/lib/libexpat.so.1; \
+    /opt/calibre/calibre-debug -c \
+      "import pyexpat; assert pyexpat.EXPAT_VERSION == 'expat_${EXPAT_VERSION}', pyexpat.EXPAT_VERSION"; \
+    rm -rf /tmp/expat.tar.xz "/tmp/expat-${EXPAT_VERSION}" /tmp/expat-build /tmp/expat-install; \
     \
     # We only need Qt6 WebEngine (Chromium) for ebook->PDF output.
     # PDF input is parsed through pdftohtml, not Qt.
@@ -273,7 +294,7 @@ RUN if [ "${CALIBRE_STRIP_WEBENGINE}" = "true" ]; then \
 
 
 # Stage 2: Build Ghostscript from source
-FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS gs-build
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS gs-build
 ARG TARGETPLATFORM
 ARG GS_VERSION=10.08.0
 
@@ -297,7 +318,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 
 # Stage 3: Build PDF Tools (QPDF and ImageMagick 7)
-FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS pdf-tools-build
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS pdf-tools-build
 ARG TARGETPLATFORM
 ARG QPDF_VERSION=12.4.2
 ARG IM_VERSION=7.1.2-33
@@ -342,7 +363,7 @@ RUN mkdir -p /magick-export/usr/bin \
 
 
 # Stage 4: Build Python venv
-FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS python-venv-build
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS python-venv-build
 ARG TARGETPLATFORM
 ARG UNOSERVER_VERSION=3.7
 
@@ -355,7 +376,7 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     python3 -m venv /opt/venv --system-site-packages && \
     /opt/venv/bin/pip install --no-cache-dir --prefer-binary --only-binary=:all: \
       weasyprint pdf2image opencv-python-headless ocrmypdf \
-      cryptography \
+      cryptography "pillow>=13.0.0" "Brotli>=1.2.1" \
       "unoserver==${UNOSERVER_VERSION}" && \
     find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
     find /opt/venv \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true && \
@@ -366,7 +387,7 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     find /opt/venv -name '*.so' -exec strip --strip-unneeded {} + 2>/dev/null || true
 
 
-FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS lo-sandbox-build
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS lo-sandbox-build
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
@@ -378,7 +399,7 @@ RUN gcc -O2 -Wall -Wextra -Werror -o /usr/local/bin/lo-sandbox /src/lo-sandbox.c
 
 
 # Final runtime image - the actual base image
-FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e AS runtime
+FROM eclipse-temurin:25-jre-noble@sha256:a98128a57de944a72bd31fbc79b898edd5a5864d3652071d5bbd2160ab7d7dce AS runtime
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -392,6 +413,7 @@ ARG UNOSERVER_VERSION=3.7
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     set -eux; \
     apt-get update; \
+    apt-get upgrade -y --no-install-recommends; \
     # Add LibreOffice Fresh PPA for latest version (26.2.x)
     apt-get install -y --no-install-recommends software-properties-common; \
     add-apt-repository -y ppa:libreoffice/ppa; \

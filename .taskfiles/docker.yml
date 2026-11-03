@@ -6,6 +6,23 @@ vars:
   ENGINE_DIR: docker/engine
 
 tasks:
+  check:
+    desc: "Check Docker image definitions"
+    cmds:
+      - docker build --check -f docker/base/Dockerfile docker/base
+      - docker build --check -f docker/backend/Dockerfile .
+      # Supabase publishable keys are public browser configuration.
+      - docker build --check --build-arg BUILDKIT_DOCKERFILE_CHECK=skip=SecretsUsedInArgOrEnv -f docker/embedded/Dockerfile .
+      - docker build --check --build-arg BUILDKIT_DOCKERFILE_CHECK=skip=SecretsUsedInArgOrEnv -f docker/embedded/Dockerfile.fat .
+      - docker build --check -f docker/embedded/Dockerfile.ultra-lite .
+      - docker build --check -f docker/engine/Dockerfile .
+      - docker build --check -f docker/unoserver/Dockerfile .
+
+  build:base:
+    desc: "Build shared PDF tools image"
+    cmds:
+      - docker build --pull -t stirling-pdf-base:local -f docker/base/Dockerfile docker/base
+
   build:
     desc: "Build standard Docker image"
     cmds:
