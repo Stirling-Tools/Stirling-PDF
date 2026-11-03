@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import Userback from "@userback/widget";
 import { useAuth } from "@editor/auth/UseSession";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import {
   getUserbackInstance,
   setUserbackInstance,
@@ -14,12 +15,14 @@ const USERBACK_TOKEN = import.meta.env.VITE_USERBACK_TOKEN;
  */
 export default function UserbackWidget() {
   const { user } = useAuth();
+  const { config } = useAppConfig();
+  const feedbackEnabled = config?.enableFeedback === true;
   const userId = user?.id;
   const email = user?.email;
   const name: string | undefined = user?.user_metadata?.full_name;
 
   useEffect(() => {
-    if (!USERBACK_TOKEN || !userId) return;
+    if (!feedbackEnabled || !USERBACK_TOKEN || !userId) return;
     // A cancelled run leaves the instance alone: the loader hands every caller
     // the same pending promise, so the run that replaced this one stores it.
     let cancelled = false;
@@ -43,7 +46,7 @@ export default function UserbackWidget() {
       getUserbackInstance()?.destroy();
       setUserbackInstance(null);
     };
-  }, [userId, email, name]);
+  }, [feedbackEnabled, userId, email, name]);
 
   return null;
 }
