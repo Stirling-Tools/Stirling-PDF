@@ -1,15 +1,13 @@
 import { Switch } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useOfficeConversionDefault } from "@editor/hooks/useOfficeConversionDefault";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 
 interface ConvertOfficeEngineSettingsProps {
-  parameters: ConvertParameters;
-  onParameterChange: <K extends keyof ConvertParameters>(
-    key: K,
-    value: ConvertParameters[K],
-  ) => void;
+  parameters: Pick<ConvertParameters, "useStirlingOfficeConvert">;
+  onParameterChange: (key: "useStirlingOfficeConvert", value: boolean) => void;
   disabled?: boolean;
+  endpointName?: string;
 }
 
 /** Picks Stirling Office Convert or the standard converter; starts from the server setting. */
@@ -17,13 +15,11 @@ const ConvertOfficeEngineSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
+  endpointName,
 }: ConvertOfficeEngineSettingsProps) => {
   const { t } = useTranslation();
-  const { config } = useAppConfig();
-  const checked =
-    parameters.useStirlingOfficeConvert ??
-    config?.stirlingOfficeConversion ??
-    false;
+  const serverDefault = useOfficeConversionDefault(endpointName);
+  const checked = parameters.useStirlingOfficeConvert ?? serverDefault;
 
   return (
     <Switch

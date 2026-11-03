@@ -150,6 +150,16 @@ export const usesOfficeEngine = (
   return OFFICE_ENGINE_ENDPOINTS.includes(endpoint);
 };
 
+/** Stored choices may be JSON booleans or multipart strings; absent or invalid values inherit the server setting. */
+export const parseOfficeEngineChoice = (
+  value: unknown,
+): boolean | undefined => {
+  if (typeof value === "boolean") return value;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return undefined;
+};
+
 /**
  * Resolves the full endpoint URL for a given conversion
  */

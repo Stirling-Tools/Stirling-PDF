@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useOfficeConversionDefault } from "@editor/hooks/useOfficeConversionDefault";
 import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -10,6 +10,7 @@ import {
   isWebFormat,
   getAvailableToExtensions as defaultGetAvailableToExtensions,
   usesOfficeEngine,
+  getEndpointName,
 } from "@editor/utils/convertUtils";
 import { getConversionEndpoints } from "@editor/data/toolsTaxonomy";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
@@ -70,11 +71,12 @@ const ConvertSettings = ({
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
-  const { config } = useAppConfig();
-  const officeConvert =
-    parameters.useStirlingOfficeConvert ??
-    config?.stirlingOfficeConversion ??
-    false;
+  const endpointName = getEndpointName(
+    parameters.fromExtension,
+    parameters.toExtension,
+  );
+  const serverDefault = useOfficeConversionDefault(endpointName);
+  const officeConvert = parameters.useStirlingOfficeConvert ?? serverDefault;
   const { preferences } = usePreferences();
   const localProcessingOnly = useLocalProcessingOnly();
   const hideUnavailableConversions =
@@ -542,6 +544,7 @@ const ConvertSettings = ({
         <>
           <Divider />
           <ConvertOfficeEngineSettings
+            endpointName={endpointName}
             parameters={parameters}
             onParameterChange={onParameterChange}
             disabled={disabled}
