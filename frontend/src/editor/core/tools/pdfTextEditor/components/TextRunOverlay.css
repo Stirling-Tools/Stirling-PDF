@@ -22,3 +22,8 @@
   color: transparent;
   -webkit-text-fill-color: transparent;
 }
+
+/* Must stay in sync with TEXT_RANGE_HIGHLIGHT in overlayPainter.ts. */
+::highlight(pdf-editor-text-range) {
+  background-color: color-mix(in srgb, var(--c-primary) 28%, transparent);
+}

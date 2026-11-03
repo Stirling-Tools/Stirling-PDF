@@ -26,7 +26,7 @@ class RearrangePagesRequestTest {
             RearrangePagesRequest req = new RearrangePagesRequest();
 
             assertThat(req.getCustomMode()).isNull();
-            assertThat(req.getPageNumbers()).isNull();
+            assertThat(req.getPageNumbers()).isEqualTo("all");
         }
     }
 

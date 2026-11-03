@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     rm /tmp/calibre.txz; \
     \
     # We only need Qt6 WebEngine (Chromium) for ebook->PDF output.
-    # PDF INPUT now uses the pdftohtml engine (poppler), not Qt.
+    # PDF input is parsed through pdftohtml, not Qt.
     rm -f  /opt/calibre/lib/libQt6Designer* \
            /opt/calibre/lib/libQt6Multimedia* \
            /opt/calibre/lib/libQt6SpatialAudio.so.* \
@@ -253,7 +253,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     /opt/calibre/ebook-convert /tmp/test.txt /tmp/test.epub; \
     rm -f /tmp/test.txt /tmp/test.epub; \
     \
-    # Verify pdftohtml (poppler) is available for the pdftohtml PDF engine.
     pdftohtml -v >/dev/null 2>&1 && echo "pdftohtml OK" || { echo "ERROR: pdftohtml not found"; exit 1; }; \
     echo "=== Calibre stripped successfully ==="
 
