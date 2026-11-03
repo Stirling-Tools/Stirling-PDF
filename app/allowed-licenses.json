@@ -78,11 +78,11 @@
     },
     {
       "moduleName": "com.github.jai-imageio:jai-imageio-core",
-      "moduleLicense": "LICENSE.txt"
+      "moduleLicense": "BSD 3-clause License w/nuclear disclaimer"
     },
     {
       "moduleName": "com.github.jai-imageio:jai-imageio-jpeg2000",
-      "moduleLicense": "LICENSE-JJ2000.txt, LICENSE-Sun.txt"
+      "moduleLicense": "BSD 3-clause License w/nuclear disclaimer"
     },
     {
       "moduleName": ".*",
