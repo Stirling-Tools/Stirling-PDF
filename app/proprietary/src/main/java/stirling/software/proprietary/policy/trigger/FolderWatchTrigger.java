@@ -113,7 +113,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
                         Thread.ofVirtual().name("policy-folder-reconcile-", 0).factory());
         // First reconcile runs immediately so pre-existing files are picked up at startup.
         reconciler.scheduleAtFixedRate(this::safeReconcile, 0, reconcileSeconds, TimeUnit.SECONDS);
-        log.info("Folder-watch trigger started (reconcile every {}s)", reconcileSeconds);
+        log.debug("Folder-watch trigger started (reconcile every {}s)", reconcileSeconds);
     }
 
     @Override
