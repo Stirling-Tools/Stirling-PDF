@@ -62,6 +62,7 @@ export interface AppConfig {
   defaultHideUnavailableTools?: boolean;
   defaultHideUnavailableConversions?: boolean;
   storageEnabled?: boolean;
+  storageAutoSyncEnabled?: boolean;
   storageSharingEnabled?: boolean;
   storageShareLinksEnabled?: boolean;
   storageShareEmailEnabled?: boolean;

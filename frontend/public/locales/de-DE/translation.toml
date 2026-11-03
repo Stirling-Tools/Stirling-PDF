@@ -1797,6 +1797,10 @@ sameorigin = "Gleiche Herkunft (Einbetten von derselben Domain erlauben)"
 description = "Server-Speicher und Freigabeoptionen verwalten."
 title = "Dateispeicher & Freigabe"
 
+[admin.settings.storage.autoSync]
+description = "Änderungen an Server-Dateien für alle Benutzer automatisch speichern. Bei Konflikten bleiben die Änderungen lokal, bis der Benutzer die Server-Version ausdrücklich ersetzt."
+label = "Automatische Dateisynchronisierung aktivieren"
+
 [admin.settings.storage.enabled]
 description = "Ermöglicht Benutzern, Dateien auf dem Server zu speichern."
 label = "Server-Dateispeicher aktivieren"

@@ -1791,6 +1791,10 @@ sameorigin = "Same Origin (Allow framing from same domain)"
 description = "Control server storage and sharing options."
 title = "File Storage & Sharing"
 
+[admin.settings.storage.autoSync]
+description = "Automatically save edits to server-stored files for all users. Conflicting changes stay local until the user chooses to replace the server copy."
+label = "Enable Automatic File Sync"
+
 [admin.settings.storage.enabled]
 description = "Allow users to store files on the server."
 label = "Enable Server File Storage"
@@ -11916,6 +11920,18 @@ messageWithFallback = "Some tools require a server connection."
 showTools = "View unavailable tools ▾"
 title = "Your Stirling-PDF server is unreachable"
 toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}}\" is not available on the local backend."
+
+[serverSync.conflict]
+body = "The server copy of \"{{name}}\" is newer than the version you edited, so your changes were not uploaded. They are still here. Use Update on Server to replace the server copy with them."
+title = "Changed on another device"
+
+[serverSync.status]
+conflict = "Changed on another device: use Update on Server to keep your version"
+error = "Sync failed: it will retry after your next edit"
+offline = "Offline: changes will sync when the connection returns"
+pending = "Changes waiting to sync"
+synced = "Up to date on server"
+syncing = "Syncing to server"
 
 [session]
 expired = "Your session has expired. Please refresh the page and try again."

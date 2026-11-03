@@ -14,7 +14,7 @@ import {
   useNavigationState,
 } from "@editor/contexts/NavigationContext";
 import { StirlingFileStub } from "@editor/types/fileContext";
-import type { FileId } from "@editor/types/file";
+import type { FileId, RemoteSyncBase } from "@editor/types/file";
 import { fileStorage } from "@editor/services/fileStorage";
 import apiClient from "@editor/services/apiClient";
 import {
@@ -62,6 +62,10 @@ export const FilesModalContext = createContext<FilesModalContextType | null>(
   null,
 );
 
+/**
+ * Coordinates picker state, optional custom consumers and workbench admission.
+ * Imported server documents must retain their access metadata and revision base.
+ */
 export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -80,6 +84,10 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   const [maxSelectable, setMaxSelectable] = useState<number | null>(null);
   const [supportedFormats, setSupportedFormats] = useState<string[]>();
 
+  /**
+   * Restores bundle history, or admits a plain file, while retaining server access and sync
+   * metadata. Returns the imported IDs so selection can be merged rather than replaced.
+   */
   const importBundleToWorkbench = useCallback(
     async (
       blob: Blob,
@@ -91,6 +99,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       remoteOwnedByCurrentUser?: boolean,
       remoteSharedViaLink?: boolean,
       remoteShareToken?: string,
+      remoteSync?: RemoteSyncBase,
     ): Promise<FileId[]> => {
       const bundle = isZipBundle(contentType, filename)
         ? await loadShareBundleEntries(blob)
@@ -183,6 +192,10 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
           remoteOwnedByCurrentUser,
           remoteSharedViaLink,
           remoteShareToken,
+          remoteSync:
+            remoteSync && !remoteSharedViaLink
+              ? { revision: remoteSync.revision, leafId: fileId }
+              : undefined,
         };
         actions.updateStirlingFileStub(fileId, updates);
         await fileStorage.updateFileMetadata(fileId, updates);
@@ -254,6 +267,11 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
     [downloadRemoteFile],
   );
 
+  /**
+   * Admits available selections and uploads without discarding the current selection.
+   * Custom handlers receive loaded files instead; unavailable selections are reported
+   * after successful files have been admitted. Remote imports retain their revision base.
+   */
   const handleRecentFileSelect = useCallback(
     async (stirlingFileStubs: StirlingFileStub[], uploads: File[] = []) => {
       const failedNames: string[] = [];
@@ -301,6 +319,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
             stub.remoteOwnedByCurrentUser,
             stub.remoteShareToken ? true : stub.remoteSharedViaLink,
             stub.remoteShareToken,
+            stub.remoteSync,
           );
           requestedIds.push(...importedIds);
         } catch (cause) {

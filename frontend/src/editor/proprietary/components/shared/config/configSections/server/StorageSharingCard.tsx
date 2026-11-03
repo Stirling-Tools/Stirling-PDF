@@ -46,6 +46,24 @@ export function StorageSharingCard({
 
         <SettingsToggleRow
           label={t(
+            "admin.settings.storage.autoSync.label",
+            "Enable Automatic File Sync",
+          )}
+          info={t(
+            "admin.settings.storage.autoSync.description",
+            "Automatically save edits to server-stored files for all users. Conflicting changes stay local until the user chooses to replace the server copy.",
+          )}
+          pending={isFieldPending("autoSyncEnabled")}
+          checked={settings.autoSyncEnabled ?? false}
+          onChange={(checked) =>
+            setSettings({ ...settings, autoSyncEnabled: checked })
+          }
+          disabled={!loginEnabled || !storageEnabled}
+          styles={getDisabledStyles()}
+        />
+
+        <SettingsToggleRow
+          label={t(
             "admin.settings.storage.sharing.enabled.label",
             "Enable Sharing",
           )}

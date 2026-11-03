@@ -42,6 +42,7 @@ interface StoredFileResponse {
   sizeBytes: number;
   createdAt?: string | null;
   updatedAt?: string | null;
+  revision?: string | null;
   owner?: string | null;
   ownedByCurrentUser?: boolean;
   accessRole?: string | null;
@@ -111,7 +112,9 @@ function normalizeServerFileName(fileName: string | undefined | null): string {
   return fallback;
 }
 
-/** Pull the server file list (and share-links) and reconcile with local stubs. */
+/**
+ * Pull the server file list (and share-links) and reconcile with local stubs.
+ */
 export async function reconcileServerFiles(
   localStubs: StirlingFileStub[],
   opts: ReconcileOptions,
@@ -254,6 +257,13 @@ export async function reconcileServerFiles(
         quickKey: `${name}|${file.sizeBytes ?? 0}|${lastModified}`,
         remoteStorageId: file.id,
         remoteStorageUpdatedAt: lastModified,
+        // A bundle unpacks to several documents, none of which alone may
+        // replace the stored copy, so it is never pushed automatically.
+        remoteSync:
+          file.revision &&
+          !isZipBundle(file.contentType ?? "", file.fileName ?? "")
+            ? { revision: file.revision, leafId: id }
+            : undefined,
         remoteOwnerUsername: file.owner ?? undefined,
         remoteOwnedByCurrentUser:
           typeof file.ownedByCurrentUser === "boolean"
@@ -508,6 +518,10 @@ export async function materializeServerStubs(
         remoteSharedViaLink: isSharedStub ? true : false,
         remoteHasShareLinks: stub.remoteHasShareLinks,
         remoteShareToken: isSharedStub ? stub.remoteShareToken : undefined,
+        remoteSync:
+          stub.remoteSync && !isSharedStub
+            ? { revision: stub.remoteSync.revision, leafId: newId }
+            : undefined,
       };
       helpers.updateStub(newId, remoteUpdates);
       await fileStorage.updateFileMetadata(newId, remoteUpdates);

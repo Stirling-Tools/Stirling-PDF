@@ -279,6 +279,7 @@ export default function AdminSystemSection() {
     saveTransformer: (currentSettings) => ({
       sectionData: {
         enabled: currentSettings.enabled,
+        autoSyncEnabled: currentSettings.autoSyncEnabled,
         sharing: {
           enabled: currentSettings.sharing?.enabled,
           linkEnabled: currentSettings.sharing?.linkEnabled,
