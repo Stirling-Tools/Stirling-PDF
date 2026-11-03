@@ -233,10 +233,12 @@ public class PasswordController {
     @Operation(
             summary = "Add a password and permission restrictions to a PDF",
             description =
-                    "password is needed to open the file. The prevent* restrictions only"
-                            + " hold when ownerPassword is set and differs from password."
-                            + " sourcePassword opens an already protected file; preserveExisting"
-                            + " changes its permissions and keeps its existing passwords.")
+                    "password is needed to open the file. For new protection, prevent*"
+                            + " restrictions require a nonempty ownerPassword different from password."
+                            + " sourcePassword opens an already protected file. With preserveExisting=true"
+                            + " on an encrypted file, omitting or leaving ownerPassword empty retains"
+                            + " the existing passwords and changes permissions; supplying ownerPassword"
+                            + " replaces the permissions password while retaining the opening password.")
     public ResponseEntity<Resource> addPassword(@ModelAttribute AddPasswordRequest request)
             throws IOException {
         boolean explicitProtection =

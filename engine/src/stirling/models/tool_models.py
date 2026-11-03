@@ -120,7 +120,7 @@ class KeyLength(IntEnum):
 
 class AddPasswordParams(ApiModel):
     """
-    password is needed to open the file. The prevent* restrictions only hold when ownerPassword is set and differs from password. sourcePassword opens an already protected file; preserveExisting changes its permissions and keeps its existing passwords. Input:PDF/PDF_ENCRYPTED Output:PDF_ENCRYPTED Type:SISO
+    password is needed to open the file. For new protection, prevent* restrictions require a nonempty ownerPassword different from password. sourcePassword opens an already protected file. With preserveExisting=true on an encrypted file, omitting or leaving ownerPassword empty retains the existing passwords and changes permissions; supplying ownerPassword replaces the permissions password while retaining the opening password. Input:PDF/PDF_ENCRYPTED Output:PDF_ENCRYPTED Type:SISO
     """
 
     key_length: KeyLength = Field(KeyLength.integer_256, description="The length of the encryption key")
@@ -133,7 +133,7 @@ class AddPasswordParams(ApiModel):
     )
     preserve_existing: bool = Field(
         False,
-        description="Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.",
+        description="Change permissions on an encrypted source. Omitting or leaving ownerPassword empty retains its passwords and encryption; supplying ownerPassword replaces the permissions password while keeping the opening password and encryption key length.",
     )
     prevent_assembly: bool = Field(False, description="Whether document assembly is prevented")
     prevent_extract_content: bool = Field(False, description="Whether content extraction is prevented")
@@ -216,10 +216,12 @@ class AddStampParams(ApiModel):
     )
     opacity: float = Field(0.5, description="The opacity of the stamp (0.0 - 1.0)")
     override_x: float = Field(
-        -1, description="X in points from the left edge; with overrideY, replaces position. -1 = not set."
+        -1,
+        description="X in PDF user-space points. When both overrides are nonnegative, replaces position. Image and QR positions are clamped to the media box using the unrotated stamp size; text positions are not clamped. -1 = not set.",
     )
     override_y: float = Field(
-        -1, description="Y in points from the bottom edge; with overrideX, replaces position. -1 = not set."
+        -1,
+        description="Y in PDF user-space points. When both overrides are nonnegative, replaces position. Image and QR positions are clamped to the media box using the unrotated stamp size; text positions are not clamped. -1 = not set.",
     )
     page_numbers: str = Field(
         "all",
@@ -232,7 +234,7 @@ class AddStampParams(ApiModel):
     rotation: float = Field(0, description="The rotation of the stamp in degrees")
     stamp_text: str | None = Field(
         None,
-        description="The stamp text, or the QR code content when stampType is qr; required when stampType is text or qr. \\n starts a new line. Supports @page, @total_pages, @date, @date{dd/MM/yyyy}, @time, @filename, @title, @author and @uuid (@@ for a literal @).",
+        description="The stamp text, or the QR code content when stampType is qr; required when stampType is text or qr. For text stamps only, \\n starts a new line; QR content keeps the literal sequence. Both support @page, @total_pages, @date, @date{dd/MM/yyyy}, @time, @filename, @title, @author and @uuid (@@ for a literal @).",
     )
     stamp_type: StampType | None = Field(
         None,
@@ -286,7 +288,7 @@ class AddWatermarkParams(ApiModel):
 
 class AutoRedactParams(ApiModel):
     """
-    Removes each match and boxes it over. If removal fails it only draws boxes; set convertPDFToImage=true to be sure nothing can be extracted. Input:PDF Output:PDF Type:SISO
+    Removes each match and boxes it over. Native verification failures reject the request. Set convertPDFToImage=true to rasterize the output and remove its extractable text layer. Input:PDF Output:PDF Type:SISO
     """
 
     case_sensitive: bool = Field(
@@ -329,7 +331,7 @@ class DetectionMode(StrEnum):
 
 class AutoSplitPdfParams(ApiModel):
     """
-    Splits at each divider page and returns a zip of the parts; divider pages are dropped. duplexMode=true also drops each divider's back page. With no dividers you get one file; use split-pages or split-by-size-or-count instead. Input:PDF Output:PDF Type:SIMO
+    Splits at each divider page and returns a zip of the parts. Divider pages are dropped except a divider on page 1, which is retained. duplexMode=true also drops each divider's back page, including when the divider is retained. With no dividers you get one file; use split-pages or split-by-size-or-count instead. Input:PDF Output:PDF Type:SIMO
     """
 
     duplex_mode: bool = Field(

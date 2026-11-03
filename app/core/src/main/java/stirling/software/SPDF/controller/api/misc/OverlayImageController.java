@@ -49,9 +49,10 @@ public class OverlayImageController {
     @Operation(
             summary = "Overlay an image at x,y on the first or every page",
             description =
-                    "Draws a raster or SVG image at native size (1 px = 1 pt), lower-left"
-                            + " corner at (x, y) in points from the bottom-left. To set size,"
-                            + " position or pages, use add-stamp with stampType=image.")
+                    "Draws a raster or SVG image at native size (1 px = 1 pt), with its"
+                            + " lower-left corner at PDF user-space coordinates (x, y), in points."
+                            + " The page's lower-left coordinates may be nonzero. To set size,"
+                            + " grid position or pages, use add-stamp with stampType=image.")
     public ResponseEntity<Resource> overlayImage(@ModelAttribute OverlayImageRequest request) {
         MultipartFile pdfFile = request.getFileInput();
         MultipartFile imageFile = request.getImageFile();

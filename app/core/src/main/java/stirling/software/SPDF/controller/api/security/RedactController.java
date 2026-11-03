@@ -145,9 +145,9 @@ public class RedactController {
             summary = "Redact text matching words or regex patterns",
             operationId = "redactPdfAuto",
             description =
-                    "Removes each match and boxes it over. If removal fails it only draws"
-                            + " boxes; set convertPDFToImage=true to be sure nothing can be"
-                            + " extracted.")
+                    "Removes each match and boxes it over. Native verification failures reject"
+                            + " the request. Set convertPDFToImage=true to rasterize the output"
+                            + " and remove its extractable text layer.")
     public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request)
             throws ToolFailedException {
         if (request.getFileInput() == null || request.getFileInput().isEmpty()) {

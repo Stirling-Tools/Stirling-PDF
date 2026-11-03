@@ -81,7 +81,7 @@ export interface AddPasswordRequest {
    */
   password?: string;
   /**
-   * Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.
+   * Change permissions on an encrypted source. Omitting or leaving ownerPassword empty retains its passwords and encryption; supplying ownerPassword replaces the permissions password while keeping the opening password and encryption key length.
    */
   preserveExisting?: boolean;
   /**
@@ -143,11 +143,11 @@ export interface AddStampRequest {
    */
   opacity?: number;
   /**
-   * X in points from the left edge; with overrideY, replaces position. -1 = not set.
+   * X in PDF user-space points. When both overrides are nonnegative, replaces position. Image and QR positions are clamped to the media box using the unrotated stamp size; text positions are not clamped. -1 = not set.
    */
   overrideX?: number;
   /**
-   * Y in points from the bottom edge; with overrideX, replaces position. -1 = not set.
+   * Y in PDF user-space points. When both overrides are nonnegative, replaces position. Image and QR positions are clamped to the media box using the unrotated stamp size; text positions are not clamped. -1 = not set.
    */
   overrideY?: number;
   /**
@@ -164,7 +164,7 @@ export interface AddStampRequest {
   rotation?: number;
   stampImage?: File;
   /**
-   * The stamp text, or the QR code content when stampType is qr; required when stampType is text or qr. \n starts a new line. Supports @page, @total_pages, @date, @date{dd/MM/yyyy}, @time, @filename, @title, @author and @uuid (@@ for a literal @).
+   * The stamp text, or the QR code content when stampType is qr; required when stampType is text or qr. For text stamps only, \n starts a new line; QR content keeps the literal sequence. Both support @page, @total_pages, @date, @date{dd/MM/yyyy}, @time, @filename, @title, @author and @uuid (@@ for a literal @).
    */
   stampText?: string;
   /**
@@ -840,11 +840,11 @@ export interface OverlayImageRequest {
   everyPage?: boolean;
   imageFile: File;
   /**
-   * X of the image's lower-left corner, in points from the left edge
+   * X of the image's lower-left corner in PDF user-space points
    */
   x?: number;
   /**
-   * Y of the image's lower-left corner, in points from the bottom edge
+   * Y of the image's lower-left corner in PDF user-space points
    */
   y?: number;
 }
@@ -858,7 +858,7 @@ export interface OverlayPdfsRequest {
    */
   overlayFiles: File[];
   /**
-   * SequentialOverlay repeats the overlay pages in order (e.g. a letterhead on every page). InterleavedOverlay takes each overlay file in turn. FixedRepeatOverlay uses counts.
+   * SequentialOverlay uses each overlay file's pages in order and repeats as needed. With multiple files it starts with the second file, proceeds through the remaining files, then wraps to the first (e.g. B, A for files [A, B]). A single file repeats from its first page. InterleavedOverlay takes each overlay file in turn. FixedRepeatOverlay uses counts.
    */
   overlayMode:
     | "SequentialOverlay"

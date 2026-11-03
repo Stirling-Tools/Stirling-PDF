@@ -20,13 +20,13 @@ public class OverlayImageRequest extends PDFFile {
     private MultipartFile imageFile;
 
     @Schema(
-            description = "X of the image's lower-left corner, in points from the left edge",
+            description = "X of the image's lower-left corner in PDF user-space points",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "0")
     private float x;
 
     @Schema(
-            description = "Y of the image's lower-left corner, in points from the bottom edge",
+            description = "Y of the image's lower-left corner in PDF user-space points",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "0")
     private float y;
