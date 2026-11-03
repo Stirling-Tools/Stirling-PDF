@@ -121,7 +121,7 @@ export const defaultParameters: ConvertParameters = {
   },
   pdfUaOptions: {
     profile: "ua1",
-    language: "en-GB",
+    language: "en-US",
     overrideLanguage: false,
     title: "",
     embedFonts: true,
