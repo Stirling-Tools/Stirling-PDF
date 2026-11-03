@@ -46,6 +46,11 @@ public class DeviceCredentialStore {
     /** Persists (or replaces) the credential returned by a SaaS register call. */
     @Transactional
     public void save(String deviceId, String deviceSecret, Long teamId) {
+        save(deviceId, deviceSecret, teamId, LinkMethod.BROWSER);
+    }
+
+    @Transactional
+    public void save(String deviceId, String deviceSecret, Long teamId, LinkMethod method) {
         assertNoHandover();
         DeviceCredential cred = repo.findCredential().orElseGet(DeviceCredential::new);
         cred.setId(DeviceCredential.SINGLETON_ID);
@@ -56,6 +61,7 @@ public class DeviceCredentialStore {
         cred.setLastEntitlementSuccessAt(null);
         cred.setEntitlementRevoked(false);
         cred.setFleetUserLimit(null);
+        cred.setLinkMethod(method);
         repo.save(cred);
     }
 

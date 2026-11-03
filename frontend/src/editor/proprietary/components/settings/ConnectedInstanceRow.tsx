@@ -136,6 +136,19 @@ export function ConnectedInstanceRow({
               </dt>
               <dd>{formatDate(instance.createdAt)}</dd>
             </div>
+            {instance.linkedWithKey && (
+              <div>
+                <dt>
+                  {t(
+                    "settings.connectedInstances.connectedWith",
+                    "Connected with",
+                  )}
+                </dt>
+                <dd>
+                  {t("settings.connectedInstances.linkKey.caption", "Link key")}
+                </dd>
+              </div>
+            )}
           </dl>
           <span role="status">
             {copyState === "copied"

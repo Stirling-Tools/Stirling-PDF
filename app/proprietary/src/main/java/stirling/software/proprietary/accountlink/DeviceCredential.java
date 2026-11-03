@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -63,4 +65,12 @@ public class DeviceCredential implements Serializable {
 
     @Column(name = "linked_at", nullable = false)
     private LocalDateTime linkedAt;
+
+    /** Defaulted in the column so adding it to a populated database needs no migration. */
+    @Enumerated(EnumType.STRING)
+    @Column(
+            name = "link_method",
+            nullable = false,
+            columnDefinition = "varchar(16) not null default 'BROWSER'")
+    private LinkMethod linkMethod = LinkMethod.BROWSER;
 }

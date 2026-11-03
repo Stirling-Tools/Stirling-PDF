@@ -1,6 +1,7 @@
 package stirling.software.saas.accountlink;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -35,10 +36,13 @@ public class AccountLinkController {
 
     private final AccountLinkService service;
     private final LeaderTeamResolver leaderTeams;
+    private final LinkKeyService linkKeys;
 
-    public AccountLinkController(AccountLinkService service, LeaderTeamResolver leaderTeams) {
+    public AccountLinkController(
+            AccountLinkService service, LeaderTeamResolver leaderTeams, LinkKeyService linkKeys) {
         this.service = service;
         this.leaderTeams = leaderTeams;
+        this.linkKeys = linkKeys;
     }
 
     public record InstanceRow(
@@ -49,7 +53,8 @@ public class AccountLinkController {
             String lastSeenAt,
             boolean revoked,
             Integer seatCount,
-            String seatsReportedAt) {}
+            String seatsReportedAt,
+            boolean linkedWithKey) {}
 
     @GetMapping("/instances")
     @PreAuthorize("isAuthenticated()")
@@ -58,6 +63,7 @@ public class AccountLinkController {
         if (lt.error() != null) {
             return ResponseEntity.status(lt.error()).build();
         }
+        Set<Long> keyLinked = linkKeys.instanceIdsLinkedByKey(lt.teamId());
         List<InstanceRow> rows =
                 service.list(lt.teamId()).stream()
                         .map(
@@ -76,7 +82,8 @@ public class AccountLinkController {
                                                 i.getSeatCount(),
                                                 i.getSeatsReportedAt() == null
                                                         ? null
-                                                        : i.getSeatsReportedAt().toString()))
+                                                        : i.getSeatsReportedAt().toString(),
+                                                keyLinked.contains(i.getInstanceId())))
                         .toList();
         return ResponseEntity.ok(rows);
     }

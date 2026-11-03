@@ -18,6 +18,7 @@ export const qk = {
   policyPermissions: () => ["portal", "policies", "permissions"] as const,
   fleetStats: () => ["portal", "fleetStats"] as const,
   freeTier: () => ["portal", "freeTier"] as const,
+  cloudPlan: () => ["portal", "cloudPlan"] as const,
   /** Storage-encryption migration progress, polled while a run is active. */
   encryptionMigration: () => ["portal", "encryptionMigration"] as const,
   /** Usage accrued on this instance since the last sync; self-hosted only. */

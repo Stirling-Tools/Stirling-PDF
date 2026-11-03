@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,7 @@ class AccountLinkControllerTest {
     @Mock private AccountLinkService service;
     @Mock private TeamMembershipRepository memberRepo;
     @Mock private UserRepository userRepository;
+    @Mock private LinkKeyService linkKeys;
 
     private AccountLinkController controller;
     private Authentication auth;
@@ -52,7 +54,8 @@ class AccountLinkControllerTest {
         controller =
                 new AccountLinkController(
                         service,
-                        new LeaderTeamResolver(new UserTeamResolver(memberRepo), userRepository));
+                        new LeaderTeamResolver(new UserTeamResolver(memberRepo), userRepository),
+                        linkKeys);
         auth =
                 new AnonymousAuthenticationToken(
                         "k", "anonymousUser", List.of(new SimpleGrantedAuthority("ROLE_USER")));
@@ -109,8 +112,10 @@ class AccountLinkControllerTest {
         User user = mockUser(42L);
         TeamMembership leader = membership(7L, TeamRole.LEADER);
         LinkedInstance instance = new LinkedInstance();
+        instance.setInstanceId(11L);
         instance.setName("Production");
         when(service.list(7L)).thenReturn(List.of(instance));
+        when(linkKeys.instanceIdsLinkedByKey(7L)).thenReturn(Set.of(11L));
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
@@ -122,8 +127,11 @@ class AccountLinkControllerTest {
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(resp.getBody())
                     .singleElement()
-                    .extracting(InstanceRow::name)
-                    .isEqualTo("Production");
+                    .satisfies(
+                            row -> {
+                                assertThat(row.name()).isEqualTo("Production");
+                                assertThat(row.linkedWithKey()).isTrue();
+                            });
             // The team comes from the caller's membership, never from the request.
             verify(service).list(7L);
         }

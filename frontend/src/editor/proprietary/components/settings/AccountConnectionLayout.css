@@ -141,6 +141,17 @@
   margin-bottom: 1rem;
 }
 
+.account-connection__key {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.account-connection__key p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
 .account-connection__actions {
   display: flex;
   justify-content: flex-end;
