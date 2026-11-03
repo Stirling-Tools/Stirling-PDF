@@ -288,15 +288,13 @@ class AddWatermarkParams(ApiModel):
 
 class AutoRedactParams(ApiModel):
     """
-    Attempts to remove each text match and cover it with a box. Native verification failures reject the request. Other native failures may fall back to drawing boxes only, leaving matched text extractable when convertPDFToImage is false or unset. Set convertPDFToImage=true to rasterize the output and remove its extractable text layer. Input:PDF Output:PDF Type:SISO
+    Removes matched page text and covers its location. Verification failures in native word/regex removal reject the request. Other native failures fall back to region content removal or rasterization. convertPDFToImage=true rasterizes every output page. Input:PDF Output:PDF Type:SISO
     """
 
     case_sensitive: bool = Field(
         False, description="Whether matching is case-sensitive, for plain text and regex alike"
     )
-    convert_pdf_to_image: bool = Field(
-        False, description="Turn pages into images so nothing under the boxes can be extracted"
-    )
+    convert_pdf_to_image: bool = Field(False, description="Rasterize every output page, making page text unselectable")
     custom_padding: float = Field(0, description="Extra space around each redaction box, in points")
     list_of_text: str = Field(
         ...,
@@ -682,7 +680,7 @@ class HtmlToPdfParams(ApiModel):
 
 class ImageBox(ApiModel):
     """
-    Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
+    Rectangular areas identified by page and bounding box. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
     """
 
     page_index: int = Field(..., description="0-indexed page number (first page = 0).")
@@ -1277,7 +1275,7 @@ class RearrangePagesParams(ApiModel):
 
 class Strategy(StrEnum):
     """
-    AUTO removes matched text; OVERLAY_ONLY only draws boxes; IMAGE_FINALIZE also rasterizes pages
+    AUTO removes covered page content and may rasterize affected pages. OVERLAY_ONLY draws text/range/image boxes without removal. IMAGE_FINALIZE rasterizes every output page. Whole-page wipes remove page content in every strategy; convertToImage also controls final rasterization independently.
     """
 
     auto = "AUTO"
@@ -1291,17 +1289,17 @@ class Style(ApiModel):
     """
 
     color: str = Field("#000000", description="Hex redaction box color")
-    convert_to_image: bool = Field(False, description="Rasterize every page so no covered content can be extracted")
+    convert_to_image: bool = Field(False, description="Rasterize every output page, making page text unselectable")
     padding: float = Field(0, description="Extra padding around each box in points")
     strategy: Strategy = Field(
         Strategy.auto,
-        description="AUTO removes matched text; OVERLAY_ONLY only draws boxes; IMAGE_FINALIZE also rasterizes pages",
+        description="AUTO removes covered page content and may rasterize affected pages. OVERLAY_ONLY draws text/range/image boxes without removal. IMAGE_FINALIZE rasterizes every output page. Whole-page wipes remove page content in every strategy; convertToImage also controls final rasterization independently.",
     )
 
 
 class RedactionArea(ApiModel):
     """
-    Areas to cover: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
+    Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
     """
 
     color: str | None = Field(None, description="The color used to redact the specified area.")
@@ -1699,7 +1697,7 @@ class SvgToPdfParams(ApiModel):
 
 class TextRange(ApiModel):
     """
-    Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
+    Text located using start and end anchor phrases (inclusive). AUTO removes selected page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
     """
 
     end_string: str = Field(
@@ -1843,19 +1841,20 @@ class AutoRotatePdfParams(ApiModel):
 
 class RedactExecuteParams(ApiModel):
     """
-    Redacts exact text, regex matches and whole pages in one request. The ranges, imageBoxes and redactImagePages fields only draw boxes unless style.convertToImage=true or style.strategy=IMAGE_FINALIZE. Input:PDF Output:PDF Type:SISO
+    Redacts exact text, regex matches, anchored ranges, image regions and whole pages. AUTO removes covered page content, with per-page rasterization when needed. OVERLAY_ONLY skips removal for text/range/image boxes; whole-page wipes still remove page content. style.convertToImage=true or IMAGE_FINALIZE rasterizes every output page. Verification failures in native word/regex removal reject the request. Input:PDF Output:PDF Type:SISO
     """
 
     image_boxes: list[ImageBox] | None = Field(
         None,
-        description="Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).",
+        description="Rectangular areas identified by page and bounding box. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.",
     )
     ranges: list[TextRange] | None = Field(
         None,
-        description="Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).",
+        description="Text located using start and end anchor phrases (inclusive). AUTO removes selected page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.",
     )
     redact_image_pages: list[int] | None = Field(
-        None, description="1-indexed pages whose images get boxed over; an empty list means every page, null skips it."
+        None,
+        description="1-indexed pages whose detected image regions are redacted; an empty list means every page, null skips it. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes.",
     )
     regex_patterns: list[str] | None = Field(
         None,
@@ -1873,19 +1872,20 @@ class RedactExecuteParams(ApiModel):
 
 class RedactParams(ApiModel):
     """
-    Boxes only cover the content, which can still be extracted unless convertPDFToImage=true. To remove the text itself, use auto-redact. Input:PDF Output:PDF Type:SISO
+    Removes covered page content from selected areas and wipes selected whole pages. An affected page may be rasterized if native region removal cannot safely clear it. convertPDFToImage=true rasterizes every output page. Input:PDF Output:PDF Type:SISO
     """
 
     convert_pdf_to_image: bool = Field(
-        False, description="Turn pages into images so covered content is really removed; text becomes unselectable"
+        False,
+        description="Rasterize every output page, making page text unselectable. Redaction areas already remove covered page content by default.",
     )
     page_numbers: str | None = Field(
-        None, description="Pages to cover entirely, e.g. '1,3-5'. Omit to redact only the listed areas."
+        None, description="Pages to wipe completely, e.g. '1,3-5'. Omit to redact only the listed areas."
     )
     page_redaction_color: str = Field("#000000", description="The color used to fully redact certain pages")
     redactions: list[RedactionArea] = Field(
         ...,
-        description="Areas to cover: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points",
+        description="Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points",
     )
 
 

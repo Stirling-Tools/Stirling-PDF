@@ -51,7 +51,7 @@ public class RedactPdfRequest extends PDFFile {
     private float customPadding = 0f;
 
     @Schema(
-            description = "Turn pages into images so nothing under the boxes can be extracted",
+            description = "Rasterize every output page, making page text unselectable",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean convertPDFToImage = Boolean.FALSE;

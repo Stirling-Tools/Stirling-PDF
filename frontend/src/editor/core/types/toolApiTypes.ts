@@ -617,11 +617,11 @@ export interface IntegrationPurviewReadLabelRequest {
 export type ListAttachmentsRequest = Record<string, never>;
 export interface ManualRedactPdfRequest {
   /**
-   * Turn pages into images so covered content is really removed; text becomes unselectable
+   * Rasterize every output page, making page text unselectable. Redaction areas already remove covered page content by default.
    */
   convertPDFToImage?: boolean;
   /**
-   * Pages to cover entirely, e.g. '1,3-5'. Omit to redact only the listed areas.
+   * Pages to wipe completely, e.g. '1,3-5'. Omit to redact only the listed areas.
    */
   pageNumbers?: string;
   /**
@@ -629,12 +629,12 @@ export interface ManualRedactPdfRequest {
    */
   pageRedactionColor?: string;
   /**
-   * Areas to cover: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
+   * Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
    */
   redactions: RedactionArea[];
 }
 /**
- * Areas to cover: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
+ * Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
  */
 export interface RedactionArea {
   /**
@@ -1093,15 +1093,15 @@ export interface RearrangePagesRequest {
 }
 export interface RedactExecuteRequest {
   /**
-   * Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
+   * Rectangular areas identified by page and bounding box. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
    */
   imageBoxes?: ImageBox[];
   /**
-   * Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
+   * Text located using start and end anchor phrases (inclusive). AUTO removes selected page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
    */
   ranges?: TextRange[];
   /**
-   * 1-indexed pages whose images get boxed over; an empty list means every page, null skips it.
+   * 1-indexed pages whose detected image regions are redacted; an empty list means every page, null skips it. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes.
    */
   redactImagePages?: number[];
   /**
@@ -1119,7 +1119,7 @@ export interface RedactExecuteRequest {
   wipePages?: number[];
 }
 /**
- * Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
+ * Rectangular areas identified by page and bounding box. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
  */
 export interface ImageBox {
   /**
@@ -1144,7 +1144,7 @@ export interface ImageBox {
   y2: number;
 }
 /**
- * Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
+ * Text located using start and end anchor phrases (inclusive). AUTO removes selected page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
  */
 export interface TextRange {
   /**
@@ -1165,7 +1165,7 @@ export interface RedactStyle {
    */
   color?: string;
   /**
-   * Rasterize every page so no covered content can be extracted
+   * Rasterize every output page, making page text unselectable
    */
   convertToImage?: boolean;
   /**
@@ -1173,7 +1173,7 @@ export interface RedactStyle {
    */
   padding?: number;
   /**
-   * AUTO removes matched text; OVERLAY_ONLY only draws boxes; IMAGE_FINALIZE also rasterizes pages
+   * AUTO removes covered page content and may rasterize affected pages. OVERLAY_ONLY draws text/range/image boxes without removal. IMAGE_FINALIZE rasterizes every output page. Whole-page wipes remove page content in every strategy; convertToImage also controls final rasterization independently.
    */
   strategy?: "AUTO" | "OVERLAY_ONLY" | "IMAGE_FINALIZE";
 }
@@ -1183,7 +1183,7 @@ export interface RedactPdfRequest {
    */
   caseSensitive?: boolean;
   /**
-   * Turn pages into images so nothing under the boxes can be extracted
+   * Rasterize every output page, making page text unselectable
    */
   convertPDFToImage?: boolean;
   /**
