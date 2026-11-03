@@ -16,6 +16,7 @@ tasks:
       - docker build --check --build-arg BUILDKIT_DOCKERFILE_CHECK=skip=SecretsUsedInArgOrEnv -f docker/embedded/Dockerfile.fat .
       - docker build --check -f docker/embedded/Dockerfile.ultra-lite .
       - docker build --check -f docker/engine/Dockerfile .
+      - docker build --check -f docker/engine/Dockerfile.dev .
       - docker build --check -f docker/unoserver/Dockerfile .
 
   build:base:
