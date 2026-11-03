@@ -25,6 +25,13 @@ import { updateSupportedLanguages } from "@editor/i18n";
 import SpringLoginForm from "@editor/auth/ui/SpringLoginForm";
 import AuthDefaultCredentials from "@editor/auth/ui/AuthDefaultCredentials";
 import { useSpringLogin } from "@editor/auth/ui/useSpringLogin";
+import {
+  clearSignedOutFlag,
+  isSsoAutoLoginAllowed,
+  recordSsoAutoLoginAttempt,
+  recordSsoAutoLoginError,
+  resetSsoAutoLoginCounts,
+} from "@editor/auth/ssoAutoLogin";
 import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
 import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
@@ -73,52 +80,6 @@ export default function Login() {
   const autoLoginAttempted = useRef(false);
   const autoLoginErrorRecorded = useRef(false);
 
-  const AUTO_LOGIN_ATTEMPTS_KEY = "stirling_sso_auto_login_attempts";
-  const AUTO_LOGIN_ERRORS_KEY = "stirling_sso_auto_login_errors";
-  const AUTO_LOGIN_LOGOUT_KEY = "stirling_sso_auto_login_logged_out";
-  const MAX_AUTO_LOGIN_ATTEMPTS = 2;
-  const MAX_AUTO_LOGIN_ERRORS = 1;
-
-  const readSessionNumber = (key: string) => {
-    if (typeof window === "undefined") {
-      return 0;
-    }
-    const raw = window.sessionStorage.getItem(key);
-    const value = Number(raw);
-    return Number.isFinite(value) ? value : 0;
-  };
-
-  const writeSessionNumber = (key: string, value: number) => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    window.sessionStorage.setItem(key, String(value));
-  };
-
-  const hasLogoutBlock = () => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-    return window.sessionStorage.getItem(AUTO_LOGIN_LOGOUT_KEY) === "1";
-  };
-
-  const clearLogoutBlock = () => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    window.sessionStorage.removeItem(AUTO_LOGIN_LOGOUT_KEY);
-  };
-
-  const recordAutoLoginAttempt = () => {
-    const attempts = readSessionNumber(AUTO_LOGIN_ATTEMPTS_KEY);
-    writeSessionNumber(AUTO_LOGIN_ATTEMPTS_KEY, attempts + 1);
-  };
-
-  const recordAutoLoginError = () => {
-    const errors = readSessionNumber(AUTO_LOGIN_ERRORS_KEY);
-    writeSessionNumber(AUTO_LOGIN_ERRORS_KEY, errors + 1);
-  };
-
   const errorFromState = (location.state as { error?: string } | null)?.error;
   const errorFromQuery = useMemo(() => {
     if (!searchParams) {
@@ -148,13 +109,16 @@ export default function Login() {
   }, [searchParams]);
 
   const hasSsoLoginError = Boolean(errorFromState || errorFromQuery);
+  // /login?all is how a local admin reaches the password form when SSO
+  // auto-login would otherwise redirect straight to the provider.
+  const skipSsoAutoLogin = searchParams.has("all");
 
   // Shared login state + sign-in handlers + provider fetch. Editor-specific
   // behaviour (auto-login, redirects, first-time setup) is layered on here.
   const login = useSpringLogin({
     ready: backendProbe.status === "up" || backendProbe.loginDisabled,
     redirectTo: `${BASE_PATH}/auth/callback`,
-    onSignInStart: clearLogoutBlock,
+    onSignInStart: clearSignedOutFlag,
     onBeforeOAuth: () => {
       // Don't overwrite a path already stashed by httpErrorHandler on a 401.
       const returnPath = resolveReturnPath();
@@ -181,6 +145,11 @@ export default function Login() {
 
   const isUserPassAllowed = login.isUserPassAllowed;
   const isSsoOnlyMode = !login.isUserPassAllowed;
+  // Visitors who can only sign in with a password: the admin of a fresh
+  // install (default credentials) and a local account just created from an
+  // invite (messageType). Redirecting them to the IdP strands them there.
+  const awaitsPasswordSignIn =
+    isUserPassAllowed && (isFirstTimeSetup || searchParams.has("messageType"));
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
@@ -213,6 +182,7 @@ export default function Login() {
   useEffect(() => {
     if (loading) return;
     if (!session) return;
+    resetSsoAutoLoginCounts();
     const stashed = consumePostLoginRedirectPath();
     const returnPath = resolveReturnPath() ?? stashed;
     if (returnPath) {
@@ -266,12 +236,6 @@ export default function Login() {
       return;
     }
 
-    const attempts = readSessionNumber(AUTO_LOGIN_ATTEMPTS_KEY);
-    const errors = readSessionNumber(AUTO_LOGIN_ERRORS_KEY);
-    const blockedByErrors = errors >= MAX_AUTO_LOGIN_ERRORS;
-    const blockedByAttempts = attempts >= MAX_AUTO_LOGIN_ATTEMPTS;
-    const blockedByLogout = hasLogoutBlock();
-
     if (
       !ssoAutoLogin ||
       loginDisabled ||
@@ -283,15 +247,11 @@ export default function Login() {
     }
 
     if (
+      skipSsoAutoLogin ||
+      awaitsPasswordSignIn ||
       hasSsoLoginError ||
-      blockedByErrors ||
-      blockedByAttempts ||
-      blockedByLogout
+      !isSsoAutoLoginAllowed()
     ) {
-      return;
-    }
-
-    if (login.isUserPassAllowed) {
       return;
     }
 
@@ -300,7 +260,9 @@ export default function Login() {
     }
 
     autoLoginAttempted.current = true;
-    recordAutoLoginAttempt();
+    if (!recordSsoAutoLoginAttempt()) {
+      return;
+    }
     void login.signInWithProvider(login.providers[0]);
   }, [
     ssoAutoLogin,
@@ -311,8 +273,9 @@ export default function Login() {
     login.loginMethod,
     login.providers,
     login.signInWithProvider,
-    login.isUserPassAllowed,
     hasSsoLoginError,
+    skipSsoAutoLogin,
+    awaitsPasswordSignIn,
   ]);
 
   // Handle query params (email prefill, success messages, and session expiry)
@@ -371,7 +334,7 @@ export default function Login() {
       }
 
       if (hasSsoLoginError && !autoLoginErrorRecorded.current) {
-        recordAutoLoginError();
+        recordSsoAutoLoginError();
         autoLoginErrorRecorded.current = true;
       }
     } catch (_) {
