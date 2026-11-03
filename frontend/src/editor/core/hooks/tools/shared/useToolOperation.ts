@@ -832,8 +832,10 @@ export const useToolOperation = <TParams>(
           params,
         );
 
-        const errorMessage =
-          config.getErrorMessage?.(error) || extractErrorMessage(error);
+        const extracted = config.getErrorMessage
+          ? await config.getErrorMessage(error)
+          : extractErrorMessage(error);
+        const errorMessage = extracted || extractErrorMessage(error);
         actions.setError(errorMessage);
         actions.setStatus("");
       } finally {

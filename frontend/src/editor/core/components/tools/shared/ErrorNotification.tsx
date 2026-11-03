@@ -1,4 +1,4 @@
-import { Notification } from "@mantine/core";
+import { Notification, Text, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 export interface ErrorNotificationProps {
@@ -20,6 +20,9 @@ const ErrorNotification = ({
 
   if (!error) return null;
 
+  const isStrictModeError =
+    typeof error === "string" && error.includes("Strict PDF/A mode enabled");
+
   return (
     <Notification
       color={color}
@@ -27,7 +30,17 @@ const ErrorNotification = ({
       onClose={onClose}
       mb={mb}
     >
-      {error}
+      <Stack gap={6}>
+        <Text size="sm">{error}</Text>
+        {isStrictModeError && (
+          <Text size="xs" c="dimmed">
+            {t(
+              "convert.strictModeAdvice",
+              "If conversion fails, disable Strict Mode for standard PDF/A compatibility or choose PDF/A-2b.",
+            )}
+          </Text>
+        )}
+      </Stack>
     </Notification>
   );
 };

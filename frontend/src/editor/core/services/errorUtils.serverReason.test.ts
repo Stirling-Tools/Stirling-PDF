@@ -23,6 +23,9 @@ describe("serverErrorReason", () => {
       serverErrorReason(blobError({ message: "No pages" })),
     ).resolves.toBe("No pages");
     await expect(
+      serverErrorReason(blobError({ error: "Direct error" })),
+    ).resolves.toBe("Direct error");
+    await expect(
       serverErrorReason(new Error("network")),
     ).resolves.toBeUndefined();
   });

@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import apiClient from "@editor/services/apiClient";
+import { serverErrorReason } from "@editor/services/errorUtils";
 import { useTranslation } from "react-i18next";
 import {
   validateConvertParameters,
@@ -308,6 +309,7 @@ export const convertProcessor = async (
 
   if (isSeparateProcessing) {
     // Individual processing for complex cases (PDF→image, smart detection, etc.)
+    let lastError: unknown = null;
     for (const file of selectedFiles) {
       try {
         const formData = buildConvertFormData(parameters, [file]);
@@ -327,7 +329,11 @@ export const convertProcessor = async (
         processedFiles.push(convertedFile);
       } catch (error) {
         console.warn(`Failed to convert file ${file.name}:`, error);
+        lastError = error;
       }
+    }
+    if (processedFiles.length === 0 && lastError) {
+      throw lastError;
     }
   } else {
     // Batch processing for simple cases (image→PDF combine)
@@ -647,7 +653,11 @@ export const useConvertOperation = (parameters?: ConvertParameters) => {
   const operation = useToolOperation<ConvertParameters>({
     ...convertOperationConfig,
     customProcessor: customConvertProcessor, // Use instance-specific processor for translation support
-    getErrorMessage: (error) => {
+    getErrorMessage: async (error) => {
+      const serverReason = await serverErrorReason(error);
+      if (serverReason) {
+        return serverReason;
+      }
       const err = error as {
         response?: { data?: unknown };
         message?: string;

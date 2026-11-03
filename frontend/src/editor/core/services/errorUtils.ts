@@ -32,16 +32,26 @@ export async function serverErrorReason(
   try {
     let payload = await normalizeAxiosErrorData(data);
     if (typeof Blob !== "undefined" && payload instanceof Blob) {
-      // Older Blob implementations lack text(); read it the long way.
       payload = tryParseJson(await readBlobText(payload));
     }
+    if (typeof payload === "string") {
+      const parsed = tryParseJson(payload);
+      if (parsed && typeof parsed === "object") payload = parsed;
+    }
     if (payload && typeof payload === "object") {
-      const { detail, message } = payload as {
+      const { detail, message, error } = payload as {
         detail?: unknown;
         message?: unknown;
+        error?: unknown;
       };
-      const reason = typeof detail === "string" && detail ? detail : message;
-      return typeof reason === "string" && reason ? reason : undefined;
+      const reason =
+        (typeof detail === "string" && detail ? detail : undefined) ??
+        (typeof message === "string" && message ? message : undefined) ??
+        (typeof error === "string" && error ? error : undefined);
+      return reason;
+    }
+    if (typeof payload === "string" && payload.trim()) {
+      return payload.trim();
     }
   } catch {
     // Unreadable body: the caller keeps its generic message.
