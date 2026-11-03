@@ -44,9 +44,6 @@ vi.mock("@editor/services/endpointAvailabilityService", () => ({
 vi.mock("@editor/hooks/useFirstLaunchCheck", () => ({
   useFirstLaunchCheck: () => ({ isFirstLaunch: false, setupComplete: true }),
 }));
-vi.mock("@editor/hooks/useDesktopUpdatePopup", () => ({
-  useDesktopUpdatePopup: () => ({ state: {}, actions: {} }),
-}));
 vi.mock("@editor/hooks/useBackendInitializer", () => ({
   useBackendInitializer: state.monitor,
 }));
@@ -91,14 +88,9 @@ vi.mock("@editor/components/DesktopQueryCacheReset", () => ({
 vi.mock("@editor/components/DesktopBannerInitializer", () => ({
   DesktopBannerInitializer: () => null,
 }));
-vi.mock("@editor/components/SaveShortcutListener", () => ({
-  SaveShortcutListener: () => null,
-}));
-vi.mock("@editor/components/LocalProcessingFolders", () => ({
-  LocalProcessingFolders: () => null,
-}));
-vi.mock("@editor/components/shared/DiskConflictHost", () => ({
-  DiskConflictHost: () => null,
+vi.mock("@editor/components/appProvidersExtensions", () => ({
+  AppHostExtensions: () => null,
+  useUpdatePopupModal: () => null,
 }));
 vi.mock("@editor/components/DesktopOnboardingModal", () => ({
   DesktopOnboardingModal: () => null,
@@ -106,17 +98,10 @@ vi.mock("@editor/components/DesktopOnboardingModal", () => ({
 vi.mock("@editor/components/DesktopSaasOnboardingBootstrap", () => ({
   DesktopSaasOnboardingBootstrap: () => null,
 }));
-vi.mock(
-  "@editor/components/onboarding/classificationDemo/ClassificationBackgroundRunner",
-  () => ({ ClassificationBackgroundRunner: () => null }),
-);
 vi.mock("@editor/components/UsageLimitModalHost", () => ({
   default: () => null,
 }));
 vi.mock("@editor/components/SignInModal", () => ({ SignInModal: () => null }));
-vi.mock("@editor-core/components/shared/UpdateModal", () => ({
-  default: () => null,
-}));
 
 it("initializes backend monitoring and endpoint preload after a gate retry recovers configuration", async () => {
   state.getConfig.mockRejectedValue(new Error("Store unavailable"));

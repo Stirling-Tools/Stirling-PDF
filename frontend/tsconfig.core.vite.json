@@ -5,5 +5,9 @@
       "@editor/*": ["./src/editor/core/*"]
     }
   },
-  "exclude": ["src/editor/proprietary", "src/editor/desktop"]
+  "exclude": [
+    "src/editor/proprietary",
+    "src/editor/desktop",
+    "src/editor/tauri"
+  ]
 }

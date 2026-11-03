@@ -54,12 +54,9 @@ vi.mock("@editor/components/onboarding/slides/WelcomeSlide", () => ({
   default: () => ({ title: "Welcome", body: null }),
 }));
 
-vi.mock(
-  "@editor/components/onboarding/classificationDemo/ClassificationDemoModal",
-  () => ({
-    ClassificationDemoModal: () => <div role="dialog">Downloads demo</div>,
-  }),
-);
+vi.mock("@editor/components/onboarding/OnboardingClosingStep", () => ({
+  OnboardingClosingStep: () => <div role="dialog">Downloads demo</div>,
+}));
 
 function renderModal() {
   return render(

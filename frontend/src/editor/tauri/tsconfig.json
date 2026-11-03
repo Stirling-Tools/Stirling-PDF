@@ -1,0 +1,5 @@
+{
+  // tauri/ only builds inside a platform, and its bundled-backend seams resolve from
+  // desktop/, so editors check it with the desktop cascade rather than the root config.
+  "extends": "../desktop/tsconfig.json"
+}

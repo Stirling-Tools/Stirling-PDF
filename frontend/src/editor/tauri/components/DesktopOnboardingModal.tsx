@@ -8,7 +8,7 @@ import OnboardingSlideShell, {
 import { SetupWizard } from "@editor/components/SetupWizard";
 import WelcomeSlide from "@editor/components/onboarding/slides/WelcomeSlide";
 import { connectionModeService } from "@editor/services/connectionModeService";
-import { ClassificationDemoModal } from "@editor/components/onboarding/classificationDemo/ClassificationDemoModal";
+import { OnboardingClosingStep } from "@editor/components/onboarding/OnboardingClosingStep";
 import { useBypassOnboarding } from "@editor/components/onboarding/useBypassOnboarding";
 import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
 
@@ -95,8 +95,7 @@ export function DesktopOnboardingModal() {
     // Accepting the offer hands the workbench canvas to the sweep, which outlives this
     // modal — the session store owns it from there, so nothing else needs to stay mounted.
     return classificationDemo && automationEnabled ? (
-      <ClassificationDemoModal
-        opened
+      <OnboardingClosingStep
         onClose={() => {
           localStorage.setItem(CLASSIFICATION_DEMO_KEY, "true");
           setClassificationDemo(false);

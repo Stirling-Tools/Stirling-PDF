@@ -6,7 +6,7 @@ import {
   extendPreferences,
 } from "@editor-core/components/shared/config/configNavSections";
 import { ConnectionSettings } from "@editor/components/ConnectionSettings";
-import DesktopGeneralSection from "@editor/components/shared/config/configSections/GeneralSection";
+import { PreferencesPage } from "@editor/components/shared/config/preferencesPage";
 import { createCloudTeamNavItem } from "@editor/components/shared/config/cloudConfigNavSections";
 import { BillingSettingsSection } from "@editor/components/settings/BillingSettingsSection";
 import { connectionModeService } from "@editor/services/connectionModeService";
@@ -64,7 +64,7 @@ export const useConfigNavSections = (
   const isLocalMode = connectionMode === "local";
 
   // Account cards and the server-setup banner concern a self-hosted server, so
-  // local and cloud mode drop them; desktop adds file defaults and update controls.
+  // local and cloud mode drop them.
   const isSelfHostedMode = connectionMode === "selfhosted";
   const sections = extendPreferences(
     useProprietaryConfigNavSections(
@@ -80,7 +80,7 @@ export const useConfigNavSections = (
         ? {}
         : { accountSlot: undefined }),
     },
-    DesktopGeneralSection,
+    PreferencesPage,
   );
 
   const connectionModeSection: ConfigNavSection = {

@@ -4,18 +4,21 @@
     "paths": {
       "@editor/*": [
         "./src/editor/desktop/*",
+        "./src/editor/tauri/*",
         "./src/editor/cloud/*",
         "./src/editor/proprietary/*",
         "./src/editor/core/*"
       ],
       "@editor/portal/*": [
         "./src/editor/desktop/portal/*",
+        "./src/editor/tauri/portal/*",
         "./src/editor/cloud/portal/*",
         "./src/editor/proprietary/portal/*",
         "./src/editor/core/portal/*",
         "./src/processor/proprietary/*"
       ],
       "@processor/*": ["./src/processor/proprietary/*"],
+      "@editor-tauri/*": ["./src/editor/tauri/*"],
       "@editor-cloud/*": ["./src/editor/cloud/*"],
       "@editor-proprietary/*": ["./src/editor/proprietary/*"],
       "@editor-core/*": ["./src/editor/core/*"]

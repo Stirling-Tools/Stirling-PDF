@@ -14,6 +14,8 @@ if that directory exists, is licensed under the license defined in "engine/LICEN
 if that directory exists, is licensed under the license defined in "frontend/src/editor/proprietary/LICENSE".
 * All content that resides under the "frontend/src/editor/desktop/" directory of this repository,
 if that directory exists, is licensed under the license defined in "frontend/src/editor/desktop/LICENSE".
+* All content that resides under the "frontend/src/editor/tauri/" directory of this repository,
+if that directory exists, is licensed under the license defined in "frontend/src/editor/tauri/LICENSE".
 * All content that resides under the "frontend/src/editor/saas/" directory of this repository,
 if that directory exists, is licensed under the license defined in "frontend/src/editor/saas/LICENSE".
 * All content that resides under the "frontend/src/editor/cloud/" directory of this repository,

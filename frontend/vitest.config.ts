@@ -131,7 +131,10 @@ export default defineConfig({
         test: {
           name: "desktop",
           ...TEST_DEFAULTS,
-          include: ["src/editor/desktop/**/*.test.{ts,tsx}"],
+          include: [
+            "src/editor/desktop/**/*.test.{ts,tsx}",
+            "src/editor/tauri/**/*.test.{ts,tsx}",
+          ],
           environment: "jsdom",
           globals: true,
           setupFiles: ["./src/editor/core/setupTests.ts"],
