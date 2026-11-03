@@ -33,6 +33,7 @@ class EndpointConfigurationTest {
                         "pdf-to-xml",
                         "pdf-to-markdown",
                         "html-to-pdf",
+                        "eml-to-pdf",
                         "markdown-to-pdf",
                         "pdf-to-epub",
                         "ebook-to-pdf",

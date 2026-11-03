@@ -534,8 +534,11 @@ const ConvertSettings = ({
           </>
         )}
 
-      {/* Stirling Office Convert or LibreOffice */}
-      {usesOfficeEngine(parameters.fromExtension, parameters.toExtension) && (
+      {usesOfficeEngine(parameters.fromExtension, parameters.toExtension) &&
+      !(
+        ["eml", "msg"].includes(parameters.fromExtension) &&
+        parameters.emailOptions.downloadHtml
+      ) ? (
         <>
           <Divider />
           <ConvertOfficeEngineSettings
@@ -544,7 +547,7 @@ const ConvertSettings = ({
             disabled={disabled}
           />
         </>
-      )}
+      ) : null}
 
       {/* PDF to EPUB/AZW3 options */}
       {parameters.fromExtension === "pdf" &&

@@ -498,6 +498,10 @@ export interface EmlToPdfRequest {
    * Maximum attachment size in MB to include (default 10MB, range: 1-100)
    */
   maxAttachmentSizeMB?: number;
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
 }
 export type ExtractAttachmentsRequest = Record<string, never>;
 export interface ExtractHeaderRequest {

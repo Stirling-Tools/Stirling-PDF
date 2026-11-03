@@ -590,6 +590,9 @@ class EmlToPdfParams(ApiModel):
         ge=1,
         le=100,
     )
+    use_stirling_office_convert: bool | None = Field(
+        None, description="Use Stirling Office Convert; when omitted, follow the server setting"
+    )
 
 
 class ExtractAttachmentsParams(ApiModel):

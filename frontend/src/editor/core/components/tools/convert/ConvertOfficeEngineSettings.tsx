@@ -12,7 +12,7 @@ interface ConvertOfficeEngineSettingsProps {
   disabled?: boolean;
 }
 
-/** Picks Stirling Office Convert or LibreOffice for this conversion; starts from the server setting. */
+/** Picks Stirling Office Convert or the standard converter; starts from the server setting. */
 const ConvertOfficeEngineSettings = ({
   parameters,
   onParameterChange,

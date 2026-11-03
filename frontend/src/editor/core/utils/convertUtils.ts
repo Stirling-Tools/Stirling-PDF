@@ -40,6 +40,7 @@ const OFFICE_ENGINE_ENDPOINTS = [
   "html-to-pdf",
   "markdown-to-pdf",
   "ebook-to-pdf",
+  "eml-to-pdf",
 ];
 
 const OFFICE_EXTENSIONS = [
@@ -131,7 +132,7 @@ const OFFICE_EXTENSIONS = [
   "htmlz",
 ];
 
-/** Whether the conversion can run on Stirling Office Convert instead of LibreOffice. */
+/** Whether the conversion can run on Stirling Office Convert instead of its standard converter. */
 export const usesOfficeEngine = (
   fromExtension: string,
   toExtension: string,

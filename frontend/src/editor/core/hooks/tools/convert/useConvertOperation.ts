@@ -623,6 +623,10 @@ export const convertFromApiParams = (
   return {
     fromExtension,
     toExtension,
+    ...(usesOfficeEngine(fromExtension, toExtension) &&
+    body.useStirlingOfficeConvert !== undefined
+      ? { useStirlingOfficeConvert: asFlag(body.useStirlingOfficeConvert) }
+      : {}),
     ...(readOptions ? readOptions(body, toExtension) : {}),
   };
 };

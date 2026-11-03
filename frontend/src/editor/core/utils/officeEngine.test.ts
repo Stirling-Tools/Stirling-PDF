@@ -1,6 +1,10 @@
 import { describe, test, expect } from "vitest";
 import { usesOfficeEngine } from "@editor/utils/convertUtils";
-import { buildConvertFormData } from "@editor/hooks/tools/convert/useConvertOperation";
+import {
+  buildConvertFormData,
+  convertFromApiParams,
+  convertToApiParams,
+} from "@editor/hooks/tools/convert/useConvertOperation";
 import { defaultParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 
 describe("Stirling Office Convert switch", () => {
@@ -19,7 +23,8 @@ describe("Stirling Office Convert switch", () => {
     expect(usesOfficeEngine("epub", "pdf")).toBe(true);
     expect(usesOfficeEngine("file-vsdx", "pdf")).toBe(true);
     expect(usesOfficeEngine("file-htmlz", "pdf")).toBe(true);
-    expect(usesOfficeEngine("eml", "pdf")).toBe(false);
+    expect(usesOfficeEngine("eml", "pdf")).toBe(true);
+    expect(usesOfficeEngine("msg", "pdf")).toBe(true);
     expect(usesOfficeEngine("pdf", "pdfx")).toBe(false);
     expect(usesOfficeEngine("pdf", "png")).toBe(false);
   });
@@ -43,6 +48,8 @@ describe("Stirling Office Convert switch", () => {
     ["mobi", "pdf"],
     ["azw3", "pdf"],
     ["fb2", "pdf"],
+    ["eml", "pdf"],
+    ["msg", "pdf"],
     ["file-vsdx", "pdf"],
   ])(
     "serializes both engine choices for %s to %s",
@@ -59,6 +66,32 @@ describe("Stirling Office Convert switch", () => {
           [file],
         );
         expect(data.get("useStirlingOfficeConvert")).toBe(String(choice));
+      }
+    },
+  );
+
+  test.each(["eml", "msg"])(
+    "preserves %s email options and converter choices in saved steps",
+    (fromExtension) => {
+      for (const choice of [true, false, undefined]) {
+        const parameters = {
+          ...defaultParameters,
+          fromExtension,
+          toExtension: "pdf",
+          useStirlingOfficeConvert: choice,
+          emailOptions: {
+            includeAttachments: true,
+            maxAttachmentSizeMB: 3,
+            downloadHtml: false,
+            includeAllRecipients: false,
+          },
+        };
+        expect(convertFromApiParams(convertToApiParams(parameters))).toEqual({
+          fromExtension,
+          toExtension: "pdf",
+          ...(choice !== undefined ? { useStirlingOfficeConvert: choice } : {}),
+          emailOptions: parameters.emailOptions,
+        });
       }
     },
   );
