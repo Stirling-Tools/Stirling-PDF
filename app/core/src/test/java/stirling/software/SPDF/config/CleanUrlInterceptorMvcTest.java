@@ -78,4 +78,25 @@ class CleanUrlInterceptorMvcTest {
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl(path + "?"));
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"?all", "?all=", "?all=1", "?all=true", "?lang=en&all", "?all&lang=en"})
+    void servesLoginShowAllWithoutRedirect(String query) throws Exception {
+        for (String contextPath : new String[] {"", "/stirling", "/stirling/nested"}) {
+            mvc.perform(get(contextPath + "/login" + query).contextPath(contextPath))
+                    .andExpect(status().isOk())
+                    .andExpect(header().doesNotExist("Location"))
+                    .andExpect(content().string(SPA_HTML));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "/stirling", "/stirling/nested"})
+    void loginCleaningKeepsShowAllFlagAndContextPath(String contextPath) throws Exception {
+        String loginPath = contextPath + "/login";
+
+        mvc.perform(get(loginPath + "?all&evil=x&lang=en&flag").contextPath(contextPath))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl(loginPath + "?all&lang=en"));
+    }
 }

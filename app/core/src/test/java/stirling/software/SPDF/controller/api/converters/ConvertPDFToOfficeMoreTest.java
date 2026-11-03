@@ -34,7 +34,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
@@ -42,6 +44,7 @@ import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils.ToolRequiredException;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
@@ -63,6 +66,7 @@ class ConvertPDFToOfficeMoreTest {
     @Mock private TempFileManager tempFileManager;
     @Mock private OfficeConversionService officeConversionService;
     @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock private EndpointConfiguration endpointConfiguration;
 
     @InjectMocks private ConvertPDFToOffice controller;
 
@@ -70,6 +74,8 @@ class ConvertPDFToOfficeMoreTest {
     void setUp() throws Exception {
         // These cover the legacy converters; Stirling Office Convert has its own tests.
         lenient().when(officeConversionService.legacy(null)).thenReturn(true);
+        lenient().when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
+        lenient().when(endpointConfiguration.isEndpointEnabled("pdf-to-rtf")).thenReturn(true);
         // Real temp files backing TempFileManager so the file-backed response can be read back.
         lenient()
                 .when(tempFileManager.createManagedTempFile(any()))
@@ -301,6 +307,121 @@ class ConvertPDFToOfficeMoreTest {
                             IOException.class,
                             () -> controller.processPdfToRTForTXT(request, null));
             assertEquals("cannot parse pdf", thrown.getMessage());
+        }
+    }
+
+    @Nested
+    @DisplayName("LibreOffice gate")
+    class LibreOfficeGate {
+
+        private PdfToTextOrRTFRequest textRequest(String format) {
+            PdfToTextOrRTFRequest request = new PdfToTextOrRTFRequest();
+            request.setFileInput(pdfFile());
+            request.setOutputFormat(format);
+            return request;
+        }
+
+        @Test
+        @DisplayName("rtf answers 403 when pdf-to-rtf is disabled, without running LibreOffice")
+        void rtfRefusedWhenItsEndpointIsDisabled() {
+            when(endpointConfiguration.isEndpointEnabled("pdf-to-rtf")).thenReturn(false);
+
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+                ResponseStatusException thrown =
+                        assertThrows(
+                                ResponseStatusException.class,
+                                () -> controller.processPdfToRTForTXT(textRequest("rtf"), null));
+                assertEquals(HttpStatus.FORBIDDEN, thrown.getStatusCode());
+                mockedFactory.verifyNoInteractions();
+            }
+        }
+
+        @Test
+        @DisplayName("txt still converts when pdf-to-rtf is disabled")
+        void txtUnaffectedByRtfRemoval() throws Exception {
+            when(endpointConfiguration.isEndpointEnabled("pdf-to-rtf")).thenReturn(false);
+            PDDocument realDoc = new PDDocument();
+            realDoc.addPage(new PDPage());
+            when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(realDoc);
+
+            ResponseEntity<Resource> response =
+                    controller.processPdfToRTForTXT(textRequest("txt"), null);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+        }
+
+        @Test
+        @DisplayName("an invalid format is still a 400 when pdf-to-rtf is disabled")
+        void invalidFormatIsBadRequestWhenRtfRemoved() throws Exception {
+            when(endpointConfiguration.isEndpointEnabled("pdf-to-rtf")).thenReturn(false);
+
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+                for (String format : new String[] {"docx", null}) {
+                    assertEquals(
+                            HttpStatus.BAD_REQUEST,
+                            controller
+                                    .processPdfToRTForTXT(textRequest(format), null)
+                                    .getStatusCode(),
+                            String.valueOf(format));
+                }
+                mockedFactory.verifyNoInteractions();
+            }
+        }
+
+        @Test
+        @DisplayName("text endpoint no longer serves the Word and XML formats")
+        void textEndpointRejectsOtherOfficeFormats() throws Exception {
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+                for (String format : new String[] {"doc", "docx", "odt", "xml"}) {
+                    assertEquals(
+                            HttpStatus.BAD_REQUEST,
+                            controller
+                                    .processPdfToRTForTXT(textRequest(format), null)
+                                    .getStatusCode(),
+                            format);
+                }
+                mockedFactory.verifyNoInteractions();
+            }
+        }
+
+        @Test
+        @DisplayName("word endpoint rejects xml")
+        void wordEndpointRejectsXml() throws Exception {
+            PdfToWordRequest request = new PdfToWordRequest();
+            request.setFileInput(pdfFile());
+            request.setOutputFormat("xml");
+
+            assertEquals(
+                    HttpStatus.BAD_REQUEST,
+                    controller.processPdfToWord(request, null).getStatusCode());
+        }
+
+        @Test
+        @DisplayName("every LibreOffice branch asks for LibreOffice when its group is off")
+        void libreOfficeBranchesRefuseWhenUnavailable() {
+            when(officeConversionService.libreOfficeAvailable()).thenReturn(false);
+            PdfToWordRequest word = new PdfToWordRequest();
+            word.setFileInput(pdfFile());
+            word.setOutputFormat("docx");
+            PdfToPresentationRequest presentation = new PdfToPresentationRequest();
+            presentation.setFileInput(pdfFile());
+            presentation.setOutputFormat("pptx");
+            PDFFile xml = new PDFFile();
+            xml.setFileInput(pdfFile());
+
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+                assertThrows(
+                        ToolRequiredException.class,
+                        () -> controller.processPdfToRTForTXT(textRequest("rtf"), null));
+                assertThrows(
+                        ToolRequiredException.class,
+                        () -> controller.processPdfToWord(word, false));
+                assertThrows(
+                        ToolRequiredException.class,
+                        () -> controller.processPdfToPresentation(presentation, false));
+                assertThrows(ToolRequiredException.class, () -> controller.processPdfToXML(xml));
+                mockedFactory.verifyNoInteractions();
+            }
         }
     }
 

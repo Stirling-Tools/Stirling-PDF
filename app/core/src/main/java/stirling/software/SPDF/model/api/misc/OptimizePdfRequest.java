@@ -21,9 +21,12 @@ public class OptimizePdfRequest extends PDFFile {
     private Integer optimizeLevel = 5;
 
     @Schema(
-            description = "The expected output size, e.g. '100MB', '25KB', etc.",
-            defaultValue = "25KB",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+            description =
+                    "Target output size, e.g. '100MB' or '25KB'. When set, the optimization"
+                            + " level is chosen automatically to reach it; omit to compress at"
+                            + " optimizeLevel.",
+            example = "25KB",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String expectedOutputSize;
 
     @Schema(
