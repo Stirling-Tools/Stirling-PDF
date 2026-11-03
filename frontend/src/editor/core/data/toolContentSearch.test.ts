@@ -36,7 +36,8 @@ describe("toolContentSearch", () => {
     expect(getTranslationPrefixesForToolId("certSign")).toEqual([
       "certSign",
       "home.certSign",
-      "sign",
+      "sign.canvas",
+      "sign.type",
     ]);
   });
 

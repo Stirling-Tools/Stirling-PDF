@@ -24,7 +24,7 @@ const EXTRA_TOOL_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> = {
   autoRename: ["auto-rename"],
   annotate: ["annotation"],
   scalePages: ["adjustPageScale"],
-  certSign: ["sign"],
+  certSign: ["sign.canvas", "sign.type"],
 };
 
 export const getTranslationPrefixesForToolId = (toolId: string): string[] => {
