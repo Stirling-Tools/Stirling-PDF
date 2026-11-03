@@ -70,7 +70,14 @@ public class AutoJobAspect {
                 trackProgress);
 
         // Process arguments in-place to avoid type mismatch issues
-        Object[] args = processArgsInPlace(joinPoint.getArgs(), async);
+        List<String> inputCopies = new ArrayList<>();
+        Object[] args;
+        try {
+            args = processArgsInPlace(joinPoint.getArgs(), async, inputCopies);
+        } catch (RuntimeException failure) {
+            discardInputCopies(inputCopies);
+            throw failure;
+        }
 
         // Extract queueable and resourceWeight parameters and validate
         boolean queueable = autoJobPostMapping.queueable();
@@ -252,7 +259,8 @@ public class AutoJobAspect {
      * @param async Whether this is an async operation
      * @return The original array with processed arguments
      */
-    private Object[] processArgsInPlace(Object[] originalArgs, boolean async) {
+    private Object[] processArgsInPlace(
+            Object[] originalArgs, boolean async, List<String> inputCopies) {
         if (originalArgs == null || originalArgs.length == 0) {
             return originalArgs;
         }
@@ -271,6 +279,7 @@ public class AutoJobAspect {
                             // The stored file is read lazily, and the source may expire or be
                             // deleted while the job is queued, so the job gets its own copy.
                             String copyId = fileStorage.storeFile(file);
+                            inputCopies.add(copyId);
                             recordPendingInputFile(copyId);
                             file = fileStorage.retrieveFile(copyId);
                         }
@@ -286,6 +295,7 @@ public class AutoJobAspect {
                         log.debug("Making persistent copy of uploaded file for async processing");
                         MultipartFile originalFile = pdfFile.getFileInput();
                         String fileId = fileStorage.storeFile(originalFile);
+                        inputCopies.add(fileId);
 
                         // Store the fileId for later reference
                         pdfFile.setFileId(fileId);
@@ -305,6 +315,21 @@ public class AutoJobAspect {
         }
 
         return originalArgs;
+    }
+
+    private void discardInputCopies(List<String> inputCopies) {
+        for (String fileId : inputCopies) {
+            try {
+                if (!fileStorage.deleteFileAsSystem(fileId)) {
+                    log.warn("Could not delete failed input copy {}", fileId);
+                }
+            } catch (RuntimeException cleanupFailure) {
+                log.warn(
+                        "Could not delete failed input copy {}: {}",
+                        fileId,
+                        cleanupFailure.getMessage());
+            }
+        }
     }
 
     /**
