@@ -21,12 +21,12 @@ class SplitPdfBySizeOrCountRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("splitType zero and splitValue null on a fresh instance")
+        @DisplayName("splitType zero and splitValue 10MB on a fresh instance")
         void defaultValues() {
             SplitPdfBySizeOrCountRequest req = new SplitPdfBySizeOrCountRequest();
 
             assertThat(req.getSplitType()).isZero();
-            assertThat(req.getSplitValue()).isNull();
+            assertThat(req.getSplitValue()).isEqualTo("10MB");
             assertThat(req.getFileInput()).isNull();
         }
     }

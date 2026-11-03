@@ -40,11 +40,8 @@ export const SCRATCH = {
   readerCharX: key(),
   readerCharY: key(),
   readerBounds: key(),
-  readerFill: key(),
   readerMatrix: key(),
-  readerStroke: key(),
   readerRuleDrawMode: key(),
-  readerRuleColour: key(),
   readerRuleStrokeWidth: key(),
   readerSegmentPoint: key(),
   writerBbox: key(),
@@ -58,7 +55,7 @@ export const SCRATCH = {
   shapeDrawMode: key(),
   shapeStrokeAlpha: key(),
   colourRGBA: key(),
-  outlineRGBAW: key(),
+  outlineW: key(),
   faceL: key(),
   faceB: key(),
   faceR: key(),
@@ -89,6 +86,11 @@ export const SCRATCH = {
   tagName: key(),
   tagNameLen: key(),
   tagMcid: key(),
+  splitMatrix: key(),
+  splitOriginX: key(),
+  splitOriginY: key(),
+  splitFontSize: key(),
+  splitStrokeWidth: key(),
 } as const;
 
 /** Structural minimum: any wrapper that exposes PDFium's wasm allocator. */

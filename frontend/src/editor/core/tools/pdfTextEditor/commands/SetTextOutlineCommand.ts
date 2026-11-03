@@ -6,6 +6,7 @@ import {
   applyInkState,
   collectMemberPtrs,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { readObjStroke } from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
 import {
   SCRATCH,
   scratchPtr,
@@ -151,13 +152,6 @@ export class SetTextOutlineCommand implements Command {
 }
 
 interface OutlineModule {
-  FPDFPageObj_GetStrokeColor?: (
-    obj: number,
-    r: number,
-    g: number,
-    b: number,
-    a: number,
-  ) => boolean;
   FPDFPageObj_GetStrokeWidth?: (obj: number, out: number) => boolean;
   FPDFPageObj_SetStrokeColor?: (
     obj: number,
@@ -184,22 +178,12 @@ function readMemberInk(
   } catch {
     /* keep the run-level value */
   }
+  const w = scratchPtr(m, SCRATCH.outlineW, 4);
   try {
-    const buf = scratchPtr(m, SCRATCH.outlineRGBAW, 20);
-    let stroke: RGBA | null = null;
-    if (
-      mod.FPDFPageObj_GetStrokeColor?.(ptr, buf, buf + 4, buf + 8, buf + 12)
-    ) {
-      stroke = {
-        r: m.pdfium.getValue(buf, "i32") & 0xff,
-        g: m.pdfium.getValue(buf + 4, "i32") & 0xff,
-        b: m.pdfium.getValue(buf + 8, "i32") & 0xff,
-        a: m.pdfium.getValue(buf + 12, "i32") & 0xff,
-      };
-    }
+    const stroke = readObjStroke(m, ptr);
     let strokeWidth = 0;
-    if (mod.FPDFPageObj_GetStrokeWidth?.(ptr, buf + 16)) {
-      const raw = m.pdfium.getValue(buf + 16, "float");
+    if (mod.FPDFPageObj_GetStrokeWidth?.(ptr, w)) {
+      const raw = m.pdfium.getValue(w, "float");
       if (Number.isFinite(raw) && raw > 0) strokeWidth = raw;
     }
     return { ptr, renderMode, stroke, strokeWidth };

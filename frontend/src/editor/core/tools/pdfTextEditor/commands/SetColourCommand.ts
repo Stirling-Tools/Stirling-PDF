@@ -4,10 +4,7 @@ import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDoc
 import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 import { PdfiumTextWriter } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
 import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
-import {
-  SCRATCH,
-  scratchPtr,
-} from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import { readObjFill } from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
 import {
   setScanOverride,
   type ScanOverride,
@@ -111,26 +108,5 @@ export class SetColourCommand implements Command {
     return i18n.t("pdfTextEditor.commands.setColour", "Set colour on {{run}}", {
       run: this.runId,
     });
-  }
-}
-
-/** Read an object's current fill colour (0-255 RGBA), or null on failure. */
-export function readObjFill(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-  objPtr: number,
-): RGBA | null {
-  try {
-    const buf = scratchPtr(m, SCRATCH.colourRGBA, 16);
-    if (!m.FPDFPageObj_GetFillColor(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
-      return null;
-    }
-    return {
-      r: m.pdfium.getValue(buf, "i32"),
-      g: m.pdfium.getValue(buf + 4, "i32"),
-      b: m.pdfium.getValue(buf + 8, "i32"),
-      a: m.pdfium.getValue(buf + 12, "i32"),
-    };
-  } catch {
-    return null;
   }
 }

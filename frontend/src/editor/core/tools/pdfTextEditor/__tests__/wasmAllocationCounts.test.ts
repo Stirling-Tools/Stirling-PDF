@@ -6,7 +6,7 @@ import {
   measureObjSpanPt,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { setCharcodesOn } from "@editor/tools/pdfTextEditor/charcode/charcodeRegistry";
-import { readObjFill } from "@editor/tools/pdfTextEditor/commands/SetColourCommand";
+import { readObjFill } from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
 
 interface Bounds {
   left: number;

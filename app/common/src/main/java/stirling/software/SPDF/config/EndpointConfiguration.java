@@ -325,7 +325,7 @@ public class EndpointConfiguration {
                 disabledGroups.stream().filter(group -> !isToolGroup(group)).sorted().toList();
 
         if (!disabledToolGroups.isEmpty()) {
-            log.info(
+            log.debug(
                     "Disabled tool groups: {} (endpoints may have alternative implementations)",
                     String.join(", ", disabledToolGroups));
         }
@@ -384,6 +384,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-markdown");
         addEndpointToGroup("Convert", "eml-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-epub");
+        addEndpointToGroup("Convert", "ebook-to-pdf");
         // Backend-only endpoints (not in frontend tool registry)
         addEndpointToGroup("Convert", "pdf-to-vector");
         addEndpointToGroup("Convert", "vector-to-pdf");
@@ -428,7 +429,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "extract-single-attachment");
         addEndpointToGroup("Other", "replace-invert-pdf");
         addEndpointToGroup("Other", "edit-table-of-contents");
-        addEndpointToGroup("Other", "text-editor-pdf");
         // Backend-only endpoints (not in frontend tool registry endpoints)
         addEndpointToGroup("Other", "add-image");
         addEndpointToGroup("Other", "compare");
@@ -561,9 +561,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "flatten");
         addEndpointToGroup("Java", "unlock-pdf-forms");
         addEndpointToGroup("Java", "validate-signature");
-        addEndpointToGroup("Java", "text-editor-pdf");
         addEndpointToGroup("Java", "edit-table-of-contents");
         addEndpointToGroup("Java", "pdf-to-epub");
+        addEndpointToGroup("Java", "ebook-to-pdf");
         addEndpointToGroup("Java", "eml-to-pdf");
         addEndpointToGroup("Java", "handleData");
         addEndpointToGroup("Java", "form-detection");
@@ -574,7 +574,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Javascript", "sign");
         addEndpointToGroup("Javascript", "compare");
         addEndpointToGroup("Javascript", "adjust-contrast");
-        addEndpointToGroup("Javascript", "text-editor-pdf");
 
         /* qpdf */
         addEndpointToGroup("qpdf", "repair");
@@ -649,6 +648,7 @@ public class EndpointConfiguration {
 
         // Calibre dependent endpoints
         addEndpointToGroup("Calibre", "pdf-to-epub");
+        addEndpointToGroup("Calibre", "ebook-to-pdf");
     }
 
     private void processEnvironmentConfigs() {
