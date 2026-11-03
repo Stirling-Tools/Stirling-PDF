@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
-/** Layout-invisible wrapper that tags sensitive content with 'ph-no-capture' to exclude it from analytics. */
+/** Layout-invisible wrapper that keeps sensitive content out of analytics without hiding interactions with it. */
 const meta: Meta<typeof PrivateContent> = {
   title: "Shared/PrivateContent",
   component: PrivateContent,
