@@ -53,6 +53,9 @@ tauri-plugin-single-instance = { version = "2.4.1", features = ["deep-link"] }
 tauri-plugin-updater = "2"
 tauri-plugin-window-state = "2.2.1"
 
+[target.'cfg(any(target_os = "ios", target_os = "android"))'.dependencies]
+tauri-plugin-document-scanner = { path = "plugins/document-scanner" }
+
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.10"
 core-services = "1.0"

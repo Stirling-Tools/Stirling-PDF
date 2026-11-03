@@ -1,0 +1,14 @@
+[package]
+name = "tauri-plugin-document-scanner"
+version = "0.1.0"
+description = "Scans paper documents to PDF with the platform scanner: VisionKit on iOS, ML Kit on Android."
+edition = "2021"
+rust-version = "1.77.2"
+publish = false
+links = "tauri-plugin-document-scanner"
+
+[dependencies]
+tauri = { version = "2.10.3" }
+
+[build-dependencies]
+tauri-plugin = { version = "2.5.3", features = ["build"] }

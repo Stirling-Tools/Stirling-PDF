@@ -20,5 +20,9 @@
 	     edit is written back to the file the user actually chose. -->
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+
+	<!-- Shown when the document scanner first asks for the camera. -->
+	<key>NSCameraUsageDescription</key>
+	<string>Stirling PDF uses the camera to scan paper documents into PDFs.</string>
 </dict>
 </plist>
