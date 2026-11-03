@@ -54,7 +54,7 @@ class LicenseKeyCheckerTest {
         ApplicationProperties properties = new ApplicationProperties();
         when(userLicenseSettingsService.refreshLinkedTeamUsers()).thenReturn(300);
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService, scheduler);
 
         assertEquals(License.SERVER, checker.premiumTier());
         assertEquals(License.SERVER, checker.premiumTier());
@@ -71,7 +71,7 @@ class LicenseKeyCheckerTest {
                 .thenThrow(new IllegalStateException("Supabase unreachable"))
                 .thenReturn(300);
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService, scheduler);
 
         assertEquals(License.SERVER, checker.premiumTier());
         checker.onEntitlementRefreshed();
@@ -89,7 +89,7 @@ class LicenseKeyCheckerTest {
                 .thenThrow(new IllegalStateException("Database not initialized"))
                 .thenReturn(300);
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService, scheduler);
 
         assertEquals(License.NORMAL, checker.premiumTier());
         assertEquals(License.SERVER, checker.premiumTier());
@@ -105,7 +105,7 @@ class LicenseKeyCheckerTest {
         properties.getPremium().setKey("a-key");
         when(verifier.verifyLicense("a-key")).thenReturn(License.ENTERPRISE);
         LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService, scheduler);
         checker.init();
 
         assertEquals(License.ENTERPRISE, checker.premiumTier());
