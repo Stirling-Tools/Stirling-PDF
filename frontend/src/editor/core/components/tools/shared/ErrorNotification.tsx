@@ -36,7 +36,7 @@ const ErrorNotification = ({
           <Text size="xs" c="dimmed">
             {t(
               "convert.strictModeAdvice",
-              "If conversion fails, disable Strict Mode for standard PDF/A compatibility or choose PDF/A-2b.",
+              "If conversion fails, disable Strict Mode to allow best-effort conversion (may not pass strict verification) or choose PDF/A-2b.",
             )}
           </Text>
         )}

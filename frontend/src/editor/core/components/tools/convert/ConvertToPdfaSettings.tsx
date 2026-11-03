@@ -134,10 +134,16 @@ const ConvertToPdfaSettings = ({
               />
             </div>
             <div className={styles["pdfa-strict-text"]}>
-              <span className={styles["pdfa-strict-title"]}>
+              <label
+                htmlFor="pdfa-strict-mode-switch"
+                className={styles["pdfa-strict-title"]}
+              >
                 {t("convert.strictMode", "Strict Mode")}
-              </span>
-              <span className={styles["pdfa-strict-desc"]}>
+              </label>
+              <span
+                id="pdfa-strict-mode-desc"
+                className={styles["pdfa-strict-desc"]}
+              >
                 {t(
                   "convert.strictModeDesc",
                   "Enforces 100% VeraPDF compliance and rejects non-conforming outputs",
@@ -146,6 +152,7 @@ const ConvertToPdfaSettings = ({
             </div>
           </div>
           <ToggleSwitch
+            id="pdfa-strict-mode-switch"
             checked={parameters.pdfaOptions.strict ?? false}
             onChange={(checked) =>
               onParameterChange("pdfaOptions", {
@@ -154,6 +161,7 @@ const ConvertToPdfaSettings = ({
               })
             }
             disabled={disabled || isChecking}
+            aria-describedby="pdfa-strict-mode-desc"
             aria-label={t("convert.strictMode", "Strict Mode")}
             data-testid="pdfa-strict-mode-toggle"
           />

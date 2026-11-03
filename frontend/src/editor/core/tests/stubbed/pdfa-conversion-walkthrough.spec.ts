@@ -23,10 +23,6 @@ function shot(name: string): string {
   return path.join(SHOT_DIR, `${name}.png`);
 }
 
-async function settle(page: Page, ms = 700) {
-  await page.waitForTimeout(ms);
-}
-
 type Theme = "light" | "dark";
 
 async function applyTheme(page: Page, theme: Theme) {
@@ -75,7 +71,10 @@ for (const theme of THEMES) {
     await uploadFile(page, SAMPLE_PDF);
     await navigateToPdfa(page);
     await dismissTourTooltip(page);
-    await settle(page, 500);
+
+    const switchInput = page.locator("#pdfa-strict-mode-switch");
+    await expect(switchInput).toBeVisible();
+    await expect(switchInput).not.toBeChecked();
 
     await page.screenshot({ path: shot(`01_pdfa_default_settings_${theme}`) });
   });
@@ -90,7 +89,9 @@ for (const theme of THEMES) {
 
     const strictToggle = page.getByTestId("pdfa-strict-mode-toggle");
     await strictToggle.click();
-    await settle(page, 500);
+
+    const switchInput = page.locator("#pdfa-strict-mode-switch");
+    await expect(switchInput).toBeChecked();
 
     await page.screenshot({
       path: shot(`02_pdfa_strict_mode_checked_${theme}`),
@@ -124,10 +125,9 @@ for (const theme of THEMES) {
     await strictToggle.click();
     await page.getByTestId("convert-button").click();
 
-    await expect(page.getByRole("alert").first()).toBeVisible({
-      timeout: 5000,
-    });
-    await settle(page, 800);
+    const alert = page.getByRole("alert").first();
+    await expect(alert).toBeVisible({ timeout: 5000 });
+    await expect(alert).toContainText("Strict PDF/A mode enabled");
 
     await page.screenshot({ path: shot(`03_pdfa_strict_error_view_${theme}`) });
   });
