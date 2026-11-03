@@ -7,8 +7,6 @@ This directory contains the organized Docker configurations for the split fronte
 All Docker commands can be run from the project root using [Task](https://taskfile.dev/):
 
 ```bash
-task docker:check            # Check Docker image definitions
-task docker:build:base       # Build the shared PDF tools image
 task docker:build            # Build standard image
 task docker:build:fat        # Build fat image (all features)
 task docker:build:ultra-lite # Build ultra-lite image
@@ -20,23 +18,6 @@ task docker:up:ultra-lite    # Start ultra-lite compose stack
 task docker:down             # Stop all running stacks
 task docker:logs             # Tail compose logs
 ```
-
-## Updating the shared runtime
-
-The standard, fat and backend images inherit their PDF tools and Python packages
-from the pinned shared base image. Build and test changes with
-`task docker:build:base`; application builds can use that local image with
-`--build-arg BASE_IMAGE=stirling-pdf-base:local`.
-
-After validation, publish a new version through the **Push Docker Base Image**
-workflow. Update `BASE_VERSION` to the published version and manifest digest in
-`docker/embedded/Dockerfile`, `docker/embedded/Dockerfile.fat` and
-`docker/backend/Dockerfile` before releasing the application. The existing digest
-pins continue to select the previous base until this publication step is complete.
-
-Calibre ships its own Expat and OpenSSL libraries. The Calibre build replaces
-bundled Expat with the verified upstream build and checks the version loaded by
-Calibre's Python. Ubuntu package upgrades also refresh the separate system copies.
 
 ## Directory Structure
 
