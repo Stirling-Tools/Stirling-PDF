@@ -361,6 +361,10 @@ export function PageStage() {
                       if (shiftKey) store.selection.toggle(runId);
                       else store.selection.selectOne(runId);
                     }}
+                    onSelectRunText={(runId, range) =>
+                      store.selection.setTextRange(runId, range)
+                    }
+                    selectedTextRange={selection.textRange}
                     onSelectImage={(imageId) =>
                       store.selection.selectImage(imageId)
                     }

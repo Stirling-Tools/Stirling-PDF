@@ -78,13 +78,13 @@ public class ApplicationProperties {
 
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
-    private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
     private FormDetection formDetection = new FormDetection();
     private Docparse docparse = new Docparse();
     private Mcp mcp = new Mcp();
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
+    private SecondLevelCache secondLevelCache = new SecondLevelCache();
     private Policies policies = new Policies();
 
     @PostConstruct
@@ -284,6 +284,19 @@ public class ApplicationProperties {
         private int runExpiryMinutes = 30;
 
         /**
+         * Most steps one pipeline or policy run may have, covering {@code
+         * /api/v1/pipeline/handleData} as well as policies; 0 = unlimited.
+         */
+        private int maxSteps = 50;
+
+        /**
+         * Most files one step of a pipeline or policy run may produce before the run is aborted; 0
+         * = unlimited. A step answering with a ZIP multiplies the files the next step is called on,
+         * so without a cap a few split steps fan out into millions of tool calls.
+         */
+        private int maxFilesPerStep = 10000;
+
+        /**
          * Whether a policy S3 source's custom endpoint may resolve to a loopback, link-local, or
          * private address. Off by default so a user-supplied endpoint cannot be pointed at internal
          * services (e.g. the cloud metadata address); enable for a self-hosted MinIO or other
@@ -328,46 +341,6 @@ public class ApplicationProperties {
         private boolean allowCustomApiIntegrations = true;
 
         private long webhookMaxBytes = 104857600L;
-    }
-
-    @Data
-    public static class PdfEditor {
-        private Cache cache = new Cache();
-        private FontNormalization fontNormalization = new FontNormalization();
-        private CffConverter cffConverter = new CffConverter();
-        private Type3 type3 = new Type3();
-        private String fallbackFont = "classpath:/static/fonts/NotoSans-Regular.ttf";
-
-        @Data
-        public static class Cache {
-            private long maxBytes = -1;
-            private int maxPercent = 20;
-        }
-
-        @Data
-        public static class FontNormalization {
-            private boolean enabled = false;
-        }
-
-        @Data
-        public static class CffConverter {
-            private boolean enabled = true;
-            private String method = "python";
-            private String pythonCommand = "/opt/venv/bin/python3";
-            private String pythonScript = "/scripts/convert_cff_to_ttf.py";
-            private String fontforgeCommand = "fontforge";
-        }
-
-        @Data
-        public static class Type3 {
-            private Library library = new Library();
-
-            @Data
-            public static class Library {
-                private boolean enabled = true;
-                private String index = "classpath:/type3/library/index.json";
-            }
-        }
     }
 
     @Data
@@ -629,6 +602,22 @@ public class ApplicationProperties {
              */
             private boolean requireExistingAccount = true;
         }
+    }
+
+    /**
+     * Hibernate second-level cache scope, bound under the top-level {@code secondLevelCache.*}
+     * prefix.
+     */
+    @Data
+    public static class SecondLevelCache {
+
+        /**
+         * The JCache regions are process-local: a write on one instance cannot evict another
+         * instance's entries, so a revocation or role change reaches the other instances only when
+         * the region TTL lapses. Multi-instance deployments either set {@code cluster.enabled=true}
+         * (which disables the cache) or turn it off here.
+         */
+        private boolean enabled = true;
     }
 
     /** Cluster backplane config, bound under the top-level {@code cluster.*} prefix. */
@@ -1348,6 +1337,8 @@ public class ApplicationProperties {
         private boolean disableSanitize;
         private boolean stirlingOfficeConversion;
         private int maxDPI = 500;
+        private int maxPdfaConversionPages = 20_000;
+        private int maxImageMegapixels;
         private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();

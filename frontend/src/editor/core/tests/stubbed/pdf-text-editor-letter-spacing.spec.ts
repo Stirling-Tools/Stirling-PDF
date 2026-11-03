@@ -1,5 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import type { Page, Route } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 
@@ -19,27 +19,6 @@ test("editing a letter-spaced heading keeps its tracking through save+reopen", a
   test.setTimeout(120_000);
   const errs: string[] = [];
   page.on("pageerror", (e) => errs.push(e.message));
-
-  // Serve real charcodes for the standard-14 Helvetica: its charcode IS the
-  // ASCII code, so the per-char backend branch engages like production.
-  await page.route("**/encode-charcodes", async (route: Route) => {
-    let text = "";
-    try {
-      const body = route.request().postDataJSON() as { text?: string };
-      text = body.text ?? "";
-    } catch {
-      /* fall through with empty text */
-    }
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        charcodes: [...text].map((c) => c.codePointAt(0) ?? 0),
-        missing: [],
-        note: "stub ascii",
-      }),
-    });
-  });
 
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
