@@ -98,6 +98,7 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.ImageMemoryLimit;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
@@ -809,6 +810,7 @@ public class ConvertPDFToPDFA {
                 PDXObject loXo = loRes.getXObject(name);
                 if (!(loXo instanceof PDImageXObject img)) continue;
 
+                ImageMemoryLimit.requireEmbeddedImageFits(img);
                 PDImageXObject newImg = LosslessFactory.createFromImage(baseDoc, img.getImage());
 
                 // replace the resource under the same name
