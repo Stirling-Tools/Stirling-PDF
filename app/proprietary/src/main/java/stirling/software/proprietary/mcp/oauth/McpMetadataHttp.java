@@ -16,8 +16,11 @@ import org.apache.hc.client5.http.DnsResolver;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.util.Timeout;
 
 import stirling.software.common.util.GeneralUtils;
@@ -81,32 +84,38 @@ final class McpMetadataHttp {
         try {
             HttpGet request = new HttpGet(uri);
             request.setHeader("Accept", "application/json");
-            var response = client.executeOpen(null, request, null);
-            Map<String, List<String>> headers = new LinkedHashMap<>();
-            for (var header : response.getHeaders()) {
-                headers.computeIfAbsent(header.getName(), key -> new ArrayList<>())
-                        .add(header.getValue());
-            }
-            InputStream body =
-                    response.getEntity() == null
-                            ? InputStream.nullInputStream()
-                            : response.getEntity().getContent();
-            return new Response(
-                    response.getCode(),
-                    HttpHeaders.of(headers, (name, value) -> true),
-                    new FilterInputStream(body) {
-                        @Override
-                        public void close() throws IOException {
-                            try {
-                                response.close();
-                            } finally {
-                                client.close();
-                            }
-                        }
-                    });
+            return response(client, client.executeOpen(null, request, null));
         } catch (IOException | RuntimeException e) {
-            client.close();
+            client.close(CloseMode.IMMEDIATE);
             throw e;
         }
+    }
+
+    /** The body owns the per-request client; closing aborts unread data instead of draining it. */
+    static Response response(CloseableHttpClient client, ClassicHttpResponse response)
+            throws IOException {
+        Map<String, List<String>> headers = new LinkedHashMap<>();
+        for (var header : response.getHeaders()) {
+            headers.computeIfAbsent(header.getName(), key -> new ArrayList<>())
+                    .add(header.getValue());
+        }
+        InputStream body =
+                response.getEntity() == null
+                        ? InputStream.nullInputStream()
+                        : response.getEntity().getContent();
+        return new Response(
+                response.getCode(),
+                HttpHeaders.of(headers, (name, value) -> true),
+                new FilterInputStream(body) {
+                    @Override
+                    public void close() throws IOException {
+                        client.close(CloseMode.IMMEDIATE);
+                        try {
+                            response.close();
+                        } catch (IOException ignored) {
+                            // Entity cleanup may report the connection we intentionally aborted.
+                        }
+                    }
+                });
     }
 }

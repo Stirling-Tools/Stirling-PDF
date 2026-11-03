@@ -3,12 +3,17 @@ package stirling.software.proprietary.mcp.oauth;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -38,8 +43,19 @@ public class McpClientMetadataFetcher {
     public record ClientMetadata(String clientId, String clientName, List<String> redirectUris) {}
 
     static final int MAX_BYTES = 64 * 1024;
+    static final int MAX_BODY_READERS = 4;
     private static final int MAX_REDIRECTS = 3;
     private static final long BODY_TIMEOUT_SECONDS = 10;
+    // Queued reads would retain open HTTP responses while waiting for a reader.
+    private static final ExecutorService BODY_READERS =
+            new ThreadPoolExecutor(
+                    0,
+                    MAX_BODY_READERS,
+                    30,
+                    TimeUnit.SECONDS,
+                    new SynchronousQueue<>(),
+                    Thread.ofPlatform().daemon().name("mcp-metadata-reader-", 0).factory(),
+                    new ThreadPoolExecutor.AbortPolicy());
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Set<String> SECRET_AUTH_METHODS =
             Set.of("client_secret_basic", "client_secret_post", "client_secret_jwt");
@@ -166,12 +182,24 @@ public class McpClientMetadataFetcher {
         }
     }
 
-    /** The request timeout only covers headers, so a trickled body needs its own deadline. */
+    /** A continuously trickled body can evade socket timeouts, so it needs an absolute deadline. */
     private static byte[] readWithDeadline(InputStream in) {
-        CompletableFuture<byte[]> read = CompletableFuture.supplyAsync(() -> readCapped(in));
+        return readWithDeadline(in, Duration.ofSeconds(BODY_TIMEOUT_SECONDS));
+    }
+
+    /** Consumes and closes the body; saturation or expiry aborts it. */
+    static byte[] readWithDeadline(InputStream in, Duration timeout) {
+        Future<byte[]> read;
         try {
-            return read.get(BODY_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            read = BODY_READERS.submit(() -> readCapped(in));
+        } catch (RejectedExecutionException e) {
+            closeQuietly(in);
+            throw invalidClient("Client metadata fetching is busy. Try again.");
+        }
+        try {
+            return read.get(timeout.toNanos(), TimeUnit.NANOSECONDS);
         } catch (TimeoutException e) {
+            read.cancel(true);
             closeQuietly(in);
             throw invalidClient("Client metadata download timed out.");
         } catch (ExecutionException e) {
@@ -180,6 +208,7 @@ public class McpClientMetadataFetcher {
             }
             throw invalidClient("Could not read the client metadata.");
         } catch (InterruptedException e) {
+            read.cancel(true);
             Thread.currentThread().interrupt();
             closeQuietly(in);
             throw invalidClient("Client metadata fetch was interrupted.");
