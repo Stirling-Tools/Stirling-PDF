@@ -19,7 +19,8 @@ import stirling.software.proprietary.model.ToolChainStatId;
  * take the top N workflows without loading the table.
  */
 @Repository
-public interface ToolChainStatRepository extends JpaRepository<ToolChainStat, ToolChainStatId> {
+public interface ToolChainStatRepository
+        extends JpaRepository<ToolChainStat, ToolChainStatId>, ToolChainStatRepositoryCustom {
 
     String SELECT_TOP =
             "SELECT c.chainKey, MAX(c.chainLength), SUM(c.count) FROM ToolChainStat c WHERE ";
@@ -63,25 +64,6 @@ public interface ToolChainStatRepository extends JpaRepository<ToolChainStat, To
             @Param("principal") String principal,
             @Param("chainKey") String chainKey,
             @Param("epochDay") long epochDay,
-            @Param("delta") long delta);
-
-    /**
-     * Native insert so a concurrent first-run-of-day loses the primary key race instead of silently
-     * overwriting the winner - {@code save()} would merge, resetting their count.
-     */
-    @Modifying(clearAutomatically = true)
-    @Transactional
-    @Query(
-            value =
-                    "INSERT INTO tool_chain_stats (principal, chain_key, epoch_day, chain_length,"
-                            + " count) VALUES (:principal, :chainKey, :epochDay, :chainLength,"
-                            + " :delta)",
-            nativeQuery = true)
-    void insertCount(
-            @Param("principal") String principal,
-            @Param("chainKey") String chainKey,
-            @Param("epochDay") long epochDay,
-            @Param("chainLength") int chainLength,
             @Param("delta") long delta);
 
     @Modifying(clearAutomatically = true)
