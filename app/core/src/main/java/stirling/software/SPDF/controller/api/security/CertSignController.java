@@ -150,10 +150,11 @@ public class CertSignController {
             signature.setReason(reason);
             signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
             if (Boolean.TRUE.equals(showSignature)) {
+                int pageIndex = resolveSignaturePage(pageNumber, doc.getNumberOfPages());
                 try (SignatureOptions signatureOptions = new SignatureOptions()) {
                     signatureOptions.setVisualSignature(
-                            instance.createVisibleSignature(doc, signature, pageNumber, showLogo));
-                    signatureOptions.setPage(pageNumber);
+                            instance.createVisibleSignature(doc, signature, pageIndex, showLogo));
+                    signatureOptions.setPage(pageIndex);
 
                     doc.addSignature(signature, instance, signatureOptions);
                     doc.saveIncremental(output);
@@ -162,10 +163,22 @@ public class CertSignController {
                 doc.addSignature(signature, instance);
                 doc.saveIncremental(output);
             }
-        } catch (IOException | RuntimeException e) {
-            ExceptionUtils.logException("PDF signing", e);
-            throw e;
         }
+    }
+
+    // pageNumber is 0-based here and null means the first page, as the UI shows it.
+    private static int resolveSignaturePage(Integer pageNumber, int pageCount) {
+        int pageIndex = pageNumber == null ? 0 : pageNumber;
+        if (pageIndex < 0 || pageIndex >= pageCount) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "pageNumber "
+                            + (pageIndex + 1)
+                            + " - the visible signature needs a page from 1 to "
+                            + pageCount);
+        }
+        return pageIndex;
     }
 
     @AutoJobPostMapping(
@@ -178,11 +191,19 @@ public class CertSignController {
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Sign PDF with a Digital Certificate",
+            summary =
+                    "Digitally sign a PDF; certType SERVER uses the server's own certificate. Run"
+                            + " last: later edits invalidate it",
             description =
-                    "This endpoint accepts a PDF file, a digital certificate and related"
-                            + " information to sign the PDF. It then returns the digitally signed PDF"
-                            + " file.")
+                    "Adds a digital signature to the PDF and returns the signed file. certType"
+                            + " SERVER signs with this server's own certificate, so no file or"
+                            + " password is needed, and the signer shown is the server's"
+                            + " organisation rather than the user. PEM, PKCS12/PFX and JKS sign"
+                            + " with an uploaded certificate and key; WINDOWS_STORE and PKCS11 work"
+                            + " only in the desktop app. Make signing the last change to the file:"
+                            + " any later edit (compress, watermark, add a password, flatten and"
+                            + " so on) invalidates the signature. Set showSignature to add a"
+                            + " visible signature box on pageNumber.")
     public ResponseEntity<Resource> signPDFWithCert(
             @ModelAttribute SignPDFWithCertRequest request, HttpServletRequest httpRequest)
             throws Exception {
@@ -209,7 +230,8 @@ public class CertSignController {
         }
 
         KeyStore ks = null;
-        String keystorePassword = password;
+        // Unencrypted keys and password-less keystores arrive with no password: use an empty one.
+        String keystorePassword = password != null ? password : "";
         Provider signingProvider = null;
         HardwareKeyStoreService.Pkcs11Session pkcs11Session = null;
 
@@ -223,8 +245,6 @@ public class CertSignController {
                                 certFile, "PEM certificate", "certificate file is required");
                 ks = KeyStore.getInstance("JKS");
                 ks.load(null);
-                // An unencrypted key needs no password, but the JKS entry still needs one.
-                keystorePassword = password != null ? password : "";
                 PrivateKey privateKey =
                         getPrivateKeyFromPEM(privateKeyFile.getBytes(), keystorePassword);
                 Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
@@ -240,14 +260,14 @@ public class CertSignController {
                         validateFilePresent(
                                 p12File, "PKCS12 keystore", "PKCS12/PFX keystore file is required");
                 ks = KeyStore.getInstance("PKCS12");
-                ks.load(p12File.getInputStream(), password.toCharArray());
+                loadKeyStore(ks, p12File, keystorePassword, "PKCS12 keystore");
                 break;
             case "JKS":
                 jksfile =
                         validateFilePresent(
                                 jksfile, "JKS keystore", "JKS keystore file is required");
                 ks = KeyStore.getInstance("JKS");
-                ks.load(jksfile.getInputStream(), password.toCharArray());
+                loadKeyStore(ks, jksfile, keystorePassword, "JKS keystore");
                 break;
             case "SERVER":
                 if (serverCertificateService == null) {
@@ -315,7 +335,7 @@ public class CertSignController {
                     location,
                     reason,
                     showLogo);
-        } catch (Exception e) {
+        } catch (IOException | RuntimeException e) {
             signedOut.close();
             throw e;
         } finally {
@@ -343,6 +363,29 @@ public class CertSignController {
         return file;
     }
 
+    // A wrong password surfaces as an IOException caused by UnrecoverableKeyException.
+    private static void loadKeyStore(KeyStore ks, MultipartFile file, String password, String label)
+            throws IOException, NoSuchAlgorithmException, CertificateException {
+        try (InputStream in = file.getInputStream()) {
+            ks.load(in, password.toCharArray());
+        } catch (IOException e) {
+            if (e.getCause() instanceof UnrecoverableKeyException) {
+                throw wrongPassword(label);
+            }
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    label + " - the file could not be read as a " + label);
+        }
+    }
+
+    private static IllegalArgumentException wrongPassword(String label) {
+        return ExceptionUtils.createIllegalArgumentException(
+                "error.invalidArgument",
+                "Invalid argument: {0}",
+                "password - the " + label + " password is incorrect or missing");
+    }
+
     private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
             throws IOException, OperatorCreationException, PKCSException {
         try (PEMParser pemParser =
@@ -352,24 +395,44 @@ public class CertSignController {
             PrivateKeyInfo pkInfo;
             if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo pkcs8EncryptedPrivateKeyInfo) {
                 InputDecryptorProvider decProv =
-                        new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
-                pkInfo = pkcs8EncryptedPrivateKeyInfo.decryptPrivateKeyInfo(decProv);
+                        new JceOpenSSLPKCS8DecryptorProviderBuilder()
+                                .build(requirePemPassword(password));
+                try {
+                    pkInfo = pkcs8EncryptedPrivateKeyInfo.decryptPrivateKeyInfo(decProv);
+                } catch (PKCSException e) {
+                    throw wrongPassword("PEM private key");
+                }
             } else if (pemObject instanceof PEMEncryptedKeyPair pemEncryptedKeyPair) {
                 PEMDecryptorProvider decProv =
-                        new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
-                pkInfo = pemEncryptedKeyPair.decryptKeyPair(decProv).getPrivateKeyInfo();
+                        new JcePEMDecryptorProviderBuilder().build(requirePemPassword(password));
+                try {
+                    pkInfo = pemEncryptedKeyPair.decryptKeyPair(decProv).getPrivateKeyInfo();
+                } catch (IOException e) {
+                    throw wrongPassword("PEM private key");
+                }
             } else if (pemObject instanceof PEMKeyPair pemKeyPair) {
                 pkInfo = pemKeyPair.getPrivateKeyInfo();
             } else if (pemObject instanceof PrivateKeyInfo privateKeyInfo) {
+                // Unencrypted PKCS#8 ("BEGIN PRIVATE KEY"), the usual openssl output.
                 pkInfo = privateKeyInfo;
             } else {
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.invalidArgument",
                         "Invalid argument: {0}",
-                        "PEM private key - file does not contain a private key");
+                        "PEM private key - no private key found in the file");
             }
             return converter.getPrivateKey(pkInfo);
         }
+    }
+
+    private static char[] requirePemPassword(String password) {
+        if (password == null || password.isEmpty()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "PEM private key - the key is encrypted, so its password is required");
+        }
+        return password.toCharArray();
     }
 
     private Certificate getCertificateFromPEM(byte[] pemBytes)
@@ -494,7 +557,7 @@ public class CertSignController {
                     renderText(cs, doc, fontCache, fontSize, "Signed by " + name);
                     cs.newLine();
                     renderText(cs, doc, fontCache, fontSize, date);
-                    if (reason != null && !reason.isEmpty()) {
+                    if (StringUtils.isNotBlank(reason)) {
                         cs.newLine();
                         renderText(cs, doc, fontCache, fontSize, reason);
                     }
