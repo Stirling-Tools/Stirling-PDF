@@ -154,18 +154,26 @@ describe("reading the structure tree", () => {
   test("lists each element with its type, description and MCIDs", async () => {
     const doc = await openSample();
     const elements = readPageStructure(doc.module, doc.page(0).pagePtr);
-    const element = (type: string, alt: string | null, mcids: number[]) => ({
+    const element = (
+      type: string,
+      alt: string | null,
+      mcids: number[],
+      key: string,
+    ) => ({
+      role: type,
       type,
       alt,
       actualText: null,
       mcids,
       onlyMarkedContent: false,
+      key,
+      block: { key, role: type, type },
     });
     expect(elements).toEqual([
-      element("Document", null, []),
-      element("H1", null, [0]),
-      element("P", null, [1]),
-      element("Figure", FIGURE_ALT, [2]),
+      element("Document", null, [], "0"),
+      element("H1", null, [0], "1"),
+      element("P", null, [1], "2"),
+      element("Figure", FIGURE_ALT, [2], "3"),
     ]);
   });
 
@@ -253,20 +261,31 @@ function spanningPdf(slot0 = "8 0 R"): Uint8Array {
 
 describe("reading tags from the file's ParentTree", () => {
   test("gives each page's MCIDs to the element its ParentTree names", async () => {
-    const structure = (await readFileStructure(spanningPdf()))!;
-    const element = (type: string, alt: string | null, mcids: number[]) => ({
+    const structure = (await readFileStructure(spanningPdf()))!.pages;
+    const element = (
+      type: string,
+      alt: string | null,
+      mcids: number[],
+      num: number,
+    ) => ({
+      role: type,
       type,
       alt,
       actualText: null,
       mcids,
       onlyMarkedContent: true,
+      key: String(num),
+      block: { key: String(num), role: type, type },
     });
     expect(structure.get(0)).toEqual({
-      elements: [element("Figure", "Chart", [0]), element("P", null, [5])],
+      elements: [
+        element("Figure", "Chart", [0], 8),
+        element("P", null, [5], 9),
+      ],
       slotCount: 6,
     });
     expect(structure.get(1)).toEqual({
-      elements: [element("P", null, [0])],
+      elements: [element("P", null, [0], 9)],
       slotCount: 1,
     });
   });
@@ -637,11 +656,14 @@ describe("images drawn by a form XObject", () => {
 
 describe("PageStructure", () => {
   const figure = {
-    type: "Figure",
+    role: "Figure",
+    type: "Figure" as const,
     alt: "old",
     actualText: null,
     mcids: [3, 4],
     onlyMarkedContent: true,
+    key: "figure",
+    block: { key: "figure", role: "Figure", type: "Figure" as const },
   };
 
   test("holds one edit per element, whichever of its MCIDs addressed it", () => {
@@ -912,42 +934,51 @@ describe("saving a description", () => {
 
 describe("PageStructure: added figures", () => {
   const paragraph = {
-    type: "P",
+    role: "P",
+    type: "P" as const,
     alt: null,
     actualText: null,
     mcids: [3],
     onlyMarkedContent: true,
+    key: "paragraph",
+    block: { key: "paragraph", role: "P", type: "P" as const },
   };
 
-  test("takes an MCID above every slot, added figure and marked content", () => {
+  test("takes an MCID above every slot, added element and marked content", () => {
     const s = new PageStructure([paragraph], null, 5);
     expect(s.freeMcid(2)).toBe(5);
     expect(s.freeMcid(7)).toBe(8);
-    s.addFigure(5);
+    s.addElement(5, "Figure");
     expect(s.freeMcid(2)).toBe(6);
   });
 
-  test("lists added figures apart from edits to the file's elements", () => {
-    const s = new PageStructure([{ ...paragraph, type: "Figure" }], null, 5);
-    s.addFigure(5);
+  test("lists added elements apart from edits to the file's elements", () => {
+    const s = new PageStructure(
+      [{ ...paragraph, role: "Figure", type: "Figure" }],
+      null,
+      5,
+    );
+    s.addElement(5, "Figure");
     s.setAlt(5, "Logo");
     s.setAlt(3, "Chart");
     expect(s.pendingEdits()).toEqual([
       { mcid: 3, alt: "Chart", decorative: false },
     ]);
-    expect(s.addedFigures()).toEqual([{ mcid: 5, alt: "Logo" }]);
+    expect(s.addedElements()).toEqual([
+      { mcid: 5, type: "Figure", alt: "Logo" },
+    ]);
     expect(() => s.setDecorative(5, true)).toThrow();
-    s.removeFigure(5);
-    expect(s.addedFigures()).toEqual([]);
+    s.removeElement(5);
+    expect(s.addedElements()).toEqual([]);
     expect(s.element(5)).toBeNull();
   });
 
   test("adds none where the page has no ParentTree array or is read-only", () => {
     expect(
-      new PageStructure([paragraph], null, 5).cannotAddFigure(),
+      new PageStructure([paragraph], null, 5).cannotAddElement(),
     ).toBeNull();
-    expect(new PageStructure([]).cannotAddFigure()).toBe("untagged");
-    expect(new PageStructure([], "encrypted", 5).cannotAddFigure()).toBe(
+    expect(new PageStructure([]).cannotAddElement()).toBe("untagged");
+    expect(new PageStructure([], "encrypted", 5).cannotAddElement()).toBe(
       "encrypted",
     );
   });
@@ -1029,7 +1060,7 @@ describe("TagImageCommand", () => {
     );
     history.undo(doc);
     expect(image.mcid).toBeNull();
-    expect(doc.structure(0).addedFigures()).toEqual([]);
+    expect(doc.structure(0).addedElements()).toEqual([]);
   });
 
   test("un-decorates an artifact, restoring the mark on undo", async () => {
@@ -1056,11 +1087,11 @@ describe("TagImageCommand", () => {
     history.execute(tagImage(image, "figure", "A logo"), doc);
     history.execute(tagImage(image, "artifact"), doc);
     expect(marks(doc, image)).toEqual([{ name: "Artifact", mcid: null }]);
-    expect(doc.structure(0).addedFigures()).toEqual([]);
+    expect(doc.structure(0).addedElements()).toEqual([]);
 
     history.undo(doc);
-    expect(doc.structure(0).addedFigures()).toEqual([
-      { mcid: 1, alt: "A logo" },
+    expect(doc.structure(0).addedElements()).toEqual([
+      { mcid: 1, type: "Figure", alt: "A logo" },
     ]);
   });
 
