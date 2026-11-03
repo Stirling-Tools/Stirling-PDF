@@ -786,4 +786,87 @@ test.describe("PDF text editor - tables", () => {
       page.locator('[data-testid^="pdf-editor-recognized-table-select-"]'),
     ).toHaveCount(1);
   });
+  test("reproduces issue #8678 on the reporter-style six-column table", async ({ page }) => {
+    test.setTimeout(180_000);
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page
+      .locator('[data-testid="pdf-editor-file-input"]')
+      .setInputFiles(
+        path.join(
+          import.meta.dirname,
+          "../test-fixtures/issue-8678-row-deletion-sample.pdf",
+        ),
+      );
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForFunction(
+      () =>
+        (
+          window as unknown as { __editor_store: EditorStore }
+        ).__editor_store.getState().firstPageRendered,
+      undefined,
+      { timeout: 30_000 },
+    );
+
+    const editTable = page
+      .locator('[data-testid^="pdf-editor-recognized-table-edit-"]')
+      .first();
+    await expect(editTable).toBeVisible({ timeout: 15_000 });
+    await editTable.click();
+
+    const readTable = () =>
+      page.evaluate(() => {
+        const store = (
+          window as unknown as { __editor_store: EditorStore }
+        ).__editor_store;
+        const documentPage = store.document?.page(0);
+        const table = documentPage?.tables[0];
+        if (!documentPage || !table) throw new Error("Table adoption failed");
+        const snapshot = table.snapshot();
+        const rowTexts = Array.from({ length: table.rows }, (_, row) =>
+          snapshot.cells
+            .filter((cell) => cell.row === row)
+            .flatMap((cell) =>
+              cell.runIds.map(
+                (id) =>
+                  documentPage.runs.find((run) => run.id === id)?.text ?? "",
+              ),
+            )
+            .join(" "),
+        );
+        return { id: table.id, rows: table.rows, cols: table.cols, rowTexts };
+      });
+
+    const before = await readTable();
+    expect(before.cols).toBe(6);
+    const targetRow = before.rowTexts.findIndex((text) => text.includes("14:00"));
+    expect(targetRow).toBeGreaterThan(0);
+    expect(before.rowTexts.at(-1)).toContain("30,00");
+    expect(before.rowTexts.at(-1)).toContain("53,00");
+
+    // The issue sample has repeated colored bands; select the row containing
+    // 14:00 rather than relying on a hard-coded final-track deletion.
+    await page
+      .getByTestId(
+        `pdf-editor-table-row-handle-${before.id}-${targetRow + 1}`,
+      )
+      .click();
+    await page
+      .getByTestId(`pdf-editor-table-del-row-${before.id}`)
+      .click();
+
+    await expect
+      .poll(async () => (await readTable()).rows)
+      .toBe(before.rows - 1);
+    const after = await readTable();
+    expect(after.rowTexts.join(" ")).not.toContain("14:00");
+    expect(after.rowTexts.at(-1)).toContain("30,00");
+    expect(after.rowTexts.at(-1)).toContain("53,00");
+    expect(after.rowTexts.at(-1)).toContain("-390,00");
+  });
+
 });
