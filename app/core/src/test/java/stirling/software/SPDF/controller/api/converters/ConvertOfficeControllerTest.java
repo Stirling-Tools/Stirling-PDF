@@ -640,4 +640,140 @@ class ConvertOfficeControllerTest {
             org.apache.commons.io.FileUtils.deleteDirectory(producedPdf.getParentFile());
         }
     }
+
+    @Nested
+    @DisplayName("Legacy binary Office routing")
+    class LegacyBinary {
+
+        private static final byte[] OLE2 = {
+            (byte) 0xD0,
+            (byte) 0xCF,
+            0x11,
+            (byte) 0xE0,
+            (byte) 0xA1,
+            (byte) 0xB1,
+            0x1A,
+            (byte) 0xE1,
+            0,
+            0,
+            0,
+            0
+        };
+        private static final byte[] OOXML = {'P', 'K', 0x03, 0x04, 0, 0, 0, 0};
+
+        private MockMultipartFile docFile(byte[] content) {
+            return new MockMultipartFile("fileInput", "report.doc", "application/msword", content);
+        }
+
+        private File runLibreOffice(MockedStatic<ProcessExecutor> pe, MockMultipartFile file)
+                throws Exception {
+            ProcessExecutorResult result = mockExecutor(pe, 0);
+            ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
+            when(executor.runCommandWithOutputHandling(any()))
+                    .thenAnswer(
+                            inv -> {
+                                List<String> command = inv.getArgument(0);
+                                Path out = Path.of(command.getLast()).resolveSibling("report.pdf");
+                                Files.writeString(out, "%PDF soffice");
+                                return result;
+                            });
+            return controller.convertToPdf(file, true);
+        }
+
+        @Test
+        @DisplayName("an OLE2 .doc goes to LibreOffice even when in-process is selected")
+        void ole2GoesToLibreOffice() throws Exception {
+            when(officeToPdfService.handles("doc", true)).thenReturn(true);
+            when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
+
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                File pdf = runLibreOffice(pe, docFile(OLE2));
+
+                assertThat(Files.readString(pdf.toPath())).isEqualTo("%PDF soffice");
+                Mockito.verify(officeToPdfService, Mockito.never())
+                        .convert(any(Path.class), any(Path.class));
+                deleteWorkdir(pdf);
+            }
+        }
+
+        @Test
+        @DisplayName("a renamed OLE2 file is routed by signature and skips the ZIP sanitizer")
+        void ole2RoutedBySignature() throws Exception {
+            when(officeToPdfService.handles("xlsx", true)).thenReturn(true);
+            when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
+            // The .xlsx name would otherwise select the ZIP sanitizer, which cannot read OLE2.
+            when(officeDocumentSanitizer.isSanitizableExtension("xlsx")).thenReturn(true);
+            MockMultipartFile renamed =
+                    new MockMultipartFile("fileInput", "book.xlsx", "application/msword", OLE2);
+
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                ProcessExecutorResult result = mockExecutor(pe, 0);
+                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
+                when(executor.runCommandWithOutputHandling(any()))
+                        .thenAnswer(
+                                inv -> {
+                                    Path out =
+                                            Path.of(((List<String>) inv.getArgument(0)).getLast())
+                                                    .resolveSibling("book.pdf");
+                                    assertThat(Files.readAllBytes(out.resolveSibling("book.xlsx")))
+                                            .isEqualTo(OLE2);
+                                    Files.writeString(out, "%PDF soffice");
+                                    return result;
+                                });
+
+                File pdf = controller.convertToPdf(renamed, true);
+
+                assertThat(Files.readString(pdf.toPath())).isEqualTo("%PDF soffice");
+                Mockito.verify(officeToPdfService, Mockito.never())
+                        .convert(any(Path.class), any(Path.class));
+                Mockito.verify(officeDocumentSanitizer, Mockito.never())
+                        .sanitize(any(byte[].class), anyString());
+                deleteWorkdir(pdf);
+            }
+        }
+
+        @Test
+        @DisplayName("an OOXML upload still converts in process")
+        void ooxmlStaysInProcess() throws Exception {
+            when(officeToPdfService.handles("doc", true)).thenReturn(true);
+            when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
+            Mockito.doAnswer(
+                            inv -> {
+                                Files.writeString(inv.getArgument(1), "%PDF in process");
+                                return null;
+                            })
+                    .when(officeToPdfService)
+                    .convert(any(Path.class), any(Path.class));
+
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                File pdf = controller.convertToPdf(docFile(OOXML), true);
+
+                assertThat(Files.readString(pdf.toPath())).isEqualTo("%PDF in process");
+                pe.verifyNoInteractions();
+                deleteWorkdir(pdf);
+            }
+        }
+
+        @Test
+        @DisplayName("without LibreOffice an OLE2 file still uses the in-process converter")
+        void ole2UsesInProcessWithoutLibreOffice() throws Exception {
+            when(officeToPdfService.handles("doc", true)).thenReturn(true);
+            when(officeConversionService.libreOfficeAvailable()).thenReturn(false);
+            Mockito.doAnswer(
+                            inv -> {
+                                Files.writeString(inv.getArgument(1), "%PDF in process");
+                                return null;
+                            })
+                    .when(officeToPdfService)
+                    .convert(any(Path.class), any(Path.class));
+
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                File pdf = controller.convertToPdf(docFile(OLE2), true);
+
+                assertThat(Files.readString(pdf.toPath())).isEqualTo("%PDF in process");
+                pe.verifyNoInteractions();
+                deleteWorkdir(pdf);
+            }
+        }
+    }
 }

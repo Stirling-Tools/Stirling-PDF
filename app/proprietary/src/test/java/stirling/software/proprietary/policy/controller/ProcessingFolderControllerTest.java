@@ -199,7 +199,7 @@ class ProcessingFolderControllerTest {
                         sourceStore,
                         assetStore,
                         toolChainValidator,
-                        new ApplicationProperties());
+                        properties);
         controller =
                 new ProcessingFolderController(
                         policyStore,
