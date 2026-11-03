@@ -56,6 +56,14 @@ describe("languageOptions", () => {
     expect(tagsOf(others)).not.toContain("en-IE");
   });
 
+  it("offers nothing extra for a language's name typed in place of its code", () => {
+    for (const typed of ["French", "Fren", "x-klingon"]) {
+      expect(languageOptions(null, "en", typed).others).toHaveLength(
+        OFFERED_LANGUAGE_TAGS.length,
+      );
+    }
+  });
+
   it("offers nothing extra for text that is not a tag", () => {
     const { inUse, others } = languageOptions(null, "en", "not a language");
     expect(inUse).toEqual([]);
@@ -134,7 +142,7 @@ function renderPicker(
         <LanguagePicker
           own={null}
           inherited={null}
-          placeholder="Not set"
+          placeholder="Select language"
           onChange={onChange}
           label="Language"
           testId="picker"

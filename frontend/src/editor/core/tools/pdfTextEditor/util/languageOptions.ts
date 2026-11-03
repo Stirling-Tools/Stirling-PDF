@@ -74,8 +74,8 @@ export interface LanguageOptions {
 /**
  * The offered languages, split into those the document uses and the rest,
  * plus `current`, the file's own tag, and the tag `typed` names when either
- * is one the list lacks: any well-formed tag can be picked, not only those
- * listed. Tags are compared in canonical form, so the options hold
+ * is one the list lacks, so a language the list lacks can still be picked by
+ * its code. Tags are compared in canonical form, so the options hold
  * `comparableLanguageTag(current)`, not `current`.
  */
 export function languageOptions(
@@ -90,7 +90,7 @@ export function languageOptions(
     ...used,
     ...[
       current === null ? null : comparableLanguageTag(current),
-      canonicalLanguageTag(searchedCode(typed)),
+      typedLanguageTag(typed),
     ].filter((tag): tag is string => tag !== null),
   ]);
   const sorted = (keep: (tag: string) => boolean) =>
@@ -134,6 +134,16 @@ export const filterLanguages: OptionsFilter = ({ options, search }) => {
 function searchedCode(search: string): string {
   const labelled = /\(([^()]*)\)\s*([^\s()]*)$/.exec(search.trim());
   return labelled ? labelled[1] + labelled[2] : search.trim();
+}
+
+// A primary language subtag of 5-8 letters is reserved for registration
+// (RFC 5646 2.2.1) and none is registered, so "French" is well-formed but
+// names no language. Typed codes must be ISO 639's 2 or 3 letters.
+const TYPED_LANGUAGE_CODE = /^[a-z]{2,3}(?:-|$)/i;
+
+function typedLanguageTag(typed: string): string | null {
+  const code = searchedCode(typed);
+  return TYPED_LANGUAGE_CODE.test(code) ? canonicalLanguageTag(code) : null;
 }
 
 function optionLabel(tag: string, uiLang: string): string {

@@ -117,7 +117,10 @@ function DocumentLanguageField({
         <LanguagePicker
           own={control.language}
           inherited={null}
-          placeholder={t("pdfTextEditor.inspector.language.unknown", "Not set")}
+          placeholder={t(
+            "pdfTextEditor.inspector.language.placeholder",
+            "Select language",
+          )}
           onChange={control.onSet}
           label={label}
           testId="pdf-editor-document-language-picker"

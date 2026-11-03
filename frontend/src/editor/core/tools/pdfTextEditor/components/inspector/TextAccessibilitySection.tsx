@@ -111,7 +111,10 @@ function TextLanguageField({ control }: { control: TextLanguageControl }) {
         inherited={language?.inherited ?? null}
         placeholder={
           language
-            ? t("pdfTextEditor.inspector.language.unknown", "Not set")
+            ? t(
+                "pdfTextEditor.inspector.language.placeholder",
+                "Select language",
+              )
             : t("pdfTextEditor.inspector.language.mixed", "Mixed")
         }
         onChange={control.onSet}
@@ -240,7 +243,10 @@ function InnerTagControls({
       <LanguagePicker
         own={innerTag.language.own}
         inherited={innerTag.language.inherited}
-        placeholder={t("pdfTextEditor.inspector.language.unknown", "Not set")}
+        placeholder={t(
+          "pdfTextEditor.inspector.language.placeholder",
+          "Select language",
+        )}
         onChange={onSetLanguage}
         label={t(
           "pdfTextEditor.inspector.language.innerLabel",
@@ -297,8 +303,8 @@ function NewLanguagePicker({ inner }: { inner: InnerTagsControl }) {
         own={null}
         inherited={null}
         placeholder={t(
-          "pdfTextEditor.inspector.language.setForSelection",
-          "Set a language",
+          "pdfTextEditor.inspector.language.placeholder",
+          "Select language",
         )}
         onChange={(lang) => {
           if (lang) onPick(lang);

@@ -101,7 +101,10 @@ describe("DocumentInspector language", () => {
     renderInspector(null, vi.fn(), control);
     expect(screen.getByTestId(MISSING)).toBeVisible();
     expect(picker()).toHaveValue("");
-    expect(picker()).toHaveAttribute("placeholder", `${LANGUAGE_KEY}.unknown`);
+    expect(picker()).toHaveAttribute(
+      "placeholder",
+      `${LANGUAGE_KEY}.placeholder`,
+    );
     fireEvent.click(picker());
     const options = document.getElementById(
       picker().getAttribute("aria-controls")!,
