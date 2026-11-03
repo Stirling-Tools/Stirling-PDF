@@ -48,9 +48,9 @@ export interface TrackPageTileProps {
   ) => void;
   /** Opens the track's page-view modal starting at this page. */
   onViewPage: (pageId: string) => void;
-  onRotate: (pageIds: string[], delta: number) => void;
+  onRotatePage: (pageId: string, delta: number) => void;
   onDeletePage: (pageId: string) => void;
-  onDuplicate: (pageIds: string[]) => void;
+  onDuplicatePage: (pageId: string) => void;
   /** Swaps the page with its neighbour: -1 left, 1 right. */
   onShift: (pageId: string, by: -1 | 1) => void;
 }
@@ -109,9 +109,9 @@ function TrackPageTileImpl({
   thumbnails,
   onSelect,
   onViewPage,
-  onRotate,
+  onRotatePage,
   onDeletePage,
-  onDuplicate,
+  onDuplicatePage,
   onShift,
 }: TrackPageTileProps) {
   const { t } = useTranslation();
@@ -165,7 +165,7 @@ function TrackPageTileImpl({
         label: t("pageTracks.rotateLeft", "Rotate left"),
         onClick: (event) => {
           event.stopPropagation();
-          onRotate([page.id], -90);
+          onRotatePage(page.id, -90);
         },
       },
       {
@@ -174,7 +174,7 @@ function TrackPageTileImpl({
         label: t("pageTracks.rotateRight", "Rotate right"),
         onClick: (event) => {
           event.stopPropagation();
-          onRotate([page.id], 90);
+          onRotatePage(page.id, 90);
         },
       },
       {
@@ -183,7 +183,7 @@ function TrackPageTileImpl({
         label: t("pageTracks.duplicate.page", "Duplicate page"),
         onClick: (event) => {
           event.stopPropagation();
-          onDuplicate([page.id]);
+          onDuplicatePage(page.id);
         },
       },
       {
@@ -203,9 +203,9 @@ function TrackPageTileImpl({
     [
       t,
       onViewPage,
-      onRotate,
+      onRotatePage,
       onDeletePage,
-      onDuplicate,
+      onDuplicatePage,
       page.id,
       selected,
       hasMultiSelection,

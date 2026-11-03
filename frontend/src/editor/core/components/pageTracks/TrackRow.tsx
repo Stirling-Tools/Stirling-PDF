@@ -378,12 +378,24 @@ function TrackRowImpl({
     [onSelectTrack, track.fileId],
   );
 
-  // The tile's trash button deletes the whole selection when that tile is part
-  // of it; otherwise it deletes only the page it was pressed on. Read through a
-  // ref so the handler identity survives selection changes, leaving the
-  // memoised tiles to re-render only for their own state.
+  // Tile actions read the committed selection through a ref so their identity
+  // survives selection changes, leaving the memoised tiles to re-render only
+  // for their own state. Layout effect, not a render write: React may abandon a
+  // render, and the handler must never see a selection that never committed.
   const selectedIdsRef = useRef(selectedIds);
-  selectedIdsRef.current = selectedIds;
+  useLayoutEffect(() => {
+    selectedIdsRef.current = selectedIds;
+  }, [selectedIds]);
+  const handleRotatePage = useCallback(
+    (pageId: string, delta: number) =>
+      onRotate(selectionPageIds(pageId, selectedIdsRef.current), delta),
+    [onRotate],
+  );
+  const handleDuplicatePage = useCallback(
+    (pageId: string) =>
+      onDuplicate(selectionPageIds(pageId, selectedIdsRef.current)),
+    [onDuplicate],
+  );
   const handleDeletePage = useCallback(
     (pageId: string) =>
       onDelete(selectionPageIds(pageId, selectedIdsRef.current)),
@@ -587,9 +599,9 @@ function TrackRowImpl({
                         thumbnails={thumbnails}
                         onSelect={onSelectPage}
                         onViewPage={handleViewPage}
-                        onRotate={onRotate}
+                        onRotatePage={handleRotatePage}
                         onDeletePage={handleDeletePage}
-                        onDuplicate={onDuplicate}
+                        onDuplicatePage={handleDuplicatePage}
                         onShift={onShiftPage}
                       />
                       <GapHandle
@@ -657,9 +669,9 @@ function TrackRowImpl({
                         thumbnails={thumbnails}
                         onSelect={onSelectPage}
                         onViewPage={handleViewPage}
-                        onRotate={onRotate}
+                        onRotatePage={handleRotatePage}
                         onDeletePage={handleDeletePage}
-                        onDuplicate={onDuplicate}
+                        onDuplicatePage={handleDuplicatePage}
                         onShift={onShiftPage}
                       />
                       <GapHandle
