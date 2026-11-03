@@ -109,6 +109,55 @@ function untaggedPdf(): Uint8Array {
   );
 }
 
+function nestedLanguagePdf(): Uint8Array {
+  return buildClassicPdf(
+    [
+      {
+        num: 1,
+        body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> /Lang (en) >>",
+      },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+      {
+        num: 3,
+        body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /StructParents 0 /Resources << /Font << /F1 5 0 R >> >> >>",
+      },
+      {
+        num: 4,
+        body: streamBody(
+          "",
+          "/Span <</MCID 0>> BDC BT /F1 12 Tf 72 700 Td (Inner text) Tj ET EMC\n/Span <</MCID 1>> BDC BT /F1 12 Tf 72 680 Td (Parent text) Tj ET EMC\n/P <</MCID 2>> BDC BT /F1 12 Tf 72 660 Td (Block text) Tj ET EMC",
+        ),
+      },
+      {
+        num: 5,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      {
+        num: 6,
+        body: "<< /Type /StructTreeRoot /K 7 0 R /ParentTree 11 0 R /ParentTreeNextKey 1 >>",
+      },
+      {
+        num: 7,
+        body: "<< /Type /StructElem /S /Document /P 6 0 R /K 8 0 R >>",
+      },
+      {
+        num: 8,
+        body: "<< /Type /StructElem /S /P /P 7 0 R /Pg 3 0 R /K [2 9 0 R] >>",
+      },
+      {
+        num: 9,
+        body: "<< /Type /StructElem /S /Span /P 8 0 R /Pg 3 0 R /K [1 10 0 R] /Lang (fr) >>",
+      },
+      {
+        num: 10,
+        body: "<< /Type /StructElem /S /Span /P 9 0 R /Pg 3 0 R /K 0 /Lang (de) >>",
+      },
+      { num: 11, body: "<< /Nums [0 [10 0 R 9 0 R 8 0 R]] >>" },
+    ],
+    1,
+  );
+}
+
 const opened: EditorDocument[] = [];
 
 async function open(bytes: Uint8Array, page = 0): Promise<EditorDocument> {
@@ -301,6 +350,84 @@ describe("text language", () => {
 });
 
 describe("part of a block's text", () => {
+  test("a nested Span inherits its nearest ancestor, including edits, save and undo", async () => {
+    const doc = await open(nestedLanguagePdf());
+    const history = new HistoryStack();
+    expect(doc.innerLanguage(0, 0, "10")).toEqual({
+      own: "de",
+      inherited: "fr",
+    });
+
+    history.execute(
+      new SetInnerLanguageCommand({ pageIndex: 0, key: "10", lang: null }),
+      doc,
+    );
+    expect(doc.innerLanguage(0, 0, "10")).toEqual({
+      own: null,
+      inherited: "fr",
+    });
+    expect((await savedLangs(doc)).get("10")).toMatchObject({
+      lang: null,
+      inheritedLang: "fr",
+    });
+    const reopened = await open(await savedBytes(doc));
+    expect(reopened.innerLanguage(0, 0, "10")).toEqual({
+      own: null,
+      inherited: "fr",
+    });
+    history.undo(doc);
+    expect(doc.innerLanguage(0, 0, "10")).toEqual({
+      own: "de",
+      inherited: "fr",
+    });
+
+    history.execute(
+      new SetInnerLanguageCommand({ pageIndex: 0, key: "9", lang: "es" }),
+      doc,
+    );
+    expect(doc.innerLanguage(0, 0, "10")).toEqual({
+      own: "de",
+      inherited: "es",
+    });
+    history.undo(doc);
+    expect(doc.innerLanguage(0, 0, "10")).toEqual({
+      own: "de",
+      inherited: "fr",
+    });
+
+    history.execute(
+      new SetInnerLanguageCommand({ pageIndex: 0, key: "9", lang: null }),
+      doc,
+    );
+    expect(doc.innerLanguage(0, 0, "10")).toEqual({
+      own: "de",
+      inherited: "en",
+    });
+    history.execute(
+      new SetTextLanguageCommand({
+        targets: [{ pageIndex: 0, mcid: 2 }],
+        lang: "it",
+      }),
+      doc,
+    );
+    expect(doc.innerLanguage(0, 0, "10")).toEqual({
+      own: "de",
+      inherited: "it",
+    });
+  });
+
+  test("an explicit catalog-language override still differs from its inline parent's language", async () => {
+    const doc = await open(nestedLanguagePdf());
+    new HistoryStack().execute(
+      new SetInnerLanguageCommand({ pageIndex: 0, key: "10", lang: "en" }),
+      doc,
+    );
+    expect(doc.innerLanguage(0, 0, "10")).toEqual({
+      own: "en",
+      inherited: "fr",
+    });
+  });
+
   test("reads the language a Span inside a paragraph has", async () => {
     const doc = await openSample();
     const run = runWith(doc, PAGE, "Umsatzerlöse").snapshot();
