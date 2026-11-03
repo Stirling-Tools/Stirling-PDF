@@ -12,7 +12,7 @@ on:
       - "app/proprietary/build.gradle"
       - "gradle/spotless.gradle"
       - "README.md"
-      - "frontend/editor/public/locales/*/translation.toml"
+      - "frontend/public/locales/*/translation.toml"
       - "app/core/src/main/resources/static/3rdPartyLicenses.json"
       - "scripts/ignore_translation.toml"
 
@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
 
@@ -53,7 +53,7 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Install uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           enable-cache: true
           cache-dependency-glob: |
@@ -66,10 +66,12 @@ jobs:
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        with:
+          version: 3.54.0
 
       - name: Sync translation TOML files
         run: |
-          uv run --project engine --locked --group tools python .github/scripts/check_language_toml.py sync --reference-file "frontend/editor/public/locales/en-US/translation.toml"
+          uv run --project engine --locked --group tools python .github/scripts/check_language_toml.py sync --reference-file "frontend/public/locales/en-US/translation.toml"
 
       - name: Sort translation TOML files
         run: |
@@ -77,7 +79,7 @@ jobs:
 
       - name: Commit translation files
         run: |
-          git add frontend/editor/public/locales/*/translation.toml
+          git add frontend/public/locales/*/translation.toml
           git diff --staged --quiet || git commit -m ":memo: Sync translation files (TOML)" || echo "No changes detected"
 
       - name: Sync README.md
@@ -107,7 +109,7 @@ jobs:
             This Pull Request was automatically generated to synchronize updates to translation files and documentation. Below are the details of the changes made:
 
             #### **1. Synchronization of Translation Files**
-            - Updated translation files (`frontend/editor/public/locales/*/translation.toml`) to reflect changes in the reference file `en-US/translation.toml`.
+            - Updated translation files (`frontend/public/locales/*/translation.toml`) to reflect changes in the reference file `en-US/translation.toml`.
             - Ensured consistency and synchronization across all supported language files.
             - Highlighted any missing or incomplete translations.
             - **Format**: TOML
@@ -132,5 +134,5 @@ jobs:
           sign-commits: true
           add-paths: |
             README.md
-            frontend/editor/public/locales/*/translation.toml
+            frontend/public/locales/*/translation.toml
             scripts/ignore_translation.toml

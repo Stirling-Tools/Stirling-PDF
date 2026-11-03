@@ -21,6 +21,7 @@ import threading
 import time
 import tomllib
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 from pathlib import Path
 
 from stale_translations import find_stale, git
@@ -95,6 +96,31 @@ def get_language_completion(locales_dir: Path, language: str) -> float | None:
         return None
 
 
+def find_error_line(output: str) -> str:
+    lines = [line.strip() for line in output.splitlines() if line.strip()]
+    if not lines:
+        return "Unknown error"
+    error_line = next((line for line in lines if "Error" in line), lines[-1])
+    return error_line[:300]
+
+
+def write_log(log_file: Path, cmd: list[str], stdout: str | bytes | None, stderr: str | bytes | None) -> str:
+    api_key = cmd[cmd.index("--api-key") + 1]
+
+    def as_text(stream: str | bytes | None) -> str:
+        if isinstance(stream, bytes):
+            stream = stream.decode("utf-8", errors="replace")
+        return (stream or "").replace(api_key, "***")
+
+    output = as_text(stdout) + as_text(stderr)
+    shown_cmd = " ".join("***" if part == api_key else part for part in cmd)
+    log_file.write_text(
+        f"$ {shown_cmd}\n\n--- stdout ---\n{as_text(stdout)}\n--- stderr ---\n{as_text(stderr)}",
+        encoding="utf-8",
+    )
+    return output
+
+
 def translate_language(
     language: str,
     api_key: str,
@@ -103,6 +129,7 @@ def translate_language(
     skip_verification: bool,
     include_existing: bool,
     model: str,
+    log_dir: Path,
     keys_file: Path | None = None,
     only_keys: bool = False,
 ) -> tuple[str, bool, str]:
@@ -137,6 +164,8 @@ def translate_language(
         if only_keys:
             cmd.append("--only-keys")
 
+    log_file = log_dir / f"{language}.log"
+
     try:
         result = subprocess.run(
             cmd,
@@ -144,6 +173,7 @@ def translate_language(
             text=True,
             timeout=timeout * 5,  # Overall timeout = 5x per-batch timeout
         )
+        output = write_log(log_file, cmd, result.stdout, result.stderr)
 
         if result.returncode == 0:
             # Check if nothing to translate
@@ -153,14 +183,13 @@ def translate_language(
             safe_print(f"[{language}] ✓ Success")
             return (language, True, "Success")
         else:
-            # Show the actual error (last line of output), not the header
-            output = result.stderr.strip() or result.stdout.strip() or "Unknown error"
-            error_msg = output.splitlines()[-1][:200]
-            safe_print(f"[{language}] ✗ Failed: {error_msg}")
+            error_msg = find_error_line(output)
+            safe_print(f"[{language}] ✗ Failed: {error_msg} (log: {log_file})")
             return (language, False, error_msg)
 
-    except subprocess.TimeoutExpired:
-        safe_print(f"[{language}] ✗ Timeout exceeded")
+    except subprocess.TimeoutExpired as e:
+        write_log(log_file, cmd, e.stdout, e.stderr)
+        safe_print(f"[{language}] ✗ Timeout exceeded (log: {log_file})")
         return (language, False, "Timeout exceeded")
     except Exception as e:
         safe_print(f"[{language}] ✗ Error: {str(e)}")
@@ -243,7 +272,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
     )
     parser.add_argument(
         "--locales-dir",
-        default="frontend/editor/public/locales",
+        default="frontend/public/locales",
         help="Path to locales directory",
     )
     parser.add_argument(
@@ -255,6 +284,12 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
         "--include-existing",
         action="store_true",
         help="Also retranslate existing keys that match English (default: only translate missing keys)",
+    )
+    parser.add_argument(
+        "--log-dir",
+        default="translation_logs",
+        help="Directory for each language's full pipeline output, one timestamped folder per run "
+        "(default: translation_logs)",
     )
     parser.add_argument(
         "--dry-run",
@@ -348,6 +383,11 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
 
     start_time = time.time()
 
+    log_root = Path(args.log_dir)
+    log_root.mkdir(parents=True, exist_ok=True)
+    log_dir = Path(tempfile.mkdtemp(prefix=datetime.now().strftime("%Y%m%d_%H%M%S_"), dir=log_root))
+    print(f"Logging each language's output to {log_dir}/\n")
+
     # Stale key lists are handed to auto_translate.py as files
     keys_dir = Path(tempfile.mkdtemp(prefix="stale_keys_"))
     keys_files: dict[str, Path] = {}
@@ -370,6 +410,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
                 args.skip_verification,
                 args.include_existing,
                 args.model,
+                log_dir,
                 keys_files.get(lang),
                 args.mode == "changed",
             ): lang
@@ -415,6 +456,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
         print(f"\n❌ Failed ({len(results['failed'])}):")
         for lang, msg in sorted(results["failed"]):
             print(f"  - {lang}: {msg}")
+            print(f"    log: {log_dir / f'{lang}.log'}")
         sys.exit(1)
 
     print("\n✅ Bulk translation completed successfully!")

@@ -1,0 +1,409 @@
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Badge, Tooltip } from "@mantine/core";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Icon } from "@editor/ui/Icon";
+import { FileId } from "@editor/types/file";
+import type { FolderId, FolderRecord } from "@editor/types/folder";
+import { StirlingFileStub } from "@editor/types/fileContext";
+import { formatFileSize, getFileDate } from "@editor/utils/fileUtils";
+import {
+  downloadFileFromStorage,
+  downloadMultipleFiles,
+} from "@editor/utils/downloadUtils";
+import ShareManagementModal from "@editor/components/shared/ShareManagementModal";
+import { useSharingEnabled } from "@editor/hooks/useSharingEnabled";
+import { fileStorage } from "@editor/services/fileStorage";
+import { readStubClassificationLabels } from "@editor/services/fileClassification";
+import { useLabelName } from "@editor/data/labelDisplay";
+import { useClassificationEnabled } from "@editor/hooks/useClassificationEnabled";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import {
+  VersionTimeline,
+  DetailField,
+} from "@editor/components/filesPage/VersionTimeline";
+import { FileDetailsActions } from "@editor/components/filesPage/FileDetailsActions";
+import { getFileOrigin } from "@editor/components/filesPage/fileOrigin";
+import "@editor/components/filesPage/FilesPage.css";
+
+interface FileDetailsPanelProps {
+  /** Picker hosts choose a version without exposing workspace or library mutations. */
+  onPickVersion?: (file: StirlingFileStub) => void;
+  selectedFileIds: FileId[];
+  fileMap: Map<FileId, StirlingFileStub>;
+  foldersById: ReadonlyMap<FolderId, FolderRecord>;
+  onClose: () => void;
+  onAddToWorkspace?: (fileIds: FileId[]) => void;
+  onMove?: (fileIds: FileId[]) => void;
+  onRemove?: (fileIds: FileId[]) => void;
+  /** Receives selected files without a server copy; omitting it hides Add to library. */
+  onSaveToServer?: (files: StirlingFileStub[]) => void;
+  /** Keeps Add to library visible but disabled, with this explanation as a tooltip. */
+  saveToServerDisabledReason?: string | null;
+  /** Replaces the inline version timeline with a button that invokes onOpenVersionHistory. */
+  compactVersions?: boolean;
+  onOpenVersionHistory?: () => void;
+}
+
+export function FileDetailsPanel({
+  onPickVersion,
+  selectedFileIds,
+  fileMap,
+  foldersById,
+  onClose,
+  onAddToWorkspace,
+  onMove,
+  onRemove,
+  onSaveToServer,
+  saveToServerDisabledReason,
+  compactVersions = false,
+  onOpenVersionHistory,
+}: FileDetailsPanelProps) {
+  const { t } = useTranslation();
+  const { sharingEnabled } = useSharingEnabled();
+  const files = useMemo(
+    () =>
+      selectedFileIds
+        .map((id) => fileMap.get(id))
+        .filter((f): f is StirlingFileStub => Boolean(f)),
+    [selectedFileIds, fileMap],
+  );
+
+  const [downloading, setDownloading] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  // Collapsed metadata leaves room for the preview and footer actions.
+  const [fieldsOpen, setFieldsOpen] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
+  const [classification, setClassification] = useState<string[] | null>(null);
+  const [classificationOpen, setClassificationOpen] = useState(false);
+  const classificationEnabled = useClassificationEnabled();
+  // Stored classification values are IDs; display names depend on the active locale.
+  const labelName = useLabelName();
+  const [versionChain, setVersionChain] = useState<StirlingFileStub[]>([]);
+  const singleFileForChain = files.length === 1 ? files[0] : null;
+  const access = usePdfAccess(singleFileForChain?.id);
+  const thumbnail =
+    singleFileForChain?.processedFile?.isEncrypted && !access
+      ? undefined
+      : singleFileForChain?.thumbnailUrl;
+  useEffect(() => {
+    if (!singleFileForChain) {
+      setVersionChain([]);
+      return;
+    }
+    let cancelled = false;
+    const rootId = (singleFileForChain.originalFileId ??
+      singleFileForChain.id) as FileId;
+    fileStorage
+      .getHistoryChainStubs(rootId)
+      .then((chain) => {
+        if (!cancelled) setVersionChain(chain);
+      })
+      .catch((err) => {
+        console.error("Failed to load version history", err);
+        if (!cancelled) setVersionChain([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [singleFileForChain]);
+
+  useEffect(() => {
+    setClassification(null);
+    if (!classificationEnabled) return;
+    const stub = singleFileForChain;
+    if (!stub) return;
+    if (stub.classificationLabels && stub.classificationLabels.length > 0) {
+      setClassification(stub.classificationLabels);
+      return;
+    }
+    let cancelled = false;
+    void readStubClassificationLabels(stub).then((labels) => {
+      if (!cancelled && labels) setClassification(labels);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [singleFileForChain, classificationEnabled]);
+
+  if (files.length === 0) {
+    return null;
+  }
+
+  const single = files.length === 1 ? files[0] : null;
+  const selectedFolder = single?.folderId
+    ? foldersById.get(single.folderId)
+    : undefined;
+  const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+  const ext = single ? (single.name.split(".").pop() ?? "").toUpperCase() : "";
+  const localOnlyFiles = files.filter((f) => f.remoteStorageId == null);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      if (single) {
+        await downloadFileFromStorage(single);
+      } else {
+        await downloadMultipleFiles(files);
+      }
+    } catch (err) {
+      console.error("Download failed", err);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <aside
+      className="files-page-details"
+      aria-label={t("filesPage.details", "Details")}
+    >
+      <div className="files-page-details-header">
+        <strong>
+          {single
+            ? t("filesPage.details", "Details")
+            : t("filesPage.detailsCount", "{{count}} files selected", {
+                count: files.length,
+              })}
+        </strong>
+        <Tooltip
+          label={t("filesPage.closeDetails", "Close details")}
+          withinPortal
+        >
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            onClick={onClose}
+            aria-label={t("filesPage.closeDetails", "Close details")}
+          >
+            <Icon name="x" size={20} />
+          </ActionIcon>
+        </Tooltip>
+      </div>
+
+      <div className="files-page-details-body">
+        {single ? (
+          <>
+            <div
+              className={`files-page-details-thumb${compactVersions ? " is-compact" : ""}`}
+            >
+              {thumbnail ? (
+                <img src={thumbnail} alt="" />
+              ) : (
+                <Icon
+                  name="file-pdf"
+                  size={"3rem"}
+                  style={{ color: "var(--c-text-subtle)" }}
+                />
+              )}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                flexWrap: "wrap",
+              }}
+            >
+              <h3 style={{ margin: 0, wordBreak: "break-word", flex: 1 }}>
+                {single.name}
+              </h3>
+              {ext && <span className="files-page-details-ext-tag">{ext}</span>}
+              {(single.versionNumber ?? 1) > 1 && (
+                <Badge size="sm" color="blue">
+                  v{single.versionNumber}
+                </Badge>
+              )}
+            </div>
+            <Button
+              variant="tertiary"
+              className="files-page-details-collapse-toggle"
+              onClick={() => setFieldsOpen((o) => !o)}
+              aria-expanded={fieldsOpen}
+              rightSection={
+                <Icon
+                  name="chevron-down"
+                  size={20}
+                  className={`files-page-details-collapse-chevron${fieldsOpen ? " is-open" : ""}`}
+                />
+              }
+            >
+              <span>{t("filesPage.fileInfo", "File info")}</span>
+            </Button>
+            {fieldsOpen && (
+              <div className="files-page-details-fieldlist">
+                <DetailField
+                  label={t("filesPage.field.size", "Size")}
+                  value={formatFileSize(single.size)}
+                />
+                <DetailField
+                  label={t("filesPage.field.type", "Type")}
+                  value={single.type || "-"}
+                />
+                <DetailField
+                  label={t("filesPage.field.modified", "Modified")}
+                  value={getFileDate({ lastModified: single.lastModified })}
+                />
+                <DetailField
+                  label={t("filesPage.field.added", "Added")}
+                  value={
+                    single.createdAt
+                      ? getFileDate({ lastModified: single.createdAt })
+                      : "-"
+                  }
+                />
+                <DetailField
+                  label={t("filesPage.field.folder", "Folder")}
+                  value={
+                    selectedFolder
+                      ? selectedFolder.name
+                      : !single.folderId && getFileOrigin(single) === "local"
+                        ? t("filesPage.recentFiles", "Recents")
+                        : t("filesPage.allFiles", "Stirling library")
+                  }
+                />
+              </div>
+            )}
+            {classification && (
+              <>
+                <Button
+                  variant="quiet"
+                  fullWidth
+                  justify="between"
+                  className="files-page-details-collapse-toggle"
+                  onClick={() => setClassificationOpen((o) => !o)}
+                  aria-expanded={classificationOpen}
+                  rightSection={
+                    <Icon
+                      name="chevron-down"
+                      size={20}
+                      className={`files-page-details-collapse-chevron${classificationOpen ? " is-open" : ""}`}
+                    />
+                  }
+                >
+                  <span>{t("filesPage.classification", "Classification")}</span>
+                </Button>
+                {classificationOpen && (
+                  <div className="files-page-details-fieldlist">
+                    <div className="files-page-details-field">
+                      <span className="files-page-details-field-label">
+                        {t("filesPage.field.labels", "Labels")}
+                      </span>
+                      <span
+                        className="files-page-details-field-value"
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "0.25rem",
+                          justifyContent: "flex-end",
+                        }}
+                      >
+                        {classification.map((label) => (
+                          <Badge
+                            key={label}
+                            size="xs"
+                            variant="light"
+                            color="orange"
+                          >
+                            {labelName(label)}
+                          </Badge>
+                        ))}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            {versionChain.length > 1 &&
+              (compactVersions && onOpenVersionHistory ? (
+                <Button
+                  leftSection={<Icon name="rotate-ccw-clock" size={20} />}
+                  variant="tertiary"
+                  onClick={onOpenVersionHistory}
+                >
+                  {t(
+                    "filesPage.viewVersionHistory",
+                    "Version journey ({{count}})",
+                    { count: versionChain.length },
+                  )}
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="quiet"
+                    fullWidth
+                    justify="between"
+                    className="files-page-details-collapse-toggle"
+                    onClick={() => setVersionsOpen((o) => !o)}
+                    aria-expanded={versionsOpen}
+                    rightSection={
+                      <Icon
+                        name="chevron-down"
+                        size={20}
+                        className={`files-page-details-collapse-chevron${versionsOpen ? " is-open" : ""}`}
+                      />
+                    }
+                  >
+                    <span>
+                      {t(
+                        "filesPage.viewVersionHistory",
+                        "Version journey ({{count}})",
+                        { count: versionChain.length },
+                      )}
+                    </span>
+                  </Button>
+                  {versionsOpen && (
+                    <VersionTimeline
+                      onPickVersion={onPickVersion}
+                      chain={versionChain}
+                      currentId={single.id}
+                      onAddToWorkspace={onAddToWorkspace}
+                      onRemove={onRemove}
+                      hideHeader
+                    />
+                  )}
+                </>
+              ))}
+          </>
+        ) : (
+          <div className="files-page-details-fieldlist">
+            <DetailField
+              label={t("filesPage.field.totalSize", "Total size")}
+              value={formatFileSize(totalSize)}
+            />
+            <DetailField
+              label={t("filesPage.field.count", "Files")}
+              value={String(files.length)}
+            />
+          </div>
+        )}
+      </div>
+
+      {onAddToWorkspace && onMove && onRemove && (
+        <FileDetailsActions
+          selectedFileIds={selectedFileIds}
+          single={single}
+          fileCount={files.length}
+          localOnlyFiles={localOnlyFiles}
+          sharingEnabled={sharingEnabled}
+          downloading={downloading}
+          onDownload={handleDownload}
+          onAddToWorkspace={onAddToWorkspace}
+          onMove={onMove}
+          onRemove={onRemove}
+          onSaveToServer={onSaveToServer}
+          saveToServerDisabledReason={saveToServerDisabledReason}
+          onShare={() => setShareModalOpen(true)}
+        />
+      )}
+      {single && sharingEnabled && !onPickVersion && (
+        <ShareManagementModal
+          opened={shareModalOpen}
+          onClose={() => setShareModalOpen(false)}
+          file={single}
+        />
+      )}
+    </aside>
+  );
+}

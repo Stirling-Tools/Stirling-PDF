@@ -20,6 +20,7 @@ dependencies {
 
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
+    implementation 'org.eclipse.jetty.compression:jetty-compression-server'
     implementation 'org.eclipse.jetty.http2:jetty-http2-server'
     implementation 'org.eclipse.jetty:jetty-alpn-java-server'
     implementation ('org.telegram:telegrambots:6.9.7.1') {
@@ -169,7 +170,7 @@ if (project.findProperty('buildWithPortal')?.toString() == 'true') {
 }
 // Workspace root holds package.json and node_modules (shared across editor /
 // future portal). Editor-specific paths (src, public, dist, tauri) live one
-// level deeper under frontend/editor/.
+// level deeper under frontend/.
 
 // Vite mode: -PfrontendMode > enableSaas > disableAdditional > proprietary.
 def frontendModeOverride = project.findProperty('frontendMode')?.toString()?.toLowerCase()
@@ -187,11 +188,11 @@ def frontendBuildTask = "frontend:build:${frontendMode}"
 
 // Workspace root holds package.json and node_modules (shared across editor /
 // future portal). Editor-specific paths (src, public, dist, tauri) live one
-// level deeper under frontend/editor/. When the portal lands as an embedded
+// level deeper under frontend/. When the portal lands as an embedded
 // app, add a sibling frontendPortalDir / frontendPortalDistDir alongside.
 def frontendDir = file('../../frontend')
-def frontendEditorDir = file('../../frontend/editor')
-def frontendEditorDistDir = file('../../frontend/editor/dist')
+def frontendEditorDir = file('../../frontend')
+def frontendEditorDistDir = file('../../frontend/dist')
 def resourcesStaticDir = file('src/main/resources/static')
 def generatedFrontendPaths = [
     'assets',

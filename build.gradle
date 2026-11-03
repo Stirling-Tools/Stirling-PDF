@@ -2,7 +2,7 @@ plugins {
     id "java"
     id "jacoco"
     id "io.spring.dependency-management" version "1.1.7"
-    id "org.springframework.boot" version "4.1.1"
+    id "org.springframework.boot" version "4.1.2"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "com.diffplug.spotless" version "8.8.0"
@@ -21,7 +21,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import stirling.software.gradle.ModuleLicenseOverrideFilter
 
 ext {
-    springBootVersion = "4.1.1"
+    springBootVersion = "4.1.2"
     pdfboxVersion = "3.0.8"
     officeConvertVersion = "0.2.2"
     imageioVersion = "3.15.2"
@@ -37,15 +37,15 @@ ext {
     rhinoVersion = "1.9.1"
     okhttpBomVersion = "5.4.0"
     gsonVersion = "2.14.0"
-    guavaVersion = "33.6.0-jre"
+    guavaVersion = "33.7.2-jre"
     jinjavaVersion = "2.8.4"
     jackson2Version = "2.22.3"
-    bucket4jVersion = "8.19.0"
+    bucket4jVersion = "8.20.0"
     archunitVersion = "1.5.0"
     batikVersion = "1.19"
     jpdfiumVersion = "1.1.6"
     jwtVersion = "0.13.0"
-    awsSdkVersion = "2.54.13"
+    awsSdkVersion = "2.55.14"
     jschVersion = "2.28.7"
     commonsNetVersion = "3.13.0"
     smbjVersion = "0.14.0"
@@ -122,7 +122,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '3.2.0'
+    version = '3.2.2'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -130,9 +130,9 @@ allprojects {
 }
 
 def appVersionStr = project.version.toString()
-def tauriConfigPath = layout.projectDirectory.file('frontend/editor/src-tauri/tauri.conf.json').asFile.path
-def sim1Path = layout.projectDirectory.file('frontend/editor/src/core/testing/serverExperienceSimulations.ts').asFile.path
-def sim2Path = layout.projectDirectory.file('frontend/editor/src/proprietary/testing/serverExperienceSimulations.ts').asFile.path
+def tauriConfigPath = layout.projectDirectory.file('frontend/src-tauri/tauri.conf.json').asFile.path
+def sim1Path = layout.projectDirectory.file('frontend/src/editor/core/testing/serverExperienceSimulations.ts').asFile.path
+def sim2Path = layout.projectDirectory.file('frontend/src/editor/proprietary/testing/serverExperienceSimulations.ts').asFile.path
 def aurDesktopPkgbuildPath = layout.projectDirectory.file('.github/aur/stirling-pdf-desktop/PKGBUILD').asFile.path
 def aurServerPkgbuildPath = layout.projectDirectory.file('.github/aur/stirling-pdf-server-bin/PKGBUILD').asFile.path
 
@@ -776,24 +776,20 @@ tasks.withType(Test).configureEach {
 // ----------------------------------------------------------------------------
 
 configurations {
-    jacocoRuntimeAgent
     jacocoCli
 }
 
 dependencies {
-    // The :runtime classifier on org.jacoco.agent IS the agent jar - no
-    // unzipping required. Kept on the version the plugin already picks so
-    // agent + reporter line up exactly.
-    jacocoRuntimeAgent "org.jacoco:org.jacoco.agent:${jacoco.toolVersion}:runtime"
     jacocoCli "org.jacoco:org.jacoco.cli:${jacoco.toolVersion}"
 }
 
 tasks.register('copyJacocoAgent', Copy) {
     group = 'verification'
     description = 'Copies the JaCoCo runtime agent jar to build/jacoco/jacocoagent.jar.'
-    from configurations.jacocoRuntimeAgent
+    // Reuse the test agent artifact so mirrors and shared caches need only one agent dependency.
+    from { configurations.jacocoAgent.collect { zipTree(it) } }
+    include 'jacocoagent.jar'
     into layout.buildDirectory.dir('jacoco')
-    rename { 'jacocoagent.jar' }
 }
 
 // Aggregates an externally-produced .exec (e.g. from e2e:live or the cucumber

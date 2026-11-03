@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.output;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 
@@ -27,21 +28,28 @@ public class PolicyOutputResolver {
         if (outputIds.isEmpty()) {
             return List.of(policy.output());
         }
-        return outputIds.stream().map(this::resolveDestination).toList();
+        return outputIds.stream().map(id -> resolveDestination(policy, id)).toList();
     }
 
     /** Resolve each routing rule's destination live; rule order is preserved. */
     public List<RoutedDestination> resolveRouting(Policy policy) {
         return policy.routingRules().stream()
-                .map(rule -> new RoutedDestination(rule, resolveDestination(rule.outputId())))
+                .map(
+                        rule ->
+                                new RoutedDestination(
+                                        rule, resolveDestination(policy, rule.outputId())))
                 .toList();
     }
 
-    private OutputSpec resolveDestination(String id) {
+    private OutputSpec resolveDestination(Policy policy, String id) {
         return sourceStore
                 .get(id)
                 .filter(Source::enabled)
                 .filter(source -> !"editor".equals(source.type()))
+                .filter(
+                        source ->
+                                policy.teamId() == null
+                                        || Objects.equals(source.teamId(), policy.teamId()))
                 .orElseThrow(
                         () ->
                                 new IllegalArgumentException(

@@ -120,7 +120,7 @@ class KeyLength(IntEnum):
 
 class AddPasswordParams(ApiModel):
     """
-    This endpoint adds password protection to a PDF file. Users can specify a set of permissions that should be applied to the file. Input:PDF Output:PDF_ENCRYPTED Type:SISO
+    This endpoint adds password protection to a PDF file. Users can specify a set of permissions that should be applied to the file. sourcePassword authenticates an existing protected source; preserveExisting changes permissions while retaining existing credentials. Omitting these options preserves the existing add-password behaviour. Input:PDF/PDF_ENCRYPTED Output:PDF_ENCRYPTED Type:SISO
     """
 
     key_length: KeyLength = Field(KeyLength.integer_256, description="The length of the encryption key")
@@ -130,6 +130,10 @@ class AddPasswordParams(ApiModel):
     )
     password: SecretStr | None = Field(
         None, description="The password to be added to the PDF file (Restricts the opening of the document itself.)"
+    )
+    preserve_existing: bool = Field(
+        False,
+        description="Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.",
     )
     prevent_assembly: bool = Field(False, description="Whether document assembly is prevented")
     prevent_extract_content: bool = Field(False, description="Whether content extraction is prevented")
@@ -141,6 +145,10 @@ class AddPasswordParams(ApiModel):
     prevent_modify_annotations: bool = Field(False, description="Whether modification of annotations is prevented")
     prevent_printing: bool = Field(False, description="Whether printing of the document is prevented")
     prevent_printing_faithful: bool = Field(False, description="Whether faithful printing is prevented")
+    source_password: SecretStr | None = Field(
+        None,
+        description="Credential for authenticating an existing protected source, separate from the new passwords. Omit to retain legacy add-password behaviour.",
+    )
 
 
 class Alphabet(StrEnum):
@@ -185,16 +193,17 @@ class Position1(IntEnum):
 
 class StampType(StrEnum):
     """
-    The stamp type (text or image)
+    The stamp type (text, image or qr). When omitted, image is used if stampImage is supplied, otherwise text.
     """
 
     text = "text"
     image = "image"
+    qr = "qr"
 
 
 class AddStampParams(ApiModel):
     """
-    This endpoint adds a stamp to a given PDF file. Users can specify the stamp type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO
+    This endpoint adds a stamp to a given PDF file. Users can specify the stamp type (text, image or qr), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO
     """
 
     alphabet: Alphabet = Field(Alphabet.roman, description="The selected alphabet of the stamp text")
@@ -215,12 +224,18 @@ class AddStampParams(ApiModel):
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
     position: Position1 = Field(
-        Position1.integer_8,
+        Position1.integer_5,
         description="Position for stamp placement based on a 1-9 grid (1: bottom-left, 2: bottom-center, 3: bottom-right, 4: middle-left, 5: middle-center, 6: middle-right, 7: top-left, 8: top-center, 9: top-right)",
     )
     rotation: float = Field(0, description="The rotation of the stamp in degrees")
-    stamp_text: str = Field("Stirling Software", description="The stamp text")
-    stamp_type: StampType = Field(..., description="The stamp type (text or image)")
+    stamp_text: str | None = Field(
+        None,
+        description="The stamp text, or the QR code content when stampType is qr; required when stampType is text or qr",
+    )
+    stamp_type: StampType | None = Field(
+        None,
+        description="The stamp type (text, image or qr). When omitted, image is used if stampImage is supplied, otherwise text.",
+    )
 
 
 class Alphabet1(StrEnum):
@@ -238,7 +253,7 @@ class Alphabet1(StrEnum):
 
 class WatermarkType(StrEnum):
     """
-    The watermark type (text or image)
+    The watermark type (text or image). When omitted, image is used if watermarkImage is supplied, otherwise text.
     """
 
     text = "text"
@@ -253,12 +268,15 @@ class AddWatermarkParams(ApiModel):
     alphabet: Alphabet1 = Field(Alphabet1.roman, description="The selected alphabet")
     convert_pdf_to_image: bool = Field(False, description="Convert the redacted PDF to an image")
     custom_color: str = Field("#d3d3d3", description="The color for watermark")
-    font_size: float = Field(30, description="The font size of the watermark text", ge=1.0)
+    font_size: float = Field(12, description="The font size of the watermark text", ge=1.0)
     height_spacer: int = Field(50, description="The height spacer between watermark elements", ge=0)
     opacity: float = Field(0.5, description="The opacity of the watermark (0.0 - 1.0)")
     rotation: float = Field(0, description="The rotation of the watermark in degrees")
-    watermark_text: str = Field("Stirling Software", description="The watermark text")
-    watermark_type: WatermarkType = Field(..., description="The watermark type (text or image)")
+    watermark_text: str | None = Field(None, description="The watermark text, required when watermarkType is text")
+    watermark_type: WatermarkType | None = Field(
+        None,
+        description="The watermark type (text or image). When omitted, image is used if watermarkImage is supplied, otherwise text.",
+    )
     width_spacer: int = Field(50, description="The width spacer between watermark elements", ge=0)
 
 
@@ -272,7 +290,9 @@ class AutoRedactParams(ApiModel):
     )
     convert_pdf_to_image: bool = Field(False, description="Convert the redacted PDF to an image")
     custom_padding: float = Field(..., description="Custom padding for redaction")
-    list_of_text: str = Field("text,text2", description="List of text to redact from the PDF")
+    list_of_text: str = Field(
+        ..., description="Newline-separated list of text to redact from the PDF", examples=["text\ntext2"]
+    )
     redact_color: str = Field("#000000", description="The color for redaction")
     use_regex: bool = Field(False, description="Whether to use regex for the listOfText")
     whole_word_search: bool = Field(False, description="Whether to use whole word search")
@@ -414,7 +434,11 @@ class CompressPdfParams(ApiModel):
     This endpoint accepts a PDF file and optimizes it based on the provided parameters. Input:PDF Output:PDF Type:SISO
     """
 
-    expected_output_size: str = Field("25KB", description="The expected output size, e.g. '100MB', '25KB', etc.")
+    expected_output_size: str | None = Field(
+        None,
+        description="Target output size, e.g. '100MB' or '25KB'. When set, the optimization level is chosen automatically to reach it; omit to compress at optimizeLevel.",
+        examples=["25KB"],
+    )
     grayscale: bool = Field(False, description="Whether to convert the PDF to grayscale. Default is false.")
     line_art: bool = Field(
         False, description="Whether to convert images to high-contrast line art using ImageMagick. Default is false."
@@ -542,33 +566,6 @@ class EditTableOfContentsParams(ApiModel):
     )
 
 
-class EditTextOperation(ApiModel):
-    """
-    Ordered list of find/replace operations. Each replaces every occurrence on the selected pages, in order; later operations see the result of earlier ones (so 'foo'->'foos' then 'foos'->'bars' turns 'foo' into 'bars').
-    """
-
-    find: str = Field(..., description="The literal text to find.")
-    replace: str = Field(..., description="The replacement text. May be empty to delete the matched text.")
-
-
-class EditTextParams(ApiModel):
-    """
-    Applies an ordered list of find/replace operations to the text in a PDF and returns the edited PDF. Useful for find-and-replace, bulk renames (e.g. updating a company name throughout a document), and copy editing where the AI agent has identified specific replacements. Matching is performed against the joined text of each page, so find strings can span multiple visual runs (titles split per word, kerning-broken phrases). Cross-element matches are written as a single replacement run anchored at the leftmost matched position; centered or tracked text may shift left when its content changes. Input:PDF Output:PDF Type:SISO
-    """
-
-    edits: list[EditTextOperation] = Field(
-        ...,
-        description="Ordered list of find/replace operations. Each replaces every occurrence on the selected pages, in order; later operations see the result of earlier ones (so 'foo'->'foos' then 'foos'->'bars' turns 'foo' into 'bars').",
-    )
-    page_numbers: str = Field(
-        "all",
-        description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
-    )
-    whole_word_search: bool = Field(
-        False, description="Whether matches must be whole words (boundaries determined by non-word characters)"
-    )
-
-
 class EmlToPdfParams(ApiModel):
     """
     This endpoint converts EML (email) and MSG (Outlook) files to PDF format with extensive customization options. Features include font settings, image constraints, display modes, attachment handling, and HTML debug output. or MSG file, or HTML file. Input:EMAIL Output:PDF Type:SISO
@@ -592,19 +589,6 @@ class EmlToPdfParams(ApiModel):
     )
 
 
-class EncodeCharcodesParams(ApiModel):
-    """
-    Frontend-only helper: takes the source PDF, a locator pointing at an existing char rendered in the target font, and a Unicode string. Returns the byte sequence the target font produces for that Unicode, packed as one unsigned int per char. The frontend then calls FPDFText_SetCharcodes with the returned ints to inject new text that reuses the embedded font's actual glyphs. Chars the font can't encode are listed in `missing` so the caller can fall back per-char.
-    """
-
-    font_name: str | None = None
-    font_sha256: str | None = None
-    locator_char: str | None = None
-    page_index: int | None = None
-    pdf_base64: str | None = None
-    text: str | None = None
-
-
 class ExtractAttachmentsParams(ApiModel):
     """
     This endpoint extracts all embedded attachments from a PDF into a ZIP archive. Input:PDF Output:ZIP Type:SISO
@@ -616,11 +600,11 @@ class ExtractImageScansParams(ApiModel):
     This endpoint extracts image scans from a given file based on certain parameters. Users can specify angle threshold, tolerance, minimum area, minimum contour area, and border size. Input:PDF/IMAGE Output:IMAGE Type:SIMO
     """
 
-    angle_threshold: int = Field(5, description="The angle threshold for the image scan extraction")
+    angle_threshold: int = Field(10, description="The angle threshold for the image scan extraction")
     border_size: int = Field(1, description="The border size for the image scan extraction")
-    min_area: int = Field(8000, description="The minimum area for the image scan extraction")
+    min_area: int = Field(10000, description="The minimum area for the image scan extraction")
     min_contour_area: int = Field(500, description="The minimum contour area for the image scan extraction")
-    tolerance: int = Field(20, description="The tolerance for the image scan extraction")
+    tolerance: int = Field(30, description="The tolerance for the image scan extraction")
 
 
 class Format(StrEnum):
@@ -872,7 +856,7 @@ class OcrRenderType(StrEnum):
 
 class OcrType(StrEnum):
     """
-    Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'
+    How to treat pages that already contain text: 'skip-text' OCRs only pages without text, 'force-ocr' rasterises and OCRs every page.
     """
 
     skip_text = "skip-text"
@@ -885,19 +869,22 @@ class OcrPdfParams(ApiModel):
     This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType, and removeImagesAfter options. Uses OCRmyPDF if available, falls back to Tesseract. Input:PDF Output:PDF Type:SISO
     """
 
-    clean: bool | None = Field(None, description="Clean the input file if set to true")
-    clean_final: bool | None = Field(None, description="Clean the final output if set to true")
-    deskew: bool | None = Field(None, description="Deskew the input file if set to true")
+    clean: bool = Field(False, description="Clean the input file if set to true")
+    clean_final: bool = Field(False, description="Clean the final output if set to true")
+    deskew: bool = Field(False, description="Deskew the input file if set to true")
     languages: list[str] = Field(["eng"], description="List of languages to use in OCR processing, e.g., 'eng', 'deu'")
     ocr_render_type: OcrRenderType = Field(
         OcrRenderType.hocr, description="Specify the OCR render type, either 'hocr' or 'sandwich'"
     )
-    ocr_type: OcrType = Field(..., description="Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'")
-    remove_images_after: bool | None = Field(None, description="Remove images from the output PDF if set to true")
-    rotate_pages: bool | None = Field(
-        None, description="Auto-correct page orientation (90/180/270) using Tesseract OSD if set to true"
+    ocr_type: OcrType = Field(
+        OcrType.skip_text,
+        description="How to treat pages that already contain text: 'skip-text' OCRs only pages without text, 'force-ocr' rasterises and OCRs every page.",
     )
-    sidecar: bool | None = Field(None, description="Include OCR text in a sidecar text file if set to true")
+    remove_images_after: bool = Field(False, description="Remove images from the output PDF if set to true")
+    rotate_pages: bool = Field(
+        False, description="Auto-correct page orientation (90/180/270) using Tesseract OSD if set to true"
+    )
+    sidecar: bool = Field(False, description="Include OCR text in a sidecar text file if set to true")
 
 
 class PageRotation(ApiModel):
@@ -1162,8 +1149,8 @@ class PdfToUaParams(ApiModel):
         description="How to treat images with no description. require-alt leaves them undescribed so the report asks for input; mark-decorative treats every image as decoration.",
     )
     language: str = Field(
-        "en-GB",
-        description="Document language as a BCP-47 tag, for example en-GB. Applied only when the document does not already declare one, unless overrideLanguage is set.",
+        "en-US",
+        description="Document language as a BCP-47 tag, for example en-US. Applied only when the document does not already declare one, unless overrideLanguage is set.",
     )
     override_language: bool = Field(
         False,
@@ -1267,7 +1254,7 @@ class CustomMode(StrEnum):
 
 class RearrangePagesParams(ApiModel):
     """
-    This endpoint rearranges pages in a given PDF file based on the specified page order or custom mode. Users can provide a page order as a comma-separated list of page numbers or page ranges, or a custom mode. Input:PDF Output:PDF Type:SISO
+    Builds the output from pageNumbers, in the order given: '3-7' keeps only pages 3 to 7, '3,1,2' keeps pages 3, 1 and 2 in that order, and pages not listed are dropped (a page listed twice is kept once). Or set customMode to a preset such as REVERSE_ORDER, DUPLEX_SORT or REMOVE_FIRST; with DUPLICATE, pageNumbers is how many copies of each page to make. Input:PDF Output:PDF Type:SISO
     """
 
     custom_mode: CustomMode | None = Field(
@@ -1350,10 +1337,26 @@ class RemovePagesParams(ApiModel):
 
 class RemovePasswordParams(ApiModel):
     """
-    This endpoint removes the password from a protected PDF file while preserving its document permissions. Users need to provide the existing password. Input:PDF/PDF_ENCRYPTED Output:PDF Type:SISO
+    This endpoint removes the password from a protected PDF file while preserving its document permissions. Users need to provide the existing password. Optional ownerPassword, sourcePassword or retainedOpeningPassword enable selective removal: nonempty password and ownerPassword select which passwords to remove; blank selections retain them. removeAll explicitly removes all protection, subject to the owner-password policy. Source and retained credentials never select removal. Input:PDF/PDF_ENCRYPTED Output:PDF Type:SISO
     """
 
+    owner_password: SecretStr | None = Field(
+        None,
+        description="Permissions password to remove. Supplying this field enables selective removal; leave blank to retain the permissions password.",
+    )
     password: SecretStr | None = Field(None, description="The password of the PDF file")
+    remove_all: bool = Field(
+        False,
+        description="Explicitly remove all passwords and restrictions, subject to the server owner-password policy. The password or sourcePassword authenticates the source; selective removal fields do not apply.",
+    )
+    retained_opening_password: SecretStr | None = Field(
+        None,
+        description="Opening password to retain when removing only the permissions password. Supplying this field enables selective removal.",
+    )
+    source_password: SecretStr | None = Field(
+        None,
+        description="Credential for opening the source, without selecting it for removal. Supplying this field enables selective removal; password then selects the opening password to remove and ownerPassword selects the permissions password to remove. Blank selection fields keep their passwords.",
+    )
 
 
 class RenameAttachmentParams(ApiModel):
@@ -1468,7 +1471,7 @@ class Orientation1(StrEnum):
 
 class PageSize(StrEnum):
     """
-    The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP.
+    The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP. KEEP keeps each page's own size.
     """
 
     a0 = "A0"
@@ -1493,7 +1496,8 @@ class ScalePagesParams(ApiModel):
         description="Orientation to apply to the target page size. Ignored when pageSize is KEEP.",
     )
     page_size: PageSize = Field(
-        ..., description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP."
+        PageSize.keep,
+        description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP. KEEP keeps each page's own size.",
     )
     scale_factor: float = Field(
         1, description="The scale of the content on the pages of the output PDF. Acceptable values are floats.", ge=0.0
@@ -1605,7 +1609,11 @@ class SplitPdfByChaptersParams(ApiModel):
     """
 
     allow_duplicates: bool = Field(False, description="Whether to allow duplicates or not")
-    bookmark_level: int = Field(0, description="Maximum bookmark level required", ge=0)
+    bookmark_level: int = Field(
+        1,
+        description="Maximum bookmark nesting level to split on: 0 splits on top-level bookmarks only, 1 also on their children, and so on",
+        ge=0,
+    )
     include_metadata: bool = Field(False, description="Whether to include Metadata or not")
 
 
@@ -1634,7 +1642,11 @@ class SplitPdfBySectionsParams(ApiModel):
 
     horizontal_divisions: int = Field(0, description="Number of horizontal divisions for each PDF page", ge=0, le=50)
     merge: bool = Field(False, description="Merge the split documents into a single PDF")
-    page_numbers: str = Field("SPLIT_ALL", description="Pages to be split by section")
+    page_numbers: str | None = Field(
+        None,
+        description="Pages to split when splitMode is CUSTOM (required in that mode, ignored otherwise). Supports ranges (e.g. '1,3,5-9'), 'all', or functions like '2n+1'.",
+        examples=["1,3,5-9"],
+    )
     split_mode: SplitMode | None = Field(
         None,
         description="Modes for page split. Valid values are:\nSPLIT_ALL_EXCEPT_FIRST_AND_LAST: Splits all except the first and the last pages.\nSPLIT_ALL_EXCEPT_FIRST: Splits all except the first page.\nSPLIT_ALL_EXCEPT_LAST: Splits all except the last page.\nSPLIT_ALL: Splits all pages.\nCUSTOM: Custom split.\n",
@@ -1672,12 +1684,13 @@ class TextRange(ApiModel):
 
 class TimestampPdfParams(ApiModel):
     """
-    Contacts a trusted Time Stamp Authority (TSA) server and embeds an RFC 3161 document timestamp into the PDF. Only a SHA-256 hash of the document is sent to the TSA - the PDF itself never leaves the server. Input:PDF Output:PDF Type:SISO
+    Contacts a trusted Time Stamp Authority (TSA) server and embeds an RFC 3161 document timestamp into the PDF. Only a SHA-256 hash of the document is sent to the TSA - the PDF itself never leaves the server. Make the timestamp the last change to the file: any later edit invalidates it. Input:PDF Output:PDF Type:SISO
     """
 
-    tsa_url: str = Field(
-        "http://timestamp.digicert.com",
-        description="URL of the RFC 3161 Time Stamp Authority (TSA) server. Must be one of the built-in presets (DigiCert, Sectigo, SSL.com, FreeTSA, MeSign) or an admin-configured URL in settings.yml (security.timestamp.customTsaUrls). If omitted, the server default is used.",
+    tsa_url: str | None = Field(
+        None,
+        description="URL of the RFC 3161 Time Stamp Authority (TSA) server. Must be one of the built-in presets (DigiCert, Sectigo, SSL.com, FreeTSA, MeSign) or an admin-configured URL in settings.yml (security.timestamp.customTsaUrls). If omitted, the server default is used (security.timestamp.defaultTsaUrl, DigiCert unless changed).",
+        examples=["http://timestamp.digicert.com"],
     )
 
 
@@ -1689,7 +1702,7 @@ class UnlockPdfFormsParams(ApiModel):
 
 class Trapped(StrEnum):
     """
-    The trapped status of the document
+    The trapped status of the document. Omit to remove it, which readers treat as Unknown.
     """
 
     true = "True"
@@ -1706,24 +1719,36 @@ class UpdateMetadataParams(ApiModel):
         None,
         description="Map list of key and value of custom parameters. Note these must start with customKey and customValue if they are non-standard",
     )
-    author: str = Field("author", description="The author of the document")
-    creation_date: str = Field(
-        "2023/10/01 12:00:00",
-        description="The creation date of the document (format: yyyy/MM/dd HH:mm:ss)",
+    author: str | None = Field(None, description="The author of the document. Omit to remove it.", examples=["author"])
+    creation_date: str | None = Field(
+        None,
+        description="The creation date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.",
+        examples=["2023/10/01 12:00:00"],
         pattern="yyyy/MM/dd HH:mm:ss",
     )
-    creator: str = Field("creator", description="The creator of the document")
+    creator: str | None = Field(
+        None, description="The creator of the document. Omit to remove it.", examples=["creator"]
+    )
     delete_all: bool = Field(False, description="Delete all metadata if set to true")
-    keywords: str = Field("keywords", description="The keywords for the document")
-    modification_date: str = Field(
-        "2023/10/01 12:00:00",
-        description="The modification date of the document (format: yyyy/MM/dd HH:mm:ss)",
+    keywords: str | None = Field(
+        None, description="The keywords for the document. Omit to remove it.", examples=["keywords"]
+    )
+    modification_date: str | None = Field(
+        None,
+        description="The modification date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.",
+        examples=["2023/10/01 12:00:00"],
         pattern="yyyy/MM/dd HH:mm:ss",
     )
-    producer: str = Field("producer", description="The producer of the document")
-    subject: str = Field("subject", description="The subject of the document")
-    title: str = Field("title", description="The title of the document")
-    trapped: Trapped = Field(Trapped.false, description="The trapped status of the document")
+    producer: str | None = Field(
+        None, description="The producer of the document. Omit to remove it.", examples=["producer"]
+    )
+    subject: str | None = Field(
+        None, description="The subject of the document. Omit to remove it.", examples=["subject"]
+    )
+    title: str | None = Field(None, description="The title of the document. Omit to remove it.", examples=["title"])
+    trapped: Trapped | None = Field(
+        None, description="The trapped status of the document. Omit to remove it, which readers treat as Unknown."
+    )
 
 
 class UrlToPdfParams(ApiModel):
@@ -1756,7 +1781,7 @@ class VectorToPdfParams(ApiModel):
 
 class AutoRotatePdfParams(ApiModel):
     """
-    Detects each page's orientation (embedded-text direction first, Tesseract OSD for scanned pages) and sets the page rotation so the content displays upright. With dryRun=true, returns a JSON per-page report instead of the PDF. With pageRotations set, applies the given corrections without running detection. Input:PDF Output:PDF Type:SISO
+    Detects each page's orientation (embedded-text direction first, Tesseract OSD for scanned pages) and sets the page rotation so the content displays upright. With dryRun=true, returns a JSON per-page report instead of the PDF. With pageRotations set (a JSON list such as [{"pageNumber":3,"rotation":90}]), applies only those clockwise turns without running detection. Input:PDF Output:PDF Type:SISO
     """
 
     confidence_threshold: float = Field(
@@ -1818,9 +1843,8 @@ class RedactParams(ApiModel):
     """
 
     convert_pdf_to_image: bool = Field(False, description="Convert the redacted PDF to an image")
-    page_numbers: str = Field(
-        "all",
-        description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
+    page_numbers: str | None = Field(
+        None, description="Pages to black out completely, e.g. '1,3-5'. Omit to redact only the listed areas."
     )
     page_redaction_color: str = Field("#000000", description="The color used to fully redact certain pages")
     redactions: list[RedactionArea] = Field(..., description="A list of areas that should be redacted")
@@ -1857,10 +1881,8 @@ class Model(
         | BookletImpositionParams
         | CropParams
         | EditTableOfContentsParams
-        | EditTextParams
         | MergePdfsParams
         | MultiPageLayoutParams
-        | EncodeCharcodesParams
         | PdfToSinglePageParams
         | RearrangePagesParams
         | RemoveImagePdfParams
@@ -1938,10 +1960,8 @@ class Model(
         | BookletImpositionParams
         | CropParams
         | EditTableOfContentsParams
-        | EditTextParams
         | MergePdfsParams
         | MultiPageLayoutParams
-        | EncodeCharcodesParams
         | PdfToSinglePageParams
         | RearrangePagesParams
         | RemoveImagePdfParams
@@ -2020,10 +2040,8 @@ type ParamToolModel = (
     | BookletImpositionParams
     | CropParams
     | EditTableOfContentsParams
-    | EditTextParams
     | MergePdfsParams
     | MultiPageLayoutParams
-    | EncodeCharcodesParams
     | PdfToSinglePageParams
     | RearrangePagesParams
     | RemoveImagePdfParams
@@ -2103,10 +2121,8 @@ class ToolEndpoint(StrEnum):
     BOOKLET_IMPOSITION = "/api/v1/general/booklet-imposition"
     CROP = "/api/v1/general/crop"
     EDIT_TABLE_OF_CONTENTS = "/api/v1/general/edit-table-of-contents"
-    EDIT_TEXT = "/api/v1/general/edit-text"
     MERGE_PDFS = "/api/v1/general/merge-pdfs"
     MULTI_PAGE_LAYOUT = "/api/v1/general/multi-page-layout"
-    ENCODE_CHARCODES = "/api/v1/general/pdf-text-editor/encode-charcodes"
     PDF_TO_SINGLE_PAGE = "/api/v1/general/pdf-to-single-page"
     REARRANGE_PAGES = "/api/v1/general/rearrange-pages"
     REMOVE_IMAGE_PDF = "/api/v1/general/remove-image-pdf"
@@ -2184,10 +2200,8 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.BOOKLET_IMPOSITION: BookletImpositionParams,
     ToolEndpoint.CROP: CropParams,
     ToolEndpoint.EDIT_TABLE_OF_CONTENTS: EditTableOfContentsParams,
-    ToolEndpoint.EDIT_TEXT: EditTextParams,
     ToolEndpoint.MERGE_PDFS: MergePdfsParams,
     ToolEndpoint.MULTI_PAGE_LAYOUT: MultiPageLayoutParams,
-    ToolEndpoint.ENCODE_CHARCODES: EncodeCharcodesParams,
     ToolEndpoint.PDF_TO_SINGLE_PAGE: PdfToSinglePageParams,
     ToolEndpoint.REARRANGE_PAGES: RearrangePagesParams,
     ToolEndpoint.REMOVE_IMAGE_PDF: RemoveImagePdfParams,

@@ -48,7 +48,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
 
@@ -98,7 +98,7 @@ jobs:
 
       - name: Install uv
         if: matrix.cucumber
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           enable-cache: true
           cache-dependency-glob: |
@@ -164,7 +164,7 @@ jobs:
 
       - name: Upload cucumber JaCoCo report
         if: always() && matrix.cucumber && steps.cucumber-coverage.outputs.report == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: jacoco-cucumber-${{ github.run_id }}
           path: build/reports/jacoco/cucumber/
@@ -174,7 +174,7 @@ jobs:
         # Picked up by the coverage-aggregate workflow via the
         # `jacoco-exec-*` artifact name pattern.
         if: always() && matrix.cucumber && steps.cucumber-coverage.outputs.report == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: jacoco-exec-cucumber
           path: testing/cucumber-coverage/cucumber.exec
@@ -183,7 +183,7 @@ jobs:
 
       - name: Upload Cucumber Report
         if: always() && matrix.cucumber
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cucumber-report
           path: testing/cucumber/report.html
@@ -192,7 +192,7 @@ jobs:
 
       - name: Upload Test Reports
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: docker-compose-test-reports-${{ matrix.image }}
           path: testing/reports/
@@ -201,7 +201,7 @@ jobs:
 
       - name: Cucumber Test Report
         if: always() && matrix.cucumber
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: Cucumber Tests
           path: testing/cucumber/junit/*.xml

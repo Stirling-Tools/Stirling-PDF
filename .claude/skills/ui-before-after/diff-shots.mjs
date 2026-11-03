@@ -2,7 +2,7 @@
 // unchanged | changed | added | removed, and CROP each changed pair to the
 // affected region (bounding box of differing pixels + padding) - unless the
 // change spans most of the page, in which case the full frame is kept.
-// Run from frontend/editor (so deps resolve):
+// Run from frontend (so deps resolve):
 //   node <skill>/diff-shots.mjs <beforeDir> <afterDir> [outDir]
 // Env:
 //   DIFF_THRESHOLD  min fraction of differing pixels to count as changed (default 0.001)

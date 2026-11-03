@@ -18,7 +18,7 @@ final class SigningEmailTemplates {
     private static final int MAX_SUBJECT_VALUE_LENGTH = 80;
     private static final int MAX_REASON_LENGTH = 500;
 
-    // Light-theme values of the frontend tokens (frontend/editor/src/core/theme/colors.css),
+    // Light-theme values of the frontend tokens (frontend/src/editor/core/theme/colors.css),
     // inlined because email clients do not support CSS variables. BRAND is --c-brand, the fill of
     // the sign-in CTAs a recipient lands on.
     private static final String BRAND = "#af3434";

@@ -7,6 +7,8 @@ import java.util.Map;
 import org.commonmark.Extension;
 import org.commonmark.ext.gfm.tables.TableBlock;
 import org.commonmark.ext.gfm.tables.TablesExtension;
+import org.commonmark.node.FencedCodeBlock;
+import org.commonmark.node.IndentedCodeBlock;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.AttributeProvider;
@@ -36,6 +38,18 @@ import stirling.software.common.util.*;
 @ConvertApi
 @RequiredArgsConstructor
 public class ConvertMarkdownToPdf {
+
+    private static final List<Extension> MARKDOWN_EXTENSIONS = List.of(TablesExtension.create());
+
+    private static final Parser MARKDOWN_PARSER =
+            Parser.builder().extensions(MARKDOWN_EXTENSIONS).build();
+
+    private static final HtmlRenderer HTML_RENDERER =
+            HtmlRenderer.builder()
+                    .attributeProviderFactory(context -> new TableAttributeProvider())
+                    .attributeProviderFactory(context -> new CodeBlockAttributeProvider())
+                    .extensions(MARKDOWN_EXTENSIONS)
+                    .build();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
@@ -121,15 +135,7 @@ public class ConvertMarkdownToPdf {
 
                 // Read and convert markdown to HTML
                 String markdownContent = java.nio.file.Files.readString(markdownFile.toPath());
-                List<Extension> extensions = List.of(TablesExtension.create());
-                Parser parser = Parser.builder().extensions(extensions).build();
-                Node document = parser.parse(markdownContent);
-                HtmlRenderer renderer =
-                        HtmlRenderer.builder()
-                                .attributeProviderFactory(context -> new TableAttributeProvider())
-                                .extensions(extensions)
-                                .build();
-                String htmlContent = renderer.render(document);
+                String htmlContent = renderHtml(markdownContent);
 
                 // Create a new ZIP with HTML + images for WeasyPrint
                 byte[] htmlZipBytes = createHtmlZip(htmlContent, tempDirPath.toFile());
@@ -151,17 +157,8 @@ public class ConvertMarkdownToPdf {
             }
         } else {
             // Handle plain markdown file (no images)
-            List<Extension> extensions = List.of(TablesExtension.create());
-            Parser parser = Parser.builder().extensions(extensions).build();
-
-            Node document = parser.parse(new String(fileInput.getBytes(), StandardCharsets.UTF_8));
-            HtmlRenderer renderer =
-                    HtmlRenderer.builder()
-                            .attributeProviderFactory(context -> new TableAttributeProvider())
-                            .extensions(extensions)
-                            .build();
-
-            String htmlContent = renderer.render(document);
+            String htmlContent =
+                    renderHtml(new String(fileInput.getBytes(), StandardCharsets.UTF_8));
 
             pdfBytes =
                     FileToPdf.convertHtmlToPdf(
@@ -185,6 +182,10 @@ public class ConvertMarkdownToPdf {
             throw e;
         }
         return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
+    }
+
+    static String renderHtml(String markdown) {
+        return HTML_RENDERER.render(MARKDOWN_PARSER.parse(markdown));
     }
 
     /**
@@ -261,6 +262,19 @@ class TableAttributeProvider implements AttributeProvider {
     public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
         if (node instanceof TableBlock) {
             attributes.put("class", "table table-striped");
+        }
+    }
+}
+
+// The HTML reaches WeasyPrint with no stylesheet, and its default `white-space: pre` lets a long
+// code line run past the page margin and get clipped. Inline, because the sanitizer strips <style>
+// elements; word-wrap rather than overflow-wrap, because its CSS allowlist drops the latter.
+class CodeBlockAttributeProvider implements AttributeProvider {
+    @Override
+    public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
+        if ("pre".equals(tagName)
+                && (node instanceof FencedCodeBlock || node instanceof IndentedCodeBlock)) {
+            attributes.put("style", "white-space: pre-wrap; word-wrap: break-word");
         }
     }
 }

@@ -32,7 +32,7 @@ jobs:
         flavor: [core, proprietary, saas]
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -53,6 +53,8 @@ jobs:
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        with:
+          version: 3.54.0
       - name: Check Java formatting (Spotless)
         # Runs once per matrix combination - pick the cheapest leg
         # (core - no proprietary, no saas) so we don't wait for the
@@ -183,7 +185,7 @@ jobs:
 
       - name: Upload Test Reports
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}-flavor-${{ matrix.flavor }}
           path: |
@@ -197,7 +199,7 @@ jobs:
 
       - name: Install uv
         if: always() && matrix.flavor == 'saas'
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           enable-cache: true
           cache-dependency-glob: |
@@ -230,7 +232,7 @@ jobs:
         # (`jacoco-exec-*`) instead of unpacking the whole test-reports
         # tarball.
         if: always() && matrix.flavor == 'saas'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: jacoco-exec-junit-jdk-${{ matrix.jdk-version }}
           path: app/*/build/jacoco/*.exec

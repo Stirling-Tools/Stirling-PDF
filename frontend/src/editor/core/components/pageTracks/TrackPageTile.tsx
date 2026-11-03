@@ -1,0 +1,303 @@
+import React, { useCallback, useMemo } from "react";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { useTranslation } from "react-i18next";
+import { Icon } from "@editor/ui/Icon";
+import { Checkbox } from "@editor/ui/Checkbox";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import HoverActionMenu, {
+  HoverAction,
+} from "@editor/components/shared/HoverActionMenu";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { FileId } from "@editor/types/file";
+import { TrackPage } from "@editor/components/pageTracks/types";
+import {
+  TrackThumbnailStore,
+  useTrackThumbnail,
+} from "@editor/components/pageTracks/hooks/useTrackThumbnails";
+import styles from "@editor/components/pageTracks/PageTracks.module.css";
+import { BlankPagePreview } from "@editor/components/pageTracks/BlankPagePreview";
+
+export const pageDroppableId = (pageId: string) => `page:${pageId}`;
+
+export interface TrackPageTileProps {
+  page: TrackPage;
+  /** The track this tile currently sits in. */
+  trackFileId: FileId;
+  /** 1-based position within the track. */
+  position: number;
+  isLast: boolean;
+  /** Horizontal offset within the lane, from the virtualiser. */
+  offsetX: number;
+  /** Vertical offset within the lane (0 in single-row mode; row top in wrap). */
+  offsetY: number;
+  selected: boolean;
+  dragging: boolean;
+  /** Draw the insertion line on this tile's leading edge. */
+  dropBefore: boolean;
+  /** Draw it on the trailing edge (last tile, appending to the track). */
+  dropAfterLast: boolean;
+  thumbnails: TrackThumbnailStore;
+  onSelect: (
+    fileId: FileId,
+    pageId: string,
+    modifiers: { shift: boolean },
+  ) => void;
+  /** Opens the track's page-view modal starting at this page. */
+  onViewPage: (pageId: string) => void;
+  onRotate: (pageIds: string[], delta: number) => void;
+  onDelete: (pageIds: string[]) => void;
+  onDuplicate: (pageIds: string[]) => void;
+  /** Swaps the page with its neighbour: -1 left, 1 right. */
+  onShift: (pageId: string, by: -1 | 1) => void;
+}
+
+interface ShiftButtonProps {
+  direction: "left" | "right";
+  label: string;
+  forceVisible: boolean;
+  onShift: () => void;
+}
+
+/** Sits on the side of the page it moves towards. */
+function ShiftButton({
+  direction,
+  label,
+  forceVisible,
+  onShift,
+}: ShiftButtonProps) {
+  return (
+    <div
+      className={`${styles.shiftButton} ${direction === "left" ? styles.shiftLeft : styles.shiftRight}`}
+      data-force-visible={forceVisible}
+      // The tile is a drag source and a selection toggle; neither should fire.
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <Tooltip content={label} position={direction}>
+        <ActionIcon
+          variant="quiet"
+          size="sm"
+          aria-label={label}
+          onClick={onShift}
+        >
+          <Icon
+            name={direction === "left" ? "arrow-left" : "arrow-right"}
+            size={14}
+          />
+        </ActionIcon>
+      </Tooltip>
+    </div>
+  );
+}
+
+function TrackPageTileImpl({
+  page,
+  trackFileId,
+  position,
+  isLast,
+  offsetX,
+  offsetY,
+  selected,
+  dragging,
+  dropBefore,
+  dropAfterLast,
+  thumbnails,
+  onSelect,
+  onViewPage,
+  onRotate,
+  onDelete,
+  onDuplicate,
+  onShift,
+}: TrackPageTileProps) {
+  const { t } = useTranslation();
+  const isMobile = useIsMobile();
+  const dragData = { type: "page", pageId: page.id, fileId: trackFileId };
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDragRef,
+  } = useDraggable({ id: pageDroppableId(page.id), data: dragData });
+  const { setNodeRef: setDropRef } = useDroppable({
+    id: pageDroppableId(page.id),
+    data: dragData,
+  });
+
+  const setRefs = useCallback(
+    (element: HTMLElement | null) => {
+      setDragRef(element);
+      setDropRef(element);
+      thumbnails.observe(page)(element);
+    },
+    [setDragRef, setDropRef, thumbnails, page],
+  );
+
+  const thumbnail = useTrackThumbnail(thumbnails, page);
+
+  const handleClick = useCallback(
+    (event: React.MouseEvent) => {
+      onSelect(trackFileId, page.id, { shift: event.shiftKey });
+    },
+    [onSelect, trackFileId, page.id],
+  );
+
+  const stop = (event: React.MouseEvent) => event.stopPropagation();
+  const quarterTurn = page.rotation === 90 || page.rotation === 270;
+
+  const hoverActions = useMemo<HoverAction[]>(
+    () => [
+      {
+        id: "view",
+        icon: <Icon name="eye" size={16} />,
+        label: t("pageTracks.viewPage", "View page"),
+        onClick: (event) => {
+          event.stopPropagation();
+          onViewPage(page.id);
+        },
+      },
+      {
+        id: "rotate-left",
+        icon: <Icon name="rotate-ccw" size={16} />,
+        label: t("pageTracks.rotateLeft", "Rotate left"),
+        onClick: (event) => {
+          event.stopPropagation();
+          onRotate([page.id], -90);
+        },
+      },
+      {
+        id: "rotate-right",
+        icon: <Icon name="rotate-cw" size={16} />,
+        label: t("pageTracks.rotateRight", "Rotate right"),
+        onClick: (event) => {
+          event.stopPropagation();
+          onRotate([page.id], 90);
+        },
+      },
+      {
+        id: "duplicate",
+        icon: <Icon name="copy-plus" size={16} />,
+        label: t("pageTracks.duplicate.page", "Duplicate page"),
+        onClick: (event) => {
+          event.stopPropagation();
+          onDuplicate([page.id]);
+        },
+      },
+      {
+        id: "delete",
+        icon: <Icon name="trash" size={16} />,
+        label: t("pageTracks.delete.page", "Delete page"),
+        color: "var(--c-danger)",
+        onClick: (event) => {
+          event.stopPropagation();
+          onDelete([page.id]);
+        },
+      },
+    ],
+    [t, onViewPage, onRotate, onDelete, onDuplicate, page.id],
+  );
+
+  return (
+    <div
+      ref={setRefs}
+      className={[
+        styles.tile,
+        selected ? styles.tileSelected : "",
+        dragging ? styles.tileDragging : "",
+        dropBefore ? styles.dropBefore : "",
+        dropAfterLast ? styles.dropAfterLast : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      style={{ left: offsetX, top: offsetY }}
+      {...attributes}
+      {...listeners}
+      data-page-id={page.id}
+      data-selected={selected}
+      data-drop-before={dropBefore || undefined}
+      data-drop-after-last={dropAfterLast || undefined}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      aria-label={t("pageTracks.page", "Page {{number}}", {
+        number: position,
+      })}
+      onClick={handleClick}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect(trackFileId, page.id, { shift: false });
+        }
+      }}
+    >
+      <div className={styles.thumbBox}>
+        <div className={styles.tileCheckbox} onClick={stop}>
+          <Checkbox
+            checked={selected}
+            aria-label={t("pageTracks.selectPage", "Select page {{number}}", {
+              number: position,
+            })}
+            onChange={() => onSelect(trackFileId, page.id, { shift: false })}
+          />
+        </div>
+
+        <div className={styles.pageShadow}>
+          {page.kind === "blank" ? (
+            <BlankPagePreview page={page} placement="tile" />
+          ) : thumbnail ? (
+            <PrivateContent>
+              <img
+                className={[
+                  styles.thumb,
+                  quarterTurn ? styles.thumbQuarterTurn : "",
+                  "ph-no-capture",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                src={thumbnail}
+                alt=""
+                draggable={false}
+                data-original-rotation={page.rotation}
+                style={{ transform: `rotate(${page.rotation}deg)` }}
+              />
+            </PrivateContent>
+          ) : (
+            <div className={styles.thumbPending} />
+          )}
+        </div>
+
+        {position > 1 && (
+          <ShiftButton
+            direction="left"
+            label={t("pageTracks.moveLeft", "Move left")}
+            forceVisible={isMobile}
+            onShift={() => onShift(page.id, -1)}
+          />
+        )}
+        {!isLast && (
+          <ShiftButton
+            direction="right"
+            label={t("pageTracks.moveRight", "Move right")}
+            forceVisible={isMobile}
+            onShift={() => onShift(page.id, 1)}
+          />
+        )}
+
+        <HoverActionMenu
+          show={isMobile}
+          actions={hoverActions}
+          position="inside"
+          visibility="cssHover"
+          className={styles.pagePill}
+        />
+      </div>
+
+      <div className={styles.pageNumber} data-page-index={position}>
+        {position}
+      </div>
+    </div>
+  );
+}
+
+export const TrackPageTile = React.memo(TrackPageTileImpl);
+export default TrackPageTile;

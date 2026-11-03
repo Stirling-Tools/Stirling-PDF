@@ -56,6 +56,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.LineArtConversionService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ImageMemoryLimit;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
@@ -150,6 +151,13 @@ public class CompressController {
 
                 // Direct image
                 if (isImage(xobj)) {
+                    if (!ImageMemoryLimit.embeddedImageFits((PDImageXObject) xobj)) {
+                        log.info(
+                                "Leaving image '{}' on page {} uncompressed: over the image limit",
+                                name.getName(),
+                                pageNum + 1);
+                        continue;
+                    }
                     addDirectImage(pageNum, name, (PDImageXObject) xobj, uniqueImages);
                     log.info(
                             "Found direct image '{}' on page {} - {}x{}",
@@ -207,6 +215,15 @@ public class CompressController {
 
             if (isImage(nestedXobj)) {
                 PDImageXObject nestedImage = (PDImageXObject) nestedXobj;
+                if (!ImageMemoryLimit.embeddedImageFits(nestedImage)) {
+                    log.info(
+                            "Leaving image '{}' in form '{}' on page {} uncompressed: over the"
+                                    + " image limit",
+                            nestedName.getName(),
+                            formName.getName(),
+                            pageNum + 1);
+                    continue;
+                }
 
                 log.info(
                         "Found nested image '{}' in form '{}' on page {} - {}x{}",
@@ -1404,10 +1421,15 @@ public class CompressController {
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
                                 .runCommandWithOutputHandling(command, null);
 
-                // Update current file to the QPDF output
+                long postQpdfSize = Files.size(qpdfOutputPath);
+                if (postQpdfSize >= preQpdfSize) {
+                    log.info(
+                            "QPDF output ({}) is not smaller than its input, keeping the input",
+                            GeneralUtils.formatBytes(postQpdfSize));
+                    return;
+                }
                 Files.copy(qpdfOutputPath, currentFile, StandardCopyOption.REPLACE_EXISTING);
 
-                long postQpdfSize = Files.size(currentFile);
                 double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
                 log.info(
                         "Post-QPDF file size: {} (reduced by {}%)",

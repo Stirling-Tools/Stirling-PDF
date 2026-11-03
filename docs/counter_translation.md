@@ -2,7 +2,7 @@
 
 ## Overview
 
-The script [`scripts/counter_translation_v3.py`](../scripts/counter_translation_v3.py) checks the translation progress of TOML files in `frontend/editor/public/locales/`.
+The script [`scripts/counter_translation_v3.py`](../scripts/counter_translation_v3.py) checks the translation progress of TOML files in `frontend/public/locales/`.
 It compares each locale's `translation.toml` file with the English reference file `en-US/translation.toml` and calculates a percentage of completion for each language.
 
 In addition to console output, the script maintains the configuration file [`scripts/ignore_translation.toml`](../scripts/ignore_translation.toml), which lists translation keys to be ignored for each language.
@@ -21,7 +21,7 @@ python scripts/counter_translation_v3.py
 
 This command:
 
-1. scans `frontend/editor/public/locales/` for all locale `translation.toml` files,
+1. scans `frontend/public/locales/` for all locale `translation.toml` files,
 2. calculates the translation progress for each file,
 3. reformats `scripts/ignore_translation.toml` (sorted, multi-line arrays).
 

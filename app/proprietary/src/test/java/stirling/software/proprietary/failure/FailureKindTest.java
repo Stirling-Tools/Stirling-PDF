@@ -226,7 +226,7 @@ class FailureKindTest {
         private static List<String> readTranslations() {
             try {
                 return Files.readAllLines(
-                        repoFile("frontend/editor/public/locales/en-US/translation.toml"),
+                        repoFile("frontend/public/locales/en-US/translation.toml"),
                         StandardCharsets.UTF_8);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
@@ -465,6 +465,8 @@ class FailureKindTest {
                             FailureKind.STEP_TOOL_FAILED,
                             FailureKind.STEP_INTERRUPTED,
                             FailureKind.STEP_PAGE_TOO_LARGE,
+                            FailureKind.INPUT_IMAGE_TOO_LARGE,
+                            FailureKind.INPUT_DECOMPRESSES_TOO_LARGE,
                             FailureKind.STEP_MISCONFIGURED);
         }
 
