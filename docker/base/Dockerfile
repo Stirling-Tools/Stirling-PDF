@@ -366,10 +366,12 @@ RUN mkdir -p /magick-export/usr/bin \
 FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS python-venv-build
 ARG TARGETPLATFORM
 ARG UNOSERVER_VERSION=3.7
+ARG LXML_VERSION=6.1.3
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
-      python3 python3-venv ca-certificates binutils && \
+      python3 python3-venv python3-dev build-essential libxml2-dev libxslt1-dev \
+      ca-certificates binutils && \
     rm -rf /var/lib/apt/lists/*
 
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
@@ -377,8 +379,16 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     /opt/venv/bin/pip install --no-cache-dir --prefer-binary --only-binary=:all: \
       weasyprint pdf2image opencv-python-headless ocrmypdf \
       cryptography "pillow>=13.0.0" "Brotli>=1.2.1" \
-      "unoserver==${UNOSERVER_VERSION}" && \
-    find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
+      "unoserver==${UNOSERVER_VERSION}"
+
+# Use distribution XML libraries so their package updates also cover lxml.
+RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
+    /opt/venv/bin/pip install --no-cache-dir --no-binary=lxml --force-reinstall \
+      "lxml==${LXML_VERSION}" && \
+    /opt/venv/bin/python -c \
+      "from lxml import etree; assert etree.LIBXML_VERSION == (2, 9, 14), etree.LIBXML_VERSION"
+
+RUN find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
     find /opt/venv \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true && \
     rm -rf /opt/venv/lib/python*/site-packages/pip \
            /opt/venv/lib/python*/site-packages/pip-*.dist-info \
@@ -434,6 +444,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       fonts-freefont-ttf fonts-terminus \
       # Python runtime & UNO bridge
       python3 python3-uno python3-packaging \
+      libxml2 libxslt1.1 \
       # OCR
       tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
       tesseract-ocr-por tesseract-ocr-chi-sim \
