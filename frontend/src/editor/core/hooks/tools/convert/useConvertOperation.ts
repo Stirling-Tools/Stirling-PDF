@@ -2,7 +2,6 @@ import { useCallback, useMemo } from "react";
 import axios from "axios";
 import apiClient from "@editor/services/apiClient";
 import { serverErrorReason } from "@editor/services/errorUtils";
-import { detectFileExtension } from "@editor/utils/fileUtils";
 import { useTranslation } from "react-i18next";
 import {
   validateConvertParameters,
@@ -19,6 +18,8 @@ import {
   getEndpointUrl,
   getEndpointName,
   isImageFormat,
+  isWebFormat,
+  isOfficeFormat,
   usesOfficeEngine,
   parseOfficeEngineChoice,
 } from "@editor/utils/convertUtils";
@@ -35,34 +36,58 @@ import {
 } from "@editor/constants/convertConstants";
 import { useToolCloudStatus } from "@editor/hooks/useToolCloudStatus";
 
-/** Only the image and SVG endpoints can combine several uploads in one request. */
+// Static function that can be used by both the hook and automation executor
 export const shouldProcessFilesSeparately = (
   selectedFiles: File[],
   parameters: ConvertParameters,
 ): boolean => {
   return (
     selectedFiles.length > 1 &&
-    !(
+    // Image to PDF with combineImages = false
+    (((isImageFormat(parameters.fromExtension) ||
+      parameters.fromExtension === "image") &&
       parameters.toExtension === "pdf" &&
-      (isImageFormat(parameters.fromExtension) ||
-        ["image", "svg"].includes(parameters.fromExtension)) &&
-      parameters.imageOptions.combineImages
-    )
+      !parameters.imageOptions.combineImages) ||
+      // SVG to PDF with combineIntoSinglePdf = false
+      (parameters.fromExtension === "svg" &&
+        parameters.toExtension === "pdf" &&
+        !parameters.imageOptions.combineImages) ||
+      // PDF to image conversions (each PDF should generate its own image file)
+      (parameters.fromExtension === "pdf" &&
+        isImageFormat(parameters.toExtension)) ||
+      // PDF to PDF/A, PDF/X and PDF/UA conversions (each PDF should be processed separately)
+      (parameters.fromExtension === "pdf" &&
+        ["pdfa", "pdfx", "pdfua"].includes(parameters.toExtension)) ||
+      // PDF to text-like/spreadsheet formats should be one output per input
+      (parameters.fromExtension === "pdf" &&
+        ["txt", "rtf", "csv", "xlsx"].includes(parameters.toExtension)) ||
+      // PDF to CBR conversions (each PDF should generate its own archive)
+      (parameters.fromExtension === "pdf" &&
+        parameters.toExtension === "cbr") ||
+      // PDF to EPUB/AZW3 conversions (each PDF should generate its own ebook)
+      (parameters.fromExtension === "pdf" &&
+        ["epub", "azw3"].includes(parameters.toExtension)) ||
+      // PDF to office format conversions (each PDF should generate its own office file)
+      (parameters.fromExtension === "pdf" &&
+        isOfficeFormat(parameters.toExtension)) ||
+      // Office files to PDF conversions (each file should be processed separately via LibreOffice)
+      (isOfficeFormat(parameters.fromExtension) &&
+        parameters.toExtension === "pdf") ||
+      // Web files to PDF conversions (each web file should generate its own PDF)
+      ((isWebFormat(parameters.fromExtension) ||
+        parameters.fromExtension === "web") &&
+        parameters.toExtension === "pdf") ||
+      // eBook files to PDF conversions (each file should be processed separately via Calibre)
+      (["epub", "mobi", "azw3", "fb2"].includes(parameters.fromExtension) &&
+        parameters.toExtension === "pdf") ||
+      // Web files smart detection
+      (parameters.isSmartDetection &&
+        parameters.smartDetectionType === "web") ||
+      // Mixed file types (smart detection)
+      (parameters.isSmartDetection &&
+        parameters.smartDetectionType === "mixed"))
   );
 };
-
-const parametersForFile = (
-  parameters: ConvertParameters,
-  file: File,
-): ConvertParameters =>
-  parameters.fromExtension === "any" && parameters.toExtension === "pdf"
-    ? {
-        ...parameters,
-        fromExtension: detectFileExtension(file.name) || "any",
-        isSmartDetection: false,
-        smartDetectionType: "none",
-      }
-    : parameters;
 
 // Static function that can be used by both the hook and automation executor
 export const buildConvertFormData = (
@@ -216,7 +241,10 @@ export const buildConvertFormData = (
       "targetDevice",
       epubOptions?.targetDevice ?? "TABLET_PHONE_IMAGES",
     );
-    formData.append("outputFormat", toExtension === "azw3" ? "AZW3" : "EPUB");
+    formData.append(
+      "outputFormat",
+      epubOptions?.outputFormat ?? (toExtension === "azw3" ? "AZW3" : "EPUB"),
+    );
   }
 
   return formData;
@@ -299,31 +327,13 @@ export const convertProcessor = async (
     toExtension: actualToExtension, // Use the mapped extension for decision logic
   });
 
-  if (isSeparateProcessing || parameters.fromExtension === "any") {
+  if (isSeparateProcessing) {
     // Individual processing for complex cases (PDF→image, smart detection, etc.)
     for (const file of selectedFiles) {
       try {
-        const fileParameters = parametersForFile(parameters, file);
-        if (
-          fileParameters.fromExtension === "pdf" &&
-          actualToExtension === "pdf"
-        ) {
-          processedFiles.push(file);
-          continue;
-        }
-        const formData = buildConvertFormData(fileParameters, [file]);
+        const formData = buildConvertFormData(parameters, [file]);
         const response = await apiClient
-          .post(
-            getEndpointUrl(fileParameters.fromExtension, actualToExtension),
-            formData,
-            {
-              ...requestConfig,
-              endpointName: getEndpointName(
-                fileParameters.fromExtension,
-                actualToExtension,
-              ),
-            },
-          )
+          .post(endpoint, formData, requestConfig)
           .catch(rethrowWithServerReason);
 
         const convertedFile = createFileFromResponse(

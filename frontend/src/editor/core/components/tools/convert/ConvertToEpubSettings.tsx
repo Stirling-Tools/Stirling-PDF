@@ -19,37 +19,63 @@ const ConvertToEpubSettings = ({
 }: ConvertToEpubSettingsProps) => {
   const { t } = useTranslation();
 
-  const epubOptions = {
-    detectChapters: parameters.epubOptions?.detectChapters ?? true,
-    targetDevice: parameters.epubOptions?.targetDevice ?? "TABLET_PHONE_IMAGES",
-    outputFormat: parameters.toExtension === "azw3" ? "AZW3" : "EPUB",
-  };
-
   const handleDetectChaptersChange = (value: boolean) => {
     onParameterChange("epubOptions", {
-      ...epubOptions,
       detectChapters: value,
+      targetDevice:
+        parameters.epubOptions?.targetDevice ?? "TABLET_PHONE_IMAGES",
+      outputFormat:
+        (parameters.epubOptions?.outputFormat ??
+        parameters.toExtension === "azw3")
+          ? "AZW3"
+          : "EPUB",
     });
   };
 
   const handleTargetDeviceChange = (value: string | null) => {
     if (value) {
       onParameterChange("epubOptions", {
-        ...epubOptions,
+        detectChapters: parameters.epubOptions?.detectChapters ?? true,
         targetDevice: value,
+        outputFormat:
+          (parameters.epubOptions?.outputFormat ??
+          parameters.toExtension === "azw3")
+            ? "AZW3"
+            : "EPUB",
       });
     }
   };
 
   const handleOutputFormatChange = (value: string | null) => {
-    if (value === "EPUB" || value === "AZW3") {
-      onParameterChange("toExtension", value === "AZW3" ? "azw3" : "epub");
+    if (value) {
       onParameterChange("epubOptions", {
-        ...epubOptions,
+        detectChapters: parameters.epubOptions?.detectChapters ?? true,
+        targetDevice:
+          parameters.epubOptions?.targetDevice ?? "TABLET_PHONE_IMAGES",
         outputFormat: value,
       });
     }
   };
+
+  // Initialize epubOptions if not present, set output format based on toExtension
+  const epubOptions = parameters.epubOptions || {
+    detectChapters: true,
+    targetDevice: "TABLET_PHONE_IMAGES",
+    outputFormat: parameters.toExtension === "azw3" ? "AZW3" : "EPUB",
+  };
+
+  // Sync output format with selected target extension if not manually set
+  if (
+    parameters.toExtension === "azw3" &&
+    epubOptions.outputFormat !== "AZW3"
+  ) {
+    handleOutputFormatChange("AZW3");
+  } else if (
+    parameters.toExtension === "epub" &&
+    epubOptions.outputFormat !== "EPUB"
+  ) {
+    handleOutputFormatChange("EPUB");
+  }
 
   return (
     <Stack gap="sm" data-testid="epub-settings">

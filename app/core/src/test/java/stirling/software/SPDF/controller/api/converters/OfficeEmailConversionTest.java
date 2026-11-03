@@ -135,16 +135,14 @@ class OfficeEmailConversionTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void respectsAttachmentAndRecipientChoices(boolean include) throws Exception {
+    void respectsAttachmentChoices(boolean include) throws Exception {
         var request = request(email("attached note".getBytes(StandardCharsets.UTF_8)), "eml");
         request.setUseStirlingOfficeConvert(true);
         request.setIncludeAttachments(include);
-        request.setIncludeAllRecipients(include);
         try (var pdf = Loader.loadPDF(body(controller.convertEmlToPdf(request)))) {
             String text = new PDFTextStripper().getText(pdf);
             assertThat(text).contains("Email conversion content");
-            assertThat(text.contains("cc-only@example.com")).isEqualTo(include);
-            assertThat(text.contains("bcc-only@example.com")).isEqualTo(include);
+            assertThat(text).contains("cc-only@example.com", "bcc-only@example.com");
             var names = pdf.getDocumentCatalog().getNames();
             if (include) {
                 var attachments = names.getEmbeddedFiles().getNames();

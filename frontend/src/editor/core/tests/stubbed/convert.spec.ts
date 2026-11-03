@@ -7,7 +7,6 @@
 
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
-import { readFileSync } from "node:fs";
 import { mockAppApis } from "@editor/tests/helpers/api-stubs";
 import {
   suppressNativeFilePicker,
@@ -130,34 +129,27 @@ test.describe("Convert Tool", () => {
     test(`offers Office Convert for ${format.toUpperCase()} while retaining email settings`, async ({
       page,
     }) => {
-      const payloads: string[] = [];
-      await page.route("**/api/v1/convert/eml/pdf", (route) => {
-        payloads.push(route.request().postData() ?? "");
-        return route.fulfill({
+      await page.route("**/api/v1/convert/eml/pdf", (route) =>
+        route.fulfill({
           status: 200,
           contentType: "application/pdf",
           headers: {
-            "Content-Disposition": `attachment; filename="email-${payloads.length}.pdf"`,
+            "Content-Disposition": 'attachment; filename="email.pdf"',
           },
           path: SAMPLE_PDF,
-        });
-      });
+        }),
+      );
       await page.getByTestId("files-button").click();
-      const buffer =
-        format === "msg"
-          ? readFileSync(
-              path.resolve("../app/common/src/test/resources/eml/example.msg"),
-            )
-          : Buffer.from(
-              "From: sender@example.com\r\nSubject: Email\r\n\r\nEmail content",
-            );
       await page.getByTestId("file-input").setInputFiles(
-        ["first", "second"].map((name) => ({
-          name: `${name}.${format}`,
-          mimeType:
-            format === "msg" ? "application/vnd.ms-outlook" : "message/rfc822",
-          buffer,
-        })),
+        format === "msg"
+          ? path.resolve("../app/common/src/test/resources/eml/example.msg")
+          : {
+              name: "email.eml",
+              mimeType: "message/rfc822",
+              buffer: Buffer.from(
+                "From: sender@example.com\r\nSubject: Email\r\n\r\nEmail content",
+              ),
+            },
       );
       await navigateToConvert(page);
       await selectToFormat(page, "pdf");
@@ -179,73 +171,8 @@ test.describe("Convert Tool", () => {
       expect(payload).toMatch(/name="includeAttachments"\r\n\r\ntrue/);
       expect(payload).toMatch(/name="includeAllRecipients"\r\n\r\nfalse/);
       await expect(page.getByTestId("download-result-button")).toBeVisible();
-      await expect.poll(() => payloads.length).toBe(2);
-      for (const body of payloads) {
-        expect(body).toMatch(/name="useStirlingOfficeConvert"\r\n\r\ntrue/);
-        expect(body).toMatch(/name="includeAttachments"\r\n\r\ntrue/);
-        expect(body).toMatch(/name="includeAllRecipients"\r\n\r\nfalse/);
-      }
     });
   }
-
-  test("mixed Office, email and HTML uploads use their own conversion endpoints", async ({
-    page,
-  }) => {
-    const requests: Array<{ path: string; office: boolean }> = [];
-    await page.route("**/api/v1/convert/**", (route) => {
-      requests.push({
-        path: new URL(route.request().url()).pathname,
-        office: /name="useStirlingOfficeConvert"\r\n\r\ntrue/.test(
-          route.request().postData() ?? "",
-        ),
-      });
-      return route.fulfill({
-        status: 200,
-        contentType: "application/pdf",
-        path: SAMPLE_PDF,
-        headers: {
-          "Content-Disposition": `attachment; filename="converted-${requests.length}.pdf"`,
-        },
-      });
-    });
-    await page.getByTestId("files-button").click();
-    await page.getByTestId("file-input").setInputFiles([
-      {
-        name: "letter.docx",
-        mimeType:
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        buffer: Buffer.from("document"),
-      },
-      {
-        name: "mail.eml",
-        mimeType: "message/rfc822",
-        buffer: Buffer.from(
-          "From: sender@example.com\r\nSubject: Email\r\n\r\nEmail",
-        ),
-      },
-      {
-        name: "page.html",
-        mimeType: "text/html",
-        buffer: Buffer.from("<html><body>HTML</body></html>"),
-      },
-      {
-        name: "existing.pdf",
-        mimeType: "application/pdf",
-        buffer: readFileSync(SAMPLE_PDF),
-      },
-    ]);
-    await navigateToConvert(page);
-    const choice = page.getByTestId("stirling-office-convert-switch");
-    await choice.check();
-    await dismissTourTooltip(page);
-    await page.getByTestId("convert-button").click();
-    await expect(page.getByTestId("download-result-button")).toBeVisible();
-    expect(requests).toEqual([
-      { path: "/api/v1/convert/file/pdf", office: true },
-      { path: "/api/v1/convert/eml/pdf", office: true },
-      { path: "/api/v1/convert/html/pdf", office: true },
-    ]);
-  });
 
   test("successful PDF to PNG conversion shows download option", async ({
     page,
