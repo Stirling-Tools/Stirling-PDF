@@ -1,5 +1,6 @@
 """Step definitions for the multi-node regression suite: drive the stack (testing/compose/docker-compose-multinode.yml) via the LB, docker exec curl/psql on individual nodes, and a throwaway Silo client container."""
 
+import base64
 import io
 import json
 import re
@@ -673,3 +674,185 @@ def step_conn_absent(context):
     for node in NODES:
         status, _ = _curl_on_node(node, "GET", f"/api/v1/integrations/{cid}", token=_token(context))
         assert status in (403, 404), f"{node} still resolves deleted connection {cid}: HTTP {status}"
+
+
+MCP_ACCEPT = "application/json, text/event-stream"
+PURGE_LOCK_KEY = "stirling:lock:storage-expiry-purge"
+
+
+def _mcp_on_node(node, api_key, method, params):
+    """POST one JSON-RPC frame to a node's own /mcp (bypasses the LB); returns the result object."""
+    frame = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params})
+    cmd = ["docker", "exec", "-i", node, "curl", "-s", "-w", "\n%{http_code}", "-X", "POST",
+           "-H", "Content-Type: application/json", "-H", f"Accept: {MCP_ACCEPT}",
+           "-H", f"X-API-KEY: {api_key}", "--data-binary", "@-", "http://localhost:8080/mcp"]
+    rc, out, err = _sh(cmd, stdin=frame, timeout=120)
+    body, _, status = out.rstrip("\n").rpartition("\n")
+    assert status.strip() == "200", f"{node} /mcp {method} returned HTTP {status.strip()}: {body[:200] or err}"
+    data = json.loads(body)
+    assert "result" in data, f"{node} /mcp {method} failed: {data.get('error')}"
+    return data["result"]
+
+
+def _mcp_tool(context, idx, name, arguments):
+    key = getattr(context, "_mcp_key", None)
+    assert key, "No MCP API key - use 'Given I have an MCP API key' first."
+    result = _mcp_on_node(_node(idx), key, "tools/call", {"name": name, "arguments": arguments})
+    text = next((c.get("text", "") for c in result.get("content", []) if c.get("type") == "text"), "")
+    assert not result.get("isError"), f"{name} failed on {_node(idx)}: {text[:200]}"
+    return result
+
+
+def _mcp_result_id(context):
+    card = getattr(context, "_mcp_result", None)
+    assert card and card.get("fileId"), "No MCP result - use 'When I rotate a PDF over MCP on node' first."
+    return int(card["fileId"])
+
+
+def _mcp_result_link(context):
+    link = (getattr(context, "_mcp_result", None) or {}).get("downloadUrl")
+    assert link, "the MCP result has no download link (storage.sharing.enabled and system.frontendUrl set?)"
+    return link
+
+
+def _share_token(context):
+    link = _mcp_result_link(context)
+    match = re.search(r"/share/([^/?#]+)", link)
+    assert match, f"result link carries no share token: {link}"
+    return match.group(1)
+
+
+def _valkey_cli(*args):
+    # -c follows MOVED redirects, so the same call works on a sharded Valkey cluster.
+    rc, out, err = _sh(["docker", "exec", VALKEY, "valkey-cli", "-c", *args], timeout=30)
+    assert rc == 0, f"valkey-cli {' '.join(args)} failed: {err.strip() or out.strip()}"
+    return out.strip()
+
+
+@given("I have an MCP API key")
+def step_mcp_api_key(context):
+    # mcp.auth.mode=apikey on this stack, so the admin's own Stirling API key opens /mcp.
+    for path in ("/api/v1/user/get-api-key", "/api/v1/user/update-api-key"):
+        r = requests.post(f"{LB_URL}{path}", headers=_auth(context), timeout=15)
+        key = r.json().get("apiKey") if r.status_code == 200 else None
+        if key:
+            context._mcp_key = key
+            return
+    raise AssertionError("could not get or mint an API key for admin")
+
+
+@when('I rotate a PDF over MCP on node "{idx}"')
+def step_mcp_rotate(context, idx):
+    marker = uuid.uuid4().hex[:12]
+    pdf = base64.b64encode(_pdf_bytes(marker)).decode()
+    result = _mcp_tool(context, idx, "stirling_pages", {
+        "operation": "rotate-pdf", "file": pdf, "fileName": f"mcp-{marker}.pdf", "parameters": {"angle": 90},
+    })
+    context._mcp_result = result.get("structuredContent") or {}
+    assert context._mcp_result.get("fileId"), f"rotate-pdf on {_node(idx)} returned no fileId: {result}"
+
+
+@then("the MCP result should be a temporary stored file in the shared database")
+def step_mcp_result_in_db(context):
+    fid = _mcp_result_id(context)
+    n = _psql_int(f"select count(*) from stored_files where stored_file_id = {fid} and expires_at is not null")
+    assert n == 1, f"MCP result {fid} is not a temporary stored file in the shared DB"
+
+
+@then('the MCP result should download over MCP on node "{idx}"')
+def step_mcp_download_on_node(context, idx):
+    fid = _mcp_result_id(context)
+    result = _mcp_tool(context, idx, "stirling_download", {"fileId": str(fid)})
+    blob = next((c["resource"].get("blob") for c in result.get("content", []) if c.get("type") == "resource"), None)
+    assert blob and base64.b64decode(blob)[:5] == b"%PDF-", f"{_node(idx)} did not return result {fid} as a PDF"
+
+
+@then('the MCP result should feed another operation on node "{idx}"')
+def step_mcp_chain_on_node(context, idx):
+    fid = _mcp_result_id(context)
+    result = _mcp_tool(context, idx, "stirling_misc", {
+        "operation": "compress-pdf", "fileId": str(fid), "parameters": {"optimizeLevel": 2},
+    })
+    new_id = (result.get("structuredContent") or {}).get("fileId")
+    assert new_id and new_id != str(fid), f"compress-pdf on {_node(idx)} returned no new fileId: {result}"
+
+
+@then("the result link should be a private share link on the load balancer URL")
+def step_mcp_link_private(context):
+    link = _mcp_result_link(context)
+    assert re.fullmatch(rf"{re.escape(LB_URL)}/share/[^/?#]+\?action=download", link), (
+        f"expected a private /share link on {LB_URL}, got {link}")
+
+
+@then("the result link should refuse anonymous downloads on every node")
+def step_mcp_link_anonymous(context):
+    token = _share_token(context)
+    for node in NODES:
+        status, _ = _curl_on_node(node, "GET", f"/api/v1/storage/share-links/{token}")
+        assert status == 401, f"{node} served a private result link anonymously (HTTP {status})"
+
+
+@then("the result link should download for a signed-in user on every node")
+def step_mcp_link_signed_in(context):
+    token = _share_token(context)
+    for node in NODES:
+        # S3 storage answers with a redirect to a presigned URL rather than the bytes.
+        status, _ = _curl_on_node(node, "GET", f"/api/v1/storage/share-links/{token}", token=_token(context))
+        assert status in (200, 302), f"{node} refused a signed-in download of the result link (HTTP {status})"
+
+
+@when("the MCP result has expired")
+def step_mcp_result_expired(context):
+    fid = _mcp_result_id(context)
+    _psql(f"update stored_files set expires_at = now() - interval '1 day' where stored_file_id = {fid}")
+
+
+@when("another holder takes the storage purge lock")
+def step_take_purge_lock(context):
+    # Overwrites a node's lease if one is mid-purge; its renew then fails and it stops.
+    _valkey_cli("set", PURGE_LOCK_KEY, f"regr-{uuid.uuid4().hex[:8]}", "px", "600000")
+
+
+@when("the storage purge lock is released")
+def step_release_purge_lock(context):
+    _valkey_cli("del", PURGE_LOCK_KEY)
+
+
+@when('I restart node "{idx}" and wait until it is healthy')
+def step_restart_node_healthy(context, idx):
+    node = _node(idx)
+    rc, out, err = _sh(["docker", "restart", node], timeout=120)
+    assert rc == 0, f"docker restart {node} failed: {err.strip() or out.strip()}"
+    deadline = time.monotonic() + 300
+    while time.monotonic() < deadline:
+        _, out, _ = _sh(["docker", "inspect", "-f", "{{.State.Health.Status}}", node])
+        if out.strip() == "healthy":
+            return
+        time.sleep(5)
+    raise AssertionError(f"{node} did not become healthy within 300s of a restart")
+
+
+@then("the expired MCP result should still be in the shared database after {seconds:d}s")
+def step_mcp_result_survives(context, seconds):
+    time.sleep(seconds)
+    fid = _mcp_result_id(context)
+    n = _psql_int(f"select count(*) from stored_files where stored_file_id = {fid}")
+    assert n == 1, f"expired result {fid} was purged although another holder had the purge lock"
+
+
+@then("within {seconds:d}s the expired MCP result should be purged from the shared database")
+def step_mcp_result_purged(context, seconds):
+    fid = _mcp_result_id(context)
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        if _psql_int(f"select count(*) from stored_files where stored_file_id = {fid}") == 0:
+            return
+        time.sleep(3)
+    raise AssertionError(f"expired result {fid} was still in the shared DB {seconds}s after the lock was released")
+
+
+@then("no node should have logged a storage purge failure")
+def step_no_purge_failure(context):
+    for node in NODES:
+        _, out, err = _sh(["docker", "logs", node], timeout=60)
+        assert "Failed to purge expired stored file" not in out + err, f"{node} logged a storage purge failure"

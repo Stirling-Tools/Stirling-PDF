@@ -12,7 +12,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
-import stirling.software.proprietary.mcp.engine.EngineCapabilityClient;
 import stirling.software.proprietary.mcp.security.McpSecurityConfig;
 import stirling.software.proprietary.mcp.tools.DescribeOperationTool;
 import stirling.software.proprietary.mcp.tools.McpOperationExecutor;
@@ -71,7 +70,6 @@ class McpConditionalTest {
             McpSecurityConfig.class,
             McpAnalytics.class,
             McpToolCatalog.class,
-            EngineCapabilityClient.class,
             McpOperationExecutor.class,
             DescribeOperationTool.class,
             StirlingAiTool.class,

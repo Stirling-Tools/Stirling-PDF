@@ -597,6 +597,14 @@ public class PolicyController {
         return new PolicyPermissions(policyEditingAllowed());
     }
 
+    /**
+     * The caller's policy with its stored step secrets, for running it in-process. Applies the same
+     * access check as {@link #getPolicy}; the result must never be returned over HTTP.
+     */
+    public Optional<Policy> accessiblePolicyForRun(String policyId) {
+        return policyStore.get(policyId).filter(this::accessiblePolicySurface);
+    }
+
     @GetMapping("/{policyId}")
     @Operation(
             summary = "Get a policy by id",
