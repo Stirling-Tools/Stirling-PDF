@@ -118,7 +118,6 @@ public class MetadataController {
                 producer = producer != null ? producer : info.getProducer();
                 subject = subject != null ? subject : info.getSubject();
                 title = title != null ? title : info.getTitle();
-                trapped = trapped != null ? trapped : info.getTrapped();
             }
 
             // If the "deleteAll" flag is set, remove all metadata from the document
@@ -191,7 +190,9 @@ public class MetadataController {
             info.setProducer(producer);
             info.setSubject(subject);
             info.setTitle(title);
-            info.setTrapped(trapped);
+            if (!keepOmitted || trapped != null) {
+                info.setTrapped(trapped);
+            }
 
             document.setDocumentInformation(info);
             return WebResponseUtils.pdfDocToWebResponse(
