@@ -96,9 +96,9 @@ describe("applyStructureEdits", () => {
   test("sets, replaces and removes /Alt on the elements the MCIDs resolve to", async () => {
     const bytes = buildClassicPdf(objects(), 1);
     const out = await applyStructureEdits(bytes, [
-      { pageIndex: 0, mcid: 0, alt: "Intro" },
-      { pageIndex: 0, mcid: 1, alt: null },
-      { pageIndex: 1, mcid: 0, alt: "Second figure" },
+      { pageIndex: 0, mcid: 0, alt: "Intro", decorative: false },
+      { pageIndex: 0, mcid: 1, alt: null, decorative: false },
+      { pageIndex: 1, mcid: 0, alt: "Second figure", decorative: false },
     ]);
     expect(await elementBody(out, 10)).toContain("/Alt (Intro)");
     expect(await elementBody(out, 11)).not.toContain("/Alt");
@@ -108,7 +108,7 @@ describe("applyStructureEdits", () => {
   test("appends a revision and leaves the original bytes in place", async () => {
     const bytes = buildClassicPdf(objects(), 1);
     const out = await applyStructureEdits(bytes, [
-      { pageIndex: 1, mcid: 0, alt: "x" },
+      { pageIndex: 1, mcid: 0, alt: "x", decorative: false },
     ]);
     expect(out.subarray(0, bytes.length)).toEqual(bytes);
     // Only the one element changed, so only it is appended.
@@ -118,8 +118,8 @@ describe("applyStructureEdits", () => {
 
   test("lets the later of two edits to one element win", async () => {
     const out = await applyStructureEdits(buildClassicPdf(objects(), 1), [
-      { pageIndex: 0, mcid: 1, alt: "first" },
-      { pageIndex: 0, mcid: 1, alt: "second" },
+      { pageIndex: 0, mcid: 1, alt: "first", decorative: false },
+      { pageIndex: 0, mcid: 1, alt: "second", decorative: false },
     ]);
     const body = await elementBody(out, 11);
     expect(body).toContain("/Alt (second)");
@@ -134,7 +134,7 @@ describe("applyStructureEdits", () => {
       { num: 22, body: "[10 0 R 11 0 R]" },
     ];
     const out = await applyStructureEdits(buildClassicPdf(tree, 1), [
-      { pageIndex: 0, mcid: 1, alt: "Found" },
+      { pageIndex: 0, mcid: 1, alt: "Found", decorative: false },
     ]);
     expect(await elementBody(out, 11)).toContain("/Alt (Found)");
   });
@@ -142,7 +142,7 @@ describe("applyStructureEdits", () => {
   test("extends a cross-reference-stream file", async () => {
     const bytes = buildXrefStreamPdf(objects(), 1);
     const out = await applyStructureEdits(bytes, [
-      { pageIndex: 0, mcid: 1, alt: "Streamed" },
+      { pageIndex: 0, mcid: 1, alt: "Streamed", decorative: false },
     ]);
     expect(await elementBody(out, 11)).toContain("/Alt (Streamed)");
     expect((await RawPdf.parse(out))?.usesXrefStream).toBe(true);
@@ -150,9 +150,9 @@ describe("applyStructureEdits", () => {
 
   test("names every edit it cannot write, and writes none of them", async () => {
     const reasons = await failuresOf(buildClassicPdf(objects(), 1), [
-      { pageIndex: 0, mcid: 1, alt: "fine on its own" },
-      { pageIndex: 5, mcid: 0, alt: "x" },
-      { pageIndex: 0, mcid: 7, alt: "x" },
+      { pageIndex: 0, mcid: 1, alt: "fine on its own", decorative: false },
+      { pageIndex: 5, mcid: 0, alt: "x", decorative: false },
+      { pageIndex: 0, mcid: 7, alt: "x", decorative: false },
     ]);
     expect(reasons).toEqual([
       "no such page",
@@ -166,7 +166,7 @@ describe("applyStructureEdits", () => {
     );
     expect(
       await failuresOf(buildClassicPdf(untaggedPage, 1), [
-        { pageIndex: 1, mcid: 0, alt: "x" },
+        { pageIndex: 1, mcid: 0, alt: "x", decorative: false },
       ]),
     ).toEqual(["the page has no /StructParents"]);
   });
@@ -177,7 +177,7 @@ describe("applyStructureEdits", () => {
     );
     expect(
       await failuresOf(buildClassicPdf(untagged, 1), [
-        { pageIndex: 0, mcid: 0, alt: "x" },
+        { pageIndex: 0, mcid: 0, alt: "x", decorative: false },
       ]),
     ).toEqual(["the file has no structure tree"]);
   });
@@ -189,7 +189,9 @@ describe("applyStructureEdits", () => {
     );
     const bytes = Uint8Array.from(encrypted, (c) => c.charCodeAt(0));
     expect(
-      await failuresOf(bytes, [{ pageIndex: 0, mcid: 0, alt: "x" }]),
+      await failuresOf(bytes, [
+        { pageIndex: 0, mcid: 0, alt: "x", decorative: false },
+      ]),
     ).toEqual(["the file is encrypted"]);
   });
 });
@@ -219,7 +221,12 @@ describe("applyStructureEdits on a real producer's output", () => {
   test("PDFium reads the new description from the saved file", async () => {
     const bytes = new Uint8Array(await readFile(TAGGED_SAMPLE));
     const out = await applyStructureEdits(bytes, [
-      { pageIndex: 0, mcid: 2, alt: "Revenue by region, \u00e9t\u00e9 2026" },
+      {
+        pageIndex: 0,
+        mcid: 2,
+        alt: "Revenue by region, \u00e9t\u00e9 2026",
+        decorative: false,
+      },
     ]);
 
     const doc = await EditorDocument.open(out);
@@ -239,5 +246,404 @@ describe("applyStructureEdits on a real producer's output", () => {
     } finally {
       doc.dispose();
     }
+  });
+});
+
+async function pageContent(bytes: Uint8Array, pageIndex: number) {
+  const pdf = (await RawPdf.parse(bytes))!;
+  return toLatin1(
+    (await pdf.pageContent(pdf.pageNumberAt(pageIndex)!))!,
+  ).trim();
+}
+
+function parentArray(pdf: RawPdf, key: number): string {
+  const tree = pdf.parentTreeArray(7, key)!;
+  return `[${tree.items!.map((item) => item.text).join(" ")}]`;
+}
+
+/** `objects()` with the bodies in `overrides` swapped in. */
+function withBodies(overrides: Record<number, string>, base = objects()) {
+  return base.map((o) =>
+    o.num in overrides ? { ...o, body: overrides[o.num] } : o,
+  );
+}
+
+const DECORATE_FIGURE = {
+  pageIndex: 0,
+  mcid: 1,
+  alt: null,
+  decorative: true,
+} as const;
+
+describe("applyStructureEdits: marking decorative", () => {
+  test("retags the figure's content as an artifact and drops the figure", async () => {
+    const out = await applyStructureEdits(buildClassicPdf(objects(), 1), [
+      DECORATE_FIGURE,
+    ]);
+    expect(await pageContent(out, 0)).toBe(
+      "/P <</MCID 0>> BDC EMC /Artifact BMC 0 0 10 10 re f EMC",
+    );
+    expect(await pageContent(out, 1)).toBe(
+      "/Figure <</MCID 0>> BDC 0 0 10 10 re f EMC",
+    );
+    const pdf = (await RawPdf.parse(out))!;
+    expect(pdf.valueSpan(pdf.objectBody(9)!, "K")!.text).toBe(
+      "[10 0 R 12 0 R]",
+    );
+    expect(parentArray(pdf, 0)).toBe("[10 0 R null]");
+  });
+
+  test("retags a figure held in a named property list", async () => {
+    const bytes = buildClassicPdf(
+      withBodies({
+        3: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 5 0 R /StructParents 0 /Resources << /Properties << /MC0 << /MCID 1 >> >> >> >>",
+        5: streamBody(
+          "",
+          "/P <</MCID 0>> BDC EMC /Figure /MC0 BDC 0 0 10 10 re f EMC",
+        ),
+      }),
+      1,
+    );
+    const out = await applyStructureEdits(bytes, [DECORATE_FIGURE]);
+    expect(await pageContent(out, 0)).toBe(
+      "/P <</MCID 0>> BDC EMC /Artifact BMC 0 0 10 10 re f EMC",
+    );
+  });
+
+  test("retags every page a figure spans", async () => {
+    const bytes = buildClassicPdf(
+      withBodies(
+        {
+          11: "<< /Type /StructElem /S /Figure /P 9 0 R /Pg 3 0 R /K [1 << /Type /MCR /Pg 4 0 R /MCID 0 >>] >>",
+          9: "<< /Type /StructElem /S /Document /P 7 0 R /K [10 0 R 11 0 R] >>",
+        },
+        objects("<< /Nums [0 [10 0 R 11 0 R] 1 [11 0 R]] >>"),
+      ),
+      1,
+    );
+    const out = await applyStructureEdits(bytes, [DECORATE_FIGURE]);
+    expect(await pageContent(out, 1)).toBe("/Artifact BMC 0 0 10 10 re f EMC");
+    const pdf = (await RawPdf.parse(out))!;
+    expect(parentArray(pdf, 0)).toBe("[10 0 R null]");
+    expect(parentArray(pdf, 1)).toBe("[null]");
+  });
+
+  test("writes a description and a decorative mark in one save", async () => {
+    const out = await applyStructureEdits(buildClassicPdf(objects(), 1), [
+      DECORATE_FIGURE,
+      { pageIndex: 1, mcid: 0, alt: "Second", decorative: false },
+    ]);
+    expect(await elementBody(out, 12)).toContain("/Alt (Second)");
+    const pdf = (await RawPdf.parse(out))!;
+    expect(pdf.valueSpan(pdf.objectBody(9)!, "K")!.text).toBe(
+      "[10 0 R 12 0 R]",
+    );
+  });
+
+  test("refuses a figure whose page draws content another page also draws", async () => {
+    const bytes = buildClassicPdf(
+      withBodies({
+        4: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 5 0 R /StructParents 1 >>",
+      }),
+      1,
+    );
+    expect(await failuresOf(bytes, [DECORATE_FIGURE])).toEqual([
+      "its page draws content another page also draws",
+    ]);
+  });
+
+  test("refuses a figure with a child element", async () => {
+    const bytes = buildClassicPdf(
+      [
+        ...withBodies({
+          11: "<< /Type /StructElem /S /Figure /P 9 0 R /Pg 3 0 R /K [1 13 0 R] >>",
+        }),
+        {
+          num: 13,
+          body: "<< /Type /StructElem /S /Caption /P 11 0 R /Pg 3 0 R >>",
+        },
+      ],
+      1,
+    );
+    expect(await failuresOf(bytes, [DECORATE_FIGURE])).toEqual([
+      "its content is not all marked content on its pages",
+    ]);
+  });
+
+  test("drops a top-level figure when the ParentTree is held in the StructTreeRoot", async () => {
+    const bytes = buildClassicPdf(
+      withBodies({
+        7: "<< /Type /StructTreeRoot /K [9 0 R 11 0 R] /ParentTree << /Nums [0 [10 0 R 11 0 R] 1 [12 0 R]] >> /ParentTreeNextKey 2 >>",
+        9: "<< /Type /StructElem /S /Document /P 7 0 R /K [10 0 R 12 0 R] >>",
+        11: "<< /Type /StructElem /S /Figure /P 7 0 R /Pg 3 0 R /K 1 >>",
+      }),
+      1,
+    );
+    const out = await applyStructureEdits(bytes, [DECORATE_FIGURE]);
+    const root = await elementBody(out, 7);
+    expect(root).toContain("/K [9 0 R]");
+    expect(root).toContain("/Nums [0 [10 0 R null] 1 [12 0 R]]");
+  });
+});
+
+describe("applyStructureEdits: adding figures", () => {
+  // Page 1 also draws content marked MCID 2 and 3, which no element owns.
+  function untaggedContent(parentTree?: string): Uint8Array {
+    return buildClassicPdf(
+      objects(parentTree).map((obj) =>
+        obj.num === 5
+          ? {
+              num: 5,
+              body: streamBody(
+                "",
+                "/P <</MCID 0>> BDC EMC /Figure <</MCID 1>> BDC 0 0 10 10 re f EMC " +
+                  "/Figure <</MCID 2>> BDC 0 0 5 5 re f EMC /Figure <</MCID 3>> BDC 0 0 2 2 re f EMC",
+              ),
+            }
+          : obj,
+      ),
+      1,
+    );
+  }
+  const figure = (mcid: number, after: number | null, alt = "Logo") => ({
+    pageIndex: 0,
+    mcid,
+    alt,
+    decorative: false,
+    newElement: { type: "Figure" as const, after },
+  });
+  const documentKids = async (bytes: Uint8Array) =>
+    (await elementBody(bytes, 9)).match(/\/K \[([^\]]*)\]/)![1];
+
+  test("adds a figure after the element owning the content before it", async () => {
+    const out = await applyStructureEdits(untaggedContent(), [figure(2, 0)]);
+    expect(await documentKids(out)).toBe("10 0 R 13 0 R 11 0 R 12 0 R");
+    expect((await elementBody(out, 13)).trim()).toBe(
+      "<< /Type /StructElem /S /Figure /P 9 0 R /Pg 3 0 R /K 2 /Alt (Logo) >>",
+    );
+    expect(await elementBody(out, 7)).toContain(
+      "0 [10 0 R 11 0 R 13 0 R] 1 [12 0 R]",
+    );
+  });
+
+  test("places a figure before the page's first tagged content when nothing precedes it", async () => {
+    const out = await applyStructureEdits(untaggedContent(), [
+      figure(2, null, null as unknown as string),
+    ]);
+    expect(await documentKids(out)).toBe("13 0 R 10 0 R 11 0 R 12 0 R");
+    expect(await elementBody(out, 13)).not.toContain("/Alt");
+  });
+
+  test("places a figure after one added in the same save", async () => {
+    const out = await applyStructureEdits(untaggedContent(), [
+      figure(2, 1),
+      figure(3, 2),
+    ]);
+    expect(await documentKids(out)).toBe("10 0 R 11 0 R 13 0 R 14 0 R 12 0 R");
+  });
+
+  test("files a figure on a page with no tagged content in the document element", async () => {
+    const out = await applyStructureEdits(
+      untaggedContent("<< /Nums [0 [10 0 R 11 0 R] 1 [null]] >>"),
+      [{ ...figure(0, null), pageIndex: 1 }],
+    );
+    expect(await documentKids(out)).toBe("10 0 R 11 0 R 12 0 R 13 0 R");
+  });
+
+  test("files a figure in a StructTreeRoot that also holds the ParentTree", async () => {
+    const out = await applyStructureEdits(
+      buildClassicPdf(
+        [
+          ...withBodies(
+            {
+              7: "<< /Type /StructTreeRoot /K [9 0 R 8 0 R] /ParentTree << /Nums [0 [10 0 R 11 0 R] 1 [null]] >> /ParentTreeNextKey 2 >>",
+            },
+            objects(),
+          ),
+          { num: 8, body: "<< /Type /StructElem /S /Sect /P 7 0 R >>" },
+        ],
+        1,
+      ),
+      [{ ...figure(0, null), pageIndex: 1 }],
+    );
+    const root = await elementBody(out, 7);
+    expect(root).toContain("/K [9 0 R 8 0 R 13 0 R]");
+    expect(root).toContain("/Nums [0 [10 0 R 11 0 R] 1 [13 0 R]]");
+  });
+
+  test("adds a figure beside one marked decorative in the same save", async () => {
+    const out = await applyStructureEdits(untaggedContent(), [
+      figure(2, 1),
+      { pageIndex: 0, mcid: 1, alt: null, decorative: true },
+    ]);
+    expect(await documentKids(out)).toBe("10 0 R 13 0 R 12 0 R");
+    expect(await elementBody(out, 7)).toContain(
+      "0 [10 0 R null 13 0 R] 1 [12 0 R]",
+    );
+  });
+
+  test("refuses an MCID the page's content does not carry, or an element owns", async () => {
+    expect(
+      await failuresOf(untaggedContent(), [figure(7, 0), figure(1, 0)]),
+    ).toEqual([
+      "the page's content does not carry its MCID",
+      "another element owns its MCID",
+    ]);
+  });
+});
+
+describe("applyStructureEdits: blocks", () => {
+  // Document 9 holds a P (10) whose text is all in a Span (13), then a list
+  // (14) of one item (15). The page also draws MCID 2, which no element owns.
+  function blocksPdf(): Uint8Array {
+    return buildClassicPdf(
+      objects("<< /Nums [0 [13 0 R 15 0 R]] >>")
+        .map((obj) => {
+          switch (obj.num) {
+            case 5:
+              return {
+                num: 5,
+                body: streamBody(
+                  "",
+                  "/Span <</MCID 0>> BDC 0 0 10 10 re f EMC /LI <</MCID 1>> BDC 0 0 5 5 re f EMC " +
+                    "/P <</MCID 2>> BDC 0 0 2 2 re f EMC",
+                ),
+              };
+            case 9:
+              return {
+                num: 9,
+                body: "<< /Type /StructElem /S /Document /P 7 0 R /K [10 0 R 14 0 R] >>",
+              };
+            case 10:
+              return {
+                num: 10,
+                body: "<< /Type /StructElem /S /P /P 9 0 R /K 13 0 R >>",
+              };
+            default:
+              return obj;
+          }
+        })
+        .concat([
+          {
+            num: 13,
+            body: "<< /Type /StructElem /S /Span /P 10 0 R /Pg 3 0 R /K 0 >>",
+          },
+          {
+            num: 14,
+            body: "<< /Type /StructElem /S /L /P 9 0 R /K 15 0 R >>",
+          },
+          {
+            num: 15,
+            body: "<< /Type /StructElem /S /LI /P 14 0 R /Pg 3 0 R /K 1 >>",
+          },
+        ]),
+      1,
+    );
+  }
+  const added = (after: number) => ({
+    pageIndex: 0,
+    mcid: 2,
+    decorative: false,
+    newElement: { type: "P" as const, after },
+  });
+  const documentKids = async (bytes: Uint8Array) =>
+    (await elementBody(bytes, 9)).match(/\/K \[([^\]]*)\]/)![1];
+
+  test("retags the paragraph a Span's text sits in", async () => {
+    const out = await applyStructureEdits(blocksPdf(), [
+      { pageIndex: 0, mcid: 0, type: "H2", decorative: false },
+    ]);
+    expect(await elementBody(out, 10)).toContain("/S /H2");
+    expect(await elementBody(out, 13)).toContain("/S /Span");
+  });
+
+  test("places an element after the paragraph, not inside it beside the Span", async () => {
+    const out = await applyStructureEdits(blocksPdf(), [added(0)]);
+    expect(await documentKids(out)).toBe("10 0 R 16 0 R 14 0 R");
+  });
+
+  test("places an element after a list, not among its items", async () => {
+    const out = await applyStructureEdits(blocksPdf(), [added(1)]);
+    expect(await documentKids(out)).toBe("10 0 R 14 0 R 16 0 R");
+  });
+});
+
+describe("applyStructureEdits: cutting", () => {
+  // Document 9 holds P 10, whose kids are MCID 0, Link 13 (MCID 2) and MCID
+  // 1. The page also carries MCIDs 3 and 4, which the editor gave the text
+  // it cut out of MCID 0 and the text after that cut.
+  function cutPdf(): Uint8Array {
+    return buildClassicPdf(
+      objects("<< /Nums [0 [10 0 R 10 0 R 13 0 R]] >>")
+        .map((obj) => {
+          switch (obj.num) {
+            case 5:
+              return {
+                num: 5,
+                body: streamBody(
+                  "",
+                  "/P <</MCID 0>> BDC 0 0 1 1 re f EMC /H2 <</MCID 3>> BDC 0 0 2 2 re f EMC " +
+                    "/P <</MCID 4>> BDC 0 0 3 3 re f EMC /Link <</MCID 2>> BDC 0 0 4 4 re f EMC " +
+                    "/P <</MCID 1>> BDC 0 0 5 5 re f EMC",
+                ),
+              };
+            case 9:
+              return {
+                num: 9,
+                body: "<< /Type /StructElem /S /Document /P 7 0 R /K [10 0 R] >>",
+              };
+            case 10:
+              return {
+                num: 10,
+                body: "<< /Type /StructElem /S /P /P 9 0 R /Pg 3 0 R /K [0 13 0 R 1] >>",
+              };
+            default:
+              return obj;
+          }
+        })
+        .concat([
+          {
+            num: 13,
+            body: "<< /Type /StructElem /S /Link /P 10 0 R /Pg 3 0 R /K 2 >>",
+          },
+        ]),
+      1,
+    );
+  }
+  const cut = (type: "H2" | "Span") => ({
+    pageIndex: 0,
+    mcid: 3,
+    alt: null,
+    decorative: false,
+    cut: { type, from: [0], before: 0, after: 4 },
+  });
+  const kids = async (bytes: Uint8Array, num: number) =>
+    (await elementBody(bytes, num)).match(/\/K \[([^\]]*)\]/)![1];
+
+  test("puts an inline element among the kids, between the parts it was cut from", async () => {
+    const out = await applyStructureEdits(cutPdf(), [cut("Span")]);
+    expect(await kids(out, 10)).toBe("0 14 0 R 4 13 0 R 1");
+    expect(await elementBody(out, 14)).toContain("/S /Span /P 10 0 R");
+  });
+
+  test("splits the element around a block, moving the kids after it to a new one", async () => {
+    const out = await applyStructureEdits(cutPdf(), [cut("H2")]);
+    expect(await kids(out, 9)).toBe("10 0 R 14 0 R 15 0 R");
+    expect(await kids(out, 10)).toBe("0");
+    expect(await elementBody(out, 14)).toContain("/S /H2 /P 9 0 R");
+    expect(await kids(out, 15)).toBe("4 13 0 R 1");
+    expect(await elementBody(out, 13)).toContain("/P 15 0 R");
+
+    const pdf = (await RawPdf.parse(out))!;
+    const slots = pdf.parentTreeArray(7, 0)!.items!.map((item) => item.text);
+    expect(slots).toEqual(["10 0 R", "15 0 R", "13 0 R", "14 0 R", "15 0 R"]);
+  });
+
+  test("refuses a cut from MCIDs that are not consecutive kids", async () => {
+    await expect(
+      applyStructureEdits(cutPdf(), [
+        { ...cut("Span"), cut: { ...cut("Span").cut, from: [0, 1] } },
+      ]),
+    ).rejects.toThrow(StructureEditError);
   });
 });

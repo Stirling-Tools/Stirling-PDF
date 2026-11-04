@@ -190,7 +190,7 @@ jobs:
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -280,6 +280,7 @@ jobs:
             VITE_SUPABASE_URL=${{ steps.saas.outputs.supabase_url }}
             VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
             VITE_SAAS_API_URL=${{ steps.saas.outputs.api_base }}
+            VITE_ACCESSIBILITY_EDITING=true
           platforms: linux/amd64
 
       - name: Set up SSH

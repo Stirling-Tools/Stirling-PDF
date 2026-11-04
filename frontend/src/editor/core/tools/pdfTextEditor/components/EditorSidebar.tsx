@@ -2,11 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
+import { useHeadingOutline } from "@editor/tools/pdfTextEditor/hooks/useHeadingOutline";
+import { useDocumentLanguage } from "@editor/tools/pdfTextEditor/hooks/useDocumentLanguage";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
+import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
 import { analyzePageFonts } from "@editor/tools/pdfTextEditor/util/pageFonts";
+import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
   ScanHint,
   type ScanHintProps,
@@ -59,6 +64,7 @@ export function EditorSidebar({
   const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
   const geometry = useSelectionGeometry(store, state, selection);
+  const documentLanguage = useDocumentLanguage(store, state);
   const hasSelection =
     selection.runIds.length > 0 ||
     selection.imageIds.length > 0 ||
@@ -73,6 +79,33 @@ export function EditorSidebar({
   }, [hasSelection]);
 
   const fontNote = useSelectedFontNote(state, selection);
+
+  const editorDocument = store.document;
+  const reviewingAccessibility = useMemo(
+    () => ACCESSIBILITY_EDITING && !!editorDocument?.isTagged(),
+    [editorDocument],
+  );
+  const imageSelected = controller.imageAccessibility !== null;
+  // Counts and Next cover only pages already read, which is just the first few
+  // until the rest scroll into view.
+  useEffect(() => {
+    if (!reviewingAccessibility || (tab !== "document" && !imageSelected)) {
+      return;
+    }
+    const id = window.setTimeout(() => ensureAllPagesRead(store), 0);
+    return () => window.clearTimeout(id);
+  }, [reviewingAccessibility, tab, imageSelected, store]);
+  const headings = useHeadingOutline(
+    store,
+    state,
+    reviewingAccessibility && tab === "document",
+  );
+
+  // Following the selection only catches one appearing, so moving from one
+  // selected image to the next would leave the new one's description hidden.
+  const selectNextImageToReview = () => {
+    if (controller.onSelectNextImageToReview()) setTab("selected");
+  };
 
   if (!state.hasDocument) {
     return (
@@ -112,42 +145,51 @@ export function EditorSidebar({
         </Tabs.List>
       </Group>
 
-      <Box>
-        <Tabs.Panel value="selected">
-          {hasSelection ? (
-            <SelectionInspector
-              controller={controller}
-              selection={selection}
-              geometry={geometry}
-              fontNote={fontNote}
-              canGroup={canGroup}
-              canUngroup={canUngroup}
-              onGroup={onGroup}
-              onUngroup={onUngroup}
-            />
-          ) : (
-            <NothingSelected
+      <LanguagesInUse.Provider value={state.languagesInUse}>
+        <Box>
+          <Tabs.Panel value="selected">
+            {hasSelection ? (
+              <SelectionInspector
+                controller={controller}
+                selection={selection}
+                geometry={geometry}
+                fontNote={fontNote}
+                canGroup={canGroup}
+                canUngroup={canUngroup}
+                onGroup={onGroup}
+                onUngroup={onUngroup}
+              />
+            ) : (
+              <NothingSelected
+                pages={state.pages}
+                onRunOcr={onRunOcr}
+                ocrRunning={ocrRunning}
+                ocrAvailable={ocrAvailable}
+                ocrBlockedReason={ocrBlockedReason}
+                onRemovePassword={onRemovePassword}
+              />
+            )}
+          </Tabs.Panel>
+          <Tabs.Panel value="document">
+            <DocumentInspector
               pages={state.pages}
-              onRunOcr={onRunOcr}
-              ocrRunning={ocrRunning}
-              ocrAvailable={ocrAvailable}
-              ocrBlockedReason={ocrBlockedReason}
-              onRemovePassword={onRemovePassword}
+              groupingMode={state.groupingMode}
+              widthMode={state.widthMode}
+              showRulers={state.showRulers}
+              onSetGroupingMode={onSetGroupingMode}
+              onSetWidthMode={onSetWidthMode}
+              onSetShowRulers={onSetShowRulers}
+              imageReview={
+                reviewingAccessibility ? controller.imageReview : null
+              }
+              onSelectNextImageToReview={selectNextImageToReview}
+              headingOutline={headings.outline}
+              onSelectHeading={headings.selectHeading}
+              documentLanguage={documentLanguage}
             />
-          )}
-        </Tabs.Panel>
-        <Tabs.Panel value="document">
-          <DocumentInspector
-            pages={state.pages}
-            groupingMode={state.groupingMode}
-            widthMode={state.widthMode}
-            showRulers={state.showRulers}
-            onSetGroupingMode={onSetGroupingMode}
-            onSetWidthMode={onSetWidthMode}
-            onSetShowRulers={onSetShowRulers}
-          />
-        </Tabs.Panel>
-      </Box>
+          </Tabs.Panel>
+        </Box>
+      </LanguagesInUse.Provider>
     </Tabs>
   );
 }

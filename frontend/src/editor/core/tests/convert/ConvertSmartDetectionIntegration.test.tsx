@@ -106,6 +106,23 @@ vi.mock("../../services/thumbnailGenerationService", () => ({
   },
 }));
 
+vi.mock("@editor/utils/thumbnailUtils", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@editor/utils/thumbnailUtils")>()),
+  generateThumbnailForFile: vi
+    .fn()
+    .mockResolvedValue("data:image/png;base64,fake-thumbnail"),
+  generateThumbnailPairWithMetadata: vi.fn().mockResolvedValue({
+    unrotated: {
+      thumbnail: "data:image/png;base64,fake-thumbnail",
+      pageCount: 1,
+    },
+    rotated: {
+      thumbnail: "data:image/png;base64,fake-thumbnail",
+      pageCount: 1,
+    },
+  }),
+}));
+
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <MantineProvider>
     <I18nextProvider i18n={i18n}>
@@ -182,6 +199,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "file-to-pdf",
         },
       );
 
@@ -236,6 +254,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "file-to-pdf",
         },
       );
     });
@@ -291,6 +310,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "img-to-pdf",
         },
       );
 
@@ -301,7 +321,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
       expect(files).toHaveLength(3);
     });
 
-    test("should detect mixed file types and use file-to-pdf endpoint", async () => {
+    test("converts mixed Office uploads individually and keeps the existing PDF", async () => {
       const { result: paramsResult } = renderHook(
         () => useConvertParameters(),
         {
@@ -358,11 +378,13 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
       });
 
       expect(onToolRunComplete).toHaveBeenCalledTimes(1);
+      expect(mockedApiClient.post).toHaveBeenCalledTimes(2);
       expect(mockedApiClient.post).toHaveBeenCalledWith(
         "/api/v1/convert/file/pdf",
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "file-to-pdf",
         },
       );
     });
@@ -417,6 +439,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "html-to-pdf",
         },
       );
 
@@ -568,6 +591,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "pdf-to-pdfa",
         },
       );
     });

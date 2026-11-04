@@ -14,9 +14,9 @@ class ExtractHeaderRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("useFirstTextAsFallback defaults to null")
-        void useFirstTextAsFallbackDefaultsNull() {
-            assertThat(new ExtractHeaderRequest().getUseFirstTextAsFallback()).isNull();
+        @DisplayName("useFirstTextAsFallback defaults to false")
+        void useFirstTextAsFallbackDefaultsFalse() {
+            assertThat(new ExtractHeaderRequest().getUseFirstTextAsFallback()).isFalse();
         }
     }
 

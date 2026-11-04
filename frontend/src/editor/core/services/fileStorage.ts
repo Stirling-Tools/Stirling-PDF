@@ -594,6 +594,7 @@ class FileStorageService {
         '"{{name}}" is saved in this browser but its contents can no longer be read. Upload the file again to keep working on it.',
         { name: record.name },
       ),
+      privateBody: true,
       expandable: false,
       durationMs: 8000,
     });
