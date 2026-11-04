@@ -22,11 +22,6 @@
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The 2-Clause BSD License",
-      "category": "permissive"
-    },
-    {
-      "moduleName": ".*",
       "moduleLicense": "BSD-3-Clause",
       "category": "permissive"
     },
@@ -53,11 +48,6 @@
     {
       "moduleName": ".*",
       "moduleLicense": "Eclipse Distribution License v. 1.0",
-      "category": "permissive"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "BSD-4 License",
       "category": "permissive"
     },
     {
@@ -126,11 +116,6 @@
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache-2.0 License",
-      "category": "permissive"
-    },
-    {
-      "moduleName": ".*",
       "moduleLicense": "Apache License 2.0",
       "category": "permissive"
     },
@@ -162,11 +147,6 @@
     {
       "moduleName": ".*",
       "moduleLicense": "The Apache Software License, Version 2.0",
-      "category": "permissive"
-    },
-    {
-      "moduleName": "com.nimbusds:oauth2-oidc-sdk",
-      "moduleLicense": "\"Apache License, version 2.0\";link=\"https://www.apache.org/licenses/LICENSE-2.0.html\"",
       "category": "permissive"
     },
     {
