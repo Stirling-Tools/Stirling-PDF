@@ -32,6 +32,7 @@ import {
   type ReadAloudFromSelectionDetail,
 } from "@editor/components/viewer/readAloudFromSelection";
 import "@editor/components/viewer/TextSelectionMenu.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export type TextSelectionMenuProps = SelectionSelectionMenuProps & {
   documentId?: string;
@@ -485,6 +486,7 @@ function TextSelectionMenuInner({
                     <TextInput
                       placeholder="https://..."
                       value={linkUrl}
+                      className={privateContentClassName}
                       onChange={(e) => setLinkUrl(e.currentTarget.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && linkUrl.trim()) {

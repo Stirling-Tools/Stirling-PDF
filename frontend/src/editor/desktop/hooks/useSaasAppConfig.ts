@@ -10,11 +10,16 @@ import type { AppConfig } from "@editor/types/appConfig";
  * `useSaasAppConfig()?.aiEngineEnabled`, `?.premiumEnabled`). Reloads when the
  * connection mode changes, so switching into/out of SaaS updates the flags
  * (and a server-side flag flip is picked up on the next load).
+ * Disabled callers return null without fetching or subscribing to connection changes.
  */
-export function useSaasAppConfig(): AppConfig | null {
+export function useSaasAppConfig(enabled = true): AppConfig | null {
   const [config, setConfig] = useState<AppConfig | null>(null);
 
   useEffect(() => {
+    if (!enabled) {
+      setConfig(null);
+      return;
+    }
     let alive = true;
     const load = () => {
       void saasAppConfigService.getConfig().then((c) => {
@@ -30,7 +35,7 @@ export function useSaasAppConfig(): AppConfig | null {
       alive = false;
       unsubscribe?.();
     };
-  }, []);
+  }, [enabled]);
 
-  return config;
+  return enabled ? config : null;
 }
