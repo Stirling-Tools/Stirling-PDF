@@ -48,7 +48,7 @@ jobs:
 
       - name: Resolve backend dependencies
         if: steps.cache-gradle-restore.outputs.cache-hit != 'true'
-        run: ./gradlew :stirling-pdf:classes --no-daemon
+        run: ./gradlew :stirling-pdf:classes copyJacocoAgent --no-daemon
         env:
           STIRLING_FLAVOR: saas
           MAVEN_USER: ${{ secrets.MAVEN_USER }}

@@ -433,21 +433,28 @@
         {
             "moduleName": "com.stirling:stirling-office-convert",
             "moduleUrl": "https://github.com/Stirling-Tools/Stirling-Office-Convert",
-            "moduleVersion": "0.2.2",
+            "moduleVersion": "0.3.3",
             "moduleLicense": "MIT License",
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
         {
             "moduleName": "com.stirling:stirling-office-convert-legacy",
             "moduleUrl": "https://github.com/Stirling-Tools/Stirling-Office-Convert",
-            "moduleVersion": "0.2.2",
+            "moduleVersion": "0.3.3",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "com.stirling:stirling-office-convert-pdfa",
+            "moduleUrl": "https://github.com/Stirling-Tools/Stirling-Office-Convert",
+            "moduleVersion": "0.3.3",
             "moduleLicense": "MIT License",
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
         {
             "moduleName": "com.stirling:stirling-office-convert-topdf",
             "moduleUrl": "https://github.com/Stirling-Tools/Stirling-Office-Convert",
-            "moduleVersion": "0.2.2",
+            "moduleVersion": "0.3.3",
             "moduleLicense": "MIT License",
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
         },
@@ -3017,7 +3024,5 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         }
     ],
-    "importedModules": [
-        
-    ]
+    "importedModules": []
 }

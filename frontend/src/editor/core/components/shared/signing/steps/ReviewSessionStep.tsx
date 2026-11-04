@@ -5,6 +5,8 @@ import { Icon } from "@editor/ui/Icon";
 import type { SignatureSettings } from "@editor/components/tools/certSign/SignatureSettingsInput";
 import type { FileState } from "@editor/types/file";
 import { formatFileSize } from "@editor/utils/fileUtils";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface ReviewSessionStepProps {
   selectedFile: FileState;
@@ -55,7 +57,11 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
             backgroundColor: "var(--mantine-color-default-hover)",
           }}
         >
-          <Text size="sm" style={{ overflowWrap: "anywhere" }}>
+          <Text
+            size="sm"
+            style={{ overflowWrap: "anywhere" }}
+            className={privateContentClassName}
+          >
             {selectedFile.name}
           </Text>
           {selectedFile.size && (
@@ -120,7 +126,7 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
               <strong>
                 {t("groupSigning.steps.review.reason", "Reason:")}
               </strong>{" "}
-              {signatureSettings.reason}
+              <PrivateContent>{signatureSettings.reason}</PrivateContent>
             </Text>
           )}
           {signatureSettings.showSignature && signatureSettings.location && (
@@ -128,7 +134,7 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
               <strong>
                 {t("groupSigning.steps.review.location", "Location:")}
               </strong>{" "}
-              {signatureSettings.location}
+              <PrivateContent>{signatureSettings.location}</PrivateContent>
             </Text>
           )}
           {signatureSettings.showSignature && (

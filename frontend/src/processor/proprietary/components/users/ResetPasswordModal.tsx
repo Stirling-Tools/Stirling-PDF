@@ -4,6 +4,8 @@ import { Button, Checkbox, FormField, Input, Modal } from "@editor/ui";
 import { resetMemberPassword, type Member } from "@processor/api/users";
 import { errorMessage } from "@processor/api/http";
 import "@processor/views/Users.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface ResetPasswordModalProps {
   open: boolean;
@@ -108,7 +110,7 @@ export function ResetPasswordModal({
       onClose={onClose}
       width="sm"
       title={t("users.resetPw.title", "Reset password")}
-      subtitle={member?.name}
+      subtitle={member && <PrivateContent>{member.name}</PrivateContent>}
       footer={
         <div className="portal-users__modal-footer">
           <Button variant="tertiary" size="sm" onClick={onClose}>
@@ -144,6 +146,7 @@ export function ResetPasswordModal({
                   input, so name the input directly. */}
               <Input
                 value={generated}
+                className={privateContentClassName}
                 readOnly
                 aria-label={t("users.resetPw.newPassword", "New password")}
               />

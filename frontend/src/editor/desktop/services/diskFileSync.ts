@@ -333,10 +333,13 @@ interface ToastSpec {
 }
 
 /** Lazy: this sits on the hydration path and the toast barrel pulls in the
- *  whole icon set, costing ~3s of module load per file open. */
+ *  whole icon set, costing ~3s of module load per file open. Every notice
+ *  here names a file in its body. */
 function toast({ alertType = "warning", ...options }: ToastSpec): void {
   void import("@editor/components/toast")
-    .then(({ alert }) => alert({ alertType, expandable: false, ...options }))
+    .then(({ alert }) =>
+      alert({ alertType, expandable: false, privateBody: true, ...options }),
+    )
     .catch((error) => console.error("[diskFileSync] toast failed:", error));
 }
 

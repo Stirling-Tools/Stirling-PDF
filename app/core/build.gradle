@@ -30,6 +30,7 @@ dependencies {
             exclude group: 'jakarta.enterprise'
         }
     }
+    implementation 'org.eclipse.jetty.compression:jetty-compression-server'
     // Boot 4's JettyWebServerFactory builds an h2c HTTP2CServerConnectionFactory for every
     // connector, so jetty-http2-server is not optional even on the loopback-only desktop sidecar.
     // ALPN stays because the same factory wires it for TLS connectors.
@@ -76,6 +77,7 @@ dependencies {
     implementation "com.stirling:stirling-office-convert:$officeConvertVersion"
     implementation "com.stirling:stirling-office-convert-legacy:$officeConvertVersion"
     implementation "com.stirling:stirling-office-convert-topdf:$officeConvertVersion"
+    implementation "com.stirling:stirling-office-convert-pdfa:$officeConvertVersion"
 
     // General PDF dependencies
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"

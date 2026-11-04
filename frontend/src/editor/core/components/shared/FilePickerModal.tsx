@@ -17,6 +17,7 @@ import { FileId } from "@editor/types/file";
 import type { StoredStirlingFileRecord } from "@editor/services/fileStorage";
 import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 type StoredFileItem = Partial<StoredStirlingFileRecord> & {
   id: FileId;
@@ -113,7 +114,7 @@ function StoredFileCard({ file, selected, onToggle }: StoredFileCardProps) {
       }}
       onClick={onToggle}
     >
-      <Group gap="sm" align="flex-start">
+      <Group gap="sm" align="flex-start" className={privateContentClassName}>
         <Checkbox
           checked={selected}
           onChange={onToggle}
