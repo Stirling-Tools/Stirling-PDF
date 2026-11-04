@@ -1,20 +1,19 @@
 import { render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { userback, appConfig } = vi.hoisted(() => ({
-  userback: vi.fn(() => new Promise<never>(() => {})),
+const { userback, appConfig, user } = vi.hoisted(() => ({
+  userback: vi.fn((): Promise<unknown> => new Promise(() => {})),
   appConfig: { enableFeedback: false },
+  user: {
+    id: "user-1",
+    email: "ada@example.com",
+    user_metadata: { full_name: "Ada" },
+  },
 }));
 
 vi.mock("@userback/widget", () => ({ default: userback }));
 vi.mock("@editor/auth/UseSession", () => ({
-  useAuth: () => ({
-    user: {
-      id: "user-1",
-      email: "ada@example.com",
-      user_metadata: { full_name: "Ada" },
-    },
-  }),
+  useAuth: () => ({ user }),
 }));
 vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: appConfig }),
@@ -24,7 +23,21 @@ vi.mock("@editor/contexts/AppConfigContext", () => ({
 async function renderWidget() {
   const { default: UserbackWidget } =
     await import("@editor/components/feedback/UserbackWidget");
-  render(<UserbackWidget />);
+  const view = render(<UserbackWidget />);
+  return {
+    unmount: view.unmount,
+    rerender: () => view.rerender(<UserbackWidget />),
+  };
+}
+
+// Like the real loader, every call gets the same pending load.
+function pendingLoad() {
+  let resolve!: (instance: unknown) => void;
+  const promise = new Promise<unknown>((r) => {
+    resolve = r;
+  });
+  userback.mockReturnValue(promise);
+  return { promise, resolve };
 }
 
 describe("UserbackWidget", () => {
@@ -35,7 +48,8 @@ describe("UserbackWidget", () => {
   afterEach(() => {
     vi.resetModules();
     vi.unstubAllEnvs();
-    userback.mockClear();
+    userback.mockReset();
+    user.email = "ada@example.com";
   });
 
   it("does not load Userback while the server has feedback off", async () => {
@@ -56,5 +70,38 @@ describe("UserbackWidget", () => {
         },
       }),
     );
+  });
+
+  it("destroys a load that finishes after the widget has gone", async () => {
+    appConfig.enableFeedback = true;
+    const load = pendingLoad();
+    const { unmount } = await renderWidget();
+    unmount();
+
+    const instance = { destroy: vi.fn() };
+    load.resolve(instance);
+    await load.promise;
+
+    expect(instance.destroy).toHaveBeenCalled();
+    const { getUserbackInstance } =
+      await import("@editor/components/feedback/userbackInstance");
+    expect(getUserbackInstance()).toBeNull();
+  });
+
+  it("hands a pending load to the run that replaced the one that started it", async () => {
+    appConfig.enableFeedback = true;
+    const load = pendingLoad();
+    const { rerender } = await renderWidget();
+    user.email = "ada@new.example.com";
+    rerender();
+
+    const instance = { destroy: vi.fn() };
+    load.resolve(instance);
+    await load.promise;
+
+    expect(instance.destroy).not.toHaveBeenCalled();
+    const { getUserbackInstance } =
+      await import("@editor/components/feedback/userbackInstance");
+    expect(getUserbackInstance()).toBe(instance);
   });
 });
