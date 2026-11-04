@@ -81,7 +81,7 @@ export interface AddPasswordRequest {
    */
   password?: string;
   /**
-   * Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.
+   * Change permissions on an encrypted source. Omitting or leaving ownerPassword empty retains its passwords and encryption; supplying ownerPassword replaces the permissions password while keeping the opening password and encryption key length.
    */
   preserveExisting?: boolean;
   /**
@@ -143,11 +143,11 @@ export interface AddStampRequest {
    */
   opacity?: number;
   /**
-   * X in points from the left edge; with overrideY, replaces position. -1 = not set.
+   * X in PDF user-space points. When both overrides are nonnegative, replaces position. Image and QR positions are clamped to the media box using the unrotated stamp size; text positions are not clamped. -1 = not set.
    */
   overrideX?: number;
   /**
-   * Y in points from the bottom edge; with overrideX, replaces position. -1 = not set.
+   * Y in PDF user-space points. When both overrides are nonnegative, replaces position. Image and QR positions are clamped to the media box using the unrotated stamp size; text positions are not clamped. -1 = not set.
    */
   overrideY?: number;
   /**
@@ -164,7 +164,7 @@ export interface AddStampRequest {
   rotation?: number;
   stampImage?: File;
   /**
-   * The stamp text, or the QR code content when stampType is qr; required when stampType is text or qr. \n starts a new line. Supports @page, @total_pages, @date, @date{dd/MM/yyyy}, @time, @filename, @title, @author and @uuid (@@ for a literal @).
+   * The stamp text, or the QR code content when stampType is qr; required when stampType is text or qr. For text stamps only, \n starts a new line; QR content keeps the literal sequence. Both support @page, @total_pages, @date, @date{dd/MM/yyyy}, @time, @filename, @title, @author and @uuid (@@ for a literal @).
    */
   stampText?: string;
   /**
@@ -337,9 +337,17 @@ export interface ConvertEbookToPdfRequest {
    * Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)
    */
   optimizeForEbook?: true | false;
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
 }
-export type ConvertPdfHtmlRequest = Record<string, never>;
-export type ConvertPdfMarkdownRequest = Record<string, never>;
+export interface ConvertPdfHtmlRequest {
+  useStirlingOfficeConvert?: boolean;
+}
+export interface ConvertPdfMarkdownRequest {
+  useStirlingOfficeConvert?: boolean;
+}
 export interface ConvertPdfToCbrRequest {
   /**
    * The DPI (Dots Per Inch) for rendering PDF pages as images
@@ -365,8 +373,14 @@ export interface ConvertPdfToEpubRequest {
    * Choose an output profile optimized for the reader device.
    */
   targetDevice?: "TABLET_PHONE_IMAGES" | "KINDLE_EINK_TEXT";
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
 }
-export type ConvertPdfXmlRequest = Record<string, never>;
+export interface ConvertPdfXmlRequest {
+  useStirlingOfficeConvert?: boolean;
+}
 export interface ConvertToImageRequest {
   /**
    * The color type of the output image(s)
@@ -484,6 +498,10 @@ export interface EmlToPdfRequest {
    * Maximum attachment size in MB to include (default 10MB, range: 1-100)
    */
   maxAttachmentSizeMB?: number;
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
 }
 export type ExtractAttachmentsRequest = Record<string, never>;
 export interface ExtractHeaderRequest {
@@ -553,6 +571,10 @@ export type GeneralPdfToSinglePageRequest = Record<string, never>;
 export type GeneralRemoveImagePdfRequest = Record<string, never>;
 export interface HTMLToPdfRequest {
   /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
+  /**
    * Zoom level for displaying the website. Default is '1'.
    */
   zoom?: number;
@@ -617,11 +639,11 @@ export interface IntegrationPurviewReadLabelRequest {
 export type ListAttachmentsRequest = Record<string, never>;
 export interface ManualRedactPdfRequest {
   /**
-   * Turn pages into images so covered content is really removed; text becomes unselectable
+   * Rasterize every output page, making page text unselectable. Redaction areas already remove covered page content by default.
    */
   convertPDFToImage?: boolean;
   /**
-   * Pages to cover entirely, e.g. '1,3-5'. Omit to redact only the listed areas.
+   * Pages to wipe completely, e.g. '1,3-5'. Omit to redact only the listed areas.
    */
   pageNumbers?: string;
   /**
@@ -629,12 +651,12 @@ export interface ManualRedactPdfRequest {
    */
   pageRedactionColor?: string;
   /**
-   * Areas to cover: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
+   * Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
    */
   redactions: RedactionArea[];
 }
 /**
- * Areas to cover: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
+ * Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
  */
 export interface RedactionArea {
   /**
@@ -844,11 +866,11 @@ export interface OverlayImageRequest {
   everyPage?: boolean;
   imageFile: File;
   /**
-   * X of the image's lower-left corner, in points from the left edge
+   * X of the image's lower-left corner in PDF user-space points
    */
   x?: number;
   /**
-   * Y of the image's lower-left corner, in points from the bottom edge
+   * Y of the image's lower-left corner in PDF user-space points
    */
   y?: number;
 }
@@ -862,7 +884,7 @@ export interface OverlayPdfsRequest {
    */
   overlayFiles: File[];
   /**
-   * SequentialOverlay repeats the overlay pages in order (e.g. a letterhead on every page). InterleavedOverlay takes each overlay file in turn. FixedRepeatOverlay uses counts.
+   * SequentialOverlay uses each overlay file's pages in order and repeats as needed. With multiple files it starts with the second file, proceeds through the remaining files, then wraps to the first (e.g. B, A for files [A, B]). A single file repeats from its first page. InterleavedOverlay takes each overlay file in turn. FixedRepeatOverlay uses counts.
    */
   overlayMode:
     | "SequentialOverlay"
@@ -948,6 +970,10 @@ export interface PdfToPdfARequest {
    * If true, the conversion will fail if the output is not perfectly compliant
    */
   strict?: boolean;
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToPdfUaRequest {
   /**
@@ -1097,15 +1123,15 @@ export interface RearrangePagesRequest {
 }
 export interface RedactExecuteRequest {
   /**
-   * Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
+   * Rectangular areas identified by page and bounding box. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
    */
   imageBoxes?: ImageBox[];
   /**
-   * Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
+   * Text located using start and end anchor phrases (inclusive). AUTO removes selected page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
    */
   ranges?: TextRange[];
   /**
-   * 1-indexed pages whose images get boxed over; an empty list means every page, null skips it.
+   * 1-indexed pages whose detected image regions are redacted; an empty list means every page, null skips it. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes.
    */
   redactImagePages?: number[];
   /**
@@ -1123,7 +1149,7 @@ export interface RedactExecuteRequest {
   wipePages?: number[];
 }
 /**
- * Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
+ * Rectangular areas identified by page and bounding box. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
  */
 export interface ImageBox {
   /**
@@ -1148,7 +1174,7 @@ export interface ImageBox {
   y2: number;
 }
 /**
- * Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
+ * Text located using start and end anchor phrases (inclusive). AUTO removes selected page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
  */
 export interface TextRange {
   /**
@@ -1169,7 +1195,7 @@ export interface RedactStyle {
    */
   color?: string;
   /**
-   * Rasterize every page so no covered content can be extracted
+   * Rasterize every output page, making page text unselectable
    */
   convertToImage?: boolean;
   /**
@@ -1177,7 +1203,7 @@ export interface RedactStyle {
    */
   padding?: number;
   /**
-   * AUTO removes matched text; OVERLAY_ONLY only draws boxes; IMAGE_FINALIZE also rasterizes pages
+   * AUTO removes covered page content and may rasterize affected pages. OVERLAY_ONLY draws text/range/image boxes without removal. IMAGE_FINALIZE rasterizes every output page. Whole-page wipes remove page content in every strategy; convertToImage also controls final rasterization independently.
    */
   strategy?: "AUTO" | "OVERLAY_ONLY" | "IMAGE_FINALIZE";
 }
@@ -1187,7 +1213,7 @@ export interface RedactPdfRequest {
    */
   caseSensitive?: boolean;
   /**
-   * Turn pages into images so nothing under the boxes can be extracted
+   * Rasterize every output page, making page text unselectable
    */
   convertPDFToImage?: boolean;
   /**

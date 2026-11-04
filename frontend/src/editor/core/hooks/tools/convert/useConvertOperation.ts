@@ -1,5 +1,7 @@
 import { useCallback, useMemo } from "react";
+import axios from "axios";
 import apiClient from "@editor/services/apiClient";
+import { serverErrorReason } from "@editor/services/errorUtils";
 import { useTranslation } from "react-i18next";
 import {
   validateConvertParameters,
@@ -19,6 +21,7 @@ import {
   isWebFormat,
   isOfficeFormat,
   usesOfficeEngine,
+  parseOfficeEngineChoice,
 } from "@editor/utils/convertUtils";
 import {
   isToolEndpoint,
@@ -150,7 +153,12 @@ export const buildConvertFormData = (
     (fromExtension === "html" || fromExtension === "zip") &&
     toExtension === "pdf"
   ) {
-    formData.append("zoom", htmlOptions.zoomLevel.toString());
+    formData.append(
+      "zoom",
+      parameters.useStirlingOfficeConvert
+        ? "1"
+        : htmlOptions.zoomLevel.toString(),
+    );
   } else if (
     (fromExtension === "eml" || fromExtension === "msg") &&
     toExtension === "pdf"
@@ -277,13 +285,26 @@ const withoutCrossFileAltText = (
       }
     : parameters;
 
-// Static processor that can be used by both the hook and automation executor
+const rethrowWithServerReason = async (error: unknown): Promise<never> => {
+  const reason = await serverErrorReason(error);
+  if (reason && axios.isAxiosError(error)) {
+    // Preserve HTTP status and payload for authentication and corrupt-file handling.
+    error.message = reason;
+  }
+  throw error;
+};
+
+/**
+ * Keeps successful files after partial batch failures. If every file fails, rethrows the first
+ * error with the server's reason while preserving its HTTP metadata.
+ */
 export const convertProcessor = async (
   rawParameters: ConvertParameters,
   selectedFiles: File[],
 ): Promise<CustomProcessorResult> => {
   const parameters = withoutCrossFileAltText(rawParameters, selectedFiles);
   const processedFiles: File[] = [];
+  let firstFailure: unknown;
 
   // Map PDF/X to use PDF/A endpoint
   const actualToExtension =
@@ -311,11 +332,9 @@ export const convertProcessor = async (
     for (const file of selectedFiles) {
       try {
         const formData = buildConvertFormData(parameters, [file]);
-        const response = await apiClient.post(
-          endpoint,
-          formData,
-          requestConfig,
-        );
+        const response = await apiClient
+          .post(endpoint, formData, requestConfig)
+          .catch(rethrowWithServerReason);
 
         const convertedFile = createFileFromResponse(
           response.data,
@@ -326,13 +345,19 @@ export const convertProcessor = async (
 
         processedFiles.push(convertedFile);
       } catch (error) {
+        firstFailure ??= error;
         console.warn(`Failed to convert file ${file.name}:`, error);
       }
+    }
+    if (processedFiles.length === 0 && firstFailure !== undefined) {
+      throw firstFailure;
     }
   } else {
     // Batch processing for simple cases (image→PDF combine)
     const formData = buildConvertFormData(parameters, selectedFiles);
-    const response = await apiClient.post(endpoint, formData, requestConfig);
+    const response = await apiClient
+      .post(endpoint, formData, requestConfig)
+      .catch(rethrowWithServerReason);
 
     const baseFilename =
       selectedFiles.length === 1 ? selectedFiles[0].name : "converted_files";
@@ -596,9 +621,14 @@ export const convertFromApiParams = (
   // Each reader reads only its own endpoint's fields; the runtime endpoint is just a string, so
   // readOptions is looked up per-endpoint (undefined when the pair has no reader).
   const readOptions = endpoint ? CONVERT_OPTION_READERS[endpoint] : undefined;
+  const officeChoice = parseOfficeEngineChoice(body.useStirlingOfficeConvert);
   return {
     fromExtension,
     toExtension,
+    ...(usesOfficeEngine(fromExtension, toExtension) &&
+    officeChoice !== undefined
+      ? { useStirlingOfficeConvert: officeChoice }
+      : {}),
     ...(readOptions ? readOptions(body, toExtension) : {}),
   };
 };

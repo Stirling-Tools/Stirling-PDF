@@ -279,9 +279,10 @@ public class AutoSplitPdfController {
     @Operation(
             summary = "Split a PDF at Stirling QR-code divider pages",
             description =
-                    "Splits at each divider page and returns a zip of the parts; divider"
-                            + " pages are dropped. duplexMode=true also drops each divider's back"
-                            + " page. With no dividers you get one file; use split-pages or"
+                    "Splits at each divider page and returns a zip of the parts. Divider"
+                            + " pages are dropped except a divider on page 1, which is retained."
+                            + " duplexMode=true also drops each divider's back page, including"
+                            + " when the divider is retained. With no dividers you get one file; use split-pages or"
                             + " split-by-size-or-count instead.")
     public ResponseEntity<Resource> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
             throws IOException {

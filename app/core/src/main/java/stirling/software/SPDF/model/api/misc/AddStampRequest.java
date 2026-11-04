@@ -24,8 +24,9 @@ public class AddStampRequest extends PDFWithPageNums {
     @Schema(
             description =
                     "The stamp text, or the QR code content when stampType is qr; required when"
-                            + " stampType is text or qr. \\n starts a new"
-                            + " line. Supports @page, @total_pages, @date, @date{dd/MM/yyyy}, @time,"
+                            + " stampType is text or qr. For text stamps only, \\n starts a new"
+                            + " line; QR content keeps the literal sequence. Both support @page,"
+                            + " @total_pages, @date, @date{dd/MM/yyyy}, @time,"
                             + " @filename, @title, @author and @uuid (@@ for a literal @).")
     private String stampText;
 
@@ -65,15 +66,17 @@ public class AddStampRequest extends PDFWithPageNums {
 
     @Schema(
             description =
-                    "X in points from the left edge; with overrideY, replaces position. -1"
-                            + " = not set.",
+                    "X in PDF user-space points. When both overrides are nonnegative, replaces"
+                            + " position. Image and QR positions are clamped to the media box using"
+                            + " the unrotated stamp size; text positions are not clamped. -1 = not set.",
             defaultValue = "-1")
     private float overrideX = -1f;
 
     @Schema(
             description =
-                    "Y in points from the bottom edge; with overrideX, replaces position."
-                            + " -1 = not set.",
+                    "Y in PDF user-space points. When both overrides are nonnegative, replaces"
+                            + " position. Image and QR positions are clamped to the media box using"
+                            + " the unrotated stamp size; text positions are not clamped. -1 = not set.",
             defaultValue = "-1")
     private float overrideY = -1f;
 
