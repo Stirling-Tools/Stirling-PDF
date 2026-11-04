@@ -11,27 +11,17 @@ import groovy.transform.PackageScope
 import org.gradle.api.GradleException
 
 /**
- * Reports, for each dependency, the declared license with the most permissive {@code category} in
- * the allowed-licenses file ({@code permissive}, then {@code weak-copyleft}). Ties go to the
- * alphabetically last name, as the plugin does. Declared licenses with no matching entry are never
- * reported; a dependency with none is left for {@code checkLicense} to reject.
+ * Chooses the license each dependency is reported under, from the {@code category} of its entries in
+ * {@code app/allowed-licenses.json}. The rules are under "Preferred license" in
+ * {@code buildSrc/README.md}.
  *
- * <p>When the reported license is not {@code permissive}, the dependency's URL is replaced with its
- * {@code -sources.jar} on Maven Central for the resolved version.
- *
- * <p>A module is rewritten to report only the chosen license, in the report and in
- * {@code checkLicense}, unless its default license is already the chosen permissive one.
- *
- * <p>An entry with an {@code allOf} list marks licenses that all apply to a module rather than being
- * alternatives. The module is reported under the entry's {@code moduleLicense}, and the build fails
- * if it declares some of the listed licenses but not all of them.
- *
- * <p>Entries are matched as {@code checkLicense} matches them, so the two agree on which licenses
- * are allowed. Every entry must set a valid {@code category}, otherwise the build fails.
+ * <p>Fails the build when an entry has no valid category, or when a dependency declares only some of
+ * an {@code allOf} entry's licenses. Entries are matched the way {@code checkLicense} matches them.
  */
 class PreferredLicenseFilter implements DependencyFilter {
     private static final String MAVEN_CENTRAL = 'https://repo1.maven.org/maven2'
-    private static final List<String> CATEGORIES = ['permissive', 'weak-copyleft']
+    private static final List<String> CATEGORIES = ['permissive', 'weak-copyleft', 'restricted']
+    private static final Set<String> SOURCE_LINK_CATEGORIES = ['weak-copyleft'] as Set<String>
 
     private final File allowedLicensesFile
 
@@ -107,7 +97,7 @@ class PreferredLicenseFilter implements DependencyFilter {
                 .findAll { license, rank -> rank == bestRank }
                 .keySet()
                 .max { license -> license.name }
-        boolean needsSource = bestRank > 0
+        boolean needsSource = SOURCE_LINK_CATEGORIES.contains(CATEGORIES[bestRank])
         List<String> defaultInfo = LicenseDataCollector.singleModuleLicenseInfo(module)
         if (!needsSource && defaultInfo[1] == chosen.name) {
             return

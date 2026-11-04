@@ -34,6 +34,7 @@ class PreferredLicenseFilterTest {
     private static final License MPL = new License('MPL 2.0', 'https://www.mozilla.org/MPL/2.0/')
     private static final License LGPL = new License('LGPL-2.1-only', 'https://spdx.org/licenses/LGPL-2.1-only.html')
     private static final License GPL_CPE = new License('GPL2 w/ CPE', 'https://openjdk.org/legal/gplv2+ce.html')
+    private static final License UNRAR = new License('UnRar License', 'https://www.rarlab.com/license.htm')
     private static final License UNLISTED = new License('Unlisted License', 'https://www.example.com/license')
 
     private static final List<Map<String, String>> ALLOWED = [
@@ -64,6 +65,24 @@ class PreferredLicenseFilterTest {
         filter(module, ALLOWED)
 
         assertEquals([SOURCES_JAR, MPL.name, MPL.url], singleLicenseInfo(module))
+    }
+
+    @Test
+    void prefersWeakCopyleftOverRestricted() {
+        ModuleData module = createModule(MPL, UNRAR)
+
+        filter(module, ALLOWED + [allowed(UNRAR, 'restricted')])
+
+        assertEquals([SOURCES_JAR, MPL.name, MPL.url], singleLicenseInfo(module))
+    }
+
+    @Test
+    void doesNotLinkSourcesJarForRestrictedLicense() {
+        ModuleData module = createModule(UNRAR)
+
+        filter(module, [allowed(UNRAR, 'restricted')])
+
+        assertEquals([HOMEPAGE, UNRAR.name, UNRAR.url], singleLicenseInfo(module))
     }
 
     @Test
@@ -134,7 +153,7 @@ class PreferredLicenseFilterTest {
         String combined = "${bsd.name} AND ${jj2000.name}"
         List<Map<String, Object>> allowed = [
                 [moduleName: "${GROUP}:${MODULE}".toString(), moduleLicense: combined,
-                 allOf: [bsd.name, jj2000.name], category: 'permissive'],
+                 allOf: [bsd.name, jj2000.name], category: 'restricted'],
                 [moduleName: '.*', moduleLicense: bsd.name, category: 'permissive']
         ]
         ModuleData module = createModule(bsd, jj2000, new License('LICENSE-JJ2000.txt, LICENSE-Sun.txt', null))

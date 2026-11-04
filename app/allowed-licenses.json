@@ -107,7 +107,7 @@
         "BSD 3-clause License w/nuclear disclaimer",
         "JJ2000"
       ],
-      "category": "permissive"
+      "category": "restricted"
     },
     {
       "moduleName": ".*",
@@ -242,7 +242,7 @@
     {
       "moduleName": ".*",
       "moduleLicense": "UnRar License",
-      "category": "permissive"
+      "category": "restricted"
     }
   ]
 }

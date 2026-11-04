@@ -126,15 +126,16 @@ file must contain only overrides that are still needed.
 
 Without this filter, the plugin reports the alphabetically last license a dependency declares, so a
 dependency offered under Apache-2.0 or LGPL is reported as LGPL. `PreferredLicenseFilter` runs after
-the override filter and reports the declared license with the most permissive `category` in
-`app/allowed-licenses.json` instead:
+the override filter and reports the declared license whose `category` in
+`app/allowed-licenses.json` comes first in this order instead:
 
 ```json
 { "moduleName": ".*", "moduleLicense": "Apache-2.0", "category": "permissive" }
 ```
 
-- `permissive`: no source obligation (Apache, MIT, BSD, EDL and similar).
-- `weak-copyleft`: file-level copyleft (MPL, EPL, CDDL).
+1. `permissive`: open source, no source obligation (Apache, MIT, BSD, EDL and similar).
+2. `weak-copyleft`: open source, file-level copyleft (MPL, EPL, CDDL).
+3. `restricted`: not open source; free to use but with conditions on how (UnRar, JJ2000).
 
 LGPL and GPL licenses are not allowed, so a dependency available only under them fails
 `checkLicense`.
@@ -151,14 +152,14 @@ alternatives. When all of them apply, add one entry for the module that lists th
   "moduleName": "com.github.jai-imageio:jai-imageio-jpeg2000",
   "moduleLicense": "BSD 3-clause License w/nuclear disclaimer AND JJ2000",
   "allOf": ["BSD 3-clause License w/nuclear disclaimer", "JJ2000"],
-  "category": "permissive"
+  "category": "restricted"
 }
 ```
 
 The dependency is then reported under the entry's `moduleLicense`, and the build fails if a later
 version stops declaring one of the listed licenses.
 
-When the reported license is not `permissive`, the dependency's URL becomes its `-sources.jar` on
+When the reported license is `weak-copyleft`, the dependency's URL becomes its `-sources.jar` on
 Maven Central for the resolved version. Maven Central requires a sources jar for every published jar
 and never changes a published file, so the link does not go stale.
 
