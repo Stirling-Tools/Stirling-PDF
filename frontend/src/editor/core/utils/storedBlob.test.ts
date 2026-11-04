@@ -50,6 +50,21 @@ describe("detachedFile", () => {
     expect(await file.text()).toBe(await source.text());
   });
 
+  it("keeps the identity a stored plain Blob carries as own properties", async () => {
+    // How fileStorage hands back a record whose bytes were stored as a Blob.
+    const stored = new Blob(["%PDF-1.7 body"], { type: "application/pdf" });
+    Object.defineProperty(stored, "name", { value: "report.pdf" });
+    Object.defineProperty(stored, "lastModified", { value: 1_700_000_000_000 });
+    markStoredBlob(stored);
+
+    const file = await detachedFile(stored);
+
+    expect([file.name, file.lastModified]).toEqual([
+      "report.pdf",
+      1_700_000_000_000,
+    ]);
+  });
+
   it("takes a new identity where one is given", async () => {
     const file = await detachedFile(pdf(), {
       name: "renamed.pdf",

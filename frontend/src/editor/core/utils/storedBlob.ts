@@ -33,12 +33,14 @@ export async function detachedFile(
   source: Blob,
   options: DetachedFileOptions = {},
 ): Promise<File> {
-  const name = options.name ?? (source instanceof File ? source.name : "blob");
+  // Read as plain properties: fileStorage lays a record's identity over a stored
+  // Blob that is not a File (see withRecordIdentity).
+  const { name: sourceName, lastModified: sourceModified } =
+    source as Partial<File>;
+  const name = options.name ?? sourceName ?? "blob";
   const init: FilePropertyBag = {
     type: options.type ?? source.type,
-    lastModified:
-      options.lastModified ??
-      (source instanceof File ? source.lastModified : Date.now()),
+    lastModified: options.lastModified ?? sourceModified ?? Date.now(),
   };
   const bytes =
     options.alwaysCopy || isStoredBlob(source)
