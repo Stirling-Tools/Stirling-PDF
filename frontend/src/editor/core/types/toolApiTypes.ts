@@ -337,9 +337,17 @@ export interface ConvertEbookToPdfRequest {
    * Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)
    */
   optimizeForEbook?: true | false;
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
 }
-export type ConvertPdfHtmlRequest = Record<string, never>;
-export type ConvertPdfMarkdownRequest = Record<string, never>;
+export interface ConvertPdfHtmlRequest {
+  useStirlingOfficeConvert?: boolean;
+}
+export interface ConvertPdfMarkdownRequest {
+  useStirlingOfficeConvert?: boolean;
+}
 export interface ConvertPdfToCbrRequest {
   /**
    * The DPI (Dots Per Inch) for rendering PDF pages as images
@@ -365,8 +373,14 @@ export interface ConvertPdfToEpubRequest {
    * Choose an output profile optimized for the reader device.
    */
   targetDevice?: "TABLET_PHONE_IMAGES" | "KINDLE_EINK_TEXT";
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
 }
-export type ConvertPdfXmlRequest = Record<string, never>;
+export interface ConvertPdfXmlRequest {
+  useStirlingOfficeConvert?: boolean;
+}
 export interface ConvertToImageRequest {
   /**
    * The color type of the output image(s)
@@ -484,6 +498,10 @@ export interface EmlToPdfRequest {
    * Maximum attachment size in MB to include (default 10MB, range: 1-100)
    */
   maxAttachmentSizeMB?: number;
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
 }
 export type ExtractAttachmentsRequest = Record<string, never>;
 export interface ExtractHeaderRequest {
@@ -552,6 +570,10 @@ export interface GeneralFile {
 export type GeneralPdfToSinglePageRequest = Record<string, never>;
 export type GeneralRemoveImagePdfRequest = Record<string, never>;
 export interface HTMLToPdfRequest {
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
   /**
    * Zoom level for displaying the website. Default is '1'.
    */
@@ -944,6 +966,10 @@ export interface PdfToPdfARequest {
    * If true, the conversion will fail if the output is not perfectly compliant
    */
   strict?: boolean;
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToPdfUaRequest {
   /**

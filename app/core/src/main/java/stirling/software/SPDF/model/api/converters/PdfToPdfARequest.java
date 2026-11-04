@@ -11,6 +11,9 @@ import stirling.software.common.model.api.PDFFile;
 @EqualsAndHashCode(callSuper = true)
 public class PdfToPdfARequest extends PDFFile {
 
+    @Schema(description = "Use Stirling Office Convert; when omitted, follow the server setting")
+    private Boolean useStirlingOfficeConvert;
+
     @Schema(
             description = "The output format type (PDF/A or PDF/X)",
             requiredMode = Schema.RequiredMode.REQUIRED,
