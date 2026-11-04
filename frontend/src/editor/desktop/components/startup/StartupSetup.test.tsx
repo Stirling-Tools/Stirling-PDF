@@ -13,11 +13,8 @@ vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: { appVersion: h.appVersion } }),
 }));
 vi.mock("@editor-core/components/startup/StartupSetup", () => ({
-  StartupSetup: (props: {
-    children: ReactNode;
-    refreshConfigOnMount: boolean;
-  }) => {
-    h.setup(props.refreshConfigOnMount);
+  StartupSetup: (props: { children: ReactNode }) => {
+    h.setup();
     return <>{props.children}</>;
   },
 }));
@@ -28,12 +25,12 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-it("waits for desktop config readiness without fetching the bundled backend", () => {
+it("waits for desktop config readiness", () => {
   const view = render(<StartupSetup>Consent</StartupSetup>);
   expect(h.setup).not.toHaveBeenCalled();
   h.appVersion = "1.0";
   view.rerender(<StartupSetup>Consent</StartupSetup>);
-  expect(h.setup).toHaveBeenCalledWith(false);
+  expect(h.setup).toHaveBeenCalled();
 });
 
 it("leaves hosted account setup to the identity provider", () => {

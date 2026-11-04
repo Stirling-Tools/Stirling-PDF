@@ -14,10 +14,10 @@ class FlattenRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("flattenOnlyForms and renderDpi default to null")
+        @DisplayName("flattenOnlyForms defaults to false and renderDpi to null")
         void defaultsNull() {
             FlattenRequest req = new FlattenRequest();
-            assertThat(req.getFlattenOnlyForms()).isNull();
+            assertThat(req.getFlattenOnlyForms()).isFalse();
             assertThat(req.getRenderDpi()).isNull();
         }
     }

@@ -2,239 +2,255 @@
   "allowedLicenses": [
     {
       "moduleName": ".*",
-      "moduleLicense": "BSD License"
+      "moduleLicense": "BSD License",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The BSD License"
+      "moduleLicense": "The BSD License",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "BSD-2-Clause"
+      "moduleLicense": "BSD-2-Clause",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "BSD 2-Clause License"
+      "moduleLicense": "BSD 2-Clause License",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The 2-Clause BSD License"
+      "moduleLicense": "BSD-3-Clause",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "BSD-3-Clause"
+      "moduleLicense": "The BSD 3-Clause License (BSD3)",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The BSD 3-Clause License (BSD3)"
+      "moduleLicense": "BSD 3-Clause License",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "BSD-4 License"
+      "moduleLicense": "EDL 1.0",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Revised BSD"
+      "moduleLicense": "Eclipse Distribution License - v 1.0",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "ISC"
+      "moduleLicense": "Eclipse Distribution License v. 1.0",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "MIT"
+      "moduleLicense": "Revised BSD",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "MIT License"
+      "moduleLicense": "ISC",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The MIT License"
+      "moduleLicense": "MIT",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "MIT-0"
+      "moduleLicense": "MIT License",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "MIT license"
+      "moduleLicense": "The MIT License",
+      "category": "permissive"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "MIT-0",
+      "category": "permissive"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "MIT license",
+      "category": "permissive"
     },
     {
       "moduleName": "com.github.jai-imageio:jai-imageio-core",
-      "moduleLicense": "LICENSE.txt"
+      "moduleLicense": "BSD 3-clause License w/nuclear disclaimer",
+      "category": "permissive"
     },
     {
       "moduleName": "com.github.jai-imageio:jai-imageio-jpeg2000",
-      "moduleLicense": "LICENSE-JJ2000.txt, LICENSE-Sun.txt"
+      "moduleLicense": "BSD 3-clause License w/nuclear disclaimer AND JJ2000",
+      "allOf": [
+        "BSD 3-clause License w/nuclear disclaimer",
+        "JJ2000"
+      ],
+      "category": "restricted"
+    },
+    {
+      "moduleName": "org.verapdf:verapdf-xmp-core",
+      "moduleLicense": "BSD 3-Clause License AND Mozilla Public License 2.0 (MPL-2.0)",
+      "allOf": [
+        "BSD 3-Clause License",
+        "Mozilla Public License 2.0 (MPL-2.0)"
+      ],
+      "category": "weak-copyleft"
+    },
+    {
+      "moduleName": "com.github.mwiede:jsch",
+      "moduleLicense": "Revised BSD AND ISC",
+      "allOf": [
+        "Revised BSD",
+        "ISC"
+      ],
+      "category": "permissive"
+    },
+    {
+      "moduleName": "xml-apis:xml-apis",
+      "moduleLicense": "The Apache Software License, Version 2.0 AND The SAX License AND The W3C License",
+      "allOf": [
+        "The Apache Software License, Version 2.0",
+        "The SAX License",
+        "The W3C License"
+      ],
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache 2"
+      "moduleLicense": "Apache 2",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache 2.0"
+      "moduleLicense": "Apache 2.0",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache-2.0"
+      "moduleLicense": "Apache-2.0",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache-2.0 License"
+      "moduleLicense": "Apache License 2.0",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache License 2.0"
+      "moduleLicense": "Apache License Version 2.0",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache License Version 2.0"
+      "moduleLicense": "Apache License version 2.0",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache License version 2.0"
+      "moduleLicense": "Apache License, Version 2.0",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache License, Version 2.0"
+      "moduleLicense": "Apache License, version 2.0",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache License, version 2.0"
+      "moduleLicense": "The Apache License, Version 2.0",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The Apache License, Version 2.0"
+      "moduleLicense": "The Apache Software License, Version 2.0",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The Apache Software License, Version 2.0"
-    },
-    {
-      "moduleName": "com.nimbusds:oauth2-oidc-sdk",
-      "moduleLicense": "\"Apache License, version 2.0\";link=\"https://www.apache.org/licenses/LICENSE-2.0.html\""
+      "moduleLicense": "MPL 2.0",
+      "category": "weak-copyleft"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "MPL 2.0"
+      "moduleLicense": "Mozilla Public License, Version 2.0",
+      "category": "weak-copyleft"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Mozilla Public License, Version 2.0"
+      "moduleLicense": "Mozilla Public License 2.0 (MPL-2.0)",
+      "category": "weak-copyleft"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Mozilla Public License 2.0 (MPL-2.0)"
+      "moduleLicense": "Mozilla Public License Version 2.0",
+      "category": "weak-copyleft"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Mozilla Public License Version 2.0"
+      "moduleLicense": "BSD",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": 	"CDDL+GPL License"
+      "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0",
+      "category": "weak-copyleft"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "BSD"
+      "moduleLicense": "Eclipse Public License v. 2.0",
+      "category": "weak-copyleft"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "UnboundID SCIM2 SDK Free Use License"
+      "moduleLicense": "Eclipse Public License - v 2.0",
+      "category": "weak-copyleft"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "GPL2 w/ CPE"
+      "moduleLicense": "Eclipse Public License, Version 2.0",
+      "category": "weak-copyleft"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "GPLv2+CE"
+      "moduleLicense": "EPL-2.0",
+      "category": "weak-copyleft"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "GNU GENERAL PUBLIC LICENSE, Version 2 + Classpath Exception"
+      "moduleLicense": "Bouncy Castle Licence",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "GNU Lesser Public License"
+      "moduleLicense": "Public Domain, per Creative Commons CC0",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The GNU Lesser General Public License"
-    },
-    {
-      "moduleName": "com.martiansoftware:jsap",
-      "moduleLicense": "LGPL"
-    },
-    {
-      "moduleName": "org.hibernate.orm:hibernate-core",
-      "moduleLicense": "GNU Library General Public License v2.1 or later"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License 1.0"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License - v 1.0"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License v2.0"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License v. 2.0"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License - v 2.0"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License - Version 2.0"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License, Version 2.0"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "EPL-2.0"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "LGPL-2.1-only"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Ubuntu Font Licence 1.0"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Bouncy Castle Licence"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Public Domain, per Creative Commons CC0"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "The W3C License"
+      "moduleLicense": "The W3C License",
+      "category": "permissive"
     },
     {
       "moduleName": "com.google.re2j:re2j",
-      "moduleLicense": "Go License"
+      "moduleLicense": "Go License",
+      "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "UnRar License"
+      "moduleLicense": "UnRar License",
+      "category": "restricted"
     }
   ]
 }

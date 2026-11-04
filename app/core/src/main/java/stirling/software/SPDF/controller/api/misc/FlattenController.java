@@ -34,6 +34,7 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.LimitedPDFRenderer;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -55,10 +56,11 @@ public class FlattenController {
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Flatten PDF form fields or full page",
+            summary = "Flatten a PDF to images, or flatten only its form fields",
             description =
-                    "Flattening just PDF form fields or converting each page to images to make text"
-                            + " unselectable.")
+                    "By default every page becomes an image, so text can no longer be"
+                            + " selected. flattenOnlyForms=true only merges form fields into the"
+                            + " page.")
     public ResponseEntity<Resource> flatten(@ModelAttribute FlattenRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
@@ -78,7 +80,7 @@ public class FlattenController {
             } else {
                 // flatten whole page aka convert each page to image and re-add it (making text
                 // unselectable)
-                PDFRenderer pdfRenderer = new PDFRenderer(document);
+                PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
                 pdfRenderer.setSubsamplingAllowed(
                         true); // Enable subsampling to reduce memory usage
 
@@ -111,10 +113,6 @@ public class FlattenController {
                         final int pageIndex = i;
                         BufferedImage image = null;
                         try {
-                            // Validate dimensions BEFORE rendering to prevent OOM
-                            ExceptionUtils.validateRenderingDimensions(
-                                    document.getPage(pageIndex), pageIndex + 1, renderDpi);
-
                             // Wrap entire rendering operation to catch OutOfMemoryError from any
                             // depth
                             image =

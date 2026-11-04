@@ -232,6 +232,25 @@ class ProprietaryUIDataControllerMoreTest {
         }
 
         @Test
+        @DisplayName("masks the MFA secret in the returned settings")
+        void masksMfaSecret() {
+            User user = normalUser(4L, "mfauser");
+            user.setSettings(Map.of("mfaEnabled", "true", "mfaSecret", "JBSWY3DPEHPK3PXP"));
+            when(userRepository.findByUsernameIgnoreCaseWithSettings("mfauser"))
+                    .thenReturn(Optional.of(user));
+            lenient().when(mfaService.isMfaEnabled(user)).thenReturn(true);
+            lenient().when(mfaService.isMfaRequired(user)).thenReturn(false);
+            Authentication auth =
+                    new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+
+            ResponseEntity<AccountData> response = controller.getAccountData(auth);
+
+            assertThat(response.getBody().getSettings())
+                    .doesNotContain("JBSWY3DPEHPK3PXP")
+                    .contains("mfaEnabled");
+        }
+
+        @Test
         @DisplayName("resolves a SAML2 principal and flags saml login")
         void saml2Principal() {
             User user = normalUser(3L, "samluser");
