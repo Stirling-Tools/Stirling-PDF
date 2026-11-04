@@ -21,6 +21,14 @@ import {
   type TextSource,
 } from "@editor/tools/pdfTextEditor/commands/textPieces";
 import { splitByBlock } from "@editor/tools/pdfTextEditor/commands/splitByBlock";
+import { readRunTags } from "@editor/tools/pdfTextEditor/commands/runTags";
+import { taggedSpans } from "@editor/tools/pdfTextEditor/model/TextTags";
+import {
+  leaves,
+  lineList,
+  type Leaf,
+  type LeafList,
+} from "@editor/tools/pdfTextEditor/commands/runLeaves";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
@@ -482,67 +490,6 @@ function replaceEntries(
   list.charStarts.splice(index, 1, ...entries.starts.map((at) => start + at));
 }
 
-/** One object's text in a run, where it starts in the run's text, and the arrays listing it. */
-interface Leaf {
-  run: TextRun;
-  ptr: number;
-  text: string;
-  start: number;
-  list: LeafList;
-  index: number;
-}
-
-/** A run's parallel arrays for one line's objects. */
-interface LeafList {
-  ptrs: number[];
-  texts: string[];
-  bounds: Array<{ x: number; right: number }>;
-  charStarts: number[];
-  /** Where the line starts in the run's text. */
-  base: number;
-}
-
-function lineList(run: TextRun): LeafList {
-  return {
-    ptrs: run.mergedFromPtrs,
-    texts: run.mergedFromTexts,
-    bounds: run.mergedFromBounds,
-    charStarts: run.mergedFromCharStarts,
-    base: 0,
-  };
-}
-
-/** The run's objects in reading order; null when their texts do not tile the run's. */
-function leaves(run: TextRun): Leaf[] | null {
-  const lists: LeafList[] =
-    run.paragraphLineSlots.length > 0
-      ? run.paragraphLineSlots.map((slot) => ({
-          ptrs: slot.mergedFromPtrs,
-          texts: slot.mergedFromTexts,
-          bounds: slot.mergedFromBounds,
-          charStarts: slot.mergedFromCharStarts,
-          base: slot.startChar,
-        }))
-      : [lineList(run)];
-  const out = lists.flatMap((list) =>
-    list.ptrs.map((ptr, index) => ({
-      run,
-      ptr,
-      text: list.texts[index] ?? "",
-      start: list.base + (list.charStarts[index] ?? Number.NaN),
-      list,
-      index,
-    })),
-  );
-  const tiles = out.every(
-    (leaf, i) =>
-      leaf.ptr !== 0 &&
-      run.text.slice(leaf.start, leaf.start + leaf.text.length) === leaf.text &&
-      (i === 0 || leaf.start >= out[i - 1].start + out[i - 1].text.length),
-  );
-  return out.length > 0 && tiles ? out : null;
-}
-
 /** Every page-level object a run lists, and where. */
 function pageLeaves(page: Page): Map<number, Leaf> {
   const out = new Map<number, Leaf>();
@@ -624,29 +571,32 @@ export interface ElementStretch {
 }
 
 /**
- * The stretches of run `runId`'s text each element marks, in reading order:
- * one for each series of the run's objects one element marks. Untagged and
- * artifact text is left out, and every stretch when the run's objects cannot
- * be mapped to its text.
+ * The stretches of run `runId`'s text each element marks, in reading order,
+ * as `readRunTags` places its objects' tags. Untagged and artifact text is
+ * left out.
  */
 export function elementStretches(
   doc: EditorDocument,
   pageIndex: number,
   runId: string,
 ): ElementStretch[] {
-  const run = doc.page(pageIndex).findRun(runId);
-  const all = run ? leaves(run) : null;
-  if (!all) return [];
+  const page = doc.page(pageIndex);
+  const run = page.findRun(runId);
+  if (!run) return [];
   const structure = doc.structure(pageIndex);
   const out: ElementStretch[] = [];
-  let previous: StructureElement | null = null;
-  for (const leaf of all) {
-    const mcid = ownMark(doc, leaf.ptr)?.mcid ?? null;
+  const spans = taggedSpans(readRunTags(doc, page, run), run.text.length);
+  for (const { start, end, tags } of spans) {
+    const mcid = tags.some((tag) => tag.name === ARTIFACT_TAG)
+      ? null
+      : innermostMcid(tags);
     const element = mcid === null ? null : structure.element(mcid);
-    const end = leaf.start + leaf.text.length;
-    if (element && element === previous) out.at(-1)!.end = end;
-    else if (element) out.push({ start: leaf.start, end, element });
-    previous = element;
+    const last = out.at(-1);
+    if (element && last?.element === element && last.end === start) {
+      last.end = end;
+    } else if (element) {
+      out.push({ start, end, element });
+    }
   }
   return out;
 }
