@@ -413,7 +413,7 @@ RUN gcc -O2 -Wall -Wextra -Werror -o /usr/local/bin/lo-sandbox /src/lo-sandbox.c
 FROM eclipse-temurin:25-jdk-noble@sha256:ba0f0e1a33864105e1d454e88105c617ab40f71062db1f306bf58be32a3f8e5e AS jre-build
 
 RUN "$JAVA_HOME/bin/jlink" \
-      --add-modules java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.dynalink,jdk.management,jdk.charsets,jdk.localedata,jdk.naming.dns,jdk.unsupported,jdk.zipfs \
+      --add-modules java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.dynalink,jdk.management,jdk.management.agent,jdk.charsets,jdk.localedata,jdk.naming.dns,jdk.unsupported,jdk.zipfs \
       --strip-debug --no-man-pages --no-header-files --compress=zip-9 \
       --output /opt/jre
 
@@ -676,6 +676,10 @@ ARG PUID=1000
 ARG PGID=1000
 
 RUN set -eux; \
+    # Ubuntu's base image already owns UID/GID 1000 as the ubuntu account. Remove it so the
+    # application user can take the documented PUID/PGID and --user 1000:1000 can write its dirs.
+    userdel -r ubuntu 2>/dev/null || true; \
+    groupdel ubuntu 2>/dev/null || true; \
     if ! getent group stirlingpdfgroup >/dev/null 2>&1; then \
       groupadd -g "${PGID}" stirlingpdfgroup 2>/dev/null \
         || groupadd stirlingpdfgroup; \
