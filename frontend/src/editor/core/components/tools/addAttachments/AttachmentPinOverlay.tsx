@@ -228,6 +228,7 @@ export function AttachmentPinOverlay({
       window.removeEventListener("resize", schedule);
       if (frameRef.current !== null) {
         cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
       }
     };
   }, [measure, pins.length, target]);

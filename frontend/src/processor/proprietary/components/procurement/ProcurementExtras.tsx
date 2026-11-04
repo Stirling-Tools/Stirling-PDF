@@ -16,6 +16,7 @@ import { FlowModal } from "@processor/components/shared/FlowModal";
 import { useAsync } from "@processor/hooks/useAsync";
 import { openApiUrl } from "@processor/api/externalUrl";
 import "@processor/views/Procurement.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * Small centred dialogs that hang off the deal-status hero's quick actions — the licence key,
@@ -516,6 +517,7 @@ export function TrialSetupModal({
                 </span>
                 <input
                   value={contactName}
+                  className={privateContentClassName}
                   placeholder={t(
                     "portal.procurement.setup.fullNamePlaceholder",
                   )}
@@ -528,6 +530,7 @@ export function TrialSetupModal({
                 </span>
                 <input
                   value={businessName}
+                  className={privateContentClassName}
                   placeholder={t(
                     "portal.procurement.setup.businessNamePlaceholder",
                   )}
@@ -542,6 +545,7 @@ export function TrialSetupModal({
               <input
                 type="email"
                 value={contactEmail}
+                className={privateContentClassName}
                 placeholder={t("portal.procurement.setup.workEmailPlaceholder")}
                 onChange={(e) => setContactEmail(e.target.value)}
               />
@@ -552,6 +556,7 @@ export function TrialSetupModal({
               </span>
               <input
                 value={inviteEmails}
+                className={privateContentClassName}
                 placeholder={t("portal.procurement.setup.invitesPlaceholder")}
                 onChange={(e) => setInviteEmails(e.target.value)}
               />

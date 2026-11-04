@@ -166,3 +166,88 @@ test("keeps the placement overlay inside the viewer while scrolling", async ({
   expect(after.overlay?.bottom).toBe(before.overlay.bottom);
   expect(after.banner?.top).toBe(before.banner.top);
 });
+
+test("placed pin tracks page position when scrolled", async ({ page }) => {
+  await page.route("**/api/v1/misc/list-attachments", (route) =>
+    route.fulfill({ json: [] }),
+  );
+
+  await page.goto("/add-attachments", { waitUntil: "domcontentloaded" });
+  await page.locator('input[type="file"]').first().setInputFiles(MULTI_SAMPLE);
+  await expect(page.locator("[data-page-index]").first()).toBeVisible({
+    timeout: 15_000,
+  });
+
+  await page.locator("#attachments-input").setInputFiles({
+    name: "evidence.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("evidence"),
+  });
+
+  await page.locator('[data-testid^="attachment-pin-action-"]').first().click();
+  await expect(page.getByTestId("attachment-pin-page")).toHaveCount(3);
+
+  const pageBox = await page
+    .getByTestId("attachment-pin-page")
+    .first()
+    .boundingBox();
+  expect(pageBox).not.toBeNull();
+  if (!pageBox) return;
+
+  await page.mouse.click(
+    pageBox.x + pageBox.width * 0.4,
+    pageBox.y + pageBox.height * 0.55,
+  );
+
+  await expect(page.getByTestId("attachment-pin-link")).toBeVisible();
+  const marker = page.locator(".attachment-pin-overlay__marker").first();
+  await expect(marker).toBeVisible();
+
+  const getPositions = () =>
+    page.evaluate(() => {
+      const pinEl = document.querySelector<HTMLElement>(
+        ".attachment-pin-overlay__marker",
+      );
+      const pageEl = document.querySelector<HTMLElement>('[data-page-index="0"]');
+      let scroller = pageEl?.parentElement ?? null;
+      while (
+        scroller &&
+        !["auto", "scroll"].includes(getComputedStyle(scroller).overflowY)
+      ) {
+        scroller = scroller.parentElement;
+      }
+      return {
+        markerTop: pinEl?.getBoundingClientRect().top ?? 0,
+        pageTop: pageEl?.getBoundingClientRect().top ?? 0,
+        scrollerTop: scroller?.scrollTop ?? 0,
+      };
+    });
+
+  const initial = await getPositions();
+
+  await page.evaluate(() => {
+    const pageEl = document.querySelector<HTMLElement>('[data-page-index="0"]');
+    let scroller = pageEl?.parentElement ?? null;
+    while (
+      scroller &&
+      !["auto", "scroll"].includes(getComputedStyle(scroller).overflowY)
+    ) {
+      scroller = scroller.parentElement;
+    }
+    if (scroller) {
+      scroller.scrollTop += 350;
+    }
+  });
+
+  await expect
+    .poll(async () => {
+      const current = await getPositions();
+      const pageDelta = initial.pageTop - current.pageTop;
+      const markerDelta = initial.markerTop - current.markerTop;
+      return (
+        current.scrollerTop > initial.scrollerTop &&
+        Math.abs(pageDelta - markerDelta) < 2
+      );
+    })
+    .toBe(true);
+});
