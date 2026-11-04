@@ -9,6 +9,8 @@ import type {
   QuickNavIdentity,
 } from "@editor/contexts/QuickNavHostContext";
 import "@editor/components/shared/quickNav/QuickNavRailAccount.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const ICON_SIZE = "1rem";
 
@@ -44,7 +46,12 @@ export function QuickNavRailAccount({
   return (
     <div className="quick-nav-rail-account" data-active={active || undefined}>
       <Dropdown.Root open={open} onOpenChange={setOpen} side="right">
-        <Tooltip content={label} position="right" arrow disabled={open}>
+        <Tooltip
+          content={<PrivateContent>{label}</PrivateContent>}
+          position="right"
+          arrow
+          disabled={open}
+        >
           {/* A span, not the button: Tooltip binds by cloning its child. */}
           <span
             className="quick-nav-rail-avatar-target"
@@ -54,7 +61,7 @@ export function QuickNavRailAccount({
             <Dropdown.Trigger>
               <button
                 type="button"
-                className="quick-nav-rail-avatar"
+                className={`quick-nav-rail-avatar ${privateContentClassName}`}
                 aria-label={label}
                 aria-current={active ? "page" : undefined}
               >
@@ -71,7 +78,7 @@ export function QuickNavRailAccount({
           </span>
         </Tooltip>
         <Dropdown.Menu className="quick-nav-account-menu" width="14rem">
-          <div className="quick-nav-account-menu__header">
+          <div className={`quick-nav-account-menu__header ${privateContentClassName}`}>
             <span aria-hidden>
               <Avatar src={profilePictureUrl} name={displayName} size="md" />
             </span>

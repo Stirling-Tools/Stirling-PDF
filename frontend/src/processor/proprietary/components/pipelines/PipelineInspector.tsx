@@ -4,6 +4,7 @@ import { Icon } from "@editor/ui/Icon";
 import { Banner, EmptyState } from "@editor/ui";
 import "@processor/theme/surface.css";
 import "@processor/components/pipelines/PipelineInspector.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 export interface PipelineInspectorProps {
   /** Names what is selected, e.g. the step's tool or "Input". Absent when nothing is. */
@@ -72,7 +73,11 @@ export function PipelineInspector({
         <span>{title}</span>
       </div>
       <div className="portal-inspector__body">
-        {error && <Banner tone="danger">{error}</Banner>}
+        {error && (
+          <Banner tone="danger">
+            <PrivateContent>{error}</PrivateContent>
+          </Banner>
+        )}
         {children}
       </div>
     </aside>

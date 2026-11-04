@@ -11,6 +11,9 @@ import stirling.software.common.model.api.PDFFile;
 @EqualsAndHashCode(callSuper = true)
 public class PdfToPdfARequest extends PDFFile {
 
+    @Schema(description = "Use Stirling Office Convert; when omitted, follow the server setting")
+    private Boolean useStirlingOfficeConvert;
+
     @Schema(
             description = "The output format type (PDF/A or PDF/X)",
             requiredMode = Schema.RequiredMode.REQUIRED,
@@ -25,7 +28,7 @@ public class PdfToPdfARequest extends PDFFile {
                     "Also declare PDF/UA accessibility alongside PDF/A. Only applies to the level A"
                             + " formats, and the claim is written only if it validates.",
             defaultValue = "false")
-    private Boolean pdfUa;
+    private Boolean pdfUa = false;
 
     @Schema(
             description =

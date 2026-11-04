@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Stack, Text, TextInput, Group } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface WordsToRedactInputProps {
   wordsToRedact: string[];
@@ -63,6 +64,7 @@ export default function WordsToRedactInput({
               whiteSpace: "nowrap",
             }}
             title={word}
+            className={privateContentClassName}
           >
             {word}
           </Text>
@@ -87,6 +89,7 @@ export default function WordsToRedactInput({
             "Enter a word",
           )}
           value={currentWord}
+          className={privateContentClassName}
           onChange={(e) => setCurrentWord(e.target.value)}
           onKeyDown={handleKeyPress}
           disabled={disabled}
