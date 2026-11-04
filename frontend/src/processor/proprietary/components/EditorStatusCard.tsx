@@ -13,6 +13,7 @@ import { DownloadEditorModal } from "@processor/components/DownloadEditorModal";
 import "@processor/theme/surface.css";
 import { BrandTile } from "@editor/components/shared/BrandTile";
 import "@processor/components/EditorStatusCard.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** The instance to headline: the busiest healthy one, else the first. */
 function primaryInstance(instances: EditorInstance[]): EditorInstance | null {
@@ -123,7 +124,11 @@ export function EditorStatusCard({ footer }: EditorStatusCardProps) {
                   {t("portal.home.editor.name")}
                 </span>
                 {view?.host && (
-                  <span className="portal-editor-hero__host">{view.host}</span>
+                  <span
+                    className={`portal-editor-hero__host ${privateContentClassName}`}
+                  >
+                    {view.host}
+                  </span>
                 )}
                 {adoption && (
                   <>

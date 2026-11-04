@@ -3,10 +3,14 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { TextAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
 import { structureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
-import type { InnerTagsControl } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
+import type {
+  InnerTagsControl,
+  TextLanguageControl,
+} from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import type { TextTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 
 const KEY = "pdfTextEditor.inspector.accessibility";
+const LANGUAGE_KEY = "pdfTextEditor.inspector.language";
 const NO_INNER: InnerTagsControl = {
   tags: [],
   active: null,
@@ -14,12 +18,19 @@ const NO_INNER: InnerTagsControl = {
   onSet: () => {},
   newTagTypes: null,
   onTagSelection: () => {},
+  onSetLanguage: () => {},
+  onLanguageSelection: null,
 };
 
 function tagShown(tag: TextTag): HTMLElement {
   render(
     <MantineProvider env="test">
-      <TextAccessibilitySection tag={tag} onSetTag={vi.fn()} inner={NO_INNER} />
+      <TextAccessibilitySection
+        tag={tag}
+        onSetTag={vi.fn()}
+        inner={NO_INNER}
+        language={null}
+      />
     </MantineProvider>,
   );
   return screen.getByTestId("pdf-editor-text-tag");
@@ -69,6 +80,7 @@ describe("TextAccessibilitySection", () => {
           tag={{ kind: "tagged", block: structureRole("P"), cannotRetag: null }}
           onSetTag={onRetag}
           inner={NO_INNER}
+          language={null}
         />
       </MantineProvider>,
     );
@@ -90,6 +102,7 @@ describe("TextAccessibilitySection", () => {
           }}
           onSetTag={vi.fn()}
           inner={NO_INNER}
+          language={null}
         />
       </MantineProvider>,
     );
@@ -148,7 +161,94 @@ describe("TextAccessibilitySection", () => {
       screen.getByRole("textbox", { name: `${KEY}.selectedText` }),
     ).toBeDisabled();
   });
+
+  it("shows the language the text inherits, muted, and sets one of its own", () => {
+    const language = languageControl("en-IE", null);
+    renderSection(innerControl(), language);
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.label`,
+    });
+    expect((input as HTMLInputElement).value).toMatch(/(^|\()en-IE\)?$/);
+    expect(isMuted(input)).toBe(true);
+    fireEvent.click(input);
+    fireEvent.click(optionFor(input, "fr"));
+    expect(language.onSet).toHaveBeenCalledWith("fr");
+  });
+
+  it("mutes a language set the same as the one inherited", () => {
+    renderSection(innerControl(), languageControl("en-IE", "en-IE"));
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.label`,
+    });
+    expect(isMuted(input)).toBe(true);
+    expect(clearButtonOf(input)).toBeNull();
+  });
+
+  it("clears the text's own language", () => {
+    const language = languageControl("en", "fr");
+    renderSection(innerControl(), language);
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.label`,
+    });
+    expect((input as HTMLInputElement).value).toMatch(/(^|\()fr\)?$/);
+    expect(isMuted(input)).toBe(false);
+    fireEvent.click(clearButtonOf(input)!);
+    expect(language.onSet).toHaveBeenCalledWith(null);
+  });
+
+  it("shows only the language for several selected runs", () => {
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={null}
+          onSetTag={vi.fn()}
+          inner={innerControl()}
+          language={{ language: undefined, onSet: vi.fn() }}
+        />
+      </MantineProvider>,
+    );
+    expect(screen.queryByTestId("pdf-editor-text-tag")).toBeNull();
+    expect(screen.queryByTestId("pdf-editor-inner-tags")).toBeNull();
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.label`,
+    });
+    expect(input).toHaveValue("");
+    expect(input).toHaveAttribute("placeholder", `${LANGUAGE_KEY}.mixed`);
+  });
+
+  it("sets the language of the selected tag", () => {
+    const inner = innerControl({ active: 0 });
+    renderSection(inner);
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.innerLabel`,
+    });
+    expect((input as HTMLInputElement).value).toMatch(/(^|\()de\)?$/);
+    fireEvent.click(input);
+    fireEvent.click(optionFor(input, "ga"));
+    expect(inner.onSetLanguage).toHaveBeenCalledWith(0, "ga");
+  });
+
+  it("marks characters selected inside the text as another language", () => {
+    const inner = innerControl({
+      newTagTypes: ["Span"],
+      onLanguageSelection: vi.fn(),
+    });
+    renderSection(inner);
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.selectedText`,
+    });
+    fireEvent.click(input);
+    fireEvent.click(optionFor(input, "fr"));
+    expect(inner.onLanguageSelection).toHaveBeenCalledWith("fr");
+  });
 });
+
+function languageControl(
+  inherited: string | null,
+  own: string | null,
+): TextLanguageControl & { onSet: ReturnType<typeof vi.fn> } {
+  return { language: { own, inherited }, onSet: vi.fn() };
+}
 
 function innerControl(
   overrides: Partial<InnerTagsControl> = {},
@@ -163,6 +263,8 @@ function innerControl(
         role: structureRole("Span"),
         types: ["Span", "Code"],
         removable: true,
+        language: { own: "de", inherited: "en" },
+        languageEditable: true,
       },
       {
         key: "2",
@@ -172,6 +274,8 @@ function innerControl(
         role: structureRole("Link"),
         types: [],
         removable: false,
+        language: { own: null, inherited: "en" },
+        languageEditable: true,
       },
     ],
     active: null,
@@ -179,20 +283,41 @@ function innerControl(
     onSet: vi.fn(),
     newTagTypes: null,
     onTagSelection: vi.fn(),
+    onSetLanguage: vi.fn(),
+    onLanguageSelection: null,
     ...overrides,
   };
 }
 
-function renderSection(inner: InnerTagsControl) {
+function renderSection(
+  inner: InnerTagsControl,
+  language: TextLanguageControl | null = null,
+) {
   render(
     <MantineProvider env="test">
       <TextAccessibilitySection
         tag={{ kind: "tagged", block: structureRole("P"), cannotRetag: null }}
         onSetTag={vi.fn()}
         inner={inner}
+        language={language}
       />
     </MantineProvider>,
   );
+}
+
+function isMuted(input: HTMLElement): boolean {
+  return input.closest('[style*="--c-text-muted"]') !== null;
+}
+
+function clearButtonOf(input: HTMLElement): HTMLElement | null {
+  return input.closest(".mantine-Input-wrapper")!.querySelector("button");
+}
+
+/** A language picker's option for `tag`: "Name (tag)", or the tag alone where the locale has no name. */
+function optionFor(input: HTMLElement, tag: string): HTMLElement {
+  return within(listboxOf(input)).getByRole("option", {
+    name: new RegExp(`(^|\\()${tag}\\)?$`),
+  });
 }
 
 /** The options of a picker: every picker's are in the document at once. */
