@@ -1,13 +1,17 @@
 import { useState } from "react";
+import type { TFunction } from "i18next";
 import { Badge, Collapse, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import {
+  Field,
   Section,
   SectionLabel,
   StatRow,
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
+import type { DocumentLanguageControl } from "@editor/tools/pdfTextEditor/hooks/useDocumentLanguage";
 import {
   analyzePageFonts,
   type PageFont,
@@ -18,6 +22,9 @@ import type {
   PageSnapshot,
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
+import type { ImageReview } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import type { HeadingOutline } from "@editor/tools/pdfTextEditor/util/headingOutline";
+import { HeadingOutlineSection } from "@editor/tools/pdfTextEditor/components/inspector/HeadingOutlineSection";
 
 interface Props {
   pages: PageSnapshot[];
@@ -27,10 +34,26 @@ interface Props {
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
+  /** Images needing attention; null when there is nothing to review. */
+  imageReview: ImageReview | null;
+  onSelectNextImageToReview: () => void;
+  /** Null when there is nothing to check. */
+  headingOutline: HeadingOutline | null;
+  onSelectHeading: (index: number) => void;
+  /** Null when the language cannot be edited here. */
+  documentLanguage: DocumentLanguageControl | null;
 }
 
 /** Facts about the open document. Nothing here acts on a selection. */
-export function DocumentInspector({ pages, ...settings }: Props) {
+export function DocumentInspector({
+  pages,
+  imageReview,
+  onSelectNextImageToReview,
+  headingOutline,
+  onSelectHeading,
+  documentLanguage,
+  ...settings
+}: Props) {
   const { t } = useTranslation();
   const runs = pages.reduce((n, p) => n + p.runs.length, 0);
   const images = pages.reduce((n, p) => n + p.images.length, 0);
@@ -54,10 +77,153 @@ export function DocumentInspector({ pages, ...settings }: Props) {
             value={images}
           />
         </Stack>
+        {documentLanguage && (
+          <DocumentLanguageField control={documentLanguage} />
+        )}
       </Section>
+      {imageReview && (
+        <AccessibilitySection
+          review={imageReview}
+          onNext={onSelectNextImageToReview}
+        />
+      )}
+      {headingOutline && (
+        <HeadingOutlineSection
+          outline={headingOutline}
+          onSelect={onSelectHeading}
+        />
+      )}
       <FontsSection pages={pages} />
       <DocumentSettings {...settings} />
     </Stack>
+  );
+}
+
+/**
+ * The language every text is read in unless its own element says otherwise.
+ * Flagged while unset: PDF/UA and WCAG 3.1.1 require it, and a screen reader
+ * left to guess reads the whole document in the wrong voice.
+ */
+function DocumentLanguageField({
+  control,
+}: {
+  control: DocumentLanguageControl;
+}) {
+  const { t } = useTranslation();
+  const label = t("pdfTextEditor.inspector.language.documentLabel", "Language");
+  return (
+    <Stack gap={4} mt="sm">
+      <Field label={label} hint={documentLanguageHint(t, control)}>
+        <LanguagePicker
+          own={control.language}
+          inherited={null}
+          placeholder={t(
+            "pdfTextEditor.inspector.language.placeholder",
+            "Select language",
+          )}
+          onChange={control.onSet}
+          label={label}
+          testId="pdf-editor-document-language-picker"
+          disabled={!control.editable}
+        />
+      </Field>
+      {control.language === null && (
+        <Text
+          size="xs"
+          c="yellow.8"
+          data-testid="pdf-editor-document-language-missing"
+        >
+          {t(
+            "pdfTextEditor.inspector.language.missing",
+            "No language set. Screen readers will guess, and may read the whole document in the wrong voice.",
+          )}
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
+function documentLanguageHint(
+  t: TFunction,
+  control: DocumentLanguageControl,
+): string {
+  return control.editable
+    ? t(
+        "pdfTextEditor.inspector.language.documentHint",
+        "The language screen readers use unless a part of the text sets its own.",
+      )
+    : t(
+        "pdfTextEditor.inspector.language.documentLocked",
+        "An encrypted document's language can't be changed here.",
+      );
+}
+
+function AccessibilitySection({
+  review,
+  onNext,
+}: {
+  review: ImageReview;
+  onNext: () => void;
+}) {
+  const { t } = useTranslation();
+  const pending = review.needsDescription + review.untagged;
+  return (
+    <Section testId="pdf-editor-document-accessibility">
+      <SectionLabel>
+        {t("pdfTextEditor.inspector.accessibility.heading", "Accessibility")}
+      </SectionLabel>
+      <Stack gap="xs">
+        <Stack gap={4} data-testid="pdf-editor-document-accessibility-summary">
+          <StatRow
+            label={t(
+              "pdfTextEditor.inspector.accessibility.missingDescriptions",
+              "Missing descriptions",
+            )}
+            value={review.needsDescription}
+          />
+          <StatRow
+            label={t(
+              "pdfTextEditor.inspector.accessibility.untaggedImages",
+              "Untagged images",
+            )}
+            value={review.untagged}
+          />
+          <UntaggableRow count={review.untaggable} />
+        </Stack>
+        {pending > 0 && (
+          <Button
+            size="sm"
+            variant="secondary"
+            accent="neutral"
+            fullWidth
+            justify="start"
+            leftSection={<Icon name="arrow-right" size={20} />}
+            onClick={onNext}
+            data-testid="pdf-editor-document-accessibility-next"
+          >
+            {t("pdfTextEditor.inspector.accessibility.nextImage", "Next image")}
+          </Button>
+        )}
+      </Stack>
+    </Section>
+  );
+}
+
+/**
+ * Untagged images nothing here can tag, kept apart so the rows Next works
+ * through can reach zero. Absent in the usual file, which has none.
+ */
+function UntaggableRow({ count }: { count: number }) {
+  const { t } = useTranslation();
+  if (count === 0) return null;
+  return (
+    <StatRow
+      label={t(
+        "pdfTextEditor.inspector.accessibility.untaggableImages",
+        "Can't be tagged here",
+      )}
+      value={count}
+    />
   );
 }
 

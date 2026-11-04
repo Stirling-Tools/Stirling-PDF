@@ -10,7 +10,7 @@ import {
   PdfiumModelSync,
   type ModelSyncResult,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumModelSync";
-import { resetBackendResolverCaches } from "@editor/tools/pdfTextEditor/charcode/BackendResolver";
+import { resetFontHelperCaches } from "@editor/tools/pdfTextEditor/charcode/FontHelpers";
 import { resetCmapCache } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 import { resetContentStreamCache } from "@editor/tools/pdfTextEditor/charcode/ContentStreamResolver";
 import {
@@ -37,7 +37,7 @@ import { resetEmbeddedFaces } from "@editor/tools/pdfTextEditor/util/embeddedFac
 
 /** Drop EVERY per-document charcode/glyph cache. */
 function resetCharcodeCaches(): void {
-  resetBackendResolverCaches();
+  resetFontHelperCaches();
   resetCmapCache();
   resetContentStreamCache();
   resetOnPageAdvCache();
@@ -67,6 +67,10 @@ export interface EditorViewState {
   pages: PageSnapshot[];
   /** Document-level dirty bit (any page dirty). */
   dirty: boolean;
+  /** The catalog /Lang as the session has it; null when unknown. */
+  documentLanguage: string | null;
+  /** Every language the document is read in: its own and each element's. */
+  languagesInUse: string[];
   /** Async lifecycle markers. */
   loading: boolean;
   /** True once the first page's bitmap has actually painted in PageView. */
@@ -106,6 +110,8 @@ const INITIAL: EditorViewState = {
   pageCount: 0,
   pages: [],
   dirty: false,
+  documentLanguage: null,
+  languagesInUse: [],
   loading: false,
   firstPageRendered: false,
   progress: null,
@@ -305,6 +311,8 @@ export class EditorStore {
       pageCount: doc.pageCount,
       pages: [],
       dirty: false,
+      documentLanguage: doc.documentLanguage(),
+      languagesInUse: doc.languagesInUse(),
       loading: false,
       firstPageRendered: false,
       error: null,
@@ -564,8 +572,16 @@ export class EditorStore {
   /** Re-read the model into a fresh page-snapshot array and publish it. */
   resnapshot(): void {
     if (!this.doc) return;
-    let changed = false;
     const doc = this.doc;
+    const documentLanguage = doc.documentLanguage();
+    if (documentLanguage !== this.state.documentLanguage) {
+      this.patch({ documentLanguage });
+    }
+    const languagesInUse = doc.languagesInUse();
+    if (languagesInUse.join() !== this.state.languagesInUse.join()) {
+      this.patch({ languagesInUse });
+    }
+    let changed = false;
     const pages: PageSnapshot[] = this.state.pages.map((p) => {
       const live = doc.page(p.pageIndex);
       if (live.revision === p.revision) return p;

@@ -4,6 +4,7 @@ import { Alert, Checkbox, Group, Modal, Stack, Text } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import { Button } from "@editor/ui/Button";
 import { folderKind, FolderRecord } from "@editor/types/folder";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface DeleteFolderDialogProps {
   opened: boolean;
@@ -53,7 +54,7 @@ export function DeleteFolderDialog({
       size="md"
     >
       <Stack gap="md">
-        <Text size="sm">
+        <Text size="sm" className={privateContentClassName}>
           {isMount
             ? t(
                 "filesPage.unmountFolderBody",
