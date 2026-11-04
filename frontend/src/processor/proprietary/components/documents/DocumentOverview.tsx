@@ -4,6 +4,7 @@ import {
   DOCUMENT_STATUS_LABEL,
   type ReviewDocument,
 } from "@processor/api/documents";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 /** Key fields for the selected document - product, action, user, status. */
 export function DocumentOverview({ doc }: { doc: ReviewDocument }) {
@@ -29,7 +30,7 @@ export function DocumentOverview({ doc }: { doc: ReviewDocument }) {
         />
         <StatTile
           label={t("portal.documents.overview.user")}
-          value={doc.user || "-"}
+          value={<PrivateContent>{doc.user || "-"}</PrivateContent>}
         />
         <StatTile
           label={t("portal.documents.overview.type")}
