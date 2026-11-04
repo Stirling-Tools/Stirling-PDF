@@ -20,6 +20,8 @@ html[data-app-theme="light"] {
   --c-text-muted: var(--p-gray-600);
   --c-text-subtle: var(--p-gray-550);
   --c-text-on-primary: var(--p-white);
+  /* Brand marks whose owners permit only pure black or white (GitHub, Apple). */
+  --c-mark-mono: var(--p-black);
 
   --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-snow);
@@ -166,6 +168,7 @@ html[data-app-theme="midnight"] {
   --c-text-muted: var(--p-zinc-200);
   --c-text-subtle: var(--p-zinc-250);
   --c-text-on-primary: var(--p-white);
+  --c-mark-mono: var(--p-white);
   /* Accent used as TEXT on dark surfaces: a lighter step for 4.5:1. */
   --c-accent-text: var(--p-brand-red-300);
   --c-btn-solid: var(--c-text);
@@ -351,6 +354,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   --c-text: var(--p-snow);
   --c-text-muted: var(--p-zinc-200);
   --c-text-subtle: var(--p-zinc-250);
+  --c-mark-mono: var(--p-white);
   --c-btn-solid: var(--c-text);
   --c-btn-inverse: var(--p-ink);
   --c-btn-secondary: var(--p-c-1a1a1d);

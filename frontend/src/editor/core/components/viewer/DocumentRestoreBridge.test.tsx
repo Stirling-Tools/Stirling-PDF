@@ -114,6 +114,7 @@ const fixture = vi.hoisted(() => {
     const scrollRequests = perDocument(() =>
       emitter<{ x: number; y: number }>(),
     );
+    const scrollTo = perDocument(() => ({ scrollToPage: vi.fn() }));
     return {
       zoom: perDocument(zoomScope),
       spread: perDocument(spreadScope),
@@ -122,9 +123,11 @@ const fixture = vi.hoisted(() => {
       layoutChange,
       viewportResize,
       scrollRequests,
+      scrollTo,
       scroll: {
         onLayoutReady: layoutReady.on,
         onLayoutChange: layoutChange.on,
+        forDocument: scrollTo.forDocument,
       },
       viewport: { onViewportResize: viewportResize.on },
       viewportPlugin: {
@@ -172,6 +175,7 @@ const request = (
   zoom: 1.42,
   spread: SpreadMode.Odd,
   rotation: 1,
+  page: null,
   ...overrides,
 });
 
@@ -391,6 +395,49 @@ describe("DocumentRestoreBridge", () => {
       fixture.current.rotate.forDocument("second").setRotation,
     ).toHaveBeenCalledExactlyOnceWith(1);
     expect(types()).toEqual(["rotation", "spread", "zoom"]);
+  });
+
+  it("scrolls the replacement to the carried page once the carried values have landed", () => {
+    renderBridge({ request: request({ page: 7 }), laidOut: false });
+    layoutReady("second", 10);
+
+    const { scrollToPage } = fixture.current.scrollTo.forDocument("second");
+    const { requestZoom } = fixture.current.zoom.forDocument("second");
+    expect(scrollToPage).toHaveBeenCalledExactlyOnceWith({
+      pageNumber: 7,
+      behavior: "instant",
+    });
+    expect(scrollToPage.mock.invocationCallOrder[0]).toBeGreaterThan(
+      requestZoom.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("holds the carried page until a dropped zoom lands, then asks once", () => {
+    const zoom = fixture.current.zoom.forDocument("second");
+    zoom.drop = true;
+    renderBridge({ request: request({ page: 2 }) });
+
+    const { scrollToPage } = fixture.current.scrollTo.forDocument("second");
+    expect(scrollToPage).not.toHaveBeenCalled();
+
+    zoom.drop = false;
+    act(() => fixture.current.viewportResize.emit({ documentId: "second" }));
+    act(() => fixture.current.layoutChange.emit({ documentId: "second" }));
+
+    expect(scrollToPage).toHaveBeenCalledExactlyOnceWith({
+      pageNumber: 2,
+      behavior: "instant",
+    });
+  });
+
+  it("clamps the carried page to the replacement's length", () => {
+    renderBridge({
+      request: request({ zoom: null, spread: null, rotation: null, page: 9 }),
+    });
+
+    expect(
+      fixture.current.scrollTo.forDocument("second").scrollToPage,
+    ).toHaveBeenCalledExactlyOnceWith({ pageNumber: 3, behavior: "instant" });
   });
 
   it("subscribes to nothing while no restore is in flight", () => {

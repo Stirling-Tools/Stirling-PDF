@@ -1,13 +1,17 @@
 import { useState } from "react";
+import type { TFunction } from "i18next";
 import { Badge, Collapse, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import {
+  Field,
   Section,
   SectionLabel,
   StatRow,
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
+import type { DocumentLanguageControl } from "@editor/tools/pdfTextEditor/hooks/useDocumentLanguage";
 import {
   analyzePageFonts,
   type PageFont,
@@ -19,6 +23,8 @@ import type {
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 import type { ImageReview } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import type { HeadingOutline } from "@editor/tools/pdfTextEditor/util/headingOutline";
+import { HeadingOutlineSection } from "@editor/tools/pdfTextEditor/components/inspector/HeadingOutlineSection";
 
 interface Props {
   pages: PageSnapshot[];
@@ -31,6 +37,11 @@ interface Props {
   /** Images needing attention; null when there is nothing to review. */
   imageReview: ImageReview | null;
   onSelectNextImageToReview: () => void;
+  /** Null when there is nothing to check. */
+  headingOutline: HeadingOutline | null;
+  onSelectHeading: (index: number) => void;
+  /** Null when the language cannot be edited here. */
+  documentLanguage: DocumentLanguageControl | null;
 }
 
 /** Facts about the open document. Nothing here acts on a selection. */
@@ -38,6 +49,9 @@ export function DocumentInspector({
   pages,
   imageReview,
   onSelectNextImageToReview,
+  headingOutline,
+  onSelectHeading,
+  documentLanguage,
   ...settings
 }: Props) {
   const { t } = useTranslation();
@@ -63,6 +77,9 @@ export function DocumentInspector({
             value={images}
           />
         </Stack>
+        {documentLanguage && (
+          <DocumentLanguageField control={documentLanguage} />
+        )}
       </Section>
       {imageReview && (
         <AccessibilitySection
@@ -70,10 +87,75 @@ export function DocumentInspector({
           onNext={onSelectNextImageToReview}
         />
       )}
+      {headingOutline && (
+        <HeadingOutlineSection
+          outline={headingOutline}
+          onSelect={onSelectHeading}
+        />
+      )}
       <FontsSection pages={pages} />
       <DocumentSettings {...settings} />
     </Stack>
   );
+}
+
+/**
+ * The language every text is read in unless its own element says otherwise.
+ * Flagged while unset: PDF/UA and WCAG 3.1.1 require it, and a screen reader
+ * left to guess reads the whole document in the wrong voice.
+ */
+function DocumentLanguageField({
+  control,
+}: {
+  control: DocumentLanguageControl;
+}) {
+  const { t } = useTranslation();
+  const label = t("pdfTextEditor.inspector.language.documentLabel", "Language");
+  return (
+    <Stack gap={4} mt="sm">
+      <Field label={label} hint={documentLanguageHint(t, control)}>
+        <LanguagePicker
+          own={control.language}
+          inherited={null}
+          placeholder={t(
+            "pdfTextEditor.inspector.language.placeholder",
+            "Select language",
+          )}
+          onChange={control.onSet}
+          label={label}
+          testId="pdf-editor-document-language-picker"
+          disabled={!control.editable}
+        />
+      </Field>
+      {control.language === null && (
+        <Text
+          size="xs"
+          c="yellow.8"
+          data-testid="pdf-editor-document-language-missing"
+        >
+          {t(
+            "pdfTextEditor.inspector.language.missing",
+            "No language set. Screen readers will guess, and may read the whole document in the wrong voice.",
+          )}
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
+function documentLanguageHint(
+  t: TFunction,
+  control: DocumentLanguageControl,
+): string {
+  return control.editable
+    ? t(
+        "pdfTextEditor.inspector.language.documentHint",
+        "The language screen readers use unless a part of the text sets its own.",
+      )
+    : t(
+        "pdfTextEditor.inspector.language.documentLocked",
+        "An encrypted document's language can't be changed here.",
+      );
 }
 
 function AccessibilitySection({

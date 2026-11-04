@@ -65,12 +65,6 @@ class ToolIODeclarationCoverageTest {
      */
     private static final List<String> EXEMPT =
             List.of(
-                    // Interactive editing sessions: page fragments and cache handles, not
-                    // documents.
-                    "/api/v1/convert/pdf/text-editor",
-                    "/api/v1/convert/text-editor/pdf",
-                    // Charcode lookup for the v2 editor: returns glyph mappings, not a document.
-                    "/api/v1/general/pdf-text-editor",
                     // Interactive credential helpers, hidden from pipeline discovery; restoration
                     // requires the original protected document as well as the working result.
                     "/api/v1/security/restore-pdf-protection",

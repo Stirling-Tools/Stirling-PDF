@@ -24,6 +24,7 @@ import {
 import { useSources } from "@processor/queries/sources";
 import { buildFailureActionCells } from "@processor/components/failures/failureActionCells";
 import { outcomeOf } from "@processor/components/failures/failureOutcomes";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** The review queue: what a policy run or an editor tool needs a human to look at. */
 
@@ -77,6 +78,7 @@ export function FileRunEventList() {
         key: "user",
         label: t("portal.failures.filters.user", "User"),
         getValue: (event) => event.actor,
+        privateContent: true,
       },
       {
         key: "origin",
@@ -149,6 +151,7 @@ export function FileRunEventList() {
       key: "user",
       header: t("portal.failures.columns.user", "User"),
       sortable: true,
+      privateContent: true,
       get: (event) => event.actor,
       placeholder: "-",
     }),
@@ -179,6 +182,7 @@ export function FileRunEventList() {
             key: "closedBy",
             header: t("portal.failures.columns.closedBy", "Closed by"),
             sortable: true,
+            privateContent: true,
             get: (event) => event.statusActor,
             placeholder: t("portal.failures.closedBySystem", "Stirling"),
           }),
@@ -287,7 +291,9 @@ export function FileRunEventList() {
           </Button>
         }
       >
-        <pre className="portal-failures__log">{logOf?.detail}</pre>
+        <pre className={`portal-failures__log ${privateContentClassName}`}>
+          {logOf?.detail}
+        </pre>
       </Modal>
     </div>
   );

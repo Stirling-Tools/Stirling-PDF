@@ -65,7 +65,7 @@ export function retaggableTag(
 ): RetaggableTag | null {
   if (!doc.isTagged() || image.inForm) return null;
   const structure = doc.structure(image.pageIndex);
-  if (structure.cannotAddFigure()) return null;
+  if (structure.cannotAddElement()) return null;
   if (image.mcid === undefined) {
     return image.artifact ? { kind: "artifact" } : { kind: "untagged" };
   }
