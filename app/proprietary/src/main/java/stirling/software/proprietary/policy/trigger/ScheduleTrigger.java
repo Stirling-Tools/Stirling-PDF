@@ -71,7 +71,7 @@ public class ScheduleTrigger implements PolicyTrigger {
                         Thread.ofVirtual().name("policy-schedule-", 0).factory());
         scheduler.scheduleAtFixedRate(
                 this::safeSweep, sweepSeconds, sweepSeconds, TimeUnit.SECONDS);
-        log.info("Schedule trigger started (sweep every {}s)", sweepSeconds);
+        log.debug("Schedule trigger started (sweep every {}s)", sweepSeconds);
     }
 
     @Override
