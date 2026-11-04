@@ -42,9 +42,9 @@ import {
 
 /**
  * Tag part of a run's tagged text, code units `start` to `end`, as its own
- * element of `as`. The save pass gives the element its place: inside the
- * element the text was cut from for an inline type, else splitting that
- * element around it.
+ * element of `as`, read in language `lang` when given. The save pass gives
+ * the element its place: inside the element the text was cut from for an
+ * inline type, else splitting that element around it.
  */
 export class TagTextRangeCommand implements Command {
   readonly type = "tag-text-range";
@@ -53,6 +53,7 @@ export class TagTextRangeCommand implements Command {
   private readonly start: number;
   private readonly end: number;
   private readonly as: StructureType;
+  private readonly lang: string | null;
   /** Chosen on first apply, so a redo reuses them. */
   private mcids: { cut: number; part: number } | null = null;
   private undo: Array<() => void> = [];
@@ -63,12 +64,14 @@ export class TagTextRangeCommand implements Command {
     start: number;
     end: number;
     as: StructureType;
+    lang?: string | null;
   }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.start = opts.start;
     this.end = opts.end;
     this.as = opts.as;
+    this.lang = opts.lang ?? null;
   }
 
   apply(doc: EditorDocument): void {
@@ -84,7 +87,9 @@ export class TagTextRangeCommand implements Command {
             "pdfTextEditor.inspector.accessibility.cannotRetag",
             "This text's tag can't be changed.",
           ),
-          { cause: err },
+          {
+            cause: err,
+          },
         ),
       );
     }
@@ -142,6 +147,9 @@ export class TagTextRangeCommand implements Command {
       after: partMcid("after", plan.from.at(-1)!),
     });
     undo.push(() => structure.removeElement(cut));
+    if (this.lang !== null) {
+      structure.setOwnLang(structure.element(cut)!.key, this.lang);
+    }
   }
 }
 
