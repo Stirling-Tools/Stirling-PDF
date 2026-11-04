@@ -1,8 +1,11 @@
 import {
+  useEffect,
   useId,
+  useRef,
   type KeyboardEvent,
   type MouseEvent,
   type ReactNode,
+  type TransitionEvent,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -119,13 +122,38 @@ export interface SetupStepProps {
   saveSection: (section: ExpandableSection) => void;
 }
 
+const prefersReducedMotion = () =>
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+
+/**
+ * Scrolls the card just enough to show all of `group`, or its top when it is
+ * taller than the card, below the sticky bar that holds Back and the step count.
+ */
+function revealInCard(group: HTMLElement) {
+  const scroller = group.closest<HTMLElement>(`.${styles.frameScroll}`);
+  if (!scroller) return;
+  const sticky =
+    scroller.querySelector<HTMLElement>(`.${styles.topBar}`)?.offsetHeight ?? 0;
+  const view = scroller.getBoundingClientRect();
+  const box = group.getBoundingClientRect();
+  const belowView = box.bottom - view.bottom;
+  const aboveView = box.top - (view.top + sticky);
+  const delta =
+    aboveView < 0 ? aboveView : Math.min(Math.max(belowView, 0), aboveView);
+  if (delta === 0) return;
+  scroller.scrollBy({
+    top: delta,
+    behavior: prefersReducedMotion() ? "auto" : "smooth",
+  });
+}
+
 /**
  * One setting: its label and control, then, for settings that open more
  * fields, those fields in a panel that animates open and shut. A setting with
  * `details` is boxed even while switched off, so the fields it opens read as
  * its own.
  * `details` stays mounted while closed so it can animate; `inert` keeps its
- * fields out of the tab order meanwhile.
+ * fields out of the tab order meanwhile. Opening it scrolls the card to show it.
  */
 export function SettingRow({
   label,
@@ -149,8 +177,28 @@ export function SettingRow({
   const labelId = useId();
   const detailsId = useId();
   const open = expand?.open === true;
+  const groupRef = useRef<HTMLDivElement>(null);
+  const wasOpen = useRef(open);
+
+  // Scrolled once fully open, when the card has grown to fit it. Without
+  // motion there is no transition to wait for. Not on mount: a card that
+  // shows with a section open is already at its top.
+  useEffect(() => {
+    const opened = open && !wasOpen.current;
+    wasOpen.current = open;
+    if (opened && prefersReducedMotion() && groupRef.current) {
+      revealInCard(groupRef.current);
+    }
+  }, [open]);
+  const revealWhenOpened = (event: TransitionEvent<HTMLDivElement>) => {
+    if (open && event.target === event.currentTarget && groupRef.current) {
+      revealInCard(groupRef.current);
+    }
+  };
+
   return (
     <div
+      ref={groupRef}
       className={styles.group}
       data-expandable={details !== undefined}
       role="group"
@@ -189,6 +237,7 @@ export function SettingRow({
           className={styles.groupDetails}
           data-open={open}
           inert={!open}
+          onTransitionEnd={revealWhenOpened}
         >
           <div className={styles.groupDetailsClip}>
             <div className={styles.groupDetailsBody}>
