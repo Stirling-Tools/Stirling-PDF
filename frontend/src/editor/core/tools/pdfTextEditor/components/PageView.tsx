@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -94,7 +94,12 @@ function nearestScrollRoot(el: HTMLElement): HTMLElement | null {
 
 // One PDF page: a PDFium-rendered bitmap plus an HTML overlay layer with one
 // positioned, editable element per text run.
-export function PageView({
+/**
+ * One page and its overlays. Memoised: with every page read, re-rendering them
+ * all on each store change takes seconds, so a caller must pass handlers that
+ * keep their identity across renders.
+ */
+export const PageView = memo(function PageView({
   document,
   store,
   page,
@@ -462,4 +467,4 @@ export function PageView({
       </Box>
     </Box>
   );
-}
+});

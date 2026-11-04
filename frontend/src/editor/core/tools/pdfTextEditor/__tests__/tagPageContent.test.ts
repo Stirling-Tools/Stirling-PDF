@@ -16,6 +16,9 @@ import {
   hasUntaggedContent,
 } from "@editor/tools/pdfTextEditor/commands/TagPageContentCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { tagAllPages } from "@editor/tools/pdfTextEditor/hooks/useBulkTagging";
+import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { readTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
@@ -272,5 +275,62 @@ describe("TagPageContentCommand", () => {
         doc,
       ),
     ).toThrow();
+  });
+});
+
+describe("tagAllPages", () => {
+  /** A store holding `bytes` as its document, its pages listed but none read. */
+  async function storeFor(bytes: Uint8Array): Promise<EditorStore> {
+    const doc = await EditorDocument.open(bytes);
+    const store = new EditorStore();
+    await store.setDocument(doc);
+    store.publishPages(
+      Array.from(
+        { length: doc.pageCount },
+        (_, pageIndex) =>
+          ({
+            pageIndex,
+            revision: -1,
+            runs: [],
+            images: [],
+            shapes: [],
+            annotations: [],
+            rules: [],
+          }) as unknown as PageSnapshot,
+      ),
+    );
+    return store;
+  }
+
+  test("reads and tags every page behind the loading overlay, as one undo step", async () => {
+    const store = await storeFor(pagePdf(COLUMNS));
+    const progress = vi.spyOn(store, "setProgress");
+    const tagging = tagAllPages(store);
+    expect(store.getState().loading).toBe(true);
+    await tagging;
+
+    expect(store.getState().loading).toBe(false);
+    expect(progress).toHaveBeenCalledWith(
+      expect.objectContaining({ current: 0, total: 1 }),
+    );
+    const doc = store.document!;
+    expect(hasUntaggedContent(doc, 0)).toBe(false);
+    expect(
+      store.getState().pages[0].runs.every((run) => run.mcid !== undefined),
+    ).toBe(true);
+
+    store.undo();
+    expect(hasUntaggedContent(doc, 0)).toBe(true);
+    expect(store.history.canUndo).toBe(false);
+    store.dispose();
+  });
+
+  test("records nothing when nothing is untagged", async () => {
+    const store = await storeFor(pagePdf(COLUMNS));
+    await tagAllPages(store);
+    const tagged = store.history.peekUndo();
+    await tagAllPages(store);
+    expect(store.history.peekUndo()).toBe(tagged);
+    store.dispose();
   });
 });

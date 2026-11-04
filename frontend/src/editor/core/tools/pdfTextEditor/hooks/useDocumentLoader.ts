@@ -159,7 +159,13 @@ export function ensureAllPagesRead(store: EditorStore): void {
       store.setError(err instanceof Error ? err.message : String(err));
     }
   }
-  if (!any) return;
+  if (any) publishAllPages(store);
+}
+
+/** Publish every page's snapshot as the document has it now. */
+export function publishAllPages(store: EditorStore): void {
+  const doc = store.document;
+  if (!doc) return;
   const next = store.getState().pages.map((p) => {
     const page = doc.page(p.pageIndex);
     return {
