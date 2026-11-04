@@ -28,8 +28,10 @@ import {
 } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 import {
   canTagText,
+  sharedTextTag,
   textTag,
 } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import { setTextTagCommand } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 
 const TAGGED_SAMPLE = path.join(
   import.meta.dirname,
@@ -362,5 +364,59 @@ describe("tagging text in a file with no structure tree", () => {
         return tag.kind === "tagged" ? tag.block.type : tag.kind;
       }),
     ).toEqual(["H1", "P"]);
+  });
+});
+
+describe("setting one tag on several runs", () => {
+  function targets(doc: EditorDocument, ...fragments: string[]) {
+    return fragments.map((fragment) => {
+      const run = runWith(doc, fragment).snapshot();
+      return { run, tag: textTag(doc, run) };
+    });
+  }
+
+  test("reads runs tagged differently as mixed, and alike as their tag", async () => {
+    const doc = await openSample();
+    const mixed = targets(doc, "Priorities for next quarter", "Confidential");
+    expect(sharedTextTag(mixed.map(({ tag }) => tag))).toEqual({
+      kind: "mixed",
+      settable: true,
+    });
+    const history = new HistoryStack();
+    history.execute(setTextTagCommand(mixed, "H3")!, doc);
+    const alike = targets(doc, "Priorities for next quarter", "Confidential");
+    expect(sharedTextTag(alike.map(({ tag }) => tag))).toMatchObject({
+      kind: "tagged",
+      block: { type: "H3" },
+      cannotRetag: null,
+    });
+  });
+
+  test("retags tagged text and tags untagged text as one undo step", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    history.execute(
+      setTextTagCommand(
+        targets(doc, "Priorities for next quarter", "Confidential"),
+        "H3",
+      )!,
+      doc,
+    );
+    expect(shownTag(doc, "Priorities for next quarter")).toBe("H3");
+    expect(shownTag(doc, "Confidential")).toBe("H3");
+
+    history.undo(doc);
+    expect(shownTag(doc, "Priorities for next quarter")).not.toBe("H3");
+    expect(shownTag(doc, "Confidential")).toBe("untagged");
+  });
+
+  test("leaves text whose tag cannot be set out, and is not settable with it", async () => {
+    const doc = await openSample();
+    const withArtifact = targets(doc, "Confidential", "Acme Corp");
+    expect(sharedTextTag(withArtifact.map(({ tag }) => tag))).toEqual({
+      kind: "mixed",
+      settable: false,
+    });
+    expect(setTextTagCommand(targets(doc, "Acme Corp"), "P")).toBeNull();
   });
 });

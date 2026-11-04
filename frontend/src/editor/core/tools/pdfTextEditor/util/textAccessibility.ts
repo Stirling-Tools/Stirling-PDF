@@ -22,7 +22,9 @@ export type TextTag =
   /** `taggable` when TagTextCommand can give the text an element. */
   | { kind: "untagged"; documentTagged: boolean; taggable: boolean }
   /** Drawn by a form XObject, whose marks the editor does not read. */
-  | { kind: "unknown" };
+  | { kind: "unknown" }
+  /** Several runs' text, not all tagged alike; `settable` when every run's tag can be set. */
+  | { kind: "mixed"; settable: boolean };
 
 export function textTag(doc: EditorDocument, run: TextRunSnapshot): TextTag {
   if (run.inForm) return { kind: "unknown" };
@@ -41,6 +43,53 @@ export function textTag(doc: EditorDocument, run: TextRunSnapshot): TextTag {
     block: { role: block.role, type: block.type },
     cannotRetag: structure.cannotRetag(run.mcid),
   };
+}
+
+/** True when the tag picker can set the text's tag: retag it, or tag it. */
+export function canSetTextTag(tag: TextTag): boolean {
+  switch (tag.kind) {
+    case "tagged":
+      return tag.cannotRetag === null;
+    case "untagged":
+      return tag.taggable;
+    case "mixed":
+      return tag.settable;
+    default:
+      return false;
+  }
+}
+
+/**
+ * How several runs' text is tagged together: the tag they share, or mixed.
+ * Shared, it is settable only when every run's is.
+ */
+export function sharedTextTag(tags: readonly TextTag[]): TextTag {
+  const [first, ...rest] = tags;
+  const settable = tags.every(canSetTextTag);
+  if (!rest.every((tag) => sameTagShown(first, tag))) {
+    return { kind: "mixed", settable };
+  }
+  switch (first.kind) {
+    case "tagged":
+      return settable
+        ? { ...first, cannotRetag: null }
+        : (tags.find((tag) => tag.kind === "tagged" && tag.cannotRetag) ??
+            first);
+    case "untagged":
+      return { ...first, taggable: settable };
+    default:
+      return first;
+  }
+}
+
+function sameTagShown(a: TextTag, b: TextTag): boolean {
+  if (a.kind === "tagged" && b.kind === "tagged") {
+    return a.block.role === b.block.role;
+  }
+  if (a.kind === "untagged" && b.kind === "untagged") {
+    return a.documentTagged === b.documentTagged;
+  }
+  return a.kind === b.kind;
 }
 
 /**
