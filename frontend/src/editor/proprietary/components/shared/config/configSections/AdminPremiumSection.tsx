@@ -21,6 +21,7 @@ import { useSettingsDirty } from "@editor/hooks/useSettingsDirty";
 import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsStickyFooter";
 import { useLoginRequired } from "@editor/hooks/useLoginRequired";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface PremiumSettingsData {
   key?: string;
@@ -176,6 +177,7 @@ export default function AdminPremiumSection() {
                   setSettings({ ...settings, key: e.target.value })
                 }
                 placeholder="00000000-0000-0000-0000-000000000000"
+                className={privateContentClassName}
                 disabled={!loginEnabled}
               />
             </div>

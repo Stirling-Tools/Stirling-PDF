@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@editor/auth/UseSession";
 import { supabase } from "@editor/auth/supabase";
 import { Z_INDEX_OVER_SETTINGS_MODAL } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const PasswordSecurity: React.FC = () => {
   const { t } = useTranslation();
@@ -154,12 +155,14 @@ const PasswordSecurity: React.FC = () => {
             style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
           >
             <PasswordInput
+              className={privateContentClassName}
               label={t("account.newPassword", "New Password")}
               placeholder={t("account.newPassword", "New Password")}
               value={newPassword}
               onChange={(e) => setNewPassword(e.currentTarget.value)}
             />
             <PasswordInput
+              className={privateContentClassName}
               label={t("account.confirmNewPassword", "Confirm New Password")}
               placeholder={t(
                 "account.confirmNewPassword",
