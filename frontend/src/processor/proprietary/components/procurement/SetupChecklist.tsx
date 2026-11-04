@@ -1,7 +1,8 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Card } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
+import { copyText } from "@editor/utils/copyText";
 import { EDITOR_URL } from "@processor/auth/editorUrl";
 import { DownloadEditorModal } from "@processor/components/DownloadEditorModal";
 import { useEditorInstalled } from "@processor/hooks/useEditorInstalled";
@@ -194,20 +195,7 @@ export function SetupChecklist({
               : [],
             done: teamSize > 1,
           },
-          {
-            ...peopleStep(
-              t(
-                "portal.enterprise.setup.sso.bodyCloud",
-                "Sign in through your identity provider with SAML or OAuth, so access follows your directory.",
-              ),
-            ),
-            id: "sso",
-            title: t(
-              "portal.enterprise.setup.sso.title",
-              "Connect single sign-on",
-            ),
-            links: ssoLinks,
-          },
+          // No single sign-on step: on Stirling Cloud it needs self-hosting (see DeploymentOptions).
         ]
       : kind === "selfhost"
         ? [
@@ -451,16 +439,25 @@ function StepAction({ link }: { link: StepLink }): ReactNode {
 function CodeBlock({ code }: { code: string }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+  const codeRef = useRef<HTMLElement>(null);
   const copy = () => {
-    void navigator.clipboard?.writeText(code).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    void copyText(code).then((ok) => {
+      if (ok) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        return;
+      }
+      // The browser refused: select the command so the admin can copy it by hand.
+      const range = document.createRange();
+      if (codeRef.current) range.selectNodeContents(codeRef.current);
+      window.getSelection()?.removeAllRanges();
+      window.getSelection()?.addRange(range);
     });
   };
   return (
     <div className="ent-setup__code">
       <pre>
-        <code>{code}</code>
+        <code ref={codeRef}>{code}</code>
       </pre>
       <Button variant="tertiary" size="sm" onClick={copy}>
         {copied

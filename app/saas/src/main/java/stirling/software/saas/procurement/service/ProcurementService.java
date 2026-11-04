@@ -355,7 +355,7 @@ public class ProcurementService {
         // price a $0 enterprise quote, accept it, and be provisioned a committed licence.
         long floor = config.getMinAnnualNetMinor();
         if (floor > 0 && breakdown.annualNetMinor() < floor) {
-            throw new IllegalStateException(
+            throw new BelowMinimumDealException(
                     "Quoted annual fee "
                             + breakdown.annualNetMinor()
                             + " is below the minimum enterprise deal size "
@@ -780,7 +780,7 @@ public class ProcurementService {
      * The deployment the team is actually entitled to: the priced quote's once one exists,
      * otherwise the trial's self-selected target. Paid entitlements must follow what was quoted.
      */
-    private String entitledDeployment(ProcurementDeal deal) {
+    public String entitledDeployment(ProcurementDeal deal) {
         ProcurementQuote quote = currentQuote(deal.getTeamId()).orElse(null);
         if (quote != null && quote.getDeployment() != null && !quote.getDeployment().isBlank()) {
             return quote.getDeployment();

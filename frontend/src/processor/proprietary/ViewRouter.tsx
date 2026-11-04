@@ -8,7 +8,7 @@ import { Sources } from "@processor/views/Sources";
 import { Integrations } from "@processor/views/Integrations";
 import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
 import { DOCS_PATH } from "@editor/routes/docsRoute";
-import { ENTERPRISE_PATH } from "@processor/components/procurement/enterprisePath";
+import { legacyProcurementTarget } from "@processor/components/procurement/enterprisePath";
 
 /** Keeps the query and hash a moved tab's deep links carry (?tab=, #doc-id). */
 function MovedTo({ to }: { to: string }) {
@@ -18,9 +18,9 @@ function MovedTo({ to }: { to: string }) {
 
 /** Old usage bookmarks; one that set out to start the Enterprise trial goes to the Enterprise page. */
 function UsageRedirect() {
-  const params = new URLSearchParams(useLocation().search);
-  return params.get("procurement") === "start" ? (
-    <Navigate to={ENTERPRISE_PATH} replace />
+  const target = legacyProcurementTarget(useLocation().search);
+  return target ? (
+    <Navigate to={target} replace />
   ) : (
     <MovedTo to="/settings/billing" />
   );

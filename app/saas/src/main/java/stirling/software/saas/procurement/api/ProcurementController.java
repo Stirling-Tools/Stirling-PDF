@@ -1,6 +1,7 @@
 package stirling.software.saas.procurement.api;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -35,6 +36,7 @@ import stirling.software.saas.procurement.model.QuoteDetails;
 import stirling.software.saas.procurement.pricing.ProcurementPricingService;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.pricing.QuoteLineItem;
+import stirling.software.saas.procurement.service.BelowMinimumDealException;
 import stirling.software.saas.procurement.service.ProcurementService;
 import stirling.software.saas.procurement.service.ProcurementService.ContractPeriod;
 import stirling.software.saas.security.UserTeamResolver;
@@ -211,7 +213,10 @@ public class ProcurementController {
             QuoteResponse latestQuote,
             // Smallest annual fee a quote may come to (minor units), so the builder can say so
             // before the buyer prices one; 0 when there is no floor.
-            long minAnnualNetMinor) {}
+            long minAnnualNetMinor,
+            // The deployment the licence is issued for: the current quote's once one exists, else
+            // the trial's. Setup steps and the offline licence follow this, not {@code deployment}.
+            String entitledDeployment) {}
 
     /** The filled agreement for review: registry metadata + the rendered markdown body. */
     public record AgreementDocumentResponse(
@@ -272,7 +277,8 @@ public class ProcurementController {
                 null,
                 null,
                 null,
-                config.getMinAnnualNetMinor());
+                config.getMinAnnualNetMinor(),
+                null);
     }
 
     /**
@@ -379,8 +385,7 @@ public class ProcurementController {
 
     @PostMapping("/quote")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<QuoteResponse> buildQuote(
-            @RequestBody QuoteRequest request, Authentication auth) {
+    public ResponseEntity<?> buildQuote(@RequestBody QuoteRequest request, Authentication auth) {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         try {
@@ -388,13 +393,22 @@ public class ProcurementController {
                     toQuote(
                             procurement.buildQuote(
                                     teamId, request.toConfig(), request.toDetails())));
+        } catch (BelowMinimumDealException e) {
+            // Named in the body so the builder can say the quote is too small, as opposed to the
+            // deal having moved on (below).
+            log.warn("[procurement] quote below minimum team={}: {}", teamId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", QUOTE_BELOW_MINIMUM));
         } catch (IllegalStateException e) {
-            // Below the minimum deal size, or the deal is already live. A client error, not a
+            // The deal is already past quoting (e.g. accepted elsewhere). A client error, not a
             // fault.
             log.warn("[procurement] quote rejected team={}: {}", teamId, e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
+
+    /** Error code for a quote under the minimum deal size; the builder keys on it. */
+    static final String QUOTE_BELOW_MINIMUM = "quote_below_minimum";
 
     // Issue + accept are Supabase edge functions (they own Stripe): issue-procurement-quote turns a
     // draft into a finalized Stripe Quote; accept-procurement-quote accepts it into a subscription.
@@ -650,7 +664,8 @@ public class ProcurementController {
                 deal.getContactName(),
                 deal.getContactEmail(),
                 latest,
-                config.getMinAnnualNetMinor());
+                config.getMinAnnualNetMinor(),
+                procurement.entitledDeployment(deal));
     }
 
     private QuoteResponse toQuote(ProcurementQuote q) {

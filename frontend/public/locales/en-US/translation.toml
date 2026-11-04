@@ -9275,10 +9275,6 @@ body = "Open http://your-server:8080 and sign in with admin / stirling. You'll b
 bodyAirgap = "Open http://your-server:8080 and sign in with admin / stirling, choose a new password, then check /settings/adminPlan shows your licence as active."
 title = "Sign in as the admin"
 
-[portal.enterprise.setup.sso]
-bodyCloud = "Sign in through your identity provider with SAML or OAuth, so access follows your directory."
-title = "Connect single sign-on"
-
 [portal.enterprise.connect]
 ownerOnly = "Only this server’s owner can connect it. Ask them to open this page."
 unavailable = "Connecting to a Stirling account is turned off on this server. Book a call and we’ll set up your trial with you."
@@ -10608,6 +10604,7 @@ loadError = "Could not load the agreement. Please try again."
 loading = "Loading the agreement..."
 ref = "Ref {{ref}} · {{version}}"
 requestChanges = "Request changes"
+scrollHint = "Scroll to review"
 signatory = "Signatory name"
 signatoryPlaceholder = "Full name"
 signatoryTitle = "Signatory title"
@@ -10629,6 +10626,7 @@ businessNamePlaceholder = "Your company"
 city = "City"
 cityPlaceholder = "San Francisco"
 completeRequired = "Please complete the required fields (marked *) with a valid email before generating the quote."
+conflict = "This deal has changed since you opened it. Close the builder and reload the page to see where it stands."
 contactEmail = "Contact email"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "Contact name"
@@ -10797,7 +10795,6 @@ title = "Link your account to begin"
 
 [portal.procurement.live]
 description = "Your subscription is active and your licence is issued. Your team is provisioned and billing has started."
-eyebrow = "Live"
 title = "You're live on Stirling Enterprise"
 
 [portal.procurement.milestone]
@@ -10805,10 +10802,7 @@ downloadError = "Could not download the quote PDF just yet — please try again 
 
 [portal.procurement.payment]
 description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
-downloadAgreement = "Download signed agreement"
 downloadInvoice = "Download invoice"
-eyebrow = "Payment"
-title = "Subscription created"
 viewInvoice = "View & pay invoice"
 
 [portal.procurement.review]
@@ -10862,6 +10856,8 @@ workEmailPlaceholder = "you@company.com"
 body = "Extending adds 7 days and notifies your solutions engineer."
 bodyMaxed = "You have used all your extensions — talk to your solutions engineer if you need more time."
 cancel = "Cancel trial"
+cancelBody = "Your trial licence stops working and the deal starts over. You can start a new trial later."
+cancelTitle = "Cancel your trial?"
 extend = "Extend 7 days"
 maxed = "Maxed out"
 subtitle = "Your free trial runs through {{date}}. No card required."

@@ -55,9 +55,13 @@ public class LegalController {
 
     public record ConsentRequest(String documentId, String context) {}
 
-    /** Fetch a legal document's current version as markdown. 404 for an unknown document. */
+    /**
+     * Fetch a legal document's current version as markdown. 404 for an unknown document. Public:
+     * visitors are asked to agree to these before they have an account, so they must be able to
+     * read them first.
+     */
     @GetMapping("/{docId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<LegalDocumentResponse> document(@PathVariable String docId) {
         return registry.meta(docId)
                 .<ResponseEntity<LegalDocumentResponse>>map(

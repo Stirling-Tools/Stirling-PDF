@@ -39,6 +39,7 @@ vi.mock("@editor/auth", () => ({
     loading: false,
     isAnonymous: false,
     session: state.signedIn ? {} : null,
+    user: state.signedIn ? { email: "Dana@Northwind.example" } : null,
   }),
 }));
 const rememberPendingDestination = vi.hoisted(() => vi.fn());
@@ -82,7 +83,10 @@ vi.mock("@processor/api/billing", () => ({
 vi.mock("@processor/queries/wallet", () => ({
   walletQuery: (linked: boolean) => ({
     queryKey: ["wallet", linked],
-    queryFn: async () => ({ role: state.role }),
+    queryFn: async () => {
+      if (state.role === "unavailable") throw new Error("Wallet unavailable");
+      return { role: state.role };
+    },
     enabled: linked,
   }),
 }));
@@ -322,6 +326,31 @@ describe("Enterprise page", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("says the wallet failed rather than showing a leader the member view", async () => {
+    state.role = "unavailable";
+    state.controller = controller();
+    mount();
+    expect(await screen.findByText("Wallet unavailable")).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Your team leader runs this deal. You can follow its progress here.",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("offers no fresh start while the deal cannot be loaded", async () => {
+    state.controller = controller({
+      data: null,
+      loadError: "Snapshot unavailable",
+    });
+    mount();
+    expect(await screen.findByText("Snapshot unavailable")).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.procurement.setup.title"),
+    ).not.toBeInTheDocument();
+    expect(state.controller.onExploreEnterprise).not.toHaveBeenCalled();
+  });
+
   it("lets a visitor without an account fill in the trial, and asks them to sign in to start it", () => {
     state.signedIn = false;
     mount();
@@ -371,7 +400,11 @@ describe("Enterprise page", () => {
     state.draft = {
       deployment: "selfhost",
       seats: 40,
-      details: { businessName: "Northwind", contactName: "Dana Lee" },
+      details: {
+        businessName: "Northwind",
+        contactName: "Dana Lee",
+        contactEmail: "dana@northwind.example",
+      },
     };
     state.controller = controller({ data: null });
     mount();
@@ -384,7 +417,11 @@ describe("Enterprise page", () => {
   });
 
   it("starts the trial on return from sign-in when the terms were agreed before it", async () => {
-    const details = { businessName: "Northwind", contactName: "Dana Lee" };
+    const details = {
+      businessName: "Northwind",
+      contactName: "Dana Lee",
+      contactEmail: "dana@northwind.example",
+    };
     state.draft = {
       deployment: "selfhost",
       seats: 40,
@@ -406,6 +443,30 @@ describe("Enterprise page", () => {
     expect(
       screen.queryByText("portal.procurement.setup.title"),
     ).not.toBeInTheDocument();
+  });
+
+  it("leaves answers given for another account behind", async () => {
+    state.draft = {
+      deployment: "selfhost",
+      seats: 40,
+      details: {
+        businessName: "Contoso",
+        contactName: "Sam Roe",
+        contactEmail: "sam@contoso.example",
+      },
+      eulaAgreed: true,
+    };
+    state.controller = controller({ data: null });
+    mount();
+    // A fresh setup, as if no answers were kept.
+    expect(
+      await screen.findByText("portal.procurement.setup.title"),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(state.controller.onExploreEnterprise).toHaveBeenCalledOnce(),
+    );
+    expect(state.controller.onConfirmSetup).not.toHaveBeenCalled();
+    expect(screen.queryByDisplayValue("Contoso")).not.toBeInTheDocument();
   });
 
   it("brings the trial setup back if starting it on return fails", async () => {

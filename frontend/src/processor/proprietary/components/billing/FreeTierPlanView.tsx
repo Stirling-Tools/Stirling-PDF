@@ -14,7 +14,7 @@ import { usersBackend } from "@editor/portal/usersBackend";
 import { HttpError } from "@processor/api/http";
 import { useUI } from "@processor/contexts/UIContext";
 import "@processor/components/billing/FreeTierPlanView.css";
-import { useOpenEnterprise } from "@editor/portal/components/procurement/enterprisePath";
+import { useOpenEnterprise } from "@processor/components/procurement/enterprisePath";
 
 /** {@code forbidden} is an outcome, not a failure: the endpoint is admin-only. */
 type Load =

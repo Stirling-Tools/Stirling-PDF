@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { Banner } from "@editor/ui";
-import { COMPARE_PLANS_ANCHOR } from "@editor/billing/BillingScreen";
+import { COMPARE_PLANS_ANCHOR } from "@editor/billing/compareAnchor";
 import { useUI } from "@editor/portal/contexts/UIContext";
 import { useLinkedAccountEmail } from "@editor/portal/hooks/useLinkedAccountEmail";
 import { ProcurementAgreement } from "@editor/portal/components/procurement/ProcurementAgreement";
-import { ScheduleCallModal } from "@editor/portal/components/procurement/ProcurementExtras";
+import { ScheduleCallModal } from "@processor/components/procurement/ProcurementExtras";
 import { QuoteBuilder } from "@editor/portal/components/procurement/QuoteBuilder";
 import type { ProcurementController } from "@editor/portal/components/procurement/useProcurement";
 

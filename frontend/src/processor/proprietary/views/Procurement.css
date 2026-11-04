@@ -508,32 +508,6 @@
   gap: 0.75rem;
   flex-wrap: wrap;
 }
-.portal-hero__icons {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.portal-hero__iconbtn {
-  width: 34px;
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9px;
-  border: 1px solid var(--c-border);
-  background: var(--c-surface);
-  color: var(--c-text-muted);
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-.portal-hero__iconbtn:hover {
-  background: var(--c-hover);
-  border-color: var(--c-border-strong);
-  color: var(--c-text);
-}
 /* Terminal state: the deal is done, so the row reports rather than asks. */
 .portal-hero__live {
   display: flex;
@@ -618,22 +592,6 @@
   color: var(--c-text-subtle, var(--c-text-muted));
 }
 
-/* Hero next-step action row (primary CTA + optional extend-trial). */
-/* Hero quick-action chips (the trial countdown pill under the stage sentence). */
-.portal-hero__chip--action {
-  border: 1px solid var(--c-border);
-  cursor: pointer;
-  transition:
-    background 0.12s,
-    border-color 0.12s,
-    transform 0.12s;
-}
-.portal-hero__chip--action:hover {
-  background: var(--c-surface);
-  border-color: var(--c-border-strong);
-  transform: translateY(-1px);
-}
-
 /* ── Side dialogs (Key documents / Schedule a call / Trial) ───────────────── */
 /* Chrome and width come from the shared Modal via FlowModal; only type and content live here. */
 .portal-sidemodal__title {
@@ -690,18 +648,6 @@
 }
 
 /* ── Agreement (security) step ────────────────────────────────────────────── */
-/* The terminal steps (payment, live): a stacked eyebrow/title/description with the flow's own footer
-   bar beneath. No card of their own — the dialog is already the surface. */
-.portal-procstage {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-/* Nothing to report on the left of these, so the actions take the whole bar. */
-.portal-procstage__foot {
-  justify-content: flex-end;
-}
-
 /* The two document actions read as a pair, close together and set apart from the close beside them. */
 .portal-agreement__actions {
   display: flex;
@@ -736,6 +682,12 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+}
+.portal-agreement__gate {
+  flex: 0 0 auto;
+  font-size: 0.6875rem;
+  color: var(--c-text-subtle);
+  white-space: nowrap;
 }
 .portal-agreement__signrow .portal-agreement__signfields {
   flex: 1;

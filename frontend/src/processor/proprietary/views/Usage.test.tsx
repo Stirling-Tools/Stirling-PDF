@@ -98,9 +98,16 @@ vi.mock("@editor/portal/hooks/useBundleFlowState", () => ({
 }));
 const procurement = {
   deal: null as Pick<ProcurementSnapshot, "dealId" | "stage"> | null,
+  error: null as Error | null,
+  refetch: vi.fn(),
 };
 vi.mock("@editor/portal/components/procurement/useProcurement", () => ({
-  useProcurementSnapshot: () => ({ data: procurement.deal }),
+  useProcurementSnapshot: () => ({
+    data: procurement.error ? undefined : procurement.deal,
+    error: procurement.error,
+    isSuccess: !procurement.error,
+    refetch: procurement.refetch,
+  }),
 }));
 vi.mock("@editor/portal/components/procurement/DealStatusHero", () => ({
   DealStatusHero: ({ onOpen }: { onOpen?: () => void }) => (
@@ -205,6 +212,8 @@ describe("Usage — link-free wallet renderer", () => {
     fetchWallet.mockReset();
     refreshWalletCache.mockReset();
     procurement.deal = null;
+    procurement.error = null;
+    procurement.refetch.mockReset();
   });
 
   it("opens Team once for an over-capacity server and includes the actual allowance", async () => {
@@ -625,6 +634,19 @@ describe("Usage — link-free wallet renderer", () => {
       await screen.findByRole("button", { name: "Get an enterprise quote" }),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("procurement-summary")).not.toBeInTheDocument();
+  });
+
+  it("does not offer a new deal while the existing one cannot be loaded", async () => {
+    procurement.error = new Error("Snapshot unavailable");
+    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
+    renderUsage(<Usage />);
+    await screen.findByText("The full PDF Editor.");
+    expect(screen.getByText("Snapshot unavailable")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Get an enterprise quote" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(procurement.refetch).toHaveBeenCalledTimes(1);
   });
 
   it("anchors an existing deal before Plan", async () => {

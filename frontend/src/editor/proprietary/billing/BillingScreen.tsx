@@ -15,10 +15,11 @@ import { fleetUsersInUse } from "@editor/billing/fleetSeats";
 import type { ServerPlan } from "@editor/billing/serverPlan";
 import type { Wallet } from "@editor/billing/types";
 import type { LegacyTeamAllowance } from "@editor/types/legacyBilling";
+import { COMPARE_PLANS_ANCHOR } from "@editor/billing/compareAnchor";
 import "@editor/billing/billing-screen.css";
 
-/** Settings anchor that opens billing with the plan comparison showing. */
-export const COMPARE_PLANS_ANCHOR = "compare-plans";
+// Kept in its own module so callers that only link here need not load this screen.
+export { COMPARE_PLANS_ANCHOR };
 
 export interface BillingScreenProps {
   /** Host-specific occupied seats; null means unavailable, undefined uses the wallet. */

@@ -769,15 +769,6 @@ button.ent__company[aria-expanded="true"] {
   border-top: 0;
 }
 
-/* The stage cards were drawn for the takeover's footer bar; on the page their actions follow the text. */
-.ent__body .portal-procstage__foot {
-  flex-direction: row-reverse;
-  justify-content: flex-end;
-  margin-top: 1.25rem;
-  padding-top: 0;
-  border-top: 0;
-}
-
 /* The licence panel is a boxed inset elsewhere; here it is one row: what it is, the key, copy. */
 .ent__license .portal-proc__license {
   display: grid;

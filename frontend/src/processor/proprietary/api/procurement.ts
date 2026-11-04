@@ -151,6 +151,11 @@ export interface ProcurementSnapshot {
   latestQuote: QuoteResult | null;
   /** Smallest annual fee a quote may come to (minor units); 0 or absent when there is no floor. */
   minAnnualNetMinor?: number;
+  /**
+   * The deployment the licence is issued for: the current quote's once there is one, else the
+   * trial's. Setup steps and the offline licence follow this; absent on an unstarted deal.
+   */
+  entitledDeployment?: string | null;
 }
 
 export interface QuoteConfigInput {
@@ -308,9 +313,14 @@ export function recordAgreementSignature(
   );
 }
 
-/** Fetch a static legal document (eula, sla, subprocessors) by id for in-product viewing. */
+/**
+ * Fetch a static legal document (eula, sla, subprocessors) by id for in-product viewing. Public, so a
+ * visitor can read the terms they are asked to agree to before they have an account.
+ */
 export function fetchLegalDocument(docId: string): Promise<AgreementDocument> {
-  return apiClient.saas.json<AgreementDocument>(`/api/v1/legal/${docId}`);
+  return apiClient.saas.json<AgreementDocument>(`/api/v1/legal/${docId}`, {
+    anonymous: true,
+  });
 }
 
 /** Download the stored, signed enterprise-agreement PDF for the team (post-signing). */

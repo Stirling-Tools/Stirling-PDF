@@ -337,7 +337,10 @@ export const procurementSaasHandlers = [
     const cfg = (await request.json()) as Cfg;
     const quote = priceQuote(cfg);
     if (quote.annualNetMinor < MIN_ANNUAL_NET_MINOR) {
-      return new HttpResponse(null, { status: 409 });
+      return HttpResponse.json(
+        { error: "quote_below_minimum" },
+        { status: 409 },
+      );
     }
     const d = (
       deal.dealId ? deal : { dealId: 1, trialExtensionsUsed: 0 }

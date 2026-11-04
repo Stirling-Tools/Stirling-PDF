@@ -69,6 +69,10 @@ function Demo({
   const queryClient = useQueryClient();
   const [onWebsite, setOnWebsite] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
+  // Who signed in: the page resumes a trial set up before sign-in only for the account it was for.
+  const [signedInEmail, setSignedInEmail] = useState<string>(
+    DEMO_PREFILL.contactEmail,
+  );
   // The Enterprise page sends a visitor to sign-in and back; here that screen is part of the demo.
   const [signingIn, setSigningIn] = useState(false);
   const refresh = () => void queryClient.invalidateQueries();
@@ -118,12 +122,16 @@ function Demo({
             session: signedIn
               ? (auth.session ?? ({} as unknown as typeof auth.session))
               : null,
+            user: signedIn
+              ? ({ ...auth.user, email: signedInEmail } as typeof auth.user)
+              : null,
           }}
         >
           {signingIn ? (
             <DemoSignIn
               prefill={prefill}
-              onSignedIn={() => {
+              onSignedIn={(email) => {
+                setSignedInEmail(email);
                 setSigningIn(false);
                 setSignedIn(true);
               }}
@@ -185,7 +193,7 @@ function DemoSignIn({
   onSignedIn,
 }: {
   prefill: boolean;
-  onSignedIn: () => void;
+  onSignedIn: (email: string) => void;
 }) {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState(prefill ? DEMO_PREFILL.contactName : "");
@@ -199,7 +207,7 @@ function DemoSignIn({
     setSubmitting(true);
     // Long enough to read as a real sign-in, short enough not to stall the demo.
     await new Promise((resolve) => setTimeout(resolve, 600));
-    onSignedIn();
+    onSignedIn(email);
   };
   const switchLink = (label: string, onClick: () => void) => (
     <div className="ent-demo-auth__switch">

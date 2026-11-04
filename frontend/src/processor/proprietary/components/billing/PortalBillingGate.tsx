@@ -1,7 +1,7 @@
 import { useServerPlan } from "@editor/portal/hooks/useServerPlan";
 import { ManageBillingButton } from "@editor/components/shared/ManageBillingButton";
 import { useCallback, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { ServerLicenseSection } from "@editor/portal/components/billing/ServerLicenseSection";
 import {
   useApplyLinkFacts,
@@ -14,6 +14,7 @@ import { SaasSessionBanner } from "@editor/portal/components/account-link/SaasSe
 import { FreeTierPlanView } from "@editor/portal/components/billing/FreeTierPlanView";
 import { Usage } from "@editor/portal/views/Usage";
 import type { Wallet } from "@editor/portal/api/billing";
+import { legacyProcurementTarget } from "@processor/components/procurement/enterprisePath";
 
 /**
  * The seam the SaaS build shadows: picks which usage page this instance has one of.
@@ -51,6 +52,8 @@ export function PortalBillingGate() {
     [applyLinkFacts],
   );
 
+  const procurementTarget = legacyProcurementTarget(searchParams.toString());
+  if (procurementTarget) return <Navigate to={procurementTarget} replace />;
   // Only the organization owner manages the server's account and billing.
   // The nav hides these sections too; this guards a directly entered URL.
   if (!isOwner) return null;

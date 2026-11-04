@@ -17,9 +17,9 @@ import { Banner, Button } from "@editor/ui";
 import { BillingScreen, KvRow, formatPeriodDate } from "@editor/billing";
 import { useLegacySubscriptions } from "@editor/hooks/useLegacySubscriptions";
 import { LegacySubscriptionPlan } from "@editor/components/shared/config/LegacySubscriptionPlan";
-import { useProcurementSnapshot } from "@editor/portal/components/procurement/useProcurement";
-import { DealStatusHero } from "@editor/portal/components/procurement/DealStatusHero";
-import { useOpenEnterprise } from "@editor/portal/components/procurement/enterprisePath";
+import { useProcurementSnapshot } from "@processor/components/procurement/useProcurement";
+import { DealStatusHero } from "@processor/components/procurement/DealStatusHero";
+import { useOpenEnterprise } from "@processor/components/procurement/enterprisePath";
 import {
   fetchWallet,
   refreshWalletCache,
@@ -111,7 +111,14 @@ export function Usage({
     previousSessionRevision.current = sessionRevision;
     refresh();
   }, [sessionRevision, refresh]);
-  const { data: deal } = useProcurementSnapshot();
+  const dealQuery = useProcurementSnapshot();
+  const deal = dealQuery.data;
+  // Session failures surface through the session banner; anything else is shown here, since an
+  // unknown deal must not be read as "no deal" and offered a fresh start.
+  const dealError =
+    dealQuery.error && !(dealQuery.error instanceof SaasSessionRequiredError)
+      ? dealQuery.error.message
+      : null;
   const openEnterprise = useOpenEnterprise();
   const [searchParams, setSearchParams] = useSearchParams();
   const isLeader = wallet?.role === "leader";
@@ -389,6 +396,19 @@ export function Usage({
           {wallet?.team?.held && wallet.role === "leader" && (
             <TeamSubscriptionChange refreshKey={walletReadAt} />
           )}
+          {dealError && (
+            <Banner
+              tone="danger"
+              title={t("portal.procurement.error.title")}
+              action={
+                <Button size="sm" onClick={() => void dealQuery.refetch()}>
+                  {t("portal.accountLink.gate.retry", "Try again")}
+                </Button>
+              }
+            >
+              {dealError}
+            </Banner>
+          )}
           {sessionRecovery}
 
           {error && (
@@ -468,7 +488,9 @@ export function Usage({
         ) : undefined
       }
       onEnterpriseQuote={
-        isLeader && (deal?.dealId == null || deal.stage === "exploring")
+        isLeader &&
+        dealQuery.isSuccess &&
+        (deal?.dealId == null || deal.stage === "exploring")
           ? openEnterprise
           : undefined
       }

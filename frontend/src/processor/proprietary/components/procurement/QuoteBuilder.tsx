@@ -36,7 +36,7 @@ const SIZE_TIERS = [
 /** Share of the minimum from which a quote counts as nearly there, so the nudge is to top up. */
 const NEAR_MINIMUM_RATIO = 0.75;
 
-/** Flat add-on prices, in cents; mirror PricingRates.defaults() on the server. */
+/** Flat add-on prices, in cents; must equal the server's PricingRates.defaults(). */
 const QBR_ANNUAL_MINOR = 800_000;
 const TRAINING_MINOR = 750_000;
 /** Upper bound for the volume search, far past any real estimate. */
@@ -212,9 +212,21 @@ export function QuoteBuilder({
         years: cfg.termYears,
         tcv: money(tcvPreview),
       };
+  // Onboarding is one-time, so over a single year it shows beside the yearly price; on paper as
+  // the issued quote charged it, in its currency.
+  const trainingLine = onPaper
+    ? issued.lineItems.find((li) => li.key === "training")
+    : undefined;
+  const oneTime = onPaper
+    ? trainingLine
+      ? money(trainingLine.amountMinor, issued.currency)
+      : null
+    : cfg.training
+      ? money(TRAINING_MINOR)
+      : null;
 
-  // The preview mirrors the server's pricing, so a draft under the floor is caught here rather
-  // than by the server refusing to price it.
+  // The preview uses the server's rates, so a draft under the floor is caught here rather than by
+  // the server refusing to price it.
   const belowMinimum =
     !onPaper && minAnnualMinor > 0 && preview < minAnnualMinor;
   const showMinimum = belowMinimum && triedBelowMinimum;
@@ -270,9 +282,12 @@ export function QuoteBuilder({
       if (!eulaAlreadyAgreed) void recordLegalConsent("eula", "quote");
       onGenerate(quote);
     } catch (e) {
-      // A conflict is the server declining to price this deal, most often for falling under the
-      // minimum Enterprise size; anything else is a plain failure.
-      const tooSmall = e instanceof HttpError && e.status === 409;
+      // The server names a quote under the minimum Enterprise size; any other conflict is the deal
+      // having moved on elsewhere (accepted in another tab, say).
+      const conflict = e instanceof HttpError && e.status === 409;
+      const tooSmall =
+        conflict &&
+        (e.body as { error?: string } | null)?.error === "quote_below_minimum";
       setGenerateError({
         tooSmall,
         message: tooSmall
@@ -280,7 +295,12 @@ export function QuoteBuilder({
               "portal.procurement.builder.belowMinimum",
               "This quote is below the minimum size for an Enterprise deal.",
             )
-          : errorMessage(e),
+          : conflict
+            ? t(
+                "portal.procurement.builder.conflict",
+                "This deal has changed since you opened it. Close the builder and reload the page to see where it stands.",
+              )
+            : errorMessage(e),
       });
     } finally {
       setBusy(false);
@@ -830,14 +850,13 @@ export function QuoteBuilder({
             </span>
           )}
           {/* Over one year there is no term total to fold onboarding into, so it shows on its own. */}
-          {running.years === 1 &&
-            (onPaper ? issued.config.training : cfg.training) && (
-              <span className="portal-qb__running-total">
-                {t("portal.procurement.builder.addonOneTime", {
-                  amount: money(TRAINING_MINOR),
-                })}
-              </span>
-            )}
+          {running.years === 1 && oneTime && (
+            <span className="portal-qb__running-total">
+              {t("portal.procurement.builder.addonOneTime", {
+                amount: oneTime,
+              })}
+            </span>
+          )}
           {belowMinimum && !showMinimum && (
             <span className="portal-qb__minimum">
               {t(

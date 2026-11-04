@@ -56,24 +56,24 @@ describe("SetupChecklist", () => {
 
   it("remembers a step the buyer ticks, per deal", () => {
     const { unmount } = render(<SetupChecklist {...base} deployment="cloud" />);
-    expect(screen.getByText("0 of 4 done")).toBeInTheDocument();
+    expect(screen.getByText("0 of 3 done")).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", {
-        name: "Mark “Connect single sign-on” done",
+        name: "Mark “Run your first document” done",
       }),
     );
-    expect(screen.getByText("1 of 4 done")).toBeInTheDocument();
+    expect(screen.getByText("1 of 3 done")).toBeInTheDocument();
     unmount();
 
     render(<SetupChecklist {...base} deployment="cloud" />);
-    expect(screen.getByText("1 of 4 done")).toBeInTheDocument();
+    expect(screen.getByText("1 of 3 done")).toBeInTheDocument();
     render(<SetupChecklist {...base} dealId={8} deployment="cloud" />);
-    expect(screen.getByText("0 of 4 done")).toBeInTheDocument();
+    expect(screen.getByText("0 of 3 done")).toBeInTheDocument();
   });
 
   it("ticks inviting once a teammate has joined, and keeps it ticked", () => {
     render(<SetupChecklist {...base} deployment="cloud" teamSize={3} />);
-    expect(screen.getByText("1 of 4 done")).toBeInTheDocument();
+    expect(screen.getByText("1 of 3 done")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Mark “Invite your team” done" }),
     ).toBeDisabled();

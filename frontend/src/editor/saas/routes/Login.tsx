@@ -31,7 +31,9 @@ import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.s
 
 export default function Login() {
   const navigate = useNavigate();
-  const { session, loading, refreshSession } = useAuth();
+  const { session, isAnonymous, loading, refreshSession } = useAuth();
+  // A guest session is not a sign-in: guests come here to sign in, so they get the form.
+  const signedIn = !!session && !isAnonymous;
   const { t } = useTranslation();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,10 +70,10 @@ export default function Login() {
   }, []);
 
   useEffect(() => {
-    if (session && !loading && nextPath) {
+    if (signedIn && !loading && nextPath) {
       navigate(nextPath, { replace: true });
     }
-  }, [session, loading, nextPath, navigate]);
+  }, [signedIn, loading, nextPath, navigate]);
 
   // Stashed as well as held in the URL: leaving to create an account loses the
   // query string, and the confirmation link cannot carry a `next`.
@@ -102,7 +104,7 @@ export default function Login() {
   }
 
   // Show logged in state if authenticated (unless bouncing back to `next`)
-  if (session && !loading) {
+  if (signedIn && !loading) {
     if (nextPath) {
       return null;
     }
@@ -258,10 +260,8 @@ export default function Login() {
         // Refresh session to ensure backend endpoints are properly synchronized
         await refreshSession();
 
-        console.log(
-          "[Login] Session refreshed, user will be redirected by auth state change",
-        );
-        // User will be redirected by the auth state change after session refresh
+        // A guest session does not count as signed in here, so nothing else moves them on.
+        navigate(nextPath ?? "/", { replace: true });
       }
     } catch (err) {
       console.error("[Login] Unexpected error:", err);

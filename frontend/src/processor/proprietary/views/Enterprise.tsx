@@ -35,6 +35,7 @@ import {
 import { DeploymentOptions } from "@processor/components/procurement/DeploymentOptions";
 import { LicensePanel } from "@processor/components/procurement/ProcurementStages";
 import { SetupChecklist } from "@processor/components/procurement/SetupChecklist";
+import { ConfirmModal } from "@processor/components/users/ConfirmModal";
 import { daysLeft } from "@processor/components/procurement/DealStatusHero";
 import { money } from "@processor/components/procurement/format";
 import {
@@ -124,6 +125,7 @@ function SignedOut({ onSignIn }: { onSignIn: () => void }) {
 
 function SignedIn() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -134,13 +136,23 @@ function SignedIn() {
   const isOwner = useAccountLinkOwner();
   const email = useLinkedAccountEmail();
   const { openSettings } = useUI();
-  // Answers given before signing in, if this visit is the return from it.
-  const [draft] = useState(takeTrialDraft);
+  // Answers given before signing in, if this visit is the return from it. Only the account they
+  // were given for picks them up: on a shared browser, whoever signs in next must not start a
+  // trial on another person's details and consent.
+  const [draft] = useState(() => {
+    const saved = takeTrialDraft();
+    const given = saved?.details.contactEmail?.trim().toLowerCase();
+    return given && given === user?.email?.trim().toLowerCase() ? saved : null;
+  });
   const { isLinked, data, started, stage, latest, busy } = procurement;
   const wallet = useQuery(walletQuery(isLinked));
-  // Members follow the deal; only the team leader can act on it.
+  // Members follow the deal; only the team leader can act on it. Unknown while the wallet fails,
+  // which a banner says rather than showing a leader the member view.
   const canManage = wallet.data?.role === "leader";
-  const exploring = !started || stage === "exploring";
+  const roleKnown = wallet.isSuccess;
+  // Without the snapshot it is unknown whether a deal exists, so none is offered a fresh start.
+  const exploring =
+    !procurement.loadError && (!started || stage === "exploring");
 
   // Arriving here is asking about Enterprise. Recorded once, so accounts that never ask stay free of
   // the deal surface and drop-off before the trial is visible.
@@ -178,9 +190,12 @@ function SignedIn() {
       );
   }, [data, isLinked, queryClient]);
 
-  // A link straight to this page has no history inside the app to return to.
+  // Only a visit opened from within the app has somewhere in it to return to; a link straight here,
+  // or the return from signing in, goes to the app itself.
   const goBack = () =>
-    location.key === "default" ? navigate("/") : navigate(-1);
+    (location.state as { fromApp?: boolean } | null)?.fromApp
+      ? navigate(-1)
+      : navigate("/");
   const schedule = () => procurement.setExtra("schedule");
 
   // While the trial starts from the saved answers the page stays on its placeholder rather than
@@ -234,6 +249,19 @@ function SignedIn() {
             {gate.error}
           </Banner>
         )}
+        {wallet.isError && (
+          <Banner
+            tone="danger"
+            title={t("portal.procurement.error.title")}
+            action={
+              <Button size="sm" onClick={() => void wallet.refetch()}>
+                {t("portal.accountLink.gate.retry", "Try again")}
+              </Button>
+            }
+          >
+            {wallet.error.message}
+          </Banner>
+        )}
         {procurement.loadError && (
           <Banner
             tone="danger"
@@ -269,7 +297,7 @@ function SignedIn() {
             onSchedule={schedule}
           />
         </Landing>
-      ) : exploring ? (
+      ) : procurement.loadError ? null : exploring ? (
         <Landing>
           {canManage ? (
             <TrialSetupForm
@@ -280,18 +308,21 @@ function SignedIn() {
               onConfirm={procurement.onConfirmSetup}
             />
           ) : (
-            <p className="ent__note">
-              {t(
-                "portal.enterprise.member",
-                "Your team leader runs the Enterprise deal. Once it starts, you can follow its progress here.",
-              )}
-            </p>
+            roleKnown && (
+              <p className="ent__note">
+                {t(
+                  "portal.enterprise.member",
+                  "Your team leader runs the Enterprise deal. Once it starts, you can follow its progress here.",
+                )}
+              </p>
+            )
           )}
         </Landing>
       ) : (
         <Deal
           controller={procurement}
           canManage={canManage}
+          roleKnown={roleKnown}
           teamSize={wallet.data?.team?.usersInUse ?? 1}
           onInvite={canManage ? () => openSettings("users") : undefined}
           onSchedule={schedule}
@@ -506,6 +537,7 @@ function ConnectPanel({
 function Deal({
   controller,
   canManage,
+  roleKnown,
   teamSize,
   onInvite,
   onSchedule,
@@ -514,6 +546,8 @@ function Deal({
 }: {
   controller: ReturnType<typeof useProcurement>;
   canManage: boolean;
+  /** False while the viewer's role could not be loaded: neither the leader's nor a member's view. */
+  roleKnown: boolean;
   teamSize: number;
   onInvite?: () => void;
   onSchedule: () => void;
@@ -576,6 +610,8 @@ function Deal({
     return undefined;
   };
   const inTrial = TRIAL_STAGES.includes(stage) && data?.trialEndsAt != null;
+  // What the licence is issued for, which a quote can change from the trial's choice.
+  const deployment = data?.entitledDeployment ?? data?.deployment ?? "cloud";
   const isLive = stage === "active";
   // Once a quote is on the table it is what the buyer is deciding on, so it takes the panel and
   // the trial's clock drops to a chip beside the stage.
@@ -643,11 +679,13 @@ function Deal({
                     </div>
                   </div>
                 ) : (
-                  <NextStep
-                    controller={controller}
-                    canManage={canManage}
-                    stage={stage}
-                  />
+                  roleKnown && (
+                    <NextStep
+                      controller={controller}
+                      canManage={canManage}
+                      stage={stage}
+                    />
+                  )
                 ))
               )}
             </div>
@@ -723,7 +761,7 @@ function Deal({
         {!flow && (
           <SetupChecklist
             dealId={data?.dealId}
-            deployment={data?.deployment ?? "cloud"}
+            deployment={deployment}
             licenseKey={data?.licenseKey}
             live={isLive}
             teamSize={teamSize}
@@ -736,11 +774,12 @@ function Deal({
           <Card padding="loose" className="ent__license">
             <LicensePanel
               licenseKey={data.licenseKey}
-              offlineAvailable={data.deployment === "airgap"}
+              offlineAvailable={deployment === "airgap"}
               downloadingLicense={downloadingLicense}
               onDownloadOffline={controller.onDownloadOfflineLicense}
             />
-            {data.deployment === "airgap" && !isLive && (
+            {/* Still on the trial licence; from the agreement on, the file is the committed one. */}
+            {deployment === "airgap" && TRIAL_STAGES.includes(stage) && (
               <p className="portal-proc__license-hint">
                 {t("portal.procurement.license.trialFileHint")}
               </p>
@@ -790,6 +829,7 @@ function TrialPanel({
   onCancel?: () => void;
 }) {
   const { t } = useTranslation();
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
   const left = daysLeft(trialEndsAt);
   const ends = new Date(trialEndsAt).toLocaleDateString(undefined, {
     month: "long",
@@ -839,10 +879,34 @@ function TrialPanel({
                 ? t("portal.procurement.trial.maxed")
                 : t("portal.procurement.trial.extend")}
             </Button>
-            <Button variant="tertiary" disabled={busy} onClick={onCancel}>
+            <Button
+              variant="tertiary"
+              disabled={busy}
+              onClick={() => setConfirmingCancel(true)}
+            >
               {t("portal.procurement.trial.cancel")}
             </Button>
           </div>
+          {/* Cancelling ends the deal along with its licence, quote and progress. */}
+          <ConfirmModal
+            open={confirmingCancel}
+            danger
+            busy={busy}
+            title={t(
+              "portal.procurement.trial.cancelTitle",
+              "Cancel your trial?",
+            )}
+            body={t(
+              "portal.procurement.trial.cancelBody",
+              "Your trial licence stops working and the deal starts over. You can start a new trial later.",
+            )}
+            confirmLabel={t("portal.procurement.trial.cancel")}
+            onCancel={() => setConfirmingCancel(false)}
+            onConfirm={() => {
+              setConfirmingCancel(false);
+              onCancel();
+            }}
+          />
         </>
       )}
     </div>
@@ -881,10 +945,13 @@ function QuotePanel({
         {t("portal.procurement.review.annual")}
       </span>
       <dl className="ent__facts">
-        <div>
-          <dt>{t("portal.procurement.builder.users")}</dt>
-          <dd>{quote.config.users.toLocaleString()}</dd>
-        </div>
+        {/* Quotes from before the seat count was kept carry 0. */}
+        {quote.config.users > 0 && (
+          <div>
+            <dt>{t("portal.procurement.builder.users")}</dt>
+            <dd>{quote.config.users.toLocaleString()}</dd>
+          </div>
+        )}
         <div>
           <dt>{t("portal.enterprise.deployment", "Deployment")}</dt>
           <dd>{t(`portal.procurement.setup.${quote.config.deployment}`)}</dd>
