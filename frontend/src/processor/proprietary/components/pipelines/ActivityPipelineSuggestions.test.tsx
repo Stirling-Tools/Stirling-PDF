@@ -1,8 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import type { PipelineView, Policy } from "@processor/api/pipelines";
-import type { ActivityChain } from "@editor/utils/activityChains";
+import { fetchToolWorkflows } from "@editor/api/toolRecommendations";
 import { ActivityPipelineSuggestions } from "@processor/components/pipelines/ActivityPipelineSuggestions";
 
 vi.mock("react-i18next", () => ({
@@ -12,6 +12,14 @@ vi.mock("react-i18next", () => ({
     i18n: { changeLanguage: vi.fn() },
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
+}));
+
+vi.mock("@editor/auth/UseSession", () => ({
+  useAuth: () => ({ user: { id: "alice" } }),
+}));
+
+vi.mock("@editor/api/toolRecommendations", () => ({
+  fetchToolWorkflows: vi.fn(),
 }));
 
 vi.mock("@editor/contexts/ToolRegistryContext", () => {
@@ -35,6 +43,23 @@ vi.mock("@editor/contexts/ToolRegistryContext", () => {
   const allTools = {
     compress: tool("Compress", "compress", "/api/v1/misc/compress-pdf"),
     flatten: tool("Flatten", "flatten", "/api/v1/misc/flatten"),
+    adjustContrast: {
+      ...tool("Adjust Contrast", "adjustContrast", ""),
+      operationConfig: {
+        operationType: "adjustContrast",
+        toolType: 2,
+        customProcessor: async () => ({ files: [] }),
+      },
+    },
+    extractPages: {
+      ...tool("Extract Pages", "extractPages", ""),
+      operationConfig: {
+        operationType: "extractPages",
+        toolType: 2,
+        endpoint: "/api/v1/general/rearrange-pages",
+        customProcessor: async () => ({ files: [] }),
+      },
+    },
   };
   return {
     useToolRegistry: () => ({
@@ -44,25 +69,6 @@ vi.mock("@editor/contexts/ToolRegistryContext", () => {
       allTools,
       getToolById: () => null,
     }),
-  };
-});
-
-const suggestions = vi.hoisted(() => ({
-  chains: null as ActivityChain[] | null,
-  existing: [] as string[][],
-}));
-
-vi.mock("@editor/hooks/useToolWorkflowSuggestions", async (importOriginal) => {
-  const actual =
-    await importOriginal<
-      typeof import("@editor/hooks/useToolWorkflowSuggestions")
-    >();
-  return {
-    ...actual,
-    useToolWorkflowSuggestions: (_registry: unknown, existing: string[][]) => {
-      suggestions.existing = existing;
-      return suggestions.chains;
-    },
   };
 });
 
@@ -90,21 +96,25 @@ const renderSuggestions = (
   );
 
 describe("ActivityPipelineSuggestions", () => {
+  beforeEach(() => {
+    vi.mocked(fetchToolWorkflows).mockReset();
+  });
+
   it("renders nothing when the server has no workflows to offer", () => {
-    suggestions.chains = null;
+    vi.mocked(fetchToolWorkflows).mockResolvedValue(null);
     renderSuggestions([]);
 
     expect(screen.queryByText("portal.pipelines.activity.title")).toBeNull();
   });
 
-  it("opens the builder with the workflow's steps as a draft", () => {
-    suggestions.chains = [
-      { operations: ["compress", "flatten"], fileCount: 4, scope: "team" },
-    ];
+  it("opens the builder with the workflow's steps as a draft", async () => {
+    vi.mocked(fetchToolWorkflows).mockResolvedValue([
+      { tools: ["compress", "flatten"], count: 4, scope: "TEAM" },
+    ]);
     const onOpen = vi.fn();
     renderSuggestions([], onOpen);
 
-    expect(screen.getByText("toolWorkflows.ranBy.team:4")).toBeTruthy();
+    expect(await screen.findByText("toolWorkflows.ranBy.team:4")).toBeTruthy();
     fireEvent.click(screen.getByText("Compress → Flatten"));
 
     expect(onOpen).toHaveBeenCalledWith(
@@ -119,12 +129,37 @@ describe("ActivityPipelineSuggestions", () => {
     );
   });
 
-  it("compares existing pipelines by tool, not by endpoint path", () => {
-    suggestions.chains = [];
+  it("excludes workflows needing frontend processing before applying the card limit", async () => {
+    vi.mocked(fetchToolWorkflows).mockResolvedValue([
+      {
+        tools: ["compress", "extractPages", "flatten"],
+        count: 120,
+        scope: "TEAM",
+      },
+      ...Array.from({ length: 6 }, () => ({
+        tools: ["compress", "adjustContrast", "flatten"],
+        count: 100,
+        scope: "TEAM" as const,
+      })),
+      { tools: ["compress", "flatten"], count: 4, scope: "TEAM" },
+    ]);
+    renderSuggestions([]);
+
+    expect(await screen.findByText("Compress → Flatten")).toBeTruthy();
+    expect(screen.queryByText(/Adjust Contrast/)).toBeNull();
+    expect(screen.queryByText(/Extract Pages/)).toBeNull();
+  });
+
+  it("compares existing pipelines by tool, not by endpoint path", async () => {
+    vi.mocked(fetchToolWorkflows).mockResolvedValue([
+      { tools: ["compress", "flatten"], count: 4, scope: "TEAM" },
+      { tools: ["flatten", "compress"], count: 3, scope: "TEAM" },
+    ]);
     renderSuggestions([
       pipeline(["/api/v1/misc/compress-pdf", "/api/v1/misc/flatten"]),
     ]);
 
-    expect(suggestions.existing).toEqual([["compress", "flatten"]]);
+    expect(await screen.findByText("Flatten → Compress")).toBeTruthy();
+    expect(screen.queryByText("Compress → Flatten")).toBeNull();
   });
 });

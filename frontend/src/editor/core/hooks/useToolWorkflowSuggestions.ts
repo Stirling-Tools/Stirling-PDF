@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@editor/auth/UseSession";
 import {
   fetchToolWorkflows,
   type ToolWorkflowScope,
@@ -30,6 +31,7 @@ const SCOPES: Record<ToolWorkflowScope, ActivityScope> = {
   GLOBAL: "install",
 };
 
+/** Includes frontend processors usable by Automate; does not require a backend endpoint. */
 export function useIsAutomatableTool(
   toolRegistry: Partial<ToolRegistry>,
 ): (toolId: string) => boolean {
@@ -45,6 +47,7 @@ export function useIsAutomatableTool(
   );
 }
 
+/** Excludes exact ordered matches against tool IDs, preserving order and applying the limit last. */
 export function excludeExisting(
   chains: ActivityChain[],
   existingOperationLists: string[][],
@@ -60,15 +63,21 @@ export function excludeExisting(
     .slice(0, limit);
 }
 
+/**
+ * Returns null until backend data is available, or when the request fails; an empty response or
+ * fully filtered result returns []. Existing workflows contain tool IDs, not endpoint paths.
+ * Filters against the supplied registry, then ranks, excludes existing workflows, and limits.
+ */
 export function useToolWorkflowSuggestions(
   toolRegistry: Partial<ToolRegistry>,
   existingOperationLists: string[][],
   limit = MAX_WORKFLOW_SUGGESTIONS,
   order: ChainOrder = "nearestFirst",
 ): ActivityChain[] | null {
+  const { user } = useAuth();
   const isAutomatable = useIsAutomatableTool(toolRegistry);
   const { data } = useQuery({
-    queryKey: qk.toolWorkflows(WORKFLOW_FETCH_LIMIT),
+    queryKey: qk.toolWorkflows(user?.id ?? null, WORKFLOW_FETCH_LIMIT),
     queryFn: () => fetchToolWorkflows(WORKFLOW_FETCH_LIMIT),
     staleTime: WORKFLOW_STALE_TIME,
     retry: false,
@@ -91,6 +100,7 @@ export function useToolWorkflowSuggestions(
   }, [data, isAutomatable, existingOperationLists, limit, order]);
 }
 
+/** Localized workflow names and scope-specific run counts; names over three steps are abbreviated. */
 export function useActivityChainText(toolRegistry: Partial<ToolRegistry>) {
   const { t } = useTranslation();
 

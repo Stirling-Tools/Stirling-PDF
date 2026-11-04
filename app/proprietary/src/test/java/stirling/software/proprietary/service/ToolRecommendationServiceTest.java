@@ -144,15 +144,19 @@ class ToolRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("under the saas profile the install's workflows are never read")
-        void saasNeverReadsGlobalWorkflows() {
-            environment.setActiveProfiles("saas");
+        @DisplayName("SaaS serves only the caller's and team's workflows")
+        void saasServesUserAndTeamWorkflowsOnly() {
+            environment.setActiveProfiles("security", "saas");
+            when(signalService.resolveTeamScope(PRINCIPAL)).thenReturn(TEAM);
             when(signalService.userChains(eq(PRINCIPAL), anyLong(), anyInt(), anyInt()))
                     .thenReturn(List.of(chain(2, "compress", "ocr")));
+            when(signalService.teamChains(eq(TEAM), anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of(chain(9, "split", "merge")));
 
             assertThat(service.getWorkflows(PRINCIPAL, 2, 6))
-                    .extracting(ToolWorkflow::scope)
-                    .containsOnly(WorkflowScope.USER);
+                    .containsExactly(
+                            new ToolWorkflow(List.of("compress", "ocr"), 2, WorkflowScope.USER),
+                            new ToolWorkflow(List.of("split", "merge"), 9, WorkflowScope.TEAM));
             verify(signalService, never()).globalChains(anyLong(), anyInt(), anyInt());
         }
 

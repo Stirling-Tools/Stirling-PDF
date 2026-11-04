@@ -2,6 +2,7 @@ export type ActivityScope = "user" | "team" | "install";
 
 export interface ActivityChain {
   operations: string[];
+  /** Caller-defined frequency: backend run counts or distinct local file histories. */
   fileCount: number;
   scope: ActivityScope;
 }
@@ -60,6 +61,11 @@ export function sameOperations(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((op, i) => op === b[i]);
 }
 
+/**
+ * Removes infrequent chains and subsumes a shorter chain when a longer contiguous chain in the
+ * same scope has at least 80% of its count. Applies the limit after sorting; nearestFirst orders
+ * scopes before frequency and length. Counts are compared as supplied by the caller.
+ */
 export function rankChains(
   chains: ActivityChain[],
   {
@@ -93,6 +99,10 @@ export function rankChains(
     .slice(0, limit);
 }
 
+/**
+ * Counts each contiguous chain once per input history. Non-automatable tools break chains and
+ * consecutive repeats collapse; length bounds apply before same-scope subsumption and ranking.
+ */
 export function findRepeatedChains(
   histories: string[][],
   {

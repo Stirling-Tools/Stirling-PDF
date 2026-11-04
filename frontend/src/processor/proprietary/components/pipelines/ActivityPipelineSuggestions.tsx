@@ -13,7 +13,6 @@ import {
   useActivityChainText,
   useToolWorkflowSuggestions,
 } from "@editor/hooks/useToolWorkflowSuggestions";
-import type { ActivityChain } from "@editor/utils/activityChains";
 import type { PipelineView, Policy } from "@processor/api/pipelines";
 
 const MAX_PIPELINE_SUGGESTIONS = 6;
@@ -30,6 +29,17 @@ export function ActivityPipelineSuggestions({
   const { t } = useTranslation();
   const { allTools } = useToolRegistry();
   const { name, ranBy } = useActivityChainText(allTools);
+  const executableTools = useMemo(
+    () => getExecutableTools(allTools),
+    [allTools],
+  );
+  const executableRegistry = useMemo(
+    () =>
+      Object.fromEntries(
+        executableTools.map(({ toolId }) => [toolId, allTools[toolId]]),
+      ),
+    [executableTools, allTools],
+  );
 
   const existingOperationLists = useMemo(
     () =>
@@ -43,32 +53,31 @@ export function ActivityPipelineSuggestions({
     [pipelines, allTools],
   );
   const chains = useToolWorkflowSuggestions(
-    allTools,
+    executableRegistry,
     existingOperationLists,
     MAX_PIPELINE_SUGGESTIONS,
     "mostRun",
   );
 
-  const executableTools = useMemo(
-    () => getExecutableTools(allTools),
-    [allTools],
-  );
-
-  const toDraft = (chain: ActivityChain): Policy => ({
-    name: name(chain),
-    enabled: true,
-    inputs: [],
-    steps: chain.operations.flatMap((toolId) => {
-      const tool = executableTools.find((entry) => entry.toolId === toolId);
-      return tool
-        ? [serializeToolStep(newWorkingToolStep(tool, allTools), allTools)]
-        : [];
-    }),
-    output: { type: "inline", options: {} },
-    outputIds: [],
+  const suggestions = (chains ?? []).flatMap((chain) => {
+    const tools = chain.operations.map((toolId) =>
+      executableTools.find((entry) => entry.toolId === toolId),
+    );
+    if (!tools.every((tool) => tool !== undefined)) return [];
+    const draft: Policy = {
+      name: name(chain),
+      enabled: true,
+      inputs: [],
+      steps: tools.map((tool) =>
+        serializeToolStep(newWorkingToolStep(tool, allTools), allTools),
+      ),
+      output: { type: "inline", options: {} },
+      outputIds: [],
+    };
+    return [{ chain, draft }];
   });
 
-  if (!chains || chains.length === 0) return null;
+  if (suggestions.length === 0) return null;
 
   return (
     <section className="portal-pipelines__templates">
@@ -76,13 +85,13 @@ export function ActivityPipelineSuggestions({
         {t("portal.pipelines.activity.title", "From how people work")}
       </h2>
       <CardRail itemWidth="16rem">
-        {chains.map((chain) => (
+        {suggestions.map(({ chain, draft }) => (
           <OptionCard
             key={chain.operations.join("-")}
             icon={<Icon name="activity" size={"1.25rem"} />}
             title={name(chain)}
             description={ranBy(chain)}
-            onSelect={() => onOpen(toDraft(chain))}
+            onSelect={() => onOpen(draft)}
             cta={
               <>
                 {t("portal.pipelines.activity.build", "Build pipeline")}
