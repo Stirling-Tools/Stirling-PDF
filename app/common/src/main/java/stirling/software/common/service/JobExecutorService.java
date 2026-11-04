@@ -264,6 +264,16 @@ public class JobExecutorService {
                 ResponseEntity<?> response = (ResponseEntity<?>) result;
                 Object body = response.getBody();
 
+                if (body == null && !response.getStatusCode().is2xxSuccessful()) {
+                    String error =
+                            "Job rejected with HTTP status " + response.getStatusCode().value();
+                    if (response.getHeaders().getLocation() != null) {
+                        error += " at " + response.getHeaders().getLocation();
+                    }
+                    taskManager.setError(jobId, error);
+                    return;
+                }
+
                 if (body instanceof byte[]) {
                     String filename = extractResponseFilename(response);
                     String contentType = extractResponseContentType(response);
