@@ -1,51 +1,42 @@
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
-import { SegmentedControl } from "@editor/ui/SegmentedControl";
-import {
-  SettingRow,
-  SetupNote,
-  type SetupStepProps,
-} from "@editor/components/serverSetup/SetupFields";
+import { SetupNote } from "@editor/components/serverSetup/SetupFields";
 import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 
-const ANALYTICS_DOCS = "https://docs.stirlingpdf.com/analytics-telemetry/";
+const ANALYTICS_DOCS =
+  "https://docs.stirlingpdf.com/Server/Analytics-and-Telemetry/";
 
-export function AnalyticsStep({ draft, update }: SetupStepProps) {
+export function AnalyticsStep() {
   const { t } = useTranslation();
-  const label = t("serverSetup.analytics.label", "Usage analytics");
+  const settingsPath = [
+    t("settings.title", "Settings"),
+    t("settings.server.title", "Server"),
+    t("settings.policiesPrivacy.title", "Legal & privacy"),
+  ].join(" → ");
   return (
-    <>
-      <SettingRow label={label}>
-        {() => (
-          <SegmentedControl
-            fullWidth
-            ariaLabel={label}
-            value={draft.analytics === false ? "off" : "on"}
-            onChange={(value) => update({ analytics: value === "on" })}
-            options={[
-              { value: "on", label: t("serverSetup.on", "On") },
-              { value: "off", label: t("serverSetup.off", "Off") },
-            ]}
-          />
+    <SetupNote>
+      <p className={styles.noteText}>
+        {t(
+          "serverSetup.analytics.note",
+          "Share usage data from this server with us to help us improve Stirling PDF. We never collect files or their contents.",
         )}
-      </SettingRow>
-      <SetupNote>
-        <p className={styles.noteText}>
-          {t(
-            "serverSetup.analytics.note",
-            "Anonymous usage data helps us improve Stirling PDF. We never collect personal information or file contents.",
-          )}
-        </p>
-        <a
-          className={styles.noteLink}
-          href={ANALYTICS_DOCS}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {t("serverSetup.analytics.learnMore", "What we collect")}
-          <Icon name="external-link" size={14} />
-        </a>
-      </SetupNote>
-    </>
+      </p>
+      <p className={styles.noteText}>
+        {t(
+          "serverSetup.analytics.changeLater",
+          "You can change this at any time in {{path}}.",
+          { path: settingsPath },
+        )}
+      </p>
+      <a
+        className={styles.noteLink}
+        href={ANALYTICS_DOCS}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {t("serverSetup.analytics.learnMore", "What we collect")}
+        <Icon name="external-link" size={14} />
+      </a>
+    </SetupNote>
   );
 }

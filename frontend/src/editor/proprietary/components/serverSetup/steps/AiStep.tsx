@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { FormField } from "@editor/ui/FormField";
-import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { Select } from "@editor/ui/Select";
 import {
   OnOffControl,
   sectionToggle,
   SETUP_DROPDOWN,
   SettingRow,
+  SetupChoice,
   TextField,
   type SetupStepProps,
 } from "@editor/components/serverSetup/SetupFields";
@@ -24,12 +24,12 @@ import {
 export function AiStep(props: SetupStepProps) {
   const { draft, initial, update, errors, mode, setOpenSection } = props;
   const { t } = useTranslation();
-  const label = t("serverSetup.ai.label", "AI");
+  const label = t("serverSetup.ai.label", "Self-hosted AI");
   const documentsLabel = t("serverSetup.documents.label", "Document questions");
   const mcpLabel = t("serverSetup.mcp.label", "MCP server");
   const choices: { value: AiChoice; label: string }[] = [
     { value: "off", label: t("serverSetup.off", "Off") },
-    { value: "custom", label: t("serverSetup.ai.custom", "Your own AI") },
+    { value: "custom", label: t("serverSetup.on", "On") },
   ];
   // Stirling AI cannot be set up from here yet; keep it selectable only on a
   // server that already uses it, so the wizard never switches it off by accident.
@@ -58,11 +58,17 @@ export function AiStep(props: SetupStepProps) {
     },
   ];
 
+  const aiExpand =
+    draft.ai === "custom" ? sectionToggle(props, "ai") : undefined;
+  const documentsExpand = draft.documentQuestions
+    ? sectionToggle(props, "documents")
+    : undefined;
+
   return (
     <>
       <SettingRow
         label={label}
-        expand={draft.ai === "custom" ? sectionToggle(props, "ai") : undefined}
+        expand={aiExpand}
         details={
           <>
             <TextField
@@ -124,30 +130,40 @@ export function AiStep(props: SetupStepProps) {
                 />
               </>
             )}
+            <FormField label={mcpLabel}>
+              <OnOffControl
+                ariaLabel={mcpLabel}
+                value={draft.mcpEnabled}
+                onChange={(mcpEnabled) => update({ mcpEnabled })}
+              />
+            </FormField>
           </>
         }
       >
         {() => (
-          <SegmentedControl
-            fullWidth
+          <SetupChoice
             ariaLabel={label}
             value={draft.ai}
             onChange={(ai) => {
-              update({ ai });
+              // MCP is only shown while AI is on, so switching AI off must
+              // not leave a change to it that the admin can no longer see.
+              update(
+                ai === "custom"
+                  ? { ai }
+                  : { ai, mcpEnabled: initial.mcpEnabled },
+              );
               if (ai === "custom") setOpenSection("ai");
             }}
             options={choices}
+            expand={aiExpand}
+            expandValue="custom"
           />
         )}
       </SettingRow>
       {draft.ai === "custom" && (
         <SettingRow
           label={documentsLabel}
-          expand={
-            draft.documentQuestions
-              ? sectionToggle(props, "documents")
-              : undefined
-          }
+          expand={documentsExpand}
           details={
             <>
               <FormField
@@ -214,6 +230,7 @@ export function AiStep(props: SetupStepProps) {
             <OnOffControl
               ariaLabel={documentsLabel}
               value={draft.documentQuestions}
+              expand={documentsExpand}
               onChange={(documentQuestions) => {
                 update({ documentQuestions });
                 if (documentQuestions) setOpenSection("documents");
@@ -222,15 +239,6 @@ export function AiStep(props: SetupStepProps) {
           )}
         </SettingRow>
       )}
-      <SettingRow label={mcpLabel}>
-        {() => (
-          <OnOffControl
-            ariaLabel={mcpLabel}
-            value={draft.mcpEnabled}
-            onChange={(mcpEnabled) => update({ mcpEnabled })}
-          />
-        )}
-      </SettingRow>
     </>
   );
 }

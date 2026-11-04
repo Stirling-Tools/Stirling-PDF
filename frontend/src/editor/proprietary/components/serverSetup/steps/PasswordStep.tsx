@@ -17,6 +17,7 @@ export function PasswordStep({
       <FieldGroup>
         <TextField
           required
+          initialFocus
           autoComplete="username"
           label={t("serverSetup.account.username", "Username")}
           info={t(

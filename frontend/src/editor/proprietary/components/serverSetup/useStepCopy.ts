@@ -69,11 +69,7 @@ export function useStepCopy() {
         };
       case "analytics":
         return {
-          title: t("serverSetup.analytics.title", "Analytics"),
-          subtitle: t(
-            "serverSetup.analytics.subtitle",
-            "Help make Stirling PDF better.",
-          ),
+          title: t("serverSetup.analytics.title", "Server analytics"),
         };
     }
   };

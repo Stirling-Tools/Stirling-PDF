@@ -1,10 +1,18 @@
-import { useId, type ReactNode } from "react";
+import {
+  useId,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { FormField } from "@editor/ui/FormField";
 import { Icon } from "@editor/ui/Icon";
 import { Input } from "@editor/ui/Input";
-import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import {
+  SegmentedControl,
+  type SegmentedOption,
+} from "@editor/ui/SegmentedControl";
 import type {
   SetupStepId,
   ErrorCode,
@@ -29,18 +37,36 @@ const SECTIONS_BY_STEP: Partial<Record<SetupStepId, ExpandableSection[]>> = {
   ai: ["ai", "documents"],
 };
 
-/** The sections on `step` that are switched on, and so have fields to fill in. */
-function sectionsOn(
-  step: SetupStepId,
+function isSectionOn(
   draft: ServerSetupDraft,
-): ExpandableSection[] {
-  const isOn: Record<ExpandableSection, boolean> = {
+): Record<ExpandableSection, boolean> {
+  return {
     signIn: draft.login !== "password",
     email: draft.emailEnabled,
     ai: draft.ai === "custom",
     documents: draft.ai === "custom" && draft.documentQuestions,
   };
+}
+
+/** The sections on `step` that are switched on, and so have fields to fill in. */
+function sectionsOn(
+  step: SetupStepId,
+  draft: ServerSetupDraft,
+): ExpandableSection[] {
+  const isOn = isSectionOn(draft);
   return (SECTIONS_BY_STEP[step] ?? []).filter((section) => isOn[section]);
+}
+
+/** Sections the server already has switched on, so already configured. */
+export function sectionsConfiguredOnServer(
+  initial: ServerSetupDraft,
+): Set<ExpandableSection> {
+  const isOn = isSectionOn(initial);
+  return new Set(
+    (Object.keys(isOn) as ExpandableSection[]).filter(
+      (section) => isOn[section],
+    ),
+  );
 }
 
 /** The section to open when a card first shows: its first one switched on. */
@@ -87,6 +113,8 @@ export interface SetupStepProps {
   usingDefaultCredentials: boolean;
   openSection: ExpandableSection | null;
   setOpenSection: (section: ExpandableSection | null) => void;
+  /** Sections the server had on, or that were shut while on; they read Configured. */
+  configured: ReadonlySet<ExpandableSection>;
   /** Checks `section`'s fields; when they pass, opens the next section switched on. */
   saveSection: (section: ExpandableSection) => void;
 }
@@ -103,15 +131,18 @@ export function SettingRow({
   label,
   children,
   expand,
+  chevron = false,
   details,
 }: {
   label: string;
   children: (labelId: string) => ReactNode;
   /**
-   * Adds a chevron that shows or hides `details`, and a Save button under
-   * them; omit while there is nothing to show.
+   * Shows `details` while open, with a Save button under them; omit while
+   * there is nothing to show. The control opens and shuts it, unless `chevron`.
    */
-  expand?: { open: boolean; onToggle: () => void; onSave: () => void };
+  expand?: SectionExpand;
+  /** Adds a chevron that opens and shuts `details`, for a control that cannot. */
+  chevron?: boolean;
   details?: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -130,7 +161,7 @@ export function SettingRow({
           {label}
         </span>
         <div className={styles.settingControl}>{children(labelId)}</div>
-        {expand && (
+        {expand && chevron && (
           <button
             type="button"
             className={styles.expandToggle}
@@ -186,38 +217,128 @@ export function FieldGroup({ children }: { children: ReactNode }) {
   );
 }
 
+export interface SectionExpand {
+  open: boolean;
+  configured: boolean;
+  onToggle: () => void;
+  onSave: () => void;
+}
+
 /** The `expand` prop for a SettingRow whose fields live in `section`. */
 export function sectionToggle(
-  props: Pick<SetupStepProps, "openSection" | "setOpenSection" | "saveSection">,
+  props: Pick<
+    SetupStepProps,
+    "openSection" | "setOpenSection" | "saveSection" | "configured"
+  >,
   section: ExpandableSection,
-) {
+): SectionExpand {
   const open = props.openSection === section;
   return {
     open,
+    configured: props.configured.has(section),
     onToggle: () => props.setOpenSection(open ? null : section),
     onSave: () => props.saveSection(section),
   };
+}
+
+/**
+ * A segmented choice whose `expandValue` segment, once chosen, also opens and
+ * shuts the setting's fields. It reads Configured once they have been shut.
+ */
+export function SetupChoice<T extends string>({
+  options,
+  value,
+  onChange,
+  ariaLabel,
+  expand,
+  expandValue,
+}: {
+  options: SegmentedOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  ariaLabel: string;
+  expand?: SectionExpand;
+  expandValue?: T;
+}) {
+  const { t } = useTranslation();
+  const toggles = expand !== undefined && value === expandValue;
+  const isExpandRadio = (target: EventTarget) =>
+    toggles &&
+    target instanceof HTMLInputElement &&
+    target.value === expandValue;
+  // A click on the label reaches the radio as a click too, so handling the
+  // radio's alone toggles once. A chosen radio gets no click from the keyboard.
+  const toggleOnClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (isExpandRadio(event.target)) expand?.onToggle();
+  };
+  const toggleOnKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (
+      (event.key === " " || event.key === "Enter") &&
+      isExpandRadio(event.target)
+    ) {
+      event.preventDefault();
+      expand?.onToggle();
+    }
+  };
+  const shown = options.map((option) =>
+    toggles && option.value === expandValue
+      ? {
+          ...option,
+          label: (
+            <span className={styles.expandLabel}>
+              <span className={styles.expandLabelText}>
+                {expand.open && !expand.configured
+                  ? option.label
+                  : t("serverSetup.configured", "Configured")}
+              </span>
+              <Icon
+                name={expand.open ? "chevron-up" : "chevron-down"}
+                size={14}
+              />
+            </span>
+          ),
+        }
+      : option,
+  );
+  return (
+    <div
+      className={styles.setupChoice}
+      onClick={toggleOnClick}
+      onKeyDown={toggleOnKey}
+    >
+      <SegmentedControl
+        fullWidth
+        ariaLabel={ariaLabel}
+        value={value}
+        onChange={onChange}
+        options={shown}
+      />
+    </div>
+  );
 }
 
 export function OnOffControl({
   value,
   onChange,
   ariaLabel,
+  expand,
 }: {
   value: boolean;
   onChange: (value: boolean) => void;
   ariaLabel: string;
+  expand?: SectionExpand;
 }) {
   const { t } = useTranslation();
   return (
-    <SegmentedControl
-      fullWidth
+    <SetupChoice
       ariaLabel={ariaLabel}
       value={value ? "on" : "off"}
       onChange={(next) => onChange(next === "on")}
+      expand={expand}
+      expandValue="on"
       options={[
-        { value: "on", label: t("serverSetup.on", "On") },
         { value: "off", label: t("serverSetup.off", "Off") },
+        { value: "on", label: t("serverSetup.on", "On") },
       ]}
     />
   );
@@ -290,6 +411,7 @@ export function TextField({
   placeholder,
   required,
   autoComplete = "off",
+  initialFocus,
 }: {
   label: ReactNode;
   value: string;
@@ -301,6 +423,11 @@ export function TextField({
   autoComplete?: string;
   placeholder?: string;
   required?: boolean;
+  /**
+   * Takes focus when the setup dialog opens. Without one the dialog focuses
+   * the first focusable element, which may be an (i) whose tooltip opens on focus.
+   */
+  initialFocus?: boolean;
 }) {
   const errorText = useErrorText();
   return (
@@ -318,6 +445,7 @@ export function TextField({
         placeholder={placeholder}
         autoComplete={autoComplete}
         spellCheck={false}
+        data-autofocus={initialFocus || undefined}
         onChange={(event) => onChange(event.target.value)}
       />
     </FormField>

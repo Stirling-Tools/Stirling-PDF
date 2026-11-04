@@ -152,6 +152,17 @@
   gap: var(--space-2);
 }
 
+/* Side by side, wrapping to a stack with the primary last on narrow cards. */
+.actions[data-choice="true"] {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.actions[data-choice="true"] > * {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
 .screen {
   position: fixed;
   inset: 0;
@@ -203,6 +214,38 @@
   transition: transform var(--motion-fast);
 }
 
+.setupChoice {
+  min-width: 0;
+}
+
+/* The chevron sits at the segment's right edge whatever the word beside it. */
+.setupChoice :global(.mantine-SegmentedControl-innerLabel):has(.expandLabel) {
+  width: 100%;
+}
+
+.expandLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.expandLabelText {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+/* The details panel is the same grey as a segmented track, so a choice among
+   its fields takes an input's well and a tinted pill instead. */
+.groupDetailsBody :global(.sui-seg.mantine-SegmentedControl-root) {
+  --sc-color: var(--c-active);
+  background-color: var(--c-input-bg);
+  box-shadow: inset 0 0 0 1px var(--c-border);
+}
+
 .expandToggle:hover {
   background: var(--c-hover);
 }
@@ -216,6 +259,11 @@
   display: flex;
   flex-direction: column;
   max-height: min(42rem, calc(100vh - 8rem));
+}
+
+/* Focused only to take focus off a choice's buttons, not as a control. */
+.frame:focus {
+  outline: none;
 }
 
 /* The inline padding keeps a boxed setting's outward edge and inputs' focus
@@ -232,6 +280,17 @@
 
 .frameScroll:not(.animating) {
   overflow-y: auto;
+}
+
+/* Back and the step count stay in reach while a long card scrolls under them. */
+.frameScroll .topBar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin-inline: -1.5rem;
+  margin-bottom: 0;
+  padding: 0 1.5rem var(--space-3);
+  background: var(--auth-card-bg);
 }
 
 /* Only a setting that can open more fields is boxed, so its fields read as its

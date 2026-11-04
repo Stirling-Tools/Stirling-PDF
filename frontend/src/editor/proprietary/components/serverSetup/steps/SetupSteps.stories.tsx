@@ -1,199 +1,275 @@
-import { useState, type ComponentType } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, waitFor, within } from "storybook/test";
+import { http, HttpResponse } from "msw";
+import { AuthProvider } from "@editor/auth/UseSession";
+import { ServerSetupWizard } from "@editor/components/serverSetup/ServerSetupWizard";
+import { SetupSignInScreen } from "@editor/components/serverSetup/SetupScreen";
 import {
-  initialOpenSection,
-  nextOpenSection,
-  type ExpandableSection,
-  type SetupStepProps,
-} from "@editor/components/serverSetup/SetupFields";
-import {
-  SetupScreen,
-  SetupSignInScreen,
-} from "@editor/components/serverSetup/SetupScreen";
-import { SetupStepFrame } from "@editor/components/serverSetup/SetupStepFrame";
-import {
-  draftFromSettings,
-  prefillAddresses,
   stepsFor,
-  validateStep,
-  type ServerSetupDraft,
   type SetupMode,
   type SetupStepId,
 } from "@editor/components/serverSetup/serverSetupDraft";
-import { useStepCopy } from "@editor/components/serverSetup/useStepCopy";
-import { AddressesStep } from "@editor/components/serverSetup/steps/AddressesStep";
-import { AiStep } from "@editor/components/serverSetup/steps/AiStep";
-import { AnalyticsStep } from "@editor/components/serverSetup/steps/AnalyticsStep";
-import { EmailStep } from "@editor/components/serverSetup/steps/EmailStep";
-import { FilesStep } from "@editor/components/serverSetup/steps/FilesStep";
-import { LanguageStep } from "@editor/components/serverSetup/steps/LanguageStep";
-import { PasswordStep } from "@editor/components/serverSetup/steps/PasswordStep";
-import { QuickSummaryStep } from "@editor/components/serverSetup/steps/QuickSummaryStep";
-import { SignInStep } from "@editor/components/serverSetup/steps/SignInStep";
 // The app loads the card's colours globally (App.tsx); a story has to load them itself.
 import "@editor/auth/ui/auth-theme.css";
 
-const STEPS: Record<SetupStepId, ComponentType<SetupStepProps>> = {
-  addresses: AddressesStep,
-  language: LanguageStep,
-  signIn: SignInStep,
-  email: EmailStep,
-  files: FilesStep,
-  ai: AiStep,
-  analytics: AnalyticsStep,
-  password: PasswordStep,
-  summary: QuickSummaryStep,
+/** What a new server answers for its current settings. */
+const NEW_SERVER_SETTINGS = {
+  system: { frontendUrl: "", backendUrl: "", enableAnalytics: null },
+  security: { oauth2: { enabled: false } },
+  mail: { enabled: false },
+  storage: { enabled: true, sharing: { enabled: false } },
+  aiEngine: {
+    enabled: false,
+    url: "http://localhost:5001",
+    models: {
+      provider: "anthropic",
+      fastModel: "claude-haiku-4-5",
+      smartModel: "claude-haiku-4-5",
+    },
+    rag: { embeddingProvider: "voyageai", embeddingModel: "voyage-4" },
+    features: { documentQuestions: true },
+  },
+  mcp: { enabled: false, auth: { mode: "oauth" } },
 };
 
-interface StepPreviewProps {
-  step: SetupStepId;
-  mode?: SetupMode;
-  /** Values the card opens with, over a new server's defaults. */
-  draft?: Partial<ServerSetupDraft>;
-  /** The server's values, for warnings that compare against them. */
-  initial?: Partial<ServerSetupDraft>;
-  openSection?: ExpandableSection | null;
-  /** Show the errors Continue would, as the wizard does. */
-  showErrors?: boolean;
-  usingDefaultCredentials?: boolean;
-  primaryLabel?: string;
+/** A new server that saves everything and, like Docker, cannot restart itself. */
+const newServer = [
+  http.get("*/api/v1/admin/settings", () =>
+    HttpResponse.json(NEW_SERVER_SETTINGS),
+  ),
+  http.put("*/api/v1/admin/settings", () => HttpResponse.json({})),
+  http.post("*/api/v1/settings/update-enable-analytics", () =>
+    HttpResponse.json({}),
+  ),
+  http.post("*/api/v1/admin/settings/setup-complete", () =>
+    HttpResponse.json({ persisted: true }),
+  ),
+  http.post("*/api/v1/admin/settings/restart", () =>
+    HttpResponse.json({}, { status: 503 }),
+  ),
+];
+
+interface WizardProps {
+  /** The admin is still on the default password, so setup starts with the account. */
+  owesPassword?: boolean;
 }
 
-/** One wizard card with a real step inside, editable, over sample settings. */
-function StepPreview({
-  step,
-  mode = "custom",
-  draft: draftPatch,
-  initial: initialPatch,
-  openSection: openAtStart,
-  showErrors = false,
-  usingDefaultCredentials = false,
-  primaryLabel = "Continue",
-}: StepPreviewProps) {
-  const copy = useStepCopy();
-  const [initial] = useState<ServerSetupDraft>(() => ({
-    ...draftFromSettings({}),
-    ...initialPatch,
-  }));
-  const [draft, setDraft] = useState<ServerSetupDraft>(() => ({
-    ...prefillAddresses(initial, "http://localhost:8080"),
-    analytics: true,
-    ...draftPatch,
-  }));
-  const [openSection, setOpenSection] = useState<ExpandableSection | null>(
-    () =>
-      openAtStart === undefined ? initialOpenSection(step, draft) : openAtStart,
-  );
-  const steps = stepsFor(mode);
-  const index = steps.indexOf(step);
-  const Step = STEPS[step];
+/** The wizard as ServerSetupGate mounts it; only the server is mocked. */
+function Wizard({ owesPassword = false }: WizardProps) {
   return (
-    <SetupScreen>
-      <SetupStepFrame
-        {...copy(step)}
-        progress={
-          index >= 0 ? { current: index + 1, total: steps.length } : undefined
+    <AuthProvider>
+      <ServerSetupWizard
+        onDone={() => {}}
+        passwordChange={
+          owesPassword ? { usingDefaultCredentials: true } : undefined
         }
-        onBack={index >= 0 ? () => {} : undefined}
-        primaryLabel={primaryLabel}
-        onPrimary={() => {}}
-      >
-        <Step
-          draft={draft}
-          initial={initial}
-          update={(patch) => setDraft((current) => ({ ...current, ...patch }))}
-          errors={showErrors ? validateStep(step, draft, mode) : {}}
-          mode={mode}
-          usingDefaultCredentials={usingDefaultCredentials}
-          openSection={openSection}
-          setOpenSection={setOpenSection}
-          saveSection={(section) =>
-            setOpenSection(nextOpenSection(step, draft, section))
-          }
-        />
-      </SetupStepFrame>
-    </SetupScreen>
+      />
+    </AuthProvider>
   );
 }
 
 /**
- * Each card of first-run server setup, rendered from the real step components
- * over a new server's defaults. Nothing is saved; Continue and Back do nothing.
+ * First-run server setup, rendered by the real wizard against a mocked new
+ * server. Each story reaches its card by clicking through the flow, so it
+ * shows what the app shows.
  */
 const meta = {
   title: "Server Setup/Steps",
-  component: StepPreview,
-  parameters: { layout: "fullscreen" },
-} satisfies Meta<typeof StepPreview>;
+  component: Wizard,
+  parameters: { layout: "fullscreen", msw: { handlers: newServer } },
+} satisfies Meta<typeof Wizard>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+type Canvas = ReturnType<typeof within>;
+
+const button = (canvas: Canvas, name: string) =>
+  userEvent.click(canvas.getByRole("button", { name }));
+
+/** Picks `option` on `setting`'s own control, ahead of any setting nested in its fields. */
+const choose = (canvas: Canvas, setting: string, option: string) =>
+  userEvent.click(
+    within(canvas.getByRole("group", { name: setting })).getAllByText(option, {
+      exact: true,
+    })[0],
+  );
+
+/** From the first card, clicks Continue until `step`'s card is up. */
+async function reach(canvas: Canvas, mode: SetupMode, step: SetupStepId) {
+  await canvas.findByRole("heading", { name: "Your server is up" });
+  if (mode === "custom") await userEvent.click(canvas.getByText("Custom"));
+  const steps = stepsFor(mode);
+  const target = steps.indexOf(step);
+  for (let index = 0; index <= target; index++) {
+    await button(canvas, "Continue");
+    await canvas.findByText(`${index + 1} of ${steps.length}`);
+  }
+}
+
 export const SigningIn: Story = {
-  args: { step: "password" },
   render: () => <SetupSignInScreen />,
 };
 
 export const Account: Story = {
-  args: {
-    step: "password",
-    usingDefaultCredentials: true,
-    primaryLabel: "Save and continue",
+  args: { owesPassword: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const username = await canvas.findByRole("textbox", { name: /^Username/ });
+    await waitFor(() => expect(username).toHaveFocus());
   },
 };
 
 export const AccountMismatch: Story = {
-  args: {
-    ...Account.args,
-    step: "password",
-    draft: {
-      adminUsername: "admin",
-      newPassword: "adminadmin",
-      confirmPassword: "adminadmi",
-    },
-    showErrors: true,
+  args: { owesPassword: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(
+      await canvas.findByRole("textbox", { name: /^Username/ }),
+      "admin",
+    );
+    await userEvent.type(canvas.getByLabelText(/^New password/), "adminadmin");
+    await userEvent.type(
+      canvas.getByLabelText(/^Confirm new password/),
+      "adminadmi",
+    );
+    await button(canvas, "Save and continue");
   },
 };
 
-export const QuickStart: Story = { args: { step: "summary", mode: "quick" } };
+export const Start: Story = {};
 
-export const QuickStartEmailOn: Story = {
-  args: { step: "summary", mode: "quick", draft: { emailEnabled: true } },
+export const StartCustom: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole("heading", { name: "Your server is up" });
+    await userEvent.click(canvas.getByText("Custom"));
+  },
 };
 
-export const Addresses: Story = { args: { step: "addresses" } };
+export const QuickStart: Story = {
+  play: ({ canvasElement }) => reach(within(canvasElement), "quick", "summary"),
+};
 
-export const Language: Story = { args: { step: "language" } };
+export const QuickStartEmailOn: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await reach(canvas, "quick", "summary");
+    await choose(canvas, "Send email", "On");
+  },
+};
 
-export const SignIn: Story = { args: { step: "signIn" } };
+export const Addresses: Story = {
+  play: ({ canvasElement }) =>
+    reach(within(canvasElement), "custom", "addresses"),
+};
+
+export const Language: Story = {
+  play: ({ canvasElement }) =>
+    reach(within(canvasElement), "custom", "language"),
+};
+
+export const SignIn: Story = {
+  play: ({ canvasElement }) => reach(within(canvasElement), "custom", "signIn"),
+};
+
+async function chooseOpenIdConnect(canvas: Canvas) {
+  await reach(canvas, "custom", "signIn");
+  await userEvent.click(canvas.getByRole("textbox", { name: "Sign in with" }));
+  await userEvent.click(
+    await within(document.body).findByRole("option", {
+      name: "Other OpenID Connect",
+    }),
+  );
+}
 
 export const SignInOpenIdConnect: Story = {
-  args: { step: "signIn", draft: { login: "oidc" } },
+  play: ({ canvasElement }) => chooseOpenIdConnect(within(canvasElement)),
 };
 
 export const SignInMissingFields: Story = {
-  args: { step: "signIn", draft: { login: "oidc" }, showErrors: true },
-};
-
-export const Email: Story = { args: { step: "email" } };
-
-export const EmailOn: Story = {
-  args: { step: "email", draft: { emailEnabled: true } },
-};
-
-export const Files: Story = { args: { step: "files" } };
-
-export const FilesStorageTurnedOff: Story = {
-  args: {
-    step: "files",
-    initial: { storageEnabled: true },
-    draft: { storageEnabled: false, sharingEnabled: false },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await chooseOpenIdConnect(canvas);
+    await button(canvas, "Continue");
   },
 };
 
-export const AiOff: Story = { args: { step: "ai", draft: { ai: "off" } } };
+export const Email: Story = {
+  play: ({ canvasElement }) => reach(within(canvasElement), "custom", "email"),
+};
 
-export const AiOwn: Story = { args: { step: "ai", draft: { ai: "custom" } } };
+export const EmailOn: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await reach(canvas, "custom", "email");
+    await choose(canvas, "Send email", "On");
+  },
+};
+
+export const Files: Story = {
+  play: ({ canvasElement }) => reach(within(canvasElement), "custom", "files"),
+};
+
+export const FilesStorageTurnedOff: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await reach(canvas, "custom", "files");
+    await choose(canvas, "Store files", "Off");
+  },
+};
+
+export const AiOn: Story = {
+  play: ({ canvasElement }) => reach(within(canvasElement), "custom", "ai"),
+};
+
+export const AiConfigured: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await reach(canvas, "custom", "ai");
+    await choose(canvas, "Self-hosted AI", "On");
+    await within(
+      canvas.getByRole("group", { name: "Self-hosted AI" }),
+    ).findByRole("radio", { name: "Configured" });
+  },
+};
+
+export const AiOff: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await reach(canvas, "custom", "ai");
+    await choose(canvas, "Self-hosted AI", "Off");
+  },
+};
 
 export const Analytics: Story = {
-  args: { step: "analytics", primaryLabel: "Accept and finish" },
+  play: ({ canvasElement }) =>
+    reach(within(canvasElement), "quick", "analytics"),
+};
+
+export const Saved: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await reach(canvas, "quick", "analytics");
+    await button(canvas, "Accept and finish");
+    await canvas.findByRole("heading", { name: "Settings saved" });
+  },
+};
+
+export const SaveFailed: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        http.put("*/api/v1/admin/settings", () =>
+          HttpResponse.json({}, { status: 500 }),
+        ),
+        ...newServer,
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await reach(canvas, "quick", "analytics");
+    await button(canvas, "Accept and finish");
+    await canvas.findByRole("heading", { name: "Couldn't save your settings" });
+  },
 };

@@ -11,11 +11,14 @@ export function EmailStep(props: SetupStepProps) {
   const { draft, update, errors, setOpenSection } = props;
   const { t } = useTranslation();
   const label = t("serverSetup.email.label", "Send email");
+  const emailExpand = draft.emailEnabled
+    ? sectionToggle(props, "email")
+    : undefined;
   return (
     <>
       <SettingRow
         label={label}
-        expand={draft.emailEnabled ? sectionToggle(props, "email") : undefined}
+        expand={emailExpand}
         details={
           <>
             <TextField
@@ -61,6 +64,7 @@ export function EmailStep(props: SetupStepProps) {
           <OnOffControl
             ariaLabel={label}
             value={draft.emailEnabled}
+            expand={emailExpand}
             onChange={(emailEnabled) => {
               update({ emailEnabled });
               if (emailEnabled) setOpenSection("email");

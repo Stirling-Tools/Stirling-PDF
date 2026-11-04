@@ -130,7 +130,14 @@ function renderGate(
 const click = (name: string) =>
   fireEvent.click(screen.getByRole("button", { name }));
 
+const acceptAnalytics = () => click("Accept and finish");
+
 const group = (name: string) => screen.getByRole("group", { name });
+const option = (setting: string, name: string) =>
+  within(screen.getByRole("radiogroup", { name: setting })).getByRole("radio", {
+    name,
+  });
+const turnAiOn = () => fireEvent.click(option("Self-hosted AI", "On"));
 
 /** Collapsed fields stay mounted so they can animate; read their panel. */
 const isShown = (name: RegExp) => {
@@ -219,7 +226,7 @@ describe("ServerSetupGate", () => {
     renderGate();
     await openQuickStart();
     click("Continue");
-    click("Accept and finish");
+    acceptAnalytics();
     await screen.findByRole("heading", { name: "Couldn't save your settings" });
     expect(api.markSetupComplete).toHaveBeenCalled();
     expect(screen.queryByText("The app")).toBeNull();
@@ -247,16 +254,25 @@ describe("ServerSetupGate", () => {
     expect(screen.getByText("1 of 2")).toBeInTheDocument();
     click("Continue");
 
-    // Analytics starts on, so its button accepts; turning it off declines.
+    // The last card's two buttons start unfocused, so Enter carried over
+    // from Continue cannot press one.
     expect(
-      screen.getByRole("heading", { name: "Analytics" }),
+      screen.getByRole("heading", { name: "Server analytics" }),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("radio", { name: "Off" }));
     expect(
-      screen.getByRole("button", { name: "Decline and finish" }),
+      screen.getByText(
+        "You can change this at any time in Settings → Server → Legal & privacy.",
+      ),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("radio", { name: "On" }));
-    click("Accept and finish");
+    const decline = screen.getByRole("button", { name: "Decline and finish" });
+    const accept = screen.getByRole("button", { name: "Accept and finish" });
+    expect(document.activeElement).not.toBe(decline);
+    expect(document.activeElement).not.toBe(accept);
+    expect(
+      decline.compareDocumentPosition(accept) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    acceptAnalytics();
 
     await screen.findByRole("heading", { name: "Settings saved" });
     expect(api.saveServerSettings).toHaveBeenCalledWith({
@@ -278,8 +294,9 @@ describe("ServerSetupGate", () => {
     renderGate();
     await openQuickStart();
     click("Continue");
-    click("Accept and finish");
+    click("Decline and finish");
     await screen.findByText(/The server didn't restart/);
+    expect(api.answerAnalytics).toHaveBeenCalledWith(false);
   });
 
   it("checks the summary before moving on", async () => {
@@ -316,11 +333,15 @@ describe("ServerSetupGate", () => {
   it("starts MCP from the server's value and leaves it off", async () => {
     renderGate();
     await openQuickStart();
-    expect(
-      within(group("MCP server")).getByRole("radio", { name: "Off" }),
-    ).toBeChecked();
+    turnAiOn();
+    expect(option("MCP server", "Off")).toBeChecked();
+    fireEvent.click(option("Document questions", "Off"));
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /^AI engine address/ }),
+      { target: { value: "http://engine" } },
+    );
     click("Continue");
-    click("Accept and finish");
+    acceptAnalytics();
 
     await waitFor(() => expect(api.saveServerSettings).toHaveBeenCalled());
     const saved = vi.mocked(api.saveServerSettings).mock.calls[0][0];
@@ -331,11 +352,15 @@ describe("ServerSetupGate", () => {
   it("turns MCP on with API keys when the admin switches it on", async () => {
     renderGate();
     await openQuickStart();
-    fireEvent.click(
-      within(group("MCP server")).getByRole("radio", { name: "On" }),
+    turnAiOn();
+    fireEvent.click(option("MCP server", "On"));
+    fireEvent.click(option("Document questions", "Off"));
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /^AI engine address/ }),
+      { target: { value: "http://engine" } },
     );
     click("Continue");
-    click("Accept and finish");
+    acceptAnalytics();
 
     await waitFor(() => expect(api.saveServerSettings).toHaveBeenCalled());
     expect(vi.mocked(api.saveServerSettings).mock.calls[0][0]).toMatchObject({
@@ -352,7 +377,7 @@ describe("ServerSetupGate", () => {
     renderGate();
     await openQuickStart();
     click("Continue");
-    click("Accept and finish");
+    acceptAnalytics();
 
     await waitFor(() => expect(api.saveServerSettings).toHaveBeenCalled());
     const saved = vi.mocked(api.saveServerSettings).mock.calls[0][0];
@@ -381,6 +406,10 @@ describe("ServerSetupGate", () => {
     await reachAccountStep();
     expect(screen.queryByLabelText(/^Current password/)).toBeNull();
     expect(screen.getByRole("textbox", { name: /^Username/ })).toHaveValue("");
+    // Not the (i) before its label, whose tooltip would open over the card.
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: /^Username/ })).toHaveFocus(),
+    );
 
     fillAccount("admin");
     click("Save and continue");
@@ -399,7 +428,7 @@ describe("ServerSetupGate", () => {
 
     click("Continue");
     click("Continue"); // Quick start summary
-    click("Accept and finish");
+    acceptAnalytics();
     await screen.findByRole("heading", { name: "Settings saved" });
     expect(api.changeAdminPassword).toHaveBeenCalledTimes(1);
 
@@ -488,7 +517,7 @@ describe("ServerSetupGate", () => {
 
     click("Continue");
     click("Continue");
-    click("Accept and finish");
+    acceptAnalytics();
     await screen.findByRole("heading", { name: "Settings saved" });
     expect(auth.refreshSession).not.toHaveBeenCalled();
     click("Continue");
@@ -545,19 +574,53 @@ describe("ServerSetupGate", () => {
     );
     expect(isShown(/^SMTP host/)).toBe(true);
 
-    fireEvent.click(screen.getByRole("radio", { name: "Your own AI" }));
+    turnAiOn();
     expect(isShown(/^SMTP host/)).toBe(false);
     expect(isShown(/^AI engine address/)).toBe(true);
 
-    click("Show Send email settings");
+    fireEvent.click(option("Send email", "Configured"));
     expect(isShown(/^SMTP host/)).toBe(true);
     expect(isShown(/^AI engine address/)).toBe(false);
+  });
+
+  it("puts Off before On, and folds a setting from its chosen On, then reads Configured", async () => {
+    renderGate();
+    await openQuickStart();
+    const email = screen.getByRole("radiogroup", { name: "Send email" });
+    expect(
+      within(email)
+        .getAllByRole("radio")
+        .map((radio) => radio.getAttribute("value")),
+    ).toEqual(["off", "on"]);
+
+    fireEvent.click(option("Send email", "On"));
+    expect(isShown(/^SMTP host/)).toBe(true);
+    fireEvent.click(option("Send email", "On"));
+    expect(isShown(/^SMTP host/)).toBe(false);
+    expect(option("Send email", "Configured")).toBeChecked();
+    fireEvent.click(option("Send email", "Configured"));
+    expect(isShown(/^SMTP host/)).toBe(true);
+    expect(option("Send email", "Configured")).toBeChecked();
+  });
+
+  it("drops an MCP change when AI is switched back off", async () => {
+    renderGate();
+    await openQuickStart();
+    turnAiOn();
+    fireEvent.click(option("MCP server", "On"));
+    fireEvent.click(option("Self-hosted AI", "Off"));
+    click("Continue");
+    acceptAnalytics();
+
+    await waitFor(() => expect(api.saveServerSettings).toHaveBeenCalled());
+    const saved = vi.mocked(api.saveServerSettings).mock.calls[0][0];
+    expect(saved).not.toHaveProperty("mcp.enabled");
   });
 
   it("saves a section and opens the next one that is on", async () => {
     renderGate();
     await openQuickStart();
-    fireEvent.click(screen.getByRole("radio", { name: "Your own AI" }));
+    turnAiOn();
     fireEvent.click(
       within(group("Send email")).getByRole("radio", { name: "On" }),
     );
@@ -577,7 +640,11 @@ describe("ServerSetupGate", () => {
     expect(isShown(/^SMTP host/)).toBe(false);
     expect(isShown(/^AI engine address/)).toBe(true);
 
-    fireEvent.click(within(group("AI")).getByRole("button", { name: "Save" }));
+    fireEvent.click(
+      within(group("Self-hosted AI")).getAllByRole("button", {
+        name: "Save",
+      })[0],
+    );
     expect(isShown(/^Embedding model/)).toBe(true);
 
     fireEvent.click(
@@ -609,7 +676,7 @@ describe("ServerSetupGate", () => {
     renderGate();
     await openQuickStart();
     expect(screen.queryByText("Document questions")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("radio", { name: "Your own AI" }));
+    turnAiOn();
     fireEvent.click(
       within(group("Document questions")).getByRole("radio", { name: "Off" }),
     );
@@ -618,7 +685,7 @@ describe("ServerSetupGate", () => {
       { target: { value: "http://engine" } },
     );
     click("Continue");
-    click("Accept and finish");
+    acceptAnalytics();
 
     await waitFor(() => expect(api.saveServerSettings).toHaveBeenCalled());
     const saved = vi.mocked(api.saveServerSettings).mock.calls[0][0];
@@ -661,7 +728,7 @@ describe("ServerSetupGate", () => {
     for (let card = 1; card < 6; card += 1) click("Continue");
 
     expect(screen.getByRole("heading", { name: "AI" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "Your own AI" })).toBeChecked();
+    expect(option("Self-hosted AI", "On")).toBeChecked();
     expect(isShown(/^AI engine address/)).toBe(true);
   });
 
@@ -675,9 +742,7 @@ describe("ServerSetupGate", () => {
 
     fireEvent.click(screen.getByRole("radio", { name: "Quick start" }));
     click("Continue");
-    expect(
-      within(group("AI")).getByRole("radio", { name: "Off" }),
-    ).toBeChecked();
+    expect(option("Self-hosted AI", "Off")).toBeChecked();
   });
 
   it("opens a setting that starts on when its card shows", async () => {

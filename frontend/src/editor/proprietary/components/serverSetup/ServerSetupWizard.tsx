@@ -14,6 +14,7 @@ import {
   SetupNote,
   initialOpenSection,
   nextOpenSection,
+  sectionsConfiguredOnServer,
   sectionForField,
   type ExpandableSection,
   type SetupStepProps,
@@ -128,7 +129,6 @@ function ServerSetupFlow({
     passwordChange?.usingDefaultCredentials === true;
   const [draft, setDraft] = useState<ServerSetupDraft>(() => ({
     ...prefillAddresses(initial, setupAddressPrefill()),
-    analytics: initial.analytics ?? true,
     currentPassword: usingDefaultCredentials
       ? DEFAULT_ADMIN_CREDENTIALS.password
       : "",
@@ -142,9 +142,19 @@ function ServerSetupFlow({
   const [accountState, setAccountState] = useState<AccountState>("editing");
   const { signOut } = useAuth();
   const [errors, setErrors] = useState<StepErrors>({});
-  const [openSection, setOpenSection] = useState<ExpandableSection | null>(
+  const [openSection, setOpenSectionState] = useState<ExpandableSection | null>(
     null,
   );
+  const [configured, setConfigured] = useState(() =>
+    sectionsConfiguredOnServer(initial),
+  );
+  // A section reads Configured from the first time it is shut after being open.
+  const setOpenSection = (next: ExpandableSection | null) => {
+    if (openSection && openSection !== next) {
+      setConfigured((current) => new Set(current).add(openSection));
+    }
+    setOpenSectionState(next);
+  };
   const steps = stepsFor(mode);
   const {
     state: finishState,
@@ -154,7 +164,7 @@ function ServerSetupFlow({
     reset,
   } = useSetupFinish({ onDone, onPasswordChanged });
 
-  // Custom's AI card starts on "Your own AI", so its fields are there to fill
+  // Custom's AI card starts with AI on, so its fields are there to fill
   // in; only the first visit applies it, so switching AI off sticks.
   const aiDefaulted = useRef(false);
   // True while that default is in the draft, so a switch to Quick start can undo it.
@@ -210,6 +220,7 @@ function ServerSetupFlow({
     usingDefaultCredentials,
     openSection,
     setOpenSection,
+    configured,
     saveSection,
   };
 
@@ -248,9 +259,9 @@ function ServerSetupFlow({
     }
   };
 
-  const startFinish = () => {
+  const startFinish = (finalDraft: ServerSetupDraft = draft) => {
     goTo({ kind: "finish" });
-    finish(initial, draftToSave(draft, initial, mode));
+    finish(initial, draftToSave(finalDraft, initial, mode));
   };
 
   const submitAccount = () => {
@@ -338,7 +349,11 @@ function ServerSetupFlow({
     }
   };
 
-  // The analytics answer is the button itself, so it reads as consent.
+  const finishOrContinue = (isLast: boolean) =>
+    isLast
+      ? t("serverSetup.finishSetup", "Finish setup")
+      : t("serverSetup.continue", "Continue");
+
   const analyticsLabel = (accept: boolean, isLast: boolean) => {
     if (accept) {
       return isLast
@@ -392,23 +407,38 @@ function ServerSetupFlow({
     };
   };
 
+  const answerAnalytics = (accept: boolean, index: number) => {
+    const answered = { ...draft, analytics: accept };
+    setDraft(answered);
+    if (index === steps.length - 1) startFinish(answered);
+    else goTo({ kind: "step", index: index + 1 });
+  };
+
   const stepFrame = (index: number): FrameProps => {
     const step = steps[index];
     const Step = STEP_COMPONENTS[step];
     const isLast = index === steps.length - 1;
-    return {
+    const card = {
       ...stepCopy(step),
       progress: { current: index + 1, total: steps.length },
       onBack: () =>
         goTo(
           index === 0 ? { kind: "start" } : { kind: "step", index: index - 1 },
         ),
-      primaryLabel:
-        step === "analytics"
-          ? analyticsLabel(draft.analytics !== false, isLast)
-          : isLast
-            ? t("serverSetup.finishSetup", "Finish setup")
-            : t("serverSetup.continue", "Continue"),
+      children: <Step {...stepProps} />,
+    };
+    if (step === "analytics") {
+      return {
+        ...card,
+        primaryLabel: analyticsLabel(true, isLast),
+        onPrimary: () => answerAnalytics(true, index),
+        secondaryLabel: analyticsLabel(false, isLast),
+        onSecondary: () => answerAnalytics(false, index),
+      };
+    }
+    return {
+      ...card,
+      primaryLabel: finishOrContinue(isLast),
       primaryLoading: checkingIssuers,
       onPrimary: () => {
         if (checkingIssuers) return;
@@ -426,7 +456,6 @@ function ServerSetupFlow({
           else advance();
         });
       },
-      children: <Step {...stepProps} />,
     };
   };
 

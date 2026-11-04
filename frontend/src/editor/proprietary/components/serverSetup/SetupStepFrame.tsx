@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -18,6 +18,12 @@ interface SetupStepFrameProps {
   primaryLabel?: ReactNode;
   onPrimary?: () => void;
   primaryLoading?: boolean;
+  /**
+   * With `onSecondary`, turns the actions into a two-way choice: this button on
+   * the left, the primary on the right, and neither focused when it appears.
+   */
+  secondaryLabel?: ReactNode;
+  onSecondary?: () => void;
 }
 
 /**
@@ -35,10 +41,21 @@ export function SetupStepFrame({
   primaryLabel,
   onPrimary,
   primaryLoading,
+  secondaryLabel,
+  onSecondary,
 }: SetupStepFrameProps) {
   const { t } = useTranslation();
+  const frameRef = useRef<HTMLDivElement>(null);
+  const isChoice = Boolean(secondaryLabel && onSecondary);
+
+  // The card stays mounted, so focus left on the previous step's button would
+  // land on one of the answers, and Enter would choose it unread.
+  useEffect(() => {
+    if (isChoice) frameRef.current?.focus();
+  }, [isChoice]);
+
   return (
-    <div className={styles.frame}>
+    <div ref={frameRef} className={styles.frame} tabIndex={-1}>
       <AnimatedHeight className={styles.frameScroll}>
         {(onBack || progress) && (
           <div className={styles.topBar}>
@@ -69,8 +86,23 @@ export function SetupStepFrame({
         </SetupCardLayout>
       </AnimatedHeight>
       {primaryLabel && onPrimary && (
-        <div className={styles.actions}>
+        <div
+          className={styles.actions}
+          data-choice={isChoice ? "true" : undefined}
+        >
+          {isChoice && (
+            <Button
+              key="secondary"
+              variant="secondary"
+              fat
+              fullWidth
+              onClick={onSecondary}
+            >
+              {secondaryLabel}
+            </Button>
+          )}
           <Button
+            key="primary"
             variant="primary"
             fat
             fullWidth

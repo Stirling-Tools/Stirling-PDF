@@ -38,6 +38,7 @@ export function SignInStep(props: SetupStepProps) {
       <SettingRow
         label={t("serverSetup.signIn.label", "Sign in with")}
         expand={oauth ? sectionToggle(props, "signIn") : undefined}
+        chevron
         details={
           oauth && (
             <>
