@@ -7,6 +7,7 @@ import { Icon } from "@editor/ui/Icon";
 import { accountService } from "@editor/services/accountService";
 import { alert } from "@editor/components/toast";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface FirstLoginModalProps {
   opened: boolean;
@@ -142,7 +143,7 @@ export default function FirstLoginModal({
 
           <Text size="sm" fw={500}>
             {t("firstLogin.loggedInAs", "Logged in as")}:{" "}
-            <strong>{username}</strong>
+            <strong className={privateContentClassName}>{username}</strong>
           </Text>
 
           {error && (

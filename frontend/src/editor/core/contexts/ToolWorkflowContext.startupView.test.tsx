@@ -10,6 +10,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { AppProviders } from "@editor/components/AppProviders";
+import { PlatformProviders } from "@editor/components/PlatformProviders";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
@@ -63,15 +64,15 @@ function renderLaunch(
   const { config = null, path = "/", autoFetch = false } = options;
   render(
     <MemoryRouter initialEntries={[path]}>
-      <AppProviders
+      <PlatformProviders
         appConfigProviderProps={{
           initialConfig: config,
           bootstrapMode: "non-blocking",
           autoFetch,
         }}
       >
-        {ui}
-      </AppProviders>
+        <AppProviders>{ui}</AppProviders>
+      </PlatformProviders>
     </MemoryRouter>,
   );
   return screen.getByTestId("launch");
