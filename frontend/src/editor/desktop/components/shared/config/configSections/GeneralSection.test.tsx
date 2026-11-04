@@ -109,6 +109,10 @@ describe("desktop GeneralSection update policy", () => {
     // An administrator who turned updates off still needs to see what is installed.
     expect(await screen.findByText("3.0.1")).toBeInTheDocument();
     expect(screen.getByLabelText("Update behavior")).toBeDisabled();
+    expect(screen.getByText("View version information")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Check for updates and view version information"),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Check for Updates" }),
     ).not.toBeInTheDocument();

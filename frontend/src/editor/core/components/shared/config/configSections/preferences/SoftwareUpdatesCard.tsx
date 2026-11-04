@@ -99,10 +99,15 @@ export function SoftwareUpdatesCard({
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Text size="xs" c="dimmed">
-              {t(
-                "settings.general.updates.description",
-                "Check for updates and view version information",
-              )}
+              {updatesManagedOff
+                ? t(
+                    "settings.general.updates.descriptionManaged",
+                    "View version information",
+                  )
+                : t(
+                    "settings.general.updates.description",
+                    "Check for updates and view version information",
+                  )}
             </Text>
             {updateSummary && (
               <Badge
