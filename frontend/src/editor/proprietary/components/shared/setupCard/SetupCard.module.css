@@ -218,12 +218,14 @@
   max-height: min(42rem, calc(100vh - 8rem));
 }
 
-/* The inline padding keeps inputs' focus rings clear of the scroll clip. */
+/* The inline padding keeps a boxed setting's outward edge and inputs' focus
+   rings clear of the scroll clip; it must exceed --setup-box-bleed. */
 .frameScroll {
+  --setup-box-bleed: calc(var(--space-4) + 1px); /* a boxed row's padding and border */
   flex: 1 1 auto;
   min-height: 0;
-  margin-inline: -0.25rem;
-  padding-inline: 0.25rem;
+  margin-inline: -1.5rem;
+  padding-inline: 1.5rem;
   scrollbar-width: thin;
 }
 
@@ -231,9 +233,11 @@
   overflow-y: auto;
 }
 
-/* A setting and the fields it opens, as one rounded block. */
-/* Only a setting that can open more fields is boxed, so its fields read as its own. */
+/* Only a setting that can open more fields is boxed, so its fields read as its
+   own. The box reaches out by its own padding and border, so its label, control
+   and fields stay in line with the settings around it. */
 .group[data-expandable="true"] {
+  margin-inline: calc(-1 * var(--setup-box-bleed));
   border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-lg);
   overflow: hidden;
