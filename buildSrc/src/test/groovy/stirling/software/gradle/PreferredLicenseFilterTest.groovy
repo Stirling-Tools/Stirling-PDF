@@ -132,8 +132,9 @@ class PreferredLicenseFilterTest {
         License bsd = new License('BSD 3-clause License w/nuclear disclaimer', 'LICENSE-Sun.txt')
         License jj2000 = new License('JJ2000', 'LICENSE-JJ2000.txt')
         String combined = "${bsd.name} AND ${jj2000.name}"
-        List<Map<String, String>> allowed = [
-                [moduleName: "${GROUP}:${MODULE}".toString(), moduleLicense: combined, category: 'permissive'],
+        List<Map<String, Object>> allowed = [
+                [moduleName: "${GROUP}:${MODULE}".toString(), moduleLicense: combined,
+                 allOf: [bsd.name, jj2000.name], category: 'permissive'],
                 [moduleName: '.*', moduleLicense: bsd.name, category: 'permissive']
         ]
         ModuleData module = createModule(bsd, jj2000, new License('LICENSE-JJ2000.txt, LICENSE-Sun.txt', null))
@@ -149,7 +150,8 @@ class PreferredLicenseFilterTest {
         String combined = "${APACHE.name} AND ${MPL.name}"
         ModuleData module = createModule(APACHE, MPL)
 
-        filter(module, [[moduleName: "${GROUP}:${MODULE}".toString(), moduleLicense: combined, category: 'weak-copyleft']])
+        filter(module, [[moduleName: "${GROUP}:${MODULE}".toString(), moduleLicense: combined,
+                         allOf: [APACHE.name, MPL.name], category: 'weak-copyleft']])
 
         assertEquals([SOURCES_JAR, combined, APACHE.url], singleLicenseInfo(module))
     }
@@ -160,10 +162,29 @@ class PreferredLicenseFilterTest {
         ModuleData module = createModule(APACHE)
 
         GradleException failure = assertThrows(GradleException) {
-            filter(module, [[moduleName: "${GROUP}:${MODULE}".toString(), moduleLicense: combined, category: 'permissive']])
+            filter(module, [[moduleName: "${GROUP}:${MODULE}".toString(), moduleLicense: combined,
+                             allOf: [APACHE.name, 'JJ2000'], category: 'permissive']])
         }
 
         assertTrue(failure.message.contains('JJ2000'))
+    }
+
+    @Test
+    void treatsAndInsideLicenseNameAsPartOfTheName() {
+        License cddl = new License('COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0', null)
+        ModuleData module = createModule(cddl)
+
+        filter(module, [[moduleName: '.*', moduleLicense: cddl.name, category: 'weak-copyleft']])
+
+        assertEquals([SOURCES_JAR, cddl.name, null], singleLicenseInfo(module))
+    }
+
+    @Test
+    void failsWhenAllOfListsFewerThanTwoLicenses() {
+        List<Map<String, Object>> allowed = [[moduleName: '.*', moduleLicense: MPL.name, allOf: [MPL.name],
+                                              category: 'weak-copyleft']]
+
+        assertThrows(GradleException) { filter(createModule(MPL), allowed) }
     }
 
     @Test
@@ -233,7 +254,7 @@ class PreferredLicenseFilterTest {
                 as Set<List<String>>
         assertTrue(!rejected.isEmpty() && rejected.size() < cases.size(), 'cases must include allowed and rejected')
 
-        List<Map<String, String>> entries = PreferredLicenseFilter.loadEntries(allowedLicensesFile)
+        List<Map<String, Object>> entries = PreferredLicenseFilter.loadEntries(allowedLicensesFile)
         cases.each { testCase ->
             boolean allowedByFilter = PreferredLicenseFilter.categoryOf(
                     testCase[0], testCase[1], testCase[2], entries) != null
@@ -241,13 +262,13 @@ class PreferredLicenseFilterTest {
         }
     }
 
-    private File writeAllowedLicenses(List<Map<String, String>> allowed) {
+    private File writeAllowedLicenses(List<Map<String, Object>> allowed) {
         File allowedLicensesFile = temporaryDirectory.resolve('allowed-licenses.json').toFile()
         allowedLicensesFile.text = JsonOutput.toJson([allowedLicenses: allowed])
         return allowedLicensesFile
     }
 
-    private void filter(ModuleData module, List<Map<String, String>> allowed) {
+    private void filter(ModuleData module, List<Map<String, Object>> allowed) {
         File allowedLicensesFile = writeAllowedLicenses(allowed)
         ConfigurationData configuration =
                 new ConfigurationData('runtimeClasspath', [module] as LinkedHashSet<ModuleData>)

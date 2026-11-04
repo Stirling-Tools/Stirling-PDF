@@ -144,10 +144,19 @@ Every entry must set a category, otherwise the license report fails. Entries are
 with no allowed license still fails `checkLicense`. Ties keep the plugin's alphabetical choice.
 
 A POM cannot say whether its licenses are alternatives or all apply, so the filter treats them as
-alternatives. When all of them apply, add one entry for the module that joins the names with
-` AND `, for example `"BSD 3-clause License w/nuclear disclaimer AND JJ2000"`. The dependency is
-then reported under that combined license, and the build fails if a later version stops declaring
-one of the parts.
+alternatives. When all of them apply, add one entry for the module that lists them in `allOf`:
+
+```json
+{
+  "moduleName": "com.github.jai-imageio:jai-imageio-jpeg2000",
+  "moduleLicense": "BSD 3-clause License w/nuclear disclaimer AND JJ2000",
+  "allOf": ["BSD 3-clause License w/nuclear disclaimer", "JJ2000"],
+  "category": "permissive"
+}
+```
+
+The dependency is then reported under the entry's `moduleLicense`, and the build fails if a later
+version stops declaring one of the listed licenses.
 
 When the reported license is not `permissive`, the dependency's URL becomes its `-sources.jar` on
 Maven Central for the resolved version. Maven Central requires a sources jar for every published jar

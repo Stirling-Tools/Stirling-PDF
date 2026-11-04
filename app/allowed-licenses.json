@@ -103,6 +103,10 @@
     {
       "moduleName": "com.github.jai-imageio:jai-imageio-jpeg2000",
       "moduleLicense": "BSD 3-clause License w/nuclear disclaimer AND JJ2000",
+      "allOf": [
+        "BSD 3-clause License w/nuclear disclaimer",
+        "JJ2000"
+      ],
       "category": "permissive"
     },
     {
@@ -187,37 +191,12 @@
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "CDDL+GPL License",
-      "category": "weak-copyleft"
-    },
-    {
-      "moduleName": ".*",
       "moduleLicense": "BSD",
       "category": "permissive"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "UnboundID SCIM2 SDK Free Use License",
-      "category": "permissive"
-    },
-    {
-      "moduleName": ".*",
       "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0",
-      "category": "weak-copyleft"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License 1.0",
-      "category": "weak-copyleft"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License - v 1.0",
-      "category": "weak-copyleft"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License v2.0",
       "category": "weak-copyleft"
     },
     {
@@ -232,11 +211,6 @@
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License - Version 2.0",
-      "category": "weak-copyleft"
-    },
-    {
-      "moduleName": ".*",
       "moduleLicense": "Eclipse Public License, Version 2.0",
       "category": "weak-copyleft"
     },
@@ -244,11 +218,6 @@
       "moduleName": ".*",
       "moduleLicense": "EPL-2.0",
       "category": "weak-copyleft"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "Ubuntu Font Licence 1.0",
-      "category": "permissive"
     },
     {
       "moduleName": ".*",

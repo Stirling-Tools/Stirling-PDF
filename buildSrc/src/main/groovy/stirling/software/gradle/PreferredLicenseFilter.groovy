@@ -22,9 +22,9 @@ import org.gradle.api.GradleException
  * <p>A module is rewritten to report only the chosen license, in the report and in
  * {@code checkLicense}, unless its default license is already the chosen permissive one.
  *
- * <p>An entry whose {@code moduleLicense} joins names with {@code " AND "} marks licenses that all
- * apply to a module rather than being alternatives. It is reported as that one combined license, and
- * the build fails if the module declares some of its parts but not all of them.
+ * <p>An entry with an {@code allOf} list marks licenses that all apply to a module rather than being
+ * alternatives. The module is reported under the entry's {@code moduleLicense}, and the build fails
+ * if it declares some of the listed licenses but not all of them.
  *
  * <p>Entries are matched as {@code checkLicense} matches them, so the two agree on which licenses
  * are allowed. Every entry must set a valid {@code category}, otherwise the build fails.
@@ -32,7 +32,6 @@ import org.gradle.api.GradleException
 class PreferredLicenseFilter implements DependencyFilter {
     private static final String MAVEN_CENTRAL = 'https://repo1.maven.org/maven2'
     private static final List<String> CATEGORIES = ['permissive', 'weak-copyleft']
-    private static final String ALL_OF = ' AND '
 
     private final File allowedLicensesFile
 
@@ -42,7 +41,7 @@ class PreferredLicenseFilter implements DependencyFilter {
 
     @Override
     ProjectData filter(ProjectData projectData) {
-        List<Map<String, String>> entries = loadEntries(allowedLicensesFile)
+        List<Map<String, Object>> entries = loadEntries(allowedLicensesFile)
         projectData.configurations
                 .collectMany { configuration -> configuration.dependencies }
                 .each { module -> applyPreferredLicense(module, entries) }
@@ -50,14 +49,21 @@ class PreferredLicenseFilter implements DependencyFilter {
     }
 
     @PackageScope
-    static List<Map<String, String>> loadEntries(File allowedLicensesFile) {
-        List<Map<String, String>> entries =
-                new JsonSlurper().parse(allowedLicensesFile).allowedLicenses as List<Map<String, String>>
+    static List<Map<String, Object>> loadEntries(File allowedLicensesFile) {
+        List<Map<String, Object>> entries =
+                new JsonSlurper().parse(allowedLicensesFile).allowedLicenses as List<Map<String, Object>>
         entries.each { entry ->
             if (!CATEGORIES.contains(entry.category)) {
                 throw new GradleException(
                         "Allowed license ${entry.moduleLicense} for ${entry.moduleName} must set " +
                                 "'category' to one of ${CATEGORIES} in ${allowedLicensesFile}")
+            }
+            if (entry.containsKey('allOf')
+                    && !(entry.allOf instanceof List && entry.allOf.size() > 1
+                            && entry.allOf.every { part -> part instanceof String && !part.isBlank() })) {
+                throw new GradleException(
+                        "Allowed license ${entry.moduleLicense} for ${entry.moduleName} must list at least " +
+                                "two license names in 'allOf' in ${allowedLicensesFile}")
             }
         }
         return entries
@@ -69,8 +75,8 @@ class PreferredLicenseFilter implements DependencyFilter {
      */
     @PackageScope
     static String categoryOf(
-            String moduleName, String moduleVersion, String licenseName, List<Map<String, String>> entries) {
-        List<Map<String, String>> matching = entries.findAll { entry ->
+            String moduleName, String moduleVersion, String licenseName, List<Map<String, Object>> entries) {
+        List<Map<String, Object>> matching = entries.findAll { entry ->
             matches(moduleName, entry.moduleName)
                     && matches(moduleVersion, entry.moduleVersion)
                     && matches(licenseName, entry.moduleLicense)
@@ -78,7 +84,7 @@ class PreferredLicenseFilter implements DependencyFilter {
         return matching.collect { entry -> entry.category }.max { category -> CATEGORIES.indexOf(category) }
     }
 
-    private static void applyPreferredLicense(ModuleData module, List<Map<String, String>> entries) {
+    private static void applyPreferredLicense(ModuleData module, List<Map<String, Object>> entries) {
         String moduleName = "${module.group}:${module.name}"
         Map<String, License> declared = LicenseDataCollector.multiModuleLicenseInfo(module).licenses
                 .findAll { license -> license.name }
@@ -126,18 +132,18 @@ class PreferredLicenseFilter implements DependencyFilter {
             String moduleName,
             String moduleVersion,
             Map<String, License> declared,
-            List<Map<String, String>> entries) {
-        Map<String, String> entry = entries.find { candidate ->
-            candidate.moduleLicense?.contains(ALL_OF)
+            List<Map<String, Object>> entries) {
+        Map<String, Object> entry = entries.find { candidate ->
+            candidate.allOf
                     && matches(moduleName, candidate.moduleName)
                     && matches(moduleVersion, candidate.moduleVersion)
-                    && candidate.moduleLicense.split(ALL_OF).any { part -> declared.containsKey(part) }
+                    && candidate.allOf.any { part -> declared.containsKey(part) }
         }
         if (entry == null) {
             return [:]
         }
 
-        List<String> parts = entry.moduleLicense.split(ALL_OF) as List<String>
+        List<String> parts = entry.allOf as List<String>
         List<String> missing = parts.findAll { part -> !declared.containsKey(part) }
         if (!missing.isEmpty()) {
             throw new GradleException(
