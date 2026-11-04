@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Banner, Button, Card, Dropdown, Logo, Skeleton } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
@@ -126,8 +125,6 @@ function SignedOut({ onSignIn }: { onSignIn: () => void }) {
 function SignedIn() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
   const queryClient = useQueryClient();
   const procurement = useProcurement();
   const gate = useConnectGate();
@@ -190,12 +187,6 @@ function SignedIn() {
       );
   }, [data, isLinked, queryClient]);
 
-  // Only a visit opened from within the app has somewhere in it to return to; a link straight here,
-  // or the return from signing in, goes to the app itself.
-  const goBack = () =>
-    (location.state as { fromApp?: boolean } | null)?.fromApp
-      ? navigate(-1)
-      : navigate("/");
   const schedule = () => procurement.setExtra("schedule");
 
   // While the trial starts from the saved answers the page stays on its placeholder rather than
@@ -222,15 +213,6 @@ function SignedIn() {
       company={company}
       onInvite={canManage ? () => openSettings("users") : undefined}
       scrollKey={flowOpen ? "flow" : "page"}
-      headerAction={
-        <Button
-          variant="tertiary"
-          leftSection={<Icon name="arrow-left" size={16} />}
-          onClick={goBack}
-        >
-          {t("portal.enterprise.back", "Back to Stirling")}
-        </Button>
-      }
       // A deal carries its own contact section, so the footer would only repeat it.
       onSchedule={loading || !isLinked || exploring ? schedule : undefined}
     >

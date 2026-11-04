@@ -9155,7 +9155,6 @@ time = "Time"
 user = "User"
 
 [portal.enterprise]
-back = "Back to Stirling"
 brandTag = "Enterprise"
 callInfo = "A 15-minute call. Bring your questions on pricing, deployment or security, or plan your rollout together."
 callTitle = "Talk to a solutions engineer"
