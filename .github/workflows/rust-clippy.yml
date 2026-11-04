@@ -31,6 +31,9 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Cargo build scripts run third-party code; none of it needs the token.
+          persist-credentials: false
 
       - name: Install dependencies (ubuntu only)
         if: runner.os == 'Linux'

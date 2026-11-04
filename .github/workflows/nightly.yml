@@ -100,6 +100,16 @@ jobs:
       sign: false
     secrets: inherit
 
+  # Same reason as warm-tauri-cache: PR runs restore the Clippy cache but never
+  # write it, because Actions scopes a cache written on a PR to that PR alone.
+  # The nightly run on main is what makes the key reusable.
+  clippy:
+    name: Rust Clippy
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/rust-clippy.yml
+
   # Runs the @nightly tag (conversion scenarios) plus a 10-shard concurrency run
   # of every other feature.
   cucumber-nightly:
