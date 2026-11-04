@@ -45,6 +45,7 @@ import {
 } from "@processor/components/sources/connectionTypes";
 import { createIntegration } from "@processor/api/integrations";
 import "@processor/components/sources/SourceModal.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 function webhookUrl(webhookId: string): string {
   return `${window.location.origin}/api/v1/webhooks/${webhookId}`;
@@ -505,6 +506,7 @@ export function SourceModal({
       <Input
         type={field.control === "password" ? "password" : undefined}
         value={options[field.key] ?? ""}
+        className={privateContentClassName}
         placeholder={field.placeholderKey ? t(field.placeholderKey) : undefined}
         onChange={(e) => setOption(field.key, e.target.value)}
       />
@@ -675,6 +677,7 @@ export function SourceModal({
                   <div className="portal-source-modal__copy-row">
                     <Input
                       value={webhookUrl(editingWebhookId)}
+                      className={privateContentClassName}
                       readOnly
                       onFocus={(e) => e.currentTarget.select()}
                     />
@@ -744,6 +747,7 @@ export function SourceModal({
             <div className="portal-source-modal__copy-row">
               <Input
                 value={webhookUrl(reveal.webhookId)}
+                className={privateContentClassName}
                 readOnly
                 onFocus={(e) => e.currentTarget.select()}
               />
@@ -763,6 +767,7 @@ export function SourceModal({
             <div className="portal-source-modal__copy-row">
               <Input
                 value={reveal.secret}
+                className={privateContentClassName}
                 readOnly
                 onFocus={(e) => e.currentTarget.select()}
               />
