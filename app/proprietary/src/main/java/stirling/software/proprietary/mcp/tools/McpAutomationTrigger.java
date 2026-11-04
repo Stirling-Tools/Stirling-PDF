@@ -65,7 +65,7 @@ public class McpAutomationTrigger {
         try {
             wiring = automations.wiring(context.stirlingUserId(), automationId);
         } catch (McpAutomations.AutomationException e) {
-            return McpResponses.error(mapper, e.getMessage());
+            return McpResponses.error(mapper, e.getMessage(), e.failure());
         }
         List<MultipartFile> inputs = new ArrayList<>();
         if (fileGiven(args)) {
@@ -144,7 +144,7 @@ public class McpAutomationTrigger {
         try {
             started = automations.trigger(context.stirlingUserId(), wiring.id(), inputs);
         } catch (McpAutomations.AutomationException e) {
-            return McpResponses.error(mapper, e.getMessage());
+            return McpResponses.error(mapper, e.getMessage(), e.failure());
         }
         List<PolicyRunView> views =
                 started.runIds().size() <= MAX_AWAITED_RUNS

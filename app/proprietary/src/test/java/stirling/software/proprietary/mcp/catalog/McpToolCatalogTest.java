@@ -8,13 +8,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
@@ -154,5 +159,64 @@ class McpToolCatalogTest {
         Field f = McpToolCatalog.class.getDeclaredField(field);
         f.setAccessible(true);
         ((Map<String, OperationMeta>) f.get(catalog)).put(id, meta);
+    }
+
+    @Test
+    void catalogIncludesBodyAndHandlerParametersWithAllRequiredNames() throws Exception {
+        ApplicationContext ctx = mock(ApplicationContext.class);
+        RequestMappingHandlerMapping mapping = mock(RequestMappingHandlerMapping.class);
+        HandlerMethod handler =
+                new HandlerMethod(
+                        new MixedHandler(),
+                        MixedHandler.class.getDeclaredMethod(
+                                "convert",
+                                MixedRequest.class,
+                                String.class,
+                                String.class,
+                                boolean.class));
+        RequestMappingInfo route =
+                RequestMappingInfo.paths("/api/v1/misc/mixed").methods(RequestMethod.POST).build();
+        when(mapping.getHandlerMethods()).thenReturn(Map.of(route, handler));
+        when(ctx.getBeansOfType(RequestMappingHandlerMapping.class))
+                .thenReturn(Map.of("api", mapping));
+        EndpointConfiguration endpoints = mock(EndpointConfiguration.class);
+        when(endpoints.isEndpointEnabledForUri(anyString())).thenReturn(true);
+        McpToolCatalog catalog =
+                new McpToolCatalog(ctx, endpoints, new ApplicationProperties(), mapper);
+        catalog.discover();
+
+        var schema = catalog.findByOperationId("mixed").orElseThrow().paramSchema();
+        assertTrue(schema.path("properties").has("title"));
+        assertEquals(
+                "Body title", schema.path("properties").path("title").path("description").asText());
+        assertEquals("string", schema.path("properties").path("locale").path("type").asText());
+        assertEquals(
+                "boolean",
+                schema.path("properties").path("useStirlingOfficeConvert").path("type").asText());
+        assertFalse(
+                schema.path("properties")
+                        .path("useStirlingOfficeConvert")
+                        .path("default")
+                        .asBoolean(true));
+        Set<String> required = new HashSet<>();
+        schema.path("required").forEach(value -> required.add(value.asText()));
+        assertEquals(Set.of("title", "locale"), required);
+        assertEquals(required.size(), schema.path("required").size());
+        assertFalse(schema.path("additionalProperties").asBoolean());
+    }
+
+    static class MixedRequest {
+        @io.swagger.v3.oas.annotations.media.Schema(description = "Body title")
+        @jakarta.validation.constraints.NotBlank
+        String title;
+    }
+
+    static class MixedHandler {
+        public void convert(
+                @ModelAttribute MixedRequest body,
+                @RequestParam(name = "title") String title,
+                @RequestParam(name = "locale") String locale,
+                @RequestParam(name = "useStirlingOfficeConvert", defaultValue = "false")
+                        boolean office) {}
     }
 }

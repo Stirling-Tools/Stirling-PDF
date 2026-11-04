@@ -75,8 +75,8 @@
 <input id="picker" type="file" accept=".pdf,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.html,.md,.csv,.epub,.mobi,.azw3,.fb2,.eml,.msg,.zip,.cbz,.cbr,.ps,.eps,.svg,.p12,.pfx,.pem,.crt,.cer,.der,.key,.jks">
 <script>
 (function () {
-  var INLINE_FILES = 3;
   "use strict";
+  var INLINE_FILES = 3;
   var root = document.getElementById("root");
   var picker = document.getElementById("picker");
   var openai = window.openai;
@@ -365,7 +365,6 @@
     });
   }
 
-  // Files already in Stirling; choosing one tells the assistant its fileId.
   // Files already in Stirling; choosing one tells the assistant its fileId. Kept compact:
   // a few recent files inline, the rest behind "Show all" with a filter.
   function renderRecent(files, purpose, library) {

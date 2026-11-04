@@ -139,7 +139,8 @@ public class StirlingRunPipelineTool implements McpTool {
                             step.meta().id()
                                     + " needs the '"
                                     + step.meta().requiredScope()
-                                    + "' scope.");
+                                    + "' scope.",
+                            McpResponses.Failure.INSUFFICIENT_SCOPE);
                 }
             }
             ObjectNode result = runner.executePipeline(steps, arguments, context);
@@ -162,7 +163,7 @@ public class StirlingRunPipelineTool implements McpTool {
             }
             return result;
         } catch (McpAutomations.AutomationException e) {
-            return McpResponses.error(mapper, e.getMessage());
+            return McpResponses.error(mapper, e.getMessage(), e.failure());
         }
     }
 }

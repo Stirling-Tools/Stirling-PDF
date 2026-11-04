@@ -62,7 +62,7 @@ Put Stirling PDF behind a proxy that terminates TLS on 443 and passes MCP reques
 - **Body size**: allow at least `mcp.maxRequestBytes` plus headroom. Files sent inline or through the file picker travel as base64 inside the request, which adds about a third.
 - **Timeouts**: long operations such as OCR or office conversion hold the request open. Allow several minutes for reads and sends.
 - **Buffering off**: stream responses instead of buffering them.
-- **Forwarded headers**: send `X-Forwarded-Proto` and `X-Forwarded-Host`. Stirling uses them to build the `resource_metadata` URL in its `401` response; without them clients are pointed at `http://` and the connection fails. Stirling trusts these headers from proxies on private addresses; if your proxy connects from a public address, configure trusted proxies (for example `server.tomcat.remoteip.internal-proxies`).
+- **Forwarded headers**: send `X-Forwarded-Proto` and `X-Forwarded-Host`. Stirling uses them to build the `resource_metadata` URL in its `401` response; without them clients are pointed at `http://` and the connection fails. The embedded Jetty server already uses `server.forward-headers-strategy=NATIVE`. Restrict direct access to the application port to trusted reverse proxies, and configure the edge proxy to discard incoming `Forwarded` and `X-Forwarded-*` headers before setting its own values. See [Spring Boot’s reverse-proxy guidance](https://docs.spring.io/spring-boot/4.1/how-to/webserver.html#howto.webserver.use-behind-a-proxy-server).
 
 nginx:
 
@@ -174,7 +174,7 @@ Each result is saved as a temporary file owned by the user and kept for `mcp.res
 1. A signed-out visitor goes straight to the Stirling sign-in page.
 2. After sign-in they return to the share page, which runs the action: **Download** saves the file, **Open in Stirling PDF** (`?action=open`) opens it in the editor.
 
-Any signed-in user of your Stirling PDF who has the link can open it until it expires, so treat links like the file itself.
+Only the result’s owner can open its private link, and only until it expires. Other signed-in users who have the link are refused.
 
 **Public links** (`mcp.downloadLinks: public`) point at `https://pdf.example.com/api/v1/storage/share-links/<token>` and download without signing in until they expire. They are built from `system.backendUrl`, so set it to your public URL.
 

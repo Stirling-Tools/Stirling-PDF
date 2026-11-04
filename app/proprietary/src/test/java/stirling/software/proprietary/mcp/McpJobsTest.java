@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
@@ -67,7 +69,7 @@ class McpJobsTest {
                 "other users see nothing");
 
         release.countDown();
-        finished.await(5, TimeUnit.SECONDS);
+        assertTrue(finished.await(5, TimeUnit.SECONDS), "work did not finish");
         ObjectNode done = waitForCompletion(jobId);
         assertEquals("ocr done", done.get("content").get(0).get("text").asText());
     }
@@ -78,20 +80,17 @@ class McpJobsTest {
         assertTrue(jobs.status("not-ours", "alice").get("isError").asBoolean());
     }
 
-    private ObjectNode waitForCompletion(String jobId) throws InterruptedException {
-        for (int i = 0; i < 50; i++) {
-            ObjectNode status = jobs.status(jobId, "alice");
-            if (!status.has("structuredContent")) {
-                return status;
-            }
-            Thread.sleep(50);
-        }
-        throw new AssertionError("job never completed");
+    private ObjectNode waitForCompletion(String jobId) {
+        return Awaitility.await()
+                .atMost(Duration.ofSeconds(10))
+                .until(
+                        () -> jobs.status(jobId, "alice"),
+                        status -> !status.has("structuredContent"));
     }
 
     private static void await(CountDownLatch latch) {
         try {
-            latch.await(10, TimeUnit.SECONDS);
+            assertTrue(latch.await(10, TimeUnit.SECONDS), "work was not released");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

@@ -878,4 +878,19 @@ class McpPipelineTest {
         verify(policies).savePolicy(policy.capture());
         assertEquals("SERVER", policy.getValue().steps().getFirst().parameters().get("certType"));
     }
+
+    @Test
+    void pipelineScopeRefusalIsNotRetryable() {
+        McpCallContext readOnly = new McpCallContext("alice", Set.of("mcp.tools.read"), true);
+        ObjectNode result =
+                new StirlingRunPipelineTool(mapper, automations, provider(executor))
+                        .call(args(steps("repair")), readOnly);
+
+        assertTrue(result.path("isError").asBoolean());
+        assertEquals(
+                "insufficient_scope",
+                result.path("structuredContent").path("error").path("code").asText());
+        assertFalse(
+                result.path("structuredContent").path("error").path("retryable").asBoolean(true));
+    }
 }

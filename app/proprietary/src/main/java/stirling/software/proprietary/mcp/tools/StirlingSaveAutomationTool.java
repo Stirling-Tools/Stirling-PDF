@@ -251,7 +251,7 @@ public class StirlingSaveAutomationTool implements McpTool {
             }
             return result;
         } catch (McpAutomations.AutomationException e) {
-            return McpResponses.error(mapper, e.getMessage());
+            return McpResponses.error(mapper, e.getMessage(), e.failure());
         }
     }
 }

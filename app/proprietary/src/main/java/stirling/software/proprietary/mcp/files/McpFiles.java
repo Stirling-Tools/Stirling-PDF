@@ -12,7 +12,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -461,6 +463,11 @@ public class McpFiles {
         String resourceId = applicationProperties.getMcp().getAuth().getResourceId();
         if (resourceId != null && resourceId.endsWith("/mcp")) {
             return resourceId.substring(0, resourceId.length() - "/mcp".length());
+        }
+        if (RequestContextHolder.getRequestAttributes() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Set system.backendUrl so links can be built outside a request.");
         }
         return stripSlash(ServletUriComponentsBuilder.fromCurrentContextPath().toUriString());
     }

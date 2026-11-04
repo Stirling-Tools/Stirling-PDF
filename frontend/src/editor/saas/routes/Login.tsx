@@ -258,13 +258,11 @@ export default function Login() {
           "[Login] Anonymous sign in successful, refreshing session...",
         );
 
-        // Refresh session to ensure backend endpoints are properly synchronized
         await refreshSession();
-
-        console.log(
-          "[Login] Session refreshed, user will be redirected by auth state change",
-        );
-        // User will be redirected by the auth state change after session refresh
+        const remembered = takePendingDestination();
+        navigate(nextPath ?? remembered ?? (await resolveLandingPath()), {
+          replace: true,
+        });
       }
     } catch (err) {
       console.error("[Login] Unexpected error:", err);
