@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
-import java.util.Calendar;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -180,19 +179,12 @@ public class MetadataController {
                     }
                 }
             }
-            // Set creation date using utility method
-            Calendar creationDateCal =
-                    keepOmitted && creationDate == null
-                            ? info.getCreationDate()
-                            : PdfMetadataService.parseToCalendar(creationDate);
-            info.setCreationDate(creationDateCal);
-
-            // Set modification date using utility method
-            Calendar modificationDateCal =
-                    keepOmitted && modificationDate == null
-                            ? info.getModificationDate()
-                            : PdfMetadataService.parseToCalendar(modificationDate);
-            info.setModificationDate(modificationDateCal);
+            if (!keepOmitted || creationDate != null) {
+                info.setCreationDate(PdfMetadataService.parseToCalendar(creationDate));
+            }
+            if (!keepOmitted || modificationDate != null) {
+                info.setModificationDate(PdfMetadataService.parseToCalendar(modificationDate));
+            }
             info.setCreator(creator);
             info.setKeywords(keywords);
             info.setAuthor(author);
