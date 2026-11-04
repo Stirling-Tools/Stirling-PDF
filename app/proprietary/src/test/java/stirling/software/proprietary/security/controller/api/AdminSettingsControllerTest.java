@@ -746,23 +746,25 @@ class AdminSettingsControllerTest {
                 ResponseEntity<Map<String, Object>> response = controller.completeSetup();
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                assertThat(response.getBody()).containsEntry("persisted", true);
                 assertThat(applicationProperties.getSystem().isSetupCompleted()).isTrue();
                 mocked.verify(() -> GeneralUtils.saveKeyToSettings("system.setupCompleted", true));
             }
         }
 
         @Test
-        @DisplayName("returns 500 and leaves the flag unset when saving fails")
+        @DisplayName("applies the flag in memory even when the settings file cannot be written")
         void saveFails() {
             applicationProperties.getSystem().setSetupCompleted(false);
             try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
                 mocked.when(() -> GeneralUtils.saveKeyToSettings("system.setupCompleted", true))
-                        .thenThrow(new IOException("disk full"));
+                        .thenThrow(new IOException("read-only file system"));
 
                 ResponseEntity<Map<String, Object>> response = controller.completeSetup();
 
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-                assertThat(applicationProperties.getSystem().isSetupCompleted()).isFalse();
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                assertThat(response.getBody()).containsEntry("persisted", false);
+                assertThat(applicationProperties.getSystem().isSetupCompleted()).isTrue();
             }
         }
     }

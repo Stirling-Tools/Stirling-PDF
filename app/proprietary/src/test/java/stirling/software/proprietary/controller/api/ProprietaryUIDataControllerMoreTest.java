@@ -148,6 +148,7 @@ class ProprietaryUIDataControllerMoreTest {
         void singleAdminFirstLogin() {
             User admin = normalUser(1L, "admin");
             admin.setFirstLogin(true);
+            applicationProperties.getSystem().setSetupCompleted(false);
             when(userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId()))
                     .thenReturn(1L);
             when(userRepository.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(admin));
