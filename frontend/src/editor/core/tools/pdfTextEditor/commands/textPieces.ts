@@ -151,6 +151,24 @@ export function inkStarts(text: string, from: number, to: number): number[] {
 }
 
 /**
+ * The characters from code unit `from` to `to` of a source's `text` that its
+ * glyphs drew, given where it drew them: what redrawing them draws. A space
+ * the text page inferred from a gap is left to the gap, as the source left it,
+ * and a subset font may have no glyph to draw it with.
+ */
+export function glyphText(
+  text: string,
+  origins: ReadonlyMap<number, Point>,
+  from: number,
+  to: number,
+): string {
+  return charStarts(text)
+    .filter((at) => at >= from && at < to && origins.has(at))
+    .map((at) => String.fromCodePoint(text.codePointAt(at)!))
+    .join("");
+}
+
+/**
  * Where to start drawing a piece of `text` from code unit `from`: the
  * source's place for the first character from there that a glyph drew, or
  * failing that the last before it. A piece needing the second is only spaces
@@ -261,9 +279,8 @@ export function placeGlyphs(
       // as a new object, which lays out without it, so is measured afresh.
       const cuts = fresh ? breaks : breaks.slice(0, 1);
       if (cuts.length === 0) continue;
-      if (
-        !setPieceText(m, head.ptr, piece.text.slice(head.from, cuts[0]), null)
-      ) {
+      const kept = glyphText(piece.text, piece.origins, head.from, cuts[0]);
+      if (!setPieceText(m, head.ptr, kept, null)) {
         throw new Error("PDFium could not redraw the text");
       }
       let index = pageObjectIndex(m, page, head.ptr);
@@ -274,7 +291,7 @@ export function placeGlyphs(
           docPtr,
           page,
           piece.source,
-          piece.text.slice(from, ends[i]),
+          glyphText(piece.text, piece.origins, from, ends[i]),
           piece.origins.get(from)!,
           piece.tags,
           ++index,

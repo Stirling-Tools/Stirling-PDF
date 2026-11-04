@@ -118,6 +118,11 @@ function cutPdf(): Uint8Array {
 
 /** A page whose one paragraph (MCID 0) draws `line`, a text-showing operation with its spacing set before it. */
 function linePdf(line: string): Uint8Array {
+  return paragraphPdf(`BT /F1 12 Tf 72 700 Td ${line} ET`);
+}
+
+/** A page whose one paragraph (MCID 0) is drawn by `content`, with font F1 Helvetica. */
+function paragraphPdf(content: string): Uint8Array {
   return buildClassicPdf(
     [
       {
@@ -133,10 +138,7 @@ function linePdf(line: string): Uint8Array {
       },
       {
         num: 4,
-        body: streamBody(
-          "",
-          `/P <</MCID 0>> BDC BT /F1 12 Tf 72 700 Td ${line} ET EMC\n`,
-        ),
+        body: streamBody("", `/P <</MCID 0>> BDC ${content} EMC\n`),
       },
       {
         num: 5,
@@ -175,6 +177,19 @@ async function openSample(): Promise<EditorDocument> {
   opened.push(doc);
   PdfiumTextReader.populate(doc, doc.page(1));
   return doc;
+}
+
+/**
+ * Chrome's "Save as PDF" output: each glyph an object of its own and each
+ * word space another, in fonts subset to the glyphs each draws, with some
+ * text inside a form XObject.
+ */
+async function openChromePdf(): Promise<EditorDocument> {
+  const file = path.join(
+    import.meta.dirname,
+    "../../../tests/test-fixtures/stirling-marketing.pdf",
+  );
+  return open(new Uint8Array(await readFile(file)));
 }
 
 function runWith(doc: EditorDocument, fragment: string, pageIndex = 0) {
@@ -261,7 +276,7 @@ interface Glyph {
   y: number;
 }
 
-/** Every glyph page 0 draws with ink, left to right. */
+/** Every glyph page 0 draws with ink, line by line from the top, left to right. */
 function inkGlyphs(doc: EditorDocument): Glyph[] {
   const m = doc.module;
   const textPage = m.FPDFText_LoadPage(doc.page(0).pagePtr);
@@ -286,7 +301,8 @@ function inkGlyphs(doc: EditorDocument): Glyph[] {
     m.pdfium.wasmExports.free(y);
     m.FPDFText_ClosePage(textPage);
   }
-  return glyphs.sort((a, b) => a.x - b.x);
+  const line = (glyph: Glyph) => Math.round(glyph.y * 10);
+  return glyphs.sort((a, b) => line(b) - line(a) || a.x - b.x);
 }
 
 function words(text: string): string[] {
@@ -551,6 +567,49 @@ describe("tagging part of a spaced or kerned line", () => {
   });
 });
 
+describe("tagging part of a line of a Chrome-produced file", () => {
+  test("draws every glyph where it was, and saves the text it tagged", async () => {
+    const doc = await openChromePdf();
+    const text = runWith(doc, "Free Adobe").text;
+    const before = inkGlyphs(doc);
+    tagRange(doc, new HistoryStack(), "Free Adobe", "Span");
+    expectDrawnAt(inkGlyphs(doc), before);
+
+    const saved = await open(await savedBytes(doc));
+    expectDrawnAt(inkGlyphs(saved), before);
+    const run = runWith(saved, "Free Adobe");
+    expect(words(run.text)).toEqual(words(text));
+    // Chrome wraps the heading's text in a NonStruct, which keeps the text
+    // either side.
+    expect(
+      innerTags(saved, run.snapshot()).map(({ text, role }) => [
+        text.trim(),
+        role.type,
+      ]),
+    ).toEqual([
+      ["The", "NonStruct"],
+      ["Free Adobe", "Span"],
+      ["Acrobat Alternative", "NonStruct"],
+    ]);
+  });
+
+  test("offers no tag for part of text inside a form XObject, which apply refuses", async () => {
+    const doc = await openChromePdf();
+    const run = runWith(doc, "Open Source");
+    const start = run.text.indexOf("Source");
+    const end = start + "Source".length;
+    expect(rangeTagTypes(doc, 0, run.id, start, end)).toEqual([]);
+    const cut = new TagTextRangeCommand({
+      pageIndex: 0,
+      runId: run.id,
+      start,
+      end,
+      as: "Span",
+    });
+    expect(() => new HistoryStack().execute(cut, doc)).toThrow();
+  });
+});
+
 describe("a block cut from part of a run", () => {
   test("gets a run of its own, as a read of the page groups it", async () => {
     const doc = await open(cutPdf());
@@ -682,6 +741,22 @@ describe("which tags part of a run's text can take", () => {
       TEXT_RANGE_TYPES.filter(isInlineType),
     );
     expect(typesFor(doc, 1, "in the appendix")).toEqual([]);
+  });
+
+  test("offers none for text its element draws out of reading order, which apply refuses", async () => {
+    const doc = await open(
+      paragraphPdf(
+        "BT /F1 12 Tf 72 700 Td (Sales ) Tj ET " +
+          "BT /F1 12 Tf 176.06 700 Td (region.) Tj ET " +
+          "BT /F1 12 Tf 105.35 700 Td (rose in every ) Tj ET",
+      ),
+    );
+    const run = runWith(doc, "Sales rose in every region.");
+    const end = "Sales rose".length;
+    expect(rangeTagTypes(doc, 0, run.id, 0, end)).toEqual([]);
+    expect(() =>
+      tagRange(doc, new HistoryStack(), "Sales rose", "Span"),
+    ).toThrow();
   });
 
   test("offers none for untagged text or only spaces", async () => {
