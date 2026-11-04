@@ -16,7 +16,7 @@ import stirling.software.common.model.api.PDFFile;
 public class AddAttachmentRequest extends PDFFile {
 
     @Schema(
-            description = "The image file to be overlaid onto the PDF.",
+            description = "Files to attach to the PDF (up to 50 MB each, 200 MB in total)",
             requiredMode = Schema.RequiredMode.REQUIRED,
             format = "binary")
     private List<MultipartFile> attachments;

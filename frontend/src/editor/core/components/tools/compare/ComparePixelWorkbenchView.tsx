@@ -9,6 +9,7 @@ import type {
   ComparePixelPageResult,
 } from "@editor/types/compare";
 import "@editor/components/tools/compare/compareView.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface ComparePixelWorkbenchViewProps {
   result: CompareResultPixelData;
@@ -70,6 +71,7 @@ const PixelPageCard = ({
         <div className="compare-pixel-triptych">
           <figure>
             <img
+              className={privateContentClassName}
               src={page.baseImageUrl}
               alt={t("compare.pixel.base", "Original")}
               loading="lazy"
@@ -80,6 +82,7 @@ const PixelPageCard = ({
           </figure>
           <figure>
             <img
+              className={privateContentClassName}
               src={page.diffImageUrl}
               alt={t("compare.pixel.diff", "Differences")}
               loading="lazy"
@@ -90,6 +93,7 @@ const PixelPageCard = ({
           </figure>
           <figure>
             <img
+              className={privateContentClassName}
               src={page.comparisonImageUrl}
               alt={t("compare.pixel.comparison", "Edited")}
               loading="lazy"
@@ -104,6 +108,7 @@ const PixelPageCard = ({
       {viewMode === "diff-only" && (
         <figure>
           <img
+            className={privateContentClassName}
             src={page.diffImageUrl}
             alt={t("compare.pixel.diff", "Differences")}
             loading="lazy"
@@ -120,14 +125,14 @@ const PixelPageCard = ({
             alt={t("compare.pixel.base", "Original")}
             loading="lazy"
             decoding="async"
-            className="compare-pixel-overlay-img"
+            className={`compare-pixel-overlay-img ${privateContentClassName}`}
           />
           <img
             src={page.diffImageUrl}
             alt={t("compare.pixel.diff", "Differences")}
             loading="lazy"
             decoding="async"
-            className="compare-pixel-overlay-img compare-pixel-overlay-top"
+            className={`compare-pixel-overlay-img compare-pixel-overlay-top ${privateContentClassName}`}
           />
         </div>
       )}

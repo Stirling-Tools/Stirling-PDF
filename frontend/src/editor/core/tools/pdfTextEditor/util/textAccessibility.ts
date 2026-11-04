@@ -5,6 +5,7 @@ import type {
   RetagBlocker,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
+import type { TextLanguage } from "@editor/tools/pdfTextEditor/model/languageTag";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { innermostMcid } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import type { TextRunSnapshot } from "@editor/tools/pdfTextEditor/types";
@@ -66,6 +67,9 @@ export interface InnerTag extends InnerOptions {
   start: number;
   end: number;
   role: StructureRole;
+  language: TextLanguage;
+  /** False when the save cannot write the page's tags. */
+  languageEditable: boolean;
 }
 
 /** The run's inner tags in reading order, as the session has them. */
@@ -84,7 +88,20 @@ export function innerTags(
       if (!role) return [];
       const options = structure.innerOptions(element.key);
       const text = run.text.slice(start, end);
-      return [{ key: element.key, text, start, end, role, ...options }];
+      const language = doc.innerLanguage(run.pageIndex, run.mcid!, element.key);
+      const languageEditable = structure.readOnly === null;
+      return [
+        {
+          key: element.key,
+          text,
+          start,
+          end,
+          role,
+          language,
+          languageEditable,
+          ...options,
+        },
+      ];
     },
   );
 }

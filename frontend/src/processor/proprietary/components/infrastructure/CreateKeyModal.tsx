@@ -6,6 +6,7 @@ import {
   type CreatedApiKey,
 } from "@processor/api/infrastructure";
 import { errorMessage } from "@processor/api/http";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export function CreateKeyModal({
   open,
@@ -90,6 +91,7 @@ export function CreateKeyModal({
         <div className="portal-infra__stack">
           <CodeBlock
             code={created.secret}
+            className={privateContentClassName}
             lang="bash"
             caption={t("portal.infrastructure.createKey.secretKeyCaption")}
           />
