@@ -17,6 +17,8 @@ function makeDoc(): EditorDocument {
   return {
     pageCount: 0,
     loadedPages: () => [],
+    documentLanguage: () => null,
+    languagesInUse: () => [],
     dispose: () => {},
   } as unknown as EditorDocument;
 }
