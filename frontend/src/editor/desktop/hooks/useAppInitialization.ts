@@ -97,8 +97,10 @@ export function useAppInitialization(): void {
           // Reopen the stored copy of a file disk has not changed, or every
           // open from Explorer stores the same file again.
           const storedCopies = await storedCopiesForNewFiles(loadedFiles);
-          const reopened = [...storedCopies.values()];
-          if (reopened.length > 0) await actions.addStirlingFileStubs(reopened);
+          const stubs = [...storedCopies.values()];
+          // Only what admission let in: skipping an encrypted file's unlock leaves it out.
+          const reopened =
+            stubs.length > 0 ? await actions.addStirlingFileStubs(stubs) : [];
           const fresh = loadedFiles.filter((file) => !storedCopies.has(file));
           // The lookup above is the dedupe for these, by path: the name, size
           // and date key would take an identical copy from another folder for
@@ -115,7 +117,7 @@ export function useAppInitialization(): void {
           actions.setSelectedFiles([
             ...new Set([
               ...selected,
-              ...reopened.map((stub) => stub.id),
+              ...reopened.map((file) => file.fileId),
               ...added.map((file) => file.fileId),
             ]),
           ]);

@@ -67,6 +67,7 @@ describe("useAppInitialization", () => {
       files.map((file) => Object.assign(file, { fileId: "new" })),
     );
     storedCopiesForNewFiles.mockResolvedValue(new Map());
+    addStirlingFileStubs.mockResolvedValue([]);
     getDiskFileState.mockResolvedValue({
       availability: "present",
       size: 4,
@@ -90,12 +91,25 @@ describe("useAppInitialization", () => {
     storedCopiesForNewFiles.mockImplementation(
       async (files: File[]) => new Map([[files[0], stub("stored")]]),
     );
+    addStirlingFileStubs.mockResolvedValue([{ fileId: "stored" }] as never);
 
     await open();
 
     expect(addStirlingFileStubs).toHaveBeenCalledWith([stub("stored")]);
     expect(addFiles).not.toHaveBeenCalled();
     expect(setSelectedFiles).toHaveBeenCalledWith(["stored"]);
+  });
+
+  it("selects only the stored copies that were admitted", async () => {
+    storedCopiesForNewFiles.mockImplementation(
+      async (files: File[]) => new Map([[files[0], stub("stored")]]),
+    );
+    // Skipping the unlock of an encrypted file leaves it out.
+    addStirlingFileStubs.mockResolvedValue([]);
+
+    await open();
+
+    expect(setSelectedFiles).toHaveBeenCalledWith([]);
   });
 
   it("lets a batch finish before the next one looks for stored copies", async () => {
