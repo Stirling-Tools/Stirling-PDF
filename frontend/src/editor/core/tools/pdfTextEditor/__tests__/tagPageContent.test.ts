@@ -17,6 +17,7 @@ import {
 } from "@editor/tools/pdfTextEditor/commands/TagPageContentCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { tagAllPages } from "@editor/tools/pdfTextEditor/hooks/useBulkTagging";
+import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
@@ -278,30 +279,30 @@ describe("TagPageContentCommand", () => {
   });
 });
 
-describe("tagAllPages", () => {
-  /** A store holding `bytes` as its document, its pages listed but none read. */
-  async function storeFor(bytes: Uint8Array): Promise<EditorStore> {
-    const doc = await EditorDocument.open(bytes);
-    const store = new EditorStore();
-    await store.setDocument(doc);
-    store.publishPages(
-      Array.from(
-        { length: doc.pageCount },
-        (_, pageIndex) =>
-          ({
-            pageIndex,
-            revision: -1,
-            runs: [],
-            images: [],
-            shapes: [],
-            annotations: [],
-            rules: [],
-          }) as unknown as PageSnapshot,
-      ),
-    );
-    return store;
-  }
+/** A store holding `bytes` as its document, its pages listed but none read. */
+async function storeFor(bytes: Uint8Array): Promise<EditorStore> {
+  const doc = await EditorDocument.open(bytes);
+  const store = new EditorStore();
+  await store.setDocument(doc);
+  store.publishPages(
+    Array.from(
+      { length: doc.pageCount },
+      (_, pageIndex) =>
+        ({
+          pageIndex,
+          revision: -1,
+          runs: [],
+          images: [],
+          shapes: [],
+          annotations: [],
+          rules: [],
+        }) as unknown as PageSnapshot,
+    ),
+  );
+  return store;
+}
 
+describe("tagAllPages", () => {
   test("reads and tags every page behind the loading overlay, as one undo step", async () => {
     const store = await storeFor(pagePdf(COLUMNS));
     const progress = vi.spyOn(store, "setProgress");
@@ -331,6 +332,36 @@ describe("tagAllPages", () => {
     const tagged = store.history.peekUndo();
     await tagAllPages(store);
     expect(store.history.peekUndo()).toBe(tagged);
+    store.dispose();
+  });
+});
+
+describe("readAllPagesInBackground", () => {
+  test("reads unread pages after yielding, then publishes them", async () => {
+    const store = await storeFor(pagePdf(COLUMNS));
+    readAllPagesInBackground(store);
+    expect(store.document!.page(0).loaded).toBe(false);
+
+    await vi.waitFor(() =>
+      expect(store.getState().pages[0].runs.length).toBeGreaterThan(0),
+    );
+    expect(store.document!.page(0).loaded).toBe(true);
+    store.dispose();
+  });
+
+  test("reads nothing once cancelled", async () => {
+    const store = await storeFor(pagePdf(COLUMNS));
+    const publish = vi.spyOn(store, "publishPages");
+    vi.useFakeTimers({ toFake: ["setTimeout"] });
+    try {
+      readAllPagesInBackground(store)();
+      await vi.runAllTimersAsync();
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(store.document!.page(0).loaded).toBe(false);
+    expect(publish).not.toHaveBeenCalled();
     store.dispose();
   });
 });

@@ -11,7 +11,7 @@ import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspec
 import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
 import { analyzePageFonts } from "@editor/tools/pdfTextEditor/util/pageFonts";
-import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
   ScanHint,
@@ -93,8 +93,7 @@ export function EditorSidebar({
     if (!reviewingAccessibility || (tab !== "document" && !imageSelected)) {
       return;
     }
-    const id = window.setTimeout(() => ensureAllPagesRead(store), 0);
-    return () => window.clearTimeout(id);
+    return readAllPagesInBackground(store);
   }, [reviewingAccessibility, tab, imageSelected, store]);
   const headings = useHeadingOutline(
     store,

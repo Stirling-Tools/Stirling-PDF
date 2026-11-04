@@ -92,10 +92,9 @@ function nearestScrollRoot(el: HTMLElement): HTMLElement | null {
   return null;
 }
 
-// One PDF page: a PDFium-rendered bitmap plus an HTML overlay layer with one
-// positioned, editable element per text run.
 /**
- * One page and its overlays. Memoised: with every page read, re-rendering them
+ * One PDF page: a PDFium-rendered bitmap plus an overlay with one positioned,
+ * editable element per text run. Memoised: with every page read, re-rendering them
  * all on each store change takes seconds, so a caller must pass handlers that
  * keep their identity across renders.
  */
