@@ -203,7 +203,7 @@ function AccessibilitySection({
           <StatRow
             label={t(
               "pdfTextEditor.inspector.accessibility.untaggedPages",
-              "Pages with untagged content",
+              "Pages to tag",
             )}
             value={untaggedPages}
           />
@@ -250,7 +250,7 @@ function TagUntaggedButton({
       w={260}
       label={t(
         "pdfTextEditor.inspector.accessibility.tagUntaggedHint",
-        "Tags text as paragraphs and images as figures, and marks everything else as decorative. Check the result and correct any headings, lists or reading order.",
+        "Automatically adds accessibility tags throughout the document. The result is rough: check headings, lists and reading order afterwards.",
       )}
     >
       <Button
@@ -265,7 +265,7 @@ function TagUntaggedButton({
       >
         {t(
           "pdfTextEditor.inspector.accessibility.tagUntagged",
-          "Tag untagged content",
+          "Auto-tag document",
         )}
       </Button>
     </Tooltip>

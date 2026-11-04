@@ -72,7 +72,7 @@ export async function tagAllPages(store: EditorStore): Promise<void> {
   const pageIndices = store.getState().pages.map((p) => p.pageIndex);
   const stage = i18n.t(
     "pdfTextEditor.inspector.accessibility.tagging",
-    "Tagging content",
+    "Tagging pages",
   );
   const applied: TagPageContentCommand[] = [];
   store.setLoading(true);

@@ -109,7 +109,7 @@ export class TagPageContentCommand implements Command {
   }
 
   describe(): string {
-    return i18n.t("pdfTextEditor.commands.tagPageContent", "Tag page content");
+    return i18n.t("pdfTextEditor.commands.tagPageContent", "Auto-tag page");
   }
 }
 
