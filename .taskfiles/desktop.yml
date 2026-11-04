@@ -92,6 +92,41 @@ tasks:
     cmds:
       - cargo test
 
+  # ============================================================
+  # Lint
+  # ============================================================
+
+  clippy:
+    desc: "Lint every Rust crate with Clippy"
+    cmds:
+      - task: clippy:app
+      - task: clippy:provisioner
+      - task: clippy:thumbnail-handler
+
+  clippy:app:
+    desc: "Lint the Tauri app crate with Clippy"
+    dir: src-tauri
+    env:
+      # Clippy only needs the crate graph. Blanking the bundle resources stops
+      # tauri-build failing on the libs/*.jar and runtime/jre globs that only
+      # `desktop:prepare` produces, so linting does not need a backend build.
+      TAURI_CONFIG: '{"bundle":{"resources":[]}}'
+    cmds:
+      - cargo clippy --all-targets --all-features -- -D warnings
+
+  clippy:provisioner:
+    desc: "Lint the installer provisioner crate with Clippy"
+    dir: src-tauri/provisioner
+    cmds:
+      - cargo clippy --all-targets -- -D warnings
+
+  clippy:thumbnail-handler:
+    desc: "Lint the Windows thumbnail handler crate with Clippy"
+    platforms: [windows]
+    dir: src-tauri/thumbnail-handler
+    cmds:
+      - cargo clippy --all-targets -- -D warnings
+
   clean:
     desc: "Clean Tauri/Cargo build artifacts"
     cmds:

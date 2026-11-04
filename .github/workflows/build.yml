@@ -216,6 +216,15 @@ jobs:
       sign: true
       use_shared_cache: true
 
+  rust-clippy:
+    if: |
+      !cancelled() &&
+      needs.files-changed.outputs.tauri == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/rust-clippy.yml
+
   ai-engine:
     if: needs.files-changed.outputs.engine == 'true'
     needs: [files-changed]
@@ -303,6 +312,7 @@ jobs:
       - docker-compose-tests
       - test-build-docker-images
       - tauri-build
+      - rust-clippy
       - ai-engine
       - generated-models
       - pre-commit
@@ -331,6 +341,7 @@ jobs:
             docker-compose-tests=${{ needs.docker-compose-tests.result }}
             test-build-docker-images=${{ needs.test-build-docker-images.result }}
             tauri-build=${{ needs.tauri-build.result }}
+            rust-clippy=${{ needs.rust-clippy.result }}
             ai-engine=${{ needs.ai-engine.result }}
             generated-models=${{ needs.generated-models.result }}
             pre-commit=${{ needs.pre-commit.result }}
