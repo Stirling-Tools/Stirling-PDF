@@ -11921,6 +11921,7 @@ toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}
 back = "Back"
 collapse = "Hide {{setting}} settings"
 continue = "Continue"
+dialogLabel = "Server setup"
 expand = "Show {{setting}} settings"
 finishSetup = "Finish setup"
 loadErrorSubtitle = "Setup needs the server's current settings to start."
