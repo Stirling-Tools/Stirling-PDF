@@ -182,6 +182,19 @@ function Demo({
   );
 }
 
+/** The work email on the trial setup saved before sign-in, if any. */
+function draftEmail(): string | null {
+  try {
+    const raw = window.localStorage.getItem(TRIAL_DRAFT_KEY);
+    const saved = raw
+      ? (JSON.parse(raw) as { draft?: { details?: { contactEmail?: string } } })
+      : null;
+    return saved?.draft?.details?.contactEmail ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // Folded to a corner tab until the presenter reaches for it, so it stays out of the product's way.
 /**
  * The hosted sign-in screen, as a buyer reaches it from the Enterprise page: the product's own
@@ -197,7 +210,11 @@ function DemoSignIn({
 }) {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState(prefill ? DEMO_PREFILL.contactName : "");
-  const [email, setEmail] = useState(prefill ? DEMO_PREFILL.contactEmail : "");
+  // The email given on the trial form, as a buyer would sign in with it: the page only resumes a
+  // setup for the account it was filled in for, so a different one here would lose the answers.
+  const [email, setEmail] = useState(
+    () => (prefill ? DEMO_PREFILL.contactEmail : draftEmail()) ?? "",
+  );
   const [password, setPassword] = useState(prefill ? "demo-password" : "");
   const [confirmPassword, setConfirmPassword] = useState(
     prefill ? "demo-password" : "",
