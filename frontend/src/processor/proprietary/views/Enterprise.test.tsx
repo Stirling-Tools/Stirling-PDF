@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  cleanup,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -314,6 +320,20 @@ describe("Enterprise page", () => {
       }),
     ).toBeInTheDocument();
     expect(state.controller.setOpen).not.toHaveBeenCalled();
+
+    // Leaving mid-review and coming back (from settings, say) lands on the stage the deal has
+    // reached, not the finished one last looked at.
+    fireEvent.click(
+      screen.getByRole("button", { name: /journeySteps.trial.label/ }),
+    );
+    cleanup();
+    mount();
+    expect(
+      await screen.findByRole("button", {
+        name: "portal.procurement.payment.viewInvoice",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Completed")).not.toBeInTheDocument();
   });
 
   it("lets a member follow the deal without acting on it", async () => {
