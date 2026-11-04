@@ -248,6 +248,11 @@ export interface AddedElement {
   alt: string | null;
   /** The /Lang to save; null for none. */
   lang: string | null;
+  /**
+   * The MCID of the content it reads after, null for first, fixed when it was
+   * added. Absent when its place follows from where it sits on the page.
+   */
+  follows?: number | null;
 }
 
 /** A change to the /Lang of one of the file's elements marking part of a block's text. */
@@ -268,6 +273,8 @@ export class PageStructure {
   private readonly byMcid = new Map<number, StructureElement>();
   private readonly edits = new Map<StructureElement, StructureElementEdit>();
   private readonly added = new Map<number, AddedStructureElement>();
+  /** AddedElement.follows, by the added element's MCID. */
+  private readonly follows = new Map<number, number | null>();
   /** By the new element's MCID, in the order made: a later cut can take text from an earlier one. */
   private readonly cuts = new Map<
     number,
@@ -458,12 +465,17 @@ export class PageStructure {
     return this.added.has(mcid);
   }
 
-  /** Give the content `mcid` marks a new element. Throws when an element already owns it. */
-  addElement(mcid: number, type: StructureType): void {
+  /**
+   * Give the content `mcid` marks a new element, read after the content
+   * `follows` marks when given (see `AddedElement.follows`). Throws when an
+   * element already owns it.
+   */
+  addElement(mcid: number, type: StructureType, follows?: number | null): void {
     if (this.byMcid.has(mcid)) {
       throw new Error(`MCID ${mcid} already has an element`);
     }
     this.putAdded(mcid, type);
+    if (follows !== undefined) this.follows.set(mcid, follows);
   }
 
   /**
@@ -518,6 +530,7 @@ export class PageStructure {
     const element = this.added.get(mcid);
     if (!element && !this.cuts.has(mcid)) return;
     this.added.delete(mcid);
+    this.follows.delete(mcid);
     this.byMcid.delete(mcid);
     this.langs.delete(addedKey(mcid));
     if (element) this.edits.delete(element);
@@ -668,12 +681,14 @@ export class PageStructure {
   }
 
   private addedElement(mcid: number): AddedElement {
-    return {
+    const element: AddedElement = {
       mcid,
       type: this.added.get(mcid)!.type,
       alt: this.alt(mcid),
       lang: this.langs.get(addedKey(mcid)) ?? null,
     };
+    if (this.follows.has(mcid)) element.follows = this.follows.get(mcid)!;
+    return element;
   }
 
   /**

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
+import { useBulkTagging } from "@editor/tools/pdfTextEditor/hooks/useBulkTagging";
 import { useHeadingOutline } from "@editor/tools/pdfTextEditor/hooks/useHeadingOutline";
 import { useDocumentLanguage } from "@editor/tools/pdfTextEditor/hooks/useDocumentLanguage";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
@@ -101,6 +102,12 @@ export function EditorSidebar({
     reviewingAccessibility && tab === "document",
   );
 
+  const bulkTagging = useBulkTagging(
+    store,
+    state,
+    reviewingAccessibility && tab === "document",
+  );
+
   // Following the selection only catches one appearing, so moving from one
   // selected image to the next would leave the new one's description hidden.
   const selectNextImageToReview = () => {
@@ -183,6 +190,8 @@ export function EditorSidebar({
                 reviewingAccessibility ? controller.imageReview : null
               }
               onSelectNextImageToReview={selectNextImageToReview}
+              untaggedPages={bulkTagging.untaggedPages}
+              onTagUntaggedContent={bulkTagging.tagAll}
               headingOutline={headings.outline}
               onSelectHeading={headings.selectHeading}
               documentLanguage={documentLanguage}

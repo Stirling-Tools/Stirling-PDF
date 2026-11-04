@@ -497,9 +497,9 @@ export class EditorDocument {
   }
 
   /**
-   * The page's added elements in reading order, so one placed after another
-   * finds it already in the tree. An element whose content was deleted is
-   * left out: there is nothing left for it to tag.
+   * The page's added elements, each after the added element it reads after,
+   * so it finds that already in the tree. An element whose content was
+   * deleted is left out: there is nothing left for it to tag.
    */
   private addedElementEdits(
     pageIndex: number,
@@ -510,22 +510,28 @@ export class EditorDocument {
       structure.addedElements().map((element) => [element.mcid, element]),
     );
     if (!page || added.size === 0) return [];
-    return taggedContentInReadingOrder(page).flatMap((content) => {
-      const element = added.get(content.mcid);
-      if (!element) return [];
-      added.delete(content.mcid);
-      const after = precedingTaggedMcid(page, content);
-      return [
-        {
-          pageIndex,
-          mcid: element.mcid,
-          alt: element.alt,
-          lang: element.lang,
-          decorative: false,
-          newElement: { type: element.type, after },
-        },
-      ];
-    });
+    const content = taggedContentInReadingOrder(page);
+    const carried = new Set(content.map(({ mcid }) => mcid));
+    const edits = new Map<number, StructureEdit>();
+    for (const item of content) {
+      const element = added.get(item.mcid);
+      if (!element) continue;
+      added.delete(item.mcid);
+      const { follows } = element;
+      const after =
+        follows === null || (follows !== undefined && carried.has(follows))
+          ? follows
+          : precedingTaggedMcid(page, item);
+      edits.set(element.mcid, {
+        pageIndex,
+        mcid: element.mcid,
+        alt: element.alt,
+        lang: element.lang,
+        decorative: false,
+        newElement: { type: element.type, after },
+      });
+    }
+    return anchorsFirst(edits);
   }
 
   /**
@@ -716,4 +722,25 @@ function insertionPoint(
     (block) => block.pageIndex !== null && block.pageIndex >= pageIndex,
   );
   return next >= 0 ? next : blocks.length;
+}
+
+/**
+ * `edits`, keyed by MCID, reordered so each comes after the edit adding the
+ * element it is placed after. A cycle is broken where it closes, that element
+ * placing as though its anchor were not added.
+ */
+function anchorsFirst(edits: Map<number, StructureEdit>): StructureEdit[] {
+  const ordered: StructureEdit[] = [];
+  for (const start of [...edits.keys()]) {
+    const chain: StructureEdit[] = [];
+    let mcid: number | null = start;
+    while (mcid !== null && edits.has(mcid)) {
+      const edit: StructureEdit = edits.get(mcid)!;
+      edits.delete(mcid);
+      chain.push(edit);
+      mcid = edit.newElement!.after;
+    }
+    ordered.push(...chain.reverse());
+  }
+  return ordered;
 }

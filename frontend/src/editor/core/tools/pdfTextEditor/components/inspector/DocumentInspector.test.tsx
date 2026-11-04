@@ -9,6 +9,7 @@ function renderInspector(
   imageReview: ImageReview | null,
   onNext = vi.fn(),
   documentLanguage: DocumentLanguageControl | null = null,
+  { untaggedPages = 0, onTagUntagged = vi.fn() } = {},
 ) {
   render(
     <MantineProvider env="test">
@@ -22,6 +23,8 @@ function renderInspector(
         onSetShowRulers={vi.fn()}
         imageReview={imageReview}
         onSelectNextImageToReview={onNext}
+        untaggedPages={untaggedPages}
+        onTagUntaggedContent={onTagUntagged}
         headingOutline={null}
         onSelectHeading={vi.fn()}
         documentLanguage={documentLanguage}
@@ -34,6 +37,8 @@ function renderInspector(
 const KEY = "pdfTextEditor.inspector.accessibility";
 const SUMMARY = "pdf-editor-document-accessibility-summary";
 const NEXT = "pdf-editor-document-accessibility-next";
+const TAG_UNTAGGED = "pdf-editor-document-accessibility-tag-untagged";
+const NOTHING_TO_REVIEW = { needsDescription: 0, untagged: 0, untaggable: 0 };
 
 describe("DocumentInspector accessibility review", () => {
   it("counts images missing descriptions and untagged ones, and moves to the next", () => {
@@ -75,6 +80,24 @@ describe("DocumentInspector accessibility review", () => {
     expect(
       screen.queryByTestId("pdf-editor-document-accessibility"),
     ).not.toBeInTheDocument();
+  });
+
+  it("counts pages with untagged content and tags them", () => {
+    const onTagUntagged = vi.fn();
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, {
+      untaggedPages: 3,
+      onTagUntagged,
+    });
+    expect(screen.getByTestId(SUMMARY)).toHaveTextContent(
+      `${KEY}.untaggedPages3`,
+    );
+    fireEvent.click(screen.getByTestId(TAG_UNTAGGED));
+    expect(onTagUntagged).toHaveBeenCalledOnce();
+  });
+
+  it("offers no tagging once every page is tagged", () => {
+    renderInspector(NOTHING_TO_REVIEW);
+    expect(screen.queryByTestId(TAG_UNTAGGED)).not.toBeInTheDocument();
   });
 });
 

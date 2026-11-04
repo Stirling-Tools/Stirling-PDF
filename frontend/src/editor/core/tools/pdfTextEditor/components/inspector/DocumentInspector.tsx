@@ -37,6 +37,9 @@ interface Props {
   /** Images needing attention; null when there is nothing to review. */
   imageReview: ImageReview | null;
   onSelectNextImageToReview: () => void;
+  /** Read pages with content left untagged. */
+  untaggedPages: number;
+  onTagUntaggedContent: () => void;
   /** Null when there is nothing to check. */
   headingOutline: HeadingOutline | null;
   onSelectHeading: (index: number) => void;
@@ -49,6 +52,8 @@ export function DocumentInspector({
   pages,
   imageReview,
   onSelectNextImageToReview,
+  untaggedPages,
+  onTagUntaggedContent,
   headingOutline,
   onSelectHeading,
   documentLanguage,
@@ -85,6 +90,8 @@ export function DocumentInspector({
         <AccessibilitySection
           review={imageReview}
           onNext={onSelectNextImageToReview}
+          untaggedPages={untaggedPages}
+          onTagUntagged={onTagUntaggedContent}
         />
       )}
       {headingOutline && (
@@ -161,9 +168,13 @@ function documentLanguageHint(
 function AccessibilitySection({
   review,
   onNext,
+  untaggedPages,
+  onTagUntagged,
 }: {
   review: ImageReview;
   onNext: () => void;
+  untaggedPages: number;
+  onTagUntagged: () => void;
 }) {
   const { t } = useTranslation();
   const pending = review.needsDescription + review.untagged;
@@ -189,7 +200,18 @@ function AccessibilitySection({
             value={review.untagged}
           />
           <UntaggableRow count={review.untaggable} />
+          <StatRow
+            label={t(
+              "pdfTextEditor.inspector.accessibility.untaggedPages",
+              "Pages with untagged content",
+            )}
+            value={untaggedPages}
+          />
         </Stack>
+        <TagUntaggedButton
+          untaggedPages={untaggedPages}
+          onClick={onTagUntagged}
+        />
         {pending > 0 && (
           <Button
             size="sm"
@@ -206,6 +228,47 @@ function AccessibilitySection({
         )}
       </Stack>
     </Section>
+  );
+}
+
+/**
+ * Tags every page's untagged content as a starting point. Absent once there
+ * is none, as Next is once nothing needs attention.
+ */
+function TagUntaggedButton({
+  untaggedPages,
+  onClick,
+}: {
+  untaggedPages: number;
+  onClick: () => void;
+}) {
+  const { t } = useTranslation();
+  if (untaggedPages === 0) return null;
+  return (
+    <Tooltip
+      multiline
+      w={260}
+      label={t(
+        "pdfTextEditor.inspector.accessibility.tagUntaggedHint",
+        "Tags text as paragraphs and images as figures, and marks everything else as decorative. Check the result and correct any headings, lists or reading order.",
+      )}
+    >
+      <Button
+        size="sm"
+        variant="secondary"
+        accent="neutral"
+        fullWidth
+        justify="start"
+        leftSection={<Icon name="tag" size={20} />}
+        onClick={onClick}
+        data-testid="pdf-editor-document-accessibility-tag-untagged"
+      >
+        {t(
+          "pdfTextEditor.inspector.accessibility.tagUntagged",
+          "Tag untagged content",
+        )}
+      </Button>
+    </Tooltip>
   );
 }
 
