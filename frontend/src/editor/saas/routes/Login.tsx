@@ -327,12 +327,8 @@ export default function Login() {
             <span className="oauth-btn-group">
               <Icon
                 name="link"
-                style={{
-                  width: "1.75rem",
-                  height: "1.75rem",
-                  marginRight: "0.5rem",
-                  flexShrink: 0,
-                }}
+                className="oauth-icon-medium"
+                style={{ marginRight: "0.5rem", flexShrink: 0 }}
               />
               <span className="oauth-btn-label">
                 {t("login.useMagicLink", "Use magic link")}
