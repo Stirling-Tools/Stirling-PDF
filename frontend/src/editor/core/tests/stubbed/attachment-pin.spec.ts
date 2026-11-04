@@ -208,7 +208,9 @@ test("placed pin tracks page position when scrolled", async ({ page }) => {
       const pinEl = document.querySelector<HTMLElement>(
         ".attachment-pin-overlay__marker",
       );
-      const pageEl = document.querySelector<HTMLElement>('[data-page-index="0"]');
+      const pageEl = document.querySelector<HTMLElement>(
+        '[data-page-index="0"]',
+      );
       let scroller = pageEl?.parentElement ?? null;
       while (
         scroller &&

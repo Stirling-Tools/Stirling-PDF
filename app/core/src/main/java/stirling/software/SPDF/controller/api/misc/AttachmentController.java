@@ -374,7 +374,8 @@ public class AttachmentController {
                                         document, renameOp.getOldName(), renameOp.getNewName());
                                 // Remove the existing pin after the successful rename.
                                 PdfAttachmentPinUtils.removePins(
-                                        document, List.of(renameOp.getNewName()));
+                                        document,
+                                        List.of(renameOp.getOldName(), renameOp.getNewName()));
                             } catch (IOException | RuntimeException e) {
                                 log.warn(
                                         "Batch rename from '{}' to '{}' skipped: {}",

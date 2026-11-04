@@ -120,6 +120,28 @@ class PdfAttachmentPinUtilsTest {
     }
 
     @Test
+    void removesPinAfterSaveReloadAndRename() throws Exception {
+        byte[] saved;
+        try (PDDocument document = documentWithAttachment("report.pdf")) {
+            PdfAttachmentPinUtils.applyPins(
+                    document,
+                    List.of(new AttachmentPinSpec("report.pdf", 0, 0.4f, 0.55f)),
+                    List.of());
+            try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+                document.save(output);
+                saved = output.toByteArray();
+            }
+        }
+
+        try (PDDocument reloaded = Loader.loadPDF(saved)) {
+            renameFileSpecification(reloaded, "report.pdf", "renamed.pdf");
+            PdfAttachmentPinUtils.removePins(reloaded, List.of("renamed.pdf"));
+
+            assertTrue(PdfAttachmentPinUtils.findPins(reloaded).isEmpty());
+        }
+    }
+
+    @Test
     void applyingRenamedPinReplacesTheOldAnnotation() throws Exception {
         try (PDDocument document = documentWithAttachment("report.pdf")) {
             PdfAttachmentPinUtils.applyPins(
