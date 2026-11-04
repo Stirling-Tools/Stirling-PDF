@@ -18,7 +18,7 @@ function SettingsLinkModalHost() {
   return <LinkAccountModalHost />;
 }
 
-/** The instance link starts unknown; checkout and license are inherited from AppProviders. */
+/** The instance link starts unknown; checkout comes from AppProviders, the licence from PlatformProviders. */
 export function PortalSettingsProviders({ children }: { children: ReactNode }) {
   return (
     <LinkProvider initialState="unlinked" statusKnown={false}>

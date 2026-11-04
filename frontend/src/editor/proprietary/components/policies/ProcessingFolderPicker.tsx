@@ -33,6 +33,8 @@ import { ProcessingFolderLocationPicker } from "@editor/components/policies/Proc
 import { ProcessingFolderActionCard } from "@editor/components/policies/ProcessingFolderActionCard";
 import type { DownloadsProcessing } from "@editor/hooks/useDownloadsProcessing";
 import "@editor/components/filesPage/FilesPage.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { privateClassNameIf } from "@editor/components/shared/privateClassNameIf";
 
 type AddedFolder = {
   folder: FolderRecord;
@@ -418,6 +420,7 @@ export function ProcessingFolderPicker({
                     data-autofocus={active || undefined}
                     value={name}
                     maxLength={120}
+                    className={privateContentClassName}
                     disabled={Boolean(serverDisabledReason)}
                     placeholder={t("processingFolders.setup.namePlaceholder")}
                     onChange={(event) => setName(event.target.value)}
@@ -425,7 +428,7 @@ export function ProcessingFolderPicker({
                 </FormField>
                 <div className="folder-setup__new-folder-location">
                   <span>{t("processingFolders.setup.createIn")}</span>
-                  <div title={parentPath}>
+                  <div title={parentPath} className={privateContentClassName}>
                     <Icon name="cloud" size={18} />
                     <span>{parentPath}</span>
                     <ProcessingFolderLocationPicker
@@ -484,7 +487,10 @@ export function ProcessingFolderPicker({
                         {index > 0 && <Icon name="chevron-right" size={14} />}
                         <button
                           type="button"
-                          className="files-page-breadcrumb"
+                          className={privateClassNameIf(
+                            Boolean(item.id),
+                            "files-page-breadcrumb",
+                          )}
                           aria-current={
                             item.id === currentId ? "location" : undefined
                           }

@@ -454,7 +454,7 @@ public class ProprietaryUIDataController {
 
         String settingsJson;
         try {
-            settingsJson = objectMapper.writeValueAsString(user.get().getSettings());
+            settingsJson = objectMapper.writeValueAsString(maskSecrets(user.get().getSettings()));
         } catch (JacksonException e) {
             log.error("Error converting settings map", e);
             return ResponseEntity.status(500).build();
