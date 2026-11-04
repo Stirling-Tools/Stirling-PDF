@@ -21,8 +21,9 @@ public final class SecretMasker {
             RegexPatternUtils.getInstance()
                     .getPattern(
                             // Password names also occur inside camelCase fields and arg_ audit
-                            // keys.
-                            "(?i)password|\\b(token|secret[_-]?access[_-]?key|signing[_-]?secret|secret|api[_-]?key|authorization|auth|jwt|cred|cert)\\b");
+                            // keys. The rest are bounded by separators, not \b, so snake_case keys
+                            // like refresh_token match; longer alternatives precede their prefixes.
+                            "(?i)password|(?<![a-z0-9])(code[_-]?verifier|refresh[_-]?token|access[_-]?token|client[_-]?secret|token|secret[_-]?access[_-]?key|signing[_-]?secret|secret|api[_-]?key|authorization|auth|jwt|cred|cert)(?![a-z0-9])");
 
     private SecretMasker() {}
 

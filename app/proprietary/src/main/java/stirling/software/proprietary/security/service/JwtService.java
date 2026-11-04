@@ -44,6 +44,11 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class JwtService implements JwtServiceInterface {
 
+    /** Claim and value marking a token minted by the built-in MCP authorization server. */
+    public static final String TOKEN_USE_CLAIM = "token_use";
+
+    public static final String MCP_ACCESS_TOKEN_USE = "mcp_access";
+
     private final ObjectMapper objectMapper;
     private final KeyPersistenceServiceInterface keyPersistenceService;
     private final boolean v2Enabled;
@@ -200,6 +205,15 @@ public class JwtService implements JwtServiceInterface {
     }
 
     private Claims extractAllClaims(String token, boolean allowExpired) {
+        Claims claims = parseClaims(token, allowExpired);
+        // MCP access tokens share these signing keys but must never act as an app session.
+        if (MCP_ACCESS_TOKEN_USE.equals(claims.get(TOKEN_USE_CLAIM))) {
+            throw new AuthenticationFailureException("MCP access tokens are only valid at /mcp");
+        }
+        return claims;
+    }
+
+    private Claims parseClaims(String token, boolean allowExpired) {
         try {
             String keyId = extractKeyId(token);
             KeyPair keyPair;

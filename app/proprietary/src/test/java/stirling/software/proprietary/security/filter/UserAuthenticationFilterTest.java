@@ -291,6 +291,20 @@ class UserAuthenticationFilterTest {
         }
 
         @Test
+        @DisplayName("skips the anonymous MCP OAuth endpoints but not the consent API")
+        void skipsMcpOAuthPublicEndpointsOnly() {
+            request.setMethod("POST");
+            request.setRequestURI("/api/v1/mcp/oauth/token");
+            assertThat(filter(true).shouldNotFilter(request)).isTrue();
+
+            request.setRequestURI("/api/v1/mcp/oauth/register");
+            assertThat(filter(true).shouldNotFilter(request)).isTrue();
+
+            request.setRequestURI("/api/v1/mcp/oauth/authorizations");
+            assertThat(filter(true).shouldNotFilter(request)).isFalse();
+        }
+
+        @Test
         @DisplayName("does not skip /auth/me, so account status is checked there")
         void doesNotSkipAuthMe() {
             request.setMethod("GET");
