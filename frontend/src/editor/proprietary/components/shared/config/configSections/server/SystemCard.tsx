@@ -19,6 +19,7 @@ import {
 } from "@editor/i18n";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import type { GeneralCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Branding, languages and the system-wide toggles. Writes ui.* and system.*. */
 export function SystemCard({
@@ -221,6 +222,7 @@ export function SystemCard({
 
         <div id="frontendUrl">
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>

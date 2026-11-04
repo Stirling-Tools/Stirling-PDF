@@ -12,6 +12,7 @@ import { DocumentOverview } from "@processor/components/documents/DocumentOvervi
 import { DocumentExtractions } from "@processor/components/documents/DocumentExtractions";
 import { DocumentAudit } from "@processor/components/documents/DocumentAudit";
 import { ElevationBanner } from "@processor/components/documents/ElevationBanner";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 type SubTab = "overview" | "extractions" | "audit";
 
@@ -78,8 +79,10 @@ export function DocumentDrawer({ doc, onClose }: DocumentDrawerProps) {
       open
       onClose={onClose}
       width="lg"
-      title={doc.name}
-      subtitle={`${doc.type} · ${doc.source}`}
+      title={<PrivateContent>{doc.name}</PrivateContent>}
+      subtitle={
+        <PrivateContent>{`${doc.type} · ${doc.source}`}</PrivateContent>
+      }
     >
       <div className="portal-documents__drawer">
         <div className="portal-documents__drawer-status">
