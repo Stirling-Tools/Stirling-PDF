@@ -5,6 +5,7 @@ import { Icon } from "@editor/ui/Icon";
 import { Button } from "@editor/ui/Button";
 import type { FirstLinkTarget } from "@editor/components/viewer/useAnnotationMenuHandlers";
 import "@editor/components/viewer/TextSelectionMenu.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export function DeleteButton({ onDelete }: { onDelete: () => void }) {
   const { t } = useTranslation();
@@ -145,6 +146,7 @@ export function LinkButton({
           <TextInput
             placeholder="https://..."
             value={url}
+            className={privateContentClassName}
             onChange={(e) => setUrl(e.currentTarget.value)}
             size="sm"
             style={{ minWidth: 220 }}
