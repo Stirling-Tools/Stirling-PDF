@@ -603,6 +603,16 @@ function Deal({
     }
     return undefined;
   };
+  // The stage before the one on screen. The deal's own stage returns to its overview, closing any
+  // step open over it; a stage already finished opens as it was left.
+  const backIdx = currentIdx - 1;
+  const goBack =
+    backIdx >= 0 && backIdx <= actualIdx
+      ? () => {
+          if (flowStep) setOpen(false);
+          setReview(backIdx < actualIdx ? { index: backIdx, stage } : null);
+        }
+      : undefined;
   const inTrial = TRIAL_STAGES.includes(stage) && data?.trialEndsAt != null;
   // What the licence is issued for, which a quote can change from the trial's choice.
   const deployment = data?.entitledDeployment ?? data?.deployment ?? "cloud";
@@ -618,6 +628,19 @@ function Deal({
         <div className="ent__wrap ent__hero">
           <div className="ent__hero-main">
             <div className="ent__hero-head">
+              {goBack && (
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  className="ent__back"
+                  leftSection={<Icon name="arrow-left" size={16} />}
+                  onClick={goBack}
+                >
+                  {t("portal.enterprise.backTo", "Back to {{stage}}", {
+                    stage: t(FLOW_JOURNEY[backIdx].label),
+                  })}
+                </Button>
+              )}
               <div className="ent__eyebrow-row">
                 <span className="ent__eyebrow">
                   {t(

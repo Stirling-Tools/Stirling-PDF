@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import type { QuoteConfigInput } from "@processor/api/procurement";
+import type { QuoteConfigInput, QuoteResult } from "@processor/api/procurement";
 import { QuoteBuilder } from "@processor/components/procurement/QuoteBuilder";
 
 vi.mock("react-i18next", () => ({
@@ -68,6 +68,83 @@ function mount(
 
 const generate = () =>
   screen.getByRole("button", { name: "portal.procurement.builder.generate" });
+
+describe("QuoteBuilder chrome", () => {
+  it("has no close: a quote in progress is left through the page, not dismissed", () => {
+    mount();
+    expect(
+      screen.queryByRole("button", { name: "Close" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("words the issued quote's lines through translations, keeping unknown ones as sent", () => {
+    const issued: QuoteResult = {
+      quoteId: 1,
+      quoteNumber: "QT-1",
+      status: "sent",
+      currency: "usd",
+      annualNetMinor: 1_600_000,
+      tcvMinor: 4_800_000,
+      renewalAnnualNetMinor: 1_650_000,
+      cpiRatePct: 3,
+      lineItems: [
+        {
+          key: "usage",
+          label: "server usage",
+          kind: "RECURRING",
+          amountMinor: 1,
+        },
+        {
+          key: "seats",
+          label: "server seats",
+          kind: "INCLUDED",
+          amountMinor: 0,
+        },
+        {
+          key: "deployment",
+          label: "server deploy",
+          kind: "RECURRING",
+          amountMinor: 1,
+        },
+        {
+          key: "new-thing",
+          label: "Something new",
+          kind: "RECURRING",
+          amountMinor: 1,
+        },
+      ],
+      validUntil: null,
+      stripeQuoteId: "qt_1",
+      invoiceUrl: null,
+      invoicePdf: null,
+      config: { ...smallQuote, deployment: "selfhost" },
+    };
+    render(
+      <MantineProvider>
+        <QuoteBuilder
+          deployment="selfhost"
+          seats={5}
+          initial={issued.config}
+          eulaAlreadyAgreed
+          minAnnualMinor={0}
+          issued={issued}
+          onGenerate={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+    expect(screen.queryByText("server usage")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("portal.procurement.builder.line.usage"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.procurement.builder.line.seats"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.procurement.builder.line.deployment"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Something new")).toBeInTheDocument();
+  });
+});
 
 describe("QuoteBuilder minimum deal size", () => {
   it("only notes where Enterprise starts while the buyer is still sizing the quote", () => {

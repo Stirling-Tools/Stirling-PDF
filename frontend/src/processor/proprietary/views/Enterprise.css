@@ -50,6 +50,11 @@
   outline-offset: 4px;
 }
 
+/* Text-aligned with the stage label below it, so the padding sits outside the column. */
+.ent__back {
+  margin: 0 0 1rem -12px;
+}
+
 .ent__brand-tag {
   padding-left: 0.75rem;
   border-left: 1px solid var(--c-border);

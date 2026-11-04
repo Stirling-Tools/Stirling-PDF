@@ -8,6 +8,7 @@ import {
   buildQuote,
   recordLegalConsent,
   type QuoteConfigInput,
+  type QuoteLineItem,
   type QuoteResult,
 } from "@processor/api/procurement";
 import { LegalDocumentModal } from "@processor/components/procurement/ProcurementExtras";
@@ -317,7 +318,6 @@ export function QuoteBuilder({
           n: step + 1,
           total: STEPS.length,
         })}
-        onClose={onClose}
       />
 
       <div className="portal-qb__body">
@@ -649,7 +649,9 @@ export function QuoteBuilder({
             <div className="portal-surface portal-qb__paper">
               <div className="portal-qb__paper-head">
                 <div>
-                  <div className="portal-qb__paper-brand">Stirling PDF</div>
+                  <div className="portal-qb__paper-brand">
+                    {t("portal.procurement.builder.paperBrand", "Stirling PDF")}
+                  </div>
                   <div className="portal-qb__paper-eyebrow">
                     {t("portal.procurement.builder.paperEyebrow")}
                   </div>
@@ -694,7 +696,7 @@ export function QuoteBuilder({
               <ul className="portal-qb__lines">
                 {issued.lineItems.map((li) => (
                   <li key={li.key} data-kind={li.kind}>
-                    <span>{li.label}</span>
+                    <span>{lineLabel(li, issued, t)}</span>
                     <span>
                       {/* Marked, since one-off charges sit outside the yearly fee totalled below. */}
                       {li.kind === "ONE_TIME" && (
@@ -911,6 +913,61 @@ export function QuoteBuilder({
   );
 }
 
+/**
+ * An issued quote's line in the viewer's language. The server words its lines in English for the
+ * PDF and Stripe, so each known line is rebuilt from its key and the quote's own inputs; a line
+ * this page does not know keeps the server's wording.
+ */
+function lineLabel(
+  li: QuoteLineItem,
+  quote: QuoteResult,
+  t: (key: string, options?: Record<string, unknown>) => string,
+): string {
+  const cfg = quote.config;
+  switch (li.key) {
+    case "usage": {
+      const posture = POSTURES.find((p) => p.intensity === cfg.intensity);
+      if (!posture) return li.label;
+      return t("portal.procurement.builder.line.usage", {
+        volume: cfg.volume.toLocaleString(),
+        rate: new Intl.NumberFormat(undefined, {
+          style: "currency",
+          currency: quote.currency || "USD",
+          currencyDisplay: "narrowSymbol",
+          minimumFractionDigits: 4,
+          maximumFractionDigits: 4,
+        }).format(perRunRate(cfg) * Math.max(1, cfg.intensity)),
+        posture: t(`portal.procurement.builder.posture_${posture.key}`),
+      });
+    }
+    case "seats":
+      return cfg.users > 0
+        ? t("portal.procurement.builder.line.seats", {
+            count: cfg.users,
+            users: cfg.users.toLocaleString(),
+          })
+        : t("portal.procurement.builder.line.seatsUnset");
+    case "multi-year":
+      return t("portal.procurement.builder.line.multiYear", {
+        count: cfg.termYears,
+      });
+    case "support":
+      return t("portal.procurement.builder.line.support");
+    case "deployment":
+      return t("portal.procurement.builder.line.deployment", {
+        deployment: t(`portal.procurement.setup.${cfg.deployment}`),
+      });
+    case "indemnification":
+      return t("portal.procurement.builder.line.indemnification");
+    case "qbr":
+      return t("portal.procurement.builder.line.qbr");
+    case "training":
+      return t("portal.procurement.builder.line.training");
+    default:
+      return li.label;
+  }
+}
+
 function Step({
   icon,
   title,
@@ -1032,7 +1089,8 @@ function estimateVolume(users: number): number {
 // Exported for the pricing-parity test, which pins this client estimate to the mock and the
 // server's published fixtures so a rate-card change can't silently desync the footer from the
 // issued quote. This copy stays non-authoritative — the backend prices the real quote.
-export function previewAnnualMinor(cfg: QuoteConfigInput): number {
+/** Dollars per run after the committed-volume curve, its floor and the PDF-size multiplier. */
+function perRunRate(cfg: QuoteConfigInput): number {
   const LIST = 0.01;
   const FLOOR = 0.005;
   const runVol = Math.max(0, cfg.volume) * Math.max(1, cfg.intensity);
@@ -1040,7 +1098,12 @@ export function previewAnnualMinor(cfg: QuoteConfigInput): number {
     runVol > 1_000_000
       ? Math.min(0.5, 0.06 * Math.log2(runVol / 1_000_000))
       : 0;
-  const rate = Math.max(FLOOR, LIST * (1 - volDisc)) * (cfg.sizeMult || 1);
+  return Math.max(FLOOR, LIST * (1 - volDisc)) * (cfg.sizeMult || 1);
+}
+
+export function previewAnnualMinor(cfg: QuoteConfigInput): number {
+  const runVol = Math.max(0, cfg.volume) * Math.max(1, cfg.intensity);
+  const rate = perRunRate(cfg);
   const termDisc = TERM_DISCOUNT[Math.min(Math.max(cfg.termYears, 1), 5) - 1];
   const meterNet = Math.round(runVol * rate * (1 - termDisc)) * 100; // whole $ → minor units
   const support = cfg.serviceLevel === "dedicated" ? 3_000_000 : 0; // std + priority included

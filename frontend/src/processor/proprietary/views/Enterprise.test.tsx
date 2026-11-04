@@ -31,6 +31,7 @@ const state = vi.hoisted(() => ({
   role: "leader",
   signedIn: true,
   draft: null as TrialDraft | null,
+  flowStep: null as "builder" | "agreement" | null,
   useProcurement: null as unknown as () => ProcurementController,
 }));
 
@@ -75,7 +76,7 @@ vi.mock("@processor/components/account-link/SaasSessionBanner", () => ({
 }));
 vi.mock("@processor/components/procurement/ProcurementFlow", () => ({
   ProcurementFlow: () => null,
-  procurementFlowStep: () => null,
+  procurementFlowStep: () => state.flowStep,
 }));
 vi.mock("@processor/api/billing", () => ({
   refreshWalletCache: () => Promise.resolve(),
@@ -173,6 +174,7 @@ beforeEach(() => {
   state.role = "leader";
   state.signedIn = true;
   state.draft = null;
+  state.flowStep = null;
   state.useProcurement = vi.fn(() => state.controller);
   rememberPendingDestination.mockReset();
   saveTrialDraft.mockReset();
@@ -279,8 +281,15 @@ describe("Enterprise page", () => {
     state.controller = controller({ data: signed });
     mount();
 
+    // Back from payment opens the agreement as it was signed.
     fireEvent.click(
-      await screen.findByRole("button", { name: /journeySteps.trial.label/ }),
+      await screen.findByRole("button", { name: "Back to {{stage}}" }),
+    );
+    expect(screen.getByText("Version")).toBeInTheDocument();
+    expect(screen.getByText("Completed")).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /journeySteps.trial.label/ }),
     );
     expect(screen.getByText("Your trial")).toBeInTheDocument();
     expect(screen.getByText("Completed")).toBeInTheDocument();
@@ -323,6 +332,25 @@ describe("Enterprise page", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "portal.procurement.trial.extend" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("leaves the quote builder for the trial it was opened from", async () => {
+    state.flowStep = "builder";
+    state.controller = controller({ open: true });
+    mount();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Back to {{stage}}" }),
+    );
+    expect(state.controller.setOpen).toHaveBeenCalledWith(false);
+  });
+
+  it("has nothing to go back to from the first stage", async () => {
+    state.controller = controller();
+    mount();
+    await screen.findAllByText("portal.procurement.journeySteps.trial.label");
+    expect(
+      screen.queryByRole("button", { name: "Back to {{stage}}" }),
     ).not.toBeInTheDocument();
   });
 
