@@ -1,9 +1,13 @@
 import { lazy } from "react";
 import type { ReactElement } from "react";
-import { Route } from "react-router-dom";
+import { Navigate, Route, useLocation } from "react-router-dom";
 import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
 import { HAS_PORTAL } from "@editor/routes/hasPortal";
 import { NoAppChrome } from "@editor/components/layout/NoAppChrome";
+import {
+  ENTERPRISE_PATH,
+  LEGACY_ENTERPRISE_PATH,
+} from "@editor/portal/components/procurement/enterprisePath";
 
 const PortalApp = HAS_PORTAL
   ? lazy(async () => {
@@ -30,13 +34,24 @@ const ConnectCallback = HAS_PORTAL
     })
   : null;
 
+/** Old Enterprise links, kept working with whatever they carry (?source=sales). */
+function LegacyEnterpriseRedirect() {
+  const { search, hash } = useLocation();
+  return <Navigate to={`${ENTERPRISE_PATH}${search}${hash}`} replace />;
+}
+
 /** The portal mounts as an admin-only route-set at PORTAL_BASENAME (/processor/*). */
 export function getAdminRouteExtensions(): ReactElement[] {
   if (!PortalApp || !ConnectCallback || !EnterpriseApp) return [];
   return [
     <Route key="enterprise" element={<NoAppChrome />}>
-      <Route path="/procurement" element={<EnterpriseApp />} />
+      <Route path={ENTERPRISE_PATH} element={<EnterpriseApp />} />
     </Route>,
+    <Route
+      key="enterprise-legacy"
+      path={LEGACY_ENTERPRISE_PATH}
+      element={<LegacyEnterpriseRedirect />}
+    />,
     <Route
       key="portal"
       path={`${PORTAL_BASENAME}/*`}

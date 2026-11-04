@@ -623,7 +623,7 @@ describe("Usage — link-free wallet renderer", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: "Get an enterprise quote" }),
     );
-    expect(screen.getByTestId("location")).toHaveTextContent("/procurement");
+    expect(screen.getByTestId("location")).toHaveTextContent("/enterprise");
   });
 
   it("still offers the quote to a buyer who asked but never started a trial", async () => {

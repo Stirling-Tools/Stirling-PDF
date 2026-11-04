@@ -4,7 +4,10 @@ import { normalizePath } from "@editor/utils/pathUtils";
 import { PublicRouteProviders } from "@editor/components/PublicRouteProviders";
 import { RunLocationChooser } from "@editor/components/runLocation/RunLocationChooser";
 import { hasChosenRunLocation } from "@editor/components/runLocation/runLocationChosen";
-import { ENTERPRISE_PATH } from "@editor/portal/components/procurement/enterprisePath";
+import {
+  ENTERPRISE_PATH,
+  LEGACY_ENTERPRISE_PATH,
+} from "@editor/portal/components/procurement/enterprisePath";
 
 // Links that finish a flow already in progress (an emailed sign-in, an OAuth
 // redirect, a shared file). Interrupting them with the chooser in a fresh
@@ -18,6 +21,7 @@ const FLOW_PATHS = [
   "/link",
   "/account-link/callback",
   ENTERPRISE_PATH,
+  LEGACY_ENTERPRISE_PATH,
 ];
 
 // Signing in from the Enterprise page detours through these, naming it as `next`.
@@ -27,8 +31,10 @@ export function bypassesRunLocation(pathname: string, search = ""): boolean {
   const path = normalizePath(pathname);
   if (FLOW_PATHS.includes(path) || path.startsWith("/share/")) return true;
   const next = new URLSearchParams(search).get("next");
+  const nextPath = next?.split(/[?#]/)[0];
   return (
-    AUTH_PATHS.includes(path) && next?.split(/[?#]/)[0] === ENTERPRISE_PATH
+    AUTH_PATHS.includes(path) &&
+    (nextPath === ENTERPRISE_PATH || nextPath === LEGACY_ENTERPRISE_PATH)
   );
 }
 

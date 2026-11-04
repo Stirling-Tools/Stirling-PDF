@@ -40,7 +40,7 @@ function mount(entry: string) {
         <MemoryRouter initialEntries={[entry]}>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/procurement" element={<div>Enterprise page</div>} />
+            <Route path="/enterprise" element={<div>Enterprise page</div>} />
           </Routes>
         </MemoryRouter>
       </TestQueryProvider>
@@ -55,14 +55,14 @@ describe("SaaS login with a guest session", () => {
   });
 
   it("shows a guest the sign-in form instead of sending them back to `next`", () => {
-    mount("/login?next=%2Fprocurement");
+    mount("/login?next=%2Fenterprise");
     expect(screen.queryByText("Enterprise page")).not.toBeInTheDocument();
     expect(screen.getAllByRole("textbox").length).toBeGreaterThan(0);
   });
 
   it("sends a signed-in account straight on to `next`", () => {
     auth.isAnonymous = false;
-    mount("/login?next=%2Fprocurement");
+    mount("/login?next=%2Fenterprise");
     expect(screen.getByText("Enterprise page")).toBeInTheDocument();
   });
 });

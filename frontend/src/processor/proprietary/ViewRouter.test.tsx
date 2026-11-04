@@ -35,7 +35,7 @@ function BillingLocation() {
 
 describe("procurement sales links", () => {
   it.each(["/", "/app"])(
-    "opens the Enterprise page from the short link under basename %s",
+    "sends the old /procurement link to the Enterprise page under basename %s",
     async (basename) => {
       render(
         <MemoryRouter
@@ -53,7 +53,7 @@ describe("procurement sales links", () => {
         </MemoryRouter>,
       );
       expect(
-        await screen.findByText("/procurement?source=sales"),
+        await screen.findByText("/enterprise?source=sales"),
       ).toBeInTheDocument();
     },
   );
@@ -76,7 +76,7 @@ describe("procurement sales links", () => {
           </Suspense>
         </MemoryRouter>,
       );
-      expect(await screen.findByText("/procurement")).toBeInTheDocument();
+      expect(await screen.findByText("/enterprise")).toBeInTheDocument();
     },
   );
 });

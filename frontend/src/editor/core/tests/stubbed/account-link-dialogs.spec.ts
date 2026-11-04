@@ -109,7 +109,7 @@ for (const path of ["/settings/account-link", "/settings/billing"]) {
 test("the Enterprise page asks an unlinked server to connect first, and only on request", async ({
   page,
 }) => {
-  await page.goto("/procurement");
+  await page.goto("/enterprise");
   const connect = page.getByRole("button", {
     name: "Link account",
     exact: true,

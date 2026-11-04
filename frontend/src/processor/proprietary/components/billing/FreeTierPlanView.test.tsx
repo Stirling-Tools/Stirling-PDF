@@ -190,7 +190,7 @@ describe("FreeTierPlanView", () => {
       fireEvent.click(screen.getByRole("button", { name: button }));
 
       expect(openLinkModal).not.toHaveBeenCalled();
-      expect(screen.getByTestId("location")).toHaveTextContent("/procurement");
+      expect(screen.getByTestId("location")).toHaveTextContent("/enterprise");
     },
   );
 

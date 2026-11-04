@@ -30,7 +30,7 @@ describe("LoggedInState", () => {
   });
 
   it("returns to the destination remembered before an auth detour", async () => {
-    rememberPendingDestination("/procurement");
+    rememberPendingDestination("/enterprise");
     render(
       <MemoryRouter>
         <LoggedInState />
@@ -38,7 +38,7 @@ describe("LoggedInState", () => {
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/procurement", {
+      expect(mockNavigate).toHaveBeenCalledWith("/enterprise", {
         replace: true,
       });
     });
