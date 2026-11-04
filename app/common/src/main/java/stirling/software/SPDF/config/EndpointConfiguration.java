@@ -608,23 +608,10 @@ public class EndpointConfiguration {
         // file-to-pdf has multiple implementations
         addEndpointAlternative("file-to-pdf", "LibreOffice");
         addEndpointAlternative("file-to-pdf", "Unoconvert");
-        // Stirling Office Convert, when enabled, keeps Office conversions working without
-        // LibreOffice
-        if (applicationProperties.getSystem().isStirlingOfficeConversion()) {
-            addEndpointAlternative("file-to-pdf", "Java");
-            addEndpointAlternative("pdf-to-word", "Java");
-            addEndpointAlternative("pdf-to-presentation", "Java");
-            addEndpointAlternative("pdf-to-rtf", "Java");
-        }
-
         // pdf-to-html and pdf-to-markdown can use either LibreOffice or Pdftohtml
         addEndpointAlternative("pdf-to-html", "LibreOffice");
         addEndpointAlternative("pdf-to-html", "Pdftohtml");
         addEndpointAlternative("pdf-to-markdown", "Pdftohtml");
-
-        // markdown-to-pdf can use either Weasyprint or Java
-        addEndpointAlternative("markdown-to-pdf", "Weasyprint");
-        addEndpointAlternative("markdown-to-pdf", "Java");
 
         // Weasyprint dependent endpoints
         addEndpointToGroup("Weasyprint", "html-to-pdf");
