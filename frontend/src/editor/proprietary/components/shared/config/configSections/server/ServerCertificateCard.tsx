@@ -5,6 +5,7 @@ import { TextInput, NumberInput, Stack, Paper, Group } from "@mantine/core";
 import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import { useLoginRequired } from "@editor/hooks/useLoginRequired";
 import type { GeneralCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * The certificate behind "Sign with Stirling-PDF". This was the whole Features
@@ -50,6 +51,7 @@ export function ServerCertificateCard({
 
         <div>
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>

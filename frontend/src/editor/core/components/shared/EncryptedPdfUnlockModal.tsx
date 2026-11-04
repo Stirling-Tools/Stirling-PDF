@@ -4,6 +4,7 @@ import { Button } from "@editor/ui/Button";
 import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface EncryptedPdfUnlockModalProps {
   opened: boolean;
@@ -121,6 +122,7 @@ const EncryptedPdfUnlockModal = ({
           </Text>
         )}
         <PasswordInput
+          className={privateContentClassName}
           label={
             ownerUnlock
               ? t("encryptedPdfUnlock.ownerPassword", "Permissions password")

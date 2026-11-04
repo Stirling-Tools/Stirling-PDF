@@ -21,6 +21,7 @@ import {
   MASKED_SECRET,
 } from "@editor/components/shared/config/configSections/aiEngineSettings";
 import type { AiCardProps } from "@editor/components/shared/config/configSections/ai/aiCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface AiDocumentsCardProps extends AiCardProps {
   /** The picked embedding model differs from the one the server indexed with. */
@@ -156,6 +157,7 @@ export function AiDocumentsCard({
 
           {showEmbeddingApiKey && (
             <PasswordInput
+              className={privateContentClassName}
               label={
                 <Group gap="xs">
                   <span>{embeddingApiKeyLabel}</span>
@@ -193,6 +195,7 @@ export function AiDocumentsCard({
 
           {showEmbeddingBaseUrl && (
             <TextInput
+              className={privateContentClassName}
               label={
                 <Group gap="xs">
                   <span>
