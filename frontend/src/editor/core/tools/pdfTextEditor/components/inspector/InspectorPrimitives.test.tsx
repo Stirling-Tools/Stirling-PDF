@@ -1,5 +1,6 @@
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { Field } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 
@@ -13,19 +14,19 @@ function renderField() {
       </Field>
     </MantineProvider>,
   );
-  return screen.getByRole("img", { name: HINT });
+  return screen.getByRole("button", { name: HINT });
 }
 
 describe("Field hint", () => {
   it("shows the hint when the pointer rests on its icon", async () => {
-    fireEvent.mouseEnter(renderField());
-    expect(await screen.findByRole("tooltip")).toHaveTextContent(HINT);
+    await userEvent.setup().hover(renderField());
+    expect(await screen.findByRole("dialog")).toHaveTextContent(HINT);
   });
 
   it("shows the hint when its icon takes keyboard focus", async () => {
     const icon = renderField();
-    expect(icon).toHaveAttribute("tabindex", "0");
-    fireEvent.focus(icon);
-    expect(await screen.findByRole("tooltip")).toHaveTextContent(HINT);
+    await userEvent.setup().tab();
+    expect(icon).toHaveFocus();
+    expect(await screen.findByRole("dialog")).toHaveTextContent(HINT);
   });
 });
