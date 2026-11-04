@@ -18,6 +18,7 @@ import {
 } from "@editor/hooks/tools/sign/useSavedSignatures";
 import { SignatureCreationStep } from "@editor/components/tools/certSign/steps/SignatureCreationStep";
 import { type SignatureType } from "@editor/components/shared/wetSignature/SignatureTypeSelector";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface SignControlsPanelProps {
   placementMode: boolean;
@@ -78,7 +79,9 @@ export default function SignControlsPanel({
     (sig: SavedSignature) => {
       if (sig.type === "text") {
         return (
-          <span className="signing-controls__preview">
+          <span
+            className={`signing-controls__preview ${privateContentClassName}`}
+          >
             <Text
               size="lg"
               style={{
@@ -97,7 +100,9 @@ export default function SignControlsPanel({
       }
 
       return (
-        <span className="signing-controls__preview">
+        <span
+          className={`signing-controls__preview ${privateContentClassName}`}
+        >
           <img
             src={sig.dataUrl}
             alt={
@@ -380,7 +385,11 @@ export default function SignControlsPanel({
                 "Change signature",
               )}
             >
-              <span className="signing-controls__preview">{previewNode}</span>
+              <span
+                className={`signing-controls__preview ${privateContentClassName}`}
+              >
+                {previewNode}
+              </span>
             </Button>
           </Menu.Target>
           <Menu.Dropdown>

@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.RegexPatternUtils;
 
 /**
@@ -119,6 +120,8 @@ public class ExternalAppDepConfig {
             // Python / OpenCV special handling
             checkPythonAndOpenCV();
 
+            disableCalibreUnlessConfined();
+
             dependenciesChecked = true;
             saveCachedDependencyState();
         } finally {
@@ -202,6 +205,19 @@ public class ExternalAppDepConfig {
                 + sOfficePath;
     }
 
+    private void disableCalibreUnlessConfined() {
+        if (!endpointConfiguration.isGroupEnabled("Calibre")
+                || ProcessExecutor.isCalibreSandboxUsable(List.of(calibrePath, "--version"))) {
+            return;
+        }
+        endpointConfiguration.disableGroup(
+                "Calibre", EndpointConfiguration.DisableReason.DEPENDENCY);
+        log.warn(
+                "Calibre cannot be confined on this host - Disabling group: Calibre (Affected"
+                        + " features: {})",
+                String.join(", ", getAffectedFeatures("Calibre")));
+    }
+
     private void checkDependencyAndDisableGroup(String command) {
         boolean available = isCommandAvailable(command);
 
@@ -245,7 +261,7 @@ public class ExternalAppDepConfig {
                                     required,
                                     String.join(", ", affectedGroups));
                         } else {
-                            log.info("WeasyPrint {} meets minimum {}", installed, required);
+                            log.debug("WeasyPrint {} meets minimum {}", installed, required);
                         }
                     },
                     () ->
@@ -273,7 +289,7 @@ public class ExternalAppDepConfig {
                                     required,
                                     String.join(", ", affectedGroups));
                         } else {
-                            log.info("qpdf {} meets minimum {}", installed, required);
+                            log.debug("qpdf {} meets minimum {}", installed, required);
                         }
                     },
                     () -> log.warn("qpdf version could not be determined ({} --version)", command));

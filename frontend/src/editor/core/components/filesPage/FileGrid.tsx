@@ -56,6 +56,7 @@ import type { FilesPageSortMode } from "@editor/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@editor/components/filesPage/OpenInNewWindowMenuItem";
 import { useLongPress } from "@editor/components/filesPage/useLongPress";
 import { useIsTouch } from "@editor/hooks/useIsMobile";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export type FilesPageViewMode = "grid" | "list";
 
@@ -742,7 +743,7 @@ const FolderCard = React.memo(function FolderCard({
         e.dataTransfer.effectAllowed = "move";
       }}
       {...(selectionOnly ? {} : dropHandlers)}
-      className={`files-page-card is-folder${isDropTarget ? " is-drop-target" : ""}`}
+      className={`files-page-card is-folder${isDropTarget ? " is-drop-target" : ""} ${privateContentClassName}`}
       onClick={onOpen}
       onContextMenu={(e) => {
         e.preventDefault();
@@ -1286,7 +1287,7 @@ const FileCard = React.memo(function FileCard({
         }
         if (e.key === "Enter") onDoubleClick();
       }}
-      className={`files-page-card${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}${locked ? " is-locked" : ""}`}
+      className={`files-page-card${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}${locked ? " is-locked" : ""} ${privateContentClassName}`}
       title={disabledReason ?? (locked ? lockedHint : undefined)}
     >
       {isInWorkspace && (
@@ -1712,7 +1713,7 @@ const FolderRow = React.memo(function FolderRow({
       onKeyDown={(e) => {
         if (e.target === e.currentTarget && e.key === "Enter") onOpen();
       }}
-      className={`files-page-list-row${isDropTarget ? " is-drop-target" : ""}`}
+      className={`files-page-list-row${isDropTarget ? " is-drop-target" : ""} ${privateContentClassName}`}
     >
       {selectionColumn && <span aria-hidden="true" />}
 
@@ -1945,7 +1946,7 @@ const FileRow = React.memo(function FileRow({
         }
         if (e.key === "Enter") onOpen();
       }}
-      className={`files-page-list-row${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}${locked ? " is-locked" : ""}`}
+      className={`files-page-list-row${isSelected ? " is-selected" : ""}${isInWorkspace ? " is-in-workspace" : ""}${locked ? " is-locked" : ""} ${privateContentClassName}`}
       title={disabledReason ?? (locked ? lockedHint : undefined)}
     >
       {selectionColumn &&
@@ -2108,7 +2109,7 @@ const DiskFileCard = React.memo(function DiskFileCard({
   const isPdf = extension === "PDF";
   return (
     <div
-      className={`files-page-card${locked ? " is-locked" : ""}${isSelected ? " is-selected" : ""}`}
+      className={`files-page-card${locked ? " is-locked" : ""}${isSelected ? " is-selected" : ""} ${privateContentClassName}`}
       role="listitem"
       tabIndex={0}
       aria-label={
@@ -2272,7 +2273,7 @@ const DiskFileRow = React.memo(function DiskFileRow({
         if (selectionOnly && !locked)
           actions.selectDiskFile(entry, event.shiftKey);
       }}
-      className={`files-page-list-row${locked ? " is-locked" : ""}${isSelected ? " is-selected" : ""}`}
+      className={`files-page-list-row${locked ? " is-locked" : ""}${isSelected ? " is-selected" : ""} ${privateContentClassName}`}
       onDoubleClick={onOpen}
       onKeyDown={(e) => {
         if (e.key === " " && selectionOnly) {

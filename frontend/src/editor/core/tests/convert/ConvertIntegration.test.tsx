@@ -463,6 +463,7 @@ describe("Convert Tool Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "pdf-to-img",
         },
       );
 
@@ -806,6 +807,7 @@ describe("Convert Tool Integration Tests", () => {
         expect.any(FormData),
         {
           responseType: "blob",
+          endpointName: "pdf-to-csv",
         },
       );
 
