@@ -82,8 +82,8 @@ export function innerTags(
   if (!block) return [];
   return elementStretches(doc, run.pageIndex, run.id).flatMap(
     ({ start, end, element }) => {
-      const role =
-        element.key === block.key ? null : structure.innerType(element.key);
+      if (!structure.marksPartOf(element, block.key)) return [];
+      const role = structure.innerType(element.key);
       if (!role) return [];
       const options = structure.innerOptions(element.key);
       const text = run.text.slice(start, end);

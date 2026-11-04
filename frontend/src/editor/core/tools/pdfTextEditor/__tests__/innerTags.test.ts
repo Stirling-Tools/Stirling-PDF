@@ -11,7 +11,9 @@ import {
   test,
   vi,
 } from "vitest";
+import { MergeRunsCommand } from "@editor/tools/pdfTextEditor/commands/MergeRunsCommand";
 import { RetagInnerCommand } from "@editor/tools/pdfTextEditor/commands/RetagInnerCommand";
+import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
 import { TagTextRangeCommand } from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
@@ -25,6 +27,7 @@ import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextR
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { innerTags } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import { singleContentPdf } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 const SAMPLE = path.join(
   import.meta.dirname,
@@ -222,5 +225,49 @@ describe("tags inside a run's text", () => {
     const [label] = tagsIn(doc, "Close the two delayed");
     expect(() => retag(doc, new HistoryStack(), label.key, null)).toThrow();
     expect(doc.structureEdits()).toEqual([]);
+  });
+});
+
+describe("tags inside a run grouped from several paragraphs", () => {
+  const TWO_PARAGRAPHS = singleContentPdf(
+    "BT /F1 12 Tf 72 700 Td (The first paragraph.) Tj ET\n" +
+      "BT /F1 12 Tf 72 640 Td (The second paragraph.) Tj ET\n",
+  );
+
+  async function openFirstPage(bytes: Uint8Array) {
+    const doc = await EditorDocument.open(bytes);
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(0));
+    return doc;
+  }
+
+  function tagEachAsParagraph(doc: EditorDocument, history: HistoryStack) {
+    for (const run of [...doc.page(0).runs]) {
+      history.execute(
+        new TagTextCommand({ pageIndex: 0, runId: run.id, as: "P" }),
+        doc,
+      );
+    }
+  }
+
+  function groupAndListTags(doc: EditorDocument, history: HistoryStack) {
+    const runIds = doc.page(0).runs.map((run) => run.id);
+    expect(runIds).toHaveLength(2);
+    history.execute(new MergeRunsCommand({ pageIndex: 0, runIds }), doc);
+    return innerTags(doc, doc.page(0).runs[0].snapshot());
+  }
+
+  test("lists no tags for paragraphs the session tagged", async () => {
+    const doc = await openFirstPage(TWO_PARAGRAPHS);
+    const history = new HistoryStack();
+    tagEachAsParagraph(doc, history);
+    expect(groupAndListTags(doc, history)).toEqual([]);
+  });
+
+  test("lists no tags for the file's paragraphs", async () => {
+    const tagging = await openFirstPage(TWO_PARAGRAPHS);
+    tagEachAsParagraph(tagging, new HistoryStack());
+    const doc = await openFirstPage((await saved(tagging)).bytes);
+    expect(groupAndListTags(doc, new HistoryStack())).toEqual([]);
   });
 });

@@ -579,6 +579,18 @@ export class PageStructure {
     return change === null ? null : { role: change, type: change };
   }
 
+  /**
+   * True when `el` marks part of block `blockKey`'s text: an inline element in
+   * it, or text the session cut from it. The element of a neighbouring block
+   * whose text was grouped in is not.
+   */
+  marksPartOf(el: StructureElement, blockKey: string): boolean {
+    if (el.key === blockKey) return false;
+    const cut = this.cutMcid(el.key);
+    if (cut !== null) return this.cuts.get(cut)!.owner.block.key === blockKey;
+    return this.fileElements.has(el) && el.block.key === blockKey;
+  }
+
   /** What element `key` can be changed to. Throws as innerType does. */
   innerOptions(key: string): InnerOptions {
     if (this.readOnly) return { types: [], removable: false };
