@@ -150,7 +150,7 @@ public class McpSecurityConfig {
                                             response.setContentType("application/json");
                                             response.getWriter()
                                                     .write(
-                                                            "{\"error\":\"unauthorized\",\"message\":\"Provide a valid Stirling API key via the X-API-KEY header (or Authorization: Bearer <key>). This server runs MCP in API-key mode and publishes no OAuth metadata; clients that only support OAuth need mcp.auth.mode=oauth.\"}");
+                                                            "{\"error\":\"unauthorized\",\"message\":\"Provide a valid Stirling API key via the X-API-KEY header (or Authorization: Bearer <key>). This server runs MCP in API-key mode and publishes no OAuth metadata; OAuth-only clients need mcp.auth.mode=builtin with built-in sign-in support, or mcp.auth.mode=oauth with a configured external identity provider.\"}");
                                         }))
                 .addFilterBefore(
                         new McpRequestSizeFilter(

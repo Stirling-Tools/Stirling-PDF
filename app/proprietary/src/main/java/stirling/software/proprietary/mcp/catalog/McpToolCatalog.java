@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,6 +33,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.ApplicationProperties;
 
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
@@ -171,7 +173,28 @@ public class McpToolCatalog {
     private ObjectNode paramSchemaFor(HandlerMethod handler) {
         Optional<Class<?>> bodyType = firstComplexParamType(handler);
         if (bodyType.isPresent()) {
-            return schemaGenerator.toSchema(bodyType.get());
+            ObjectNode schema = schemaGenerator.toSchema(bodyType.get());
+            ObjectNode requestParams = schemaGenerator.forRequestParams(handler.getMethod());
+            if (requestParams != null) {
+                ObjectNode properties = (ObjectNode) schema.get("properties");
+                requestParams
+                        .get("properties")
+                        .properties()
+                        .forEach(
+                                entry -> {
+                                    if (!properties.has(entry.getKey())) {
+                                        properties.set(entry.getKey(), entry.getValue());
+                                    }
+                                });
+                Set<String> requiredNames = new LinkedHashSet<>();
+                schema.path("required").forEach(value -> requiredNames.add(value.asText()));
+                requestParams.path("required").forEach(value -> requiredNames.add(value.asText()));
+                if (!requiredNames.isEmpty()) {
+                    ArrayNode required = schema.putArray("required");
+                    requiredNames.forEach(required::add);
+                }
+            }
+            return schema;
         }
         ObjectNode fromParams = schemaGenerator.forRequestParams(handler.getMethod());
         return fromParams != null ? fromParams : emptyObjectSchema();

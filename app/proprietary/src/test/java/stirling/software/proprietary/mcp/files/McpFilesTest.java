@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import stirling.software.common.cluster.KeyValueCache;
 import stirling.software.common.model.ApplicationProperties;
@@ -300,5 +301,20 @@ class McpFilesTest {
         McpFiles.McpFileException e =
                 assertThrows(McpFiles.McpFileException.class, () -> files.load(owner, "nope"));
         assertTrue(e.getMessage().contains("Unknown or expired"));
+    }
+
+    @Test
+    void saveWithoutRequestOrPublicBaseUrlRetainsTheStoredResult() throws Exception {
+        props.getMcp().setDownloadLinks("public");
+        props.getSystem().setBackendUrl("");
+        props.getMcp().getAuth().setResourceId("");
+        RequestContextHolder.resetRequestAttributes();
+
+        McpFiles.Saved saved = files.save(owner, PDF, "out.pdf", "application/pdf", true);
+
+        assertEquals("7", saved.fileId());
+        assertNull(saved.downloadUrl());
+        assertNull(saved.openUrl());
+        verify(storage).storeTemporaryFile(eq(owner), any(), any());
     }
 }

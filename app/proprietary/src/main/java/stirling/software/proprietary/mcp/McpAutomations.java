@@ -37,6 +37,7 @@ import stirling.software.proprietary.mcp.catalog.OperationMeta;
 import stirling.software.proprietary.mcp.tools.McpMetadataKeep;
 import stirling.software.proprietary.mcp.tools.McpParameterCheck;
 import stirling.software.proprietary.mcp.tools.McpPipelineStep;
+import stirling.software.proprietary.mcp.tools.McpResponses;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.controller.PolicyController;
 import stirling.software.proprietary.policy.controller.PolicyRunFiles;
@@ -119,10 +120,21 @@ public class McpAutomations {
         this.users = users;
     }
 
-    /** A message that is safe to hand back to the model. */
+    /** A validation message safe to return to the model, with its MCP failure classification. */
     public static class AutomationException extends Exception {
+        private final McpResponses.Failure failure;
+
         public AutomationException(String message) {
+            this(message, McpResponses.Failure.INVALID_REQUEST);
+        }
+
+        public AutomationException(String message, McpResponses.Failure failure) {
             super(message);
+            this.failure = failure;
+        }
+
+        public McpResponses.Failure failure() {
+            return failure;
         }
     }
 
@@ -1046,7 +1058,8 @@ public class McpAutomations {
                                 + id
                                 + ") needs the '"
                                 + meta.requiredScope()
-                                + "' scope.");
+                                + "' scope.",
+                        McpResponses.Failure.INSUFFICIENT_SCOPE);
             }
             steps.add(new McpPipelineStep(meta, step.get("parameters")));
         }

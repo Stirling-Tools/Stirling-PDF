@@ -230,7 +230,7 @@ public class StirlingListAutomationsTool implements McpTool {
             result.set("structuredContent", structured);
             return result;
         } catch (McpAutomations.AutomationException e) {
-            return McpResponses.error(mapper, e.getMessage());
+            return McpResponses.error(mapper, e.getMessage(), e.failure());
         }
     }
 }
