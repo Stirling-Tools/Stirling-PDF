@@ -11,6 +11,7 @@ import {
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { ColorPicker } from "@editor/components/annotation/shared/ColorPicker";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface TextInputWithFontProps {
   text: string;
@@ -113,6 +114,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
         label={label}
         placeholder={placeholder}
         value={text}
+        className={privateContentClassName}
         onChange={(e) => {
           onTextChange(e.target.value);
           onAnyChange?.();

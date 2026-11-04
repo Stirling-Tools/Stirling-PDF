@@ -4,7 +4,10 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
+import type {
+  PageSnapshot,
+  TextRange,
+} from "@editor/tools/pdfTextEditor/types";
 import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
 import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
@@ -19,6 +22,7 @@ import { AnnotationOutline } from "@editor/tools/pdfTextEditor/components/Annota
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { PageGuides } from "@editor/tools/pdfTextEditor/components/PageRulers";
 import { useDevicePixelRatio } from "@editor/tools/pdfTextEditor/hooks/useDevicePixelRatio";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface PageViewProps {
   document: EditorDocument;
@@ -49,6 +53,10 @@ interface PageViewProps {
     dy: number,
   ) => void;
   onEditRun: (pageIndex: number, runId: string, nextText: string) => void;
+  /** The characters selected inside a run's box, while it has focus. */
+  onSelectRunText?: (runId: string, range: TextRange | null) => void;
+  /** The characters selected inside the one selected run. */
+  selectedTextRange?: TextRange | null;
   /** Ctrl+drag committed; dx/dy in PDF points. */
   onMoveRun?: (
     pageIndex: number,
@@ -102,6 +110,8 @@ export function PageView({
   onSelectShape,
   onMoveShape,
   onEditRun,
+  onSelectRunText,
+  selectedTextRange,
   onMoveRun,
   onWrapRun,
   onResizeRun,
@@ -252,6 +262,7 @@ export function PageView({
       mx="auto"
       mb="lg"
       ref={containerRef}
+      className={privateContentClassName}
       style={{
         width: raster.width,
         height: raster.height,
@@ -418,6 +429,16 @@ export function PageView({
             highlighted={highlightedRunId === run.id}
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
             onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
+            onTextRangeChange={
+              ACCESSIBILITY_EDITING
+                ? (range) => onSelectRunText?.(run.id, range)
+                : undefined
+            }
+            textRange={
+              selectedRunIds.length === 1 && selectedRunIds[0] === run.id
+                ? selectedTextRange
+                : null
+            }
             onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
             onWrap={(maxWidthPt) =>
               onWrapRun?.(page.pageIndex, run.id, maxWidthPt)

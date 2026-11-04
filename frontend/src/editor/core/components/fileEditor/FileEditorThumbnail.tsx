@@ -39,6 +39,7 @@ import UploadToServerModal from "@editor/components/shared/UploadToServerModal";
 import ShareFileModal from "@editor/components/shared/ShareFileModal";
 import { VersionHistoryModal } from "@editor/components/filesPage/VersionHistoryModal";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useAuth } from "@editor/auth/UseSession";
 import { useFileThumbnail } from "@editor/hooks/useFileThumbnail";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import { Tooltip as StirlingTooltip } from "@editor/components/shared/Tooltip";
@@ -86,6 +87,7 @@ const FileEditorThumbnail = ({
     ? t("files.notIncludedInToolRun", "Not included in this tool run")
     : undefined;
   const { config } = useAppConfig();
+  const { isAnonymous } = useAuth();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
   const {
@@ -142,15 +144,8 @@ const FileEditorThumbnail = ({
     return (m?.[1] || "").toUpperCase();
   }, [file.name]);
 
-  const extLower = useMemo(() => {
-    const m = /\.([a-z0-9]+)$/i.exec(file.name ?? "");
-    return (m?.[1] || "").toLowerCase();
-  }, [file.name]);
-
-  const isCBZ = extLower === "cbz";
-  const isCBR = extLower === "cbr";
-
-  const uploadEnabled = config?.storageEnabled === true;
+  // Guests have no server storage to save or share into.
+  const uploadEnabled = config?.storageEnabled === true && !isAnonymous;
   const sharingEnabled =
     uploadEnabled && config?.storageSharingEnabled === true;
   const shareLinksEnabled =
@@ -249,6 +244,7 @@ const FileEditorThumbnail = ({
     alert({
       alertType: "neutral",
       title: t("fileEditor.closedFile", "Closed {{name}}", { name: file.name }),
+      privateTitle: true,
       expandable: false,
       durationMs: 3500,
     });
@@ -282,6 +278,7 @@ const FileEditorThumbnail = ({
           body: t("fileEditor.couldNotSave", "Could not save {{name}}", {
             name: file.name,
           }),
+          privateBody: true,
           expandable: true,
         });
         setShowCloseModal(false);
@@ -294,6 +291,7 @@ const FileEditorThumbnail = ({
       title: t("fileEditor.savedAndClosed", "Saved and closed {{name}}", {
         name: file.name,
       }),
+      privateTitle: true,
       expandable: false,
       durationMs: 3500,
     });
@@ -382,6 +380,7 @@ const FileEditorThumbnail = ({
                 title: t("fileEditor.unpinnedFile", "Unpinned {{name}}", {
                   name: file.name,
                 }),
+                privateTitle: true,
                 expandable: false,
                 durationMs: 3000,
               });
@@ -392,6 +391,7 @@ const FileEditorThumbnail = ({
                 title: t("fileEditor.pinnedFile", "Pinned {{name}}", {
                   name: file.name,
                 }),
+                privateTitle: true,
                 expandable: false,
                 durationMs: 3000,
               });
@@ -459,12 +459,13 @@ const FileEditorThumbnail = ({
               title: t("fileEditor.unzipping", "Unzipping {{name}}", {
                 name: file.name,
               }),
+              privateTitle: true,
               expandable: false,
               durationMs: 2500,
             });
           }
         },
-        hidden: !isZipFile || !onUnzipFile || isCBZ || isCBR,
+        hidden: !isZipFile || !onUnzipFile,
       },
       {
         id: "versionHistory",
@@ -493,8 +494,6 @@ const FileEditorThumbnail = ({
     file.name,
     file.versionNumber,
     isZipFile,
-    isCBZ,
-    isCBR,
     isPinned,
     isDamaged,
     damagedRepair,

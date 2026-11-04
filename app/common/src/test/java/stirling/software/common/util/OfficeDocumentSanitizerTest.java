@@ -1,6 +1,7 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -21,9 +22,15 @@ import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.SsrfProtectionService;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 class OfficeDocumentSanitizerTest {
 
@@ -172,6 +179,41 @@ class OfficeDocumentSanitizerTest {
         String content = new String(result.get("content.xml"), StandardCharsets.UTF_8);
         assertFalse(content.contains(EXTERNAL_URL), "External xlink:href should be stripped");
         assertTrue(content.contains("Pictures/image1.png"), "Internal href should be preserved");
+    }
+
+    @Test
+    void sanitize_logsOneSummaryPerPartNotOneLinePerHref() throws IOException {
+        StringBuilder content =
+                new StringBuilder(
+                        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                                + "<office:document-content"
+                                + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
+                                + " xmlns:xlink=\"http://www.w3.org/1999/xlink\">");
+        for (int i = 0; i < 1_000; i++) {
+            content.append("<a xlink:href=\"").append(EXTERNAL_URL).append("\"/>");
+        }
+        content.append("</office:document-content>");
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("content.xml", content.toString().getBytes(StandardCharsets.UTF_8));
+
+        Logger logger = (Logger) LoggerFactory.getLogger(OfficeDocumentSanitizer.class);
+        Level previousLevel = logger.getLevel();
+        logger.setLevel(Level.INFO);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            byte[] cleaned = sanitizer.sanitize(zip(entries), "odt");
+
+            String result = new String(unzip(cleaned).get("content.xml"), StandardCharsets.UTF_8);
+            assertFalse(result.contains(EXTERNAL_URL));
+            assertEquals(1, appender.list.size(), () -> appender.list.toString());
+            assertTrue(appender.list.get(0).getFormattedMessage().contains("1000"));
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+            logger.setLevel(previousLevel);
+        }
     }
 
     @Test

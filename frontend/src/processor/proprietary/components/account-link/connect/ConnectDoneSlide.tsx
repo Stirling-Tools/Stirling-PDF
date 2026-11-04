@@ -8,6 +8,7 @@ import { useLinkedAccountEmail } from "@processor/hooks/useLinkedAccountEmail";
 import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
 import "@processor/components/billing/billing.css";
 import "@editor/components/account-link/connect.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface Props {
   /** Closes the dialog first, so a next step does not land behind the overlay. */
@@ -127,7 +128,11 @@ export function ConnectDoneSlide({ onNavigate }: Props) {
           <span className="portal-connect__row-label">
             {t("portal.accountLink.connect.done.accountLabel", "Account")}
           </span>
-          <span className="portal-connect__row-detail">{email}</span>
+          <span
+            className={`portal-connect__row-detail ${privateContentClassName}`}
+          >
+            {email}
+          </span>
         </div>
       )}
 
