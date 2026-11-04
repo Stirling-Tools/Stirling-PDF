@@ -11,6 +11,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -311,7 +314,9 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
                 "false, false, false, tauri:state:nonce, oAuth2AutoCreateDisabled",
                 "true, false, false, tauri:state:nonce, oAuth2AutoCreateDisabled",
                 "true, true, false, tauri:state:nonce, oAuth2AdminBlockedUser",
-                "true, true, true, tauri:state:nonce, maxUsersReached"
+                "true, true, true, tauri:state:nonce, maxUsersReached",
+                "true, false, false, tauri:state:nonce+value, oAuth2AutoCreateDisabled",
+                "true, false, false, tauri:state://evil.example/?next=%2F%2Fevil&x=1#fragment, oAuth2AutoCreateDisabled"
             },
             emptyValue = "")
     void newUserIsSentToLoginErrorBeforeSavedRequest(
@@ -362,11 +367,19 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
 
         handler.onAuthenticationSuccess(request, response, authentication);
 
-        String expectedUrl = "/stirling/logout?" + expectedError + "=true";
+        URI redirect = URI.create(response.getRedirectedUrl());
+        assertEquals(null, redirect.getScheme());
+        assertEquals(null, redirect.getRawAuthority());
+        assertEquals(null, redirect.getFragment());
+        assertEquals("/stirling/logout", redirect.getPath());
+        String[] query = redirect.getRawQuery().split("&");
+        assertEquals(expectedError + "=true", query[0]);
         if (!state.isEmpty()) {
-            expectedUrl += "&state=tauri%3Astate%3Anonce";
+            assertEquals(2, query.length);
+            assertEquals("state=" + state, URLDecoder.decode(query[1], StandardCharsets.UTF_8));
+        } else {
+            assertEquals(1, query.length);
         }
-        assertEquals(expectedUrl, response.getRedirectedUrl());
         verify(userService, never())
                 .processSSOPostLogin(anyString(), anyString(), anyString(), anyBoolean(), any());
         verifyNoInteractions(jwtService);

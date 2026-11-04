@@ -6,11 +6,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -380,24 +383,49 @@ class CustomLogoutSuccessHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void desktopRejectionReturnsToCallbackAfterLogout(boolean authenticated) throws IOException {
+    @CsvSource(
+            value = {
+                "false, '', '', /stirling, /stirling/auth/callback/tauri",
+                "true, '', '', /stirling, /stirling/auth/callback/tauri",
+                "false, '', https://pdf.example.com, '', /auth/callback/tauri",
+                "true, https://api.example.com, '', /stirling, https://api.example.com/auth/callback/tauri",
+                "false, https://api.example.com, https://pdf.example.com/, /stirling, https://pdf.example.com/auth/callback/tauri",
+                "true, https://example.com/pdf/, '', /stirling, https://example.com/pdf/auth/callback/tauri"
+            },
+            emptyValue = "")
+    void desktopRejectionReturnsToCallbackAfterLogout(
+            boolean authenticated,
+            String redirectBaseUrl,
+            String frontendUrl,
+            String contextPath,
+            String expectedCallback)
+            throws IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setContextPath("/stirling");
+        request.setContextPath(contextPath);
         request.setParameter("oAuth2AutoCreateDisabled", "true");
-        request.setParameter("state", "tauri:state:n+once");
+        String nonce = "n+once&next=//evil.example/#fragment";
+        String state = "tauri:state:" + nonce;
+        request.setParameter("state", state);
         request.setCookies(new Cookie(TauriOAuthUtils.SPA_REDIRECT_COOKIE, "/auth/callback"));
-        applicationProperties.getSystem().setFrontendUrl("https://pdf.example.com");
+        applicationProperties.getSecurity().getOauth2().setRedirectBaseUrl(redirectBaseUrl);
+        applicationProperties.getSystem().setFrontendUrl(frontendUrl);
         MockHttpServletResponse response = new MockHttpServletResponse();
         OAuth2AuthenticationToken authentication =
                 authenticated ? mock(OAuth2AuthenticationToken.class) : null;
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, authentication);
 
-        assertEquals(
-                "/stirling/auth/callback/tauri?errorOAuth=oAuth2AutoCreateDisabled"
-                        + "&state=tauri%3Astate%3An%2Bonce&nonce=n%2Bonce",
-                response.getRedirectedUrl());
+        URI redirect = URI.create(response.getRedirectedUrl());
+        URI expected = URI.create(expectedCallback);
+        assertEquals(expected.getScheme(), redirect.getScheme());
+        assertEquals(expected.getRawAuthority(), redirect.getRawAuthority());
+        assertEquals(expected.getPath(), redirect.getPath());
+        assertEquals(null, redirect.getFragment());
+        String[] query = redirect.getRawQuery().split("&");
+        assertEquals(3, query.length);
+        assertEquals("errorOAuth=oAuth2AutoCreateDisabled", query[0]);
+        assertEquals("state=" + state, URLDecoder.decode(query[1], StandardCharsets.UTF_8));
+        assertEquals("nonce=" + nonce, URLDecoder.decode(query[2], StandardCharsets.UTF_8));
         assertEquals(0, response.getCookie(TauriOAuthUtils.SPA_REDIRECT_COOKIE).getMaxAge());
     }
 }

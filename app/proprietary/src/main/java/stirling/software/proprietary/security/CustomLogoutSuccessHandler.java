@@ -77,8 +77,18 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             if (TauriOAuthUtils.isTauriState(request)) {
                 String errorQuery = checkForErrors(request);
                 if (errorQuery.startsWith("errorOAuth=")) {
+                    String callbackBase =
+                            RedirectBaseUrl.landingBase(
+                                            applicationProperties
+                                                    .getSecurity()
+                                                    .getOauth2()
+                                                    .getRedirectBaseUrl(),
+                                            applicationProperties.getSystem().getFrontendUrl())
+                                    .orElse("");
                     String redirectUrl =
-                            TauriOAuthUtils.defaultTauriCallbackPath(request.getContextPath())
+                            callbackBase
+                                    + TauriOAuthUtils.defaultTauriCallbackPath(
+                                            callbackBase.isEmpty() ? request.getContextPath() : "")
                                     + "?"
                                     + errorQuery
                                     + "&state="
