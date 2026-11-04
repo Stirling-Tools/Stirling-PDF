@@ -96,7 +96,7 @@
   align-items: center;
   gap: var(--space-1);
   font-weight: var(--font-weight-medium);
-  color: var(--c-accent-fg, var(--c-primary));
+  color: var(--c-accent-text);
   text-decoration: none;
 }
 

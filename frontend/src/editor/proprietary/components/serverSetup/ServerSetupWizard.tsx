@@ -61,6 +61,7 @@ import { AiStep } from "@editor/components/serverSetup/steps/AiStep";
 import { AnalyticsStep } from "@editor/components/serverSetup/steps/AnalyticsStep";
 import { PasswordStep } from "@editor/components/serverSetup/steps/PasswordStep";
 import { QuickSummaryStep } from "@editor/components/serverSetup/steps/QuickSummaryStep";
+import { useStepCopy } from "@editor/components/serverSetup/useStepCopy";
 
 const STEP_COMPONENTS: Record<SetupStepId, ComponentType<SetupStepProps>> = {
   addresses: AddressesStep,
@@ -110,83 +111,6 @@ type Phase =
 function pageOrigin(): string {
   if (!/^https?:$/.test(window.location.protocol)) return "";
   return `${window.location.origin}${withBasePath("/")}`.replace(/\/+$/, "");
-}
-
-function useStepCopy() {
-  const { t } = useTranslation();
-  return (step: SetupStepId) => {
-    switch (step) {
-      case "addresses":
-        return {
-          title: t("serverSetup.addresses.title", "Addresses"),
-          subtitle: t(
-            "serverSetup.addresses.subtitle",
-            "How people and sign-in providers reach this server.",
-          ),
-        };
-      case "language":
-        return {
-          title: t("serverSetup.language.title", "Language"),
-          subtitle: t(
-            "serverSetup.language.subtitle",
-            "What new visitors see first.",
-          ),
-        };
-      case "signIn":
-        return {
-          title: t("serverSetup.signIn.title", "Sign-in"),
-          subtitle: t("serverSetup.signIn.subtitle", "How your team signs in."),
-        };
-      case "email":
-        return {
-          title: t("serverSetup.email.title", "Email"),
-          subtitle: t(
-            "serverSetup.email.subtitle",
-            "For invites, signing requests and shares.",
-          ),
-        };
-      case "files":
-        return {
-          title: t("serverSetup.files.title", "Files"),
-          subtitle: t(
-            "serverSetup.files.subtitle",
-            "Manage file storage and sharing.",
-          ),
-        };
-      case "ai":
-        return {
-          title: t("serverSetup.ai.title", "AI"),
-          subtitle: t(
-            "serverSetup.ai.subtitle",
-            "Document questions, automated edits and AI agents.",
-          ),
-        };
-      case "summary":
-        return {
-          title: t("serverSetup.summary.title", "Quick start"),
-          subtitle: t(
-            "serverSetup.summary.subtitle",
-            "Check the essentials. Everything else keeps its default.",
-          ),
-        };
-      case "password":
-        return {
-          title: t("serverSetup.account.title", "Set up your account"),
-          subtitle: t(
-            "serverSetup.account.subtitle",
-            "Choose how you'll sign in from now on.",
-          ),
-        };
-      case "analytics":
-        return {
-          title: t("serverSetup.analytics.title", "Analytics"),
-          subtitle: t(
-            "serverSetup.analytics.subtitle",
-            "Help make Stirling PDF better.",
-          ),
-        };
-    }
-  };
 }
 
 interface ServerSetupWizardProps {
