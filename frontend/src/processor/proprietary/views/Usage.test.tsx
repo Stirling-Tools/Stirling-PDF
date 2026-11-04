@@ -97,30 +97,17 @@ vi.mock("@editor/portal/hooks/useBundleFlowState", () => ({
   useBundleFlowState: () => bundleFlow,
 }));
 const procurement = {
-  isLinked: true,
-  loading: false,
-  loadError: null as string | null,
-  error: null,
-  open: false,
-  started: false,
-  stage: null as ProcurementSnapshot["stage"],
-  retry: vi.fn(),
-  onExploreEnterprise: vi.fn(),
-  onStartTrial: vi.fn(),
-  setOpen: vi.fn(),
+  deal: null as Pick<ProcurementSnapshot, "dealId" | "stage"> | null,
 };
 vi.mock("@editor/portal/components/procurement/useProcurement", () => ({
-  useProcurement: () => procurement,
+  useProcurementSnapshot: () => ({ data: procurement.deal }),
 }));
-vi.mock("@editor/portal/components/procurement/ProcurementBanner", () => ({
-  ControlledDealStatusHero: ({ readOnly }: { readOnly: boolean }) => (
+vi.mock("@editor/portal/components/procurement/DealStatusHero", () => ({
+  DealStatusHero: ({ onOpen }: { onOpen?: () => void }) => (
     <div data-testid="procurement-summary">
-      {readOnly ? "Read-only deal" : "Enterprise deal"}
+      {onOpen ? "Enterprise deal" : "Read-only deal"}
     </div>
   ),
-}));
-vi.mock("@editor/portal/components/procurement/ProcurementFlow", () => ({
-  ProcurementFlow: () => <div data-testid="procurement-flow" />,
 }));
 vi.mock("@editor/portal/api/fleetStats", () => ({
   fetchFleetStats: () => Promise.resolve(null),
@@ -217,13 +204,7 @@ describe("Usage — link-free wallet renderer", () => {
     bundleFlow.refresh.mockReset();
     fetchWallet.mockReset();
     refreshWalletCache.mockReset();
-    procurement.loading = false;
-    procurement.loadError = null;
-    procurement.started = false;
-    procurement.stage = null;
-    procurement.onExploreEnterprise.mockReset();
-    procurement.onStartTrial.mockReset();
-    procurement.setOpen.mockReset();
+    procurement.deal = null;
   });
 
   it("opens Team once for an over-capacity server and includes the actual allowance", async () => {
@@ -627,81 +608,48 @@ describe("Usage — link-free wallet renderer", () => {
     expect(document.getElementById("ub-plan")).toBeNull();
   });
 
-  it("starts procurement from the billing CTA without leaving Usage", async () => {
+  it("opens the Enterprise page from the billing CTA", async () => {
     fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
     renderUsage(<Usage />);
     fireEvent.click(
       await screen.findByRole("button", { name: "Get an enterprise quote" }),
     );
-    expect(procurement.onExploreEnterprise).toHaveBeenCalledTimes(1);
-    expect(screen.getByTestId("location")).toHaveTextContent(
-      "/settings/billing",
-    );
+    expect(screen.getByTestId("location")).toHaveTextContent("/procurement");
   });
 
-  it.each([
-    [null, "onExploreEnterprise"],
-    ["exploring", "onStartTrial"],
-    ["trial", "setOpen"],
-    ["quote", "setOpen"],
-    ["security", "setOpen"],
-    ["procurement", "setOpen"],
-    ["active", "setOpen"],
-  ] as const)("resumes %s once from a sales link", async (stage, action) => {
-    procurement.stage = stage;
-    procurement.started = stage !== null;
+  it("still offers the quote to a buyer who asked but never started a trial", async () => {
+    procurement.deal = { dealId: 1, stage: "exploring" };
     fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
-    renderUsage(<Usage />, "/settings/billing?procurement=start&source=sales");
-    await waitFor(() => expect(procurement[action]).toHaveBeenCalledTimes(1));
-    await waitFor(() =>
-      expect(screen.getByTestId("location")).toHaveTextContent(
-        "/settings/billing?source=sales",
-      ),
-    );
-    if (stage) expect(procurement.onExploreEnterprise).not.toHaveBeenCalled();
-  });
-
-  it("keeps a failed snapshot's start request pending instead of creating another deal", async () => {
-    procurement.loadError = "Snapshot unavailable";
-    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
-    renderUsage(<Usage />, "/settings/billing?procurement=start");
-    await screen.findByText("The full PDF Editor.");
-    expect(screen.getByText("Snapshot unavailable")).toBeInTheDocument();
-    expect(procurement.onExploreEnterprise).not.toHaveBeenCalled();
-    expect(screen.getByTestId("location")).toHaveTextContent(
-      "procurement=start",
-    );
+    renderUsage(<Usage />);
     expect(
-      screen.queryByRole("button", { name: "Get an enterprise quote" }),
-    ).not.toBeInTheDocument();
+      await screen.findByRole("button", { name: "Get an enterprise quote" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("procurement-summary")).not.toBeInTheDocument();
   });
 
   it("anchors an existing deal before Plan", async () => {
-    procurement.started = true;
-    procurement.stage = "trial";
+    procurement.deal = { dealId: 1, stage: "trial" };
     fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
     renderUsage(<Usage />);
     await screen.findByText("The full PDF Editor.");
     const section = screen.getByRole("region", { name: "Procurement" });
     expect(section.nextElementSibling?.id).toBe("ub-plan");
+    expect(screen.getByText("Enterprise deal")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Get an enterprise quote" }),
     ).not.toBeInTheDocument();
   });
 
-  it("shows members the deal without starting or mounting its mutation dialogs", async () => {
-    procurement.started = true;
-    procurement.stage = "trial";
+  it("shows members the deal with no way into it", async () => {
+    procurement.deal = { dealId: 1, stage: "trial" };
     fetchWallet.mockResolvedValue(walletOf("free"));
-    renderUsage(<Usage />, "/settings/billing?procurement=start");
+    renderUsage(<Usage />);
     await screen.findByText("The full PDF Editor.");
     expect(screen.getByText("Read-only deal")).toBeInTheDocument();
-    expect(screen.queryByTestId("procurement-flow")).not.toBeInTheDocument();
-    expect(procurement.setOpen).not.toHaveBeenCalled();
   });
 
   it("keeps the deal visible if the wallet fails", async () => {
-    procurement.started = true;
+    procurement.deal = { dealId: 1, stage: "trial" };
     fetchWallet.mockRejectedValue(new Error("Wallet unavailable"));
     renderUsage(<Usage />);
     await screen.findByText("Wallet unavailable");
@@ -835,8 +783,7 @@ describe("Usage — refresh cost", () => {
     refreshWalletCache.mockReset().mockResolvedValue(undefined);
     fetchLocalUsage.mockReset().mockResolvedValue(null);
     bundleFlow.status = "none";
-    procurement.loading = false;
-    procurement.loadError = null;
+    procurement.deal = null;
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 

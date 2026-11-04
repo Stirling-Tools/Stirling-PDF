@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -19,8 +19,8 @@ import "@processor/views/Procurement.css";
  * The agreement (security) step: the buyer reviews the full Stirling Enterprise Agreement — Master
  * Services Agreement + Order Form (from the quote) + Data Processing Addendum, one signature — then
  * signs it. The document body is served by the backend from the versioned legal registry (static
- * legal copy, English only); this component renders it, gates signing behind a scroll-through, and
- * captures the typed legal name, signatory, title, and authority. On sign it records the signature
+ * legal copy, English only); this component renders it in full and captures the typed legal name,
+ * signatory, title, and authority. On sign it records the signature
  * (pinned to the exact document version + a hash) and then accepts the quote into a subscription.
  *
  * Presented as the document itself rather than a card about it: this step names the agreement in the
@@ -40,7 +40,7 @@ export function ProcurementAgreement({
   onAgree: () => void;
   /** Hand the buyer to their SE to negotiate terms: closes this and opens scheduling. */
   onRequestChanges: () => void;
-  /** This step draws the dialog's header, so it carries the close too. */
+  /** This step draws its own header, so it carries the close too. */
   onClose?: () => void;
 }) {
   const { t } = useTranslation();
@@ -50,12 +50,10 @@ export function ProcurementAgreement({
   const [signatory, setSignatory] = useState(quote.config.contactName ?? "");
   const [title, setTitle] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const [scrolledToEnd, setScrolledToEnd] = useState(false);
   const [signing, setSigning] = useState(false);
   const [downloadingMsa, setDownloadingMsa] = useState(false);
   const [error, setError] = useState(false);
   const [downloadError, setDownloadError] = useState(false);
-  const docRef = useRef<HTMLDivElement>(null);
 
   const downloadMsa = async () => {
     setDownloadingMsa(true);
@@ -79,16 +77,9 @@ export function ProcurementAgreement({
     }
   };
 
-  const onScroll = () => {
-    const el = docRef.current;
-    if (!el) return;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 24) {
-      setScrolledToEnd(true);
-    }
-  };
-
+  // A signature is pinned to the document's version, so there is nothing to sign until it shows.
   const ready =
-    scrolledToEnd &&
+    doc != null &&
     confirmed &&
     legalName.trim().length > 0 &&
     signatory.trim().length > 0;
@@ -142,19 +133,7 @@ export function ProcurementAgreement({
         }
       />
 
-      {/* The tray scrolls, not the paper. The paper is its natural height inside it, so mid-document it
-          runs flush to the footer with no grey beneath, and the tray's bottom padding only comes into
-          view once the buyer reaches the end — the page ending is what shows they got there. */}
-      {/* Focusable and named: signing is gated on scrolling to the end, so the
-          tray has to be scrollable by keyboard as well as pointer. */}
-      <div
-        className="portal-agreement__tray portal-agreement__scroll"
-        ref={docRef}
-        onScroll={onScroll}
-        tabIndex={0}
-        role="group"
-        aria-label={t("portal.procurement.agreement.docName")}
-      >
+      <div className="portal-agreement__tray">
         <div className="portal-surface portal-agreement__doc">
           {loading && <p>{t("portal.procurement.agreement.loading")}</p>}
           {!loading && !doc && (
@@ -249,23 +228,15 @@ export function ProcurementAgreement({
           </Button>
         </div>
 
-        {/* Consent under the fields it qualifies; the gate's state under the button it gates, so the
-            reason signing is unavailable sits beside the unavailable thing. */}
         <div className="portal-agreement__signfoot">
           <label className="portal-agreement__accept">
             <input
               type="checkbox"
               checked={confirmed}
-              disabled={!scrolledToEnd}
               onChange={(e) => setConfirmed(e.target.checked)}
             />
             <span>{t("portal.procurement.agreement.confirm")}</span>
           </label>
-          {doc && !scrolledToEnd && (
-            <span className="portal-agreement__gate">
-              {t("portal.procurement.agreement.scrollHint")}
-            </span>
-          )}
         </div>
       </div>
     </div>

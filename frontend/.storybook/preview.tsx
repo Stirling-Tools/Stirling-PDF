@@ -16,7 +16,7 @@ void React;
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TierProvider, type Tier } from "@processor/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
-import { ThemeProvider, useTheme } from "@processor/contexts/ThemeContext";
+import { ThemeProvider } from "@processor/contexts/ThemeContext";
 import { UIProvider } from "@processor/contexts/UIContext";
 import { SuiProvider } from "@processor/theme/SuiProvider";
 import { MantineProvider } from "@mantine/core";
@@ -161,23 +161,6 @@ function TierKey({
 }
 
 /**
- * Makes the Storybook toolbar the SINGLE source of truth for the theme.
- */
-function ThemeBridge({
-  theme,
-  children,
-}: {
-  theme: "light" | "dark";
-  children: React.ReactNode;
-}) {
-  const { setTheme } = useTheme();
-  useEffect(() => {
-    setTheme(theme);
-  }, [theme, setTheme]);
-  return <>{children}</>;
-}
-
-/**
  * Sets the theme attributes colors.css needs — always `data-app-theme="custom"`
  * with the fixed default accent (data-accent="default"), matching the editor.
  */
@@ -261,29 +244,29 @@ const withProviders: Decorator = (Story, context) => {
   return (
     <MemoryRouter initialEntries={["/"]}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
+        {/* Forced, not saved: the toolbar is the single source of truth for the theme, and
+            saving it as the preference set open tabs flipping each other back and forth. */}
+        <ThemeProvider forcedTheme={colorScheme}>
           <SchemeSetup scheme={colorScheme} />
-          <ThemeBridge theme={colorScheme}>
-            <StoryTheme isPortalStory={isPortalStory} colorScheme={colorScheme}>
-              {/* LinkProvider must wrap TierProvider: TierContext derives its tier
+          <StoryTheme isPortalStory={isPortalStory} colorScheme={colorScheme}>
+            {/* LinkProvider must wrap TierProvider: TierContext derives its tier
                   from useLink() (matches App.tsx's nesting). */}
-              <LinkProvider key={linkState} initialState={linkState}>
-                <TierKey tier={tier}>
-                  <UIProvider>
-                    <Suspense fallback={null}>
-                      {isPortalStory ? (
-                        <div className="portal-scope">
-                          <Story />
-                        </div>
-                      ) : (
+            <LinkProvider key={linkState} initialState={linkState}>
+              <TierKey tier={tier}>
+                <UIProvider>
+                  <Suspense fallback={null}>
+                    {isPortalStory ? (
+                      <div className="portal-scope">
                         <Story />
-                      )}
-                    </Suspense>
-                  </UIProvider>
-                </TierKey>
-              </LinkProvider>
-            </StoryTheme>
-          </ThemeBridge>
+                      </div>
+                    ) : (
+                      <Story />
+                    )}
+                  </Suspense>
+                </UIProvider>
+              </TierKey>
+            </LinkProvider>
+          </StoryTheme>
         </ThemeProvider>
       </QueryClientProvider>
     </MemoryRouter>

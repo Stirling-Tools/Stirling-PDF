@@ -74,6 +74,22 @@ describe("RunLocationGate", () => {
     expect(screen.getByText("The app")).toBeInTheDocument();
   });
 
+  it("lets the Enterprise landing link through without recording a choice", () => {
+    renderAt("/procurement");
+    expect(screen.getByText("The app")).toBeInTheDocument();
+    expect(window.localStorage.getItem(SEEN_KEY)).toBeNull();
+  });
+
+  it("lets sign-in through on the way back to the Enterprise page", () => {
+    renderAt("/login?next=%2Fprocurement%3Fsource%3Dsales");
+    expect(screen.getByText("The app")).toBeInTheDocument();
+  });
+
+  it("still asks on sign-in headed anywhere else", () => {
+    renderAt("/login");
+    expect(screen.queryByText("The app")).not.toBeInTheDocument();
+  });
+
   it("lets flow links through without recording a choice", () => {
     renderAt("/auth/callback");
     expect(screen.getByText("The app")).toBeInTheDocument();

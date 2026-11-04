@@ -17,6 +17,9 @@ import type { Wallet } from "@editor/billing/types";
 import type { LegacyTeamAllowance } from "@editor/types/legacyBilling";
 import "@editor/billing/billing-screen.css";
 
+/** Settings anchor that opens billing with the plan comparison showing. */
+export const COMPARE_PLANS_ANCHOR = "compare-plans";
+
 export interface BillingScreenProps {
   /** Host-specific occupied seats; null means unavailable, undefined uses the wallet. */
   usersInUse?: number | null;
@@ -129,7 +132,10 @@ export function BillingScreen({
   extras,
 }: BillingScreenProps) {
   const { t } = useTranslation();
-  const [comparing, setComparing] = useState(false);
+  // Opened straight away when linked to it, e.g. from a quote too small for Enterprise.
+  const [comparing, setComparing] = useState(
+    () => window.location.hash === `#${COMPARE_PLANS_ANCHOR}`,
+  );
 
   const enterpriseProcessor =
     Boolean(wallet?.enterprise) || serverPlan?.licenseType === "ENTERPRISE";

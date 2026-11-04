@@ -7,7 +7,6 @@ import {
   useApplyLinkFacts,
   useLinkOptional,
 } from "@editor/portal/contexts/LinkContext";
-import { useUI } from "@editor/portal/contexts/UIContext";
 import { useConnectGate } from "@editor/portal/hooks/useConnectGate";
 import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
 import { AccountConnectionNotice } from "@editor/portal/components/account-link/AccountConnectionNotice";
@@ -25,7 +24,6 @@ import type { Wallet } from "@editor/portal/api/billing";
  */
 export function PortalBillingGate() {
   const applyLinkFacts = useApplyLinkFacts();
-  const { trialSetupRequested } = useUI();
   const { loading, gated, connect } = useConnectGate();
   const isOwner = useAccountLinkOwner();
   const {
@@ -38,10 +36,7 @@ export function PortalBillingGate() {
   const link = useLinkOptional();
   const [searchParams] = useSearchParams();
   const prompted = useRef(false);
-  const accountLinkRequested =
-    trialSetupRequested ||
-    searchParams.get("procurement") === "start" ||
-    searchParams.get("upgrade") === "team";
+  const accountLinkRequested = searchParams.get("upgrade") === "team";
 
   useEffect(() => {
     if (!accountLinkRequested || link?.isLinked) prompted.current = false;

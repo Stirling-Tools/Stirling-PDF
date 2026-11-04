@@ -420,7 +420,12 @@ export default function Login() {
       >
         <Button
           variant="tertiary"
-          onClick={() => navigate("/signup")}
+          onClick={() =>
+            navigate(
+              "/signup" +
+                (nextPath ? `?next=${encodeURIComponent(nextPath)}` : ""),
+            )
+          }
           style={{
             background: "none",
             border: "none",

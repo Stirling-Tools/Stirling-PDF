@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@editor/ui";
+import { Banner, Button } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
+import { errorMessage, HttpError } from "@processor/api/http";
 import { money } from "@processor/components/procurement/format";
 import {
   buildQuote,
@@ -11,6 +12,7 @@ import {
 } from "@processor/api/procurement";
 import { LegalDocumentModal } from "@processor/components/procurement/ProcurementExtras";
 import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
+import { useProcurementPrefill } from "@processor/components/procurement/prefill";
 import "@processor/theme/surface.css";
 import "@processor/views/Procurement.css";
 
@@ -31,6 +33,15 @@ const SIZE_TIERS = [
   { mult: 2.4, key: "heavy" },
 ] as const;
 
+/** Share of the minimum from which a quote counts as nearly there, so the nudge is to top up. */
+const NEAR_MINIMUM_RATIO = 0.75;
+
+/** Flat add-on prices, in cents; mirror PricingRates.defaults() on the server. */
+const QBR_ANNUAL_MINOR = 800_000;
+const TRAINING_MINOR = 750_000;
+/** Upper bound for the volume search, far past any real estimate. */
+const MAX_VOLUME = 1_000_000_000_000;
+
 /**
  * The enterprise quote builder — volume → commitment &amp; service → details → review. A client-side
  * preview drives the live footer total; the backend is authoritative. Generating builds and issues in
@@ -46,6 +57,9 @@ export function QuoteBuilder({
   dealDetails,
   initial,
   eulaAlreadyAgreed = false,
+  minAnnualMinor = 0,
+  onComparePlans,
+  onScheduleCall,
   onGenerate,
   issued,
   downloading = false,
@@ -56,7 +70,7 @@ export function QuoteBuilder({
   seats?: number;
   /** Linked-account email; prefills the contact email on a fresh quote's details step. */
   email?: string | null;
-  /** Dismiss the dialog. The builder draws its own header, so it carries the close too. */
+  /** Dismiss the builder. It draws its own header, so it carries the close too. */
   onClose?: () => void;
   /**
    * The buying entity captured at trial setup. Seeds a fresh quote's details step so it confirms
@@ -68,6 +82,12 @@ export function QuoteBuilder({
     contactName?: string | null;
     contactEmail?: string | null;
   };
+  /** Smallest annual fee the server will quote; 0 when there is no floor. */
+  minAnnualMinor?: number;
+  /** Where a buyer too small for Enterprise goes instead: the self-serve plans. */
+  onComparePlans?: () => void;
+  /** Talk it through with us, offered when a quote falls just short of the minimum. */
+  onScheduleCall?: () => void;
   /** Seed the builder from an existing quote's config (re-editing a quote). */
   initial?: QuoteConfigInput;
   /**
@@ -88,6 +108,7 @@ export function QuoteBuilder({
 }) {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
+  const prefill = useProcurementPrefill();
   const [cfg, setCfg] = useState<QuoteConfigInput>(
     initial ?? {
       // Users-first: with no seats from the trial, leave volume empty so entering the team size
@@ -97,7 +118,9 @@ export function QuoteBuilder({
       intensity: 4, // Governed — the default governance posture per the pricing alignment
       sizeMult: 1.4, // Standard — the default PDF-size tier (D93)
       deployment,
-      termYears: 3,
+      // One year: the sizing step prices the base rate, and longer terms' discounts belong to the
+      // commitment step where the term is chosen.
+      termYears: 1,
       serviceLevel: "priority",
       indemnification: false,
       training: false,
@@ -105,22 +128,30 @@ export function QuoteBuilder({
       businessName: dealDetails?.businessName ?? "",
       contactName: dealDetails?.contactName ?? "",
       contactEmail: dealDetails?.contactEmail ?? email ?? "",
-      addressLine1: "",
+      addressLine1: prefill?.addressLine1 ?? "",
       addressLine2: "",
-      city: "",
-      region: "",
-      postalCode: "",
+      city: prefill?.city ?? "",
+      region: prefill?.region ?? "",
+      postalCode: prefill?.postalCode ?? "",
       poNumber: "",
       taxId: "",
     },
   );
-  // A seeded quote carries a volume but no user count, so treat it as manually set.
+  // A seeded quote's volume may have been typed rather than estimated, so keep it as is.
   const [manualVolume, setManualVolume] = useState(initial != null);
   // Never pre-ticked, even when re-editing a quote: a consent the buyer did not tick in this session
   // is not a consent, and recordLegalConsent would have logged one as though they had.
   const [eula, setEula] = useState(false);
   const [legalDoc, setLegalDoc] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [generateError, setGenerateError] = useState<{
+    message: string;
+    /** The server declined the deal for its size, so the self-serve plans are the way on. */
+    tooSmall: boolean;
+  } | null>(null);
+  // Set by moving on (or generating) under the floor, so the warning answers that step rather than
+  // nagging while the buyer is still sizing the quote.
+  const [triedBelowMinimum, setTriedBelowMinimum] = useState(false);
   // Only surface field errors once the buyer tries to generate — no red fields on first sight.
   const [showErrors, setShowErrors] = useState(false);
 
@@ -160,7 +191,12 @@ export function QuoteBuilder({
   }, [issued?.quoteId]);
 
   const preview = previewAnnualMinor(cfg);
-  const tcvPreview = preview * cfg.termYears + (cfg.training ? 750_000 : 0);
+  const tcvPreview =
+    preview * cfg.termYears + (cfg.training ? TRAINING_MINOR : 0);
+  // Priced off the usage fee, so its figure moves with the rest of the quote.
+  const indemnityPreview =
+    previewAnnualMinor({ ...cfg, indemnification: true }) -
+    previewAnnualMinor({ ...cfg, indemnification: false });
 
   // On the review step the footer quotes the issued figures rather than the client-side preview, so
   // the running total never disagrees with the paper directly above it.
@@ -177,20 +213,75 @@ export function QuoteBuilder({
         tcv: money(tcvPreview),
       };
 
+  // The preview mirrors the server's pricing, so a draft under the floor is caught here rather
+  // than by the server refusing to price it.
+  const belowMinimum =
+    !onPaper && minAnnualMinor > 0 && preview < minAnnualMinor;
+  const showMinimum = belowMinimum && triedBelowMinimum;
+  // Close enough that a little more usage clears it: help them over rather than away.
+  const nearMinimum =
+    belowMinimum && preview >= minAnnualMinor * NEAR_MINIMUM_RATIO;
+
+  /** Lift the estimated volume just far enough for the quote to clear the minimum. */
+  function raiseToMinimum() {
+    let low = cfg.volume;
+    let high = Math.max(cfg.volume, 1) * 2;
+    while (
+      previewAnnualMinor({ ...cfg, volume: high }) < minAnnualMinor &&
+      high < MAX_VOLUME
+    ) {
+      low = high;
+      high *= 2;
+    }
+    while (high - low > 1) {
+      const mid = Math.floor((low + high) / 2);
+      if (previewAnnualMinor({ ...cfg, volume: mid }) >= minAnnualMinor)
+        high = mid;
+      else low = mid;
+    }
+    setManualVolume(true);
+    set("volume", high);
+  }
+
   // Fully filled → price + hand the draft to the parent to issue as a Stripe Quote (which then shows
   // as the milestone). No separate in-builder preview step.
+  // Moving on never waits on the minimum; it only raises the warning, which stays until the
+  // quote clears it.
+  function advance(next: number) {
+    if (belowMinimum) setTriedBelowMinimum(true);
+    setStep(next);
+  }
+
   async function generate() {
     if (!canGenerate) {
       setShowErrors(true);
       return;
     }
+    if (belowMinimum) {
+      setTriedBelowMinimum(true);
+      return;
+    }
     setBusy(true);
+    setGenerateError(null);
     try {
       const quote = await buildQuote(cfg);
       // Record the EULA clickwrap only when it's collected here — i.e. the buyer didn't already
       // accept it at trial start. Best-effort.
       if (!eulaAlreadyAgreed) void recordLegalConsent("eula", "quote");
       onGenerate(quote);
+    } catch (e) {
+      // A conflict is the server declining to price this deal, most often for falling under the
+      // minimum Enterprise size; anything else is a plain failure.
+      const tooSmall = e instanceof HttpError && e.status === 409;
+      setGenerateError({
+        tooSmall,
+        message: tooSmall
+          ? t(
+              "portal.procurement.builder.belowMinimum",
+              "This quote is below the minimum size for an Enterprise deal.",
+            )
+          : errorMessage(e),
+      });
     } finally {
       setBusy(false);
     }
@@ -226,7 +317,9 @@ export function QuoteBuilder({
                   onChange={(e) => {
                     const users = Number(e.target.value);
                     set("users", users);
-                    if (!manualVolume) set("volume", estimateVolume(users));
+                    // A manual figure gives way here, as the hint under the fields promises.
+                    setManualVolume(false);
+                    set("volume", estimateVolume(users));
                   }}
                 />
               </Field>
@@ -277,7 +370,9 @@ export function QuoteBuilder({
                     key={s.key}
                     on={cfg.sizeMult === s.mult}
                     title={t(`portal.procurement.builder.size_${s.key}`)}
-                    sub={`×${s.mult} · ${t(`portal.procurement.builder.size_${s.key}Sub`)}`}
+                    // The multiplier stays in the price, not on the card: it is rate detail buyers
+                    // need not weigh, and the running estimate already shows its effect.
+                    sub={t(`portal.procurement.builder.size_${s.key}Sub`)}
                     onClick={() => set("sizeMult", s.mult)}
                   />
                 ))}
@@ -342,19 +437,28 @@ export function QuoteBuilder({
                 <AddOn
                   on={cfg.indemnification}
                   title={t("portal.procurement.builder.indemnification")}
-                  sub={t("portal.procurement.builder.indemnificationSub")}
+                  sub={`${t("portal.procurement.builder.indemnificationSub")} · ${t(
+                    "portal.procurement.builder.addonPerYear",
+                    { amount: money(indemnityPreview) },
+                  )}`}
                   onClick={() => set("indemnification", !cfg.indemnification)}
                 />
                 <AddOn
                   on={cfg.training}
                   title={t("portal.procurement.builder.training")}
-                  sub={t("portal.procurement.builder.trainingSub")}
+                  sub={`${t("portal.procurement.builder.trainingSub")} · ${t(
+                    "portal.procurement.builder.addonOneTime",
+                    { amount: money(TRAINING_MINOR) },
+                  )}`}
                   onClick={() => set("training", !cfg.training)}
                 />
                 <AddOn
                   on={cfg.qbr}
                   title={t("portal.procurement.builder.qbr")}
-                  sub={t("portal.procurement.builder.qbrSub")}
+                  sub={`${t("portal.procurement.builder.qbrSub")} · ${t(
+                    "portal.procurement.builder.addonPerYear",
+                    { amount: money(QBR_ANNUAL_MINOR) },
+                  )}`}
                   onClick={() => set("qbr", !cfg.qbr)}
                 />
               </div>
@@ -571,7 +675,15 @@ export function QuoteBuilder({
                 {issued.lineItems.map((li) => (
                   <li key={li.key} data-kind={li.kind}>
                     <span>{li.label}</span>
-                    <span>{money(li.amountMinor, issued.currency)}</span>
+                    <span>
+                      {/* Marked, since one-off charges sit outside the yearly fee totalled below. */}
+                      {li.kind === "ONE_TIME" && (
+                        <span className="portal-qb__line-note">
+                          {t("portal.procurement.review.oneTime")}
+                        </span>
+                      )}
+                      {money(li.amountMinor, issued.currency)}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -605,7 +717,9 @@ export function QuoteBuilder({
                   )}
                 </div>
                 <div className="portal-qb__total-num">
-                  {money(issued.annualNetMinor, issued.currency)}
+                  <strong>
+                    {money(issued.annualNetMinor, issued.currency)}
+                  </strong>
                 </div>
               </div>
             </div>
@@ -613,10 +727,127 @@ export function QuoteBuilder({
         )}
       </div>
 
+      {showMinimum && (
+        <Banner
+          tone="warning"
+          className="portal-qb__minimum-callout"
+          title={
+            nearMinimum
+              ? t(
+                  "portal.procurement.builder.minimumNearTitle",
+                  "You're {{gap}} a year short of Enterprise.",
+                  { gap: money(minAnnualMinor - preview) },
+                )
+              : t(
+                  "portal.procurement.builder.minimum",
+                  "Enterprise requires a minimum yearly spend of {{min}}.",
+                  { min: money(minAnnualMinor) },
+                )
+          }
+          action={
+            <div className="portal-qb__minimum-actions">
+              {nearMinimum ? (
+                <>
+                  {onScheduleCall && (
+                    <Button variant="secondary" onClick={onScheduleCall}>
+                      {t("portal.procurement.hero.scheduleCall")}
+                    </Button>
+                  )}
+                  <Button variant="primary" onClick={raiseToMinimum}>
+                    {t(
+                      "portal.procurement.builder.raiseUsage",
+                      "Raise estimated usage",
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="secondary" onClick={() => setStep(0)}>
+                    {t("portal.procurement.builder.editUsage", "Edit usage")}
+                  </Button>
+                  {onComparePlans && (
+                    <Button
+                      variant="primary"
+                      rightSection={<Icon name="arrow-right" size={16} />}
+                      onClick={onComparePlans}
+                    >
+                      {t("portal.billing.compare.open", "Compare plans")}
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+          }
+        >
+          {nearMinimum
+            ? t(
+                "portal.procurement.builder.minimumNear",
+                "Enterprise requires a minimum yearly spend of {{min}}. Raise your estimated usage to reach it, or talk it through with us.",
+                { min: money(minAnnualMinor) },
+              )
+            : t(
+                "portal.procurement.builder.minimumBelow",
+                "This quote comes to {{annual}} a year. If you expect to use more, raise your estimated usage; otherwise the Team plan is likely a better fit.",
+                { annual: money(preview) },
+              )}
+        </Banner>
+      )}
+
+      {generateError && (
+        <Banner
+          tone="danger"
+          title={t("portal.procurement.error.title")}
+          onDismiss={() => setGenerateError(null)}
+          action={
+            generateError.tooSmall &&
+            onComparePlans && (
+              <Button size="sm" onClick={onComparePlans}>
+                {t("portal.billing.compare.open", "Compare plans")}
+              </Button>
+            )
+          }
+        >
+          {generateError.message}
+        </Banner>
+      )}
+
       <div className="portal-qb__foot">
-        <span className="portal-qb__running">
-          {t("portal.procurement.builder.running", running)}
-        </span>
+        <div className="portal-qb__totals">
+          <span className="portal-qb__running-label">
+            {onPaper
+              ? t("portal.procurement.builder.runningLabelIssued")
+              : t("portal.procurement.builder.runningLabel")}
+          </span>
+          <span className="portal-qb__running">
+            {t("portal.procurement.builder.runningOneYear", {
+              annual: running.annual,
+            })}
+          </span>
+          {/* A one-year term's total is its yearly price; repeating it says nothing. */}
+          {running.years > 1 && (
+            <span className="portal-qb__running-total">
+              {t("portal.procurement.builder.runningTotal", running)}
+            </span>
+          )}
+          {/* Over one year there is no term total to fold onboarding into, so it shows on its own. */}
+          {running.years === 1 &&
+            (onPaper ? issued.config.training : cfg.training) && (
+              <span className="portal-qb__running-total">
+                {t("portal.procurement.builder.addonOneTime", {
+                  amount: money(TRAINING_MINOR),
+                })}
+              </span>
+            )}
+          {belowMinimum && !showMinimum && (
+            <span className="portal-qb__minimum">
+              {t(
+                "portal.procurement.builder.minimum",
+                "Enterprise requires a minimum yearly spend of {{min}}.",
+                { min: money(minAnnualMinor) },
+              )}
+            </span>
+          )}
+        </div>
         <div className="portal-qb__foot-btns">
           {step > 0 && (
             <Button variant="secondary" onClick={() => setStep(step - 1)}>
@@ -627,18 +858,22 @@ export function QuoteBuilder({
             <Button
               variant="primary"
               disabled={cfg.volume <= 0}
-              onClick={() => setStep(1)}
+              onClick={() => advance(1)}
             >
               {t("portal.procurement.builder.continue")}
             </Button>
           )}
           {step === 1 && (
-            <Button variant="primary" onClick={() => setStep(2)}>
+            <Button variant="primary" onClick={() => advance(2)}>
               {t("portal.procurement.builder.continue")}
             </Button>
           )}
           {step === DETAILS_STEP && (
-            <Button variant="primary" loading={busy} onClick={generate}>
+            <Button
+              variant={showMinimum ? "secondary" : "primary"}
+              loading={busy}
+              onClick={generate}
+            >
               {t("portal.procurement.builder.generate")}
             </Button>
           )}
@@ -766,7 +1001,10 @@ function AddOn({
 function estimateVolume(users: number): number {
   const raw = Math.max(0, users) * 5 * 230 * 1.75;
   const stepSize = raw >= 1_000_000 ? 50_000 : raw >= 100_000 ? 25_000 : 5_000;
-  return Math.round(raw / stepSize) * stepSize;
+  // A small team still processes something: rounding it to zero would leave nothing to price.
+  return raw > 0
+    ? Math.max(stepSize, Math.round(raw / stepSize) * stepSize)
+    : 0;
 }
 
 // Client mirror of the server pricing curve (ProcurementPricingService / quotePricing). The server
@@ -794,6 +1032,6 @@ export function previewAnnualMinor(cfg: QuoteConfigInput): number {
         ? 1_200_000
         : 0;
   const indemnity = cfg.indemnification ? Math.round(meterNet * 0.05) : 0;
-  const qbr = cfg.qbr ? 800_000 : 0;
+  const qbr = cfg.qbr ? QBR_ANNUAL_MINOR : 0;
   return meterNet + support + deploy + indemnity + qbr;
 }

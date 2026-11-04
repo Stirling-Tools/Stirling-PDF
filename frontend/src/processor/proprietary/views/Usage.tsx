@@ -17,10 +17,9 @@ import { Banner, Button } from "@editor/ui";
 import { BillingScreen, KvRow, formatPeriodDate } from "@editor/billing";
 import { useLegacySubscriptions } from "@editor/hooks/useLegacySubscriptions";
 import { LegacySubscriptionPlan } from "@editor/components/shared/config/LegacySubscriptionPlan";
-import { useUI } from "@editor/portal/contexts/UIContext";
-import { useProcurement } from "@editor/portal/components/procurement/useProcurement";
-import { ControlledDealStatusHero } from "@editor/portal/components/procurement/ProcurementBanner";
-import { ProcurementFlow } from "@editor/portal/components/procurement/ProcurementFlow";
+import { useProcurementSnapshot } from "@editor/portal/components/procurement/useProcurement";
+import { DealStatusHero } from "@editor/portal/components/procurement/DealStatusHero";
+import { useOpenEnterprise } from "@editor/portal/components/procurement/enterprisePath";
 import {
   fetchWallet,
   refreshWalletCache,
@@ -112,51 +111,15 @@ export function Usage({
     previousSessionRevision.current = sessionRevision;
     refresh();
   }, [sessionRevision, refresh]);
-  const procurement = useProcurement();
-  const { trialSetupRequested, clearTrialSetupRequest } = useUI();
+  const { data: deal } = useProcurementSnapshot();
+  const openEnterprise = useOpenEnterprise();
   const [searchParams, setSearchParams] = useSearchParams();
-  const handledProcurementRequest = useRef(false);
-  const canManageProcurement = wallet?.role === "leader";
+  const isLeader = wallet?.role === "leader";
   const bundleFlow = useBundleFlowState(
     wallet?.teamId,
-    canManageProcurement && wallet?.status === "free",
+    isLeader && wallet?.status === "free",
   );
 
-  useEffect(() => {
-    const requested =
-      trialSetupRequested || searchParams.get("procurement") === "start";
-    if (!requested) {
-      handledProcurementRequest.current = false;
-      return;
-    }
-    if (
-      handledProcurementRequest.current ||
-      !wallet ||
-      !procurement.isLinked ||
-      procurement.loading ||
-      procurement.loadError
-    )
-      return;
-    handledProcurementRequest.current = true;
-    clearTrialSetupRequest();
-    if (searchParams.get("procurement") === "start") {
-      const next = new URLSearchParams(searchParams);
-      next.delete("procurement");
-      setSearchParams(next, { replace: true });
-    }
-    if (!canManageProcurement) return;
-    if (!procurement.started) procurement.onExploreEnterprise();
-    else if (procurement.stage === "exploring") procurement.onStartTrial();
-    else procurement.setOpen(true);
-  }, [
-    trialSetupRequested,
-    searchParams,
-    setSearchParams,
-    wallet,
-    procurement,
-    canManageProcurement,
-    clearTrialSetupRequest,
-  ]);
   // Locally-accrued usage SaaS hasn't billed yet; added to the synced figure so
   // "current usage" reflects work since the last daily sync. Best-effort.
   const hasLocalInstance = localUsersInUse !== undefined;
@@ -169,22 +132,6 @@ export function Usage({
     staleTime: WALLET_POLL_MS,
     retry: false,
   });
-  const previousDeal = useRef(procurement.data);
-  useEffect(() => {
-    const previous = previousDeal.current;
-    previousDeal.current = procurement.data;
-    if (!previous || previous === procurement.data) return;
-    // A trial or agreement can change entitlements while the buyer stays on this page.
-    let cancelled = false;
-    void refreshWalletCache()
-      .catch(() => {})
-      .then(() => {
-        if (!cancelled) refresh();
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [procurement.data, refresh]);
   // From fleet-stats, not the wallet. Null when the backend cannot compute it, which omits the row.
   const { data: fleetStats } = useFleetStats();
   const editorsDeployed = fleetStats?.editorsDeployed ?? null;
@@ -442,28 +389,6 @@ export function Usage({
           {wallet?.team?.held && wallet.role === "leader" && (
             <TeamSubscriptionChange refreshKey={walletReadAt} />
           )}
-          {procurement.loadError && (
-            <Banner
-              tone="danger"
-              title={t("portal.procurement.error.title")}
-              action={
-                <Button size="sm" onClick={procurement.retry}>
-                  {t("portal.accountLink.gate.retry", "Try again")}
-                </Button>
-              }
-            >
-              {procurement.loadError}
-            </Banner>
-          )}
-          {procurement.error && !procurement.open && (
-            <Banner
-              tone="danger"
-              title={t("portal.procurement.error.title")}
-              onDismiss={() => procurement.setError(null)}
-            >
-              {procurement.error}
-            </Banner>
-          )}
           {sessionRecovery}
 
           {error && (
@@ -535,20 +460,16 @@ export function Usage({
           : undefined
       }
       procurementSection={
-        procurement.isLinked && procurement.started ? (
-          <ControlledDealStatusHero
-            controller={procurement}
-            readOnly={!canManageProcurement}
+        deal?.dealId != null && deal.stage !== "exploring" ? (
+          <DealStatusHero
+            snapshot={deal}
+            onOpen={isLeader ? openEnterprise : undefined}
           />
         ) : undefined
       }
       onEnterpriseQuote={
-        canManageProcurement &&
-        procurement.isLinked &&
-        !procurement.loading &&
-        !procurement.loadError &&
-        !procurement.started
-          ? procurement.onExploreEnterprise
+        isLeader && (deal?.dealId == null || deal.stage === "exploring")
+          ? openEnterprise
           : undefined
       }
       paymentSection={
@@ -596,7 +517,6 @@ export function Usage({
       }
       extras={
         <>
-          {canManageProcurement && <ProcurementFlow controller={procurement} />}
           {!enterpriseProcessor && wallet && wallet.status === "free" && (
             <FreePlanView
               wallet={wallet}

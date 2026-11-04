@@ -5,7 +5,7 @@ import { invokeSaasFunction } from "@editor/portal/auth/saasFunctions";
 
 /*
  * Procurement models the enterprise commercial journey: trial → quote → agreement → payment →
- * implementation. Usage & Billing hosts the deal summary and its flow dialogs.
+ * implementation. The Enterprise page hosts it; billing shows where the deal stands.
  */
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -149,6 +149,8 @@ export interface ProcurementSnapshot {
   contactName: string | null;
   contactEmail: string | null;
   latestQuote: QuoteResult | null;
+  /** Smallest annual fee a quote may come to (minor units); 0 or absent when there is no floor. */
+  minAnnualNetMinor?: number;
 }
 
 export interface QuoteConfigInput {

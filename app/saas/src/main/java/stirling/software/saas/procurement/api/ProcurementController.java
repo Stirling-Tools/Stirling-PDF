@@ -154,8 +154,7 @@ public class ProcurementController {
 
     /**
      * The inputs the quote was priced from, echoed back so the builder can seed itself when the
-     * buyer re-edits an existing quote. {@code users} is not persisted (only the resulting volume
-     * is), so it is always 0 here; the builder treats the seeded volume as manually set.
+     * buyer re-edits an existing quote. {@code users} is the licensed seat count, 0 when unset.
      */
     public record QuoteConfigEcho(
             long volume,
@@ -209,7 +208,10 @@ public class ProcurementController {
             String businessName,
             String contactName,
             String contactEmail,
-            QuoteResponse latestQuote) {}
+            QuoteResponse latestQuote,
+            // Smallest annual fee a quote may come to (minor units), so the builder can say so
+            // before the buyer prices one; 0 when there is no floor.
+            long minAnnualNetMinor) {}
 
     /** The filled agreement for review: registry metadata + the rendered markdown body. */
     public record AgreementDocumentResponse(
@@ -248,12 +250,30 @@ public class ProcurementController {
         // journey (stage, trial, quote) but the key is withheld; the .lic file is likewise gated.
         boolean leader = userTeamResolver.isLeader(caller.get());
         return ResponseEntity.ok(
-                procurement.getDeal(teamId).map(d -> toSnapshot(d, leader)).orElse(EMPTY_SNAPSHOT));
+                procurement
+                        .getDeal(teamId)
+                        .map(d -> toSnapshot(d, leader))
+                        .orElseGet(this::emptySnapshot));
     }
 
-    private static final SnapshotResponse EMPTY_SNAPSHOT =
-            new SnapshotResponse(
-                    null, null, null, 0, null, null, 0, false, null, null, null, null, null, null);
+    private SnapshotResponse emptySnapshot() {
+        return new SnapshotResponse(
+                null,
+                null,
+                null,
+                0,
+                null,
+                null,
+                0,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                config.getMinAnnualNetMinor());
+    }
 
     /**
      * Download the offline / air-gapped licence file (.lic) for the team — available for an
@@ -567,7 +587,7 @@ public class ProcurementController {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         procurement.resetDeal(teamId);
-        return ResponseEntity.ok(EMPTY_SNAPSHOT);
+        return ResponseEntity.ok(emptySnapshot());
     }
 
     // ---- helpers ------------------------------------------------------------
@@ -629,7 +649,8 @@ public class ProcurementController {
                 deal.getBusinessName(),
                 deal.getContactName(),
                 deal.getContactEmail(),
-                latest);
+                latest,
+                config.getMinAnnualNetMinor());
     }
 
     private QuoteResponse toQuote(ProcurementQuote q) {

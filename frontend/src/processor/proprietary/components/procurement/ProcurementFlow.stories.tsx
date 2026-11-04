@@ -93,7 +93,6 @@ function makeController(
     extra: null,
     setExtra: () => {},
     invoicePdf: null,
-    onStartTrial: () => {},
     onConfirmSetup: () => {},
     onExtendTrial: () => {},
     onReset: () => {},
@@ -110,8 +109,8 @@ function makeController(
 }
 
 /**
- * The procurement takeover flow: quote & agreement, payment, and live stages, driven by a
- * plain ProcurementController object (no live backend needed to render each stage).
+ * The Enterprise page's takeover: the quote builder and the agreement, driven by a plain
+ * ProcurementController object (no live backend needed to render each step).
  */
 const meta: Meta<typeof ProcurementFlow> = {
   title: "Portal/Procurement/ProcurementFlow",
@@ -127,30 +126,12 @@ export const Default: Story = {
   args: { controller: makeController() },
 };
 
-// No linked account yet: the modal shows the "link your account" empty state.
-export const Unlinked: Story = {
+// Quote accepted: the agreement to read and sign.
+export const Agreement: Story = {
   args: {
     controller: makeController({
-      isLinked: false,
-      data: null,
-      started: false,
-      stage: undefined,
-      latest: null,
-      isIssued: false,
-      isDraft: true,
-    }),
-  },
-};
-
-// Snapshot still loading: the skeleton placeholder shows instead of a stage.
-export const Loading: Story = {
-  args: {
-    controller: makeController({
-      loading: true,
-      data: null,
-      started: false,
-      stage: undefined,
-      latest: null,
+      data: { ...snapshot, stage: "security" },
+      stage: "security",
     }),
   },
 };

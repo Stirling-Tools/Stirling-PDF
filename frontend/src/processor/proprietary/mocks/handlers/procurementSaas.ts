@@ -7,6 +7,9 @@ import { http, HttpResponse } from "msw";
  */
 const SAAS = "http://saas.mock";
 
+/** The server's default floor on a quote's annual fee: USD 12,000. */
+const MIN_ANNUAL_NET_MINOR = 1_200_000;
+
 const EMPTY = {
   dealId: null,
   stage: null,
@@ -178,7 +181,7 @@ export function priceQuote(cfg: Cfg) {
     invoicePdf: null,
     config: {
       volume: cfg.volume,
-      users: 0,
+      users: cfg.users ?? 0,
       intensity,
       sizeMult,
       deployment: cfg.deployment || "cloud",
@@ -206,8 +209,93 @@ export function resetProcurementSaasStore() {
   seq = 0;
 }
 
+/** The stages a demo can jump straight to. */
+export type DemoStage =
+  | "trial"
+  | "quote"
+  | "security"
+  | "procurement"
+  | "active";
+
+const DEMO_QUOTE: Cfg = {
+  volume: 500_000,
+  users: 250,
+  intensity: 4,
+  sizeMult: 1.4,
+  // Cloud, not self-hosted: the self-hosted fee alone meets the minimum spend, so a self-hosted
+  // deal could never show the builder's minimum guidance.
+  deployment: "cloud",
+  serviceLevel: "priority",
+  termYears: 3,
+  indemnification: false,
+  training: true,
+  qbr: false,
+  businessName: "Northwind Logistics",
+  contactName: "Dana Lee",
+  contactEmail: "dana@northwind.example",
+  addressLine1: "500 Howard St",
+  city: "San Francisco",
+  region: "California",
+  postalCode: "94105",
+};
+
+/** A trial team far under the minimum spend, so building its quote opens on the minimum check. */
+const DEMO_TRIAL_SEATS = 1;
+
+/**
+ * Puts the deal straight at a stage with believable data, as if the buyer had walked there, so a
+ * demo can skip past steps it doesn't need to show.
+ */
+export function seedProcurementSaasStage(stage: DemoStage) {
+  const day = 86_400_000;
+  const now = Date.now();
+  const paid = stage === "procurement" || stage === "active";
+  const quote =
+    stage === "trial"
+      ? null
+      : {
+          ...priceQuote(DEMO_QUOTE),
+          status: paid ? "accepted" : "sent",
+          stripeQuoteId: "qt_mock_demo",
+          quoteNumber: "QT-MOCKPFX-0001-1",
+          invoiceUrl: paid
+            ? "https://invoice.stripe.com/i/mock_procurement"
+            : null,
+          invoicePdf: paid
+            ? "https://invoice.stripe.com/i/mock_procurement/pdf"
+            : null,
+        };
+  deal = {
+    dealId: 1,
+    stage,
+    deployment: DEMO_QUOTE.deployment,
+    seats: stage === "trial" ? DEMO_TRIAL_SEATS : (DEMO_QUOTE.users ?? 0),
+    trialStartedAt: new Date(now - 4 * day).toISOString(),
+    trialEndsAt: new Date(now + 10 * day).toISOString(),
+    trialExtensionsUsed: 0,
+    licensed: true,
+    licenseKey:
+      stage === "active" ? "MOCK-ENTERPRISE-KEY-0001" : "MOCK-TRIAL-KEY-0001",
+    agreementSignedVersion: paid ? "SEA v0.9.1" : null,
+    businessName: DEMO_QUOTE.businessName,
+    contactName: DEMO_QUOTE.contactName,
+    contactEmail: DEMO_QUOTE.contactEmail,
+    latestQuote: quote,
+  };
+}
+
+/** The buyer pays their first invoice: the deal goes live, as Stripe's webhook would make it. */
+export function markProcurementSaasPaid() {
+  const d = deal as Record<string, unknown>;
+  if (d.stage !== "procurement") return;
+  d.stage = "active";
+  d.licenseKey = "MOCK-ENTERPRISE-KEY-0001";
+}
+
 export const procurementSaasHandlers = [
-  http.get(`${SAAS}/api/v1/procurement`, () => HttpResponse.json(deal)),
+  http.get(`${SAAS}/api/v1/procurement`, () =>
+    HttpResponse.json({ ...deal, minAnnualNetMinor: MIN_ANNUAL_NET_MINOR }),
+  ),
   // Interest: creates the deal at `exploring` when there is none, and never disturbs one that
   // already exists — so the enterprise surface only appears for accounts that asked for it.
   http.post(`${SAAS}/api/v1/procurement/interest`, () => {
@@ -248,6 +336,9 @@ export const procurementSaasHandlers = [
   http.post(`${SAAS}/api/v1/procurement/quote`, async ({ request }) => {
     const cfg = (await request.json()) as Cfg;
     const quote = priceQuote(cfg);
+    if (quote.annualNetMinor < MIN_ANNUAL_NET_MINOR) {
+      return new HttpResponse(null, { status: 409 });
+    }
     const d = (
       deal.dealId ? deal : { dealId: 1, trialExtensionsUsed: 0 }
     ) as Record<string, unknown>;
@@ -275,9 +366,29 @@ export const procurementSaasHandlers = [
     return HttpResponse.json(deal);
   }),
   http.get(`${SAAS}/api/v1/procurement/agreement/document`, () => {
-    const q = (deal as { latestQuote: { quoteNumber?: string } | null })
-      .latestQuote;
+    const q = (
+      deal as {
+        latestQuote: {
+          quoteNumber?: string;
+          annualNetMinor: number;
+          config: {
+            businessName?: string;
+            deployment: string;
+            termYears: number;
+            users: number;
+          };
+        } | null;
+      }
+    ).latestQuote;
     if (!q) return new HttpResponse(null, { status: 404 });
+    const usd = (minor: number) =>
+      `$${Math.round(minor / 100).toLocaleString("en-US")}`;
+    const deployName =
+      q.config.deployment === "airgap"
+        ? "Air-gapped"
+        : q.config.deployment === "selfhost"
+          ? "Self-hosted"
+          : "Stirling Cloud";
     return HttpResponse.json({
       docId: "enterprise-agreement",
       version: "0.9.1",
@@ -290,10 +401,17 @@ export const procurementSaasHandlers = [
         "## Part A — Master Services Agreement",
         "Provider will provide the Stirling PDF Processor and Editor as described in the Order Form.",
         `## Part B — Order Form · ${q.quoteNumber ?? "Q-MOCK"}`,
-        "| Term | Value |",
-        "| --- | --- |",
-        "| Subscription | Enterprise · Stirling Cloud |",
-        "| Escalator | +3% at each anniversary during the Term |",
+        // One block: a blank line between rows would end the table.
+        [
+          "| Term | Value |",
+          "| --- | --- |",
+          `| Customer | ${q.config.businessName?.trim() || "Customer"} |`,
+          `| Subscription | Stirling Enterprise · ${deployName} |`,
+          `| Users | ${q.config.users.toLocaleString("en-US")} |`,
+          `| Initial term | ${q.config.termYears} year${q.config.termYears === 1 ? "" : "s"} |`,
+          `| Annual fee | ${usd(q.annualNetMinor)} |`,
+          "| Escalator | +3% at each anniversary during the Term |",
+        ].join("\n"),
         "## Part C — Data Processing Addendum",
         "Provider processes Personal Data only on Customer's documented instructions.",
       ].join("\n\n"),

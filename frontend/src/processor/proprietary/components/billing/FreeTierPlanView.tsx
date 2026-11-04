@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import type { ServerPlan } from "@editor/billing/serverPlan";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@editor/auth";
 import { qk } from "@processor/queries/keys";
@@ -15,6 +14,7 @@ import { usersBackend } from "@editor/portal/usersBackend";
 import { HttpError } from "@processor/api/http";
 import { useUI } from "@processor/contexts/UIContext";
 import "@processor/components/billing/FreeTierPlanView.css";
+import { useOpenEnterprise } from "@editor/portal/components/procurement/enterprisePath";
 
 /** {@code forbidden} is an outcome, not a failure: the endpoint is admin-only. */
 type Load =
@@ -93,7 +93,7 @@ export function FreeTierPlanView({
   const { t } = useTranslation();
   const { isAdmin } = useAuth();
   const { openLinkModal } = useUI();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const openEnterprise = useOpenEnterprise();
   const query = useQuery({
     queryKey: qk.freeTier(),
     queryFn: fetchFreeTier,
@@ -142,14 +142,6 @@ export function FreeTierPlanView({
     ? () => openLinkModal(exhausted ? "exhausted" : "link")
     : undefined;
 
-  function requestEnterpriseQuote() {
-    // The link handoff retains the URL across sign-in; Usage consumes this request once linked.
-    const next = new URLSearchParams(searchParams);
-    next.set("procurement", "start");
-    setSearchParams(next, { replace: true });
-    openLinkModal("link");
-  }
-
   return (
     <BillingScreen
       wallet={wallet}
@@ -162,7 +154,7 @@ export function FreeTierPlanView({
       pdfsProcessed={fleetStats?.pdfsProcessed ?? null}
       onAddCapacity={onLink}
       onActivateProcessor={onLink}
-      onEnterpriseQuote={isAdmin ? requestEnterpriseQuote : undefined}
+      onEnterpriseQuote={isAdmin ? openEnterprise : undefined}
       notices={
         <>
           <Banner

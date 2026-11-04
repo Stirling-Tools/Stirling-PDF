@@ -7,6 +7,9 @@ import { getAdminRouteExtensions } from "@editor/routes/adminRouteExtensions";
 
 vi.mock("@editor/routes/hasPortal", () => ({ HAS_PORTAL: true }));
 vi.mock("@processor/PortalApp", () => ({ PortalApp: () => <ViewRouter /> }));
+vi.mock("@processor/EnterpriseApp", () => ({
+  EnterpriseApp: () => <BillingLocation />,
+}));
 
 vi.mock("@processor/views/Home", () => ({ Home: () => <div>Home</div> }));
 vi.mock("@processor/views/Users", () => ({ Users: () => null }));
@@ -32,7 +35,7 @@ function BillingLocation() {
 
 describe("procurement sales links", () => {
   it.each(["/", "/app"])(
-    "accepts the short link under basename %s without duplicating the prefix",
+    "opens the Enterprise page from the short link under basename %s",
     async (basename) => {
       render(
         <MemoryRouter
@@ -50,15 +53,13 @@ describe("procurement sales links", () => {
         </MemoryRouter>,
       );
       expect(
-        await screen.findByText(
-          "/settings/billing?source=sales&procurement=start",
-        ),
+        await screen.findByText("/procurement?source=sales"),
       ).toBeInTheDocument();
     },
   );
 
   it.each(["/", "/app"])(
-    "keeps the old usage bookmark's query and section under %s",
+    "sends an old usage bookmark that started the trial to the Enterprise page under %s",
     async (basename) => {
       render(
         <MemoryRouter
@@ -75,11 +76,7 @@ describe("procurement sales links", () => {
           </Suspense>
         </MemoryRouter>,
       );
-      expect(
-        await screen.findByText(
-          "/settings/billing?procurement=start#ub-license",
-        ),
-      ).toBeInTheDocument();
+      expect(await screen.findByText("/procurement")).toBeInTheDocument();
     },
   );
 });

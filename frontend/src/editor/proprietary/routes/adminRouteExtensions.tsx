@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { Route } from "react-router-dom";
 import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
 import { HAS_PORTAL } from "@editor/routes/hasPortal";
+import { NoAppChrome } from "@editor/components/layout/NoAppChrome";
 
 const PortalApp = HAS_PORTAL
   ? lazy(async () => {
@@ -11,11 +12,11 @@ const PortalApp = HAS_PORTAL
     })
   : null;
 
-const ProcurementRedirect = HAS_PORTAL
+/** The Enterprise page reads like a website, so it carries none of the app's chrome. */
+const EnterpriseApp = HAS_PORTAL
   ? lazy(async () => {
-      const m =
-        await import("@processor/components/procurement/ProcurementRedirect");
-      return { default: m.ProcurementRedirect };
+      const m = await import("@processor/EnterpriseApp");
+      return { default: m.EnterpriseApp };
     })
   : null;
 
@@ -31,13 +32,11 @@ const ConnectCallback = HAS_PORTAL
 
 /** The portal mounts as an admin-only route-set at PORTAL_BASENAME (/processor/*). */
 export function getAdminRouteExtensions(): ReactElement[] {
-  if (!PortalApp || !ConnectCallback || !ProcurementRedirect) return [];
+  if (!PortalApp || !ConnectCallback || !EnterpriseApp) return [];
   return [
-    <Route
-      key="procurement"
-      path="/procurement"
-      element={<ProcurementRedirect />}
-    />,
+    <Route key="enterprise" element={<NoAppChrome />}>
+      <Route path="/procurement" element={<EnterpriseApp />} />
+    </Route>,
     <Route
       key="portal"
       path={`${PORTAL_BASENAME}/*`}

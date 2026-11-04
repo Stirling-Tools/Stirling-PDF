@@ -8,11 +8,22 @@ import { Sources } from "@processor/views/Sources";
 import { Integrations } from "@processor/views/Integrations";
 import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
 import { DOCS_PATH } from "@editor/routes/docsRoute";
+import { ENTERPRISE_PATH } from "@processor/components/procurement/enterprisePath";
 
 /** Keeps the query and hash a moved tab's deep links carry (?tab=, #doc-id). */
 function MovedTo({ to }: { to: string }) {
   const { search, hash } = useLocation();
   return <Navigate to={`${to}${search}${hash}`} replace />;
+}
+
+/** Old usage bookmarks; one that set out to start the Enterprise trial goes to the Enterprise page. */
+function UsageRedirect() {
+  const params = new URLSearchParams(useLocation().search);
+  return params.get("procurement") === "start" ? (
+    <Navigate to={ENTERPRISE_PATH} replace />
+  ) : (
+    <MovedTo to="/settings/billing" />
+  );
 }
 
 // The portal mounts as a route-set under /processor/* in the editor app, so these
@@ -73,10 +84,7 @@ export function ViewRouter() {
         path={rel(VIEW_PATHS.infrastructure)}
         element={<MovedTo to="/settings/api-keys" />}
       />
-      <Route
-        path={rel(VIEW_PATHS.usage)}
-        element={<MovedTo to="/settings/billing" />}
-      />
+      <Route path={rel(VIEW_PATHS.usage)} element={<UsageRedirect />} />
       <Route path={rel(VIEW_PATHS.docs)} element={<MovedTo to={DOCS_PATH} />} />
       {/* Account-link is a settings section now. */}
       <Route
