@@ -7,7 +7,8 @@ license files. Some artifacts do not publish license metadata in a form the plug
 though the artifact has a known license.
 
 This directory contains the build logic used to provide narrowly scoped fallback license metadata
-for those artifacts.
+for those artifacts, and to choose which license and URL the report shows for a dependency that
+declares several (see [Preferred license](#preferred-license)).
 
 ## Files
 
@@ -17,8 +18,10 @@ for those artifacts.
 - `src/main/groovy/stirling/software/gradle/ModuleLicenseOverrideFilter.groovy` implements the
   plugin's `DependencyFilter` interface.
 - `../app/license-overrides.json` contains the actual module-specific fallback values.
+- `src/main/groovy/stirling/software/gradle/PreferredLicenseFilter.groovy` chooses the reported
+  license and, for copyleft dependencies, the source link.
 - `../app/allowed-licenses.json` defines which detected or supplied licenses are accepted by
-  `checkLicense`.
+  `checkLicense`, and the category each one is reported under.
 
 ## How it works
 
@@ -97,7 +100,7 @@ https://github.com/<owner>/<repository>/tree/<full-commit-hash>
 Do not use the repository's default branch or another moving URL. See the existing entries in
 `app/license-overrides.json` for concrete examples.
 
-If the license name is not already accepted, add a suitably narrow rule to
+If the license name is not already accepted, add a suitably narrow rule with a `category` to
 `app/allowed-licenses.json`. Adding an override and allowing a license are separate operations:
 
 - `license-overrides.json` supplies missing metadata for a specific artifact version.
@@ -119,6 +122,50 @@ If the new artifact publishes usable license metadata, no override is necessary.
 report or license check removes the old entry from `app/license-overrides.json` automatically. The
 file must contain only overrides that are still needed.
 
+## Preferred license
+
+Without this filter, the plugin reports the alphabetically last license a dependency declares, so a
+dependency offered under Apache-2.0 or LGPL is reported as LGPL. `PreferredLicenseFilter` runs after
+the override filter and reports the declared license whose `category` in
+`app/allowed-licenses.json` comes first in this order instead:
+
+```json
+{ "moduleName": ".*", "moduleLicense": "Apache-2.0", "category": "permissive" }
+```
+
+1. `permissive`: open source, no source obligation (Apache, MIT, BSD, EDL and similar).
+2. `weak-copyleft`: open source, file-level copyleft (MPL, EPL, CDDL).
+3. `restricted`: not open source; free to use but with conditions on how (UnRar, JJ2000).
+
+LGPL and GPL licenses are not allowed, so a dependency available only under them fails
+`checkLicense`.
+
+Every entry must set a category, otherwise the license report fails. Entries are matched the same way
+`checkLicense` matches them. A declared license with no entry is never reported, and a dependency
+with no allowed license still fails `checkLicense`. Ties keep the plugin's alphabetical choice.
+
+A POM cannot say whether its licenses are alternatives or all apply, so the filter treats them as
+alternatives. When all of them apply, add one entry for the module that lists them in `allOf`:
+
+```json
+{
+  "moduleName": "com.github.jai-imageio:jai-imageio-jpeg2000",
+  "moduleLicense": "BSD 3-clause License w/nuclear disclaimer AND JJ2000",
+  "allOf": ["BSD 3-clause License w/nuclear disclaimer", "JJ2000"],
+  "category": "restricted"
+}
+```
+
+The dependency is then reported under the entry's `moduleLicense`, and the build fails if a later
+version stops declaring one of the listed licenses.
+
+When the reported license is `weak-copyleft`, the dependency's URL becomes its `-sources.jar` on
+Maven Central for the resolved version. Maven Central requires a sources jar for every published jar
+and never changes a published file, so the link does not go stale.
+
+A dependency the filter changes reports only the chosen license, in the report and in
+`checkLicense`. Other dependencies are left as the plugin reads them.
+
 ## Verification
 
 Run the filter unit tests:
@@ -131,7 +178,10 @@ The tests use `com.example:example-library` versions 1.4 and 1.7 to cover the mi
 metadata fallback, placeholder creation, version migration, preservation of a populated newer
 override, automatic cleanup after license metadata appears, exact-version matching, and concurrent
 resolved versions. They also verify removal when a dependency version disappears. A separate `1.9`
-to `1.11.0` case verifies numeric Gradle version ordering.
+to `1.11.0` case verifies numeric Gradle version ordering. `PreferredLicenseFilterTest` covers
+choosing by category, the sources jar link, ignoring licenses with no entry, module-scoped entries,
+failure on a missing category, combined `AND` licenses, and that it matches entries the same way
+`checkLicense` does.
 
 Run the normal backend license workflow from the repository root:
 
@@ -159,7 +209,8 @@ The override JSON is registered as an input of `generateLicenseReport` and
 
 - Do not use an unversioned key. It cannot match the filter and would make the intended scope
   ambiguous.
-- Do not use an override to replace valid license metadata published by a dependency.
+- Do not use an override to replace valid license metadata published by a dependency. Choosing
+  between declared licenses is handled by `PreferredLicenseFilter`.
 - Do not add an empty license to `allowed-licenses.json` merely to silence `checkLicense`; that
   would still leave the generated report without useful license information.
 - Do not exclude a dependency from the report solely because it is transitive. Runtime transitive

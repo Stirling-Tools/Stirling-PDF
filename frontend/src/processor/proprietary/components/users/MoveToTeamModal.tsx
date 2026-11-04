@@ -5,6 +5,7 @@ import { moveMemberToTeam, type Member } from "@processor/api/users";
 import type { Team } from "@processor/api/teams";
 import { errorMessage } from "@processor/api/http";
 import "@processor/views/Users.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 interface MoveToTeamModalProps {
   open: boolean;
@@ -59,7 +60,7 @@ export function MoveToTeamModal({
       onClose={onClose}
       width="sm"
       title={t("users.moveTeam.title", "Move to team")}
-      subtitle={member?.name}
+      subtitle={member && <PrivateContent>{member.name}</PrivateContent>}
       footer={
         <div className="portal-users__modal-footer">
           <Button variant="tertiary" size="sm" onClick={onClose}>
