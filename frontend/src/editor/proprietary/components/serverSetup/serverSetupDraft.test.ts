@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   aiProviderChange,
+  asksForModels,
   draftFromSettings,
   embeddingProviderChange,
   isValidUsername,
@@ -153,9 +154,11 @@ describe("validateStep", () => {
     });
   });
 
-  it("only asks for model names in Custom, where they are shown", () => {
+  it("asks for model names in either mode", () => {
     const draft = { ...initial, ai: "custom" as const, aiFastModel: "" };
-    expect(validateStep("ai", draft, "quick")).toEqual({});
+    expect(validateStep("ai", draft, "quick")).toEqual({
+      aiFastModel: "required",
+    });
     expect(validateStep("ai", draft, "custom")).toEqual({
       aiFastModel: "required",
     });
@@ -274,7 +277,42 @@ describe("switching provider", () => {
     oauthClientSecret: "********",
     aiProvider: "anthropic" as const,
     aiApiKey: "********",
+    aiFastModel: "claude-haiku-4-5",
+    aiSmartModel: "claude-haiku-4-5",
   };
+
+  it("never carries one provider's model names to another", () => {
+    expect(aiProviderChange("openai", initial)).toMatchObject({
+      aiFastModel: "",
+      aiSmartModel: "",
+    });
+    expect(aiProviderChange("anthropic", initial)).toMatchObject({
+      aiFastModel: "claude-haiku-4-5",
+      aiSmartModel: "claude-haiku-4-5",
+    });
+  });
+
+  it("has Quick start ask for model names only once there are none to keep", () => {
+    expect(asksForModels("quick", initial, initial)).toBe(false);
+    const switched = { ...initial, ...aiProviderChange("ollama", initial) };
+    expect(asksForModels("quick", switched, initial)).toBe(true);
+    expect(asksForModels("custom", initial, initial)).toBe(true);
+    const noModels = { ...initial, aiFastModel: "", aiSmartModel: "" };
+    expect(asksForModels("quick", noModels, noModels)).toBe(true);
+  });
+
+  it("will not save Your own AI without model names, in either mode", () => {
+    const switched = {
+      ...prefillAddresses(initial, ORIGIN),
+      ai: "custom" as const,
+      aiEngineUrl: "http://localhost:5001",
+      ...aiProviderChange("openai", initial),
+    };
+    expect(validateStep("summary", switched, "quick")).toMatchObject({
+      aiFastModel: "required",
+      aiSmartModel: "required",
+    });
+  });
 
   it("never hands one provider's secret to another", () => {
     expect(loginChange("keycloak", initial)).toMatchObject({

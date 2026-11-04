@@ -221,7 +221,8 @@
 /* The inline padding keeps a boxed setting's outward edge and inputs' focus
    rings clear of the scroll clip; it must exceed --setup-box-bleed. */
 .frameScroll {
-  --setup-box-bleed: calc(var(--space-4) + 1px); /* a boxed row's padding and border */
+  /* A boxed row's padding and border. */
+  --setup-box-bleed: calc(var(--space-4) + 1px);
   flex: 1 1 auto;
   min-height: 0;
   margin-inline: -1.5rem;

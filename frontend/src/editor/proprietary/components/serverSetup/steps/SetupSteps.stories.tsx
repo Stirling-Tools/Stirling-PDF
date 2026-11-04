@@ -78,7 +78,6 @@ function StepPreview({
   const [draft, setDraft] = useState<ServerSetupDraft>(() => ({
     ...prefillAddresses(initial, "http://localhost:8080"),
     analytics: true,
-    mcpEnabled: true,
     ...draftPatch,
   }));
   const [openSection, setOpenSection] = useState<ExpandableSection | null>(

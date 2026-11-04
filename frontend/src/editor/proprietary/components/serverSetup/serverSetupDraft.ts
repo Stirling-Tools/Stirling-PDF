@@ -96,7 +96,10 @@ export function loginChange(
   };
 }
 
-/** The same for the AI model provider, whose API key and base URL are its own. */
+/**
+ * The same for the AI model provider, whose API key, base URL and model names
+ * are its own: another provider's model names would make every AI call fail.
+ */
 export function aiProviderChange(
   provider: AiProvider,
   initial: ServerSetupDraft,
@@ -106,8 +109,34 @@ export function aiProviderChange(
         aiProvider: provider,
         aiApiKey: initial.aiApiKey,
         aiBaseUrl: initial.aiBaseUrl,
+        aiFastModel: initial.aiFastModel,
+        aiSmartModel: initial.aiSmartModel,
       }
-    : { aiProvider: provider, aiApiKey: "", aiBaseUrl: "" };
+    : {
+        aiProvider: provider,
+        aiApiKey: "",
+        aiBaseUrl: "",
+        aiFastModel: "",
+        aiSmartModel: "",
+      };
+}
+
+/**
+ * Whether the AI card shows the model names. Quick start keeps the server's,
+ * so it asks only once there are none to keep: a new provider, or a server
+ * without them.
+ */
+export function asksForModels(
+  mode: SetupMode,
+  draft: ServerSetupDraft,
+  initial: ServerSetupDraft,
+): boolean {
+  return (
+    mode === "custom" ||
+    draft.aiProvider !== initial.aiProvider ||
+    !initial.aiFastModel.trim() ||
+    !initial.aiSmartModel.trim()
+  );
 }
 
 /**
@@ -669,10 +698,8 @@ export function validateStep(
       if (draft.ai === "custom") {
         requireUrl("aiEngineUrl");
         if (providerNeedsBaseUrl(draft.aiProvider)) requireUrl("aiBaseUrl");
-        if (mode === "custom") {
-          require("aiFastModel");
-          require("aiSmartModel");
-        }
+        require("aiFastModel");
+        require("aiSmartModel");
       }
       if (draft.ai === "custom" && draft.documentQuestions) {
         require("embeddingModel");

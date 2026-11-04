@@ -7,7 +7,6 @@ import {
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { withBasePath } from "@editor/constants/app";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 import {
@@ -62,6 +61,7 @@ import { AnalyticsStep } from "@editor/components/serverSetup/steps/AnalyticsSte
 import { PasswordStep } from "@editor/components/serverSetup/steps/PasswordStep";
 import { QuickSummaryStep } from "@editor/components/serverSetup/steps/QuickSummaryStep";
 import { useStepCopy } from "@editor/components/serverSetup/useStepCopy";
+import { setupAddressPrefill } from "@editor/components/serverSetup/setupAddressPrefill";
 
 const STEP_COMPONENTS: Record<SetupStepId, ComponentType<SetupStepProps>> = {
   addresses: AddressesStep,
@@ -107,12 +107,6 @@ type Phase =
   | { kind: "step"; index: number }
   | { kind: "finish" };
 
-/** Prefill for the address fields; empty where the page is not served over http(s). */
-function pageOrigin(): string {
-  if (!/^https?:$/.test(window.location.protocol)) return "";
-  return `${window.location.origin}${withBasePath("/")}`.replace(/\/+$/, "");
-}
-
 interface ServerSetupWizardProps {
   onDone: () => void;
   passwordChange?: { usingDefaultCredentials: boolean };
@@ -133,9 +127,8 @@ function ServerSetupFlow({
   const usingDefaultCredentials =
     passwordChange?.usingDefaultCredentials === true;
   const [draft, setDraft] = useState<ServerSetupDraft>(() => ({
-    ...prefillAddresses(initial, pageOrigin()),
+    ...prefillAddresses(initial, setupAddressPrefill()),
     analytics: initial.analytics ?? true,
-    mcpEnabled: true,
     currentPassword: usingDefaultCredentials
       ? DEFAULT_ADMIN_CREDENTIALS.password
       : "",

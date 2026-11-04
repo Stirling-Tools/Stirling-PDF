@@ -12,6 +12,7 @@ import {
 } from "@editor/components/serverSetup/SetupFields";
 import {
   aiProviderChange,
+  asksForModels,
   embeddingNeedsApiKey,
   embeddingProviderChange,
   providerNeedsBaseUrl,
@@ -105,7 +106,7 @@ export function AiStep(props: SetupStepProps) {
               value={draft.aiApiKey}
               onChange={(aiApiKey) => update({ aiApiKey })}
             />
-            {mode === "custom" && (
+            {asksForModels(mode, draft, initial) && (
               <>
                 <TextField
                   required

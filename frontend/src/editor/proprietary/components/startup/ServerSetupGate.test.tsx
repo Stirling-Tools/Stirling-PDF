@@ -98,7 +98,11 @@ const NEW_SERVER_SETTINGS = {
   aiEngine: {
     enabled: false,
     url: "http://localhost:5001",
-    models: {},
+    models: {
+      provider: "anthropic",
+      fastModel: "claude-haiku-4-5",
+      smartModel: "claude-haiku-4-5",
+    },
     rag: { embeddingProvider: "voyageai", embeddingModel: "voyage-4" },
     features: { documentQuestions: true },
   },
@@ -258,8 +262,6 @@ describe("ServerSetupGate", () => {
     expect(api.saveServerSettings).toHaveBeenCalledWith({
       "system.frontendUrl": window.location.origin,
       "system.backendUrl": window.location.origin,
-      "mcp.enabled": true,
-      "mcp.auth.mode": "apikey",
     });
     expect(api.answerAnalytics).toHaveBeenCalledWith(true);
     expect(api.requestRestart).toHaveBeenCalled();
@@ -311,15 +313,27 @@ describe("ServerSetupGate", () => {
     expect(screen.getByText("1 of 7")).toBeInTheDocument();
   });
 
-  it("turns MCP on with API keys, whether or not AI is on", async () => {
+  it("starts MCP from the server's value and leaves it off", async () => {
     renderGate();
     await openQuickStart();
     expect(
-      within(group("AI")).getByRole("radio", { name: "Off" }),
+      within(group("MCP server")).getByRole("radio", { name: "Off" }),
     ).toBeChecked();
-    expect(
+    click("Continue");
+    click("Accept and finish");
+
+    await waitFor(() => expect(api.saveServerSettings).toHaveBeenCalled());
+    const saved = vi.mocked(api.saveServerSettings).mock.calls[0][0];
+    expect(saved).not.toHaveProperty("mcp.enabled");
+    expect(saved).not.toHaveProperty("mcp.auth.mode");
+  });
+
+  it("turns MCP on with API keys when the admin switches it on", async () => {
+    renderGate();
+    await openQuickStart();
+    fireEvent.click(
       within(group("MCP server")).getByRole("radio", { name: "On" }),
-    ).toBeChecked();
+    );
     click("Continue");
     click("Accept and finish");
 
