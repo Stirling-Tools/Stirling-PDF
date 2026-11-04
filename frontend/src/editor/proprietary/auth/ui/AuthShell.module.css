@@ -35,6 +35,14 @@
   }
 }
 
+.authCardMedium {
+  width: min(28rem, 96vw);
+}
+
+.authCardMedium .authContent {
+  max-width: 24rem; /* 28rem card minus 2rem padding each side */
+}
+
 .authCardWide {
   width: min(36rem, 96vw);
   padding: 2.5rem;

@@ -139,6 +139,11 @@
   color: var(--c-danger);
 }
 
+/* Room above and below the settings, so they don't crowd the title or the button. */
+.frame .body {
+  padding-block: var(--space-2) var(--space-4);
+}
+
 .actions {
   margin-top: var(--space-4);
   display: flex;
@@ -227,7 +232,8 @@
 }
 
 /* A setting and the fields it opens, as one rounded block. */
-.group {
+/* Only a setting that can open more fields is boxed, so its fields read as its own. */
+.group[data-expandable="true"] {
   border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -237,6 +243,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+
+.group[data-expandable="true"] .groupRow {
   padding: var(--space-3) var(--space-4);
 }
 
@@ -248,7 +257,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  padding: var(--space-4);
 }
 
 /* Grid rows animate between 0fr and 1fr, which height cannot do to auto. */

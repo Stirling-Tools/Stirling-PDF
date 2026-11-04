@@ -11933,7 +11933,6 @@ stepCount = "{{current}} of {{total}}"
 [serverSetup.account]
 failed = "Couldn't save your details. Check the server is reachable and try again."
 save = "Save and continue"
-saved = "Details saved"
 signIn = "Sign in"
 signInAgainSubtitle = "Sign in again with your new username and password to carry on."
 signInAgainTitle = "Your details are saved"
@@ -12015,7 +12014,7 @@ sharing = "File sharing"
 sharingOffWarning = "With sharing off, existing share links stop working."
 storage = "Store files"
 storageOffWarning = "With storage off, files people saved on the server can no longer be opened."
-subtitle = "Where files live."
+subtitle = "Manage file storage and sharing."
 title = "Files"
 
 [serverSetup.finish]
@@ -12061,7 +12060,6 @@ title = "Sign-in"
 
 [serverSetup.signingIn]
 button = "Signing in"
-subtitle = "You'll choose your own next."
 title = "Signing in with default credentials"
 
 [serverSetup.start]

@@ -92,8 +92,10 @@ export interface SetupStepProps {
 }
 
 /**
- * One setting as a rounded group: its label and control, then, for settings
- * that open more fields, those fields in a panel that animates open and shut.
+ * One setting: its label and control, then, for settings that open more
+ * fields, those fields in a panel that animates open and shut. A setting with
+ * `details` is boxed even while switched off, so the fields it opens read as
+ * its own.
  * `details` stays mounted while closed so it can animate; `inert` keeps its
  * fields out of the tab order meanwhile.
  */
@@ -117,7 +119,12 @@ export function SettingRow({
   const detailsId = useId();
   const open = expand?.open === true;
   return (
-    <div className={styles.group} role="group" aria-labelledby={labelId}>
+    <div
+      className={styles.group}
+      data-expandable={details !== undefined}
+      role="group"
+      aria-labelledby={labelId}
+    >
       <div className={styles.groupRow}>
         <span className={styles.settingLabel} id={labelId}>
           {label}
@@ -170,7 +177,7 @@ export function SettingRow({
   );
 }
 
-/** A rounded group of fields with no controlling setting, such as the addresses. */
+/** A set of fields with no controlling setting, such as the addresses. */
 export function FieldGroup({ children }: { children: ReactNode }) {
   return (
     <div className={styles.group}>

@@ -12,7 +12,7 @@ interface SetupStepFrameProps {
   /** Shows a Back button top left. */
   onBack?: () => void;
   title: ReactNode;
-  subtitle: ReactNode;
+  subtitle?: ReactNode;
   children?: ReactNode;
   /** Omit both to show no actions, as while the server restarts. */
   primaryLabel?: ReactNode;

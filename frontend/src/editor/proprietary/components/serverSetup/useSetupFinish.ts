@@ -1,8 +1,6 @@
 import { useCallback, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useAuth } from "@editor/auth/UseSession";
 import { springAuth } from "@editor/auth/spring/springAuthClient";
-import { alert } from "@editor/components/toast";
 import {
   answerAnalytics,
   changeAdminPassword,
@@ -110,7 +108,6 @@ export function useSetupFinish({
   onDone: () => void;
   onPasswordChanged?: () => void;
 }) {
-  const { t } = useTranslation();
   const { refreshSession, user } = useAuth();
   const [state, setState] = useState<FinishState>("idle");
   const passwordChanged = useRef(false);
@@ -154,12 +151,8 @@ export function useSetupFinish({
       if (username.toLowerCase() !== (user?.username ?? "").toLowerCase()) {
         await rename(username, draft.newPassword);
       }
-      alert({
-        alertType: "success",
-        title: t("serverSetup.account.saved", "Details saved"),
-      });
     },
-    [changePassword, rename, t, user?.username],
+    [changePassword, rename, user?.username],
   );
 
   /** Leaves setup; rotates the token first when the password was changed. */

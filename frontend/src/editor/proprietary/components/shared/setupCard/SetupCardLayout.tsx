@@ -4,7 +4,7 @@ import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 
 interface SetupCardLayoutProps {
   title: ReactNode;
-  subtitle: ReactNode;
+  subtitle?: ReactNode;
   children: ReactNode;
 }
 
@@ -20,7 +20,7 @@ export function SetupCardLayout({
         <Logo variant="iconOnly" iconHeight="2.5rem" />
         <div className={styles.headerText}>
           <h1 className={styles.title}>{title}</h1>
-          <p className={styles.subtitle}>{subtitle}</p>
+          {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
         </div>
       </header>
       <div className={styles.body}>{children}</div>

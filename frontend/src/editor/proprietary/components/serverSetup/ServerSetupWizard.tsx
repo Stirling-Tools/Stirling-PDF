@@ -148,7 +148,10 @@ function useStepCopy() {
       case "files":
         return {
           title: t("serverSetup.files.title", "Files"),
-          subtitle: t("serverSetup.files.subtitle", "Where files live."),
+          subtitle: t(
+            "serverSetup.files.subtitle",
+            "Manage file storage and sharing.",
+          ),
         };
       case "ai":
         return {

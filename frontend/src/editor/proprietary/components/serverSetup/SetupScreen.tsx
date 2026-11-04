@@ -9,7 +9,8 @@ import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 export function SetupScreen({ children }: { children: ReactNode }) {
   return (
     <div className={styles.screen} style={{ zIndex: Z_INDEX_ONBOARDING_CARD }}>
-      <AuthShell>{children}</AuthShell>
+      {/* Medium: a default OAuth redirect URI and the longest sign-in method fit on one line. */}
+      <AuthShell size="medium">{children}</AuthShell>
     </div>
   );
 }
@@ -27,10 +28,6 @@ export function SetupSignInScreen() {
         title={t(
           "serverSetup.signingIn.title",
           "Signing in with default credentials",
-        )}
-        subtitle={t(
-          "serverSetup.signingIn.subtitle",
-          "You'll choose your own next.",
         )}
         primaryLabel={t("serverSetup.signingIn.button", "Signing in")}
         onPrimary={() => {}}

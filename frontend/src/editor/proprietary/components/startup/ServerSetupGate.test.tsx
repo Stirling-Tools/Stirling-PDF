@@ -378,9 +378,8 @@ describe("ServerSetupGate", () => {
     );
     expect(api.changeAdminUsername).not.toHaveBeenCalled();
     expect(onPasswordChanged).toHaveBeenCalled();
-    expect(alert).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Details saved" }),
-    );
+    // Moving on to the next card is the confirmation; a toast would repeat it.
+    expect(alert).not.toHaveBeenCalled();
     // Refreshing reloads the app's auth state, so it waits until setup closes.
     expect(auth.refreshSession).not.toHaveBeenCalled();
 
