@@ -40,9 +40,7 @@ class PreferredLicenseFilterTest {
             allowed(APACHE, 'permissive'),
             allowed(APACHE_ALIAS, 'permissive'),
             allowed(EPL, 'weak-copyleft'),
-            allowed(MPL, 'weak-copyleft'),
-            allowed(LGPL, 'copyleft'),
-            allowed(GPL_CPE, 'copyleft')
+            allowed(MPL, 'weak-copyleft')
     ]
 
     @TempDir
@@ -69,7 +67,7 @@ class PreferredLicenseFilterTest {
     }
 
     @Test
-    void prefersWeakCopyleftOverCopyleft() {
+    void reportsWeakCopyleftWhenOtherOptionIsNotAllowed() {
         ModuleData module = createModule(EPL, LGPL)
 
         filter(module, ALLOWED)
@@ -110,13 +108,13 @@ class PreferredLicenseFilterTest {
     void appliesModuleScopedEntryOnlyToThatModule() {
         List<Map<String, String>> allowed = [
                 [moduleName: 'com.other:library', moduleLicense: UNLISTED.name, category: 'permissive'],
-                allowed(GPL_CPE, 'copyleft')
+                allowed(MPL, 'weak-copyleft')
         ]
-        ModuleData module = createModule(UNLISTED, GPL_CPE)
+        ModuleData module = createModule(UNLISTED, MPL)
 
         filter(module, allowed)
 
-        assertEquals([SOURCES_JAR, GPL_CPE.name, GPL_CPE.url], singleLicenseInfo(module))
+        assertEquals([SOURCES_JAR, MPL.name, MPL.url], singleLicenseInfo(module))
     }
 
     @Test
@@ -170,7 +168,7 @@ class PreferredLicenseFilterTest {
 
     @Test
     void failsWhenAllowedLicenseHasNoValidCategory() {
-        List<Map<String, String>> allowed = [[moduleName: '.*', moduleLicense: MPL.name], allowed(APACHE, 'high')]
+        List<Map<String, String>> allowed = [[moduleName: '.*', moduleLicense: MPL.name], allowed(APACHE, 'copyleft')]
 
         GradleException failure = assertThrows(GradleException) { filter(createModule(MPL), allowed) }
 
@@ -186,8 +184,8 @@ class PreferredLicenseFilterTest {
                 [moduleName: 'com.example:versioned', moduleVersion: '1\\..*', moduleLicense: 'Versioned License',
                  category: 'weak-copyleft'],
                 [moduleName: '.*', moduleLicense: quoted, category: 'permissive'],
-                [moduleLicense: 'No Module Name', category: 'copyleft'],
-                [moduleName: 'com.example:any-license', moduleLicense: '.*', category: 'copyleft']
+                [moduleLicense: 'No Module Name', category: 'weak-copyleft'],
+                [moduleName: 'com.example:any-license', moduleLicense: '.*', category: 'weak-copyleft']
         ]
         List<List<String>> cases = [
                 ['com.example:lib', '1.0', 'Apache License 2.0'],

@@ -202,41 +202,6 @@
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "GPL2 w/ CPE",
-      "category": "copyleft"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "GPLv2+CE",
-      "category": "copyleft"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "GNU GENERAL PUBLIC LICENSE, Version 2 + Classpath Exception",
-      "category": "copyleft"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "GNU Lesser Public License",
-      "category": "copyleft"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "The GNU Lesser General Public License",
-      "category": "copyleft"
-    },
-    {
-      "moduleName": "com.martiansoftware:jsap",
-      "moduleLicense": "LGPL",
-      "category": "copyleft"
-    },
-    {
-      "moduleName": "org.hibernate.orm:hibernate-core",
-      "moduleLicense": "GNU Library General Public License v2.1 or later",
-      "category": "copyleft"
-    },
-    {
-      "moduleName": ".*",
       "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0",
       "category": "weak-copyleft"
     },
@@ -279,11 +244,6 @@
       "moduleName": ".*",
       "moduleLicense": "EPL-2.0",
       "category": "weak-copyleft"
-    },
-    {
-      "moduleName": ".*",
-      "moduleLicense": "LGPL-2.1-only",
-      "category": "copyleft"
     },
     {
       "moduleName": ".*",

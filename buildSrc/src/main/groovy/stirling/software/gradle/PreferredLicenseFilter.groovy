@@ -12,10 +12,9 @@ import org.gradle.api.GradleException
 
 /**
  * Reports, for each dependency, the declared license with the most permissive {@code category} in
- * the allowed-licenses file ({@code permissive}, then {@code weak-copyleft}, then
- * {@code copyleft}). Ties go to the alphabetically last name, as the plugin does. Declared licenses
- * with no matching entry are never reported; a dependency with none is left for
- * {@code checkLicense} to reject.
+ * the allowed-licenses file ({@code permissive}, then {@code weak-copyleft}). Ties go to the
+ * alphabetically last name, as the plugin does. Declared licenses with no matching entry are never
+ * reported; a dependency with none is left for {@code checkLicense} to reject.
  *
  * <p>When the reported license is not {@code permissive}, the dependency's URL is replaced with its
  * {@code -sources.jar} on Maven Central for the resolved version.
@@ -32,7 +31,7 @@ import org.gradle.api.GradleException
  */
 class PreferredLicenseFilter implements DependencyFilter {
     private static final String MAVEN_CENTRAL = 'https://repo1.maven.org/maven2'
-    private static final List<String> CATEGORIES = ['permissive', 'weak-copyleft', 'copyleft']
+    private static final List<String> CATEGORIES = ['permissive', 'weak-copyleft']
     private static final String ALL_OF = ' AND '
 
     private final File allowedLicensesFile

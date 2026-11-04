@@ -125,7 +125,7 @@ file must contain only overrides that are still needed.
 ## Preferred license
 
 Without this filter, the plugin reports the alphabetically last license a dependency declares, so a
-dependency offered under Apache-2.0 or GPL is reported as GPL. `PreferredLicenseFilter` runs after
+dependency offered under Apache-2.0 or LGPL is reported as LGPL. `PreferredLicenseFilter` runs after
 the override filter and reports the declared license with the most permissive `category` in
 `app/allowed-licenses.json` instead:
 
@@ -135,7 +135,9 @@ the override filter and reports the declared license with the most permissive `c
 
 - `permissive`: no source obligation (Apache, MIT, BSD, EDL and similar).
 - `weak-copyleft`: file-level copyleft (MPL, EPL, CDDL).
-- `copyleft`: LGPL, and GPL with the Classpath Exception.
+
+LGPL and GPL licenses are not allowed, so a dependency available only under them fails
+`checkLicense`.
 
 Every entry must set a category, otherwise the license report fails. Entries are matched the same way
 `checkLicense` matches them. A declared license with no entry is never reported, and a dependency
