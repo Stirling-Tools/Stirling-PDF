@@ -100,6 +100,34 @@
       "category": "restricted"
     },
     {
+      "moduleName": "org.verapdf:verapdf-xmp-core",
+      "moduleLicense": "BSD 3-Clause License AND Mozilla Public License 2.0 (MPL-2.0)",
+      "allOf": [
+        "BSD 3-Clause License",
+        "Mozilla Public License 2.0 (MPL-2.0)"
+      ],
+      "category": "weak-copyleft"
+    },
+    {
+      "moduleName": "com.github.mwiede:jsch",
+      "moduleLicense": "Revised BSD AND ISC",
+      "allOf": [
+        "Revised BSD",
+        "ISC"
+      ],
+      "category": "permissive"
+    },
+    {
+      "moduleName": "xml-apis:xml-apis",
+      "moduleLicense": "The Apache Software License, Version 2.0 AND The SAX License AND The W3C License",
+      "allOf": [
+        "The Apache Software License, Version 2.0",
+        "The SAX License",
+        "The W3C License"
+      ],
+      "category": "permissive"
+    },
+    {
       "moduleName": ".*",
       "moduleLicense": "Apache 2",
       "category": "permissive"
