@@ -9,6 +9,8 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -17,10 +19,12 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.security.oauth2.TauriOAuthUtils;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,6 +41,7 @@ class CustomLogoutSuccessHandlerTest {
     @Test
     void testSuccessfulLogout() throws IOException {
         HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("state")).thenReturn(null);
         HttpServletResponse response = mock(HttpServletResponse.class);
         String token = "token";
         String logoutPath = "/login?logout=true";
@@ -54,6 +59,7 @@ class CustomLogoutSuccessHandlerTest {
     @Test
     void testSuccessfulLogoutViaJWT() throws IOException {
         HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("state")).thenReturn(null);
         HttpServletResponse response = mock(HttpServletResponse.class);
         String logoutPath = "/login?logout=true";
         String token = "token";
@@ -71,6 +77,7 @@ class CustomLogoutSuccessHandlerTest {
     @Test
     void testSuccessfulLogoutViaOAuth2() throws IOException {
         HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("state")).thenReturn(null);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken oAuth2AuthenticationToken = mock(OAuth2AuthenticationToken.class);
         ApplicationProperties.Security.OAUTH2 oauth =
@@ -94,6 +101,7 @@ class CustomLogoutSuccessHandlerTest {
     @Test
     void oauth2LogoutUsesRedirectBaseUrlWhenSet() throws IOException {
         HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("state")).thenReturn(null);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken oAuth2AuthenticationToken = mock(OAuth2AuthenticationToken.class);
         ApplicationProperties.Security.OAUTH2 oauth =
@@ -114,6 +122,7 @@ class CustomLogoutSuccessHandlerTest {
     @Test
     void oauth2LogoutLandsOnSeparateFrontendWhenRedirectBaseUrlSet() throws IOException {
         HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("state")).thenReturn(null);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken oAuth2AuthenticationToken = mock(OAuth2AuthenticationToken.class);
         ApplicationProperties.Security.OAUTH2 oauth =
@@ -135,6 +144,7 @@ class CustomLogoutSuccessHandlerTest {
         String error = "userIsDisabled";
         String url = "http://localhost:8080";
         HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("state")).thenReturn(null);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
         ApplicationProperties.Security.OAUTH2 oauth =
@@ -167,6 +177,7 @@ class CustomLogoutSuccessHandlerTest {
         String errorPath = "userAlreadyExistsWeb";
         String url = "http://localhost:8080";
         HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("state")).thenReturn(null);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
         ApplicationProperties.Security.OAUTH2 oauth =
@@ -191,6 +202,7 @@ class CustomLogoutSuccessHandlerTest {
         String error = "testError";
         String url = "http://localhost:8080";
         HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("state")).thenReturn(null);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
         ApplicationProperties.Security.OAUTH2 oauth =
@@ -216,6 +228,7 @@ class CustomLogoutSuccessHandlerTest {
         String error = "oAuth2AutoCreateDisabled";
         String url = "http://localhost:8080";
         HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("state")).thenReturn(null);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
         ApplicationProperties.Security.OAUTH2 oauth =
@@ -243,6 +256,7 @@ class CustomLogoutSuccessHandlerTest {
         String error = "test";
         String url = "http://localhost:8080";
         HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("state")).thenReturn(null);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
         ApplicationProperties.Security.OAUTH2 oauth =
@@ -275,6 +289,7 @@ class CustomLogoutSuccessHandlerTest {
         String error = "badCredentials";
         String url = "http://localhost:8080";
         HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("state")).thenReturn(null);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
         ApplicationProperties.Security.OAUTH2 oauth =
@@ -308,6 +323,7 @@ class CustomLogoutSuccessHandlerTest {
         String error = "oAuth2AdminBlockedUser";
         String url = "http://localhost:8080";
         HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("state")).thenReturn(null);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
         ApplicationProperties.Security.OAUTH2 oauth =
@@ -361,5 +377,27 @@ class CustomLogoutSuccessHandlerTest {
         assertEquals(
                 "https://pdf.example.com/login?errorOAuth=oAuth2AutoCreateDisabled",
                 response.getRedirectedUrl());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void desktopRejectionReturnsToCallbackAfterLogout(boolean authenticated) throws IOException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setContextPath("/stirling");
+        request.setParameter("oAuth2AutoCreateDisabled", "true");
+        request.setParameter("state", "tauri:state:n+once");
+        request.setCookies(new Cookie(TauriOAuthUtils.SPA_REDIRECT_COOKIE, "/auth/callback"));
+        applicationProperties.getSystem().setFrontendUrl("https://pdf.example.com");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        OAuth2AuthenticationToken authentication =
+                authenticated ? mock(OAuth2AuthenticationToken.class) : null;
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, authentication);
+
+        assertEquals(
+                "/stirling/auth/callback/tauri?errorOAuth=oAuth2AutoCreateDisabled"
+                        + "&state=tauri%3Astate%3An%2Bonce&nonce=n%2Bonce",
+                response.getRedirectedUrl());
+        assertEquals(0, response.getCookie(TauriOAuthUtils.SPA_REDIRECT_COOKIE).getMaxAge());
     }
 }

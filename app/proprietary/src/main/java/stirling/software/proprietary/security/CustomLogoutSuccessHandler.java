@@ -1,6 +1,8 @@
 package stirling.software.proprietary.security;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.ArrayList;
@@ -8,6 +10,8 @@ import java.util.List;
 import java.util.Locale;
 
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
 import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,6 +38,7 @@ import stirling.software.common.util.UrlUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
+import stirling.software.proprietary.security.oauth2.TauriOAuthUtils;
 import stirling.software.proprietary.security.saml2.CertificateUtils;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
@@ -69,6 +74,32 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         }
 
         if (!response.isCommitted()) {
+            if (TauriOAuthUtils.isTauriState(request)) {
+                String errorQuery = checkForErrors(request);
+                if (errorQuery.startsWith("errorOAuth=")) {
+                    String redirectUrl =
+                            TauriOAuthUtils.defaultTauriCallbackPath(request.getContextPath())
+                                    + "?"
+                                    + errorQuery
+                                    + "&state="
+                                    + URLEncoder.encode(
+                                            request.getParameter("state"), StandardCharsets.UTF_8);
+                    String nonce = TauriOAuthUtils.extractNonceFromRequest(request);
+                    if (nonce != null) {
+                        redirectUrl += "&nonce=" + URLEncoder.encode(nonce, StandardCharsets.UTF_8);
+                    }
+                    response.addHeader(
+                            HttpHeaders.SET_COOKIE,
+                            ResponseCookie.from(TauriOAuthUtils.SPA_REDIRECT_COOKIE, "")
+                                    .path("/")
+                                    .sameSite("Lax")
+                                    .maxAge(0)
+                                    .build()
+                                    .toString());
+                    response.sendRedirect(redirectUrl);
+                    return;
+                }
+            }
             if (authentication != null) {
                 switch (authentication) {
                     case Saml2Authentication samlAuthentication ->

@@ -109,7 +109,9 @@ export default function Login() {
           "This account has been disabled. Contact your administrator.",
         ),
       };
-      return ssoErrorMessages[ssoErrorCode] ?? ssoErrorCode;
+      return Object.hasOwn(ssoErrorMessages, ssoErrorCode)
+        ? ssoErrorMessages[ssoErrorCode]
+        : ssoErrorCode;
     }
     const errorParamKeys = [
       "error",
