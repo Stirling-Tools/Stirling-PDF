@@ -226,6 +226,12 @@ public class RequestUriUtils {
                 || INVITE_LINK_PATTERN.matcher(trimmedUri).matches();
     }
 
+    /** Share-link download, which serves public links anonymously and private ones signed in. */
+    public static boolean isShareLinkDownload(String requestURI, String contextPath) {
+        String normalizedUri = normalizeUriOrNull(contextPath, requestURI);
+        return normalizedUri != null && SHARE_LINK_API_PATTERN.matcher(normalizedUri).matches();
+    }
+
     public static String normalizeUri(String contextPath, String requestURI) {
         String decodedUri = UriUtils.decode(requestURI, StandardCharsets.UTF_8);
         if (contextPath != null && !contextPath.isBlank()) {
