@@ -336,6 +336,21 @@ describe("tagAllPages", () => {
   });
 });
 
+describe("tagAllPages and the tagged flag", () => {
+  test("marks the document fully tagged in the same undo step", async () => {
+    const store = await storeFor(pagePdf(COLUMNS));
+    const doc = store.document!;
+    doc.setMarkedTagged(false);
+    await tagAllPages(store);
+    expect(doc.markedTagged()).toBe(true);
+
+    store.undo();
+    expect(doc.markedTagged()).toBe(false);
+    expect(hasUntaggedContent(doc, 0)).toBe(true);
+    store.dispose();
+  });
+});
+
 describe("readAllPagesInBackground", () => {
   test("reads unread pages after yielding, then publishes them", async () => {
     const store = await storeFor(pagePdf(COLUMNS));

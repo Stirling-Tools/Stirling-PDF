@@ -2,7 +2,9 @@ import { useState } from "react";
 import type { TFunction } from "i18next";
 import { Badge, Collapse, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Tooltip as InfoTooltip } from "@editor/components/shared/Tooltip";
 import { Button } from "@editor/ui/Button";
+import { Checkbox } from "@editor/ui/Checkbox";
 import { Icon } from "@editor/ui/Icon";
 import {
   Field,
@@ -40,6 +42,11 @@ interface Props {
   /** Read pages with content left untagged. */
   untaggedPages: number;
   onTagUntaggedContent: () => void;
+  /** Whether the file declares itself tagged; null when that can't be changed. */
+  markedTagged: boolean | null;
+  onSetMarkedTagged: (marked: boolean) => void;
+  /** Whether the saved file will hold any tags. */
+  hasTags: boolean;
   /** Null when there is nothing to check. */
   headingOutline: HeadingOutline | null;
   onSelectHeading: (index: number) => void;
@@ -54,6 +61,9 @@ export function DocumentInspector({
   onSelectNextImageToReview,
   untaggedPages,
   onTagUntaggedContent,
+  markedTagged,
+  onSetMarkedTagged,
+  hasTags,
   headingOutline,
   onSelectHeading,
   documentLanguage,
@@ -92,6 +102,9 @@ export function DocumentInspector({
           onNext={onSelectNextImageToReview}
           untaggedPages={untaggedPages}
           onTagUntagged={onTagUntaggedContent}
+          markedTagged={markedTagged}
+          onSetMarkedTagged={onSetMarkedTagged}
+          hasTags={hasTags}
         />
       )}
       {headingOutline && (
@@ -170,17 +183,23 @@ function AccessibilitySection({
   onNext,
   untaggedPages,
   onTagUntagged,
+  markedTagged,
+  onSetMarkedTagged,
+  hasTags,
 }: {
   review: ImageReview;
   onNext: () => void;
   untaggedPages: number;
   onTagUntagged: () => void;
+  markedTagged: boolean | null;
+  onSetMarkedTagged: (marked: boolean) => void;
+  hasTags: boolean;
 }) {
   const { t } = useTranslation();
   const pending = review.needsDescription + review.untagged;
   return (
     <Section testId="pdf-editor-document-accessibility">
-      <SectionLabel>
+      <SectionLabel info={<DocumentAccessibilityInfo />}>
         {t("pdfTextEditor.inspector.accessibility.heading", "Accessibility")}
       </SectionLabel>
       <Stack gap="xs">
@@ -211,6 +230,12 @@ function AccessibilitySection({
         <TagUntaggedButton
           untaggedPages={untaggedPages}
           onClick={onTagUntagged}
+        />
+        <MarkedTaggedCheckbox
+          marked={markedTagged}
+          onChange={onSetMarkedTagged}
+          untaggedPages={untaggedPages}
+          hasTags={hasTags}
         />
         {pending > 0 && (
           <Button
@@ -245,30 +270,139 @@ function TagUntaggedButton({
   const { t } = useTranslation();
   if (untaggedPages === 0) return null;
   return (
-    <Tooltip
-      multiline
-      w={260}
-      label={t(
-        "pdfTextEditor.inspector.accessibility.tagUntaggedHint",
-        "Automatically adds accessibility tags throughout the document. The result is rough: check headings, lists and reading order afterwards.",
-      )}
+    <Button
+      size="sm"
+      variant="secondary"
+      accent="neutral"
+      fullWidth
+      justify="start"
+      leftSection={<Icon name="tag" size={20} />}
+      onClick={onClick}
+      data-testid="pdf-editor-document-accessibility-tag-untagged"
     >
-      <Button
-        size="sm"
-        variant="secondary"
-        accent="neutral"
-        fullWidth
-        justify="start"
-        leftSection={<Icon name="tag" size={20} />}
-        onClick={onClick}
-        data-testid="pdf-editor-document-accessibility-tag-untagged"
-      >
-        {t(
-          "pdfTextEditor.inspector.accessibility.tagUntagged",
-          "Auto-tag document",
+      {t(
+        "pdfTextEditor.inspector.accessibility.tagUntagged",
+        "Auto-tag document",
+      )}
+    </Button>
+  );
+}
+
+/**
+ * The file's claim to be tagged, which readers that honour it read the tags
+ * by. Separate from the tags so a half-tagged file does not make the rest of
+ * its content unreadable. Absent when the file's flag can't be changed.
+ */
+function MarkedTaggedCheckbox({
+  marked,
+  onChange,
+  untaggedPages,
+  hasTags,
+}: {
+  marked: boolean | null;
+  onChange: (marked: boolean) => void;
+  untaggedPages: number;
+  hasTags: boolean;
+}) {
+  const { t } = useTranslation();
+  if (marked === null) return null;
+  return (
+    <Stack gap={4}>
+      <Checkbox
+        checked={marked}
+        onChange={(event) => onChange(event.currentTarget.checked)}
+        label={t(
+          "pdfTextEditor.inspector.accessibility.markedTagged",
+          "Document is fully tagged",
         )}
-      </Button>
-    </Tooltip>
+        data-testid="pdf-editor-document-accessibility-marked"
+      />
+      <MarkedTaggedWarning
+        marked={marked}
+        untaggedPages={untaggedPages}
+        hasTags={hasTags}
+      />
+    </Stack>
+  );
+}
+
+/** Why the flag disagrees with the tags; absent when it does not. */
+function MarkedTaggedWarning({
+  marked,
+  untaggedPages,
+  hasTags,
+}: {
+  marked: boolean;
+  untaggedPages: number;
+  hasTags: boolean;
+}) {
+  const { t } = useTranslation();
+  const warning = marked
+    ? untaggedPages > 0 &&
+      t(
+        "pdfTextEditor.inspector.accessibility.markedWithUntagged",
+        "Some content has no tags, so screen readers may skip it.",
+      )
+    : hasTags &&
+      t(
+        "pdfTextEditor.inspector.accessibility.unmarkedWithTags",
+        "Some PDF viewers will use the tags anyway and may skip content without them.",
+      );
+  if (!warning) return null;
+  return (
+    <Text
+      size="xs"
+      style={{ color: "var(--c-danger)" }}
+      data-testid="pdf-editor-document-accessibility-marked-warning"
+    >
+      {warning}
+    </Text>
+  );
+}
+
+/** What the section's controls do, behind the (i) the image section uses too. */
+function DocumentAccessibilityInfo() {
+  const { t } = useTranslation();
+  return (
+    <InfoTooltip
+      sidebarTooltip
+      pinOnClick
+      header={{
+        title: t(
+          "pdfTextEditor.inspector.accessibility.heading",
+          "Accessibility",
+        ),
+      }}
+      tips={[
+        {
+          title: t(
+            "pdfTextEditor.inspector.accessibility.tagUntagged",
+            "Auto-tag document",
+          ),
+          description: t(
+            "pdfTextEditor.inspector.accessibility.tagUntaggedHint",
+            "Automatically adds accessibility tags throughout the document. The result is rough: check headings, lists and reading order afterwards.",
+          ),
+        },
+        {
+          title: t(
+            "pdfTextEditor.inspector.accessibility.markedTagged",
+            "Document is fully tagged",
+          ),
+          description: t(
+            "pdfTextEditor.inspector.accessibility.markedTaggedHint",
+            "Tells PDF readers to use the accessibility tags. Tick it once everything is tagged.",
+          ),
+        },
+      ]}
+    >
+      <span
+        style={{ display: "flex", color: "var(--icon-files-color)" }}
+        data-testid="pdf-editor-document-accessibility-info"
+      >
+        <Icon name="info" size={14} />
+      </span>
+    </InfoTooltip>
   );
 }
 

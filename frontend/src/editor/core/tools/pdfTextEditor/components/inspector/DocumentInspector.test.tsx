@@ -9,7 +9,19 @@ function renderInspector(
   imageReview: ImageReview | null,
   onNext = vi.fn(),
   documentLanguage: DocumentLanguageControl | null = null,
-  { untaggedPages = 0, onTagUntagged = vi.fn() } = {},
+  {
+    untaggedPages = 0,
+    onTagUntagged = vi.fn(),
+    markedTagged = false,
+    onSetMarkedTagged = vi.fn(),
+    hasTags = false,
+  }: {
+    untaggedPages?: number;
+    onTagUntagged?: () => void;
+    markedTagged?: boolean | null;
+    onSetMarkedTagged?: (marked: boolean) => void;
+    hasTags?: boolean;
+  } = {},
 ) {
   render(
     <MantineProvider env="test">
@@ -25,6 +37,9 @@ function renderInspector(
         onSelectNextImageToReview={onNext}
         untaggedPages={untaggedPages}
         onTagUntaggedContent={onTagUntagged}
+        markedTagged={markedTagged}
+        onSetMarkedTagged={onSetMarkedTagged}
+        hasTags={hasTags}
         headingOutline={null}
         onSelectHeading={vi.fn()}
         documentLanguage={documentLanguage}
@@ -38,6 +53,8 @@ const KEY = "pdfTextEditor.inspector.accessibility";
 const SUMMARY = "pdf-editor-document-accessibility-summary";
 const NEXT = "pdf-editor-document-accessibility-next";
 const TAG_UNTAGGED = "pdf-editor-document-accessibility-tag-untagged";
+const MARKED = "pdf-editor-document-accessibility-marked";
+const MARKED_WARNING = "pdf-editor-document-accessibility-marked-warning";
 const NOTHING_TO_REVIEW = { needsDescription: 0, untagged: 0, untaggable: 0 };
 
 describe("DocumentInspector accessibility review", () => {
@@ -98,6 +115,42 @@ describe("DocumentInspector accessibility review", () => {
   it("offers no tagging once every page is tagged", () => {
     renderInspector(NOTHING_TO_REVIEW);
     expect(screen.queryByTestId(TAG_UNTAGGED)).not.toBeInTheDocument();
+  });
+
+  it("ticks the fully-tagged box to mark the document", () => {
+    const onSetMarkedTagged = vi.fn();
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), { onSetMarkedTagged });
+    const box = screen.getByTestId(MARKED);
+    expect(box).not.toBeChecked();
+    fireEvent.click(box);
+    expect(onSetMarkedTagged).toHaveBeenCalledWith(true);
+  });
+
+  it("leaves the box out when the file's flag can't be changed", () => {
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), { markedTagged: null });
+    expect(screen.queryByTestId(MARKED)).not.toBeInTheDocument();
+  });
+
+  it("warns when marked tagged while content is untagged", () => {
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), {
+      markedTagged: true,
+      untaggedPages: 2,
+    });
+    expect(screen.getByTestId(MARKED_WARNING)).toHaveTextContent(
+      `${KEY}.markedWithUntagged`,
+    );
+  });
+
+  it("warns when tags exist but the document isn't marked tagged", () => {
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), { hasTags: true });
+    expect(screen.getByTestId(MARKED_WARNING)).toHaveTextContent(
+      `${KEY}.unmarkedWithTags`,
+    );
+  });
+
+  it("shows no warning when the flag matches the tags", () => {
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), { markedTagged: true });
+    expect(screen.queryByTestId(MARKED_WARNING)).not.toBeInTheDocument();
   });
 });
 

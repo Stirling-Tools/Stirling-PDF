@@ -13,6 +13,7 @@ import {
   type ElementNode,
 } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
 import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
+import { isMarked } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markTagged";
 
 type ElementInfo = Omit<StructureElement, "mcids">;
 
@@ -55,6 +56,10 @@ export interface FileStructure {
   blocks: FileBlock[];
   /** By element key, for every element a page or block names. */
   languages: Map<string, ElementLanguage>;
+  /** Whether the file has a /StructTreeRoot at all. */
+  hasTree: boolean;
+  /** Whether the catalog declares the file tagged (/MarkInfo /Marked). */
+  marked: boolean;
 }
 
 /**
@@ -73,7 +78,13 @@ export async function readFileStructure(
   if (treeRoot === null) {
     return pdf.valueSpan(catalog, "StructTreeRoot")
       ? null
-      : { pages: new Map(), blocks: [] };
+      : {
+          pages: new Map(),
+          blocks: [],
+          languages: new Map(),
+          hasTree: false,
+          marked: isMarked(pdf, catalog),
+        };
   }
   const rootBody = pdf.objectBody(treeRoot);
   if (!rootBody) return null;
@@ -126,7 +137,13 @@ export async function readFileStructure(
       parent: parent === null ? null : String(parent),
     });
   }
-  return { pages: byPage, blocks, languages };
+  return {
+    pages: byPage,
+    blocks,
+    languages,
+    hasTree: true,
+    marked: isMarked(pdf, catalog),
+  };
 }
 
 /** Block elements in the depth-first /K order a reader follows. */

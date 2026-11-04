@@ -698,7 +698,7 @@ describe("applyStructureEdits: no structure yet", () => {
 
     const pdf = (await RawPdf.parse(out))!;
     const catalog = pdf.objectBody(1)!;
-    expect(catalog).toMatch(/\/MarkInfo << \/Marked true >>/);
+    expect(catalog).not.toContain("/MarkInfo");
     const root = pdf.objectBody(pdf.dictRef(catalog, "StructTreeRoot")!)!;
     expect(root).toContain("/ParentTreeNextKey 1");
     const document = pdf.objectBody(pdf.dictRef(root, "K")!)!;
@@ -748,7 +748,7 @@ describe("applyStructureEdits: no structure yet", () => {
     ]);
   });
 
-  test("marks the file tagged when its /MarkInfo says otherwise", async () => {
+  test("leaves /MarkInfo as the file has it", async () => {
     const unmarked = untaggedSecondPage().map((obj) =>
       obj.num === 1
         ? {
@@ -760,7 +760,9 @@ describe("applyStructureEdits: no structure yet", () => {
     const out = await applyStructureEdits(buildClassicPdf(unmarked, 1), [
       paragraph(1),
     ]);
-    expect(await elementBody(out, 1)).toContain("/MarkInfo << /Marked true >>");
+    expect(await elementBody(out, 1)).toContain(
+      "/MarkInfo << /Marked false >>",
+    );
   });
 
   test("leaves the file's structure alone when every page already has its own", async () => {

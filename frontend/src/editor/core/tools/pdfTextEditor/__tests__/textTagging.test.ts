@@ -19,6 +19,7 @@ import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureT
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import {
@@ -351,9 +352,7 @@ describe("tagging text in a file with no structure tree", () => {
       "P",
     ]);
     const pdf = (await RawPdf.parse(bytes))!;
-    expect(pdf.objectBody(pdf.rootNum)).toContain(
-      "/MarkInfo << /Marked true >>",
-    );
+    expect(pdf.objectBody(pdf.rootNum)).not.toContain("/MarkInfo");
 
     const reopened = await EditorDocument.open(bytes);
     opened.push(reopened);
@@ -364,6 +363,28 @@ describe("tagging text in a file with no structure tree", () => {
         return tag.kind === "tagged" ? tag.block.type : tag.kind;
       }),
     ).toEqual(["H1", "P"]);
+  });
+
+  test("claims to be tagged only once marked so, and not after an undo", async () => {
+    const doc = await openUntagged();
+    const history = new HistoryStack();
+    tagText(doc, history, "Summary", "H1", 0);
+    expect(doc.markedTagged()).toBe(false);
+    history.execute(new SetMarkedTaggedCommand(true), doc);
+
+    const marked = await savedBytes(doc);
+    const pdf = (await RawPdf.parse(marked))!;
+    expect(pdf.objectBody(pdf.rootNum)).toContain(
+      "/MarkInfo << /Marked true >>",
+    );
+    const reopened = await EditorDocument.open(marked);
+    opened.push(reopened);
+    expect(reopened.markedTagged()).toBe(true);
+
+    history.undo(doc);
+    const unmarked = await savedBytes(doc);
+    const again = (await RawPdf.parse(unmarked))!;
+    expect(again.objectBody(again.rootNum)).not.toContain("/MarkInfo");
   });
 });
 

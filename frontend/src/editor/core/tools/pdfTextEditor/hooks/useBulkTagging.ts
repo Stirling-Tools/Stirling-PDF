@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useRef } from "react";
 import i18n from "i18next";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
+import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import {
   TagPageContentCommand,
   hasUntaggedContent,
@@ -63,8 +65,8 @@ export function useBulkTagging(
 
 /**
  * Read and tag every page behind the loading overlay, a slice at a time so
- * its progress paints, then record the pages tagged as one undo step. Every
- * page tagged is untagged again when one fails.
+ * its progress paints, then mark the document fully tagged and record it all
+ * as one undo step. Every page tagged is untagged again when one fails.
  */
 export async function tagAllPages(store: EditorStore): Promise<void> {
   const doc = store.document;
@@ -93,10 +95,16 @@ export async function tagAllPages(store: EditorStore): Promise<void> {
       command.apply(doc);
       applied.push(command);
     }
+    const steps: Command[] = [...applied];
+    if (doc.canSetMarkedTagged() && !doc.markedTagged()) {
+      const mark = new SetMarkedTaggedCommand(true);
+      mark.apply(doc);
+      steps.push(mark);
+    }
     publishAllPages(store);
-    if (applied.length > 0) {
+    if (steps.length > 0) {
       store.recordApplied(
-        applied.length === 1 ? applied[0] : new CompositeCommand(applied),
+        steps.length === 1 ? steps[0] : new CompositeCommand(steps),
       );
     }
   } catch (err) {

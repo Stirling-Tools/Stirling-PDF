@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
@@ -12,6 +12,7 @@ import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
 import { analyzePageFonts } from "@editor/tools/pdfTextEditor/util/pageFonts";
 import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
   ScanHint,
@@ -95,6 +96,10 @@ export function EditorSidebar({
     }
     return readAllPagesInBackground(store);
   }, [reviewingAccessibility, tab, imageSelected, store]);
+  const setMarkedTagged = useCallback(
+    (marked: boolean) => store.dispatch(new SetMarkedTaggedCommand(marked)),
+    [store],
+  );
   const headings = useHeadingOutline(
     store,
     state,
@@ -191,6 +196,13 @@ export function EditorSidebar({
               onSelectNextImageToReview={selectNextImageToReview}
               untaggedPages={bulkTagging.untaggedPages}
               onTagUntaggedContent={bulkTagging.tagAll}
+              markedTagged={
+                editorDocument?.canSetMarkedTagged()
+                  ? editorDocument.markedTagged()
+                  : null
+              }
+              onSetMarkedTagged={setMarkedTagged}
+              hasTags={!!editorDocument?.hasStructureTree()}
               headingOutline={headings.outline}
               onSelectHeading={headings.selectHeading}
               documentLanguage={documentLanguage}

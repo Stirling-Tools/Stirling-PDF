@@ -20,9 +20,8 @@ const MAX_TREE_DEPTH = 32;
 
 /**
  * The file with a structure tree and a ParentTree array for each of
- * `pageIndices`, also marking it tagged (/MarkInfo /Marked true). Null when
- * nothing needed adding, or when `pageIndices` is empty; a string saying why
- * when the file cannot be given them.
+ * `pageIndices`. Null when nothing needed adding, or when `pageIndices` is
+ * empty; a string saying why when the file cannot be given them.
  */
 export function ensureStructureTree(
   pdf: RawPdf,
@@ -81,9 +80,15 @@ export function ensureStructureTree(
   if (!root) return "the file's structure tree cannot be read";
   bodies.set(treeRoot, root);
 
-  const marked = markTagged(pdf, catalog, treeRoot, bodies);
-  if (!marked) return "the file's catalog cannot be read";
-  bodies.set(pdf.rootNum, marked);
+  // /MarkInfo is left alone: a file declares itself tagged only when the
+  // user says its tags are finished (markTagged).
+  const named = setDictEntry(
+    catalog,
+    "StructTreeRoot",
+    indirectRef(pdf, treeRoot),
+  );
+  if (!named) return "the file's catalog cannot be read";
+  bodies.set(pdf.rootNum, named);
 
   const out = appendRevision(
     pdf,
@@ -215,31 +220,4 @@ function withEntries(
   );
   const all = [...items.map((item) => item.text), `${leaf} 0 R`];
   return setDictEntry(node, "Kids", `[${all.join(" ")}]`);
-}
-
-/**
- * The catalog naming `treeRoot` and with /MarkInfo /Marked true. An indirect
- * /MarkInfo is written to `bodies`. Null when a dictionary cannot be read.
- */
-function markTagged(
-  pdf: RawPdf,
-  catalog: string,
-  treeRoot: number,
-  bodies: Map<number, string>,
-): string | null {
-  let out = setDictEntry(catalog, "StructTreeRoot", indirectRef(pdf, treeRoot));
-  const infoNum = pdf.dictRef(catalog, "MarkInfo");
-  if (infoNum !== null) {
-    const info = pdf.objectBody(infoNum);
-    const marked = info ? setDictEntry(info, "Marked", "true") : null;
-    if (!marked) return null;
-    bodies.set(infoNum, marked);
-    return out;
-  }
-  const info = pdf.valueSpan(catalog, "MarkInfo")?.text;
-  const marked = info
-    ? setDictEntry(info, "Marked", "true")
-    : "<< /Marked true >>";
-  out = out && marked ? setDictEntry(out, "MarkInfo", marked) : null;
-  return out;
 }

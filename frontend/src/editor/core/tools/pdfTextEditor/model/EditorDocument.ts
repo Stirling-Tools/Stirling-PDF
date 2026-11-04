@@ -73,6 +73,7 @@ export class EditorDocument {
   private documentLangEdit: string | null | undefined;
   /** The file's own structure tree; null when only PDFium's view is available. */
   private readonly fileStructure: FileStructure | null;
+  private marked: boolean;
   private readonly ownedFonts: Map<string, FontRef>;
   private _disposed: boolean;
   // Form-fill environment. Widgets with no appearance stream are drawn ONLY by
@@ -94,6 +95,7 @@ export class EditorDocument {
     this.openedBytes = openedBytes;
     this.fileStructure = fileStructure;
     this.fileDocumentLang = readCatalogLang(module, docPtr);
+    this.marked = fileStructure?.marked ?? false;
     this.pageCache = new Map();
     this.ownedFonts = new Map();
     this._disposed = false;
@@ -444,6 +446,41 @@ export class EditorDocument {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Whether the saved file declares itself tagged (/MarkInfo /Marked). Kept
+   * apart from the tags themselves so unfinished tags do not claim the file is
+   * tagged, which readers that honour the flag would then read by.
+   */
+  markedTagged(): boolean {
+    return this.marked;
+  }
+
+  /** False when the file cannot be parsed or is encrypted: the flag is fixed. */
+  canSetMarkedTagged(): boolean {
+    return this.fileStructure !== null;
+  }
+
+  /** Throws when canSetMarkedTagged() is false. */
+  setMarkedTagged(marked: boolean): void {
+    if (!this.canSetMarkedTagged()) {
+      throw new Error("this file's tagged flag can't be changed");
+    }
+    this.marked = marked;
+  }
+
+  /** True when the save must write /MarkInfo /Marked. */
+  markedTaggedChanged(): boolean {
+    return (
+      this.fileStructure !== null && this.marked !== this.fileStructure.marked
+    );
+  }
+
+  /** True when the saved file will have a structure tree, the file's own or one the save creates. */
+  hasStructureTree(): boolean {
+    if (this.fileStructure?.hasTree) return true;
+    return this.structureEdits().some((edit) => edit.newElement);
   }
 
   private encrypted(): boolean {
