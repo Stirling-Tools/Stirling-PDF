@@ -17,6 +17,7 @@ import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 /** A switch's help has to wrap the control: Mantine does not surface a tooltip from its label. */
 function SwitchWithHelp({
   help,
@@ -193,6 +194,7 @@ export function FormFieldPropertyEditor({
             />
           }
           value={value.name ?? ""}
+          className={privateContentClassName}
           onChange={(e) => onChange({ name: e.currentTarget.value })}
         />
       )}
@@ -220,6 +222,7 @@ export function FormFieldPropertyEditor({
           />
         }
         value={value.label ?? ""}
+        className={privateContentClassName}
         onChange={(e) => onChange({ label: e.currentTarget.value })}
       />
 
@@ -269,6 +272,7 @@ export function FormFieldPropertyEditor({
                 size="xs"
                 style={{ flex: 1 }}
                 value={opt}
+                className={privateContentClassName}
                 placeholder={t(
                   "formFill.editor.optionPlaceholder",
                   "Option {{n}}",
@@ -359,6 +363,7 @@ export function FormFieldPropertyEditor({
             />
           }
           value={value.defaultValue ?? ""}
+          className={privateContentClassName}
           onChange={(e) => onChange({ defaultValue: e.currentTarget.value })}
         />
       )}
@@ -375,6 +380,7 @@ export function FormFieldPropertyEditor({
           />
         }
         value={value.tooltip ?? ""}
+        className={privateContentClassName}
         onChange={(e) => onChange({ tooltip: e.currentTarget.value })}
       />
 
@@ -431,6 +437,7 @@ export function FormFieldPropertyEditor({
                 />
               }
               value={action.url}
+              className={privateContentClassName}
               onChange={(e) =>
                 onChange({
                   buttonAction: buildButtonAction(
