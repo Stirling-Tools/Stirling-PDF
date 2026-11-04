@@ -308,7 +308,9 @@ async function openFormDetectionSettings(page: Page) {
   await page.getByRole("menuitem", { name: /all settings/i }).click();
   const dialog = page.locator(".settings-page");
   await expect(dialog).toBeVisible({ timeout: 5_000 });
+  await expect(page).toHaveURL(/\/settings\/general(?:[?#].*)?$/);
   await dialog.locator('[data-tour="admin-adminGeneral-nav"]').first().click();
+  await expect(page).toHaveURL(/\/settings\/adminGeneral(?:[?#].*)?$/);
   await expect(dialog.getByText(/AI Form Detection/i).first()).toBeVisible({
     timeout: 5_000,
   });
