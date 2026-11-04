@@ -111,9 +111,7 @@ export class EditorDocument {
     // footprint; past a point the gradient repair is not worth that.
     const keep = prepared.length <= MAX_RETAINED_BYTES ? prepared : EMPTY;
     const fileStructure =
-      keep.length > 0 && module.FPDFCatalog_IsTagged(docPtr)
-        ? await readFileStructure(keep).catch(() => null)
-        : null;
+      keep.length > 0 ? await readFileStructure(keep).catch(() => null) : null;
     return new EditorDocument(module, docPtr, keep, fileStructure);
   }
 
@@ -213,7 +211,7 @@ export class EditorDocument {
       );
     }
     const page = this.fileStructure.pages.get(pageIndex);
-    if (!page) return new PageStructure([]);
+    if (!page) return new PageStructure([], null, 0);
     if (page.slotCount === null) return new PageStructure([], "unreadable");
     return new PageStructure(page.elements, null, page.slotCount, (key) =>
       this.retaggedAs(key),
@@ -433,8 +431,14 @@ export class EditorDocument {
     }
   }
 
-  /** True when the catalog marks the file as tagged (ISO 32000-1 14.7.1). */
-  isTagged(): boolean {
+  /**
+   * True when the catalog marks the file as tagged (ISO 32000-1 14.7.1), or
+   * the save can write tags into it, creating its structure tree if need be.
+   * Not a promise that tags can be edited: an encrypted tagged file is true
+   * here and read-only in its PageStructure, which decides that.
+   */
+  treatAsTagged(): boolean {
+    if (this.fileStructure) return true;
     try {
       return this.module.FPDFCatalog_IsTagged(this.docPtr);
     } catch {

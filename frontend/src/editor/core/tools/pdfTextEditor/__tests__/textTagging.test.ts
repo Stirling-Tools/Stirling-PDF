@@ -23,6 +23,7 @@ import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import {
   buildClassicPdf,
+  singleContentPdf,
   streamBody,
 } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 import {
@@ -307,5 +308,59 @@ describe("tagging untagged text", () => {
     for (const run of reopened.page(0).runs) {
       expect(textTag(reopened, run.snapshot()).kind).toBe("tagged");
     }
+  });
+});
+
+describe("tagging text in a file with no structure tree", () => {
+  async function openUntagged(): Promise<EditorDocument> {
+    const doc = await EditorDocument.open(
+      singleContentPdf(
+        "BT /F1 20 Tf 72 700 Td (Summary) Tj ET\n" +
+          "BT /F1 12 Tf 72 670 Td (Sales rose in every region.) Tj ET\n",
+      ),
+    );
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(0));
+    return doc;
+  }
+
+  test("offers the untagged text for tagging", async () => {
+    const doc = await openUntagged();
+    const run = doc.page(0).runs.find((r) => r.text.includes("Summary"))!;
+    expect(textTag(doc, run.snapshot())).toEqual({
+      kind: "untagged",
+      documentTagged: true,
+      taggable: true,
+    });
+  });
+
+  test("saves a tree holding the tagged text, in the order it was read", async () => {
+    const doc = await openUntagged();
+    const history = new HistoryStack();
+    tagText(doc, history, "Summary", "H1", 0);
+    tagText(doc, history, "Sales rose", "P", 0);
+    expect(doc.headings()!.map((h) => h.type)).toEqual(["H1"]);
+
+    const bytes = await savedBytes(doc);
+    const saved = await readFileStructure(bytes);
+    expect(saved!.blocks.map((block) => block.type)).toEqual([
+      "Document",
+      "H1",
+      "P",
+    ]);
+    const pdf = (await RawPdf.parse(bytes))!;
+    expect(pdf.objectBody(pdf.rootNum)).toContain(
+      "/MarkInfo << /Marked true >>",
+    );
+
+    const reopened = await EditorDocument.open(bytes);
+    opened.push(reopened);
+    PdfiumTextReader.populate(reopened, reopened.page(0));
+    expect(
+      reopened.page(0).runs.map((run) => {
+        const tag = textTag(reopened, run.snapshot());
+        return tag.kind === "tagged" ? tag.block.type : tag.kind;
+      }),
+    ).toEqual(["H1", "P"]);
   });
 });

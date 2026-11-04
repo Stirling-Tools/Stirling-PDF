@@ -82,7 +82,7 @@ export function EditorSidebar({
 
   const editorDocument = store.document;
   const reviewingAccessibility = useMemo(
-    () => ACCESSIBILITY_EDITING && !!editorDocument?.isTagged(),
+    () => ACCESSIBILITY_EDITING && !!editorDocument?.treatAsTagged(),
     [editorDocument],
   );
   const imageSelected = controller.imageAccessibility !== null;

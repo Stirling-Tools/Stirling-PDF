@@ -11,6 +11,7 @@ import {
   applyStructureEdits,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
+import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import {
   buildClassicPdf,
   buildXrefStreamPdf,
@@ -645,5 +646,128 @@ describe("applyStructureEdits: cutting", () => {
         { ...cut("Span"), cut: { ...cut("Span").cut, from: [0, 1] } },
       ]),
     ).rejects.toThrow(StructureEditError);
+  });
+});
+
+describe("applyStructureEdits: no structure yet", () => {
+  const paragraph = (pageIndex: number, mcid = 0) => ({
+    pageIndex,
+    mcid,
+    decorative: false,
+    newElement: { type: "P" as const, after: null },
+  });
+  const documentKids = async (bytes: Uint8Array) =>
+    (await elementBody(bytes, 9)).match(/\/K \[([^\]]*)\]/)![1];
+
+  // objects() with page 2 (object 4) dropping its /StructParents and the
+  // ParentTree its entry, its content now marking MCID 0 with no element.
+  function untaggedSecondPage(parentTree = "<< /Nums [0 [10 0 R 11 0 R]] >>") {
+    return objects(parentTree)
+      .filter((obj) => obj.num !== 12)
+      .map((obj) => {
+        if (obj.num === 4) {
+          return { ...obj, body: obj.body.replace(" /StructParents 1", "") };
+        }
+        if (obj.num === 7) {
+          return { ...obj, body: obj.body.replace("/ParentTreeNextKey 2", "") };
+        }
+        if (obj.num === 9) {
+          return {
+            ...obj,
+            body: "<< /Type /StructElem /S /Document /P 7 0 R /K [10 0 R 11 0 R] >>",
+          };
+        }
+        return obj;
+      });
+  }
+
+  test("creates the tree, a Document element and the page's ParentTree array in an untagged file", async () => {
+    const untagged = buildClassicPdf(
+      objects()
+        .filter((obj) => obj.num < 7)
+        .map((obj) => ({
+          ...obj,
+          body:
+            obj.num === 1
+              ? "<< /Type /Catalog /Pages 2 0 R >>"
+              : obj.body.replace(/ \/StructParents \d/, ""),
+        })),
+      1,
+    );
+    const out = await applyStructureEdits(untagged, [paragraph(1)]);
+
+    const pdf = (await RawPdf.parse(out))!;
+    const catalog = pdf.objectBody(1)!;
+    expect(catalog).toMatch(/\/MarkInfo << \/Marked true >>/);
+    const root = pdf.objectBody(pdf.dictRef(catalog, "StructTreeRoot")!)!;
+    expect(root).toContain("/ParentTreeNextKey 1");
+    const document = pdf.objectBody(pdf.dictRef(root, "K")!)!;
+    expect(document).toContain("/S /Document");
+    expect(pdf.dictInt(pdf.objectBody(3)!, "StructParents")).toBeNull();
+    expect(pdf.dictInt(pdf.objectBody(4)!, "StructParents")).toBe(0);
+
+    const structure = await readFileStructure(out);
+    expect(structure!.pages.get(1)!.elements.map((el) => el.type)).toEqual([
+      "P",
+    ]);
+    expect(structure!.blocks.map((block) => block.type)).toEqual([
+      "Document",
+      "P",
+    ]);
+  });
+
+  test("gives a page with no /StructParents the next free ParentTree key", async () => {
+    const out = await applyStructureEdits(
+      buildClassicPdf(untaggedSecondPage(), 1),
+      [paragraph(1)],
+    );
+    const pdf = (await RawPdf.parse(out))!;
+    expect(pdf.dictInt(pdf.objectBody(4)!, "StructParents")).toBe(1);
+    const root = pdf.objectBody(7)!;
+    expect(root).toContain("/ParentTreeNextKey 2");
+    expect(root).toMatch(/\/Nums \[0 \[10 0 R 11 0 R\] 1 \d+ 0 R\]/);
+    expect(await documentKids(out)).toMatch(/^10 0 R 11 0 R \d+ 0 R$/);
+  });
+
+  test("adds a leaf for the new page to a ParentTree with kids", async () => {
+    const tree = [
+      ...untaggedSecondPage("20 0 R"),
+      { num: 20, body: "<< /Kids [21 0 R] >>" },
+      { num: 21, body: "<< /Limits [0 0] /Nums [0 [10 0 R 11 0 R]] >>" },
+    ];
+    const out = await applyStructureEdits(buildClassicPdf(tree, 1), [
+      paragraph(1),
+    ]);
+    const pdf = (await RawPdf.parse(out))!;
+    const kids = pdf.objectBody(20)!.match(/\/Kids \[([^\]]*)\]/)![1];
+    const leaf = pdf.objectBody(Number(kids.split(" ")[3]))!;
+    expect(leaf).toMatch(/\/Limits \[1 1\] \/Nums \[1 \d+ 0 R\]/);
+    const structure = await readFileStructure(out);
+    expect(structure!.pages.get(1)!.elements.map((el) => el.type)).toEqual([
+      "P",
+    ]);
+  });
+
+  test("marks the file tagged when its /MarkInfo says otherwise", async () => {
+    const unmarked = untaggedSecondPage().map((obj) =>
+      obj.num === 1
+        ? {
+            ...obj,
+            body: obj.body.replace("/Marked true", "/Marked false"),
+          }
+        : obj,
+    );
+    const out = await applyStructureEdits(buildClassicPdf(unmarked, 1), [
+      paragraph(1),
+    ]);
+    expect(await elementBody(out, 1)).toContain("/MarkInfo << /Marked true >>");
+  });
+
+  test("leaves the file's structure alone when every page already has its own", async () => {
+    const bytes = buildClassicPdf(objects(), 1);
+    const out = await applyStructureEdits(bytes, [
+      { pageIndex: 1, mcid: 0, alt: "x", decorative: false },
+    ]);
+    expect(await elementBody(out, 1)).toBe(await elementBody(bytes, 1));
   });
 });

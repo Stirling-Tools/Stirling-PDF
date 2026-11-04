@@ -29,7 +29,7 @@ export function textTag(doc: EditorDocument, run: TextRunSnapshot): TextTag {
   if (run.artifact) return { kind: "artifact" };
   const untagged = {
     kind: "untagged",
-    documentTagged: doc.isTagged(),
+    documentTagged: doc.treatAsTagged(),
     taggable: canTagText(doc, run),
   } as const;
   if (run.mcid === undefined) return untagged;
@@ -45,12 +45,11 @@ export function textTag(doc: EditorDocument, run: TextRunSnapshot): TextTag {
 
 /**
  * True when the run's text can be given an element of its own: it is drawn
- * by the page itself in a tagged document whose save can add one, and has no
- * tag or artifact mark.
+ * by the page itself, whose save can add one, and has no tag or artifact
+ * mark.
  */
 export function canTagText(doc: EditorDocument, run: TextRunSnapshot): boolean {
   return (
-    doc.isTagged() &&
     !run.inForm &&
     !run.artifact &&
     run.mcid === undefined &&
