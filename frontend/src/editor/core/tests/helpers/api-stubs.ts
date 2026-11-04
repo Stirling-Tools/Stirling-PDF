@@ -38,6 +38,7 @@ const ALL_BACKEND_ENDPOINTS = [
   "pdf-to-word",
   "file-to-pdf",
   "pdf-to-text",
+  "pdf-to-rtf",
   "pdf-to-html",
   "pdf-to-xml",
   "pdf-to-csv",
@@ -295,13 +296,6 @@ export async function mockAppApis(
           rag: { embeddingProvider: "voyageai", embeddingModel: "voyage-3" },
         },
       }),
-  );
-
-  // Folder access reads this on every visit to the System page; unstubbed it
-  // 401s in a retry loop and the refresh failures sign the session out.
-  await page.route(
-    "**/api/v1/admin/settings/policies/implied-folder-roots",
-    (route: Route) => route.fulfill({ json: { impliedRoots: [] } }),
   );
 
   // Same trap on the merged Legal and Advanced pages, which each pull in a

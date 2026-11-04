@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import stirling.software.common.util.RequestUriUtils;
+
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
@@ -17,11 +19,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
             HttpServletResponse response,
             AuthenticationException authException)
             throws IOException {
-        String contextPath = request.getContextPath();
-        String requestURI = request.getRequestURI();
-
         // For API requests, return JSON error
-        if (requestURI.startsWith(contextPath + "/api/")) {
+        if (RequestUriUtils.isApiRequest(request.getContextPath(), request.getRequestURI())) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");

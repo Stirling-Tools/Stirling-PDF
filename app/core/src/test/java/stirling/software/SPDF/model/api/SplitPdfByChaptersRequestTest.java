@@ -9,6 +9,15 @@ import org.junit.jupiter.api.Test;
 class SplitPdfByChaptersRequestTest {
 
     @Test
+    @DisplayName("defaults match what the web UI sends")
+    void defaultsMatchUi() {
+        SplitPdfByChaptersRequest req = new SplitPdfByChaptersRequest();
+        assertThat(req.getBookmarkLevel()).isEqualTo(1);
+        assertThat(req.getIncludeMetadata()).isFalse();
+        assertThat(req.getAllowDuplicates()).isFalse();
+    }
+
+    @Test
     @DisplayName("accessors round-trip")
     void roundTrip() {
         SplitPdfByChaptersRequest req = new SplitPdfByChaptersRequest();

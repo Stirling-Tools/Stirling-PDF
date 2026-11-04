@@ -3,25 +3,30 @@ import { Box, Group, NumberInput, Stack, Text, Tooltip } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 /** Shared layout atoms for the editor's properties inspector. */
 
-/** Uppercase section heading, optionally with a trailing control. */
+/** Uppercase section heading, optionally with an info affordance beside it and a trailing control. */
 export function SectionLabel({
   children,
+  info,
   right,
 }: {
   children: ReactNode;
+  info?: ReactNode;
   right?: ReactNode;
 }) {
   return (
     <Group justify="space-between" wrap="nowrap" gap={4} mb={8}>
-      <Text
-        size="xs"
-        fw={600}
-        c="dimmed"
-        tt="uppercase"
-        style={{ letterSpacing: "0.5px" }}
-      >
-        {children}
-      </Text>
+      <Group gap={6} wrap="nowrap">
+        <Text
+          size="xs"
+          fw={600}
+          c="dimmed"
+          tt="uppercase"
+          style={{ letterSpacing: "0.5px" }}
+        >
+          {children}
+        </Text>
+        {info}
+      </Group>
       {right}
     </Group>
   );

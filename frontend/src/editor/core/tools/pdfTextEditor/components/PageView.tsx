@@ -1,12 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
+import type {
+  PageSnapshot,
+  TextRange,
+} from "@editor/tools/pdfTextEditor/types";
 import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
 import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
+import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
+import {
+  imageAttention,
+  type ImageAttention,
+} from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 import { ImageHandle } from "@editor/tools/pdfTextEditor/components/ImageHandle";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { ShapeHandle } from "@editor/tools/pdfTextEditor/components/ShapeHandle";
@@ -44,6 +52,10 @@ interface PageViewProps {
     dy: number,
   ) => void;
   onEditRun: (pageIndex: number, runId: string, nextText: string) => void;
+  /** The characters selected inside a run's box, while it has focus. */
+  onSelectRunText?: (runId: string, range: TextRange | null) => void;
+  /** The characters selected inside the one selected run. */
+  selectedTextRange?: TextRange | null;
   /** Ctrl+drag committed; dx/dy in PDF points. */
   onMoveRun?: (
     pageIndex: number,
@@ -97,6 +109,8 @@ export function PageView({
   onSelectShape,
   onMoveShape,
   onEditRun,
+  onSelectRunText,
+  selectedTextRange,
   onMoveRun,
   onWrapRun,
   onResizeRun,
@@ -106,6 +120,15 @@ export function PageView({
   onFirstRendered,
 }: PageViewProps) {
   const { t } = useTranslation();
+  const imageAttentions = useMemo(() => {
+    const out = new Map<string, ImageAttention>();
+    if (!ACCESSIBILITY_EDITING) return out;
+    for (const image of page.images) {
+      const attention = imageAttention(document, image);
+      if (attention) out.set(image.id, attention);
+    }
+    return out;
+  }, [document, page]);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   // `raster` is the CSS layout size; the bitmap itself renders at deviceScale
@@ -379,6 +402,7 @@ export function PageView({
             onTransformCommit={(next) =>
               onTransformImage?.(page.pageIndex, image.id, next)
             }
+            attention={imageAttentions.get(image.id) ?? null}
           />
         ))}
         {/* Grid + empty-cell editors sit below the run overlays so filled
@@ -403,6 +427,16 @@ export function PageView({
             highlighted={highlightedRunId === run.id}
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
             onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
+            onTextRangeChange={
+              ACCESSIBILITY_EDITING
+                ? (range) => onSelectRunText?.(run.id, range)
+                : undefined
+            }
+            textRange={
+              selectedRunIds.length === 1 && selectedRunIds[0] === run.id
+                ? selectedTextRange
+                : null
+            }
             onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
             onWrap={(maxWidthPt) =>
               onWrapRun?.(page.pageIndex, run.id, maxWidthPt)

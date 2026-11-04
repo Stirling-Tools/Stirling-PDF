@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -36,6 +37,8 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import stirling.software.common.util.XmpUtils;
 
 @DisplayName("PDF to PDF/A Converter Tests")
 @ExtendWith(MockitoExtension.class)
@@ -237,6 +240,63 @@ class ConvertPDFToPDFATest {
             PDDocumentInformation info = document.getDocumentInformation();
             assertThat(info.getCreationDate()).isNotNull();
             assertThat(info.getModificationDate()).isNotNull();
+
+            document.close();
+        }
+
+        @Test
+        @DisplayName("Should replace every existing creator with the document's creator")
+        void shouldReplaceExistingCreators() throws Exception {
+            PDDocument document = createSimplePdf();
+            document.getDocumentInformation().setCreator("Original Creator");
+            XMPMetadata existing = XMPMetadata.createXMPMetadata();
+            DublinCoreSchema dc = existing.createAndAddDublinCoreSchema();
+            for (int i = 0; i < 5_000; i++) {
+                dc.addCreator("creator " + i);
+            }
+            ByteArrayOutputStream packet = new ByteArrayOutputStream();
+            new XmpSerializer().serialize(existing, packet, true);
+            PDMetadata metadata = new PDMetadata(document);
+            metadata.importXMPMetadata(packet.toByteArray());
+            document.getDocumentCatalog().setMetadata(metadata);
+
+            invokePrivateMethod("mergeAndAddXmpMetadata", document, 1);
+
+            try (InputStream is = document.getDocumentCatalog().getMetadata().createInputStream()) {
+                XMPMetadata xmp = new DomXmpParser().parse(is);
+                assertThat(xmp.getDublinCoreSchema().getCreators())
+                        .containsExactly("Original Creator");
+            }
+
+            document.close();
+        }
+
+        @Test
+        @DisplayName("Should replace an oversized XMP packet instead of parsing it")
+        void shouldReplaceOversizedXmp() throws Exception {
+            PDDocument document = createSimplePdf();
+            String filler = "<!--" + "x".repeat(XmpUtils.MAX_XMP_BYTES) + "-->";
+            PDMetadata metadata = new PDMetadata(document);
+            metadata.importXMPMetadata(
+                    ("<?xpacket begin=\"\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>"
+                                    + filler
+                                    + "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"/>"
+                                    + "<?xpacket end=\"w\"?>")
+                            .getBytes(StandardCharsets.UTF_8));
+            document.getDocumentCatalog().setMetadata(metadata);
+
+            invokePrivateMethod("mergeAndAddXmpMetadata", document, 2);
+
+            PDMetadata written = document.getDocumentCatalog().getMetadata();
+            assertThat(written.toByteArray().length).isLessThan(XmpUtils.MAX_XMP_BYTES);
+            try (InputStream is = written.createInputStream()) {
+                PDFAIdentificationSchema pdfaSchema =
+                        (PDFAIdentificationSchema)
+                                new DomXmpParser()
+                                        .parse(is)
+                                        .getSchema(PDFAIdentificationSchema.class);
+                assertThat(pdfaSchema.getPart()).isEqualTo(2);
+            }
 
             document.close();
         }

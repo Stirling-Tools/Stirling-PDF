@@ -1,6 +1,10 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { readUtf16 } from "@editor/services/pdfiumService";
-import type { StructureElement } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  containingBlock,
+  type StructureElement,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
+import { structureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
 
 type StringGetter = (el: number, buf: number, len: number) => number;
 
@@ -21,7 +25,11 @@ export function readPageStructure(
   try {
     tree = m.FPDF_StructTree_GetForPage(pagePtr);
     if (!tree) return out;
-    const visit = (el: number, depth: number): void => {
+    const visit = (
+      el: number,
+      depth: number,
+      parent: StructureElement | null,
+    ): void => {
       if (!el || depth > MAX_DEPTH) return;
       const mcids: number[] = [];
       const count = m.FPDF_StructElement_GetMarkedContentIdCount(el);
@@ -29,20 +37,28 @@ export function readPageStructure(
         const id = m.FPDF_StructElement_GetMarkedContentIdAtIndex(el, i);
         if (id >= 0) mcids.push(id);
       }
-      out.push({
-        type: readString(m, el, m.FPDF_StructElement_GetType) ?? "",
+      const role = structureRole(
+        readString(m, el, m.FPDF_StructElement_GetType) ?? "",
+      );
+      const element: StructureElement = {
+        ...role,
         alt: readString(m, el, m.FPDF_StructElement_GetAltText),
         actualText: readString(m, el, m.FPDF_StructElement_GetActualText),
         mcids,
-      });
+        // PDFium does not expose the kids' kinds; the fallback is read-only anyway.
+        onlyMarkedContent: false,
+        key: String(out.length),
+        block: containingBlock({ key: String(out.length), ...role }, parent),
+      };
+      out.push(element);
       const kids = m.FPDF_StructElement_CountChildren(el);
       for (let i = 0; i < kids; i++) {
-        visit(m.FPDF_StructElement_GetChildAtIndex(el, i), depth + 1);
+        visit(m.FPDF_StructElement_GetChildAtIndex(el, i), depth + 1, element);
       }
     };
     const roots = m.FPDF_StructTree_CountChildren(tree);
     for (let i = 0; i < roots; i++) {
-      visit(m.FPDF_StructTree_GetChildAtIndex(tree, i), 0);
+      visit(m.FPDF_StructTree_GetChildAtIndex(tree, i), 0, null);
     }
   } catch {
     return [];

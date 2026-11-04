@@ -1,5 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import type { Page, Route } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import path from "path";
 
 // Inserting a JPEG embeds the original JPEG stream instead of re-encoding
@@ -20,7 +20,6 @@ test("inserting a JPEG embeds it as DCTDecode, not re-encoded RGBA", async ({
   page: Page;
 }) => {
   test.setTimeout(90_000);
-  await page.route("**/encode-charcodes", (route: Route) => route.abort());
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 20_000,
