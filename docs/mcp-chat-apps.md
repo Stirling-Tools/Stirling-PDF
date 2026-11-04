@@ -78,7 +78,10 @@ server {
         proxy_set_header Host              $host;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-Host  $host;
-        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-For   $remote_addr;
+        proxy_set_header X-Forwarded-Port  $server_port;
+        proxy_set_header X-Forwarded-Server "";
+        proxy_set_header Forwarded         "";
         proxy_http_version 1.1;
         proxy_buffering off;
         proxy_request_buffering off;
@@ -88,7 +91,7 @@ server {
 }
 ```
 
-Caddy sets the forwarded headers itself:
+Caddy replaces the main `X-Forwarded-*` headers itself. Clear the incoming `Forwarded` header and unused server hint, and set the public HTTPS port:
 
 ```caddy
 pdf.example.com {
@@ -96,6 +99,9 @@ pdf.example.com {
         max_size 200MB
     }
     reverse_proxy stirling-pdf:8080 {
+        header_up -Forwarded
+        header_up -X-Forwarded-Server
+        header_up X-Forwarded-Port 443
         flush_interval -1
     }
 }
