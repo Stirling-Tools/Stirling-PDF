@@ -9,7 +9,7 @@ dependencies = []
 # Runtime dependencies for the AI document engine service.
 engine = [
     "cryptography>=50.0.2",
-    "fastapi>=0.141.1",
+    "fastapi>=0.162.0",
     "opentelemetry-sdk>=1.45.2",
     "pgvector>=0.5.0",
     "posthog>=7.53.0",
