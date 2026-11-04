@@ -100,6 +100,7 @@ describe("TextAccessibilitySection", () => {
           tag={{ kind: "mixed", settable: true }}
           onSetTag={onSetTag}
           inner={NO_INNER}
+          language={null}
         />
       </MantineProvider>,
     );

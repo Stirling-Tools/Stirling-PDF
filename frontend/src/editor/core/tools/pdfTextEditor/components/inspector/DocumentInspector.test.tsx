@@ -119,7 +119,7 @@ describe("DocumentInspector accessibility review", () => {
 
   it("ticks the fully-tagged box to mark the document", () => {
     const onSetMarkedTagged = vi.fn();
-    renderInspector(NOTHING_TO_REVIEW, vi.fn(), { onSetMarkedTagged });
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, { onSetMarkedTagged });
     const box = screen.getByTestId(MARKED);
     expect(box).not.toBeChecked();
     fireEvent.click(box);
@@ -127,12 +127,12 @@ describe("DocumentInspector accessibility review", () => {
   });
 
   it("leaves the box out when the file's flag can't be changed", () => {
-    renderInspector(NOTHING_TO_REVIEW, vi.fn(), { markedTagged: null });
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, { markedTagged: null });
     expect(screen.queryByTestId(MARKED)).not.toBeInTheDocument();
   });
 
   it("warns when marked tagged while content is untagged", () => {
-    renderInspector(NOTHING_TO_REVIEW, vi.fn(), {
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, {
       markedTagged: true,
       untaggedPages: 2,
     });
@@ -142,14 +142,14 @@ describe("DocumentInspector accessibility review", () => {
   });
 
   it("warns when tags exist but the document isn't marked tagged", () => {
-    renderInspector(NOTHING_TO_REVIEW, vi.fn(), { hasTags: true });
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, { hasTags: true });
     expect(screen.getByTestId(MARKED_WARNING)).toHaveTextContent(
       `${KEY}.unmarkedWithTags`,
     );
   });
 
   it("shows no warning when the flag matches the tags", () => {
-    renderInspector(NOTHING_TO_REVIEW, vi.fn(), { markedTagged: true });
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, { markedTagged: true });
     expect(screen.queryByTestId(MARKED_WARNING)).not.toBeInTheDocument();
   });
 });
