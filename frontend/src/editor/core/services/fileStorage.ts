@@ -237,10 +237,11 @@ export async function copyBlobBytes(source: Blob): Promise<ArrayBuffer> {
  */
 async function withProbeDeadline<T>(
   probe: (signal: AbortSignal) => Promise<T>,
+  deadlineMs = PROBE_DEADLINE_MS,
 ): Promise<T | typeof PROBE_UNANSWERED> {
   const controller = new AbortController();
   const running = probe(controller.signal);
-  const outcome = await beforeDeadline(running);
+  const outcome = await beforeDeadline(running, deadlineMs);
   if (outcome !== PROBE_UNANSWERED) return outcome;
   controller.abort();
   await beforeDeadline(running.catch(() => undefined));
@@ -249,12 +250,13 @@ async function withProbeDeadline<T>(
 
 function beforeDeadline<T>(
   promise: Promise<T>,
+  deadlineMs = PROBE_DEADLINE_MS,
 ): Promise<T | typeof PROBE_UNANSWERED> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   return Promise.race([
     promise,
     new Promise<typeof PROBE_UNANSWERED>((resolve) => {
-      timer = setTimeout(() => resolve(PROBE_UNANSWERED), PROBE_DEADLINE_MS);
+      timer = setTimeout(() => resolve(PROBE_UNANSWERED), deadlineMs);
     }),
   ]).finally(() => clearTimeout(timer));
 }
@@ -664,7 +666,11 @@ class FileStorageService {
       const record = await this.readRecord(db, fileId);
       if (!(record?.data instanceof Blob)) return;
       const { data, bodyRevision: revision } = record;
-      const bytes = await withProbeDeadline(() => data.arrayBuffer());
+      // Every byte, not a one-byte probe: the deadline grows with the file.
+      const bytes = await withProbeDeadline(
+        () => data.arrayBuffer(),
+        writeStallDeadlineMs(data.size),
+      );
       if (bytes === PROBE_UNANSWERED || !(bytes instanceof ArrayBuffer)) return;
       const rescued = await this.updateRecord(fileId, (stored) => {
         if (stored.bodyRevision !== revision) return false;

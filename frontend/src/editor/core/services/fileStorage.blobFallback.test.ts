@@ -558,6 +558,33 @@ describe("stub listings — data-lost auditing", () => {
     ).toBeUndefined();
   });
 
+  test("a rescue waits for a full read that takes longer than the probe", async () => {
+    localStorage.setItem("stirling.indexeddb.blobValuesUnsupported", "true");
+    const { fileStorage, store } = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    instrumentPut();
+    const id = await store("legacy.pdf");
+
+    let open = () => {};
+    let reading = () => {};
+    const reached = new Promise<void>((resolve) => (reading = resolve));
+    substituteHealthyBlobOnRead(100, {
+      open: new Promise<void>((resolve) => (open = resolve)),
+      onRead: () => reading(),
+    });
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    await fileStorage.getStirlingFileStub(id);
+    await reached;
+
+    // Past the 3 s probe deadline: reading every byte is not a one-byte probe.
+    await vi.advanceTimersByTimeAsync(4_000);
+    open();
+    await vi.advanceTimersByTimeAsync(0);
+    vi.useRealTimers();
+
+    await vi.waitFor(() => expect(putAttempts).toContain("copy"));
+  });
+
   test("a rescue keeps what was written while it read the bytes", async () => {
     localStorage.setItem("stirling.indexeddb.blobValuesUnsupported", "true");
     const { fileStorage, store } = await freshFileStorage();
