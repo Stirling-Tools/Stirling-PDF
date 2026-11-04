@@ -13,15 +13,21 @@ import {
 import {
   addTextPiece,
   charOrigins,
+  inkStarts,
+  pieceOrigin,
+  placeGlyphs,
   readMatrix,
   readTextSource,
   restoreText,
   setPieceText,
+  type Placed,
+  type Placing,
   type Point,
   type TextSource,
 } from "@editor/tools/pdfTextEditor/commands/textPieces";
 import { splitByBlock } from "@editor/tools/pdfTextEditor/commands/splitByBlock";
 import { readRunTags } from "@editor/tools/pdfTextEditor/commands/runTags";
+import { readsWordGap } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
 import { taggedSpans } from "@editor/tools/pdfTextEditor/model/TextTags";
 import {
   leaves,
@@ -328,36 +334,35 @@ function verifyTexts(
   }
 }
 
-/** Where each piece starts, for every piece that does not start its object. */
+/** Where each object draws each character of its text a glyph draws. */
 function originsFor(
   m: WrappedPdfiumModule,
   page: Page,
   objects: readonly CutObject[],
 ): Map<number, Map<number, Point>> {
-  const wanted = new Map<number, Set<number>>();
-  const lengths = new Map<number, number>();
-  for (const { leaf, pieces } of objects) {
-    const offsets = pieces.map((piece) => piece.from).filter((at) => at > 0);
-    if (offsets.length === 0) continue;
-    wanted.set(leaf.ptr, new Set(offsets));
-    lengths.set(leaf.ptr, leaf.text.length);
-  }
-  const origins = charOrigins(m, page.pagePtr, wanted, lengths);
-  for (const [ptr, offsets] of wanted) {
-    if ([...offsets].some((at) => !origins.get(ptr)?.has(at))) {
+  const origins = charOrigins(
+    m,
+    page.pagePtr,
+    new Map(objects.map(({ leaf }) => [leaf.ptr, leaf.text])),
+  );
+  for (const { leaf } of objects) {
+    const drawn = origins.get(leaf.ptr);
+    const ink = inkStarts(leaf.text, 0, leaf.text.length);
+    if (!drawn || ink.some((at) => !drawn.has(at))) {
       throw new Error("PDFium cannot place a piece of the text");
     }
   }
   return origins;
 }
 
-/** The objects drawing each cut object's pieces, in reading order, by the object it was. */
-type Drawn = Map<number, Array<{ ptr: number; piece: Piece }>>;
+/** The objects drawing each cut object's text, in reading order, by the object it was. */
+type Drawn = Map<number, Placed[]>;
 
 /**
  * Redraw the pieces in the redrawn groups as new objects, in reading order so
  * PDFium writes each MCID's content in that order. An object keeping a piece
- * is cut down to it; one keeping none is taken off the page.
+ * is cut down to it; one keeping none is taken off the page. Every glyph is
+ * then drawn where it was.
  */
 function redraw(
   doc: EditorDocument,
@@ -367,21 +372,46 @@ function redraw(
   undo: Array<() => void>,
 ): Drawn {
   const m = doc.module;
-  const drawn: Drawn = new Map();
-  const expected = new Map<number, string>();
+  const heads: Array<{ piece: Piece; placing: Placing }> = [];
+  const placing = (
+    object: CutObject,
+    piece: Piece,
+    ptr: number,
+    tags: readonly TagMark[],
+    fresh: boolean,
+  ): Placing => ({
+    ptr,
+    from: piece.from,
+    to: piece.to,
+    text: object.leaf.text,
+    source: object.source,
+    origins: plan.origins.get(object.leaf.ptr)!,
+    tags,
+    fresh,
+  });
   const objectFor = new Map(plan.objects.map((o) => [o.leaf.ptr, o]));
   for (const piece of plan.pieces) {
     const object = objectFor.get(piece.ptr);
     if (!object || !plan.redrawn.has(piece.group)) continue;
-    const text = object.leaf.text.slice(piece.from, piece.to);
-    const origin = startOf(object, piece, plan.origins);
-    const ptr = addTextPiece(m, doc.docPtr, page, object.source, text, origin, [
-      tagFor(piece),
-    ]);
+    const tags = [tagFor(piece)];
+    const { matrix } = object.source;
+    const origin = pieceOrigin(
+      plan.origins.get(piece.ptr)!,
+      object.leaf.text,
+      piece.from,
+    ) ?? { x: matrix[4], y: matrix[5] };
+    const ptr = addTextPiece(
+      m,
+      doc.docPtr,
+      page,
+      object.source,
+      object.leaf.text.slice(piece.from, piece.to),
+      origin,
+      tags,
+    );
     if (!ptr) throw new Error("PDFium could not draw the text");
     undo.push(() => removeAndDestroyObject(m, page.pagePtr, ptr));
-    expected.set(ptr, text);
-    drawn.set(piece.ptr, [...(drawn.get(piece.ptr) ?? []), { ptr, piece }]);
+    heads.push({ piece, placing: placing(object, piece, ptr, tags, true) });
   }
 
   for (const object of plan.objects) {
@@ -394,40 +424,85 @@ function redraw(
       continue;
     }
     const matrix = readMatrix(m, ptr);
-    const keptText = text.slice(kept.from, kept.to);
-    const origin = kept.from > 0 ? startOf(object, kept, plan.origins) : null;
-    if (!matrix || !setPieceText(m, ptr, keptText, origin)) {
+    const origin =
+      kept.from > 0
+        ? pieceOrigin(plan.origins.get(ptr)!, text, kept.from)
+        : null;
+    if (
+      !matrix ||
+      !setPieceText(m, ptr, text.slice(kept.from, kept.to), origin)
+    ) {
       throw new Error("PDFium could not redraw the text");
     }
     undo.push(() => restoreText(m, ptr, text, matrix));
-    expected.set(ptr, keptText);
-    const pieces = [...(drawn.get(ptr) ?? []), { ptr, piece: kept }];
-    drawn.set(
-      ptr,
-      pieces.sort((a, b) => a.piece.from - b.piece.from),
-    );
+    const tags = readTagMarks(m, ptr);
+    heads.push({
+      piece: kept,
+      placing: placing(object, kept, ptr, tags, false),
+    });
   }
 
-  // The text page ends an object's text with a space it infers from the gap
-  // to the next, which is no glyph of the object's.
-  const read = readObjTexts(m, page.pagePtr, [...expected.keys()]);
-  if (
-    [...expected.values()].some(
-      (text, i) => read[i]?.trimEnd() !== text.trimEnd(),
-    )
-  ) {
-    throw new Error("PDFium redrew the text differently");
-  }
+  const placed = placeGlyphs(
+    m,
+    doc.docPtr,
+    page,
+    heads.map((head) => head.placing),
+    undo,
+  );
+  const drawn: Drawn = new Map();
+  heads.forEach(({ piece }, i) => {
+    drawn.set(piece.ptr, [...(drawn.get(piece.ptr) ?? []), ...placed[i]]);
+  });
+  for (const parts of drawn.values()) parts.sort((a, b) => a.from - b.from);
+  verifyRedrawn(m, page, plan, drawn);
   return drawn;
 }
 
-function startOf(
-  object: CutObject,
-  piece: Piece,
-  origins: ReadonlyMap<number, ReadonlyMap<number, Point>>,
-): Point {
-  if (piece.from > 0) return origins.get(object.leaf.ptr)!.get(piece.from)!;
-  return { x: object.source.matrix[4], y: object.source.matrix[5] };
+function verifyRedrawn(
+  m: WrappedPdfiumModule,
+  page: Page,
+  plan: CutPlan,
+  drawn: Drawn,
+): void {
+  const parts = plan.objects.flatMap((object) =>
+    (drawn.get(object.leaf.ptr) ?? []).map((part, i, all) => ({
+      object,
+      part,
+      next: all[i + 1],
+    })),
+  );
+  const read = readObjTexts(
+    m,
+    page.pagePtr,
+    parts.map(({ part }) => part.ptr),
+  );
+  const wrong = parts.some(({ object, part, next }, i) => {
+    const { text } = object.leaf;
+    const own = text.slice(part.from, part.to);
+    const got = read[i];
+    // The text page ends an object's text with a space it infers from the gap
+    // to the next, which is no glyph of the object's.
+    if (got?.trimEnd() !== own.trimEnd()) return true;
+    // Between two parts of one word, as letter-spaced text drawn glyph by
+    // glyph, that space would split the word, as would the one a line read
+    // puts in a wide gap.
+    const inWord = next && /\S$/.test(own) && /\S/.test(text[part.to] ?? "");
+    return inWord && (got !== own || readApart(m, object.source, part, next));
+  });
+  if (wrong) throw new Error("PDFium redrew the text differently");
+}
+
+function readApart(
+  m: WrappedPdfiumModule,
+  source: TextSource,
+  part: Placed,
+  next: Placed,
+): boolean {
+  const before = measureObjBoxPt(m, part.ptr);
+  const after = measureObjBoxPt(m, next.ptr);
+  if (!before || !after) return true;
+  const fontSize = source.size * Math.hypot(source.matrix[0], source.matrix[1]);
+  return readsWordGap(after.x - (before.x + before.width), fontSize);
 }
 
 /** List the objects now drawing a run's text in place of the ones they replace. */
@@ -451,9 +526,9 @@ function relist(
     };
     const entries = {
       ptrs: now.map((d) => d.ptr),
-      texts: now.map((d) => leaf.text.slice(d.piece.from, d.piece.to)),
+      texts: now.map((d) => leaf.text.slice(d.from, d.to)),
       bounds: now.map((d) => box(d.ptr)),
-      starts: now.map((d) => d.piece.from),
+      starts: now.map((d) => d.from),
     };
     replaceEntries(leaf.list, leaf.index, entries);
     // A paragraph keeps its first line's arrays on the run as well.
