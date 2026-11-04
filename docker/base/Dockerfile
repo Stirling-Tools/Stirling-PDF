@@ -408,15 +408,29 @@ RUN gcc -O2 -Wall -Wextra -Werror -o /usr/local/bin/lo-sandbox /src/lo-sandbox.c
     strip --strip-unneeded /usr/local/bin/lo-sandbox
 
 
+# Minimal Java runtime. The full Temurin JRE includes modules the application
+# never loads; jlink keeps only what the app and its libraries use.
+FROM eclipse-temurin:25-jdk-noble@sha256:ba0f0e1a33864105e1d454e88105c617ab40f71062db1f306bf58be32a3f8e5e AS jre-build
+
+RUN "$JAVA_HOME/bin/jlink" \
+      --add-modules java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.dynalink,jdk.management,jdk.charsets,jdk.localedata,jdk.naming.dns,jdk.unsupported,jdk.zipfs \
+      --strip-debug --no-man-pages --no-header-files --compress=zip-9 \
+      --output /opt/jre
+
+
 # Final runtime image - the actual base image
-FROM eclipse-temurin:25-jre-noble@sha256:a98128a57de944a72bd31fbc79b898edd5a5864d3652071d5bbd2160ab7d7dce AS runtime
+FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS runtime
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+COPY --from=jre-build /opt/jre /opt/jre
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
-    TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
+    TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata \
+    JAVA_HOME=/opt/jre \
+    PATH=/opt/jre/bin:${PATH}
 
 ARG UNOSERVER_VERSION=3.7
 
