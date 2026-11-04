@@ -127,6 +127,34 @@ class MetadataControllerTest {
     }
 
     @Test
+    void keepOmittedKeepsTheFieldsARequestLeavesOut() throws Exception {
+        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(mockDocument);
+        when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
+        when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
+        java.util.Calendar created = java.util.Calendar.getInstance();
+        when(mockInfo.getAuthor()).thenReturn("Original Author");
+        when(mockInfo.getSubject()).thenReturn("Original Subject");
+        when(mockInfo.getCreationDate()).thenReturn(created);
+
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(mockFile);
+        request.setKeepOmitted(true);
+        request.setTitle("New Title");
+        request.setAllRequestParams(new HashMap<>());
+
+        try {
+            metadataController.metadata(request);
+        } catch (Exception e) {
+            // Expected - pdfDocToWebResponse may fail
+        }
+
+        verify(mockInfo).setTitle("New Title");
+        verify(mockInfo).setAuthor("Original Author");
+        verify(mockInfo).setSubject("Original Subject");
+        verify(mockInfo).setCreationDate(created);
+    }
+
+    @Test
     void testMetadata_undefinedFieldsSetToNull() throws Exception {
         when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(mockDocument);
         when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);

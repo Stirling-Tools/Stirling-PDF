@@ -20,6 +20,14 @@ public class MetadataRequest extends PDFFile {
     private Boolean deleteAll = false;
 
     @Schema(
+            description =
+                    "True keeps the current value of every standard field left out, instead of"
+                            + " removing it",
+            defaultValue = "false",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    private Boolean keepOmitted = false;
+
+    @Schema(
             description = "The author of the document. Omit to remove it.",
             example = "author",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
