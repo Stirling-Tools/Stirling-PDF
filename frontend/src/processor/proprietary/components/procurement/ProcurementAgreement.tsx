@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -19,9 +19,8 @@ import "@processor/views/Procurement.css";
  * The agreement (security) step: the buyer reviews the full Stirling Enterprise Agreement — Master
  * Services Agreement + Order Form (from the quote) + Data Processing Addendum, one signature — then
  * signs it. The document body is served by the backend from the versioned legal registry (static
- * legal copy, English only); this component renders it in full, gates signing on the buyer reaching
- * its end, and captures the typed legal name, signatory, title, and authority. On sign it records
- * the signature
+ * legal copy, English only); this component renders it in full and captures the typed legal name,
+ * signatory, title, and authority. On sign it records the signature
  * (pinned to the exact document version + a hash) and then accepts the quote into a subscription.
  *
  * Presented as the document itself rather than a card about it: this step names the agreement in the
@@ -51,8 +50,6 @@ export function ProcurementAgreement({
   const [signatory, setSignatory] = useState(quote.config.contactName ?? "");
   const [title, setTitle] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const [reachedEnd, setReachedEnd] = useState(false);
-  const endRef = useRef<HTMLDivElement>(null);
   const [signing, setSigning] = useState(false);
   const [downloadingMsa, setDownloadingMsa] = useState(false);
   const [error, setError] = useState(false);
@@ -80,27 +77,9 @@ export function ProcurementAgreement({
     }
   };
 
-  // Signing waits until the buyer has scrolled to the end of the agreement. Watched with a marker
-  // after the last line, since the page scrolls rather than a box around the document.
-  useEffect(() => {
-    const el = endRef.current;
-    if (!el || reachedEnd) return;
-    // No way to tell without the observer (old browsers, jsdom), so it does not block signing.
-    if (typeof IntersectionObserver === "undefined") {
-      setReachedEnd(true);
-      return;
-    }
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) setReachedEnd(true);
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [doc, reachedEnd]);
-
   // A signature is pinned to the document's version, so there is nothing to sign until it shows.
   const ready =
     doc != null &&
-    reachedEnd &&
     confirmed &&
     legalName.trim().length > 0 &&
     signatory.trim().length > 0;
@@ -179,7 +158,6 @@ export function ProcurementAgreement({
               <div className="portal-agreement__md">
                 <Markdown remarkPlugins={[remarkGfm]}>{doc.markdown}</Markdown>
               </div>
-              <div ref={endRef} aria-hidden />
             </>
           )}
         </div>
@@ -255,17 +233,10 @@ export function ProcurementAgreement({
             <input
               type="checkbox"
               checked={confirmed}
-              disabled={!reachedEnd}
               onChange={(e) => setConfirmed(e.target.checked)}
             />
             <span>{t("portal.procurement.agreement.confirm")}</span>
           </label>
-          {/* Beside the consent it gates, so the reason it is unavailable sits next to it. */}
-          {doc && !reachedEnd && (
-            <span className="portal-agreement__gate">
-              {t("portal.procurement.agreement.scrollHint", "Scroll to review")}
-            </span>
-          )}
         </div>
       </div>
     </div>

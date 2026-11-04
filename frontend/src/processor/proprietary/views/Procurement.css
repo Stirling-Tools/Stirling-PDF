@@ -683,12 +683,6 @@
   justify-content: space-between;
   gap: 1rem;
 }
-.portal-agreement__gate {
-  flex: 0 0 auto;
-  font-size: 0.6875rem;
-  color: var(--c-text-subtle);
-  white-space: nowrap;
-}
 .portal-agreement__signrow .portal-agreement__signfields {
   flex: 1;
   gap: 0.6rem;
