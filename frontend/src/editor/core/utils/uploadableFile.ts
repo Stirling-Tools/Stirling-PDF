@@ -16,3 +16,13 @@ import { detachedFile } from "@editor/utils/storedBlob";
 export function uploadableFile(file: File): Promise<File> {
   return detachedFile(file);
 }
+
+/**
+ * `file` itself when it is a real File, or a detached File with its identity.
+ * FormData only takes a part's filename from a File, and fileStorage can hand
+ * back a stored Blob wearing its record's name (see withRecordIdentity), which
+ * would otherwise go out as "blob".
+ */
+export async function namedForUpload(file: File): Promise<File> {
+  return file instanceof File ? file : detachedFile(file);
+}

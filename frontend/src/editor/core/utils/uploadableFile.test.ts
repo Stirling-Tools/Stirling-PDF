@@ -1,6 +1,6 @@
 import { Blob as NodeBlob, File as NodeFile } from "node:buffer";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { uploadableFile } from "@editor/utils/uploadableFile";
+import { namedForUpload, uploadableFile } from "@editor/utils/uploadableFile";
 import { markStoredBlob } from "@editor/utils/storedBlob";
 
 /** jsdom's Blob has no text(). */
@@ -54,5 +54,29 @@ describe("uploadableFile", () => {
     expect(stream).toHaveBeenCalledOnce();
     expect(slice).not.toHaveBeenCalled();
     expect(await upload.text()).toBe("%PDF-1.7 stored");
+  });
+});
+
+describe("namedForUpload", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("hands a File back untouched", async () => {
+    const file = new File(["%PDF-1.7"], "report.pdf");
+    expect(await namedForUpload(file)).toBe(file);
+  });
+
+  it("names the part after a stored Blob's record, not 'blob'", async () => {
+    vi.stubGlobal("File", NodeFile);
+    vi.stubGlobal("Blob", NodeBlob);
+    // How fileStorage hands back a record whose bytes were stored as a Blob.
+    const stored = new Blob(["%PDF-1.7 stored"], { type: "application/pdf" });
+    Object.defineProperty(stored, "name", { value: "report.pdf" });
+    markStoredBlob(stored);
+
+    // FormData takes a part's filename only from a File.
+    const named = await namedForUpload(stored as File);
+
+    expect(named).toBeInstanceOf(File);
+    expect(named.name).toBe("report.pdf");
   });
 });
