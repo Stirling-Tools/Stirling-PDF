@@ -182,12 +182,48 @@ class MetadataControllerTest {
     }
 
     @Test
+    void keepOmittedPreservesAnUnrecognizedTrappedEntry() throws Exception {
+        PDDocument source = new PDDocument();
+        source.addPage(new PDPage());
+        source.getDocumentInformation().getCOSObject().setName(COSName.TRAPPED, "Maybe");
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(mockFile);
+        request.setKeepOmitted(true);
+        request.setTitle("New Title");
+
+        try (PDDocument result = writeMetadata(source, request)) {
+            assertEquals("New Title", result.getDocumentInformation().getTitle());
+            assertEquals(
+                    "Maybe",
+                    result.getDocumentInformation()
+                            .getCOSObject()
+                            .getNameAsString(COSName.TRAPPED));
+        }
+    }
+
+    @Test
+    void keepOmittedCanReplaceATrappedEntry() throws Exception {
+        PDDocument source = new PDDocument();
+        source.addPage(new PDPage());
+        source.getDocumentInformation().getCOSObject().setName(COSName.TRAPPED, "Maybe");
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(mockFile);
+        request.setKeepOmitted(true);
+        request.setTrapped("True");
+
+        try (PDDocument result = writeMetadata(source, request)) {
+            assertEquals("True", result.getDocumentInformation().getTrapped());
+        }
+    }
+
+    @Test
     void deleteAllClearsDatesEvenWhenKeepOmittedIsEnabled() throws Exception {
         PDDocument source = new PDDocument();
         source.addPage(new PDPage());
         source.getDocumentInformation().setAuthor("Original Author");
         source.getDocumentInformation().getCOSObject().setString(COSName.CREATION_DATE, "D:202501");
         source.getDocumentInformation().getCOSObject().setString(COSName.MOD_DATE, "unparseable");
+        source.getDocumentInformation().getCOSObject().setName(COSName.TRAPPED, "Maybe");
         MetadataRequest request = new MetadataRequest();
         request.setFileInput(mockFile);
         request.setKeepOmitted(true);
@@ -198,6 +234,7 @@ class MetadataControllerTest {
             assertNull(info.getAuthor());
             assertNull(info.getCOSObject().getItem(COSName.CREATION_DATE));
             assertNull(info.getCOSObject().getItem(COSName.MOD_DATE));
+            assertNull(info.getCOSObject().getItem(COSName.TRAPPED));
         }
     }
 
