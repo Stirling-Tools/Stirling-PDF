@@ -35,7 +35,9 @@ public class AddPasswordRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.",
+                    "Change permissions on an encrypted source. Omitting or leaving ownerPassword"
+                            + " empty retains its passwords and encryption; supplying ownerPassword replaces"
+                            + " the permissions password while keeping the opening password and encryption key length.",
             defaultValue = "false")
     private boolean preserveExisting;
 

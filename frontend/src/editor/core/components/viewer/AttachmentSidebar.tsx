@@ -21,6 +21,7 @@ import { detectNonPdfFileType, isPdfFile } from "@editor/utils/fileUtils";
 import { readPortfolioMemberBytes } from "@editor/utils/portfolioMembers";
 import { downloadFile } from "@editor/services/downloadService";
 import "@editor/components/viewer/AttachmentSidebar.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface AttachmentSidebarProps {
   visible: boolean;
@@ -618,11 +619,11 @@ export const AttachmentSidebar = ({
           className="attachment-item-wrapper"
         >
           <div
-            className={
+            className={`${
               isCurrent
                 ? "attachment-item attachment-item--current"
                 : "attachment-item"
-            }
+            } ${privateContentClassName}`}
             onClick={rowClick}
             role="button"
             tabIndex={0}

@@ -14,6 +14,7 @@ import {
   type StirlingFileStub,
 } from "@editor/types/fileContext";
 import thumbnailStyles from "@editor/components/fileEditor/FileEditorThumbnail.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Picks one PDF without navigating away; library imports use the normal FileContext ingestion path. */
 export function SigningDocumentPicker({
@@ -180,7 +181,7 @@ function SigningDocumentCard({
   onSelect: () => void;
 }) {
   return (
-    <label className="signing-document-card">
+    <label className={`signing-document-card ${privateContentClassName}`}>
       <input
         type="radio"
         name="signing-document"

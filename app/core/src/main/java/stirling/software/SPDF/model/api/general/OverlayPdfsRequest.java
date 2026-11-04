@@ -20,8 +20,11 @@ public class OverlayPdfsRequest extends PDFFile {
 
     @Schema(
             description =
-                    "SequentialOverlay repeats the overlay pages in order (e.g. a"
-                            + " letterhead on every page). InterleavedOverlay takes each overlay file"
+                    "SequentialOverlay uses each overlay file's pages in order and repeats as"
+                            + " needed. With multiple files it starts with the second file, proceeds"
+                            + " through the remaining files, then wraps to the first (e.g. B, A for"
+                            + " files [A, B]). A single file repeats from its first page."
+                            + " InterleavedOverlay takes each overlay file"
                             + " in turn. FixedRepeatOverlay uses counts.",
             allowableValues = {"SequentialOverlay", "InterleavedOverlay", "FixedRepeatOverlay"},
             requiredMode = Schema.RequiredMode.REQUIRED)

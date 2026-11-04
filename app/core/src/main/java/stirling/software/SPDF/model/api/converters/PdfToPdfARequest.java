@@ -11,6 +11,9 @@ import stirling.software.common.model.api.PDFFile;
 @EqualsAndHashCode(callSuper = true)
 public class PdfToPdfARequest extends PDFFile {
 
+    @Schema(description = "Use Stirling Office Convert; when omitted, follow the server setting")
+    private Boolean useStirlingOfficeConvert;
+
     @Schema(
             description =
                     "pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b;"

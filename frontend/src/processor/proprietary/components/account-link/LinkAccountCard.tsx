@@ -7,6 +7,7 @@ import "@editor/components/settings/AccountConnectionLayout.css";
 import type { UseAccountLink } from "@processor/hooks/useAccountLink";
 import { useUI } from "@processor/contexts/UIContext";
 import { useLinkedAccountEmail } from "@processor/hooks/useLinkedAccountEmail";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface Props {
   link: UseAccountLink;
@@ -71,7 +72,13 @@ export function LinkAccountCard({ link, instanceName }: Props) {
             {t("portal.accountLink.card.eyebrow", "This instance")}
           </span>
           <div className="portal-link__section-head">
-            <h2>
+            <h2
+              className={
+                (instanceName ?? link.status?.name)
+                  ? privateContentClassName
+                  : undefined
+              }
+            >
               {instanceName ??
                 link.status?.name ??
                 t("portal.accountLink.card.title", "Stirling Cloud")}
@@ -103,7 +110,7 @@ export function LinkAccountCard({ link, instanceName }: Props) {
                 "portal.accountLink.card.signedInAs",
                 "Signed in to Stirling Cloud as",
               )}{" "}
-              <strong>{email}</strong>
+              <strong className={privateContentClassName}>{email}</strong>
             </p>
           )}
           {linked && (

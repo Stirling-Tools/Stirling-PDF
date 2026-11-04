@@ -28,6 +28,8 @@ import OAuthButtons from "@editor/routes/login/OAuthButtons";
 import LoggedInState from "@editor/routes/login/LoggedInState";
 import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
 import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -352,7 +354,9 @@ export default function Login() {
                       margin: 0,
                     }}
                   >
-                    {t("login.magicLinkSent", { email: magicLinkEmail })}
+                    <PrivateContent>
+                      {t("login.magicLinkSent", { email: magicLinkEmail })}
+                    </PrivateContent>
                   </p>
                 ) : (
                   <div className="auth-magic-row">
@@ -369,7 +373,7 @@ export default function Login() {
                         !isSigningIn &&
                         signInWithMagicLink()
                       }
-                      className="auth-input"
+                      className={`auth-input ${privateContentClassName}`}
                     />
                     <Button
                       onClick={signInWithMagicLink}

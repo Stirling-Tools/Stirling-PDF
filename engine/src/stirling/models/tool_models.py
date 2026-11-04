@@ -120,7 +120,7 @@ class KeyLength(IntEnum):
 
 class AddPasswordParams(ApiModel):
     """
-    password is needed to open the file. The prevent* restrictions only hold when ownerPassword is set and differs from password. sourcePassword opens an already protected file; preserveExisting changes its permissions and keeps its existing passwords. Input:PDF/PDF_ENCRYPTED Output:PDF_ENCRYPTED Type:SISO
+    password sets an optional opening password; omit or leave it empty for owner-only protection with ownerPassword. For new protection, prevent* restrictions require a nonempty ownerPassword different from password. sourcePassword opens an already protected file. With preserveExisting=true on an encrypted file, omitting or leaving ownerPassword empty retains the existing passwords and changes permissions; supplying ownerPassword replaces the permissions password while retaining the opening password. Replacement requires the existing opening password in password or sourcePassword. When sourcePassword is a distinct permissions password, password must contain the source's existing opening password. Input:PDF/PDF_ENCRYPTED Output:PDF_ENCRYPTED Type:SISO
     """
 
     key_length: KeyLength = Field(KeyLength.integer_256, description="The length of the encryption key")
@@ -133,7 +133,7 @@ class AddPasswordParams(ApiModel):
     )
     preserve_existing: bool = Field(
         False,
-        description="Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.",
+        description="Change permissions on an encrypted source. Omitting or leaving ownerPassword empty retains its passwords and encryption; supplying ownerPassword replaces the permissions password while keeping the opening password and encryption key length.",
     )
     prevent_assembly: bool = Field(False, description="Whether document assembly is prevented")
     prevent_extract_content: bool = Field(False, description="Whether content extraction is prevented")
@@ -216,10 +216,12 @@ class AddStampParams(ApiModel):
     )
     opacity: float = Field(0.5, description="The opacity of the stamp (0.0 - 1.0)")
     override_x: float = Field(
-        -1, description="X in points from the left edge; with overrideY, replaces position. -1 = not set."
+        -1,
+        description="X in PDF user-space points. When both overrides are nonnegative, replaces position. Image and QR positions are clamped to the media box using the unrotated stamp size; text positions are not clamped. -1 = not set.",
     )
     override_y: float = Field(
-        -1, description="Y in points from the bottom edge; with overrideX, replaces position. -1 = not set."
+        -1,
+        description="Y in PDF user-space points. When both overrides are nonnegative, replaces position. Image and QR positions are clamped to the media box using the unrotated stamp size; text positions are not clamped. -1 = not set.",
     )
     page_numbers: str = Field(
         "all",
@@ -232,7 +234,7 @@ class AddStampParams(ApiModel):
     rotation: float = Field(0, description="The rotation of the stamp in degrees")
     stamp_text: str | None = Field(
         None,
-        description="The stamp text, or the QR code content when stampType is qr; required when stampType is text or qr. \\n starts a new line. Supports @page, @total_pages, @date, @date{dd/MM/yyyy}, @time, @filename, @title, @author and @uuid (@@ for a literal @).",
+        description="The stamp text, or the QR code content when stampType is qr; required when stampType is text or qr. For text stamps only, \\n starts a new line; QR content keeps the literal sequence. Both support @page, @total_pages, @date, @date{dd/MM/yyyy}, @time, @filename, @title, @author and @uuid (@@ for a literal @).",
     )
     stamp_type: StampType | None = Field(
         None,
@@ -286,15 +288,13 @@ class AddWatermarkParams(ApiModel):
 
 class AutoRedactParams(ApiModel):
     """
-    Removes each match and boxes it over. If removal fails it only draws boxes; set convertPDFToImage=true to be sure nothing can be extracted. Input:PDF Output:PDF Type:SISO
+    Removes matched page text and covers its location. Verification failures in native word/regex removal reject the request. Other native failures fall back to region content removal or rasterization. convertPDFToImage=true rasterizes every output page. Input:PDF Output:PDF Type:SISO
     """
 
     case_sensitive: bool = Field(
         False, description="Whether matching is case-sensitive, for plain text and regex alike"
     )
-    convert_pdf_to_image: bool = Field(
-        False, description="Turn pages into images so nothing under the boxes can be extracted"
-    )
+    convert_pdf_to_image: bool = Field(False, description="Rasterize every output page, making page text unselectable")
     custom_padding: float = Field(0, description="Extra space around each redaction box, in points")
     list_of_text: str = Field(
         ...,
@@ -329,7 +329,7 @@ class DetectionMode(StrEnum):
 
 class AutoSplitPdfParams(ApiModel):
     """
-    Splits at each divider page and returns a zip of the parts; divider pages are dropped. duplexMode=true also drops each divider's back page. With no dividers you get one file; use split-pages or split-by-size-or-count instead. Input:PDF Output:PDF Type:SIMO
+    Splits at each divider page and returns a zip of the parts. Divider pages are dropped except a divider on page 1, which is retained. duplexMode=true also drops each divider's back page, including when the divider is retained. With no dividers you get one file; use split-pages or split-by-size-or-count instead. Input:PDF Output:PDF Type:SIMO
     """
 
     duplex_mode: bool = Field(
@@ -539,7 +539,7 @@ class OptimizeForEbook(Enum):
 
 class EbookToPdfParams(ApiModel):
     """
-    This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX) to PDF using Calibre. Input:EBOOK Output:PDF Type:SISO
+    This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX) to PDF using Calibre or Stirling Office Convert. Input:EBOOK Output:PDF Type:SISO
     """
 
     embed_all_fonts: EmbedAllFonts = Field(
@@ -554,6 +554,9 @@ class EbookToPdfParams(ApiModel):
     optimize_for_ebook: OptimizeForEbook = Field(
         OptimizeForEbook.boolean_false,
         description="Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)",
+    )
+    use_stirling_office_convert: bool | None = Field(
+        None, description="Use Stirling Office Convert; when omitted, follow the server setting"
     )
 
 
@@ -596,6 +599,9 @@ class EmlToPdfParams(ApiModel):
         examples=[10],
         ge=1,
         le=100,
+    )
+    use_stirling_office_convert: bool | None = Field(
+        None, description="Use Stirling Office Convert; when omitted, follow the server setting"
     )
 
 
@@ -675,12 +681,15 @@ class HtmlToPdfParams(ApiModel):
     This endpoint takes an HTML or ZIP file input and converts it to a PDF format. Input:HTML/ZIP Output:PDF Type:SISO
     """
 
+    use_stirling_office_convert: bool | None = Field(
+        None, description="Use Stirling Office Convert; when omitted, follow the server setting"
+    )
     zoom: float = Field(1, description="Zoom level for displaying the website. Default is '1'.")
 
 
 class ImageBox(ApiModel):
     """
-    Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
+    Rectangular areas identified by page and bounding box. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
     """
 
     page_index: int = Field(..., description="0-indexed page number (first page = 0).")
@@ -729,6 +738,8 @@ class MarkdownToPdfParams(ApiModel):
     """
     This endpoint takes a Markdown file or ZIP (containing Markdown + images) input, converts it to HTML, and then to PDF format. Input:MARKDOWN/ZIP Output:PDF Type:SISO
     """
+
+    use_stirling_office_convert: bool | None = None
 
 
 class SortType(StrEnum):
@@ -970,7 +981,7 @@ class TargetDevice(StrEnum):
 
 class PdfToEpubParams(ApiModel):
     """
-    Convert a PDF file to a high-quality EPUB or AZW3 ebook using Calibre. Input:PDF Output:EBOOK Type:SISO
+    Convert a PDF file to an EPUB or AZW3 ebook using Calibre or Stirling Office Convert. Input:PDF Output:EBOOK Type:SISO
     """
 
     detect_chapters: DetectChapters = Field(
@@ -980,12 +991,17 @@ class PdfToEpubParams(ApiModel):
     target_device: TargetDevice = Field(
         TargetDevice.tablet_phone_images, description="Choose an output profile optimized for the reader device."
     )
+    use_stirling_office_convert: bool | None = Field(
+        None, description="Use Stirling Office Convert; when omitted, follow the server setting"
+    )
 
 
 class PdfToHtmlParams(ApiModel):
     """
     This endpoint converts a PDF file to HTML format. Input:PDF Output:ZIP Type:SISO
     """
+
+    use_stirling_office_convert: bool | None = None
 
 
 class ImageFormat(StrEnum):
@@ -1033,6 +1049,8 @@ class PdfToMarkdownParams(ApiModel):
     This endpoint converts a PDF file to Markdown format. Input:PDF Output:MARKDOWN Type:SISO
     """
 
+    use_stirling_office_convert: bool | None = None
+
 
 class OutputFormat1(StrEnum):
     """
@@ -1053,7 +1071,7 @@ class OutputFormat1(StrEnum):
 
 class PdfToPdfaParams(ApiModel):
     """
-    This endpoint converts a PDF file to a PDF/A or PDF/X file using Ghostscript (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO
+    This endpoint converts a PDF file to PDF/A using Stirling Office Convert, or to a PDF/A or PDF/X file using Ghostscript (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO
     """
 
     output_format: OutputFormat1 = Field(
@@ -1066,6 +1084,9 @@ class PdfToPdfaParams(ApiModel):
     )
     strict: bool | None = Field(
         None, description="If true, the conversion will fail if the output is not perfectly compliant"
+    )
+    use_stirling_office_convert: bool | None = Field(
+        None, description="Use Stirling Office Convert; when omitted, follow the server setting"
     )
 
 
@@ -1240,6 +1261,8 @@ class PdfToXmlParams(ApiModel):
     This endpoint converts a PDF file to an XML file. Input:PDF Output:XML Type:SISO
     """
 
+    use_stirling_office_convert: bool | None = None
+
 
 class CustomMode(StrEnum):
     """
@@ -1275,7 +1298,7 @@ class RearrangePagesParams(ApiModel):
 
 class Strategy(StrEnum):
     """
-    AUTO removes matched text; OVERLAY_ONLY only draws boxes; IMAGE_FINALIZE also rasterizes pages
+    AUTO removes covered page content and may rasterize affected pages. OVERLAY_ONLY draws text/range/image boxes without removal. IMAGE_FINALIZE rasterizes every output page. Whole-page wipes remove page content in every strategy; convertToImage also controls final rasterization independently.
     """
 
     auto = "AUTO"
@@ -1289,17 +1312,17 @@ class Style(ApiModel):
     """
 
     color: str = Field("#000000", description="Hex redaction box color")
-    convert_to_image: bool = Field(False, description="Rasterize every page so no covered content can be extracted")
+    convert_to_image: bool = Field(False, description="Rasterize every output page, making page text unselectable")
     padding: float = Field(0, description="Extra padding around each box in points")
     strategy: Strategy = Field(
         Strategy.auto,
-        description="AUTO removes matched text; OVERLAY_ONLY only draws boxes; IMAGE_FINALIZE also rasterizes pages",
+        description="AUTO removes covered page content and may rasterize affected pages. OVERLAY_ONLY draws text/range/image boxes without removal. IMAGE_FINALIZE rasterizes every output page. Whole-page wipes remove page content in every strategy; convertToImage also controls final rasterization independently.",
     )
 
 
 class RedactionArea(ApiModel):
     """
-    Areas to cover: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
+    Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
     """
 
     color: str | None = Field(None, description="The color used to redact the specified area.")
@@ -1697,7 +1720,7 @@ class SvgToPdfParams(ApiModel):
 
 class TextRange(ApiModel):
     """
-    Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).
+    Text located using start and end anchor phrases (inclusive). AUTO removes selected page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
     """
 
     end_string: str = Field(
@@ -1844,19 +1867,20 @@ class AutoRotatePdfParams(ApiModel):
 
 class RedactExecuteParams(ApiModel):
     """
-    Redacts exact text, regex matches and whole pages in one request. ranges, imageBoxes and redactImagePages only draw boxes unless style.convertToImage=true or style.strategy=IMAGE_FINALIZE. Input:PDF Output:PDF Type:SISO
+    Redacts exact text, regex matches, anchored ranges, image regions and whole pages. AUTO removes covered page content, with per-page rasterization when needed. OVERLAY_ONLY skips removal for text/range/image boxes; whole-page wipes still remove page content. style.convertToImage=true or IMAGE_FINALIZE rasterizes every output page. Verification failures in native word/regex removal reject the request. Input:PDF Output:PDF Type:SISO
     """
 
     image_boxes: list[ImageBox] | None = Field(
         None,
-        description="Rectangular areas to black out, by page and bounding box. Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).",
+        description="Rectangular areas identified by page and bounding box. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.",
     )
     ranges: list[TextRange] | None = Field(
         None,
-        description="Text from a start to an end anchor phrase (inclusive). Boxes only unless pages are rasterized (style.convertToImage or IMAGE_FINALIZE).",
+        description="Text located using start and end anchor phrases (inclusive). AUTO removes selected page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.",
     )
     redact_image_pages: list[int] | None = Field(
-        None, description="1-indexed pages whose images get boxed over; an empty list means every page, null skips it."
+        None,
+        description="1-indexed pages whose detected image regions are redacted; an empty list means every page, null skips it. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes.",
     )
     regex_patterns: list[str] | None = Field(
         None,
@@ -1874,19 +1898,20 @@ class RedactExecuteParams(ApiModel):
 
 class RedactParams(ApiModel):
     """
-    Boxes only cover the content, which can still be extracted unless convertPDFToImage=true. To remove the text itself, use auto-redact. Input:PDF Output:PDF Type:SISO
+    Removes covered page content from selected areas and wipes selected whole pages. An affected page may be rasterized if native region removal cannot safely clear it. convertPDFToImage=true rasterizes every output page. Input:PDF Output:PDF Type:SISO
     """
 
     convert_pdf_to_image: bool = Field(
-        False, description="Turn pages into images so covered content is really removed; text becomes unselectable"
+        False,
+        description="Rasterize every output page, making page text unselectable. Redaction areas already remove covered page content by default.",
     )
     page_numbers: str | None = Field(
-        None, description="Pages to cover entirely, e.g. '1,3-5'. Omit to redact only the listed areas."
+        None, description="Pages to wipe completely, e.g. '1,3-5'. Omit to redact only the listed areas."
     )
     page_redaction_color: str = Field("#000000", description="The color used to fully redact certain pages")
     redactions: list[RedactionArea] = Field(
         ...,
-        description="Areas to cover: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points",
+        description="Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points",
     )
 
 
