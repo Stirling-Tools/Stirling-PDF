@@ -45,7 +45,7 @@ export function QuickNavRailAccount({
 
   return (
     <div className="quick-nav-rail-account" data-active={active || undefined}>
-      <Dropdown.Root open={open} onOpenChange={setOpen} side="right">
+      <Dropdown.Root open={open} onOpenChange={setOpen} align="start">
         <Tooltip
           content={<PrivateContent>{label}</PrivateContent>}
           position="right"
@@ -77,8 +77,15 @@ export function QuickNavRailAccount({
             </Dropdown.Trigger>
           </span>
         </Tooltip>
-        <Dropdown.Menu className="quick-nav-account-menu" width="14rem">
-          <div className={`quick-nav-account-menu__header ${privateContentClassName}`}>
+        <Dropdown.Menu
+          className="quick-nav-account-menu"
+          width="14rem"
+          placement="side"
+          autoFocus
+        >
+          <div
+            className={`quick-nav-account-menu__header ${privateContentClassName}`}
+          >
             <span aria-hidden>
               <Avatar src={profilePictureUrl} name={displayName} size="md" />
             </span>

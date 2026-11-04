@@ -17,8 +17,6 @@ import { createPortal } from "react-dom";
 import "@editor/ui/Dropdown.css";
 
 type Alignment = "start" | "end";
-/** "below" drops under the trigger (flipping above near the bottom); "right" opens beside it. */
-type Side = "below" | "right";
 
 interface DropdownContextValue {
   open: boolean;
@@ -28,7 +26,6 @@ interface DropdownContextValue {
   menuRef: React.RefObject<HTMLDivElement | null>;
   menuId: string;
   align: Alignment;
-  side: Side;
 }
 
 const DropdownContext = createContext<DropdownContextValue | null>(null);
@@ -49,7 +46,6 @@ export interface DropdownRootProps {
   onOpenChange?: (open: boolean) => void;
   /** Alignment of the menu relative to the trigger. */
   align?: Alignment;
-  side?: Side;
   children: ReactNode;
   className?: string;
 }
@@ -59,7 +55,6 @@ function Root({
   defaultOpen,
   onOpenChange,
   align = "end",
-  side = "below",
   children,
   className,
 }: DropdownRootProps) {
@@ -110,8 +105,8 @@ function Root({
   }, [open, setOpen]);
 
   const value = useMemo<DropdownContextValue>(
-    () => ({ open, setOpen, triggerRef, menuRef, menuId, align, side }),
-    [open, setOpen, menuId, align, side],
+    () => ({ open, setOpen, triggerRef, menuRef, menuId, align }),
+    [open, setOpen, menuId, align],
   );
 
   return (
@@ -180,7 +175,7 @@ function Menu({
   ariaLabel,
   placement = "vertical",
 }: DropdownMenuProps) {
-  const { open, menuId, align, side, triggerRef, menuRef } = useDropdownCtx();
+  const { open, menuId, align, triggerRef, menuRef } = useDropdownCtx();
   // Fixed position tracked to the trigger. Portaling to <body> keeps the menu
   // out of any `overflow` ancestor (e.g. a table's horizontal scroll area),
   // which would otherwise clip it and add a scrollbar.
@@ -229,19 +224,6 @@ function Menu({
       }
       const spaceBelow = window.innerHeight - r.bottom - margin;
       const spaceAbove = r.top - margin;
-      if (side === "right") {
-        // Grows away from the nearer edge: a trigger low on screen opens upwards.
-        const up = r.top + r.height / 2 > window.innerHeight / 2;
-        setPos({
-          left: r.right + gap,
-          ...(up ? { bottom: window.innerHeight - r.bottom } : { top: r.top }),
-          maxHeight: Math.max(
-            0,
-            up ? r.bottom - margin : window.innerHeight - r.top - margin,
-          ),
-        });
-        return;
-      }
       // Flip above when there's more room there, so a trigger near the viewport
       // bottom doesn't open a fixed menu that runs off-screen and can't scroll.
       const below = spaceBelow >= spaceAbove;
@@ -276,7 +258,7 @@ function Menu({
       window.removeEventListener("resize", place);
       observer?.disconnect();
     };
-  }, [open, align, side, triggerRef, menuRef, placement, positioned]);
+  }, [open, align, triggerRef, menuRef, placement, positioned]);
 
   if (!open || !pos) return null;
   const style: React.CSSProperties = {

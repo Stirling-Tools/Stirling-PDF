@@ -9,6 +9,9 @@ const state = vi.hoisted(() => ({
   isAdmin: false,
   enableLogin: true,
   orgOwner: false,
+  loading: false,
+  accessSettled: true,
+  rosterAvailable: true,
 }));
 vi.mock("@editor/routes/hasPortal", () => ({ HAS_PORTAL: true }));
 vi.mock("@editor/auth/UseSession", () => ({
@@ -17,7 +20,17 @@ vi.mock("@editor/auth/UseSession", () => ({
     isAdmin: state.isAdmin,
     isAnonymous: state.isAnonymous,
     portalAccess: state.portalAccess,
+    loading: state.loading,
   }),
+}));
+vi.mock("@editor/hooks/usePortalAccess", () => ({
+  usePortalAccessState: () => ({
+    granted: state.portalAccess,
+    settled: state.accessSettled,
+  }),
+}));
+vi.mock("@editor/hooks/useRosterAvailable", () => ({
+  useRosterAvailable: () => state.rosterAvailable,
 }));
 vi.mock("@editor/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({
@@ -39,17 +52,21 @@ describe("self-hosted account menu shortcuts", () => {
     state.isAdmin = false;
     state.enableLogin = true;
     state.orgOwner = false;
+    state.loading = false;
+    state.accessSettled = true;
+    state.rosterAvailable = true;
   });
 
   it("gives a signed-in admin the server pages", () => {
     state.isAdmin = true;
-    expect(shortcutIds()).toEqual(["account", "users", "server", "plan"]);
+    expect(shortcutIds()).toEqual(["account", "users", "server"]);
   });
 
-  it("swaps Plan for Usage & Billing where settings does: the owner with processor access", () => {
+  it("offers billing only to the owner with processor access", () => {
     state.isAdmin = true;
     state.portalAccess = true;
-    expect(shortcutIds()).toContain("plan");
+    expect(shortcutIds()).not.toContain("billing");
+    expect(shortcutIds()).not.toContain("plan");
 
     state.orgOwner = true;
     const ids = shortcutIds();
@@ -61,9 +78,27 @@ describe("self-hosted account menu shortcuts", () => {
     expect(shortcutIds()).toEqual(["account", "api-keys"]);
   });
 
-  it("adds the roster for processor access without making them an admin", () => {
+  it("does not offer the admin roster to a regular processor member", () => {
     state.portalAccess = true;
-    expect(shortcutIds()).toEqual(["account", "users", "api-keys"]);
+    expect(shortcutIds()).toEqual(["account", "api-keys"]);
+  });
+
+  it("hides the roster without a server connection", () => {
+    state.isAdmin = true;
+    state.rosterAvailable = false;
+    expect(shortcutIds()).toEqual(["account", "server"]);
+  });
+
+  it("waits for settled permissions before offering owner billing", () => {
+    state.isAdmin = true;
+    state.orgOwner = true;
+    state.portalAccess = true;
+    state.loading = true;
+    expect(shortcutIds()).toEqual(["account", "server"]);
+
+    state.loading = false;
+    state.accessSettled = false;
+    expect(shortcutIds()).not.toContain("billing");
   });
 
   it("offers no admin pages with login off, where settings disables them all", () => {

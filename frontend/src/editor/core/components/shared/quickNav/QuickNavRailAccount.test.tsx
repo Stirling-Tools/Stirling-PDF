@@ -49,6 +49,34 @@ describe("QuickNavRailAccount menu", () => {
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
+  it("focuses menu actions, supports keyboard navigation, and returns focus on Escape", () => {
+    const { open } = setup({ shortcuts: [], signOut: vi.fn() });
+    const trigger = screen.getByRole("button", { name: /Ada/ });
+    trigger.focus();
+    open();
+    const [settings, signOut] = screen.getAllByRole("menuitem");
+    expect(settings).toHaveFocus();
+    fireEvent.keyDown(settings, { key: "ArrowDown" });
+    expect(signOut).toHaveFocus();
+    fireEvent.keyDown(signOut, { key: "ArrowUp" });
+    expect(settings).toHaveFocus();
+    fireEvent.keyDown(settings, { key: "Escape" });
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
+  it("masks the account identity in both the trigger and the portaled menu", () => {
+    const { open } = setup();
+    expect(screen.getByRole("button", { name: /Ada/ })).toHaveClass(
+      "ph-sensitive",
+    );
+    open();
+    const menu = screen.getByRole("menu");
+    expect(menu.querySelector(".quick-nav-account-menu__header")).toHaveClass(
+      "ph-sensitive",
+    );
+  });
+
   it("always offers all settings, and sign out only with a session", () => {
     const signOut = vi.fn();
     const { onOpenSettings, open } = setup({ shortcuts: [], signOut });

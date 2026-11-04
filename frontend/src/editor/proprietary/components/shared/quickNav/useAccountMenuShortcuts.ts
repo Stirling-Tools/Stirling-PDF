@@ -2,6 +2,8 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@editor/auth/UseSession";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { HAS_PORTAL } from "@editor/routes/hasPortal";
+import { usePortalAccessState } from "@editor/hooks/usePortalAccess";
+import { useRosterAvailable } from "@editor/hooks/useRosterAvailable";
 import type { QuickNavAccountShortcut } from "@editor/contexts/QuickNavHostContext";
 
 /** Interpolated, not inlined: a literal "#acc…" reads as a hex colour to theme-lint. */
@@ -14,8 +16,11 @@ const ACCOUNT_ANCHOR = "account";
  */
 export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
   const { t } = useTranslation();
-  const { user, isAnonymous, portalAccess, isAdmin: sessionAdmin } = useAuth();
+  const { user, isAnonymous, isAdmin: sessionAdmin, loading } = useAuth();
   const { config } = useAppConfig();
+  const { granted: portalAccess, settled: accessSettled } =
+    usePortalAccessState();
+  const rosterAvailable = useRosterAvailable();
   const signedIn = Boolean(user) && !isAnonymous;
 
   if (!signedIn) {
@@ -46,7 +51,12 @@ export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
     },
   ];
 
-  if (isAdmin || portalAccess) {
+  if (
+    rosterAvailable &&
+    config?.enableLogin === true &&
+    sessionAdmin &&
+    !loading
+  ) {
     shortcuts.push({
       id: "users",
       label: t("portal.nav.users", "Users"),
@@ -56,28 +66,27 @@ export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
   }
   if (isAdmin) {
     // In place of API Keys, keeping the menu short.
-    shortcuts.push(
-      {
-        id: "server",
-        label: t("quickNav.accountMenu.server", "Server settings"),
-        icon: "server",
-        to: "/settings/adminGeneral",
-      },
-      // Usage & Billing replaces Plan in settings whenever the nav includes it.
-      HAS_PORTAL && portalAccess && sessionAdmin && user?.orgOwner === true
-        ? {
-            id: "billing",
-            label: t("portal.nav.usage", "Usage & Billing"),
-            icon: "credit-card",
-            to: "/settings/billing",
-          }
-        : {
-            id: "plan",
-            label: t("settings.licensingAnalytics.plan", "Plan"),
-            icon: "star",
-            to: "/settings/adminPlan",
-          },
-    );
+    shortcuts.push({
+      id: "server",
+      label: t("quickNav.accountMenu.server", "Server settings"),
+      icon: "server",
+      to: "/settings/adminGeneral",
+    });
+    if (
+      HAS_PORTAL &&
+      portalAccess &&
+      accessSettled &&
+      sessionAdmin &&
+      !loading &&
+      user?.orgOwner === true
+    ) {
+      shortcuts.push({
+        id: "billing",
+        label: t("portal.nav.usage", "Usage & Billing"),
+        icon: "credit-card",
+        to: "/settings/billing",
+      });
+    }
   } else {
     shortcuts.push({
       id: "api-keys",

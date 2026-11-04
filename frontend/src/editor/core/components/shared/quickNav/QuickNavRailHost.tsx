@@ -275,7 +275,7 @@ export function QuickNavRailHost() {
   // is a navigation that remembers where to return to.
   const openSettingsAt = (target: string) => {
     if (inSettings) {
-      navigate(target, { replace: true });
+      guarded(() => navigate(target, { replace: true }));
       return;
     }
     go(target);
