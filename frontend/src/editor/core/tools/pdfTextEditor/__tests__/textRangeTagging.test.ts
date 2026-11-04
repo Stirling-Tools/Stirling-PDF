@@ -15,6 +15,8 @@ import {
   rangeTagTypes,
   TagTextRangeCommand,
 } from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { RetagInnerCommand } from "@editor/tools/pdfTextEditor/commands/RetagInnerCommand";
 import { readObjTexts } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   charOrigins,
@@ -45,7 +47,10 @@ import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { headingOutline } from "@editor/tools/pdfTextEditor/util/headingOutline";
-import { locateHeading } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import {
+  innerTags,
+  locateHeading,
+} from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import {
   buildClassicPdf,
   streamBody,
@@ -120,8 +125,19 @@ async function open(bytes: Uint8Array): Promise<EditorDocument> {
   return doc;
 }
 
-function runWith(doc: EditorDocument, fragment: string) {
-  const run = doc.page(0).runs.find((r) => r.text.includes(fragment));
+async function openSample(): Promise<EditorDocument> {
+  const sample = path.join(
+    import.meta.dirname,
+    "../../../tests/test-fixtures/tagged-sample.pdf",
+  );
+  const doc = await EditorDocument.open(new Uint8Array(await readFile(sample)));
+  opened.push(doc);
+  PdfiumTextReader.populate(doc, doc.page(1));
+  return doc;
+}
+
+function runWith(doc: EditorDocument, fragment: string, pageIndex = 0) {
+  const run = doc.page(pageIndex).runs.find((r) => r.text.includes(fragment));
   if (!run) throw new Error(`no run contains "${fragment}"`);
   return run;
 }
@@ -131,19 +147,42 @@ function tagRange(
   history: HistoryStack,
   fragment: string,
   as: StructureType,
-) {
-  const run = runWith(doc, fragment);
+  pageIndex = 0,
+): TagTextRangeCommand {
+  const run = runWith(doc, fragment, pageIndex);
   const start = run.text.indexOf(fragment);
+  const command = new TagTextRangeCommand({
+    pageIndex,
+    runId: run.id,
+    start,
+    end: start + fragment.length,
+    as,
+  });
+  history.execute(command, doc);
+  return command;
+}
+
+/** Replace `from` with `to` in the run holding `from`, as typing would. */
+function editText(
+  doc: EditorDocument,
+  history: HistoryStack,
+  from: string,
+  to: string,
+  pageIndex = 0,
+) {
+  const run = runWith(doc, from, pageIndex);
   history.execute(
-    new TagTextRangeCommand({
-      pageIndex: 0,
+    new EditTextCommand({
+      pageIndex,
       runId: run.id,
-      start,
-      end: start + fragment.length,
-      as,
+      nextText: run.text.replace(from, to),
     }),
     doc,
   );
+}
+
+function runTexts(doc: EditorDocument, pageIndex = 0): string[] {
+  return doc.page(pageIndex).runs.map((run) => run.text.trim());
 }
 
 async function savedBytes(doc: EditorDocument): Promise<Uint8Array> {
@@ -340,15 +379,7 @@ describe("tagging part of an element's text", () => {
   });
 
   test("tags a word of a real file's paragraph as a Span inside it", async () => {
-    const sample = path.join(
-      import.meta.dirname,
-      "../../../tests/test-fixtures/tagged-sample.pdf",
-    );
-    const doc = await EditorDocument.open(
-      new Uint8Array(await readFile(sample)),
-    );
-    opened.push(doc);
-    PdfiumTextReader.populate(doc, doc.page(1));
+    const doc = await openSample();
     const run = doc.page(1).runs.find((r) => r.text.includes("All amounts"))!;
     const paragraph = doc.structure(1).block(run.snapshot().mcid!)!.key;
     const spansIn = (elements: readonly StructureElement[]) =>
@@ -382,6 +413,108 @@ describe("tagging part of an element's text", () => {
   });
 });
 
+describe("a block cut from part of a run", () => {
+  test("gets a run of its own, as a read of the page groups it", async () => {
+    const doc = await open(cutPdf());
+    const run = runWith(doc, "We sampled");
+    const cut = tagRange(doc, new HistoryStack(), "sampled", "H3");
+
+    expect(doc.page(0).findRun(run.id)).toBeUndefined();
+    expect(doc.page(0).findRun(cut.movedToRunId!)!.text.trim()).toBe("sampled");
+    expect(runTexts(doc).slice(5, 9)).toEqual([
+      "Methods",
+      "We",
+      "sampled",
+      "every store.",
+    ]);
+  });
+
+  test("leaves a run cut whole as it was", async () => {
+    const doc = await open(cutPdf());
+    const run = runWith(doc, "Outlook");
+    const cut = tagRange(doc, new HistoryStack(), "Outlook", "H2");
+    expect(cut.movedToRunId).toBeNull();
+    expect(doc.page(0).findRun(run.id)!.snapshot().mcid).toBe(4);
+  });
+
+  test.each([
+    ["the text before it", "We", "They"],
+    ["the text after it", "store", "shop"],
+  ])("survives an edit of %s", async (_part, from, to) => {
+    const doc = await open(cutPdf());
+    const history = new HistoryStack();
+    tagRange(doc, history, "sampled", "H3");
+    editText(doc, history, from, to);
+
+    expect(doc.headings()!.map((h) => h.type)).toEqual(["H1", "H3"]);
+    const bytes = await savedBytes(doc);
+    expect(await savedHeadings(doc)).toEqual(["H1", "H3"]);
+    expect(
+      textByMcid(await open(bytes))
+        .get(4)
+        ?.trim(),
+    ).toBe("sampled");
+  });
+
+  test("survives an edit of the paragraph it was cut from", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    const headings = () =>
+      doc.headings()!.filter((h) => h.type === "H4").length;
+    tagRange(doc, history, "Atlas product line", "H4", 1);
+    expect(headings()).toBe(1);
+    expect(runWith(doc, "Revenue rose", 1).text).toContain(
+      "and the launch of the",
+    );
+
+    editText(doc, history, "Canada", "Mexico", 1);
+    expect(headings()).toBe(1);
+    const saved = await savedHeadings(doc);
+    expect(saved.filter((type) => type === "H4")).toHaveLength(1);
+  });
+
+  test("puts the run back on undo, and splits it the same way on redo", async () => {
+    const doc = await open(cutPdf());
+    const history = new HistoryStack();
+    const before = doc.page(0).runs.map((r) => [r.id, r.text]);
+    tagRange(doc, history, "sampled", "H3");
+    const split = doc.page(0).runs.map((r) => r.id);
+    editText(doc, history, "store", "shop");
+
+    history.undo(doc);
+    history.undo(doc);
+    expect(doc.page(0).runs.map((r) => [r.id, r.text])).toEqual(before);
+
+    history.redo(doc);
+    history.redo(doc);
+    expect(doc.page(0).runs.map((r) => r.id)).toEqual(split);
+    expect(runWith(doc, "shop").text.trim()).toBe("every shop.");
+  });
+
+  test("is made when an inline cut is retagged as a block", async () => {
+    const doc = await open(cutPdf());
+    const history = new HistoryStack();
+    tagRange(doc, history, "every", "Span");
+    const [span] = innerTags(doc, runWith(doc, "Sales rose").snapshot());
+    const retag = new RetagInnerCommand({
+      pageIndex: 0,
+      key: span.key,
+      type: "H2",
+    });
+    history.execute(retag, doc);
+    expect(doc.page(0).findRun(retag.movedToRunId!)!.text.trim()).toBe("every");
+
+    editText(doc, history, "region", "area");
+    expect(await savedHeadings(doc)).toEqual(["H1", "H2"]);
+
+    history.undo(doc);
+    history.undo(doc);
+    expect(innerTags(doc, runWith(doc, "Sales rose").snapshot())).toMatchObject(
+      [{ text: "every", role: { type: "Span" } }],
+    );
+  });
+});
+
 describe("which tags part of a run's text can take", () => {
   const typesFor = (
     doc: EditorDocument,
@@ -406,18 +539,7 @@ describe("which tags part of a run's text can take", () => {
   });
 
   test("offers only inline types for text in an inline element", async () => {
-    const doc = await EditorDocument.open(
-      new Uint8Array(
-        await readFile(
-          path.join(
-            import.meta.dirname,
-            "../../../tests/test-fixtures/tagged-sample.pdf",
-          ),
-        ),
-      ),
-    );
-    opened.push(doc);
-    PdfiumTextReader.populate(doc, doc.page(1));
+    const doc = await openSample();
     expect(typesFor(doc, 1, "appendix")).toEqual(
       TEXT_RANGE_TYPES.filter(isInlineType),
     );

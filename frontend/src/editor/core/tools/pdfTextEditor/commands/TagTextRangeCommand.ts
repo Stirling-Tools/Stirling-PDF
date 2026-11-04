@@ -20,6 +20,7 @@ import {
   type Point,
   type TextSource,
 } from "@editor/tools/pdfTextEditor/commands/textPieces";
+import { splitByBlock } from "@editor/tools/pdfTextEditor/commands/splitByBlock";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
@@ -44,7 +45,9 @@ import {
  * Tag part of a run's tagged text, code units `start` to `end`, as its own
  * element of `as`, read in language `lang` when given. The save pass gives
  * the element its place: inside the element the text was cut from for an
- * inline type, else splitting that element around it.
+ * inline type, else splitting that element around it. Splitting also
+ * replaces the run with one for each block, so `runId` may name no run once
+ * applied.
  */
 export class TagTextRangeCommand implements Command {
   readonly type = "tag-text-range";
@@ -57,6 +60,7 @@ export class TagTextRangeCommand implements Command {
   /** Chosen on first apply, so a redo reuses them. */
   private mcids: { cut: number; part: number } | null = null;
   private undo: Array<() => void> = [];
+  private movedTo: string | null = null;
 
   constructor(opts: {
     pageIndex: number;
@@ -72,6 +76,14 @@ export class TagTextRangeCommand implements Command {
     this.end = opts.end;
     this.as = opts.as;
     this.lang = opts.lang ?? null;
+  }
+
+  /**
+   * The run a block cut moved the cut text into, once applied; null while
+   * the text is in the run it was cut from.
+   */
+  get movedToRunId(): string | null {
+    return this.movedTo;
   }
 
   apply(doc: EditorDocument): void {
@@ -150,6 +162,11 @@ export class TagTextRangeCommand implements Command {
     if (this.lang !== null) {
       structure.setOwnLang(structure.element(cut)!.key, this.lang);
     }
+    if (isInlineType(this.as)) return;
+    const holder = splitByBlock(doc, page, run, undo).find(
+      (part) => innermostMcid(part.tagMarks) === cut,
+    );
+    this.movedTo = holder && holder !== run ? holder.id : null;
   }
 }
 
