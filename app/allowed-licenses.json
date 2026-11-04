@@ -102,7 +102,7 @@
     },
     {
       "moduleName": "com.github.jai-imageio:jai-imageio-jpeg2000",
-      "moduleLicense": "BSD 3-clause License w/nuclear disclaimer",
+      "moduleLicense": "BSD 3-clause License w/nuclear disclaimer AND JJ2000",
       "category": "permissive"
     },
     {

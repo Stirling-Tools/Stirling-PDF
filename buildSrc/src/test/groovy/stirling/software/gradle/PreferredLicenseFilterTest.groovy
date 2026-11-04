@@ -130,6 +130,45 @@ class PreferredLicenseFilterTest {
     }
 
     @Test
+    void reportsEveryPartOfCombinedLicense() {
+        License bsd = new License('BSD 3-clause License w/nuclear disclaimer', 'LICENSE-Sun.txt')
+        License jj2000 = new License('JJ2000', 'LICENSE-JJ2000.txt')
+        String combined = "${bsd.name} AND ${jj2000.name}"
+        List<Map<String, String>> allowed = [
+                [moduleName: "${GROUP}:${MODULE}".toString(), moduleLicense: combined, category: 'permissive'],
+                [moduleName: '.*', moduleLicense: bsd.name, category: 'permissive']
+        ]
+        ModuleData module = createModule(bsd, jj2000, new License('LICENSE-JJ2000.txt, LICENSE-Sun.txt', null))
+
+        filter(module, allowed)
+
+        assertEquals([HOMEPAGE, combined, bsd.url], singleLicenseInfo(module))
+        assertEquals([combined], licenseNames(module))
+    }
+
+    @Test
+    void linksSourcesJarForCombinedCopyleftLicense() {
+        String combined = "${APACHE.name} AND ${MPL.name}"
+        ModuleData module = createModule(APACHE, MPL)
+
+        filter(module, [[moduleName: "${GROUP}:${MODULE}".toString(), moduleLicense: combined, category: 'weak-copyleft']])
+
+        assertEquals([SOURCES_JAR, combined, APACHE.url], singleLicenseInfo(module))
+    }
+
+    @Test
+    void failsWhenModuleNoLongerDeclaresEveryPartOfCombinedLicense() {
+        String combined = "${APACHE.name} AND JJ2000"
+        ModuleData module = createModule(APACHE)
+
+        GradleException failure = assertThrows(GradleException) {
+            filter(module, [[moduleName: "${GROUP}:${MODULE}".toString(), moduleLicense: combined, category: 'permissive']])
+        }
+
+        assertTrue(failure.message.contains('JJ2000'))
+    }
+
+    @Test
     void failsWhenAllowedLicenseHasNoValidCategory() {
         List<Map<String, String>> allowed = [[moduleName: '.*', moduleLicense: MPL.name], allowed(APACHE, 'high')]
 

@@ -23,12 +23,17 @@ import org.gradle.api.GradleException
  * <p>A module is rewritten to report only the chosen license, in the report and in
  * {@code checkLicense}, unless its default license is already the chosen permissive one.
  *
+ * <p>An entry whose {@code moduleLicense} joins names with {@code " AND "} marks licenses that all
+ * apply to a module rather than being alternatives. It is reported as that one combined license, and
+ * the build fails if the module declares some of its parts but not all of them.
+ *
  * <p>Entries are matched as {@code checkLicense} matches them, so the two agree on which licenses
  * are allowed. Every entry must set a valid {@code category}, otherwise the build fails.
  */
 class PreferredLicenseFilter implements DependencyFilter {
     private static final String MAVEN_CENTRAL = 'https://repo1.maven.org/maven2'
     private static final List<String> CATEGORIES = ['permissive', 'weak-copyleft', 'copyleft']
+    private static final String ALL_OF = ' AND '
 
     private final File allowedLicensesFile
 
@@ -76,15 +81,18 @@ class PreferredLicenseFilter implements DependencyFilter {
 
     private static void applyPreferredLicense(ModuleData module, List<Map<String, String>> entries) {
         String moduleName = "${module.group}:${module.name}"
-        Map<License, Integer> rankByLicense = [:]
-        LicenseDataCollector.multiModuleLicenseInfo(module).licenses
+        Map<String, License> declared = LicenseDataCollector.multiModuleLicenseInfo(module).licenses
                 .findAll { license -> license.name }
-                .each { license ->
-                    String category = categoryOf(moduleName, module.version, license.name, entries)
-                    if (category != null) {
-                        rankByLicense[license] = CATEGORIES.indexOf(category)
-                    }
+                .collectEntries { license -> [(license.name): license] }
+        Map<License, Integer> rankByLicense = combinedLicense(moduleName, module.version, declared, entries)
+        if (rankByLicense.isEmpty()) {
+            declared.values().each { license ->
+                String category = categoryOf(moduleName, module.version, license.name, entries)
+                if (category != null) {
+                    rankByLicense[license] = CATEGORIES.indexOf(category)
                 }
+            }
+        }
         if (rankByLicense.isEmpty()) {
             return
         }
@@ -113,6 +121,32 @@ class PreferredLicenseFilter implements DependencyFilter {
                         [chosen] as LinkedHashSet<License>,
                         false)
         ] as LinkedHashSet<ManifestData>
+    }
+
+    private static Map<License, Integer> combinedLicense(
+            String moduleName,
+            String moduleVersion,
+            Map<String, License> declared,
+            List<Map<String, String>> entries) {
+        Map<String, String> entry = entries.find { candidate ->
+            candidate.moduleLicense?.contains(ALL_OF)
+                    && matches(moduleName, candidate.moduleName)
+                    && matches(moduleVersion, candidate.moduleVersion)
+                    && candidate.moduleLicense.split(ALL_OF).any { part -> declared.containsKey(part) }
+        }
+        if (entry == null) {
+            return [:]
+        }
+
+        List<String> parts = entry.moduleLicense.split(ALL_OF) as List<String>
+        List<String> missing = parts.findAll { part -> !declared.containsKey(part) }
+        if (!missing.isEmpty()) {
+            throw new GradleException(
+                    "${moduleName}:${moduleVersion} no longer declares ${missing}, which allowed license " +
+                            "'${entry.moduleLicense}' requires. Re-verify its licenses in allowed-licenses.json.")
+        }
+        License combined = new License(entry.moduleLicense, declared[parts[0]].url)
+        return [(combined): CATEGORIES.indexOf(entry.category)]
     }
 
     // Mirrors checkLicense: a missing pattern matches anything, otherwise regex or exact match.

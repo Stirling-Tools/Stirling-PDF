@@ -141,6 +141,12 @@ Every entry must set a category, otherwise the license report fails. Entries are
 `checkLicense` matches them. A declared license with no entry is never reported, and a dependency
 with no allowed license still fails `checkLicense`. Ties keep the plugin's alphabetical choice.
 
+A POM cannot say whether its licenses are alternatives or all apply, so the filter treats them as
+alternatives. When all of them apply, add one entry for the module that joins the names with
+` AND `, for example `"BSD 3-clause License w/nuclear disclaimer AND JJ2000"`. The dependency is
+then reported under that combined license, and the build fails if a later version stops declaring
+one of the parts.
+
 When the reported license is not `permissive`, the dependency's URL becomes its `-sources.jar` on
 Maven Central for the resolved version. Maven Central requires a sources jar for every published jar
 and never changes a published file, so the link does not go stale.
@@ -162,7 +168,8 @@ override, automatic cleanup after license metadata appears, exact-version matchi
 resolved versions. They also verify removal when a dependency version disappears. A separate `1.9`
 to `1.11.0` case verifies numeric Gradle version ordering. `PreferredLicenseFilterTest` covers
 choosing by category, the sources jar link, ignoring licenses with no entry, module-scoped entries,
-failure on a missing category, and that it matches entries the same way `checkLicense` does.
+failure on a missing category, combined `AND` licenses, and that it matches entries the same way
+`checkLicense` does.
 
 Run the normal backend license workflow from the repository root:
 
