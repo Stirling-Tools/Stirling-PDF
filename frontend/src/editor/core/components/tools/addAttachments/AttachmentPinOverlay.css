@@ -55,7 +55,9 @@
 }
 
 .attachment-pin-overlay__marker:focus-visible {
-  outline: none;
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .attachment-pin-overlay__marker-pin {
