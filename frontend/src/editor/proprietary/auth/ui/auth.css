@@ -794,11 +794,6 @@
   box-shadow: none;
 }
 
-/* ── Dark-mode icon inversion for monochrome OAuth logos ────────────── */
-[data-mantine-color-scheme="dark"] .oauth-icon--github {
-  filter: invert(1);
-}
-
 /* ── Icon+label group — keeps icons vertically aligned across buttons ── */
 .oauth-btn-group {
   display: inline-flex;
