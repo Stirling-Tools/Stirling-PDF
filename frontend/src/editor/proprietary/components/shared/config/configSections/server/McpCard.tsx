@@ -1,9 +1,22 @@
 import { useTranslation } from "react-i18next";
 import { InfoTooltip } from "@editor/ui/InfoTooltip";
-import { TextInput, Textarea, Switch, Select, Stack, Paper, Text, Group, Alert } from "@mantine/core";
+import {
+  TextInput,
+  Textarea,
+  Switch,
+  Select,
+  Stack,
+  Paper,
+  Text,
+  Group,
+  Alert,
+} from "@mantine/core";
 import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
-import type { McpAuthData, McpBuiltinAuthData } from "@editor/components/shared/config/configSections/server/serverSettings";
+import type {
+  McpAuthData,
+  McpBuiltinAuthData,
+} from "@editor/components/shared/config/configSections/server/serverSettings";
 import type { McpCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
 import { McpConnectionPanel } from "@editor/components/shared/config/configSections/server/McpConnectionPanel";
 import { McpBuiltinFields } from "@editor/components/shared/config/configSections/server/McpBuiltinFields";
@@ -20,14 +33,22 @@ function parseOpList(raw: string): string[] {
 }
 
 /** The MCP endpoint, how it authenticates, and which tools it exposes. */
-export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps) {
+export function McpCard({
+  settings,
+  setSettings,
+  isFieldPending,
+}: McpCardProps) {
   const { t } = useTranslation();
 
-  const setAuth = (patch: Partial<McpAuthData>) => setSettings({ ...settings, auth: { ...(settings.auth || {}), ...patch } });
+  const setAuth = (patch: Partial<McpAuthData>) =>
+    setSettings({ ...settings, auth: { ...(settings.auth || {}), ...patch } });
   const setBuiltin = (patch: Partial<McpBuiltinAuthData>) =>
     setAuth({ builtin: { ...(settings.auth?.builtin || {}), ...patch } });
 
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://your-host";
+  const baseUrl =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://your-host";
   const mcpUrl = `${baseUrl}/mcp`;
   const metadataUrl = `${baseUrl}/.well-known/oauth-protected-resource`;
   const authMode = settings.auth?.mode || "oauth";
@@ -35,7 +56,11 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
 
   return (
     <>
-      <McpConnectionPanel enabled={settings.enabled || false} mode={authMode} connectorUrl={connectorUrl} />
+      <McpConnectionPanel
+        enabled={settings.enabled || false}
+        mode={authMode}
+        connectorUrl={connectorUrl}
+      />
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <Group justify="space-between" align="flex-start" wrap="nowrap">
@@ -53,7 +78,9 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
             <Group gap="xs">
               <Switch
                 checked={settings.enabled || false}
-                onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })}
+                onChange={(e) =>
+                  setSettings({ ...settings, enabled: e.target.checked })
+                }
               />
               <PendingBadge show={isFieldPending("enabled")} />
             </Group>
@@ -62,7 +89,9 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
           <Select
             label={
               <Group gap="xs">
-                <span>{t("admin.settings.mcp.mode.label", "Authentication mode")}</span>
+                <span>
+                  {t("admin.settings.mcp.mode.label", "Authentication mode")}
+                </span>
                 <PendingBadge show={isFieldPending("auth.mode")} />
                 <InfoTooltip
                   label={t(
@@ -75,15 +104,24 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
             data={[
               {
                 value: "builtin",
-                label: t("admin.settings.mcp.mode.builtin", "Built-in OAuth 2.1"),
+                label: t(
+                  "admin.settings.mcp.mode.builtin",
+                  "Built-in OAuth 2.1",
+                ),
               },
               {
                 value: "oauth",
-                label: t("admin.settings.mcp.mode.oauth", "OAuth 2.1 (external IdP)"),
+                label: t(
+                  "admin.settings.mcp.mode.oauth",
+                  "OAuth 2.1 (external IdP)",
+                ),
               },
               {
                 value: "apikey",
-                label: t("admin.settings.mcp.mode.apikey", "API key (Stirling per-user key)"),
+                label: t(
+                  "admin.settings.mcp.mode.apikey",
+                  "API key (Stirling per-user key)",
+                ),
               },
             ]}
             value={authMode}
@@ -112,7 +150,9 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
               className={privateContentClassName}
               label={
                 <Group gap="xs">
-                  <span>{t("admin.settings.mcp.resourceId.label", "Resource ID")}</span>
+                  <span>
+                    {t("admin.settings.mcp.resourceId.label", "Resource ID")}
+                  </span>
                   <PendingBadge show={isFieldPending("auth.resourceId")} />
                   <InfoTooltip
                     label={t(
@@ -144,7 +184,12 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
                 className={privateContentClassName}
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.mcp.issuerUri.label", "OAuth Issuer URL")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.mcp.issuerUri.label",
+                        "OAuth Issuer URL",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("auth.issuerUri")} />
                     <InfoTooltip
                       label={t(
@@ -164,8 +209,15 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
                 className={privateContentClassName}
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.mcp.acceptedAudiences.label", "Additional accepted audiences (optional)")}</span>
-                    <PendingBadge show={isFieldPending("auth.acceptedAudiences")} />
+                    <span>
+                      {t(
+                        "admin.settings.mcp.acceptedAudiences.label",
+                        "Additional accepted audiences (optional)",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("auth.acceptedAudiences")}
+                    />
                     <InfoTooltip
                       label={t(
                         "admin.settings.mcp.acceptedAudiences.description",
@@ -175,7 +227,9 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
                   </Group>
                 }
                 value={(settings.auth?.acceptedAudiences || []).join(" ")}
-                onChange={(e) => setAuth({ acceptedAudiences: parseOpList(e.target.value) })}
+                onChange={(e) =>
+                  setAuth({ acceptedAudiences: parseOpList(e.target.value) })
+                }
                 placeholder="authenticated"
                 disabled={!settings.enabled}
               />
@@ -184,7 +238,12 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
                 className={privateContentClassName}
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.mcp.jwksUri.label", "JWKS URL (optional)")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.mcp.jwksUri.label",
+                        "JWKS URL (optional)",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("auth.jwksUri")} />
                     <InfoTooltip
                       label={t(
@@ -196,14 +255,20 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
                 }
                 value={settings.auth?.jwksUri || ""}
                 onChange={(e) => setAuth({ jwksUri: e.target.value })}
-                placeholder={t("admin.settings.mcp.jwksUri.placeholder", "Auto-discovered from issuer")}
+                placeholder={t(
+                  "admin.settings.mcp.jwksUri.placeholder",
+                  "Auto-discovered from issuer",
+                )}
                 disabled={!settings.enabled}
               />
 
               <Group justify="space-between" align="flex-start" wrap="nowrap">
                 <div>
                   <Text fw={500} size="sm">
-                    {t("admin.settings.mcp.scopes.label", "Enforce OAuth scopes")}{" "}
+                    {t(
+                      "admin.settings.mcp.scopes.label",
+                      "Enforce OAuth scopes",
+                    )}{" "}
                     <InfoTooltip
                       label={t(
                         "admin.settings.mcp.scopes.description",
@@ -230,7 +295,10 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
               <Group justify="space-between" align="flex-start" wrap="nowrap">
                 <div>
                   <Text fw={500} size="sm">
-                    {t("admin.settings.mcp.requireAccount.label", "Require an existing Stirling account")}{" "}
+                    {t(
+                      "admin.settings.mcp.requireAccount.label",
+                      "Require an existing Stirling account",
+                    )}{" "}
                     <InfoTooltip
                       label={t(
                         "admin.settings.mcp.requireAccount.description",
@@ -242,17 +310,26 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
                 <Group gap="xs">
                   <Switch
                     checked={settings.auth?.requireExistingAccount ?? true}
-                    onChange={(e) => setAuth({ requireExistingAccount: e.target.checked })}
+                    onChange={(e) =>
+                      setAuth({ requireExistingAccount: e.target.checked })
+                    }
                     disabled={!settings.enabled}
                   />
-                  <PendingBadge show={isFieldPending("auth.requireExistingAccount")} />
+                  <PendingBadge
+                    show={isFieldPending("auth.requireExistingAccount")}
+                  />
                 </Group>
               </Group>
 
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.mcp.usernameClaim.label", "Username claim")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.mcp.usernameClaim.label",
+                        "Username claim",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("auth.usernameClaim")} />
                     <InfoTooltip
                       label={t(
@@ -280,7 +357,9 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
           <Textarea
             label={
               <Group gap="xs">
-                <span>{t("admin.settings.mcp.allowedOps.label", "Allowed tools")}</span>
+                <span>
+                  {t("admin.settings.mcp.allowedOps.label", "Allowed tools")}
+                </span>
                 <PendingBadge show={isFieldPending("allowedOperations")} />
                 <InfoTooltip
                   label={t(
@@ -307,7 +386,9 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
           <Textarea
             label={
               <Group gap="xs">
-                <span>{t("admin.settings.mcp.blockedOps.label", "Blocked tools")}</span>
+                <span>
+                  {t("admin.settings.mcp.blockedOps.label", "Blocked tools")}
+                </span>
                 <PendingBadge show={isFieldPending("blockedOperations")} />
                 <InfoTooltip
                   label={t(
@@ -333,7 +414,11 @@ export function McpCard({ settings, setSettings, isFieldPending }: McpCardProps)
         </Stack>
       </Paper>
 
-      <McpGuide mode={authMode} mcpUrl={connectorUrl} metadataUrl={metadataUrl} />
+      <McpGuide
+        mode={authMode}
+        mcpUrl={connectorUrl}
+        metadataUrl={metadataUrl}
+      />
     </>
   );
 }
