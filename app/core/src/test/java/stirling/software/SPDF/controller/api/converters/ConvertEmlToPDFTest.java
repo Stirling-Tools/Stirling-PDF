@@ -31,6 +31,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
+import stirling.software.SPDF.service.OfficeConversionService;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -58,6 +60,8 @@ class ConvertEmlToPDFTest {
     @Mock private RuntimePathConfig runtimePathConfig;
     @Mock private TempFileManager tempFileManager;
     @Mock private CustomHtmlSanitizer customHtmlSanitizer;
+    @Mock private OfficeConversionService officeConversionService;
+    @Mock private OfficeToPdfService officeToPdfService;
 
     @InjectMocks private ConvertEmlToPDF controller;
 

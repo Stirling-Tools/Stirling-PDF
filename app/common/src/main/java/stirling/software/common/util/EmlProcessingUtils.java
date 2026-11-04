@@ -170,7 +170,9 @@ public class EmlProcessingUtils {
                         sanitizeText(content.getFrom(), customHtmlSanitizer),
                         sanitizeText(content.getTo(), customHtmlSanitizer)));
 
-        if (content.getCc() != null && !content.getCc().trim().isEmpty()) {
+        if ((request == null || request.isIncludeAllRecipients())
+                && content.getCc() != null
+                && !content.getCc().trim().isEmpty()) {
             html.append(
                     String.format(
                             Locale.ROOT,
@@ -178,7 +180,9 @@ public class EmlProcessingUtils {
                             sanitizeText(content.getCc(), customHtmlSanitizer)));
         }
 
-        if (content.getBcc() != null && !content.getBcc().trim().isEmpty()) {
+        if ((request == null || request.isIncludeAllRecipients())
+                && content.getBcc() != null
+                && !content.getBcc().trim().isEmpty()) {
             html.append(
                     String.format(
                             Locale.ROOT,
