@@ -38,6 +38,18 @@
   gap: 0.75rem;
 }
 
+.ent__home {
+  display: inline-flex;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+
+.ent__home:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 4px;
+}
+
 .ent__brand-tag {
   padding-left: 0.75rem;
   border-left: 1px solid var(--c-border);

@@ -326,6 +326,14 @@ describe("Enterprise page", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("links the logo back into the app", () => {
+    state.controller = controller();
+    mount();
+    expect(
+      screen.getByRole("link", { name: "Go to Stirling" }),
+    ).toHaveAttribute("href", "/");
+  });
+
   it("says the wallet failed rather than showing a leader the member view", async () => {
     state.role = "unavailable";
     state.controller = controller();

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Banner, Button, Card, Dropdown, Logo, Skeleton } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
@@ -347,7 +348,18 @@ function Shell({
       <header className="ent__header">
         <div className="ent__wrap ent__header-inner">
           <div className="ent__brand">
-            <Logo variant="iconAndText" iconHeight="1.5rem" textHeight="1rem" />
+            {/* The page has no app chrome, so the logo is the way back into the app. */}
+            <Link
+              to="/"
+              className="ent__home"
+              aria-label={t("portal.enterprise.home", "Go to Stirling")}
+            >
+              <Logo
+                variant="iconAndText"
+                iconHeight="1.5rem"
+                textHeight="1rem"
+              />
+            </Link>
             <span className="ent__brand-tag">
               {t("portal.enterprise.brandTag", "Enterprise")}
             </span>

@@ -9160,6 +9160,7 @@ callInfo = "A 15-minute call. Bring your questions on pricing, deployment or sec
 callTitle = "Talk to a solutions engineer"
 deployment = "Deployment"
 footer = "Questions about Stirling Enterprise?"
+home = "Go to Stirling"
 member = "Your team leader runs the Enterprise deal. Once it starts, you can follow its progress here."
 memberDeal = "Your team leader runs this deal. You can follow its progress here."
 quotePanel = "Your quote"
