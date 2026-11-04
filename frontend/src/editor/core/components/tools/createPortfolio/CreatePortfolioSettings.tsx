@@ -6,6 +6,7 @@
 import { Stack, Text, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CreatePortfolioParameters } from "@editor/hooks/tools/createPortfolio/useCreatePortfolioParameters";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface CreatePortfolioSettingsProps {
   parameters: CreatePortfolioParameters;
@@ -32,6 +33,7 @@ const CreatePortfolioSettings = ({
           "PDF Portfolio",
         )}
         value={parameters.coverTitle}
+        className={privateContentClassName}
         onChange={(event) =>
           onParameterChange("coverTitle", event.currentTarget.value)
         }
