@@ -6,10 +6,16 @@ import com.github.jk1.license.ManifestData
 import com.github.jk1.license.ModuleData
 import com.github.jk1.license.ProjectData
 import com.github.jk1.license.render.LicenseDataCollector
+import groovy.json.JsonOutput
+import java.nio.file.Path
+import org.gradle.api.GradleException
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertTrue
 
 class PreferredLicenseFilterTest {
     private static final String GROUP = 'com.example.libs'
@@ -26,95 +32,123 @@ class PreferredLicenseFilterTest {
     private static final License MPL = new License('MPL 2.0', 'https://www.mozilla.org/MPL/2.0/')
     private static final License LGPL = new License('LGPL-2.1-only', 'https://spdx.org/licenses/LGPL-2.1-only.html')
     private static final License GPL_CPE = new License('GPL2 w/ CPE', 'https://openjdk.org/legal/gplv2+ce.html')
+    private static final License UNLISTED = new License('Unlisted License', 'https://www.example.com/license')
+
+    private static final List<Map<String, String>> ALLOWED = [
+            allowed(APACHE, 'high'),
+            allowed(APACHE_ALIAS, 'high'),
+            allowed(EPL, 'medium'),
+            allowed(MPL, 'medium'),
+            allowed(LGPL, 'low'),
+            allowed(GPL_CPE, 'low')
+    ]
+
+    @TempDir
+    Path temporaryDirectory
 
     @Test
-    void reportsPermissiveLicenseInsteadOfAlphabeticallyLastCopyleftOne() {
+    void reportsHighTierLicenseInsteadOfAlphabeticallyLastOne() {
         ModuleData module = createModule(APACHE, GPL_CPE)
         assertEquals(GPL_CPE.name, singleLicenseInfo(module)[1])
 
-        filter(module)
+        filter(module, ALLOWED)
 
         assertEquals([HOMEPAGE, APACHE.name, APACHE.url], singleLicenseInfo(module))
         assertEquals([APACHE.name], licenseNames(module))
     }
 
     @Test
-    void linksSourcesJarWhenOnlyCopyleftLicensesAreDeclared() {
+    void linksSourcesJarForMediumTierLicense() {
         ModuleData module = createModule(MPL)
 
-        filter(module)
+        filter(module, ALLOWED)
 
         assertEquals([SOURCES_JAR, MPL.name, MPL.url], singleLicenseInfo(module))
     }
 
     @Test
-    void prefersFileLevelCopyleftOverLgpl() {
+    void prefersMediumTierOverLowTier() {
         ModuleData module = createModule(EPL, LGPL)
 
-        filter(module)
-
-        assertEquals([SOURCES_JAR, EPL.name, EPL.url], singleLicenseInfo(module))
-    }
-
-    @Test
-    void prefersWeakCopyleftOverGpl() {
-        ModuleData module = createModule(EPL, GPL_CPE)
-
-        filter(module)
+        filter(module, ALLOWED)
 
         assertEquals([SOURCES_JAR, EPL.name, EPL.url], singleLicenseInfo(module))
         assertEquals([EPL.name], licenseNames(module))
     }
 
     @Test
-    void leavesModuleUnchangedWhenDefaultLicenseIsAlreadyPermissive() {
+    void neverReportsLicenseMissingFromAllowedLicenses() {
+        ModuleData module = createModule(MPL, UNLISTED)
+
+        filter(module, ALLOWED)
+
+        assertEquals([SOURCES_JAR, MPL.name, MPL.url], singleLicenseInfo(module))
+    }
+
+    @Test
+    void leavesModuleWithoutAllowedLicenseUnchanged() {
+        ModuleData module = createModule(UNLISTED)
+
+        filter(module, ALLOWED)
+
+        assertEquals([HOMEPAGE, UNLISTED.name, UNLISTED.url], singleLicenseInfo(module))
+    }
+
+    @Test
+    void leavesModuleUnchangedWhenDefaultLicenseIsAlreadyHighTier() {
         ModuleData module = createModule(APACHE, APACHE_ALIAS)
 
-        filter(module)
+        filter(module, ALLOWED)
 
         assertEquals([HOMEPAGE, APACHE_ALIAS.name, APACHE_ALIAS.url], singleLicenseInfo(module))
         assertEquals([APACHE.name, APACHE_ALIAS.name], licenseNames(module))
     }
 
     @Test
-    void leavesModuleWithoutLicenseUnchanged() {
-        ModuleData module = createModule()
+    void appliesModuleScopedEntryOnlyToThatModule() {
+        List<Map<String, String>> allowed = [
+                [moduleName: 'com.other:library', moduleLicense: UNLISTED.name, tier: 'high'],
+                allowed(GPL_CPE, 'low')
+        ]
+        ModuleData module = createModule(UNLISTED, GPL_CPE)
 
-        filter(module)
+        filter(module, allowed)
 
-        assertEquals([HOMEPAGE, null, null], singleLicenseInfo(module))
+        assertEquals([SOURCES_JAR, GPL_CPE.name, GPL_CPE.url], singleLicenseInfo(module))
     }
 
     @Test
-    void ranksLicenseNames() {
-        Map<String, Integer> expected = [
-                'Apache-2.0': 0,
-                'MIT-0': 0,
-                'BSD 3-clause License w/nuclear disclaimer': 0,
-                'EDL 1.0': 0,
-                'Eclipse Distribution License - v 1.0': 0,
-                'Public Domain, per Creative Commons CC0': 0,
-                'UnRar License': 1,
-                'Mozilla Public License 2.0 (MPL-2.0)': 2,
-                'Eclipse Public License - v 2.0': 2,
-                'COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0': 2,
-                'CDDL/GPLv2+CE': 2,
-                'GNU Lesser General Public License': 3,
-                'LGPL-2.1-only': 3,
-                'GPL2 w/ CPE': 4,
-                'GNU General Public License, version 2 with the GNU Classpath Exception': 4
-        ]
+    void usesLeastPermissiveTierWhenEntriesConflict() {
+        List<Map<String, String>> allowed = [allowed(MPL, 'high'), allowed(MPL, 'medium')]
+        ModuleData module = createModule(MPL)
 
-        expected.each { name, rank -> assertEquals(rank, PreferredLicenseFilter.rank(name), name) }
+        filter(module, allowed)
+
+        assertEquals(SOURCES_JAR, singleLicenseInfo(module)[0])
     }
 
-    private static void filter(ModuleData module) {
+    @Test
+    void failsWhenAllowedLicenseHasNoValidTier() {
+        List<Map<String, String>> allowed = [[moduleName: '.*', moduleLicense: MPL.name], allowed(APACHE, 'top')]
+
+        GradleException failure = assertThrows(GradleException) { filter(createModule(MPL), allowed) }
+
+        assertTrue(failure.message.contains(MPL.name))
+    }
+
+    private void filter(ModuleData module, List<Map<String, String>> allowed) {
+        File allowedLicensesFile = temporaryDirectory.resolve('allowed-licenses.json').toFile()
+        allowedLicensesFile.text = JsonOutput.toJson([allowedLicenses: allowed])
         ConfigurationData configuration =
                 new ConfigurationData('runtimeClasspath', [module] as LinkedHashSet<ModuleData>)
-        new PreferredLicenseFilter().filter(
+        new PreferredLicenseFilter(allowedLicensesFile).filter(
                 new ProjectData(
                         ProjectBuilder.builder().build(),
                         [configuration] as LinkedHashSet<ConfigurationData>))
+    }
+
+    private static Map<String, String> allowed(License license, String tier) {
+        return [moduleName: '.*', moduleLicense: license.name, tier: tier]
     }
 
     private static ModuleData createModule(License... licenses) {

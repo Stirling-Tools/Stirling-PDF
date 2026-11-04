@@ -2,255 +2,318 @@
   "allowedLicenses": [
     {
       "moduleName": ".*",
-      "moduleLicense": "BSD License"
+      "moduleLicense": "BSD License",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The BSD License"
+      "moduleLicense": "The BSD License",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "BSD-2-Clause"
+      "moduleLicense": "BSD-2-Clause",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "BSD 2-Clause License"
+      "moduleLicense": "BSD 2-Clause License",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The 2-Clause BSD License"
+      "moduleLicense": "The 2-Clause BSD License",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "BSD-3-Clause"
+      "moduleLicense": "BSD-3-Clause",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The BSD 3-Clause License (BSD3)"
+      "moduleLicense": "The BSD 3-Clause License (BSD3)",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "BSD 3-Clause License"
+      "moduleLicense": "BSD 3-Clause License",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "EDL 1.0"
+      "moduleLicense": "EDL 1.0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Eclipse Distribution License - v 1.0"
+      "moduleLicense": "Eclipse Distribution License - v 1.0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Eclipse Distribution License v. 1.0"
+      "moduleLicense": "Eclipse Distribution License v. 1.0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "BSD-4 License"
+      "moduleLicense": "BSD-4 License",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Revised BSD"
+      "moduleLicense": "Revised BSD",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "ISC"
+      "moduleLicense": "ISC",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "MIT"
+      "moduleLicense": "MIT",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "MIT License"
+      "moduleLicense": "MIT License",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The MIT License"
+      "moduleLicense": "The MIT License",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "MIT-0"
+      "moduleLicense": "MIT-0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "MIT license"
+      "moduleLicense": "MIT license",
+      "tier": "high"
     },
     {
       "moduleName": "com.github.jai-imageio:jai-imageio-core",
-      "moduleLicense": "BSD 3-clause License w/nuclear disclaimer"
+      "moduleLicense": "BSD 3-clause License w/nuclear disclaimer",
+      "tier": "high"
     },
     {
       "moduleName": "com.github.jai-imageio:jai-imageio-jpeg2000",
-      "moduleLicense": "BSD 3-clause License w/nuclear disclaimer"
+      "moduleLicense": "BSD 3-clause License w/nuclear disclaimer",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache 2"
+      "moduleLicense": "Apache 2",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache 2.0"
+      "moduleLicense": "Apache 2.0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache-2.0"
+      "moduleLicense": "Apache-2.0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache-2.0 License"
+      "moduleLicense": "Apache-2.0 License",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache License 2.0"
+      "moduleLicense": "Apache License 2.0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache License Version 2.0"
+      "moduleLicense": "Apache License Version 2.0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache License version 2.0"
+      "moduleLicense": "Apache License version 2.0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache License, Version 2.0"
+      "moduleLicense": "Apache License, Version 2.0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Apache License, version 2.0"
+      "moduleLicense": "Apache License, version 2.0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The Apache License, Version 2.0"
+      "moduleLicense": "The Apache License, Version 2.0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The Apache Software License, Version 2.0"
+      "moduleLicense": "The Apache Software License, Version 2.0",
+      "tier": "high"
     },
     {
       "moduleName": "com.nimbusds:oauth2-oidc-sdk",
-      "moduleLicense": "\"Apache License, version 2.0\";link=\"https://www.apache.org/licenses/LICENSE-2.0.html\""
+      "moduleLicense": "\"Apache License, version 2.0\";link=\"https://www.apache.org/licenses/LICENSE-2.0.html\"",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "MPL 2.0"
+      "moduleLicense": "MPL 2.0",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Mozilla Public License, Version 2.0"
+      "moduleLicense": "Mozilla Public License, Version 2.0",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Mozilla Public License 2.0 (MPL-2.0)"
+      "moduleLicense": "Mozilla Public License 2.0 (MPL-2.0)",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Mozilla Public License Version 2.0"
+      "moduleLicense": "Mozilla Public License Version 2.0",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": 	"CDDL+GPL License"
+      "moduleLicense": "CDDL+GPL License",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "BSD"
+      "moduleLicense": "BSD",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "UnboundID SCIM2 SDK Free Use License"
+      "moduleLicense": "UnboundID SCIM2 SDK Free Use License",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "GPL2 w/ CPE"
+      "moduleLicense": "GPL2 w/ CPE",
+      "tier": "low"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "GPLv2+CE"
+      "moduleLicense": "GPLv2+CE",
+      "tier": "low"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "GNU GENERAL PUBLIC LICENSE, Version 2 + Classpath Exception"
+      "moduleLicense": "GNU GENERAL PUBLIC LICENSE, Version 2 + Classpath Exception",
+      "tier": "low"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "GNU Lesser Public License"
+      "moduleLicense": "GNU Lesser Public License",
+      "tier": "low"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The GNU Lesser General Public License"
+      "moduleLicense": "The GNU Lesser General Public License",
+      "tier": "low"
     },
     {
       "moduleName": "com.martiansoftware:jsap",
-      "moduleLicense": "LGPL"
+      "moduleLicense": "LGPL",
+      "tier": "low"
     },
     {
       "moduleName": "org.hibernate.orm:hibernate-core",
-      "moduleLicense": "GNU Library General Public License v2.1 or later"
+      "moduleLicense": "GNU Library General Public License v2.1 or later",
+      "tier": "low"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0"
+      "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License 1.0"
+      "moduleLicense": "Eclipse Public License 1.0",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License - v 1.0"
+      "moduleLicense": "Eclipse Public License - v 1.0",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License v2.0"
+      "moduleLicense": "Eclipse Public License v2.0",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License v. 2.0"
+      "moduleLicense": "Eclipse Public License v. 2.0",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License - v 2.0"
+      "moduleLicense": "Eclipse Public License - v 2.0",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License - Version 2.0"
+      "moduleLicense": "Eclipse Public License - Version 2.0",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Eclipse Public License, Version 2.0"
+      "moduleLicense": "Eclipse Public License, Version 2.0",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "EPL-2.0"
+      "moduleLicense": "EPL-2.0",
+      "tier": "medium"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "LGPL-2.1-only"
+      "moduleLicense": "LGPL-2.1-only",
+      "tier": "low"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Ubuntu Font Licence 1.0"
+      "moduleLicense": "Ubuntu Font Licence 1.0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Bouncy Castle Licence"
+      "moduleLicense": "Bouncy Castle Licence",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "Public Domain, per Creative Commons CC0"
+      "moduleLicense": "Public Domain, per Creative Commons CC0",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "The W3C License"
+      "moduleLicense": "The W3C License",
+      "tier": "high"
     },
     {
       "moduleName": "com.google.re2j:re2j",
-      "moduleLicense": "Go License"
+      "moduleLicense": "Go License",
+      "tier": "high"
     },
     {
       "moduleName": ".*",
-      "moduleLicense": "UnRar License"
+      "moduleLicense": "UnRar License",
+      "tier": "high"
     }
   ]
 }

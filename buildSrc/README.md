@@ -21,7 +21,7 @@ declares several (see [Preferred license](#preferred-license)).
 - `src/main/groovy/stirling/software/gradle/PreferredLicenseFilter.groovy` chooses the reported
   license and, for copyleft dependencies, the source link.
 - `../app/allowed-licenses.json` defines which detected or supplied licenses are accepted by
-  `checkLicense`.
+  `checkLicense`, and the tier each one is reported at.
 
 ## How it works
 
@@ -100,7 +100,7 @@ https://github.com/<owner>/<repository>/tree/<full-commit-hash>
 Do not use the repository's default branch or another moving URL. See the existing entries in
 `app/license-overrides.json` for concrete examples.
 
-If the license name is not already accepted, add a suitably narrow rule to
+If the license name is not already accepted, add a suitably narrow rule with a `tier` to
 `app/allowed-licenses.json`. Adding an override and allowing a license are separate operations:
 
 - `license-overrides.json` supplies missing metadata for a specific artifact version.
@@ -126,22 +126,27 @@ file must contain only overrides that are still needed.
 
 Without this filter, the plugin reports the alphabetically last license a dependency declares, so a
 dependency offered under Apache-2.0 or GPL is reported as GPL. `PreferredLicenseFilter` runs after
-the override filter and reports the most permissive declared license instead, ranked:
+the override filter and reports the declared license with the highest `tier` in
+`app/allowed-licenses.json` instead:
 
-1. permissive (Apache, MIT, BSD, ISC, EDL, public domain and similar)
-2. unrecognised names
-3. file-level copyleft (MPL, EPL, CDDL)
-4. LGPL
-5. GPL
+```json
+{ "moduleName": ".*", "moduleLicense": "Apache-2.0", "tier": "high" }
+```
 
-Ties keep the plugin's alphabetical choice. When the reported license is copyleft, the dependency's
-URL becomes its `-sources.jar` on Maven Central for the resolved version. Maven Central requires a
-sources jar for every published jar and never changes a published file, so the link does not go
-stale.
+- `high`: permissive, no source obligation (Apache, MIT, BSD, EDL and similar).
+- `medium`: file-level copyleft (MPL, EPL, CDDL).
+- `low`: LGPL, and GPL with the Classpath Exception.
+
+Every entry must set a tier, otherwise the license report fails. Entries are matched the same way
+`checkLicense` matches them. A declared license with no entry is never reported, and a dependency
+with no allowed license still fails `checkLicense`. Ties keep the plugin's alphabetical choice.
+
+When the reported license is `medium` or `low`, the dependency's URL becomes its `-sources.jar` on
+Maven Central for the resolved version. Maven Central requires a sources jar for every published jar
+and never changes a published file, so the link does not go stale.
 
 A dependency the filter changes reports only the chosen license, in the report and in
-`checkLicense`. Other dependencies are left as the plugin reads them. If a new license name is
-ranked wrongly, extend the patterns in `PreferredLicenseFilter` and `PreferredLicenseFilterTest`.
+`checkLicense`. Other dependencies are left as the plugin reads them.
 
 ## Verification
 
@@ -155,8 +160,9 @@ The tests use `com.example:example-library` versions 1.4 and 1.7 to cover the mi
 metadata fallback, placeholder creation, version migration, preservation of a populated newer
 override, automatic cleanup after license metadata appears, exact-version matching, and concurrent
 resolved versions. They also verify removal when a dependency version disappears. A separate `1.9`
-to `1.11.0` case verifies numeric Gradle version ordering. `PreferredLicenseFilterTest` covers the
-license ranking, the sources jar link, and leaving already-permissive dependencies unchanged.
+to `1.11.0` case verifies numeric Gradle version ordering. `PreferredLicenseFilterTest` covers
+choosing by tier, the sources jar link, ignoring licenses with no entry, module-scoped entries, and
+failure on a missing tier.
 
 Run the normal backend license workflow from the repository root:
 

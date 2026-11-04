@@ -6,72 +6,82 @@ import com.github.jk1.license.ModuleData
 import com.github.jk1.license.ProjectData
 import com.github.jk1.license.filter.DependencyFilter
 import com.github.jk1.license.render.LicenseDataCollector
-import java.util.regex.Pattern
+import groovy.json.JsonSlurper
+import org.gradle.api.GradleException
 
 /**
- * Reports the most permissive license a dependency declares, ranked permissive, then
- * unrecognised, then file-level copyleft (MPL, EPL, CDDL), then LGPL, then GPL. Ties go to the
- * alphabetically last name, as the plugin does.
+ * Reports, for each dependency, the declared license with the highest {@code tier} in the
+ * allowed-licenses file ({@code high}, then {@code medium}, then {@code low}). Ties go to the
+ * alphabetically last name, as the plugin does. Declared licenses with no matching entry are never
+ * reported; a dependency with none is left for {@code checkLicense} to reject.
  *
- * <p>When the reported license is copyleft, the dependency's URL is replaced with its
- * {@code -sources.jar} on Maven Central for the resolved version.
+ * <p>When the reported license is {@code medium} or {@code low}, the dependency's URL is replaced
+ * with its {@code -sources.jar} on Maven Central for the resolved version.
  *
  * <p>A module is rewritten to report only the chosen license, in the report and in
- * {@code checkLicense}, when its default license is not the chosen one or the chosen one is
- * copyleft. Other modules are left as the plugin reads them.
+ * {@code checkLicense}, unless its default license is already the chosen {@code high} one.
+ *
+ * <p>Entries are matched as {@code checkLicense} matches them, so the two agree on which licenses
+ * are allowed. Every entry must set a valid {@code tier}, otherwise the build fails.
  */
 class PreferredLicenseFilter implements DependencyFilter {
     private static final String MAVEN_CENTRAL = 'https://repo1.maven.org/maven2'
+    private static final List<String> TIERS = ['high', 'medium', 'low']
 
-    private static final List<Map.Entry<Pattern, Integer>> RANKS = [
-            Map.entry(Pattern.compile(
-                    '(?i)apache|\\bmit\\b|\\bbsd|\\bisc\\b|\\bedl\\b|eclipse distribution'
-                            + '|public domain|\\bcc0\\b|bouncy castle|\\bw3c\\b|\\bsax\\b|go license'), 0),
-            Map.entry(Pattern.compile(
-                    '(?i)mozilla|\\bmpl\\b|eclipse public|\\bepl\\b|cddl|common development and distribution'), 2),
-            Map.entry(Pattern.compile('(?i)lesser general|\\blgpl'), 3),
-            Map.entry(Pattern.compile('(?i)general public|\\bgpl'), 4)
-    ]
-    private static final int UNRECOGNISED_RANK = 1
-    private static final int COPYLEFT_RANK = 2
+    private final File allowedLicensesFile
+
+    PreferredLicenseFilter(File allowedLicensesFile) {
+        this.allowedLicensesFile = allowedLicensesFile
+    }
 
     @Override
     ProjectData filter(ProjectData projectData) {
+        List<Map<String, String>> entries = loadEntries()
         projectData.configurations
                 .collectMany { configuration -> configuration.dependencies }
-                .each { module -> applyPreferredLicense(module) }
+                .each { module -> applyPreferredLicense(module, entries) }
         return projectData
     }
 
-    static int rank(String licenseName) {
-        Map.Entry<Pattern, Integer> match =
-                RANKS.find { entry -> entry.key.matcher(licenseName).find() }
-        return match == null ? UNRECOGNISED_RANK : match.value
+    private List<Map<String, String>> loadEntries() {
+        List<Map<String, String>> entries =
+                new JsonSlurper().parse(allowedLicensesFile).allowedLicenses as List<Map<String, String>>
+        entries.each { entry ->
+            if (!TIERS.contains(entry.tier)) {
+                throw new GradleException(
+                        "Allowed license ${entry.moduleLicense} for ${entry.moduleName} must set " +
+                                "'tier' to one of ${TIERS} in ${allowedLicensesFile}")
+            }
+        }
+        return entries
     }
 
-    private static String sourcesJarUrl(ModuleData module) {
-        String directory = "${MAVEN_CENTRAL}/${module.group.replace('.', '/')}/${module.name}/${module.version}"
-        return "${directory}/${module.name}-${module.version}-sources.jar"
-    }
-
-    private static void applyPreferredLicense(ModuleData module) {
-        Set<License> declared = LicenseDataCollector.multiModuleLicenseInfo(module).licenses
-                .findAll { license -> license.name } as Set<License>
-        if (declared.isEmpty()) {
+    private static void applyPreferredLicense(ModuleData module, List<Map<String, String>> entries) {
+        Map<License, Integer> tierByLicense = [:]
+        LicenseDataCollector.multiModuleLicenseInfo(module).licenses
+                .findAll { license -> license.name }
+                .each { license ->
+                    Integer tier = tierOf(module, license.name, entries)
+                    if (tier != null) {
+                        tierByLicense[license] = tier
+                    }
+                }
+        if (tierByLicense.isEmpty()) {
             return
         }
 
-        int bestRank = declared.collect { license -> rank(license.name) }.min()
-        License chosen = declared
-                .findAll { license -> rank(license.name) == bestRank }
+        int bestTier = tierByLicense.values().min()
+        License chosen = tierByLicense
+                .findAll { license, tier -> tier == bestTier }
+                .keySet()
                 .max { license -> license.name }
+        boolean needsSource = bestTier > 0
         List<String> defaultInfo = LicenseDataCollector.singleModuleLicenseInfo(module)
-        boolean copyleft = bestRank >= COPYLEFT_RANK
-        if (!copyleft && defaultInfo[1] == chosen.name) {
+        if (!needsSource && defaultInfo[1] == chosen.name) {
             return
         }
 
-        String moduleUrl = copyleft ? sourcesJarUrl(module) : defaultInfo[0]
+        String moduleUrl = needsSource ? sourcesJarUrl(module) : defaultInfo[0]
         module.poms = new TreeSet<>()
         module.licenseFiles = new TreeSet<>()
         module.manifests = [
@@ -84,5 +94,28 @@ class PreferredLicenseFilter implements DependencyFilter {
                         [chosen] as LinkedHashSet<License>,
                         false)
         ] as LinkedHashSet<ManifestData>
+    }
+
+    // When several entries match one license, the least permissive tier wins.
+    private static Integer tierOf(ModuleData module, String licenseName, List<Map<String, String>> entries) {
+        String moduleName = "${module.group}:${module.name}"
+        List<Integer> tiers = entries
+                .findAll { entry ->
+                    matches(moduleName, entry.moduleName)
+                            && matches(module.version, entry.moduleVersion)
+                            && matches(licenseName, entry.moduleLicense)
+                }
+                .collect { entry -> TIERS.indexOf(entry.tier) }
+        return tiers.isEmpty() ? null : tiers.max()
+    }
+
+    // Mirrors checkLicense: a missing pattern matches anything, otherwise regex or exact match.
+    private static boolean matches(String value, String pattern) {
+        return pattern == null || value ==~ pattern || value == pattern
+    }
+
+    private static String sourcesJarUrl(ModuleData module) {
+        String directory = "${MAVEN_CENTRAL}/${module.group.replace('.', '/')}/${module.name}/${module.version}"
+        return "${directory}/${module.name}-${module.version}-sources.jar"
     }
 }

@@ -594,21 +594,23 @@ gradle.taskGraph.whenReady { graph ->
 
 def allProjects = ((subprojects as Set<Project>) + project) as Set<Project>
 def moduleLicenseOverridesFile = project.layout.projectDirectory.file("app/license-overrides.json").asFile
+def allowedLicensesJsonFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
 
 licenseReport {
     projects = allProjects
     renderers = [new JsonReportRenderer()]
-    allowedLicensesFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
+    allowedLicensesFile = allowedLicensesJsonFile
     outputDir = project.layout.buildDirectory.dir("reports/dependency-license").get().asFile.path
     configurations = [ "productionRuntimeClasspath", "runtimeClasspath" ]
     filters = [
         new ModuleLicenseOverrideFilter(moduleLicenseOverridesFile),
-        new PreferredLicenseFilter()
+        new PreferredLicenseFilter(allowedLicensesJsonFile)
     ]
 }
 
 tasks.named('generateLicenseReport') {
     inputs.file(moduleLicenseOverridesFile)
+    inputs.file(allowedLicensesJsonFile)
 }
 
 tasks.named('checkLicensePreparation') {
