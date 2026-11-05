@@ -427,12 +427,17 @@ class CertSignControllerTest {
 
     /** An openssl-style unencrypted PKCS#8 key and a self-signed certificate, as PEM text. */
     private static byte[][] unencryptedPemPair() throws Exception {
+        return pemPairWithSubject("CN=Chat Tester");
+    }
+
+    /** As {@link #unencryptedPemPair()}, but with the given certificate subject. */
+    private static byte[][] pemPairWithSubject(String subjectDn) throws Exception {
         java.security.KeyPairGenerator generator =
                 java.security.KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048);
         java.security.KeyPair pair = generator.generateKeyPair();
         org.bouncycastle.asn1.x500.X500Name subject =
-                new org.bouncycastle.asn1.x500.X500Name("CN=Chat Tester");
+                new org.bouncycastle.asn1.x500.X500Name(subjectDn);
         java.util.Date now = new java.util.Date();
         java.security.cert.X509Certificate cert =
                 new org.bouncycastle.cert.jcajce.JcaX509CertificateConverter()
