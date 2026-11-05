@@ -1,0 +1,13 @@
+From: =?utf-8?q?=C3=89lodie_Sender?= <sender@example.com>
+To: =?utf-8?q?Zo=C3=AB_Primary?= <to@example.com>
+Cc: =?utf-8?q?Ren=C3=A9_Copy?= <cc-only@example.com>,
+ Second Copy <cc-second@example.com>
+Bcc: =?utf-8?q?S=C3=B8ren_Blind?= <bcc-only@example.com>
+Subject: =?utf-8?q?Recipient_options_caf=C3=A9?=
+Date: Mon, 01 Jan 2024 12:00:00 +0000
+Message-ID: <recipient-options@example.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Fixture email body with café.

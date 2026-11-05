@@ -15,6 +15,7 @@ import type { TrialDraft } from "@processor/components/procurement/trialDraft";
 import { useProcurementPrefill } from "@processor/components/procurement/prefill";
 import { openApiUrl } from "@processor/api/externalUrl";
 import "@processor/views/Procurement.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * Pieces of the Enterprise page that stand apart from the journey's stages: the trial setup form,
@@ -444,6 +445,7 @@ export function TrialSetupForm({
               </span>
               <input
                 value={contactName}
+                className={privateContentClassName}
                 placeholder={t("portal.procurement.setup.fullNamePlaceholder")}
                 onChange={(e) => setContactName(e.target.value)}
               />
@@ -454,6 +456,7 @@ export function TrialSetupForm({
               </span>
               <input
                 value={businessName}
+                className={privateContentClassName}
                 placeholder={t(
                   "portal.procurement.setup.businessNamePlaceholder",
                 )}
@@ -468,6 +471,7 @@ export function TrialSetupForm({
             <input
               type="email"
               value={contactEmail}
+              className={privateContentClassName}
               placeholder={t("portal.procurement.setup.workEmailPlaceholder")}
               onChange={(e) => setContactEmail(e.target.value)}
             />
@@ -478,6 +482,7 @@ export function TrialSetupForm({
             </span>
             <input
               value={inviteEmails}
+              className={privateContentClassName}
               placeholder={t("portal.procurement.setup.invitesPlaceholder")}
               onChange={(e) => setInviteEmails(e.target.value)}
             />

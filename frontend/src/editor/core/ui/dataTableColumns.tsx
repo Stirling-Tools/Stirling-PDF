@@ -1,4 +1,6 @@
 import { Fragment, type ReactNode } from "react";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateClassNameIf } from "@editor/components/shared/privateClassNameIf";
 import { Icon } from "@editor/ui/Icon";
 import { StatusBadge, type StatusTone } from "@editor/ui/StatusBadge";
 import { Chip, type ChipAccent } from "@editor/ui/Chip";
@@ -151,6 +153,9 @@ interface Common {
   key: string;
   header: ReactNode;
   sortable?: boolean;
+  /** Keeps the cell out of analytics and feedback captures, for user content
+   * such as names and emails. */
+  privateContent?: boolean;
 }
 
 function base<T>(
@@ -171,7 +176,9 @@ function base<T>(
     sortValue: o.sortable ? extra.sortValue : undefined,
     sortFn: o.sortable ? extra.sortFn : undefined,
     interactive: extra.interactive,
-    renderCell: extra.renderCell,
+    renderCell: o.privateContent
+      ? (row) => <PrivateContent>{extra.renderCell(row)}</PrivateContent>
+      : extra.renderCell,
   };
 }
 
@@ -400,6 +407,9 @@ function entity<T>(
     unreadLabel?: (row: T) => string | null | undefined;
     /** Secondary muted line under the name. */
     note?: (row: T) => string | null | undefined;
+    /** Keeps the row's note out of analytics and feedback captures, where only
+     * some rows' notes are user content. */
+    privateNote?: (row: T) => boolean;
     sortBy?: (row: T) => SortValue;
   },
 ): DataTableColumn<T> {
@@ -436,7 +446,16 @@ function entity<T>(
                 <span className="sui-dtc__entity-suffix">{suffix}</span>
               )}
             </span>
-            {note && <span className="sui-dtc__note">{note}</span>}
+            {note && (
+              <span
+                className={privateClassNameIf(
+                  o.privateNote?.(r),
+                  "sui-dtc__note",
+                )}
+              >
+                {note}
+              </span>
+            )}
           </div>
         </div>
       );
