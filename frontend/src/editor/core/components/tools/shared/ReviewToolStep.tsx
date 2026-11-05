@@ -78,7 +78,10 @@ function ReviewStepContent<TParams = unknown>({
   const saveLabel = oneTarget
     ? outputStubs.length > 1
       ? oneTarget.saveAllLabel()
-      : oneTarget.saveLabel(outputStubs[0])
+      : oneTarget.saveLabel(
+          outputStubs[0],
+          saver.planFor(outputStubs[0]) ?? "replace",
+        )
     : terminology.download;
 
   const handleUndo = async () => {

@@ -37,8 +37,15 @@ const written = (page: Page) =>
       (window as unknown as { __writtenPaths?: string[] }).__writtenPaths ?? [],
   );
 
-async function openDirtyReport(page: Page) {
+async function openDirtyReport(page: Page, saveMode?: string) {
   await installTauri(page);
+  if (saveMode)
+    await page.addInitScript((mode) => {
+      localStorage.setItem(
+        "stirlingpdf_preferences",
+        JSON.stringify({ saveMode: mode }),
+      );
+    }, saveMode);
   await gotoFiles(page);
   await stage(page, { [REPORT]: { bytes: PDF, modifiedMs: MTIME } }, [
     {
@@ -77,5 +84,42 @@ test.describe("Saving files that live on disk", () => {
     await expect(
       page.getByRole("menuitem", { name: /Save a copy somewhere else/ }),
     ).toBeVisible();
+  });
+
+  test("Save a copy writes one copy beside the file, then keeps updating it", async ({
+    page,
+  }) => {
+    await openDirtyReport(page, "copy");
+    const copy = "C:/Docs/quarterly-report (edited).pdf";
+
+    await page.keyboard.press("Control+s");
+    await expect.poll(() => written(page)).toContain(copy);
+    expect(await written(page)).not.toContain(REPORT);
+
+    await page.keyboard.press("Control+s");
+    await expect
+      .poll(async () => (await written(page)).filter((p) => p === copy).length)
+      .toBe(2);
+    expect(await written(page)).not.toContain(
+      "C:/Docs/quarterly-report (edited 2).pdf",
+    );
+  });
+
+  test("Ask me offers update, copy or elsewhere before saving", async ({
+    page,
+  }) => {
+    await openDirtyReport(page, "ask");
+
+    await page.keyboard.press("Control+s");
+    const dialog = page.getByRole("dialog", {
+      name: 'Save "quarterly-report.pdf"',
+    });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText("Save a copy somewhere else…")).toBeVisible();
+    await dialog.getByText("Save a copy next to it").click();
+    await dialog.getByRole("button", { name: "Save", exact: true }).click();
+    await expect
+      .poll(() => written(page))
+      .toContain("C:/Docs/quarterly-report (edited).pdf");
   });
 });

@@ -44,6 +44,7 @@ import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
 import { truncateCenter } from "@editor/utils/textUtils";
 import { FileEditorStatusDot } from "@editor/components/fileEditor/FileEditorStatusDot";
 import type { SaveTarget } from "@editor/services/saveTargets";
+import type { SaveMode } from "@editor/services/saveMode";
 import { useToolEligibleFileIds } from "@editor/contexts/ToolFileEligibilityContext";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
 
@@ -65,6 +66,8 @@ interface FileEditorThumbnailProps {
   unsaved?: boolean;
   /** Set when Save sends this file somewhere other than disk or a download. */
   saveTarget?: SaveTarget;
+  /** What Save does for this file under the save setting. */
+  savePlan?: SaveMode | null;
   onUnzipFile?: (fileId: FileId) => void;
   toolMode?: boolean;
   isSupported?: boolean;
@@ -80,6 +83,7 @@ const FileEditorThumbnail = ({
   onSaveFile,
   unsaved = false,
   saveTarget,
+  savePlan,
   onUnzipFile,
   isSupported = true,
   policies = [],
@@ -289,7 +293,7 @@ const FileEditorThumbnail = ({
   const backgroundPolicy = policies.find((p) => p.background && !p.enforcing);
 
   const hoverActions = useMemo<HoverAction[]>(() => {
-    const targetLabel = saveTarget?.saveLabel(file);
+    const targetLabel = saveTarget?.saveLabel(file, savePlan ?? "replace");
     // Beside a save to another home, the plain one needs to say it stays local.
     const downloadLabel = !saveTarget
       ? terminology.download
@@ -494,6 +498,7 @@ const FileEditorThumbnail = ({
     onDownloadFile,
     onSaveFile,
     saveTarget,
+    savePlan,
     file,
     icons.saveAs,
     onUnzipFile,

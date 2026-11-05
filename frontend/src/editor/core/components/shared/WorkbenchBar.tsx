@@ -66,6 +66,7 @@ import "@editor/components/shared/WorkbenchBar.css";
 import { NotificationBell } from "@editor/components/notifications/NotificationBell";
 import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
+import { SaveChoiceModal } from "@editor/components/shared/saveChoice/SaveChoiceModal";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
 
@@ -262,11 +263,12 @@ export default function WorkbenchBar({
         const stub = isStirlingFile(fileToExport)
           ? selectors.getStirlingFileStub(fileToExport.fileId)
           : undefined;
-        const target =
-          !forceNewFile && stub ? saver.targetFor(stub) : undefined;
-        if (target && stub) {
-          const viewerFile = await enforcedViewerFile(buffer, stub);
-          if ((await target.save(stub, viewerFile)) !== "fallback") return;
+        if (!forceNewFile && stub && saver.planFor(stub) !== null) {
+          const viewerFile = new File([buffer], stub.name, {
+            type: "application/pdf",
+          });
+          await saver.saveStoredFile(stub, viewerFile);
+          return;
         }
         try {
           const result = await downloadFile({
@@ -327,10 +329,11 @@ export default function WorkbenchBar({
       for (let idx = 0; idx < filesToExport.length; idx++) {
         const file = filesToExport[idx];
         const stub = stubs[idx];
-        const target =
-          !forceNewFile && stub ? saver.targetFor(stub) : undefined;
-        if (target && stub) {
-          if ((await target.save(stub, enforced[idx])) !== "fallback") continue;
+        if (!forceNewFile && stub && saver.planFor(stub) !== null) {
+          await saver.saveStoredFile(stub, enforced[idx], {
+            policiesApplied: true,
+          });
+          continue;
         }
         try {
           const result = await downloadRaw({
@@ -753,6 +756,7 @@ export default function WorkbenchBar({
         <ViewerShareButton disabled={actionsDisabled} />
       )}
 
+      <SaveChoiceModal />
       {isMobile ? (
         <WorkbenchBarMobileActions {...globalActionProps} />
       ) : (

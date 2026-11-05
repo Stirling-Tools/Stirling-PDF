@@ -1333,6 +1333,8 @@ public class ApplicationProperties {
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide = true;
         private boolean enableEasterEggs = true;
+        private String saveMode = "replace";
+        private boolean allowUserSaveMode = true;
         private Datasource datasource;
         private boolean disableSanitize;
         private boolean stirlingOfficeConversion;

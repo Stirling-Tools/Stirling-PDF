@@ -72,6 +72,8 @@ export interface AppConfig {
   googleDriveClientId?: string;
   googleDriveApiKey?: string;
   googleDriveAppId?: string;
+  saveMode?: string;
+  allowUserSaveMode?: boolean;
   timestampDefaultTsaUrl?: string;
   timestampCustomTsaUrls?: string[];
   timestampTsaPresets?: { label: string; url: string }[];

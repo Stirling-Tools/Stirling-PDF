@@ -3,12 +3,14 @@ import { expect, it, vi } from "vitest";
 import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
 import type { SaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import type { SaveTarget } from "@editor/services/saveTargets";
+import type { SaveMode } from "@editor/services/saveMode";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (_key: string, fallback: string) => fallback,
+    t: (_key: string, fallback: string, vars?: Record<string, string>) =>
+      fallback.replace(/{{(\w+)}}/g, (_m, k: string) => vars?.[k] ?? ""),
   }),
 }));
 
@@ -20,6 +22,7 @@ const cloud: SaveTarget = {
   handles: (s) => s.id.startsWith("c"),
   isUnsaved: () => true,
   saveLabel: (s) => `Update ${s.name} in cloud`,
+  homeName: () => "the cloud",
   saveAllLabel: () => "Save all to cloud",
   statusLabel: () => "Not in cloud",
   icon: "cloud-upload",
@@ -34,10 +37,15 @@ const cloud: SaveTarget = {
   ],
 };
 
-function saver(targets: SaveTarget[]): SaveStoredFile {
+function saver(
+  targets: SaveTarget[],
+  mode: SaveMode = "replace",
+): SaveStoredFile {
   const targetFor = (s: StirlingFileStub) => targets.find((t) => t.handles(s));
   return {
     targetFor,
+    planFor: (s) => (targetFor(s) || s.localFilePath ? mode : null),
+    saveToHome: async () => "saved",
     isUnsaved: (s) =>
       targetFor(s)?.isUnsaved(s) ?? Boolean(s.isDirty && s.localFilePath),
     saveStoredFile: async () => "saved",
@@ -79,6 +87,7 @@ it("moves desktop Save As into the menu and dots unsaved disk edits", () => {
   expect(result.current.unsaved).toBe(true);
   expect(result.current.menu?.map((item) => item.label)).toEqual([
     "Save a copy somewhere else…",
+    "Save a copy next to it",
   ]);
 });
 
@@ -95,6 +104,7 @@ it("names the target and lists its destinations for one file", () => {
   expect(result.current.icon).toBe("cloud-upload");
   expect(result.current.menu?.map((item) => item.label)).toEqual([
     "Download a copy",
+    "Save a copy next to it",
     "Save a copy to cloud",
   ]);
 });
@@ -114,4 +124,20 @@ it("says each file goes home when targets are mixed", () => {
   );
   expect(result.current.icon).toBeUndefined();
   expect(result.current.menu).toBeUndefined();
+});
+
+it("names the copy and offers the update when the setting is Save a copy", () => {
+  const { result } = renderHook(() =>
+    useSaveButton({
+      ...base,
+      saver: saver([], "copy"),
+      targets: [stub("a", { localFilePath: "C:/a.pdf" })],
+      savesToDisk: true,
+    }),
+  );
+  expect(result.current.label).toBe("Save a copy of a.pdf next to it");
+  expect(result.current.menu?.map((item) => item.label)).toEqual([
+    "Save a copy somewhere else…",
+    "Update a.pdf",
+  ]);
 });
