@@ -1,3 +1,10 @@
+/**
+ * The server's pricing formula (ProcurementPricingService), run over the rate card it sends, so the
+ * builder's live estimate needs no round trip yet can't drift from the server's figures. The server
+ * prices the real quote. Minor units (cents); the meter rounds to whole dollars, exactly like the
+ * backend, so the preview matches the issued quote. pricingParity.test.ts pins this formula to the
+ * server's fixtures.
+ */
 import type { QuoteConfigInput, RateCard } from "@processor/api/procurement";
 
 // Governance posture: the intensity (runs per PDF) fed to the committed-volume curve.
@@ -6,15 +13,22 @@ export const POSTURES = [
   { intensity: 4, key: "governed" },
   { intensity: 7, key: "regulated" },
 ] as const;
-// PDF-size tiers (D93): a multiplier on the rate. Default Standard (×1.4). Mirrors the server.
+// PDF-size tiers: a multiplier on the rate. Mirrors the server.
 export const SIZE_TIERS = [
   { mult: 1.0, key: "compact" },
   { mult: 1.4, key: "standard" },
   { mult: 2.4, key: "heavy" },
 ] as const;
 
+/** PDFs a user processes a working day, working days a year, and headroom on top. */
+const PDFS_PER_USER_DAY = 5;
+const WORKING_DAYS = 230;
+const VOLUME_HEADROOM = 1.75;
+
+/** A starting annual volume for a team of this size, rounded to a figure that reads as an estimate. */
 export function estimateVolume(users: number): number {
-  const raw = Math.max(0, users) * 5 * 230 * 1.75;
+  const raw =
+    Math.max(0, users) * PDFS_PER_USER_DAY * WORKING_DAYS * VOLUME_HEADROOM;
   const stepSize = raw >= 1_000_000 ? 50_000 : raw >= 100_000 ? 25_000 : 5_000;
   // A small team still processes something: rounding it to zero would leave nothing to price.
   return raw > 0
@@ -22,18 +36,12 @@ export function estimateVolume(users: number): number {
     : 0;
 }
 
-// The server's pricing formula (ProcurementPricingService), run over the rate card it sends, so the
-// builder's live estimate needs no round trip yet can't drift from the server's figures. The server
-// prices the real quote. Minor units (cents); the meter rounds to whole dollars, exactly like the
-// backend, so the preview matches the issued quote. pricingParity.test.ts pins this formula to the
-// server's fixtures.
+/** Committed runs a year: PDFs times the policies each one runs through. */
+function runVolume(cfg: QuoteConfigInput): number {
+  return Math.max(0, cfg.volume) * Math.max(1, cfg.intensity);
+}
 
-/** Committed runs a year past which the per-run rate starts to fall. */
-const RUN_CURVE_KNEE = 1_000_000;
-/** The most the committed-volume curve takes off the list rate. */
-const MAX_VOLUME_DISCOUNT = 0.5;
-
-/** Meter-only discount for a term of this many years (clamped to 1..5). */
+/** Meter-only discount for a term of this many years, clamped to the terms the card prices. */
 export function termDiscount(rates: RateCard, termYears: number): number {
   const byYear = rates.termDiscountByYear;
   return byYear[Math.min(Math.max(termYears, 1), byYear.length) - 1] ?? 0;
@@ -41,12 +49,12 @@ export function termDiscount(rates: RateCard, termYears: number): number {
 
 /** Dollars per run after the committed-volume curve, its floor and the PDF-size multiplier. */
 export function perRunRate(cfg: QuoteConfigInput, rates: RateCard): number {
-  const runVol = Math.max(0, cfg.volume) * Math.max(1, cfg.intensity);
+  const runVol = runVolume(cfg);
   const volDisc =
-    runVol > RUN_CURVE_KNEE
+    runVol > rates.runCurveKnee
       ? Math.min(
-          MAX_VOLUME_DISCOUNT,
-          rates.discountPerDoubling * Math.log2(runVol / RUN_CURVE_KNEE),
+          rates.maxVolumeDiscount,
+          rates.discountPerDoubling * Math.log2(runVol / rates.runCurveKnee),
         )
       : 0;
   return (
@@ -59,7 +67,7 @@ export function previewAnnualMinor(
   cfg: QuoteConfigInput,
   rates: RateCard,
 ): number {
-  const runVol = Math.max(0, cfg.volume) * Math.max(1, cfg.intensity);
+  const runVol = runVolume(cfg);
   const rate = perRunRate(cfg, rates);
   const termDisc = termDiscount(rates, cfg.termYears);
   const meterNet = Math.round(runVol * rate * (1 - termDisc)) * 100; // whole $ → minor units

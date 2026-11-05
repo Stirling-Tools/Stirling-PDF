@@ -7,7 +7,7 @@ import type {
   QuoteResult,
   RateCard,
 } from "@processor/api/procurement";
-import { money } from "@processor/components/procurement/format";
+import { money, unitRate } from "@processor/components/procurement/format";
 import {
   perRunRate,
   POSTURES,
@@ -150,13 +150,11 @@ function lineLabel(
       if (!posture) return li.label;
       return t("portal.procurement.builder.line.usage", {
         volume: cfg.volume.toLocaleString(),
-        rate: new Intl.NumberFormat(undefined, {
-          style: "currency",
-          currency: quote.currency || "USD",
-          currencyDisplay: "narrowSymbol",
-          minimumFractionDigits: 4,
-          maximumFractionDigits: 4,
-        }).format(perRunRate(cfg, rates) * Math.max(1, cfg.intensity)),
+        // From the current rate card: the line carries its amount but not the rate it was issued at.
+        rate: unitRate(
+          perRunRate(cfg, rates) * Math.max(1, cfg.intensity),
+          quote.currency,
+        ),
         posture: t(`portal.procurement.builder.posture_${posture.key}`),
       });
     }

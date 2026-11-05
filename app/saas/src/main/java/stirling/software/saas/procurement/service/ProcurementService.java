@@ -780,8 +780,20 @@ public class ProcurementService {
      * The deployment the team is actually entitled to: the priced quote's once one exists,
      * otherwise the trial's self-selected target. Paid entitlements must follow what was quoted.
      */
-    public String entitledDeployment(ProcurementDeal deal) {
-        ProcurementQuote quote = currentQuote(deal.getTeamId()).orElse(null);
+    private String entitledDeployment(ProcurementDeal deal) {
+        return entitledDeployment(deal, quotesForDeal(deal.getDealId()));
+    }
+
+    /**
+     * {@link #entitledDeployment(ProcurementDeal)} from the deal's quotes, newest first, for a
+     * caller that already has them loaded.
+     */
+    public String entitledDeployment(ProcurementDeal deal, List<ProcurementQuote> quotes) {
+        ProcurementQuote quote =
+                quotes.stream()
+                        .filter(q -> q.getQuoteId().equals(deal.getAcceptedQuoteId()))
+                        .findFirst()
+                        .orElse(quotes.isEmpty() ? null : quotes.get(0));
         if (quote != null && quote.getDeployment() != null && !quote.getDeployment().isBlank()) {
             return quote.getDeployment();
         }

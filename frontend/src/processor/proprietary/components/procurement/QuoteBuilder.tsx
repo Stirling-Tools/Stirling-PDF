@@ -6,6 +6,7 @@ import { errorMessage, HttpError } from "@processor/api/http";
 import { money } from "@processor/components/procurement/format";
 import {
   buildQuote,
+  QUOTE_BELOW_MINIMUM,
   recordLegalConsent,
   type QuoteConfigInput,
   type RateCard,
@@ -289,7 +290,7 @@ export function QuoteBuilder({
       const conflict = e instanceof HttpError && e.status === 409;
       const tooSmall =
         conflict &&
-        (e.body as { error?: string } | null)?.error === "quote_below_minimum";
+        (e.body as { error?: string } | null)?.error === QUOTE_BELOW_MINIMUM;
       setGenerateError({
         tooSmall,
         message: tooSmall

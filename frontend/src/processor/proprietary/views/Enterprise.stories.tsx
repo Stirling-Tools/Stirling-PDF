@@ -59,6 +59,7 @@ const trial: ProcurementSnapshot = {
   contactEmail: "dana@northwind.example",
   latestQuote: null,
   rateCard: RATE_CARD,
+  entitledDeployment: "selfhost",
   minAnnualNetMinor: 1_200_000,
 };
 

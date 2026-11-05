@@ -204,7 +204,9 @@ class ProcurementPricingServiceTest {
         JsonNode json = new ObjectMapper().valueToTree(pricing.rates());
         assertThat(json.get("listRatePerRun").asDouble()).isEqualTo(0.01);
         assertThat(json.get("floorRatePerRun").asDouble()).isEqualTo(0.005);
+        assertThat(json.get("runCurveKnee").asLong()).isEqualTo(1_000_000L);
         assertThat(json.get("discountPerDoubling").asDouble()).isEqualTo(0.06);
+        assertThat(json.get("maxVolumeDiscount").asDouble()).isEqualTo(0.5);
         assertThat(json.get("termDiscountByYear").size()).isEqualTo(5);
         assertThat(json.get("indemnificationRate").asDouble()).isEqualTo(0.05);
         assertThat(json.get("dedicatedSupportMinor").asLong()).isEqualTo(3_000_000L);

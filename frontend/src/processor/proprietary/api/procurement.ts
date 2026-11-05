@@ -128,6 +128,9 @@ export interface AcceptResult {
   invoicePdf: string | null;
 }
 
+/** The error code the server answers a quote under the minimum deal size with (a 409). */
+export const QUOTE_BELOW_MINIMUM = "quote_below_minimum";
+
 /**
  * The rates the server prices quotes from (its PricingRates), sent so the quote builder's live
  * estimate uses the same ones. Per-run rates are in dollars; flat fees in minor units (cents).
@@ -135,8 +138,12 @@ export interface AcceptResult {
 export interface RateCard {
   listRatePerRun: number;
   floorRatePerRun: number;
+  /** Committed runs a year past which the per-run rate starts to fall. */
+  runCurveKnee: number;
   /** Share taken off the per-run rate for each doubling of committed runs past the knee. */
   discountPerDoubling: number;
+  /** The most the committed-volume curve takes off the list rate. */
+  maxVolumeDiscount: number;
   /** Meter-only discount by term; index 0 is a one-year term. */
   termDiscountByYear: number[];
   /** Share of the net meter charged for indemnification. */
@@ -169,13 +176,13 @@ export interface ProcurementSnapshot {
   contactName: string | null;
   contactEmail: string | null;
   latestQuote: QuoteResult | null;
-  /** Smallest annual fee a quote may come to (minor units); 0 or absent when there is no floor. */
-  minAnnualNetMinor?: number;
+  /** Smallest annual fee a quote may come to (minor units); 0 when there is no floor. */
+  minAnnualNetMinor: number;
   /**
    * The deployment the licence is issued for: the current quote's once there is one, else the
-   * trial's. Setup steps and the offline licence follow this; absent on an unstarted deal.
+   * trial's. Setup steps and the offline licence follow this; null on an unstarted deal.
    */
-  entitledDeployment?: string | null;
+  entitledDeployment: string | null;
   /** What quotes are priced from; the builder's live estimate runs the same formula over it. */
   rateCard: RateCard;
 }

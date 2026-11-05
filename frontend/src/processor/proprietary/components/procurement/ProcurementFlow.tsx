@@ -89,7 +89,7 @@ export function ProcurementFlow({
               }
               initial={latest?.config}
               eulaAlreadyAgreed={data?.trialStartedAt != null}
-              minAnnualMinor={data.minAnnualNetMinor ?? 0}
+              minAnnualMinor={data.minAnnualNetMinor}
               rates={data.rateCard}
               onScheduleCall={() => setExtra("schedule")}
               onComparePlans={() =>

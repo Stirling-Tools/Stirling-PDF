@@ -66,6 +66,8 @@ const snapshot: ProcurementSnapshot = {
   contactEmail: null,
   latestQuote: quote,
   rateCard: RATE_CARD,
+  minAnnualNetMinor: 0,
+  entitledDeployment: null,
 };
 
 /** Builds a fully-populated controller so callers only need to override the fields a story cares about. */

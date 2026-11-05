@@ -63,6 +63,9 @@ public class ProcurementController {
     // ObjectMapper bean.
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    /** Error code for a quote under the minimum deal size; the builder keys on it. */
+    static final String QUOTE_BELOW_MINIMUM = "quote_below_minimum";
+
     private final ProcurementService procurement;
     private final ProcurementPricingService pricing;
     private final UserTeamResolver userTeamResolver;
@@ -219,7 +222,30 @@ public class ProcurementController {
             // the trial's. Setup steps and the offline licence follow this, not {@code deployment}.
             String entitledDeployment,
             // The rates quotes are priced from, so the builder's live estimate uses the same ones.
-            PricingRates rateCard) {}
+            PricingRates rateCard) {
+
+        /** The snapshot of a team with no deal yet. */
+        static SnapshotResponse empty(long minAnnualNetMinor, PricingRates rateCard) {
+            return new SnapshotResponse(
+                    null,
+                    null,
+                    null,
+                    0,
+                    null,
+                    null,
+                    0,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    minAnnualNetMinor,
+                    null,
+                    rateCard);
+        }
+    }
 
     /** The filled agreement for review: registry metadata + the rendered markdown body. */
     public record AgreementDocumentResponse(
@@ -265,24 +291,7 @@ public class ProcurementController {
     }
 
     private SnapshotResponse emptySnapshot() {
-        return new SnapshotResponse(
-                null,
-                null,
-                null,
-                0,
-                null,
-                null,
-                0,
-                false,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                config.getMinAnnualNetMinor(),
-                null,
-                pricing.rates());
+        return SnapshotResponse.empty(config.getMinAnnualNetMinor(), pricing.rates());
     }
 
     /**
@@ -410,9 +419,6 @@ public class ProcurementController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
-
-    /** Error code for a quote under the minimum deal size; the builder keys on it. */
-    static final String QUOTE_BELOW_MINIMUM = "quote_below_minimum";
 
     // Issue + accept are Supabase edge functions (they own Stripe): issue-procurement-quote turns a
     // draft into a finalized Stripe Quote; accept-procurement-quote accepts it into a subscription.
@@ -648,11 +654,8 @@ public class ProcurementController {
      * endpoints are leader-gated, so they always pass true.
      */
     private SnapshotResponse toSnapshot(ProcurementDeal deal, boolean includeLicenseKey) {
-        QuoteResponse latest =
-                procurement.quotesForDeal(deal.getDealId()).stream()
-                        .findFirst()
-                        .map(this::toQuote)
-                        .orElse(null);
+        List<ProcurementQuote> quotes = procurement.quotesForDeal(deal.getDealId());
+        QuoteResponse latest = quotes.stream().findFirst().map(this::toQuote).orElse(null);
         return new SnapshotResponse(
                 deal.getDealId(),
                 deal.getStage(),
@@ -669,7 +672,7 @@ public class ProcurementController {
                 deal.getContactEmail(),
                 latest,
                 config.getMinAnnualNetMinor(),
-                procurement.entitledDeployment(deal),
+                procurement.entitledDeployment(deal, quotes),
                 pricing.rates());
     }
 

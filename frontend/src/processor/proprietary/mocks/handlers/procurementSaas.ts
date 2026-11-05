@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { RateCard } from "@processor/api/procurement";
+import { QUOTE_BELOW_MINIMUM, type RateCard } from "@processor/api/procurement";
 
 /**
  * MSW mock for the real SaaS procurement endpoints (`apiClient.saas` → VITE_SAAS_API_URL, which is
@@ -52,11 +52,24 @@ let deal: typeof EMPTY | (Record<string, unknown> & { latestQuote: unknown }) =
   EMPTY;
 let seq = 0;
 
+/** The deployment the licence follows: the quote's once there is one, else the trial's. */
+function entitledDeployment(): string | null {
+  const d = deal as {
+    dealId: unknown;
+    deployment?: string;
+    latestQuote: { config?: Cfg } | null;
+  };
+  if (d.dealId == null) return null;
+  return d.latestQuote?.config?.deployment ?? d.deployment ?? null;
+}
+
 /** The server's default rate card (PricingRates.defaults()), sent with the deal like the real one. */
 export const RATE_CARD: RateCard = {
   listRatePerRun: 0.01,
   floorRatePerRun: 0.005,
+  runCurveKnee: 1_000_000,
   discountPerDoubling: 0.06,
+  maxVolumeDiscount: 0.5,
   termDiscountByYear: [0, 0.03, 0.05, 0.06, 0.07],
   indemnificationRate: 0.05,
   dedicatedSupportMinor: 3_000_000,
@@ -66,22 +79,27 @@ export const RATE_CARD: RateCard = {
   trainingOneTimeMinor: 750_000,
 };
 
-// Mirror of ProcurementPricingService (D71): run-based curve, flat priced needs, USD.
+// Mirror of ProcurementPricingService: run-based curve, flat priced needs, USD.
 // Exported for the pricing-parity test (see pricingParity.test.ts).
 export function priceQuote(cfg: Cfg) {
   const R = RATE_CARD;
   const intensity = Math.max(1, cfg.intensity || 4);
   const runVol = Math.max(0, cfg.volume) * intensity;
   const volDisc =
-    runVol > 1_000_000
-      ? Math.min(0.5, R.discountPerDoubling * Math.log2(runVol / 1_000_000))
+    runVol > R.runCurveKnee
+      ? Math.min(
+          R.maxVolumeDiscount,
+          R.discountPerDoubling * Math.log2(runVol / R.runCurveKnee),
+        )
       : 0;
-  // File-size tier (D93) scales the rate after the floor; snap to a known multiplier.
+  // The PDF-size tier scales the rate after the floor; snap to a known multiplier.
   const sizeMult = [1.0, 1.4, 2.4].includes(cfg.sizeMult) ? cfg.sizeMult : 1.0;
   const rate =
     Math.max(R.floorRatePerRun, R.listRatePerRun * (1 - volDisc)) * sizeMult;
   const termDisc =
-    R.termDiscountByYear[Math.min(Math.max(cfg.termYears, 1), 5) - 1];
+    R.termDiscountByYear[
+      Math.min(Math.max(cfg.termYears, 1), R.termDiscountByYear.length) - 1
+    ];
   const annualBase = Math.round(runVol * rate) * 100; // whole $ → minor
   const meterNet = Math.round(runVol * rate * (1 - termDisc)) * 100;
   const termDiscount = meterNet - annualBase; // <= 0
@@ -314,6 +332,7 @@ export const procurementSaasHandlers = [
     HttpResponse.json({
       ...deal,
       minAnnualNetMinor: MIN_ANNUAL_NET_MINOR,
+      entitledDeployment: entitledDeployment(),
       rateCard: RATE_CARD,
     }),
   ),
@@ -358,10 +377,7 @@ export const procurementSaasHandlers = [
     const cfg = (await request.json()) as Cfg;
     const quote = priceQuote(cfg);
     if (quote.annualNetMinor < MIN_ANNUAL_NET_MINOR) {
-      return HttpResponse.json(
-        { error: "quote_below_minimum" },
-        { status: 409 },
-      );
+      return HttpResponse.json({ error: QUOTE_BELOW_MINIMUM }, { status: 409 });
     }
     const d = (
       deal.dealId ? deal : { dealId: 1, trialExtensionsUsed: 0 }

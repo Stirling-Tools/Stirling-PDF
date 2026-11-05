@@ -21,6 +21,8 @@ const base: ProcurementSnapshot = {
   agreementSignedVersion: null,
   latestQuote: null,
   rateCard: RATE_CARD,
+  minAnnualNetMinor: 0,
+  entitledDeployment: null,
 };
 
 /** Billing's view of a deal underway; its one action opens the Enterprise page. */
