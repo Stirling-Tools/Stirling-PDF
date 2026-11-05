@@ -66,6 +66,11 @@ function mount(
   );
 }
 
+const field = (name: string) =>
+  screen.getByLabelText(
+    new RegExp(`^portal\\.procurement\\.builder\\.${name}( \\*)?$`),
+  );
+
 const generate = () =>
   screen.getByRole("button", { name: "portal.procurement.builder.generate" });
 
@@ -217,8 +222,31 @@ describe("QuoteBuilder contact email", () => {
     mount(vi.fn(), { ...smallQuote, contactEmail: "dana@northwind" });
     fireEvent.click(generate());
     expect(
-      screen.getByText("portal.procurement.emailInvalid"),
+      screen.getByText("portal.procurement.validation.email"),
     ).toBeInTheDocument();
+  });
+});
+
+describe("QuoteBuilder blocked steps", () => {
+  it("keeps sizing's Continue clickable and asks for a volume instead of moving on", () => {
+    mount(vi.fn(), null);
+    fireEvent.change(field("volume"), { target: { value: "0" } });
+    const next = screen.getByRole("button", {
+      name: "portal.procurement.builder.continue",
+    });
+    expect(next).toBeEnabled();
+    fireEvent.click(next);
+    expect(
+      screen.getByText("portal.procurement.validation.volume"),
+    ).toBeInTheDocument();
+  });
+
+  it("names each missing required detail when generating", () => {
+    mount(vi.fn(), { ...smallQuote, city: "", postalCode: "" });
+    fireEvent.click(generate());
+    expect(
+      screen.getAllByText("portal.procurement.validation.required"),
+    ).toHaveLength(2);
   });
 });
 
@@ -235,9 +263,6 @@ describe("QuoteBuilder generate errors", () => {
 });
 
 describe("QuoteBuilder sizing", () => {
-  const field = (name: string) =>
-    screen.getByLabelText(`portal.procurement.builder.${name}`);
-
   it("re-estimates volume from the team size even after a manual figure", () => {
     mount(vi.fn(), null);
     fireEvent.change(field("volume"), { target: { value: "999999" } });

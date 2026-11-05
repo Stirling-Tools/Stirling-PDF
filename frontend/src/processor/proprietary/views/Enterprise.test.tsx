@@ -422,15 +422,15 @@ describe("Enterprise page", () => {
       screen.getByRole("button", { name: "portal.procurement.setup.continue" }),
     );
     fireEvent.change(
-      screen.getByLabelText("portal.procurement.setup.fullName"),
+      screen.getByLabelText(/^portal.procurement.setup.fullName/),
       { target: { value: "Dana Lee" } },
     );
     fireEvent.change(
-      screen.getByLabelText("portal.procurement.setup.businessName"),
+      screen.getByLabelText(/^portal.procurement.setup.businessName/),
       { target: { value: "Northwind" } },
     );
     fireEvent.change(
-      screen.getByLabelText("portal.procurement.setup.workEmail"),
+      screen.getByLabelText(/^portal.procurement.setup.workEmail/),
       { target: { value: "dana@northwind.example" } },
     );
     fireEvent.click(screen.getByRole("checkbox"));
@@ -465,7 +465,7 @@ describe("Enterprise page", () => {
     state.controller = controller({ data: null });
     mount();
     expect(
-      await screen.findByLabelText("portal.procurement.setup.businessName"),
+      await screen.findByLabelText(/^portal.procurement.setup.businessName/),
     ).toHaveValue("Northwind");
     expect(
       screen.getByRole("button", { name: "portal.procurement.setup.start" }),

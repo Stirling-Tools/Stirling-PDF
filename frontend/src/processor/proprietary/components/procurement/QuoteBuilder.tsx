@@ -14,6 +14,13 @@ import {
 import { LegalDocumentModal } from "@processor/components/procurement/ProcurementExtras";
 import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
 import { useProcurementPrefill } from "@processor/components/procurement/prefill";
+import {
+  Field,
+  FieldError,
+  focusFirstInvalid,
+  isEmail,
+  isFilled,
+} from "@processor/components/procurement/formField";
 import "@processor/theme/surface.css";
 import "@processor/views/Procurement.css";
 
@@ -156,24 +163,24 @@ export function QuoteBuilder({
   // Only surface field errors once the buyer tries to generate — no red fields on first sight.
   const [showErrors, setShowErrors] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
+  // Same for the sizing step: Continue stays clickable and says what is missing.
+  const [triedSizing, setTriedSizing] = useState(false);
 
   function set<K extends keyof QuoteConfigInput>(k: K, v: QuoteConfigInput[K]) {
     setCfg((c) => ({ ...c, [k]: v }));
   }
 
   // Required buyer details before a quote can be generated (Order Form / invoice need these).
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-    (cfg.contactEmail ?? "").trim(),
-  );
   const valid = {
-    businessName: cfg.businessName.trim().length > 0,
-    contactName: (cfg.contactName ?? "").trim().length > 0,
-    contactEmail: emailOk,
-    addressLine1: (cfg.addressLine1 ?? "").trim().length > 0,
-    city: (cfg.city ?? "").trim().length > 0,
-    region: (cfg.region ?? "").trim().length > 0,
-    postalCode: (cfg.postalCode ?? "").trim().length > 0,
+    businessName: isFilled(cfg.businessName),
+    contactName: isFilled(cfg.contactName),
+    contactEmail: isEmail(cfg.contactEmail),
+    addressLine1: isFilled(cfg.addressLine1),
+    city: isFilled(cfg.city),
+    region: isFilled(cfg.region),
+    postalCode: isFilled(cfg.postalCode),
   };
+  const required = t("portal.procurement.validation.required");
   const detailsValid = Object.values(valid).every(Boolean);
   const eulaOk = eulaAlreadyAgreed || eula;
   const canGenerate = detailsValid && eulaOk;
@@ -269,6 +276,7 @@ export function QuoteBuilder({
   async function generate() {
     if (!canGenerate) {
       setShowErrors(true);
+      focusFirstInvalid();
       return;
     }
     if (belowMinimum) {
@@ -344,7 +352,12 @@ export function QuoteBuilder({
                   }}
                 />
               </Field>
-              <Field label={t("portal.procurement.builder.volume")}>
+              <Field
+                label={t("portal.procurement.builder.volume")}
+                required
+                invalid={triedSizing && cfg.volume <= 0}
+                error={t("portal.procurement.validation.volume")}
+              >
                 <input
                   type="number"
                   min={0}
@@ -498,6 +511,7 @@ export function QuoteBuilder({
                 label={t("portal.procurement.builder.businessName")}
                 required
                 invalid={showErrors && !valid.businessName}
+                error={required}
               >
                 <input
                   placeholder={t(
@@ -511,6 +525,7 @@ export function QuoteBuilder({
                 label={t("portal.procurement.builder.contactName")}
                 required
                 invalid={showErrors && !valid.contactName}
+                error={required}
               >
                 <input
                   placeholder={t(
@@ -528,7 +543,11 @@ export function QuoteBuilder({
                 (showErrors || (emailTouched && !!cfg.contactEmail?.trim())) &&
                 !valid.contactEmail
               }
-              error={t("portal.procurement.emailInvalid")}
+              error={
+                isFilled(cfg.contactEmail)
+                  ? t("portal.procurement.validation.email")
+                  : required
+              }
             >
               <input
                 type="email"
@@ -544,6 +563,7 @@ export function QuoteBuilder({
               label={t("portal.procurement.builder.addressLine1")}
               required
               invalid={showErrors && !valid.addressLine1}
+              error={required}
             >
               <input
                 placeholder={t(
@@ -567,6 +587,7 @@ export function QuoteBuilder({
                 label={t("portal.procurement.builder.city")}
                 required
                 invalid={showErrors && !valid.city}
+                error={required}
               >
                 <input
                   placeholder={t("portal.procurement.builder.cityPlaceholder")}
@@ -578,6 +599,7 @@ export function QuoteBuilder({
                 label={t("portal.procurement.builder.region")}
                 required
                 invalid={showErrors && !valid.region}
+                error={required}
               >
                 <input
                   placeholder={t(
@@ -591,6 +613,7 @@ export function QuoteBuilder({
                 label={t("portal.procurement.builder.postalCode")}
                 required
                 invalid={showErrors && !valid.postalCode}
+                error={required}
               >
                 <input
                   placeholder={t(
@@ -620,10 +643,14 @@ export function QuoteBuilder({
               </Field>
             </div>
             {!eulaAlreadyAgreed && (
-              <label className="portal-qb__eula">
+              <label
+                className="portal-qb__eula"
+                data-invalid={(showErrors && !eulaOk) || undefined}
+              >
                 <input
                   type="checkbox"
                   checked={eula}
+                  aria-invalid={(showErrors && !eulaOk) || undefined}
                   onChange={(e) => setEula(e.target.checked)}
                 />
                 <span>
@@ -637,6 +664,9 @@ export function QuoteBuilder({
                   </button>
                 </span>
               </label>
+            )}
+            {!eulaAlreadyAgreed && showErrors && !eulaOk && (
+              <FieldError>{t("portal.procurement.validation.eula")}</FieldError>
             )}
             {showErrors && !canGenerate && (
               <p className="portal-qb__error">
@@ -889,8 +919,14 @@ export function QuoteBuilder({
           {step === 0 && (
             <Button
               variant="primary"
-              disabled={cfg.volume <= 0}
-              onClick={() => advance(1)}
+              onClick={() => {
+                if (cfg.volume <= 0) {
+                  setTriedSizing(true);
+                  focusFirstInvalid();
+                  return;
+                }
+                advance(1);
+              }}
             >
               {t("portal.procurement.builder.continue")}
             </Button>
@@ -1003,40 +1039,6 @@ function Step({
       </div>
       {children}
     </>
-  );
-}
-
-function Field({
-  label,
-  required,
-  invalid,
-  error,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  invalid?: boolean;
-  /** Said under the input while it is invalid, for checks the red border alone can't explain. */
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="portal-qb__field" data-invalid={invalid || undefined}>
-      <span className="portal-qb__field-label">
-        {label}
-        {required && (
-          <span className="portal-qb__req" aria-hidden>
-            {" *"}
-          </span>
-        )}
-      </span>
-      {children}
-      {invalid && error && (
-        <span className="portal-qb__field-error" role="alert">
-          {error}
-        </span>
-      )}
-    </label>
   );
 }
 

@@ -13,6 +13,12 @@ import { Icon } from "@editor/ui/Icon";
 import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
 import { useAsync } from "@processor/hooks/useAsync";
 import "@processor/theme/surface.css";
+import {
+  Field,
+  FieldError,
+  focusFirstInvalid,
+  isFilled,
+} from "@processor/components/procurement/formField";
 import "@processor/views/Procurement.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
@@ -79,11 +85,23 @@ export function ProcurementAgreement({
   };
 
   // A signature is pinned to the document's version, so there is nothing to sign until it shows.
-  const ready =
-    doc != null &&
-    confirmed &&
-    legalName.trim().length > 0 &&
-    signatory.trim().length > 0;
+  const valid = {
+    legalName: isFilled(legalName),
+    signatory: isFilled(signatory),
+    confirmed,
+  };
+  const ready = doc != null && Object.values(valid).every(Boolean);
+  // Signing stays clickable once the document is in; a blocked click marks what is missing.
+  const [tried, setTried] = useState(false);
+  const required = t("portal.procurement.validation.required");
+  const attemptSign = () => {
+    if (!ready) {
+      setTried(true);
+      focusFirstInvalid();
+      return;
+    }
+    void sign();
+  };
 
   const sign = async () => {
     setError(false);
@@ -182,10 +200,12 @@ export function ProcurementAgreement({
       <div className="portal-qb__foot portal-agreement__signbar">
         <div className="portal-agreement__signrow">
           <div className="portal-qb__row portal-agreement__signfields">
-            <label className="portal-qb__field">
-              <span className="portal-qb__field-label">
-                {t("portal.procurement.agreement.legalName")}
-              </span>
+            <Field
+              label={t("portal.procurement.agreement.legalName")}
+              required
+              invalid={tried && !valid.legalName}
+              error={required}
+            >
               <input
                 value={legalName}
                 className={privateContentClassName}
@@ -194,11 +214,13 @@ export function ProcurementAgreement({
                 )}
                 onChange={(e) => setLegalName(e.target.value)}
               />
-            </label>
-            <label className="portal-qb__field">
-              <span className="portal-qb__field-label">
-                {t("portal.procurement.agreement.signatory")}
-              </span>
+            </Field>
+            <Field
+              label={t("portal.procurement.agreement.signatory")}
+              required
+              invalid={tried && !valid.signatory}
+              error={required}
+            >
               <input
                 value={signatory}
                 className={privateContentClassName}
@@ -207,11 +229,8 @@ export function ProcurementAgreement({
                 )}
                 onChange={(e) => setSignatory(e.target.value)}
               />
-            </label>
-            <label className="portal-qb__field">
-              <span className="portal-qb__field-label">
-                {t("portal.procurement.agreement.signatoryTitle")}
-              </span>
+            </Field>
+            <Field label={t("portal.procurement.agreement.signatoryTitle")}>
               <input
                 value={title}
                 className={privateContentClassName}
@@ -220,27 +239,36 @@ export function ProcurementAgreement({
                 )}
                 onChange={(e) => setTitle(e.target.value)}
               />
-            </label>
+            </Field>
           </div>
           <Button
             variant="primary"
             loading={busy || signing}
-            disabled={!ready}
-            onClick={sign}
+            disabled={doc == null}
+            onClick={attemptSign}
           >
             {t("portal.procurement.agreement.agreeCta")}
           </Button>
         </div>
 
         <div className="portal-agreement__signfoot">
-          <label className="portal-agreement__accept">
+          <label
+            className="portal-agreement__accept"
+            data-invalid={(tried && !confirmed) || undefined}
+          >
             <input
               type="checkbox"
               checked={confirmed}
+              aria-invalid={(tried && !confirmed) || undefined}
               onChange={(e) => setConfirmed(e.target.checked)}
             />
             <span>{t("portal.procurement.agreement.confirm")}</span>
           </label>
+          {tried && !confirmed && (
+            <FieldError>
+              {t("portal.procurement.validation.confirm")}
+            </FieldError>
+          )}
         </div>
       </div>
     </div>

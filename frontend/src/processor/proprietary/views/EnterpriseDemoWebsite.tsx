@@ -1,6 +1,12 @@
 import { useState, type ReactNode } from "react";
 import { Button, Logo, Modal } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
+import {
+  Field,
+  focusFirstInvalid,
+  isEmail,
+  isFilled,
+} from "@processor/components/procurement/formField";
 import "@processor/views/Procurement.css";
 import "@processor/views/EnterpriseDemoWebsite.css";
 
@@ -184,10 +190,22 @@ function ContactSalesModal({
       setSent(true);
     }, 900);
   };
-  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const showEmailError = emailTouched && email.trim().length > 0 && !emailValid;
-  const ready =
-    name.trim().length > 0 && company.trim().length > 0 && emailValid;
+  const [tried, setTried] = useState(false);
+  const valid = {
+    name: isFilled(name),
+    company: isFilled(company),
+    email: isEmail(email),
+  };
+  const emailInvalid =
+    !valid.email && (tried || (emailTouched && isFilled(email)));
+  const attemptSend = () => {
+    if (!Object.values(valid).every(Boolean)) {
+      setTried(true);
+      focusFirstInvalid();
+      return;
+    }
+    send();
+  };
 
   return (
     <Modal
@@ -204,7 +222,7 @@ function ContactSalesModal({
         sent ? (
           <Button onClick={close}>Done</Button>
         ) : (
-          <Button loading={sending} disabled={!ready} onClick={send}>
+          <Button loading={sending} onClick={attemptSend}>
             Send to sales
           </Button>
         )
@@ -215,42 +233,49 @@ function ContactSalesModal({
       ) : (
         <div className="site__form">
           <div className="portal-qb__row">
-            <label className="portal-qb__field">
-              <span className="portal-qb__field-label">Full name</span>
+            <Field
+              label="Full name"
+              required
+              invalid={tried && !valid.name}
+              error="This field is required."
+            >
               <input
                 value={name}
                 placeholder="Your name"
                 onChange={(e) => setName(e.target.value)}
               />
-            </label>
-            <label className="portal-qb__field">
-              <span className="portal-qb__field-label">Company</span>
+            </Field>
+            <Field
+              label="Company"
+              required
+              invalid={tried && !valid.company}
+              error="This field is required."
+            >
               <input
                 value={company}
                 placeholder="Acme Corp"
                 onChange={(e) => setCompany(e.target.value)}
               />
-            </label>
+            </Field>
           </div>
-          <label
-            className="portal-qb__field"
-            data-invalid={showEmailError || undefined}
+          <Field
+            label="Work email"
+            required
+            invalid={emailInvalid}
+            error={
+              isFilled(email)
+                ? "Enter a valid email address, like name@company.com."
+                : "This field is required."
+            }
           >
-            <span className="portal-qb__field-label">Work email</span>
             <input
               type="email"
               value={email}
-              aria-invalid={showEmailError || undefined}
               placeholder="you@company.com"
               onChange={(e) => setEmail(e.target.value)}
               onBlur={() => setEmailTouched(true)}
             />
-            {showEmailError && (
-              <span className="portal-qb__field-error" role="alert">
-                Enter a valid email address, like name@company.com.
-              </span>
-            )}
-          </label>
+          </Field>
           <label className="portal-qb__field">
             <span className="portal-qb__field-label">What do you need?</span>
             <textarea

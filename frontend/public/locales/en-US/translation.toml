@@ -10606,7 +10606,6 @@ cloud = "Drive · Box · S3"
 email = "Email intake"
 
 [portal.procurement]
-emailInvalid = "Enter a valid email address, like name@company.com."
 title = "Procurement"
 
 [portal.procurement.agreement]
@@ -10895,6 +10894,14 @@ extend = "Extend 7 days"
 maxed = "Maxed out"
 subtitle = "Your free trial runs through {{date}}. No card required."
 title = "Enterprise trial"
+
+[portal.procurement.validation]
+confirm = "Confirm you're authorized to sign for the organization."
+email = "Enter a valid email address, like name@company.com."
+eula = "Agree to the EULA to continue."
+required = "This field is required."
+seats = "Enter how many people will trial it."
+volume = "Enter how many PDFs you expect to process a year."
 
 [portal.review]
 subtitle = "Anything from your policy runs and your team's editors that needs your attention."

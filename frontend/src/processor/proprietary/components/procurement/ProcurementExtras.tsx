@@ -16,13 +16,18 @@ import { useProcurementPrefill } from "@processor/components/procurement/prefill
 import { openApiUrl } from "@processor/api/externalUrl";
 import "@processor/views/Procurement.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import {
+  Field,
+  FieldError,
+  focusFirstInvalid,
+  isEmail,
+  isFilled,
+} from "@processor/components/procurement/formField";
 
 /**
  * Pieces of the Enterprise page that stand apart from the journey's stages: the trial setup form,
  * the deal's documents, booking a call, and the legal-document reader.
  */
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function SideModal({
   open,
@@ -359,14 +364,21 @@ export function TrialSetupForm({
 
   // The buying entity is what the quote and agreement are drawn against, so it is required here
   // rather than deferred to the quote; invites are genuinely optional.
-  const emailValid = EMAIL_RE.test(contactEmail.trim());
+  const seatsValid = Number(seats) > 0;
+  const valid = {
+    contactName: isFilled(contactName),
+    businessName: isFilled(businessName),
+    contactEmail: isEmail(contactEmail),
+  };
+  const detailsValid = Object.values(valid).every(Boolean);
+  // Errors wait for an attempt to move on, except a mistyped email, which shows on leaving the field.
+  const [triedSeats, setTriedSeats] = useState(false);
+  const [triedStart, setTriedStart] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
-  const showEmailError =
-    emailTouched && contactEmail.trim().length > 0 && !emailValid;
-  const detailsValid =
-    contactName.trim().length > 0 &&
-    businessName.trim().length > 0 &&
-    emailValid;
+  const emailInvalid =
+    !valid.contactEmail &&
+    (triedStart || (emailTouched && isFilled(contactEmail)));
+  const required = t("portal.procurement.validation.required");
 
   const confirm = () => {
     onConfirm(deployment, Math.max(0, Number(seats) || 0), {
@@ -375,6 +387,23 @@ export function TrialSetupForm({
       contactEmail: contactEmail.trim(),
       inviteEmails: inviteEmails.trim(),
     });
+  };
+
+  const continueToDetails = () => {
+    if (!seatsValid) {
+      setTriedSeats(true);
+      focusFirstInvalid();
+      return;
+    }
+    setStep(1);
+  };
+  const start = () => {
+    if (!detailsValid || !eula) {
+      setTriedStart(true);
+      focusFirstInvalid();
+      return;
+    }
+    confirm();
   };
 
   return (
@@ -398,13 +427,12 @@ export function TrialSetupForm({
 
       {step === 0 && (
         <>
-          <label className="portal-qb__field">
-            <span className="portal-qb__field-label">
-              {t("portal.procurement.setup.seats")}
-              <span className="portal-qb__req" aria-hidden>
-                {" *"}
-              </span>
-            </span>
+          <Field
+            label={t("portal.procurement.setup.seats")}
+            required
+            invalid={triedSeats && !seatsValid}
+            error={t("portal.procurement.validation.seats")}
+          >
             <input
               type="number"
               min={0}
@@ -413,7 +441,7 @@ export function TrialSetupForm({
               value={seats}
               onChange={(e) => setSeats(e.target.value)}
             />
-          </label>
+          </Field>
           <label className="portal-qb__field">
             <span className="portal-qb__field-label">
               {t("portal.procurement.setup.deployment")}
@@ -443,21 +471,25 @@ export function TrialSetupForm({
       {step === 1 && (
         <>
           <div className="portal-qb__row">
-            <label className="portal-qb__field">
-              <span className="portal-qb__field-label">
-                {t("portal.procurement.setup.fullName")}
-              </span>
+            <Field
+              label={t("portal.procurement.setup.fullName")}
+              required
+              invalid={triedStart && !valid.contactName}
+              error={required}
+            >
               <input
                 value={contactName}
                 className={privateContentClassName}
                 placeholder={t("portal.procurement.setup.fullNamePlaceholder")}
                 onChange={(e) => setContactName(e.target.value)}
               />
-            </label>
-            <label className="portal-qb__field">
-              <span className="portal-qb__field-label">
-                {t("portal.procurement.setup.businessName")}
-              </span>
+            </Field>
+            <Field
+              label={t("portal.procurement.setup.businessName")}
+              required
+              invalid={triedStart && !valid.businessName}
+              error={required}
+            >
               <input
                 value={businessName}
                 className={privateContentClassName}
@@ -466,30 +498,27 @@ export function TrialSetupForm({
                 )}
                 onChange={(e) => setBusinessName(e.target.value)}
               />
-            </label>
+            </Field>
           </div>
-          <label
-            className="portal-qb__field"
-            data-invalid={showEmailError || undefined}
+          <Field
+            label={t("portal.procurement.setup.workEmail")}
+            required
+            invalid={emailInvalid}
+            error={
+              isFilled(contactEmail)
+                ? t("portal.procurement.validation.email")
+                : required
+            }
           >
-            <span className="portal-qb__field-label">
-              {t("portal.procurement.setup.workEmail")}
-            </span>
             <input
               type="email"
               value={contactEmail}
               className={privateContentClassName}
-              aria-invalid={showEmailError || undefined}
               placeholder={t("portal.procurement.setup.workEmailPlaceholder")}
               onChange={(e) => setContactEmail(e.target.value)}
               onBlur={() => setEmailTouched(true)}
             />
-            {showEmailError && (
-              <span className="portal-qb__field-error" role="alert">
-                {t("portal.procurement.emailInvalid")}
-              </span>
-            )}
-          </label>
+          </Field>
           <label className="portal-qb__field">
             <span className="portal-qb__field-label">
               {t("portal.procurement.setup.invites")}
@@ -502,10 +531,14 @@ export function TrialSetupForm({
             />
           </label>
 
-          <label className="portal-qb__eula">
+          <label
+            className="portal-qb__eula"
+            data-invalid={(triedStart && !eula) || undefined}
+          >
             <input
               type="checkbox"
               checked={eula}
+              aria-invalid={(triedStart && !eula) || undefined}
               onChange={(e) => setEula(e.target.checked)}
             />
             <span>
@@ -519,6 +552,9 @@ export function TrialSetupForm({
               </button>
             </span>
           </label>
+          {triedStart && !eula && (
+            <FieldError>{t("portal.procurement.validation.eula")}</FieldError>
+          )}
         </>
       )}
 
@@ -535,11 +571,7 @@ export function TrialSetupForm({
                 {t("portal.procurement.setup.scheduleCall")}
               </button>
             </span>
-            <Button
-              variant="primary"
-              disabled={Number(seats) <= 0}
-              onClick={() => setStep(1)}
-            >
+            <Button variant="primary" onClick={continueToDetails}>
               {t("portal.procurement.setup.continue")}
             </Button>
           </>
@@ -548,12 +580,7 @@ export function TrialSetupForm({
             <Button variant="secondary" onClick={() => setStep(0)}>
               {t("portal.procurement.setup.back")}
             </Button>
-            <Button
-              variant="primary"
-              loading={busy}
-              disabled={!eula || !detailsValid}
-              onClick={confirm}
-            >
+            <Button variant="primary" loading={busy} onClick={start}>
               {startLabel ?? t("portal.procurement.setup.start")}
             </Button>
           </>
