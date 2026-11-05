@@ -474,3 +474,51 @@
     align-self: flex-start;
   }
 }
+
+/* Changes not yet saved to where Save goes. */
+.workbench-bar-action-icon:has(.workbench-bar-unsaved-dot) {
+  position: relative;
+}
+
+.workbench-bar-unsaved-dot {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 999px;
+  background: var(--c-danger);
+  box-shadow: 0 0 0 1.5px var(--c-bg-raised);
+  pointer-events: none;
+}
+
+.workbench-bar-menu-hint {
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+}
+
+/* Without a menu the wrapper must not change the bar's layout. */
+.workbench-bar-save-plain {
+  display: contents;
+}
+
+/* Save and "More save options" joined, so they read as one control. */
+.workbench-bar-save-group {
+  --save-group-line: color-mix(
+    in srgb,
+    var(--c-border-strong) 55%,
+    transparent
+  );
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 3px;
+  border: 1px solid var(--save-group-line);
+  border-radius: 8px;
+}
+
+.workbench-bar-save-group-caret {
+  display: inline-flex;
+  padding-left: 3px;
+  border-left: 1px solid var(--save-group-line);
+}

@@ -1,5 +1,6 @@
 import type { IconName } from "@editor/ui/Icon";
 import { WorkbenchType } from "@editor/types/workbench";
+import type { SaveMenuItem } from "@editor/services/saveTargets";
 
 /** Shared shape for the workbench bar's file-level global actions (print,
  *  export, save-as, close) so the mobile and desktop clusters stay in step. */
@@ -17,6 +18,10 @@ export interface WorkbenchBarActionsProps {
   downloadLabel: string;
   downloadIconName: IconName;
   saveAsIconName?: IconName;
+  /** Changes not yet saved to where Save goes. */
+  downloadUnsaved?: boolean;
+  /** Other save destinations; replaces the Save As button when set. */
+  saveMenu?: SaveMenuItem[];
   onPrint?: () => void;
   printDisabledReason?: string;
   onExport: (forceNewFile?: boolean) => void;

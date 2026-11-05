@@ -11841,6 +11841,15 @@ title = "Sanitize PDF"
 [sanitizePdf]
 tags = "clean,secure,safe,remove-threats"
 
+[saveFile.menu]
+download = "Download a copy"
+more = "More save options"
+saveCopyElsewhere = "Save a copy somewhere else…"
+saveToComputer = "Save to this computer…"
+
+[saveFile.toolbar]
+mixed = "Save all, each back to where it came from"
+
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Adjust page-scale"

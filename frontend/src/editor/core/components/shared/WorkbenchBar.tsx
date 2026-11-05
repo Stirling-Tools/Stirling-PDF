@@ -64,8 +64,21 @@ import { WorkbenchBarActionsProps } from "@editor/components/shared/workbenchBar
 import { useIsMobile, useIsPhone } from "@editor/hooks/useIsMobile";
 import "@editor/components/shared/WorkbenchBar.css";
 import { NotificationBell } from "@editor/components/notifications/NotificationBell";
+import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
+import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
+import type { StirlingFileStub } from "@editor/types/fileContext";
+import type { FileId } from "@editor/types/file";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
+
+async function enforcedViewerFile(
+  buffer: ArrayBuffer,
+  stub: StirlingFileStub,
+): Promise<File> {
+  const file = new File([buffer], stub.name, { type: "application/pdf" });
+  const [enforced] = await enforceExportPolicies([file], [stub.id]);
+  return enforced ?? file;
+}
 
 interface ViewOption {
   value: WorkbenchType;
@@ -204,6 +217,10 @@ export default function WorkbenchBar({
       : undefined;
   const totalItems = activeFiles.length;
   const selectedCount = selectedFileIds.length;
+  const saver = useSaveStoredFile();
+  const exportTargetStubs = exportTargetIds
+    .map((id) => selectors.getStirlingFileStub(id as FileId))
+    .filter((stub): stub is StirlingFileStub => Boolean(stub));
 
   // Registered into the bar's own row rather than the tool row below it. Already
   // sorted by order when registered.
@@ -245,6 +262,12 @@ export default function WorkbenchBar({
         const stub = isStirlingFile(fileToExport)
           ? selectors.getStirlingFileStub(fileToExport.fileId)
           : undefined;
+        const target =
+          !forceNewFile && stub ? saver.targetFor(stub) : undefined;
+        if (target && stub) {
+          const viewerFile = await enforcedViewerFile(buffer, stub);
+          if ((await target.save(stub, viewerFile)) !== "fallback") return;
+        }
         try {
           const result = await downloadFile({
             data: new Blob([buffer], { type: "application/pdf" }),
@@ -304,6 +327,11 @@ export default function WorkbenchBar({
       for (let idx = 0; idx < filesToExport.length; idx++) {
         const file = filesToExport[idx];
         const stub = stubs[idx];
+        const target =
+          !forceNewFile && stub ? saver.targetFor(stub) : undefined;
+        if (target && stub) {
+          if ((await target.save(stub, enforced[idx])) !== "fallback") continue;
+        }
         try {
           const result = await downloadRaw({
             data: enforced[idx],
@@ -337,8 +365,28 @@ export default function WorkbenchBar({
       viewFileActions,
       selectors,
       fileActions,
+      saver,
     ],
   );
+
+  // The viewer's copy carries unapplied annotations; export policies run on it too.
+  const viewerFileFor = useCallback(
+    async (stub: StirlingFileStub): Promise<File | undefined> => {
+      if (currentView !== "viewer") return undefined;
+      const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
+      return buffer ? enforcedViewerFile(buffer, stub) : undefined;
+    },
+    [currentView, viewerContext],
+  );
+
+  const saveButton = useSaveButton({
+    saver,
+    targets: exportTargetStubs,
+    singleFile: currentView === "viewer",
+    savesToDisk: Boolean(icons.saveAs),
+    onSaveLocalCopy: () => void handleExportAll(true),
+    fileFor: viewerFileFor,
+  });
 
   const printAccess = usePdfAccess(activeFileId);
   const canPrint =
@@ -417,9 +465,11 @@ export default function WorkbenchBar({
     showsFileActions: !isCustomView && currentView !== "myFiles",
     actionsDisabled,
     policyEnforcing,
-    downloadLabel: downloadTooltip,
-    downloadIconName: icons.download,
+    downloadLabel: saveButton.label ?? downloadTooltip,
+    downloadIconName: saveButton.icon ?? icons.download,
     saveAsIconName: icons.saveAs,
+    downloadUnsaved: saveButton.unsaved,
+    saveMenu: saveButton.menu,
     onPrint: canPrint ? handlePrint : undefined,
     printDisabledReason,
     onExport: handleExportAll,

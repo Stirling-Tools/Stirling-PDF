@@ -13,6 +13,9 @@ import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
 import { saveOperationResults } from "@editor/services/operationResultsSaveService";
 import { useFileActions, useFileSelectors } from "@editor/contexts/FileContext";
 import i18n from "@editor/i18n";
+import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
+import type { FileId } from "@editor/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 /**
  * Nearest scrolling ancestor - in the right rail that is the tool panel's
@@ -61,6 +64,22 @@ function ReviewStepContent<TParams = unknown>({
   const stepRef = useRef<HTMLDivElement>(null);
   const { actions: fileActions } = useFileActions();
   const selectors = useFileSelectors();
+  const saver = useSaveStoredFile();
+  const outputStubs = (operation.outputFileIds ?? [])
+    .map((id) => selectors.getStirlingFileStub(id as FileId))
+    .filter((stub): stub is StirlingFileStub => Boolean(stub));
+  const targets = outputStubs.map(saver.targetFor);
+  // Results inherit their source's home, so Save sends them back there too.
+  const savesToTarget = targets.some(Boolean);
+  const oneTarget =
+    savesToTarget && targets.every((target) => target === targets[0])
+      ? targets[0]
+      : undefined;
+  const saveLabel = oneTarget
+    ? outputStubs.length > 1
+      ? oneTarget.saveAllLabel()
+      : oneTarget.saveLabel(outputStubs[0])
+    : terminology.download;
 
   const handleUndo = async () => {
     try {
@@ -79,6 +98,11 @@ function ReviewStepContent<TParams = unknown>({
 
   const handleDownload = async () => {
     if (!operation.downloadUrl) return;
+    if (savesToTarget) {
+      for (const stub of outputStubs)
+        await saver.saveStoredFile(stub, selectors.getFile(stub.id));
+      return;
+    }
     try {
       await saveOperationResults({
         downloadUrl: operation.downloadUrl,
@@ -174,12 +198,12 @@ function ReviewStepContent<TParams = unknown>({
       {operation.downloadUrl && (
         <Button
           data-testid="download-result-button"
-          leftSection={<Icon name={icons.download} />}
+          leftSection={<Icon name={oneTarget?.icon ?? icons.download} />}
           fullWidth
           style={{ marginBottom: "1rem" }}
           onClick={handleDownload}
         >
-          {terminology.download}
+          {saveLabel}
         </Button>
       )}
 
