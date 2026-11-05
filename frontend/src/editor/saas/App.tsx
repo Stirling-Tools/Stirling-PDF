@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@editor/utils/pathUtils";
 import { AppProviders } from "@editor/components/AppProviders";
+import { PlatformProviders } from "@editor/components/PlatformProviders";
 import { PublicRouteProviders } from "@editor/components/PublicRouteProviders";
 import { RunLocationGate } from "@editor/components/runLocation/RunLocationGate";
 import { setBaseUrl } from "@editor/constants/app";
@@ -24,10 +25,12 @@ import { NoAppChrome } from "@editor/components/layout/NoAppChrome";
 import OnboardingBootstrap from "@editor/components/OnboardingBootstrap";
 import SignupRequiredBootstrap from "@editor/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@editor/components/UsageLimitModalHost";
+import UserbackWidget from "@editor/components/feedback/UserbackWidget";
 import { RootGate } from "@editor/routes/RootGate";
 
 const MobileScannerPage = lazy(() => import("@editor/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@editor/pages/MobileSignPage"));
+const FeedbackPage = lazy(() => import("@editor/pages/FeedbackPage"));
 
 // Import global styles
 import "@editor/styles/tailwind.css";
@@ -57,6 +60,7 @@ function NonAuthBootstraps() {
       <OnboardingBootstrap />
       <SignupRequiredBootstrap />
       <UsageLimitModalHost />
+      <UserbackWidget />
     </>
   );
 }
@@ -87,14 +91,12 @@ function MainRoutes() {
   );
 }
 
-// Everything else needs the auth/backend providers. RootGate routes "/" by role
-// before any of it mounts.
+// Everything else needs the editor's providers. RootGate routes "/" by role
+// before any of them mount.
 function MainApp() {
   return (
     <RootGate>
-      <AppProviders
-        appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
-      >
+      <AppProviders>
         <AppLayout>
           <NonAuthBootstraps />
           <ResumePendingConnect />
@@ -122,6 +124,15 @@ export default function App() {
           }
         />
 
+        <Route
+          path="/feedback"
+          element={
+            <PublicRouteProviders>
+              <FeedbackPage />
+            </PublicRouteProviders>
+          }
+        />
+
         {/* Mobile signature drawing - reached from the Sign tool QR code */}
         <Route
           path="/mobile-sign"
@@ -135,7 +146,15 @@ export default function App() {
         {/* Before the frame and auth, so a first visit sees the chooser alone. */}
         <Route element={<RunLocationGate />}>
           {/* Both apps, under a shared frame so the rail renders once outside them. */}
-          <Route element={<AppFrame />}>
+          <Route
+            element={
+              <PlatformProviders
+                appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
+              >
+                <AppFrame />
+              </PlatformProviders>
+            }
+          >
             {/* The portal: its own top-level shell, before the catch-all. */}
             {getAdminRouteExtensions()}
             <Route path="*" element={<MainApp />} />

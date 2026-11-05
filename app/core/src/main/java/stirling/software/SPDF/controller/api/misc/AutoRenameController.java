@@ -48,10 +48,10 @@ public class AutoRenameController {
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Extract header from PDF file",
+            summary = "Rename a PDF after its largest heading text",
             description =
-                    "This endpoint accepts a PDF file and attempts to extract its title or header"
-                            + " based on heuristics.")
+                    "Uses the largest text near the start as the file name; the pages are"
+                            + " unchanged. Keeps the original name if no text is found.")
     public ResponseEntity<Resource> extractHeader(@ModelAttribute ExtractHeaderRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
