@@ -16,7 +16,11 @@ void React;
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TierProvider, type Tier } from "@processor/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
-import { ThemeProvider } from "@processor/contexts/ThemeContext";
+import {
+  ThemeProvider,
+  useTheme,
+} from "@editor-core/components/shared/ThemeProvider";
+import { PreferencesProvider } from "@editor-core/contexts/PreferencesContext";
 import { UIProvider } from "@processor/contexts/UIContext";
 import { AppConfigProvider } from "@editor-core/contexts/AppConfigContext";
 import { SuiProvider } from "@processor/theme/SuiProvider";
@@ -162,17 +166,20 @@ function TierKey({
 }
 
 /**
- * Sets the theme attributes colors.css needs — always `data-app-theme="custom"`
- * with the fixed default accent (data-accent="default"), matching the editor.
+ * Makes the Storybook toolbar the SINGLE source of truth for the theme.
  */
-function SchemeSetup({ scheme }: { scheme: "light" | "dark" }) {
+function ThemeBridge({
+  theme,
+  children,
+}: {
+  theme: "light" | "dark";
+  children: React.ReactNode;
+}) {
+  const { setTheme } = useTheme();
   useEffect(() => {
-    const root = document.documentElement;
-    root.setAttribute("data-app-theme", "custom");
-    root.setAttribute("data-accent", "default");
-    root.setAttribute("data-mantine-color-scheme", scheme);
-  }, [scheme]);
-  return null;
+    setTheme(theme);
+  }, [theme, setTheme]);
+  return <>{children}</>;
 }
 
 /** Switches i18next to the toolbar locale and keeps document dir/lang in sync. */
@@ -245,37 +252,42 @@ const withProviders: Decorator = (Story, context) => {
   return (
     <MemoryRouter initialEntries={["/"]}>
       <QueryClientProvider client={queryClient}>
-        {/* Forced, not saved: the toolbar owns the theme, and one tab saving it would flip the others. */}
-        <ThemeProvider forcedTheme={colorScheme}>
-          <SchemeSetup scheme={colorScheme} />
-          <StoryTheme isPortalStory={isPortalStory} colorScheme={colorScheme}>
-            {/* The app mounts this with the platform providers; without it the config never
-                loads and anything waiting on it (the portal's connect gate) never settles.
-                Seeded rather than fetched; a story can mount its own to vary it. */}
-            <AppConfigProvider
-              initialConfig={STORY_APP_CONFIG}
-              autoFetch={false}
-            >
-              {/* LinkProvider must wrap TierProvider: TierContext derives its tier
+        <PreferencesProvider>
+          <ThemeProvider>
+            <ThemeBridge theme={colorScheme}>
+              <StoryTheme
+                isPortalStory={isPortalStory}
+                colorScheme={colorScheme}
+              >
+                {/* The app mounts this with the platform providers; without it the config never
+                    loads and anything waiting on it (the portal's connect gate) never settles.
+                    Seeded rather than fetched; a story can mount its own to vary it. */}
+                <AppConfigProvider
+                  initialConfig={STORY_APP_CONFIG}
+                  autoFetch={false}
+                >
+                {/* LinkProvider must wrap TierProvider: TierContext derives its tier
                   from useLink() (matches App.tsx's nesting). */}
-              <LinkProvider key={linkState} initialState={linkState}>
-                <TierKey tier={tier}>
-                  <UIProvider>
-                    <Suspense fallback={null}>
-                      {isPortalStory ? (
-                        <div className="portal-scope">
+                <LinkProvider key={linkState} initialState={linkState}>
+                  <TierKey tier={tier}>
+                    <UIProvider>
+                      <Suspense fallback={null}>
+                        {isPortalStory ? (
+                          <div className="portal-scope">
+                            <Story />
+                          </div>
+                        ) : (
                           <Story />
-                        </div>
-                      ) : (
-                        <Story />
-                      )}
-                    </Suspense>
-                  </UIProvider>
-                </TierKey>
-              </LinkProvider>
-            </AppConfigProvider>
-          </StoryTheme>
-        </ThemeProvider>
+                        )}
+                      </Suspense>
+                    </UIProvider>
+                  </TierKey>
+                </LinkProvider>
+                </AppConfigProvider>
+              </StoryTheme>
+            </ThemeBridge>
+          </ThemeProvider>
+        </PreferencesProvider>
       </QueryClientProvider>
     </MemoryRouter>
   );
