@@ -41,6 +41,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfSplit;
+import stirling.software.jpdfium.model.SaveOptions;
 
 @GeneralApi
 @Slf4j
@@ -88,7 +89,9 @@ public class SplitPdfBySizeController {
                 }
 
                 try (PdfDocument sourceDocument = PdfDocument.open(sourceTempFile.getPath())) {
-                    List<int[]> ranges = computeRanges(request, sourceDocument);
+                    List<int[]> ranges =
+                            computeRanges(
+                                    request, sourceDocument, Files.size(sourceTempFile.getPath()));
 
                     int fileIndex = 1;
                     for (int[] range : ranges) {
@@ -126,12 +129,14 @@ public class SplitPdfBySizeController {
                 "must be a positive integer for page-count or document-count splitting");
     }
 
-    private List<int[]> computeRanges(SplitPdfBySizeOrCountRequest request, PdfDocument sourceDoc)
+    private List<int[]> computeRanges(
+            SplitPdfBySizeOrCountRequest request, PdfDocument sourceDoc, long sourceBytes)
             throws IOException {
         int type = request.getSplitType();
         String value = request.getSplitValue();
         if (type == 0) {
-            return computeSizeRanges(sourceDoc, GeneralUtils.convertSizeToBytes(value));
+            return computeSizeRanges(
+                    sourceDoc, GeneralUtils.convertSizeToBytes(value), sourceBytes);
         } else if (type == 1) {
             return computePageCountRanges(sourceDoc, requirePositiveCount(value));
         } else if (type == 2) {
@@ -199,81 +204,60 @@ public class SplitPdfBySizeController {
     }
 
     /** Returns contiguous page-index ranges fitting within {@code maxBytes}. */
-    private List<int[]> computeSizeRanges(PdfDocument sourceDoc, long maxBytes) throws IOException {
+    private List<int[]> computeSizeRanges(PdfDocument sourceDoc, long maxBytes, long sourceBytes)
+            throws IOException {
         List<int[]> ranges = new ArrayList<>();
         int totalPages = sourceDoc.pageCount();
-        int baseCheckFrequency = 5;
-        int rangeStart = 0;
-        int rangeEnd = -1;
+        long bytesPerPage = Math.max(1, sourceBytes / Math.max(1, totalPages));
         try (TempFile probe = new TempFile(tempFileManager, ".pdf")) {
-            File probeFile = probe.getFile();
-            for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-                rangeEnd = pageIndex;
-                int pageAdded = rangeEnd - rangeStart + 1;
-                boolean shouldCheckSize =
-                        (pageAdded % baseCheckFrequency == 0)
-                                || (pageIndex == totalPages - 1)
-                                || (pageAdded >= 20);
-                if (!shouldCheckSize) {
-                    continue;
-                }
-                long actualSize = saveRange(sourceDoc, rangeStart, rangeEnd, probeFile);
-
-                if (actualSize > maxBytes) {
-                    if (pageAdded > 1) {
-                        rangeEnd = pageIndex - 1;
-                        pageIndex--;
-                    }
-                    ranges.add(buildRange(rangeStart, rangeEnd));
-                    rangeStart = rangeEnd + 1;
-                    rangeEnd = rangeStart - 1;
-                } else if (pageIndex < totalPages - 1 && actualSize < maxBytes * 0.75) {
-                    int extra =
-                            lookAheadFit(
-                                    sourceDoc,
-                                    rangeStart,
-                                    pageIndex,
-                                    maxBytes,
-                                    totalPages,
-                                    probeFile);
-                    pageIndex += extra;
-                    rangeEnd = pageIndex;
-                }
+            int start = 0;
+            while (start < totalPages) {
+                int end =
+                        largestFittingEnd(
+                                sourceDoc,
+                                start,
+                                totalPages - 1,
+                                maxBytes,
+                                bytesPerPage,
+                                probe.getPath());
+                ranges.add(buildRange(start, end));
+                start = end + 1;
             }
-        }
-        if (rangeEnd >= rangeStart) {
-            ranges.add(buildRange(rangeStart, rangeEnd));
         }
         return ranges;
     }
 
-    private long saveRange(PdfDocument sourceDoc, int from, int to, File output)
+    private int largestFittingEnd(
+            PdfDocument sourceDoc,
+            int start,
+            int lastPage,
+            long maxBytes,
+            long bytesPerPage,
+            Path probe)
             throws IOException {
-        try (PdfDocument split = PdfSplit.extractPageRange(sourceDoc, from, to)) {
-            split.save(output.toPath());
+        int fits = start - 1;
+        int tooBig = lastPage + 1;
+        int candidate = (int) Math.min(lastPage, start + Math.max(0, maxBytes / bytesPerPage - 1));
+        while (tooBig - fits > 1) {
+            if (rangeSize(sourceDoc, start, candidate, probe) <= maxBytes) {
+                fits = candidate;
+                candidate =
+                        tooBig > lastPage
+                                ? Math.min(lastPage, fits + (fits - start + 1))
+                                : (fits + tooBig) / 2;
+            } else {
+                tooBig = candidate;
+                candidate = (fits + tooBig) / 2;
+            }
         }
-        return output.length();
+        return Math.max(fits, start);
     }
 
-    private int lookAheadFit(
-            PdfDocument sourceDoc,
-            int rangeStart,
-            int currentEnd,
-            long maxBytes,
-            int totalPages,
-            File probeFile)
-            throws IOException {
-        int pagesToLookAhead = Math.min(5, totalPages - currentEnd - 1);
-        int extra = 0;
-        for (int i = 0; i < pagesToLookAhead; i++) {
-            int trialEnd = currentEnd + 1 + i;
-            long size = saveRange(sourceDoc, rangeStart, trialEnd, probeFile);
-            if (size > maxBytes) {
-                break;
-            }
-            extra++;
+    private long rangeSize(PdfDocument sourceDoc, int from, int to, Path probe) throws IOException {
+        try (PdfDocument split = PdfSplit.extractPageRange(sourceDoc, from, to)) {
+            split.saveTo(probe, SaveOptions.ephemeral());
         }
-        return extra;
+        return Files.size(probe);
     }
 
     private List<int[]> computePageCountRanges(PdfDocument sourceDoc, int pageCount) {
