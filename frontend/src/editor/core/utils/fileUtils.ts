@@ -96,6 +96,25 @@ export function mimeTypeToExtension(mimeType: string): string {
 }
 
 /**
+ * Reverse of {@link mimeTypeToExtension}: the MIME type a known extension
+ * stands for. Returns "" for unknown extensions. Used so a File built from
+ * signature-detected content carries the MIME type of the actual content
+ * instead of a generic response header (e.g. "application/octet-stream"
+ * set by a proxy).
+ */
+const EXTENSION_TO_MIME_TYPE: Record<string, string> = Object.fromEntries(
+  Object.entries(MIME_TYPE_TO_EXTENSION).map(([mime, ext]) => [ext, mime]),
+);
+
+export function extensionToMimeType(extension: string): string {
+  if (!extension || typeof extension !== "string") return "";
+  const key = extension.toLowerCase();
+  return Object.prototype.hasOwnProperty.call(EXTENSION_TO_MIME_TYPE, key)
+    ? EXTENSION_TO_MIME_TYPE[key]
+    : "";
+}
+
+/**
  * Leading byte signatures ("magic bytes") for the formats in
  * MIME_TYPE_TO_EXTENSION that have a fixed prefix.
  */
