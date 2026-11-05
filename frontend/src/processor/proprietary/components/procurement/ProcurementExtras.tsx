@@ -17,11 +17,14 @@ import { openApiUrl } from "@processor/api/externalUrl";
 import "@processor/views/Procurement.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import {
+  ConsentCheckbox,
+  emailFieldError,
   Field,
-  FieldError,
+  FieldGroup,
   focusFirstInvalid,
   isEmail,
   isFilled,
+  OptionCard,
 } from "@processor/components/procurement/formField";
 
 /**
@@ -375,10 +378,12 @@ export function TrialSetupForm({
   const [triedSeats, setTriedSeats] = useState(false);
   const [triedStart, setTriedStart] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
-  const emailInvalid =
-    !valid.contactEmail &&
-    (triedStart || (emailTouched && isFilled(contactEmail)));
   const required = t("portal.procurement.validation.required");
+  const emailError = emailFieldError(
+    contactEmail,
+    { tried: triedStart, touched: emailTouched },
+    { required, invalid: t("portal.procurement.validation.email") },
+  );
 
   const confirm = () => {
     onConfirm(deployment, Math.max(0, Number(seats) || 0), {
@@ -442,29 +447,19 @@ export function TrialSetupForm({
               onChange={(e) => setSeats(e.target.value)}
             />
           </Field>
-          <label className="portal-qb__field">
-            <span className="portal-qb__field-label">
-              {t("portal.procurement.setup.deployment")}
-            </span>
+          <FieldGroup label={t("portal.procurement.setup.deployment")}>
             <div className="portal-qb__opts portal-qb__opts--across">
               {DEPLOYMENTS.map((d) => (
-                <button
+                <OptionCard
                   key={d}
-                  type="button"
-                  className="portal-qb__opt"
-                  data-on={deployment === d || undefined}
+                  on={deployment === d}
+                  title={t(`portal.procurement.setup.${d}`)}
+                  sub={t(`portal.procurement.setup.${d}Sub`)}
                   onClick={() => setDeployment(d)}
-                >
-                  <span className="portal-qb__opt-title">
-                    {t(`portal.procurement.setup.${d}`)}
-                  </span>
-                  <span className="portal-qb__opt-sub">
-                    {t(`portal.procurement.setup.${d}Sub`)}
-                  </span>
-                </button>
+                />
               ))}
             </div>
-          </label>
+          </FieldGroup>
         </>
       )}
 
@@ -503,12 +498,8 @@ export function TrialSetupForm({
           <Field
             label={t("portal.procurement.setup.workEmail")}
             required
-            invalid={emailInvalid}
-            error={
-              isFilled(contactEmail)
-                ? t("portal.procurement.validation.email")
-                : required
-            }
+            invalid={emailError != null}
+            error={emailError ?? undefined}
           >
             <input
               type="email"
@@ -519,42 +510,30 @@ export function TrialSetupForm({
               onBlur={() => setEmailTouched(true)}
             />
           </Field>
-          <label className="portal-qb__field">
-            <span className="portal-qb__field-label">
-              {t("portal.procurement.setup.invites")}
-            </span>
+          <Field label={t("portal.procurement.setup.invites")}>
             <input
               value={inviteEmails}
               className={privateContentClassName}
               placeholder={t("portal.procurement.setup.invitesPlaceholder")}
               onChange={(e) => setInviteEmails(e.target.value)}
             />
-          </label>
+          </Field>
 
-          <label
-            className="portal-qb__eula"
-            data-invalid={(triedStart && !eula) || undefined}
+          <ConsentCheckbox
+            checked={eula}
+            onChange={setEula}
+            invalid={triedStart && !eula}
+            error={t("portal.procurement.validation.eula")}
           >
-            <input
-              type="checkbox"
-              checked={eula}
-              aria-invalid={(triedStart && !eula) || undefined}
-              onChange={(e) => setEula(e.target.checked)}
-            />
-            <span>
-              {t("portal.procurement.setup.eula")}{" "}
-              <button
-                type="button"
-                className="portal-legal__link"
-                onClick={() => setLegalDoc("eula")}
-              >
-                {t("portal.procurement.setup.viewEula")}
-              </button>
-            </span>
-          </label>
-          {triedStart && !eula && (
-            <FieldError>{t("portal.procurement.validation.eula")}</FieldError>
-          )}
+            {t("portal.procurement.setup.eula")}{" "}
+            <button
+              type="button"
+              className="portal-legal__link"
+              onClick={() => setLegalDoc("eula")}
+            >
+              {t("portal.procurement.setup.viewEula")}
+            </button>
+          </ConsentCheckbox>
         </>
       )}
 

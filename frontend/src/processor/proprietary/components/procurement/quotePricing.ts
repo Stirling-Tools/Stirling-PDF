@@ -19,6 +19,9 @@ export const SIZE_TIERS = [
   { mult: 1.4, key: "standard" },
   { mult: 2.4, key: "heavy" },
 ] as const;
+/** Where a fresh quote starts: Governed, at the Standard PDF size. */
+export const DEFAULT_POSTURE = POSTURES[1];
+export const DEFAULT_SIZE_TIER = SIZE_TIERS[1];
 
 /** PDFs a user processes a working day, working days a year, and headroom on top. */
 const PDFS_PER_USER_DAY = 5;

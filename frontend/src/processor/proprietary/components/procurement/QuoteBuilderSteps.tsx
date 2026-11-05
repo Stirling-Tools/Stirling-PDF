@@ -3,10 +3,13 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import type { QuoteConfigInput, RateCard } from "@processor/api/procurement";
 import { money } from "@processor/components/procurement/format";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import {
+  ConsentCheckbox,
+  emailFieldError,
   Field,
-  FieldError,
-  isFilled,
+  FieldGroup,
+  OptionCard,
 } from "@processor/components/procurement/formField";
 import {
   estimateVolume,
@@ -98,10 +101,10 @@ export function SizingStep({
             ? t("portal.procurement.builder.volManual")
             : t("portal.procurement.builder.volNoUsers")}
       </p>
-      <Field label={t("portal.procurement.builder.posture")}>
+      <FieldGroup label={t("portal.procurement.builder.posture")}>
         <div className="portal-qb__opts">
           {POSTURES.map((p) => (
-            <OptCard
+            <OptionCard
               key={p.key}
               on={cfg.intensity === p.intensity}
               title={t(`portal.procurement.builder.posture_${p.key}`)}
@@ -112,12 +115,12 @@ export function SizingStep({
             />
           ))}
         </div>
-      </Field>
+      </FieldGroup>
 
-      <Field label={t("portal.procurement.builder.pdfSize")}>
+      <FieldGroup label={t("portal.procurement.builder.pdfSize")}>
         <div className="portal-qb__opts">
           {SIZE_TIERS.map((s) => (
-            <OptCard
+            <OptionCard
               key={s.key}
               on={cfg.sizeMult === s.mult}
               title={t(`portal.procurement.builder.size_${s.key}`)}
@@ -128,7 +131,7 @@ export function SizingStep({
             />
           ))}
         </div>
-      </Field>
+      </FieldGroup>
     </Step>
   );
 }
@@ -153,18 +156,21 @@ export function PlanStep({
       title={t("portal.procurement.builder.s2Title")}
       sub={t("portal.procurement.builder.s2Sub")}
     >
-      <Field label={t("portal.procurement.builder.term")}>
+      <FieldGroup label={t("portal.procurement.builder.term")}>
         <div className="portal-qb__pills">
-          {[1, 2, 3, 4, 5].map((y) => (
-            <button
-              key={y}
-              type="button"
-              data-on={cfg.termYears === y || undefined}
-              onClick={() => set("termYears", y)}
-            >
-              {t("portal.procurement.builder.years", { count: y })}
-            </button>
-          ))}
+          {rates.termDiscountByYear
+            .map((_, i) => i + 1)
+            .map((y) => (
+              <button
+                key={y}
+                type="button"
+                aria-pressed={cfg.termYears === y}
+                data-on={cfg.termYears === y || undefined}
+                onClick={() => set("termYears", y)}
+              >
+                {t("portal.procurement.builder.years", { count: y })}
+              </button>
+            ))}
         </div>
         {termDiscount(rates, cfg.termYears) > 0 && (
           <p className="portal-qb__discount">
@@ -173,32 +179,32 @@ export function PlanStep({
             })}
           </p>
         )}
-      </Field>
+      </FieldGroup>
 
-      <Field label={t("portal.procurement.builder.serviceLevel")}>
+      <FieldGroup label={t("portal.procurement.builder.serviceLevel")}>
         <div className="portal-qb__opts">
-          <OptCard
+          <OptionCard
             on={cfg.serviceLevel === "standard"}
             title={t("portal.procurement.builder.slStandard")}
             sub={t("portal.procurement.builder.slStandardSub")}
             onClick={() => set("serviceLevel", "standard")}
           />
-          <OptCard
+          <OptionCard
             on={cfg.serviceLevel === "priority"}
             title={t("portal.procurement.builder.slPriority")}
             sub={t("portal.procurement.builder.slPrioritySub")}
             onClick={() => set("serviceLevel", "priority")}
           />
-          <OptCard
+          <OptionCard
             on={cfg.serviceLevel === "dedicated"}
             title={t("portal.procurement.builder.slDedicated")}
             sub={t("portal.procurement.builder.slDedicatedSub")}
             onClick={() => set("serviceLevel", "dedicated")}
           />
         </div>
-      </Field>
+      </FieldGroup>
 
-      <Field label={t("portal.procurement.builder.addons")}>
+      <FieldGroup label={t("portal.procurement.builder.addons")}>
         <div className="portal-qb__addons">
           <AddOn
             on={cfg.indemnification}
@@ -228,7 +234,7 @@ export function PlanStep({
             onClick={() => set("qbr", !cfg.qbr)}
           />
         </div>
-      </Field>
+      </FieldGroup>
     </Step>
   );
 }
@@ -241,11 +247,7 @@ export function DetailsStep({
   showErrors,
   emailTouched,
   onEmailBlur,
-  eulaAlreadyAgreed,
   eula,
-  setEula,
-  onViewEula,
-  canGenerate,
 }: {
   cfg: QuoteConfigInput;
   set: SetQuoteField;
@@ -254,15 +256,50 @@ export function DetailsStep({
   showErrors: boolean;
   emailTouched: boolean;
   onEmailBlur: () => void;
-  eulaAlreadyAgreed: boolean;
-  eula: boolean;
-  setEula: (agreed: boolean) => void;
-  onViewEula: () => void;
-  canGenerate: boolean;
+  /** The EULA clickwrap, or null when the buyer already accepted it. */
+  eula: {
+    checked: boolean;
+    onChange: (agreed: boolean) => void;
+    onView: () => void;
+  } | null;
 }) {
   const { t } = useTranslation();
   const required = t("portal.procurement.validation.required");
-  const eulaOk = eulaAlreadyAgreed || eula;
+  /** One of the buyer's text details; its label and placeholder keys follow its name. */
+  const text = (
+    name:
+      | Exclude<keyof QuoteDetailsValidity, "contactEmail">
+      | "addressLine2"
+      | "poNumber"
+      | "taxId",
+  ) => {
+    const isRequired = name in valid;
+    return (
+      <Field
+        label={t(`portal.procurement.builder.${name}`)}
+        required={isRequired}
+        invalid={
+          isRequired && showErrors && !valid[name as keyof QuoteDetailsValidity]
+        }
+        error={required}
+      >
+        <input
+          className={privateContentClassName}
+          placeholder={t(`portal.procurement.builder.${name}Placeholder`)}
+          value={cfg[name] ?? ""}
+          onChange={(e) => set(name, e.target.value)}
+        />
+      </Field>
+    );
+  };
+  const emailError = emailFieldError(
+    cfg.contactEmail,
+    { tried: showErrors, touched: emailTouched },
+    { required, invalid: t("portal.procurement.validation.email") },
+  );
+  const eulaInvalid = eula != null && showErrors && !eula.checked;
+  const incomplete =
+    !Object.values(valid).every(Boolean) || (eula != null && !eula.checked);
   return (
     <Step
       icon={<Icon name="users" size={22} />}
@@ -270,155 +307,54 @@ export function DetailsStep({
       sub={t("portal.procurement.builder.s3Sub")}
     >
       <div className="portal-qb__row">
-        <Field
-          label={t("portal.procurement.builder.businessName")}
-          required
-          invalid={showErrors && !valid.businessName}
-          error={required}
-        >
-          <input
-            placeholder={t(
-              "portal.procurement.builder.businessNamePlaceholder",
-            )}
-            value={cfg.businessName}
-            onChange={(e) => set("businessName", e.target.value)}
-          />
-        </Field>
-        <Field
-          label={t("portal.procurement.builder.contactName")}
-          required
-          invalid={showErrors && !valid.contactName}
-          error={required}
-        >
-          <input
-            placeholder={t("portal.procurement.builder.contactNamePlaceholder")}
-            value={cfg.contactName ?? ""}
-            onChange={(e) => set("contactName", e.target.value)}
-          />
-        </Field>
+        {text("businessName")}
+        {text("contactName")}
       </div>
       <Field
         label={t("portal.procurement.builder.contactEmail")}
         required
-        invalid={
-          (showErrors || (emailTouched && !!cfg.contactEmail?.trim())) &&
-          !valid.contactEmail
-        }
-        error={
-          isFilled(cfg.contactEmail)
-            ? t("portal.procurement.validation.email")
-            : required
-        }
+        invalid={emailError != null}
+        error={emailError ?? undefined}
       >
         <input
           type="email"
+          className={privateContentClassName}
           placeholder={t("portal.procurement.builder.contactEmailPlaceholder")}
           value={cfg.contactEmail ?? ""}
           onChange={(e) => set("contactEmail", e.target.value)}
           onBlur={onEmailBlur}
         />
       </Field>
-      <Field
-        label={t("portal.procurement.builder.addressLine1")}
-        required
-        invalid={showErrors && !valid.addressLine1}
-        error={required}
-      >
-        <input
-          placeholder={t("portal.procurement.builder.addressLine1Placeholder")}
-          value={cfg.addressLine1 ?? ""}
-          onChange={(e) => set("addressLine1", e.target.value)}
-        />
-      </Field>
-      <Field label={t("portal.procurement.builder.addressLine2")}>
-        <input
-          placeholder={t("portal.procurement.builder.addressLine2Placeholder")}
-          value={cfg.addressLine2 ?? ""}
-          onChange={(e) => set("addressLine2", e.target.value)}
-        />
-      </Field>
+      {text("addressLine1")}
+      {text("addressLine2")}
       <div className="portal-qb__row">
-        <Field
-          label={t("portal.procurement.builder.city")}
-          required
-          invalid={showErrors && !valid.city}
-          error={required}
-        >
-          <input
-            placeholder={t("portal.procurement.builder.cityPlaceholder")}
-            value={cfg.city ?? ""}
-            onChange={(e) => set("city", e.target.value)}
-          />
-        </Field>
-        <Field
-          label={t("portal.procurement.builder.region")}
-          required
-          invalid={showErrors && !valid.region}
-          error={required}
-        >
-          <input
-            placeholder={t("portal.procurement.builder.regionPlaceholder")}
-            value={cfg.region ?? ""}
-            onChange={(e) => set("region", e.target.value)}
-          />
-        </Field>
-        <Field
-          label={t("portal.procurement.builder.postalCode")}
-          required
-          invalid={showErrors && !valid.postalCode}
-          error={required}
-        >
-          <input
-            placeholder={t("portal.procurement.builder.postalCodePlaceholder")}
-            value={cfg.postalCode ?? ""}
-            onChange={(e) => set("postalCode", e.target.value)}
-          />
-        </Field>
+        {text("city")}
+        {text("region")}
+        {text("postalCode")}
       </div>
       <div className="portal-qb__row">
-        <Field label={t("portal.procurement.builder.poNumber")}>
-          <input
-            placeholder={t("portal.procurement.builder.poNumberPlaceholder")}
-            value={cfg.poNumber ?? ""}
-            onChange={(e) => set("poNumber", e.target.value)}
-          />
-        </Field>
-        <Field label={t("portal.procurement.builder.taxId")}>
-          <input
-            placeholder={t("portal.procurement.builder.taxIdPlaceholder")}
-            value={cfg.taxId ?? ""}
-            onChange={(e) => set("taxId", e.target.value)}
-          />
-        </Field>
+        {text("poNumber")}
+        {text("taxId")}
       </div>
-      {!eulaAlreadyAgreed && (
-        <label
-          className="portal-qb__eula"
-          data-invalid={(showErrors && !eulaOk) || undefined}
+      {eula && (
+        <ConsentCheckbox
+          checked={eula.checked}
+          onChange={eula.onChange}
+          invalid={eulaInvalid}
+          error={t("portal.procurement.validation.eula")}
         >
-          <input
-            type="checkbox"
-            checked={eula}
-            aria-invalid={(showErrors && !eulaOk) || undefined}
-            onChange={(e) => setEula(e.target.checked)}
-          />
-          <span>
-            {t("portal.procurement.builder.eula")}{" "}
-            <button
-              type="button"
-              className="portal-legal__link"
-              onClick={onViewEula}
-            >
-              {t("portal.procurement.builder.viewEula")}
-            </button>
-          </span>
-        </label>
+          {t("portal.procurement.builder.eula")}{" "}
+          <button
+            type="button"
+            className="portal-legal__link"
+            onClick={eula.onView}
+          >
+            {t("portal.procurement.builder.viewEula")}
+          </button>
+        </ConsentCheckbox>
       )}
-      {!eulaAlreadyAgreed && showErrors && !eulaOk && (
-        <FieldError>{t("portal.procurement.validation.eula")}</FieldError>
-      )}
-      {showErrors && !canGenerate && (
-        <p className="portal-qb__error">
+      {showErrors && incomplete && (
+        <p className="portal-qb__error" role="alert">
           {t("portal.procurement.builder.completeRequired")}
         </p>
       )}
@@ -453,30 +389,6 @@ function Step({
   );
 }
 
-function OptCard({
-  on,
-  title,
-  sub,
-  onClick,
-}: {
-  on: boolean;
-  title: string;
-  sub: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="portal-qb__opt"
-      data-on={on || undefined}
-      onClick={onClick}
-    >
-      <span className="portal-qb__opt-title">{title}</span>
-      <span className="portal-qb__opt-sub">{sub}</span>
-    </button>
-  );
-}
-
 function AddOn({
   on,
   title,
@@ -492,6 +404,7 @@ function AddOn({
     <button
       type="button"
       className="portal-qb__addon"
+      aria-pressed={on}
       data-on={on || undefined}
       onClick={onClick}
     >

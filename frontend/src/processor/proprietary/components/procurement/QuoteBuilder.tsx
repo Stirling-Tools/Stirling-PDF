@@ -20,6 +20,8 @@ import {
 import { QuotePaper } from "@processor/components/procurement/QuotePaper";
 import {
   estimateVolume,
+  DEFAULT_POSTURE,
+  DEFAULT_SIZE_TIER,
   previewAnnualMinor,
 } from "@processor/components/procurement/quotePricing";
 import { LegalDocumentModal } from "@processor/components/procurement/ProcurementExtras";
@@ -33,9 +35,8 @@ import {
 import "@processor/theme/surface.css";
 import "@processor/views/Procurement.css";
 
-const STEPS = ["volume", "plan", "details", "review"] as const;
-const DETAILS_STEP = 2;
-const REVIEW_STEP = 3;
+const STEP = { sizing: 0, plan: 1, details: 2, review: 3 } as const;
+const STEP_COUNT = Object.keys(STEP).length;
 /** Share of the minimum from which a quote counts as nearly there, so the nudge is to top up. */
 const NEAR_MINIMUM_RATIO = 0.75;
 /** Upper bound for the volume search, far past any real estimate. */
@@ -70,7 +71,7 @@ export function QuoteBuilder({
   seats?: number;
   /** Linked-account email; prefills the contact email on a fresh quote's details step. */
   email?: string | null;
-  /** Dismiss the builder. It draws its own header, so it carries the close too. */
+  /** Leave the builder, from the review step's Done. It has no close: a quote in progress is left through the page. */
   onClose?: () => void;
   /**
    * The buying entity captured at trial setup. Seeds a fresh quote's details step so it confirms
@@ -109,7 +110,11 @@ export function QuoteBuilder({
   onGenerate: (quote: QuoteResult) => void;
 }) {
   const { t } = useTranslation();
-  const [step, setStep] = useState(0);
+  // Re-editing a quote opens on its details, everything seeded: one click re-generates, or Back
+  // changes a field.
+  const [step, setStep] = useState<number>(
+    initial ? STEP.details : STEP.sizing,
+  );
   const prefill = useProcurementPrefill();
   const [cfg, setCfg] = useState<QuoteConfigInput>(
     initial ?? {
@@ -117,8 +122,8 @@ export function QuoteBuilder({
       // auto-fills it (rather than pre-seeding a figure that hides the users → volume estimate).
       volume: seats > 0 ? estimateVolume(seats) : 0,
       users: Math.max(0, seats),
-      intensity: 4, // Governed — the default governance posture per the pricing alignment
-      sizeMult: 1.4, // Standard — the default PDF-size tier (D93)
+      intensity: DEFAULT_POSTURE.intensity,
+      sizeMult: DEFAULT_SIZE_TIER.mult,
       deployment,
       // One year: the sizing step prices the base rate, and longer terms' discounts belong to the
       // commitment step where the term is chosen.
@@ -178,18 +183,11 @@ export function QuoteBuilder({
   const eulaOk = eulaAlreadyAgreed || eula;
   const canGenerate = detailsValid && eulaOk;
 
-  // Re-editing an existing quote: everything is seeded, so jump to the details step with the
-  // agreement pre-accepted — one click re-generates, or Back to change a field. No walking from step 1.
-  // Mount-only: seed the step from `initial` once (deliberately no deps).
-  useEffect(() => {
-    if (initial) setStep(DETAILS_STEP);
-  }, []);
-
   // Issuing lands by snapshot refresh rather than as a return value, so the arrival of the issued
   // quote is what opens the review step. Keyed on the quote's id, not the object: React Query hands
   // back a fresh object on every refetch, which would yank a buyer who had walked Back to the form.
   useEffect(() => {
-    if (issued) setStep(REVIEW_STEP);
+    if (issued) setStep(STEP.review);
   }, [issued?.quoteId]);
 
   const preview = previewAnnualMinor(cfg, rates);
@@ -202,7 +200,7 @@ export function QuoteBuilder({
 
   // On the review step the footer quotes the issued figures rather than the client-side preview, so
   // the running total never disagrees with the paper directly above it.
-  const onPaper = issued != null && step === REVIEW_STEP;
+  const onPaper = issued != null && step === STEP.review;
   const running = onPaper
     ? {
         annual: money(issued.annualNetMinor, issued.currency),
@@ -257,8 +255,6 @@ export function QuoteBuilder({
     set("volume", high);
   }
 
-  // Fully filled → price + hand the draft to the parent to issue as a Stripe Quote (which then shows
-  // as the milestone). No separate in-builder preview step.
   // Moving on never waits on the minimum; it only raises the warning, which stays until the
   // quote clears it.
   function advance(next: number) {
@@ -315,15 +311,15 @@ export function QuoteBuilder({
       <StepModalHeader
         title={t("portal.procurement.builder.title")}
         step={step + 1}
-        total={STEPS.length}
+        total={STEP_COUNT}
         stepLabel={t("portal.procurement.builder.stepOf", {
           n: step + 1,
-          total: STEPS.length,
+          total: STEP_COUNT,
         })}
       />
 
       <div className="portal-qb__body">
-        {step === 0 && (
+        {step === STEP.sizing && (
           <SizingStep
             cfg={cfg}
             set={set}
@@ -332,7 +328,7 @@ export function QuoteBuilder({
             volumeInvalid={triedSizing && cfg.volume <= 0}
           />
         )}
-        {step === 1 && (
+        {step === STEP.plan && (
           <PlanStep
             cfg={cfg}
             set={set}
@@ -340,7 +336,7 @@ export function QuoteBuilder({
             indemnityPreview={indemnityPreview}
           />
         )}
-        {step === DETAILS_STEP && (
+        {step === STEP.details && (
           <DetailsStep
             cfg={cfg}
             set={set}
@@ -348,19 +344,20 @@ export function QuoteBuilder({
             showErrors={showErrors}
             emailTouched={emailTouched}
             onEmailBlur={() => setEmailTouched(true)}
-            eulaAlreadyAgreed={eulaAlreadyAgreed}
-            eula={eula}
-            setEula={setEula}
-            onViewEula={() => setLegalDoc("eula")}
-            canGenerate={canGenerate}
+            eula={
+              eulaAlreadyAgreed
+                ? null
+                : {
+                    checked: eula,
+                    onChange: setEula,
+                    onView: () => setLegalDoc("eula"),
+                  }
+            }
           />
         )}
 
-        {/* No step heading here, unlike the form steps: the quote is the content, and a heading over
-            it only repeats what the paper already says. The real issued figures, not the footer's
-            client-side preview — this is the document the buyer circulates, so it has to match the
-            PDF and the Stripe quote exactly. */}
-        {step === REVIEW_STEP && issued && (
+        {/* No step heading, unlike the form steps: a heading over the quote repeats the paper. */}
+        {step === STEP.review && issued && (
           <QuotePaper
             issued={issued}
             rates={rates}
@@ -377,7 +374,7 @@ export function QuoteBuilder({
           previewMinor={preview}
           onScheduleCall={onScheduleCall}
           onRaise={raiseToMinimum}
-          onEditUsage={() => setStep(0)}
+          onEditUsage={() => setStep(STEP.sizing)}
           onComparePlans={onComparePlans}
         />
       )}
@@ -442,7 +439,7 @@ export function QuoteBuilder({
               {t("portal.procurement.builder.back")}
             </Button>
           )}
-          {step === 0 && (
+          {step === STEP.sizing && (
             <Button
               variant="primary"
               onClick={() => {
@@ -451,18 +448,18 @@ export function QuoteBuilder({
                   focusFirstInvalid();
                   return;
                 }
-                advance(1);
+                advance(STEP.plan);
               }}
             >
               {t("portal.procurement.builder.continue")}
             </Button>
           )}
-          {step === 1 && (
-            <Button variant="primary" onClick={() => advance(2)}>
+          {step === STEP.plan && (
+            <Button variant="primary" onClick={() => advance(STEP.details)}>
               {t("portal.procurement.builder.continue")}
             </Button>
           )}
-          {step === DETAILS_STEP && (
+          {step === STEP.details && (
             <Button
               variant={showMinimum ? "secondary" : "primary"}
               loading={busy}
@@ -474,7 +471,7 @@ export function QuoteBuilder({
           {/* No Accept here: the review step ends on the deal card, where accepting is one of two
               deliberate choices rather than the only way out of a modal. Download lives on the
               document itself. */}
-          {step === REVIEW_STEP && (
+          {step === STEP.review && (
             <Button variant="primary" onClick={onClose}>
               {t("portal.procurement.builder.done")}
             </Button>

@@ -265,6 +265,23 @@ describe("QuoteBuilder generate errors", () => {
   });
 });
 
+describe("QuoteBuilder option groups", () => {
+  it("leaves the choice alone when the group's heading is clicked", () => {
+    mount(vi.fn(), null);
+    fireEvent.click(screen.getByText("portal.procurement.builder.posture"));
+    expect(
+      screen.getByRole("group", { name: "portal.procurement.builder.posture" }),
+    ).toBeInTheDocument();
+    const pressed = screen
+      .getAllByRole("button", { pressed: true })
+      .map((b) => b.textContent);
+    expect(pressed).toEqual([
+      expect.stringContaining("posture_governed"),
+      expect.stringContaining("size_standard"),
+    ]);
+  });
+});
+
 describe("QuoteBuilder sizing", () => {
   it("re-estimates volume from the team size even after a manual figure", () => {
     mount(vi.fn(), null);

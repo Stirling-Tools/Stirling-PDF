@@ -14,8 +14,8 @@ import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
 import { useAsync } from "@processor/hooks/useAsync";
 import "@processor/theme/surface.css";
 import {
+  ConsentCheckbox,
   Field,
-  FieldError,
   focusFirstInvalid,
   isFilled,
 } from "@processor/components/procurement/formField";
@@ -29,10 +29,7 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
  * legal copy, English only); this component renders it in full and captures the typed legal name,
  * signatory, title, and authority. On sign it records the signature
  * (pinned to the exact document version + a hash) and then accepts the quote into a subscription.
- *
- * Presented as the document itself rather than a card about it: this step names the agreement in the
- * dialog's own header and carries its download there, so the terms are read on paper-like stock
- * instead of in app chrome. That is why it draws its own header — see ProcurementFlow.
+ * It draws its own header, which names the agreement and carries its download.
  */
 export function ProcurementAgreement({
   quote,
@@ -113,13 +110,12 @@ export function ProcurementAgreement({
         signatoryTitle: title.trim(),
         authorityConfirmed: confirmed,
       });
-      onAgree(); // proceed into the committed subscription
+      onAgree();
     } catch {
       setError(true);
     } finally {
       // In `finally`, not only on failure: accepting can fail after the signature is recorded, and
-      // the controller deliberately keeps this dialog open on failure so the error is readable. With
-      // the flag left set, the button span the rest of the session and there was no way to retry.
+      // the dialog stays open on failure, so the button must reset for a retry.
       setSigning(false);
     }
   };
@@ -193,10 +189,8 @@ export function ProcurementAgreement({
         </p>
       )}
 
-      {/* The signature block: who is bound, who signs, and the act of signing, on one line — the
-          shape of a paper signature block rather than a form above a button. The consent sits
-          directly under the fields it qualifies, with no rule between them: it is part of signing,
-          not a separate section, and boxing it cost the document a quarter of its height. */}
+      {/* The signature block: who is bound, who signs, and the act of signing, on one line like a
+          paper signature block. The consent sits directly under the fields it qualifies. */}
       <div className="portal-qb__foot portal-agreement__signbar">
         <div className="portal-agreement__signrow">
           <div className="portal-qb__row portal-agreement__signfields">
@@ -252,23 +246,15 @@ export function ProcurementAgreement({
         </div>
 
         <div className="portal-agreement__signfoot">
-          <label
+          <ConsentCheckbox
             className="portal-agreement__accept"
-            data-invalid={(tried && !confirmed) || undefined}
+            checked={confirmed}
+            onChange={setConfirmed}
+            invalid={tried && !confirmed}
+            error={t("portal.procurement.validation.confirm")}
           >
-            <input
-              type="checkbox"
-              checked={confirmed}
-              aria-invalid={(tried && !confirmed) || undefined}
-              onChange={(e) => setConfirmed(e.target.checked)}
-            />
-            <span>{t("portal.procurement.agreement.confirm")}</span>
-          </label>
-          {tried && !confirmed && (
-            <FieldError>
-              {t("portal.procurement.validation.confirm")}
-            </FieldError>
-          )}
+            {t("portal.procurement.agreement.confirm")}
+          </ConsentCheckbox>
         </div>
       </div>
     </div>
