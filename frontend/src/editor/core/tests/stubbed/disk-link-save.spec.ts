@@ -103,6 +103,12 @@ test.describe("Saving files that live on disk", () => {
     expect(await written(page)).not.toContain(
       "C:/Docs/quarterly-report (edited 2).pdf",
     );
+
+    // The copy's name is stored, so it is still there after a restart.
+    await page.reload();
+    await expect(
+      page.getByText("quarterly-report (edited).pdf").first(),
+    ).toBeVisible({ timeout: 20_000 });
   });
 
   test("Ask me offers update, copy or elsewhere before saving", async ({
