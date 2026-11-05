@@ -59,6 +59,7 @@ import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.common.model.api.security.RedactionArea;
+import stirling.software.common.pdf.worker.PdfWorkerPool;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -227,7 +228,8 @@ class RedactControllerTest {
                         tempFileManager,
                         manualRedactionService,
                         textRedactionService,
-                        redactExecuteService);
+                        redactExecuteService,
+                        PdfWorkerPool.inProcess());
 
         setupRealDocument();
     }

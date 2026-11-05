@@ -42,6 +42,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.pdf.worker.PdfWorkerPool;
+import stirling.software.common.pdf.worker.RedactJob;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.ToolFailedException;
@@ -52,10 +54,6 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.JsonListPropertyEditor;
 import stirling.software.common.util.propertyeditor.JsonObjectPropertyEditor;
-import stirling.software.jpdfium.PdfDocument;
-import stirling.software.jpdfium.redact.PdfRedactor;
-import stirling.software.jpdfium.redact.RedactOptions;
-import stirling.software.jpdfium.redact.RedactResult;
 
 import tools.jackson.core.type.TypeReference;
 
@@ -69,6 +67,7 @@ public class RedactController {
     private final ManualRedactionService manualRedactionService;
     private final TextRedactionService textRedactionService;
     private final RedactExecuteService redactExecuteService;
+    private final PdfWorkerPool pdfWorkerPool;
 
     private String removeFileExtension(String filename) {
         return stirling.software.common.util.GeneralUtils.removeExtension(filename);
@@ -213,58 +212,37 @@ public class RedactController {
                 Files.copy(in, tempInput.getPath(), StandardCopyOption.REPLACE_EXISTING);
             }
 
-            RedactOptions options =
-                    RedactOptions.builder()
-                            .addWords(terms)
-                            .useRegex(useRegex)
-                            .wholeWord(wholeWordSearchBool)
-                            .caseSensitive(caseSensitive)
-                            .boxColor(boxColorInt)
-                            .padding(request.getCustomPadding())
-                            .removeContent(true)
-                            .convertToImage(Boolean.TRUE.equals(request.getConvertPDFToImage()))
-                            .normalizeFonts(false)
-                            .fixToUnicode(false)
-                            .glyphAware(true)
-                            .ligatureAware(true)
-                            .bidiAware(true)
-                            .graphemeSafe(true)
-                            .sanitizeStructure(false) // WIP/Experimental API
-                            .redactMetadata(true)
-                            .build();
-
             TempFile tempOutput = tempFileManager.createManagedTempFile(".pdf");
             try {
-                try (PdfDocument checkDoc = PdfDocument.open(tempInput.getFile().toPath())) {
-                    if (checkDoc.pageCount() <= 0) {
-                        throw new IOException("Invalid or empty PDF document");
-                    }
+                log.debug("Running JPDFium auto-redact in RedactController (terms={})", terms);
+                RedactJob.Result result =
+                        pdfWorkerPool.execute(
+                                new RedactJob(
+                                        tempInput.getPath(),
+                                        tempOutput.getPath(),
+                                        terms,
+                                        useRegex,
+                                        wholeWordSearchBool,
+                                        caseSensitive,
+                                        boxColorInt,
+                                        request.getCustomPadding(),
+                                        Boolean.TRUE.equals(request.getConvertPDFToImage())));
+                switch (result.outcome()) {
+                    case UNVERIFIED_PAGES ->
+                            throw ExceptionUtils.createRedactionUnverifiedException(
+                                    result.unverifiedPages());
+                    case UNVERIFIABLE ->
+                            throw ExceptionUtils.createRedactionUnverifiableException(
+                                    new IOException(result.detail()));
+                    case REDACTED -> {}
                 }
-
-                log.debug(
-                        "Calling JPDFium PdfRedactor.redact in RedactController (terms={})", terms);
-                RedactResult result = PdfRedactor.redact(tempInput.getFile().toPath(), options);
-                log.debug(
-                        "JPDFium auto-redact complete (matches={})",
-                        result != null ? result.totalMatches() : -1);
-                if (result == null) {
-                    throw new IOException("JPDFium auto-redact returned null result");
-                }
-                try {
-                    TextRedactionService.requireVerified(result.pageResults());
-                    result.save(tempOutput.getFile().toPath());
-                    log.info(
-                            "JPDFium auto-redact: {} matches processed into {}",
-                            result.totalMatches(),
-                            filename);
-                    return withMatchCount(
-                            WebResponseUtils.pdfFileToWebResponse(tempOutput, filename),
-                            result.totalMatches());
-                } finally {
-                    if (result.document() != null) {
-                        result.document().close();
-                    }
-                }
+                log.info(
+                        "JPDFium auto-redact: {} matches processed into {}",
+                        result.totalMatches(),
+                        filename);
+                return withMatchCount(
+                        WebResponseUtils.pdfFileToWebResponse(tempOutput, filename),
+                        result.totalMatches());
             } catch (ToolFailedException e) {
                 tempOutput.close();
                 throw e;

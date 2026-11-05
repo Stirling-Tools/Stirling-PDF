@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
@@ -23,14 +24,18 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import stirling.software.common.pdf.MarkdownBlock;
+import stirling.software.common.pdf.MarkdownBlocks;
 import stirling.software.common.pdf.PdfMarkdownExtractor;
+import stirling.software.common.pdf.worker.PdfWorkerPool;
 import stirling.software.common.util.TempFile;
 import stirling.software.jpdfium.PdfDocument;
 
 class ConvertPDFToMarkdownTest {
 
     private MockMvc mockMvc(PdfMarkdownExtractor extractor) {
-        return MockMvcBuilders.standaloneSetup(new ConvertPDFToMarkdown(null, extractor))
+        return MockMvcBuilders.standaloneSetup(
+                        new ConvertPDFToMarkdown(null, extractor, PdfWorkerPool.inProcess()))
                 .setControllerAdvice(new GlobalErrorHandler())
                 .build();
     }
@@ -48,8 +53,9 @@ class ConvertPDFToMarkdownTest {
 
     @Test
     void pdfToMarkdownReturnsMarkdownBytes() throws Exception {
-        byte[] md = "# heading\n\ncontent\n".getBytes(StandardCharsets.UTF_8);
-        String expectedMd = "# heading\n\ncontent\n";
+        List<MarkdownBlock> blocks =
+                List.of(new MarkdownBlock("# heading", 1, 1), new MarkdownBlock("content", 1, 1));
+        byte[] md = MarkdownBlocks.join(blocks).getBytes(StandardCharsets.UTF_8);
 
         File tmpFile = File.createTempFile("test", ".pdf");
         tmpFile.deleteOnExit();
@@ -64,7 +70,7 @@ class ConvertPDFToMarkdownTest {
                 MockedStatic<PdfDocument> docStatic = Mockito.mockStatic(PdfDocument.class)) {
 
             PdfMarkdownExtractor extractor = Mockito.mock(PdfMarkdownExtractor.class);
-            when(extractor.convert(any())).thenReturn(expectedMd);
+            when(extractor.extractBlocks(any())).thenReturn(blocks);
 
             PdfDocument mockDoc = Mockito.mock(PdfDocument.class);
             docStatic.when(() -> PdfDocument.open(any(Path.class))).thenReturn(mockDoc);
@@ -96,7 +102,7 @@ class ConvertPDFToMarkdownTest {
                 MockedStatic<PdfDocument> docStatic = Mockito.mockStatic(PdfDocument.class)) {
 
             PdfMarkdownExtractor extractor = Mockito.mock(PdfMarkdownExtractor.class);
-            when(extractor.convert(any())).thenThrow(new RuntimeException("boom"));
+            when(extractor.extractBlocks(any())).thenThrow(new RuntimeException("boom"));
 
             PdfDocument mockDoc = Mockito.mock(PdfDocument.class);
             docStatic.when(() -> PdfDocument.open(any(Path.class))).thenReturn(mockDoc);

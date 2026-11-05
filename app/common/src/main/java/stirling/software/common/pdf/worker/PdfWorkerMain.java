@@ -25,7 +25,10 @@ public final class PdfWorkerMain {
     }
 
     private static final Map<String, Handler> HANDLERS =
-            Map.of(MergeJob.TYPE, PdfWorkerMain::handleMerge);
+            Map.of(
+                    MergeJob.TYPE, PdfWorkerMain::handleMerge,
+                    RedactJob.TYPE, PdfWorkerMain::handleRedact,
+                    MarkdownJob.TYPE, PdfWorkerMain::handleMarkdown);
 
     private PdfWorkerMain() {}
 
@@ -76,6 +79,36 @@ public final class PdfWorkerMain {
         PdfWorkerProtocol.writeHeader(out);
         out.writeByte(PdfWorkerProtocol.STATUS_OK);
         MergeJob.writeResult(out, result);
+    }
+
+    private static void handleRedact(DataInputStream in, DataOutputStream out) throws IOException {
+        RedactJob job = RedactJob.readRequest(in);
+        RedactJob.Result result;
+        try {
+            result = job.run();
+        } catch (Exception | LinkageError e) {
+            writeError(out, e);
+            return;
+        }
+        PdfWorkerProtocol.writeHeader(out);
+        out.writeByte(PdfWorkerProtocol.STATUS_OK);
+        RedactJob.writeResult(out, result);
+    }
+
+    private static void handleMarkdown(DataInputStream in, DataOutputStream out)
+            throws IOException {
+        MarkdownJob job;
+        MarkdownJob.Result result;
+        try {
+            job = MarkdownJob.readRequest(in);
+            result = job.run();
+        } catch (Exception | LinkageError e) {
+            writeError(out, e);
+            return;
+        }
+        PdfWorkerProtocol.writeHeader(out);
+        out.writeByte(PdfWorkerProtocol.STATUS_OK);
+        MarkdownJob.writeResult(out, result);
     }
 
     static void writeError(DataOutputStream out, Throwable error) throws IOException {

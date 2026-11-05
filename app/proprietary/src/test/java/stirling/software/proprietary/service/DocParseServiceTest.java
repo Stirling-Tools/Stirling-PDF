@@ -36,6 +36,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.pdf.MarkdownBlock;
 import stirling.software.common.pdf.MarkdownBlocks;
 import stirling.software.common.pdf.PdfMarkdownExtractor;
+import stirling.software.common.pdf.worker.PdfWorkerPool;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.model.api.docparse.IngestApiRequest;
@@ -79,7 +80,8 @@ class DocParseServiceTest {
                         properties,
                         jsonMapper,
                         fileIdStrategy,
-                        userService);
+                        userService,
+                        PdfWorkerPool.inProcess());
     }
 
     @Test
