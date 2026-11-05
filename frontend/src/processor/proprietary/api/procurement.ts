@@ -185,6 +185,8 @@ export interface ProcurementSnapshot {
   entitledDeployment: string | null;
   /** What quotes are priced from; the builder's live estimate runs the same formula over it. */
   rateCard: RateCard;
+  /** How many times the trial may be extended. */
+  maxTrialExtensions: number;
 }
 
 export interface QuoteConfigInput {

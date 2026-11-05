@@ -424,7 +424,7 @@ button.ent__company[aria-expanded="true"] {
 }
 
 .ent__call,
-.ent__trial {
+.ent__aside {
   border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
   background: var(--c-surface);
@@ -439,7 +439,7 @@ button.ent__company[aria-expanded="true"] {
   padding: 1rem 1.25rem;
 }
 
-.ent__hero:not(:has(.ent__trial)) .ent__call {
+.ent__hero:not(:has(.ent__aside)) .ent__call {
   max-width: 44rem;
 }
 
@@ -464,13 +464,13 @@ button.ent__company[aria-expanded="true"] {
   text-wrap: pretty;
 }
 
-.ent__trial {
+.ent__aside {
   display: flex;
   flex-direction: column;
   padding: 1.375rem 1.5rem 1.25rem;
 }
 
-.ent__trial-label {
+.ent__aside-label {
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -478,7 +478,7 @@ button.ent__company[aria-expanded="true"] {
   color: var(--c-text-muted);
 }
 
-.ent__trial-days {
+.ent__aside-figure {
   margin-top: 0.375rem;
   font-size: 1.75rem;
   font-weight: 650;
@@ -486,11 +486,11 @@ button.ent__company[aria-expanded="true"] {
   letter-spacing: -0.01em;
 }
 
-.ent__trial-days[data-expired] {
+.ent__aside-figure[data-expired] {
   color: var(--c-danger);
 }
 
-.ent__trial:not(:has(.ent__actions)) {
+.ent__aside:not(:has(.ent__actions)) {
   align-self: start;
 }
 
@@ -574,12 +574,12 @@ button.ent__company[aria-expanded="true"] {
   background: var(--c-primary);
 }
 
-.ent__trial .ent__text {
+.ent__aside .ent__text {
   margin-top: 0.75rem;
 }
 
 /* Pinned to the panel's foot, level with the call box beside it. */
-.ent__trial .ent__actions {
+.ent__aside .ent__actions {
   gap: 0.25rem;
   margin-top: auto;
   padding-top: 0.75rem;
@@ -587,7 +587,7 @@ button.ent__company[aria-expanded="true"] {
   margin-left: -1.125rem;
 }
 
-.ent__trial .ent__hint {
+.ent__aside .ent__hint {
   margin-top: 0.5rem;
 }
 

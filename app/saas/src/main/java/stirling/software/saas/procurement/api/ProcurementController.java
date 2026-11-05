@@ -222,10 +222,13 @@ public class ProcurementController {
             // the trial's. Setup steps and the offline licence follow this, not {@code deployment}.
             String entitledDeployment,
             // The rates quotes are priced from, so the builder's live estimate uses the same ones.
-            PricingRates rateCard) {
+            PricingRates rateCard,
+            // How many times the trial may be extended, so the page can say when it can't be.
+            int maxTrialExtensions) {
 
         /** The snapshot of a team with no deal yet. */
-        static SnapshotResponse empty(long minAnnualNetMinor, PricingRates rateCard) {
+        static SnapshotResponse empty(
+                long minAnnualNetMinor, PricingRates rateCard, int maxTrialExtensions) {
             return new SnapshotResponse(
                     null,
                     null,
@@ -243,7 +246,8 @@ public class ProcurementController {
                     null,
                     minAnnualNetMinor,
                     null,
-                    rateCard);
+                    rateCard,
+                    maxTrialExtensions);
         }
     }
 
@@ -291,7 +295,8 @@ public class ProcurementController {
     }
 
     private SnapshotResponse emptySnapshot() {
-        return SnapshotResponse.empty(config.getMinAnnualNetMinor(), pricing.rates());
+        return SnapshotResponse.empty(
+                config.getMinAnnualNetMinor(), pricing.rates(), config.getMaxTrialExtensions());
     }
 
     /**
@@ -673,7 +678,8 @@ public class ProcurementController {
                 latest,
                 config.getMinAnnualNetMinor(),
                 procurement.entitledDeployment(deal, quotes),
-                pricing.rates());
+                pricing.rates(),
+                config.getMaxTrialExtensions());
     }
 
     private QuoteResponse toQuote(ProcurementQuote q) {

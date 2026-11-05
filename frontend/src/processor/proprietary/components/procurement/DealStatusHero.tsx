@@ -6,6 +6,10 @@ import {
   type DealStage,
   type ProcurementSnapshot,
 } from "@processor/api/procurement";
+import {
+  daysLeft,
+  trialLeftLabel,
+} from "@processor/components/procurement/format";
 import "@processor/theme/surface.css";
 import "@processor/views/Procurement.css";
 
@@ -35,9 +39,9 @@ export function DealStatusHero({
 }) {
   const { t } = useTranslation();
   const stage = snapshot.stage ?? "trial";
-  const trialDaysLeft =
+  const trialEndsAt =
     snapshot.trialEndsAt && ["trial", "quote", "security"].includes(stage)
-      ? daysLeft(snapshot.trialEndsAt)
+      ? snapshot.trialEndsAt
       : null;
   const isLive = stage === "active";
   // Known from trial setup onward. The quote's own copy wins when present, since the buyer may have
@@ -88,14 +92,10 @@ export function DealStatusHero({
             )}
           </p>
 
-          {trialDaysLeft != null && Number.isFinite(trialDaysLeft) && (
+          {trialEndsAt && Number.isFinite(daysLeft(trialEndsAt)) && (
             <div className="portal-hero__chips">
               <span className="portal-hero__chip">
-                {trialDaysLeft === 0
-                  ? t("portal.procurement.journey.expired", "Trial expired")
-                  : t("portal.procurement.journey.daysLeft", {
-                      count: trialDaysLeft,
-                    })}
+                {trialLeftLabel(t, trialEndsAt)}
               </span>
             </div>
           )}
@@ -127,9 +127,4 @@ export function DealStatusHero({
       )}
     </div>
   );
-}
-
-export function daysLeft(iso: string): number {
-  const end = new Date(iso).getTime();
-  return Math.max(0, Math.ceil((end - Date.now()) / 86_400_000));
 }

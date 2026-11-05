@@ -8,6 +8,9 @@ import { QUOTE_BELOW_MINIMUM, type RateCard } from "@processor/api/procurement";
  */
 const SAAS = "http://saas.mock";
 
+/** The server's default cap on trial extensions. */
+const MAX_TRIAL_EXTENSIONS = 2;
+
 /** The server's default floor on a quote's annual fee: USD 12,000. */
 const MIN_ANNUAL_NET_MINOR = 1_200_000;
 
@@ -334,6 +337,7 @@ export const procurementSaasHandlers = [
       minAnnualNetMinor: MIN_ANNUAL_NET_MINOR,
       entitledDeployment: entitledDeployment(),
       rateCard: RATE_CARD,
+      maxTrialExtensions: MAX_TRIAL_EXTENSIONS,
     }),
   ),
   // Interest: creates the deal at `exploring` when there is none, and never disturbs one that

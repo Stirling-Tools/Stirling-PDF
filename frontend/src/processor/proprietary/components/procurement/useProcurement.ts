@@ -52,6 +52,7 @@ export interface ProcurementController {
   setEditing: (b: boolean) => void;
   extra: ProcurementExtra;
   setExtra: (e: ProcurementExtra) => void;
+  /** The latest quote's invoice PDF, or the one accepting it just returned. */
   invoicePdf: string | null;
   /**
    * Record enterprise interest. Persisting the intent is what keeps the enterprise surface off
@@ -322,7 +323,7 @@ export function useProcurement(): ProcurementController {
     setEditing,
     extra,
     setExtra,
-    invoicePdf,
+    invoicePdf: latest?.invoicePdf ?? invoicePdf,
     onExploreEnterprise,
     onConfirmSetup,
     onExtendTrial,

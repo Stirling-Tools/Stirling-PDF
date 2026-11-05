@@ -22,7 +22,10 @@ import { useConnectGate } from "@processor/hooks/useConnectGate";
 import { useAccountLinkOwner } from "@processor/hooks/useAccountLinkOwner";
 import { useLinkedAccountEmail } from "@processor/hooks/useLinkedAccountEmail";
 import { SaasSessionBanner } from "@processor/components/account-link/SaasSessionBanner";
-import { useProcurement } from "@processor/components/procurement/useProcurement";
+import {
+  useProcurement,
+  type ProcurementController,
+} from "@processor/components/procurement/useProcurement";
 import {
   ProcurementFlow,
   procurementFlowStep,
@@ -36,8 +39,12 @@ import { DeploymentOptions } from "@processor/components/procurement/DeploymentO
 import { LicensePanel } from "@processor/components/procurement/ProcurementStages";
 import { SetupChecklist } from "@processor/components/procurement/SetupChecklist";
 import { ConfirmModal } from "@processor/components/users/ConfirmModal";
-import { daysLeft } from "@processor/components/procurement/DealStatusHero";
-import { money } from "@processor/components/procurement/format";
+import {
+  daysLeft,
+  longDate,
+  money,
+  trialLeftLabel,
+} from "@processor/components/procurement/format";
 import {
   saveTrialDraft,
   takeTrialDraft,
@@ -53,7 +60,7 @@ const TRIAL_STAGES: DealStage[] = ["trial", "quote", "security"];
  * then where the deal stands, its next action, licence key, trial, documents and a way to talk to
  * us. Building a quote and signing the agreement are long enough to open over it.
  *
- * <p>Open to visitors without an account where the build allows it (the hosted page, linked from
+ * Open to visitors without an account where the build allows it (the hosted page, linked from
  * the website): they read the page and fill in the trial setup, and sign in only to start it.
  */
 export function Enterprise({
@@ -148,26 +155,26 @@ function SignedIn() {
   // which a banner says rather than showing a leader the member view.
   const canManage = wallet.data?.role === "leader";
   const roleKnown = wallet.isSuccess;
-  // Without the snapshot it is unknown whether a deal exists, so none is offered a fresh start.
+  // Without the snapshot it's unknown whether a deal exists, so a load error offers no fresh start.
   const exploring =
     !procurement.loadError && (!started || stage === "exploring");
 
-  // Arriving here is asking about Enterprise. Recorded once, so accounts that never ask stay free of
-  // the deal surface and drop-off before the trial is visible.
-  const recordedInterest = useRef(false);
-  // Back from signing in with the setup finished and the terms agreed, that click was to start the
-  // trial, so it starts rather than showing the form again.
+  // A first visit does one of two things, once: back from signing in with the setup finished and the
+  // terms agreed, it starts the trial that click asked for; otherwise it records interest, since
+  // arriving here is asking about Enterprise. Accounts that never ask stay free of the deal surface,
+  // and drop-off before the trial is visible.
+  const firstVisitHandled = useRef(false);
   const resumeTrial = draft?.eulaAgreed === true && exploring;
   useEffect(() => {
     if (
-      recordedInterest.current ||
+      firstVisitHandled.current ||
       !canManage ||
       procurement.loading ||
       procurement.loadError ||
       (started && !resumeTrial)
     )
       return;
-    recordedInterest.current = true;
+    firstVisitHandled.current = true;
     if (resumeTrial && draft) {
       procurement.onConfirmSetup(draft.deployment, draft.seats, draft.details);
     } else {
@@ -198,7 +205,7 @@ function SignedIn() {
     canManage &&
     !procurement.error &&
     !procurement.loadError &&
-    (!recordedInterest.current || busy);
+    (!firstVisitHandled.current || busy);
   const loading =
     gate.loading ||
     (isLinked && (procurement.loading || wallet.isPending)) ||
@@ -207,7 +214,9 @@ function SignedIn() {
   const company =
     latest?.config.businessName?.trim() || data?.businessName?.trim() || null;
   // Building a quote or signing opens within the deal, at the stage it belongs to.
-  const flowOpen = procurement.open && procurementFlowStep(procurement) != null;
+  const flowStep = procurement.open ? procurementFlowStep(procurement) : null;
+  const flowOpen = flowStep != null;
+  const onInvite = canManage ? () => openSettings("users") : undefined;
 
   /** The page's main content, by how far the visitor has got: linking, then exploring, then the deal. */
   function body(): ReactNode {
@@ -257,9 +266,9 @@ function SignedIn() {
         canManage={canManage}
         roleKnown={roleKnown}
         teamSize={wallet.data?.team?.usersInUse ?? 1}
-        onInvite={canManage ? () => openSettings("users") : undefined}
+        onInvite={onInvite}
         onSchedule={schedule}
-        flowStep={flowOpen ? procurementFlowStep(procurement) : null}
+        flowStep={flowStep}
         flow={flowOpen && <ProcurementFlow controller={procurement} />}
       />
     );
@@ -268,7 +277,7 @@ function SignedIn() {
   return (
     <Shell
       company={company}
-      onInvite={canManage ? () => openSettings("users") : undefined}
+      onInvite={onInvite}
       scrollKey={flowOpen ? "flow" : "page"}
       // A deal carries its own contact section, so the footer would only repeat it.
       onSchedule={loading || !isLinked || exploring ? schedule : undefined}
@@ -276,43 +285,19 @@ function SignedIn() {
       <div className="ent__wrap ent__notices">
         {link && <SaasSessionBanner />}
         {gate.error && (
-          <Banner
-            tone="danger"
-            title={t("portal.procurement.error.title")}
-            action={
-              <Button size="sm" onClick={gate.retry}>
-                {t("portal.accountLink.gate.retry", "Try again")}
-              </Button>
-            }
-          >
-            {gate.error}
-          </Banner>
+          <RetryBanner message={gate.error} onRetry={gate.retry} />
         )}
         {wallet.isError && (
-          <Banner
-            tone="danger"
-            title={t("portal.procurement.error.title")}
-            action={
-              <Button size="sm" onClick={() => void wallet.refetch()}>
-                {t("portal.accountLink.gate.retry", "Try again")}
-              </Button>
-            }
-          >
-            {wallet.error.message}
-          </Banner>
+          <RetryBanner
+            message={wallet.error.message}
+            onRetry={() => void wallet.refetch()}
+          />
         )}
         {procurement.loadError && (
-          <Banner
-            tone="danger"
-            title={t("portal.procurement.error.title")}
-            action={
-              <Button size="sm" onClick={procurement.retry}>
-                {t("portal.accountLink.gate.retry", "Try again")}
-              </Button>
-            }
-          >
-            {procurement.loadError}
-          </Banner>
+          <RetryBanner
+            message={procurement.loadError}
+            onRetry={procurement.retry}
+          />
         )}
         {procurement.error && !procurement.open && (
           <Banner
@@ -330,6 +315,30 @@ function SignedIn() {
       {/* Mounted here while no step is open: booking a call opens from anywhere on the page. */}
       {!flowOpen && <ProcurementFlow controller={procurement} />}
     </Shell>
+  );
+}
+
+/** Something the page could not load, and the way to try again. */
+function RetryBanner({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Banner
+      tone="danger"
+      title={t("portal.procurement.error.title")}
+      action={
+        <Button size="sm" onClick={onRetry}>
+          {t("portal.accountLink.gate.retry", "Try again")}
+        </Button>
+      }
+    >
+      {message}
+    </Banner>
   );
 }
 
@@ -540,66 +549,46 @@ function ConnectPanel({
   );
 }
 
-/** A deal underway: where it stands, its next action, and everything it has produced so far. */
-function Deal({
-  controller,
-  canManage,
-  roleKnown,
-  teamSize,
-  onInvite,
-  onSchedule,
+/** Which stage of the journey a long step shows, when one is open. */
+const FLOW_STEP_STAGE = { builder: "quote", agreement: "security" } as const;
+
+/**
+ * The deal page's navigation. The tracker doubles as navigation: a finished stage opens for review,
+ * shown as it was left while the deal itself stays put; the deal's own stage returns to its overview
+ * or opens its long step; and from the trial, the quote stage is the same as "Build your quote".
+ */
+function useStageNavigation({
+  stage,
   flowStep,
-  flow,
+  flowShown,
+  canManage,
+  setOpen,
 }: {
-  controller: ReturnType<typeof useProcurement>;
-  canManage: boolean;
-  /** False while the viewer's role could not be loaded: neither the leader's nor a member's view. */
-  roleKnown: boolean;
-  teamSize: number;
-  onInvite?: () => void;
-  onSchedule: () => void;
-  /** The long step open within the deal, if any; the header follows it to its stage. */
+  stage: DealStage;
   flowStep?: "builder" | "agreement" | null;
-  flow?: ReactNode;
+  /** A long step is on screen, which ends any review. */
+  flowShown: boolean;
+  canManage: boolean;
+  setOpen: (open: boolean) => void;
 }) {
-  const { t } = useTranslation();
-  const {
-    data,
-    latest,
-    isIssued,
-    busy,
-    setOpen,
-    downloading,
-    downloadingLicense,
-    downloadingAgreement,
-    invoicePdf,
-  } = controller;
-  const stage = controller.stage ?? "trial";
-  // A finished stage opened from the tracker, shown as it was left; the deal itself stays put.
   const [review, setReview] = useState<{
     index: number;
     stage: DealStage;
   } | null>(null);
   // Opening a step or the deal moving on ends the review, so it never resurfaces over a later stage.
-  if (review && (flow || review.stage !== stage)) setReview(null);
-  const reviewing = flow ? null : (review?.index ?? null);
+  if (review && (flowShown || review.stage !== stage)) setReview(null);
+  const reviewing = flowShown ? null : (review?.index ?? null);
   const shownStage: DealStage =
     reviewing != null
       ? FLOW_JOURNEY[reviewing].stage
-      : flowStep === "builder"
-        ? "quote"
-        : flowStep === "agreement"
-          ? "security"
-          : stage;
+      : flowStep
+        ? FLOW_STEP_STAGE[flowStep]
+        : stage;
   const currentIdx = Math.max(
     0,
     FLOW_JOURNEY.findIndex((s) => s.stage === shownStage),
   );
-  const step = FLOW_JOURNEY[currentIdx];
   const actualIdx = FLOW_JOURNEY.findIndex((s) => s.stage === stage);
-  // The tracker doubles as navigation: a finished stage opens for review, the deal's own stage
-  // returns to its overview or opens its long step, and from the trial, the quote stage is the same
-  // as "Build your quote".
   const stageAction = (index: number): (() => void) | undefined => {
     const target = FLOW_JOURNEY[index].stage;
     if (index < actualIdx && !flowStep)
@@ -626,7 +615,71 @@ function Deal({
           setReview(backIdx < actualIdx ? { index: backIdx, stage } : null);
         }
       : undefined;
-  const inTrial = TRIAL_STAGES.includes(stage) && data?.trialEndsAt != null;
+  return {
+    reviewing,
+    shownStage,
+    currentIdx,
+    actualIdx,
+    backIdx,
+    stageAction,
+    goBack,
+    endReview: () => setReview(null),
+  };
+}
+
+/** A deal underway: where it stands, its next action, and everything it has produced so far. */
+function Deal({
+  controller,
+  canManage,
+  roleKnown,
+  teamSize,
+  onInvite,
+  onSchedule,
+  flowStep,
+  flow,
+}: {
+  controller: ProcurementController;
+  canManage: boolean;
+  /** False while the viewer's role could not be loaded: neither the leader's nor a member's view. */
+  roleKnown: boolean;
+  teamSize: number;
+  onInvite?: () => void;
+  onSchedule: () => void;
+  /** The long step open within the deal, if any; the header follows it to its stage. */
+  flowStep?: "builder" | "agreement" | null;
+  flow?: ReactNode;
+}) {
+  const { t } = useTranslation();
+  const {
+    data,
+    latest,
+    isIssued,
+    busy,
+    setOpen,
+    downloading,
+    downloadingLicense,
+    downloadingAgreement,
+    invoicePdf,
+  } = controller;
+  const stage = controller.stage ?? "trial";
+  const {
+    reviewing,
+    shownStage,
+    currentIdx,
+    actualIdx,
+    backIdx,
+    stageAction,
+    goBack,
+    endReview,
+  } = useStageNavigation({
+    stage,
+    flowStep,
+    flowShown: !!flow,
+    canManage,
+    setOpen,
+  });
+  const step = FLOW_JOURNEY[currentIdx];
+  const inTrial = TRIAL_STAGES.includes(stage);
   // What the licence is issued for, which a quote can change from the trial's choice.
   const deployment = data?.entitledDeployment ?? data?.deployment ?? "cloud";
   const isLive = stage === "active";
@@ -672,11 +725,7 @@ function Deal({
                 )}
                 {quoteOnTable && data?.trialEndsAt && (
                   <span className="ent__chip">
-                    {daysLeft(data.trialEndsAt) === 0
-                      ? t("portal.procurement.journey.expired", "Trial expired")
-                      : t("portal.procurement.journey.daysLeft", {
-                          count: daysLeft(data.trialEndsAt),
-                        })}
+                    {trialLeftLabel(t, data.trialEndsAt)}
                   </span>
                 )}
               </div>
@@ -684,67 +733,47 @@ function Deal({
               <p className="ent__lede">{t(step.blurb)}</p>
               {reviewing != null ? (
                 <div className="ent__actions">
-                  <Button
-                    variant="secondary"
-                    size="md"
-                    onClick={() => setReview(null)}
-                  >
+                  <Button variant="secondary" size="md" onClick={endReview}>
                     {t("portal.enterprise.review.back", {
                       stage: t(FLOW_JOURNEY[actualIdx].label),
                     })}
                   </Button>
                 </div>
               ) : (
-                !flow &&
-                (isLive ? (
-                  <div className="ent__live">
-                    <Icon name="circle-check" size={22} />
-                    <div>
-                      <h2 className="ent__h3">
-                        {t("portal.procurement.live.title")}
-                      </h2>
-                      <p className="ent__text">
-                        {t("portal.procurement.live.description")}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  roleKnown && (
-                    <NextStep
-                      controller={controller}
-                      canManage={canManage}
-                      stage={stage}
-                    />
-                  )
-                ))
+                !flow && (
+                  <HeroAction
+                    controller={controller}
+                    canManage={canManage}
+                    roleKnown={roleKnown}
+                    stage={stage}
+                  />
+                )
               )}
             </div>
+            {/* Talking to us outranks the trial's own controls, so it sits under the next step. */}
             {!flow && reviewing == null && (
-              <>
-                {/* Talking to us outranks the trial's own controls, so it sits under the next step. */}
-                <div className="ent__call">
-                  <span className="ent__call-icon">
-                    <Icon name="calendar" size={20} />
-                  </span>
-                  <div className="ent__call-text">
-                    <h2 className="ent__h3">
-                      {t(
-                        "portal.enterprise.callTitle",
-                        "Talk to a solutions engineer",
-                      )}
-                    </h2>
-                    <p className="ent__text">
-                      {t(
-                        "portal.enterprise.callInfo",
-                        "A 15-minute call. Bring your questions on pricing, deployment or security, or plan your rollout together.",
-                      )}
-                    </p>
-                  </div>
-                  <Button variant="secondary" onClick={onSchedule}>
-                    {t("portal.procurement.hero.scheduleCall")}
-                  </Button>
+              <div className="ent__call">
+                <span className="ent__call-icon">
+                  <Icon name="calendar" size={20} />
+                </span>
+                <div className="ent__call-text">
+                  <h2 className="ent__h3">
+                    {t(
+                      "portal.enterprise.callTitle",
+                      "Talk to a solutions engineer",
+                    )}
+                  </h2>
+                  <p className="ent__text">
+                    {t(
+                      "portal.enterprise.callInfo",
+                      "A 15-minute call. Bring your questions on pricing, deployment or security, or plan your rollout together.",
+                    )}
+                  </p>
                 </div>
-              </>
+                <Button variant="secondary" onClick={onSchedule}>
+                  {t("portal.procurement.hero.scheduleCall")}
+                </Button>
+              </div>
             )}
           </div>
 
@@ -758,22 +787,29 @@ function Deal({
           {reviewing != null && (
             <StageReview stage={shownStage} controller={controller} />
           )}
-          {inTrial && data && !quoteOnTable && !flow && reviewing == null && (
-            <TrialPanel
-              trialStartedAt={data.trialStartedAt}
-              trialEndsAt={data.trialEndsAt!}
-              extensionsUsed={data.trialExtensionsUsed}
-              busy={busy}
-              onExtend={
-                canManage && stage === "trial"
-                  ? controller.onExtendTrial
-                  : undefined
-              }
-              onCancel={
-                canManage && stage === "trial" ? controller.onReset : undefined
-              }
-            />
-          )}
+          {inTrial &&
+            data?.trialEndsAt &&
+            !quoteOnTable &&
+            !flow &&
+            reviewing == null && (
+              <TrialPanel
+                trialStartedAt={data.trialStartedAt}
+                trialEndsAt={data.trialEndsAt}
+                extensionsUsed={data.trialExtensionsUsed}
+                maxExtensions={data.maxTrialExtensions}
+                busy={busy}
+                onExtend={
+                  canManage && stage === "trial"
+                    ? controller.onExtendTrial
+                    : undefined
+                }
+                onCancel={
+                  canManage && stage === "trial"
+                    ? controller.onReset
+                    : undefined
+                }
+              />
+            )}
 
           <StageTracker
             currentIdx={reviewing != null ? actualIdx : currentIdx}
@@ -834,7 +870,7 @@ function Deal({
             downloadingQuote={downloading}
             onDownloadQuote={controller.onDownloadPdf}
             invoiceUrl={latest?.invoiceUrl}
-            invoicePdf={latest?.invoicePdf ?? invoicePdf}
+            invoicePdf={invoicePdf}
           />
         </Card>
       </div>
@@ -847,6 +883,7 @@ function TrialPanel({
   trialStartedAt,
   trialEndsAt,
   extensionsUsed,
+  maxExtensions,
   busy,
   onExtend,
   onCancel,
@@ -854,19 +891,16 @@ function TrialPanel({
   trialStartedAt: string | null;
   trialEndsAt: string;
   extensionsUsed: number;
+  /** How many extensions the server allows; it enforces the cap. */
+  maxExtensions: number;
   busy: boolean;
   onExtend?: () => void;
   onCancel?: () => void;
 }) {
   const { t } = useTranslation();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
-  const left = daysLeft(trialEndsAt);
-  const ends = new Date(trialEndsAt).toLocaleDateString(undefined, {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-  const maxed = extensionsUsed >= 2;
+  const ends = longDate(trialEndsAt);
+  const maxed = extensionsUsed >= maxExtensions;
   const start = trialStartedAt ? new Date(trialStartedAt).getTime() : null;
   const end = new Date(trialEndsAt).getTime();
   const used =
@@ -874,14 +908,15 @@ function TrialPanel({
       ? Math.min(1, Math.max(0, (Date.now() - start) / (end - start)))
       : null;
   return (
-    <div className="ent__trial">
-      <span className="ent__trial-label">
+    <div className="ent__aside">
+      <span className="ent__aside-label">
         {t("portal.procurement.trial.title")}
       </span>
-      <span className="ent__trial-days" data-expired={left === 0 || undefined}>
-        {left === 0
-          ? t("portal.procurement.journey.expired", "Trial expired")
-          : t("portal.procurement.journey.daysLeft", { count: left })}
+      <span
+        className="ent__aside-figure"
+        data-expired={daysLeft(trialEndsAt) === 0 || undefined}
+      >
+        {trialLeftLabel(t, trialEndsAt)}
       </span>
       {used != null && (
         <span className="ent__trial-bar" aria-hidden>
@@ -961,21 +996,21 @@ function QuotePanel({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="ent__trial ent__quote">
-      <span className="ent__trial-label">
+    <div className="ent__aside ent__quote">
+      <span className="ent__aside-label">
         {t("portal.enterprise.quotePanel", "Your quote")}
         {quote.quoteNumber && (
           <span className="ent__quote-number">{quote.quoteNumber}</span>
         )}
       </span>
-      <span className="ent__trial-days">
+      <span className="ent__aside-figure">
         {money(quote.annualNetMinor, quote.currency)}
       </span>
       <span className="ent__quote-caption">
         {t("portal.procurement.review.annual")}
       </span>
       <dl className="ent__facts">
-        {/* Quotes from before the seat count was kept carry 0. */}
+        {/* A seat count of 0 means none was recorded. */}
         {quote.config.users > 0 && (
           <div>
             <dt>{t("portal.procurement.builder.users")}</dt>
@@ -1032,7 +1067,7 @@ function StageReview({
   controller,
 }: {
   stage: DealStage;
-  controller: ReturnType<typeof useProcurement>;
+  controller: ProcurementController;
 }) {
   const { t } = useTranslation();
   const { data, latest } = controller;
@@ -1046,34 +1081,26 @@ function StageReview({
     ) : null;
   }
   if (!data) return null;
-  const date = (iso: string | null) =>
-    iso
-      ? new Date(iso).toLocaleDateString(undefined, {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        })
-      : "\u2014";
   const company = latest?.config.businessName || data.businessName;
   const invoiceUrl = latest?.invoiceUrl;
-  const invoicePdf = latest?.invoicePdf ?? controller.invoicePdf;
+  const { invoicePdf } = controller;
   return (
-    <div className="ent__trial">
-      {(stage === "trial" || stage === "exploring") && (
+    <div className="ent__aside">
+      {stage === "trial" && (
         <>
-          <span className="ent__trial-label">
+          <span className="ent__aside-label">
             {t("portal.enterprise.review.trialTitle", "Your trial")}
           </span>
           <dl className="ent__facts">
             <div>
               <dt>{t("portal.enterprise.review.started", "Started")}</dt>
-              <dd>{date(data.trialStartedAt)}</dd>
+              <dd>{longDate(data.trialStartedAt)}</dd>
             </div>
             <div>
               <dt>
                 {t("portal.enterprise.review.trialEnds", "Trial end date")}
               </dt>
-              <dd>{date(data.trialEndsAt)}</dd>
+              <dd>{longDate(data.trialEndsAt)}</dd>
             </div>
             <div>
               <dt>{t("portal.enterprise.deployment", "Deployment")}</dt>
@@ -1096,7 +1123,7 @@ function StageReview({
       )}
       {stage === "security" && (
         <>
-          <span className="ent__trial-label">
+          <span className="ent__aside-label">
             {t("portal.procurement.documents.agreement")}
           </span>
           <dl className="ent__facts">
@@ -1128,7 +1155,7 @@ function StageReview({
       )}
       {stage === "procurement" && (
         <>
-          <span className="ent__trial-label">
+          <span className="ent__aside-label">
             {t("portal.procurement.documents.invoice")}
           </span>
           <p className="ent__text">
@@ -1155,20 +1182,51 @@ function StageReview({
   );
 }
 
+/** The hero's call to action: the deal's next step, or that it is live. */
+function HeroAction({
+  controller,
+  canManage,
+  roleKnown,
+  stage,
+}: {
+  controller: ProcurementController;
+  canManage: boolean;
+  roleKnown: boolean;
+  stage: DealStage;
+}) {
+  const { t } = useTranslation();
+  if (stage === "active") {
+    return (
+      <div className="ent__live">
+        <Icon name="circle-check" size={22} />
+        <div>
+          <h2 className="ent__h3">{t("portal.procurement.live.title")}</h2>
+          <p className="ent__text">
+            {t("portal.procurement.live.description")}
+          </p>
+        </div>
+      </div>
+    );
+  }
+  if (!roleKnown) return null;
+  return (
+    <NextStep controller={controller} canManage={canManage} stage={stage} />
+  );
+}
+
 /** What the buyer does next at this stage; a member follows along instead. */
 function NextStep({
   controller,
   canManage,
   stage,
 }: {
-  controller: ReturnType<typeof useProcurement>;
+  controller: ProcurementController;
   canManage: boolean;
   stage: DealStage;
 }) {
   const { t } = useTranslation();
-  const { isIssued, busy, setOpen, latest } = controller;
+  const { isIssued, busy, setOpen, latest, invoicePdf } = controller;
   const invoiceUrl = latest?.invoiceUrl;
-  const invoicePdf = latest?.invoicePdf ?? controller.invoicePdf;
   if (!canManage) {
     return (
       <p className="ent__note">
@@ -1211,28 +1269,30 @@ function NextStep({
           {t("portal.procurement.hero.ctaAgreement")}
         </Button>
       )}
-      {stage === "procurement" && invoiceUrl && (
-        <Button
-          variant="primary"
-          size="md"
-          onClick={() => openApiUrl(invoiceUrl)}
-        >
-          {t("portal.procurement.payment.viewInvoice")}
-        </Button>
-      )}
-      {stage === "procurement" && invoicePdf && (
-        <Button
-          variant="secondary"
-          size="md"
-          onClick={() => openApiUrl(invoicePdf)}
-        >
-          {t("portal.procurement.payment.downloadInvoice")}
-        </Button>
-      )}
       {stage === "procurement" && (
-        <p className="ent__hint ent__next-hint">
-          {t("portal.procurement.payment.description")}
-        </p>
+        <>
+          {invoiceUrl && (
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => openApiUrl(invoiceUrl)}
+            >
+              {t("portal.procurement.payment.viewInvoice")}
+            </Button>
+          )}
+          {invoicePdf && (
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => openApiUrl(invoicePdf)}
+            >
+              {t("portal.procurement.payment.downloadInvoice")}
+            </Button>
+          )}
+          <p className="ent__hint ent__next-hint">
+            {t("portal.procurement.payment.description")}
+          </p>
+        </>
       )}
     </div>
   );

@@ -115,6 +115,7 @@ const trial: ProcurementSnapshot = {
   contactEmail: null,
   latestQuote: null,
   rateCard: RATE_CARD,
+  maxTrialExtensions: 2,
   minAnnualNetMinor: 0,
   entitledDeployment: null,
 };
