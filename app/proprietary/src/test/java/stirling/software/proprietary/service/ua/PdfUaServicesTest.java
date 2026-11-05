@@ -237,13 +237,19 @@ class PdfUaServicesTest {
         @Test
         @DisplayName("keeps a fillable form rather than flattening it to embed fonts")
         void keepsFormFieldsFillable() throws Exception {
-            assertFormKept(unembeddedFontForm(true));
+            assertFormKept(unembeddedFontForm(true, true));
         }
 
         @Test
         @DisplayName("keeps widgets the AcroForm does not list rather than flattening them")
         void keepsOrphanWidgetsFillable() throws Exception {
-            assertFormKept(unembeddedFontForm(false));
+            assertFormKept(unembeddedFontForm(false, true));
+        }
+
+        @Test
+        @DisplayName("keeps AcroForm fields that no page shows, such as invisible signatures")
+        void keepsFieldsWithoutPageWidgets() throws Exception {
+            assertFormKept(unembeddedFontForm(true, false));
         }
 
         private void assertFormKept(byte[] form) {
@@ -256,7 +262,8 @@ class PdfUaServicesTest {
         }
     }
 
-    private static byte[] unembeddedFontForm(boolean listedInAcroForm) throws IOException {
+    private static byte[] unembeddedFontForm(boolean listedInAcroForm, boolean onPage)
+            throws IOException {
         try (PDDocument document = Loader.loadPDF(unembeddedFontPdf())) {
             PDAcroForm acroForm = new PDAcroForm(document);
             document.getDocumentCatalog().setAcroForm(acroForm);
@@ -267,9 +274,11 @@ class PdfUaServicesTest {
             }
             PDAnnotationWidget widget = field.getWidgets().get(0);
             widget.setRectangle(new PDRectangle(50, 600, 200, 20));
-            PDPage page = document.getPage(0);
-            widget.setPage(page);
-            page.getAnnotations().add(widget);
+            if (onPage) {
+                PDPage page = document.getPage(0);
+                widget.setPage(page);
+                page.getAnnotations().add(widget);
+            }
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             document.save(out);
             return out.toByteArray();

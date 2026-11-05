@@ -19,6 +19,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 
@@ -163,6 +164,11 @@ public class FontEmbeddingService {
     }
 
     private static boolean hasFormFields(PDDocument document) throws IOException {
+        // Invisible signature fields can be listed in the AcroForm without any page widget.
+        PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm(null);
+        if (acroForm != null && !acroForm.getFields().isEmpty()) {
+            return true;
+        }
         for (PDPage page : document.getPages()) {
             for (PDAnnotation annotation : page.getAnnotations()) {
                 if (annotation instanceof PDAnnotationWidget) {
