@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -17,6 +18,7 @@ import java.nio.file.Path;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -71,6 +73,29 @@ class CropControllerMoreTest {
                             lenient().when(tf.getAbsolutePath()).thenReturn(f.getAbsolutePath());
                             return tf;
                         });
+    }
+
+    private MockMultipartFile pdfWithBoundaryText() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            try (PDPageContentStream content = new PDPageContentStream(doc, page)) {
+                content.beginText();
+                content.setFont(
+                        new org.apache.pdfbox.pdmodel.font.PDType1Font(
+                                org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName.HELVETICA),
+                        12);
+                content.newLineAtOffset(50, 200);
+                content.showText("Inside");
+                content.newLineAtOffset(140, 0);
+                content.showText("BoundaryWord");
+                content.endText();
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            doc.save(out);
+            return new MockMultipartFile(
+                    "fileInput", "boundary.pdf", "application/pdf", out.toByteArray());
+        }
     }
 
     private MockMultipartFile pdf(int pages) throws IOException {
@@ -151,6 +176,25 @@ class CropControllerMoreTest {
                 assertRect(out.getPage(1).getMediaBox(), 20f, 20f, 200f, 300f);
                 assertRect(out.getPage(0).getMediaBox(), 0f, 0f, 612f, 792f);
                 assertRect(out.getPage(2).getMediaBox(), 0f, 0f, 612f, 792f);
+            }
+        }
+
+        @Test
+        @DisplayName("boundary-crossing text is removed before the crop")
+        void boundaryTextIsRemoved() throws Exception {
+            MockMultipartFile file = pdfWithBoundaryText();
+            CropPdfForm request = form(file, true);
+
+            when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = cropController.cropPdf(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            byte[] body = response.getBody().getInputStream().readAllBytes();
+            try (PDDocument out = Loader.loadPDF(body)) {
+                String text = new org.apache.pdfbox.text.PDFTextStripper().getText(out);
+                assertThat(text).contains("Inside");
+                assertThat(text).doesNotContain("BoundaryWord");
             }
         }
 
