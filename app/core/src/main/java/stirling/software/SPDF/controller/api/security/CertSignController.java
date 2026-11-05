@@ -610,6 +610,7 @@ public class CertSignController {
                 PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
                 float height = bbox.getHeight();
                 form.setBBox(bbox);
+                PDFont font = new PDType1Font(FontName.TIMES_BOLD);
 
                 // from PDVisualSigBuilder.createAppearanceDictionary()
                 PDAppearanceDictionary appearance = new PDAppearanceDictionary();
@@ -651,7 +652,7 @@ public class CertSignController {
                     // such as O=株式会社), and showText would throw for those characters.
                     // Resolve the font from the label so the width calculation and the
                     // rendering use the same font.
-                    PDFont font = resolveSignatureFont(doc, signedBy);
+                    font = resolveSignatureFont(doc, signedBy);
 
                     String date = signature.getSignDate().getTime().toString();
                     String reason = signature.getReason();
