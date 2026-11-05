@@ -212,6 +212,16 @@ describe("QuoteBuilder minimum deal size", () => {
   });
 });
 
+describe("QuoteBuilder contact email", () => {
+  it("says the email is invalid, not just marks it, when generating", () => {
+    mount(vi.fn(), { ...smallQuote, contactEmail: "dana@northwind" });
+    fireEvent.click(generate());
+    expect(
+      screen.getByText("portal.procurement.emailInvalid"),
+    ).toBeInTheDocument();
+  });
+});
+
 describe("QuoteBuilder generate errors", () => {
   it("offers the self-serve plans only when the server refuses the deal for its size", async () => {
     buildQuote.mockRejectedValueOnce(new Error("Network down"));

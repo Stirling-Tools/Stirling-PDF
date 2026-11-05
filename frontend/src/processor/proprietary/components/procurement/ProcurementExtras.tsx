@@ -359,10 +359,14 @@ export function TrialSetupForm({
 
   // The buying entity is what the quote and agreement are drawn against, so it is required here
   // rather than deferred to the quote; invites are genuinely optional.
+  const emailValid = EMAIL_RE.test(contactEmail.trim());
+  const [emailTouched, setEmailTouched] = useState(false);
+  const showEmailError =
+    emailTouched && contactEmail.trim().length > 0 && !emailValid;
   const detailsValid =
     contactName.trim().length > 0 &&
     businessName.trim().length > 0 &&
-    EMAIL_RE.test(contactEmail.trim());
+    emailValid;
 
   const confirm = () => {
     onConfirm(deployment, Math.max(0, Number(seats) || 0), {
@@ -464,7 +468,10 @@ export function TrialSetupForm({
               />
             </label>
           </div>
-          <label className="portal-qb__field">
+          <label
+            className="portal-qb__field"
+            data-invalid={showEmailError || undefined}
+          >
             <span className="portal-qb__field-label">
               {t("portal.procurement.setup.workEmail")}
             </span>
@@ -472,9 +479,16 @@ export function TrialSetupForm({
               type="email"
               value={contactEmail}
               className={privateContentClassName}
+              aria-invalid={showEmailError || undefined}
               placeholder={t("portal.procurement.setup.workEmailPlaceholder")}
               onChange={(e) => setContactEmail(e.target.value)}
+              onBlur={() => setEmailTouched(true)}
             />
+            {showEmailError && (
+              <span className="portal-qb__field-error" role="alert">
+                {t("portal.procurement.emailInvalid")}
+              </span>
+            )}
           </label>
           <label className="portal-qb__field">
             <span className="portal-qb__field-label">

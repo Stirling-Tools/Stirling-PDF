@@ -155,6 +155,7 @@ export function QuoteBuilder({
   const [triedBelowMinimum, setTriedBelowMinimum] = useState(false);
   // Only surface field errors once the buyer tries to generate — no red fields on first sight.
   const [showErrors, setShowErrors] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
 
   function set<K extends keyof QuoteConfigInput>(k: K, v: QuoteConfigInput[K]) {
     setCfg((c) => ({ ...c, [k]: v }));
@@ -523,7 +524,11 @@ export function QuoteBuilder({
             <Field
               label={t("portal.procurement.builder.contactEmail")}
               required
-              invalid={showErrors && !valid.contactEmail}
+              invalid={
+                (showErrors || (emailTouched && !!cfg.contactEmail?.trim())) &&
+                !valid.contactEmail
+              }
+              error={t("portal.procurement.emailInvalid")}
             >
               <input
                 type="email"
@@ -532,6 +537,7 @@ export function QuoteBuilder({
                 )}
                 value={cfg.contactEmail ?? ""}
                 onChange={(e) => set("contactEmail", e.target.value)}
+                onBlur={() => setEmailTouched(true)}
               />
             </Field>
             <Field
@@ -1004,11 +1010,14 @@ function Field({
   label,
   required,
   invalid,
+  error,
   children,
 }: {
   label: string;
   required?: boolean;
   invalid?: boolean;
+  /** Said under the input while it is invalid, for checks the red border alone can't explain. */
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -1022,6 +1031,11 @@ function Field({
         )}
       </span>
       {children}
+      {invalid && error && (
+        <span className="portal-qb__field-error" role="alert">
+          {error}
+        </span>
+      )}
     </label>
   );
 }

@@ -168,6 +168,7 @@ function ContactSalesModal({
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -183,10 +184,10 @@ function ContactSalesModal({
       setSent(true);
     }, 900);
   };
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const showEmailError = emailTouched && email.trim().length > 0 && !emailValid;
   const ready =
-    name.trim().length > 0 &&
-    company.trim().length > 0 &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    name.trim().length > 0 && company.trim().length > 0 && emailValid;
 
   return (
     <Modal
@@ -231,14 +232,24 @@ function ContactSalesModal({
               />
             </label>
           </div>
-          <label className="portal-qb__field">
+          <label
+            className="portal-qb__field"
+            data-invalid={showEmailError || undefined}
+          >
             <span className="portal-qb__field-label">Work email</span>
             <input
               type="email"
               value={email}
+              aria-invalid={showEmailError || undefined}
               placeholder="you@company.com"
               onChange={(e) => setEmail(e.target.value)}
+              onBlur={() => setEmailTouched(true)}
             />
+            {showEmailError && (
+              <span className="portal-qb__field-error" role="alert">
+                Enter a valid email address, like name@company.com.
+              </span>
+            )}
           </label>
           <label className="portal-qb__field">
             <span className="portal-qb__field-label">What do you need?</span>

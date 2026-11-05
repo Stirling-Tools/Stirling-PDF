@@ -10606,6 +10606,7 @@ cloud = "Drive · Box · S3"
 email = "Email intake"
 
 [portal.procurement]
+emailInvalid = "Enter a valid email address, like name@company.com."
 title = "Procurement"
 
 [portal.procurement.agreement]
