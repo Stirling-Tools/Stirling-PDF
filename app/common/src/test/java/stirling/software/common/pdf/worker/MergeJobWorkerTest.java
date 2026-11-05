@@ -75,6 +75,26 @@ class MergeJobWorkerTest {
     }
 
     @Test
+    void singleInputIsCopiedWithoutRewriting() throws IOException {
+        Path in = pdf("only.pdf", 2);
+        Path out = dir.resolve("single.pdf");
+        MergeJob.Result result = new MergeJob(List.of(in), out, null, false).run();
+
+        assertThat(result.pageCounts()).containsExactly(2);
+        assertThat(Files.mismatch(in, out)).isEqualTo(-1L);
+    }
+
+    @Test
+    void singleInputWithTableOfContentsGetsTheBookmark() throws IOException {
+        Path out = dir.resolve("single-toc.pdf");
+        new MergeJob(List.of(pdf("one.pdf", 1)), out, List.of("Only"), false).run();
+        try (PDDocument merged = Loader.loadPDF(out.toFile())) {
+            assertThat(merged.getDocumentCatalog().getDocumentOutline().getFirstChild().getTitle())
+                    .isEqualTo("Only");
+        }
+    }
+
+    @Test
     void corruptInputFailsTheJobButKeepsTheWorker() throws IOException {
         Path bad = dir.resolve("bad.pdf");
         Files.writeString(bad, "not a pdf");

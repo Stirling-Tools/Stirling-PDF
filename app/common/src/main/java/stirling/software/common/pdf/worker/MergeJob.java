@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -133,7 +134,16 @@ public record MergeJob(
                 runningOffset += pageCounts[i];
             }
 
+            if (docs.size() == 1 && tocTitles == null) {
+                // PdfMerge round-trips one document through a Java byte[]; nothing to merge.
+                Files.copy(inputs.getFirst(), output, StandardCopyOption.REPLACE_EXISTING);
+                return pageCounts;
+            }
             BookmarkTree combinedTree = buildCombinedBookmarkTree(pageOffsets, sourceBookmarks);
+            if (docs.size() == 1) {
+                PdfBookmarkEditor.setBookmarks(docs.getFirst(), combinedTree, output);
+                return pageCounts;
+            }
             try (PdfDocument merged = PdfMerge.merge(docs)) {
                 if (combinedTree.entries().isEmpty()) {
                     merged.save(output);
