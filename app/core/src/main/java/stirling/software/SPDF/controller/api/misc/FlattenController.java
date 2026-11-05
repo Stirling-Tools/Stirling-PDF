@@ -28,6 +28,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.model.FlattenMode;
+import stirling.software.jpdfium.model.SaveOptions;
 
 @MiscApi
 @Slf4j
@@ -89,7 +90,7 @@ public class FlattenController {
                 } else {
                     document.flatten(FlattenMode.FULL, renderDpi);
                 }
-                document.save(tempOutputFile.getFile().toPath());
+                document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
             } catch (RuntimeException e) {
                 throw new IOException("JPDFium flatten failed", e);
             }
