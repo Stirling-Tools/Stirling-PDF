@@ -20,6 +20,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
@@ -79,6 +80,7 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
+import stirling.software.SPDF.utils.text.TextEncodingHelper;
 import stirling.software.SPDF.utils.text.WidthCalculator;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -510,6 +512,71 @@ public class CertSignController {
         }
 
         /**
+         * Resolves the font for the visible signature. Times Bold is kept whenever it can
+         * encode the label, so Latin signer names look exactly as before. When it cannot
+         * (a no-CN subject such as {@code O=株式会社}), the embedded Noto face covering
+         * the script is loaded instead, following the watermark/stamp pattern; a
+         * {@code PDType1Font} would throw in {@code showText} for those characters.
+         */
+        static PDFont resolveSignatureFont(PDDocument doc, String label) throws IOException {
+            PDFont timesBold = new PDType1Font(FontName.TIMES_BOLD);
+            if (TextEncodingHelper.canEncodeCharacters(timesBold, label)) {
+                return timesBold;
+            }
+            String resource = signatureFontResource(label);
+            try (InputStream is = new ClassPathResource(resource).getInputStream()) {
+                return PDType0Font.load(doc, is);
+            }
+        }
+
+        /**
+         * Picks a bundled Noto face for text Times Bold cannot encode, by the first
+         * non-Latin script found in the text. CJK ideographs without kana default to
+         * Simplified Chinese, which covers the common shared characters.
+         */
+        static String signatureFontResource(String text) {
+            for (int i = 0; i < text.length(); ) {
+                int codePoint = text.codePointAt(i);
+                Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
+                if (block == Character.UnicodeBlock.HIRAGANA
+                        || block == Character.UnicodeBlock.KATAKANA) {
+                    return "static/fonts/NotoSansJP-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.HANGUL_SYLLABLES
+                        || block == Character.UnicodeBlock.HANGUL_JAMO
+                        || block == Character.UnicodeBlock.HANGUL_COMPATIBILITY_JAMO) {
+                    return "static/fonts/NotoSansKR-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                        || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+                        || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
+                        || block == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS) {
+                    return "static/fonts/NotoSansSC-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.ARABIC) {
+                    return "static/fonts/NotoSansArabic-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.THAI) {
+                    return "static/fonts/NotoSansThai-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.HEBREW) {
+                    return "static/fonts/NotoSansHebrew-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.DEVANAGARI) {
+                    return "static/fonts/NotoSansDevanagari-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.MALAYALAM) {
+                    return "static/fonts/NotoSansMalayalam-Regular.ttf";
+                }
+                if (block == Character.UnicodeBlock.TIBETAN) {
+                    return "static/fonts/NotoSerifTibetan-Regular.ttf";
+                }
+                i += Character.charCount(codePoint);
+            }
+            return "static/fonts/NotoSans-Regular.ttf";
+        }
+
+        /**
          * Builds the visible signature appearance (a 200 by 50 point box showing the signer
          * name, the signing date and, when present, the reason) as a standalone PDF.
          */
@@ -543,7 +610,6 @@ public class CertSignController {
                 PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
                 float height = bbox.getHeight();
                 form.setBBox(bbox);
-                PDFont font = new PDType1Font(FontName.TIMES_BOLD);
 
                 // from PDVisualSigBuilder.createAppearanceDictionary()
                 PDAppearanceDictionary appearance = new PDAppearanceDictionary();
@@ -580,6 +646,12 @@ public class CertSignController {
                     // https://stackoverflow.com/questions/2914521/
                     String name = getSignerName(cert);
                     String signedBy = "Signed by " + name;
+
+                    // Times Bold cannot encode non-Latin subjects (e.g. a no-CN fallback
+                    // such as O=株式会社), and showText would throw for those characters.
+                    // Resolve the font from the label so the width calculation and the
+                    // rendering use the same font.
+                    PDFont font = resolveSignatureFont(doc, signedBy);
 
                     String date = signature.getSignDate().getTime().toString();
                     String reason = signature.getReason();
