@@ -21,7 +21,10 @@ final class PdfWorkerLauncher {
     static List<String> command(String maxHeap, Class<?> mainClass) {
         List<String> args = new ArrayList<>();
         args.add("-Xmx" + maxHeap);
+        args.add("-Xss512k");
         args.add("-XX:+UseSerialGC");
+        args.add("-XX:ReservedCodeCacheSize=24m");
+        args.add("-XX:MaxMetaspaceSize=128m");
         args.add("-XX:TieredStopAtLevel=1");
         args.add("-XX:+ExitOnOutOfMemoryError");
         args.add("--enable-native-access=ALL-UNNAMED");
