@@ -339,6 +339,17 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void handleIOException_cyclicCauseChain_terminates_and_keeps_body() {
+        IOException outer = new IOException("outer");
+        IOException inner = new IOException("inner");
+        outer.initCause(inner);
+        inner.initCause(outer);
+        ResponseEntity<ProblemDetail> resp = handler.handleIOException(outer, request);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
+        assertNotNull(resp.getBody());
+    }
+
+    @Test
     void handleIOException_jettyEofException_returns_empty_body() {
         IOException ex = new EofException("Early EOF");
         ResponseEntity<ProblemDetail> resp = handler.handleIOException(ex, request);

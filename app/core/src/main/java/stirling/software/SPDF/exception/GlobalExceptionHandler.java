@@ -198,21 +198,8 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
-    /**
-     * Connector-level signals that the response could not be written because the peer is gone,
-     * matched by simple name so no container has to be on the classpath: {@code AbortedException}
-     * (Reactor Netty), {@code ClientAbortException} (Tomcat), {@code EofException} (Jetty) and
-     * {@code AsyncRequestNotUsableException}, which Spring MVC raises from {@code
-     * StandardServletAsyncWebRequest} when a write on an async response fails - the shape a
-     * mid-write idle timeout arrives in.
-     *
-     * <p>This is {@code DisconnectedClientHelper.EXCEPTION_TYPE_NAMES} minus bare {@code
-     * EOFException}: Spring's set is tuned for log routing, but PDFBox and the JDK's own stream
-     * decoders throw {@code java.io.EOFException} for truncated user input, and treating those as a
-     * disconnect would drop a real server-side failure's body and stack trace. Jetty's {@code
-     * EofException} still matches by its own name even though it extends {@code EOFException}, so
-     * this must stay a name test rather than an {@code instanceof}.
-     */
+    // Peer-gone connector exceptions by simple name (no container on the classpath); bare
+    // java.io.EOFException is left out because PDFBox throws it for truncated user input.
     private static final Set<String> CLIENT_DISCONNECT_TYPE_NAMES =
             Set.of(
                     "AbortedException",
@@ -220,22 +207,12 @@ public class GlobalExceptionHandler {
                     "EofException",
                     "AsyncRequestNotUsableException");
 
-    /**
-     * Checks whether the given IOException indicates that the client disconnected before the
-     * response could be written: a broken pipe, a connection reset, or a mid-write idle timeout.
-     * When this happens there is no point in serialising a {@link ProblemDetail} body because the
-     * socket is already closed - and attempting to do so may trigger a secondary {@code
-     * HttpMessageNotWritableException} if the response Content-Type was already committed as a
-     * non-JSON type (e.g. image/png).
-     *
-     * <p>Everything else, including a read-side idle timeout on a slow upload, keeps its
-     * ProblemDetail body and its stack trace.
-     */
+    // Broken pipe, reset or mid-write idle timeout: no point serialising a body to a closed socket.
     private static boolean isClientDisconnectException(IOException ex) {
         // Walk the causal chain - Jetty/Tomcat may wrap the low-level SocketException
         Throwable current = ex;
-        Throwable previous = null;
-        while (current != null && current != previous) {
+        // Bounded so a cyclic cause chain cannot spin forever
+        for (int depth = 0; current != null && depth < 32; depth++) {
             if (CLIENT_DISCONNECT_TYPE_NAMES.contains(current.getClass().getSimpleName())) {
                 return true;
             }
@@ -248,7 +225,6 @@ public class GlobalExceptionHandler {
                     return true;
                 }
             }
-            previous = current;
             current = current.getCause();
         }
         return false;
@@ -1340,9 +1316,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleIOException(
             IOException ex, HttpServletRequest request) {
 
-        // Attempting to write a ProblemDetail response to a disconnected client will fail because
-        // the response Content-Type may already be committed (e.g. image/png) and the client is
-        // gone anyway. Log at WARN and return an empty body.
+        // The client is gone and the Content-Type may already be committed (e.g. image/png),
+        // so writing a ProblemDetail would fail; log at WARN and return an empty body.
         if (isClientDisconnectException(ex)) {
             log.warn(
                     "Client disconnected at {}: {}",
