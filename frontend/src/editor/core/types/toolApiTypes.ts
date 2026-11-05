@@ -967,7 +967,7 @@ export interface PdfToPdfARequest {
    */
   pdfUa?: boolean;
   /**
-   * If true, the conversion will fail if the output is not perfectly compliant
+   * PDF/A: fail if the output is not perfectly compliant. PDF/X: fail if a font is not embedded.
    */
   strict?: boolean;
   /**

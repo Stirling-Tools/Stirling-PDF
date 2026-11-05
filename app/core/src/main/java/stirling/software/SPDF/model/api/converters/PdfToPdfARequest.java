@@ -37,6 +37,7 @@ public class PdfToPdfARequest extends PDFFile {
 
     @Schema(
             description =
-                    "If true, the conversion will fail if the output is not perfectly compliant")
+                    "PDF/A: fail if the output is not perfectly compliant. PDF/X: fail if a font is"
+                            + " not embedded.")
     private Boolean strict = false;
 }

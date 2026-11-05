@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.color.ColorSpace;
 import java.awt.color.ICC_Profile;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -91,6 +90,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
+import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
@@ -108,17 +108,10 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.XmpUtils;
-import stirling.software.jpdfium.PdfDocument;
-import stirling.software.jpdfium.PdfPage;
-import stirling.software.jpdfium.doc.PdfColorConverter;
-import stirling.software.jpdfium.doc.PdfFontAuditor;
-import stirling.software.jpdfium.doc.PdfIccProfiles;
-import stirling.software.jpdfium.doc.PdfOutputIntent;
-import stirling.software.jpdfium.doc.PdfPageObjects;
 import stirling.software.jpdfium.doc.PdfXConverter;
 import stirling.software.jpdfium.doc.PdfXOptions;
 import stirling.software.jpdfium.doc.PdfXStandard;
-import stirling.software.jpdfium.model.SaveOptions;
+import stirling.software.jpdfium.exception.JPDFiumException;
 import stirling.software.officeconvert.pdfa.PdfALevel;
 import stirling.software.officeconvert.pdfa.PdfToPdfA;
 
@@ -640,12 +633,7 @@ public class ConvertPDFToPDFA {
                         : originalFileName;
 
         try {
-            boolean nativeMetadata =
-                    profile.getStandard() == PdfXStandard.PDF_X_3
-                            || profile.getStandard() == PdfXStandard.PDF_X_4;
-            if (nativeMetadata
-                    && (!PdfXConverter.isSupported()
-                            || !PdfXConverter.supports(profile.getStandard()))) {
+            if (!PdfXConverter.supports(profile.getStandard())) {
                 throw new IOException(
                         "PDF/X conversion is not supported by this JPDFium build for "
                                 + profile.getDisplayName());
@@ -659,6 +647,8 @@ public class ConvertPDFToPDFA {
                             .convertSpecialColors(true)
                             .convertLosslessImages(true)
                             .strictImages(true)
+                            .requireEmbeddedFonts(strict)
+                            .title(baseFileName)
                             .build();
 
             TempFile inputTemp = null;
@@ -667,35 +657,17 @@ public class ConvertPDFToPDFA {
                 inputTemp = tempFileManager.createManagedTempFile(".pdf");
                 outputTemp = tempFileManager.createManagedTempFile(".pdf");
                 inputFile.transferTo(inputTemp.getFile());
-
-                if (nativeMetadata) {
-                    PdfXConverter.applyMetadata(inputTemp.getPath(), outputTemp.getPath(), options);
-                } else {
-                    applyUnsupportedPdfxMetadata(
-                            inputTemp.getPath(), outputTemp.getPath(), profile);
+                try (PDDocument pageCounter = Loader.loadPDF(inputTemp.getFile())) {
+                    requireSanitizablePageCount(pageCounter, maxConversionPages);
                 }
 
-                verifyPdfxMetadata(outputTemp.getPath(), options);
-                TempFile polishedTemp = tempFileManager.createManagedTempFile(".pdf");
-                try {
-                    polishPdfx(
-                            outputTemp.getPath(),
-                            polishedTemp.getPath(),
-                            profile,
-                            baseFileName,
-                            strict);
-                    verifyPdfxMetadata(polishedTemp.getPath(), options);
-                    String outputFilename = baseFileName + profile.outputSuffix();
-                    TempFile out = polishedTemp;
-                    polishedTemp = null; // ownership transferred to the response
-                    outputTemp.close();
-                    outputTemp = null;
-                    return WebResponseUtils.pdfFileToWebResponse(out, outputFilename);
-                } finally {
-                    if (polishedTemp != null) {
-                        polishedTemp.close();
-                    }
-                }
+                PdfXConverter.applyMetadata(inputTemp.getPath(), outputTemp.getPath(), options);
+                PdfXConverter.checkMetadata(outputTemp.getPath(), options);
+
+                String outputFilename = baseFileName + profile.outputSuffix();
+                TempFile out = outputTemp;
+                outputTemp = null; // ownership transferred to the response
+                return WebResponseUtils.pdfFileToWebResponse(out, outputFilename);
             } finally {
                 if (inputTemp != null) {
                     inputTemp.close();
@@ -705,6 +677,8 @@ public class ConvertPDFToPDFA {
                 }
             }
 
+        } catch (JPDFiumException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         } catch (RuntimeException e) {
             log.error("JPDFium PDF/X conversion failed", e);
             throw ExceptionUtils.createPdfaConversionFailedException(e);
@@ -714,152 +688,6 @@ public class ConvertPDFToPDFA {
         } catch (IOException e) {
             log.error("PDF/X conversion failed", e);
             throw ExceptionUtils.createPdfaConversionFailedException(e);
-        }
-    }
-
-    /**
-     * JPDFium 1.3.0 only bootstraps PDF/X-3 and PDF/X-4 metadata. X-1a and X-6 use the same colour
-     * and output-intent primitives directly, then {@link #polishPdfx} applies the base version and
-     * document boxes. Font embedding remains a preflight concern.
-     */
-    private void applyUnsupportedPdfxMetadata(Path input, Path output, PdfXProfile profile)
-            throws IOException {
-        PdfXStandard standard = profile.getStandard();
-        try (PdfDocument document = PdfDocument.open(input)) {
-            if (!standard.allowsTransparency()) {
-                for (int i = 0; i < document.pageCount(); i++) {
-                    try (PdfPage page = document.page(i)) {
-                        if (PdfPageObjects.hasTransparencyStrict(page.rawHandleForRead())) {
-                            throw new IOException(
-                                    standard
-                                            + " forbids transparency; page "
-                                            + i
-                                            + " requires flattening");
-                        }
-                    }
-                }
-            }
-
-            PdfColorConverter.convert(
-                    document,
-                    PdfColorConverter.ColorConvertOptions.builder()
-                            .targetColorSpace(PdfColorConverter.ColorSpace.CMYK)
-                            .iccProfile(PdfIccProfiles.compactCmyk())
-                            .convertForms(true)
-                            .convertSpecialColors(true)
-                            .convertLosslessImages(true)
-                            .strictImages(true)
-                            .build());
-
-            TempFile staged = tempFileManager.createManagedTempFile(".pdf");
-            try {
-                document.saveTo(staged.getPath(), SaveOptions.validated());
-                boolean applied =
-                        PdfOutputIntent.applyPdfxMetadata(
-                                staged.getPath(),
-                                output,
-                                PdfIccProfiles.compactCmyk(),
-                                PdfOutputIntent.Spec.pdfx(
-                                        PdfIccProfiles.COMPACT_CMYK_CONDITION,
-                                        PdfIccProfiles.COMPACT_CMYK_CONDITION),
-                                standard.gtsVersion(),
-                                standard.gtsConformance());
-                if (!applied) {
-                    throw new IOException("Could not apply " + standard + " metadata");
-                }
-            } finally {
-                staged.close();
-            }
-        }
-    }
-
-    private static void polishPdfx(
-            Path input, Path output, PdfXProfile profile, String title, boolean strict)
-            throws IOException {
-        Path staged = null;
-        if (input.toAbsolutePath().equals(output.toAbsolutePath())) {
-            staged =
-                    Files.createTempFile(
-                            output.toAbsolutePath().getParent(), "pdfx-polish-", ".pdf");
-        }
-        Path savePath = staged == null ? output : staged;
-        try (PDDocument document = Loader.loadPDF(input.toFile())) {
-            float targetVersion = profile.getPdfVersion();
-            if (targetVersion > document.getVersion()) {
-                document.setVersion(targetVersion);
-            }
-            document.getDocument().setIsXRefStream(false);
-            document.getDocumentCatalog().getCOSObject().removeItem(COSName.VERSION);
-
-            for (PDPage page : document.getPages()) {
-                PDRectangle trimBox =
-                        page.getCropBox() != null ? page.getCropBox() : page.getMediaBox();
-                // PDFBox omits /TrimBox when it equals /MediaBox; PDF/X still requires the entry.
-                page.getCOSObject().setItem(COSName.TRIM_BOX, trimBox.getCOSArray());
-            }
-
-            PDDocumentInformation info = document.getDocumentInformation();
-            if (info.getTitle() == null || info.getTitle().isBlank()) {
-                info.setTitle(title);
-            }
-            if (info.getCreationDate() == null) {
-                info.setCreationDate(Calendar.getInstance());
-            }
-            if (info.getModificationDate() == null) {
-                info.setModificationDate(Calendar.getInstance());
-            }
-            info.setTrapped("False");
-
-            document.save(savePath.toFile());
-        }
-
-        forceHeaderVersion(savePath, profile.getPdfVersion());
-
-        try (PdfDocument audit = PdfDocument.open(savePath)) {
-            if (PdfFontAuditor.hasNonEmbeddedFonts(audit)) {
-                String message =
-                        "PDF/X requires embedded fonts; the document has non-embedded fonts";
-                if (strict) {
-                    throw new IOException(message);
-                }
-                log.warn(message);
-            }
-        }
-
-        if (staged != null) {
-            try {
-                Files.move(staged, output, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            } finally {
-                Files.deleteIfExists(staged);
-            }
-        }
-    }
-
-    private static void verifyPdfxMetadata(Path pdf, PdfXOptions options) throws IOException {
-        try (PDDocument document = Loader.loadPDF(pdf.toFile())) {
-            if (document.getDocumentCatalog().getMetadata() == null
-                    || document.getDocumentCatalog().getOutputIntents() == null
-                    || document.getDocumentCatalog().getOutputIntents().isEmpty()) {
-                throw new IOException("PDF/X output intent or XMP metadata is missing");
-            }
-            String xmp =
-                    new String(
-                            document.getDocumentCatalog().getMetadata().toByteArray(),
-                            StandardCharsets.UTF_8);
-            if (!xmp.contains(options.standard().gtsVersion())
-                    || !xmp.contains(options.standard().gtsConformance())) {
-                throw new IOException(
-                        "PDF/X XMP does not declare " + options.standard().gtsVersion());
-            }
-        }
-    }
-
-    private static void forceHeaderVersion(Path pdf, float version) throws IOException {
-        String header = "%PDF-" + (version == 1.3f ? "1.3" : version == 1.6f ? "1.6" : "2.0");
-        byte[] replacement = header.getBytes(StandardCharsets.US_ASCII);
-        try (java.io.RandomAccessFile file = new java.io.RandomAccessFile(pdf.toFile(), "rw")) {
-            file.seek(0);
-            file.write(replacement);
         }
     }
 
@@ -2086,8 +1914,7 @@ public class ConvertPDFToPDFA {
     }
 
     /** True for a PDF/UA or WCAG result, which says nothing about archival conformance. */
-    private static boolean isAccessibilityProfile(
-            stirling.software.SPDF.model.api.security.PDFVerificationResult result) {
+    private static boolean isAccessibilityProfile(PDFVerificationResult result) {
         String profile = result.getValidationProfile();
         if (profile == null) {
             return false;
@@ -2100,9 +1927,7 @@ public class ConvertPDFToPDFA {
      * True when a result speaks for the requested profile. Only archival results count, and a level
      * B pass must never satisfy a level A request.
      */
-    private static boolean answersRequest(
-            PdfaProfile profile,
-            stirling.software.SPDF.model.api.security.PDFVerificationResult result) {
+    private static boolean answersRequest(PdfaProfile profile, PDFVerificationResult result) {
         if (isAccessibilityProfile(result)) {
             return false;
         }
@@ -2127,14 +1952,11 @@ public class ConvertPDFToPDFA {
                             + " was not reached. It is valid at level B.");
         }
         try (InputStream is = new ByteArrayInputStream(pdfBytes)) {
-            List<stirling.software.SPDF.model.api.security.PDFVerificationResult> results =
-                    veraPDFService.validatePDF(is);
+            List<PDFVerificationResult> results = veraPDFService.validatePDF(is);
             boolean isCompliant =
                     results.stream()
                             .filter(result -> answersRequest(profile, result))
-                            .anyMatch(
-                                    stirling.software.SPDF.model.api.security.PDFVerificationResult
-                                            ::isCompliant);
+                            .anyMatch(PDFVerificationResult::isCompliant);
             if (!isCompliant) {
                 String details =
                         results.stream()
@@ -2926,28 +2748,22 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfXProfile {
-        PDF_X("PDF/X", "_PDFX.pdf", PdfXStandard.PDF_X_4, 1.6f, "pdfx"),
-        PDF_X_1A("PDF/X-1a", "_PDFX-1a.pdf", PdfXStandard.PDF_X_1A, 1.3f, "pdfx-1a", "pdfx-1"),
-        PDF_X_3("PDF/X-3", "_PDFX-3.pdf", PdfXStandard.PDF_X_3, 1.3f, "pdfx-3"),
-        PDF_X_4("PDF/X-4", "_PDFX-4.pdf", PdfXStandard.PDF_X_4, 1.6f, "pdfx-4"),
-        PDF_X_6("PDF/X-6", "_PDFX-6.pdf", PdfXStandard.PDF_X_6, 2.0f, "pdfx-6");
+        PDF_X("PDF/X", "_PDFX.pdf", PdfXStandard.PDF_X_4, "pdfx"),
+        PDF_X_1A("PDF/X-1a", "_PDFX-1a.pdf", PdfXStandard.PDF_X_1A, "pdfx-1a", "pdfx-1"),
+        PDF_X_3("PDF/X-3", "_PDFX-3.pdf", PdfXStandard.PDF_X_3, "pdfx-3"),
+        PDF_X_4("PDF/X-4", "_PDFX-4.pdf", PdfXStandard.PDF_X_4, "pdfx-4"),
+        PDF_X_6("PDF/X-6", "_PDFX-6.pdf", PdfXStandard.PDF_X_6, "pdfx-6");
 
         private final String displayName;
         private final String suffix;
         private final PdfXStandard standard;
-        private final float pdfVersion;
         private final List<String> requestTokens;
 
         PdfXProfile(
-                String displayName,
-                String suffix,
-                PdfXStandard standard,
-                float pdfVersion,
-                String... requestTokens) {
+                String displayName, String suffix, PdfXStandard standard, String... requestTokens) {
             this.displayName = displayName;
             this.suffix = suffix;
             this.standard = standard;
-            this.pdfVersion = pdfVersion;
             this.requestTokens =
                     Arrays.stream(requestTokens)
                             .map(token -> token.toLowerCase(Locale.ROOT))

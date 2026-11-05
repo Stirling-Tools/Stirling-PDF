@@ -1087,7 +1087,7 @@ class PdfToPdfaParams(ApiModel):
         description="Also declare PDF/UA accessibility alongside PDF/A. Only applies to the level A formats, and the claim is written only if it validates.",
     )
     strict: bool | None = Field(
-        None, description="If true, the conversion will fail if the output is not perfectly compliant"
+        None, description="PDF/A: fail if the output is not perfectly compliant. PDF/X: fail if a font is not embedded."
     )
     use_stirling_office_convert: bool | None = Field(
         None, description="Use Stirling Office Convert; when omitted, follow the server setting"
