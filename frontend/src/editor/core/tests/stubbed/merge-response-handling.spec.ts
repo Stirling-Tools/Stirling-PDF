@@ -124,4 +124,29 @@ test.describe("Merge output filename (#8404)", () => {
     await expect(review.getByText(/merged_sample\.pdf/i).first()).toBeVisible();
     await expect(review.getByText(/merged_sample\.jpe?g/i)).toHaveCount(0);
   });
+
+  test("JPEG-first merge with generic Content-Type and unrecognized bytes -> .pdf, never the input extension", async ({
+    page,
+  }) => {
+    // Generic Content-Type plus bytes with no known signature: the input
+    // extension must still not be reused (JPEG input, non-PDF output
+    // would otherwise be saved as .jpg).
+    await page.route("**/api/v1/general/merge-pdfs", (route: Route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/octet-stream",
+        body: "plain text, not a PDF",
+      }),
+    );
+    await page.goto("/merge");
+    await uploadFiles(page, [SAMPLE_JPG, SAMPLE_PDF]);
+    await switchToEditorIfViewerMode(page);
+    await runToolAndWaitForReview(page);
+
+    const review = page.locator('[data-testid="review-panel-container"]');
+    await expect(review).toBeVisible();
+    await expect(review.getByText(/merged_sample\.pdf/i).first()).toBeVisible();
+    await expect(review.getByText(/merged_sample\.jpe?g/i)).toHaveCount(0);
+  });
+
 });
