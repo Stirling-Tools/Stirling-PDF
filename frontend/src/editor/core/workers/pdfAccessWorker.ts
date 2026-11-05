@@ -11,6 +11,7 @@ export interface PdfAccessRequest {
 }
 
 export type PdfAccessResponse =
+  | { ready: true }
   | { access: PdfAccess }
   | { error: string; code?: number };
 
@@ -44,6 +45,8 @@ self.onmessage = async ({ data }: MessageEvent<PdfAccessRequest>) => {
     }
     const module = await Promise.race([init(options), instantiationFailed]);
     module.PDFiumExt_Init();
+    // Loading is network-bound; tell the caller so its deadline only covers parsing.
+    self.postMessage({ ready: true } satisfies PdfAccessResponse);
     const bytes = new Uint8Array(await data.file.arrayBuffer());
     const pointer = module.pdfium.wasmExports.malloc(bytes.length);
     if (!pointer) throw new Error("Unable to allocate memory for this PDF");

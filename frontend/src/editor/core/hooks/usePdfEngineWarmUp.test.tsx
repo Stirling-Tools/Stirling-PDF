@@ -71,7 +71,7 @@ describe("usePdfEngineWarmUp", () => {
     expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
   });
 
-  test("fetches nothing when the page is only visited", async () => {
+  test("preloads once the browser is idle after boot", async () => {
     const store = createMockStore([]);
     const { usePdfEngineWarmUp } =
       await import("@editor/hooks/usePdfEngineWarmUp");
@@ -84,11 +84,12 @@ describe("usePdfEngineWarmUp", () => {
 
     renderHook(() => usePdfEngineWarmUp(), { wrapper });
 
+    expect(mockStartEagerWasmCompilation).not.toHaveBeenCalled();
     act(() => {
       vi.advanceTimersByTime(60_000);
     });
 
-    expect(mockStartEagerWasmCompilation).not.toHaveBeenCalled();
+    expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
   });
 
   test("does not warm up for pointer input outside the file picker", async () => {
