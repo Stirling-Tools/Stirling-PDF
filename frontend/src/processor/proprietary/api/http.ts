@@ -44,6 +44,7 @@
 import type { AccountLinkBlockContext } from "@editor/services/accountLinkBlock";
 import { withPortalSaasSession } from "@editor/portal/auth/portalSaasSession";
 import { reportAccountLinkBlock } from "@editor/portal/services/accountLinkBlock";
+import { reportMemberOverPlanLimit } from "@editor/services/memberOverPlanLimit";
 export { SaasSessionRequiredError } from "@editor/portal/auth/portalSaasSession";
 import { resolveDemoResponse } from "@editor/portal/api/demoData";
 import { saasApiBase } from "@editor/portal/api/saasApiBase";
@@ -133,6 +134,7 @@ async function unwrap<T>(
     // the actionable surface. Reported for every domain rather than only the local one because the
     // classifier keys on a sentinel only the local backend sends, so a SaaS 402 cannot reach it.
     reportAccountLinkBlock(error, context);
+    reportMemberOverPlanLimit(res.status, body);
     throw error;
   }
   // 204 / empty-body responses have nothing to parse.
