@@ -2,27 +2,24 @@ import { useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Card } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
-import { copyText } from "@editor/utils/copyText";
 import { EDITOR_URL } from "@processor/auth/editorUrl";
 import { DownloadEditorModal } from "@processor/components/DownloadEditorModal";
+import { useCopyFeedback } from "@processor/hooks/useCopyFeedback";
 import { useEditorInstalled } from "@processor/hooks/useEditorInstalled";
+import {
+  DOCKER_IMAGE,
+  type DockerImageTag,
+} from "@editor/constants/selfHosting";
+import type { Deployment } from "@processor/api/procurement";
+import { ENTERPRISE_DOCS } from "@processor/components/procurement/enterpriseDocs";
 import "@processor/views/Procurement.css";
+import "@processor/components/procurement/SetupChecklist.css";
 
-const DOCS = "https://docs.stirlingpdf.com";
-const DOC = {
-  docker: `${DOCS}/Server/Install/Docker/`,
-  kubernetes: `${DOCS}/Server/Install/Kubernetes/`,
-  licence: `${DOCS}/Server/Licensing/Plans-and-Licences/`,
-  sso: `${DOCS}/Server/Security/OAuth-SSO/`,
-  saml: `${DOCS}/Server/Security/SAML-SSO/`,
-  ocr: `${DOCS}/Server/Operations/OCR-Languages/`,
-};
-
-const IMAGE = "stirlingtools/stirling-pdf:latest";
-/** The extra fonts an offline server cannot fetch later. */
-const FULL_IMAGE = "stirlingtools/stirling-pdf:latest-fat";
-
-type Deployment = "cloud" | "selfhost" | "airgap";
+const DOC = ENTERPRISE_DOCS;
+const image = (tag: DockerImageTag) => `${DOCKER_IMAGE}:${tag}`;
+const IMAGE = image("latest");
+/** Bundles the fonts an offline server cannot download. */
+const FULL_IMAGE = image("latest-fat");
 
 interface StepLink {
   label: string;
@@ -438,15 +435,11 @@ function StepAction({ link }: { link: StepLink }): ReactNode {
 
 function CodeBlock({ code }: { code: string }) {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
+  const { copied, copy: copyCode } = useCopyFeedback();
   const codeRef = useRef<HTMLElement>(null);
   const copy = () => {
-    void copyText(code).then((ok) => {
-      if (ok) {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-        return;
-      }
+    void copyCode(code).then((ok) => {
+      if (ok) return;
       // The browser refused: select the command so the admin can copy it by hand.
       const range = document.createRange();
       if (codeRef.current) range.selectNodeContents(codeRef.current);

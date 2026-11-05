@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { Banner } from "@editor/ui";
 import { COMPARE_PLANS_ANCHOR } from "@editor/billing/compareAnchor";
-import { useUI } from "@editor/portal/contexts/UIContext";
-import { useLinkedAccountEmail } from "@editor/portal/hooks/useLinkedAccountEmail";
-import { ProcurementAgreement } from "@editor/portal/components/procurement/ProcurementAgreement";
+import { useUI } from "@processor/contexts/UIContext";
+import { useLinkedAccountEmail } from "@processor/hooks/useLinkedAccountEmail";
+import { ProcurementAgreement } from "@processor/components/procurement/ProcurementAgreement";
 import { ScheduleCallModal } from "@processor/components/procurement/ProcurementExtras";
-import { QuoteBuilder } from "@editor/portal/components/procurement/QuoteBuilder";
-import type { ProcurementController } from "@editor/portal/components/procurement/useProcurement";
+import { QuoteBuilder } from "@processor/components/procurement/QuoteBuilder";
+import type { ProcurementController } from "@processor/components/procurement/useProcurement";
 
 /** Which long step, if any, the deal is on: building its quote or signing its agreement. */
 export function procurementFlowStep(
@@ -75,20 +75,16 @@ export function ProcurementFlow({
 
           {builderShowing && data && (
             <QuoteBuilder
-              deployment={data?.deployment ?? "cloud"}
-              seats={data?.seats ?? 0}
+              deployment={data.deployment ?? "cloud"}
+              seats={data.seats}
               email={scheduleEmail}
-              dealDetails={
-                data
-                  ? {
-                      businessName: data.businessName,
-                      contactName: data.contactName,
-                      contactEmail: data.contactEmail,
-                    }
-                  : undefined
-              }
+              dealDetails={{
+                businessName: data.businessName,
+                contactName: data.contactName,
+                contactEmail: data.contactEmail,
+              }}
               initial={latest?.config}
-              eulaAlreadyAgreed={data?.trialStartedAt != null}
+              eulaAlreadyAgreed={data.trialStartedAt != null}
               minAnnualMinor={data.minAnnualNetMinor}
               rates={data.rateCard}
               onScheduleCall={() => setExtra("schedule")}

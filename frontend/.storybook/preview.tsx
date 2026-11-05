@@ -245,8 +245,7 @@ const withProviders: Decorator = (Story, context) => {
   return (
     <MemoryRouter initialEntries={["/"]}>
       <QueryClientProvider client={queryClient}>
-        {/* Forced, not saved: the toolbar is the single source of truth for the theme, and
-            saving it as the preference set open tabs flipping each other back and forth. */}
+        {/* Forced, not saved: the toolbar owns the theme, and one tab saving it would flip the others. */}
         <ThemeProvider forcedTheme={colorScheme}>
           <SchemeSetup scheme={colorScheme} />
           <StoryTheme isPortalStory={isPortalStory} colorScheme={colorScheme}>

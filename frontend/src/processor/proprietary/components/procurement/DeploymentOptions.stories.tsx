@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { DeploymentOptions } from "@processor/components/procurement/DeploymentOptions";
-import "@processor/views/Enterprise.css";
 
 /** The ways to run Enterprise, a slide each, as shown beside the trial panel on the landing page. */
 const meta: Meta<typeof DeploymentOptions> = {

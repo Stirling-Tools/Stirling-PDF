@@ -128,6 +128,10 @@ export interface AcceptResult {
   invoicePdf: string | null;
 }
 
+/** Where a buyer can run Stirling Enterprise. */
+export const DEPLOYMENTS = ["cloud", "selfhost", "airgap"] as const;
+export type Deployment = (typeof DEPLOYMENTS)[number];
+
 /** The error code the server answers a quote under the minimum deal size with (a 409). */
 export const QUOTE_BELOW_MINIMUM = "quote_below_minimum";
 

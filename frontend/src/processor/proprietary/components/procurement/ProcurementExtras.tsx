@@ -4,6 +4,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@editor/ui";
 import {
+  DEPLOYMENTS,
   fetchLegalDocument,
   type TrialSetupDetails,
 } from "@processor/api/procurement";
@@ -306,7 +307,6 @@ export function ScheduleCallModal({
 }
 
 // ── Trial setup ────────────────────────────────────────────────────────────
-const DEPLOYMENTS = ["cloud", "selfhost", "airgap"] as const;
 
 /**
  * Captured before the trial starts: where the buyer will run Stirling (which drives the deployment

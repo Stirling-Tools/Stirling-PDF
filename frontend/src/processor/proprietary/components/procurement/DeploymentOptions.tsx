@@ -2,23 +2,20 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActionIcon, CarouselDots } from "@editor/ui";
 import { Icon, type IconName } from "@editor/ui/Icon";
-
-const DOCS = "https://docs.stirlingpdf.com";
+import type { Deployment } from "@processor/api/procurement";
+import { ENTERPRISE_DOCS } from "@processor/components/procurement/enterpriseDocs";
+import "@processor/components/procurement/DeploymentOptions.css";
 
 interface Option {
-  id: "cloud" | "selfhost" | "airgap";
+  id: Deployment;
   icon: IconName;
   docs: string;
 }
 
 const OPTIONS: Option[] = [
-  { id: "cloud", icon: "cloud", docs: `${DOCS}/Cloud/` },
-  { id: "selfhost", icon: "server", docs: `${DOCS}/Server/` },
-  {
-    id: "airgap",
-    icon: "shield-check",
-    docs: `${DOCS}/Server/Licensing/Plans-and-Licences/#activating-your-license`,
-  },
+  { id: "cloud", icon: "cloud", docs: ENTERPRISE_DOCS.cloud },
+  { id: "selfhost", icon: "server", docs: ENTERPRISE_DOCS.server },
+  { id: "airgap", icon: "shield-check", docs: ENTERPRISE_DOCS.offlineLicence },
 ];
 
 /**

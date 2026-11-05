@@ -1,7 +1,6 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui";
-import { copyText } from "@editor/utils/copyText";
+import { useCopyFeedback } from "@processor/hooks/useCopyFeedback";
 import "@processor/views/Procurement.css";
 
 /**
@@ -21,15 +20,8 @@ export function LicensePanel({
   onDownloadOffline: () => void;
 }) {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
-
-  const copyKey = () => {
-    void copyText(licenseKey).then((ok) => {
-      if (!ok) return;
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  };
+  const { copied, copy } = useCopyFeedback();
+  const copyKey = () => void copy(licenseKey);
 
   return (
     <div className="portal-proc__license">

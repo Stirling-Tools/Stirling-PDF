@@ -72,11 +72,14 @@ export default function Login() {
     }
   }, []);
 
+  /** On to where the visitor was heading, which is then no longer remembered. */
+  const continueToNext = () => {
+    clearPendingDestination();
+    navigate(nextPath ?? "/", { replace: true });
+  };
+
   useEffect(() => {
-    if (signedIn && !loading && nextPath) {
-      clearPendingDestination();
-      navigate(nextPath, { replace: true });
-    }
+    if (signedIn && !loading && nextPath) continueToNext();
   }, [signedIn, loading, nextPath, navigate]);
 
   // Stashed as well as held in the URL: leaving to create an account loses the
@@ -252,8 +255,7 @@ export default function Login() {
     // Already a guest: carry on as that guest. Signing in anonymously again would swap their
     // session for a brand-new guest account.
     if (session && isAnonymous) {
-      clearPendingDestination();
-      navigate(nextPath ?? "/", { replace: true });
+      continueToNext();
       return;
     }
     try {
@@ -272,8 +274,7 @@ export default function Login() {
         await refreshSession();
 
         // A guest session does not count as signed in here, so nothing else moves them on.
-        clearPendingDestination();
-        navigate(nextPath ?? "/", { replace: true });
+        continueToNext();
       }
     } catch (err) {
       console.error("[Login] Unexpected error:", err);
