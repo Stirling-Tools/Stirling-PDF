@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { DealStatusHero } from "@processor/components/procurement/DealStatusHero";
 import type { ProcurementSnapshot } from "@processor/api/procurement";
+import { RATE_CARD } from "@processor/mocks/handlers/procurementSaas";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -30,6 +31,7 @@ const snapshot: ProcurementSnapshot = {
   contactName: null,
   contactEmail: null,
   latestQuote: null,
+  rateCard: RATE_CARD,
 };
 
 function mount(overrides: Partial<ProcurementSnapshot> = {}, member = false) {

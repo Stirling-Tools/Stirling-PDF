@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Test;
 
 import stirling.software.saas.procurement.pricing.QuoteLineItem.Kind;
 
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+
 /**
  * Locks the D71 pricing engine to the numbers marketing publishes. The two anchor fixtures are the
  * ones the demo memo foots against: acme (90M PDFs · Governed · self-hosted · dedicated · 3-yr =
@@ -190,5 +193,24 @@ class ProcurementPricingServiceTest {
                 .mapToLong(QuoteLineItem::amountMinor)
                 .findFirst()
                 .orElseThrow();
+    }
+
+    /**
+     * The quote builder reads the rate card by these names (RateCard in the portal's procurement
+     * API) and runs the same formula over it, so a rename here would break its live estimate.
+     */
+    @Test
+    void rateCardSerializesUnderTheNamesTheBuilderReads() {
+        JsonNode json = new ObjectMapper().valueToTree(pricing.rates());
+        assertThat(json.get("listRatePerRun").asDouble()).isEqualTo(0.01);
+        assertThat(json.get("floorRatePerRun").asDouble()).isEqualTo(0.005);
+        assertThat(json.get("discountPerDoubling").asDouble()).isEqualTo(0.06);
+        assertThat(json.get("termDiscountByYear").size()).isEqualTo(5);
+        assertThat(json.get("indemnificationRate").asDouble()).isEqualTo(0.05);
+        assertThat(json.get("dedicatedSupportMinor").asLong()).isEqualTo(3_000_000L);
+        assertThat(json.get("selfHostDeployMinor").asLong()).isEqualTo(1_200_000L);
+        assertThat(json.get("airgapDeployMinor").asLong()).isEqualTo(3_600_000L);
+        assertThat(json.get("qbrAnnualMinor").asLong()).isEqualTo(800_000L);
+        assertThat(json.get("trainingOneTimeMinor").asLong()).isEqualTo(750_000L);
     }
 }

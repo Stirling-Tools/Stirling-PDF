@@ -33,6 +33,7 @@ import stirling.software.saas.procurement.model.ProcurementAgreementSignature;
 import stirling.software.saas.procurement.model.ProcurementDeal;
 import stirling.software.saas.procurement.model.ProcurementQuote;
 import stirling.software.saas.procurement.model.QuoteDetails;
+import stirling.software.saas.procurement.pricing.PricingRates;
 import stirling.software.saas.procurement.pricing.ProcurementPricingService;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.pricing.QuoteLineItem;
@@ -216,7 +217,9 @@ public class ProcurementController {
             long minAnnualNetMinor,
             // The deployment the licence is issued for: the current quote's once one exists, else
             // the trial's. Setup steps and the offline licence follow this, not {@code deployment}.
-            String entitledDeployment) {}
+            String entitledDeployment,
+            // The rates quotes are priced from, so the builder's live estimate uses the same ones.
+            PricingRates rateCard) {}
 
     /** The filled agreement for review: registry metadata + the rendered markdown body. */
     public record AgreementDocumentResponse(
@@ -278,7 +281,8 @@ public class ProcurementController {
                 null,
                 null,
                 config.getMinAnnualNetMinor(),
-                null);
+                null,
+                pricing.rates());
     }
 
     /**
@@ -665,7 +669,8 @@ public class ProcurementController {
                 deal.getContactEmail(),
                 latest,
                 config.getMinAnnualNetMinor(),
-                procurement.entitledDeployment(deal));
+                procurement.entitledDeployment(deal),
+                pricing.rates());
     }
 
     private QuoteResponse toQuote(ProcurementQuote q) {

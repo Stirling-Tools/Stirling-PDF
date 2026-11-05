@@ -10,6 +10,7 @@ import { MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ProcurementSnapshot } from "@processor/api/procurement";
+import { RATE_CARD } from "@processor/mocks/handlers/procurementSaas";
 import type { ProcurementController } from "@processor/components/procurement/useProcurement";
 import type { TrialDraft } from "@processor/components/procurement/trialDraft";
 import { Enterprise } from "@processor/views/Enterprise";
@@ -113,6 +114,7 @@ const trial: ProcurementSnapshot = {
   contactName: null,
   contactEmail: null,
   latestQuote: null,
+  rateCard: RATE_CARD,
 };
 
 function controller(

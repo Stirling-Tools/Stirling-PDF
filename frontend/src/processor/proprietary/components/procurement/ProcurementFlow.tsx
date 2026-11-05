@@ -73,7 +73,7 @@ export function ProcurementFlow({
             </Banner>
           )}
 
-          {builderShowing && (
+          {builderShowing && data && (
             <QuoteBuilder
               deployment={data?.deployment ?? "cloud"}
               seats={data?.seats ?? 0}
@@ -89,7 +89,8 @@ export function ProcurementFlow({
               }
               initial={latest?.config}
               eulaAlreadyAgreed={data?.trialStartedAt != null}
-              minAnnualMinor={data?.minAnnualNetMinor ?? 0}
+              minAnnualMinor={data.minAnnualNetMinor ?? 0}
+              rates={data.rateCard}
               onScheduleCall={() => setExtra("schedule")}
               onComparePlans={() =>
                 openSettings("billing", COMPARE_PLANS_ANCHOR)

@@ -40,8 +40,16 @@ public class ProcurementPricingService {
         return Math.round(Math.max(0, users) * 5.0 * 230.0 * 1.75);
     }
 
+    /**
+     * The rate card quotes are priced from. Also sent to the quote builder, which runs the same
+     * formula over it for its live estimate, so the figures it shows can't drift from these.
+     */
+    public PricingRates rates() {
+        return PricingRates.defaults();
+    }
+
     public QuoteBreakdown price(QuoteConfig cfg) {
-        return price(cfg, PricingRates.defaults());
+        return price(cfg, rates());
     }
 
     public QuoteBreakdown price(QuoteConfig cfg, PricingRates rates) {

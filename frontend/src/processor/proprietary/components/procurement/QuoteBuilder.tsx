@@ -8,6 +8,7 @@ import {
   buildQuote,
   recordLegalConsent,
   type QuoteConfigInput,
+  type RateCard,
   type QuoteResult,
 } from "@processor/api/procurement";
 import {
@@ -19,7 +20,6 @@ import { QuotePaper } from "@processor/components/procurement/QuotePaper";
 import {
   estimateVolume,
   previewAnnualMinor,
-  TRAINING_MINOR,
 } from "@processor/components/procurement/quotePricing";
 import { LegalDocumentModal } from "@processor/components/procurement/ProcurementExtras";
 import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
@@ -56,6 +56,7 @@ export function QuoteBuilder({
   initial,
   eulaAlreadyAgreed = false,
   minAnnualMinor = 0,
+  rates,
   onComparePlans,
   onScheduleCall,
   onGenerate,
@@ -82,6 +83,8 @@ export function QuoteBuilder({
   };
   /** Smallest annual fee the server will quote; 0 when there is no floor. */
   minAnnualMinor?: number;
+  /** The server's rate card, which the live estimate is priced from. */
+  rates: RateCard;
   /** Where a buyer too small for Enterprise goes instead: the self-serve plans. */
   onComparePlans?: () => void;
   /** Talk it through with us, offered when a quote falls just short of the minimum. */
@@ -188,13 +191,13 @@ export function QuoteBuilder({
     if (issued) setStep(REVIEW_STEP);
   }, [issued?.quoteId]);
 
-  const preview = previewAnnualMinor(cfg);
+  const preview = previewAnnualMinor(cfg, rates);
   const tcvPreview =
-    preview * cfg.termYears + (cfg.training ? TRAINING_MINOR : 0);
+    preview * cfg.termYears + (cfg.training ? rates.trainingOneTimeMinor : 0);
   // Priced off the usage fee, so its figure moves with the rest of the quote.
   const indemnityPreview =
-    previewAnnualMinor({ ...cfg, indemnification: true }) -
-    previewAnnualMinor({ ...cfg, indemnification: false });
+    previewAnnualMinor({ ...cfg, indemnification: true }, rates) -
+    previewAnnualMinor({ ...cfg, indemnification: false }, rates);
 
   // On the review step the footer quotes the issued figures rather than the client-side preview, so
   // the running total never disagrees with the paper directly above it.
@@ -220,7 +223,7 @@ export function QuoteBuilder({
       ? money(trainingLine.amountMinor, issued.currency)
       : null
     : cfg.training
-      ? money(TRAINING_MINOR)
+      ? money(rates.trainingOneTimeMinor)
       : null;
 
   // The preview uses the server's rates, so a draft under the floor is caught here rather than by
@@ -237,7 +240,7 @@ export function QuoteBuilder({
     let low = cfg.volume;
     let high = Math.max(cfg.volume, 1) * 2;
     while (
-      previewAnnualMinor({ ...cfg, volume: high }) < minAnnualMinor &&
+      previewAnnualMinor({ ...cfg, volume: high }, rates) < minAnnualMinor &&
       high < MAX_VOLUME
     ) {
       low = high;
@@ -245,7 +248,7 @@ export function QuoteBuilder({
     }
     while (high - low > 1) {
       const mid = Math.floor((low + high) / 2);
-      if (previewAnnualMinor({ ...cfg, volume: mid }) >= minAnnualMinor)
+      if (previewAnnualMinor({ ...cfg, volume: mid }, rates) >= minAnnualMinor)
         high = mid;
       else low = mid;
     }
@@ -329,7 +332,12 @@ export function QuoteBuilder({
           />
         )}
         {step === 1 && (
-          <PlanStep cfg={cfg} set={set} indemnityPreview={indemnityPreview} />
+          <PlanStep
+            cfg={cfg}
+            set={set}
+            rates={rates}
+            indemnityPreview={indemnityPreview}
+          />
         )}
         {step === DETAILS_STEP && (
           <DetailsStep
@@ -354,6 +362,7 @@ export function QuoteBuilder({
         {step === REVIEW_STEP && issued && (
           <QuotePaper
             issued={issued}
+            rates={rates}
             downloading={downloading}
             onDownload={onDownload}
           />

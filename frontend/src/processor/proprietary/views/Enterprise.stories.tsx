@@ -9,6 +9,7 @@ import type {
   QuoteResult,
 } from "@processor/api/procurement";
 import { freeWallet } from "@processor/components/billing/walletFixtures";
+import { RATE_CARD } from "@processor/mocks/handlers/procurementSaas";
 
 const SAAS = "http://saas.mock";
 const DAY = 86_400_000;
@@ -57,6 +58,7 @@ const trial: ProcurementSnapshot = {
   contactName: "Dana Lee",
   contactEmail: "dana@northwind.example",
   latestQuote: null,
+  rateCard: RATE_CARD,
   minAnnualNetMinor: 1_200_000,
 };
 

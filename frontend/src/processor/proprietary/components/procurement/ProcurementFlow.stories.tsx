@@ -6,6 +6,7 @@ import type {
   QuoteResult,
 } from "@processor/api/procurement";
 import "@processor/views/Procurement.css";
+import { RATE_CARD } from "@processor/mocks/handlers/procurementSaas";
 
 const quote: QuoteResult = {
   quoteId: 488,
@@ -64,6 +65,7 @@ const snapshot: ProcurementSnapshot = {
   contactName: null,
   contactEmail: null,
   latestQuote: quote,
+  rateCard: RATE_CARD,
 };
 
 /** Builds a fully-populated controller so callers only need to override the fields a story cares about. */

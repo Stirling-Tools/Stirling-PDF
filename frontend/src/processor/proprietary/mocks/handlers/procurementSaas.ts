@@ -1,4 +1,5 @@
 import { http, HttpResponse } from "msw";
+import type { RateCard } from "@processor/api/procurement";
 
 /**
  * MSW mock for the real SaaS procurement endpoints (`apiClient.saas` → VITE_SAAS_API_URL, which is
@@ -51,36 +52,52 @@ let deal: typeof EMPTY | (Record<string, unknown> & { latestQuote: unknown }) =
   EMPTY;
 let seq = 0;
 
-const TERM = [0, 0.03, 0.05, 0.06, 0.07]; // meter-only, 1..5 years
+/** The server's default rate card (PricingRates.defaults()), sent with the deal like the real one. */
+export const RATE_CARD: RateCard = {
+  listRatePerRun: 0.01,
+  floorRatePerRun: 0.005,
+  discountPerDoubling: 0.06,
+  termDiscountByYear: [0, 0.03, 0.05, 0.06, 0.07],
+  indemnificationRate: 0.05,
+  dedicatedSupportMinor: 3_000_000,
+  selfHostDeployMinor: 1_200_000,
+  airgapDeployMinor: 3_600_000,
+  qbrAnnualMinor: 800_000,
+  trainingOneTimeMinor: 750_000,
+};
 
 // Mirror of ProcurementPricingService (D71): run-based curve, flat priced needs, USD.
 // Exported for the pricing-parity test (see pricingParity.test.ts).
 export function priceQuote(cfg: Cfg) {
-  const LIST = 0.01;
-  const FLOOR = 0.005;
+  const R = RATE_CARD;
   const intensity = Math.max(1, cfg.intensity || 4);
   const runVol = Math.max(0, cfg.volume) * intensity;
   const volDisc =
     runVol > 1_000_000
-      ? Math.min(0.5, 0.06 * Math.log2(runVol / 1_000_000))
+      ? Math.min(0.5, R.discountPerDoubling * Math.log2(runVol / 1_000_000))
       : 0;
   // File-size tier (D93) scales the rate after the floor; snap to a known multiplier.
   const sizeMult = [1.0, 1.4, 2.4].includes(cfg.sizeMult) ? cfg.sizeMult : 1.0;
-  const rate = Math.max(FLOOR, LIST * (1 - volDisc)) * sizeMult;
-  const termDisc = TERM[Math.min(Math.max(cfg.termYears, 1), 5) - 1];
+  const rate =
+    Math.max(R.floorRatePerRun, R.listRatePerRun * (1 - volDisc)) * sizeMult;
+  const termDisc =
+    R.termDiscountByYear[Math.min(Math.max(cfg.termYears, 1), 5) - 1];
   const annualBase = Math.round(runVol * rate) * 100; // whole $ → minor
   const meterNet = Math.round(runVol * rate * (1 - termDisc)) * 100;
   const termDiscount = meterNet - annualBase; // <= 0
-  const support = cfg.serviceLevel === "dedicated" ? 3_000_000 : 0;
+  const support =
+    cfg.serviceLevel === "dedicated" ? R.dedicatedSupportMinor : 0;
   const deploy =
     cfg.deployment === "airgap"
-      ? 3_600_000
+      ? R.airgapDeployMinor
       : cfg.deployment === "selfhost"
-        ? 1_200_000
+        ? R.selfHostDeployMinor
         : 0;
-  const indemnity = cfg.indemnification ? Math.round(meterNet * 0.05) : 0;
-  const qbr = cfg.qbr ? 800_000 : 0;
-  const training = cfg.training ? 750_000 : 0;
+  const indemnity = cfg.indemnification
+    ? Math.round(meterNet * R.indemnificationRate)
+    : 0;
+  const qbr = cfg.qbr ? R.qbrAnnualMinor : 0;
+  const training = cfg.training ? R.trainingOneTimeMinor : 0;
   const annualNetMinor = meterNet + support + deploy + indemnity + qbr;
   const tcvMinor = annualNetMinor * cfg.termYears + training;
 
@@ -294,7 +311,11 @@ export function markProcurementSaasPaid() {
 
 export const procurementSaasHandlers = [
   http.get(`${SAAS}/api/v1/procurement`, () =>
-    HttpResponse.json({ ...deal, minAnnualNetMinor: MIN_ANNUAL_NET_MINOR }),
+    HttpResponse.json({
+      ...deal,
+      minAnnualNetMinor: MIN_ANNUAL_NET_MINOR,
+      rateCard: RATE_CARD,
+    }),
   ),
   // Interest: creates the deal at `exploring` when there is none, and never disturbs one that
   // already exists — so the enterprise surface only appears for accounts that asked for it.

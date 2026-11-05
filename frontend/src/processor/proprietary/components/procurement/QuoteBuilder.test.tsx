@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import type { QuoteConfigInput, QuoteResult } from "@processor/api/procurement";
 import { QuoteBuilder } from "@processor/components/procurement/QuoteBuilder";
+import { RATE_CARD } from "@processor/mocks/handlers/procurementSaas";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -58,6 +59,7 @@ function mount(
         initial={initial ?? undefined}
         eulaAlreadyAgreed
         minAnnualMinor={1_200_000}
+        rates={RATE_CARD}
         onComparePlans={onComparePlans}
         onScheduleCall={onScheduleCall}
         onGenerate={vi.fn()}
@@ -132,6 +134,7 @@ describe("QuoteBuilder chrome", () => {
           initial={issued.config}
           eulaAlreadyAgreed
           minAnnualMinor={0}
+          rates={RATE_CARD}
           issued={issued}
           onGenerate={vi.fn()}
         />

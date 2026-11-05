@@ -2,7 +2,11 @@ import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
-import type { QuoteLineItem, QuoteResult } from "@processor/api/procurement";
+import type {
+  QuoteLineItem,
+  QuoteResult,
+  RateCard,
+} from "@processor/api/procurement";
 import { money } from "@processor/components/procurement/format";
 import {
   perRunRate,
@@ -15,10 +19,12 @@ import {
  */
 export function QuotePaper({
   issued,
+  rates,
   downloading,
   onDownload,
 }: {
   issued: QuoteResult;
+  rates: RateCard;
   downloading: boolean;
   onDownload?: () => void;
 }) {
@@ -78,7 +84,7 @@ export function QuotePaper({
         <ul className="portal-qb__lines">
           {issued.lineItems.map((li) => (
             <li key={li.key} data-kind={li.kind}>
-              <span>{lineLabel(li, issued, t)}</span>
+              <span>{lineLabel(li, issued, rates, t)}</span>
               <span>
                 {/* Marked, since one-off charges sit outside the yearly fee totalled below. */}
                 {li.kind === "ONE_TIME" && (
@@ -134,6 +140,7 @@ export function QuotePaper({
 function lineLabel(
   li: QuoteLineItem,
   quote: QuoteResult,
+  rates: RateCard,
   t: TFunction,
 ): string {
   const cfg = quote.config;
@@ -149,7 +156,7 @@ function lineLabel(
           currencyDisplay: "narrowSymbol",
           minimumFractionDigits: 4,
           maximumFractionDigits: 4,
-        }).format(perRunRate(cfg) * Math.max(1, cfg.intensity)),
+        }).format(perRunRate(cfg, rates) * Math.max(1, cfg.intensity)),
         posture: t(`portal.procurement.builder.posture_${posture.key}`),
       });
     }

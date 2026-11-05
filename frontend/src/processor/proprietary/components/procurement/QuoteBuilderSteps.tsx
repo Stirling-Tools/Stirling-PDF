@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
-import type { QuoteConfigInput } from "@processor/api/procurement";
+import type { QuoteConfigInput, RateCard } from "@processor/api/procurement";
 import { money } from "@processor/components/procurement/format";
 import {
   Field,
@@ -11,10 +11,8 @@ import {
 import {
   estimateVolume,
   POSTURES,
-  QBR_ANNUAL_MINOR,
   SIZE_TIERS,
-  TERM_DISCOUNT,
-  TRAINING_MINOR,
+  termDiscount,
 } from "@processor/components/procurement/quotePricing";
 
 /** Sets one field of the quote being built. */
@@ -139,10 +137,12 @@ export function SizingStep({
 export function PlanStep({
   cfg,
   set,
+  rates,
   indemnityPreview,
 }: {
   cfg: QuoteConfigInput;
   set: SetQuoteField;
+  rates: RateCard;
   /** What indemnification adds a year at the current usage, in cents. */
   indemnityPreview: number;
 }) {
@@ -166,10 +166,10 @@ export function PlanStep({
             </button>
           ))}
         </div>
-        {TERM_DISCOUNT[cfg.termYears - 1] > 0 && (
+        {termDiscount(rates, cfg.termYears) > 0 && (
           <p className="portal-qb__discount">
             {t("portal.procurement.builder.termDiscount", {
-              pct: Math.round(TERM_DISCOUNT[cfg.termYears - 1] * 100),
+              pct: Math.round(termDiscount(rates, cfg.termYears) * 100),
             })}
           </p>
         )}
@@ -214,7 +214,7 @@ export function PlanStep({
             title={t("portal.procurement.builder.training")}
             sub={`${t("portal.procurement.builder.trainingSub")} · ${t(
               "portal.procurement.builder.addonOneTime",
-              { amount: money(TRAINING_MINOR) },
+              { amount: money(rates.trainingOneTimeMinor) },
             )}`}
             onClick={() => set("training", !cfg.training)}
           />
@@ -223,7 +223,7 @@ export function PlanStep({
             title={t("portal.procurement.builder.qbr")}
             sub={`${t("portal.procurement.builder.qbrSub")} · ${t(
               "portal.procurement.builder.addonPerYear",
-              { amount: money(QBR_ANNUAL_MINOR) },
+              { amount: money(rates.qbrAnnualMinor) },
             )}`}
             onClick={() => set("qbr", !cfg.qbr)}
           />

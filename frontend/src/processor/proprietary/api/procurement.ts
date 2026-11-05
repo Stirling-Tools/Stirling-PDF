@@ -128,6 +128,26 @@ export interface AcceptResult {
   invoicePdf: string | null;
 }
 
+/**
+ * The rates the server prices quotes from (its PricingRates), sent so the quote builder's live
+ * estimate uses the same ones. Per-run rates are in dollars; flat fees in minor units (cents).
+ */
+export interface RateCard {
+  listRatePerRun: number;
+  floorRatePerRun: number;
+  /** Share taken off the per-run rate for each doubling of committed runs past the knee. */
+  discountPerDoubling: number;
+  /** Meter-only discount by term; index 0 is a one-year term. */
+  termDiscountByYear: number[];
+  /** Share of the net meter charged for indemnification. */
+  indemnificationRate: number;
+  dedicatedSupportMinor: number;
+  selfHostDeployMinor: number;
+  airgapDeployMinor: number;
+  qbrAnnualMinor: number;
+  trainingOneTimeMinor: number;
+}
+
 /** One shape for every state; an unstarted procurement has {@link ProcurementSnapshot.dealId} null. */
 export interface ProcurementSnapshot {
   dealId: number | null;
@@ -156,6 +176,8 @@ export interface ProcurementSnapshot {
    * trial's. Setup steps and the offline licence follow this; absent on an unstarted deal.
    */
   entitledDeployment?: string | null;
+  /** What quotes are priced from; the builder's live estimate runs the same formula over it. */
+  rateCard: RateCard;
 }
 
 export interface QuoteConfigInput {

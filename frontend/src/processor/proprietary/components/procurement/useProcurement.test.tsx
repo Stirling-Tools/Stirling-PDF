@@ -15,18 +15,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
  * modal, and *opening* on a failure would show the buyer an agreement for a deal that never left the
  * quote stage.
  */
-const {
-  fetchSnapshot,
-  startAgreement,
-  issueQuote,
-  startTrial,
-  recordLegalConsent,
-} = vi.hoisted(() => ({
+const { fetchSnapshot, startAgreement, issueQuote } = vi.hoisted(() => ({
   fetchSnapshot: vi.fn(),
   startAgreement: vi.fn(),
   issueQuote: vi.fn(),
-  startTrial: vi.fn(),
-  recordLegalConsent: vi.fn(),
 }));
 
 vi.mock("@editor/portal/api/procurement", async (importOriginal) => ({
@@ -34,8 +26,6 @@ vi.mock("@editor/portal/api/procurement", async (importOriginal) => ({
   fetchSnapshot,
   startAgreement,
   issueQuote,
-  startTrial,
-  recordLegalConsent,
 }));
 vi.mock("@editor/portal/contexts/usePortalLinked", () => ({
   usePortalLinked: () => true,
@@ -83,27 +73,6 @@ beforeEach(() => {
   fetchSnapshot.mockReset().mockResolvedValue(SNAPSHOT);
   startAgreement.mockReset().mockResolvedValue(SNAPSHOT);
   issueQuote.mockReset().mockResolvedValue(SNAPSHOT);
-  startTrial.mockReset().mockResolvedValue(SNAPSHOT);
-  recordLegalConsent.mockReset().mockResolvedValue(undefined);
-});
-
-describe("useProcurement trial start", () => {
-  const details = { businessName: "Northwind", contactName: "Dana Lee" };
-
-  it("records EULA consent once the trial has started", async () => {
-    mount();
-    await waitFor(() => expect(ctl).toBeDefined());
-    await act(() => ctl.onConfirmSetup("cloud", 5, details));
-    expect(recordLegalConsent).toHaveBeenCalledExactlyOnceWith("eula", "trial");
-  });
-
-  it("records no consent when the trial fails to start", async () => {
-    startTrial.mockRejectedValueOnce(new Error("Network down"));
-    mount();
-    await waitFor(() => expect(ctl).toBeDefined());
-    await act(() => ctl.onConfirmSetup("cloud", 5, details));
-    expect(recordLegalConsent).not.toHaveBeenCalled();
-  });
 });
 
 describe("useProcurement", () => {

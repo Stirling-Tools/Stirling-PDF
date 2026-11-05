@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { QuoteBuilder } from "@processor/components/procurement/QuoteBuilder";
+import { RATE_CARD } from "@processor/mocks/handlers/procurementSaas";
 import "@processor/views/Procurement.css";
 
 /**
@@ -11,7 +12,7 @@ const meta: Meta<typeof QuoteBuilder> = {
   title: "Portal/Procurement/QuoteBuilder",
   component: QuoteBuilder,
   parameters: { layout: "padded" },
-  args: { deployment: "cloud", onGenerate: () => {} },
+  args: { deployment: "cloud", rates: RATE_CARD, onGenerate: () => {} },
 };
 export default meta;
 

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { DealStatusHero } from "@processor/components/procurement/DealStatusHero";
 import type { ProcurementSnapshot } from "@processor/api/procurement";
+import { RATE_CARD } from "@processor/mocks/handlers/procurementSaas";
 import { BillingScreen } from "@editor/billing/BillingScreen";
 import { freeWallet } from "@editor/billing/walletFixtures";
 
@@ -19,6 +20,7 @@ const base: ProcurementSnapshot = {
   contactEmail: null,
   agreementSignedVersion: null,
   latestQuote: null,
+  rateCard: RATE_CARD,
 };
 
 /** Billing's view of a deal underway; its one action opens the Enterprise page. */
