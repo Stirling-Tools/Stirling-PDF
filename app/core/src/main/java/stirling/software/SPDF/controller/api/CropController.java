@@ -36,8 +36,12 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfPage;
 import stirling.software.jpdfium.model.Rect;
 import stirling.software.jpdfium.model.SaveOptions;
+import stirling.software.jpdfium.text.PageText;
+import stirling.software.jpdfium.text.PdfTextExtractor;
+import stirling.software.jpdfium.text.TextWord;
 import stirling.software.jpdfium.transform.PdfPageGeometry;
 
 @GeneralApi
@@ -334,6 +338,7 @@ public class CropController {
                 try (PdfDocument document = PdfDocument.open(tempInputFile.getFile().toPath())) {
                     for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
                         if (pagesToCrop.get(i)) {
+                            removeBoundaryCrossingText(document, i, crop);
                             PdfPageGeometry.cropAndRemoveContent(document, i, crop);
                         }
                     }
@@ -357,6 +362,48 @@ public class CropController {
                 }
             }
         }
+    }
+
+    /**
+     * Hard crop keeps a word whole when it touches the crop edge; page boxes clip the outside
+     * glyphs but leave their text extractable. Redact the whole boundary-crossing word before
+     * cropping so no outside text survives in the file.
+     */
+    private static void removeBoundaryCrossingText(PdfDocument document, int pageIndex, Rect crop) {
+        PageText text = PdfTextExtractor.extractPage(document, pageIndex);
+        float epsilon = 0.01f;
+        try (PdfPage page = document.page(pageIndex)) {
+            for (TextWord word : text.allWords()) {
+                if (!intersects(word, crop)) {
+                    continue;
+                }
+                if (isFullyInside(word, crop, epsilon)) {
+                    continue;
+                }
+                page.redactInRect(
+                        new Rect(
+                                word.x() - epsilon,
+                                word.y() - epsilon,
+                                word.width() + 2 * epsilon,
+                                word.height() + 2 * epsilon),
+                        true,
+                        false);
+            }
+        }
+    }
+
+    private static boolean intersects(TextWord word, Rect crop) {
+        return word.x() < crop.x() + crop.width()
+                && word.x() + word.width() > crop.x()
+                && word.y() < crop.y() + crop.height()
+                && word.y() + word.height() > crop.y();
+    }
+
+    private static boolean isFullyInside(TextWord word, Rect crop, float epsilon) {
+        return word.x() >= crop.x() - epsilon
+                && word.y() >= crop.y() - epsilon
+                && word.x() + word.width() <= crop.x() + crop.width() + epsilon
+                && word.y() + word.height() <= crop.y() + crop.height() + epsilon;
     }
 
     private record CropBounds(float x, float y, float width, float height) {
