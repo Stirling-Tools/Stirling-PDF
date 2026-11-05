@@ -19,6 +19,7 @@ import { isIngestStep } from "@processor/components/pipelines/docparseStep";
 import { IngestStepConfig } from "@processor/components/pipelines/IngestStepConfig";
 import type { ExternalApiStepParams } from "@processor/components/policies/stepOperations";
 import "@processor/components/pipelines/PipelineStepSettings.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 /**
  * A params update: the next params outright, or a merge from the latest params. Settings UIs fire
@@ -172,7 +173,7 @@ export function PipelineStepSettings({
                 leadingIcon={<Icon name="file" size={"0.875rem"} />}
                 onRemove={() => onClearBinding(chip.field)}
               >
-                {chip.label}
+                <PrivateContent>{chip.label}</PrivateContent>
               </Chip>
             ))}
           </div>

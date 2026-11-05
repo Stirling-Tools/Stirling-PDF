@@ -2,6 +2,7 @@ import { Combobox, ScrollArea, useCombobox } from "@mantine/core";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { NavigationDropdownProps } from "@editor/types/compare";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const CompareNavigationDropdown = ({
   changes,
@@ -188,6 +189,7 @@ const CompareNavigationDropdown = ({
               "Search changes...",
             )}
             value={query}
+            className={privateContentClassName}
             onChange={(e) => setQuery(e.currentTarget.value)}
           />
         </div>
@@ -256,7 +258,9 @@ const CompareNavigationDropdown = ({
                           }}
                         >
                           <div className="compare-dropdown-option">
-                            <span className="compare-dropdown-option__text">
+                            <span
+                              className={`compare-dropdown-option__text ${privateContentClassName}`}
+                            >
                               {item.label}
                             </span>
                           </div>

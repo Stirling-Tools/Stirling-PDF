@@ -56,6 +56,7 @@ import {
 } from "@editor/styles/zIndex";
 import "@editor/components/filesPage/FilesPage.css";
 import "@editor/components/filesPage/LibraryFilePicker.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 interface Props {
   supportedFormats?: string[];
@@ -479,6 +480,7 @@ export function LibraryFilePicker({
         alertType: "error",
         title: t("filePicker.errorTitle", "Couldn't add files"),
         body: errors.join("\n"),
+        privateBody: true,
         expandable: false,
         durationMs: 5000,
       });
@@ -647,7 +649,7 @@ export function LibraryFilePicker({
           }}
           role="alert"
         >
-          {error ?? cloudError}
+          <PrivateContent>{error ?? cloudError}</PrivateContent>
         </Alert>
       )}
       <LibraryTabs
@@ -673,7 +675,7 @@ export function LibraryFilePicker({
                       className="files-page-breadcrumb"
                       onClick={() => openFolder(folder.id)}
                     >
-                      {folder.name}
+                      <PrivateContent>{folder.name}</PrivateContent>
                     </button>
                   </span>
                 ),

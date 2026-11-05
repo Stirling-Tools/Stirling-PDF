@@ -78,6 +78,8 @@ export interface AppConfig {
   microsoftTenant?: string;
   microsoftGraphUrl?: string;
   microsoftAccountConnections?: boolean;
+  saveMode?: string;
+  allowUserSaveMode?: boolean;
   timestampDefaultTsaUrl?: string;
   timestampCustomTsaUrls?: string[];
   timestampTsaPresets?: { label: string; url: string }[];
