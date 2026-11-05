@@ -6,6 +6,7 @@ import {
   detectNonPdfFileType,
   getFileFormats,
   mimeTypeToExtension,
+  extensionToMimeType,
   detectExtensionFromSignature,
 } from "@editor/utils/fileUtils";
 
