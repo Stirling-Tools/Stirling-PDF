@@ -1,6 +1,7 @@
 import axios from "axios";
 import i18n from "i18next";
 import apiClient from "@editor/services/apiClient";
+import { inMemoryFile } from "@editor/utils/inMemoryFile";
 import {
   rememberPdfAccess,
   type PdfAccess,
@@ -372,7 +373,7 @@ export async function openRightsManagedPdf(
   signal?: AbortSignal,
 ): Promise<OpenedRightsManagedPdf> {
   const form = new FormData();
-  form.append("fileInput", original);
+  form.append("fileInput", await inMemoryFile(original));
   try {
     const response = await apiClient.post<Blob>(
       "/api/v1/rights-management/open",
@@ -409,8 +410,8 @@ export async function protectLikeOriginal(
   output: File,
 ): Promise<File> {
   const form = new FormData();
-  form.append("original", opened.original);
-  form.append("fileInput", output);
+  form.append("original", await inMemoryFile(opened.original));
+  form.append("fileInput", await inMemoryFile(output));
   try {
     const response = await apiClient.post<Blob>(
       "/api/v1/rights-management/protect",
