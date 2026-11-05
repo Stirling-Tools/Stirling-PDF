@@ -514,6 +514,34 @@ class CertSignControllerTest {
     }
 
     @Test
+    void visibleSignatureWithCertificateWithoutCnFallsBackToSubject() throws Exception {
+        SignPDFWithCertRequest request =
+                pemRequestWithSubject("O=Test Organisation, SERIALNUMBER=12345");
+        request.setShowSignature(true);
+        request.setPageNumber(1);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertNotNull(response.getBody());
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void signerNameWithCommaInCommonNameIsNotEscaped() throws Exception {
+        X509Certificate cert = certificateWithSubject("CN=García\\, Ana");
+
+        assertEquals("García, Ana", CertSignController.CreateSignature.getSignerName(cert));
+    }
+
+    private static X509Certificate certificateWithSubject(String subjectDn) throws Exception {
+        byte[][] pemPair = pemPairWithSubject(subjectDn);
+        return (X509Certificate)
+                CertificateFactory.getInstance("X.509")
+                        .generateCertificate(new ByteArrayInputStream(pemPair[1]));
+    }
+
+    @Test
     void testSignPdfWithUnencryptedPkcs8PemKey() throws Exception {
         ResponseEntity<Resource> response =
                 signWithPemKey(
