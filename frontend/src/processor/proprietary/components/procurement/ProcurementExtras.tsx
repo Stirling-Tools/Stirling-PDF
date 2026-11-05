@@ -413,22 +413,20 @@ export function TrialSetupForm({
 
   return (
     <div className="portal-setup">
-      <div className="portal-sidemodal__title-row">
-        <h2 className="portal-sidemodal__title">
-          {t("portal.procurement.setup.title")}
-        </h2>
-        <span className="portal-stepmodal__step">
-          {t("portal.procurement.setup.stepOf", { n: step + 1, total: 2 })}
-        </span>
-      </div>
-      <p className="portal-sidemodal__sub">
-        {t(
+      <StepModalHeader
+        title={t("portal.procurement.setup.title")}
+        subtitle={t(
           step === 0
             ? "portal.procurement.setup.subtitle"
             : "portal.procurement.setup.subtitleDetails",
         )}
-      </p>
-      <StepModalHeader step={step + 1} total={2} />
+        step={step + 1}
+        total={2}
+        stepLabel={t("portal.procurement.setup.stepOf", {
+          n: step + 1,
+          total: 2,
+        })}
+      />
 
       {step === 0 && (
         <>
