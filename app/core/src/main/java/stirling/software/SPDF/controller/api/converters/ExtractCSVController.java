@@ -36,7 +36,9 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CsvSanitizer;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
@@ -84,7 +86,9 @@ public class ExtractCSVController {
             }
 
             if (csvEntries.isEmpty()) {
-                return ResponseEntity.noContent().build();
+                throw PdfUtils.looksImageOnly(document, pages)
+                        ? ExceptionUtils.createNoTextLayerException()
+                        : ExceptionUtils.createNoTablesFoundException();
             } else if (csvEntries.size() == 1) {
                 return createCsvResponse(csvEntries.getFirst(), baseName);
             } else {

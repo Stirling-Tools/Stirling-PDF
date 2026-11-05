@@ -254,3 +254,16 @@ Feature: Miscellaneous PDF Operations API Validation
         Then the response status code should be 200
         And the response content type should be "application/pdf"
         And the response PDF should contain 3 pages
+
+
+    @extract-images @negative
+    Scenario: extract-images on a PDF without images is refused instead of returning an empty zip
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 2 pages with random text
+        And the request data includes
+            | parameter | value |
+            | format    | png   |
+        When I send the API request to the endpoint "/api/v1/misc/extract-images"
+        Then the response status code should be 422
+        And the response JSON field "errorCode" should equal "E089"
+        And the response JSON error should contain "No images were found"
