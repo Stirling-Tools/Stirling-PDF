@@ -439,18 +439,25 @@ public class InviteLinkController {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Map.of("error", "Email address is required"));
                 }
-
-                if (!EmailAddresses.isValidAccountAddress(email)) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(Map.of("error", "Invalid email address"));
-                }
-
-                effectiveEmail = email.trim().toLowerCase();
+                effectiveEmail = email;
             }
+
+            // Preset addresses on older invites were never validated, so check both sources
+            if (!EmailAddresses.isValidAccountAddress(effectiveEmail)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Invalid email address"));
+            }
+            effectiveEmail = effectiveEmail.trim().toLowerCase(Locale.ROOT);
 
             // Check if user already exists
             if (userService.usernameExistsIgnoreCase(effectiveEmail)) {
                 return invalidInviteResponse();
+            }
+
+            // The team may have been deleted since the invite was issued
+            if (invite.getTeamId() != null && !teamRepository.existsById(invite.getTeamId())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Team not found"));
             }
 
             // Re-check the licence limit at redemption. The check when the link was generated

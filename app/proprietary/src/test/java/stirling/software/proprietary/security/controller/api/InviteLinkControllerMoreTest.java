@@ -126,6 +126,7 @@ class InviteLinkControllerMoreTest {
         void rejectsUnknownTeam() throws Exception {
             when(userService.usernameExistsIgnoreCase("new@ex.com")).thenReturn(false);
             when(inviteTokenRepository.findByEmail("new@ex.com")).thenReturn(Optional.empty());
+            when(userLicenseSettingsService.calculateMaxAllowedUsers()).thenReturn(5);
             when(teamRepository.findById(999_999L)).thenReturn(Optional.empty());
 
             mockMvc.perform(
@@ -358,6 +359,7 @@ class InviteLinkControllerMoreTest {
             invite.setTeamId(3L);
             when(inviteTokenRepository.findByToken("preset")).thenReturn(Optional.of(invite));
             when(userService.usernameExistsIgnoreCase("preset@ex.com")).thenReturn(false);
+            when(teamRepository.existsById(3L)).thenReturn(true);
 
             mockMvc.perform(post("/api/v1/invite/accept/preset").param("password", "secret123"))
                     .andExpect(status().isOk())
@@ -365,6 +367,38 @@ class InviteLinkControllerMoreTest {
 
             verify(userService).saveUserCore(any());
             verify(inviteTokenRepository).save(invite);
+        }
+
+        @Test
+        @DisplayName("rejects a malformed pre-set email from an older invite")
+        void rejectsMalformedPresetEmail() throws Exception {
+            InviteToken invite = validInvite("legacy");
+            invite.setEmail("a@");
+            when(inviteTokenRepository.findByToken("legacy")).thenReturn(Optional.of(invite));
+
+            mockMvc.perform(post("/api/v1/invite/accept/legacy").param("password", "secret123"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("Invalid email address"));
+
+            verify(userService, never()).saveUserCore(any());
+        }
+
+        @Test
+        @DisplayName("rejects an invite whose team was deleted after it was issued")
+        void rejectsDeletedTeam() throws Exception {
+            InviteToken invite = validInvite("orphan");
+            invite.setEmail("orphan@ex.com");
+            invite.setTeamId(42L);
+            when(inviteTokenRepository.findByToken("orphan")).thenReturn(Optional.of(invite));
+            when(userService.usernameExistsIgnoreCase("orphan@ex.com")).thenReturn(false);
+            when(teamRepository.existsById(42L)).thenReturn(false);
+
+            mockMvc.perform(post("/api/v1/invite/accept/orphan").param("password", "secret123"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("Team not found"));
+
+            verify(userService, never()).saveUserCore(any());
+            verify(inviteTokenRepository, never()).save(invite);
         }
 
         @Test
