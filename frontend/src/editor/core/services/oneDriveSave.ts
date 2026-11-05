@@ -1,6 +1,7 @@
 import { isAxiosError } from "axios";
 import apiClient from "@editor/services/apiClient";
 import type { CloudOrigin } from "@editor/types/file";
+import { inMemoryFile } from "@editor/utils/inMemoryFile";
 
 export type OneDriveSaveTarget =
   | { kind: "replace"; origin: CloudOrigin }
@@ -38,7 +39,7 @@ export async function saveToOneDrive(
   const accountId =
     target.kind === "folder" ? target.accountId : target.origin.accountId;
   const form = new FormData();
-  form.append("fileInput", file);
+  form.append("fileInput", await inMemoryFile(file));
   if (target.kind === "replace") {
     if (!target.origin.eTag) {
       throw new OneDriveSaveError(
