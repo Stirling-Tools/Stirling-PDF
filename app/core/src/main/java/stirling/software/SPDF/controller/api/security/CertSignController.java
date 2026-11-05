@@ -477,6 +477,21 @@ public class CertSignController {
             }
         }
 
+        // The name shown in the visible signature. Certificates without a CN fall
+        // back to the full subject, and the CN is read as stored so RFC 4514 escapes
+        // (e.g. "García\, Ana") are not shown.
+        static String getSignerName(X509Certificate cert) {
+            X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
+            RDN[] cn = x500Name.getRDNs(BCStyle.CN);
+            if (cn.length == 0) {
+                return x500Name.toString();
+            }
+            ASN1Encodable value = cn[0].getFirst().getValue();
+            return value instanceof ASN1String asn1String
+                    ? asn1String.getString()
+                    : IETFUtils.valueToString(value);
+        }
+
         public InputStream createVisibleSignature(
                 PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showLogo)
                 throws IOException {
