@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, Logo, Modal } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
 import {
@@ -171,6 +172,8 @@ function ContactSalesModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
+  const required = t("portal.procurement.validation.required");
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
@@ -212,76 +215,88 @@ function ContactSalesModal({
       open={open}
       onClose={close}
       width="md"
-      title={sent ? "Thanks, we're on it" : "Talk to sales"}
+      title={t(
+        sent
+          ? "portal.enterprise.demoSales.sentTitle"
+          : "portal.enterprise.demoSales.title",
+      )}
       subtitle={
         sent
-          ? `A confirmation is on its way to ${email.trim()}. We usually reply within one business day.`
-          : "Tell us about your deployment and we'll put together committed-volume pricing."
+          ? t("portal.enterprise.demoSales.sentBody", { email: email.trim() })
+          : t("portal.enterprise.demoSales.subtitle")
       }
       footer={
         sent ? (
-          <Button onClick={close}>Done</Button>
+          <Button onClick={close}>
+            {t("portal.enterprise.demoSales.done")}
+          </Button>
         ) : (
           <Button loading={sending} onClick={attemptSend}>
-            Send to sales
+            {t("portal.enterprise.demoSales.send")}
           </Button>
         )
       }
     >
       {sent ? (
-        <p className="site__plan-sub">Demo · no message was sent</p>
+        <p className="site__plan-sub">
+          {t("portal.enterprise.demoSales.notSent")}
+        </p>
       ) : (
         <div className="site__form">
           <div className="portal-qb__row">
             <Field
-              label="Full name"
+              label={t("portal.procurement.setup.fullName")}
               required
               invalid={tried && !valid.name}
-              error="This field is required."
+              error={required}
             >
               <input
                 value={name}
-                placeholder="Your name"
+                placeholder={t("portal.procurement.setup.fullNamePlaceholder")}
                 onChange={(e) => setName(e.target.value)}
               />
             </Field>
             <Field
-              label="Company"
+              label={t("portal.procurement.setup.businessName")}
               required
               invalid={tried && !valid.company}
-              error="This field is required."
+              error={required}
             >
               <input
                 value={company}
-                placeholder="Acme Corp"
+                placeholder={t(
+                  "portal.procurement.setup.businessNamePlaceholder",
+                )}
                 onChange={(e) => setCompany(e.target.value)}
               />
             </Field>
           </div>
           <Field
-            label="Work email"
+            label={t("portal.procurement.setup.workEmail")}
             required
             invalid={emailInvalid}
             error={
               isFilled(email)
-                ? "Enter a valid email address, like name@company.com."
-                : "This field is required."
+                ? t("portal.procurement.validation.email")
+                : required
             }
           >
             <input
               type="email"
               value={email}
-              placeholder="you@company.com"
+              placeholder={t("portal.procurement.setup.workEmailPlaceholder")}
               onChange={(e) => setEmail(e.target.value)}
               onBlur={() => setEmailTouched(true)}
             />
           </Field>
           <label className="portal-qb__field">
-            <span className="portal-qb__field-label">What do you need?</span>
+            <span className="portal-qb__field-label">
+              {t("portal.enterprise.demoSales.message")}
+            </span>
             <textarea
               rows={3}
               value={message}
-              placeholder="Deployment, team size, compliance needs…"
+              placeholder={t("portal.enterprise.demoSales.messagePlaceholder")}
               onChange={(e) => setMessage(e.target.value)}
             />
           </label>
