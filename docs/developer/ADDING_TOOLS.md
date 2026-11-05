@@ -150,11 +150,11 @@ import { Icon } from "@editor/ui/Icon";
   endpoints: ["endpoint-name"],
   operationConfig: asRegistryConfig([toolName]OperationConfig),
   automationSettings: [ToolName]Settings, // or null if no automation settings
-  newInVersion: "2.16.0", // release the tool first ships in
+  newInVersion: "3.4.0", // release the tool first ships in
 },
 ```
 
-**"New"/"Updated" badges**: set `newInVersion` to the release the tool first ships in so the tool list shows a "New" badge; use `updatedInVersion` when an existing tool gets a major revamp to show "Updated". Badges expire automatically once that release is more than one minor behind the running app, and per user once they open the tool (see `frontend/src/editor/core/utils/toolFreshness.ts`).
+**"New"/"Updated" badges**: set `newInVersion` to the release the tool first ships in so the tool list shows a "New" badge; use `updatedInVersion` when an existing tool gets a major revamp to show "Updated". Badges expire automatically once that release is more than one minor behind the running app, and per browser once the tool is opened (see `frontend/src/editor/core/utils/toolFreshness.ts`).
 
 ## 4. Add Tooltips (Optional but Recommended)
 Create user-friendly tooltips to help non-technical users understand your tool. **Use simple, clear language - avoid technical jargon:**
