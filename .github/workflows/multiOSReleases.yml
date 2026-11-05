@@ -85,10 +85,9 @@ jobs:
       - name: Determine build matrix
         id: set-matrix
         run: |
-          # windows-arm64: NSIS only (WiX MSI has no arm64 support in Tauri) and no
-          # JPDFium natives yet - flip to windows-arm64 once JPDFium ships them.
+          # ARM64 uses NSIS because Tauri's WiX MSI bundler does not support it.
           WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"}'
-          WINDOWS_ARM64='{"platform":"windows-11-arm","args":"--target aarch64-pc-windows-msvc --bundles nsis","name":"windows-arm64","jpdfium_platforms":"none"}'
+          WINDOWS_ARM64='{"platform":"windows-11-arm","args":"--target aarch64-pc-windows-msvc --bundles nsis","name":"windows-arm64","jpdfium_platforms":"windows-arm64"}'
           MACOS='{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}'
           LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}'
           ALL="$WINDOWS,$WINDOWS_ARM64,$MACOS,$LINUX"
@@ -174,7 +173,7 @@ jobs:
           version: 3.54.0
 
       - name: Build JAR
-        run: ./gradlew build ${{ matrix.variant.build_frontend && '-PbuildWithFrontend=true' || '' }} -x spotlessApply -x spotlessCheck -x test -x sonarqube
+        run: ./gradlew build -PjpdfiumPlatforms=all ${{ matrix.variant.build_frontend && '-PbuildWithFrontend=true' || '' }} -x spotlessApply -x spotlessCheck -x test -x sonarqube
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
