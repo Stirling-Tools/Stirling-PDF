@@ -1284,7 +1284,7 @@ public class ExceptionUtils {
         // profile and failing rules.
         COMPLIANCE_NOT_MET("E074", "error.complianceNotMet", "{0}"),
 
-        RIGHTS_MANAGED_INPUT("E084", "error.rightsManagedInput", "{0}"),
+        RIGHTS_MANAGED_INPUT("E088", "error.rightsManagedInput", "{0}"),
 
         // Every repair strategy declined it. Distinct from PDF_CORRUPTED, which says a document
         // is damaged: this says the damage has already survived the tools that fix damage.
