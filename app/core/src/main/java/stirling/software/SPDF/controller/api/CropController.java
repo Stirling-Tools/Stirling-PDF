@@ -37,6 +37,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.model.Rect;
+import stirling.software.jpdfium.model.SaveOptions;
 import stirling.software.jpdfium.transform.PdfPageGeometry;
 
 @GeneralApi
@@ -335,7 +336,7 @@ public class CropController {
                             PdfPageGeometry.cropAndRemoveContent(document, i, crop);
                         }
                     }
-                    document.save(tempOutputFile.getFile().toPath());
+                    document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
                 } catch (RuntimeException e) {
                     throw new IOException("JPDFium crop failed", e);
                 }
