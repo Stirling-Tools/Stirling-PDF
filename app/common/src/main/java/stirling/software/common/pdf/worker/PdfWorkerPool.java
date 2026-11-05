@@ -48,6 +48,7 @@ public class PdfWorkerPool implements DisposableBean {
     private final AtomicInteger nextId = new AtomicInteger(1);
     private final ScheduledExecutorService timer;
     private volatile long spawnBlockedUntilNanos;
+    private volatile boolean spawnBlocked;
     private volatile boolean closed;
 
     @Autowired
@@ -86,7 +87,7 @@ public class PdfWorkerPool implements DisposableBean {
 
     /** Runs the job in a worker when the pool is on, otherwise in this JVM. */
     public <R> R execute(PdfWorkerJob<R> job) throws IOException {
-        if (!enabled() || System.nanoTime() < spawnBlockedUntilNanos) {
+        if (!enabled() || spawnBlockedNow()) {
             return job.run();
         }
         try {
@@ -102,6 +103,7 @@ public class PdfWorkerPool implements DisposableBean {
                     worker = spawn();
                 } catch (IOException e) {
                     spawnBlockedUntilNanos = System.nanoTime() + SPAWN_FAILURE_COOLDOWN.toNanos();
+                    spawnBlocked = true;
                     log.warn(
                             "Could not start a PDF worker, running PDF jobs in-process for {}"
                                     + " minutes: {}",
@@ -126,6 +128,14 @@ public class PdfWorkerPool implements DisposableBean {
         } finally {
             permits.release();
         }
+    }
+
+    private boolean spawnBlockedNow() {
+        // nanoTime may be negative, so compare by difference and only after a failure.
+        if (spawnBlocked && System.nanoTime() - spawnBlockedUntilNanos >= 0) {
+            spawnBlocked = false;
+        }
+        return spawnBlocked;
     }
 
     private PdfWorkerProcess takeIdle() {
