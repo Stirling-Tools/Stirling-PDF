@@ -5,19 +5,19 @@ import java.time.LocalDateTime;
 
 /**
  * One team's billing facts, composed by {@link TeamBillingService}. The free grant and the spending
- * cap are separate pools measured over one window.
+ * cap have independent renewal windows.
  *
  * @param subscribed team has a live PAYG subscription — i.e. {@code payg_subscription_id} is set.
  *     Cleared by {@code payg_unlink_subscription} on cancellation, so a cancelled team reads false.
  * @param subscriptionId {@code payg_team_extensions.payg_subscription_id}; null when free
  * @param periodStart inclusive start of the billing window — the Stripe subscription's current
- *     period when subscribed, calendar month otherwise. Also the period the free grant resets on.
+ *     period when subscribed, calendar month otherwise.
  * @param periodEnd exclusive end of the billing window
- * @param freeGrantUnits the team's free grant size per period (policy {@code free_tier_units}); the
- *     denominator for "used X of N free"
+ * @param freeGrantUnits included credits issued for this term; upgrades increase it and downgrades
+ *     take effect at renewal
  * @param freeRemainingUnits free documents still available in this period ({@code
- *     payg_team_extensions.free_units_remaining}, via {@code
- *     TeamBillingService.remainingForPeriod}). 0 = exhausted.
+ *     payg_team_extensions.free_units_remaining}, via {@code IncludedAllowance.resolve}). 0 =
+ *     exhausted.
  * @param perDocMinor paid per-document rate in minor units of {@link #currency()}; null when the
  *     rate can't be resolved (free team, price row unsynced) — display "unknown", never substitute
  * @param currency lower-case ISO 4217 of the subscription's Price; null when unknown
@@ -36,4 +36,6 @@ public record TeamBillingContext(
         BigDecimal perDocMinor,
         String currency,
         Long capMoneyMinor,
-        Long monthlyCapDocUnits) {}
+        Long monthlyCapDocUnits,
+        LocalDateTime includedPeriodStart,
+        LocalDateTime includedPeriodEnd) {}

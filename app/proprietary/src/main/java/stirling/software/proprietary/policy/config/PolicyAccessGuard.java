@@ -12,6 +12,7 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.asset.PolicyAsset;
 import stirling.software.proprietary.policy.asset.PolicyAssetStore;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
@@ -81,6 +82,14 @@ public class PolicyAccessGuard {
             return false;
         }
         return policy.owner() == null || !userService.usernameExists(policy.owner());
+    }
+
+    /** A source without a reachable owner must not produce inaccessible documents under login. */
+    public boolean isOrphaned(Source source) {
+        return enforced()
+                && (source.owner() == null
+                        || source.owner().isBlank()
+                        || !userService.usernameExists(source.owner()));
     }
 
     /**

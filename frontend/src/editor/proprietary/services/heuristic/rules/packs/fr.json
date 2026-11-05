@@ -1,0 +1,642 @@
+{
+  "version": 2,
+  "language": "fr",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "facture", "weight": 24, "where": "title" },
+        { "text": "taxe sur la valeur ajoutée", "weight": 8 },
+        { "text": "numéro de facture", "weight": 22, "where": "first" },
+        { "text": "facture n", "weight": 18, "where": "first" },
+        { "text": "date de facture", "weight": 16, "where": "first" },
+        { "text": "date d'échéance", "weight": 16 },
+        { "text": "total ttc", "weight": 18 },
+        { "text": "total ht", "weight": 18 },
+        { "text": "net à payer", "weight": 18 },
+        { "text": "montant total", "weight": 12 },
+        { "text": "conditions de paiement", "weight": 8 },
+        { "text": "règlement à réception", "weight": 16 },
+        { "text": "tva", "weight": 10 }
+      ],
+      "negatives": [
+        { "text": "bon de livraison", "weight": 14 },
+        { "text": "devis", "weight": 14 },
+        { "text": "relevé de compte", "weight": 12 },
+        { "text": "avoir", "weight": 10 }
+      ]
+    },
+    {
+      "id": "receipt",
+      "phrases": [
+        { "text": "reçu", "weight": 22, "where": "title" },
+        { "text": "ticket de caisse", "weight": 22, "where": "title" },
+        { "text": "justificatif de paiement", "weight": 20 },
+        { "text": "paiement reçu", "weight": 16 },
+        { "text": "merci de votre achat", "weight": 16 }
+      ]
+    },
+    {
+      "id": "credit-note",
+      "phrases": [{ "text": "extourne", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "packing-slip",
+      "phrases": [{ "text": "reçu", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "bank-statement",
+      "phrases": [
+        { "text": "relevé de compte", "weight": 24, "where": "title" },
+        { "text": "relevé bancaire", "weight": 26, "where": "title" },
+        { "text": "solde précédent", "weight": 18 },
+        { "text": "nouveau solde", "weight": 18 },
+        { "text": "date de valeur", "weight": 16 },
+        { "text": "numéro de compte", "weight": 12 }
+      ]
+    },
+    {
+      "id": "payslip",
+      "phrases": [
+        { "text": "bulletin de salaire", "weight": 22, "where": "title" },
+        { "text": "bulletin de paie", "weight": 28, "where": "title" },
+        { "text": "salaire brut", "weight": 18 },
+        { "text": "net imposable", "weight": 18 },
+        { "text": "cotisations sociales", "weight": 16 },
+        { "text": "urssaf", "weight": 18 }
+      ]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "comptes annuels", "weight": 20, "where": "title" },
+        { "text": "état de la situation financière", "weight": 12 }
+      ]
+    },
+    {
+      "id": "tax-return",
+      "phrases": [
+        { "text": "déclaration de revenus", "weight": 22, "where": "title" },
+        { "text": "avis d'imposition", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "tax-form",
+      "phrases": [
+        { "text": "déclaration de revenus", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "contract",
+      "phrases": [
+        { "text": "contrat", "weight": 12, "where": "title" },
+        { "text": "entre les parties", "weight": 16 },
+        { "text": "les parties conviennent", "weight": 16 },
+        { "text": "durée du contrat", "weight": 14 },
+        { "text": "résiliation", "weight": 12 },
+        { "text": "fait à", "weight": 10 }
+      ]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [
+        { "text": "contrat de travail", "weight": 24, "where": "title" },
+        { "text": "période d'essai", "weight": 18 },
+        { "text": "congés payés", "weight": 14 },
+        { "text": "rémunération", "weight": 12 }
+      ]
+    },
+    {
+      "id": "lease-agreement",
+      "phrases": [
+        { "text": "bail à rente", "weight": 18, "where": "title" },
+        { "text": "landlord", "weight": 8 },
+        { "text": "contrat de bail", "weight": 30, "where": "title" },
+        { "text": "bail d'habitation", "weight": 26, "where": "title" },
+        { "text": "dépôt de garantie", "weight": 18 },
+        { "text": "loyer", "weight": 16 },
+        { "text": "bailleur", "weight": 14 },
+        { "text": "locataire", "weight": 12 }
+      ]
+    },
+    {
+      "id": "nda",
+      "phrases": [
+        { "text": "accord de non-divulgation", "weight": 24, "where": "title" },
+        { "text": "accord de confidentialité", "weight": 30, "where": "title" },
+        { "text": "clause de confidentialité", "weight": 20 }
+      ]
+    },
+    {
+      "id": "privacy-policy",
+      "phrases": [
+        {
+          "text": "politique de confidentialité",
+          "weight": 24,
+          "where": "title"
+        },
+        { "text": "rgpd", "weight": 14 },
+        { "text": "données personnelles", "weight": 12 }
+      ]
+    },
+    {
+      "id": "affidavit",
+      "phrases": [
+        { "text": "déclaration sous serment", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "testament", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "mortgage-document",
+      "phrases": [
+        { "text": "crédit hypothécaire", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "insurance-policy",
+      "phrases": [
+        { "text": "police d'assurance", "weight": 22, "where": "title" },
+        { "text": "franchise", "weight": 8 },
+        { "text": "contrat d'assurance", "weight": 26, "where": "title" },
+        { "text": "garanties", "weight": 12 },
+        { "text": "numéro de contrat", "weight": 12 }
+      ]
+    },
+    {
+      "id": "resume",
+      "phrases": [
+        { "text": "curriculum vitæ", "weight": 24, "where": "title" },
+        { "text": "expérience professionnelle", "weight": 20 },
+        { "text": "compétences", "weight": 12 },
+        { "text": "formation", "weight": 10 }
+      ]
+    },
+    {
+      "id": "cover-letter",
+      "phrases": [
+        { "text": "lettre de motivation", "weight": 20, "where": "title" },
+        { "text": "candidature au poste", "weight": 20 },
+        { "text": "je vous prie d'agréer", "weight": 16 },
+        { "text": "madame, monsieur", "weight": 12 }
+      ],
+      "negatives": [{ "text": "expérience professionnelle", "weight": 12 }]
+    },
+    {
+      "id": "certificate",
+      "phrases": [{ "text": "diplôme", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "thesis",
+      "phrases": [{ "text": "thèse", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "patent",
+      "phrases": [
+        { "text": "brevet d'invention", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "prescription", "weight": 20, "where": "title" },
+        { "text": "pharmacie", "weight": 10 },
+        { "text": "ordonnance", "weight": 22, "where": "title" },
+        { "text": "posologie", "weight": 18 }
+      ]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [
+        { "text": "dossier médical", "weight": 18, "where": "title" },
+        { "text": "compte rendu médical", "weight": 24, "where": "title" },
+        { "text": "diagnostic", "weight": 12 }
+      ]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "vaccination", "weight": 12 }]
+    },
+    {
+      "id": "questionnaire",
+      "phrases": [{ "text": "questionnaire", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "user-guide",
+      "phrases": [{ "text": "mode d'emploi", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        {
+          "text": "fiche de données de sécurité",
+          "weight": 24,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [
+        { "text": "dessin technique", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "bill-of-materials",
+      "phrases": [{ "text": "nomenclature", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "press-release",
+      "phrases": [
+        { "text": "communiqué de presse", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "newsletter",
+      "phrases": [
+        { "text": "lettre d'information", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "brochure",
+      "phrases": [{ "text": "brochure", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "livre blanc", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-minutes",
+      "phrases": [
+        { "text": "compte rendu de réunion", "weight": 18, "where": "title" },
+        { "text": "procès-verbal", "weight": 24, "where": "title" },
+        { "text": "présents", "weight": 10 }
+      ]
+    },
+    {
+      "id": "memo",
+      "phrases": [{ "text": "mémorandum", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "ticket",
+      "phrases": [
+        { "text": "place de spectacle", "weight": 18, "where": "title" },
+        { "text": "carte d'embarquement", "weight": 26, "where": "title" },
+        { "text": "billet", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "waybill",
+      "phrases": [
+        { "text": "lettre de voiture", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "visa", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "utility-bill",
+      "phrases": [
+        { "text": "compteur électrique", "weight": 12 },
+        { "text": "facture d'électricité", "weight": 26, "where": "title" },
+        { "text": "facture de gaz", "weight": 26, "where": "title" },
+        { "text": "relevé de compteur", "weight": 20 },
+        { "text": "consommation", "weight": 12 },
+        { "text": "kwh", "weight": 12 }
+      ]
+    },
+    {
+      "id": "menu",
+      "phrases": [{ "text": "menu", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [
+        { "text": "recette de cuisine", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "presentation",
+      "phrases": [{ "text": "présentation", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "courrier", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "form",
+      "phrases": [{ "text": "formulaire", "weight": 10, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "licence", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "public-notice",
+      "phrases": [{ "text": "annonce légale", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "legal-notice",
+      "phrases": [{ "text": "mise en demeure", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "audit-report",
+      "phrases": [{ "text": "audit", "weight": 12 }]
+    },
+    {
+      "id": "risk-assessment",
+      "phrases": [
+        { "text": "évaluation des risques", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "bien immobilier", "weight": 8 }]
+    },
+    {
+      "id": "grant-agreement",
+      "phrases": [{ "text": "subvention", "weight": 12 }]
+    },
+    {
+      "id": "tender-document",
+      "phrases": [{ "text": "appel d'offres", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "subscription-confirmation",
+      "phrases": [{ "text": "abonnement", "weight": 10 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "courrier électronique", "weight": 8 }]
+    },
+    {
+      "id": "book-ebook",
+      "phrases": [{ "text": "sommaire", "weight": 6 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "magazine", "weight": 10 }]
+    },
+    {
+      "id": "course-syllabus",
+      "phrases": [{ "text": "syllabus", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "performance-review",
+      "phrases": [
+        { "text": "entretien d'évaluation", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "recrutement", "weight": 8 }]
+    },
+    {
+      "id": "loan-agreement",
+      "phrases": [{ "text": "contrat de prêt", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "shareholder-agreement",
+      "phrases": [
+        {
+          "text": "convention entre actionnaires",
+          "weight": 20,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "legal-opinion",
+      "phrases": [
+        {
+          "text": "motivation des décisions de justice",
+          "weight": 18,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "subpoena",
+      "phrases": [{ "text": "subpoena", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "consent-form",
+      "phrases": [
+        {
+          "text": "consentement libre et éclairé",
+          "weight": 18,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "discharge-summary",
+      "phrases": [{ "text": "hospitalisation", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "lab-report",
+      "phrases": [{ "text": "laboratoire de biologie médicale", "weight": 12 }]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "assurance", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "regulatory-filing",
+      "phrases": [{ "text": "conformité", "weight": 10 }]
+    },
+    {
+      "id": "quality-report",
+      "phrases": [{ "text": "contrôle qualité", "weight": 10 }]
+    },
+    {
+      "id": "test-report",
+      "phrases": [{ "text": "étalonnage", "weight": 12 }]
+    },
+    {
+      "id": "safety-procedure",
+      "phrases": [{ "text": "sécurité au travail", "weight": 10 }]
+    },
+    {
+      "id": "technical-specification",
+      "phrases": [{ "text": "spécification", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "api-documentation",
+      "phrases": [{ "text": "interface de programmation", "weight": 8 }]
+    },
+    {
+      "id": "license-agreement",
+      "phrases": [
+        {
+          "text": "conditions générales d'utilisation",
+          "weight": 20,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "proposal",
+      "phrases": [{ "text": "appel d'offres", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "budget", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "remittance-advice",
+      "phrases": [
+        { "text": "avis de versement", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "statement-of-account",
+      "phrases": [
+        { "text": "relevé de compte", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "application-form",
+      "phrases": [
+        { "text": "demande d'emploi", "weight": 14, "where": "title" }
+      ]
+    },
+    {
+      "id": "registration-form",
+      "phrases": [
+        { "text": "university of new zealand", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "gift-certificate",
+      "phrases": [{ "text": "carte cadeau", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "organization-chart",
+      "phrases": [{ "text": "organigramme", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "case-study",
+      "phrases": [{ "text": "étude de cas", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "conseil d'administration", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "investissement", "weight": 8 }]
+    },
+    {
+      "id": "analytics-report",
+      "phrases": [{ "text": "audience d'un site web", "weight": 10 }]
+    },
+    {
+      "id": "appraisal-report",
+      "phrases": [
+        { "text": "évaluation immobilière", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "hoa-document",
+      "phrases": [
+        { "text": "syndicat de copropriété", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "grade-report",
+      "phrases": [
+        { "text": "bulletin scolaire", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "devoir à la maison", "weight": 12 }]
+    },
+    {
+      "id": "quote",
+      "phrases": [
+        { "text": "devis", "weight": 26, "where": "title" },
+        { "text": "numéro de devis", "weight": 20 },
+        { "text": "valable jusqu'au", "weight": 16 },
+        { "text": "devis gratuit", "weight": 14 }
+      ],
+      "negatives": [{ "text": "numéro de facture", "weight": 14 }]
+    },
+    {
+      "id": "purchase-order",
+      "phrases": [
+        { "text": "bon de commande", "weight": 26, "where": "title" },
+        { "text": "numéro de commande", "weight": 18 }
+      ]
+    },
+    {
+      "id": "order-confirmation",
+      "phrases": [
+        { "text": "confirmation de commande", "weight": 26, "where": "title" },
+        { "text": "accusé de réception de commande", "weight": 20 },
+        { "text": "merci pour votre commande", "weight": 16 }
+      ]
+    },
+    {
+      "id": "delivery-note",
+      "phrases": [
+        { "text": "bon de livraison", "weight": 28, "where": "title" },
+        { "text": "adresse de livraison", "weight": 10 }
+      ]
+    },
+    {
+      "id": "terms-and-conditions",
+      "phrases": [
+        {
+          "text": "conditions générales de vente",
+          "weight": 30,
+          "where": "title"
+        },
+        { "text": "cgv", "weight": 16 }
+      ]
+    },
+    {
+      "id": "booking-confirmation",
+      "phrases": [
+        {
+          "text": "confirmation de réservation",
+          "weight": 26,
+          "where": "title"
+        },
+        { "text": "numéro de réservation", "weight": 18 }
+      ]
+    },
+    {
+      "id": "meeting-agenda",
+      "phrases": [{ "text": "ordre du jour", "weight": 20, "where": "title" }]
+    }
+  ],
+  "patterns": {
+    "toc": [{ "pattern": "table des mati[èe]res" }],
+    "references": [{ "pattern": "\\\\b(bibliographie|r[ée]f[ée]rences)\\\\b" }],
+    "signature": [
+      { "pattern": "\\\\b(signature|sign[ée]|lu et approuv[ée])\\\\b" }
+    ],
+    "signature_form": [
+      { "pattern": "_{6,}\\\\s*\\\\n\\\\s*(date|nom|signature)", "flags": "i" }
+    ],
+    "email_from": [
+      {
+        "pattern": "\\\\bde\\\\s?:\\\\s.+\\\\n(.*\\\\n){0,3}?\\\\s*(à|envoy[ée]|date)\\\\s?:\\\\s",
+        "flags": "i"
+      }
+    ],
+    "email_subject": [{ "pattern": "objet\\\\s?:\\\\s" }],
+    "currency": [{ "pattern": "\\\\d[\\\\d .,]*\\\\s?(eur|€)|€\\\\s?\\\\d" }],
+    "form_label": [
+      {
+        "pattern": "^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ /()&'.-]{2,30}\\\\s?:\\\\s*$",
+        "flags": "m"
+      }
+    ]
+  }
+}

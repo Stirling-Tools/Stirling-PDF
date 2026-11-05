@@ -320,6 +320,16 @@ class EndpointConfigurationGapTest {
             config.disableGroup("Calibre");
             assertFalse(config.isEndpointEnabled("pdf-to-epub"));
         }
+
+        @Test
+        @DisplayName("both ebook conversions are disabled with the Calibre group")
+        void ebookConversionsFollowCalibre() {
+            EndpointConfiguration config = buildDefault();
+            assertTrue(config.isEndpointEnabled("ebook-to-pdf"));
+            config.disableGroup("Calibre");
+            assertFalse(config.isEndpointEnabled("ebook-to-pdf"));
+            assertFalse(config.isEndpointEnabled("pdf-to-epub"));
+        }
     }
 
     @Nested
@@ -478,7 +488,7 @@ class EndpointConfigurationGapTest {
         @DisplayName("non-pro build disables the enterprise group")
         void nonProDisablesEnterprise() {
             EndpointConfiguration config = build(false);
-            assertTrue(config.getDisabledGroups().contains("enterprise"));
+            assertFalse(config.isGroupEnabled("enterprise"));
         }
 
         @Test

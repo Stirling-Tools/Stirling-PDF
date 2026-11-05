@@ -10,16 +10,22 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.model.OrgOwner;
+import stirling.software.proprietary.service.OrgOwnerService;
 
 /** Browser-mediated account linking, instance side. */
 @Slf4j
@@ -41,6 +47,7 @@ public class ConnectService {
     private final DeviceCredentialStore credentialStore;
     private final EntitlementCache entitlementCache;
     private final ApplicationProperties applicationProperties;
+    private final OrgOwnerService owners;
     private final SecureRandom random = new SecureRandom();
 
     public ConnectService(
@@ -48,12 +55,14 @@ public class ConnectService {
             ConnectStateRepository stateRepo,
             DeviceCredentialStore credentialStore,
             EntitlementCache entitlementCache,
-            ApplicationProperties applicationProperties) {
+            ApplicationProperties applicationProperties,
+            OrgOwnerService owners) {
         this.client = client;
         this.stateRepo = stateRepo;
         this.credentialStore = credentialStore;
         this.entitlementCache = entitlementCache;
         this.applicationProperties = applicationProperties;
+        this.owners = owners;
     }
 
     public enum Phase {
@@ -67,6 +76,8 @@ public class ConnectService {
         EXPIRED,
         /** Declined or already used; start a new one. */
         REJECTED,
+        /** The browser callback would be rewritten, losing its origin or connection state. */
+        CALLBACK_MISMATCH,
         /** SaaS could not be reached; the handshake is still valid and can be retried. */
         UNAVAILABLE
     }
@@ -86,10 +97,13 @@ public class ConnectService {
     /** Opens a handshake and returns where to send the admin. */
     @Transactional
     public ConnectStatus start(String name, CallbackHint hint) throws IOException {
+        OrgOwner owner =
+                owners.requireCurrentOwner(SecurityContextHolder.getContext().getAuthentication());
+        credentialStore.assertNoHandover();
         if (credentialStore.isLinked()) {
             return status();
         }
-        return open(name, hint, null);
+        return open(name, hint, null, owner);
     }
 
     /**
@@ -106,15 +120,20 @@ public class ConnectService {
                                         new IOException(
                                                 "This server is not linked, so there is no session"
                                                         + " to re-establish"));
-        return open(credential.getDeviceId(), hint, credential);
+        return open(credential.getDeviceId(), hint, credential, null);
     }
 
-    private ConnectStatus open(String name, CallbackHint hint, DeviceCredential credential)
+    private ConnectStatus open(
+            String name, CallbackHint hint, DeviceCredential credential, OrgOwner owner)
             throws IOException {
         String callbackUrl = resolveCallbackUrl(hint);
         if (callbackUrl == null) {
             throw new IOException(
                     "Cannot determine where to send the admin back to; set system.frontendUrl");
+        }
+        if (hint.requestedCallbackUrl() != null
+                && !callbackUrl.equals(hint.requestedCallbackUrl().strip())) {
+            return ConnectStatus.of(Phase.CALLBACK_MISMATCH);
         }
         String nonce = randomSecret();
         String claimSecret = randomSecret();
@@ -131,6 +150,11 @@ public class ConnectService {
         state.setCallbackUrl(callbackUrl);
         state.setAuthorizeUrl(created.authorizeUrl());
         state.setCreatedAt(now);
+        state.setReauth(credential != null);
+        if (owner != null) {
+            state.setOwnerUserId(owner.getOwnerUserId());
+            state.setOwnerAssignedAt(owner.getAssignedAt());
+        }
         state.setExpiresAt(
                 now.plusSeconds(created.expiresInSeconds() > 0 ? created.expiresInSeconds() : 900));
         stateRepo.save(state);
@@ -144,8 +168,8 @@ public class ConnectService {
     public ConnectStatus complete(String nonce) {
         Optional<ConnectState> found = stateRepo.findById(ConnectState.SINGLETON_ID);
         if (found.isEmpty()) {
-            // Already finished (a double-submitted callback) or never started.
-            return status();
+            // An existing device credential does not authenticate an unsolicited callback.
+            return ConnectStatus.of(Phase.REJECTED);
         }
         ConnectState state = found.get();
         if (state.isExpired(LocalDateTime.now())) {
@@ -159,10 +183,23 @@ public class ConnectService {
             return ConnectStatus.of(Phase.REJECTED);
         }
 
+        boolean reauth = Boolean.TRUE.equals(state.getReauth());
+        if (!reauth) {
+            OrgOwner owner =
+                    owners.requireCurrentOwner(
+                            SecurityContextHolder.getContext().getAuthentication());
+            if (state.getOwnerUserId() == null
+                    || !Objects.equals(state.getOwnerUserId(), owner.getOwnerUserId())
+                    || !Objects.equals(state.getOwnerAssignedAt(), owner.getAssignedAt())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "LINK_OWNER_CHANGED");
+            }
+            credentialStore.assertNoHandover();
+        }
         AccountLinkClient.ConnectClaimResult claim =
                 client.connectClaim(state.getRequestId(), state.getClaimSecret());
         return switch (claim.outcome()) {
             case GRANTED -> {
+                if (reauth) yield ConnectStatus.of(Phase.REJECTED);
                 credentialStore.save(claim.deviceId(), claim.deviceSecret(), claim.teamId());
                 entitlementCache.invalidate();
                 stateRepo.delete(state);
@@ -214,7 +251,27 @@ public class ConnectService {
     String resolveCallbackUrl(CallbackHint hint) {
         String configured = applicationProperties.getSystem().getFrontendUrl();
         if (configured != null && !configured.isBlank()) {
-            return trimTrailingSlash(configured.strip()) + CALLBACK_PATH;
+            String callback = trimTrailingSlash(configured.strip()) + CALLBACK_PATH;
+            String requested = hint.requestedCallbackUrl();
+            if (requested != null) {
+                try {
+                    URI uri = new URI(requested.strip());
+                    if (callback.equals(
+                                    new URI(
+                                                    uri.getScheme(),
+                                                    uri.getAuthority(),
+                                                    uri.getPath(),
+                                                    null,
+                                                    null)
+                                            .toString())
+                            && uri.getFragment() == null) {
+                        return requested.strip();
+                    }
+                } catch (URISyntaxException ignored) {
+                    // Invalid hints cannot override the configured callback.
+                }
+            }
+            return callback;
         }
         String browserOrigin = originOf(hint.browserOrigin());
         if (browserOrigin != null) {

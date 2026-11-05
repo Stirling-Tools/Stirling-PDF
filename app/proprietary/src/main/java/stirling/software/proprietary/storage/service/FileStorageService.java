@@ -1,6 +1,7 @@
 package stirling.software.proprietary.storage.service;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
@@ -114,7 +115,9 @@ public class FileStorageService {
      */
     public List<StoredFile> listAccessibleFiles(User user) {
         ensureStorageEnabled();
-        return storedFileRepository.findAccessibleFiles(user);
+        return storedFileRepository.findAccessibleFiles(user).stream()
+                .filter(file -> file.getExpiresAt() == null)
+                .toList();
     }
 
     public StoredFile storeFile(User owner, MultipartFile file) {
@@ -123,6 +126,21 @@ public class FileStorageService {
 
     public StoredFile storeFile(
             User owner, MultipartFile file, MultipartFile historyBundle, MultipartFile auditLog) {
+        return storeFile(owner, file, historyBundle, auditLog, null);
+    }
+
+    // Hidden from listings, purged after ttl. An expiry rather than a new FilePurpose, as
+    // enum columns carry CHECK constraints that ddl-auto never widens.
+    public StoredFile storeTemporaryFile(User owner, MultipartFile file, Duration ttl) {
+        return storeFile(owner, file, null, null, LocalDateTime.now().plus(ttl));
+    }
+
+    private StoredFile storeFile(
+            User owner,
+            MultipartFile file,
+            MultipartFile historyBundle,
+            MultipartFile auditLog,
+            LocalDateTime expiresAt) {
         ensureStorageEnabled();
         validateMainUpload(file);
 
@@ -148,6 +166,7 @@ public class FileStorageService {
             storedFile.setSizeBytes(mainObject.getSizeBytes());
             storedFile.setStorageKey(mainObject.getStorageKey());
             storedFile.setEncryptionKeyId(mainObject.getEncryptionKeyId());
+            storedFile.setExpiresAt(expiresAt);
             applyHistoryMetadata(storedFile, historyObject);
             applyAuditMetadata(storedFile, auditObject);
             try {
@@ -271,6 +290,9 @@ public class FileStorageService {
                                 () ->
                                         new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND, "File not found"));
+        if (isExpired(file)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
+        }
         if (isOwner(file, user)) {
             return file;
         }
@@ -647,6 +669,16 @@ public class FileStorageService {
     }
 
     public FileShare createShareLink(User owner, StoredFile file, ShareAccessRole role) {
+        return createShareLink(owner, file, role, false, resolveShareLinkExpiration());
+    }
+
+    /** Link share; {@code publicAccess} lets anyone with the token open it without signing in. */
+    public FileShare createShareLink(
+            User owner,
+            StoredFile file,
+            ShareAccessRole role,
+            boolean publicAccess,
+            LocalDateTime expiresAt) {
         ensureStorageEnabled();
         ensureShareLinksEnabled();
         if (!isOwner(file, owner)) {
@@ -657,8 +689,16 @@ public class FileStorageService {
         share.setFile(file);
         share.setShareToken(UUID.randomUUID().toString());
         share.setAccessRole(role);
-        share.setExpiresAt(resolveShareLinkExpiration());
+        share.setPublicAccess(publicAccess);
+        share.setExpiresAt(expiresAt);
         return fileShareRepository.save(share);
+    }
+
+    /** True when share links can be created, so callers can degrade instead of failing. */
+    public boolean canCreateShareLinks() {
+        return applicationProperties.getStorage().isEnabled()
+                && applicationProperties.getStorage().getSharing().isEnabled()
+                && isShareLinksEnabled();
     }
 
     public void revokeShareLink(User owner, StoredFile file, String token) {
@@ -701,8 +741,11 @@ public class FileStorageService {
         if (!isShareLinksEnabled()) {
             return false;
         }
-        if (isShareLinkExpired(share)) {
+        if (isShareLinkExpired(share) || isExpired(share.getFile())) {
             return false;
+        }
+        if (Boolean.TRUE.equals(share.getPublicAccess())) {
+            return true;
         }
         if (authentication == null
                 || !authentication.isAuthenticated()
@@ -878,6 +921,10 @@ public class FileStorageService {
     }
 
     private User extractAuthenticatedUser(Authentication authentication) {
+        // Public share links are opened without signing in.
+        if (authentication == null) {
+            return null;
+        }
         Object principal = authentication.getPrincipal();
         if (principal instanceof User user) {
             return user;
@@ -1108,6 +1155,12 @@ public class FileStorageService {
             return null;
         }
         return LocalDateTime.now().plus(days, ChronoUnit.DAYS);
+    }
+
+    private static boolean isExpired(StoredFile file) {
+        return file != null
+                && file.getExpiresAt() != null
+                && LocalDateTime.now().isAfter(file.getExpiresAt());
     }
 
     private boolean isShareLinkExpired(FileShare share) {

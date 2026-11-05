@@ -1,0 +1,90 @@
+import { useLayoutEffect, useRef, type MutableRefObject } from "react";
+import { useSpread, SpreadMode } from "@embedpdf/plugin-spread/react";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
+import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
+
+/**
+ * SpreadAPIBridge - Updated for embedPDF v2.6.0
+ * Connects the PDF spread mode (single/dual page) plugin to the shared ViewerContext.
+ */
+export function SpreadAPIBridge() {
+  const activeDocumentId = useActiveDocumentId();
+  const documentReady = useDocumentReady();
+  // Outlives the per-document inner bridge, so turning dual-page back on
+  // restores the pairing (cover page or not) the user last chose.
+  const lastDualModeRef = useRef<SpreadMode>(SpreadMode.Odd);
+
+  // Don't render the inner component until we have a valid document ID and document is ready
+  if (!activeDocumentId || !documentReady) {
+    return null;
+  }
+
+  return (
+    <SpreadAPIBridgeInner
+      key={activeDocumentId}
+      documentId={activeDocumentId}
+      lastDualModeRef={lastDualModeRef}
+    />
+  );
+}
+
+function SpreadAPIBridgeInner({
+  documentId,
+  lastDualModeRef,
+}: {
+  documentId: string;
+  lastDualModeRef: MutableRefObject<SpreadMode>;
+}) {
+  const { provides: spread, spreadMode } = useSpread(documentId);
+  const { registerBridge, triggerImmediateSpreadUpdate } = useViewer();
+
+  // Keep spread ref updated to avoid re-running effect when object reference changes
+  const spreadRef = useRef(spread);
+  useLayoutEffect(() => {
+    spreadRef.current = spread;
+  }, [spread]);
+
+  useLayoutEffect(() => {
+    const currentSpread = spreadRef.current;
+    if (!currentSpread || spreadMode === undefined) {
+      return;
+    }
+
+    if (spreadMode !== SpreadMode.None) {
+      lastDualModeRef.current = spreadMode;
+    }
+
+    registerBridge("spread", {
+      state: { spreadMode },
+      api: {
+        setSpreadMode: (mode: SpreadMode) => {
+          currentSpread.setSpreadMode(mode);
+        },
+        getSpreadMode: () => currentSpread.getSpreadMode(),
+        toggleSpreadMode: () => {
+          const current = currentSpread.getSpreadMode();
+          const nextMode =
+            current === SpreadMode.None
+              ? lastDualModeRef.current
+              : SpreadMode.None;
+          currentSpread.setSpreadMode(nextMode);
+        },
+        SpreadMode,
+      },
+    });
+
+    triggerImmediateSpreadUpdate(spreadMode);
+
+    return () => {
+      registerBridge("spread", null);
+    };
+  }, [
+    spreadMode,
+    registerBridge,
+    triggerImmediateSpreadUpdate,
+    lastDualModeRef,
+  ]);
+
+  return null;
+}

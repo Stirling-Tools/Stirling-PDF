@@ -37,6 +37,7 @@ public class AiEngineConfigSync {
     private final ApplicationProperties applicationProperties;
     private final AiEngineClient aiEngineClient;
     private final ObjectMapper objectMapper;
+    private final AiEngineRouter router;
 
     // Single worker keeps pushes strictly ordered; virtual (daemon) thread never blocks shutdown.
     private final ExecutorService pushExecutor =
@@ -60,6 +61,11 @@ public class AiEngineConfigSync {
                             + " (the engine is configured from its own environment)");
             return;
         }
+        if (router.isCloudMode()) {
+            // Stirling Cloud picks its own models, and its gateway refuses the config route.
+            log.debug("Skipping AI engine config push: this server is using Stirling Cloud AI");
+            return;
+        }
         // Engine may still be booting; push off-thread with retries so startup never blocks.
         submit(() -> pushWithRetries(cfg));
     }
@@ -77,7 +83,8 @@ public class AiEngineConfigSync {
             if (pendingAiEngine == null
                     || pendingAiEngine.isEmpty()
                     || !cfg.isPushConfigToEngine()
-                    || !cfg.isEnabled()) {
+                    || !cfg.isEnabled()
+                    || router.isCloudMode()) {
                 return;
             }
             Set<String> engineKeys =

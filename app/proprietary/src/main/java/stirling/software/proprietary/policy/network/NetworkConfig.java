@@ -174,9 +174,9 @@ public record NetworkConfig(
         if (mode == null || mode.isBlank()) {
             return false;
         }
-        if (!MODE_CONSUME.equals(mode) && !MODE_SNAPSHOT.equals(mode)) {
+        if (!MODE_CONSUME.equals(mode) && !MODE_SNAPSHOT.equals(mode) && !"track".equals(mode)) {
             throw new IllegalArgumentException(
-                    "network config 'mode' must be 'consume' or 'snapshot'");
+                    "network config 'mode' must be 'consume', 'track' or 'snapshot'");
         }
         return MODE_SNAPSHOT.equals(mode);
     }

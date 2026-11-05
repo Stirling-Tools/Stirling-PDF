@@ -3,7 +3,6 @@ package stirling.software.proprietary.security.saml2;
 import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -14,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.SavedRequest;
 
@@ -70,27 +70,12 @@ public class CustomSaml2AuthenticationSuccessHandler
 
             boolean userExists = userService.usernameExistsIgnoreCase(username);
 
-            // Check if user is eligible for SAML (grandfathered or system has ENTERPRISE license)
-            if (userExists) {
-                stirling.software.proprietary.security.model.User user =
-                        userService.findByUsernameIgnoreCase(username).orElse(null);
-
-                if (user != null && !licenseSettingsService.isSamlEligible(user)) {
-                    // User is not grandfathered and no ENTERPRISE license - block SAML login
-                    log.warn(
-                            "SAML2 login blocked for existing user '{}' - not eligible (not grandfathered and no ENTERPRISE license)",
-                            username);
-                    String origin = resolveOrigin(request);
-                    response.sendRedirect(origin + "/logout?saml2RequiresLicense=true");
-                    return;
-                }
-            } else if (!licenseSettingsService.isSamlEligible(null)) {
-                // No existing user and no ENTERPRISE license -> block auto creation
-                log.warn(
-                        "SAML2 login blocked for new user '{}' - not eligible (no ENTERPRISE license for auto-creation)",
-                        username);
-                String origin = resolveOrigin(request);
-                response.sendRedirect(origin + "/logout?saml2RequiresLicense=true");
+            var user = userService.findByUsernameIgnoreCase(username).orElse(null);
+            if (!licenseSettingsService.isSamlEligible(user)) {
+                SecurityContextHolder.clearContext();
+                HttpSession deniedSession = request.getSession(false);
+                if (deniedSession != null) deniedSession.invalidate();
+                response.sendRedirect(resolveOrigin() + "/logout?saml2RequiresLicense=true");
                 return;
             }
 
@@ -140,14 +125,11 @@ public class CustomSaml2AuthenticationSuccessHandler
                         isSsoUser,
                         isSAML2User);
 
-                if (userExists
-                        && hasPassword
-                        && !isSsoUser
-                        && saml2Properties.getAutoCreateUser()) {
+                if (userExists && hasPassword && !isSsoUser) {
                     log.debug(
                             "User {} exists with password but is not an SSO user, redirecting to logout",
                             username);
-                    String origin = resolveOrigin(request);
+                    String origin = resolveOrigin();
                     response.sendRedirect(origin + "/logout?oAuth2AuthenticationErrorWeb=true");
                     return;
                 }
@@ -162,12 +144,12 @@ public class CustomSaml2AuthenticationSuccessHandler
                                 username,
                                 saml2Properties.getBlockRegistration(),
                                 saml2Properties.getAutoCreateUser());
-                        String origin = resolveOrigin(request);
+                        String origin = resolveOrigin();
                         response.sendRedirect(origin + "/login?errorOAuth=oAuth2AdminBlockedUser");
                         return;
                     }
                     if (!userExists && licenseSettingsService.wouldExceedLimit(1)) {
-                        String origin = resolveOrigin(request);
+                        String origin = resolveOrigin();
                         response.sendRedirect(origin + "/logout?maxUsersReached=true");
                         return;
                     }
@@ -250,7 +232,7 @@ public class CustomSaml2AuthenticationSuccessHandler
             String contextPath,
             String jwt) {
         String redirectPath = resolveRedirectPath(request, contextPath);
-        String origin = resolveOrigin(request);
+        String origin = resolveOrigin();
         clearRedirectCookie(response);
         String url = origin + redirectPath + "#access_token=" + jwt;
 
@@ -264,23 +246,12 @@ public class CustomSaml2AuthenticationSuccessHandler
         return url;
     }
 
-    /**
-     * Resolve the origin (frontend URL) for redirects. First checks system.frontendUrl from config,
-     * then falls back to detecting from request headers.
-     */
-    private String resolveOrigin(HttpServletRequest request) {
-        // First check if frontendUrl is configured
-        String configuredFrontendUrl = applicationProperties.getSystem().getFrontendUrl();
-        if (configuredFrontendUrl != null && !configuredFrontendUrl.trim().isEmpty()) {
-            return configuredFrontendUrl.trim();
-        }
-
-        // Fall back to auto-detection from request headers
-        return resolveForwardedOrigin(request)
-                .orElseGet(
-                        () ->
-                                resolveOriginFromReferer(request)
-                                        .orElseGet(() -> buildOriginFromRequest(request)));
+    // Relative redirects preserve the browser's origin without trusting proxy or Referer headers.
+    private String resolveOrigin() {
+        String configured = applicationProperties.getSystem().getFrontendUrl();
+        return configured == null || configured.isBlank()
+                ? ""
+                : configured.trim().replaceAll("/+$", "");
     }
 
     private String resolveRedirectPath(HttpServletRequest request, String contextPath) {
@@ -288,7 +259,7 @@ public class CustomSaml2AuthenticationSuccessHandler
             return TauriOAuthUtils.defaultTauriCallbackPath(contextPath);
         }
         return extractRedirectPathFromCookie(request)
-                .filter(path -> path.startsWith("/"))
+                .filter(TauriOAuthUtils::isLocalRedirectPath)
                 .orElseGet(() -> defaultCallbackPath(contextPath));
     }
 
@@ -299,9 +270,12 @@ public class CustomSaml2AuthenticationSuccessHandler
         }
         for (Cookie cookie : cookies) {
             if (SPA_REDIRECT_COOKIE.equals(cookie.getName())) {
-                String value = URLDecoder.decode(cookie.getValue(), StandardCharsets.UTF_8).trim();
-                if (!value.isEmpty()) {
-                    return Optional.of(value);
+                try {
+                    String value =
+                            URLDecoder.decode(cookie.getValue(), StandardCharsets.UTF_8).trim();
+                    if (!value.isEmpty()) return Optional.of(value);
+                } catch (IllegalArgumentException e) {
+                    return Optional.empty();
                 }
             }
         }
@@ -316,85 +290,6 @@ public class CustomSaml2AuthenticationSuccessHandler
             return DEFAULT_CALLBACK_PATH;
         }
         return contextPath + DEFAULT_CALLBACK_PATH;
-    }
-
-    private Optional<String> resolveForwardedOrigin(HttpServletRequest request) {
-        String forwardedHostHeader = request.getHeader("X-Forwarded-Host");
-        if (forwardedHostHeader == null || forwardedHostHeader.isBlank()) {
-            return Optional.empty();
-        }
-        String host = forwardedHostHeader.split(",")[0].trim();
-        if (host.isEmpty()) {
-            return Optional.empty();
-        }
-
-        String forwardedProtoHeader = request.getHeader("X-Forwarded-Proto");
-        String proto =
-                (forwardedProtoHeader == null || forwardedProtoHeader.isBlank())
-                        ? request.getScheme()
-                        : forwardedProtoHeader.split(",")[0].trim();
-
-        if (!host.contains(":")) {
-            String forwardedPort = request.getHeader("X-Forwarded-Port");
-            if (forwardedPort != null
-                    && !forwardedPort.isBlank()
-                    && !isDefaultPort(proto, forwardedPort.trim())) {
-                host = host + ":" + forwardedPort.trim();
-            }
-        }
-        return Optional.of(proto + "://" + host);
-    }
-
-    private Optional<String> resolveOriginFromReferer(HttpServletRequest request) {
-        String referer = request.getHeader("Referer");
-        if (referer != null && !referer.isEmpty()) {
-            try {
-                URI refererUri = URI.create(referer);
-                String host = refererUri.getHost();
-                if (host == null) {
-                    return Optional.empty();
-                }
-                String origin = refererUri.getScheme() + "://" + host;
-                int port = refererUri.getPort();
-                if (port != -1 && port != 80 && port != 443) {
-                    origin += ":" + port;
-                }
-                return Optional.of(origin);
-            } catch (IllegalArgumentException e) {
-                log.debug(
-                        "Malformed referer URL: {}, falling back to request-based origin", referer);
-            }
-        }
-        return Optional.empty();
-    }
-
-    private String buildOriginFromRequest(HttpServletRequest request) {
-        String scheme = request.getScheme();
-        String serverName = request.getServerName();
-        int serverPort = request.getServerPort();
-
-        StringBuilder origin = new StringBuilder();
-        origin.append(scheme).append("://").append(serverName);
-
-        if ((!"http".equalsIgnoreCase(scheme) || serverPort != 80)
-                && (!"https".equalsIgnoreCase(scheme) || serverPort != 443)) {
-            origin.append(":").append(serverPort);
-        }
-
-        return origin.toString();
-    }
-
-    private boolean isDefaultPort(String scheme, String port) {
-        if (port == null) {
-            return true;
-        }
-        try {
-            int parsedPort = Integer.parseInt(port);
-            return ("http".equalsIgnoreCase(scheme) && parsedPort == 80)
-                    || ("https".equalsIgnoreCase(scheme) && parsedPort == 443);
-        } catch (NumberFormatException e) {
-            return false;
-        }
     }
 
     private void clearRedirectCookie(HttpServletResponse response) {

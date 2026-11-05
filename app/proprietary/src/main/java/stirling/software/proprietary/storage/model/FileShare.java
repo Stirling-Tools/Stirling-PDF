@@ -72,6 +72,10 @@ public class FileShare implements Serializable {
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
+    /** Link share that anyone holding the token may open without signing in. */
+    @Column(name = "public_access")
+    private Boolean publicAccess;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

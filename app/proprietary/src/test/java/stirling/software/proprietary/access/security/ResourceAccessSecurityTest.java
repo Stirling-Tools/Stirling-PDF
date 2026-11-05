@@ -22,6 +22,8 @@ class ResourceAccessSecurityTest {
     @Mock private ResourceAccessService accessService;
     @Mock private UserService userService;
 
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+
     @InjectMocks private ResourceAccessSecurity security;
 
     @AfterEach

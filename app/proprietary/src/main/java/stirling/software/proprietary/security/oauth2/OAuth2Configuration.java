@@ -38,13 +38,15 @@ import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.NoProviderFoundException;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.security.util.RedirectBaseUrl;
 
 @Slf4j
 @Configuration
 @ConditionalOnProperty(prefix = "security", name = "oauth2.enabled", havingValue = "true")
 public class OAuth2Configuration {
 
-    public static final String REDIRECT_URI_PATH = "{baseUrl}/login/oauth2/code/";
+    private static final String CALLBACK_PATH = "/login/oauth2/code/";
+    public static final String REDIRECT_URI_PATH = "{baseUrl}" + CALLBACK_PATH;
 
     private final ApplicationProperties applicationProperties;
     @Lazy private final UserService userService;
@@ -61,6 +63,7 @@ public class OAuth2Configuration {
     @Bean
     public ClientRegistrationRepository clientRegistrationRepository()
             throws NoProviderFoundException {
+        logRedirectBaseUrl();
         List<ClientRegistration> registrations = new ArrayList<>();
         githubClientRegistration().ifPresent(registrations::add);
         oidcClientRegistration().ifPresent(registrations::add);
@@ -106,6 +109,7 @@ public class OAuth2Configuration {
                                 .scope(keycloak.getScopes())
                                 .userNameAttributeName(keycloak.getUseAsUsername().getName())
                                 .clientName(keycloak.getClientName())
+                                .redirectUri(redirectUri(keycloak.getName()))
                                 .build())
                 : Optional.empty();
     }
@@ -137,7 +141,7 @@ public class OAuth2Configuration {
                                 .userInfoUri(google.getUserInfoUri())
                                 .userNameAttributeName(google.getUseAsUsername().getName())
                                 .clientName(google.getClientName())
-                                .redirectUri(REDIRECT_URI_PATH + google.getName())
+                                .redirectUri(redirectUri(google.getName()))
                                 .authorizationGrantType(AUTHORIZATION_CODE)
                                 .build())
                 : Optional.empty();
@@ -183,7 +187,7 @@ public class OAuth2Configuration {
                                 .userInfoUri(github.getUserInfoUri())
                                 .userNameAttributeName(github.getUseAsUsername().getName())
                                 .clientName(github.getClientName())
-                                .redirectUri(REDIRECT_URI_PATH + github.getName())
+                                .redirectUri(redirectUri(github.getName()))
                                 .authorizationGrantType(AUTHORIZATION_CODE)
                                 .build())
                 : Optional.empty();
@@ -221,7 +225,7 @@ public class OAuth2Configuration {
                     "Initialised OIDC OAuth2 provider: registrationId='{}', issuer='{}', redirectUri='{}'",
                     name,
                     oauth.getIssuer(),
-                    REDIRECT_URI_PATH + name);
+                    redirectUri(name));
         } else {
             log.warn("OIDC OAuth2 provider validation failed - provider will not be registered");
         }
@@ -235,10 +239,33 @@ public class OAuth2Configuration {
                                 .scope(oidcProvider.getScopes())
                                 .userNameAttributeName(oidcProvider.getUseAsUsername().getName())
                                 .clientName(clientName)
-                                .redirectUri(REDIRECT_URI_PATH + name)
+                                .redirectUri(redirectUri(name))
                                 .authorizationGrantType(AUTHORIZATION_CODE)
                                 .build())
                 : Optional.empty();
+    }
+
+    private String redirectUri(String registrationId) {
+        return RedirectBaseUrl.parse(
+                        applicationProperties.getSecurity().getOauth2().getRedirectBaseUrl())
+                .map(base -> base + CALLBACK_PATH + registrationId)
+                .orElse(REDIRECT_URI_PATH + registrationId);
+    }
+
+    private void logRedirectBaseUrl() {
+        String configured = applicationProperties.getSecurity().getOauth2().getRedirectBaseUrl();
+        if (isStringEmpty(configured)) {
+            return;
+        }
+        RedirectBaseUrl.parse(configured)
+                .ifPresentOrElse(
+                        base -> log.info("OAuth2 callback URLs pinned to {}", base),
+                        () ->
+                                log.error(
+                                        "Ignoring security.oauth2.redirectBaseUrl '{}': expected an"
+                                                + " absolute http(s) URL such as"
+                                                + " https://pdf.example.com",
+                                        configured));
     }
 
     private boolean isOAuth2Disabled(OAUTH2 oAuth2) {

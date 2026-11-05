@@ -8,9 +8,8 @@ import java.lang.annotation.Target;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 
 /**
- * Composite condition: matches only when cluster.enabled=true AND cluster.backplane=valkey. Both
- * checks are required (enabled alone may select the in-process backplane, which must not load
- * Valkey beans); a single {@code @ConditionalOnExpression} keeps the guard in one place.
+ * Both checks are required: enabled alone may still select the in-process backplane, which must not
+ * load Valkey beans.
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 
 import jakarta.annotation.PostConstruct;
 
@@ -22,6 +23,7 @@ import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker
  * cluster.artifactStore=s3}) is accompanied by a valid Pro / Enterprise license.
  */
 @Configuration
+@DependsOn("runningProOrHigher")
 @RequiredArgsConstructor
 @Slf4j
 public class ClusterStorageGate {

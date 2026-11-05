@@ -51,12 +51,8 @@ public class S3ConnectionPool {
     }
 
     public S3Client clientFor(S3Config config) {
-        return clients.computeIfAbsent(
-                config,
-                c -> {
-                    requirePermittedEndpoint(c);
-                    return clientFactory.apply(c);
-                });
+        requirePermittedEndpoint(config);
+        return clients.computeIfAbsent(config, clientFactory);
     }
 
     /**

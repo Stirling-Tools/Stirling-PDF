@@ -22,7 +22,7 @@ vars:
     ':(exclude).devcontainer/*'
     ':(exclude)app/core/src/main/resources/*'
     ':(exclude)app/proprietary/src/main/resources/*'
-    ':(exclude)frontend/editor/public/vendor/*'
+    ':(exclude)frontend/public/vendor/*'
     ':(exclude)*Dockerfile*'
     ':(exclude)*pdfjs*'
     ':(exclude)*thirdParty*'
@@ -40,7 +40,7 @@ vars:
     ':(exclude)*.min.*'
     ':(exclude)*diff.js'
     ':(exclude).github/workflows/*'
-  LOCALE_TOML: 'frontend/editor/public/locales/*/translation.toml'
+  LOCALE_TOML: 'frontend/public/locales/*/translation.toml'
 
   # gitleaks is pinned + checksum-verified by scripts/pre-commit/install_gitleaks.py,
   # which owns the version and caches the binary here.
@@ -140,7 +140,7 @@ tasks:
       block of commented-out code. Everything else it reports is advisory.
 
       Scoped to added lines, so touching an old file never surfaces the standing
-      backlog. The standard is devGuide/CODE_COMMENTS.md.
+      backlog. The standard is docs/developer/CODE_COMMENTS.md.
 
       With no arguments it diffs the working tree against HEAD, which is what a
       pre-commit run wants: the lines you are about to commit. On a CI pull request

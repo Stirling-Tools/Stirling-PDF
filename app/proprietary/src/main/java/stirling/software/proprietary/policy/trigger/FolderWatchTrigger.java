@@ -20,7 +20,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
-import stirling.software.proprietary.policy.engine.PolicyEngine;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.input.InputSource;
@@ -115,7 +113,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
                         Thread.ofVirtual().name("policy-folder-reconcile-", 0).factory());
         // First reconcile runs immediately so pre-existing files are picked up at startup.
         reconciler.scheduleAtFixedRate(this::safeReconcile, 0, reconcileSeconds, TimeUnit.SECONDS);
-        log.info("Folder-watch trigger started (reconcile every {}s)", reconcileSeconds);
+        log.debug("Folder-watch trigger started (reconcile every {}s)", reconcileSeconds);
     }
 
     @Override
@@ -212,28 +210,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
                         binding.policy().id(),
                         binding.input().sourceId());
                 // Light: the periodic reconcile does the full sweep.
-                runAsOwner(binding, SweepKind.LIGHT);
-            }
-        }
-    }
-
-    /**
-     * Run one binding as its policy's owner: watch threads have no security context, so run ids
-     * would mint unscoped and stay invisible to the owner's runs feed on a login install.
-     */
-    private void runAsOwner(PolicyBinding binding, SweepKind sweep) {
-        String owner = binding.policy().owner();
-        String previous = MDC.get(PolicyEngine.AUDIT_PRINCIPAL_MDC_KEY);
-        if (owner != null) {
-            MDC.put(PolicyEngine.AUDIT_PRINCIPAL_MDC_KEY, owner);
-        }
-        try {
-            policyRunner.runInput(binding.policy(), binding.input(), sweep);
-        } finally {
-            if (previous != null) {
-                MDC.put(PolicyEngine.AUDIT_PRINCIPAL_MDC_KEY, previous);
-            } else if (owner != null) {
-                MDC.remove(PolicyEngine.AUDIT_PRINCIPAL_MDC_KEY);
+                policyRunner.runInput(binding.policy(), binding.input(), SweepKind.LIGHT);
             }
         }
     }
@@ -251,7 +228,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
     void runAll() {
         for (PolicyBinding binding : policyStore.findBindingsByTriggerType(TYPE)) {
             try {
-                runAsOwner(binding, SweepKind.FULL);
+                policyRunner.runInput(binding.policy(), binding.input(), SweepKind.FULL);
             } catch (RuntimeException e) {
                 log.warn(
                         "Folder-watch reconcile run failed for input {}/{}: {}",

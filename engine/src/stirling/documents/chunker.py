@@ -105,14 +105,20 @@ def _split_long_paragraph(paragraph: str, chunk_size: int, overlap: int) -> list
     return chunks
 
 
-def _get_overlap(chunks: list[str], overlap: int) -> str:
-    """Extract the last ~`overlap` characters from the most recent chunk, snapped to a word boundary."""
-    if not chunks or overlap <= 0:
+def tail_overlap(text: str, overlap: int) -> str:
+    """Last ~`overlap` characters of `text`, snapped forward past the first space."""
+    if not text or overlap <= 0:
         return ""
-    last = chunks[-1]
-    tail = last[-overlap:] if len(last) > overlap else last
+    tail = text[-overlap:] if len(text) > overlap else text
     # Snap to the nearest word boundary to avoid starting mid-word
     space_idx = tail.find(" ")
     if space_idx > 0:
         tail = tail[space_idx + 1 :]
     return tail
+
+
+def _get_overlap(chunks: list[str], overlap: int) -> str:
+    """Extract the last ~`overlap` characters from the most recent chunk, snapped to a word boundary."""
+    if not chunks:
+        return ""
+    return tail_overlap(chunks[-1], overlap)

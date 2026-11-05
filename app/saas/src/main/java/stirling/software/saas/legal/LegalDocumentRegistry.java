@@ -13,12 +13,12 @@ import java.util.regex.Pattern;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-
 import jakarta.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Loads the versioned legal-document registry from {@code legal/manifest.json} on startup and
@@ -63,8 +63,7 @@ public class LegalDocumentRegistry {
                                     d.path("parts"),
                                     objectMapper
                                             .getTypeFactory()
-                                            .constructCollectionType(
-                                                    List.class, String.class));
+                                            .constructCollectionType(List.class, String.class));
                     documents.put(
                             id,
                             new LegalDocumentMeta(
