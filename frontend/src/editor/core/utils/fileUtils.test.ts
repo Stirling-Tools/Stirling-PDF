@@ -31,6 +31,24 @@ describe("fileUtils", () => {
     });
   });
 
+  describe("extensionToMimeType", () => {
+    it("maps known extensions back to their MIME type", () => {
+      expect(extensionToMimeType("pdf")).toBe("application/pdf");
+      expect(extensionToMimeType("jpg")).toBe("image/jpeg");
+      expect(extensionToMimeType("png")).toBe("image/png");
+      expect(extensionToMimeType("zip")).toBe("application/zip");
+    });
+
+    it("ignores casing", () => {
+      expect(extensionToMimeType("PDF")).toBe("application/pdf");
+    });
+
+    it("returns empty string for unknown or empty input", () => {
+      expect(extensionToMimeType("xyz")).toBe("");
+      expect(extensionToMimeType("")).toBe("");
+    });
+  });
+
   describe("detectExtensionFromSignature", () => {
     it("detects PDF from its %PDF signature", async () => {
       const blob = new Blob([
