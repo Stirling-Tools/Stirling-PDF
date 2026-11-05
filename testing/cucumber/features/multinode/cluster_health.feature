@@ -12,6 +12,11 @@ Feature: Multi-node cluster health
         Given the multi-node stack is running
         And both nodes are cluster members using the Valkey backplane
 
+    @smoke
+    Scenario: Every node published a heartbeat to the Valkey backplane
+        Given the multi-node stack is running
+        Then every application node should be registered in the backplane
+
     Scenario: The load balancer answers the health endpoint
         Given the multi-node stack is running
         When I request "/api/v1/info/status" 4 times through the load balancer

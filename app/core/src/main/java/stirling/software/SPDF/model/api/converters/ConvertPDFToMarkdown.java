@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -13,13 +14,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.MarkdownConversionResponse;
+import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
-import stirling.software.common.pdf.PdfMarkdownConverter;
+import stirling.software.common.pdf.PdfMarkdownExtractor;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -30,6 +32,8 @@ import stirling.software.jpdfium.PdfDocument;
 public class ConvertPDFToMarkdown {
 
     private final TempFileManager tempFileManager;
+    private final PdfMarkdownExtractor markdownExtractor;
+    private final OfficeConversionService officeConversionService;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -40,9 +44,24 @@ public class ConvertPDFToMarkdown {
     @Operation(
             summary = "Convert PDF to Markdown",
             description = "This endpoint converts a PDF file to Markdown format.")
-    public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PDFFile file)
+    public ResponseEntity<byte[]> processPdfToMarkdown(
+            @ModelAttribute PDFFile file,
+            @RequestParam(value = "useStirlingOfficeConvert", required = false)
+                    Boolean useStirlingOfficeConvert)
             throws Exception {
         MultipartFile inputFile = file.getFileInput();
+
+        if (officeConversionService.replacesLibreOffice(useStirlingOfficeConvert)) {
+            var response =
+                    officeConversionService.convert(
+                            inputFile,
+                            "md",
+                            MediaType.valueOf("text/markdown"),
+                            officeConversionService.settings());
+            try (var in = response.getBody().getInputStream()) {
+                return ResponseEntity.ok().headers(response.getHeaders()).body(in.readAllBytes());
+            }
+        }
 
         String originalName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         String baseName =
@@ -54,7 +73,7 @@ public class ConvertPDFToMarkdown {
         try (TempFile tempInput = new TempFile(tempFileManager, ".pdf")) {
             inputFile.transferTo(tempInput.getFile());
             try (PdfDocument doc = PdfDocument.open(tempInput.getPath())) {
-                markdown = new PdfMarkdownConverter().convert(doc);
+                markdown = markdownExtractor.convert(doc);
             }
         }
 

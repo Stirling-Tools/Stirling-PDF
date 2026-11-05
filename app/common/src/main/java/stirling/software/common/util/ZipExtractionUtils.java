@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -66,23 +67,15 @@ public class ZipExtractionUtils {
 
     /**
      * Extract a ZIP resource into a flat list of resources, one per file entry. Nested ZIPs are
-     * recursively extracted up to {@link #MAX_UNZIP_DEPTH}. Each entry is materialized as a
-     * hardened-extracted managed temp file so downstream consumers can stream the bytes.
-     */
-    public static List<Resource> extractZip(Resource zip, TempFileManager tempFileManager)
-            throws IOException {
-        return extractZip(zip, tempFileManager, null);
-    }
-
-    /**
-     * Extract a ZIP resource into a flat list of resources. Each created {@link TempFile} is also
-     * passed to {@code tempFileConsumer} when non-null, giving callers the option to register the
-     * temp files with an auxiliary lifecycle (e.g. {@code PipelineResult}).
+     * recursively extracted up to {@link #MAX_UNZIP_DEPTH}. Every {@link TempFile} written,
+     * including those of nested archives, is passed to {@code tempFileConsumer} as it is created,
+     * and the consumer owns deleting it: nothing else keeps a reference.
      */
     public static List<Resource> extractZip(
             Resource zip, TempFileManager tempFileManager, Consumer<TempFile> tempFileConsumer)
             throws IOException {
-        return extractZipInternal(zip, tempFileManager, tempFileConsumer, 0);
+        return extractZipInternal(
+                zip, tempFileManager, Objects.requireNonNull(tempFileConsumer), 0);
     }
 
     private static List<Resource> extractZipInternal(
@@ -108,9 +101,7 @@ public class ZipExtractionUtils {
                     continue;
                 }
                 TempFile tempFile = tempFileManager.createManagedTempFile("unzip");
-                if (tempFileConsumer != null) {
-                    tempFileConsumer.accept(tempFile);
-                }
+                tempFileConsumer.accept(tempFile);
                 try (OutputStream os = Files.newOutputStream(tempFile.getPath())) {
                     byte[] buffer = new byte[4096];
                     int count;

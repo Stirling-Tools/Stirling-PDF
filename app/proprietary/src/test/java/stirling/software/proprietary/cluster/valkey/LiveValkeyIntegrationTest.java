@@ -33,11 +33,8 @@ import stirling.software.common.cluster.RateLimitStore.RateLimitDecision;
 import stirling.software.common.model.ApplicationProperties;
 
 /**
- * Live integration tests against a real Valkey instance, started by Testcontainers. The
- * {@code @EnabledIf} guard probes the Docker daemon via {@link
- * DockerClientFactory#isDockerAvailable()} (non-throwing) so the suite skips cleanly when Docker is
- * unavailable - without that guard, {@code @Testcontainers} would throw {@code initializationError}
- * (test FAILURE, not skip) on CI runners without Docker.
+ * The {@code @EnabledIf} Docker probe must stay: without it {@code @Testcontainers} throws {@code
+ * initializationError} - a FAILURE, not a skip - on runners without Docker.
  */
 @Testcontainers
 @EnabledIf("isDockerAvailable")
@@ -77,7 +74,7 @@ class LiveValkeyIntegrationTest {
     }
 
     @Test
-    @DisplayName("Valkey reachable and isHealthy() = true after PING round-trip")
+    @DisplayName("Valkey reachable and isHealthy() = true after the single-key probe")
     void backplaneHealthy() {
         ApplicationProperties propsA = newProps("node-A");
         ValkeyClusterBackplane bp = new ValkeyClusterBackplane(propsA, templateA);
@@ -254,7 +251,8 @@ class LiveValkeyIntegrationTest {
                         "BOTH");
         reg.register(node, Duration.ofSeconds(30));
 
-        // TTL must be positive; -1 would mean EXPIRE did not commit inside MULTI/EXEC.
+        // TTL must be positive; -1 would mean the PEXPIRE half of the script never ran, which
+        // would mask a dead node as alive forever.
         Long ttlMs =
                 templateA.getExpire(
                         "stirling:nodes:" + node.nodeId(),
@@ -265,7 +263,7 @@ class LiveValkeyIntegrationTest {
                 "register() must atomically arm TTL; expected (0, 30000] ms, got " + ttlMs);
 
         Optional<ClusterNode> seen = reg.lookup(node.nodeId());
-        assertTrue(seen.isPresent(), "hash fields must be visible after atomic register()");
+        assertTrue(seen.isPresent(), "hash fields must be visible after register()");
         assertEquals("10.0.0.99:8080", seen.get().internalAddress());
 
         reg.deregister(node.nodeId());
@@ -298,9 +296,8 @@ class LiveValkeyIntegrationTest {
         ValkeyRateLimitStore store = newRateLimitStore(factoryA);
         String key = "boundary-" + java.util.UUID.randomUUID();
         long capacity = 5;
-        // refillGreedy tops the bucket up continuously, one token every window/capacity. A 500ms
-        // window left the drain loop only 100ms before a 6th token appeared, so a slow Valkey
-        // round-trip broke the count; 4s spaces refills 800ms apart, clear of any burst.
+        // refillGreedy adds a token every window/capacity. A short window re-flakes this on a slow
+        // round-trip; 4s spaces refills 800ms apart. Do not shrink.
         Duration window = Duration.ofSeconds(4);
         long refillIntervalMs = window.toMillis() / capacity;
 
@@ -346,11 +343,12 @@ class LiveValkeyIntegrationTest {
     }
 
     @Test
-    @DisplayName("JobStore put is atomic (hash + TTL + reverse index visible together)")
-    void jobStorePutIsAtomic() {
+    @DisplayName("JobStore put arms a TTL on the hash AND on every reverse-index entry")
+    void jobStorePutArmsTtlOnEveryKey() {
         ValkeyJobStore store = new ValkeyJobStore(templateA);
         String jobId = "atomic-job-" + java.util.UUID.randomUUID();
-        String fileId = "atomic-file-" + java.util.UUID.randomUUID();
+        String fileA = "atomic-fileA-" + java.util.UUID.randomUUID();
+        String fileB = "atomic-fileB-" + java.util.UUID.randomUUID();
         store.put(
                 new JobStoreEntry(
                         jobId,
@@ -359,96 +357,99 @@ class LiveValkeyIntegrationTest {
                         Instant.now(),
                         null,
                         null,
-                        List.of(fileId),
+                        List.of(fileA, fileB),
                         Map.of("k", "v")),
                 Duration.ofSeconds(30));
 
         assertTrue(store.exists(jobId), "hash must be visible after put");
-        Long jobTtl =
-                templateA.getExpire(
-                        "stirling:job:" + jobId, java.util.concurrent.TimeUnit.MILLISECONDS);
-        assertNotNull(jobTtl);
-        assertTrue(jobTtl > 0, "hash must have TTL armed inside the same transaction");
-        assertEquals(jobId, store.findJobIdByFileId(fileId).orElse(null));
-        Long indexTtl =
-                templateA.getExpire(
-                        "stirling:file2job:" + fileId, java.util.concurrent.TimeUnit.MILLISECONDS);
-        assertNotNull(indexTtl);
-        assertTrue(indexTtl > 0, "reverse index must also have TTL armed");
+        // A TTL-less key would never evict and would leak for the life of the deployment; the
+        // single-key HSET+PEXPIRE script is what makes "hash without TTL" unreachable.
+        assertPositiveTtl("stirling:job:" + jobId, "job hash");
+        assertEquals(jobId, store.findJobIdByFileId(fileA).orElse(null));
+        assertEquals(jobId, store.findJobIdByFileId(fileB).orElse(null));
+        assertPositiveTtl("stirling:file2job:" + fileA, "reverse index fileA");
+        assertPositiveTtl("stirling:file2job:" + fileB, "reverse index fileB");
+    }
+
+    private void assertPositiveTtl(String key, String what) {
+        Long ttlMs = templateA.getExpire(key, java.util.concurrent.TimeUnit.MILLISECONDS);
+        assertNotNull(ttlMs, what + " must exist");
+        assertTrue(
+                ttlMs > 0 && ttlMs <= 30_000,
+                what + " must have a TTL in (0, 30000] ms, got " + ttlMs);
     }
 
     @Test
-    @DisplayName(
-            "JobStore.delete(): WATCH aborts when put() races between read and EXEC, no orphaned"
-                    + " reverse-index entries")
-    void jobStoreDeleteWatchRaceRetriesAndCleansUp() {
+    @DisplayName("JobStore.delete() never removes a reverse-index entry a NEWER job now owns")
+    void jobStoreDeleteIsValueGuarded() {
         ValkeyJobStore store = new ValkeyJobStore(templateA);
-        String jobId = "watch-race-job-" + java.util.UUID.randomUUID();
-        String originalFile = "orig-file-" + java.util.UUID.randomUUID();
-        String newFile = "new-file-" + java.util.UUID.randomUUID();
+        String oldJob = "guard-old-" + java.util.UUID.randomUUID();
+        String newJob = "guard-new-" + java.util.UUID.randomUUID();
+        String sharedFile = "guard-file-" + java.util.UUID.randomUUID();
 
         store.put(
                 new JobStoreEntry(
-                        jobId,
-                        JobStoreEntry.JobState.RUNNING,
+                        oldJob,
+                        JobStoreEntry.JobState.COMPLETE,
                         "node-A",
+                        Instant.now(),
+                        Instant.now(),
+                        null,
+                        List.of(sharedFile),
+                        Map.of()),
+                Duration.ofSeconds(30));
+        // A later job takes ownership of the same fileId; the index row now points at newJob.
+        store.put(
+                new JobStoreEntry(
+                        newJob,
+                        JobStoreEntry.JobState.RUNNING,
+                        "node-B",
                         Instant.now(),
                         null,
                         null,
-                        List.of(originalFile),
+                        List.of(sharedFile),
                         Map.of()),
                 Duration.ofSeconds(30));
+        assertEquals(newJob, store.findJobIdByFileId(sharedFile).orElse(null));
 
-        // Simulate the race: between delete()'s WATCH read and EXEC, add a new fileId.
-        // The first EXEC aborts; the retry catches the new fileId and deletes both entries.
-        Thread mutator =
-                new Thread(
-                        () -> {
-                            try {
-                                Thread.sleep(20);
-                            } catch (InterruptedException ignored) {
-                                Thread.currentThread().interrupt();
-                            }
-                            store.put(
-                                    new JobStoreEntry(
-                                            jobId,
-                                            JobStoreEntry.JobState.RUNNING,
-                                            "node-A",
-                                            Instant.now(),
-                                            null,
-                                            null,
-                                            List.of(originalFile, newFile),
-                                            Map.of()),
-                                    Duration.ofSeconds(30));
-                        });
-        mutator.start();
+        store.delete(oldJob);
 
-        store.delete(jobId);
-        try {
-            mutator.join(2000);
-        } catch (InterruptedException ignored) {
-            Thread.currentThread().interrupt();
-        }
-
-        boolean hashGone = !store.exists(jobId);
-        boolean origIndexGone = !store.findJobIdByFileId(originalFile).isPresent();
-        boolean newIndexGone = !store.findJobIdByFileId(newFile).isPresent();
-        if (hashGone) {
-            assertTrue(
-                    origIndexGone,
-                    "if hash is deleted, original reverse-index entry must also be gone");
-            assertTrue(
-                    newIndexGone,
-                    "if hash is deleted after the racing put(), the WATCH retry must catch the"
-                            + " new fileId and delete its reverse-index entry too");
-        } else {
-            assertEquals(jobId, store.findJobIdByFileId(originalFile).orElse(null));
-            assertEquals(jobId, store.findJobIdByFileId(newFile).orElse(null));
-        }
+        assertFalse(store.exists(oldJob), "the deleted job's hash must be gone");
+        assertEquals(
+                newJob,
+                store.findJobIdByFileId(sharedFile).orElse(null),
+                "deleting the older job must not strip the index row the newer job owns");
+        assertTrue(store.exists(newJob), "the newer job itself must be untouched");
     }
 
     @Test
-    @DisplayName("JobStore.delete() removes hash AND every reverse-index entry atomically")
+    @DisplayName("JobStore.delete() is idempotent and safe on a job that no longer exists")
+    void jobStoreDeleteIsIdempotent() {
+        ValkeyJobStore store = new ValkeyJobStore(templateA);
+        String jobId = "idem-job-" + java.util.UUID.randomUUID();
+        String fileId = "idem-file-" + java.util.UUID.randomUUID();
+        store.put(
+                new JobStoreEntry(
+                        jobId,
+                        JobStoreEntry.JobState.COMPLETE,
+                        "node-A",
+                        Instant.now(),
+                        Instant.now(),
+                        null,
+                        List.of(fileId),
+                        Map.of()),
+                Duration.ofSeconds(30));
+
+        store.delete(jobId);
+        store.delete(jobId);
+        store.delete("never-existed-" + java.util.UUID.randomUUID());
+
+        assertFalse(store.exists(jobId));
+        assertFalse(store.findJobIdByFileId(fileId).isPresent());
+    }
+
+    @Test
+    @DisplayName("JobStore.delete() removes the hash AND every reverse-index entry it owns")
     void jobStoreDeleteRemovesReverseIndexEntries() {
         ValkeyJobStore store = new ValkeyJobStore(templateA);
         String jobId = "del-atomic-job-" + java.util.UUID.randomUUID();
@@ -471,8 +472,7 @@ class LiveValkeyIntegrationTest {
 
         store.delete(jobId);
 
-        // Both the main hash AND every reverse-index entry must be gone; dangling reverse-index
-        // entries would cause findJobIdByFileId() to return a deleted jobId.
+        // Dangling reverse-index entries would make findJobIdByFileId() return a deleted jobId.
         assertFalse(store.exists(jobId), "main hash must be deleted");
         assertFalse(
                 store.findJobIdByFileId(fileA).isPresent(),

@@ -207,6 +207,31 @@ class CustomHtmlSanitizerTest {
     }
 
     @Test
+    void testSanitizeKeepsRasterDataUrlImages() {
+        String html = "<img src=\"data:image/png;base64,iVBORw0KGgo=\" alt=\"logo\">";
+
+        String sanitizedHtml = customHtmlSanitizer.sanitize(html);
+
+        assertTrue(sanitizedHtml.contains("src=\"data:image/png;base64,iVBORw0KGgo&#61;\""));
+    }
+
+    @ParameterizedTest
+    @MethodSource("nonRasterDataUrls")
+    void testSanitizeDropsNonRasterDataUrlImages(String src) {
+        String sanitizedHtml = customHtmlSanitizer.sanitize("<img src=\"" + src + "\" alt=\"x\">");
+
+        assertFalse(sanitizedHtml.contains("src="), sanitizedHtml);
+    }
+
+    private static Stream<String> nonRasterDataUrls() {
+        return Stream.of(
+                "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=",
+                "data:image/svg+xml,%3Csvg%3E%3C/svg%3E",
+                "data:text/html;base64,PGI+eDwvYj4=",
+                "data:,plain");
+    }
+
+    @Test
     void testSanitizeRemovesJavaScriptInAttributes() {
         // Arrange
         String htmlWithJsEvent =
@@ -342,6 +367,26 @@ class CustomHtmlSanitizerTest {
         assertTrue(sanitizedHtml.contains("Welcome"), "Heading content should be preserved");
         assertTrue(sanitizedHtml.contains("Name"), "Table header content should be preserved");
         assertTrue(sanitizedHtml.contains("Item 1"), "Table data content should be preserved");
+    }
+
+    @Test
+    void testSanitizePreservesPreformattedCodeBlocks() {
+        String sanitizedHtml =
+                customHtmlSanitizer.sanitize(
+                        "<pre><code class=\"language-js\">a\n  b</code></pre>");
+
+        assertEquals("<pre><code>a\n  b</code></pre>", sanitizedHtml);
+    }
+
+    @Test
+    void testSanitizeStripsDangerousContentInsidePre() {
+        String sanitizedHtml =
+                customHtmlSanitizer.sanitize(
+                        "<pre onclick=\"alert(1)\" style=\"background:url(http://evil/)\">"
+                                + "<code onmouseover=\"alert(2)\">x</code>"
+                                + "<script>alert(3)</script></pre>");
+
+        assertEquals("<pre><code>x</code></pre>", sanitizedHtml);
     }
 
     @Test

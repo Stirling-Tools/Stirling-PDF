@@ -39,7 +39,8 @@ class TeamSecurityExpressionsTest {
     private static final long USER_ID = 1L;
 
     private TeamSecurityExpressions expressions() {
-        return new TeamSecurityExpressions(membershipRepository, userService);
+        return new TeamSecurityExpressions(
+                membershipRepository, userService, new UserTeamResolver(membershipRepository));
     }
 
     @AfterEach

@@ -14,7 +14,9 @@ Feature: Shared state across nodes
         And I am logged in as admin
         Then every node should report the same number of sources
 
+    # Not the seed's USER_COUNT: the licence caps seats, so the seed stops short of its target.
+    # 10 proves the seeded org reached the shared database without encoding a seat count.
     Scenario: The seeded org is present in the shared database
         Given the multi-node stack is running
-        Then the "users" table should contain at least 40 row(s)
+        Then the "users" table should contain at least 10 row(s)
         And the "integration_configs" table should contain at least 1 row(s)

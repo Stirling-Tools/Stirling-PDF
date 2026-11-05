@@ -78,6 +78,17 @@ class NetworkInputSourceTest {
     }
 
     @Test
+    void trackKeepsOriginalsAndOnlyClaimsChangedFiles() throws Exception {
+        server.put("in/doc.pdf", "data", 1000);
+        InputSpec tracked = sftp(Map.of("mode", "track"));
+        source.resolve(tracked, ctx).getFirst().onComplete().accept(true);
+        assertTrue(source.resolve(tracked, ctx).isEmpty());
+        assertEquals(1, source.resolve(sftp(Map.of("mode", "snapshot")), ctx).size());
+        server.put("in/doc.pdf", "changed", 2000);
+        assertEquals(1, source.resolve(tracked, ctx).size());
+    }
+
+    @Test
     void supportsTheThreeNetworkSourceTypes() {
         assertTrue(source.supports(new InputSpec("sftp", Map.of())));
         assertTrue(source.supports(new InputSpec("ftp", Map.of())));

@@ -9,9 +9,11 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +23,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
@@ -81,43 +84,37 @@ public class AttachmentService implements AttachmentServiceInterface {
             throw e;
         }
 
-        attachments.forEach(
-                attachment -> {
-                    String filename = attachment.getOriginalFilename();
+        for (MultipartFile attachment : attachments) {
+            String filename = attachment.getOriginalFilename();
 
-                    try {
-                        PDEmbeddedFile embeddedFile =
-                                new PDEmbeddedFile(document, attachment.getInputStream());
-                        embeddedFile.setSize((int) attachment.getSize());
-                        // use java.time.Instant and convert to GregorianCalendar for PDFBox
-                        Instant now = Instant.now();
-                        GregorianCalendar nowCal =
-                                GregorianCalendar.from(
-                                        ZonedDateTime.ofInstant(now, ZoneId.systemDefault()));
-                        embeddedFile.setCreationDate(nowCal);
-                        embeddedFile.setModDate(nowCal);
-                        String contentType = attachment.getContentType();
-                        if (StringUtils.isNotBlank(contentType)) {
-                            embeddedFile.setSubtype(contentType);
-                        }
+            // A batch that cannot read one staged file must fail, not save the
+            // rest: callers return this document as the operation result.
+            PDEmbeddedFile embeddedFile = new PDEmbeddedFile(document, attachment.getInputStream());
+            embeddedFile.setSize((int) attachment.getSize());
+            // use java.time.Instant and convert to GregorianCalendar for PDFBox
+            Instant now = Instant.now();
+            GregorianCalendar nowCal =
+                    GregorianCalendar.from(ZonedDateTime.ofInstant(now, ZoneId.systemDefault()));
+            embeddedFile.setCreationDate(nowCal);
+            embeddedFile.setModDate(nowCal);
+            String contentType = attachment.getContentType();
+            if (StringUtils.isNotBlank(contentType)) {
+                embeddedFile.setSubtype(contentType);
+            }
 
-                        // Create attachments specification and associate embedded attachment with
-                        // file
-                        PDComplexFileSpecification fileSpecification =
-                                new PDComplexFileSpecification();
-                        fileSpecification.setFile(filename);
-                        fileSpecification.setFileUnicode(filename);
-                        fileSpecification.setFileDescription("Embedded attachment: " + filename);
-                        fileSpecification.setEmbeddedFile(embeddedFile);
-                        fileSpecification.setEmbeddedFileUnicode(embeddedFile);
+            // Create attachments specification and associate embedded attachment with
+            // file
+            PDComplexFileSpecification fileSpecification = new PDComplexFileSpecification();
+            fileSpecification.setFile(filename);
+            fileSpecification.setFileUnicode(filename);
+            fileSpecification.setFileDescription("Embedded attachment: " + filename);
+            fileSpecification.setEmbeddedFile(embeddedFile);
+            fileSpecification.setEmbeddedFileUnicode(embeddedFile);
 
-                        existingNames.put(filename, fileSpecification);
+            existingNames.put(filename, fileSpecification);
 
-                        log.info("Added attachment: {} ({} bytes)", filename, attachment.getSize());
-                    } catch (IOException e) {
-                        log.warn("Failed to create embedded file for attachment: {}", filename, e);
-                    }
-                });
+            log.info("Added attachment: {} ({} bytes)", filename, attachment.getSize());
+        }
 
         embeddedFilesTree.setNames(existingNames);
         setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS);
@@ -221,6 +218,38 @@ public class AttachmentService implements AttachmentServiceInterface {
     }
 
     @Override
+    public Optional<byte[]> extractSingleAttachment(PDDocument document, String attachmentName)
+            throws IOException {
+        PDDocumentCatalog catalog = document.getDocumentCatalog();
+        if (catalog == null) {
+            return Optional.empty();
+        }
+
+        PDDocumentNameDictionary documentNames = catalog.getNames();
+        if (documentNames == null) {
+            return Optional.empty();
+        }
+
+        PDEmbeddedFilesNameTreeNode embeddedFilesTree = documentNames.getEmbeddedFiles();
+        if (embeddedFilesTree == null) {
+            return Optional.empty();
+        }
+
+        Map<String, PDComplexFileSpecification> embeddedFiles = new LinkedHashMap<>();
+        collectEmbeddedFiles(embeddedFilesTree, embeddedFiles);
+
+        Optional<Map.Entry<String, PDComplexFileSpecification>> match =
+                findAttachmentEntry(embeddedFiles, attachmentName);
+        if (match.isPresent()) {
+            PDEmbeddedFile embeddedFile = getEmbeddedFile(match.get().getValue());
+            if (embeddedFile != null) {
+                return readAttachmentData(embeddedFile);
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
     public List<AttachmentInfo> listAttachments(PDDocument document) throws IOException {
         List<AttachmentInfo> attachments = new ArrayList<>();
 
@@ -286,16 +315,13 @@ public class AttachmentService implements AttachmentServiceInterface {
         Map<String, PDComplexFileSpecification> allEmbeddedFiles = new LinkedHashMap<>();
         collectEmbeddedFiles(embeddedFilesTree, allEmbeddedFiles);
 
+        Optional<Map.Entry<String, PDComplexFileSpecification>> match =
+                findAttachmentEntry(allEmbeddedFiles, attachmentName);
         PDComplexFileSpecification fileToRename = null;
         String keyToRename = null;
-
-        for (Map.Entry<String, PDComplexFileSpecification> entry : allEmbeddedFiles.entrySet()) {
-            String currentName = determineFilename(entry.getKey(), entry.getValue());
-            if (currentName.equals(attachmentName)) {
-                fileToRename = entry.getValue();
-                keyToRename = entry.getKey();
-                break;
-            }
+        if (match.isPresent()) {
+            fileToRename = match.get().getValue();
+            keyToRename = match.get().getKey();
         }
 
         if (fileToRename == null || keyToRename == null) {
@@ -328,15 +354,9 @@ public class AttachmentService implements AttachmentServiceInterface {
         Map<String, PDComplexFileSpecification> allEmbeddedFiles = new LinkedHashMap<>();
         collectEmbeddedFiles(embeddedFilesTree, allEmbeddedFiles);
 
-        String keyToRemove = null;
-
-        for (Map.Entry<String, PDComplexFileSpecification> entry : allEmbeddedFiles.entrySet()) {
-            String currentName = determineFilename(entry.getKey(), entry.getValue());
-            if (currentName.equals(attachmentName)) {
-                keyToRemove = entry.getKey();
-                break;
-            }
-        }
+        Optional<Map.Entry<String, PDComplexFileSpecification>> match =
+                findAttachmentEntry(allEmbeddedFiles, attachmentName);
+        String keyToRemove = match.map(Map.Entry::getKey).orElse(null);
 
         if (keyToRemove == null) {
             log.warn("Attachment '{}' not found for deletion", attachmentName);
@@ -354,6 +374,94 @@ public class AttachmentService implements AttachmentServiceInterface {
         log.info("Deleted attachment: '{}'", attachmentName);
 
         return document;
+    }
+
+    /**
+     * Entry whose name matches the target. A case-sensitive match wins outright; otherwise a
+     * case-insensitive full-name match is only used when it is unique, so Report.pdf/REPORT.PDF
+     * cannot resolve by map order. Falls back to simplified and decoded matching only when no full
+     * name matches, and only when that fallback is unambiguous.
+     */
+    private Optional<Map.Entry<String, PDComplexFileSpecification>> findAttachmentEntry(
+            Map<String, PDComplexFileSpecification> embeddedFiles, String targetName) {
+        if (StringUtils.isBlank(targetName)) {
+            return Optional.empty();
+        }
+        String normTarget = targetName.trim();
+
+        Map.Entry<String, PDComplexFileSpecification> caseInsensitive = null;
+        for (Map.Entry<String, PDComplexFileSpecification> entry : embeddedFiles.entrySet()) {
+            String candidateName = determineFilename(entry.getKey(), entry.getValue());
+            if (normTarget.equals(candidateName) || normTarget.equals(entry.getKey())) {
+                return Optional.of(entry);
+            }
+            if (normTarget.equalsIgnoreCase(candidateName)
+                    || normTarget.equalsIgnoreCase(entry.getKey())) {
+                if (caseInsensitive != null) {
+                    return Optional.empty();
+                }
+                caseInsensitive = entry;
+            }
+        }
+        if (caseInsensitive != null) {
+            return Optional.of(caseInsensitive);
+        }
+
+        Map.Entry<String, PDComplexFileSpecification> fallback = null;
+        for (Map.Entry<String, PDComplexFileSpecification> entry : embeddedFiles.entrySet()) {
+            if (matchesAttachmentName(
+                    determineFilename(entry.getKey(), entry.getValue()),
+                    entry.getKey(),
+                    targetName)) {
+                if (fallback != null) {
+                    return Optional.empty();
+                }
+                fallback = entry;
+            }
+        }
+        return Optional.ofNullable(fallback);
+    }
+
+    private boolean matchesAttachmentName(
+            String candidateName, String entryKey, String targetName) {
+        if (StringUtils.isBlank(targetName)) {
+            return false;
+        }
+        String normTarget = targetName.trim();
+        if (normTarget.equalsIgnoreCase(candidateName) || normTarget.equalsIgnoreCase(entryKey)) {
+            return true;
+        }
+        String simpleCandidate = Filenames.toSimpleFileName(candidateName);
+        String simpleKey = Filenames.toSimpleFileName(entryKey);
+        String simpleTarget = Filenames.toSimpleFileName(normTarget);
+        if (simpleTarget.equalsIgnoreCase(simpleCandidate)
+                || simpleTarget.equalsIgnoreCase(simpleKey)) {
+            return true;
+        }
+        // URL-decoded comparison so a client that sends %20 etc. still matches; malformed
+        // percent-encodings are just not a match rather than a hard failure.
+        try {
+            String decodedTarget = decodeAttachmentName(normTarget);
+            String decodedCandidate = decodeAttachmentName(candidateName);
+            String decodedKey = decodeAttachmentName(entryKey);
+            if (decodedTarget.equalsIgnoreCase(decodedCandidate)
+                    || decodedTarget.equalsIgnoreCase(decodedKey)) {
+                return true;
+            }
+        } catch (IllegalArgumentException malformedEncoding) {
+            // not a match
+        }
+        return false;
+    }
+
+    /**
+     * Percent-decodes a client-supplied name while keeping literal '+' characters. URLDecoder alone
+     * form-decodes '+' to a space, which would make a request for "a b.txt" match an attachment
+     * named "a+b.txt".
+     */
+    private static String decodeAttachmentName(String name) {
+        return java.net.URLDecoder.decode(
+                name.replace("+", "%2B"), java.nio.charset.StandardCharsets.UTF_8);
     }
 
     private String sanitizeFilename(String candidate) {
@@ -389,7 +497,16 @@ public class AttachmentService implements AttachmentServiceInterface {
             PDNameTreeNode<PDComplexFileSpecification> node,
             Map<String, PDComplexFileSpecification> collector)
             throws IOException {
-        if (node == null) {
+        collectEmbeddedFiles(node, collector, Collections.newSetFromMap(new IdentityHashMap<>()));
+    }
+
+    // A node can be listed in several /Kids arrays or be its own ancestor; visit each one once
+    private void collectEmbeddedFiles(
+            PDNameTreeNode<PDComplexFileSpecification> node,
+            Map<String, PDComplexFileSpecification> collector,
+            Set<COSDictionary> visited)
+            throws IOException {
+        if (node == null || !visited.add(node.getCOSObject())) {
             return;
         }
 
@@ -401,7 +518,7 @@ public class AttachmentService implements AttachmentServiceInterface {
         List<PDNameTreeNode<PDComplexFileSpecification>> kids = node.getKids();
         if (kids != null) {
             for (PDNameTreeNode<PDComplexFileSpecification> kid : kids) {
-                collectEmbeddedFiles(kid, collector);
+                collectEmbeddedFiles(kid, collector, visited);
             }
         }
     }

@@ -9,6 +9,7 @@ from stirling.agents import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanS
 from stirling.agents.pdf_edit import PdfEditNeedContentSelection, PdfEditPlanOutput
 from stirling.contracts import (
     AiFile,
+    ConversationMessage,
     EditCannotDoResponse,
     EditClarificationRequest,
     EditPlanResponse,
@@ -24,8 +25,6 @@ from stirling.contracts import (
 from stirling.models import OPERATIONS, FileId, ParamToolModel
 from stirling.models.tool_models import (
     Angle,
-    EditTextOperation,
-    EditTextParams,
     FlattenParams,
     RotatePdfParams,
     SplitPagesParams,
@@ -397,6 +396,10 @@ async def test_pdf_edit_selection_agent_excludes_need_content_from_schema_when_n
     assert PdfEditNeedContentSelection not in _agent_output_types(cannot_request)
 
 
+def _agent_system_prompt(agent: object) -> str:
+    return "".join(getattr(getattr(agent, "agent"), "_system_prompts", ()))
+
+
 def _agent_output_types(agent: object) -> list[type]:
     native = getattr(getattr(agent, "agent"), "output_type")
     return list(getattr(native, "outputs", []))
@@ -530,169 +533,80 @@ async def test_pdf_edit_agent_rejects_plan_referencing_unavailable_operations(
     assert parameter_selector.calls == []
 
 
-@pytest.mark.anyio
-async def test_pdf_edit_agent_supports_literal_find_replace(runtime: AppRuntime) -> None:
-    params = EditTextParams(
-        edits=[EditTextOperation(find="2025", replace="2026")],
-        page_numbers="all",
-        whole_word_search=False,
-    )
-    parameter_selector = RecordingParameterSelector([params])
-    agent = StubPdfEditAgent(
-        runtime,
-        PdfEditPlanSelection(
-            operations=[ToolEndpoint.EDIT_TEXT],
-            summary="Replace 2025 with 2026 throughout the document.",
-            rationale="test rationale",
-        ),
-        parameter_selector=parameter_selector,
-    )
+class RecordingShortlist:
+    """Stands in for the runtime shortlist: the test suite has no reachable embedding provider."""
 
-    response = await agent.handle(
-        PdfEditRequest(
-            user_message="Change every 2025 to 2026.",
-            files=[AiFile(id=FileId("contract-id"), name="contract.pdf")],
-        )
-    )
+    def __init__(self, selection: list[ToolEndpoint]) -> None:
+        self.selection = selection
+        self.calls: list[tuple[str, list[ToolEndpoint], int]] = []
 
-    assert isinstance(response, EditPlanResponse)
-    assert len(response.steps) == 1
-    step = response.steps[0]
-    assert step.tool == ToolEndpoint.EDIT_TEXT
-    assert isinstance(step.parameters, EditTextParams)
-    assert step.parameters.edits == [EditTextOperation(find="2025", replace="2026")]
+    async def select(self, query: str, operations: list[ToolEndpoint], limit: int) -> list[ToolEndpoint]:
+        self.calls.append((query, list(operations), limit))
+        return self.selection
 
 
 @pytest.mark.anyio
-async def test_pdf_edit_agent_supports_copy_edit_using_page_text(runtime: AppRuntime) -> None:
-    page_text = [
-        ExtractedFileText(
-            file_name="memo.pdf",
-            pages=[
-                PdfTextSelection(
-                    page_number=3,
-                    text="The quick brown fox jumps over the lazy dog.",
-                )
-            ],
-        )
-    ]
-    params = EditTextParams(
-        edits=[
-            EditTextOperation(find="quick", replace="slow"),
-            EditTextOperation(find="lazy", replace="energetic"),
-        ],
-        page_numbers="3",
-        whole_word_search=False,
-    )
-    parameter_selector = RecordingParameterSelector([params])
-    agent = StubPdfEditAgent(
-        runtime,
-        PdfEditPlanSelection(
-            operations=[ToolEndpoint.EDIT_TEXT],
-            summary="Fix typos on page 3.",
-            rationale="test rationale",
-        ),
-        parameter_selector=parameter_selector,
-    )
+async def test_pdf_edit_agent_shows_the_planner_only_the_shortlisted_operations(
+    runtime: AppRuntime,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from stirling.agents.pdf_edit import PdfEditSelectionAgent
 
-    response = await agent.handle(
-        PdfEditRequest(
-            user_message="Fix typos on page 3.",
-            files=[AiFile(id=FileId("memo-id"), name="memo.pdf")],
-            page_text=page_text,
-        )
-    )
+    agent = PdfEditAgent(runtime)
+    narrowed = [ToolEndpoint.ROTATE_PDF, ToolEndpoint.ADD_WATERMARK]
+    agent.shortlist = RecordingShortlist(narrowed)
+    recorded: list[tuple[PdfEditSelectionAgent, str]] = []
 
-    assert isinstance(response, EditPlanResponse)
-    assert len(parameter_selector.calls) == 1
-    # The parameter selector receives the extracted page text, which is what enables free-form
-    # copy-editing: it can read the current text and propose specific edits.
-    assert parameter_selector.calls[0].request.page_text == page_text
-    step = response.steps[0]
-    assert step.tool == ToolEndpoint.EDIT_TEXT
-    assert isinstance(step.parameters, EditTextParams)
-    assert step.parameters.page_numbers == "3"
-    assert step.parameters.edits is not None
-    assert len(step.parameters.edits) == 2
+    async def record(self: PdfEditSelectionAgent, prompt: str) -> PdfEditPlanOutput:
+        recorded.append((self, prompt))
+        return _ANY_SELECTION
+
+    monkeypatch.setattr(PdfEditSelectionAgent, "select", record)
+
+    await agent._select_plan(PdfEditRequest(user_message="Rotate it."), list(OPERATIONS), [])
+
+    selection_agent, user_prompt = recorded[0]
+    system_prompt = _agent_system_prompt(selection_agent)
+    for operation in narrowed:
+        assert operation.name in system_prompt
+        assert f"- {operation.name} " in user_prompt
+    assert ToolEndpoint.SPLIT_PAGES.name not in system_prompt
+    assert ToolEndpoint.SPLIT_PAGES.name not in user_prompt
 
 
 @pytest.mark.anyio
-async def test_pdf_edit_agent_supports_natural_language_directed_edit(runtime: AppRuntime) -> None:
-    page_text = [
-        ExtractedFileText(
-            file_name="agreement.pdf",
-            pages=[
-                PdfTextSelection(
-                    page_number=1,
-                    text="This agreement is between OldCompany Inc. and the client.",
-                )
-            ],
-        )
-    ]
-    params = EditTextParams(
-        edits=[EditTextOperation(find="OldCompany Inc.", replace="Acme Corp")],
-        page_numbers="all",
-        whole_word_search=False,
-    )
-    parameter_selector = RecordingParameterSelector([params])
-    agent = StubPdfEditAgent(
-        runtime,
-        PdfEditPlanSelection(
-            operations=[ToolEndpoint.EDIT_TEXT],
-            summary="Update the company name to Acme Corp.",
-            rationale="test rationale",
-        ),
-        parameter_selector=parameter_selector,
-    )
+async def test_pdf_edit_agent_ranks_operations_against_the_conversation_not_just_the_last_message(
+    runtime: AppRuntime,
+) -> None:
+    from stirling.agents.pdf_edit import PdfEditSelectionAgent
 
-    response = await agent.handle(
-        PdfEditRequest(
-            user_message="Update the company name to Acme Corp.",
-            files=[AiFile(id=FileId("agreement-id"), name="agreement.pdf")],
-            page_text=page_text,
-        )
-    )
+    agent = PdfEditAgent(runtime)
+    shortlist = RecordingShortlist([ToolEndpoint.ADD_WATERMARK])
+    agent.shortlist = shortlist
 
-    assert isinstance(response, EditPlanResponse)
-    step = response.steps[0]
-    assert step.tool == ToolEndpoint.EDIT_TEXT
-    assert isinstance(step.parameters, EditTextParams)
-    # The exact find string came from interpreting the user's intent against the extracted text.
-    assert step.parameters.edits is not None
-    assert step.parameters.edits[0].find == "OldCompany Inc."
-    assert step.parameters.edits[0].replace == "Acme Corp"
+    def record(
+        supported_operations: Iterable[ToolEndpoint],
+        unavailable_operations: Iterable[ToolEndpoint],
+        *,
+        allow_need_content: bool,
+    ) -> PdfEditSelectionAgent:
+        raise _StopSelectionError()
+
+    agent._build_selection_agent = record
+
+    request = PdfEditRequest(
+        user_message="do the same to the other file",
+        conversation_history=[ConversationMessage(role="user", content="add a watermark saying DRAFT")],
+    )
+    with pytest.raises(_StopSelectionError):
+        await agent._select_plan(request, list(OPERATIONS), [])
+
+    query, operations, limit = shortlist.calls[0]
+    assert "watermark" in query
+    assert query.endswith("do the same to the other file")
+    assert operations == list(OPERATIONS)
+    assert limit == runtime.settings.planner_shortlist_size
 
 
-@pytest.mark.anyio
-async def test_pdf_edit_agent_composes_edit_text_with_other_operations(runtime: AppRuntime) -> None:
-    """EDIT_TEXT can appear alongside other operations in a single plan."""
-    edit_params = EditTextParams(
-        edits=[EditTextOperation(find="DRAFT", replace="")],
-        page_numbers="all",
-        whole_word_search=False,
-    )
-    parameter_selector = RecordingParameterSelector([edit_params, RotatePdfParams(angle=Angle(90))])
-    agent = StubPdfEditAgent(
-        runtime,
-        PdfEditPlanSelection(
-            operations=[ToolEndpoint.EDIT_TEXT, ToolEndpoint.ROTATE_PDF],
-            summary="Remove DRAFT marker, then rotate.",
-            rationale="test rationale",
-        ),
-        parameter_selector=parameter_selector,
-    )
-
-    response = await agent.handle(
-        PdfEditRequest(
-            user_message="Remove the DRAFT watermark text and then rotate.",
-            files=[AiFile(id=FileId("draft-id"), name="draft.pdf")],
-        )
-    )
-
-    assert isinstance(response, EditPlanResponse)
-    assert [step.tool for step in response.steps] == [
-        ToolEndpoint.EDIT_TEXT,
-        ToolEndpoint.ROTATE_PDF,
-    ]
-    assert isinstance(response.steps[0].parameters, EditTextParams)
-    assert isinstance(response.steps[1].parameters, RotatePdfParams)
+def test_pdf_edit_agents_share_the_runtime_shortlist(runtime: AppRuntime) -> None:
+    assert PdfEditAgent(runtime).shortlist is PdfEditAgent(runtime).shortlist is runtime.operation_shortlist

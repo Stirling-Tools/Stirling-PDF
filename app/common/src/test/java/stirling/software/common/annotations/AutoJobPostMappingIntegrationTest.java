@@ -10,6 +10,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -20,7 +22,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,6 +33,7 @@ import stirling.software.common.aop.AutoJobAspect;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
+import stirling.software.common.service.JobOwnershipService;
 
 @ExtendWith(MockitoExtension.class)
 class AutoJobPostMappingIntegrationTest {
@@ -172,5 +177,31 @@ class AutoJobPostMappingIntegrationTest {
         // Verify storage operations
         verify(fileStorage).storeFile(any(MultipartFile.class));
         verify(fileStorage).retrieveFile("stored-file-id");
+    }
+
+    @Test
+    void shouldCarryCallerToWorkerThreadWhenAuditAspectDidNotStampMdc() throws Throwable {
+        MDC.clear();
+        JobOwnershipService jobOwnershipService = mock(JobOwnershipService.class);
+        when(jobOwnershipService.getCurrentUserId()).thenReturn(Optional.of("alice"));
+        ReflectionTestUtils.setField(autoJobAspect, "jobOwnershipService", jobOwnershipService);
+
+        when(joinPoint.getArgs()).thenReturn(new Object[0]);
+        when(request.getParameter("async")).thenReturn("false");
+        when(autoJobPostMapping.retryCount()).thenReturn(1);
+        when(joinPoint.proceed(any())).thenAnswer(invocation -> MDC.get("auditPrincipal"));
+
+        when(jobExecutorService.runJobGeneric(
+                        anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
+                .thenAnswer(
+                        invocation -> {
+                            Supplier<Object> work = invocation.getArgument(1);
+                            return ResponseEntity.ok(CompletableFuture.supplyAsync(work).get());
+                        });
+
+        Object result = autoJobAspect.wrapWithJobExecution(joinPoint, autoJobPostMapping);
+
+        assertEquals(ResponseEntity.ok("alice"), result);
+        assertNull(MDC.get("auditPrincipal"), "Request thread MDC should be left untouched");
     }
 }

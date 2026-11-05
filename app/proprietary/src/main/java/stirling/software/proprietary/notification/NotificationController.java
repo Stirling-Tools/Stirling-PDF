@@ -20,8 +20,8 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.proprietary.failure.FailureActionException;
 
 /**
- * Open to any authenticated user: each source scopes its own rows. Every action runs on the
- * client's own device, so the only write is it reporting a fix.
+ * Open to any authenticated user: each source scopes its own rows. An action runs wherever the
+ * document is, so the writes here are a client reporting a fix and a server-run action.
  */
 @RestController
 @RequestMapping("/api/v1/notifications")
@@ -62,6 +62,25 @@ public class NotificationController {
     public NotificationView resolved(@PathVariable String notificationId) {
         try {
             return notifications.resolve(notificationId);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        } catch (FailureActionException e) {
+            throw new ResponseStatusException(
+                    FailureActionException.statusOf(e.getReason()), e.getMessage(), e);
+        }
+    }
+
+    @PostMapping("/{notificationId}/actions/{actionId}")
+    @Operation(
+            summary = "Run one of a notification's server-side actions",
+            description =
+                    "Takes the prefixed notification id, not the producing row's id. Only actions"
+                            + " the row already offers this caller can be run; the producing"
+                            + " service re-checks that, and the action authorises its own effects.")
+    public NotificationView act(
+            @PathVariable String notificationId, @PathVariable String actionId) {
+        try {
+            return notifications.act(notificationId, actionId);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         } catch (FailureActionException e) {

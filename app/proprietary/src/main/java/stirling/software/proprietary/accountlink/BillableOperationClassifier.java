@@ -13,7 +13,9 @@ import stirling.software.proprietary.billing.BillingCategoryClassifier;
  * <ul>
  *   <li><b>AUTOMATION</b> — the automation marker header ({@link
  *       InternalApiClient#AUTOMATION_HEADER}, set on pipeline / workflow / policy sub-steps);
- *   <li><b>AI</b> — the AI surface ({@code /api/v1/ai/**});
+ *   <li><b>AI</b> - the AI document-tool namespace ({@code /api/v1/ai/tools/**}); the engine's own
+ *       surface ({@code /health}, {@code /orchestrate}, {@code /pdf/edit}) is reasoning/health, not
+ *       a charged tool - its dispatched tools bill as AUTOMATION via the header, not here;
  *   <li><b>API</b> — an API-key authenticated tool call;
  *   <li><b>BYPASSED</b> — a manual interactive tool call, never billed.
  * </ul>
@@ -26,7 +28,9 @@ import stirling.software.proprietary.billing.BillingCategoryClassifier;
  */
 public final class BillableOperationClassifier {
 
-    private static final String AI_PATH_PREFIX = "/api/v1/ai/";
+    // Only the /tools/ namespace is billable AI, matching the SaaS classifier - not the broader
+    // /api/v1/ai/ surface (health, orchestrate, pdf/edit), which must not be charged.
+    private static final String AI_PATH_PREFIX = "/api/v1/ai/tools/";
 
     private BillableOperationClassifier() {}
 
@@ -44,8 +48,8 @@ public final class BillableOperationClassifier {
         if (uri == null) {
             return false;
         }
-        // Prefix-match the AI surface (not a loose substring contains), stripping a deployment
-        // context path so /<ctx>/api/v1/ai/** still classifies as AI.
+        // Prefix-match the AI tool namespace (not a loose substring contains), stripping a
+        // deployment context path so /<ctx>/api/v1/ai/tools/** still classifies as AI.
         String ctx = request.getContextPath();
         String path =
                 ctx != null && !ctx.isEmpty() && uri.startsWith(ctx)

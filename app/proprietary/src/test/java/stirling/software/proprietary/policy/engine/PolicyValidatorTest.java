@@ -15,24 +15,32 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIOSource;
 import stirling.software.common.model.tool.ToolIOSpec;
 import stirling.software.common.service.ToolChainValidator;
+import stirling.software.proprietary.document.conditions.Condition;
+import stirling.software.proprietary.document.conditions.ConditionInput;
 import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
 import stirling.software.proprietary.policy.asset.PolicyAsset;
 import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
 import stirling.software.proprietary.policy.asset.PolicyAssetStore;
 import stirling.software.proprietary.policy.input.InputSource;
+import stirling.software.proprietary.policy.model.EditorConfig;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.RoutingRule;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
@@ -51,6 +59,7 @@ class PolicyValidatorTest {
 
     private final SourceStore sourceStore = new InProcessSourceStore();
     private final PolicyAssetStore assetStore = new InProcessPolicyAssetStore();
+    private final ApplicationProperties properties = new ApplicationProperties();
     private PolicyValidator validator;
 
     @BeforeEach
@@ -63,7 +72,83 @@ class PolicyValidatorTest {
                         List.of(stepValidator),
                         sourceStore,
                         assetStore,
-                        new ToolChainValidator(path -> java.util.Optional.empty()));
+                        new ToolChainValidator(path -> java.util.Optional.empty()),
+                        properties);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"upload", "export"})
+    void rejectsCorpusExportsFromEditorPolicies(String runOn) {
+        for (Map<String, Object> params :
+                List.<Map<String, Object>>of(
+                        Map.of("exportChunksJsonl", true),
+                        Map.of("exportChunksJsonl", "true", "index", true),
+                        Map.of("exportMarkdown", true),
+                        Map.of("exportMarkdown", "true"),
+                        Map.of("includeOriginal", false))) {
+            Policy policy = ingestionPolicy(params, new EditorConfig(true, runOn));
+            IllegalArgumentException error =
+                    assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+            assertTrue(error.getMessage().contains("Choose a file or database destination"));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"upload", "export"})
+    void allowsEditorCorpusExportsToSavedDestinations(String runOn) {
+        Policy policy =
+                ingestionPolicy(
+                                Map.of(
+                                        "index",
+                                        false,
+                                        "exportChunksJsonl",
+                                        true,
+                                        "includeOriginal",
+                                        false),
+                                new EditorConfig(true, runOn))
+                        .withOutputIds(List.of("destination"));
+        validator.validateEditorOutput(policy);
+    }
+
+    @Test
+    void allowsEditorIndexingWithoutCorpusFiles() {
+        when(outputSink.supports(any())).thenReturn(true);
+        validator.validate(ingestionPolicy(Map.of("index", true), EditorConfig.onUpload()));
+        validator.validate(
+                ingestionPolicy(
+                        Map.of(
+                                "index",
+                                true,
+                                "includeOriginal",
+                                true,
+                                "exportChunksJsonl",
+                                false,
+                                "exportMarkdown",
+                                "false"),
+                        EditorConfig.onExport()));
+    }
+
+    @Test
+    void keepsCorpusExportsAvailableOutsideEditorPolicies() {
+        when(outputSink.supports(any())).thenReturn(true);
+        validator.validate(
+                ingestionPolicy(
+                        Map.of("index", false, "exportChunksJsonl", true),
+                        EditorConfig.disabled()));
+    }
+
+    private Policy ingestionPolicy(Map<String, Object> params, EditorConfig editor) {
+        return new Policy(
+                "ingestion",
+                "Ingestion",
+                "owner",
+                true,
+                List.of(),
+                List.of(new PipelineStep("/api/v1/docparse/ingest", params, Map.of())),
+                OutputSpec.inline(),
+                List.of(),
+                null,
+                editor);
     }
 
     @Test
@@ -248,8 +333,144 @@ class PolicyValidatorTest {
         verify(outputSink).validate(any());
     }
 
+    @Test
+    void rejectsAStepWhoseOperationIsUnknown() {
+        when(inputSource.supports(any())).thenReturn(true);
+        PolicyValidator strict = validatorWith(KNOWS_REAL_ENDPOINTS);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> strict.validate(withSteps(ROTATE, "/api/v1/misc/no-such-tool")));
+
+        assertTrue(ex.getMessage().contains("step 2"), ex.getMessage());
+        assertTrue(ex.getMessage().contains("/api/v1/misc/no-such-tool"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsAStepWithNoOperation() {
+        when(inputSource.supports(any())).thenReturn(true);
+        PolicyValidator strict = validatorWith(KNOWS_REAL_ENDPOINTS);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> strict.validate(withSteps(ROTATE, " ")));
+
+        assertTrue(ex.getMessage().contains("step 2"), ex.getMessage());
+    }
+
+    @Test
+    void acceptsAiIntegrationDocparseAndUndeclaredSteps() {
+        // Undeclared steps only warn: they run, their output just cannot be checked.
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+        PolicyValidator strict = validatorWith(KNOWS_REAL_ENDPOINTS);
+
+        strict.validate(withSteps(CLASSIFY, ROTATE, EXTERNAL_API, COMPRESS, DOCPARSE));
+
+        verify(outputSink).validate(any());
+    }
+
+    @Test
+    void rejectsMoreStepsThanTheConfiguredCap() {
+        properties.getPolicies().setMaxSteps(3);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> validator.validate(withSteps(ROTATE, ROTATE, ROTATE, ROTATE)));
+
+        assertTrue(ex.getMessage().contains("at most 3 steps"), ex.getMessage());
+    }
+
+    @Test
+    void capsStepsAtFiftyByDefault() {
+        String[] fiftyOne = java.util.Collections.nCopies(51, ROTATE).toArray(String[]::new);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> validator.validate(withSteps(fiftyOne)));
+
+        assertTrue(ex.getMessage().contains("at most 50 steps"), ex.getMessage());
+    }
+
+    @Test
+    void acceptsExactlyTheCap() {
+        properties.getPolicies().setMaxSteps(2);
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+
+        validator.validate(withSteps(ROTATE, ROTATE));
+    }
+
+    @Test
+    void zeroLiftsTheCap() {
+        properties.getPolicies().setMaxSteps(0);
+        String[] many = java.util.Collections.nCopies(60, ROTATE).toArray(String[]::new);
+
+        validator.validateRunnableSteps(withSteps(many).steps());
+    }
+
+    @Test
+    void adHocStepsRejectAnUnknownOperation() {
+        PolicyValidator strict = validatorWith(KNOWS_REAL_ENDPOINTS);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                strict.validateRunnableSteps(
+                                        withSteps("/api/v1/misc/no-such-tool").steps()));
+
+        assertTrue(ex.getMessage().contains("step 1"), ex.getMessage());
+        assertTrue(ex.getMessage().contains("/api/v1/misc/no-such-tool"), ex.getMessage());
+    }
+
+    @Test
+    void adHocStepsRejectMoreThanTheCap() {
+        properties.getPolicies().setMaxSteps(1);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> validator.validateRunnableSteps(withSteps(ROTATE, ROTATE).steps()));
+
+        assertTrue(ex.getMessage().contains("at most 1 steps"), ex.getMessage());
+    }
+
+    @Test
+    void adHocStepsAcceptKnownOperationsAndLeaveFormatsToTheRun() {
+        PolicyValidator strict = validatorWith(KNOWS_REAL_ENDPOINTS);
+
+        strict.validateRunnableSteps(
+                withSteps(CLASSIFY, EXTERNAL_API, DOCPARSE, EXTRACT_IMAGES, ROTATE).steps());
+    }
+
     private static final String EXTRACT_IMAGES = "/api/v1/misc/extract-images";
     private static final String ROTATE = "/api/v1/general/rotate-pdf";
+    private static final String CLASSIFY = "/api/v1/ai/tools/classify-and-label";
+    private static final String EXTERNAL_API = "/api/v1/integration/external-api-call";
+    private static final String COMPRESS = "/api/v1/misc/compress-pdf";
+    private static final String DOCPARSE = "/api/v1/docparse/ingest";
+
+    // Declares only rotate and extract-images, but knows every endpoint these tests name.
+    private static final ToolIOSource KNOWS_REAL_ENDPOINTS =
+            new ToolIOSource() {
+                private final Set<String> known =
+                        Set.of(EXTRACT_IMAGES, ROTATE, CLASSIFY, EXTERNAL_API, COMPRESS, DOCPARSE);
+
+                @Override
+                public java.util.Optional<ToolIOSpec> find(String operationPath) {
+                    return IMAGE_THEN_PDF.find(operationPath);
+                }
+
+                @Override
+                public boolean isKnown(String operationPath) {
+                    return known.contains(operationPath);
+                }
+            };
 
     private static final ToolIOSource IMAGE_THEN_PDF =
             ToolIOSource.of(
@@ -267,6 +488,33 @@ class PolicyValidatorTest {
                                     ToolArity.SISO,
                                     List.of())));
 
+    @Test
+    void diagnoseChainFlagsTheFirstStepPastTheLimit() {
+        properties.getPolicies().setMaxSteps(2);
+        PipelineStep step = new PipelineStep("/api/v1/general/rotate-pdf", Map.of());
+
+        List<ToolDiagnostic> diagnostics = validator.diagnoseChain(List.of(step, step, step), null);
+
+        assertTrue(
+                diagnostics.contains(
+                        ToolDiagnostic.error(
+                                2,
+                                ToolDiagnostic.TOO_MANY_STEPS,
+                                "A pipeline may have at most 2 steps; raise policies.maxSteps to"
+                                        + " allow more")));
+    }
+
+    @Test
+    void refusesMoreStepsThanTheLimit() {
+        properties.getPolicies().setMaxSteps(2);
+        PipelineStep step = new PipelineStep("/api/v1/general/rotate-pdf", Map.of());
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> validator.validateSteps(List.of(step, step, step)));
+        verify(stepValidator, never()).validate(any());
+    }
+
     private PolicyValidator validatorWith(ToolIOSource toolIO) {
         return new PolicyValidator(
                 List.of(trigger),
@@ -275,7 +523,8 @@ class PolicyValidatorTest {
                 List.of(stepValidator),
                 sourceStore,
                 assetStore,
-                new ToolChainValidator(toolIO));
+                new ToolChainValidator(toolIO),
+                properties);
     }
 
     private Policy withSteps(String... operations) {
@@ -320,6 +569,105 @@ class PolicyValidatorTest {
         IllegalArgumentException ex =
                 assertThrows(IllegalArgumentException.class, () -> validator.validate(twoOutputs));
         assertTrue(ex.getMessage().contains("at most one output"));
+    }
+
+    // A routing rule that can never fire is worse than no rule: its documents go to the fallback
+    // destination while the policy still reads as if it routed them, so each way of writing one is
+    // rejected at save time.
+
+    @Test
+    void acceptsARoutingRuleWhoseDestinationResolves() {
+        when(outputSink.supports(any())).thenReturn(true);
+        String destinationId = folderSourceId();
+
+        validator.validate(routingPolicy(rule("classification.labels", "invoice", destinationId)));
+
+        verify(outputSink).validate(sourceStore.get(destinationId).orElseThrow().toOutputSpec());
+    }
+
+    @Test
+    void rejectsRoutingWhenTheDestinationCannotAcceptThePipelineOutput() {
+        when(outputSink.supports(any())).thenReturn(true);
+        String destinationId = folderSourceId();
+        Policy policy = routingPolicy(rule("classification.labels", "invoice", destinationId));
+        doThrow(new IllegalArgumentException("chunks required"))
+                .when(outputSink)
+                .validatePipeline(
+                        sourceStore.get(destinationId).orElseThrow().toOutputSpec(),
+                        policy.steps());
+
+        IllegalArgumentException error =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(error.getMessage().contains("chunks required"));
+    }
+
+    @Test
+    void rejectsARoutingRuleWithNoField() {
+        Policy policy = routingPolicy(rule(" ", "invoice", folderSourceId()));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("must name a field"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsARoutingRuleWithNoCondition() {
+        Policy policy = routingPolicy(new RoutingRule(null, "dest"));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("a condition is required"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsARoutingRuleWithNothingToMatchAgainst() {
+        Policy policy = routingPolicy(rule("classification.labels", " ", folderSourceId()));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("nothing to match against"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsARoutingRuleWithNoDestination() {
+        Policy policy = routingPolicy(rule("classification.labels", "invoice", ""));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("no destination"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsARoutingRuleWhoseDestinationIsNotAStoredSource() {
+        Policy policy = routingPolicy(rule("classification.labels", "invoice", "src-deleted"));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("unknown routing destination"), ex.getMessage());
+    }
+
+    private static RoutingRule rule(String field, String value, String destinationId) {
+        return new RoutingRule(
+                new Condition.MatchesAny(new ConditionInput.DocumentField(field), List.of(value)),
+                destinationId);
+    }
+
+    private static Policy routingPolicy(RoutingRule... rules) {
+        return new Policy(
+                "p1",
+                "p",
+                "owner",
+                true,
+                false,
+                "",
+                List.of(),
+                List.of(),
+                OutputSpec.inline(),
+                List.of(),
+                null,
+                null,
+                null,
+                List.of(rules));
     }
 
     @Test

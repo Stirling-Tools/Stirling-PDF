@@ -18,19 +18,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import tools.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Hidden;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.model.enumeration.TeamRole;
-import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
 import stirling.software.saas.procurement.legal.AgreementSigning;
 import stirling.software.saas.procurement.model.ProcurementAgreementSignature;
@@ -41,7 +36,11 @@ import stirling.software.saas.procurement.pricing.ProcurementPricingService;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.pricing.QuoteLineItem;
 import stirling.software.saas.procurement.service.ProcurementService;
+import stirling.software.saas.procurement.service.ProcurementService.ContractPeriod;
+import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * The enterprise procurement journey for a linked team: read the deal snapshot, start/extend a
@@ -63,19 +62,19 @@ public class ProcurementController {
 
     private final ProcurementService procurement;
     private final ProcurementPricingService pricing;
-    private final TeamMembershipRepository memberRepo;
+    private final UserTeamResolver userTeamResolver;
     private final UserRepository userRepository;
     private final ProcurementConfigurationProperties config;
 
     public ProcurementController(
             ProcurementService procurement,
             ProcurementPricingService pricing,
-            TeamMembershipRepository memberRepo,
+            UserTeamResolver userTeamResolver,
             UserRepository userRepository,
             ProcurementConfigurationProperties config) {
         this.procurement = Objects.requireNonNull(procurement);
         this.pricing = Objects.requireNonNull(pricing);
-        this.memberRepo = Objects.requireNonNull(memberRepo);
+        this.userTeamResolver = Objects.requireNonNull(userTeamResolver);
         this.userRepository = Objects.requireNonNull(userRepository);
         this.config = Objects.requireNonNull(config);
     }
@@ -241,12 +240,13 @@ public class ProcurementController {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SnapshotResponse> snapshot(Authentication auth) {
-        Optional<TeamMembership> membership = primaryMembership(auth);
-        if (membership.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        Long teamId = membership.get().getTeam().getId();
+        Optional<User> caller = currentUser(auth);
+        Optional<Long> callerTeam = caller.flatMap(userTeamResolver::teamId);
+        if (callerTeam.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        Long teamId = callerTeam.get();
         // The licence key is the team's secret entitlement — leader-only. Members still see the
         // journey (stage, trial, quote) but the key is withheld; the .lic file is likewise gated.
-        boolean leader = membership.get().getRole() == TeamRole.LEADER;
+        boolean leader = userTeamResolver.isLeader(caller.get());
         return ResponseEntity.ok(
                 procurement.getDeal(teamId).map(d -> toSnapshot(d, leader)).orElse(EMPTY_SNAPSHOT));
     }
@@ -316,9 +316,7 @@ public class ProcurementController {
         // After the trial exists, so a rejected invite can never stop it starting.
         if (request != null) {
             procurement.sendTrialInvites(
-                    teamId,
-                    primaryMembership(auth).map(TeamMembership::getUser).orElse(null),
-                    request.inviteEmails());
+                    teamId, currentUser(auth).orElse(null), request.inviteEmails());
         }
         return ResponseEntity.ok(toSnapshot(deal, true));
     }
@@ -330,6 +328,30 @@ public class ProcurementController {
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         try {
             return ResponseEntity.ok(toSnapshot(procurement.extendTrial(teamId), true));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
+    /** Staff grants use the same trial and licence as the customer-facing procurement journey. */
+    public record GrantTrialRequest(long teamId, java.time.LocalDateTime endsAt, String reason) {}
+
+    @PostMapping("/trial/grant")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SnapshotResponse> grantTrial(
+            @RequestBody GrantTrialRequest request, Authentication auth) {
+        if (request.teamId() <= 0) return ResponseEntity.badRequest().build();
+        try {
+            return ResponseEntity.ok(
+                    toSnapshot(
+                            procurement.grantTrial(
+                                    request.teamId(),
+                                    request.endsAt(),
+                                    request.reason(),
+                                    auth.getName()),
+                            true));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
@@ -478,17 +500,13 @@ public class ProcurementController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /**
-     * Provision on accept: upgrade the team's licence to the committed annual term, valid
-     * immediately. Called server-side by the accept edge function (ROLE_ADMIN via X-API-Key) once
-     * the subscription + invoice exist, so the buyer is licensed the moment they accept — the deal
-     * stays in the payment step until the invoice settles. Idempotent.
-     */
+    /** Grants access through the verified invoice due date; the payment step remains visible. */
     @PostMapping("/provision")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> provision(@RequestParam("teamId") long teamId) {
+    public ResponseEntity<Void> provision(
+            @RequestParam("teamId") long teamId, @RequestBody ContractPeriod period) {
         try {
-            procurement.provisionLicense(teamId);
+            procurement.provisionLicense(teamId, period);
             return ResponseEntity.ok().build();
         } catch (IllegalStateException e) {
             log.warn("[procurement] provision rejected team={}: {}", teamId, e.getMessage());
@@ -497,31 +515,30 @@ public class ProcurementController {
     }
 
     /**
-     * Go live once payment settles: advance the deal to active and re-affirm the annual licence.
-     * Called server-side by the {@code invoice.paid} webhook (ROLE_ADMIN via X-API-Key), alongside
-     * {@code /provision}, which runs earlier at accept and deliberately leaves the stage alone.
-     *
-     * <p>Answers 200 when the team has no deal at all, rather than erroring: a committed
-     * subscription can be closed directly in Stripe by sales with no portal deal behind it, and a
-     * non-2xx would have Stripe retry a webhook that can never succeed.
-     *
-     * <p>{@code invoiceId} is what makes this idempotent without swallowing renewals: the same
-     * invoice twice is a redelivery, a different one is next year's payment and has to re-issue the
-     * licence. Optional so an older caller still works, at the cost of that distinction.
+     * Applies a paid service period. A missing or mismatched agreement returns 409 for retry or
+     * operator reconciliation.
      */
     @PostMapping("/activate")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> activate(
             @RequestParam("teamId") long teamId,
-            @RequestParam(value = "invoiceId", required = false) String invoiceId) {
+            @RequestParam(value = "invoiceId") String invoiceId,
+            @RequestBody ContractPeriod period) {
         try {
-            procurement.markLive(teamId, invoiceId);
+            procurement.markLive(teamId, invoiceId, period);
         } catch (IllegalStateException e) {
-            log.info(
-                    "[procurement] activate skipped, no deal for team={}: {}",
-                    teamId,
-                    e.getMessage());
+            log.info("[procurement] activation rejected team={}: {}", teamId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/end-access")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> endAccess(
+            @RequestParam("teamId") long teamId,
+            @RequestParam("subscriptionId") String subscriptionId) {
+        procurement.endAccess(teamId, subscriptionId);
         return ResponseEntity.ok().build();
     }
 
@@ -555,22 +572,20 @@ public class ProcurementController {
 
     // ---- helpers ------------------------------------------------------------
 
-    /** The caller's primary team membership; empty when unauthenticated/teamless. */
-    private Optional<TeamMembership> primaryMembership(Authentication auth) {
-        User user;
+    /** The authenticated caller; empty when unauthenticated. */
+    private Optional<User> currentUser(Authentication auth) {
         try {
-            user = AuthenticationUtils.getCurrentUser(auth, userRepository);
+            return Optional.of(AuthenticationUtils.getCurrentUser(auth, userRepository));
         } catch (SecurityException e) {
             return Optional.empty();
         }
-        return memberRepo.findPrimaryMembership(user.getId()).stream().findFirst();
     }
 
     /** Team id only when the caller is the team leader; null otherwise (commercial actions). */
     private Long requireLeader(Authentication auth) {
-        return primaryMembership(auth)
-                .filter(m -> m.getRole() == TeamRole.LEADER)
-                .map(m -> m.getTeam().getId())
+        return currentUser(auth)
+                .filter(userTeamResolver::isLeader)
+                .flatMap(userTeamResolver::teamId)
                 .orElse(null);
     }
 
@@ -639,7 +654,7 @@ public class ProcurementController {
                 q.getStripeInvoicePdf(),
                 new QuoteConfigEcho(
                         q.getVolume(),
-                        0,
+                        q.getSeats() == null ? 0 : q.getSeats(),
                         q.getIntensity(),
                         q.getSizeMult(),
                         q.getDeployment(),

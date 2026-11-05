@@ -17,6 +17,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -28,7 +29,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.service.TeamService;
@@ -180,9 +180,14 @@ class SupabaseSecurityConfigMoreTest {
     @DisplayName("corsConfigurationSource")
     class Cors {
 
+        /**
+         * Through the interface: the bean's concrete type depends on whether account linking is on,
+         * so a downcast here breaks the moment a test in this class turns it on. A path outside
+         * LINKED_INSTANCE_PATHS always resolves to the "/**" config either way.
+         */
         private CorsConfiguration cors(CorsConfigurationSource source) {
-            UrlBasedCorsConfigurationSource ub = (UrlBasedCorsConfigurationSource) source;
-            return ub.getCorsConfigurations().get("/**");
+            return source.getCorsConfiguration(
+                    new MockHttpServletRequest("GET", "/api/v1/config/ui"));
         }
 
         @Test
@@ -370,8 +375,26 @@ class SupabaseSecurityConfigMoreTest {
             return cfg.corsConfigurationSource();
         }
 
-        private CorsConfiguration resolve(CorsConfigurationSource source, String path) {
-            return source.getCorsConfiguration(new MockHttpServletRequest("GET", path));
+        /**
+         * An allow-listed origin, deliberately not a localhost one: which port anybody runs the dev
+         * server on is their business, and pinning one here would assert the wrong thing.
+         */
+        private static final String FIRST_PARTY = "https://app.stirling.com";
+
+        /** Outside production the allow-list covers loopback on any port, so exercise that too. */
+        private CorsConfigurationSource devProfileSource() {
+            MockEnvironment dev = new MockEnvironment();
+            dev.setActiveProfiles("saas", "staging");
+            SupabaseSecurityConfig cfg = config(new ApplicationProperties(), dev);
+            ReflectionTestUtils.setField(cfg, "accountLinkEnabled", true);
+            return cfg.corsConfigurationSource();
+        }
+
+        private CorsConfiguration resolve(
+                CorsConfigurationSource source, String path, String origin) {
+            MockHttpServletRequest request = new MockHttpServletRequest("GET", path);
+            request.addHeader(HttpHeaders.ORIGIN, origin);
+            return source.getCorsConfiguration(request);
         }
 
         @ParameterizedTest
@@ -389,7 +412,7 @@ class SupabaseSecurityConfigMoreTest {
                 })
         @DisplayName("every apiClient.saas path is readable from any origin")
         void portalReadsAllowAnyOrigin(String path) {
-            CorsConfiguration cfg = resolve(source(true), path);
+            CorsConfiguration cfg = resolve(source(true), path, SELF_HOSTED);
 
             assertThat(cfg.checkOrigin(SELF_HOSTED)).isEqualTo("*");
             // The wildcard is only defensible without credentials. These must never both be set:
@@ -400,7 +423,7 @@ class SupabaseSecurityConfigMoreTest {
         @Test
         @DisplayName("PATCH is allowed; the cap endpoint needs it")
         void patchAllowed() {
-            CorsConfiguration cfg = resolve(source(true), "/api/v1/payg/cap");
+            CorsConfiguration cfg = resolve(source(true), "/api/v1/payg/cap", SELF_HOSTED);
 
             assertThat(cfg.checkHttpMethod(HttpMethod.PATCH)).isNotNull();
         }
@@ -423,16 +446,100 @@ class SupabaseSecurityConfigMoreTest {
                 })
         @DisplayName("every other path keeps the credentialed allow-list")
         void otherPathsUnchanged(String path) {
-            CorsConfiguration cfg = resolve(source(true), path);
+            CorsConfiguration cfg = resolve(source(true), path, SELF_HOSTED);
 
             assertThat(cfg.getAllowCredentials()).isTrue();
             assertThat(cfg.checkOrigin(SELF_HOSTED)).isNull();
         }
 
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "/api/v1/payg/wallet",
+                    "/api/v1/payg/cap",
+                    "/api/v1/procurement/quote",
+                    "/api/v1/account-link/instances"
+                })
+        @DisplayName("an allow-listed origin keeps credentials on the very same paths")
+        void firstPartyKeepsCredentials(String path) {
+            CorsConfiguration cfg = resolve(source(true), path, FIRST_PARTY);
+
+            // Our own frontends send X-Browser-Id here, which the linked-instance policy does
+            // not allow; handing them that policy breaks the preflight.
+            assertThat(cfg.getAllowCredentials()).isTrue();
+            assertThat(cfg.checkOrigin(FIRST_PARTY)).isEqualTo(FIRST_PARTY);
+            assertThat(cfg.getAllowedHeaders()).contains("X-Browser-Id");
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {5173, 5174, 3000, 4321, 61234})
+        @DisplayName("with no operator origin list, a dev server keeps credentials on any port")
+        void anyLoopbackPortKeepsCredentials(int port) {
+            // Holds only while system.corsAllowedOrigins is empty, since an operator list replaces
+            // LOOPBACK_ANY_PORT rather than adding to it. The dev frontend is cross-origin to the
+            // backend whichever port it lands on, so nothing here may key off a fixed port.
+            String origin = "http://localhost:" + port;
+
+            CorsConfiguration cfg = resolve(devProfileSource(), "/api/v1/payg/wallet", origin);
+
+            assertThat(cfg.getAllowCredentials()).isTrue();
+            assertThat(cfg.checkOrigin(origin)).isEqualTo(origin);
+            assertThat(cfg.getAllowedHeaders()).contains("X-Browser-Id");
+        }
+
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "tauri://localhost",
+                    "http://tauri.localhost",
+                    "https://tauri.localhost"
+                })
+        @DisplayName("the desktop app's webview origins keep credentials too")
+        void desktopKeepsCredentials(String origin) {
+            // The desktop app reaches this backend from a webview origin over browser fetch -
+            // ChatContext streams from it with credentials: "include" - which is why these origins
+            // are allow-listed unconditionally. They must keep taking the allow-list branch.
+            CorsConfiguration cfg = resolve(source(true), "/api/v1/payg/wallet", origin);
+
+            assertThat(cfg.getAllowCredentials()).isTrue();
+            assertThat(cfg.checkOrigin(origin)).isEqualTo(origin);
+            assertThat(cfg.getAllowedHeaders()).contains("X-Browser-Id");
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {SELF_HOSTED, FIRST_PARTY, "tauri://localhost"})
+        @DisplayName("the portal's own request is satisfied whichever branch an origin takes")
+        void portalRequestWorksOnEitherBranch(String origin) {
+            // A self-hosted instance can sit on an allow-listed origin, so it takes the
+            // credentialed branch rather than the wildcard. That is fine only if both branches
+            // accept what apiClient.saas actually sends.
+            CorsConfiguration cfg = resolve(source(true), "/api/v1/payg/wallet", origin);
+
+            assertThat(cfg.checkOrigin(origin)).isNotNull();
+            assertThat(cfg.checkHeaders(List.of("authorization", "content-type", "accept")))
+                    .isNotNull();
+            assertThat(cfg.checkHttpMethod(HttpMethod.GET)).isNotNull();
+            assertThat(cfg.checkHttpMethod(HttpMethod.POST)).isNotNull();
+            assertThat(cfg.checkHttpMethod(HttpMethod.PATCH)).isNotNull();
+        }
+
+        @Test
+        @DisplayName("a request carrying no Origin gets the allow-list, not the wildcard")
+        void noOriginHeaderKeepsAllowList() {
+            // A live branch: the source is consulted before anything decides whether this is even
+            // a CORS request, so a same-origin call arrives with no Origin to match.
+            CorsConfiguration cfg =
+                    source(true)
+                            .getCorsConfiguration(
+                                    new MockHttpServletRequest("GET", "/api/v1/payg/wallet"));
+
+            assertThat(cfg.getAllowCredentials()).isTrue();
+        }
+
         @Test
         @DisplayName("no wildcard at all when account linking is off")
         void flagOffKeepsAllowList() {
-            CorsConfiguration cfg = resolve(source(false), "/api/v1/payg/wallet");
+            CorsConfiguration cfg = resolve(source(false), "/api/v1/payg/wallet", SELF_HOSTED);
 
             assertThat(cfg.getAllowCredentials()).isTrue();
             assertThat(cfg.checkOrigin(SELF_HOSTED)).isNull();

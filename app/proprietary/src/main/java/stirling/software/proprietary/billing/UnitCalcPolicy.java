@@ -13,6 +13,16 @@ package stirling.software.proprietary.billing;
 public record UnitCalcPolicy(
         int docPagesPerUnit, long docBytesPerUnit, int minChargeUnits, int fileUnitCap) {
 
+    /**
+     * Knobs for an instance with no policy from SaaS — a self-hosted install metering its own free
+     * tier before (or without) ever linking. Nothing else can serve as a fallback: the constructor
+     * rejects zero on every axis, so there is no inert default to degrade to.
+     *
+     * <p>Must stay equal to the values SaaS seeds on its default pricing policy, or the same
+     * document costs a different number of units before and after linking.
+     */
+    public static final UnitCalcPolicy DEFAULT = new UnitCalcPolicy(25, 5L * 1024 * 1024, 1, 1000);
+
     public UnitCalcPolicy {
         if (docPagesPerUnit <= 0) {
             throw new IllegalArgumentException("docPagesPerUnit must be > 0");

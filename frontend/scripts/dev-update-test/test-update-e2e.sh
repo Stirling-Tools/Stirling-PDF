@@ -28,7 +28,7 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONTEND_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 REPO_ROOT="$(cd "$FRONTEND_DIR/.." && pwd)"
-TAURI_DIR="$FRONTEND_DIR/editor/src-tauri"
+TAURI_DIR="$FRONTEND_DIR/src-tauri"
 OUTPUT_DIR="$SCRIPT_DIR/.update-dist"
 KEYS_DIR="$SCRIPT_DIR/.keys"
 PORT=8090
@@ -152,10 +152,8 @@ if [ "$SKIP_BUILD" = false ] || [ -z "$BUNDLE_FILE" ]; then
 
   cd "$FRONTEND_DIR/editor"
   # Mirror tauri:dev-with-update's prebuild: setup-env writes .env.local +
-  # .env.desktop.local, generate-icons emits src/assets/material-symbols-icons.json
-  # which LocalIcon.tsx imports. Without these, vite build fails to resolve the icons file.
+  # .env.desktop.local.
   npx tsx scripts/setup-env.mts --desktop
-  node scripts/generate-icons.js
   # Build the Windows installer provisioner + thumbnail-handler (no-op on macOS/Linux).
   # The WiX fragment references these binaries, so light.exe fails to bind without them.
   node scripts/build-provisioner.mjs

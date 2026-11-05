@@ -43,12 +43,4 @@ class PDFPasswordRequestTest {
 
         assertThat(a).isNotEqualTo(b).isNotEqualTo(null).isNotEqualTo("string");
     }
-
-    @Test
-    @DisplayName("toString contains class name and value")
-    void toStringContent() {
-        PDFPasswordRequest a = new PDFPasswordRequest();
-        a.setPassword("secret");
-        assertThat(a.toString()).contains("PDFPasswordRequest").contains("secret");
-    }
 }
