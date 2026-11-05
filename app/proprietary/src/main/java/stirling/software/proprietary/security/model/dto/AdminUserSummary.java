@@ -47,11 +47,17 @@ public class AdminUserSummary {
     @Schema(description = "Authentication type (WEB, OAUTH2, SAML2)")
     private String authenticationType;
 
+    /** Also the user's avatar storage path prefix. Null outside SaaS. */
+    @Schema(description = "Supabase auth id")
+    private String supabaseId;
+
     @Schema(description = "Team membership (if any)")
     private TeamSummary team;
 
     @Schema(description = "Whether the user owns (leads) any team")
     private boolean teamLead;
+
+    private boolean orgOwner;
 
     @Schema(
             description =

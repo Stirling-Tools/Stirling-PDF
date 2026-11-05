@@ -320,6 +320,16 @@ class EndpointConfigurationGapTest {
             config.disableGroup("Calibre");
             assertFalse(config.isEndpointEnabled("pdf-to-epub"));
         }
+
+        @Test
+        @DisplayName("both ebook conversions are disabled with the Calibre group")
+        void ebookConversionsFollowCalibre() {
+            EndpointConfiguration config = buildDefault();
+            assertTrue(config.isEndpointEnabled("ebook-to-pdf"));
+            config.disableGroup("Calibre");
+            assertFalse(config.isEndpointEnabled("ebook-to-pdf"));
+            assertFalse(config.isEndpointEnabled("pdf-to-epub"));
+        }
     }
 
     @Nested
@@ -464,10 +474,21 @@ class EndpointConfigurationGapTest {
         }
 
         @Test
+        @DisplayName(
+                "form-detection defaults to disabled with DEPENDENCY when the proprietary module is absent")
+        void formDetectionDisabledWithoutProprietaryModule() {
+            EndpointConfiguration config = buildDefault();
+            assertFalse(config.isEndpointEnabled("form-detection"));
+            assertEquals(
+                    DisableReason.DEPENDENCY,
+                    config.getEndpointAvailability("form-detection").getReason());
+        }
+
+        @Test
         @DisplayName("non-pro build disables the enterprise group")
         void nonProDisablesEnterprise() {
             EndpointConfiguration config = build(false);
-            assertTrue(config.getDisabledGroups().contains("enterprise"));
+            assertFalse(config.isGroupEnabled("enterprise"));
         }
 
         @Test

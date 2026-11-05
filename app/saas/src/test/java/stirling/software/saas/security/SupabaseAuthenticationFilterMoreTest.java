@@ -233,6 +233,22 @@ class SupabaseAuthenticationFilterMoreTest {
             request.setRequestURI("/api/v1/something");
             assertThat(filter.shouldNotFilter(request)).isFalse();
         }
+
+        @Test
+        @DisplayName("GET percent-encoded api path is filtered")
+        void getEncodedApiPathFiltered() {
+            request.setMethod("GET");
+            request.setRequestURI("/%61pi/v1/info/load/all");
+            assertThat(filter.shouldNotFilter(request)).isFalse();
+        }
+
+        @Test
+        @DisplayName("GET percent-encoded actuator path is filtered")
+        void getEncodedActuatorPathFiltered() {
+            request.setMethod("GET");
+            request.setRequestURI("/%61ctuator/prometheus");
+            assertThat(filter.shouldNotFilter(request)).isFalse();
+        }
     }
 
     @Nested
@@ -274,7 +290,7 @@ class SupabaseAuthenticationFilterMoreTest {
             when(jwtDecoder.decode("tok")).thenReturn(jwt);
             when(supabaseUserService.getUser(supabaseId))
                     .thenReturn(supabaseUser(supabaseId, null, true));
-            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
             when(userService.saveUser(any(User.class)))
                     .thenAnswer(
                             inv -> {
@@ -314,7 +330,7 @@ class SupabaseAuthenticationFilterMoreTest {
             User local = newUser("anon_old");
             local.setSupabaseId(supabaseId);
             local.setAuthenticationType(AuthenticationType.ANONYMOUS);
-            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.of(local));
             when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
 
@@ -340,7 +356,7 @@ class SupabaseAuthenticationFilterMoreTest {
             User local = newUser("anon_old");
             local.setSupabaseId(supabaseId);
             local.setAuthenticationType(AuthenticationType.ANONYMOUS);
-            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.of(local));
             when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
 
@@ -363,7 +379,7 @@ class SupabaseAuthenticationFilterMoreTest {
             User local = newUser("anon_old");
             local.setSupabaseId(supabaseId);
             local.setAuthenticationType(AuthenticationType.ANONYMOUS);
-            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.of(local));
             when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                     .thenThrow(new DataIntegrityViolationException("email exists"));
 
@@ -467,7 +483,7 @@ class SupabaseAuthenticationFilterMoreTest {
             when(jwtDecoder.decode("tok")).thenReturn(jwt);
             when(supabaseUserService.getUser(supabaseId))
                     .thenReturn(supabaseUser(supabaseId, "noprov@example.com", false));
-            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
 
             bearer("tok");
             filter.doFilter(request, response, chain);
@@ -484,7 +500,7 @@ class SupabaseAuthenticationFilterMoreTest {
             when(jwtDecoder.decode("tok")).thenReturn(jwt);
             when(supabaseUserService.getUser(supabaseId))
                     .thenReturn(supabaseUser(supabaseId, "race@example.com", false));
-            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
             org.mockito.Mockito.doThrow(new DataIntegrityViolationException("dup"))
                     .when(supabaseUserService)
                     .createSupabaseUser(eq(supabaseId), any(), eq(false));
@@ -507,7 +523,7 @@ class SupabaseAuthenticationFilterMoreTest {
             when(jwtDecoder.decode("tok")).thenReturn(jwt);
             when(supabaseUserService.getUser(supabaseId))
                     .thenReturn(supabaseUser(supabaseId, "fail@example.com", false));
-            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
             org.mockito.Mockito.doThrow(new IllegalStateException("mirror down"))
                     .when(supabaseUserService)
                     .createSupabaseUser(eq(supabaseId), any(), eq(false));
@@ -530,9 +546,8 @@ class SupabaseAuthenticationFilterMoreTest {
 
             User winner = newUser("winner@example.com");
             winner.setSupabaseId(supabaseId);
-            when(userService.findBySupabaseId(supabaseId))
-                    .thenReturn(Optional.empty())
-                    .thenReturn(Optional.of(winner));
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
+            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(winner));
             when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                     .thenThrow(new DataIntegrityViolationException("dup user"));
 
@@ -553,7 +568,7 @@ class SupabaseAuthenticationFilterMoreTest {
             when(jwtDecoder.decode("tok")).thenReturn(jwt);
             when(supabaseUserService.getUser(supabaseId))
                     .thenReturn(supabaseUser(supabaseId, "lost@example.com", false));
-            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
             when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                     .thenThrow(new DataIntegrityViolationException("dup user"));
 
@@ -571,7 +586,7 @@ class SupabaseAuthenticationFilterMoreTest {
             when(jwtDecoder.decode("tok")).thenReturn(jwt);
             when(supabaseUserService.getUser(supabaseId))
                     .thenReturn(supabaseUser(supabaseId, "team@example.com", false));
-            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
             when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                     .thenThrow(new IllegalStateException("team boom"));
 
@@ -602,11 +617,9 @@ class SupabaseAuthenticationFilterMoreTest {
             UUID supabaseId = UUID.randomUUID();
             when(jwtDecoder.decode("tok"))
                     .thenReturn(fullJwt(supabaseId, "real@example.com", false, "email"));
-            when(supabaseUserService.getUser(supabaseId))
-                    .thenReturn(supabaseUser(supabaseId, "real@example.com", false));
 
             User local = existingWebUser(supabaseId);
-            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.of(local));
 
             bearer("tok");
             filter.doFilter(request, response, chain);
@@ -615,6 +628,7 @@ class SupabaseAuthenticationFilterMoreTest {
             // requests would mint duplicate teams. Provisioning belongs to signup alone.
             verify(saasTeamService, never()).ensurePersonalTeam(any(User.class));
             verify(saasTeamService, never()).saveUserWithPersonalTeam(any(User.class));
+            verify(supabaseUserService, never()).getUser(any());
             assertThat(local.getTeam()).isNull();
         }
 
@@ -624,18 +638,17 @@ class SupabaseAuthenticationFilterMoreTest {
             UUID supabaseId = UUID.randomUUID();
             when(jwtDecoder.decode("tok"))
                     .thenReturn(fullJwt(supabaseId, "real@example.com", false, "email"));
-            when(supabaseUserService.getUser(supabaseId))
-                    .thenReturn(supabaseUser(supabaseId, "real@example.com", false));
 
             User local = existingWebUser(supabaseId);
             Team existing = new Team();
             local.setTeam(existing);
-            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.of(local));
 
             bearer("tok");
             filter.doFilter(request, response, chain);
 
             verify(saasTeamService, never()).ensurePersonalTeam(any(User.class));
+            verify(supabaseUserService, never()).getUser(any());
             assertThat(local.getTeam()).isSameAs(existing);
         }
 
@@ -650,7 +663,7 @@ class SupabaseAuthenticationFilterMoreTest {
             User local = newUser("anon_guest");
             local.setSupabaseId(supabaseId);
             local.setAuthenticationType(AuthenticationType.ANONYMOUS);
-            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.of(local));
 
             bearer("tok");
             filter.doFilter(request, response, chain);

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -23,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.event.StorageFolderArrivalEvent;
 import stirling.software.proprietary.storage.model.Folder;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.model.api.CreateFolderRequest;
@@ -66,6 +68,7 @@ public class FolderService {
     private final FolderRepository folderRepository;
     private final StoredFileRepository storedFileRepository;
     private final ApplicationProperties applicationProperties;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Gate every public method on storage being enabled, mirroring {@code
@@ -260,6 +263,7 @@ public class FolderService {
                                                 "File not found or not owned by current user"));
         file.setFolder(resolveOwnedFolder(folderId, user));
         storedFileRepository.save(file);
+        eventPublisher.publishEvent(new StorageFolderArrivalEvent(folderId));
     }
 
     /**
@@ -300,6 +304,9 @@ public class FolderService {
         }
 
         List<Long> moved = owned.stream().map(StoredFile::getId).toList();
+        if (!moved.isEmpty()) {
+            eventPublisher.publishEvent(new StorageFolderArrivalEvent(folderId));
+        }
         List<Long> skipped = fileIds.stream().filter(id -> !ownedIds.contains(id)).toList();
         if (!skipped.isEmpty()) {
             log.warn(

@@ -99,8 +99,7 @@ class RedactControllerTest {
 
     private static PDFont helvetica(PDDocument doc) throws IOException {
         try (InputStream is =
-                RedactControllerTest.class.getResourceAsStream(
-                        "/type3/library/fonts/dejavu/DejaVuSans.ttf")) {
+                RedactControllerTest.class.getResourceAsStream("/static/fonts/DejaVuSans.ttf")) {
             if (is != null) {
                 return PDType0Font.load(doc, is);
             }
@@ -966,7 +965,7 @@ class RedactControllerTest {
 
         @Test
         @DisplayName("Should handle null redact color gracefully")
-        void handleNullRedactColor() {
+        void handleNullRedactColor() throws Exception {
             RedactPdfRequest request = createRedactPdfRequest();
             request.setListOfText("test");
             request.setRedactColor(null);
@@ -1002,15 +1001,12 @@ class RedactControllerTest {
         }
 
         @Test
-        @DisplayName("Should handle out of bounds page numbers gracefully")
-        void handleOutOfBoundsPageNumbers() throws Exception {
+        @DisplayName("Should reject page numbers past the end of the document")
+        void rejectOutOfBoundsPageNumbers() {
             ManualRedactPdfRequest request = createManualRedactPdfRequest();
             request.setPageNumbers("100-200");
 
-            ResponseEntity<Resource> response = redactController.redactPDF(request);
-
-            assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertThrows(IllegalArgumentException.class, () -> redactController.redactPDF(request));
         }
     }
 

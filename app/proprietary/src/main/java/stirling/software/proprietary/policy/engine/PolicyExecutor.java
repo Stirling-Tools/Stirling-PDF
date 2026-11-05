@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -19,9 +20,14 @@ import org.springframework.util.MultiValueMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
+import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.PipelineLimits;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
@@ -53,38 +59,57 @@ public class PolicyExecutor {
     private final ToolMetadataService toolMetadataService;
     private final TempFileManager tempFileManager;
     private final ObjectMapper objectMapper;
+    private final ApplicationProperties applicationProperties;
 
     // files: result files (one, or many for ZIP-response tools). report: optional structured
     // payload the tool surfaced alongside or instead of a file.
     private record ToolResult(List<Resource> files, JsonNode report) {}
 
-    // A step's output files paired with each file's origin (the index into the original pipeline
-    // inputs it traces back to, or null when it has no single source). Origins compose across steps
-    // so the final result can be mapped back onto the files that entered the pipeline.
-    private record StepOutput(List<Resource> files, List<Integer> origins, JsonNode report) {}
+    // A merge can lose its single-source attribution while continuing an input's billing group.
+    private record PipelineFile(Resource resource, Integer origin, Integer billingOrigin) {}
+
+    private record StepOutput(List<PipelineFile> files, JsonNode report) {}
 
     /**
      * Run every step in order, feeding each step's output into the next. Supporting files in {@code
      * inputs} bind to named file fields and never enter the document stream.
      *
      * @throws InternalApiTimeoutException if a tool does not respond within its read timeout
+     * @throws PipelineLimits.LimitExceededException if the run breaks {@code policies.maxSteps} or
+     *     {@code policies.maxFilesPerStep}
      * @throws IOException on a non-OK tool response, a missing supporting file, or a read failure
      */
     public PolicyExecutionResult execute(
             PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener)
             throws IOException {
-        List<PipelineStep> steps = definition.steps();
-        if (steps.isEmpty()) {
-            throw new IllegalArgumentException("Pipeline definition has no steps");
+        List<TempFile> tempFiles = new ArrayList<>();
+        try {
+            return executeSteps(definition, inputs, listener, tempFiles);
+        } catch (PolicyInputRequiredException e) {
+            // The engine persists the pending files before it suspends the run: keep them
+            throw e;
+        } catch (IOException | RuntimeException e) {
+            // The caller never receives the result, so release the earlier steps' outputs here
+            tempFiles.forEach(TempFile::close);
+            throw e;
         }
+    }
 
-        List<Resource> currentFiles = inputs.primary();
+    private PolicyExecutionResult executeSteps(
+            PipelineDefinition definition,
+            PolicyInputs inputs,
+            PolicyProgressListener listener,
+            List<TempFile> tempFiles)
+            throws IOException {
+        // Zero steps is a pure routing policy: inputs pass through unchanged and
+        // are delivered to the policy's output destinations.
+        List<PipelineStep> steps = definition.steps();
+        PipelineLimits.requireWithinStepLimit(steps.size(), applicationProperties.getPolicies());
+
+        List<PipelineFile> currentFiles = new ArrayList<>();
         Map<String, List<Resource>> supportingFiles = inputs.supportingFiles();
-        // Seed each input with its own index as origin; steps carry these through so the final
-        // outputs can be traced back to the files that entered the pipeline.
-        List<Integer> currentOrigins = new ArrayList<>();
-        for (int k = 0; k < currentFiles.size(); k++) {
-            currentOrigins.add(k);
+        for (int k = 0; k < inputs.primary().size(); k++) {
+            currentFiles.add(new PipelineFile(inputs.primary().get(k), k, k));
         }
         // Last non-null report wins: the terminal step defines the output.
         JsonNode lastReport = null;
@@ -98,10 +123,10 @@ public class PolicyExecutor {
                         "Pipeline step " + (i + 1) + " has no operation");
             }
             listener.onStepStart(i + 1, steps.size(), operation);
-            StepOutput stepResult =
-                    executeStep(step, currentFiles, currentOrigins, supportingFiles);
+            int consumedTempFiles = tempFiles.size();
+            StepOutput stepResult = executeStep(step, currentFiles, supportingFiles, tempFiles);
             currentFiles = stepResult.files();
-            currentOrigins = stepResult.origins();
+            releaseTempFiles(tempFiles, consumedTempFiles);
             if (stepResult.report() != null) {
                 lastReport = stepResult.report();
                 lastReportTool = operation;
@@ -109,7 +134,12 @@ public class PolicyExecutor {
             listener.onStepComplete(i + 1, steps.size(), operation);
         }
 
-        return new PolicyExecutionResult(currentFiles, currentOrigins, lastReport, lastReportTool);
+        return new PolicyExecutionResult(
+                currentFiles.stream().map(PipelineFile::resource).toList(),
+                currentFiles.stream().map(PipelineFile::origin).toList(),
+                lastReport,
+                lastReportTool,
+                tempFiles);
     }
 
     /**
@@ -119,48 +149,84 @@ public class PolicyExecutor {
      */
     private StepOutput executeStep(
             PipelineStep step,
-            List<Resource> inputFiles,
-            List<Integer> inputOrigins,
-            Map<String, List<Resource>> supportingFiles)
+            List<PipelineFile> inputFiles,
+            Map<String, List<Resource>> supportingFiles,
+            List<TempFile> tempFiles)
             throws IOException {
-        requireAcceptedTypes(step.operation(), inputFiles);
-        List<Resource> files = new ArrayList<>();
-        List<Integer> origins = new ArrayList<>();
+        List<Resource> resources = inputFiles.stream().map(PipelineFile::resource).toList();
+        requireAcceptedTypes(step.operation(), resources);
+        List<PipelineFile> files = new ArrayList<>();
         JsonNode report = null;
         if (toolMetadataService.isMultiInput(step.operation())) {
-            // One call over all inputs. The outputs derive from a single input only when exactly
-            // one entered; otherwise (a genuine merge) there is no single source.
-            ToolResult r = callEndpoint(step, inputFiles, supportingFiles);
-            Integer origin = inputOrigins.size() == 1 ? inputOrigins.getFirst() : null;
-            for (Resource file : r.files()) {
-                files.add(file);
-                origins.add(origin);
+            Integer origin = sharedOrigin(inputFiles);
+            // Synchronous, ordered dispatch makes the last surviving input's group the newest,
+            // matching SaaS's choice when a merge joins several previously processed documents.
+            Integer billingOrigin =
+                    inputFiles.isEmpty() ? null : inputFiles.getLast().billingOrigin();
+            ToolResult r;
+            try (AutomationRunContext.Scope doc = documentScope(billingOrigin)) {
+                r = callEndpoint(step, resources, supportingFiles, tempFiles);
             }
+            for (Resource file : r.files()) {
+                files.add(new PipelineFile(file, origin, billingOrigin));
+            }
+            requireWithinFileLimit(step, files);
             report = r.report();
         } else if (inputFiles.isEmpty()) {
-            ToolResult r = callEndpoint(step, List.of(), supportingFiles);
+            ToolResult r = callEndpoint(step, List.of(), supportingFiles, tempFiles);
             for (Resource file : r.files()) {
-                files.add(file);
-                origins.add(null);
+                files.add(new PipelineFile(file, null, null));
             }
+            requireWithinFileLimit(step, files);
             report = r.report();
         } else {
-            // One call per file: every output of this call inherits that input's origin, so a 1:1
-            // op keeps its chain and a split (one input, many outputs) tags each output with the
-            // same source.
-            for (int k = 0; k < inputFiles.size(); k++) {
-                Integer origin = inputOrigins.get(k);
-                ToolResult r = callEndpoint(step, List.of(inputFiles.get(k)), supportingFiles);
-                for (Resource file : r.files()) {
-                    files.add(file);
-                    origins.add(origin);
+            for (PipelineFile input : inputFiles) {
+                ToolResult r;
+                try (AutomationRunContext.Scope doc = documentScope(input.billingOrigin())) {
+                    r = callEndpoint(step, List.of(input.resource()), supportingFiles, tempFiles);
                 }
+                for (Resource file : r.files()) {
+                    files.add(new PipelineFile(file, input.origin(), input.billingOrigin()));
+                }
+                // Checked per call, not after the loop: by then a split step has already made
+                // inputs x divisions files.
+                requireWithinFileLimit(step, files);
                 if (report == null) {
                     report = r.report();
                 }
             }
         }
-        return new StepOutput(files, origins, report);
+        return new StepOutput(files, report);
+    }
+
+    private void requireWithinFileLimit(PipelineStep step, List<PipelineFile> files) {
+        PipelineLimits.requireWithinFileLimit(
+                step.operation(), files.size(), applicationProperties.getPolicies());
+    }
+
+    /** Deletes the {@code count} temp files added first. */
+    private static void releaseTempFiles(List<TempFile> tempFiles, int count) {
+        List<TempFile> released = tempFiles.subList(0, count);
+        released.forEach(TempFile::close);
+        released.clear();
+    }
+
+    private static Integer sharedOrigin(List<PipelineFile> files) {
+        if (files.isEmpty()) {
+            return null;
+        }
+        Integer origin = files.getFirst().origin();
+        return files.stream().allMatch(file -> Objects.equals(origin, file.origin()))
+                ? origin
+                : null;
+    }
+
+    private static AutomationRunContext.Scope documentScope(Integer billingOrigin) {
+        String runId = AutomationRunContext.current();
+        if (runId == null || billingOrigin == null) {
+            return () -> {};
+        }
+        return AutomationRunContext.openDocument(runId + ":" + billingOrigin);
     }
 
     /**
@@ -170,7 +236,10 @@ public class PolicyExecutor {
      * unpacked to a flat file list.
      */
     private ToolResult callEndpoint(
-            PipelineStep step, List<Resource> files, Map<String, List<Resource>> supportingFiles)
+            PipelineStep step,
+            List<Resource> files,
+            Map<String, List<Resource>> supportingFiles,
+            List<TempFile> tempFiles)
             throws IOException {
         String endpointPath = step.operation();
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -200,7 +269,7 @@ public class PolicyExecutor {
         for (Map.Entry<String, Object> entry : step.parameters().entrySet()) {
             if (entry.getValue() instanceof List<?> list) {
                 if (containsStructuredElements(list)) {
-                    // These endpoints (e.g. /security/redact redactions, /general/edit-text edits)
+                    // These endpoints (e.g. /security/redact redactions) bind a list of
                     // bind a list of structured objects from a single JSON string field via a
                     // property editor, so pre-serialize the whole list.
                     body.add(entry.getKey(), objectMapper.writeValueAsString(list));
@@ -214,6 +283,9 @@ public class PolicyExecutor {
             }
         }
         ResponseEntity<Resource> response = internalApiClient.post(endpointPath, body);
+        if (response.getBody() instanceof InternalApiClient.TempFileResource tempFileResource) {
+            tempFiles.add(tempFileResource.getTempFile());
+        }
         if (!HttpStatus.OK.equals(response.getStatusCode()) || response.getBody() == null) {
             throw new IOException(
                     "Tool returned HTTP " + response.getStatusCode() + " for " + endpointPath);
@@ -239,7 +311,9 @@ public class PolicyExecutor {
 
         JsonNode report = parseReportHeader(headers, endpointPath);
         if (toolMetadataService.shouldUnpackZipResponse(endpointPath)) {
-            return new ToolResult(ZipExtractionUtils.extractZip(resource, tempFileManager), report);
+            return new ToolResult(
+                    ZipExtractionUtils.extractZip(resource, tempFileManager, tempFiles::add),
+                    report);
         }
         return new ToolResult(List.of(resource), report);
     }
@@ -281,16 +355,11 @@ public class PolicyExecutor {
         }
         for (Resource file : files) {
             if (!matchesType(file, accepted)) {
-                // Reports the extension rather than the filename, since this message becomes the
-                // run's error and is persisted on the failure record.
-                throw new IOException(
-                        "Step "
-                                + operation
-                                + " accepts "
-                                + accepted
-                                + " but received a '"
-                                + extensionOf(file)
-                                + "' file");
+                // Coded rather than a bare IOException: this check runs before the step, so the
+                // reader that would have reported the type is never reached and this is the only
+                // place that knows the failure is a type mismatch at all.
+                throw ExceptionUtils.createStepInputTypeException(
+                        operation, accepted, extensionOf(file));
             }
         }
     }

@@ -11,12 +11,14 @@ import stirling.software.SPDF.model.api.PDFWithPageNums;
 @EqualsAndHashCode(callSuper = true)
 public class ConvertToImageRequest extends PDFWithPageNums {
 
+    public static final int DEFAULT_DPI = 300;
+
     @Schema(
             description = "The output image format",
             defaultValue = "png",
             allowableValues = {"png", "jpeg", "jpg", "gif", "webp"},
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private String imageFormat;
+    private String imageFormat = "png";
 
     @Schema(
             description =
@@ -25,23 +27,23 @@ public class ConvertToImageRequest extends PDFWithPageNums {
             defaultValue = "multiple",
             allowableValues = {"single", "multiple"},
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private String singleOrMultiple;
+    private String singleOrMultiple = "multiple";
 
     @Schema(
             description = "The color type of the output image(s)",
             defaultValue = "color",
             allowableValues = {"color", "greyscale", "blackwhite"},
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private String colorType;
+    private String colorType = "color";
 
     @Schema(
             description = "The DPI (dots per inch) for the output image(s)",
             defaultValue = "300",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private Integer dpi;
+    private Integer dpi = DEFAULT_DPI;
 
     @Schema(
             description = "Include annotations such as comments in the output image(s)",
             defaultValue = "false")
-    private Boolean includeAnnotations;
+    private Boolean includeAnnotations = false;
 }

@@ -71,9 +71,12 @@ public class MultiPageLayoutController {
         switch (mode) {
             case "DEFAULT":
                 pagesPerSheet = request.getPagesPerSheet();
-                if (pagesPerSheet != 2
-                        && pagesPerSheet
-                                != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
+                // 0 is a perfect square, but the sheet loop steps by pagesPerSheet
+                if (pagesPerSheet <= 0
+                        || (pagesPerSheet != 2
+                                && pagesPerSheet
+                                        != (int) Math.sqrt(pagesPerSheet)
+                                                * Math.sqrt(pagesPerSheet))) {
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.invalidFormat",
                             "Invalid {0} format: {1}",

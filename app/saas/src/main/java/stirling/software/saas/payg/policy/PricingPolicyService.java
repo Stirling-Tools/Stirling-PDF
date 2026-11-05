@@ -159,6 +159,13 @@ public class PricingPolicyService {
         if (Boolean.TRUE.equals(target.getIsDefault())) {
             return target;
         }
+        if (target.getTeamIncludedUnits() == null) {
+            target.setTeamIncludedUnits(
+                    policyRepository
+                            .findFirstByIsDefaultTrue()
+                            .map(PricingPolicy::getTeamIncludedUnits)
+                            .orElse(0L));
+        }
         policyRepository.clearDefaultFlag();
         target.setIsDefault(true);
         PricingPolicy saved = policyRepository.save(target);

@@ -1,6 +1,5 @@
 package stirling.software.saas.payg.api;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -18,13 +17,12 @@ import io.swagger.v3.oas.annotations.Hidden;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.stripe.StripePaymentMethodDao;
+import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -56,17 +54,17 @@ public class PaygPaymentMethodController {
 
     private final StripePaymentMethodDao paymentMethodDao;
     private final PaygTeamExtensionsRepository extRepo;
-    private final TeamMembershipRepository memberRepo;
+    private final UserTeamResolver userTeamResolver;
     private final UserRepository userRepository;
 
     public PaygPaymentMethodController(
             StripePaymentMethodDao paymentMethodDao,
             PaygTeamExtensionsRepository extRepo,
-            TeamMembershipRepository memberRepo,
+            UserTeamResolver userTeamResolver,
             UserRepository userRepository) {
         this.paymentMethodDao = Objects.requireNonNull(paymentMethodDao, "paymentMethodDao");
         this.extRepo = Objects.requireNonNull(extRepo, "extRepo");
-        this.memberRepo = Objects.requireNonNull(memberRepo, "memberRepo");
+        this.userTeamResolver = Objects.requireNonNull(userTeamResolver, "userTeamResolver");
         this.userRepository = Objects.requireNonNull(userRepository, "userRepository");
     }
 
@@ -81,11 +79,11 @@ public class PaygPaymentMethodController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<TeamMembership> rows = memberRepo.findPrimaryMembership(user.getId());
-        if (rows.isEmpty()) {
+        Optional<Long> resolvedTeam = userTeamResolver.teamId(user);
+        if (resolvedTeam.isEmpty()) {
             return ResponseEntity.ok(PaymentMethodResponse.absent());
         }
-        Long teamId = rows.getFirst().getTeam().getId();
+        Long teamId = resolvedTeam.get();
 
         Optional<PaygTeamExtensions> ext = extRepo.findById(teamId);
         if (ext.isEmpty() || ext.get().getStripeCustomerId() == null) {

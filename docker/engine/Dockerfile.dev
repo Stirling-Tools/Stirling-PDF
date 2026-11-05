@@ -1,0 +1,15 @@
+# syntax=docker/dockerfile:1.5
+FROM python:3.13-slim-bookworm@sha256:281d39ff02e3b389401586134ff9e6572954687822a58055ec07a60ded4e0b7f
+COPY --from=ghcr.io/astral-sh/uv:0.13.7@sha256:96f40d3904aad8d0bd010539001d36c8e2188b981e1334471a90c4a1d93bb490 /uv /uvx /bin/
+WORKDIR /app
+
+COPY engine/pyproject.toml engine/uv.lock ./engine/
+RUN --mount=type=cache,target=/root/.cache/uv \
+    cd engine && uv sync --frozen --group engine --group engine-dev
+
+ENV PATH="/app/engine/.venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
+
+EXPOSE 5001
+
+CMD ["uv", "run", "--project", "/app/engine", "--frozen", "--group", "engine", "uvicorn", "stirling.api.app:app", "--host", "0.0.0.0", "--port", "5001", "--reload"]

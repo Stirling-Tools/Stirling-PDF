@@ -86,7 +86,8 @@ class PricingPolicyAdminControllerTest {
                         null,
                         null,
                         "notes",
-                        "admin@example.com");
+                        "admin@example.com",
+                        2700L);
         PricingPolicy saved = policy(99L, "v2", false);
         ArgumentCaptor<PricingPolicy> draft = ArgumentCaptor.forClass(PricingPolicy.class);
         when(service.create(draft.capture())).thenReturn(saved);
@@ -96,6 +97,7 @@ class PricingPolicyAdminControllerTest {
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(((PolicyResponse) resp.getBody()).policyId()).isEqualTo(99L);
         assertThat(draft.getValue().getVersion()).isEqualTo("v2");
+        assertThat(draft.getValue().getTeamIncludedUnits()).isEqualTo(2700L);
         // Controller must never let isDefault=true through to the service — setDefault is the
         // only path for promotion.
         assertThat(draft.getValue().getIsDefault()).isFalse();

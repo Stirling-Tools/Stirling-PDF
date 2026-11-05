@@ -11,9 +11,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -200,103 +197,6 @@ public class ExceptionUtils {
             throw new IllegalArgumentException(message);
         }
         return obj;
-    }
-
-    /**
-     * Validates that rendering a PDF page at the given DPI will not exceed safe memory limits. This
-     * should be called BEFORE attempting to render to prevent OOM/NegativeArraySizeException.
-     *
-     * <p>The validation checks if the resulting image dimensions would exceed:
-     *
-     * <ul>
-     *   <li>Java's maximum array size (Integer.MAX_VALUE)
-     *   <li>Practical memory limits (considering bytes per pixel)
-     * </ul>
-     *
-     * <p><strong>Usage Example:</strong>
-     *
-     * <pre>{@code
-     * PDPage page = document.getPage(pageIndex);
-     * ExceptionUtils.validateRenderingDimensions(page, pageIndex + 1, dpi);
-     * // Only render if validation passes
-     * BufferedImage image = renderer.renderImageWithDPI(pageIndex, dpi);
-     * }</pre>
-     *
-     * @param page the PDF page to validate
-     * @param pageNumber the page number (1-based, for error messages)
-     * @param dpi the DPI value to use for rendering
-     * @throws OutOfMemoryDpiException if the dimensions would be too large
-     */
-    public static void validateRenderingDimensions(PDPage page, int pageNumber, int dpi)
-            throws OutOfMemoryDpiException {
-        if (page == null) {
-            return; // Nothing to validate
-        }
-
-        PDRectangle mediaBox = page.getMediaBox();
-        if (mediaBox == null) {
-            return; // Cannot validate without dimensions
-        }
-
-        // Get page dimensions in points (1 point = 1/72 inch)
-        float widthInPoints = mediaBox.getWidth();
-        float heightInPoints = mediaBox.getHeight();
-
-        // Convert to pixels at the given DPI
-        // Formula: pixels = (points / 72) * dpi
-        long widthInPixels = Math.round((widthInPoints / 72.0) * dpi);
-        long heightInPixels = Math.round((heightInPoints / 72.0) * dpi);
-
-        // Check if dimensions exceed Integer.MAX_VALUE
-        if (widthInPixels > Integer.MAX_VALUE || heightInPixels > Integer.MAX_VALUE) {
-            log.warn(
-                    "Page {} dimensions too large: {}x{} pixels at {} DPI",
-                    pageNumber,
-                    widthInPixels,
-                    heightInPixels,
-                    dpi);
-            throw createOutOfMemoryDpiException(
-                    pageNumber,
-                    dpi,
-                    new IllegalArgumentException(
-                            "Dimension exceeds Integer.MAX_VALUE: "
-                                    + widthInPixels
-                                    + "x"
-                                    + heightInPixels));
-        }
-
-        // Check if total pixel count would exceed safe limits
-        // RGB images use 4 bytes per pixel (ARGB), but be conservative
-        long totalPixels = widthInPixels * heightInPixels;
-        long estimatedBytes = totalPixels * 4; // 4 bytes per pixel for ARGB
-
-        // Java array max size is Integer.MAX_VALUE elements
-        // For byte array: Integer.MAX_VALUE bytes
-        // For int array (image pixels): Integer.MAX_VALUE ints = Integer.MAX_VALUE * 4 bytes
-        if (totalPixels > Integer.MAX_VALUE) {
-            log.warn(
-                    "Page {} pixel count too large: {} pixels ({} MB) at {} DPI",
-                    pageNumber,
-                    totalPixels,
-                    estimatedBytes / (1024 * 1024),
-                    dpi);
-            throw createOutOfMemoryDpiException(
-                    pageNumber,
-                    dpi,
-                    new IllegalArgumentException(
-                            "Total pixel count exceeds safe limit: " + totalPixels));
-        }
-
-        // Additional safety check: warn about very large images (> 1GB estimated)
-        if (estimatedBytes > 1024L * 1024 * 1024) {
-            log.warn(
-                    "Page {} will create a very large image: {}x{} pixels (~{} MB) at {} DPI. This may cause memory issues.",
-                    pageNumber,
-                    widthInPixels,
-                    heightInPixels,
-                    estimatedBytes / (1024 * 1024),
-                    dpi);
-        }
     }
 
     /**
@@ -581,14 +481,14 @@ public class ExceptionUtils {
         return new IOException(message, cause);
     }
 
-    public static IOException createImageReadException(String filename) {
+    public static FileReadException createImageReadException(String filename) {
         requireNonNull(filename, "filename");
         String message =
                 getMessage(
                         ErrorCode.IMAGE_READ_ERROR.getMessageKey(),
                         ErrorCode.IMAGE_READ_ERROR.getDefaultMessage(),
                         filename);
-        return new IOException(message);
+        return new FileReadException(message, ErrorCode.IMAGE_READ_ERROR.getCode());
     }
 
     /**
@@ -635,70 +535,162 @@ public class ExceptionUtils {
         return new IllegalArgumentException(message);
     }
 
-    /** Create file validation exceptions. */
-    public static IllegalArgumentException createHtmlFileRequiredException() {
+    // Coded rather than plain: a plain IllegalArgumentException reaches the handler that attaches
+    // no errorCode, so the failure classifies as unrecognised even though the enum names it.
+    public static FileValidationException createHtmlFileRequiredException() {
         String message = getMessage(ErrorCode.HTML_FILE_REQUIRED);
-        return new IllegalArgumentException(message);
+        return new FileValidationException(message, ErrorCode.HTML_FILE_REQUIRED.getCode());
     }
 
-    public static IllegalArgumentException createPdfFileRequiredException() {
+    public static FileValidationException createPdfFileRequiredException() {
         String message = getMessage(ErrorCode.PDF_NOT_PDF);
-        return new IllegalArgumentException(message);
+        return new FileValidationException(message, ErrorCode.PDF_NOT_PDF.getCode());
     }
 
-    public static IllegalArgumentException createInvalidPageSizeException(String size) {
+    public static StepConfigurationException createInvalidPageSizeException(String size) {
         requireNonNull(size, "size");
         String message =
                 getMessage(
                         ErrorCode.INVALID_PAGE_SIZE.getMessageKey(),
                         ErrorCode.INVALID_PAGE_SIZE.getDefaultMessage(),
                         size);
-        return new IllegalArgumentException(message);
+        return new StepConfigurationException(message, ErrorCode.INVALID_PAGE_SIZE.getCode());
     }
 
-    public static IllegalArgumentException createFileNullOrEmptyException() {
+    public static FileValidationException createFileNullOrEmptyException() {
         String message = getMessage(ErrorCode.FILE_NULL_OR_EMPTY);
-        return new IllegalArgumentException(message);
+        return new FileValidationException(message, ErrorCode.FILE_NULL_OR_EMPTY.getCode());
     }
 
-    public static IllegalArgumentException createFileNoNameException() {
+    public static FileValidationException createFileNoNameException() {
         String message = getMessage(ErrorCode.FILE_NO_NAME);
-        return new IllegalArgumentException(message);
+        return new FileValidationException(message, ErrorCode.FILE_NO_NAME.getCode());
     }
 
-    public static IllegalArgumentException createPdfNoPages() {
+    public static FileValidationException createPdfNoPages() {
         String message = getMessage(ErrorCode.PDF_NO_PAGES);
-        return new IllegalArgumentException(message);
+        return new FileValidationException(message, ErrorCode.PDF_NO_PAGES.getCode());
     }
 
-    /** Create OCR-related exceptions. */
-    public static IOException createOcrLanguageRequiredException() {
+    /** A stored file that an id no longer resolves to. Checked, like the reads that raise it. */
+    public static FileReadException createFileNotFoundException(String fileId) {
+        requireNonNull(fileId, "fileId");
+        String message =
+                getMessage(
+                        ErrorCode.FILE_NOT_FOUND.getMessageKey(),
+                        ErrorCode.FILE_NOT_FOUND.getDefaultMessage(),
+                        fileId);
+        return new FileReadException(message, ErrorCode.FILE_NOT_FOUND.getCode());
+    }
+
+    public static FileReadException createFileNotFoundException(String fileId, Throwable cause) {
+        requireNonNull(fileId, "fileId");
+        String message =
+                getMessage(
+                        ErrorCode.FILE_NOT_FOUND.getMessageKey(),
+                        ErrorCode.FILE_NOT_FOUND.getDefaultMessage(),
+                        fileId);
+        return new FileReadException(message, cause, ErrorCode.FILE_NOT_FOUND.getCode());
+    }
+
+    // Unchecked where they were IOExceptions: a caller's bad settings are a 400, not a server
+    // fault, and each is thrown before any I/O a catch could be guarding.
+    public static StepConfigurationException createOcrLanguageRequiredException() {
         String message = getMessage(ErrorCode.OCR_LANGUAGE_REQUIRED);
-        return new IOException(message);
+        return new StepConfigurationException(message, ErrorCode.OCR_LANGUAGE_REQUIRED.getCode());
     }
 
-    public static IOException createOcrInvalidLanguagesException() {
+    public static StepConfigurationException createOcrInvalidLanguagesException() {
         String message = getMessage(ErrorCode.OCR_INVALID_LANGUAGES);
-        return new IOException(message);
+        return new StepConfigurationException(message, ErrorCode.OCR_INVALID_LANGUAGES.getCode());
     }
 
-    public static IOException createOcrToolsUnavailableException() {
+    public static ToolRequiredException createOcrToolsUnavailableException() {
         String message = getMessage(ErrorCode.OCR_TOOLS_UNAVAILABLE);
-        return new IOException(message);
+        return new ToolRequiredException(message, ErrorCode.OCR_TOOLS_UNAVAILABLE.getCode());
     }
 
-    public static IOException createOcrInvalidRenderTypeException() {
+    public static StepConfigurationException createOcrInvalidRenderTypeException() {
         String message = getMessage(ErrorCode.OCR_INVALID_RENDER_TYPE);
-        return new IOException(message);
+        return new StepConfigurationException(message, ErrorCode.OCR_INVALID_RENDER_TYPE.getCode());
     }
 
-    public static IOException createOcrProcessingFailedException(int returnCode) {
+    public static ToolFailedException createOcrProcessingFailedException(int returnCode) {
         String message =
                 getMessage(
                         ErrorCode.OCR_PROCESSING_FAILED.getMessageKey(),
                         ErrorCode.OCR_PROCESSING_FAILED.getDefaultMessage(),
                         returnCode);
-        return new IOException(message);
+        return new ToolFailedException(message, null, ErrorCode.OCR_PROCESSING_FAILED.getCode());
+    }
+
+    public static StepConfigurationException createCompressionOptionsRequiredException() {
+        String message = getMessage(ErrorCode.COMPRESSION_OPTIONS);
+        return new StepConfigurationException(message, ErrorCode.COMPRESSION_OPTIONS.getCode());
+    }
+
+    public static ToolFailedException createQpdfCompressionException(IOException cause) {
+        requireNonNull(cause, "cause");
+        String message = getMessage(ErrorCode.QPDF_COMPRESSION);
+        return new ToolFailedException(message, cause, ErrorCode.QPDF_COMPRESSION.getCode());
+    }
+
+    /**
+     * A document failed the compliance standard it was checked against. Carries an error code so
+     * the policy review surface can name the failure instead of recording it as unrecognised.
+     *
+     * @param detail the whole sentence, already naming the standard and the failing rules
+     */
+    public static ComplianceNotMetException createComplianceNotMetException(String detail) {
+        String message = getMessage(ErrorCode.COMPLIANCE_NOT_MET, detail);
+        return new ComplianceNotMetException(message, ErrorCode.COMPLIANCE_NOT_MET.getCode());
+    }
+
+    /** Raised once every available repair tool has tried the document and declined it. */
+    public static PdfUnrepairableException createPdfUnrepairableException() {
+        return new PdfUnrepairableException(
+                getMessage(ErrorCode.PDF_UNREPAIRABLE), ErrorCode.PDF_UNREPAIRABLE.getCode());
+    }
+
+    /**
+     * The redaction engine's own check failed on some pages, so its output is withheld.
+     *
+     * @param pages the 1-based page numbers, already joined for display
+     */
+    public static ToolFailedException createRedactionUnverifiedException(String pages) {
+        return new ToolFailedException(
+                getMessage(ErrorCode.REDACTION_UNVERIFIED, pages),
+                null,
+                ErrorCode.REDACTION_UNVERIFIED.getCode());
+    }
+
+    /**
+     * The redaction engine could not run or check its own result, and named no page, so its output
+     * is withheld.
+     */
+    public static ToolFailedException createRedactionUnverifiableException(Throwable cause) {
+        return new ToolFailedException(
+                getMessage(ErrorCode.REDACTION_UNVERIFIABLE),
+                cause,
+                ErrorCode.REDACTION_UNVERIFIABLE.getCode());
+    }
+
+    /**
+     * A step refused its input on type alone, before running.
+     *
+     * @param actual the extension, never the filename: this message is persisted on a failure
+     *     record, which holds no document names
+     */
+    public static StepInputTypeException createStepInputTypeException(
+            String operation, List<String> accepted, String actual) {
+        String message =
+                getMessage(
+                        ErrorCode.STEP_INPUT_TYPE_REJECTED.getMessageKey(),
+                        ErrorCode.STEP_INPUT_TYPE_REJECTED.getDefaultMessage(),
+                        operation,
+                        accepted,
+                        actual);
+        return new StepInputTypeException(message, ErrorCode.STEP_INPUT_TYPE_REJECTED.getCode());
     }
 
     /** Create system requirement exceptions. */
@@ -707,9 +699,29 @@ public class ExceptionUtils {
         return new FfmpegRequiredException(message, ErrorCode.FFMPEG_REQUIRED.getCode());
     }
 
-    public static IOException createPythonRequiredForWebpException() {
-        return createIOException(
-                "error.toolRequired", "{0} is required for {1}", null, "Python", "WebP conversion");
+    public static ToolRequiredException createGhostscriptRequiredException(String operation) {
+        requireNonNull(operation, "operation");
+        String message =
+                getMessage(
+                        ErrorCode.GHOSTSCRIPT_REQUIRED.getMessageKey(),
+                        ErrorCode.GHOSTSCRIPT_REQUIRED.getDefaultMessage(),
+                        operation);
+        return new ToolRequiredException(message, ErrorCode.GHOSTSCRIPT_REQUIRED.getCode());
+    }
+
+    public static ToolRequiredException createLibreOfficeRequiredException(String extension) {
+        requireNonNull(extension, "extension");
+        String message =
+                getMessage(
+                        ErrorCode.LIBREOFFICE_REQUIRED.getMessageKey(),
+                        ErrorCode.LIBREOFFICE_REQUIRED.getDefaultMessage(),
+                        extension);
+        return new ToolRequiredException(message, ErrorCode.LIBREOFFICE_REQUIRED.getCode());
+    }
+
+    public static ToolRequiredException createPythonRequiredForWebpException() {
+        String message = getMessage(ErrorCode.PYTHON_REQUIRED_WEBP);
+        return new ToolRequiredException(message, ErrorCode.PYTHON_REQUIRED_WEBP.getCode());
     }
 
     /** Create compression-related exceptions. */
@@ -895,17 +907,17 @@ public class ExceptionUtils {
                 "The source file contains content Ghostscript cannot render.");
     }
 
-    public static IOException createGhostscriptConversionException(String outputType) {
+    public static ToolFailedException createGhostscriptConversionException(String outputType) {
         requireNonNull(outputType, "outputType");
         String message =
                 getMessage(
                         ErrorCode.GHOSTSCRIPT_COMPRESSION.getMessageKey(),
                         ErrorCode.GHOSTSCRIPT_COMPRESSION.getDefaultMessage(),
                         outputType);
-        return new IOException(message);
+        return new ToolFailedException(message, null, ErrorCode.GHOSTSCRIPT_COMPRESSION.getCode());
     }
 
-    public static IOException createProcessingInterruptedException(
+    public static ProcessingInterruptedException createProcessingInterruptedException(
             String processType, InterruptedException cause) {
         requireNonNull(processType, "processType");
         requireNonNull(cause, "cause");
@@ -914,15 +926,20 @@ public class ExceptionUtils {
                         ErrorCode.PROCESSING_INTERRUPTED.getMessageKey(),
                         ErrorCode.PROCESSING_INTERRUPTED.getDefaultMessage(),
                         processType);
-        return new IOException(message, cause);
+        return new ProcessingInterruptedException(message, cause);
     }
 
-    public static RuntimeException createPdfaConversionFailedException() {
+    // Checked where it was a RuntimeException: every thrower already declares throws Exception.
+    public static ToolFailedException createPdfaConversionFailedException() {
+        return createPdfaConversionFailedException(null);
+    }
+
+    public static ToolFailedException createPdfaConversionFailedException(Throwable cause) {
         String message = getMessage(ErrorCode.PDFA_CONVERSION_FAILED);
-        return new RuntimeException(message);
+        return new ToolFailedException(message, cause, ErrorCode.PDFA_CONVERSION_FAILED.getCode());
     }
 
-    public static IllegalArgumentException createInvalidArgumentException(
+    public static StepConfigurationException createInvalidArgumentException(
             String argumentName, String value) {
         requireNonNull(argumentName, "argumentName");
         requireNonNull(value, "value");
@@ -932,7 +949,7 @@ public class ExceptionUtils {
                         ErrorCode.INVALID_ARGUMENT.getDefaultMessage(),
                         argumentName,
                         value);
-        return new IllegalArgumentException(message);
+        return new StepConfigurationException(message, ErrorCode.INVALID_ARGUMENT.getCode());
     }
 
     public static IllegalArgumentException createNullArgumentException(String argumentName) {
@@ -943,6 +960,42 @@ public class ExceptionUtils {
                         ErrorCode.NULL_ARGUMENT.getDefaultMessage(),
                         argumentName);
         return new IllegalArgumentException(message);
+    }
+
+    public static OutOfMemoryDpiException createPageImageTooLargeException(
+            int pageNumber, int dpi, long megapixels, long limitMegapixels) {
+        return new OutOfMemoryDpiException(
+                getMessage(
+                        ErrorCode.PAGE_IMAGE_TOO_LARGE,
+                        pageNumber,
+                        dpi,
+                        megapixels,
+                        limitMegapixels),
+                null,
+                ErrorCode.PAGE_IMAGE_TOO_LARGE.getCode());
+    }
+
+    public static OutOfMemoryDpiException createCombinedImageTooLargeException(
+            long megapixels, long limitMegapixels) {
+        return new OutOfMemoryDpiException(
+                getMessage(ErrorCode.COMBINED_IMAGE_TOO_LARGE, megapixels, limitMegapixels),
+                null,
+                ErrorCode.COMBINED_IMAGE_TOO_LARGE.getCode());
+    }
+
+    public static DecodedStreamTooLargeException createDecodedStreamTooLargeException(
+            long limitMegabytes) {
+        return new DecodedStreamTooLargeException(
+                getMessage(ErrorCode.DECODED_STREAM_TOO_LARGE, limitMegabytes),
+                ErrorCode.DECODED_STREAM_TOO_LARGE.getCode());
+    }
+
+    public static OutOfMemoryDpiException createEmbeddedImageTooLargeException(
+            long megapixels, long limitMegapixels) {
+        return new OutOfMemoryDpiException(
+                getMessage(ErrorCode.EMBEDDED_IMAGE_TOO_LARGE, megapixels, limitMegapixels),
+                null,
+                ErrorCode.EMBEDDED_IMAGE_TOO_LARGE.getCode());
     }
 
     /**
@@ -1035,16 +1088,18 @@ public class ExceptionUtils {
     public static IOException handlePdfException(IOException e, String context) {
         requireNonNull(e, "exception");
 
-        if (PdfErrorUtils.isCorruptedPdfError(e)) {
-            return createPdfCorruptedException(context, e);
+        // Most specific first: corruption's patterns cover almost anything PDFBox gives up on,
+        // so testing it earlier reported every document that would not decrypt as damaged.
+        if (isPasswordError(e)) {
+            return createPdfPasswordException(e);
         }
 
         if (isEncryptionError(e)) {
             return createPdfEncryptionException(e);
         }
 
-        if (isPasswordError(e)) {
-            return createPdfPasswordException(e);
+        if (PdfErrorUtils.isCorruptedPdfError(e)) {
+            return createPdfCorruptedException(context, e);
         }
 
         return e; // Return original exception if no specific handling needed
@@ -1206,22 +1261,72 @@ public class ExceptionUtils {
                 "E063",
                 "error.ffmpegRequired",
                 "FFmpeg must be installed to convert PDFs to video. Install FFmpeg and ensure it is available on the system PATH."),
+        GHOSTSCRIPT_REQUIRED(
+                "E064",
+                "error.ghostscriptRequired",
+                "Ghostscript must be installed for {0}. Install Ghostscript and ensure it is available on the system PATH."),
+        LIBREOFFICE_REQUIRED(
+                "E082",
+                "error.libreOfficeRequired",
+                "LibreOffice is needed to convert .{0} files but is not available. Install LibreOffice and ensure it is on the system PATH, or ask an administrator to re-enable the LibreOffice tool group."),
 
         // Validation errors
         INVALID_ARGUMENT("E070", "error.invalidArgument", "Invalid argument ''{0}'': {1}"),
         NULL_ARGUMENT("E071", "error.nullArgument", "{0} must not be null"),
         INVALID_PAGE_SIZE("E072", "error.invalidPageSize", "Invalid page size format: {0}"),
-        INVALID_COMPARATOR(
-                "E073",
-                "error.invalidComparator",
-                "Invalid comparator format: only 'greater', 'equal', and 'less' are supported"),
+
+        // Compliance errors. The caller builds the whole sentence: only it knows the standard,
+        // profile and failing rules.
+        COMPLIANCE_NOT_MET("E074", "error.complianceNotMet", "{0}"),
+
+        // Every repair strategy declined it. Distinct from PDF_CORRUPTED, which says a document
+        // is damaged: this says the damage has already survived the tools that fix damage.
+        PDF_UNREPAIRABLE(
+                "E076",
+                "error.pdfUnrepairable",
+                "This document is damaged in a way the repair tools cannot fix."),
+
+        // The redaction engine's post-redaction check did not pass on these pages.
+        REDACTION_UNVERIFIED(
+                "E077",
+                "error.redactionUnverified",
+                "Redaction could not be verified on page {0}, so no file was returned."),
+
+        // The redaction engine could not run or check its result; it reports no page for this.
+        REDACTION_UNVERIFIABLE(
+                "E083",
+                "error.redactionUnverifiable",
+                "Redaction could not be verified, so no file was returned."),
+
+        // Raised before a step runs, by whoever knows both what the step accepts and what it was
+        // handed. Distinct from PDF_NOT_PDF, which speaks only for steps that want a PDF.
+        STEP_INPUT_TYPE_REJECTED(
+                "E075",
+                "error.stepInputTypeRejected",
+                "Step {0} accepts {1} but received a ''{2}'' file"),
 
         // System errors
         MD5_ALGORITHM("E080", "error.md5Algorithm", "MD5 algorithm not available"),
         OUT_OF_MEMORY_DPI(
                 "E081",
                 "error.outOfMemoryDpi",
-                "Out of memory or image-too-large error while rendering PDF page {0} at {1} DPI. This can occur when the resulting image exceeds Java's array/memory limits (e.g., NegativeArraySizeException). Please use a lower DPI value (recommended: 150 or less) or process the document in smaller chunks.");
+                "Out of memory or image-too-large error while rendering PDF page {0} at {1} DPI. This can occur when the resulting image exceeds Java's array/memory limits (e.g., NegativeArraySizeException). Please use a lower DPI value (recommended: 150 or less) or process the document in smaller chunks."),
+        PAGE_IMAGE_TOO_LARGE(
+                "E084",
+                "error.pageImageTooLarge",
+                "Page {0} at {1} DPI needs a {2}-megapixel image, more than this server''s limit of {3} megapixels. Use a lower DPI."),
+        COMBINED_IMAGE_TOO_LARGE(
+                "E085",
+                "error.combinedImageTooLarge",
+                "Joining the pages into one image needs {0} megapixels, more than this server''s limit of {1} megapixels. Use a lower DPI or one image per page."),
+        EMBEDDED_IMAGE_TOO_LARGE(
+                "E086",
+                "error.embeddedImageTooLarge",
+                "An image in this document needs {0} megapixels, more than this server''s limit of {1} megapixels."),
+        DECODED_STREAM_TOO_LARGE(
+                "E087",
+                "error.decodedStreamTooLarge",
+                "Part of this document decompresses to more than this server''s limit of {0} MB.");
 
         private final String code;
         private final String messageKey;
@@ -1277,6 +1382,27 @@ public class ExceptionUtils {
         }
     }
 
+    /** Exception thrown when a document fails a compliance standard it was checked against. */
+    public static class ComplianceNotMetException extends BaseAppException {
+        public ComplianceNotMetException(String message, String errorCode) {
+            super(message, null, errorCode);
+        }
+    }
+
+    /** Exception thrown when every repair strategy has declined a damaged document. */
+    public static class PdfUnrepairableException extends BaseAppException {
+        public PdfUnrepairableException(String message, String errorCode) {
+            super(message, null, errorCode);
+        }
+    }
+
+    /** Exception thrown when a step is handed a file of a type it does not accept. */
+    public static class StepInputTypeException extends BaseAppException {
+        public StepInputTypeException(String message, String errorCode) {
+            super(message, null, errorCode);
+        }
+    }
+
     /** Exception thrown when FFmpeg is not available on the host system. */
     public static class FfmpegRequiredException extends BaseAppException {
         public FfmpegRequiredException(String message, String errorCode) {
@@ -1285,6 +1411,47 @@ public class ExceptionUtils {
 
         public FfmpegRequiredException(String message, Throwable cause, String errorCode) {
             super(message, cause, errorCode);
+        }
+    }
+
+    /**
+     * A binary or runtime the step needs is absent from this deployment. Answered 503 like {@link
+     * FfmpegRequiredException}: the document is fine; a retry fails until an operator installs it.
+     */
+    public static class ToolRequiredException extends BaseAppException {
+        public ToolRequiredException(String message, String errorCode) {
+            super(message, null, errorCode);
+        }
+    }
+
+    /**
+     * A file that cannot be read: undecodable image bytes, or a stored id that no longer resolves.
+     * Stays a checked {@link IOException}, so no caller's catch changes meaning.
+     */
+    public static class FileReadException extends BaseAppException {
+        public FileReadException(String message, String errorCode) {
+            super(message, null, errorCode);
+        }
+
+        public FileReadException(String message, Throwable cause, String errorCode) {
+            super(message, cause, errorCode);
+        }
+    }
+
+    /**
+     * A tool the step shells out to ran and did not produce a result: a non-zero exit, or no output
+     * where one was promised. The document may be the cause; the tool's own output says more.
+     */
+    public static class ToolFailedException extends BaseAppException {
+        public ToolFailedException(String message, Throwable cause, String errorCode) {
+            super(message, cause, errorCode);
+        }
+    }
+
+    /** The thread running a step was interrupted, so the step stopped without finishing. */
+    public static class ProcessingInterruptedException extends BaseAppException {
+        public ProcessingInterruptedException(String message, InterruptedException cause) {
+            super(message, cause, ErrorCode.PROCESSING_INTERRUPTED.getCode());
         }
     }
 
@@ -1338,6 +1505,26 @@ public class ExceptionUtils {
         protected BaseValidationException(String message, Throwable cause, String errorCode) {
             super(message, cause);
             this.errorCode = errorCode;
+        }
+    }
+
+    /**
+     * A submitted file that fails a validation its caller could correct, such as arriving empty.
+     * Coded, so the refusal reaches a failure record rather than the handler that attaches none.
+     */
+    public static class FileValidationException extends BaseValidationException {
+        public FileValidationException(String message, String errorCode) {
+            super(message, errorCode);
+        }
+    }
+
+    /**
+     * A step's settings, not its document, are unusable: a missing OCR language, a page size no
+     * parser accepts. Every run of the step fails the same way until the settings change.
+     */
+    public static class StepConfigurationException extends BaseValidationException {
+        public StepConfigurationException(String message, String errorCode) {
+            super(message, errorCode);
         }
     }
 
@@ -1419,6 +1606,22 @@ public class ExceptionUtils {
     public static class EmlFormatException extends BaseValidationException {
         public EmlFormatException(String message, String errorCode) {
             super(message, errorCode);
+        }
+    }
+
+    /**
+     * A PDF stream decoded past {@code DecodedStreamLimit}. Unchecked on purpose: PDFBox catches an
+     * IOException from a content stream and draws the page blank, which would answer a refused
+     * decode with a successful, empty result.
+     */
+    public static class DecodedStreamTooLargeException extends RuntimeException
+            implements ErrorCodeProvider {
+        @Getter(onMethod_ = {@Override})
+        private final String errorCode;
+
+        public DecodedStreamTooLargeException(String message, String errorCode) {
+            super(message);
+            this.errorCode = errorCode;
         }
     }
 

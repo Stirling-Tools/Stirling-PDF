@@ -9,14 +9,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import stirling.software.saas.payg.job.JobArtifactHash;
 import stirling.software.saas.payg.job.JobArtifactHash.JobArtifactHashId;
 import stirling.software.saas.payg.lineage.LineageMatch;
 import stirling.software.saas.payg.model.JobStatus;
 
-@Repository
 public interface JobArtifactHashRepository
         extends JpaRepository<JobArtifactHash, JobArtifactHashId> {
 

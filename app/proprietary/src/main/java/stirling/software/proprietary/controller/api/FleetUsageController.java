@@ -18,31 +18,29 @@ import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.api.usage.FleetUsageStats;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
-import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 
 /**
- * Admin endpoint exposing free-editor fleet usage for the portal Usage card. Audit-derived figures
- * (active editors, PDFs processed) are null (rendered as "N/A") rather than a misleading 0 whenever
- * the data can't exist: the events they count (PDF_PROCESS, FILE_OPERATION, HTTP_REQUEST) are all
- * STANDARD level, so a gate on {@code isEnabled()} alone would still return 0 at level=OFF/BASIC —
- * we gate on {@code isLevelEnabled(STANDARD)} instead.
+ * Instance-wide free-editor usage for admins on every license tier. Activity counts use the
+ * document-processing events recorded without Enterprise at BASIC or above, over the last 30 days
+ * of retained history. Disabled recording returns null rather than a misleading zero.
  *
  * <p>Known limitation: on a login-disabled self-hosted instance every request is anonymous, so its
  * audit origin is SYSTEM (not WEB) and it is excluded from these WEB-only counts — active/PDFs then
  * read 0 despite real usage. Historical audit rows written before the {@code source} column existed
- * carry {@code source=null}, so the cumulative "PDFs edited" figure effectively starts at deploy.
+ * carry {@code source=null} and are excluded from these counts.
  */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/usage")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
-@EnterpriseEndpoint
 // Self-hosted only: counts are server-wide. On SaaS this endpoint is owned by the team-scoped
 // SaasFleetUsageController (@Profile("saas")) so one backend can't leak another tenant's usage.
 @Profile("!saas")
 public class FleetUsageController {
+
+    private static final List<String> PDF_TYPES = List.of("PDF_PROCESS", "FILE_OPERATION");
 
     private final PersistentAuditEventRepository auditRepository;
     private final UserRepository userRepository;
@@ -53,19 +51,17 @@ public class FleetUsageController {
         // Exclude the reserved INTERNAL_API_USER row that InitialSecuritySetup creates on every
         // install, so a fresh single-admin instance reads 1 editor, not 2.
         Long deployed = userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId());
-        // STANDARD is the level at which the counted events are recorded; below it the data
-        // can't exist, so report N/A instead of a 0 that would misrepresent an empty table.
-        boolean auditOn = auditConfig.isLevelEnabled(AuditLevel.STANDARD);
+        boolean auditOn = auditConfig.isLevelEnabled(AuditLevel.BASIC);
         Instant since = Instant.now().minus(30, ChronoUnit.DAYS);
         Long active =
                 auditOn
-                        ? auditRepository.countDistinctPrincipalsBySourceExcludingTypeAfter(
-                                "WEB", "UI_DATA", since)
+                        ? auditRepository.countDistinctPrincipalsBySourceAndTypeInAfter(
+                                "WEB", PDF_TYPES, since)
                         : null;
         Long pdfs =
                 auditOn
                         ? auditRepository.countByTypeInAndSourceAndTimestampAfter(
-                                List.of("PDF_PROCESS", "FILE_OPERATION"), "WEB", Instant.EPOCH)
+                                PDF_TYPES, "WEB", since)
                         : null;
         if (active != null && deployed != null && active > deployed) {
             active = deployed; // active editors are a subset of those deployed

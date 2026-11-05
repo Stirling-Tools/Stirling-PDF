@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import stirling.software.common.model.api.PDFFile;
 
@@ -15,5 +16,6 @@ public class PDFPasswordRequest extends PDFFile {
             description = "The password of the PDF file",
             format = "password",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    @ToString.Exclude
     private String password;
 }

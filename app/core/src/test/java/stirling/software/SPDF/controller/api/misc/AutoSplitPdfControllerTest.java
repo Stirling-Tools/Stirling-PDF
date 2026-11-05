@@ -28,6 +28,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -484,6 +485,49 @@ class AutoSplitPdfControllerTest {
             m.setAccessible(true);
             Object result = m.invoke(noProps);
             assertEquals(150, result); // QR_DETECTION_DPI
+        }
+    }
+
+    @Nested
+    @DisplayName("checkPageByRendering retry DPI")
+    class RetryDpi {
+
+        /** DPIs the renderer is asked for when no QR decodes, for a given configured maxDPI. */
+        private List<Float> renderedDpis(int configuredMaxDpi) throws Exception {
+            applicationProperties.getSystem().setMaxDPI(configuredMaxDpi);
+            List<Float> dpis = new ArrayList<>();
+            PDFRenderer renderer = mock(PDFRenderer.class);
+            when(renderer.renderImageWithDPI(anyInt(), anyFloat()))
+                    .thenAnswer(
+                            inv -> {
+                                dpis.add(inv.getArgument(1));
+                                return new BufferedImage(40, 40, BufferedImage.TYPE_INT_RGB);
+                            });
+
+            invokeInstance(
+                    "checkPageByRendering",
+                    new Class<?>[] {PDFRenderer.class, int.class},
+                    renderer,
+                    0);
+            return dpis;
+        }
+
+        @Test
+        @DisplayName("retry is capped at 300 even when maxDPI is 500")
+        void capsRetryAt300() throws Exception {
+            assertEquals(List.of(150f, 300f), renderedDpis(500));
+        }
+
+        @Test
+        @DisplayName("a maxDPI below the cap still limits the retry")
+        void respectsLowerConfiguredMax() throws Exception {
+            assertEquals(List.of(150f, 200f), renderedDpis(200));
+        }
+
+        @Test
+        @DisplayName("no retry when maxDPI is already the detection DPI")
+        void skipsRetryAtDetectionDpi() throws Exception {
+            assertEquals(List.of(150f), renderedDpis(150));
         }
     }
 

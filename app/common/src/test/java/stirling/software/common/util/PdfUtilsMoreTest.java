@@ -16,11 +16,14 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
@@ -130,6 +133,60 @@ class PdfUtilsMoreTest {
         }
     }
 
+    @Nested
+    @DisplayName("hasImagesOnPage with form XObjects")
+    class HasImagesOnPageForms {
+
+        @Test
+        @DisplayName("an image nested inside a form XObject is found")
+        void findsAnImageInsideAForm() throws IOException {
+            try (PDDocument doc = new PDDocument()) {
+                PDFormXObject form = new PDFormXObject(doc);
+                form.setResources(new PDResources());
+                BufferedImage bi = new BufferedImage(8, 8, BufferedImage.TYPE_INT_RGB);
+                form.getResources().add(LosslessFactory.createFromImage(doc, bi));
+                PDPage page = new PDPage();
+                page.setResources(new PDResources());
+                page.getResources().add(form);
+
+                assertThat(PdfUtils.hasImagesOnPage(page)).isTrue();
+            }
+        }
+
+        @Test
+        @DisplayName("a form that draws itself is walked once")
+        void stopsAtAFormThatDrawsItself() throws IOException {
+            try (PDDocument doc = new PDDocument()) {
+                PDFormXObject form = new PDFormXObject(doc);
+                form.setResources(new PDResources());
+                form.getResources().add(form);
+                PDPage page = new PDPage();
+                page.setResources(new PDResources());
+                page.getResources().add(form);
+
+                assertThat(PdfUtils.hasImagesOnPage(page)).isFalse();
+            }
+        }
+
+        @Test
+        @DisplayName("an image is found without being decoded")
+        void doesNotDecodeTheImage() throws IOException {
+            try (PDDocument doc = new PDDocument()) {
+                COSStream stream = doc.getDocument().createCOSStream();
+                stream.setItem(COSName.SUBTYPE, COSName.IMAGE);
+                stream.setInt(COSName.WIDTH, 100_000);
+                stream.setInt(COSName.HEIGHT, 100_000);
+                stream.setInt(COSName.BITS_PER_COMPONENT, 8);
+                stream.setItem(COSName.COLORSPACE, COSName.DEVICERGB);
+                PDPage page = new PDPage();
+                page.setResources(new PDResources());
+                page.getResources().add(new PDImageXObject(new PDStream(stream), null));
+
+                assertThat(PdfUtils.hasImagesOnPage(page)).isTrue();
+            }
+        }
+    }
+
     // ---- hasText found branch ----------------------------------------------
 
     @Nested
@@ -150,6 +207,52 @@ class PdfUtilsMoreTest {
             try (PDDocument doc = docWithText("first", "SecondMarker")) {
                 assertThat(PdfUtils.hasText(doc, "2", "SecondMarker")).isTrue();
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("convertPdfToPdfImage render DPI")
+    class ConvertPdfToPdfImageDpi {
+
+        /** A one-inch-square page, so the embedded image's pixel width is the render DPI. */
+        private PDDocument oneInchPage() {
+            PDDocument doc = new PDDocument();
+            doc.addPage(new PDPage(new PDRectangle(72f, 72f)));
+            return doc;
+        }
+
+        private int embeddedImageWidth(PDDocument doc) throws IOException {
+            PDResources resources = doc.getPage(0).getResources();
+            for (var name : resources.getXObjectNames()) {
+                if (resources.isImageXObject(name)) {
+                    return ((PDImageXObject) resources.getXObject(name)).getWidth();
+                }
+            }
+            throw new IllegalStateException("no image on page");
+        }
+
+        private int renderedWidthWithMaxDpi(int maxDpi) throws IOException {
+            try (PDDocument src = oneInchPage();
+                    MockedStatic<ApplicationContextProvider> ctx =
+                            Mockito.mockStatic(ApplicationContextProvider.class)) {
+                ctx.when(() -> ApplicationContextProvider.getBean(ApplicationProperties.class))
+                        .thenReturn(propsWithMaxDpi(maxDpi));
+                try (PDDocument out = PdfUtils.convertPdfToPdfImage(src)) {
+                    return embeddedImageWidth(out);
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("a high maxDPI does not raise the render resolution above 300")
+        void capsAtPrintQuality() throws IOException {
+            assertThat(renderedWidthWithMaxDpi(500)).isEqualTo(300);
+        }
+
+        @Test
+        @DisplayName("a maxDPI below the target still clamps the render resolution")
+        void respectsLowerCeiling() throws IOException {
+            assertThat(renderedWidthWithMaxDpi(150)).isEqualTo(150);
         }
     }
 
@@ -286,6 +389,43 @@ class PdfUtilsMoreTest {
                             new MultipartFile[] {tiff}, "fillPage", false, "color", factory);
 
             assertThat(pdfOut).isNotEmpty();
+            try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(pdfOut)) {
+                assertThat(doc.getNumberOfPages()).isEqualTo(2);
+            }
+        }
+
+        @Test
+        @DisplayName("an extensionless upload with a TIFF content type keeps every frame")
+        void contentTypeTiffKeepsAllFrames() throws IOException {
+            CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
+            when(factory.createNewDocument()).thenReturn(new PDDocument());
+
+            MockMultipartFile tiff =
+                    new MockMultipartFile("file", "scan", "image/tiff", multiFrameTiff());
+
+            byte[] pdfOut =
+                    PdfUtils.imageToPdf(
+                            new MultipartFile[] {tiff}, "fillPage", false, "color", factory);
+
+            try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(pdfOut)) {
+                assertThat(doc.getNumberOfPages()).isEqualTo(2);
+            }
+        }
+
+        @Test
+        @DisplayName("a TIFF content type carrying parameters is still recognised")
+        void contentTypeWithParametersStillTiff() throws IOException {
+            CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
+            when(factory.createNewDocument()).thenReturn(new PDDocument());
+
+            MockMultipartFile tiff =
+                    new MockMultipartFile(
+                            "file", "scan", "image/tiff; application=foo", multiFrameTiff());
+
+            byte[] pdfOut =
+                    PdfUtils.imageToPdf(
+                            new MultipartFile[] {tiff}, "fillPage", false, "color", factory);
+
             try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(pdfOut)) {
                 assertThat(doc.getNumberOfPages()).isEqualTo(2);
             }

@@ -1,0 +1,30 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@editor/*": [
+        "../../editor/cloud/*",
+        "../../editor/proprietary/*",
+        "../../editor/core/*"
+      ],
+      "@processor/*": ["../../processor/proprietary/*"],
+      "@editor-cloud/*": ["../../editor/cloud/*"],
+      "@editor-proprietary/*": ["../../editor/proprietary/*"],
+      "@editor-core/*": ["../../editor/core/*"],
+      "@editor/portal/*": [
+        "../../editor/cloud/portal/*",
+        "../../editor/proprietary/portal/*",
+        "../../editor/core/portal/*",
+        "../../processor/proprietary/*"
+      ]
+    }
+  },
+  "include": [
+    "../../global.d.ts",
+    "../../*.js",
+    "../../*.ts",
+    "../../*.tsx",
+    "../core/setupTests.ts",
+    "."
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@editor/*": [
+        "./src/editor/saas/*",
+        "./src/editor/cloud/*",
+        "./src/editor/proprietary/*",
+        "./src/editor/core/*"
+      ],
+      "@editor/portal/*": [
+        "./src/editor/saas/portal/*",
+        "./src/editor/cloud/portal/*",
+        "./src/editor/proprietary/portal/*",
+        "./src/editor/core/portal/*",
+        "./src/processor/saas/*",
+        "./src/processor/proprietary/*"
+      ],
+      "@processor/*": [
+        "./src/processor/saas/*",
+        "./src/processor/proprietary/*"
+      ],
+      "@processor-proprietary/*": ["./src/processor/proprietary/*"],
+      "@editor-cloud/*": ["./src/editor/cloud/*"],
+      "@editor-proprietary/*": ["./src/editor/proprietary/*"],
+      "@editor-core/*": ["./src/editor/core/*"]
+    }
+  },
+  "exclude": [
+    "src/editor/core/**/*.test.ts*",
+    "src/editor/core/**/*.spec.ts*",
+    "src/editor/proprietary/**/*.test.ts*",
+    "src/editor/proprietary/**/*.spec.ts*",
+    "src/editor/cloud/**/*.test.ts*",
+    "src/editor/cloud/**/*.spec.ts*",
+    "src/editor/desktop"
+  ]
+}

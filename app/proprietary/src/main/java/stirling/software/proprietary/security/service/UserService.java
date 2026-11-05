@@ -13,9 +13,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.hibernate.KeyType;
+import org.hibernate.Session;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
@@ -31,6 +34,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import jakarta.persistence.EntityManager;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +53,8 @@ import stirling.software.proprietary.access.repository.ResourceGrantRepository;
 import stirling.software.proprietary.integration.model.IntegrationConfig;
 import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.repository.ToolChainStatRepository;
+import stirling.software.proprietary.repository.ToolUsageStatRepository;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -73,7 +82,12 @@ import stirling.software.proprietary.workflow.service.UserServerCertificateServi
 @RequiredArgsConstructor
 public class UserService implements UserServiceInterface {
 
+    private static final Set<String> SELF_SERVICE_SETTING_KEYS =
+            Set.of("emailNotifications", "theme", "language");
+
     private final UserRepository userRepository;
+    private final EntityManager entityManager;
+    private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
     private final TeamRepository teamRepository;
     private final AuthorityRepository authorityRepository;
 
@@ -99,6 +113,8 @@ public class UserService implements UserServiceInterface {
     private final IntegrationConfigRepository integrationConfigRepository;
     private final TeamMembershipService teamMembershipService;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
+    private final ToolUsageStatRepository toolUsageStatRepository;
+    private final ToolChainStatRepository toolChainStatRepository;
 
     // ObjectProvider breaks the cycle: UserLicenseSettingsService injects this service to count
     // users, and saveUserCore needs it back to enforce the limit. Same pattern that service already
@@ -262,6 +278,7 @@ public class UserService implements UserServiceInterface {
                     return;
                 }
             }
+            orgOwnerService.protect(user.getId(), false);
             deleteUserRelatedData(user);
             userRepository.delete(user);
             persistentLoginRepository.deleteByUsername(username);
@@ -271,6 +288,10 @@ public class UserService implements UserServiceInterface {
 
     private void deleteUserRelatedData(User user) {
         log.info("Deleting all associated data for user: {}", user.getUsername());
+
+        // Tool usage keys on the username, so a recreated name would inherit it
+        toolUsageStatRepository.deleteByPrincipal(user.getUsername());
+        toolChainStatRepository.deleteByPrincipal(user.getUsername());
 
         // Drop ACL grants held by this user and detach grants they issued
         resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(
@@ -339,12 +360,17 @@ public class UserService implements UserServiceInterface {
         }
     }
 
+    @Override
     public boolean usernameExists(String username) {
         return findByUsername(username).isPresent();
     }
 
     public boolean usernameExistsIgnoreCase(String username) {
         return findByUsernameIgnoreCase(username).isPresent();
+    }
+
+    public boolean isUsernameTakenByOtherUser(String username, Long userId) {
+        return userRepository.existsByUsernameIgnoreCaseAndIdNot(username, userId);
     }
 
     public boolean hasUsers() {
@@ -355,6 +381,7 @@ public class UserService implements UserServiceInterface {
         return userCount > 0;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void updateUserSettings(String username, Map<String, String> updates)
             throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = findByUsernameIgnoreCaseWithSettings(username);
@@ -364,16 +391,23 @@ public class UserService implements UserServiceInterface {
             if (settingsMap == null) {
                 settingsMap = new HashMap<>();
             }
-            settingsMap.clear();
-            settingsMap.putAll(updates);
+            // The same map holds the MFA state, so only the self-service preference keys may be
+            // written, and nothing else is cleared.
+            for (Map.Entry<String, String> update : updates.entrySet()) {
+                if (SELF_SERVICE_SETTING_KEYS.contains(update.getKey())) {
+                    settingsMap.put(update.getKey(), update.getValue());
+                }
+            }
             user.setSettings(settingsMap);
             userRepository.save(user);
-            databaseService.exportDatabase();
+            exportAfterCommit();
         }
     }
 
+    @Transactional(readOnly = true)
     public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+        User user = entityManager.unwrap(Session.class).find(User.class, username, KeyType.NATURAL);
+        return Optional.ofNullable(user);
     }
 
     /** Resolves a user by Supabase auth UUID; empty for rows with no supabase_id. */
@@ -404,21 +438,32 @@ public class UserService implements UserServiceInterface {
         return authorityRepository.findByUserId(user.getId());
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void changeUsername(User user, String newUsername)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(newUsername)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
+        String previousUsername = user.getUsername();
+        orgOwnerService.renamed(user.getId(), newUsername);
         user.setUsername(newUsername);
         userRepository.save(user);
-        databaseService.exportDatabase();
+        if (previousUsername != null && !previousUsername.equals(newUsername)) {
+            // Tool usage keys on the username, so the old name's rows would be inherited by
+            // whoever is given that name next.
+            toolUsageStatRepository.deleteByPrincipal(previousUsername);
+            toolChainStatRepository.deleteByPrincipal(previousUsername);
+        }
+        exportAfterCommit();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void changePassword(User user, String newPassword)
             throws SQLException, UnsupportedProviderException {
+        orgOwnerService.protect(user.getId(), true);
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        databaseService.exportDatabase();
+        exportAfterCommit();
     }
 
     public void changeFirstUse(User user, boolean firstUse)
@@ -428,19 +473,23 @@ public class UserService implements UserServiceInterface {
         databaseService.exportDatabase();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void changeRole(User user, String newRole)
             throws SQLException, UnsupportedProviderException {
+        if (!Role.ADMIN.getRoleId().equals(newRole)) orgOwnerService.protect(user.getId(), false);
         Authority userAuthority = this.findRole(user);
         userAuthority.setAuthority(newRole);
         authorityRepository.save(userAuthority);
-        databaseService.exportDatabase();
+        exportAfterCommit();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void changeUserEnabled(User user, Boolean enbeled)
             throws SQLException, UnsupportedProviderException {
+        if (Boolean.FALSE.equals(enbeled)) orgOwnerService.protect(user.getId(), false);
         user.setEnabled(enbeled);
         userRepository.save(user);
-        databaseService.exportDatabase();
+        exportAfterCommit();
     }
 
     public void changeUserTeam(User user, Team team)
@@ -483,11 +532,11 @@ public class UserService implements UserServiceInterface {
      */
     private Team getDefaultTeam() {
         return teamRepository
-                .findByName("Default")
+                .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
                 .orElseGet(
                         () -> {
                             Team team = new Team();
-                            team.setName("Default");
+                            team.setName(TeamService.DEFAULT_TEAM_NAME);
                             return teamRepository.save(team);
                         });
     }
@@ -501,6 +550,7 @@ public class UserService implements UserServiceInterface {
      * @throws SQLException If a database error occurs
      * @throws UnsupportedProviderException If an unsupported provider is specified
      */
+    @Transactional(rollbackFor = Exception.class)
     public User saveUserCore(SaveUserRequest request)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
 
@@ -547,10 +597,6 @@ public class UserService implements UserServiceInterface {
         } else {
             settings.remove(MFA_LAST_USED_STEP_KEY);
         }
-        log.info(
-                "MFA required set to true for user {} {}",
-                request.getUsername(),
-                user.getSettings().toString());
 
         // Set role (authority)
         user.addAuthority(new Authority(request.getRole(), user));
@@ -565,11 +611,53 @@ public class UserService implements UserServiceInterface {
         // Save user
         userRepository.save(user);
         teamMembershipService.syncMembership(user);
+        orgOwnerService.reconcileAfterCommit();
 
-        // Export database
-        databaseService.exportDatabase();
+        exportAfterCommit();
 
         return user;
+    }
+
+    /**
+     * Exports the database once this transaction commits, rather than inside it.
+     *
+     * <p>Two reasons it cannot run inline. The export opens its own connection, so our insert is
+     * still invisible to it and the backup it writes would omit the user we just created. And on EE
+     * it ends in a synchronous notification mail with no configured timeout, which would hold the
+     * admission lock taken in {@link #enforceUserLimit} for as long as the mail server takes to
+     * answer -- long enough for concurrent signups to give up on the lock rather than queue behind
+     * it.
+     *
+     * <p>Registered as a synchronization rather than moved below the call site because {@link
+     * #processSSOPostLogin} calls this method from inside its own transaction, where returning from
+     * {@code saveUserCore} does not commit anything.
+     */
+    private void exportAfterCommit() throws SQLException, UnsupportedProviderException {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            // No surrounding transaction to defer to, so nothing is uncommitted and no lock is
+            // held: lockForUserAdmission is MANDATORY and would have refused. Export inline, as
+            // callers that expect a backup on return always have.
+            databaseService.exportDatabase();
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        try {
+                            databaseService.exportDatabase();
+                        } catch (SQLException | UnsupportedProviderException | RuntimeException e) {
+                            // The user is committed, so a failed backup must not surface as a
+                            // failed signup. afterCommit cannot propagate the checked exceptions
+                            // exportDatabase declares, and an exception thrown here would escape
+                            // the synchronization boundary into the caller regardless.
+                            log.error(
+                                    "Database export after user change failed: {}",
+                                    e.getMessage(),
+                                    e);
+                        }
+                    }
+                });
     }
 
     /**
@@ -582,11 +670,21 @@ public class UserService implements UserServiceInterface {
             return;
         }
         UserLicenseSettingsService settings = licenseSettingsService.getIfAvailable();
-        if (settings == null || !settings.wouldExceedLimit(1)) {
+        if (settings == null) {
             return;
         }
-        long current = getTotalUsersCount();
+        // Entitlement refresh may use the network; do it before taking the admission lock.
         int max = settings.calculateMaxAllowedUsers();
+
+        // Serialise admission. The lock is held until saveUserCore's transaction commits, by which
+        // point our own insert is part of the count everyone else sees, so two concurrent creations
+        // at the last free seat cannot both be admitted.
+        settings.lockForUserAdmission();
+
+        long current = getTotalUsersCount();
+        if (current + 1 <= max) {
+            return;
+        }
         log.warn(
                 "Refusing to create user {}: would exceed the licence limit of {} ({} in use). If"
                         + " this is a legitimate path it should check wouldExceedLimit() first and"

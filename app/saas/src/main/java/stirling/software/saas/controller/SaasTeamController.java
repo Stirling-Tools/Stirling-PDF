@@ -3,6 +3,7 @@ package stirling.software.saas.controller;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Profile;
@@ -44,11 +45,14 @@ public class SaasTeamController {
     private final UserRepository userRepository;
     private final TeamService teamService;
     private final SaasTeamService saasTeamService;
+    private final stirling.software.saas.service.SaasOwnershipService ownershipService;
     private final SaasTeamExtensionService saasTeamExtensionService;
     private final TeamMembershipRepository membershipRepository;
     private final TeamInvitationRepository invitationRepository;
     private final UserService userService;
     private final TeamSecurityExpressions teamSecurityExpressions;
+    private final stirling.software.saas.procurement.service.EnterpriseEntitlementService
+            enterprise;
 
     // ========== NEW TEAM INVITATION ENDPOINTS ==========
 
@@ -274,12 +278,25 @@ public class SaasTeamController {
             List<TeamDetailsDTO> dtos =
                     memberships.stream()
                             .map(
-                                    m ->
-                                            toTeamDetailsDTO(
-                                                    m.getTeam(),
-                                                    m.getRole()
-                                                            == stirling.software.common.model
-                                                                    .enumeration.TeamRole.LEADER))
+                                    m -> {
+                                        TeamDetailsDTO dto =
+                                                toTeamDetailsDTO(
+                                                        m.getTeam(),
+                                                        m.getRole()
+                                                                == stirling.software.common.model
+                                                                        .enumeration.TeamRole
+                                                                        .LEADER);
+                                        dto.setCurrent(
+                                                currentUser.getTeam() != null
+                                                        && m.getTeam()
+                                                                .getId()
+                                                                .equals(
+                                                                        currentUser
+                                                                                .getTeam()
+                                                                                .getId()));
+                                        dto.setCurrentUserId(currentUser.getId());
+                                        return dto;
+                                    })
                             .collect(Collectors.toList());
 
             log.info("[TEAM-FETCH] Returning {} teams to client", dtos.size());
@@ -297,9 +314,7 @@ public class SaasTeamController {
     public ResponseEntity<?> getTeamMembers(@PathVariable Long teamId) {
         try {
             List<TeamMembership> memberships = membershipRepository.findByTeamId(teamId);
-            List<TeamMemberDTO> dtos =
-                    memberships.stream().map(this::toTeamMemberDTO).collect(Collectors.toList());
-            return ResponseEntity.ok(dtos);
+            return ResponseEntity.ok(toTeamMemberDTOs(memberships));
         } catch (Exception e) {
             log.error("Error fetching team members", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -321,6 +336,23 @@ public class SaasTeamController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to fetch invitations"));
         }
+    }
+
+    @PostMapping("/{teamId}/claim-leadership")
+    @PreAuthorize("@teamSecurity.isTeamMember(#teamId)")
+    public ResponseEntity<?> claimLeadership(@PathVariable Long teamId) {
+        User caller = getCurrentUser();
+        ownershipService.transfer(teamId, caller.getId(), caller);
+        return ResponseEntity.ok(Map.of("message", "Team ownership recovered."));
+    }
+
+    /** Members may recover an ownerless team only by claiming it themselves. */
+    @PostMapping("/{teamId}/members/{memberId}/transfer-leadership")
+    @PreAuthorize("@teamSecurity.isTeamMember(#teamId)")
+    public ResponseEntity<?> transferLeadership(
+            @PathVariable Long teamId, @PathVariable Long memberId) {
+        ownershipService.transfer(teamId, memberId, getCurrentUser());
+        return ResponseEntity.ok(Map.of("message", "Team ownership transferred."));
     }
 
     /** Remove team member (team leader only) */
@@ -468,14 +500,20 @@ public class SaasTeamController {
                 .orElseThrow(() -> new SecurityException("User not found: " + username));
     }
 
+    private List<TeamMemberDTO> toTeamMemberDTOs(List<TeamMembership> memberships) {
+        return memberships.stream().map(this::toTeamMemberDTO).collect(Collectors.toList());
+    }
+
     private TeamMemberDTO toTeamMemberDTO(TeamMembership membership) {
         User user = membership.getUser();
+        UUID supabaseId = user.getSupabaseId();
         return new TeamMemberDTO(
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
                 membership.getRole().name(),
-                membership.getAcceptedAt());
+                membership.getAcceptedAt(),
+                supabaseId == null ? null : supabaseId.toString());
     }
 
     private TeamDetailsDTO toTeamDetailsDTO(Team team, boolean isLeader) {
@@ -490,7 +528,7 @@ public class SaasTeamController {
                 // seatCount and maxSeats now share the same backing field on the extension.
                 maxSeats,
                 saasTeamExtensionService.getSeatsUsed(team),
-                maxSeats,
+                enterprise.isActive(team.getId()) ? null : maxSeats,
                 isLeader);
     }
 
@@ -520,6 +558,9 @@ public class SaasTeamController {
         private final String email;
         private final String role;
         private final LocalDateTime joinedAt;
+
+        /** Also the member's avatar storage path prefix. Null without a Supabase identity. */
+        private final String supabaseId;
     }
 
     @Data
@@ -533,6 +574,8 @@ public class SaasTeamController {
         private final Integer seatsUsed;
         private final Integer maxSeats;
         private final Boolean isLeader;
+        private Boolean current;
+        private Long currentUserId;
     }
 
     @Data
@@ -640,8 +683,7 @@ public class SaasTeamController {
                             .orElseThrow(() -> new IllegalArgumentException("Team not found"));
 
             List<TeamMembership> memberships = membershipRepository.findByTeamId(teamId);
-            List<TeamMemberDTO> members =
-                    memberships.stream().map(this::toTeamMemberDTO).collect(Collectors.toList());
+            List<TeamMemberDTO> members = toTeamMemberDTOs(memberships);
 
             // Check if current user is team leader
             User currentUser = getCurrentUser();

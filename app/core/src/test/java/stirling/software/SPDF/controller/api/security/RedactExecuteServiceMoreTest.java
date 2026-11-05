@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +36,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.springframework.beans.MutablePropertyValues;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.PDFText;
@@ -45,8 +50,13 @@ import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactionS
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.TextRange;
 import stirling.software.SPDF.pdf.parser.PageColumnLayout;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.jpdfium.exception.RedactUnverifiableException;
+import stirling.software.jpdfium.redact.PdfRedactor;
+import stirling.software.jpdfium.redact.RedactOptions;
+import stirling.software.jpdfium.redact.RedactResult;
 
 /**
  * Gap-coverage tests for {@link RedactExecuteService}. Drives the full {@code execute()} pipeline
@@ -127,8 +137,7 @@ class RedactExecuteServiceMoreTest {
     }
 
     private PDFont helvetica(PDDocument doc) throws IOException {
-        try (InputStream is =
-                getClass().getResourceAsStream("/type3/library/fonts/dejavu/DejaVuSans.ttf")) {
+        try (InputStream is = getClass().getResourceAsStream("/static/fonts/DejaVuSans.ttf")) {
             if (is != null) {
                 return PDType0Font.load(doc, is);
             }
@@ -239,6 +248,15 @@ class RedactExecuteServiceMoreTest {
         }
 
         @Test
+        void blankAndNullRegexEntriesDoNotCountAsRedactionTargets() {
+            RedactExecuteRequest req = requestFor(new byte[] {1});
+            req.setRegexPatterns(java.util.Arrays.asList(null, " "));
+            assertThatThrownBy(() -> service.execute(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("No redaction targets");
+        }
+
+        @Test
         @DisplayName("null file input with targets throws (wrapped as RuntimeException)")
         void nullFileInputThrows() {
             RedactExecuteRequest req = new RedactExecuteRequest();
@@ -285,6 +303,62 @@ class RedactExecuteServiceMoreTest {
         }
 
         @Test
+        @DisplayName("a page the engine could not verify fails the request, not an overlay")
+        void unverifiedPageFailsTheRequest() throws IOException {
+            byte[] pdf = singlePageTextPdf("Hide the SECRET word");
+            factoryReturns(pdf);
+
+            RedactExecuteRequest req = requestFor(pdf);
+            req.setTextValues(List.of("SECRET"));
+
+            RedactResult unverified =
+                    new RedactResult(
+                            null,
+                            List.of(new RedactResult.PageResult(0, 1, -1)),
+                            0L,
+                            false,
+                            null,
+                            List.of(),
+                            List.of(),
+                            0,
+                            0,
+                            List.of());
+            try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                redactor.when(() -> PdfRedactor.redact(any(Path.class), any(RedactOptions.class)))
+                        .thenReturn(unverified);
+
+                assertThatThrownBy(() -> service.execute(req))
+                        .isInstanceOf(ToolFailedException.class)
+                        .satisfies(
+                                e ->
+                                        assertThat(((ToolFailedException) e).getErrorCode())
+                                                .isEqualTo("E077"));
+            }
+        }
+
+        @Test
+        @DisplayName("an engine that could not check its redaction fails the request, no overlay")
+        void unverifiableRedactionFailsTheRequest() throws IOException {
+            byte[] pdf = singlePageTextPdf("Hide the SECRET word");
+            factoryReturns(pdf);
+
+            RedactExecuteRequest req = requestFor(pdf);
+            req.setTextValues(List.of("SECRET"));
+
+            try (MockedStatic<PdfRedactor> redactor = mockStatic(PdfRedactor.class)) {
+                redactor.when(() -> PdfRedactor.redact(any(Path.class), any(RedactOptions.class)))
+                        .thenThrow(new RedactUnverifiableException("text page unavailable"));
+
+                assertThatThrownBy(() -> service.execute(req))
+                        .isInstanceOf(ToolFailedException.class)
+                        .satisfies(
+                                e ->
+                                        assertThat(((ToolFailedException) e).getErrorCode())
+                                                .isEqualTo("E083"));
+            }
+        }
+
+        @Test
         @DisplayName("regex pattern redacts matching digit runs")
         void regexRemovesDigits() throws IOException {
             byte[] pdf = singlePageTextPdf("Order 12345 confirmed");
@@ -296,6 +370,22 @@ class RedactExecuteServiceMoreTest {
             try (TempFile out = service.execute(req)) {
                 String text = extractText(out);
                 assertThat(text).doesNotContain("12345");
+            }
+        }
+
+        @Test
+        void indexedFormBindingSkipsNullRegexEntriesAndStillRedacts() throws IOException {
+            byte[] pdf = singlePageTextPdf("Order 12345 confirmed");
+            factoryReturns(pdf);
+            RedactExecuteRequest req = requestFor(pdf);
+            MutablePropertyValues values = new MutablePropertyValues();
+            values.add("regexPatterns[1]", "\\d+");
+            WebDataBinder binder = new WebDataBinder(req);
+            binder.bind(values);
+            assertThat(req.getRegexPatterns()).containsExactly(null, "\\d+");
+
+            try (TempFile out = service.execute(req)) {
+                assertThat(extractText(out)).doesNotContain("12345");
             }
         }
 
@@ -481,19 +571,32 @@ class RedactExecuteServiceMoreTest {
         }
 
         @Test
-        @DisplayName("wipePages ignores out-of-range and non-positive page numbers")
-        void wipePagesOutOfRangeIgnored() throws IOException {
+        @DisplayName("wipePages rejects pages that don't exist instead of wiping nothing")
+        void wipePagesOutOfRangeRejected() throws IOException {
             byte[] pdf = singlePageTextPdf("survives the wipe");
             factoryReturns(pdf);
 
             RedactExecuteRequest req = requestFor(pdf);
-            // page 0 dropped (non-positive), page 99 dropped (out of range) -> nothing wiped.
             req.setWipePages(new ArrayList<>(List.of(0, 99)));
-            // keep a real target so we are past the no-targets guard via imageBoxes.
 
-            try (TempFile out = service.execute(req)) {
-                assertThat(extractText(out)).contains("survives the wipe");
-            }
+            assertThatThrownBy(() -> service.execute(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("[0, 99]");
+        }
+
+        @Test
+        @DisplayName("an invalid regex is rejected instead of matching nothing")
+        void invalidRegexRejected() throws IOException {
+            byte[] pdf = singlePageTextPdf("text");
+            factoryReturns(pdf);
+
+            RedactExecuteRequest req = requestFor(pdf);
+            req.setRegexPatterns(new ArrayList<>(List.of("secret-term(")));
+
+            assertThatThrownBy(() -> service.execute(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("not a valid regular expression")
+                    .hasMessageNotContaining("secret-term");
         }
 
         @Test

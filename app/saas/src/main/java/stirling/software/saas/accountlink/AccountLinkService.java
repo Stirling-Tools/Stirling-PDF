@@ -87,6 +87,14 @@ public class AccountLinkService {
         return true;
     }
 
+    /** Updates an owning team's display label; null or blank clears the optional label. */
+    @Transactional
+    public boolean rename(Long teamId, Long instanceId, String name) {
+        return repo.renameForTeam(
+                        teamId, instanceId, name == null || name.isBlank() ? null : name.strip())
+                > 0;
+    }
+
     /**
      * Resolves an active instance from a device credential, or empty if it does not authenticate.
      */

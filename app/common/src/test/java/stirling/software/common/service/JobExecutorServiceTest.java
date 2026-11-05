@@ -3,6 +3,8 @@ package stirling.software.common.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -21,6 +23,8 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -139,6 +143,46 @@ class JobExecutorServiceTest {
         @SuppressWarnings("unchecked")
         Map<String, String> errorMap = (Map<String, String>) response.getBody();
         assertEquals("Job failed: Test error", errorMap.get("error"));
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = HttpStatus.class,
+            names = {"UNPROCESSABLE_ENTITY", "NOT_IMPLEMENTED", "SERVICE_UNAVAILABLE"})
+    void shouldPreserveHttpErrorsFromSyncJobs(HttpStatus status) {
+        var error =
+                new org.springframework.web.server.ResponseStatusException(
+                        status, "Cannot prepare document");
+        assertSame(
+                error,
+                assertThrows(
+                        org.springframework.web.server.ResponseStatusException.class,
+                        () ->
+                                jobExecutorService.runJobGeneric(
+                                        false,
+                                        () -> {
+                                            throw error;
+                                        })));
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = HttpStatus.class,
+            names = {"UNAUTHORIZED", "UNPROCESSABLE_ENTITY", "SERVICE_UNAVAILABLE"})
+    void shouldPreserveWrappedHttpErrorsFromSyncJobs(HttpStatus status) {
+        var error =
+                new org.springframework.web.server.ResponseStatusException(
+                        status, "Cannot prepare document");
+        assertSame(
+                error,
+                assertThrows(
+                        org.springframework.web.server.ResponseStatusException.class,
+                        () ->
+                                jobExecutorService.runJobGeneric(
+                                        false,
+                                        () -> {
+                                            throw new RuntimeException(new RuntimeException(error));
+                                        })));
     }
 
     @Test
