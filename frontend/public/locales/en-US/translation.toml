@@ -4690,7 +4690,6 @@ closeFile = "Close file"
 
 [fileEditor]
 closedFile = "Closed {{name}}"
-couldNotSave = "Could not save {{name}}"
 filesReordered_one = "File reordered"
 filesReordered_other = "{{count}} files reordered"
 loadedFromStorage_one = "Loaded {{count}} file from storage"
