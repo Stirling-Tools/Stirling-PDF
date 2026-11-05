@@ -465,9 +465,10 @@ class OneDrivePickerService {
         `Could not download ${details.name} (HTTP ${content.status})`,
       );
     }
-    const blob = await content.blob();
-    const file = new File([blob], details.name, {
-      type: details.file?.mimeType ?? blob.type,
+    const bytes = await content.arrayBuffer();
+    const file = new File([bytes], details.name, {
+      type:
+        details.file?.mimeType ?? content.headers.get("content-type") ?? "",
       lastModified: details.lastModifiedDateTime
         ? Date.parse(details.lastModifiedDateTime)
         : Date.now(),
