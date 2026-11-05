@@ -251,7 +251,7 @@ system:
     cleanupSystemTemp: false # Whether to clean broader system temp directory
   pdfWorkers:
     enabled: auto # auto (on for servers, off for desktop), true or false. Runs PDFium jobs such as merge in separate processes so they use every core
-    count: 0 # Number of worker processes; 0 = CPU cores minus one
+    count: 2 # Number of worker processes (each ~125-300 MB RAM); 0 = CPU cores minus one
     maxHeap: 256m # Java heap per worker (PDFium memory is native and comes on top)
     maxJobsPerWorker: 500 # Restart a worker after this many jobs
     idleTimeoutSeconds: 300 # Stop a worker after it has been idle this long

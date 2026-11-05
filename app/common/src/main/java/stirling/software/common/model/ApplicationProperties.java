@@ -1534,7 +1534,7 @@ public class ApplicationProperties {
     public static class PdfWorkers {
         // auto = on for servers, off for the desktop app; false runs PDFium in this JVM only.
         private String enabled = "auto";
-        private int count = 0; // 0 = one per CPU core minus one
+        private int count = 2; // 0 or less = one per CPU core minus one
         private String maxHeap = "256m";
         private int maxJobsPerWorker = 500;
         private int idleTimeoutSeconds = 300;
