@@ -249,6 +249,13 @@ export default function Login() {
   };
 
   const handleAnonymousSignIn = async () => {
+    // Already a guest: carry on as that guest. Signing in anonymously again would swap their
+    // session for a brand-new guest account.
+    if (session && isAnonymous) {
+      clearPendingDestination();
+      navigate(nextPath ?? "/", { replace: true });
+      return;
+    }
     try {
       setIsSigningIn(true);
       setError(null);

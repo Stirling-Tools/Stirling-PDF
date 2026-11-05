@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { TestQueryProvider } from "@editor/tests/utils/TestQueryProvider";
@@ -18,13 +18,16 @@ vi.mock("@editor/auth/UseSession", () => ({
     refreshSession: vi.fn(),
   }),
 }));
+const { signInAnonymously } = vi.hoisted(() => ({
+  signInAnonymously: vi.fn(),
+}));
 vi.mock("@editor/auth/supabase", () => ({
   supabase: {
     auth: {
       getSession: async () => ({ data: { session: null }, error: null }),
     },
   },
-  signInAnonymously: vi.fn(),
+  signInAnonymously,
 }));
 vi.mock("@editor/hooks/useDocumentMeta", () => ({ useDocumentMeta: vi.fn() }));
 const destination = vi.hoisted(() => ({
@@ -66,6 +69,13 @@ describe("SaaS login with a guest session", () => {
   it("sends a signed-in account straight on to `next`", () => {
     auth.isAnonymous = false;
     mount("/login?next=%2Fenterprise");
+    expect(screen.getByText("Enterprise page")).toBeInTheDocument();
+  });
+
+  it("lets a guest skip on to `next` as the same guest, without a new guest session", () => {
+    mount("/login?next=%2Fenterprise");
+    fireEvent.click(screen.getByRole("button", { name: /skip/i }));
+    expect(signInAnonymously).not.toHaveBeenCalled();
     expect(screen.getByText("Enterprise page")).toBeInTheDocument();
   });
 

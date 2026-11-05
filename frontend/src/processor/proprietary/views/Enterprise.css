@@ -197,8 +197,6 @@ button.ent__company[aria-expanded="true"] {
   margin-top: 1.5rem;
 }
 
-/* ── Landing ─────────────────────────────────────────────────────────── */
-
 .ent__landing {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -348,8 +346,6 @@ button.ent__company[aria-expanded="true"] {
   color: var(--c-success);
 }
 
-/* ── Quote builder and agreement, within the deal ───────────────────── */
-
 /* The steps were laid out for a dialog body; this card stands in for it, publishing the same inset
    so their full-bleed trays and footer reach its edges. */
 .ent__flow .portal-procflow {
@@ -363,8 +359,6 @@ button.ent__company[aria-expanded="true"] {
   border-radius: var(--radius-lg);
   background: var(--c-bg-raised);
 }
-
-/* ── Deal: status band ───────────────────────────────────────────────── */
 
 /* The header and this band read as one block; the deal's detail sits below on the page colour. */
 .ent__band {
@@ -717,8 +711,6 @@ button.ent__company[aria-expanded="true"] {
   box-shadow: 0 0 0 4px var(--c-success-subtle);
 }
 
-/* ── Deal: detail ────────────────────────────────────────────────────── */
-
 .ent__body {
   display: flex;
   flex-direction: column;
@@ -924,8 +916,6 @@ button.ent__company[aria-expanded="true"] {
     white-space: normal;
   }
 }
-
-/* ── Deal: setup checklist ───────────────────────────────────────────── */
 
 .ent-setup__head {
   display: flex;

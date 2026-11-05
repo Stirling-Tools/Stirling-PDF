@@ -10745,7 +10745,7 @@ seats_other = "{{users}} agreed users + SSO / RBAC / audit"
 seatsUnset = "Users + SSO / RBAC / audit"
 support = "Dedicated SE / CSM"
 training = "Onboarding & training"
-usage = "PDF processing - {{volume}} PDFs/yr at {{rate}}/PDF ({{posture}} posture)"
+usage = "PDF processing — {{volume}} PDFs/yr at {{rate}}/PDF ({{posture}} posture)"
 
 [portal.procurement.documents]
 agreement = "Enterprise Agreement"

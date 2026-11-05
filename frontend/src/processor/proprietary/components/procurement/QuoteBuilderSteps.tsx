@@ -33,7 +33,7 @@ export type QuoteDetailsValidity = Record<
   boolean
 >;
 
-/** Step 1: how much the buyer will process, which sets the usage fee. */
+/** How much the buyer will process, which sets the usage fee. */
 export function SizingStep({
   cfg,
   set,
@@ -133,7 +133,7 @@ export function SizingStep({
   );
 }
 
-/** Step 2: term, service level and add-ons. */
+/** Term, service level and add-ons. */
 export function PlanStep({
   cfg,
   set,
@@ -233,7 +233,7 @@ export function PlanStep({
   );
 }
 
-/** Step 3: the buying entity's details, which the order form and invoice need. */
+/** The buying entity's details, which the order form and invoice need. */
 export function DetailsStep({
   cfg,
   set,
