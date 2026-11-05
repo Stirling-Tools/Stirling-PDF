@@ -470,7 +470,11 @@ class CertSignControllerTest {
     }
 
     private SignPDFWithCertRequest unencryptedPemRequest() throws Exception {
-        byte[][] pemPair = unencryptedPemPair();
+        return pemRequestWithSubject("CN=Chat Tester");
+    }
+
+    private SignPDFWithCertRequest pemRequestWithSubject(String subjectDn) throws Exception {
+        byte[][] pemPair = pemPairWithSubject(subjectDn);
         SignPDFWithCertRequest request = new SignPDFWithCertRequest();
         request.setFileInput(
                 new MockMultipartFile(
