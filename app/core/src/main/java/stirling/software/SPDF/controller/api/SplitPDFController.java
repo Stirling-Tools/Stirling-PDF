@@ -39,7 +39,6 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
-import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfSplit;
 
 @GeneralApi
@@ -121,19 +120,15 @@ public class SplitPDFController {
     private void writeSplitsViaJpdfium(
             File source, List<Integer> pageNumbers, String baseFilename, ZipOutputStream zipOut)
             throws IOException {
-        try (PdfDocument sourceDoc = PdfDocument.open(source.toPath())) {
-            int previousPageNumber = 0;
-            for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
-                int splitPoint = pageNumbers.get(splitIndex);
-                try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
-                    try (PdfDocument splitDoc =
-                            PdfSplit.extractPageRange(sourceDoc, previousPageNumber, splitPoint)) {
-                        splitDoc.save(splitTemp.getPath());
-                    }
-                    writeEntry(zipOut, baseFilename, splitIndex + 1, splitTemp.getPath());
-                }
-                previousPageNumber = splitPoint + 1;
+        int previousPageNumber = 0;
+        for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
+            int splitPoint = pageNumbers.get(splitIndex);
+            try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
+                PdfSplit.extractPageRangeToFile(
+                        source.toPath(), previousPageNumber, splitPoint, splitTemp.getPath());
+                writeEntry(zipOut, baseFilename, splitIndex + 1, splitTemp.getPath());
             }
+            previousPageNumber = splitPoint + 1;
         }
     }
 

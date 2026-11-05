@@ -96,7 +96,6 @@ public class SplitPdfBySizeController {
                             continue;
                         }
                         writeRange(
-                                sourceDocument,
                                 sourceTempFile.getFile(),
                                 range,
                                 zipOut,
@@ -143,7 +142,6 @@ public class SplitPdfBySizeController {
     }
 
     private void writeRange(
-            PdfDocument sourceDoc,
             File sourceFile,
             int[] range,
             ZipOutputStream zipOut,
@@ -158,7 +156,7 @@ public class SplitPdfBySizeController {
             writeRangeViaPdfBox(sourceFile, range, zipOut, baseFilename, fileIndex);
         } else {
             try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
-                extractRangeToFile(sourceDoc, range, splitTemp.getPath());
+                extractRangeToFile(sourceFile.toPath(), range, splitTemp.getPath());
                 writeEntry(zipOut, baseFilename, fileIndex, splitTemp.getPath());
             }
         }
@@ -188,13 +186,8 @@ public class SplitPdfBySizeController {
         }
     }
 
-    private void extractRangeToFile(PdfDocument sourceDoc, int[] range, Path outputPath)
-            throws IOException {
-        int from = range[0];
-        int to = range[range.length - 1];
-        try (PdfDocument split = PdfSplit.extractPageRange(sourceDoc, from, to)) {
-            split.save(outputPath);
-        }
+    private void extractRangeToFile(Path source, int[] range, Path outputPath) throws IOException {
+        PdfSplit.extractPageRangeToFile(source, range[0], range[range.length - 1], outputPath);
     }
 
     private void writeEntry(

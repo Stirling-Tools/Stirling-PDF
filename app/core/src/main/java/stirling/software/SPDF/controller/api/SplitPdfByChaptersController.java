@@ -222,17 +222,15 @@ public class SplitPdfByChaptersController {
                             totalPages);
                 }
             } else {
-                try (PdfDocument sourceDocument = PdfDocument.open(sourceFile.toPath())) {
-                    for (int i = 0; i < bookmarks.size(); i++) {
-                        writeChapterViaJpdfium(
-                                sourceDocument,
-                                bookmarks.get(i),
-                                i,
-                                fileNumberFormatter,
-                                metadata,
-                                zipOut,
-                                totalPages);
-                    }
+                for (int i = 0; i < bookmarks.size(); i++) {
+                    writeChapterViaJpdfium(
+                            sourceFile.toPath(),
+                            bookmarks.get(i),
+                            i,
+                            fileNumberFormatter,
+                            metadata,
+                            zipOut,
+                            totalPages);
                 }
             }
             log.info(
@@ -246,7 +244,7 @@ public class SplitPdfByChaptersController {
     }
 
     private void writeChapterViaJpdfium(
-            PdfDocument sourceDocument,
+            Path source,
             Bookmark bookmark,
             int index,
             String fileNumberFormatter,
@@ -258,9 +256,7 @@ public class SplitPdfByChaptersController {
         int from = range[0];
         int to = range[1];
         try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
-            try (PdfDocument splitDoc = PdfSplit.extractPageRange(sourceDocument, from, to)) {
-                splitDoc.save(splitTemp.getPath());
-            }
+            PdfSplit.extractPageRangeToFile(source, from, to, splitTemp.getPath());
             Path finalPath = splitTemp.getPath();
             TempFile metaTemp = null;
             try {
