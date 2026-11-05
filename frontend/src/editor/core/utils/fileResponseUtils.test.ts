@@ -95,6 +95,22 @@ describe("fileResponseUtils", () => {
 
       expect(filename).toBe("\u62a5\u544a.pdf");
     });
+
+    test("should ignore a malformed filename* and fall back to filename", () => {
+      const contentDisposition =
+        'attachment; filename*=UTF-8\'merged.pdf; filename="fallback.pdf"';
+      const filename = getFilenameFromHeaders(contentDisposition);
+
+      expect(filename).toBe("fallback.pdf");
+    });
+
+    test("should return null for a malformed filename* with no plain filename", () => {
+      const filename = getFilenameFromHeaders(
+        "attachment; filename*=UTF-8'merged.pdf",
+      );
+
+      expect(filename).toBe(null);
+    });
   });
 
   describe("createFileFromApiResponse", () => {
