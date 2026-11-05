@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.color.ColorSpace;
 import java.awt.color.ICC_Profile;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -11,6 +12,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.Calendar;
 import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -106,9 +108,17 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.XmpUtils;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfPage;
+import stirling.software.jpdfium.doc.PdfColorConverter;
+import stirling.software.jpdfium.doc.PdfFontAuditor;
+import stirling.software.jpdfium.doc.PdfIccProfiles;
+import stirling.software.jpdfium.doc.PdfOutputIntent;
+import stirling.software.jpdfium.doc.PdfPageObjects;
 import stirling.software.jpdfium.doc.PdfXConverter;
 import stirling.software.jpdfium.doc.PdfXOptions;
 import stirling.software.jpdfium.doc.PdfXStandard;
+import stirling.software.jpdfium.model.SaveOptions;
 import stirling.software.officeconvert.pdfa.PdfALevel;
 import stirling.software.officeconvert.pdfa.PdfToPdfA;
 
@@ -590,7 +600,8 @@ public class ConvertPDFToPDFA {
         boolean isPdfX = outputFormat != null && outputFormat.toLowerCase().startsWith("pdfx");
 
         if (isPdfX) {
-            return handlePdfXConversion(inputFile, outputFormat);
+            return handlePdfXConversion(
+                    inputFile, outputFormat, request.getStrict() != null && request.getStrict());
         } else {
             return handlePdfAConversion(
                     inputFile,
@@ -616,7 +627,7 @@ public class ConvertPDFToPDFA {
     }
 
     private ResponseEntity<Resource> handlePdfXConversion(
-            MultipartFile inputFile, String outputFormat) throws Exception {
+            MultipartFile inputFile, String outputFormat, boolean strict) throws Exception {
         PdfXProfile profile = PdfXProfile.fromRequest(outputFormat);
 
         String originalFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
@@ -629,7 +640,12 @@ public class ConvertPDFToPDFA {
                         : originalFileName;
 
         try {
-            if (!PdfXConverter.isSupported() || !PdfXConverter.supports(profile.getStandard())) {
+            boolean nativeMetadata =
+                    profile.getStandard() == PdfXStandard.PDF_X_3
+                            || profile.getStandard() == PdfXStandard.PDF_X_4;
+            if (nativeMetadata
+                    && (!PdfXConverter.isSupported()
+                            || !PdfXConverter.supports(profile.getStandard()))) {
                 throw new IOException(
                         "PDF/X conversion is not supported by this JPDFium build for "
                                 + profile.getDisplayName());
@@ -651,9 +667,18 @@ public class ConvertPDFToPDFA {
                 inputTemp = tempFileManager.createManagedTempFile(".pdf");
                 outputTemp = tempFileManager.createManagedTempFile(".pdf");
                 inputFile.transferTo(inputTemp.getFile());
-                PdfXConverter.applyMetadata(inputTemp.getPath(), outputTemp.getPath(), options);
-                // checkMetadata has no Path overload; keep the audit to one output-sized read.
-                PdfXConverter.checkMetadata(Files.readAllBytes(outputTemp.getPath()), options);
+
+                if (nativeMetadata) {
+                    PdfXConverter.applyMetadata(inputTemp.getPath(), outputTemp.getPath(), options);
+                } else {
+                    applyUnsupportedPdfxMetadata(
+                            inputTemp.getPath(), outputTemp.getPath(), profile);
+                }
+
+                byte[] converted = Files.readAllBytes(outputTemp.getPath());
+                PdfXConverter.checkMetadata(converted, options);
+                byte[] polished = polishPdfx(converted, profile, baseFileName, strict);
+                Files.write(outputTemp.getPath(), polished);
 
                 String outputFilename = baseFileName + profile.outputSuffix();
                 TempFile out = outputTemp;
@@ -678,6 +703,122 @@ public class ConvertPDFToPDFA {
             log.error("PDF/X conversion failed", e);
             throw ExceptionUtils.createPdfaConversionFailedException(e);
         }
+    }
+
+    /**
+     * JPDFium 1.3.0 only bootstraps PDF/X-3 and PDF/X-4 metadata. X-1a and X-6 use the same colour
+     * and output-intent primitives directly, then {@link #polishPdfx} applies the base version and
+     * document boxes. Font embedding remains a preflight concern.
+     */
+    private void applyUnsupportedPdfxMetadata(Path input, Path output, PdfXProfile profile)
+            throws IOException {
+        PdfXStandard standard = profile.getStandard();
+        try (PdfDocument document = PdfDocument.open(input)) {
+            if (!standard.allowsTransparency()) {
+                for (int i = 0; i < document.pageCount(); i++) {
+                    try (PdfPage page = document.page(i)) {
+                        if (PdfPageObjects.hasTransparencyStrict(page.rawHandleForRead())) {
+                            throw new IOException(
+                                    standard
+                                            + " forbids transparency; page "
+                                            + i
+                                            + " requires flattening");
+                        }
+                    }
+                }
+            }
+
+            PdfColorConverter.convert(
+                    document,
+                    PdfColorConverter.ColorConvertOptions.builder()
+                            .targetColorSpace(PdfColorConverter.ColorSpace.CMYK)
+                            .iccProfile(PdfIccProfiles.compactCmyk())
+                            .convertForms(true)
+                            .convertSpecialColors(true)
+                            .convertLosslessImages(true)
+                            .strictImages(true)
+                            .build());
+
+            TempFile staged = tempFileManager.createManagedTempFile(".pdf");
+            try {
+                document.saveTo(staged.getPath(), SaveOptions.validated());
+                boolean applied =
+                        PdfOutputIntent.applyPdfxMetadata(
+                                staged.getPath(),
+                                output,
+                                PdfIccProfiles.compactCmyk(),
+                                PdfOutputIntent.Spec.pdfx(
+                                        PdfIccProfiles.COMPACT_CMYK_CONDITION,
+                                        PdfIccProfiles.COMPACT_CMYK_CONDITION),
+                                standard.gtsVersion(),
+                                standard.gtsConformance());
+                if (!applied) {
+                    throw new IOException("Could not apply " + standard + " metadata");
+                }
+            } finally {
+                staged.close();
+            }
+        }
+    }
+
+    private static byte[] polishPdfx(byte[] pdf, PdfXProfile profile, String title, boolean strict)
+            throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            float targetVersion = profile.getPdfVersion();
+            if (targetVersion > document.getVersion()) {
+                document.setVersion(targetVersion);
+            }
+            document.getDocument().setIsXRefStream(false);
+            document.getDocumentCatalog().getCOSObject().removeItem(COSName.VERSION);
+
+            for (PDPage page : document.getPages()) {
+                PDRectangle trimBox =
+                        page.getCropBox() != null ? page.getCropBox() : page.getMediaBox();
+                // PDFBox omits /TrimBox when it equals /MediaBox; PDF/X still requires the entry.
+                page.getCOSObject().setItem(COSName.TRIM_BOX, trimBox.getCOSArray());
+            }
+
+            PDDocumentInformation info = document.getDocumentInformation();
+            if (info.getTitle() == null || info.getTitle().isBlank()) {
+                info.setTitle(title);
+            }
+            if (info.getCreationDate() == null) {
+                info.setCreationDate(Calendar.getInstance());
+            }
+            if (info.getModificationDate() == null) {
+                info.setModificationDate(Calendar.getInstance());
+            }
+            info.setTrapped("False");
+
+            byte[] polished = savePdf(document);
+            polished = forceHeaderVersion(polished, targetVersion);
+            try (PdfDocument audit = PdfDocument.open(polished)) {
+                if (PdfFontAuditor.hasNonEmbeddedFonts(audit)) {
+                    String message =
+                            "PDF/X requires embedded fonts; the document has non-embedded fonts";
+                    if (strict) {
+                        throw new IOException(message);
+                    }
+                    log.warn(message);
+                }
+            }
+            return polished;
+        }
+    }
+
+    private static byte[] forceHeaderVersion(byte[] pdf, float version) {
+        String header = "%PDF-" + (version == 1.3f ? "1.3" : version == 1.6f ? "1.6" : "2.0");
+        byte[] replacement = header.getBytes(StandardCharsets.US_ASCII);
+        if (pdf.length >= replacement.length) {
+            System.arraycopy(replacement, 0, pdf, 0, replacement.length);
+        }
+        return pdf;
+    }
+
+    private static byte[] savePdf(PDDocument document) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        document.save(output);
+        return output.toByteArray();
     }
 
     private boolean isGhostscriptAvailable() {
@@ -2743,18 +2884,28 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfXProfile {
-        PDF_X("PDF/X", "_PDFX.pdf", PdfXStandard.PDF_X_4, "pdfx");
+        PDF_X("PDF/X", "_PDFX.pdf", PdfXStandard.PDF_X_4, 1.6f, "pdfx"),
+        PDF_X_1A("PDF/X-1a", "_PDFX-1a.pdf", PdfXStandard.PDF_X_1A, 1.3f, "pdfx-1a", "pdfx-1"),
+        PDF_X_3("PDF/X-3", "_PDFX-3.pdf", PdfXStandard.PDF_X_3, 1.3f, "pdfx-3"),
+        PDF_X_4("PDF/X-4", "_PDFX-4.pdf", PdfXStandard.PDF_X_4, 1.6f, "pdfx-4"),
+        PDF_X_6("PDF/X-6", "_PDFX-6.pdf", PdfXStandard.PDF_X_6, 2.0f, "pdfx-6");
 
         private final String displayName;
         private final String suffix;
         private final PdfXStandard standard;
+        private final float pdfVersion;
         private final List<String> requestTokens;
 
         PdfXProfile(
-                String displayName, String suffix, PdfXStandard standard, String... requestTokens) {
+                String displayName,
+                String suffix,
+                PdfXStandard standard,
+                float pdfVersion,
+                String... requestTokens) {
             this.displayName = displayName;
             this.suffix = suffix;
             this.standard = standard;
+            this.pdfVersion = pdfVersion;
             this.requestTokens =
                     Arrays.stream(requestTokens)
                             .map(token -> token.toLowerCase(Locale.ROOT))

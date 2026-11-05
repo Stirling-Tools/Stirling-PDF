@@ -1054,7 +1054,7 @@ class PdfToMarkdownParams(ApiModel):
 
 class OutputFormat1(StrEnum):
     """
-    pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors instead); pdfx = PDF/X.
+    pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors instead); pdfx = PDF/X-4 alias; pdfx-1a = PDF/X-1a; pdfx-3 = PDF/X-3; pdfx-4 = PDF/X-4; pdfx-6 = PDF/X-6.
     """
 
     pdfa = "pdfa"
@@ -1067,6 +1067,10 @@ class OutputFormat1(StrEnum):
     pdfa_2a = "pdfa-2a"
     pdfa_3a = "pdfa-3a"
     pdfx = "pdfx"
+    pdfx_1a = "pdfx-1a"
+    pdfx_3 = "pdfx-3"
+    pdfx_4 = "pdfx-4"
+    pdfx_6 = "pdfx-6"
 
 
 class PdfToPdfaParams(ApiModel):
@@ -1076,7 +1080,7 @@ class PdfToPdfaParams(ApiModel):
 
     output_format: OutputFormat1 = Field(
         ...,
-        description="pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors instead); pdfx = PDF/X.",
+        description="pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors instead); pdfx = PDF/X-4 alias; pdfx-1a = PDF/X-1a; pdfx-3 = PDF/X-3; pdfx-4 = PDF/X-4; pdfx-6 = PDF/X-6.",
     )
     pdf_ua: bool = Field(
         False,
