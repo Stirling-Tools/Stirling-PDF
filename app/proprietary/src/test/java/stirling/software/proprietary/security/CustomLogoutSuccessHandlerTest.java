@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 
@@ -25,6 +26,8 @@ class CustomLogoutSuccessHandlerTest {
     @Mock private ApplicationProperties.Security securityProperties;
 
     @Mock private JwtServiceInterface jwtService;
+
+    @Spy private ApplicationProperties applicationProperties = new ApplicationProperties();
 
     @InjectMocks private CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
@@ -83,6 +86,45 @@ class CustomLogoutSuccessHandlerTest {
         customLogoutSuccessHandler.onLogoutSuccess(request, response, oAuth2AuthenticationToken);
 
         verify(response).sendRedirect("http://localhost:8080/login?logout=true");
+    }
+
+    @Test
+    void oauth2LogoutUsesRedirectBaseUrlWhenSet() throws IOException {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        OAuth2AuthenticationToken oAuth2AuthenticationToken = mock(OAuth2AuthenticationToken.class);
+        ApplicationProperties.Security.OAUTH2 oauth =
+                mock(ApplicationProperties.Security.OAUTH2.class);
+
+        when(response.isCommitted()).thenReturn(false);
+        when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn(null);
+        when(request.getParameter("errorOAuth")).thenReturn(null);
+        when(securityProperties.getOauth2()).thenReturn(oauth);
+        when(oauth.getRedirectBaseUrl()).thenReturn("https://pdf.example.com/");
+        when(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId()).thenReturn("Microsoft");
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, oAuth2AuthenticationToken);
+
+        verify(response).sendRedirect("https://pdf.example.com/login?logout=true");
+    }
+
+    @Test
+    void oauth2LogoutLandsOnSeparateFrontendWhenRedirectBaseUrlSet() throws IOException {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        OAuth2AuthenticationToken oAuth2AuthenticationToken = mock(OAuth2AuthenticationToken.class);
+        ApplicationProperties.Security.OAUTH2 oauth =
+                mock(ApplicationProperties.Security.OAUTH2.class);
+        applicationProperties.getSystem().setFrontendUrl("https://app.example.com");
+
+        when(response.isCommitted()).thenReturn(false);
+        when(securityProperties.getOauth2()).thenReturn(oauth);
+        when(oauth.getRedirectBaseUrl()).thenReturn("https://api.example.com");
+        when(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId()).thenReturn("Microsoft");
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, oAuth2AuthenticationToken);
+
+        verify(response).sendRedirect("https://app.example.com/login?logout=true");
     }
 
     @Test

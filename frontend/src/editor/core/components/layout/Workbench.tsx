@@ -1,0 +1,301 @@
+import { useState, useEffect, useRef, Suspense, lazy } from "react";
+import { useTranslation } from "react-i18next";
+import { Icon } from "@editor/ui/Icon";
+import { Box, Loader, Center, Stack, Text } from "@mantine/core";
+import { Button } from "@editor/ui/Button";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useFileHandler } from "@editor/hooks/useFileHandler";
+import { useAllFiles } from "@editor/contexts/FileContext";
+import {
+  useNavigationState,
+  useNavigationActions,
+} from "@editor/contexts/NavigationContext";
+import { isBaseWorkbench } from "@editor/types/workbench";
+import { VIEWER_SUPPORTED_EXTENSIONS } from "@editor/utils/fileUtils";
+import { useIsPhone } from "@editor/hooks/useIsMobile";
+import styles from "@editor/components/layout/Workbench.module.css";
+
+import WorkbenchBar from "@editor/components/shared/WorkbenchBar";
+import { useWorkbenchTakeover } from "@editor/components/layout/WorkbenchTakeover";
+import {
+  useIsWorkbenchFileDragOver,
+  useWorkbenchFileDrop,
+} from "@editor/components/layout/useWorkbenchFileDrop";
+import { useTitleBarStrip } from "@editor/contexts/TitleBarStripContext";
+import WorkbenchFloatingSearch from "@editor/components/shared/WorkbenchFloatingSearch";
+import LandingPage from "@editor/components/shared/LandingPage";
+import DismissAllErrorsButton from "@editor/components/shared/DismissAllErrorsButton";
+import { NotificationBell } from "@editor/components/notifications/NotificationBell";
+
+// Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
+// full @embedpdf plugin set; FileEditor/PageTracks are only needed once a file
+// is open. Lazy-loading keeps all of that out of the initial bundle.
+const SigningWorkspace = lazy(
+  () => import("@editor/components/shared/signing/SigningWorkspace"),
+);
+const FileEditor = lazy(
+  () => import("@editor/components/fileEditor/FileEditor"),
+);
+const PageTracks = lazy(
+  () => import("@editor/components/pageTracks/PageTracks"),
+);
+const Viewer = lazy(() => import("@editor/components/viewer/Viewer"));
+const FileManagerView = lazy(
+  () => import("@editor/components/filesPage/FileManagerView"),
+);
+
+// No props needed - component uses contexts directly
+export default function Workbench() {
+  // A flow that owns the canvas outright (desktop onboarding's Downloads sweep).
+  // Null in every other case, which is every case in core.
+  const takeover = useWorkbenchTakeover();
+  const strip = useTitleBarStrip();
+
+  // Use context-based hooks to eliminate all prop drilling
+  const { files: activeFiles, fileIds } = useAllFiles();
+  const { workbench: currentView } = useNavigationState();
+  const { actions: navActions } = useNavigationActions();
+  const setCurrentView = navActions.setWorkbench;
+  const { previewFile, setPreviewFile, customWorkbenchViews, readerMode } =
+    useToolWorkflow();
+
+  const { handleToolSelect } = useToolWorkflow();
+  // Below this width the rail, and the bell it carries, is gone.
+  const isPhone = useIsPhone();
+
+  // Get navigation state - this is the source of truth
+  const { selectedTool: selectedToolId } = useNavigationState();
+
+  // Get tool registry from context (instead of direct hook call)
+  const { toolRegistry } = useToolWorkflow();
+  const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
+  const { addFiles } = useFileHandler();
+  const hasFiles = activeFiles.length > 0;
+  const { t } = useTranslation();
+
+  // Every view takes file drops on the whole canvas, not just the content it
+  // happens to render. Views that do something of their own with a dropped file
+  // (the file library, the PDF text editor) stop the events reaching here.
+  // The file sidebar shares this drop target and its overlay.
+  const acceptsFileDrops = !takeover;
+  const dropHandlers = useWorkbenchFileDrop(acceptsFileDrops);
+  const isFileDragOver = useIsWorkbenchFileDragOver() && acceptsFileDrops;
+
+  // The viewer's tool row can be retracted to give the document more height.
+  // State lives here (not in WorkbenchBar) so the reopen tab can hang below the
+  // bar, outside the bar's overflow-clipped wrapper. Scoped to the viewer.
+  const [viewerToolbarCollapsed, setViewerToolbarCollapsed] = useState(false);
+  const showReopenTab = currentView === "viewer" && viewerToolbarCollapsed;
+
+  // The WorkbenchBar carries file-scoped actions, so it only shows once a file
+  // is open or a custom view supplies content; otherwise the search floats.
+  const activeCustomView = customWorkbenchViews.find(
+    (v) => v.workbenchId === currentView,
+  );
+  const topControlsAvailable =
+    currentView !== "signing" && !activeCustomView?.hideTopControls;
+  const hasWorkbenchContent =
+    hasFiles ||
+    fileIds.length > 0 ||
+    !isBaseWorkbench(currentView) ||
+    // The library browses stored files, so it has content of its own with none open.
+    currentView === "myFiles" ||
+    currentView === "signing";
+  // Reading hides the bar; the rail's Reader entry is the way back. A takeover hides
+  // the switcher and search too: both navigate away from a flow that must finish.
+  const showWorkbenchBar =
+    topControlsAvailable && hasWorkbenchContent && !readerMode && !takeover;
+  const showFloatingSearch =
+    topControlsAvailable &&
+    !hasWorkbenchContent &&
+    !readerMode &&
+    !takeover &&
+    !strip.enabled;
+
+  // On the transition, so reading sets the toolbar's start state without locking it.
+  const prevReaderModeRef = useRef(readerMode);
+  useEffect(() => {
+    if (readerMode !== prevReaderModeRef.current) {
+      setViewerToolbarCollapsed(readerMode);
+      prevReaderModeRef.current = readerMode;
+    }
+  }, [readerMode]);
+
+  const handlePreviewClose = () => {
+    setPreviewFile(null);
+    const previousMode = sessionStorage.getItem("previousMode");
+    if (previousMode === "split") {
+      // Use context's handleToolSelect which coordinates tool selection and view changes
+      handleToolSelect("split");
+      sessionStorage.removeItem("previousMode");
+    } else if (previousMode === "compress") {
+      handleToolSelect("compress");
+      sessionStorage.removeItem("previousMode");
+    } else if (previousMode === "convert") {
+      handleToolSelect("convert");
+      sessionStorage.removeItem("previousMode");
+    } else {
+      setCurrentView("fileEditor");
+    }
+  };
+
+  const renderMainContent = () => {
+    // Ahead of every view check: a takeover replaces the canvas whatever the current
+    // workbench happens to be, so navigation underneath it cannot surface.
+    if (takeover) return takeover;
+
+    // Check if we're showing a custom workbench first
+    // Custom workbenches may not require files in FileContext (e.g., sign request workbench)
+    if (!isBaseWorkbench(currentView)) {
+      const customView = customWorkbenchViews.find(
+        (view) => view.workbenchId === currentView && view.data != null,
+      );
+      if (customView) {
+        const CustomComponent = customView.component;
+        return <CustomComponent data={customView.data} />;
+      }
+    }
+
+    if (currentView === "signing") return <SigningWorkspace />;
+
+    // The file-library workbench is available regardless of whether files are
+    // currently loaded into the workbench - it lives on top of the IDB store.
+    if (currentView === "myFiles") {
+      return <FileManagerView />;
+    }
+
+    if (activeFiles.length === 0) {
+      // Files are open but their bytes are still loading (a cold PDF engine can
+      // take seconds). Showing the drop zone here reads as "the click did nothing".
+      if (fileIds.length > 0) {
+        return (
+          <Center h="100%" w="100%">
+            <Stack align="center" gap="md">
+              <Loader size="lg" />
+              <Text c="dimmed" size="sm">
+                {t("fileManager.loadingFiles", "Loading files...")}
+              </Text>
+            </Stack>
+          </Center>
+        );
+      }
+      return <LandingPage />;
+    }
+
+    switch (currentView) {
+      case "fileEditor":
+        return (
+          <FileEditor
+            toolMode={!!selectedToolId}
+            supportedExtensions={
+              selectedTool?.supportedFormats || VIEWER_SUPPORTED_EXTENSIONS
+            }
+            {...(!selectedToolId && {
+              onOpenPageEditor: () => {
+                setCurrentView("pageEditor");
+              },
+              onMergeFiles: (filesToMerge) => {
+                addFiles(filesToMerge);
+                setCurrentView("viewer");
+              },
+            })}
+          />
+        );
+
+      case "viewer":
+        return (
+          <Viewer previewFile={previewFile} onClose={handlePreviewClose} />
+        );
+
+      case "pageEditor":
+        return <PageTracks />;
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Box
+      className="flex-1 h-full min-w-0 relative flex flex-col"
+      data-tour="workbench"
+      style={{ backgroundColor: "var(--c-bg)", minWidth: 0, minHeight: 0 }}
+      {...dropHandlers}
+    >
+      {isFileDragOver && (
+        <div className={styles.fileDropOverlay} aria-live="polite">
+          <span className={styles.fileDropOverlayIcon}>
+            <Icon name="file-up" size="2.5rem" />
+          </span>
+          {t(
+            "workbench.dropOverlay",
+            "Drop files to add them to the workbench",
+          )}
+        </div>
+      )}
+      {/* Phone only: above that the rail carries the bell, and here no bar does. */}
+      {isPhone && !showWorkbenchBar && topControlsAvailable && (
+        <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>
+          <NotificationBell />
+        </div>
+      )}
+
+      {showWorkbenchBar && (
+        <div className={styles.workbenchBarShell}>
+          <div className={styles.workbenchBarWrapper}>
+            <div className={styles.workbenchBarInner}>
+              <WorkbenchBar
+                currentView={currentView}
+                setCurrentView={setCurrentView}
+                hasFiles={hasFiles}
+                viewerToolbarCollapsed={viewerToolbarCollapsed}
+                onCollapseViewerToolbar={setViewerToolbarCollapsed}
+              />
+            </div>
+          </div>
+          {/* Reopen tab for the retracted viewer tool row. */}
+          {showReopenTab && (
+            <Button
+              type="button"
+              variant="quiet"
+              className={styles.workbenchBarReopenTab}
+              onClick={() => setViewerToolbarCollapsed(false)}
+              aria-expanded={false}
+              aria-label={t("workbenchBar.showToolbar", "Show toolbar")}
+              title={t("workbenchBar.showToolbar", "Show toolbar")}
+              leftSection={<Icon name="chevron-down" size={"1rem"} />}
+            />
+          )}
+        </div>
+      )}
+      {showFloatingSearch && <WorkbenchFloatingSearch />}
+
+      {/* Dismiss All Errors Button */}
+      <DismissAllErrorsButton />
+
+      {/* Main content area */}
+      <Box
+        className={`flex-1 min-h-0 z-10 ${currentView === "pageEditor" ? "relative flex flex-col" : `relative ${styles.workbenchScrollable}`}`}
+        style={{
+          transition: "opacity 0.15s ease-in-out",
+          // Force min-width:0 so flex children (notably the files page
+          // toolbar with its 5 bulk-action buttons + 2 selects + view
+          // toggle) can shrink below their intrinsic content size on
+          // narrow viewports instead of overflowing horizontally.
+          minWidth: 0,
+          ...(currentView === "pageEditor" && { height: 0 }),
+        }}
+      >
+        <Suspense
+          fallback={
+            <Center style={{ height: "100%" }}>
+              <Loader />
+            </Center>
+          }
+        >
+          {renderMainContent()}
+        </Suspense>
+      </Box>
+    </Box>
+  );
+}

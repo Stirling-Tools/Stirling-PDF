@@ -11,6 +11,7 @@
 #############################################################################################################
 
 security:
+  honorOwnerPasswords: true # Require the permissions password for restricted PDF actions; opening passwords are always required.
   enableLogin: true # set to 'true' to enable login
   ssoAutoLogin: false
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
@@ -47,12 +48,14 @@ security:
     useAsUsername: email # default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # specify the scopes for which the application will request permissions
     provider: google # set this to your OAuth Provider's name, e.g., 'google' or 'keycloak'
+    redirectBaseUrl: "" # optional public URL users open Stirling-PDF at, e.g. 'https://pdf.example.com' (include any context path). Set it when a reverse proxy (e.g. Azure App Proxy) hides https or the public host, so OAuth callbacks become <redirectBaseUrl>/login/oauth2/code/<provider>. Leave blank to build them from each request
   saml2:
     enabled: false # Only enabled for paid enterprise clients (enterpriseEdition.enabled must be true)
     provider: "" # The name of your Provider
     autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     registrationId: stirling # The name of your Service Provider (SP) app name. Should match the name in the path for your SSO & SLO URLs
+    redirectBaseUrl: "" # optional public URL users open Stirling-PDF at, e.g. 'https://pdf.example.com' (include any context path). Overrides system.backendUrl for the SAML entity ID, ACS and logout URLs. Leave blank to use system.backendUrl
     idpMetadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata # The uri for your Provider's metadata
     idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml # The URL for initiating SSO. Provided by your Provider
     idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml # The URL for initiating SLO. Provided by your Provider
@@ -184,10 +187,13 @@ system:
   enableScarf: null # Enable Scarf tracking pixel: set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
+  stirlingOfficeConversion: false # Beta: set to 'true' to convert Office files with the built-in Stirling Office Convert (better, faster conversions using less memory) instead of LibreOffice
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
+  maxPdfaConversionPages: 20000 # Most pages a PDF/A or PDF/X conversion accepts; larger documents are refused (0 = unlimited)
+  maxImageMegapixels: 0 # Largest image one page render may create, in megapixels. 0 = automatic (a quarter of the Java heap, at most 1 GB)
   corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). WARNING: leaving this empty falls back to allowing ALL origins (with credentials), it does NOT disable CORS. Set explicit origins to lock it down.
   backendUrl: "" # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
-  frontendUrl: "" # Base URL of the web app, as a browser reaches it (e.g. 'https://app.example.com', or 'https://example.com/app' if served under a base path). Optional - if not set, will use backendUrl. Used for any link handed to a browser: invite emails, share links, mobile QR codes, and the account-link handshake.
+  frontendUrl: "" # Base URL of the web app, as a browser reaches it (e.g. 'https://app.example.com', or 'https://example.com/app' if served under a base path). Optional - if not set, will use backendUrl. Used for any link handed to a browser: invite and signing emails, share links, mobile QR codes, and the account-link handshake.
   enableMobileScanner: true # Enable mobile phone QR code upload feature. Requires frontendUrl to be configured.
   enableMobileSignature: true # Enable drawing signatures on a phone via QR code from the Sign tool. Requires frontendUrl to be configured.
   mobileScannerSettings:
@@ -246,7 +252,7 @@ system:
     cron: "0 0 0 * * ?" # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 
 storage:
-  enabled: false # set to 'true' to allow users to store files on the server (requires security.enableLogin) [ALPHA]
+  enabled: true # set to 'false' to disable server-side file storage (requires security.enableLogin) [ALPHA]
   provider: local # storage provider: 'local' for filesystem storage, 'database' for DB-backed storage
   local:
     basePath: './storage' # base directory for stored files
@@ -293,17 +299,16 @@ storage:
     emailEnabled: false # set to 'true' to allow sharing by email (requires mail.enabled)
     linkExpirationDays: 3 # Number of days before share links expire
   signing:
-    enabled: false # set to 'true' to enable group signing workflow (requires storage.enabled) [ALPHA]
+    enabled: true # set to 'false' to disable shared signing (requires storage.enabled and security.enableLogin) [ALPHA]
   # Encryption at rest for stored files (AES-256, per-team keys). Requires a Pro or
   # Enterprise licence. Key setup, cluster requirements, the encrypt-existing migration,
   # the revocation kill switch and master-key rotation are documented in
-  # devGuide/STORAGE_ENCRYPTION_AT_REST.md
+  # docs/developer/STORAGE_ENCRYPTION_AT_REST.md
   # WARNING: back up the master key (configs/file-encryption.key by default) - losing it
   # makes every encrypted stored file permanently unrecoverable.
   encryption:
     enabled: false # set to 'true' to encrypt stored files at rest
     auditReads: true # audit every decrypt of an encrypted file (denied decrypts and key lifecycle events are always audited). NOTE: audit events require an Enterprise licence; encryption itself works on Pro.
-    userListScope: org # Signing user-picker scope: 'org' (default) = whole instance, else caller's team only.
 autoPipeline:
   outputFolder: "" # Output folder for processed pipeline files (leave empty for default)
   fileReadiness:
@@ -315,6 +320,8 @@ autoPipeline:
 ui:
   appNameNavbar: "" # custom app/brand name. NOTE: no longer shown in the navbar (the navbar renders the logo). It IS used as the browser tab title and as the TOTP/2FA issuer label in authenticator apps. Empty falls back to "Stirling PDF"
   languages: [] # If empty, all languages are enabled. To restrict to specific languages, use a whitelist like ["de_DE", "pl_PL", "sv_SE"]. Empty list or not restricting any languages will enable all available languages.
+  defaultToolPanelMode: sidebar # Default user preference: open the tool picker in 'sidebar' or 'fullscreen' mode
+  defaultStartupView: tools # Default user preference: first view on launch. Options: 'tools', 'read', or 'automate'
   defaultHideUnavailableTools: false # Default user preference: hide disabled tools instead of greying them out
   defaultHideUnavailableConversions: false # Default user preference: hide disabled conversion options instead of greying them out
   hideDisabledTools:
@@ -432,10 +439,10 @@ policies:
   # security boundary. On a multi-user server EVERY authenticated user (not only team leaders) can
   # attach folder processing to directories under these roots - listing their contents and replacing
   # files in place - so only list directories all users may touch.
-  # Leave allowedFolderRoots empty (default) to disable folder sources/outputs,
-  # other than from directories that are always permitted like server file-storage and watched folders.
+  # Leave allowedFolderRoots empty (default) to disable folder sources/outputs.
   # List absolute directories to permit folder access within them.
-  # Stirling's own config directory is always off-limits, and folder access is always
+  # Stirling's own config directory, the server file-storage directory and the pipeline watched
+  # folders are always off-limits, even inside an allowed root, and folder access is always
   # disabled in SaaS mode.
   allowedFolderRoots: [] # e.g. ["/data/inbox", "/data/outbox"]
   scheduleSweepSeconds: 60 # How often (seconds) scheduled policies are checked for being due
@@ -444,6 +451,8 @@ policies:
   watchQuietPeriodMs: 500 # How long (ms) folder-watch coalesces a burst of file events into a single run
   streamTimeoutMs: 1800000 # SSE timeout (ms) for live run-progress streams
   runExpiryMinutes: 30 # How long (minutes) a finished run's in-memory state is kept before eviction
+  maxSteps: 50 # Most steps a pipeline or policy run may have (0 = unlimited)
+  maxFilesPerStep: 10000 # Abort a pipeline or policy run when one step produces more files than this (0 = unlimited)
 
 # Model Context Protocol (MCP) server. Exposes Stirling's PDF tools (grouped by namespace)
 # plus the AI agents to MCP clients (Inspector, Claude Desktop, custom). OAuth-protected.
@@ -521,21 +530,3 @@ cluster:
       maxWaitMillis: 2000 # Must be > 0: negative blocks forever, 0 fails the borrow instantly.
       timeBetweenEvictionRunsMillis: 30000 # Idle-evictor interval; minIdle only applies while it runs.
       testOnBorrow: true # Local isOpen() check only, no round trip.
-
-pdfEditor:
-  fallback-font: classpath:/static/fonts/NotoSans-Regular.ttf # Override to point at a custom fallback font
-  cache:
-    max-bytes: -1 # Max in-memory cache size in bytes; -1 disables byte cap
-    max-percent: 20 # Max in-memory cache as % of JVM max; used when max-bytes <= 0
-  font-normalization:
-    enabled: false # IMPORTANT: Disable to preserve ToUnicode CMaps for correct font rendering. Ghostscript strips Unicode mappings from CID fonts.
-  cff-converter:
-    enabled: true # Wrap CFF/Type1CFF fonts as OpenType-CFF for browser compatibility
-    method: python # Converter method: 'python' (fontTools, recommended - wraps as OTF), 'fontforge' (legacy - converts to TTF, may hang on CID fonts)
-    python-command: /opt/venv/bin/python3 # Python interpreter path
-    python-script: /scripts/convert_cff_to_ttf.py # Path to font wrapping script
-    fontforge-command: fontforge # Override if FontForge is installed under a different name/path
-  type3:
-    library:
-      enabled: true # Match common Type3 fonts against the built-in library of converted programs
-      index: classpath:/type3/library/index.json # Override to point at a custom index.json (supports http:, file:, classpath:)

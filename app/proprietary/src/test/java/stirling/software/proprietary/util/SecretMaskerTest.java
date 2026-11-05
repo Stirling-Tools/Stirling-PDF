@@ -9,6 +9,8 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Unit tests for {@link SecretMasker}.
@@ -19,6 +21,35 @@ import org.junit.jupiter.api.Test;
  * Non-sensitive keys/values remain unchanged.
  */
 class SecretMaskerTest {
+
+    @Test
+    void masksNestedArgumentsWithoutRequiringStringMapKeys() {
+        var input = Map.of(1, Map.of("sourcePassword", "private-value"));
+
+        assertEquals(
+                Map.of(1, Map.of("sourcePassword", SecretMasker.REDACTED)),
+                SecretMasker.maskValue("request", input));
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "password",
+                "arg_password",
+                "ownerPassword",
+                "sourcePassword",
+                "retainedOpeningPassword",
+                "arg_sourcePassword"
+            })
+    void masksPasswordFieldsIncludingAuditPrefixes(String field) {
+        var input = Map.<String, Object>of(field, "private-value", "keyLength", 256);
+
+        var masked = SecretMasker.mask(input);
+
+        assertEquals(SecretMasker.REDACTED, masked.get(field));
+        assertEquals(256, masked.get("keyLength"));
+        assertEquals("private-value", input.get(field));
+    }
 
     @Nested
     @DisplayName("mask(Map<String,Object>) method")

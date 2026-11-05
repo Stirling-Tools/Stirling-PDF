@@ -1,0 +1,25 @@
+.group {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.swatch {
+  width: 1.375rem;
+  height: 1.375rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--c-border-strong);
+  cursor: pointer;
+}
+
+.swatch[aria-checked="true"] {
+  box-shadow:
+    0 0 0 2px var(--c-modal-surface),
+    0 0 0 4px var(--c-primary);
+}
+
+.swatch:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 3px;
+}

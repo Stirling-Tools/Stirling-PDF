@@ -5,6 +5,7 @@
 //
 //   node a11y-scan.mjs                 scan every story
 //   node a11y-scan.mjs <file> [file…]  scan only these story files
+//   node a11y-scan.mjs --shard=<i>/<n> scan the i-th of n slices of either set
 //
 // Batching keeps each browser session small: a single run over the whole story
 // set holds one Chromium context open for the entire scan, so one crash in it
@@ -40,13 +41,30 @@ mkdirSync(OUT, { recursive: true });
 const manifestFile = join(OUT, "manifest.txt");
 const logFile = join(OUT, "scan.log");
 
+/** Parses `--shard=<index>/<count>`, 1-based like Playwright's. */
+function parseShard(arg) {
+  const m = /^--shard=(\d+)\/(\d+)$/.exec(arg);
+  const index = Number(m?.[1]);
+  const count = Number(m?.[2]);
+  if (!m || index < 1 || index > count) {
+    console.error(
+      `a11y-scan: --shard expects <index>/<count>, e.g. --shard=2/4; got ${arg}`,
+    );
+    process.exit(2);
+  }
+  return { index, count };
+}
+
 const args = process.argv.slice(2);
+const shardArg = args.find((a) => a.startsWith("--shard="));
+const shard = shardArg ? parseShard(shardArg) : null;
+const fileArgs = args.filter((a) => a !== shardArg);
 let files;
-if (args.length > 0) {
+if (fileArgs.length > 0) {
   // Explicit list (the pull-request path passes just the stories a branch
   // affects). Anything that no longer exists is dropped, so a deleted story
   // doesn't fail the manifest check.
-  files = [...new Set(args.filter((f) => existsSync(f)))].sort();
+  files = [...new Set(fileArgs.filter((f) => existsSync(f)))].sort();
   if (files.length === 0) {
     console.log(
       "a11y-scan: no existing story files in the given list — nothing to scan",
@@ -59,19 +77,14 @@ if (args.length > 0) {
   // checked before it is added to the index.
   files = [
     ...new Set([
-      ...git(
-        "ls-files",
-        "--",
-        "editor/src/**/*.stories.ts",
-        "editor/src/**/*.stories.tsx",
-      ),
+      ...git("ls-files", "--", "src/**/*.stories.ts", "src/**/*.stories.tsx"),
       ...git(
         "ls-files",
         "--others",
         "--exclude-standard",
         "--",
-        "editor/src/**/*.stories.ts",
-        "editor/src/**/*.stories.tsx",
+        "src/**/*.stories.ts",
+        "src/**/*.stories.tsx",
       ),
     ]),
   ].sort();
@@ -80,7 +93,6 @@ if (args.length > 0) {
     process.exit(2);
   }
 }
-writeFileSync(manifestFile, files.join("\n") + "\n");
 
 /** Failures carrying no axe rule — a throw, a timeout, a dropped browser page. */
 function crashCount(reportFile) {
@@ -138,11 +150,27 @@ function runBatch(filters, outputFile) {
 
 const hasReport = (f) => existsSync(f) && statSync(f).size > 0;
 
-const batches = [];
+let batches = [];
 for (let i = 0; i < files.length; i += CHUNK)
   batches.push(files.slice(i, i + CHUNK));
+if (shard) {
+  // Whole batches, not files: every batch pays a full Vite + Chromium startup,
+  // so cutting through one adds a partial batch to each shard.
+  const edge = (k) => Math.floor((k * batches.length) / shard.count);
+  batches = batches.slice(edge(shard.index - 1), edge(shard.index));
+  files = batches.flat();
+  if (files.length === 0) {
+    console.log(
+      `a11y-scan: shard ${shard.index}/${shard.count} has no batches - nothing to scan`,
+    );
+    writeFileSync(manifestFile, "");
+    process.exit(0);
+  }
+}
+writeFileSync(manifestFile, files.join("\n") + "\n");
 console.log(
-  `a11y-scan: ${files.length} story files, ${batches.length} batches of ${CHUNK}`,
+  `a11y-scan: ${files.length} story files, ${batches.length} batches of ${CHUNK}` +
+    (shard ? ` (shard ${shard.index}/${shard.count})` : ""),
 );
 
 const failed = [];

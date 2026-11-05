@@ -12,6 +12,19 @@ import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 
 public interface WalletLedgerRepository extends JpaRepository<WalletLedgerEntry, Long> {
 
+    /** Successful PDF inputs in the agreement window, including work covered by Enterprise. */
+    @Query(
+            "SELECT COALESCE(SUM(e.docCount), 0) FROM WalletLedgerEntry e"
+                    + " WHERE e.teamId = :teamId AND e.entryType = stirling.software.saas.payg.model.LedgerEntryType.DEBIT"
+                    + " AND e.billingCategory IS NOT NULL AND e.occurredAt >= :start AND e.occurredAt < :end"
+                    + " AND NOT EXISTS (SELECT r.id FROM WalletLedgerEntry r WHERE r.teamId = e.teamId"
+                    + " AND r.referenceId = e.referenceId AND r.referenceType = e.referenceType"
+                    + " AND r.entryType = stirling.software.saas.payg.model.LedgerEntryType.REFUND)")
+    long sumEnterprisePdfs(
+            @Param("teamId") Long teamId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end);
+
     /** Most recent entries for the Plan page activity feed. */
     List<WalletLedgerEntry> findTop20ByTeamIdOrderByIdDesc(Long teamId);
 

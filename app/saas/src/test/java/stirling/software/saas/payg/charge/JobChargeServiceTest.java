@@ -78,6 +78,7 @@ class JobChargeServiceTest {
     private PrepaidBundleService prepaidBundleService;
     private TeamBillingService teamBillingService;
     private JobChargeService service;
+    private stirling.software.saas.procurement.service.EnterpriseEntitlementService enterprise;
 
     private static final LocalDateTime PERIOD_START =
             YearMonth.now(ZoneOffset.UTC).atDay(1).atStartOfDay();
@@ -103,6 +104,10 @@ class JobChargeServiceTest {
         teamBillingService = Mockito.mock(TeamBillingService.class);
         when(teamBillingService.forTeam(Mockito.anyLong())).thenReturn(billingContext(GRANT));
         when(teamBillingService.resolveGrant(Mockito.anyLong(), any())).thenReturn(GRANT);
+        enterprise =
+                Mockito.mock(
+                        stirling.software.saas.procurement.service.EnterpriseEntitlementService
+                                .class);
         service =
                 new JobChargeService(
                         jobService,
@@ -114,7 +119,45 @@ class JobChargeServiceTest {
                         meterReporter,
                         ledgerRepo,
                         prepaidBundleService,
-                        teamBillingService);
+                        teamBillingService,
+                        enterprise);
+    }
+
+    @Test
+    void enterpriseTracksDocumentsWithoutConsumingCreditsOrMeteringAfterExpiry(@TempDir Path tmp)
+            throws IOException {
+        PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        when(enterprise.isActive(100L)).thenReturn(true);
+        ProcessingJob job = openJob(UUID.randomUUID());
+        job.setDocCount(2);
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(job, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 400));
+        service.openProcess(
+                new ChargeContext(
+                        42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API),
+                List.of(jobInput(tmp, "included.pdf", "application/pdf")));
+        ArgumentCaptor<PaygShadowCharge> shadow = ArgumentCaptor.forClass(PaygShadowCharge.class);
+        verify(shadowRepo).save(shadow.capture());
+        assertThat(shadow.getValue().isEnterpriseCovered()).isTrue();
+        assertThat(shadow.getValue().getPaygUnits()).isEqualTo(400);
+        ArgumentCaptor<WalletLedgerEntry> ledger = ArgumentCaptor.forClass(WalletLedgerEntry.class);
+        verify(ledgerRepo).save(ledger.capture());
+        assertThat(ledger.getValue().getAmountUnits()).isZero();
+        assertThat(ledger.getValue().getDocCount()).isEqualTo(2);
+        Mockito.verifyNoInteractions(teamExtRepo, prepaidBundleService);
+        when(enterprise.isActive(100L)).thenReturn(false);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(job.getId()))
+                .thenReturn(Optional.of(shadow.getValue()));
+        service.meterJobUsage(job.getId());
+        Mockito.verifyNoInteractions(meterReporter);
+        service.markFirstStepFailed(job.getId(), "failed");
+        verify(ledgerRepo, times(2)).save(ledger.capture());
+        assertThat(ledger.getValue().getEntryType()).isEqualTo(LedgerEntryType.REFUND);
+        assertThat(ledger.getValue().getAmountUnits()).isZero();
+        Mockito.verifyNoInteractions(teamExtRepo, prepaidBundleService);
     }
 
     private static TeamBillingContext billingContext(long grant) {

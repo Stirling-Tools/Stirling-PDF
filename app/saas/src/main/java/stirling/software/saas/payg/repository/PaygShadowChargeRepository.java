@@ -37,6 +37,7 @@ public interface PaygShadowChargeRepository extends JpaRepository<PaygShadowChar
     @Query(
             "SELECT COALESCE(SUM(s.paygUnits - s.freeUnitsConsumed - s.bundleUnitsConsumed), 0) FROM PaygShadowCharge s"
                     + " WHERE s.teamId = :teamId"
+                    + " AND s.enterpriseCovered = false"
                     + " AND s.status = stirling.software.saas.payg.model.ShadowChargeStatus.CHARGED"
                     + " AND s.occurredAt >= :from AND s.occurredAt < :to")
     long sumPaidUnits(
