@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.jpdfium.panama.NativeLoader;
 
 /**
  * Runs PDFium jobs in worker processes, since PDFium allows one call at a time per process. Workers
@@ -49,6 +50,7 @@ public class PdfWorkerPool implements DisposableBean {
     private final ScheduledExecutorService timer;
     private volatile long spawnBlockedUntilNanos;
     private volatile boolean spawnBlocked;
+    private volatile boolean nativesReady;
     private volatile boolean closed;
 
     @Autowired
@@ -150,6 +152,7 @@ public class PdfWorkerPool implements DisposableBean {
     }
 
     private PdfWorkerProcess spawn() throws IOException {
+        extractNativesOnce();
         PdfWorkerProcess worker =
                 PdfWorkerProcess.start(
                         nextId.getAndIncrement(), config.command(), START_TIMEOUT, timer);
@@ -159,6 +162,23 @@ public class PdfWorkerPool implements DisposableBean {
             throw new IOException("PDF worker pool is shut down");
         }
         return worker;
+    }
+
+    // Extraction needs more heap than a worker gets; do it here once, workers reuse the cache.
+    private void extractNativesOnce() throws IOException {
+        if (nativesReady) {
+            return;
+        }
+        synchronized (this) {
+            if (!nativesReady) {
+                try {
+                    NativeLoader.ensureLoaded();
+                } catch (RuntimeException | LinkageError e) {
+                    throw new IOException("PDFium natives could not be loaded", e);
+                }
+                nativesReady = true;
+            }
+        }
     }
 
     private void giveBack(PdfWorkerProcess worker) {
