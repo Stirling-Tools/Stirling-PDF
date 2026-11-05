@@ -192,6 +192,7 @@ class PdfWorkerPoolTest {
         assertThat(PdfWorkerPool.resolve(settings).command()).isNull();
 
         settings.setEnabled("auto");
+        assertThat(PdfWorkerPool.resolve(settings).size()).isEqualTo(2);
         settings.setCount(4);
         assertThat(PdfWorkerPool.resolve(settings).command()).isNotNull();
         assertThat(PdfWorkerPool.resolve(settings).size()).isEqualTo(4);
