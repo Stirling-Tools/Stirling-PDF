@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   },
   taken: new Set<string>(),
   askChoice: vi.fn(),
+  rename: vi.fn(async () => true),
 }));
 
 vi.mock("@editor/components/toast", () => ({ alert: mocks.alert }));
@@ -52,6 +53,9 @@ vi.mock("@editor/services/desktopFileLink", () => ({
 }));
 vi.mock("@editor/services/saveChoice", () => ({
   requestSaveChoice: mocks.askChoice,
+}));
+vi.mock("@editor/services/renameStoredFile", () => ({
+  renameStoredFile: mocks.rename,
 }));
 
 const pdf = () => new File(["%PDF"], "old-name.pdf");
@@ -168,8 +172,12 @@ it("with Save a copy, writes the first free name beside a disk file and keeps it
   expect(mocks.download).toHaveBeenCalledWith(
     expect.objectContaining({ localPath: "C:/docs/Report (edited 2).pdf" }),
   );
+  expect(mocks.rename).toHaveBeenCalledWith(
+    expect.objectContaining({ id: "f1" }),
+    "Report (edited 2).pdf",
+    mocks.updateStub,
+  );
   expect(mocks.updateStub).toHaveBeenCalledWith("f1", {
-    name: "Report (edited 2).pdf",
     localFilePath: "C:/docs/Report (edited 2).pdf",
     localFileIsCopy: true,
     isDirty: false,

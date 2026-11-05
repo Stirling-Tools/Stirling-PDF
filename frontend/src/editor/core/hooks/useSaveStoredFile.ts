@@ -10,6 +10,7 @@ import { downloadFile } from "@editor/services/downloadService";
 import { fileStorage } from "@editor/services/fileStorage";
 import { enforceExportPolicies } from "@editor/services/policyExport";
 import { requestSaveChoice } from "@editor/services/saveChoice";
+import { renameStoredFile } from "@editor/services/renameStoredFile";
 import {
   copyFileName,
   siblingPath,
@@ -176,8 +177,8 @@ export function useSaveStoredFile(): SaveStoredFile {
         fileId: stub.id,
       });
       // The copy becomes the file's home, so later saves keep updating it.
+      await renameStoredFile(stub, copy.name, actions.updateStirlingFileStub);
       actions.updateStirlingFileStub(stub.id, {
-        name: copy.name,
         localFilePath: copy.path,
         localFileIsCopy: true,
         isDirty: false,
