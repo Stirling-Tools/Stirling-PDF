@@ -14,26 +14,14 @@ variants of PDF/A; each fixes a different print-exchange contract.
 `_PDFX.pdf` filename. The explicit profiles use `_PDFX-1a.pdf`, `_PDFX-3.pdf`,
 `_PDFX-4.pdf` and `_PDFX-6.pdf`.
 
-## What JPDFium 1.3.0 supplies
+## JPDFium responsibilities
 
-JPDFium supplies the in-process PDF/X-3 and PDF/X-4 metadata bootstrap, CMYK colour
-conversion, output intents and XMP metadata. Its API deliberately does not certify
-conformance: it does not embed missing fonts, add trim boxes, set trapping metadata,
-or validate every PDF/X rule.
+JPDFium owns the PDF/X mechanics: CMYK conversion, the output intent, XMP
+metadata, the base PDF version, missing trim boxes, and the optional
+embedded-font check. Stirling only maps the requested profile to
+`PdfXStandard` and passes the document title.
 
-Stirling therefore applies a post-conversion pass for all profiles:
-
-- set the required base PDF version (1.3, 1.6 or 2.0);
-- remove the catalog `/Version` override;
-- add an explicit `/TrimBox` to every page;
-- set a document title, creation date, modification date and `/Trapped`;
-- audit fonts and, when `strict=true`, fail if any font is not embedded;
-- reject transparency for PDF/X-1a and PDF/X-3.
-
-PDF/X-1a and PDF/X-6 use the same JPDFium colour and output-intent primitives, but
-their metadata is written by `PdfOutputIntent` because the 1.3.0 `PdfXConverter`
-only exposes metadata bootstrap for X-3 and X-4.
-
-Font embedding remains the main limit. A file with non-embedded fonts is not fully
-PDF/X conformant even when the intent, boxes and colour data are correct. Use
-`strict=true` when the caller must reject that case, or embed/substitute fonts first.
+`strict=true` sets `PdfXOptions.requireEmbeddedFonts(true)` so a file with a
+non-embedded font fails instead of being returned as PDF/X. Without strict mode
+the conversion is still intended to be run through a PDF/X-aware preflight;
+`PdfXConverter.checkMetadata` only checks the intent and version wiring.

@@ -77,7 +77,7 @@ const ConvertToPdfxSettings = ({
           }
           label={t(
             "convert.pdfxStrict",
-            "Fail if the output has non-embedded fonts or other preflight issues",
+            "Fail if the output has non-embedded fonts",
           )}
           disabled={disabled}
           data-testid="pdfx-strict-checkbox"

@@ -16,7 +16,7 @@ JPDFium source: `/Users/brios/IdeaProjects/JPDFium`
 Stack: #8469 -> #8471 -> #8472 -> #8789 -> #8790 (stack #8788).
 
 The change adds PDF/X-1a, X-3, X-4 and X-6 profiles plus CMYK conversion, using
-JPDFium 1.3.0. `pdfx` remains the PDF/X-4 alias. See
+JPDFium 1.3.1. `pdfx` remains the PDF/X-4 alias. See
 `docs/developer/PDFX_STANDARDS.md` for the profile contract.
 
 ## Required checks

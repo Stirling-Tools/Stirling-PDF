@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -40,6 +41,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
+import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -321,8 +323,7 @@ class ConvertPDFToPDFAMoreTest {
             TempFile managed = managedTempFile();
             when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
 
-            stirling.software.SPDF.model.api.security.PDFVerificationResult ok =
-                    new stirling.software.SPDF.model.api.security.PDFVerificationResult();
+            PDFVerificationResult ok = new PDFVerificationResult();
             ok.setCompliant(true);
             ok.setStandard("2b");
             ok.setComplianceSummary("PDF/A-2b compliant");
@@ -390,8 +391,7 @@ class ConvertPDFToPDFAMoreTest {
                         assertThat(
                                         output.getPage(0)
                                                 .getCOSObject()
-                                                .getDictionaryObject(
-                                                        org.apache.pdfbox.cos.COSName.TRIM_BOX))
+                                                .getDictionaryObject(COSName.TRIM_BOX))
                                 .as(token)
                                 .isNotNull();
                         assertThat(output.getDocumentInformation().getTitle())
