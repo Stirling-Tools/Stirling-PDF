@@ -19,11 +19,12 @@ public class PdfToPdfARequest extends PDFFile {
                     "pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b;"
                             + " pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML);"
                             + " pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors"
-                            + " instead); pdfx = PDF/X.",
+                            + " instead); pdfx = PDF/X-4 alias; pdfx-1a = PDF/X-1a;"
+                            + " pdfx-3 = PDF/X-3; pdfx-4 = PDF/X-4; pdfx-6 = PDF/X-6.",
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {
                 "pdfa", "pdfa-1", "pdfa-2", "pdfa-2b", "pdfa-3", "pdfa-3b", "pdfa-1a", "pdfa-2a",
-                "pdfa-3a", "pdfx"
+                "pdfa-3a", "pdfx", "pdfx-1a", "pdfx-3", "pdfx-4", "pdfx-6"
             })
     private String outputFormat;
 

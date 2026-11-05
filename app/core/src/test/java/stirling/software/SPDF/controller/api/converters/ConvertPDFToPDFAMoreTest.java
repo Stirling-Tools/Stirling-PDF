@@ -358,6 +358,51 @@ class ConvertPDFToPDFAMoreTest {
     class PdfXConversion {
 
         @Test
+        @DisplayName("all PDF/X profiles convert and return a PDF")
+        void pdfXAllProfiles() throws Exception {
+            for (String token : List.of("pdfx-1a", "pdfx-3", "pdfx-4", "pdfx-6")) {
+                float version =
+                        switch (token) {
+                            case "pdfx-1a", "pdfx-3" -> 1.3f;
+                            case "pdfx-4" -> 1.6f;
+                            case "pdfx-6" -> 2.0f;
+                            default -> throw new IllegalStateException(token);
+                        };
+                TempFile managed = managedTempFile();
+                when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
+
+                PdfToPdfARequest request = new PdfToPdfARequest();
+                request.setFileInput(pdfFile());
+                request.setOutputFormat(token);
+
+                ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
+                try (MockedStatic<WebResponseUtils> wr =
+                        Mockito.mockStatic(WebResponseUtils.class)) {
+                    wr.when(
+                                    () ->
+                                            WebResponseUtils.pdfFileToWebResponse(
+                                                    any(TempFile.class), anyString()))
+                            .thenReturn(expected);
+                    ResponseEntity<Resource> response = newController().pdfToPdfA(request);
+                    assertThat(response).as(token).isSameAs(expected);
+                    try (PDDocument output = Loader.loadPDF(managed.getFile())) {
+                        assertThat(output.getVersion()).as(token).isEqualTo(version);
+                        assertThat(
+                                        output.getPage(0)
+                                                .getCOSObject()
+                                                .getDictionaryObject(
+                                                        org.apache.pdfbox.cos.COSName.TRIM_BOX))
+                                .as(token)
+                                .isNotNull();
+                        assertThat(output.getDocumentInformation().getTitle())
+                                .as(token)
+                                .isNotBlank();
+                    }
+                }
+            }
+        }
+
+        @Test
         @DisplayName("JPDFium success path returns the produced PDF/X file")
         void pdfXSuccess() throws Exception {
             TempFile managed = managedTempFile();
