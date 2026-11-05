@@ -20,6 +20,9 @@ import java.security.cert.X509Certificate;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.bouncycastle.cms.CMSProcessableByteArray;
 import org.bouncycastle.cms.CMSSignedData;
@@ -45,6 +48,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
+import stirling.software.SPDF.utils.text.WidthCalculator;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -525,6 +529,19 @@ class CertSignControllerTest {
 
         assertNotNull(response.getBody());
         assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void fallbackSignerNameFitsInsideSignatureBox() throws Exception {
+        X509Certificate cert =
+                certificateWithSubject("O=Test Organisation, SERIALNUMBER=12345");
+        String label = "Signed by " + CertSignController.CreateSignature.getSignerName(cert);
+        PDFont font = new PDType1Font(Standard14Fonts.FontName.TIMES_BOLD);
+        float fitted = CertSignController.CreateSignature.fitSignerFontSize(font, label, 10, 190);
+        assertTrue(fitted < 10, "fallback label is wider than the box at 10pt, so it must shrink");
+        assertTrue(
+                WidthCalculator.calculateAccurateWidth(font, label, fitted) <= 190,
+                "fitted label must fit inside the 190-point text area");
     }
 
     @Test
