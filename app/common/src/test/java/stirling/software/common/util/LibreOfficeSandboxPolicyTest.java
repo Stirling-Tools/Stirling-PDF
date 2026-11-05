@@ -8,6 +8,7 @@ import java.net.UnixDomainSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,6 +63,23 @@ class LibreOfficeSandboxPolicyTest {
         }
         assertTrue(Files.isDirectory(profile.resolve("tmp")));
         assertTrue(Files.isDirectory(outDir));
+    }
+
+    @Test
+    @EnabledOnOs(OS.LINUX)
+    void listsUseTheColonSeparatorLoSandboxParses() throws IOException {
+        Path profile = tmp.resolve("p");
+        Path outDir = tmp.resolve("o");
+        Path a = Files.writeString(tmp.resolve("a.docx"), "x");
+        Path b = Files.writeString(tmp.resolve("b.docx"), "x");
+        List<String> command = new ArrayList<>(sofficeCommand(profile, outDir, a));
+        command.add(b.toString());
+
+        Map<String, String> env =
+                LibreOfficeSandboxPolicy.forCommand(command, roots()).orElseThrow().env();
+
+        assertEquals(profile + ":" + outDir + ":/dev", env.get("STIRLING_LO_ALLOW_RW"));
+        assertEquals(a + ":" + b, env.get("STIRLING_LO_ALLOW_RO_EXTRA"));
     }
 
     @Test
