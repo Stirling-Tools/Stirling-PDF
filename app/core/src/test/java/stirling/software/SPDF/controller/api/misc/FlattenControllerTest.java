@@ -10,13 +10,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationText;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,8 +35,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.misc.FlattenRequest;
+import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -51,10 +58,14 @@ class FlattenControllerTest {
 
     @TempDir Path tempDir;
     @Mock private TempFileManager tempFileManager;
+    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @InjectMocks private FlattenController controller;
 
     @BeforeEach
     void setUp() throws Exception {
+        lenient()
+                .when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(inv.<MultipartFile>getArgument(0).getBytes()));
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
@@ -101,9 +112,10 @@ class FlattenControllerTest {
         assertThat(out).isNotEmpty();
         try (PDDocument flattened = Loader.loadPDF(out)) {
             assertThat(flattened.getNumberOfPages()).isEqualTo(1);
-            // JPDFium burns widget appearances into page content but leaves the dead
-            // field dictionaries behind; with no widgets left the form is non-interactive.
-            assertThat(flattened.getPage(0).getAnnotations()).isEmpty();
+            // Form-only flattening must not discard non-widget annotations; the dedicated
+            // regression test below covers that contract.
+            assertThat(flattened.getPage(0).getAnnotations())
+                    .allMatch(a -> a instanceof PDAnnotationWidget);
         }
     }
 
@@ -118,6 +130,23 @@ class FlattenControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(drainBody(response)).isNotEmpty();
+    }
+
+    @Test
+    void flatten_formsOnly_preservesNonWidgetAnnotations() throws Exception {
+        MockMultipartFile file = createPdfWithFormAndTextAnnotation();
+        FlattenRequest request = new FlattenRequest();
+        request.setFileInput(file);
+        request.setFlattenOnlyForms(true);
+
+        ResponseEntity<Resource> response = controller.flatten(request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        try (PDDocument flattened = Loader.loadPDF(drainBody(response))) {
+            assertThat(flattened.getPage(0).getAnnotations()).hasSize(1);
+            assertThat(flattened.getPage(0).getAnnotations().get(0))
+                    .isInstanceOf(PDAnnotationText.class);
+        }
     }
 
     @Test
@@ -205,6 +234,12 @@ class FlattenControllerTest {
             PDPage page = new PDPage(PDRectangle.LETTER);
             doc.addPage(page);
             PDAcroForm acroForm = new PDAcroForm(doc);
+            acroForm.setDefaultAppearance("/Helv 12 Tf 0 g");
+            PDResources resources = new PDResources();
+            resources.put(
+                    COSName.getPDFName("Helv"),
+                    new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            acroForm.setDefaultResources(resources);
             doc.getDocumentCatalog().setAcroForm(acroForm);
             org.apache.pdfbox.pdmodel.interactive.form.PDTextField field =
                     new org.apache.pdfbox.pdmodel.interactive.form.PDTextField(acroForm);
@@ -216,9 +251,45 @@ class FlattenControllerTest {
             page.getAnnotations().add(widget);
             field.getWidgets().add(widget);
             acroForm.getFields().add(field);
+            field.setValue("sample");
             doc.save(path.toFile());
         }
         return new MockMultipartFile(
                 "fileInput", "form.pdf", MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(path));
+    }
+
+    private MockMultipartFile createPdfWithFormAndTextAnnotation() throws IOException {
+        Path path = tempDir.resolve("form-and-note.pdf");
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            doc.addPage(page);
+            PDAcroForm form = new PDAcroForm(doc);
+            form.setDefaultAppearance("/Helv 12 Tf 0 g");
+            PDResources resources = new PDResources();
+            resources.put(
+                    COSName.getPDFName("Helv"),
+                    new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            form.setDefaultResources(resources);
+            doc.getDocumentCatalog().setAcroForm(form);
+            PDTextField field = new PDTextField(form);
+            field.setPartialName("name");
+            form.getFields().add(field);
+            PDAnnotationWidget widget = field.getWidgets().get(0);
+            widget.setRectangle(new PDRectangle(50, 700, 120, 20));
+            widget.setPage(page);
+            page.getAnnotations().add(widget);
+            field.setValue("sample");
+            PDAnnotationText note = new PDAnnotationText();
+            note.setRectangle(new PDRectangle(50, 600, 20, 20));
+            note.setContents("keep this note");
+            note.setPage(page);
+            page.getAnnotations().add(note);
+            doc.save(path.toFile());
+        }
+        return new MockMultipartFile(
+                "fileInput",
+                "form-and-note.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                Files.readAllBytes(path));
     }
 }

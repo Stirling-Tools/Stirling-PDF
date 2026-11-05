@@ -2,6 +2,8 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -38,6 +41,7 @@ public class FlattenController {
     // Default when the caller sends no renderDpi; an explicit request still wins up to maxDPI
     private static final int FLATTEN_RENDER_DPI = 300;
 
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
@@ -56,6 +60,9 @@ public class FlattenController {
             throws Exception {
         MultipartFile file = request.getFileInput();
         Boolean flattenOnlyForms = request.getFlattenOnlyForms();
+        if (Boolean.TRUE.equals(flattenOnlyForms)) {
+            return flattenFormsOnly(file);
+        }
 
         ApplicationProperties properties =
                 ApplicationContextProvider.getBean(ApplicationProperties.class);
@@ -78,18 +85,12 @@ public class FlattenController {
         }
         final int renderDpi = renderDpiTemp;
 
-        // JPDFium flattens in place, so unlike the old PDFBox path there is no
-        // extract-and-rebuild round-trip: ANNOTATIONS burns form fields (and other
-        // visible annotations) while keeping text selectable, FULL rasterizes each
-        // page at the requested DPI.
+        // JPDFium flattens in place, so there is no extract-and-rebuild round-trip:
+        // FULL rasterizes each page at the requested DPI.
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(".pdf");
         try {
             try (PdfDocument document = PdfDocument.open(file.getBytes())) {
-                if (Boolean.TRUE.equals(flattenOnlyForms)) {
-                    document.flatten(FlattenMode.ANNOTATIONS);
-                } else {
-                    document.flatten(FlattenMode.FULL, renderDpi);
-                }
+                document.flatten(FlattenMode.FULL, renderDpi);
                 document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
             } catch (RuntimeException e) {
                 throw new IOException("JPDFium flatten failed", e);
@@ -103,6 +104,23 @@ public class FlattenController {
             if (tempOutputFile != null) {
                 tempOutputFile.close();
             }
+        }
+    }
+
+    /**
+     * JPDFium's ANNOTATIONS flatten mode bakes every visible annotation, not just form widgets.
+     * Keep the form-only contract on PDFBox until JPDFium exposes a widget-only operation.
+     */
+    private ResponseEntity<Resource> flattenFormsOnly(MultipartFile file) throws IOException {
+        try (PDDocument document = pdfDocumentFactory.load(file)) {
+            PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
+            if (acroForm != null) {
+                acroForm.flatten();
+            }
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    Filenames.toSimpleFileName(file.getOriginalFilename()),
+                    tempFileManager);
         }
     }
 }
