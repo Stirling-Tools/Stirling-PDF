@@ -48,6 +48,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
+import stirling.software.SPDF.utils.text.TextEncodingHelper;
 import stirling.software.SPDF.utils.text.WidthCalculator;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
@@ -542,6 +543,39 @@ class CertSignControllerTest {
         assertTrue(
                 WidthCalculator.calculateAccurateWidth(font, label, fitted) <= 190,
                 "fitted label must fit inside the 190-point text area");
+    }
+
+    @Test
+    void visibleSignatureWithNonLatinFallbackSubjectSignsSuccessfully() throws Exception {
+        SignPDFWithCertRequest request = pemRequestWithSubject("O=株式会社");
+        request.setShowSignature(true);
+        request.setPageNumber(1);
+
+        ResponseEntity<Resource> response =
+                certSignController.signPDFWithCert(request, httpRequest);
+
+        assertNotNull(response.getBody());
+        assertTrue(drainBody(response).length > 0);
+    }
+
+    @Test
+    void signatureFontFallsBackToEmbeddedFontForNonLatinNames() throws Exception {
+        String label = "Signed by O=株式会社";
+        try (PDDocument doc = new PDDocument()) {
+            PDFont latinFont =
+                    CertSignController.CreateSignature.resolveSignatureFont(
+                            doc, "Signed by Test Organisation");
+            assertEquals("Times-Bold", latinFont.getName());
+
+            PDFont font =
+                    CertSignController.CreateSignature.resolveSignatureFont(doc, label);
+            assertTrue(
+                    TextEncodingHelper.canEncodeCharacters(font, label),
+                    "resolved font must encode the non-Latin label");
+            assertTrue(
+                    !"Times-Bold".equals(font.getName()),
+                    "non-Latin label must not use Times Bold");
+        }
     }
 
     @Test
