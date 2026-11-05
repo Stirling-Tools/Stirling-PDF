@@ -474,7 +474,11 @@ export const useToolOperation = <TParams>(
               // of being labelled PDF: the "pdf" fallback applies only to
               // operations whose backend contract guarantees PDF output
               // (see config.expectedOutputExtension).
+              // A missing Content-Type is equally uninformative: it says
+              // nothing about the content, so the input extension must not
+              // stand in for it either.
               const isGenericMimeType =
+                outputType === "" ||
                 outputType === "application/octet-stream" ||
                 outputType === "application/binary";
               const baseName =
