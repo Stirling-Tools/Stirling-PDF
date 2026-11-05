@@ -45,6 +45,7 @@ import { zipFileService } from "@editor/services/zipFileService";
 import {
   detectExtensionFromSignature,
   detectFileExtension,
+  extensionToMimeType,
   getFilenameWithoutExtension,
   mimeTypeToExtension,
 } from "@editor/utils/fileUtils";
