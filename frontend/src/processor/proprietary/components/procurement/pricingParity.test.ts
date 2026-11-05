@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { QuoteConfigInput } from "@processor/api/procurement";
-import { previewAnnualMinor } from "@processor/components/procurement/QuoteBuilder";
+import { previewAnnualMinor } from "@processor/components/procurement/quotePricing";
 import { priceQuote } from "@processor/mocks/handlers/procurementSaas";
 
 /**

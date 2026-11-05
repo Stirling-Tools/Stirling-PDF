@@ -16,6 +16,7 @@ import {
 } from "@editor/constants/app";
 import { isSafePostLoginRedirect } from "@editor/services/postLoginRedirect";
 import {
+  clearPendingDestination,
   rememberPendingDestination,
   takePendingDestination,
 } from "@editor/services/pendingDestination";
@@ -73,6 +74,7 @@ export default function Login() {
 
   useEffect(() => {
     if (signedIn && !loading && nextPath) {
+      clearPendingDestination();
       navigate(nextPath, { replace: true });
     }
   }, [signedIn, loading, nextPath, navigate]);
@@ -80,8 +82,8 @@ export default function Login() {
   // Stashed as well as held in the URL: leaving to create an account loses the
   // query string, and the confirmation link cannot carry a `next`.
   useEffect(() => {
-    if (nextPath) rememberPendingDestination(nextPath);
-  }, [nextPath]);
+    if (nextPath && !signedIn) rememberPendingDestination(nextPath);
+  }, [nextPath, signedIn]);
 
   const baseUrl = getBaseUrl();
 
@@ -263,6 +265,7 @@ export default function Login() {
         await refreshSession();
 
         // A guest session does not count as signed in here, so nothing else moves them on.
+        clearPendingDestination();
         navigate(nextPath ?? "/", { replace: true });
       }
     } catch (err) {

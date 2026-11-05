@@ -209,6 +209,62 @@ function SignedIn() {
   // Building a quote or signing opens within the deal, at the stage it belongs to.
   const flowOpen = procurement.open && procurementFlowStep(procurement) != null;
 
+  /** The page's main content, by how far the visitor has got: linking, then exploring, then the deal. */
+  function body(): ReactNode {
+    if (loading) return <PageSkeleton />;
+    if (!isLinked)
+      return (
+        <Landing>
+          <ConnectPanel
+            available={gate.available}
+            isOwner={isOwner}
+            onConnect={gate.connect}
+            onSchedule={schedule}
+          />
+        </Landing>
+      );
+    // The banner above says what failed and offers a retry.
+    if (procurement.loadError) return null;
+    if (exploring) {
+      if (canManage)
+        return (
+          <Landing>
+            <TrialSetupForm
+              busy={busy}
+              email={email}
+              initial={draft}
+              onScheduleCall={schedule}
+              onConfirm={procurement.onConfirmSetup}
+            />
+          </Landing>
+        );
+      return (
+        <Landing>
+          {roleKnown && (
+            <p className="ent__note">
+              {t(
+                "portal.enterprise.member",
+                "Your team leader runs the Enterprise deal. Once it starts, you can follow its progress here.",
+              )}
+            </p>
+          )}
+        </Landing>
+      );
+    }
+    return (
+      <Deal
+        controller={procurement}
+        canManage={canManage}
+        roleKnown={roleKnown}
+        teamSize={wallet.data?.team?.usersInUse ?? 1}
+        onInvite={canManage ? () => openSettings("users") : undefined}
+        onSchedule={schedule}
+        flowStep={flowOpen ? procurementFlowStep(procurement) : null}
+        flow={flowOpen && <ProcurementFlow controller={procurement} />}
+      />
+    );
+  }
+
   return (
     <Shell
       company={company}
@@ -269,50 +325,7 @@ function SignedIn() {
         )}
       </div>
 
-      {loading ? (
-        <PageSkeleton />
-      ) : !isLinked ? (
-        <Landing>
-          <ConnectPanel
-            available={gate.available}
-            isOwner={isOwner}
-            onConnect={gate.connect}
-            onSchedule={schedule}
-          />
-        </Landing>
-      ) : procurement.loadError ? null : exploring ? (
-        <Landing>
-          {canManage ? (
-            <TrialSetupForm
-              busy={busy}
-              email={email}
-              initial={draft}
-              onScheduleCall={schedule}
-              onConfirm={procurement.onConfirmSetup}
-            />
-          ) : (
-            roleKnown && (
-              <p className="ent__note">
-                {t(
-                  "portal.enterprise.member",
-                  "Your team leader runs the Enterprise deal. Once it starts, you can follow its progress here.",
-                )}
-              </p>
-            )
-          )}
-        </Landing>
-      ) : (
-        <Deal
-          controller={procurement}
-          canManage={canManage}
-          roleKnown={roleKnown}
-          teamSize={wallet.data?.team?.usersInUse ?? 1}
-          onInvite={canManage ? () => openSettings("users") : undefined}
-          onSchedule={schedule}
-          flowStep={flowOpen ? procurementFlowStep(procurement) : null}
-          flow={flowOpen && <ProcurementFlow controller={procurement} />}
-        />
-      )}
+      {body()}
 
       {/* Mounted here while no step is open: booking a call opens from anywhere on the page. */}
       {!flowOpen && <ProcurementFlow controller={procurement} />}

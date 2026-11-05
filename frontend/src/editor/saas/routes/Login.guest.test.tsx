@@ -27,10 +27,12 @@ vi.mock("@editor/auth/supabase", () => ({
   signInAnonymously: vi.fn(),
 }));
 vi.mock("@editor/hooks/useDocumentMeta", () => ({ useDocumentMeta: vi.fn() }));
-vi.mock("@editor/services/pendingDestination", () => ({
+const destination = vi.hoisted(() => ({
   rememberPendingDestination: vi.fn(),
+  clearPendingDestination: vi.fn(),
   takePendingDestination: vi.fn(() => null),
 }));
+vi.mock("@editor/services/pendingDestination", () => destination);
 
 function mount(entry: string) {
   window.history.replaceState(null, "", entry);
@@ -52,6 +54,7 @@ describe("SaaS login with a guest session", () => {
   beforeEach(() => {
     auth.session = {};
     auth.isAnonymous = true;
+    vi.clearAllMocks();
   });
 
   it("shows a guest the sign-in form instead of sending them back to `next`", () => {
@@ -64,5 +67,12 @@ describe("SaaS login with a guest session", () => {
     auth.isAnonymous = false;
     mount("/login?next=%2Fenterprise");
     expect(screen.getByText("Enterprise page")).toBeInTheDocument();
+  });
+
+  it("leaves no remembered destination behind once it has sent them on", () => {
+    auth.isAnonymous = false;
+    mount("/login?next=%2Fenterprise");
+    expect(destination.clearPendingDestination).toHaveBeenCalled();
+    expect(destination.rememberPendingDestination).not.toHaveBeenCalled();
   });
 });

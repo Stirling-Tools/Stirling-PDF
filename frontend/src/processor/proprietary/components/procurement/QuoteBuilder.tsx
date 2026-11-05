@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
@@ -8,15 +8,23 @@ import {
   buildQuote,
   recordLegalConsent,
   type QuoteConfigInput,
-  type QuoteLineItem,
   type QuoteResult,
 } from "@processor/api/procurement";
+import {
+  DetailsStep,
+  PlanStep,
+  SizingStep,
+} from "@processor/components/procurement/QuoteBuilderSteps";
+import { QuotePaper } from "@processor/components/procurement/QuotePaper";
+import {
+  estimateVolume,
+  previewAnnualMinor,
+  TRAINING_MINOR,
+} from "@processor/components/procurement/quotePricing";
 import { LegalDocumentModal } from "@processor/components/procurement/ProcurementExtras";
 import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
 import { useProcurementPrefill } from "@processor/components/procurement/prefill";
 import {
-  Field,
-  FieldError,
   focusFirstInvalid,
   isEmail,
   isFilled,
@@ -27,26 +35,8 @@ import "@processor/views/Procurement.css";
 const STEPS = ["volume", "plan", "details", "review"] as const;
 const DETAILS_STEP = 2;
 const REVIEW_STEP = 3;
-const TERM_DISCOUNT = [0, 0.03, 0.05, 0.06, 0.07]; // 1..5 years — meter-only discount (D71)
-// Governance posture: the intensity (runs per PDF) fed to the committed-volume curve.
-const POSTURES = [
-  { intensity: 2, key: "essentials" },
-  { intensity: 4, key: "governed" },
-  { intensity: 7, key: "regulated" },
-] as const;
-// PDF-size tiers (D93): a multiplier on the rate. Default Standard (×1.4). Mirrors the server.
-const SIZE_TIERS = [
-  { mult: 1.0, key: "compact" },
-  { mult: 1.4, key: "standard" },
-  { mult: 2.4, key: "heavy" },
-] as const;
-
 /** Share of the minimum from which a quote counts as nearly there, so the nudge is to top up. */
 const NEAR_MINIMUM_RATIO = 0.75;
-
-/** Flat add-on prices, in cents; must equal the server's PricingRates.defaults(). */
-const QBR_ANNUAL_MINOR = 800_000;
-const TRAINING_MINOR = 750_000;
 /** Upper bound for the volume search, far past any real estimate. */
 const MAX_VOLUME = 1_000_000_000_000;
 
@@ -180,7 +170,6 @@ export function QuoteBuilder({
     region: isFilled(cfg.region),
     postalCode: isFilled(cfg.postalCode),
   };
-  const required = t("portal.procurement.validation.required");
   const detailsValid = Object.values(valid).every(Boolean);
   const eulaOk = eulaAlreadyAgreed || eula;
   const canGenerate = detailsValid && eulaOk;
@@ -331,349 +320,31 @@ export function QuoteBuilder({
 
       <div className="portal-qb__body">
         {step === 0 && (
-          <Step
-            icon={<Icon name="file-text" size={22} />}
-            title={t("portal.procurement.builder.s1Title")}
-            sub={t("portal.procurement.builder.s1Sub")}
-          >
-            <div className="portal-qb__row">
-              <Field label={t("portal.procurement.builder.users")}>
-                <input
-                  type="number"
-                  min={0}
-                  placeholder={t("portal.procurement.builder.usersPlaceholder")}
-                  value={cfg.users || ""}
-                  onChange={(e) => {
-                    const users = Number(e.target.value);
-                    set("users", users);
-                    // A manual figure gives way here, as the hint under the fields promises.
-                    setManualVolume(false);
-                    set("volume", estimateVolume(users));
-                  }}
-                />
-              </Field>
-              <Field
-                label={t("portal.procurement.builder.volume")}
-                required
-                invalid={triedSizing && cfg.volume <= 0}
-                error={t("portal.procurement.validation.volume")}
-              >
-                <input
-                  type="number"
-                  min={0}
-                  placeholder={t(
-                    "portal.procurement.builder.volumePlaceholder",
-                  )}
-                  value={cfg.volume || ""}
-                  onChange={(e) => {
-                    setManualVolume(true);
-                    set("volume", Number(e.target.value));
-                  }}
-                />
-              </Field>
-            </div>
-            <p className="portal-qb__hint">
-              {cfg.users > 0 && !manualVolume
-                ? t("portal.procurement.builder.volEstimated", {
-                    count: cfg.users,
-                  })
-                : cfg.users > 0
-                  ? t("portal.procurement.builder.volManual")
-                  : t("portal.procurement.builder.volNoUsers")}
-            </p>
-            <Field label={t("portal.procurement.builder.posture")}>
-              <div className="portal-qb__opts">
-                {POSTURES.map((p) => (
-                  <OptCard
-                    key={p.key}
-                    on={cfg.intensity === p.intensity}
-                    title={t(`portal.procurement.builder.posture_${p.key}`)}
-                    sub={`${t("portal.procurement.builder.posture_count", {
-                      count: p.intensity,
-                    })} · ${t(`portal.procurement.builder.posture_${p.key}Sub`)}`}
-                    onClick={() => set("intensity", p.intensity)}
-                  />
-                ))}
-              </div>
-            </Field>
-
-            <Field label={t("portal.procurement.builder.pdfSize")}>
-              <div className="portal-qb__opts">
-                {SIZE_TIERS.map((s) => (
-                  <OptCard
-                    key={s.key}
-                    on={cfg.sizeMult === s.mult}
-                    title={t(`portal.procurement.builder.size_${s.key}`)}
-                    // The multiplier stays in the price, not on the card: it is rate detail buyers
-                    // need not weigh, and the running estimate already shows its effect.
-                    sub={t(`portal.procurement.builder.size_${s.key}Sub`)}
-                    onClick={() => set("sizeMult", s.mult)}
-                  />
-                ))}
-              </div>
-            </Field>
-          </Step>
+          <SizingStep
+            cfg={cfg}
+            set={set}
+            manualVolume={manualVolume}
+            setManualVolume={setManualVolume}
+            volumeInvalid={triedSizing && cfg.volume <= 0}
+          />
         )}
-
         {step === 1 && (
-          <Step
-            icon={<Icon name="shield-check" size={22} />}
-            title={t("portal.procurement.builder.s2Title")}
-            sub={t("portal.procurement.builder.s2Sub")}
-          >
-            <Field label={t("portal.procurement.builder.term")}>
-              <div className="portal-qb__pills">
-                {[1, 2, 3, 4, 5].map((y) => (
-                  <button
-                    key={y}
-                    type="button"
-                    data-on={cfg.termYears === y || undefined}
-                    onClick={() => set("termYears", y)}
-                  >
-                    {t("portal.procurement.builder.years", { count: y })}
-                  </button>
-                ))}
-              </div>
-              {TERM_DISCOUNT[cfg.termYears - 1] > 0 && (
-                <p className="portal-qb__discount">
-                  {t("portal.procurement.builder.termDiscount", {
-                    pct: Math.round(TERM_DISCOUNT[cfg.termYears - 1] * 100),
-                  })}
-                </p>
-              )}
-            </Field>
-
-            <Field label={t("portal.procurement.builder.serviceLevel")}>
-              <div className="portal-qb__opts">
-                <OptCard
-                  on={cfg.serviceLevel === "standard"}
-                  title={t("portal.procurement.builder.slStandard")}
-                  sub={t("portal.procurement.builder.slStandardSub")}
-                  onClick={() => set("serviceLevel", "standard")}
-                />
-                <OptCard
-                  on={cfg.serviceLevel === "priority"}
-                  title={t("portal.procurement.builder.slPriority")}
-                  sub={t("portal.procurement.builder.slPrioritySub")}
-                  onClick={() => set("serviceLevel", "priority")}
-                />
-                <OptCard
-                  on={cfg.serviceLevel === "dedicated"}
-                  title={t("portal.procurement.builder.slDedicated")}
-                  sub={t("portal.procurement.builder.slDedicatedSub")}
-                  onClick={() => set("serviceLevel", "dedicated")}
-                />
-              </div>
-            </Field>
-
-            <Field label={t("portal.procurement.builder.addons")}>
-              <div className="portal-qb__addons">
-                <AddOn
-                  on={cfg.indemnification}
-                  title={t("portal.procurement.builder.indemnification")}
-                  sub={`${t("portal.procurement.builder.indemnificationSub")} · ${t(
-                    "portal.procurement.builder.addonPerYear",
-                    { amount: money(indemnityPreview) },
-                  )}`}
-                  onClick={() => set("indemnification", !cfg.indemnification)}
-                />
-                <AddOn
-                  on={cfg.training}
-                  title={t("portal.procurement.builder.training")}
-                  sub={`${t("portal.procurement.builder.trainingSub")} · ${t(
-                    "portal.procurement.builder.addonOneTime",
-                    { amount: money(TRAINING_MINOR) },
-                  )}`}
-                  onClick={() => set("training", !cfg.training)}
-                />
-                <AddOn
-                  on={cfg.qbr}
-                  title={t("portal.procurement.builder.qbr")}
-                  sub={`${t("portal.procurement.builder.qbrSub")} · ${t(
-                    "portal.procurement.builder.addonPerYear",
-                    { amount: money(QBR_ANNUAL_MINOR) },
-                  )}`}
-                  onClick={() => set("qbr", !cfg.qbr)}
-                />
-              </div>
-            </Field>
-          </Step>
+          <PlanStep cfg={cfg} set={set} indemnityPreview={indemnityPreview} />
         )}
-
-        {step === 2 && (
-          <Step
-            icon={<Icon name="users" size={22} />}
-            title={t("portal.procurement.builder.s3Title")}
-            sub={t("portal.procurement.builder.s3Sub")}
-          >
-            <div className="portal-qb__row">
-              <Field
-                label={t("portal.procurement.builder.businessName")}
-                required
-                invalid={showErrors && !valid.businessName}
-                error={required}
-              >
-                <input
-                  placeholder={t(
-                    "portal.procurement.builder.businessNamePlaceholder",
-                  )}
-                  value={cfg.businessName}
-                  onChange={(e) => set("businessName", e.target.value)}
-                />
-              </Field>
-              <Field
-                label={t("portal.procurement.builder.contactName")}
-                required
-                invalid={showErrors && !valid.contactName}
-                error={required}
-              >
-                <input
-                  placeholder={t(
-                    "portal.procurement.builder.contactNamePlaceholder",
-                  )}
-                  value={cfg.contactName ?? ""}
-                  onChange={(e) => set("contactName", e.target.value)}
-                />
-              </Field>
-            </div>
-            <Field
-              label={t("portal.procurement.builder.contactEmail")}
-              required
-              invalid={
-                (showErrors || (emailTouched && !!cfg.contactEmail?.trim())) &&
-                !valid.contactEmail
-              }
-              error={
-                isFilled(cfg.contactEmail)
-                  ? t("portal.procurement.validation.email")
-                  : required
-              }
-            >
-              <input
-                type="email"
-                placeholder={t(
-                  "portal.procurement.builder.contactEmailPlaceholder",
-                )}
-                value={cfg.contactEmail ?? ""}
-                onChange={(e) => set("contactEmail", e.target.value)}
-                onBlur={() => setEmailTouched(true)}
-              />
-            </Field>
-            <Field
-              label={t("portal.procurement.builder.addressLine1")}
-              required
-              invalid={showErrors && !valid.addressLine1}
-              error={required}
-            >
-              <input
-                placeholder={t(
-                  "portal.procurement.builder.addressLine1Placeholder",
-                )}
-                value={cfg.addressLine1 ?? ""}
-                onChange={(e) => set("addressLine1", e.target.value)}
-              />
-            </Field>
-            <Field label={t("portal.procurement.builder.addressLine2")}>
-              <input
-                placeholder={t(
-                  "portal.procurement.builder.addressLine2Placeholder",
-                )}
-                value={cfg.addressLine2 ?? ""}
-                onChange={(e) => set("addressLine2", e.target.value)}
-              />
-            </Field>
-            <div className="portal-qb__row">
-              <Field
-                label={t("portal.procurement.builder.city")}
-                required
-                invalid={showErrors && !valid.city}
-                error={required}
-              >
-                <input
-                  placeholder={t("portal.procurement.builder.cityPlaceholder")}
-                  value={cfg.city ?? ""}
-                  onChange={(e) => set("city", e.target.value)}
-                />
-              </Field>
-              <Field
-                label={t("portal.procurement.builder.region")}
-                required
-                invalid={showErrors && !valid.region}
-                error={required}
-              >
-                <input
-                  placeholder={t(
-                    "portal.procurement.builder.regionPlaceholder",
-                  )}
-                  value={cfg.region ?? ""}
-                  onChange={(e) => set("region", e.target.value)}
-                />
-              </Field>
-              <Field
-                label={t("portal.procurement.builder.postalCode")}
-                required
-                invalid={showErrors && !valid.postalCode}
-                error={required}
-              >
-                <input
-                  placeholder={t(
-                    "portal.procurement.builder.postalCodePlaceholder",
-                  )}
-                  value={cfg.postalCode ?? ""}
-                  onChange={(e) => set("postalCode", e.target.value)}
-                />
-              </Field>
-            </div>
-            <div className="portal-qb__row">
-              <Field label={t("portal.procurement.builder.poNumber")}>
-                <input
-                  placeholder={t(
-                    "portal.procurement.builder.poNumberPlaceholder",
-                  )}
-                  value={cfg.poNumber ?? ""}
-                  onChange={(e) => set("poNumber", e.target.value)}
-                />
-              </Field>
-              <Field label={t("portal.procurement.builder.taxId")}>
-                <input
-                  placeholder={t("portal.procurement.builder.taxIdPlaceholder")}
-                  value={cfg.taxId ?? ""}
-                  onChange={(e) => set("taxId", e.target.value)}
-                />
-              </Field>
-            </div>
-            {!eulaAlreadyAgreed && (
-              <label
-                className="portal-qb__eula"
-                data-invalid={(showErrors && !eulaOk) || undefined}
-              >
-                <input
-                  type="checkbox"
-                  checked={eula}
-                  aria-invalid={(showErrors && !eulaOk) || undefined}
-                  onChange={(e) => setEula(e.target.checked)}
-                />
-                <span>
-                  {t("portal.procurement.builder.eula")}{" "}
-                  <button
-                    type="button"
-                    className="portal-legal__link"
-                    onClick={() => setLegalDoc("eula")}
-                  >
-                    {t("portal.procurement.builder.viewEula")}
-                  </button>
-                </span>
-              </label>
-            )}
-            {!eulaAlreadyAgreed && showErrors && !eulaOk && (
-              <FieldError>{t("portal.procurement.validation.eula")}</FieldError>
-            )}
-            {showErrors && !canGenerate && (
-              <p className="portal-qb__error">
-                {t("portal.procurement.builder.completeRequired")}
-              </p>
-            )}
-          </Step>
+        {step === DETAILS_STEP && (
+          <DetailsStep
+            cfg={cfg}
+            set={set}
+            valid={valid}
+            showErrors={showErrors}
+            emailTouched={emailTouched}
+            onEmailBlur={() => setEmailTouched(true)}
+            eulaAlreadyAgreed={eulaAlreadyAgreed}
+            eula={eula}
+            setEula={setEula}
+            onViewEula={() => setLegalDoc("eula")}
+            canGenerate={canGenerate}
+          />
         )}
 
         {/* No step heading here, unlike the form steps: the quote is the content, and a heading over
@@ -681,179 +352,24 @@ export function QuoteBuilder({
             client-side preview — this is the document the buyer circulates, so it has to match the
             PDF and the Stripe quote exactly. */}
         {step === REVIEW_STEP && issued && (
-          <div className="portal-qb__papertray">
-            <div className="portal-surface portal-qb__paper">
-              <div className="portal-qb__paper-head">
-                <div>
-                  <div className="portal-qb__paper-brand">
-                    {t("portal.procurement.builder.paperBrand", "Stirling PDF")}
-                  </div>
-                  <div className="portal-qb__paper-eyebrow">
-                    {t("portal.procurement.builder.paperEyebrow")}
-                  </div>
-                </div>
-                <div className="portal-qb__paper-meta">
-                  <div className="portal-qb__quote-number">
-                    {issued.quoteNumber}
-                  </div>
-                  {issued.validUntil && (
-                    <div>
-                      {t("portal.procurement.review.validUntil", {
-                        date: new Date(issued.validUntil).toLocaleDateString(
-                          undefined,
-                          {
-                            timeZone: "UTC",
-                          },
-                        ),
-                      })}
-                    </div>
-                  )}
-                  {/* On the document rather than in the footer: it downloads this paper, so it
-                        belongs to it, and the footer stays the flow's own Back/Done. */}
-                  <Button
-                    variant="tertiary"
-                    size="sm"
-                    className="portal-qb__paper-download"
-                    leftSection={<Icon name="download" size={14} />}
-                    loading={downloading}
-                    onClick={onDownload}
-                  >
-                    {t("portal.procurement.review.downloadCta")}
-                  </Button>
-                </div>
-              </div>
-
-              {issued.config.businessName?.trim() && (
-                <div className="portal-qb__paper-for">
-                  <div className="portal-qb__paper-eyebrow">
-                    {t("portal.procurement.builder.paperFor")}
-                  </div>
-                  <div className="portal-qb__paper-company">
-                    {issued.config.businessName}
-                  </div>
-                </div>
-              )}
-
-              <ul className="portal-qb__lines">
-                {issued.lineItems.map((li) => (
-                  <li key={li.key} data-kind={li.kind}>
-                    <span>{lineLabel(li, issued, t)}</span>
-                    <span>
-                      {/* Marked, since one-off charges sit outside the yearly fee totalled below. */}
-                      {li.kind === "ONE_TIME" && (
-                        <span className="portal-qb__line-note">
-                          {t("portal.procurement.review.oneTime")}
-                        </span>
-                      )}
-                      {money(li.amountMinor, issued.currency)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="portal-qb__total">
-                <div>
-                  <div className="portal-qb__total-label">
-                    {t("portal.procurement.review.annual")}
-                  </div>
-                  <div className="portal-qb__total-tcv">
-                    {t("portal.procurement.review.tcv", {
-                      years: issued.config.termYears,
-                      tcv: money(issued.tcvMinor, issued.currency),
-                    })}
-                  </div>
-                  <div className="portal-qb__total-tcv">
-                    {t("portal.procurement.review.renewal", {
-                      amount: money(
-                        issued.renewalAnnualNetMinor,
-                        issued.currency,
-                      ),
-                      pct: issued.cpiRatePct,
-                    })}
-                  </div>
-                  {issued.config.poNumber?.trim() && (
-                    <div className="portal-qb__total-tcv">
-                      {t("portal.procurement.review.poNumber", {
-                        po: issued.config.poNumber.trim(),
-                      })}
-                    </div>
-                  )}
-                </div>
-                <div className="portal-qb__total-num">
-                  <strong>
-                    {money(issued.annualNetMinor, issued.currency)}
-                  </strong>
-                </div>
-              </div>
-            </div>
-          </div>
+          <QuotePaper
+            issued={issued}
+            downloading={downloading}
+            onDownload={onDownload}
+          />
         )}
       </div>
 
       {showMinimum && (
-        <Banner
-          tone="warning"
-          className="portal-qb__minimum-callout"
-          title={
-            nearMinimum
-              ? t(
-                  "portal.procurement.builder.minimumNearTitle",
-                  "You're {{gap}} a year short of Enterprise.",
-                  { gap: money(minAnnualMinor - preview) },
-                )
-              : t(
-                  "portal.procurement.builder.minimum",
-                  "Enterprise requires a minimum yearly spend of {{min}}.",
-                  { min: money(minAnnualMinor) },
-                )
-          }
-          action={
-            <div className="portal-qb__minimum-actions">
-              {nearMinimum ? (
-                <>
-                  {onScheduleCall && (
-                    <Button variant="secondary" onClick={onScheduleCall}>
-                      {t("portal.procurement.hero.scheduleCall")}
-                    </Button>
-                  )}
-                  <Button variant="primary" onClick={raiseToMinimum}>
-                    {t(
-                      "portal.procurement.builder.raiseUsage",
-                      "Raise estimated usage",
-                    )}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="secondary" onClick={() => setStep(0)}>
-                    {t("portal.procurement.builder.editUsage", "Edit usage")}
-                  </Button>
-                  {onComparePlans && (
-                    <Button
-                      variant="primary"
-                      rightSection={<Icon name="arrow-right" size={16} />}
-                      onClick={onComparePlans}
-                    >
-                      {t("portal.billing.compare.open", "Compare plans")}
-                    </Button>
-                  )}
-                </>
-              )}
-            </div>
-          }
-        >
-          {nearMinimum
-            ? t(
-                "portal.procurement.builder.minimumNear",
-                "Enterprise requires a minimum yearly spend of {{min}}. Raise your estimated usage to reach it, or talk it through with us.",
-                { min: money(minAnnualMinor) },
-              )
-            : t(
-                "portal.procurement.builder.minimumBelow",
-                "This quote comes to {{annual}} a year. If you expect to use more, raise your estimated usage; otherwise the Team plan is likely a better fit.",
-                { annual: money(preview) },
-              )}
-        </Banner>
+        <MinimumNotice
+          near={nearMinimum}
+          minMinor={minAnnualMinor}
+          previewMinor={preview}
+          onScheduleCall={onScheduleCall}
+          onRaise={raiseToMinimum}
+          onEditUsage={() => setStep(0)}
+          onComparePlans={onComparePlans}
+        />
       )}
 
       {generateError && (
@@ -960,181 +476,89 @@ export function QuoteBuilder({
   );
 }
 
-/**
- * An issued quote's line in the viewer's language. The server words its lines in English for the
- * PDF and Stripe, so each known line is rebuilt from its key and the quote's own inputs; a line
- * this page does not know keeps the server's wording.
- */
-function lineLabel(
-  li: QuoteLineItem,
-  quote: QuoteResult,
-  t: (key: string, options?: Record<string, unknown>) => string,
-): string {
-  const cfg = quote.config;
-  switch (li.key) {
-    case "usage": {
-      const posture = POSTURES.find((p) => p.intensity === cfg.intensity);
-      if (!posture) return li.label;
-      return t("portal.procurement.builder.line.usage", {
-        volume: cfg.volume.toLocaleString(),
-        rate: new Intl.NumberFormat(undefined, {
-          style: "currency",
-          currency: quote.currency || "USD",
-          currencyDisplay: "narrowSymbol",
-          minimumFractionDigits: 4,
-          maximumFractionDigits: 4,
-        }).format(perRunRate(cfg) * Math.max(1, cfg.intensity)),
-        posture: t(`portal.procurement.builder.posture_${posture.key}`),
-      });
-    }
-    case "seats":
-      return cfg.users > 0
-        ? t("portal.procurement.builder.line.seats", {
-            count: cfg.users,
-            users: cfg.users.toLocaleString(),
-          })
-        : t("portal.procurement.builder.line.seatsUnset");
-    case "multi-year":
-      return t("portal.procurement.builder.line.multiYear", {
-        count: cfg.termYears,
-      });
-    case "support":
-      return t("portal.procurement.builder.line.support");
-    case "deployment":
-      return t("portal.procurement.builder.line.deployment", {
-        deployment: t(`portal.procurement.setup.${cfg.deployment}`),
-      });
-    case "indemnification":
-      return t("portal.procurement.builder.line.indemnification");
-    case "qbr":
-      return t("portal.procurement.builder.line.qbr");
-    case "training":
-      return t("portal.procurement.builder.line.training");
-    default:
-      return li.label;
-  }
-}
-
-function Step({
-  icon,
-  title,
-  sub,
-  children,
+/** Why a quote under the Enterprise minimum can't go ahead, and the ways on from there. */
+function MinimumNotice({
+  near,
+  minMinor,
+  previewMinor,
+  onScheduleCall,
+  onRaise,
+  onEditUsage,
+  onComparePlans,
 }: {
-  icon: ReactNode;
-  title: string;
-  sub: string;
-  children: React.ReactNode;
+  /** Close enough that a little more usage clears it. */
+  near: boolean;
+  minMinor: number;
+  previewMinor: number;
+  onScheduleCall?: () => void;
+  onRaise: () => void;
+  onEditUsage: () => void;
+  onComparePlans?: () => void;
 }) {
+  const { t } = useTranslation();
   return (
-    <>
-      <div className="portal-qb__intro">
-        <span className="portal-qb__intro-icon" aria-hidden>
-          {icon}
-        </span>
-        <div>
-          <div className="portal-qb__intro-title">{title}</div>
-          <div className="portal-qb__intro-sub">{sub}</div>
+    <Banner
+      tone="warning"
+      className="portal-qb__minimum-callout"
+      title={
+        near
+          ? t(
+              "portal.procurement.builder.minimumNearTitle",
+              "You're {{gap}} a year short of Enterprise.",
+              { gap: money(minMinor - previewMinor) },
+            )
+          : t(
+              "portal.procurement.builder.minimum",
+              "Enterprise requires a minimum yearly spend of {{min}}.",
+              { min: money(minMinor) },
+            )
+      }
+      action={
+        <div className="portal-qb__minimum-actions">
+          {near ? (
+            <>
+              {onScheduleCall && (
+                <Button variant="secondary" onClick={onScheduleCall}>
+                  {t("portal.procurement.hero.scheduleCall")}
+                </Button>
+              )}
+              <Button variant="primary" onClick={onRaise}>
+                {t(
+                  "portal.procurement.builder.raiseUsage",
+                  "Raise estimated usage",
+                )}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={onEditUsage}>
+                {t("portal.procurement.builder.editUsage", "Edit usage")}
+              </Button>
+              {onComparePlans && (
+                <Button
+                  variant="primary"
+                  rightSection={<Icon name="arrow-right" size={16} />}
+                  onClick={onComparePlans}
+                >
+                  {t("portal.billing.compare.open", "Compare plans")}
+                </Button>
+              )}
+            </>
+          )}
         </div>
-      </div>
-      {children}
-    </>
-  );
-}
-
-function OptCard({
-  on,
-  title,
-  sub,
-  onClick,
-}: {
-  on: boolean;
-  title: string;
-  sub: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="portal-qb__opt"
-      data-on={on || undefined}
-      onClick={onClick}
+      }
     >
-      <span className="portal-qb__opt-title">{title}</span>
-      <span className="portal-qb__opt-sub">{sub}</span>
-    </button>
+      {near
+        ? t(
+            "portal.procurement.builder.minimumNear",
+            "Enterprise requires a minimum yearly spend of {{min}}. Raise your estimated usage to reach it, or talk it through with us.",
+            { min: money(minMinor) },
+          )
+        : t(
+            "portal.procurement.builder.minimumBelow",
+            "This quote comes to {{annual}} a year. If you expect to use more, raise your estimated usage; otherwise the Team plan is likely a better fit.",
+            { annual: money(previewMinor) },
+          )}
+    </Banner>
   );
-}
-
-function AddOn({
-  on,
-  title,
-  sub,
-  onClick,
-}: {
-  on: boolean;
-  title: string;
-  sub: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="portal-qb__addon"
-      data-on={on || undefined}
-      onClick={onClick}
-    >
-      <span className="portal-qb__addon-box" aria-hidden>
-        {on ? "✓" : ""}
-      </span>
-      <span>
-        <span className="portal-qb__addon-title">{title}</span>
-        <span className="portal-qb__addon-sub">{sub}</span>
-      </span>
-    </button>
-  );
-}
-
-function estimateVolume(users: number): number {
-  const raw = Math.max(0, users) * 5 * 230 * 1.75;
-  const stepSize = raw >= 1_000_000 ? 50_000 : raw >= 100_000 ? 25_000 : 5_000;
-  // A small team still processes something: rounding it to zero would leave nothing to price.
-  return raw > 0
-    ? Math.max(stepSize, Math.round(raw / stepSize) * stepSize)
-    : 0;
-}
-
-// Client mirror of the server pricing curve (ProcurementPricingService / quotePricing). The server
-// is authoritative; this only drives the live footer estimate. Minor units (cents); the meter
-// rounds to whole dollars, exactly like the backend, so the preview matches the issued quote.
-// Exported for the pricing-parity test, which pins this client estimate to the mock and the
-// server's published fixtures so a rate-card change can't silently desync the footer from the
-// issued quote. This copy stays non-authoritative — the backend prices the real quote.
-/** Dollars per run after the committed-volume curve, its floor and the PDF-size multiplier. */
-function perRunRate(cfg: QuoteConfigInput): number {
-  const LIST = 0.01;
-  const FLOOR = 0.005;
-  const runVol = Math.max(0, cfg.volume) * Math.max(1, cfg.intensity);
-  const volDisc =
-    runVol > 1_000_000
-      ? Math.min(0.5, 0.06 * Math.log2(runVol / 1_000_000))
-      : 0;
-  return Math.max(FLOOR, LIST * (1 - volDisc)) * (cfg.sizeMult || 1);
-}
-
-export function previewAnnualMinor(cfg: QuoteConfigInput): number {
-  const runVol = Math.max(0, cfg.volume) * Math.max(1, cfg.intensity);
-  const rate = perRunRate(cfg);
-  const termDisc = TERM_DISCOUNT[Math.min(Math.max(cfg.termYears, 1), 5) - 1];
-  const meterNet = Math.round(runVol * rate * (1 - termDisc)) * 100; // whole $ → minor units
-  const support = cfg.serviceLevel === "dedicated" ? 3_000_000 : 0; // std + priority included
-  const deploy =
-    cfg.deployment === "airgap"
-      ? 3_600_000
-      : cfg.deployment === "selfhost"
-        ? 1_200_000
-        : 0;
-  const indemnity = cfg.indemnification ? Math.round(meterNet * 0.05) : 0;
-  const qbr = cfg.qbr ? QBR_ANNUAL_MINOR : 0;
-  return meterNet + support + deploy + indemnity + qbr;
 }

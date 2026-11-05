@@ -182,9 +182,11 @@ export function useProcurement(): ProcurementController {
     seats: number,
     details: TrialSetupDetails,
   ) =>
-    run(() => {
-      void recordLegalConsent("eula", "trial"); // clickwrap consent, best-effort
-      return startTrial(deployment, seats, details);
+    run(async () => {
+      await startTrial(deployment, seats, details);
+      // Clickwrap consent, best-effort. Only once the trial exists, so a failed start or a retry
+      // doesn't log a consent of its own.
+      void recordLegalConsent("eula", "trial");
     });
   const onExtendTrial = () => run(extendTrial);
   const onReset = () =>

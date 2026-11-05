@@ -271,7 +271,7 @@ export function SetupChecklist({
                   label: downloadingLicense
                     ? t(
                         "portal.enterprise.setup.links.downloading",
-                        "Downloading…",
+                        "Downloading...",
                       )
                     : t(
                         "portal.enterprise.setup.links.downloadLicence",
