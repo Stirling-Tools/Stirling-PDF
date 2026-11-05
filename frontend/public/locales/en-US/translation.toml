@@ -9192,17 +9192,6 @@ stagesLabel = "Progress"
 ownerOnly = "Only this server’s owner can connect it. Ask them to open this page."
 unavailable = "Connecting to a Stirling account is turned off on this server. Book a call and we’ll set up your trial with you."
 
-[portal.enterprise.demoSales]
-done = "Done"
-message = "What do you need?"
-messagePlaceholder = "Deployment, team size, compliance needs..."
-notSent = "Demo · no message was sent"
-send = "Send to sales"
-sentBody = "A confirmation is on its way to {{email}}. We usually reply within one business day."
-sentTitle = "Thanks, we're on it"
-subtitle = "Tell us about your deployment and we'll put together committed-volume pricing."
-title = "Talk to sales"
-
 [portal.enterprise.landing]
 lede = "Try it free for 14 days, then build your quote and sign your agreement here. No card required."
 tickAgreement = "One agreement covering the MSA, order form, EULA and DPA"

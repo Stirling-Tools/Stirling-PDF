@@ -9,7 +9,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AuthContext, useAuth } from "@editor/auth/context";
 import { WithOrgOwner } from "@processor/test/WithOrgOwner";
 import { Enterprise } from "@processor/views/Enterprise";
-import { EnterpriseDemoWebsite } from "@processor/views/EnterpriseDemoWebsite";
 import { freeWallet } from "@processor/components/billing/walletFixtures";
 import { ProcurementPrefillContext } from "@processor/components/procurement/prefill";
 import { AuthShell } from "@editor/auth/ui/AuthShell";
@@ -54,10 +53,9 @@ const STAGES: { stage: DemoStage; label: string }[] = [
 ];
 
 /**
- * The Enterprise journey as a buyer from the website meets it: the pricing page, then the Enterprise
- * page signed out, signed in on the spot, and on through trial, quote, agreement, payment and
- * go-live against the stateful mock backend. The bar along the bottom is for the presenter, not
- * part of the product.
+ * The whole Enterprise journey, for walking through it end to end: the Enterprise page signed out,
+ * signed in on the spot, and on through trial, quote, agreement, payment and go-live against the
+ * stateful mock backend. The bar along the bottom drives the mock, and is not part of the product.
  */
 function Demo({
   prefill = true,
@@ -67,7 +65,6 @@ function Demo({
 }) {
   const auth = useAuth();
   const queryClient = useQueryClient();
-  const [onWebsite, setOnWebsite] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
   // Who signed in: the page resumes a trial set up before sign-in only for the account it was for.
   const [signedInEmail, setSignedInEmail] = useState<string>(
@@ -106,49 +103,41 @@ function Demo({
     }
     setSignedIn(false);
     setSigningIn(false);
-    setOnWebsite(true);
     refresh();
   };
 
   return (
     <ProcurementPrefillContext.Provider value={prefill ? DEMO_PREFILL : null}>
-      {onWebsite ? (
-        <EnterpriseDemoWebsite onStartTrial={() => setOnWebsite(false)} />
-      ) : (
-        <AuthContext.Provider
-          value={{
-            ...auth,
-            loading: false,
-            session: signedIn
-              ? (auth.session ?? ({} as unknown as typeof auth.session))
-              : null,
-            user: signedIn
-              ? ({ ...auth.user, email: signedInEmail } as typeof auth.user)
-              : null,
-          }}
-        >
-          {signingIn ? (
-            <DemoSignIn
-              prefill={prefill}
-              onSignedIn={(email) => {
-                setSignedInEmail(email);
-                setSigningIn(false);
-                setSignedIn(true);
-              }}
-            />
-          ) : (
-            <Enterprise onSignIn={() => setSigningIn(true)} />
-          )}
-        </AuthContext.Provider>
-      )}
+      <AuthContext.Provider
+        value={{
+          ...auth,
+          loading: false,
+          session: signedIn
+            ? (auth.session ?? ({} as unknown as typeof auth.session))
+            : null,
+          user: signedIn
+            ? ({ ...auth.user, email: signedInEmail } as typeof auth.user)
+            : null,
+        }}
+      >
+        {signingIn ? (
+          <DemoSignIn
+            prefill={prefill}
+            onSignedIn={(email) => {
+              setSignedInEmail(email);
+              setSigningIn(false);
+              setSignedIn(true);
+            }}
+          />
+        ) : (
+          <Enterprise onSignIn={() => setSigningIn(true)} />
+        )}
+      </AuthContext.Provider>
 
       <div className="ent-demo-bar" role="toolbar" aria-label="Demo controls">
         <span className="ent-demo-bar__label">Demo</span>
         <button type="button" onClick={reset}>
           Reset
-        </button>
-        <button type="button" onClick={() => setOnWebsite(true)}>
-          Website
         </button>
         <span className="ent-demo-bar__sep" />
         <span className="ent-demo-bar__label">Skip to</span>
@@ -159,7 +148,6 @@ function Demo({
             onClick={() => {
               seedProcurementSaasStage(stage);
               setSignedIn(true);
-              setOnWebsite(false);
               refresh();
             }}
           >
@@ -388,4 +376,4 @@ const meta: Meta<typeof Demo> = {
 };
 export default meta;
 
-export const FromTheWebsite: StoryObj<typeof Demo> = {};
+export const FullJourney: StoryObj<typeof Demo> = {};
