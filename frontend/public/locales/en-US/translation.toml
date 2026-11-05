@@ -2979,6 +2979,7 @@ loadError = "Failed to load users"
 noTeam = "No Team"
 noUsers = "No other users found."
 placeholder = "Select users..."
+signInRequired = "Sign in to request signatures from other people."
 you = "{{name}} (You)"
 
 [certSign.device]
