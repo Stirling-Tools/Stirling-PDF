@@ -135,11 +135,14 @@ public class ValidateSignatureController {
                 result.setCoversEntireDocument(documentCovered);
 
                 try {
+                    // Opened one after the other: an S3 stream left unread while the other is
+                    // consumed can be aborted by the SDK's idle timeout.
                     byte[] signedContent;
-                    byte[] signatureBytes;
-                    try (InputStream signedIn = file.getInputStream();
-                            InputStream contentsIn = file.getInputStream()) {
+                    try (InputStream signedIn = file.getInputStream()) {
                         signedContent = sig.getSignedContent(signedIn);
+                    }
+                    byte[] signatureBytes;
+                    try (InputStream contentsIn = file.getInputStream()) {
                         signatureBytes = sig.getContents(contentsIn);
                     }
 

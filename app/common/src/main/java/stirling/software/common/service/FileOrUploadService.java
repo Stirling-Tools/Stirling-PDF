@@ -24,8 +24,9 @@ public class FileOrUploadService {
     }
 
     /**
-     * Wraps stored content as a MultipartFile that reads it on demand, so large stored files reach
-     * consumers as a stream rather than being loaded into the heap up front.
+     * MultipartFile over stored content that is read on demand rather than held in the heap. Each
+     * {@code getInputStream()} opens a new stream (a file handle or S3 connection) that the caller
+     * must close.
      */
     public MultipartFile toStreamingMultipartFile(
             String name, long size, InputStreamSource source) {
