@@ -46,6 +46,7 @@ import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.common.model.api.security.RedactionArea;
+import stirling.software.common.pdf.worker.PdfWorkerPool;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.common.util.TempFile;
@@ -110,7 +111,8 @@ class RedactControllerMoreTest {
                         tempFileManager,
                         manualRedactionService,
                         textRedactionService,
-                        redactExecuteService);
+                        redactExecuteService,
+                        PdfWorkerPool.inProcess());
     }
 
     @AfterEach

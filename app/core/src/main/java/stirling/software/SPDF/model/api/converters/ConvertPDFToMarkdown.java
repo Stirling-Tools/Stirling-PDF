@@ -21,11 +21,13 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.pdf.MarkdownBlocks;
 import stirling.software.common.pdf.PdfMarkdownExtractor;
+import stirling.software.common.pdf.worker.MarkdownJob;
+import stirling.software.common.pdf.worker.PdfWorkerPool;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
-import stirling.software.jpdfium.PdfDocument;
 
 @ConvertApi
 @RequiredArgsConstructor
@@ -34,6 +36,7 @@ public class ConvertPDFToMarkdown {
     private final TempFileManager tempFileManager;
     private final PdfMarkdownExtractor markdownExtractor;
     private final OfficeConversionService officeConversionService;
+    private final PdfWorkerPool pdfWorkerPool;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -72,9 +75,12 @@ public class ConvertPDFToMarkdown {
         String markdown;
         try (TempFile tempInput = new TempFile(tempFileManager, ".pdf")) {
             inputFile.transferTo(tempInput.getFile());
-            try (PdfDocument doc = PdfDocument.open(tempInput.getPath())) {
-                markdown = markdownExtractor.convert(doc);
-            }
+            markdown =
+                    MarkdownBlocks.join(
+                            pdfWorkerPool
+                                    .execute(
+                                            new MarkdownJob(tempInput.getPath(), markdownExtractor))
+                                    .blocks());
         }
 
         return WebResponseUtils.bytesToWebResponse(

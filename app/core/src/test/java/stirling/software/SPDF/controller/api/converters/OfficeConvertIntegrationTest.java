@@ -58,6 +58,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
+import stirling.software.common.pdf.worker.PdfWorkerPool;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.TempFileManager;
@@ -128,7 +129,8 @@ class OfficeConvertIntegrationTest {
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void markdownConvertsInBothDirections(boolean packaged) throws Exception {
-        var toMarkdown = new ConvertPDFToMarkdown(tempFiles, null, office);
+        var toMarkdown =
+                new ConvertPDFToMarkdown(tempFiles, null, office, PdfWorkerPool.inProcess());
         PDFFile pdf = new PDFFile();
         pdf.setFileInput(uploadPdf());
         byte[] markdown = toMarkdown.processPdfToMarkdown(pdf, true).getBody();
