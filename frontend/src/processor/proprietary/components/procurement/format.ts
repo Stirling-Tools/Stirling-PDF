@@ -9,12 +9,16 @@ export const USD = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 0,
 });
 
-/** Format a minor-unit (cents) amount as whole USD (no decimals). USD only for now. */
+/**
+ * Format a minor-unit (cents) amount in whole units. Only USD gets the narrow "$"; other currencies
+ * keep their full symbol so "$" never stands in for CAD or AUD.
+ */
 export function money(minor: number, currency: string = "USD"): string {
+  const code = (currency || "USD").toUpperCase();
   return new Intl.NumberFormat(undefined, {
     style: "currency",
-    currency: currency || "USD",
-    currencyDisplay: "narrowSymbol",
+    currency: code,
+    currencyDisplay: code === "USD" ? "narrowSymbol" : "symbol",
     maximumFractionDigits: 0,
   }).format(minor / 100);
 }

@@ -1002,7 +1002,9 @@ function QuotePanel({
         {quote.validUntil && quote.status !== "accepted" && (
           <span className="ent__quote-valid">
             {t("portal.procurement.review.validUntil", {
-              date: new Date(quote.validUntil).toLocaleDateString(),
+              date: new Date(quote.validUntil).toLocaleDateString(undefined, {
+                timeZone: "UTC",
+              }),
             })}
           </span>
         )}

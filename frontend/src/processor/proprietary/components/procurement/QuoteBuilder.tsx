@@ -663,7 +663,12 @@ export function QuoteBuilder({
                   {issued.validUntil && (
                     <div>
                       {t("portal.procurement.review.validUntil", {
-                        date: new Date(issued.validUntil).toLocaleDateString(),
+                        date: new Date(issued.validUntil).toLocaleDateString(
+                          undefined,
+                          {
+                            timeZone: "UTC",
+                          },
+                        ),
                       })}
                     </div>
                   )}

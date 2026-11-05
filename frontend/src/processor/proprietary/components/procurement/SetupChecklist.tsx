@@ -91,8 +91,8 @@ export function SetupChecklist({
   const runCommand = (image: string, licence: string) =>
     [
       "docker run -d --name stirling-pdf -p 8080:8080 \\",
-      "  -v ./stirling/configs:/configs \\",
-      "  -v ./stirling/logs:/logs \\",
+      '  -v "$(pwd)/stirling/configs:/configs" \\',
+      '  -v "$(pwd)/stirling/logs:/logs" \\',
       "  -e SECURITY_ENABLELOGIN=true \\",
       "  -e PREMIUM_ENABLED=true \\",
       `  -e PREMIUM_KEY=${licence} \\`,

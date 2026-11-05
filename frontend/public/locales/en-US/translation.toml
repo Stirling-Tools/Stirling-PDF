@@ -9188,18 +9188,16 @@ signInToStart = "Sign in to start your trial"
 stage = "Stage {{current}} of {{total}}"
 stagesLabel = "Progress"
 
-[portal.enterprise.review]
-back = "Return to {{stage}}"
-company = "Company"
-completed = "Completed"
-extensions = "Extensions used"
-paid = "Paid. Your invoice stays available here."
-people = "People"
-started = "Started"
-trialEnds = "Trial end date"
-trialTitle = "Your trial"
-version = "Version"
-viewInvoice = "View invoice"
+[portal.enterprise.connect]
+ownerOnly = "Only this server’s owner can connect it. Ask them to open this page."
+unavailable = "Connecting to a Stirling account is turned off on this server. Book a call and we’ll set up your trial with you."
+
+[portal.enterprise.landing]
+lede = "Try it free for 14 days, then build your quote and sign your agreement here. No card required."
+tickAgreement = "One agreement covering the MSA, order form, EULA and DPA"
+tickCompliance = "SCIM, data residency and uptime SLAs"
+tickDeploy = "Run it on Stirling Cloud, your own servers, or fully air-gapped"
+title = "Stirling Enterprise"
 
 [portal.enterprise.options]
 label = "Ways to run it"
@@ -9230,6 +9228,19 @@ point2 = "Documents are processed on your own infrastructure"
 point3 = "OAuth2, OIDC or SAML single sign-on"
 tagline = "On your own servers, on-premises or in your own cloud."
 title = "Self-hosted"
+
+[portal.enterprise.review]
+back = "Return to {{stage}}"
+company = "Company"
+completed = "Completed"
+extensions = "Extensions used"
+paid = "Paid. Your invoice stays available here."
+people = "People"
+started = "Started"
+trialEnds = "Trial end date"
+trialTitle = "Your trial"
+version = "Version"
+viewInvoice = "View invoice"
 
 [portal.enterprise.setup]
 copied = "Copied"
@@ -9266,8 +9277,8 @@ browser = "Use it in your browser"
 docker = "Docker guide"
 download = "Download the app"
 downloadForTeam = "Get the app for your team"
-downloadLicence = "Download licence file"
 downloading = "Downloading…"
+downloadLicence = "Download licence file"
 invite = "Invite teammates"
 kubernetes = "Kubernetes guide"
 licence = "Licence activation"
@@ -9293,17 +9304,6 @@ title = "Add your people"
 body = "Open http://your-server:8080 and sign in with admin / stirling. You'll be asked to choose a new password straight away."
 bodyAirgap = "Open http://your-server:8080 and sign in with admin / stirling, choose a new password, then check /settings/adminPlan shows your licence as active."
 title = "Sign in as the admin"
-
-[portal.enterprise.connect]
-ownerOnly = "Only this server’s owner can connect it. Ask them to open this page."
-unavailable = "Connecting to a Stirling account is turned off on this server. Book a call and we’ll set up your trial with you."
-
-[portal.enterprise.landing]
-lede = "Try it free for 14 days, then build your quote and sign your agreement here. No card required."
-tickAgreement = "One agreement covering the MSA, order form, EULA and DPA"
-tickCompliance = "SCIM, data residency and uptime SLAs"
-tickDeploy = "Run it on Stirling Cloud, your own servers, or fully air-gapped"
-title = "Stirling Enterprise"
 
 [portal.errorBoundary]
 description = "This view hit an unexpected error. Try again, or pick another section from the sidebar."
