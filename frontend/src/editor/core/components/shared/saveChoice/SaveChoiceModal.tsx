@@ -54,9 +54,13 @@ export function SaveChoiceModal() {
           {
             value: "replace",
             label: t("saveFile.ask.replace", "Update the original"),
-            description: t("saveFile.ask.replaceHint", "Replaces it in {{home}}.", {
-              home,
-            }),
+            description: t(
+              "saveFile.ask.replaceHint",
+              "Replaces it in {{home}}.",
+              {
+                home,
+              },
+            ),
           },
           {
             value: "copy",
@@ -70,9 +74,13 @@ export function SaveChoiceModal() {
           {
             value: "other",
             label: request?.otherLabel ?? "",
-            description: t("saveFile.ask.otherHint", "Leaves {{home}} untouched.", {
-              home,
-            }),
+            description: t(
+              "saveFile.ask.otherHint",
+              "Leaves {{home}} untouched.",
+              {
+                home,
+              },
+            ),
           },
         ]}
       />
