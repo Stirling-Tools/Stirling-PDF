@@ -3,19 +3,19 @@ import { MantineProvider } from "@mantine/core";
 import { useTheme } from "@editor/components/shared/ThemeProvider";
 import {
   mantineTheme,
-  editorCssVariablesResolver,
+  appCssVariablesResolver,
 } from "@editor/theme/mantineTheme";
 import { ToastProvider } from "@editor/components/toast";
 import ToastRenderer from "@editor/components/toast/ToastRenderer";
 import { ToastPortalBinder } from "@editor/components/toast";
 
-/** Mantine under the editor's theme, plus the toast layer. Expects ThemeProvider above it. */
-export function EditorMantineProvider({ children }: { children: ReactNode }) {
+/** Mantine under the app theme, plus the toast layer. Expects ThemeProvider above it. */
+export function AppMantineProvider({ children }: { children: ReactNode }) {
   const { colorScheme } = useTheme();
   return (
     <MantineProvider
       theme={mantineTheme}
-      cssVariablesResolver={editorCssVariablesResolver}
+      cssVariablesResolver={appCssVariablesResolver}
       defaultColorScheme={colorScheme}
       forceColorScheme={colorScheme}
     >

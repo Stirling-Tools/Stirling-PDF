@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
 import { ThemeProvider } from "@editor/components/shared/ThemeProvider";
-import { EditorMantineProvider } from "@editor/components/shared/EditorMantineProvider";
+import { AppMantineProvider } from "@editor/components/shared/AppMantineProvider";
 
 /**
  * Theme and preferences only, for pages that render without a session: no
@@ -11,7 +11,7 @@ export function PublicRouteProviders({ children }: { children: ReactNode }) {
   return (
     <PreferencesProvider>
       <ThemeProvider>
-        <EditorMantineProvider>{children}</EditorMantineProvider>
+        <AppMantineProvider>{children}</AppMantineProvider>
       </ThemeProvider>
     </PreferencesProvider>
   );

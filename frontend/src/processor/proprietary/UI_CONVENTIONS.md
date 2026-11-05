@@ -9,12 +9,12 @@ The portal has one component source from the caller's point of view: **SUI
 > an implementation detail of the design system — feature code never imports
 > `@mantine/core` directly.
 
-Theme wiring lives in one place: `SuiProvider` (`@processor/theme/SuiProvider`)
-applies the SUI-token Mantine theme, remaps Mantine's neutral palette
-(dropdown/popover surfaces, borders, text) onto SUI tokens via
-`suiCssVariablesResolver`, and takes the resolved light/dark scheme so Mantine
-chrome and the SUI CSS variables switch together. The app and Storybook both
-render through it.
+Theme wiring lives in one place, shared with the editor: `@editor/theme/mantineTheme`
+binds Mantine's palette and colour slots to the `--c-*` tokens, and
+`AppMantineProvider` (`@editor/components/shared/AppMantineProvider`) mounts it
+once above both apps, forced to the resolved light/dark scheme so Mantine
+chrome and the CSS variables switch together. Storybook renders every story
+under the same theme.
 
 ## Hand-rolled SUI — our own style
 

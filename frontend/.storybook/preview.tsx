@@ -23,11 +23,10 @@ import {
 import { PreferencesProvider } from "@editor-core/contexts/PreferencesContext";
 import { UIProvider } from "@processor/contexts/UIContext";
 import { AppConfigProvider } from "@editor-core/contexts/AppConfigContext";
-import { SuiProvider } from "@processor/theme/SuiProvider";
 import { MantineProvider } from "@mantine/core";
 import {
-  mantineTheme as editorMantineTheme,
-  editorCssVariablesResolver,
+  mantineTheme,
+  appCssVariablesResolver,
 } from "@editor-core/theme/mantineTheme";
 import { handlers } from "@processor/mocks/handlers";
 import { configureSupabase } from "@editor-proprietary/auth/supabase/supabaseClient";
@@ -195,37 +194,6 @@ const withLocale: Decorator = (Story, context) => {
   return <Story />;
 };
 
-/**
- * Applies the Mantine theme the story's component actually runs under in the
- * app: PortalApp wraps the Processor in SuiProvider, while the editor wraps
- * everything else in its own ThemeProvider. Getting this wrong is not just
- * cosmetic — the two themes carry different neutral ramps, so rendering an
- * editor component under the Processor's theme drops it onto Mantine's stock
- * greys and reports contrast failures the app doesn't have.
- */
-function StoryTheme({
-  isPortalStory,
-  colorScheme,
-  children,
-}: {
-  isPortalStory: boolean;
-  colorScheme: "light" | "dark";
-  children: React.ReactNode;
-}) {
-  if (isPortalStory) {
-    return <SuiProvider colorScheme={colorScheme}>{children}</SuiProvider>;
-  }
-  return (
-    <MantineProvider
-      theme={editorMantineTheme}
-      cssVariablesResolver={editorCssVariablesResolver}
-      forceColorScheme={colorScheme}
-    >
-      {children}
-    </MantineProvider>
-  );
-}
-
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
   const linkState =
@@ -243,9 +211,8 @@ const withProviders: Decorator = (Story, context) => {
   // styles never apply to editor components).
   // `fileName` is only injected by the dev/build pipeline — under the Vitest
   // runner it is absent, so path alone would silently drop every portal story
-  // onto the editor theme (where portal-only palette entries like `amber`
-  // resolve to nothing and render unstyled). The title prefix is the fallback
-  // that survives both environments.
+  // out of the wrapper. The title prefix is the fallback that survives both
+  // environments.
   const isPortalStory =
     (context.parameters.fileName ?? "").includes("/portal/") ||
     context.title.startsWith("Portal/");
@@ -255,9 +222,10 @@ const withProviders: Decorator = (Story, context) => {
         <PreferencesProvider>
           <ThemeProvider>
             <ThemeBridge theme={colorScheme}>
-              <StoryTheme
-                isPortalStory={isPortalStory}
-                colorScheme={colorScheme}
+              <MantineProvider
+                theme={mantineTheme}
+                cssVariablesResolver={appCssVariablesResolver}
+                forceColorScheme={colorScheme}
               >
                 {/* The app mounts this with the platform providers; without it the config never
                     loads and anything waiting on it (the portal's connect gate) never settles.
@@ -284,7 +252,7 @@ const withProviders: Decorator = (Story, context) => {
                   </TierKey>
                 </LinkProvider>
                 </AppConfigProvider>
-              </StoryTheme>
+              </MantineProvider>
             </ThemeBridge>
           </ThemeProvider>
         </PreferencesProvider>
