@@ -466,14 +466,20 @@ export const useToolOperation = <TParams>(
               // response signature instead of trusting the input extension:
               // the first input may be a JPEG while the output is a PDF.
               // Unrecognized content falls back to the input extension, then
-              // "pdf".
+              // "pdf" — but never when the response MIME type is generic
+              // (e.g. "application/octet-stream" set by a proxy): a generic
+              // type says nothing about the content, so the input extension
+              // would misname the output (JPEG input, PDF output).
+              const isGenericMimeType =
+                outputType === "application/octet-stream" ||
+                outputType === "application/binary";
               const baseName =
                 getFilenameWithoutExtension(inputName, { preserveCase: true }) ||
                 "document";
               const extension =
                 mimeTypeToExtension(outputType) ||
                 (await detectExtensionFromSignature(responseBlob)) ||
-                detectFileExtension(inputName) ||
+                (isGenericMimeType ? "" : detectFileExtension(inputName)) ||
                 "pdf";
               const filename =
                 getFilenameFromHeaders(disposition) ||
