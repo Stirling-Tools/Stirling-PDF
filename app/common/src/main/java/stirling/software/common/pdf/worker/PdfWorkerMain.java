@@ -12,6 +12,7 @@ import java.io.PrintStream;
 import java.util.Map;
 
 import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.panama.NativeLoader;
 
 /**
  * Entry point of a PDF worker process: one job at a time over stdin/stdout. Exits when stdin
@@ -86,7 +87,8 @@ public final class PdfWorkerMain {
     }
 
     private static void warmUp() {
-        // Loads the natives before reporting ready, so the first job doesn't pay for it.
+        // Fails before READY if the natives can't load, so the pool falls back in-process.
+        NativeLoader.ensureLoaded();
         try (PdfDocument ignored = PdfDocument.open(new byte[0])) {
         } catch (Exception | LinkageError ignored) {
         }
