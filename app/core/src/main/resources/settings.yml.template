@@ -248,6 +248,13 @@ system:
     cleanupIntervalMinutes: 30 # How often to run cleanup (in minutes)
     startupCleanup: true # Clean up old temp files on startup
     cleanupSystemTemp: false # Whether to clean broader system temp directory
+  pdfWorkers:
+    enabled: auto # auto (on for servers, off for desktop), true or false. Runs PDFium jobs such as merge in separate processes so they use every core
+    count: 0 # Number of worker processes; 0 = CPU cores minus one
+    maxHeap: 256m # Java heap per worker (PDFium memory is native and comes on top)
+    maxJobsPerWorker: 500 # Restart a worker after this many jobs
+    idleTimeoutSeconds: 300 # Stop a worker after it has been idle this long
+    jobTimeoutMinutes: 10 # Kill a worker whose job runs longer than this
   databaseBackup:
     cron: "0 0 0 * * ?" # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 
