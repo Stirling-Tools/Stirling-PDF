@@ -330,23 +330,26 @@ export function markProcurementSaasPaid() {
   d.licenseKey = "MOCK-ENTERPRISE-KEY-0001";
 }
 
+/** The deal as the backend returns it from every read and deal-changing call. */
+function snapshot() {
+  return {
+    ...deal,
+    minAnnualNetMinor: MIN_ANNUAL_NET_MINOR,
+    entitledDeployment: entitledDeployment(),
+    rateCard: RATE_CARD,
+    maxTrialExtensions: MAX_TRIAL_EXTENSIONS,
+  };
+}
+
 export const procurementSaasHandlers = [
-  http.get(`${SAAS}/api/v1/procurement`, () =>
-    HttpResponse.json({
-      ...deal,
-      minAnnualNetMinor: MIN_ANNUAL_NET_MINOR,
-      entitledDeployment: entitledDeployment(),
-      rateCard: RATE_CARD,
-      maxTrialExtensions: MAX_TRIAL_EXTENSIONS,
-    }),
-  ),
+  http.get(`${SAAS}/api/v1/procurement`, () => HttpResponse.json(snapshot())),
   // Interest: creates the deal at `exploring` when there is none, and never disturbs one that
   // already exists — so the enterprise surface only appears for accounts that asked for it.
   http.post(`${SAAS}/api/v1/procurement/interest`, () => {
     if (deal.dealId == null) {
       deal = { ...deal, dealId: 1, stage: "exploring" };
     }
-    return HttpResponse.json(deal);
+    return HttpResponse.json(snapshot());
   }),
   http.post(`${SAAS}/api/v1/procurement/trial/start`, async ({ request }) => {
     const body = (await request.json().catch(() => ({}))) as Partial<{
@@ -375,7 +378,7 @@ export const procurementSaasHandlers = [
       contactEmail: body.contactEmail ?? null,
       latestQuote: null,
     };
-    return HttpResponse.json(deal);
+    return HttpResponse.json(snapshot());
   }),
   http.post(`${SAAS}/api/v1/procurement/quote`, async ({ request }) => {
     const cfg = (await request.json()) as Cfg;
@@ -403,11 +406,11 @@ export const procurementSaasHandlers = [
       d.trialEndsAt = new Date(base + 7 * 86_400_000).toISOString();
       d.trialExtensionsUsed = ((d.trialExtensionsUsed as number) ?? 0) + 1;
     }
-    return HttpResponse.json(deal);
+    return HttpResponse.json(snapshot());
   }),
   http.post(`${SAAS}/api/v1/procurement/agreement`, () => {
     (deal as Record<string, unknown>).stage = "security";
-    return HttpResponse.json(deal);
+    return HttpResponse.json(snapshot());
   }),
   http.get(`${SAAS}/api/v1/procurement/agreement/document`, () => {
     const q = (
@@ -515,7 +518,7 @@ export const procurementSaasHandlers = [
       d.licensed = true;
       d.licenseKey = "MOCK-ENTERPRISE-KEY-0001";
     }
-    return HttpResponse.json(deal);
+    return HttpResponse.json(snapshot());
   }),
   http.get(`${SAAS}/api/v1/procurement/license/file`, () => {
     const q = (deal as { latestQuote: { config?: Cfg } | null }).latestQuote;
@@ -530,7 +533,7 @@ export const procurementSaasHandlers = [
   }),
   http.post(`${SAAS}/api/v1/procurement/reset`, () => {
     resetProcurementSaasStore();
-    return HttpResponse.json(EMPTY);
+    return HttpResponse.json(snapshot());
   }),
   http.get(`${SAAS}/api/v1/legal/:docId`, ({ params }) => {
     const docId = String(params.docId);
