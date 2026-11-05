@@ -70,11 +70,19 @@ public class RearrangePagesPDFController {
 
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
+            GeneralUtils.requireValidPageSelection(pagesToDelete, document.getNumberOfPages());
             // Split the page order string into an array of page numbers or range of numbers
             String[] pageOrderArr = pagesToDelete.split(",");
 
             List<Integer> pagesToRemove =
                     GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages(), false);
+            // pageNumbers defaults to "all", which here would delete the whole document.
+            if (new HashSet<>(pagesToRemove).size() >= document.getNumberOfPages()) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "pageNumbers must list the pages to remove and leave at least one page");
+            }
 
             Collections.sort(pagesToRemove);
 
@@ -251,11 +259,16 @@ public class RearrangePagesPDFController {
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Rearrange pages in a PDF file",
+            summary =
+                    "Extract, reorder or duplicate pages: pageNumbers = pages to keep in order"
+                            + " ('3-7' extracts 3-7), or customMode",
             description =
-                    "This endpoint rearranges pages in a given PDF file based on the specified page"
-                            + " order or custom mode. Users can provide a page order as a comma-separated list"
-                            + " of page numbers or page ranges, or a custom mode.")
+                    "Builds the output from pageNumbers, in the order given: '3-7' keeps only pages"
+                            + " 3 to 7, '3,1,2' keeps pages 3, 1 and 2 in that order, and pages not"
+                            + " listed are dropped (a page listed twice is kept once). Or set"
+                            + " customMode to a preset such as REVERSE_ORDER, DUPLEX_SORT or"
+                            + " REMOVE_FIRST; with DUPLICATE, pageNumbers is how many copies of"
+                            + " each page to make.")
     public ResponseEntity<Resource> rearrangePages(@ModelAttribute RearrangePagesRequest request)
             throws IOException {
         MultipartFile pdfFile = request.getFileInput();
@@ -274,6 +287,7 @@ public class RearrangePagesPDFController {
                         && !"custom".equals(sortType.toLowerCase(Locale.ROOT))) {
                     newPageOrder = processSortTypes(sortType, totalPages, pageOrder);
                 } else {
+                    GeneralUtils.requireValidPageSelection(pageOrder, totalPages);
                     newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
                 }
                 log.debug(
