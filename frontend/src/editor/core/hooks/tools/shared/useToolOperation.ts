@@ -451,8 +451,12 @@ export const useToolOperation = <TParams>(
               const inputName = filesForAPI[0]?.name || "document.pdf";
               const rawType =
                 typeof contentTypeHeader === "string" ? contentTypeHeader : "";
-              const outputType =
-                rawType.split(";")[0].trim() || "application/pdf";
+              // A missing Content-Type says nothing about the content: unlike
+              // the old code, do not assume "application/pdf" here. The
+              // extension below is only ever "pdf" when the response proves
+              // it (MIME mapping / byte signature) or the operation declares
+              // a confirmed PDF-output contract.
+              const outputType = rawType.split(";")[0].trim();
               const dispositionHeader =
                 response.headers?.["content-disposition"];
               const disposition =
@@ -466,27 +470,43 @@ export const useToolOperation = <TParams>(
               // "application/octet-stream" set by a proxy), sniff the
               // response signature instead of trusting the input extension:
               // the first input may be a JPEG while the output is a PDF.
-              // Unrecognized content falls back to the input extension, then
-              // "pdf" — but never when the response MIME type is generic
-              // (e.g. "application/octet-stream" set by a proxy): a generic
-              // type says nothing about the content, so the input extension
-              // would misname the output (JPEG input, PDF output).
+              // Content that stays unidentified keeps no extension instead
+              // of being labelled PDF: the "pdf" fallback applies only to
+              // operations whose backend contract guarantees PDF output
+              // (see config.expectedOutputExtension).
               const isGenericMimeType =
                 outputType === "application/octet-stream" ||
                 outputType === "application/binary";
               const baseName =
                 getFilenameWithoutExtension(inputName, { preserveCase: true }) ||
                 "document";
-              const extension =
+              // Extension identified from the response itself (MIME mapping
+              // or byte signature). The File type follows the identified
+              // content, not a possibly generic response header.
+              const identifiedExtension =
                 mimeTypeToExtension(outputType) ||
-                (await detectExtensionFromSignature(responseBlob)) ||
-                (isGenericMimeType ? "" : detectFileExtension(inputName)) ||
-                "pdf";
+                (await detectExtensionFromSignature(responseBlob));
+              let extension = identifiedExtension;
+              let fileType =
+                identifiedExtension !== ""
+                  ? extensionToMimeType(identifiedExtension) || rawType
+                  : rawType;
+              if (extension === "" && !isGenericMimeType) {
+                // Unmapped but specific MIME type: keep the previous
+                // behaviour of falling back to the input extension.
+                extension = detectFileExtension(inputName);
+              }
+              if (extension === "" && config.expectedOutputExtension) {
+                extension = config.expectedOutputExtension;
+                fileType = extensionToMimeType(extension) || rawType;
+              }
               const filename =
                 getFilenameFromHeaders(disposition) ||
-                `${config.filePrefix}${baseName}.${extension}`;
+                (extension === ""
+                  ? `${config.filePrefix}${baseName}`
+                  : `${config.filePrefix}${baseName}.${extension}`);
               processedFiles = [
-                new File([responseBlob], filename, { type: outputType }),
+                new File([responseBlob], filename, { type: fileType }),
               ];
             }
 
