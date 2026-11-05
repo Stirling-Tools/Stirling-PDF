@@ -49,8 +49,11 @@ export const getFilenameFromHeaders = (
   const encodedFilename = parseEncodedFilename(contentDisposition);
   if (encodedFilename) return encodedFilename;
 
+  // A malformed `filename*` must not be picked up by the plain-`filename`
+  // pattern: without the lookahead, `filename*=UTF-8'...` would match here
+  // and return the raw encoded value as the filename.
   const match = contentDisposition.match(
-    /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
+    /filename(?!\*)[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
   );
   if (match && match[1]) {
     const filename = match[1].replace(/['"]/g, "");
