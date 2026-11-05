@@ -22,6 +22,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.schema.XMPBasicSchema;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
@@ -42,6 +42,8 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.pdf.worker.MergeJob;
+import stirling.software.common.pdf.worker.PdfWorkerPool;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -51,18 +53,28 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.XmpUtils;
-import stirling.software.jpdfium.PdfDocument;
-import stirling.software.jpdfium.PdfMerge;
-import stirling.software.jpdfium.doc.Bookmark;
-import stirling.software.jpdfium.doc.PdfBookmarkEditor;
-import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
 
 @GeneralApi
 @Slf4j
-@RequiredArgsConstructor
 public class MergeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final PdfWorkerPool pdfWorkerPool;
+
+    @Autowired
+    public MergeController(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            TempFileManager tempFileManager,
+            PdfWorkerPool pdfWorkerPool) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+        this.tempFileManager = tempFileManager;
+        this.pdfWorkerPool = pdfWorkerPool;
+    }
+
+    public MergeController(
+            CustomPDFDocumentFactory pdfDocumentFactory, TempFileManager tempFileManager) {
+        this(pdfDocumentFactory, tempFileManager, PdfWorkerPool.inProcess());
+    }
 
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
@@ -271,13 +283,11 @@ public class MergeController {
         try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
 
             List<Path> inputPaths = new ArrayList<>(files.length);
-            List<Integer> invalidIndexes = new ArrayList<>();
-            for (int index = 0; index < files.length; index++) {
-                MultipartFile multipartFile = files[index];
+            for (MultipartFile multipartFile : files) {
                 File tempFile;
                 if (isImageFile(multipartFile)) {
                     // Convert images to PDF so JPDFium can merge them; fall back to the raw
-                    // upload if conversion fails so pre-validate can flag it.
+                    // upload if conversion fails so the merge reports it.
                     try {
                         tempFile = convertImageToPdf(multipartFile);
                     } catch (Exception e) {
@@ -289,18 +299,17 @@ public class MergeController {
                 }
                 filesToDelete.add(tempFile);
                 inputPaths.add(tempFile.toPath());
-
-                try (PdfDocument ignored = PdfDocument.open(tempFile.toPath())) {
-                } catch (Exception e) {
-                    ExceptionUtils.logException("PDF pre-validate", e);
-                    invalidIndexes.add(index);
-                }
             }
 
-            int[] pageCounts;
+            MergeJob.Result merged;
             try {
-                pageCounts =
-                        mergeWithJpdfium(inputPaths, files, generateToc, mt.getFile().toPath());
+                merged =
+                        pdfWorkerPool.execute(
+                                new MergeJob(
+                                        inputPaths,
+                                        mt.getFile().toPath(),
+                                        generateToc ? tocTitles(files) : null,
+                                        removeCertSign));
             } catch (IOException e) {
                 ExceptionUtils.logException("PDF merge", e);
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
@@ -309,22 +318,12 @@ public class MergeController {
                 throw e;
             }
 
-            boolean sigFlattenNeeded = false;
-            if (removeCertSign) {
-                try (PdfDocument check = PdfDocument.open(mt.getFile().toPath())) {
-                    sigFlattenNeeded = !check.signatures().isEmpty();
-                } catch (Exception e) {
-                    log.debug(
-                            "JPDFium signature pre-check failed; falling back to PDFBox flatten:"
-                                    + " {}",
-                            e.getMessage());
-                    sigFlattenNeeded = true;
-                }
-                if (!sigFlattenNeeded) {
-                    log.info(
-                            "removeCertSign requested but merged document has no signature"
-                                    + " fields; skipping PDFBox flatten pass");
-                }
+            boolean sigFlattenNeeded =
+                    removeCertSign && (merged.hasSignatures() || merged.signatureCheckFailed());
+            if (removeCertSign && !sigFlattenNeeded) {
+                log.info(
+                        "removeCertSign requested but merged document has no signature"
+                                + " fields; skipping PDFBox flatten pass");
             }
 
             if (sigFlattenNeeded) {
@@ -421,112 +420,12 @@ public class MergeController {
         return pdfFile;
     }
 
-    private int[] mergeWithJpdfium(
-            List<Path> inputPaths, MultipartFile[] files, boolean generateToc, Path outputPath)
-            throws IOException {
-        if (inputPaths.isEmpty()) {
-            try (PdfDocument empty = PdfDocument.open(new byte[0])) {
-                empty.save(outputPath);
-            } catch (Exception ignored) {
-                Files.write(outputPath, new byte[0]);
-            }
-            return new int[0];
+    private static List<String> tocTitles(MultipartFile[] files) {
+        List<String> titles = new ArrayList<>(files.length);
+        for (int i = 0; i < files.length; i++) {
+            String title = GeneralUtils.removeExtension(files[i].getOriginalFilename());
+            titles.add(title == null || title.isBlank() ? "Document " + (i + 1) : title);
         }
-
-        List<PdfDocument> docs = new ArrayList<>(inputPaths.size());
-        int[] pageCounts = new int[inputPaths.size()];
-        int[] pageOffsets = new int[inputPaths.size()];
-        List<List<Bookmark>> sourceBookmarks = new ArrayList<>(inputPaths.size());
-        int runningOffset = 0;
-        try {
-            for (int i = 0; i < inputPaths.size(); i++) {
-                Path p = inputPaths.get(i);
-                PdfDocument doc = PdfDocument.open(p);
-                docs.add(doc);
-                pageCounts[i] = doc.pageCount();
-                pageOffsets[i] = runningOffset;
-                sourceBookmarks.add(doc.bookmarks());
-                runningOffset += pageCounts[i];
-            }
-
-            BookmarkTree combinedTree =
-                    buildCombinedBookmarkTree(files, pageOffsets, sourceBookmarks, generateToc);
-
-            try (PdfDocument merged = PdfMerge.merge(docs)) {
-                if (combinedTree.entries().isEmpty()) {
-                    merged.save(outputPath);
-                } else {
-                    PdfBookmarkEditor.setBookmarks(merged, combinedTree, outputPath);
-                }
-            }
-        } catch (RuntimeException e) {
-            throw new IOException("JPDFium merge failed", e);
-        } finally {
-            for (PdfDocument doc : docs) {
-                try {
-                    doc.close();
-                } catch (Exception ignored) {
-                }
-            }
-        }
-        return pageCounts;
-    }
-
-    private BookmarkTree buildCombinedBookmarkTree(
-            MultipartFile[] files,
-            int[] pageOffsets,
-            List<List<Bookmark>> sourceBookmarks,
-            boolean generateToc) {
-        BookmarkTree.Builder builder = BookmarkTree.builder();
-
-        if (generateToc) {
-            for (int i = 0; i < files.length; i++) {
-                String filename = files[i].getOriginalFilename();
-                String title = GeneralUtils.removeExtension(filename);
-                if (title == null || title.isBlank()) {
-                    title = "Document " + (i + 1);
-                }
-                builder.add(title, pageOffsets[i]);
-            }
-        }
-
-        for (int i = 0; i < sourceBookmarks.size(); i++) {
-            int offset = pageOffsets[i];
-            for (Bookmark bm : sourceBookmarks.get(i)) {
-                addBookmarkFlat(builder, bm, offset);
-            }
-        }
-
-        return builder.build();
-    }
-
-    private void addBookmarkFlat(BookmarkTree.Builder builder, Bookmark root, int offset) {
-        final int maxNodes = 100_000;
-        java.util.Deque<Bookmark> stack = new java.util.ArrayDeque<>();
-        java.util.Set<Bookmark> visited =
-                java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
-        stack.push(root);
-        int processed = 0;
-        while (!stack.isEmpty() && processed < maxNodes) {
-            Bookmark bm = stack.pop();
-            if (!visited.add(bm)) {
-                continue;
-            }
-            processed++;
-            if (bm.isInternal() && bm.title() != null) {
-                builder.add(bm.title(), offset + bm.pageIndex());
-            }
-            if (bm.hasChildren()) {
-                List<Bookmark> children = bm.children();
-                for (int i = children.size() - 1; i >= 0; i--) {
-                    stack.push(children.get(i));
-                }
-            }
-        }
-        if (processed >= maxNodes) {
-            log.warn(
-                    "Source bookmark traversal hit {}-node cap; remaining bookmarks dropped",
-                    maxNodes);
-        }
+        return titles;
     }
 }
