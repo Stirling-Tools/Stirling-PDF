@@ -5,6 +5,7 @@ import { getFileDate } from "@editor/utils/fileUtils";
 import { FolderThumbnail } from "@editor/components/filesPage/FolderThumbnail";
 import { FolderOriginBadge } from "@editor/components/filesPage/FolderOriginBadge";
 import { findFolderIcon } from "@editor/components/filesPage/folderIcons";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface FolderListRowProps extends HTMLAttributes<HTMLDivElement> {
   folder: FolderRecord;
@@ -43,6 +44,7 @@ export function FolderListRow({
           iconGlyph={findFolderIcon(folder.icon)?.glyph}
         />
         <span
+          className={privateContentClassName}
           style={{
             display: "flex",
             flexDirection: "column",

@@ -7,6 +7,7 @@ import { Button } from "@editor/ui/Button";
 import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import { useLoginRequired } from "@editor/hooks/useLoginRequired";
 import type { FolderAccessCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** The directories folder sources and outputs may touch. A security boundary. */
 export function FolderAccessCard({
@@ -84,7 +85,12 @@ export function FolderAccessCard({
           <Stack gap="xs">
             {roots.map((root) => (
               <Group key={root} justify="space-between" wrap="nowrap" gap="xs">
-                <Code style={{ wordBreak: "break-all" }}>{root}</Code>
+                <Code
+                  className={privateContentClassName}
+                  style={{ wordBreak: "break-all" }}
+                >
+                  {root}
+                </Code>
                 <Button
                   variant="tertiary"
                   aria-label={t(
@@ -103,6 +109,7 @@ export function FolderAccessCard({
 
         <Group gap="xs" align="flex-end" wrap="nowrap">
           <TextInput
+            className={privateContentClassName}
             style={{ flex: 1 }}
             value={newRoot}
             onChange={(e) => setNewRoot(e.currentTarget.value)}
