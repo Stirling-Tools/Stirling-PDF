@@ -93,18 +93,18 @@ tasks:
       - cargo test
 
   # ============================================================
-  # Lint
+  # Lint, format, test
   # ============================================================
 
-  clippy:
-    desc: "Lint every Rust crate with Clippy"
+  lint:
+    desc: "Run linting"
     cmds:
-      - task: clippy:app
-      - task: clippy:provisioner
-      - task: clippy:thumbnail-handler
+      - task: lint:app
+      - task: lint:provisioner
+      - task: lint:thumbnail-handler
 
-  clippy:app:
-    desc: "Lint the Tauri app crate with Clippy"
+  lint:app:
+    desc: "Lint the Tauri app crate"
     dir: src-tauri
     env:
       # Clippy only needs the crate graph. Blanking the bundle resources stops
@@ -114,18 +114,33 @@ tasks:
     cmds:
       - cargo clippy --all-targets --all-features -- -D warnings
 
-  clippy:provisioner:
-    desc: "Lint the installer provisioner crate with Clippy"
+  lint:provisioner:
+    desc: "Lint the installer provisioner crate"
     dir: src-tauri/provisioner
     cmds:
       - cargo clippy --all-targets -- -D warnings
 
-  clippy:thumbnail-handler:
-    desc: "Lint the Windows thumbnail handler crate with Clippy"
+  lint:thumbnail-handler:
+    desc: "Lint the Windows thumbnail handler crate"
     platforms: [windows]
     dir: src-tauri/thumbnail-handler
     cmds:
       - cargo clippy --all-targets -- -D warnings
+
+  format:
+    desc: "Auto-fix Rust formatting (not implemented yet)"
+    cmds: []
+
+  format:check:
+    desc: "Check Rust formatting (not implemented yet)"
+    cmds: []
+
+  check:
+    desc: "Full desktop quality gate"
+    cmds:
+      - task: lint
+      - task: format:check
+      - task: test
 
   clean:
     desc: "Clean Tauri/Cargo build artifacts"

@@ -98,7 +98,7 @@ For local testing, you should generally be testing the full 'Security' version o
 
 ### Verify Setup
 
-Run `task install` to install all project dependencies (frontend npm packages, engine Python packages). Gradle manages its own dependencies automatically. Then run `task check` to verify everything builds and passes. `task check` includes `desktop:clippy`, so it needs Rust and Cargo, plus the Tauri system libraries on Linux.
+Run `task install` to install all project dependencies (frontend npm packages, engine Python packages). Gradle manages its own dependencies automatically. Then run `task check` to verify everything builds and passes. `task check` includes `desktop:check`, which runs `desktop:lint`, so it needs Rust and Cargo, plus the Tauri system libraries on Linux.
 
 ## 4. Stirling 2.0 Development Workflow
 

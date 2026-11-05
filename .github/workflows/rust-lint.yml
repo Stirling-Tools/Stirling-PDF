@@ -1,11 +1,13 @@
-name: Rust Clippy
+name: Rust Lint
 
 # Reusable workflow called from build.yml when desktop / Rust sources change.
 #
-# Clippy only analyses the `cfg` branches for the host it runs on, and the
-# Tauri crate carries Linux-, macOS- and Windows-only modules. The matrix
-# therefore runs on all three so every platform branch is linted where it
-# actually compiles, including the Windows-only thumbnail handler crate.
+# The task behind it is `desktop:lint`, so swapping Clippy for another linter
+# does not rename the job. Clippy only analyses the `cfg` branches for the host
+# it runs on, and the Tauri crate carries Linux-, macOS- and Windows-only
+# modules. The matrix therefore runs on all three so every platform branch is
+# linted where it actually compiles, including the Windows-only thumbnail
+# handler crate.
 on:
   workflow_call:
 
@@ -13,8 +15,8 @@ permissions:
   contents: read
 
 jobs:
-  clippy:
-    name: Clippy (${{ matrix.os }})
+  lint:
+    name: Lint (${{ matrix.os }})
     # Matches tauri-build's matrix gate: the lite CI profile skips desktop work.
     if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ${{ matrix.os }}
@@ -56,7 +58,7 @@ jobs:
             frontend/src-tauri
             frontend/src-tauri/provisioner
             frontend/src-tauri/thumbnail-handler
-          shared-key: rust-clippy
+          shared-key: rust-lint
           save-if: ${{ github.ref == 'refs/heads/main' }}
           cache-on-failure: true
 
@@ -65,5 +67,5 @@ jobs:
         with:
           version: 3.54.0
 
-      - name: Run Clippy
-        run: task desktop:clippy
+      - name: Run desktop lint
+        run: task desktop:lint

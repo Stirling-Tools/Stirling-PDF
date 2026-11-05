@@ -270,7 +270,7 @@ tasks:
     cmds:
       - task: frontend:lint
       - task: engine:lint
-      - task: desktop:clippy
+      - task: desktop:lint
       - task: comment-lint
 
   comment-lint:
@@ -333,7 +333,7 @@ tasks:
       - task: backend:check
       - task: frontend:check
       - task: engine:check
-      - task: desktop:clippy
+      - task: desktop:check
 
   check:all:
     desc: "Full CI quality gate"
@@ -341,7 +341,7 @@ tasks:
       - task: backend:check
       - task: frontend:check:all
       - task: engine:check
-      - task: desktop:clippy
+      - task: desktop:check
 
   # ============================================================
   # Clean
