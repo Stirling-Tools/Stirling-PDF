@@ -675,15 +675,27 @@ public class ConvertPDFToPDFA {
                             inputTemp.getPath(), outputTemp.getPath(), profile);
                 }
 
-                byte[] converted = Files.readAllBytes(outputTemp.getPath());
-                PdfXConverter.checkMetadata(converted, options);
-                byte[] polished = polishPdfx(converted, profile, baseFileName, strict);
-                Files.write(outputTemp.getPath(), polished);
-
-                String outputFilename = baseFileName + profile.outputSuffix();
-                TempFile out = outputTemp;
-                outputTemp = null; // ownership transferred to the response
-                return WebResponseUtils.pdfFileToWebResponse(out, outputFilename);
+                verifyPdfxMetadata(outputTemp.getPath(), options);
+                TempFile polishedTemp = tempFileManager.createManagedTempFile(".pdf");
+                try {
+                    polishPdfx(
+                            outputTemp.getPath(),
+                            polishedTemp.getPath(),
+                            profile,
+                            baseFileName,
+                            strict);
+                    verifyPdfxMetadata(polishedTemp.getPath(), options);
+                    String outputFilename = baseFileName + profile.outputSuffix();
+                    TempFile out = polishedTemp;
+                    polishedTemp = null; // ownership transferred to the response
+                    outputTemp.close();
+                    outputTemp = null;
+                    return WebResponseUtils.pdfFileToWebResponse(out, outputFilename);
+                } finally {
+                    if (polishedTemp != null) {
+                        polishedTemp.close();
+                    }
+                }
             } finally {
                 if (inputTemp != null) {
                     inputTemp.close();
@@ -761,9 +773,17 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private static byte[] polishPdfx(byte[] pdf, PdfXProfile profile, String title, boolean strict)
+    private static void polishPdfx(
+            Path input, Path output, PdfXProfile profile, String title, boolean strict)
             throws IOException {
-        try (PDDocument document = Loader.loadPDF(pdf)) {
+        Path staged = null;
+        if (input.toAbsolutePath().equals(output.toAbsolutePath())) {
+            staged =
+                    Files.createTempFile(
+                            output.toAbsolutePath().getParent(), "pdfx-polish-", ".pdf");
+        }
+        Path savePath = staged == null ? output : staged;
+        try (PDDocument document = Loader.loadPDF(input.toFile())) {
             float targetVersion = profile.getPdfVersion();
             if (targetVersion > document.getVersion()) {
                 document.setVersion(targetVersion);
@@ -790,35 +810,57 @@ public class ConvertPDFToPDFA {
             }
             info.setTrapped("False");
 
-            byte[] polished = savePdf(document);
-            polished = forceHeaderVersion(polished, targetVersion);
-            try (PdfDocument audit = PdfDocument.open(polished)) {
-                if (PdfFontAuditor.hasNonEmbeddedFonts(audit)) {
-                    String message =
-                            "PDF/X requires embedded fonts; the document has non-embedded fonts";
-                    if (strict) {
-                        throw new IOException(message);
-                    }
-                    log.warn(message);
+            document.save(savePath.toFile());
+        }
+
+        forceHeaderVersion(savePath, profile.getPdfVersion());
+
+        try (PdfDocument audit = PdfDocument.open(savePath)) {
+            if (PdfFontAuditor.hasNonEmbeddedFonts(audit)) {
+                String message =
+                        "PDF/X requires embedded fonts; the document has non-embedded fonts";
+                if (strict) {
+                    throw new IOException(message);
                 }
+                log.warn(message);
             }
-            return polished;
+        }
+
+        if (staged != null) {
+            try {
+                Files.move(staged, output, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            } finally {
+                Files.deleteIfExists(staged);
+            }
         }
     }
 
-    private static byte[] forceHeaderVersion(byte[] pdf, float version) {
+    private static void verifyPdfxMetadata(Path pdf, PdfXOptions options) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdf.toFile())) {
+            if (document.getDocumentCatalog().getMetadata() == null
+                    || document.getDocumentCatalog().getOutputIntents() == null
+                    || document.getDocumentCatalog().getOutputIntents().isEmpty()) {
+                throw new IOException("PDF/X output intent or XMP metadata is missing");
+            }
+            String xmp =
+                    new String(
+                            document.getDocumentCatalog().getMetadata().toByteArray(),
+                            StandardCharsets.UTF_8);
+            if (!xmp.contains(options.standard().gtsVersion())
+                    || !xmp.contains(options.standard().gtsConformance())) {
+                throw new IOException(
+                        "PDF/X XMP does not declare " + options.standard().gtsVersion());
+            }
+        }
+    }
+
+    private static void forceHeaderVersion(Path pdf, float version) throws IOException {
         String header = "%PDF-" + (version == 1.3f ? "1.3" : version == 1.6f ? "1.6" : "2.0");
         byte[] replacement = header.getBytes(StandardCharsets.US_ASCII);
-        if (pdf.length >= replacement.length) {
-            System.arraycopy(replacement, 0, pdf, 0, replacement.length);
+        try (java.io.RandomAccessFile file = new java.io.RandomAccessFile(pdf.toFile(), "rw")) {
+            file.seek(0);
+            file.write(replacement);
         }
-        return pdf;
-    }
-
-    private static byte[] savePdf(PDDocument document) throws IOException {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        document.save(output);
-        return output.toByteArray();
     }
 
     private boolean isGhostscriptAvailable() {
