@@ -173,7 +173,7 @@ jobs:
           version: 3.54.0
 
       - name: Build JAR
-        run: ./gradlew build ${{ matrix.variant.build_frontend && '-PbuildWithFrontend=true' || '' }} -x spotlessApply -x spotlessCheck -x test -x sonarqube
+        run: ./gradlew build -PjpdfiumPlatforms=all ${{ matrix.variant.build_frontend && '-PbuildWithFrontend=true' || '' }} -x spotlessApply -x spotlessCheck -x test -x sonarqube
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
