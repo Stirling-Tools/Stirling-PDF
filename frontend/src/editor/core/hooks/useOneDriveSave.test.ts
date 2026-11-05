@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   account: { id: 9, personal: false } as
     | { id: number; personal: boolean }
     | undefined,
+  config: {} as { microsoftAllowEditorSaves?: boolean },
 }));
 
 vi.mock("@editor/components/toast", () => ({
@@ -54,6 +55,9 @@ vi.mock("@editor/services/oneDrivePickerService", async (importOriginal) => ({
 vi.mock("@editor/platform/openExternal", () => ({
   openExternal: mocks.openExternal,
 }));
+vi.mock("@editor/contexts/AppConfigContext", () => ({
+  useAppConfig: () => ({ config: mocks.config }),
+}));
 
 const origin: CloudOrigin = {
   provider: "onedrive",
@@ -83,6 +87,7 @@ beforeEach(() => {
   mocks.openExternal.mockReset();
   mocks.pickFolder.mockReset();
   mocks.account = { id: 9, personal: false };
+  mocks.config = {};
 });
 
 it("offers a Reconnect button that opens the connected accounts settings", async () => {
@@ -145,4 +150,58 @@ it("opens the file's OneDrive page when it has one", () => {
     }),
   );
   expect(mocks.openExternal).not.toHaveBeenCalled();
+});
+
+it("is a save target for files opened from OneDrive", () => {
+  const { result } = renderHook(useOneDriveSave);
+  const target = result.current.target!;
+  expect(target.handles(stub)).toBe(true);
+  expect(target.handles({ ...stub, cloudOrigin: undefined })).toBe(false);
+  expect(target.saveLabel(stub, "replace")).toBe(
+    "oneDriveSave.toolbar.replace",
+  );
+  expect(
+    target.isUnsaved({
+      ...stub,
+      cloudOrigin: { ...origin, savedFileId: "file-0" },
+    }),
+  ).toBe(true);
+  expect(
+    target.isUnsaved({
+      ...stub,
+      cloudOrigin: { ...origin, savedFileId: "file-1" },
+    }),
+  ).toBe(false);
+});
+
+it("keeps updating a copy Stirling made, whatever the setting", () => {
+  const { result } = renderHook(useOneDriveSave);
+  const target = result.current.target!;
+  const copy = { ...stub, cloudOrigin: { ...origin, stirlingCopy: true } };
+  expect(target.plan!(copy, "copy")).toBe("replace");
+  expect(target.plan!(stub, "copy")).toBe("copy");
+});
+
+it("saves a copy next to the original when asked to", async () => {
+  mocks.save.mockResolvedValue({
+    ...origin,
+    itemId: "item-2",
+    name: "Report (edited).pdf",
+  });
+  const { result } = renderHook(useOneDriveSave);
+  const outcome = await act(() =>
+    result.current.target!.save(stub, new File(["%PDF"], "Report.pdf"), "copy"),
+  );
+  expect(outcome).toBe("saved");
+  expect(mocks.save).toHaveBeenCalledWith(
+    expect.any(File),
+    expect.objectContaining({ kind: "copy", name: "Report (edited).pdf" }),
+  );
+});
+
+it("is not a save target when the admin turns off editor saves", () => {
+  mocks.config = { microsoftAllowEditorSaves: false };
+  const { result } = renderHook(useOneDriveSave);
+  expect(result.current.target).toBeNull();
+  expect(result.current.available).toBe(false);
 });

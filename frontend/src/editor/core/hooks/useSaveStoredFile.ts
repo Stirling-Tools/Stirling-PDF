@@ -242,9 +242,10 @@ export function useSaveStoredFile(): SaveStoredFile {
       if (plan === "copy") return saveToHome(stub, "copy", file, options);
 
       const target = targetFor(stub);
+      const name = target?.fileName?.(stub) ?? stub.name;
       const answer = await requestSaveChoice({
-        fileName: stub.name,
-        copyName: copyFileName(stub.name),
+        fileName: name,
+        copyName: copyFileName(name),
         homeName: target
           ? target.homeName(stub)
           : t("saveFile.ask.thisFolder", "the same folder"),

@@ -1027,6 +1027,19 @@ const useMicrosoftProvider = (): Provider => {
         ),
         defaultValue: true,
       },
+      {
+        key: "allowEditorSaves",
+        type: "switch",
+        label: t(
+          "provider.microsoft.allowEditorSaves.label",
+          "Let the editor save back to OneDrive",
+        ),
+        description: t(
+          "provider.microsoft.allowEditorSaves.description",
+          "Turn off to keep edits in Stirling: files opened from OneDrive then download instead, and the server refuses saves to OneDrive.",
+        ),
+        defaultValue: true,
+      },
     ],
   };
 };

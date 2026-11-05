@@ -100,6 +100,10 @@ export interface CloudOrigin {
   name: string;
   eTag: string | null;
   webUrl: string | null;
+  /** Stirling created this item (a copy or a folder save), so Save may update it. */
+  stirlingCopy?: boolean;
+  /** The file version last read from or saved to OneDrive. */
+  savedFileId?: string;
 }
 
 /**

@@ -80,6 +80,7 @@ import {
   CONNECTED_ACCOUNTS_SETTINGS_PATH,
   useOneDriveSave,
 } from "@editor/hooks/useOneDriveSave";
+import { hasUnsavedCloudChanges } from "@editor/services/oneDriveSave";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
 const SIDEBAR_WIDTH = "var(--sidebar-w)";
@@ -1177,6 +1178,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
           isUploadedToCloud={fileOrigin === "cloud"}
           hasOneDriveOrigin={Boolean(stub.cloudOrigin)}
+          oneDriveUnsaved={
+            oneDriveSave.available && hasUnsavedCloudChanges(stub)
+          }
           oneDriveName={stub.cloudOrigin?.name}
           onOpenInOneDrive={
             stub.cloudOrigin?.webUrl ? handleOpenInOneDrive : undefined

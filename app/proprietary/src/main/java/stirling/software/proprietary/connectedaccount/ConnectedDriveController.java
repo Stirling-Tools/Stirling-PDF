@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.microsoft.ConnectedDriveWriter;
 import stirling.software.proprietary.security.model.User;
 
@@ -36,6 +37,7 @@ public class ConnectedDriveController {
 
     private final ConnectedAccountService service;
     private final ConnectedDriveWriter writer;
+    private final ApplicationProperties applicationProperties;
 
     @PostMapping(value = "/{id}/drive/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> save(
@@ -49,6 +51,10 @@ public class ConnectedDriveController {
             @AuthenticationPrincipal User user) {
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+        if (!editorSavesAllowed(applicationProperties)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Saving to OneDrive from the editor is turned off");
         }
         ConnectedAccount account =
                 service.findOwned(user, id)
@@ -104,6 +110,10 @@ public class ConnectedDriveController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid file name");
         }
         return new ConnectedDriveWriter.Create(driveId, parentId, trimmed, true);
+    }
+
+    static boolean editorSavesAllowed(ApplicationProperties properties) {
+        return properties.getPremium().getProFeatures().getMicrosoft().isAllowEditorSaves();
     }
 
     private static boolean isBlank(String value) {

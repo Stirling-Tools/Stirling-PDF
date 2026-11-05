@@ -279,6 +279,7 @@ public class ConfigController {
                                 .getProperty(
                                         "stirling.microsoft.graph-url",
                                         "https://graph.microsoft.com/v1.0"));
+                configData.put("microsoftAllowEditorSaves", microsoft.isAllowEditorSaves());
             }
             configData.put(
                     "microsoftAccountConnections",

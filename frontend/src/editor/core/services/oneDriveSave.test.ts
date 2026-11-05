@@ -84,17 +84,22 @@ describe("saveToOneDrive", () => {
       itemId: "item-1",
       eTag: '"{E},1"',
     });
-    expect(next).toMatchObject({ itemId: "item-2", eTag: '"{E},2"' });
+    expect(next).toMatchObject({
+      itemId: "item-2",
+      eTag: '"{E},2"',
+      stirlingCopy: false,
+    });
   });
 
   it("saves a copy into the folder the file came from", async () => {
     post.mockResolvedValue({ data: saved });
 
-    await saveToOneDrive(file, {
+    const next = await saveToOneDrive(file, {
       kind: "copy",
       origin,
       name: copyName(origin.name),
     });
+    expect(next.stirlingCopy).toBe(true);
 
     expect(sent()).toMatchObject({
       driveId: "drive-1",

@@ -196,11 +196,25 @@
 
 /* ---- Cloud badge (file saved to the server) ---- */
 .file-sidebar-cloud-badge {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   color: var(--c-accent-text);
+}
+
+/* Same unsaved marker as the toolbar's Save button. */
+.file-sidebar-cloud-badge-dot {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 999px;
+  background: var(--c-danger);
+  box-shadow: 0 0 0 1.5px var(--c-bg-raised);
+  pointer-events: none;
 }
 
 /* ---- Eye button (open in viewer) ---- */

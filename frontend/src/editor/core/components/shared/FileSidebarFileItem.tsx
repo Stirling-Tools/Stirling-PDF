@@ -149,6 +149,8 @@ export interface FileItemProps {
   onSaveCopyToOneDrive?: (fileId: FileId) => void;
   onSaveToOneDriveFolder?: (fileId: FileId) => void;
   hasOneDriveOrigin?: boolean;
+  /** Edited since the last save, and Save sends this file to OneDrive. */
+  oneDriveUnsaved?: boolean;
   oneDriveName?: string;
   onOpenInOneDrive?: (fileId: FileId) => void;
   savingToOneDrive?: boolean;
@@ -239,6 +241,7 @@ export const FileItem = React.memo(function FileItem({
   onSaveCopyToOneDrive,
   onSaveToOneDriveFolder,
   hasOneDriveOrigin = false,
+  oneDriveUnsaved = false,
   oneDriveName,
   onOpenInOneDrive,
   savingToOneDrive = false,
@@ -246,6 +249,9 @@ export const FileItem = React.memo(function FileItem({
   hasVersionHistory = false,
 }: FileItemProps) {
   const { t } = useTranslation();
+  const oneDriveBadgeLabel = oneDriveUnsaved
+    ? t("oneDriveSave.status.unsaved", "Changes not saved to OneDrive yet")
+    : t("oneDriveSave.fromOneDrive", "From OneDrive");
   const toolSkipReason = isToolSkipped
     ? t("files.notIncludedInToolRun", "Not included in this tool run")
     : undefined;
@@ -405,18 +411,17 @@ export const FileItem = React.memo(function FileItem({
               </Tooltip>
             )}
             {hasOneDriveOrigin && (
-              <Tooltip
-                label={t("oneDriveSave.fromOneDrive", "From OneDrive")}
-                withArrow
-                position="top"
-              >
+              <Tooltip label={oneDriveBadgeLabel} withArrow position="top">
                 <span
                   className="file-sidebar-cloud-badge"
                   data-no-select
                   data-testid="file-onedrive-badge"
-                  aria-label={t("oneDriveSave.fromOneDrive", "From OneDrive")}
+                  aria-label={oneDriveBadgeLabel}
                 >
                   <Icon name="onedrive" size={"0.85rem"} />
+                  {oneDriveUnsaved && (
+                    <span className="file-sidebar-cloud-badge-dot" />
+                  )}
                 </span>
               </Tooltip>
             )}

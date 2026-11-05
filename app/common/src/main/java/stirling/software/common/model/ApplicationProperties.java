@@ -1904,6 +1904,7 @@ public class ApplicationProperties {
                 private String tenant = "common";
                 private String clientSecret = "";
                 private boolean allowAccountConnections = true;
+                private boolean allowEditorSaves = true;
             }
 
             @Data

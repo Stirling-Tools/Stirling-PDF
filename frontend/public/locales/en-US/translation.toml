@@ -6562,6 +6562,7 @@ chooseFolder = "Choose a OneDrive folder to save to"
 conflict = "Someone changed this file in OneDrive after you opened it. Save your version as a copy instead."
 failedTitle = "Couldn't save to OneDrive"
 fromOneDrive = "From OneDrive"
+homeName = "OneDrive"
 linkNotStored = "This browser couldn't remember the link to the OneDrive file. After a reload, save it as a copy instead."
 open = "Open in OneDrive"
 personalUnsupported = "Saving to a chosen folder needs a work or school Microsoft account."
@@ -6573,6 +6574,19 @@ saved = "Saved to OneDrive"
 saveToFolder = "Save to a OneDrive folder…"
 saving = "Saving to OneDrive…"
 updateOriginal = "Update original in OneDrive"
+
+[oneDriveSave.menu]
+folderHint = "Work or school accounts"
+
+[oneDriveSave.status]
+saved = "Saved to OneDrive"
+unsaved = "Changes not saved to OneDrive yet"
+
+[oneDriveSave.toolbar]
+ask = "Save {{name}}…"
+copy = "Save a copy of {{name}} to OneDrive"
+replace = "Update {{name}} in OneDrive"
+saveAll = "Save all to OneDrive"
 
 [overlay-pdfs]
 desc = "Overlay one PDF on top of another"
@@ -11285,6 +11299,10 @@ scope = "Files & pipelines"
 [provider.microsoft.allowAccountConnections]
 description = "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections."
 label = "Let people connect their own account"
+
+[provider.microsoft.allowEditorSaves]
+description = "Turn off to keep edits in Stirling: files opened from OneDrive then download instead, and the server refuses saves to OneDrive."
+label = "Let the editor save back to OneDrive"
 
 [provider.microsoft.clientId]
 description = "From one Microsoft Entra app registration."

@@ -78,6 +78,7 @@ export interface AppConfig {
   microsoftTenant?: string;
   microsoftGraphUrl?: string;
   microsoftAccountConnections?: boolean;
+  microsoftAllowEditorSaves?: boolean;
   saveMode?: string;
   allowUserSaveMode?: boolean;
   timestampDefaultTsaUrl?: string;

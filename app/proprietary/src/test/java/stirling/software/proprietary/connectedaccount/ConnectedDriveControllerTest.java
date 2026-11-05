@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.microsoft.ConnectedDriveWriter;
 
 class ConnectedDriveControllerTest {
@@ -45,5 +46,13 @@ class ConnectedDriveControllerTest {
                 .isInstanceOf(ResponseStatusException.class);
         assertThatThrownBy(() -> ConnectedDriveController.target("d", null, null, null, "x.pdf"))
                 .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void editorSavesCanBeTurnedOff() {
+        ApplicationProperties properties = new ApplicationProperties();
+        assertThat(ConnectedDriveController.editorSavesAllowed(properties)).isTrue();
+        properties.getPremium().getProFeatures().getMicrosoft().setAllowEditorSaves(false);
+        assertThat(ConnectedDriveController.editorSavesAllowed(properties)).isFalse();
     }
 }

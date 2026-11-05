@@ -115,6 +115,7 @@ premium:
       tenant: common # 'common' (work, school and personal accounts), 'organizations' (work and school only), or a tenant ID/domain to admit one organisation
       clientSecret: "" # Client secret; needed for connected accounts and organisation connections (redirect URI <server>/api/v1/connected-accounts/callback/microsoft)
       allowAccountConnections: true # set to 'false' to stop users connecting their own Microsoft account
+      allowEditorSaves: true # set to 'false' to stop the editor saving files back to OneDrive; the server then refuses those saves
   enterpriseFeatures:
     audit:
       enabled: true # Enable audit logging for security and compliance tracking
