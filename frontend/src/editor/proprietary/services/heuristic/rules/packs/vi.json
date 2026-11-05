@@ -1,0 +1,284 @@
+{
+  "version": 2,
+  "language": "vi",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "hóa đơn", "weight": 24, "where": "title" },
+        { "text": "thuế giá trị gia tăng", "weight": 8 }
+      ]
+    },
+    {
+      "id": "purchase-order",
+      "phrases": [{ "text": "đơn đặt hàng", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "bank-statement",
+      "phrases": [{ "text": "sao kê", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "payslip",
+      "phrases": [{ "text": "bảng lương", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "báo cáo tài chính", "weight": 20, "where": "title" },
+        { "text": "bảng cân đối kế toán", "weight": 12 }
+      ]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "hợp đồng", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [
+        { "text": "hợp đồng lao động", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "lease-agreement",
+      "phrases": [
+        { "text": "thuê dài hạn", "weight": 18, "where": "title" },
+        { "text": "địa chủ", "weight": 8 }
+      ]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "di chúc", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "mortgage-document",
+      "phrases": [
+        { "text": "cho vay thế chấp", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "insurance-policy",
+      "phrases": [
+        { "text": "hợp đồng bảo hiểm", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "resume",
+      "phrases": [
+        { "text": "hồ sơ ứng tuyển", "weight": 24, "where": "title" },
+        { "text": "lý lịch trích ngang", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "cover-letter",
+      "phrases": [{ "text": "thư xin việc", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "certificate",
+      "phrases": [{ "text": "bằng tốt nghiệp", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "thesis",
+      "phrases": [{ "text": "luận văn", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "bằng sáng chế", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [{ "text": "dược", "weight": 10 }]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [
+        { "text": "bệnh án", "weight": 18, "where": "title" },
+        { "text": "chẩn đoán", "weight": 10 }
+      ]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "tiêm chủng", "weight": 12 }]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [{ "text": "vẽ kỹ thuật", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "bill-of-materials",
+      "phrases": [
+        { "text": "hóa đơn nguyên vật liệu", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "brochure",
+      "phrases": [{ "text": "brochure", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [
+        { "text": "kế hoạch kinh doanh", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "sách trắng", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-minutes",
+      "phrases": [{ "text": "biên bản", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "memo",
+      "phrases": [{ "text": "bản ghi nhớ", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "thị thực", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "utility-bill",
+      "phrases": [{ "text": "đồng hồ điện", "weight": 12 }]
+    },
+    {
+      "id": "menu",
+      "phrases": [{ "text": "thực đơn", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [
+        { "text": "công thức nấu ăn", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "presentation",
+      "phrases": [{ "text": "thuyết trình", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "report",
+      "phrases": [{ "text": "báo cáo", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "giấy phép", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "audit-report",
+      "phrases": [{ "text": "kiểm toán", "weight": 12 }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "bất động sản", "weight": 8 }]
+    },
+    {
+      "id": "tender-document",
+      "phrases": [{ "text": "gọi thầu", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "donation-receipt",
+      "phrases": [{ "text": "quyên góp", "weight": 10 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "thư điện tử", "weight": 8 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "tạp chí", "weight": 10 }]
+    },
+    {
+      "id": "lesson-plan",
+      "phrases": [{ "text": "giáo án", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "performance-review",
+      "phrases": [
+        { "text": "đánh giá hiệu suất", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "tuyển dụng", "weight": 8 }]
+    },
+    {
+      "id": "purchase-agreement",
+      "phrases": [
+        { "text": "hợp đồng bán hàng", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "lab-report",
+      "phrases": [{ "text": "phòng thí nghiệm y tế", "weight": 12 }]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "bảo hiểm", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "quality-report",
+      "phrases": [{ "text": "kiểm soát chất lượng", "weight": 10 }]
+    },
+    {
+      "id": "test-report",
+      "phrases": [{ "text": "hiệu chuẩn", "weight": 12 }]
+    },
+    {
+      "id": "license-agreement",
+      "phrases": [{ "text": "eula", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "sales-proposal",
+      "phrases": [{ "text": "đề xuất", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "proposal",
+      "phrases": [
+        { "text": "đề nghị mời thầu", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "ngân sách", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "order-confirmation",
+      "phrases": [
+        { "text": "đơn đặt hàng người mua", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "statement-of-account",
+      "phrases": [{ "text": "sao kê", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "application-form",
+      "phrases": [{ "text": "đơn xin việc", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "gift-certificate",
+      "phrases": [{ "text": "thẻ quà tặng", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "ban giám đốc", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "đầu tư", "weight": 8 }]
+    },
+    {
+      "id": "analytics-report",
+      "phrases": [{ "text": "phân tích web", "weight": 10 }]
+    },
+    {
+      "id": "benefits-summary",
+      "phrases": [{ "text": "phúc lợi người lao động", "weight": 14 }]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "bài tập về nhà", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "signature": [{ "pattern": "chữ\\ ký" }]
+  }
+}

@@ -20,19 +20,24 @@ public class ConvertToPdfRequest {
             description = "Option to determine how the image will fit onto the page",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "fillPage",
-            allowableValues = {"fillPage", "fitDocumentToImage", "maintainAspectRatio"})
-    private String fitOption;
+            allowableValues = {
+                "fillPage",
+                "fitDocumentToImage",
+                "fitDocumentToPage",
+                "maintainAspectRatio"
+            })
+    private String fitOption = "fillPage";
 
     @Schema(
             description = "The color type of the output image(s)",
             defaultValue = "color",
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"color", "greyscale", "blackwhite"})
-    private String colorType;
+    private String colorType = "color";
 
     @Schema(
             description = "Whether to automatically rotate the images to better fit the PDF page",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
-    private Boolean autoRotate;
+    private Boolean autoRotate = false;
 }

@@ -1,7 +1,10 @@
 package stirling.software.proprietary.policy.output;
 
+import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,8 +14,11 @@ import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.springframework.core.io.Resource;
@@ -45,8 +51,18 @@ public class FolderOutputSink implements PolicyOutputSink {
     static final String TYPE = FolderAccessGuard.FOLDER_TYPE;
     static final String DIRECTORY_OPTION = "directory";
 
+    /**
+     * When set, an output overwrites the same-named file instead of picking a unique name.
+     * Processing folders use it to process in place: the watched file becomes its result, and the
+     * ledger row recorded at the result's version keeps the sweep from re-claiming it.
+     */
+    static final String REPLACE_OPTION = "replace";
+
     // Staging entries are renamed away within one delivery; anything older is a crash leftover.
     private static final Duration STALE_TMP_AGE = Duration.ofDays(1);
+    private static final Object[] ORIGINAL_LOCKS =
+            IntStream.range(0, 64).mapToObj(i -> new Object()).toArray();
+    static final String MISSING_ORIGINAL_PREFIX = ".missing-original-";
 
     private final FolderAccessGuard accessGuard;
     private final ProcessedLedger processedLedger;
@@ -72,20 +88,36 @@ public class FolderOutputSink implements PolicyOutputSink {
         Path targetDir = accessGuard.requirePermitted(directoryOf(spec));
         Files.createDirectories(targetDir);
         Path canonicalDir = FolderIdentities.canonicalDir(targetDir);
-        Path tmpDir = canonicalDir.resolve(".stirling").resolve("tmp");
-        Files.createDirectories(tmpDir);
+        Path tmpDir = originalStagingDir(canonicalDir);
         sweepStaleTmp(tmpDir);
 
+        boolean replace = Boolean.parseBoolean(String.valueOf(spec.options().get(REPLACE_OPTION)));
+        // In place means the input's name: a renaming step must not drop its result beside the
+        // watched file. One-in-one-out only; a splitting pipeline lands its outputs alongside.
+        String inputName =
+                delivery.inputs().primary().size() == 1
+                        ? delivery.inputs().primary().get(0).getFilename()
+                        : null;
+        boolean replaceInPlace = replace && outputs.size() == 1 && inputName != null;
         List<ResultFile> results = new ArrayList<>();
         for (int i = 0; i < outputs.size(); i++) {
             Resource resource = outputs.get(i);
-            String name = OutputNames.safeName(resource.getFilename(), i);
+            String name =
+                    OutputNames.safeName(replaceInPlace ? inputName : resource.getFilename(), i);
             Path staged = tmpDir.resolve(UUID.randomUUID().toString());
             String contentHash = stage(resource, staged, delivery.policyId() != null);
             long size = Files.size(staged);
             // Size and mtime survive the rename.
             String gate = FolderIdentities.statGate(staged);
-            Path target = moveIntoPlace(delivery, canonicalDir, name, staged, gate, contentHash);
+            Path target =
+                    moveIntoPlace(
+                            delivery,
+                            canonicalDir,
+                            name,
+                            staged,
+                            gate,
+                            contentHash,
+                            replaceInPlace);
             String contentType =
                     MediaTypeFactory.getMediaType(name)
                             .orElse(MediaType.APPLICATION_OCTET_STREAM)
@@ -105,7 +137,7 @@ public class FolderOutputSink implements PolicyOutputSink {
     /**
      * Stream the output to its staging path. For a recorded delivery (stored policy) the content
      * hash is digested in the same pass, so the ledger gets both version tiers without re-reading a
-     * possibly huge output; ad-hoc runs record nothing and skip the digest entirely.
+     * possibly huge output.
      */
     private static String stage(Resource resource, Path staged, boolean hashed) throws IOException {
         if (!hashed) {
@@ -135,8 +167,14 @@ public class FolderOutputSink implements PolicyOutputSink {
             String name,
             Path staged,
             String gate,
-            String contentHash)
+            String contentHash,
+            boolean replace)
             throws IOException {
+        if (replace) {
+            synchronized (originalLock(dir)) {
+                return replaceOriginal(delivery, dir, name, staged, gate, contentHash);
+            }
+        }
         while (true) {
             Path target = uniqueTarget(dir, name);
             if (delivery.policyId() != null) {
@@ -152,6 +190,175 @@ public class FolderOutputSink implements PolicyOutputSink {
                 }
                 log.debug("Output name {} taken concurrently; re-picking", target);
             }
+        }
+    }
+
+    private Path replaceOriginal(
+            OutputDelivery delivery,
+            Path dir,
+            String name,
+            Path staged,
+            String gate,
+            String contentHash)
+            throws IOException {
+        Path target = dir.resolve(name);
+        // Archive before the ledger row flips DONE, so a restore that reads DONE finds the
+        // original safe, never mid-move.
+        archiveOriginal(dir, target);
+        try {
+            if (delivery.policyId() != null) {
+                processedLedger.recordOutput(
+                        delivery.policyId(), target.toString(), gate, contentHash);
+            }
+            Files.move(
+                    staged,
+                    target,
+                    StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException | RuntimeException failed) {
+            if (delivery.policyId() != null) {
+                processedLedger.forgetOutput(delivery.policyId(), target.toString(), gate);
+            }
+            throw failed;
+        }
+        return target;
+    }
+
+    /**
+     * Serializes archive, restore and expiry within this JVM; callers supply a canonical directory.
+     */
+    public static Object originalLock(Path canonicalDir) {
+        return ORIGINAL_LOCKS[Math.floorMod(canonicalDir.hashCode(), ORIGINAL_LOCKS.length)];
+    }
+
+    /** A returned or restored file starts a fresh retention period if it is deleted again. */
+    public static void clearOriginalExpiry(Path dir, String name) throws IOException {
+        Files.deleteIfExists(missingOriginalMarker(dir, name));
+    }
+
+    static Path missingOriginalMarker(Path dir, String name) {
+        return metadataPath(dir, name, MISSING_ORIGINAL_PREFIX);
+    }
+
+    private static Path metadataPath(Path dir, String name, String prefix) {
+        String key = java.io.File.separatorChar == '\\' ? name.toLowerCase(Locale.ROOT) : name;
+        return originalsDir(dir)
+                .resolve(prefix + UUID.nameUUIDFromBytes(key.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    /** Originals are direct files here; subdirectories contain internal processing data. */
+    public static Path originalsDir(Path dir) {
+        return dir.resolve(".stirling");
+    }
+
+    /**
+     * Resolves a single filename's original, including backups from the nested archive layout.
+     * Callers must validate that name contains no path components.
+     */
+    public static Path originalPath(Path dir, String name) {
+        Path original = flatOriginalPath(dir, name);
+        Path legacy = originalsDir(dir).resolve("originals").resolve(name);
+        return Files.notExists(original, NOFOLLOW_LINKS) && !Files.notExists(legacy, NOFOLLOW_LINKS)
+                ? legacy
+                : original;
+    }
+
+    private static Path flatOriginalPath(Path dir, String name) {
+        return originalsDir(dir).resolve(reservedName(name) ? ".original-" + name : name);
+    }
+
+    /** Only regular backups inside real archive directories are eligible for restore. */
+    public static boolean hasOriginal(Path dir, String name) {
+        Path archived = originalPath(dir, name);
+        return Files.isDirectory(originalsDir(dir), NOFOLLOW_LINKS)
+                && Files.isDirectory(archived.getParent(), NOFOLLOW_LINKS)
+                && Files.isRegularFile(archived, NOFOLLOW_LINKS);
+    }
+
+    /** Lists restorable filenames, excluding staging files and nested backup history. */
+    public static List<String> originalNames(Path dir) throws IOException {
+        var names = new LinkedHashSet<String>();
+        Path originals = originalsDir(dir);
+        if (!Files.isDirectory(originals, NOFOLLOW_LINKS)) return List.of();
+        for (Path archive : List.of(originals, originals.resolve("originals"))) {
+            if (!Files.isDirectory(archive, NOFOLLOW_LINKS)) continue;
+            try (Stream<Path> entries = Files.list(archive)) {
+                entries.filter(path -> Files.isRegularFile(path, NOFOLLOW_LINKS))
+                        .map(FolderOutputSink::originalName)
+                        .filter(java.util.Objects::nonNull)
+                        .filter(name -> hasOriginal(dir, name))
+                        .forEach(names::add);
+            }
+        }
+        return List.copyOf(names);
+    }
+
+    static String originalName(Path archived) {
+        String name = archived.getFileName().toString();
+        if (name.startsWith(".original-") && reservedName(name.substring(10))) {
+            return name.substring(10);
+        }
+        return name.startsWith(".") ? null : name;
+    }
+
+    private static boolean reservedName(String name) {
+        return "tmp".equalsIgnoreCase(name) || "originals".equalsIgnoreCase(name);
+    }
+
+    /**
+     * The folder's workspace root, created hidden: a dot prefix for POSIX and the app's own
+     * listings, plus the DOS attribute for Explorer where the filesystem has one.
+     */
+    private static Path stirlingDir(Path dir) throws IOException {
+        Path root = dir.resolve(".stirling");
+        Files.createDirectories(root);
+        if (!Files.isDirectory(root, NOFOLLOW_LINKS)) {
+            throw new IOException("Original archive is not a directory: " + root);
+        }
+        try {
+            Files.setAttribute(root, "dos:hidden", true);
+        } catch (UnsupportedOperationException | IOException e) {
+            // Not a DOS filesystem; the dot prefix already hides it there.
+        }
+        return root;
+    }
+
+    /** Staging must stay inside the archive rather than follow a substituted directory link. */
+    public static Path originalStagingDir(Path dir) throws IOException {
+        Path staging = stirlingDir(dir).resolve("tmp");
+        Files.createDirectories(staging);
+        if (!Files.isDirectory(staging, NOFOLLOW_LINKS)) {
+            throw new IOException("Original staging is not a directory: " + staging);
+        }
+        return staging;
+    }
+
+    private static void archiveOriginal(Path dir, Path target) throws IOException {
+        clearOriginalExpiry(dir, target.getFileName().toString());
+        if (Files.notExists(target, NOFOLLOW_LINKS)) {
+            return;
+        }
+        stirlingDir(dir);
+        String name = target.getFileName().toString();
+        Path existing = originalPath(dir, name);
+        Path archived = flatOriginalPath(dir, name);
+        if (!Files.notExists(existing, NOFOLLOW_LINKS)) {
+            if (!hasOriginal(dir, name)) {
+                throw new IOException("Original archive is not a regular file: " + existing);
+            }
+            if (!existing.equals(archived)) {
+                Files.move(existing, archived, StandardCopyOption.ATOMIC_MOVE);
+            }
+            return;
+        }
+        // Keep the input in place until output publication succeeds; edits never replace this
+        // backup.
+        Path pending = Files.createTempFile(originalsDir(dir).resolve("tmp"), "original-", ".tmp");
+        try {
+            Files.copy(target, pending, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(pending, archived, StandardCopyOption.ATOMIC_MOVE);
+        } finally {
+            Files.deleteIfExists(pending);
         }
     }
 

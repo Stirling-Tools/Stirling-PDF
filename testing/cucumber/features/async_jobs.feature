@@ -101,7 +101,7 @@ Feature: Asynchronous job API
         And the job result file should still be downloadable
 
 
-    @positive @cleanup
+    @positive @cleanup @serial
     Scenario: Cleanup releases a finished job and deletes its stored files
         Given I generate a PDF file as "fileInput"
         And the pdf contains 3 pages
@@ -124,7 +124,7 @@ Feature: Asynchronous job API
         And the job result file should no longer be downloadable
 
 
-    @positive @cleanup
+    @positive @cleanup @serial
     Scenario: A second cleanup finds nothing left behind
         Given I generate a PDF file as "fileInput"
         And the pdf contains 2 pages

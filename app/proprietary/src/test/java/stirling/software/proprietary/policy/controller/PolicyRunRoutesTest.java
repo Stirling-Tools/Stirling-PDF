@@ -56,19 +56,20 @@ class PolicyRunRoutesTest {
 
     /** Every request mapping on PolicyController, and whether it executes an automation. */
     private static final Map<String, Boolean> EXPECTED =
-            Map.of(
-                    "/api/v1/policies", false, // base: list (GET) + create (POST)
-                    "/api/v1/policies/run", true,
-                    "/api/v1/policies/run/stream", true,
-                    "/api/v1/policies/run/{runId}", false,
-                    "/api/v1/policies/runs", false,
-                    "/api/v1/policies/order", false,
-                    "/api/v1/policies/overview", false,
-                    "/api/v1/policies/triggers", false,
-                    "/api/v1/policies/{policyId}", false, // GET + DELETE
-                    "/api/v1/policies/{policyId}/processed-history", false);
+            Map.ofEntries(
+                    Map.entry("/api/v1/policies", false), // base: list (GET) + create (POST)
+                    Map.entry("/api/v1/policies/run", true),
+                    Map.entry("/api/v1/policies/run/stream", true),
+                    Map.entry("/api/v1/policies/run/{runId}", false),
+                    Map.entry("/api/v1/policies/runs", false),
+                    Map.entry("/api/v1/policies/order", false),
+                    Map.entry("/api/v1/policies/overview", false),
+                    Map.entry("/api/v1/policies/triggers", false),
+                    Map.entry("/api/v1/policies/permissions", false),
+                    Map.entry("/api/v1/policies/{policyId}", false), // GET + DELETE
+                    Map.entry("/api/v1/policies/{policyId}/processed-history", false));
 
-    // Split out because Map.of caps at 10 entries; the execute {id} routes live here.
+    // The execute {id} routes; kept as their own group.
     private static final Map<String, Boolean> EXPECTED_ID_EXECUTES =
             Map.of(
                     "/api/v1/policies/{policyId}/run", true,

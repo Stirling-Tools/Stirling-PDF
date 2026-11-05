@@ -1,0 +1,533 @@
+{
+  "version": 2,
+  "language": "ru",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "инвойс", "weight": 24, "where": "title" },
+        { "text": "налог на добавленную стоимость", "weight": 8 },
+        { "text": "счёт-фактура", "weight": 24, "where": "title" },
+        { "text": "счёт на оплату", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "receipt",
+      "phrases": [{ "text": "квитанция", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "credit-note",
+      "phrases": [{ "text": "сторно", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "packing-slip",
+      "phrases": [{ "text": "квитанция", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "bank-statement",
+      "phrases": [
+        { "text": "выписка из банка по счёту", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "payslip",
+      "phrases": [
+        { "text": "расчётный лист", "weight": 22, "where": "title" },
+        {
+          "text": "расчётно-платёжная ведомость",
+          "weight": 14,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "expense-report",
+      "phrases": [{ "text": "расходы", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "финансовая отчётность", "weight": 20, "where": "title" },
+        { "text": "бухгалтерский баланс", "weight": 12 }
+      ]
+    },
+    {
+      "id": "tax-return",
+      "phrases": [
+        { "text": "налоговая декларация", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "tax-form",
+      "phrases": [
+        { "text": "налоговая декларация", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "договор", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [
+        { "text": "трудовой договор", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "lease-agreement",
+      "phrases": [{ "text": "обеспечительный платёж", "weight": 10 }]
+    },
+    {
+      "id": "nda",
+      "phrases": [
+        { "text": "соглашение о неразглашении", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "terms-and-conditions",
+      "phrases": [
+        { "text": "условия использования", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "privacy-policy",
+      "phrases": [{ "text": "общий регламент по защите данных", "weight": 10 }]
+    },
+    {
+      "id": "affidavit",
+      "phrases": [{ "text": "аффидевит", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "завещание", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "mortgage-document",
+      "phrases": [
+        { "text": "ипотечный кредит", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "insurance-policy",
+      "phrases": [
+        { "text": "страховой полис", "weight": 22, "where": "title" },
+        { "text": "франшиза", "weight": 8 }
+      ]
+    },
+    {
+      "id": "resume",
+      "phrases": [{ "text": "резюме", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "cover-letter",
+      "phrases": [
+        { "text": "сопроводительное письмо", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "job-description",
+      "phrases": [
+        { "text": "должностная инструкция", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "timesheet",
+      "phrases": [{ "text": "таймшит", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "certificate",
+      "phrases": [
+        { "text": "аттестат", "weight": 16, "where": "title" },
+        { "text": "диплом", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "transcript",
+      "phrases": [{ "text": "зачётная книжка", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "thesis",
+      "phrases": [
+        { "text": "дипломная работа", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "патент", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "рецепт", "weight": 20, "where": "title" },
+        { "text": "фармация", "weight": 10 }
+      ]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [
+        { "text": "медицинская карта", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "вакцинация", "weight": 12 }]
+    },
+    {
+      "id": "questionnaire",
+      "phrases": [
+        { "text": "метод анкетирования", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "user-guide",
+      "phrases": [
+        { "text": "руководство пользователя", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        {
+          "text": "паспорт безопасности химической продукции",
+          "weight": 24,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [{ "text": "чертёж", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "press-release",
+      "phrases": [{ "text": "пресс-релиз", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "newsletter",
+      "phrases": [
+        { "text": "информационный бюллетень", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "brochure",
+      "phrases": [{ "text": "брошюра", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [
+        { "text": "бизнес-планирование", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "белая книга", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-minutes",
+      "phrases": [
+        { "text": "протокол собрания", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "memo",
+      "phrases": [{ "text": "меморандум", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "invitation",
+      "phrases": [
+        { "text": "свадебные пригласительные", "weight": 14, "where": "title" }
+      ]
+    },
+    {
+      "id": "ticket",
+      "phrases": [{ "text": "билет", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "waybill",
+      "phrases": [
+        {
+          "text": "товарно-транспортная накладная",
+          "weight": 20,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "customs-declaration",
+      "phrases": [
+        {
+          "text": "грузовая таможенная декларация",
+          "weight": 22,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "виза", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "utility-bill",
+      "phrases": [{ "text": "счётчик электрической энергии", "weight": 12 }]
+    },
+    {
+      "id": "menu",
+      "phrases": [{ "text": "меню", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [
+        { "text": "кулинарный рецепт", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "presentation",
+      "phrases": [{ "text": "презентация", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "report",
+      "phrases": [{ "text": "доклад", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "письмо", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "form",
+      "phrases": [{ "text": "бланк", "weight": 10, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "лицензия", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "audit-report",
+      "phrases": [{ "text": "аудит", "weight": 12 }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "недвижимость", "weight": 8 }]
+    },
+    {
+      "id": "grant-agreement",
+      "phrases": [{ "text": "грант", "weight": 12 }]
+    },
+    {
+      "id": "tender-document",
+      "phrases": [{ "text": "тендер", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "subscription-confirmation",
+      "phrases": [{ "text": "подписка", "weight": 10 }]
+    },
+    {
+      "id": "donation-receipt",
+      "phrases": [{ "text": "пожертвование", "weight": 10 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "электронная почта", "weight": 8 }]
+    },
+    {
+      "id": "book-ebook",
+      "phrases": [{ "text": "оглавление", "weight": 6 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "журнал", "weight": 10 }]
+    },
+    {
+      "id": "course-syllabus",
+      "phrases": [
+        { "text": "учебная программа", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "performance-review",
+      "phrases": [
+        { "text": "оценка персонала", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "подбор персонала", "weight": 8 }]
+    },
+    {
+      "id": "service-agreement",
+      "phrases": [
+        { "text": "соглашение об уровне услуг", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "purchase-agreement",
+      "phrases": [
+        { "text": "договор купли-продажи", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "loan-agreement",
+      "phrases": [{ "text": "договор займа", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "shareholder-agreement",
+      "phrases": [
+        { "text": "акционерное соглашение", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "settlement-agreement",
+      "phrases": [
+        { "text": "мировое соглашение", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "subpoena",
+      "phrases": [{ "text": "повестка", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "consent-form",
+      "phrases": [
+        {
+          "text": "информированное добровольное согласие",
+          "weight": 18,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "referral-letter",
+      "phrases": [
+        { "text": "реферативная практика", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "страхование", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "government-notice",
+      "phrases": [{ "text": "административный акт", "weight": 14 }]
+    },
+    {
+      "id": "regulatory-filing",
+      "phrases": [{ "text": "комплаенс", "weight": 10 }]
+    },
+    {
+      "id": "quality-report",
+      "phrases": [{ "text": "отдел технического контроля", "weight": 10 }]
+    },
+    {
+      "id": "test-report",
+      "phrases": [{ "text": "калибровка", "weight": 12 }]
+    },
+    {
+      "id": "technical-specification",
+      "phrases": [{ "text": "спецификация", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "license-agreement",
+      "phrases": [
+        {
+          "text": "пользовательское соглашение",
+          "weight": 20,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "proposal",
+      "phrases": [
+        { "text": "запрос предложения", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "бюджет", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "remittance-advice",
+      "phrases": [{ "text": "авизо", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "statement-of-account",
+      "phrases": [
+        { "text": "выписка из банка по счёту", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "registration-form",
+      "phrases": [
+        { "text": "университет новой зеландии", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "gift-certificate",
+      "phrases": [
+        { "text": "подарочный сертификат", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "совет директоров", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "инвестиции", "weight": 8 }]
+    },
+    {
+      "id": "letter-of-intent",
+      "phrases": [
+        { "text": "письмо о намерениях", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "quarterly-report",
+      "phrases": [
+        {
+          "text": "ежеквартальный отчёт эмитента",
+          "weight": 18,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "analytics-report",
+      "phrases": [{ "text": "веб-аналитика", "weight": 10 }]
+    },
+    {
+      "id": "appraisal-report",
+      "phrases": [
+        { "text": "оценка недвижимости", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "benefits-summary",
+      "phrases": [{ "text": "социальный пакет", "weight": 14 }]
+    },
+    {
+      "id": "hoa-document",
+      "phrases": [
+        {
+          "text": "товарищество собственников жилья",
+          "weight": 18,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "grade-report",
+      "phrases": [
+        { "text": "табель успеваемости", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "домашнее задание", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "toc": [{ "pattern": "оглавление" }],
+    "references": [{ "pattern": "библиография" }],
+    "signature": [{ "pattern": "подпись" }]
+  }
+}

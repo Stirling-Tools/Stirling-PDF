@@ -7,19 +7,25 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
+import stirling.software.common.model.api.security.UserSummaryDTO;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 
-@Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long>, UserRepositoryCustom {
+    @Query(
+            "SELECT u FROM User u JOIN u.authorities a WHERE a.authority = 'ROLE_ADMIN' AND (u.enabled IS NULL OR u.enabled = true) ORDER BY u.id ASC")
+    List<User> findEnabledAdminsByIdAsc();
+
     Optional<User> findByUsernameIgnoreCase(String username);
+
+    boolean existsByUsernameIgnoreCaseAndIdNot(String username, Long id);
 
     @Query("FROM User u LEFT JOIN FETCH u.settings where upper(u.username) = upper(:username)")
     Optional<User> findByUsernameIgnoreCaseWithSettings(@Param("username") String username);
@@ -33,6 +39,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
 
+    /** Both associations are EAGER, so fetch them in one statement rather than three. */
+    @EntityGraph(attributePaths = {"team", "authorities"})
     Optional<User> findBySupabaseId(UUID supabaseId);
 
     Optional<User> findBySsoProviderAndSsoProviderId(String ssoProvider, String ssoProviderId);
@@ -57,6 +65,39 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(
             "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
     List<User> findAllByTeamId(@Param("teamId") Long teamId);
+
+    /** Picker summaries without loading each user's eager authorities and team entities. */
+    @Query(
+            """
+            SELECT new stirling.software.common.model.api.security.UserSummaryDTO(
+                u.id, u.username, u.username, t.name, true)
+            FROM User u LEFT JOIN u.team t
+            WHERE (u.enabled IS NULL OR u.enabled = true)
+                AND u.username IS NOT NULL
+                AND (u.authenticationType IS NULL OR LOWER(u.authenticationType) <> 'anonymous')
+            ORDER BY u.username, u.id
+            """)
+    List<UserSummaryDTO> findEnabledSigningUsers();
+
+    /** Team-scoped picker summaries; disabled and anonymous accounts cannot be recipients. */
+    @Query(
+            """
+            SELECT new stirling.software.common.model.api.security.UserSummaryDTO(
+                u.id, u.username, u.username, t.name, true)
+            FROM User u JOIN u.team t
+            WHERE t.id = :teamId AND (u.enabled IS NULL OR u.enabled = true)
+                AND u.username IS NOT NULL
+                AND (u.authenticationType IS NULL OR LOWER(u.authenticationType) <> 'anonymous')
+            ORDER BY u.username, u.id
+            """)
+    List<UserSummaryDTO> findEnabledSigningUsersByTeamId(@Param("teamId") Long teamId);
+
+    /** Usernames alone, ordered and limited by the database, for callers that need no entities. */
+    @Query(
+            "SELECT u.username FROM User u WHERE u.team.id IN :teamIds AND u.username IS NOT NULL"
+                    + " ORDER BY u.username")
+    List<String> findUsernamesByTeamIds(
+            @Param("teamIds") Collection<Long> teamIds, Pageable pageable);
 
     long countByTeam(Team team);
 
@@ -106,13 +147,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "SELECT COUNT(u) FROM User u JOIN u.settings settings "
                     + "WHERE KEY(settings) = :key AND settings = :value")
     long countUsersBySetting(@Param("key") String key, @Param("value") String value);
-
-    @Modifying
-    @Query(
-            value = "DELETE FROM user_settings WHERE user_id = :userId AND setting_key IN (:keys)",
-            nativeQuery = true)
-    void deleteSettingsByUserIdAndKeys(
-            @Param("userId") Long userId, @Param("keys") List<String> keys);
 
     /** Anonymous users (no username) created before the cut-off, streamed for batch cleanup. */
     @Query("SELECT u.id FROM User u WHERE u.username IS NULL AND u.createdAt < :cutoffDate")

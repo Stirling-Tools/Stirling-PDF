@@ -70,7 +70,15 @@ class StorageProviderConfigTest {
         StorageEncryptionState state = newState(cfg);
 
         StorageProvider provider = cfg.storageProvider(state, Optional.empty());
-        assertThat(provider).isInstanceOf(EncryptingStorageProvider.class);
+        assertThat(provider)
+                .isInstanceOf(
+                        stirling.software.proprietary.storage.provider.LicensedStorageProvider
+                                .class);
+        assertThat(
+                        ((stirling.software.proprietary.storage.provider.LicensedStorageProvider)
+                                        provider)
+                                .delegate())
+                .isInstanceOf(EncryptingStorageProvider.class);
         assertThat(state.isWriteEnabled()).isTrue();
         assertThat(state.suppressDirectDownloads()).isTrue();
     }

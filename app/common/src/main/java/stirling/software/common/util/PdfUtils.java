@@ -5,18 +5,24 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.imageio.*;
+import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.ImageOutputStream;
 
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -32,6 +38,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -68,24 +75,81 @@ public class PdfUtils {
         };
     }
 
+    /**
+     * Collects the images reachable from {@code resources}, searching each resources dictionary
+     * once. A form XObject can be named any number of times, so a walk that follows every name
+     * grows with the number of paths, not the number of objects.
+     */
     public List<RenderedImage> getAllImages(PDResources resources) throws IOException {
         List<RenderedImage> images = new ArrayList<>();
-
-        for (COSName name : resources.getXObjectNames()) {
-            PDXObject object = resources.getXObject(name);
-
-            if (object instanceof PDImageXObject) {
-                images.add(((PDImageXObject) object).getImage());
-
-            } else if (object instanceof PDFormXObject) {
-                images.addAll(getAllImages(((PDFormXObject) object).getResources()));
-            }
-        }
-
+        collectImages(resources, images, Collections.newSetFromMap(new IdentityHashMap<>()));
         return images;
     }
 
+    private void collectImages(
+            PDResources resources, List<RenderedImage> images, Set<COSDictionary> visited)
+            throws IOException {
+        if (resources == null || !visited.add(resources.getCOSObject())) {
+            return;
+        }
+        for (COSName name : resources.getXObjectNames()) {
+            PDXObject object = resources.getXObject(name);
+            if (object instanceof PDImageXObject image) {
+                ImageMemoryLimit.requireEmbeddedImageFits(image);
+                images.add(image.getImage());
+            } else if (object instanceof PDFormXObject form) {
+                collectImages(form.getResources(), images, visited);
+            }
+        }
+    }
+
+    /**
+     * Rejects, before rendering, any embedded image whose decoded raster exceeds the limit. The
+     * page render bounds the output canvas, not the intermediate raster PDFBox decodes each image
+     * into, so each image is sized here (soft masks and self-sizing codecs included) up front.
+     */
+    private void requireEmbeddedImagesFit(PDDocument document) throws IOException {
+        Set<COSDictionary> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (PDPage page : document.getPages()) {
+            requireImagesFit(page.getResources(), visited);
+        }
+    }
+
+    private void requireImagesFit(PDResources resources, Set<COSDictionary> visited)
+            throws IOException {
+        if (resources == null || !visited.add(resources.getCOSObject())) {
+            return;
+        }
+        for (COSName name : resources.getXObjectNames()) {
+            PDXObject object = resources.getXObject(name);
+            if (object instanceof PDImageXObject image) {
+                ImageMemoryLimit.requireEmbeddedImageFits(image);
+            } else if (object instanceof PDFormXObject form) {
+                requireImagesFit(form.getResources(), visited);
+            }
+        }
+    }
+
+    private boolean containsImage(PDResources resources, Set<COSDictionary> visited)
+            throws IOException {
+        if (resources == null || !visited.add(resources.getCOSObject())) {
+            return false;
+        }
+        for (COSName name : resources.getXObjectNames()) {
+            if (resources.isImageXObject(name)) {
+                return true;
+            }
+            if (resources.getXObject(name) instanceof PDFormXObject form
+                    && containsImage(form.getResources(), visited)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean hasImages(PDDocument document, String pagesToCheck) throws IOException {
+        pagesToCheck = pagesToCheck == null || pagesToCheck.isBlank() ? "all" : pagesToCheck;
+        GeneralUtils.requireWellFormedPageSelection(pagesToCheck, document.getNumberOfPages());
         String[] pageOrderArr = pagesToCheck.split(",");
         List<Integer> pageList =
                 GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
@@ -102,6 +166,12 @@ public class PdfUtils {
 
     public boolean hasText(PDDocument document, String pageNumbersToCheck, String phrase)
             throws IOException {
+        pageNumbersToCheck =
+                pageNumbersToCheck == null || pageNumbersToCheck.isBlank()
+                        ? "all"
+                        : pageNumbersToCheck;
+        GeneralUtils.requireWellFormedPageSelection(
+                pageNumbersToCheck, document.getNumberOfPages());
         String[] pageOrderArr = pageNumbersToCheck.split(",");
         List<Integer> pageList =
                 GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
@@ -116,8 +186,10 @@ public class PdfUtils {
         return false;
     }
 
+    /** Whether the page draws an image XObject, directly or through forms; decodes no image. */
     public boolean hasImagesOnPage(PDPage page) throws IOException {
-        return !getAllImages(page.getResources()).isEmpty();
+        return containsImage(
+                page.getResources(), Collections.newSetFromMap(new IdentityHashMap<>()));
     }
 
     public boolean hasTextOnPage(PDPage page, String phrase) throws IOException {
@@ -158,7 +230,8 @@ public class PdfUtils {
 
         try (PDDocument document = pdfDocumentFactory.load(inputStream);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            requireEmbeddedImagesFit(document);
+            PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             if (!includeAnnotations) {
                 pdfRenderer.setAnnotationsFilter(annotation -> false);
@@ -183,10 +256,6 @@ public class PdfUtils {
                             final int pageIndex = i;
                             BufferedImage image;
                             try {
-                                // Validate dimensions before rendering
-                                ExceptionUtils.validateRenderingDimensions(
-                                        document.getPage(pageIndex), pageIndex + 1, DPI);
-
                                 image =
                                         ExceptionUtils.handleOomRendering(
                                                 pageIndex + 1,
@@ -220,7 +289,7 @@ public class PdfUtils {
 
                     // Calculate the combined image dimensions
                     int maxWidth = 0;
-                    int totalHeight = 0;
+                    long totalHeight = 0;
 
                     // Using a map to store the calculated dimensions of each page size
                     HashMap<PdfRenderSettingsKey, PdfImageDimensionValue> pageSizes =
@@ -252,9 +321,9 @@ public class PdfUtils {
                         totalHeight += dimension.height();
                     }
 
-                    // Create a new BufferedImage to store the combined images
+                    ImageMemoryLimit.requireCombinedImageFits(maxWidth, totalHeight);
                     BufferedImage combined =
-                            prepareImageForPdfToImage(maxWidth, totalHeight, imageType);
+                            prepareImageForPdfToImage(maxWidth, (int) totalHeight, imageType);
                     Graphics g = combined.getGraphics();
 
                     int currentHeight = 0;
@@ -263,10 +332,6 @@ public class PdfUtils {
                     for (int i = 0; i < pageCount; ++i) {
                         final int pageIndex = i;
                         try {
-                            // Validate dimensions before rendering
-                            ExceptionUtils.validateRenderingDimensions(
-                                    document.getPage(pageIndex), pageIndex + 1, DPI);
-
                             pageImage =
                                     ExceptionUtils.handleOomRendering(
                                             pageIndex + 1,
@@ -308,10 +373,6 @@ public class PdfUtils {
                         final int pageIndex = i;
                         BufferedImage image;
                         try {
-                            // Validate dimensions before rendering
-                            ExceptionUtils.validateRenderingDimensions(
-                                    document.getPage(pageIndex), pageIndex + 1, DPI);
-
                             image =
                                     ExceptionUtils.handleOomRendering(
                                             pageIndex + 1,
@@ -367,7 +428,7 @@ public class PdfUtils {
     public PDDocument convertPdfToPdfImage(PDDocument document) throws IOException {
         PDDocument imageDocument = new PDDocument();
         try {
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             for (int page = 0; page < document.getNumberOfPages(); ++page) {
                 final int pageIndex = page;
@@ -448,32 +509,10 @@ public class PdfUtils {
             throws IOException {
         try (PDDocument doc = pdfDocumentFactory.createNewDocument()) {
             for (MultipartFile file : files) {
-                String contentType = file.getContentType();
-                String originalFilename = Filenames.toSimpleFileName(file.getOriginalFilename());
-                if (originalFilename != null
-                        && (originalFilename.toLowerCase(Locale.ROOT).endsWith(".tiff")
-                                || originalFilename.toLowerCase(Locale.ROOT).endsWith(".tif"))) {
-                    ImageReader reader = ImageIO.getImageReadersByFormatName("tiff").next();
-                    reader.setInput(ImageIO.createImageInputStream(file.getInputStream()));
-                    int numPages = reader.getNumImages(true);
-                    for (int i = 0; i < numPages; i++) {
-                        BufferedImage pageImage = reader.read(i);
-                        BufferedImage convertedImage =
-                                ImageProcessingUtils.convertColorType(pageImage, colorType);
-                        PDImageXObject pdImage =
-                                LosslessFactory.createFromImage(doc, convertedImage);
-                        addImageToDocument(doc, pdImage, fitOption, autoRotate);
-                    }
+                if (isTiff(file)) {
+                    appendTiffFrames(doc, file, fitOption, autoRotate, colorType);
                 } else {
-                    BufferedImage image = ImageProcessingUtils.loadImageWithExifOrientation(file);
-                    BufferedImage convertedImage =
-                            ImageProcessingUtils.convertColorType(image, colorType);
-                    // Use JPEGFactory if it's JPEG since JPEG is lossy
-                    PDImageXObject pdImage =
-                            (contentType != null && MediaType.IMAGE_JPEG_VALUE.equals(contentType))
-                                    ? JPEGFactory.createFromImage(doc, convertedImage)
-                                    : LosslessFactory.createFromImage(doc, convertedImage);
-                    addImageToDocument(doc, pdImage, fitOption, autoRotate);
+                    appendSingleImage(doc, file, fitOption, autoRotate, colorType);
                 }
             }
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -481,6 +520,79 @@ public class PdfUtils {
             log.debug("PDF successfully saved to byte array");
             return byteArrayOutputStream.toByteArray();
         }
+    }
+
+    /**
+     * A TIFF is recognised by declared content type as well as filename suffix: an extensionless
+     * upload would otherwise take the single-image path and silently drop every frame but one.
+     */
+    private boolean isTiff(MultipartFile file) {
+        if (hasTiffContentType(file.getContentType())) {
+            return true;
+        }
+        String filename = Filenames.toSimpleFileName(file.getOriginalFilename());
+        return filename != null
+                && (filename.toLowerCase(Locale.ROOT).endsWith(".tiff")
+                        || filename.toLowerCase(Locale.ROOT).endsWith(".tif"));
+    }
+
+    /** Parsed, not compared whole: RFC 3302 allows parameters such as {@code application=}. */
+    private boolean hasTiffContentType(String contentType) {
+        if (contentType == null) {
+            return false;
+        }
+        try {
+            MediaType mediaType = MediaType.parseMediaType(contentType);
+            return "image".equals(mediaType.getType())
+                    && ("tiff".equals(mediaType.getSubtype())
+                            || "x-tiff".equals(mediaType.getSubtype()));
+        } catch (InvalidMediaTypeException e) {
+            return false;
+        }
+    }
+
+    /** Every frame becomes a page; streams and reader are released even when a frame fails. */
+    private void appendTiffFrames(
+            PDDocument doc,
+            MultipartFile file,
+            String fitOption,
+            boolean autoRotate,
+            String colorType)
+            throws IOException {
+        try (InputStream input = file.getInputStream();
+                ImageInputStream imageInput = ImageIO.createImageInputStream(input)) {
+            ImageReader reader = ImageIO.getImageReadersByFormatName("tiff").next();
+            try {
+                reader.setInput(imageInput);
+                int numPages = reader.getNumImages(true);
+                for (int i = 0; i < numPages; i++) {
+                    BufferedImage convertedImage =
+                            ImageProcessingUtils.convertColorType(reader.read(i), colorType);
+                    PDImageXObject pdImage = LosslessFactory.createFromImage(doc, convertedImage);
+                    addImageToDocument(doc, pdImage, fitOption, autoRotate);
+                }
+            } finally {
+                reader.dispose();
+            }
+        }
+    }
+
+    private void appendSingleImage(
+            PDDocument doc,
+            MultipartFile file,
+            String fitOption,
+            boolean autoRotate,
+            String colorType)
+            throws IOException {
+        BufferedImage image = ImageProcessingUtils.loadImageWithExifOrientation(file);
+        BufferedImage convertedImage = ImageProcessingUtils.convertColorType(image, colorType);
+        // Use JPEGFactory if it's JPEG since JPEG is lossy
+        String contentType = file.getContentType();
+        PDImageXObject pdImage =
+                (contentType != null && MediaType.IMAGE_JPEG_VALUE.equals(contentType))
+                        ? JPEGFactory.createFromImage(doc, convertedImage)
+                        : LosslessFactory.createFromImage(doc, convertedImage);
+        addImageToDocument(doc, pdImage, fitOption, autoRotate);
     }
 
     public void addImageToDocument(
@@ -493,7 +605,7 @@ public class PdfUtils {
             pageSize = new PDRectangle(pageSize.getHeight(), pageSize.getWidth());
         }
 
-        if ("fitDocumentToImage".equals(fitOption)) {
+        if ("fitDocumentToImage".equals(fitOption) || "fitDocumentToPage".equals(fitOption)) {
             pageSize = new PDRectangle(image.getWidth(), image.getHeight());
         }
 
@@ -505,7 +617,9 @@ public class PdfUtils {
 
         try (PDPageContentStream contentStream =
                 new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
-            if ("fillPage".equals(fitOption) || "fitDocumentToImage".equals(fitOption)) {
+            if ("fillPage".equals(fitOption)
+                    || "fitDocumentToImage".equals(fitOption)
+                    || "fitDocumentToPage".equals(fitOption)) {
                 contentStream.drawImage(image, 0, 0, pageWidth, pageHeight);
             } else if ("maintainAspectRatio".equals(fitOption)) {
                 float imageAspectRatio = (float) image.getWidth() / (float) image.getHeight();

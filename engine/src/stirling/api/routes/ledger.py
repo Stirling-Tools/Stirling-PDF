@@ -22,6 +22,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.api.dependencies import get_math_auditor_agent
+from stirling.api.linked_instance import LINKED_INSTANCE
 from stirling.contracts.ledger import (
     Evidence,
     FolioManifest,
@@ -34,7 +35,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/ai/math-auditor-agent", tags=["math-auditor-agent"])
 
 
-@router.post("/examine", response_model=Requisition)
+@router.post("/examine", response_model=Requisition, openapi_extra=LINKED_INSTANCE)
 async def examine_endpoint(
     manifest: FolioManifest,
     agent: Annotated[MathAuditorAgent, Depends(get_math_auditor_agent)],
@@ -43,7 +44,7 @@ async def examine_endpoint(
     return await agent.examine(manifest)
 
 
-@router.post("/deliberate", response_model=Verdict)
+@router.post("/deliberate", response_model=Verdict, openapi_extra=LINKED_INSTANCE)
 async def deliberate_endpoint(
     evidence: Evidence,
     agent: Annotated[MathAuditorAgent, Depends(get_math_auditor_agent)],

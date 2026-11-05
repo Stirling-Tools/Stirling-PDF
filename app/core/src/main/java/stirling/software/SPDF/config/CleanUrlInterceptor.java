@@ -1,7 +1,9 @@
 package stirling.software.SPDF.config;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +35,8 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                     "startDate",
                     "endDate",
                     "async",
-                    "session");
+                    "session",
+                    "all");
 
     @Override
     public boolean preHandle(
@@ -48,17 +51,22 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
 
         String queryString = request.getQueryString();
         if (queryString != null && !queryString.isEmpty()) {
-            Map<String, String> allowedParameters = new HashMap<>();
+            // A null value is a bare flag (?all), which the frontend reads by presence.
+            Map<String, String> allowedParameters = new LinkedHashMap<>();
+            // The frontend needs state to bind the SaaS response to the initiating browser.
+            boolean accountLinkCallback =
+                    requestURI.equals(request.getContextPath() + "/account-link/callback");
 
             // Keep only the allowed parameters
             String[] queryParameters = queryString.split("&");
             for (String param : queryParameters) {
-                String[] keyValuePair = param.split("=");
-                if (keyValuePair.length != 2) {
+                String[] keyValuePair = param.split("=", -1);
+                if (keyValuePair.length > 2 || keyValuePair[0].isEmpty()) {
                     continue;
                 }
-                if (ALLOWED_PARAMS.contains(keyValuePair[0])) {
-                    allowedParameters.put(keyValuePair[0], keyValuePair[1]);
+                String key = keyValuePair[0];
+                if (ALLOWED_PARAMS.contains(key) || (accountLinkCallback && "state".equals(key))) {
+                    allowedParameters.put(key, keyValuePair.length == 2 ? keyValuePair[1] : null);
                 }
             }
 
@@ -70,13 +78,29 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                     if (!newQueryString.isEmpty()) {
                         newQueryString.append("&");
                     }
-                    newQueryString.append(entry.getKey()).append("=").append(entry.getValue());
+                    newQueryString.append(entry.getKey());
+                    if (entry.getValue() != null) {
+                        newQueryString.append("=").append(entry.getValue());
+                    }
                 }
 
                 // Redirect to the URL with only allowed query parameters
                 String redirectUrl = requestURI + "?" + newQueryString;
 
-                response.sendRedirect(request.getContextPath() + redirectUrl);
+                try {
+                    URI redirectUri = new URI(redirectUrl);
+                    // Relative URIs can still name another host through a leading //.
+                    if (redirectUri.isAbsolute()
+                            || redirectUri.getRawAuthority() != null
+                            || !redirectUrl.startsWith("/")
+                            || redirectUrl.startsWith("//")) {
+                        response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                        return false;
+                    }
+                    response.sendRedirect(redirectUri.toString());
+                } catch (URISyntaxException ex) {
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                }
                 return false;
             }
         }

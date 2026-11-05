@@ -1,0 +1,117 @@
+.certificate-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.certificate-choice {
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  background: var(--c-surface);
+  transition:
+    border-color var(--motion-fast),
+    background var(--motion-fast);
+}
+
+.certificate-choice:not(.sui-radio--disabled):hover {
+  background: var(--c-hover);
+  border-color: var(--c-border-strong);
+}
+
+.certificate-choice:has(input:checked) {
+  border-color: var(--c-primary);
+  background: var(--c-primary-subtle);
+}
+
+.certificate-choice:has(input:focus-visible) {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
+.certificate-choice .sui-radio__dot {
+  order: 1;
+  margin: 0 0 0 0.5rem;
+}
+
+.certificate-choice .sui-radio__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.certificate-choice__content {
+  display: flex;
+  gap: 0.875rem;
+  align-items: center;
+}
+
+.certificate-choice__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  color: var(--c-text-subtle);
+  background: var(--c-surface-sunken);
+}
+
+.certificate-choice:has(input:checked) .certificate-choice__icon {
+  color: var(--c-accent-fg);
+  background: var(--c-surface);
+}
+
+.certificate-choice__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.certificate-choice__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.certificate-choice__description {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--c-text-subtle);
+}
+
+.certificate-upload {
+  padding: 1rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--c-surface-sunken);
+}
+
+.certificate-config__details {
+  border-top: 1px solid var(--c-border-subtle);
+  padding-top: 0.5rem;
+}
+
+.certificate-config__details-toggle {
+  width: 100%;
+}
+
+.certificate-config__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: 0.875rem;
+  padding-top: 0.75rem;
+}
+
+.certificate-config__footer {
+  width: 100%;
+}
+
+.certificate-config__validation {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--c-surface-sunken);
+}

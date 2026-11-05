@@ -3,11 +3,16 @@ package stirling.software.SPDF.controller.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+
+import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -18,6 +23,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -99,6 +105,18 @@ class MergeControllerMoreTest {
                 name,
                 MediaType.APPLICATION_PDF_VALUE,
                 buildPdf(pages, title, modMillis));
+    }
+
+    private static MockMultipartFile png(String name) throws IOException {
+        BufferedImage image = new BufferedImage(120, 80, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = image.createGraphics();
+        graphics.setColor(Color.ORANGE);
+        graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
+        graphics.dispose();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", baos);
+        return new MockMultipartFile(
+                "fileInput", name, MediaType.IMAGE_PNG_VALUE, baos.toByteArray());
     }
 
     private static MergePdfsRequest request(
@@ -360,6 +378,54 @@ class MergeControllerMoreTest {
             } catch (Exception expected) {
                 assertThat(expected).isInstanceOf(Exception.class);
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("Image inputs")
+    class ImageInputs {
+
+        @Test
+        @DisplayName("merges a PNG with a PDF, rendering the image on the first page")
+        void mergesImageWithPdf() throws Exception {
+            MockMultipartFile[] files = {png("scan.png"), pdf("doc.pdf", 2)};
+            ResponseEntity<Resource> response =
+                    mergeController.mergePdfs(request(files, "orderProvided", false, false), null);
+            try (PDDocument result = readResponse(response)) {
+                assertThat(result.getNumberOfPages()).isEqualTo(3);
+                assertThat(pageContainsOrange(result, 0)).isTrue();
+                assertThat(pageContainsOrange(result, 1)).isFalse();
+            }
+        }
+
+        @Test
+        @DisplayName("merges two images into a two-page PDF, rendering both")
+        void mergesTwoImages() throws Exception {
+            MockMultipartFile[] files = {png("a.png"), png("b.png")};
+            ResponseEntity<Resource> response =
+                    mergeController.mergePdfs(request(files, "orderProvided", false, false), null);
+            try (PDDocument result = readResponse(response)) {
+                assertThat(result.getNumberOfPages()).isEqualTo(2);
+                assertThat(pageContainsOrange(result, 0)).isTrue();
+                assertThat(pageContainsOrange(result, 1)).isTrue();
+            }
+        }
+
+        /** True when the rendered page shows the orange fill painted by {@link #png(String)}. */
+        private boolean pageContainsOrange(PDDocument document, int pageIndex) throws IOException {
+            BufferedImage rendered = new PDFRenderer(document).renderImage(pageIndex);
+            for (int y = 0; y < rendered.getHeight(); y += 4) {
+                for (int x = 0; x < rendered.getWidth(); x += 4) {
+                    int rgb = rendered.getRGB(x, y);
+                    int red = (rgb >> 16) & 0xFF;
+                    int green = (rgb >> 8) & 0xFF;
+                    int blue = rgb & 0xFF;
+                    if (Math.abs(red - 255) <= 8 && Math.abs(green - 200) <= 8 && blue <= 8) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }

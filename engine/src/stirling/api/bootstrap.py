@@ -20,6 +20,7 @@ from stirling.agents.pdf_comment import PdfCommentAgent
 from stirling.config import AppSettings
 from stirling.documents import DocumentService, EmbeddingService
 from stirling.services import AppRuntime, build_runtime
+from stirling.services.operation_shortlist import OperationShortlist
 
 
 @dataclass(frozen=True)
@@ -44,6 +45,7 @@ def build_app_state(
     fast_model: Model | None = None,
     smart_model: Model | None = None,
     embedder: EmbeddingService | None = None,
+    operation_shortlist: OperationShortlist | None = None,
 ) -> AppState:
     """Build the runtime and every agent from ``settings``."""
     runtime = build_runtime(
@@ -52,6 +54,7 @@ def build_app_state(
         fast_model=fast_model,
         smart_model=smart_model,
         embedder=embedder,
+        operation_shortlist=operation_shortlist,
     )
     return AppState(
         runtime=runtime,

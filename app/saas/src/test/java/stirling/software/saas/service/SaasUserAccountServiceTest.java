@@ -53,6 +53,8 @@ class SaasUserAccountServiceTest {
     @Mock private SaasTeamExtensionService saasTeamExtensionService;
     @Mock private SaasTeamService saasTeamService;
 
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+
     @InjectMocks private SaasUserAccountService service;
 
     private static final String SUPABASE_ID = "11111111-2222-3333-4444-555555555555";

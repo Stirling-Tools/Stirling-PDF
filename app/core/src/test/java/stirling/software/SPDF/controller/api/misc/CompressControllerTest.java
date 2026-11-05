@@ -259,6 +259,20 @@ class CompressControllerTest {
         }
 
         @Test
+        @DisplayName("no size reduction returns the uploaded bytes unchanged")
+        void noReduction_returnsOriginalBytes() throws Exception {
+            byte[] pdf = textOnlyPdfBytes();
+            OptimizePdfRequest request = new OptimizePdfRequest();
+            request.setFileInput(multipart(pdf));
+            request.setOptimizeLevel(1);
+
+            ResponseEntity<Resource> response = controller.optimizePdf(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(drain(response)).isEqualTo(pdf);
+        }
+
+        @Test
         @DisplayName("level 4 with a sub-threshold image still returns OK (image skipped)")
         void level4_smallImage_skipped_returnsOk() throws Exception {
             byte[] pdf = smallImagePdfBytes();

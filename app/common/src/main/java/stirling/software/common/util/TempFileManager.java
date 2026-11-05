@@ -195,7 +195,7 @@ public class TempFileManager {
             }
         }
 
-        log.info("Cleaned up {} old temporary files", deletedCount);
+        log.debug("Cleaned up {} old temporary files", deletedCount);
         return deletedCount;
     }
 

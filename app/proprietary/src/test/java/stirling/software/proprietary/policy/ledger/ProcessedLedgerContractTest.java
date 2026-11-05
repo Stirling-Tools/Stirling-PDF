@@ -43,6 +43,38 @@ abstract class ProcessedLedgerContractTest {
     }
 
     @Test
+    void aForgottenFailureIsClaimableAsNewWork() {
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null));
+        ledger.settle(POLICY, FILE, GATE, null, false);
+        assertTrue(ledger.forgetFailure(POLICY, FILE));
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null)); // same gate; no row parks it
+    }
+
+    @Test
+    void onlyAParkedFailureCanBeForgotten() {
+        assertFalse(ledger.forgetFailure(POLICY, FILE)); // no row
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null));
+        assertFalse(ledger.forgetFailure(POLICY, FILE)); // in flight
+        ledger.settle(POLICY, FILE, GATE, null, true);
+        assertFalse(ledger.forgetFailure(POLICY, FILE)); // done is history worth keeping
+    }
+
+    @Test
+    void aForgottenRowReadsAsNeverProcessed() {
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null));
+        ledger.settle(POLICY, FILE, GATE, null, true);
+        assertTrue(ledger.forget(POLICY, FILE));
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null)); // same gate: no row parks it
+    }
+
+    @Test
+    void anInFlightRowCannotBeForgotten() {
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null));
+        assertFalse(ledger.forget(POLICY, FILE));
+        assertFalse(ledger.forget(POLICY, "missing"));
+    }
+
+    @Test
     void aSettledFileIsSkippedAtTheSameGate() {
         ledger.claim(POLICY, FILE, GATE, null);
         ledger.settle(POLICY, FILE, GATE, null, true);

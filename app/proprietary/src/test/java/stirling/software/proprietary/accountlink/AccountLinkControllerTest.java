@@ -2,15 +2,20 @@ package stirling.software.proprietary.accountlink;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +31,7 @@ class AccountLinkControllerTest {
     private ConnectService connectService;
     private UsageSyncService syncService;
     private ObjectProvider<UsageSyncService> syncProvider;
+    private FreeTierUsageService freeTierService;
     private AccountLinkController controller;
 
     @BeforeEach
@@ -35,9 +41,14 @@ class AccountLinkControllerTest {
         connectService = mock(ConnectService.class);
         syncService = mock(UsageSyncService.class);
         syncProvider = mock(ObjectProvider.class);
+        freeTierService = mock(FreeTierUsageService.class);
         controller =
                 new AccountLinkController(
-                        service, connectService, mock(LocalUsageService.class), syncProvider);
+                        service,
+                        connectService,
+                        mock(LocalUsageService.class),
+                        freeTierService,
+                        syncProvider);
     }
 
     // These asserted POST /link's error mapping, which distinguished 401/403 so the portal could
@@ -83,6 +94,63 @@ class AccountLinkControllerTest {
     }
 
     @Test
+    void connectComplete_reportsSeatsAfterTheLinkCommits() {
+        var linked = new ConnectService.ConnectStatus(ConnectService.Phase.LINKED, null, null, 42L);
+        when(connectService.complete("nonce")).thenReturn(linked);
+        when(syncProvider.getIfAvailable()).thenReturn(syncService);
+
+        var response =
+                controller.connectComplete(
+                        new AccountLinkController.ConnectCompleteRequest("nonce"));
+
+        assertThat(response.getBody()).isEqualTo(linked);
+        var order = inOrder(connectService, syncService);
+        order.verify(connectService).complete("nonce");
+        order.verify(syncService).syncNow();
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = ConnectService.Phase.class,
+            names = "LINKED",
+            mode = EnumSource.Mode.EXCLUDE)
+    void connectComplete_doesNotSyncAnUnfinishedOrRejectedLink(ConnectService.Phase phase) {
+        when(connectService.complete("nonce")).thenReturn(ConnectService.ConnectStatus.of(phase));
+
+        controller.connectComplete(new AccountLinkController.ConnectCompleteRequest("nonce"));
+
+        verify(syncProvider, never()).getIfAvailable();
+        verify(syncService, never()).syncNow();
+    }
+
+    @Test
+    void connectComplete_keepsTheCommittedLinkWhenInitialSyncFails() {
+        var linked = new ConnectService.ConnectStatus(ConnectService.Phase.LINKED, null, null, 42L);
+        when(connectService.complete("nonce")).thenReturn(linked);
+        when(syncProvider.getIfAvailable()).thenReturn(syncService);
+        doThrow(new IllegalStateException("Sync unavailable")).when(syncService).syncNow();
+
+        var response =
+                controller.connectComplete(
+                        new AccountLinkController.ConnectCompleteRequest("nonce"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(linked);
+    }
+
+    @Test
+    void connectComplete_toleratesAnUnavailableSyncService() {
+        var linked = new ConnectService.ConnectStatus(ConnectService.Phase.LINKED, null, null, 42L);
+        when(connectService.complete("nonce")).thenReturn(linked);
+
+        var response =
+                controller.connectComplete(
+                        new AccountLinkController.ConnectCompleteRequest("nonce"));
+
+        assertThat(response.getBody()).isEqualTo(linked);
+    }
+
+    @Test
     void syncNow_triggersSyncWhenMeteringOn() {
         when(syncProvider.getIfAvailable()).thenReturn(syncService);
 
@@ -93,8 +161,24 @@ class AccountLinkControllerTest {
     }
 
     @Test
-    void syncNow_returns409WhenMeteringOff() {
-        when(syncProvider.getIfAvailable()).thenReturn(null); // metering disabled → bean absent
+    void freeTier_reportsTheLocalGrant() {
+        LocalDateTime start = LocalDateTime.of(2026, 9, 1, 0, 0);
+        when(freeTierService.balance())
+                .thenReturn(
+                        new FreeTierUsageService.FreeTierBalance(
+                                500, 120, 380, start, start.plusMonths(1)));
+
+        ResponseEntity<FreeTierUsageService.FreeTierBalance> resp = controller.freeTier();
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().remainingUnits()).isEqualTo(380);
+        assertThat(resp.getBody().periodEnd()).isEqualTo(start.plusMonths(1));
+    }
+
+    @Test
+    void syncNow_returns409WhenSyncUnavailable() {
+        when(syncProvider.getIfAvailable()).thenReturn(null);
 
         ResponseEntity<Void> resp = controller.syncNow();
 

@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.controller.api;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -57,6 +58,7 @@ public class TeamController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/rename")
+    @Transactional
     public ResponseEntity<?> renameTeam(
             @RequestParam("teamId") Long teamId, @RequestParam("newName") String newName) {
         if (newName == null || newName.isBlank()) {
@@ -81,6 +83,26 @@ public class TeamController {
                     .body(Map.of("error", "Cannot rename Internal team."));
         }
 
+        if (team.getName().equals(TeamService.DEFAULT_TEAM_NAME)) {
+            Team replacement = new Team();
+            replacement.setName(newName);
+            replacement = teamRepository.save(replacement);
+
+            List<User> members = userRepository.findAllByTeam(team);
+            for (User member : members) {
+                member.setTeam(replacement);
+            }
+            userRepository.saveAll(members);
+            members.forEach(teamMembershipService::syncMembership);
+
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            "Team created and Default members moved successfully",
+                            "teamId",
+                            replacement.getId()));
+        }
+
         team.setName(newName);
         teamRepository.save(team);
         return ResponseEntity.ok(Map.of("message", "Team renamed successfully"));
@@ -98,10 +120,10 @@ public class TeamController {
 
         Team team = teamOpt.get();
 
-        // Prevent deleting the Internal team
-        if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+        if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())
+                || TeamService.DEFAULT_TEAM_NAME.equals(team.getName())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Cannot delete Internal team."));
+                    .body(Map.of("error", "Cannot delete " + team.getName() + " team."));
         }
 
         long memberCount = userRepository.countByTeam(team);

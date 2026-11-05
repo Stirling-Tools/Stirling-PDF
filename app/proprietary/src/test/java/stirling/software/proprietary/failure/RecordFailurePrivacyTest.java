@@ -43,16 +43,18 @@ class RecordFailurePrivacyTest {
 
     @Test
     void hasNoFileNameFieldAtAll() {
-        // Structural, not behavioural: if a fileName component is ever added back, this fails.
+        // Structural, not behavioural: if a name component is ever added back, this fails. Not
+        // NotificationView, whose documentName is derived per reader, never stored.
         assertThat(List.of(RecordFailure.class.getRecordComponents()))
                 .extracting(RecordComponent::getName)
-                .doesNotContain("fileName");
+                .doesNotContain("fileName", "documentName");
         assertThat(List.of(FileRunEventEntity.class.getDeclaredFields()))
                 .extracting(Field::getName)
-                .doesNotContain("fileName");
+                .doesNotContain("fileName", "documentName");
+        // The portal's shape, read by reviewers over rows that are not theirs.
         assertThat(List.of(FileRunEventView.class.getRecordComponents()))
                 .extracting(RecordComponent::getName)
-                .doesNotContain("fileName");
+                .doesNotContain("fileName", "documentName");
     }
 
     @Test

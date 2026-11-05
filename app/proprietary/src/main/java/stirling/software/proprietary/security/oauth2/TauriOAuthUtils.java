@@ -1,5 +1,7 @@
 package stirling.software.proprietary.security.oauth2;
 
+import java.net.URI;
+
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -111,12 +113,33 @@ public final class TauriOAuthUtils {
         }
         for (Cookie cookie : cookies) {
             if (SPA_REDIRECT_COOKIE.equals(cookie.getName())) {
-                String value =
-                        java.net.URLDecoder.decode(
-                                cookie.getValue(), java.nio.charset.StandardCharsets.UTF_8);
-                return value.trim().isEmpty() ? null : value.trim();
+                try {
+                    String value =
+                            java.net.URLDecoder.decode(
+                                    cookie.getValue(), java.nio.charset.StandardCharsets.UTF_8);
+                    return value.trim().isEmpty() ? null : value.trim();
+                } catch (IllegalArgumentException e) {
+                    return null;
+                }
             }
         }
         return null;
+    }
+
+    public static boolean isLocalRedirectPath(String path) {
+        try {
+            URI uri = URI.create(path);
+            String decoded = uri.getPath();
+            return !uri.isAbsolute()
+                    && uri.getRawAuthority() == null
+                    && uri.getRawFragment() == null
+                    && decoded != null
+                    && decoded.startsWith("/")
+                    && !decoded.startsWith("//")
+                    && !decoded.contains("\\")
+                    && decoded.chars().noneMatch(c -> c < 32 || c == 127);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 }

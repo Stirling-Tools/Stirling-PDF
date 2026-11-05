@@ -41,6 +41,7 @@ import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
 import stirling.software.proprietary.storage.repository.FileShareRepository;
+import stirling.software.proprietary.storage.repository.FolderRepository;
 import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
@@ -52,6 +53,7 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 class FileStorageServiceMoreTest {
 
     @Mock private StoredFileRepository storedFileRepository;
+    @Mock private FolderRepository folderRepository;
     @Mock private FileShareRepository fileShareRepository;
     @Mock private FileShareAccessRepository fileShareAccessRepository;
     @Mock private UserRepository userRepository;
@@ -71,6 +73,7 @@ class FileStorageServiceMoreTest {
         service =
                 new FileStorageService(
                         storedFileRepository,
+                        folderRepository,
                         fileShareRepository,
                         fileShareAccessRepository,
                         userRepository,

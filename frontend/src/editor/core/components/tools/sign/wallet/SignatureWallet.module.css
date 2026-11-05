@@ -1,0 +1,61 @@
+.wallet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.loading {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 1.25rem;
+}
+
+.sectionIcon {
+  color: var(--c-text-subtle);
+}
+
+.sectionTitle {
+  flex-grow: 1;
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+.sectionMeta {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 0.625rem;
+  row-gap: 0.875rem;
+}
+
+.dialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+}
+
+.dialogBody {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--c-text-muted);
+}

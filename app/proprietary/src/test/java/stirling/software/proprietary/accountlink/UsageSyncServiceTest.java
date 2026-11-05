@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,11 +32,25 @@ class UsageSyncServiceTest {
     @Mock private AccountLinkClient client;
     @Mock private EntitlementCache entitlementCache;
 
+    @Mock private ApplicationEventPublisher events;
+
+    @Mock
+    private org.springframework.beans.factory.ObjectProvider<
+                    stirling.software.proprietary.security.service.UserService>
+            users;
+
+    @Mock private stirling.software.proprietary.security.service.UserService localUsers;
+    @Mock private stirling.software.proprietary.service.UserLicenseSettingsService licenseSettings;
+    private final AccountLinkProperties properties = new AccountLinkProperties();
+
     private UsageSyncService service;
     private final LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
 
     @BeforeEach
     void setUp() {
+        properties.getMetering().setEnabled(true);
+        org.mockito.Mockito.lenient().when(users.getIfAvailable()).thenReturn(localUsers);
+        org.mockito.Mockito.lenient().when(localUsers.getTotalUsersCount()).thenReturn(7L);
         service =
                 new UsageSyncService(
                         counters,
@@ -43,7 +58,10 @@ class UsageSyncServiceTest {
                         credentialStore,
                         client,
                         entitlementCache,
-                        new AccountLinkProperties());
+                        properties,
+                        events,
+                        users,
+                        licenseSettings);
     }
 
     @Test
@@ -52,7 +70,15 @@ class UsageSyncServiceTest {
         props.getMetering().setSyncIntervalHours(6);
         UsageSyncService svc =
                 new UsageSyncService(
-                        counters, syncState, credentialStore, client, entitlementCache, props);
+                        counters,
+                        syncState,
+                        credentialStore,
+                        client,
+                        entitlementCache,
+                        props,
+                        events,
+                        users,
+                        licenseSettings);
 
         ScheduledTaskRegistrar registrar = new ScheduledTaskRegistrar();
         svc.configureTasks(registrar);
@@ -84,25 +110,38 @@ class UsageSyncServiceTest {
 
         service.syncNow();
 
-        verifyNoInteractions(client, entitlementCache);
+        verifyNoInteractions(client, entitlementCache, events);
         verify(counters, never()).findPeriodsWithUnsyncedUsage();
     }
 
     @Test
-    void nothingPendingStillForcesEntitlementRefresh() {
+    void nothingPendingStillReportsSeatsAndRefreshesEntitlement() {
         when(credentialStore.get()).thenReturn(Optional.of(credential()));
         when(counters.findPeriodsWithUnsyncedUsage()).thenReturn(List.of());
-
+        var fresh = entitled();
+        when(client.reportUsage("dev-1", "sec-1", 0, null, 0, 0, 0, 7)).thenReturn(fresh);
         service.syncNow();
+        verify(entitlementCache).accept("dev-1", fresh);
+        verify(events).publishEvent(any(EntitlementRefreshedEvent.class));
+        verifyNoInteractions(syncState);
+    }
 
-        // No usage to report, so nothing is sent and no markers advance — but the sync still forces
-        // an entitlement refresh so an out-of-band plan change (e.g. a just-completed subscription)
-        // surfaces on the gate immediately instead of waiting out the entitlement-cache TTL.
-        verifyNoInteractions(client);
-        verify(syncState, never()).save(any());
-        verify(entitlementCache, never()).accept(any());
-        verify(entitlementCache).invalidate();
-        verify(entitlementCache).current();
+    @Test
+    void meteringDisabledStillReportsSeats() {
+        properties.getMetering().setEnabled(false);
+        when(credentialStore.get()).thenReturn(Optional.of(credential()));
+        service.syncNow();
+        verify(client).reportUsage("dev-1", "sec-1", 0, null, 0, 0, 0, 7);
+        verifyNoInteractions(counters);
+    }
+
+    @Test
+    void installedPaidLicenseDoesNotConsumeTeamSeats() {
+        properties.getMetering().setEnabled(false);
+        when(credentialStore.get()).thenReturn(Optional.of(credential()));
+        when(licenseSettings.hasLicenseKeyPaidTier()).thenReturn(true);
+        service.syncNow();
+        verify(client).reportUsage("dev-1", "sec-1", 0, null, 0, 0, 0, 0);
     }
 
     @Test
@@ -117,21 +156,37 @@ class UsageSyncServiceTest {
         when(syncState.findById(AccountLinkSyncState.SINGLETON_ID)).thenReturn(Optional.of(state));
         InstanceEntitlement fresh = entitled();
         when(client.reportUsage(
-                        eq("dev-1"), eq("sec-1"), eq(6L), eq(period), eq(12L), eq(4L), eq(0L)))
+                        eq("dev-1"),
+                        eq("sec-1"),
+                        eq(6L),
+                        eq(period),
+                        eq(12L),
+                        eq(4L),
+                        eq(0L),
+                        eq(7)))
                 .thenReturn(fresh);
 
         service.syncNow();
 
         // Seq advanced from 5 → 6 and the report carried the per-category cumulative.
         verify(client)
-                .reportUsage(eq("dev-1"), eq("sec-1"), eq(6L), eq(period), eq(12L), eq(4L), eq(0L));
+                .reportUsage(
+                        eq("dev-1"),
+                        eq("sec-1"),
+                        eq(6L),
+                        eq(period),
+                        eq(12L),
+                        eq(4L),
+                        eq(0L),
+                        eq(7));
         // Only categories with usage are marked; AUTOMATION (0) is skipped.
         verify(counters).markSynced(period, "API", 12L);
         verify(counters).markSynced(period, "AI", 4L);
         verify(counters, never()).markSynced(eq(period), eq("AUTOMATION"), anyLong());
         // Two saves: the pre-report seq reservation + the post-success timestamp.
         verify(syncState, times(2)).save(state);
-        verify(entitlementCache).accept(fresh);
+        verify(entitlementCache).accept("dev-1", fresh);
+        verify(events).publishEvent(any(EntitlementRefreshedEvent.class));
     }
 
     @Test
@@ -142,30 +197,40 @@ class UsageSyncServiceTest {
         when(counters.findPeriodsWithUnsyncedUsage()).thenReturn(List.of(period));
         when(counters.findByPeriodStart(period)).thenReturn(List.of(counter(period, "API", 12L)));
         when(syncState.findById(AccountLinkSyncState.SINGLETON_ID)).thenReturn(Optional.of(state));
-        when(client.reportUsage(any(), any(), anyLong(), any(), anyLong(), anyLong(), anyLong()))
+        when(client.reportUsage(
+                        any(), any(), anyLong(), any(), anyLong(), anyLong(), anyLong(), eq(7)))
                 .thenReturn(null);
 
         service.syncNow();
 
         verify(counters, never()).markSynced(any(), any(), anyLong());
         verify(syncState, times(1)).save(state); // seq reserved, success not recorded
-        verify(entitlementCache).accept(null); // nothing fresh adopted
+        verify(entitlementCache).accept("dev-1", null); // nothing fresh adopted
+        // accept() no-ops on null, so saying the entitlement was refreshed would be a lie: the
+        // licence tier listens to this and would re-read a plan nobody fetched.
+        verify(events, never()).publishEvent(any(EntitlementRefreshedEvent.class));
     }
 
     @Test
-    void revokedAbortsWithoutMarkingOrAdoptingEntitlement() {
+    void revokedAbortsAndBlocksImmediately() {
         AccountLinkSyncState state = new AccountLinkSyncState();
         state.setId(AccountLinkSyncState.SINGLETON_ID);
         when(credentialStore.get()).thenReturn(Optional.of(credential()));
         when(counters.findPeriodsWithUnsyncedUsage()).thenReturn(List.of(period));
         when(counters.findByPeriodStart(period)).thenReturn(List.of(counter(period, "API", 12L)));
         when(syncState.findById(AccountLinkSyncState.SINGLETON_ID)).thenReturn(Optional.of(state));
-        when(client.reportUsage(any(), any(), anyLong(), any(), anyLong(), anyLong(), anyLong()))
+        when(client.reportUsage(
+                        any(), any(), anyLong(), any(), anyLong(), anyLong(), anyLong(), eq(7)))
                 .thenThrow(new AccountLinkClient.RevokedException(403));
 
         service.syncNow();
 
         verify(counters, never()).markSynced(any(), any(), anyLong());
-        verify(entitlementCache, never()).accept(any());
+        verify(entitlementCache)
+                .accept(
+                        eq("dev-1"),
+                        org.mockito.ArgumentMatchers.argThat(
+                                value -> value.state() == EntitlementState.REVOKED));
+        verify(events).publishEvent(any(EntitlementRefreshedEvent.class));
     }
 }

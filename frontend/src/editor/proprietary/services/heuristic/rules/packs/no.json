@@ -1,0 +1,288 @@
+{
+  "version": 2,
+  "language": "no",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "faktura", "weight": 24, "where": "title" },
+        { "text": "merverdiavgift", "weight": 8 }
+      ]
+    },
+    {
+      "id": "receipt",
+      "phrases": [{ "text": "kvittering", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "credit-note",
+      "phrases": [{ "text": "kreditnota", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "packing-slip",
+      "phrases": [{ "text": "kvittering", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "finansregnskap", "weight": 20, "where": "title" },
+        { "text": "balanse", "weight": 12 }
+      ]
+    },
+    {
+      "id": "tax-return",
+      "phrases": [{ "text": "skattemelding", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "tax-form",
+      "phrases": [{ "text": "skattemelding", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "avtale", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [{ "text": "arbeidsavtale", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "lease-agreement",
+      "phrases": [{ "text": "depositum", "weight": 10 }]
+    },
+    {
+      "id": "privacy-policy",
+      "phrases": [{ "text": "personvernforordningen", "weight": 10 }]
+    },
+    {
+      "id": "affidavit",
+      "phrases": [{ "text": "affidavit", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "testament", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "deed",
+      "phrases": [{ "text": "bekjentgjørelse", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "insurance-policy",
+      "phrases": [{ "text": "polise", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "certificate",
+      "phrases": [{ "text": "diplom", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "patent", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "resept", "weight": 20, "where": "title" },
+        { "text": "farmasi", "weight": 10 }
+      ]
+    },
+    {
+      "id": "warranty-document",
+      "phrases": [{ "text": "garanti", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "user-guide",
+      "phrases": [{ "text": "bruksanvisning", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        { "text": "sikkerhetsdatablad", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [{ "text": "teknisk tegning", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "bill-of-materials",
+      "phrases": [{ "text": "stykkliste", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "press-release",
+      "phrases": [{ "text": "pressemelding", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "newsletter",
+      "phrases": [{ "text": "nyhetsbrev", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "brochure",
+      "phrases": [{ "text": "brosjyre", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [{ "text": "forretningsplan", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "meeting-agenda",
+      "phrases": [{ "text": "dagsorden", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "memo",
+      "phrases": [{ "text": "promemoria", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "ticket",
+      "phrases": [{ "text": "billett", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "visum", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "menu",
+      "phrases": [{ "text": "meny", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [{ "text": "oppskrift", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "report",
+      "phrases": [{ "text": "rapport", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "brev", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "form",
+      "phrases": [{ "text": "skjema", "weight": 10, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "lisens", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "public-notice",
+      "phrases": [{ "text": "bulletin", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "audit-report",
+      "phrases": [{ "text": "revisjon", "weight": 12 }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "fast eiendom", "weight": 8 }]
+    },
+    {
+      "id": "grant-agreement",
+      "phrases": [{ "text": "legat", "weight": 12 }]
+    },
+    {
+      "id": "tender-document",
+      "phrases": [{ "text": "anbud", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "subscription-confirmation",
+      "phrases": [{ "text": "abonnement", "weight": 10 }]
+    },
+    {
+      "id": "donation-receipt",
+      "phrases": [{ "text": "donasjon", "weight": 10 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "e-post", "weight": 8 }]
+    },
+    {
+      "id": "book-ebook",
+      "phrases": [{ "text": "innholdsfortegnelse", "weight": 6 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "tidsskrift", "weight": 10 }]
+    },
+    {
+      "id": "course-syllabus",
+      "phrases": [{ "text": "syllabus", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "rekruttering", "weight": 8 }]
+    },
+    {
+      "id": "service-agreement",
+      "phrases": [
+        { "text": "tjenestenivåavtale", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "settlement-agreement",
+      "phrases": [{ "text": "forlik", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "consent-form",
+      "phrases": [
+        { "text": "informert samtykke", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "forsikring", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "safety-procedure",
+      "phrases": [{ "text": "arbeidsmiljø", "weight": 10 }]
+    },
+    {
+      "id": "api-documentation",
+      "phrases": [{ "text": "programmeringsgrensesnitt", "weight": 8 }]
+    },
+    {
+      "id": "license-agreement",
+      "phrases": [
+        { "text": "sluttbrukeravtale", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "budsjett", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "application-form",
+      "phrases": [{ "text": "arbeidssøknad", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "gift-certificate",
+      "phrases": [{ "text": "gavekort", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "case-study",
+      "phrases": [{ "text": "tilfellestudie", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "styre", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "investering", "weight": 8 }]
+    },
+    {
+      "id": "analytics-report",
+      "phrases": [{ "text": "webanalyse", "weight": 10 }]
+    },
+    {
+      "id": "benefits-summary",
+      "phrases": [{ "text": "frynsegode", "weight": 14 }]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "lekser", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "toc": [{ "pattern": "innholdsfortegnelse" }],
+    "references": [{ "pattern": "bibliografi" }],
+    "signature": [{ "pattern": "signatur" }]
+  }
+}

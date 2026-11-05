@@ -88,6 +88,60 @@ class PolicyAccessGuardTest {
         assertNull(guard(false).teamForNewPolicy());
     }
 
+    @Test
+    void policiesSurfaceNeverSeesProcessingFolderRows() {
+        when(policyManagementAuthority.currentUserTeamId()).thenReturn(1L);
+        PolicyStore store = new InProcessPolicyStore();
+        store.save(inTeam(1L));
+        store.save(folderPair(1L, "alice"));
+
+        assertEquals(1, guard(true).visibleFrom(store).size());
+        assertEquals(1, guard(false).visibleFrom(store).size()); // login off hides them too
+    }
+
+    @Test
+    void processingFoldersAreScopedToTheirOwnerNotTheirTeam() {
+        when(policyManagementAuthority.currentUserTeamId()).thenReturn(1L);
+        when(userService.getCurrentUsername()).thenReturn("alice");
+        PolicyStore store = new InProcessPolicyStore();
+        store.save(folderPair(1L, "alice"));
+        store.save(folderPair(1L, "bob")); // same team, different person
+        store.save(inTeam(1L)); // ordinary policy, not a folder
+
+        List<Policy> visible = guard(true).visibleProcessingFolders(store);
+
+        assertEquals(1, visible.size());
+        assertEquals("alice", visible.get(0).owner());
+    }
+
+    @Test
+    void canAccessAProcessingFolderOnlyAsItsOwner() {
+        when(userService.getCurrentUsername()).thenReturn("alice");
+        assertTrue(guard(true).canAccess(folderPair(1L, "alice")));
+        assertFalse(guard(true).canAccess(folderPair(1L, "bob")));
+        assertTrue(guard(false).canAccess(folderPair(1L, "bob"))); // local operator
+    }
+
+    @Test
+    void aNullOwnerProcessingFolderIsNotReachableUnderLogin() {
+        // Nobody, not every authenticated user. The null-owner short-circuit returns false
+        // without reading the current user, so there is no username to stub.
+        assertFalse(guard(true).canAccess(folderPair(1L, null)));
+    }
+
+    private static Policy folderPair(Long teamId, String owner) {
+        return new Policy(
+                        null,
+                        "pair",
+                        owner,
+                        true,
+                        List.of(),
+                        List.of(),
+                        OutputSpec.inline(),
+                        teamId)
+                .withSurface(Policy.SURFACE_PROCESSING_FOLDER);
+    }
+
     private static Policy inTeam(Long teamId) {
         return new Policy(
                 null, "p", "owner", true, List.of(), List.of(), OutputSpec.inline(), teamId);
