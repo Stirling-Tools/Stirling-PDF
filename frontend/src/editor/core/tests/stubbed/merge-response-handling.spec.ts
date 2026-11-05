@@ -106,7 +106,8 @@ test.describe("Merge output filename (#8404)", () => {
     // A proxy/gateway may replace the merge response Content-Type with
     // "application/octet-stream", leaving no usable MIME type. The output
     // extension must then come from the response bytes (%PDF), not from
-    // the first input file (a JPEG).
+    // the first input file (a JPEG) — and the File type must follow the
+    // identified content instead of keeping the generic header value.
     await page.route("**/api/v1/general/merge-pdfs", (route: Route) =>
       route.fulfill({
         status: 200,
@@ -122,6 +123,9 @@ test.describe("Merge output filename (#8404)", () => {
     const review = page.locator('[data-testid="review-panel-container"]');
     await expect(review).toBeVisible();
     await expect(review.getByText(/merged_sample\.pdf/i).first()).toBeVisible();
+    await expect(
+      review.getByText("application/pdf", { exact: true }),
+    ).toBeVisible();
     await expect(review.getByText(/merged_sample\.jpe?g/i)).toHaveCount(0);
   });
 
