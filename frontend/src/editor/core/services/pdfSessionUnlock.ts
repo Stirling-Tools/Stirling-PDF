@@ -83,6 +83,20 @@ async function ensureAccessUnlessDamaged(
   }
 }
 
+/** Combined output copies one input's protection, so every protected input must share it. */
+function hasMixedProtection(files: readonly File[]): boolean {
+  const [first, ...rest] = files.map((file) => getPdfAccess(file));
+  return rest.some(
+    (access) =>
+      !first ||
+      !access ||
+      access.permissions !== first.permissions ||
+      access.encryptionRevision !== first.encryptionRevision ||
+      access.password !== first.password ||
+      access.openingPassword !== first.openingPassword,
+  );
+}
+
 /** Checks the whole selection before processing; encryption hints request authentication but never grant access. */
 export async function preflightPdfOperation(
   files: readonly StirlingFile[],
@@ -123,7 +137,7 @@ export async function preflightPdfOperation(
       );
     protectedFiles.push(file);
   }
-  if (combinesFiles && protectedFiles.length > 1)
+  if (combinesFiles && hasMixedProtection(protectedFiles))
     throw new Error(
       i18n.t(
         "encryptedPdfUnlock.mixedProtection",
@@ -262,7 +276,7 @@ async function protectPdfOutput(
   return file;
 }
 
-/** Restore protection before results reach downloads or storage, including every PDF in a ZIP; mixed protected inputs are unsupported. */
+/** Restore protection before results reach downloads or storage, including every PDF in a ZIP; inputs with differing protection are unsupported. */
 export async function protectUnlockedResults(
   outputs: File[],
   inputs: readonly File[],
@@ -273,11 +287,13 @@ export async function protectUnlockedResults(
     endpoint === "/api/v1/security/add-password"
   )
     return outputs;
-  if (inputs.filter((file) => getPdfAccess(file)?.encrypted).length > 1)
+  if (
+    hasMixedProtection(inputs.filter((file) => getPdfAccess(file)?.encrypted))
+  )
     throw new Error(
       i18n.t(
         "encryptedPdfUnlock.mixedProtection",
-        "Combining multiple protected documents requires choosing an output protection policy. Process them separately for now.",
+        "These PDFs have separate protection settings. Process them individually.",
       ),
     );
   const source = inputs.find((file) => getPdfAccess(file)?.encrypted);
