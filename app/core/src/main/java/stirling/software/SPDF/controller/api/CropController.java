@@ -324,11 +324,12 @@ public class CropController {
                     fileInput != null ? fileInput.getOriginalFilename() : request.getFileId();
             String outputFilename = GeneralUtils.generateFilename(sourceName, "_cropped.pdf");
 
-            // JPDFium crops each selected page in place, so unselected pages stay
-            // pristine without the extract-and-merge round-trip Ghostscript needed.
-            TempFile tempInputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
-            TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
+            // JPDFium crops each selected page in place, so unselected pages stay pristine.
+            TempFile tempInputFile = null;
+            TempFile tempOutputFile = null;
             try {
+                tempInputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
+                tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
                 sourceDocument.save(tempInputFile.getFile());
                 try (PdfDocument document = PdfDocument.open(tempInputFile.getFile().toPath())) {
                     for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
@@ -339,13 +340,18 @@ public class CropController {
                     document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
                 } catch (RuntimeException e) {
                     throw new IOException("JPDFium crop failed", e);
+                } catch (LinkageError e) {
+                    throw new IOException("JPDFium native library is unavailable for crop", e);
                 }
 
-                TempFile out = tempOutputFile;
+                ResponseEntity<Resource> response =
+                        WebResponseUtils.pdfFileToWebResponse(tempOutputFile, outputFilename);
                 tempOutputFile = null; // ownership transferred to the response
-                return WebResponseUtils.pdfFileToWebResponse(out, outputFilename);
+                return response;
             } finally {
-                tempInputFile.close();
+                if (tempInputFile != null) {
+                    tempInputFile.close();
+                }
                 if (tempOutputFile != null) {
                     tempOutputFile.close();
                 }
