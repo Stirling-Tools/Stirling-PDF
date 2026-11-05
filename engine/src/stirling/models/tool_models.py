@@ -1071,7 +1071,7 @@ class OutputFormat1(StrEnum):
 
 class PdfToPdfaParams(ApiModel):
     """
-    This endpoint converts a PDF file to PDF/A using Stirling Office Convert, or to a PDF/A or PDF/X file using Ghostscript (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO
+    This endpoint converts a PDF file to PDF/A using Stirling Office Convert, Ghostscript or PDFBox/LibreOffice, and to PDF/X in process with JPDFium. PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO
     """
 
     output_format: OutputFormat1 = Field(
