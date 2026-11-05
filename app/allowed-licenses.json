@@ -1,6 +1,10 @@
 {
   "allowedLicenses": [
     {
+      "moduleName": "org.tukaani:xz",
+      "moduleLicense": "0BSD"
+    },
+    {
       "moduleName": ".*",
       "moduleLicense": "BSD License"
     },
