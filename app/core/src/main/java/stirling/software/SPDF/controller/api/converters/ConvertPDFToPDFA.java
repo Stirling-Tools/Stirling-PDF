@@ -645,21 +645,34 @@ public class ConvertPDFToPDFA {
                             .strictImages(true)
                             .build();
 
-            byte[] converted = PdfXConverter.applyMetadata(inputFile.getBytes(), options);
-            PdfXConverter.checkMetadata(converted, options);
-            String outputFilename = baseFileName + profile.outputSuffix();
-
-            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+            TempFile inputTemp = null;
+            TempFile outputTemp = null;
             try {
-                Files.write(tempOut.getPath(), converted);
-            } catch (Exception ex) {
-                tempOut.close();
-                throw ex;
+                inputTemp = tempFileManager.createManagedTempFile(".pdf");
+                outputTemp = tempFileManager.createManagedTempFile(".pdf");
+                inputFile.transferTo(inputTemp.getFile());
+                PdfXConverter.applyMetadata(inputTemp.getPath(), outputTemp.getPath(), options);
+                // checkMetadata has no Path overload; keep the audit to one output-sized read.
+                PdfXConverter.checkMetadata(Files.readAllBytes(outputTemp.getPath()), options);
+
+                String outputFilename = baseFileName + profile.outputSuffix();
+                TempFile out = outputTemp;
+                outputTemp = null; // ownership transferred to the response
+                return WebResponseUtils.pdfFileToWebResponse(out, outputFilename);
+            } finally {
+                if (inputTemp != null) {
+                    inputTemp.close();
+                }
+                if (outputTemp != null) {
+                    outputTemp.close();
+                }
             }
-            return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
 
         } catch (RuntimeException e) {
             log.error("JPDFium PDF/X conversion failed", e);
+            throw ExceptionUtils.createPdfaConversionFailedException(e);
+        } catch (LinkageError e) {
+            log.error("JPDFium native library is unavailable for PDF/X conversion", e);
             throw ExceptionUtils.createPdfaConversionFailedException(e);
         } catch (IOException e) {
             log.error("PDF/X conversion failed", e);
