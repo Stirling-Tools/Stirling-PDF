@@ -97,7 +97,7 @@ public enum FailureKind {
             FailureSeverity.ERROR,
             FailureRemedy.NEEDS_USER_INPUT,
             FailureScope.FILE,
-            errorCodes("E084"),
+            errorCodes("E088"),
             fallback(
                     "This document is protected with Microsoft Purview, and the run could not"
                             + " process it under its protection."),

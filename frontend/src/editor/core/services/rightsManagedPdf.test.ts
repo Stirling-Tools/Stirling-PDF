@@ -381,8 +381,12 @@ describe("tools on protected PDFs", () => {
     expect(reopened.accountId).toBe(7);
     const [endpoint, form, config] = post.mock.calls[1];
     expect(endpoint).toBe("/api/v1/rights-management/protect");
-    expect((form as FormData).get("original")).toBe(original);
-    expect((form as FormData).get("fileInput")).toBe(output);
+    const sentOriginal = (form as FormData).get("original") as File;
+    const sentOutput = (form as FormData).get("fileInput") as File;
+    expect(sentOriginal.name).toBe(original.name);
+    expect(await sentOriginal.text()).toBe(await original.text());
+    expect(sentOutput.name).toBe(output.name);
+    expect(await sentOutput.text()).toBe("%PDF-1.7 rotated");
     expect(config?.params).toEqual({ accountId: 7 });
   });
 
