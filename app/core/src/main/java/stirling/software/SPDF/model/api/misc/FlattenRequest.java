@@ -12,15 +12,13 @@ import stirling.software.common.model.api.PDFFile;
 public class FlattenRequest extends PDFFile {
 
     @Schema(
-            description =
-                    "True to flatten only the forms, false to flatten full PDF (Convert page to"
-                            + " image)",
+            description = "True flattens only form fields; false turns every page into an image",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
-    private Boolean flattenOnlyForms;
+    private Boolean flattenOnlyForms = false;
 
     @Schema(
-            description = "Optional DPI for page rendering when flattening the full document.",
+            description = "DPI for the page images when flattening full pages (default 300)",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             minimum = "72")
     private Integer renderDpi;

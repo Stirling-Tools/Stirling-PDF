@@ -19,6 +19,7 @@ import {
 } from "@editor/i18n";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import type { GeneralCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Branding, languages and the system-wide toggles. Writes ui.* and system.*. */
 export function SystemCard({
@@ -221,6 +222,7 @@ export function SystemCard({
 
         <div id="frontendUrl">
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>
@@ -298,6 +300,69 @@ export function SystemCard({
                   mobileQRScanner: checked,
                 },
               },
+            })
+          }
+          disabled={!loginEnabled}
+        />
+
+        <div>
+          <Select
+            label={
+              <Group gap="xs">
+                <span>
+                  {t("admin.settings.general.saveMode.label", "What Save does")}
+                </span>
+                <PendingBadge show={isFieldPending("system.saveMode")} />
+                <InfoTooltip
+                  label={t(
+                    "admin.settings.general.saveMode.description",
+                    "For a file that came from someone's computer or a connected drive. People start with this and can change it in their preferences.",
+                  )}
+                />
+              </Group>
+            }
+            value={settings.system?.saveMode || "replace"}
+            onChange={(value) =>
+              setSettings({
+                ...settings,
+                system: { ...settings.system, saveMode: value || "replace" },
+              })
+            }
+            data={[
+              {
+                value: "replace",
+                label: t("saveFile.mode.replace", "Update it"),
+              },
+              {
+                value: "copy",
+                label: t("saveFile.mode.copy", "Save a copy next to it"),
+              },
+              { value: "ask", label: t("saveFile.mode.ask", "Ask me") },
+            ]}
+            allowDeselect={false}
+            comboboxProps={{
+              withinPortal: true,
+              zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+            }}
+            disabled={!loginEnabled}
+          />
+        </div>
+
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.general.allowUserSaveMode.label",
+            "Let people choose what Save does",
+          )}
+          info={t(
+            "admin.settings.general.allowUserSaveMode.description",
+            "Turn off to apply the setting above to everyone.",
+          )}
+          pending={isFieldPending("system.allowUserSaveMode")}
+          checked={settings.system?.allowUserSaveMode ?? true}
+          onChange={(checked) =>
+            setSettings({
+              ...settings,
+              system: { ...settings.system, allowUserSaveMode: checked },
             })
           }
           disabled={!loginEnabled}

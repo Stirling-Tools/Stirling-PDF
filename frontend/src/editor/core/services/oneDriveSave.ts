@@ -1,3 +1,4 @@
+import type { StirlingFileStub } from "@editor/types/fileContext";
 import { isAxiosError } from "axios";
 import apiClient from "@editor/services/apiClient";
 import type { CloudOrigin } from "@editor/types/file";
@@ -96,6 +97,8 @@ export async function saveToOneDrive(
       eTag: saved.eTag,
       webUrl: saved.webUrl,
       protected: isProtected,
+      stirlingCopy:
+        target.kind !== "replace" || Boolean(target.origin.stirlingCopy),
     };
   } catch (error) {
     if (isAxiosError(error) && error.response?.status === 409) {
@@ -134,4 +137,10 @@ export function copyName(name: string): string {
   return dot > 0
     ? `${name.slice(0, dot)} (edited)${name.slice(dot)}`
     : `${name} (edited)`;
+}
+
+/** True when this version differs from the one last saved to OneDrive. */
+export function hasUnsavedCloudChanges(stub: StirlingFileStub): boolean {
+  const origin = stub.cloudOrigin;
+  return Boolean(origin?.savedFileId && origin.savedFileId !== stub.id);
 }

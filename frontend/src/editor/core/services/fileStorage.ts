@@ -41,6 +41,8 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   // Disk path this file came from (desktop only). Persisted so the link to the
   // real file survives a reload - without it every restart drops to the stored copy.
   localFilePath?: string;
+  // Stirling wrote localFilePath as a copy, so Save keeps updating it.
+  localFileIsCopy?: boolean;
   // Size/mtime of the disk file when we last read it, so an external edit is
   // detectable without hashing. Only meaningful alongside localFilePath.
   diskSyncedSize?: number;
@@ -388,6 +390,7 @@ class FileStorageService {
         getPdfAccess(stirlingFile)?.requiresOpeningPassword ??
         stub.processedFile?.requiresOpeningPassword,
       localFilePath: stub.localFilePath,
+      localFileIsCopy: stub.localFileIsCopy,
       diskSyncedSize: stub.diskSyncedSize,
       diskSyncedModifiedMs: stub.diskSyncedModifiedMs,
       orphanedFilePath: stub.orphanedFilePath,
@@ -595,6 +598,7 @@ class FileStorageService {
         '"{{name}}" is saved in this browser but its contents can no longer be read. Upload the file again to keep working on it.',
         { name: record.name },
       ),
+      privateBody: true,
       expandable: false,
       durationMs: 8000,
     });
@@ -813,6 +817,7 @@ class FileStorageService {
                   requiresOpeningPassword: record.requiresOpeningPassword,
                 },
           localFilePath: record.localFilePath,
+          localFileIsCopy: record.localFileIsCopy,
           diskSyncedSize: record.diskSyncedSize,
           diskSyncedModifiedMs: record.diskSyncedModifiedMs,
           orphanedFilePath: record.orphanedFilePath,
@@ -898,6 +903,7 @@ class FileStorageService {
                       requiresOpeningPassword: record.requiresOpeningPassword,
                     },
               localFilePath: record.localFilePath,
+              localFileIsCopy: record.localFileIsCopy,
               diskSyncedSize: record.diskSyncedSize,
               diskSyncedModifiedMs: record.diskSyncedModifiedMs,
               orphanedFilePath: record.orphanedFilePath,
@@ -1015,6 +1021,7 @@ class FileStorageService {
                       requiresOpeningPassword: record.requiresOpeningPassword,
                     },
               localFilePath: record.localFilePath,
+              localFileIsCopy: record.localFileIsCopy,
               diskSyncedSize: record.diskSyncedSize,
               diskSyncedModifiedMs: record.diskSyncedModifiedMs,
               orphanedFilePath: record.orphanedFilePath,

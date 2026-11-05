@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { alert, dismissToast } from "@editor/components/toast";
@@ -9,6 +9,7 @@ import {
 } from "@editor/hooks/useConnectedAccounts";
 import { useOneDrivePicker } from "@editor/hooks/useOneDrivePicker";
 import { fileStorage } from "@editor/services/fileStorage";
+import { enforceExportPolicies } from "@editor/services/policyExport";
 import {
   classifyOneDriveFailure,
   getOneDrivePickerService,
@@ -21,15 +22,20 @@ import {
   type OneDriveSaveTarget,
 } from "@editor/services/oneDriveSave";
 import { openExternal } from "@editor/platform/openExternal";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { hasUnsavedCloudChanges } from "@editor/services/oneDriveSave";
+import type { SaveTarget } from "@editor/services/saveTargets";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
 
 export interface OneDriveSave {
   available: boolean;
   saving: FileId | null;
-  save: (stub: StirlingFileStub) => Promise<void>;
-  saveCopy: (stub: StirlingFileStub) => Promise<void>;
-  saveToFolder: (stub: StirlingFileStub) => Promise<void>;
+  /** Save's view of OneDrive; null when editor saves to OneDrive are off. */
+  target: SaveTarget | null;
+  save: (stub: StirlingFileStub, file?: File) => Promise<boolean>;
+  saveCopy: (stub: StirlingFileStub, file?: File) => Promise<boolean>;
+  saveToFolder: (stub: StirlingFileStub, file?: File) => Promise<void>;
   openInOneDrive: (stub: StirlingFileStub) => void;
 }
 
@@ -42,7 +48,11 @@ export function useOneDriveSave(): OneDriveSave {
   const picker = useOneDrivePicker();
   const navigate = useNavigate();
   const [saving, setSaving] = useState<FileId | null>(null);
-  const available = picker.isEnabled && connected.available("microsoft");
+  const { config } = useAppConfig();
+  const available =
+    picker.isEnabled &&
+    connected.available("microsoft") &&
+    config?.microsoftAllowEditorSaves !== false;
 
   const failureMessage = useCallback(
     (failure: OneDriveFailure | "failed" | null): string => {
@@ -81,9 +91,13 @@ export function useOneDriveSave(): OneDriveSave {
   );
 
   const run = useCallback(
-    async (stub: StirlingFileStub, target: OneDriveSaveTarget) => {
-      const file = await fileStorage.getStirlingFile(stub.id);
-      if (!file) {
+    async (
+      stub: StirlingFileStub,
+      target: OneDriveSaveTarget,
+      content?: File,
+    ): Promise<boolean> => {
+      const stored = content ?? (await fileStorage.getStirlingFile(stub.id));
+      if (!stored) {
         alert({
           alertType: "error",
           title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
@@ -93,11 +107,29 @@ export function useOneDriveSave(): OneDriveSave {
           ),
           expandable: false,
         });
-        return;
+        return false;
+      }
+      let file: File = stored;
+      // Callers that pass content have already run export policies on it.
+      if (!content) {
+        try {
+          [file] = await enforceExportPolicies([stored], [stub.id]);
+        } catch (error) {
+          alert({
+            alertType: "error",
+            title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
+            body: error instanceof Error ? error.message : String(error),
+            expandable: false,
+          });
+          return false;
+        }
       }
       setSaving(stub.id);
       try {
-        const origin = await saveToOneDrive(file, target);
+        const origin = {
+          ...(await saveToOneDrive(file, target)),
+          savedFileId: stub.id,
+        };
         actions.updateStirlingFileStub(stub.id, { cloudOrigin: origin });
         const remembered = await fileStorage.updateFileMetadata(stub.id, {
           cloudOrigin: origin,
@@ -112,7 +144,7 @@ export function useOneDriveSave(): OneDriveSave {
             ),
             expandable: false,
           });
-          return;
+          return true;
         }
         alert({
           alertType: "success",
@@ -127,6 +159,7 @@ export function useOneDriveSave(): OneDriveSave {
               }
             : {}),
         });
+        return true;
       } catch (error) {
         const code = error instanceof OneDriveSaveError ? error.code : "failed";
         const copyTarget =
@@ -155,17 +188,22 @@ export function useOneDriveSave(): OneDriveSave {
                 buttonText: t("oneDriveSave.saveCopy", "Save a copy"),
                 buttonCallback: () => {
                   dismissToast(toastId);
-                  void run(stub, {
-                    kind: "copy",
-                    origin: copyTarget,
-                    name: copyName(copyTarget.name),
-                  });
+                  void run(
+                    stub,
+                    {
+                      kind: "copy",
+                      origin: copyTarget,
+                      name: copyName(copyTarget.name),
+                    },
+                    file,
+                  );
                 },
               }
             : code === "reconnect"
               ? reconnectAction()
               : {}),
         });
+        return false;
       } finally {
         setSaving(null);
       }
@@ -174,28 +212,28 @@ export function useOneDriveSave(): OneDriveSave {
   );
 
   const save = useCallback(
-    async (stub: StirlingFileStub) => {
+    async (stub: StirlingFileStub, file?: File) => {
       const origin = stub.cloudOrigin;
-      if (origin) await run(stub, { kind: "replace", origin });
+      return origin ? run(stub, { kind: "replace", origin }, file) : false;
     },
     [run],
   );
 
   const saveCopy = useCallback(
-    async (stub: StirlingFileStub) => {
+    async (stub: StirlingFileStub, file?: File) => {
       const origin = stub.cloudOrigin;
-      if (origin)
-        await run(stub, {
-          kind: "copy",
-          origin,
-          name: copyName(origin.name),
-        });
+      if (!origin) return false;
+      return run(
+        stub,
+        { kind: "copy", origin, name: copyName(origin.name) },
+        file,
+      );
     },
     [run],
   );
 
   const saveToFolder = useCallback(
-    async (stub: StirlingFileStub) => {
+    async (stub: StirlingFileStub, file?: File) => {
       const fail = (failure: OneDriveFailure | null) =>
         alert({
           alertType: "error",
@@ -264,13 +302,17 @@ export function useOneDriveSave(): OneDriveSave {
         return;
       }
       if (!folder) return;
-      await run(stub, {
-        kind: "folder",
-        accountId: account.id,
-        driveId: folder.driveId,
-        folderId: folder.folderId,
-        name: stub.name,
-      });
+      await run(
+        stub,
+        {
+          kind: "folder",
+          accountId: account.id,
+          driveId: folder.driveId,
+          folderId: folder.folderId,
+          name: stub.name,
+        },
+        file,
+      );
     },
     [
       connected.connect,
@@ -287,5 +329,71 @@ export function useOneDriveSave(): OneDriveSave {
     if (url) void openExternal(url);
   }, []);
 
-  return { available, saving, save, saveCopy, saveToFolder, openInOneDrive };
+  const target = useMemo<SaveTarget | null>(() => {
+    if (!available) return null;
+    return {
+      id: "onedrive",
+      handles: (stub) => Boolean(stub.cloudOrigin),
+      isUnsaved: hasUnsavedCloudChanges,
+      saveLabel: (stub, mode) => {
+        const name = stub.cloudOrigin?.name ?? stub.name;
+        if (mode === "copy")
+          return t(
+            "oneDriveSave.toolbar.copy",
+            "Save a copy of {{name}} to OneDrive",
+            { name },
+          );
+        if (mode === "ask")
+          return t("oneDriveSave.toolbar.ask", "Save {{name}}…", { name });
+        return t(
+          "oneDriveSave.toolbar.replace",
+          "Update {{name}} in OneDrive",
+          {
+            name,
+          },
+        );
+      },
+      saveAllLabel: () =>
+        t("oneDriveSave.toolbar.saveAll", "Save all to OneDrive"),
+      fileName: (stub) => stub.cloudOrigin?.name ?? stub.name,
+      homeName: () => t("oneDriveSave.homeName", "OneDrive"),
+      // A copy Stirling made is ours to keep updating, whatever the setting.
+      plan: (stub, mode) => (stub.cloudOrigin?.stirlingCopy ? "replace" : mode),
+      statusLabel: (unsaved) =>
+        unsaved
+          ? t(
+              "oneDriveSave.status.unsaved",
+              "Changes not saved to OneDrive yet",
+            )
+          : t("oneDriveSave.status.saved", "Saved to OneDrive"),
+      icon: "cloud-upload",
+      save: async (stub, file, how) =>
+        (await (how === "copy" ? saveCopy(stub, file) : save(stub, file)))
+          ? "saved"
+          : "failed",
+      menuItems: (stub, file) => [
+        {
+          key: "folder",
+          label: t("oneDriveSave.saveToFolder", "Save to a OneDrive folder…"),
+          description: t(
+            "oneDriveSave.menu.folderHint",
+            "Work or school accounts",
+          ),
+          icon: "folder-up",
+          onClick: () => void file().then((f) => saveToFolder(stub, f)),
+        },
+      ],
+      saving,
+    };
+  }, [available, save, saveCopy, saveToFolder, saving, t]);
+
+  return {
+    available,
+    saving,
+    target,
+    save,
+    saveCopy,
+    saveToFolder,
+    openInOneDrive,
+  };
 }

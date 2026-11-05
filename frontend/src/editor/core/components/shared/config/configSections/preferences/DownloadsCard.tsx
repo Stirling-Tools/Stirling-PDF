@@ -3,6 +3,7 @@ import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { NumberInput, Paper, Stack, Switch, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { SaveModeSetting } from "@editor/components/shared/config/configSections/preferences/SaveModeSetting";
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 
@@ -100,6 +101,8 @@ export function DownloadsCard() {
             style={{ width: 90 }}
           />
         </div>
+
+        <SaveModeSetting />
       </Stack>
     </Paper>
   );

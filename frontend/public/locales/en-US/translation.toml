@@ -1258,6 +1258,10 @@ system = "System"
 title = "System Settings"
 ui = "User Interface"
 
+[admin.settings.general.allowUserSaveMode]
+description = "Turn off to apply the setting above to everyone."
+label = "Let people choose what Save does"
+
 [admin.settings.general.appName]
 description = "The name displayed in the browser tab and home page"
 label = "Application Name"
@@ -1356,6 +1360,10 @@ label = "Home Description"
 description = "Languages that users can select from (leave empty to enable all languages)"
 label = "Available Languages"
 placeholder = "Select languages"
+
+[admin.settings.general.saveMode]
+description = "For a file that came from someone's computer or a connected drive. People start with this and can change it in their preferences."
+label = "What Save does"
 
 [admin.settings.general.showUpdate]
 description = "Display notifications when a new version is available"
@@ -2969,6 +2977,7 @@ loadError = "Failed to load users"
 noTeam = "No Team"
 noUsers = "No other users found."
 placeholder = "Select users..."
+signInRequired = "Sign in to request signatures from other people."
 you = "{{name}} (You)"
 
 [certSign.device]
@@ -4131,7 +4140,7 @@ pdfUaFigureLabel = "Page {{page}} {{kind}}"
 pdfUaFigurePlaceholder = "What this image tells the reader"
 pdfUaFindImages = "Find images needing a description"
 pdfUaLanguage = "Document language"
-pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
+pdfUaLanguageHelp = "A BCP-47 tag such as en-US. Used only when the document does not already declare its own language."
 pdfUaNoImagesNeedingText = "No image is missing a description."
 pdfUaOptions = "PDF/UA Options"
 pdfUaOverrideLanguage = "Replace the document's own language"
@@ -6554,6 +6563,7 @@ chooseFolder = "Choose a OneDrive folder to save to"
 conflict = "Someone changed this file in OneDrive after you opened it. Save your version as a copy instead."
 failedTitle = "Couldn't save to OneDrive"
 fromOneDrive = "From OneDrive"
+homeName = "OneDrive"
 linkNotStored = "This browser couldn't remember the link to the OneDrive file. After a reload, save it as a copy instead."
 open = "Open in OneDrive"
 personalUnsupported = "Saving to a chosen folder needs a work or school Microsoft account."
@@ -6566,6 +6576,19 @@ saveToFolder = "Save to a OneDrive folder…"
 saving = "Saving to OneDrive…"
 unprotected = "This version is no longer protected with Microsoft Purview, so it was not saved to OneDrive."
 updateOriginal = "Update original in OneDrive"
+
+[oneDriveSave.menu]
+folderHint = "Work or school accounts"
+
+[oneDriveSave.status]
+saved = "Saved to OneDrive"
+unsaved = "Changes not saved to OneDrive yet"
+
+[oneDriveSave.toolbar]
+ask = "Save {{name}}…"
+copy = "Save a copy of {{name}} to OneDrive"
+replace = "Update {{name}} in OneDrive"
+saveAll = "Save all to OneDrive"
 
 [overlay-pdfs]
 desc = "Overlay one PDF on top of another"
@@ -7552,6 +7575,23 @@ tableHead = "Table head"
 tableHeader = "Table header"
 tableRow = "Table row"
 title = "Title"
+
+[pdfTextEditor.inspector.language]
+allLanguages = "All languages"
+cannotSetDocument = "This document's language can't be changed."
+cannotSetText = "This text's language can't be changed."
+documentHint = "The language screen readers use unless a part of the text sets its own."
+documentLabel = "Language"
+documentLocked = "An encrypted document's language can't be changed here."
+inDocument = "In this document"
+innerLabel = "Tag {{number}} language"
+label = "Language"
+missing = "No language set. Screen readers will guess, and may read the whole document in the wrong voice."
+mixed = "Mixed"
+noMatch = "No matching language. Type its code instead, such as mt or en-IE."
+placeholder = "Select language"
+selectedText = "Selected text language"
+textHint = "Screen readers switch voice and pronunciation to this language."
 
 [pdfTextEditor.mobile]
 actions = "Editor actions"
@@ -11282,6 +11322,10 @@ scope = "Files & pipelines"
 description = "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections."
 label = "Let people connect their own account"
 
+[provider.microsoft.allowEditorSaves]
+description = "Turn off to keep edits in Stirling: files opened from OneDrive then download instead, and the server refuses saves to OneDrive."
+label = "Let the editor save back to OneDrive"
+
 [provider.microsoft.clientId]
 description = "From one Microsoft Entra app registration."
 label = "Application (client) ID"
@@ -12063,6 +12107,41 @@ title = "Sanitize PDF"
 [sanitizePdf]
 tags = "clean,secure,safe,remove-threats"
 
+[saveFile]
+noFreeCopyName = "Couldn't find a free name for the copy next to {{name}}."
+
+[saveFile.ask]
+copy = "Save a copy next to it"
+copyHint = "Saves {{name}} in {{home}}. Later saves update that copy."
+download = "Download instead"
+otherHint = "Leaves {{home}} untouched."
+remember = "Remember my choice"
+rememberHint = "Change it later in Settings > Preferences."
+replace = "Update the original"
+replaceHint = "Replaces it in {{home}}."
+thisFolder = "the same folder"
+title = "Save \"{{name}}\""
+
+[saveFile.menu]
+copy = "Save a copy next to it"
+download = "Download a copy"
+inHome = "In {{home}}"
+more = "More save options"
+sameFolder = "In the same folder"
+saveCopyElsewhere = "Save a copy somewhere else…"
+saveToComputer = "Save to this computer…"
+update = "Update {{name}}"
+
+[saveFile.mode]
+ask = "Ask me"
+copy = "Save a copy next to it"
+replace = "Update it"
+
+[saveFile.toolbar]
+ask = "Save {{name}}…"
+copy = "Save a copy of {{name}} next to it"
+mixed = "Save all, each back to where it came from"
+
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Adjust page-scale"
@@ -12273,6 +12352,9 @@ hideUnavailableToolsDescription = "Remove tools that have been disabled by your 
 language = "Language"
 languageDescription = "Choose the display language"
 logout = "Log out"
+saveMode = "When I save a file"
+saveModeDescription = "What Save does for a file that came from your computer or a connected drive. Other options are always in the menu next to Save."
+saveModeLocked = "Set by your administrator"
 setAsDefault = "Set as Default"
 theme = "Theme"
 themeAccent = "Accent colour"

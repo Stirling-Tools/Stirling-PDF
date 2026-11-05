@@ -237,6 +237,7 @@ class ConfigControllerMoreTest {
             assertThat(body).containsEntry("microsoftEnabled", true);
             assertThat(body).containsEntry("microsoftClientId", "app-id");
             assertThat(body).containsEntry("microsoftTenant", "organizations");
+            assertThat(body).containsEntry("microsoftAllowEditorSaves", true);
             assertThat(body.values()).doesNotContain("server-only");
         }
 

@@ -217,6 +217,9 @@ public class ConfigController {
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
             configData.put("languages", applicationProperties.getUi().getLanguages());
             configData.put("defaultLocale", applicationProperties.getSystem().getDefaultLocale());
+            configData.put("saveMode", applicationProperties.getSystem().getSaveMode());
+            configData.put(
+                    "allowUserSaveMode", applicationProperties.getSystem().isAllowUserSaveMode());
 
             // User preference defaults
             configData.put(
@@ -276,6 +279,7 @@ public class ConfigController {
                                 .getProperty(
                                         "stirling.microsoft.graph-url",
                                         "https://graph.microsoft.com/v1.0"));
+                configData.put("microsoftAllowEditorSaves", microsoft.isAllowEditorSaves());
             }
             configData.put(
                     "microsoftAccountConnections",

@@ -22,6 +22,7 @@ import { AnnotationOutline } from "@editor/tools/pdfTextEditor/components/Annota
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { PageGuides } from "@editor/tools/pdfTextEditor/components/PageRulers";
 import { useDevicePixelRatio } from "@editor/tools/pdfTextEditor/hooks/useDevicePixelRatio";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface PageViewProps {
   document: EditorDocument;
@@ -261,6 +262,7 @@ export function PageView({
       mx="auto"
       mb="lg"
       ref={containerRef}
+      className={privateContentClassName}
       style={{
         width: raster.width,
         height: raster.height,

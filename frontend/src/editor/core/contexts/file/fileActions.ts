@@ -552,7 +552,8 @@ export async function addFiles(
 
       Object.assign(fileStub, await sourceLinkForNewFile(file));
       const cloudOrigin = cloudOriginOf(file);
-      if (cloudOrigin) fileStub.cloudOrigin = cloudOrigin;
+      if (cloudOrigin)
+        fileStub.cloudOrigin = { ...cloudOrigin, savedFileId: fileId };
 
       // Store insertion position if provided
       if (options.insertAfterPageId !== undefined) {

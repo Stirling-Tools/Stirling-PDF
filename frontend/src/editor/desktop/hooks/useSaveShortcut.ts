@@ -2,71 +2,32 @@ import { useEffect } from "react";
 import {
   useFileSelector,
   useFileSelectors,
-  useFileActions,
 } from "@editor/contexts/FileContext";
-// Save through the export gateway so a "run on export" policy enforces before
-// the file is written out (no-op when no such policy is active).
-import { downloadFileWithPolicy as downloadFile } from "@editor/services/exportWithPolicy";
+import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 
 /**
- * Desktop-only keyboard shortcut: Ctrl/Cmd+S to save selected files
- * Only saves files that have a localFilePath (came from disk)
- * Matches WorkbenchBar button behavior: saves selected files if any, otherwise all files
+ * Desktop-only keyboard shortcut: Ctrl/Cmd+S saves the selected files, or all
+ * files, where the toolbar's Save would (disk, or a save target).
  */
 export function useSaveShortcut() {
   const selectors = useFileSelectors();
   const currentSelectedFileIds = useFileSelector((s) => s.ui.selectedFileIds);
-  const { actions: fileActions } = useFileActions();
+  const { saveStoredFile } = useSaveStoredFile();
 
   useEffect(() => {
     const handleKeyDown = async (event: KeyboardEvent) => {
-      // Check for Ctrl+S (Windows/Linux) or Cmd+S (Mac)
-      if ((event.ctrlKey || event.metaKey) && event.key === "s") {
-        event.preventDefault();
+      if (!(event.ctrlKey || event.metaKey) || event.key !== "s") return;
+      event.preventDefault();
 
-        // Get selected files or all files if nothing selected
-        const selectedFileIds = currentSelectedFileIds;
-        const filesToSave =
-          selectedFileIds.length > 0
-            ? selectors.getFiles(selectedFileIds)
-            : selectors.getFiles();
-        const stubsToSave =
-          selectedFileIds.length > 0
-            ? selectors.getStirlingFileStubs(selectedFileIds)
-            : selectors.getStirlingFileStubs();
-
-        if (filesToSave.length === 0) {
-          return;
-        }
-
-        // Save files (Save As for files without localFilePath)
-        for (let i = 0; i < filesToSave.length; i++) {
-          const file = filesToSave[i];
-          const stub = stubsToSave[i];
-          if (!stub) continue;
-
-          try {
-            const result = await downloadFile({
-              data: file,
-              filename: file.name,
-              localPath: stub.localFilePath,
-            });
-
-            // Mark file as clean after successful save
-            if (result.savedPath) {
-              fileActions.updateStirlingFileStub(stub.id, {
-                localFilePath: stub.localFilePath ?? result.savedPath,
-                isDirty: false,
-              });
-            }
-          } catch (error) {
-            console.error(`Failed to save ${file.name}:`, error);
-          }
-        }
+      const ids =
+        currentSelectedFileIds.length > 0 ? currentSelectedFileIds : undefined;
+      for (const stub of selectors.getStirlingFileStubs(ids)) {
+        const file = selectors.getFile(stub.id);
+        if (file) await saveStoredFile(stub, file);
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [selectors, currentSelectedFileIds, fileActions]);
+  }, [selectors, currentSelectedFileIds, saveStoredFile]);
 }

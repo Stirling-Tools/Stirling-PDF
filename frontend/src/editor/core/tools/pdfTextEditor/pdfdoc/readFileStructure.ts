@@ -33,6 +33,14 @@ export interface FileBlock extends StructureRole {
   mcids: number[];
 }
 
+/** An element's /Lang, and its nearest ancestor's. */
+export interface ElementLanguage {
+  lang: string | null;
+  inheritedLang: string | null;
+  /** Parent element key; null at the top of the structure tree. */
+  parent: string | null;
+}
+
 export interface FileStructure {
   /**
    * Every page with /StructParents, keyed by page index, its elements each
@@ -44,6 +52,8 @@ export interface FileStructure {
   pages: Map<number, FilePageStructure>;
   /** Every block element, in the tree's reading order. */
   blocks: FileBlock[];
+  /** By element key, for every element a page or block names. */
+  languages: Map<string, ElementLanguage>;
 }
 
 /**
@@ -95,10 +105,16 @@ export async function readFileStructure(
       slotCount: items.length,
     });
   });
-  return {
-    pages: byPage,
-    blocks: readBlocks(pdf, rootBody, nodeFor, byPage),
-  };
+  const blocks = readBlocks(pdf, rootBody, nodeFor, byPage);
+  const languages = new Map<string, ElementLanguage>();
+  for (const [num, { lang, inheritedLang, parent }] of nodes.readNodes()) {
+    languages.set(String(num), {
+      lang,
+      inheritedLang,
+      parent: parent === null ? null : String(parent),
+    });
+  }
+  return { pages: byPage, blocks, languages };
 }
 
 /** Block elements in the depth-first /K order a reader follows. */
@@ -163,6 +179,7 @@ function readElement(
     key: String(num),
     alt: text("Alt"),
     actualText: text("ActualText"),
+    lang: node.lang,
     onlyMarkedContent: ownsOnlyMarkedContent(pdf, body),
   };
 }

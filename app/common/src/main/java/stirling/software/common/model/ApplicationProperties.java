@@ -1333,6 +1333,8 @@ public class ApplicationProperties {
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide = true;
         private boolean enableEasterEggs = true;
+        private String saveMode = "replace";
+        private boolean allowUserSaveMode = true;
         private Datasource datasource;
         private boolean disableSanitize;
         private boolean stirlingOfficeConversion;
@@ -1902,6 +1904,7 @@ public class ApplicationProperties {
                 private String tenant = "common";
                 private String clientSecret = "";
                 private boolean allowAccountConnections = true;
+                private boolean allowEditorSaves = true;
                 private RightsManagement rightsManagement = new RightsManagement();
 
                 @Data

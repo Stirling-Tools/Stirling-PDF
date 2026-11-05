@@ -9,23 +9,37 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.WebResponseUtils;
 import stirling.software.officeconvert.OfficeConvert;
 import stirling.software.officeconvert.PdfToPptx;
 import stirling.software.officeconvert.legacy.PdfToPpt;
 
 /**
  * PDF to Office in process through Stirling Office Convert, and the switch between it and the
- * legacy converters. Conversions are stopped at the LibreOffice timeout.
+ * legacy converters. Conversions use the configured LibreOffice timeout.
  */
 @Service
 @RequiredArgsConstructor
@@ -33,19 +47,43 @@ public class OfficeConversionService {
 
     /** Output formats by extension; a .doc is RTF, which Word opens as a document. */
     private static final Map<String, OfficeConvert.Format> FORMATS =
-            Map.of(
-                    "docx", OfficeConvert.Format.DOCX,
-                    "doc", OfficeConvert.Format.RTF,
-                    "odt", OfficeConvert.Format.ODT,
-                    "rtf", OfficeConvert.Format.RTF,
-                    "txt", OfficeConvert.Format.TXT,
-                    "pptx", OfficeConvert.Format.PPTX,
-                    "odp", OfficeConvert.Format.ODP,
-                    "xlsx", OfficeConvert.Format.XLSX,
-                    "ods", OfficeConvert.Format.ODS);
+            Map.ofEntries(
+                    Map.entry("docx", OfficeConvert.Format.DOCX),
+                    Map.entry("doc", OfficeConvert.Format.RTF),
+                    Map.entry("odt", OfficeConvert.Format.ODT),
+                    Map.entry("rtf", OfficeConvert.Format.RTF),
+                    Map.entry("txt", OfficeConvert.Format.TXT),
+                    Map.entry("pptx", OfficeConvert.Format.PPTX),
+                    Map.entry("odp", OfficeConvert.Format.ODP),
+                    Map.entry("xlsx", OfficeConvert.Format.XLSX),
+                    Map.entry("ods", OfficeConvert.Format.ODS),
+                    Map.entry("html", OfficeConvert.Format.HTML),
+                    Map.entry("md", OfficeConvert.Format.MARKDOWN),
+                    Map.entry("xml", OfficeConvert.Format.XML),
+                    Map.entry("epub", OfficeConvert.Format.EPUB),
+                    Map.entry("azw3", OfficeConvert.Format.AZW3));
 
     private final ApplicationProperties applicationProperties;
     private final EndpointConfiguration endpointConfiguration;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
+
+    /** The response owns the output file; failed conversions release it before returning. */
+    public ResponseEntity<Resource> convert(
+            MultipartFile input, String format, MediaType type, OfficeConvert.Settings settings)
+            throws IOException {
+        TempFile out = tempFileManager.createManagedTempFile("." + format);
+        try (PDDocument document = pdfDocumentFactory.load(input)) {
+            convert(document, out.getPath(), format, settings);
+        } catch (Exception e) {
+            out.close();
+            throw e;
+        }
+        return WebResponseUtils.fileToWebResponse(
+                out,
+                GeneralUtils.generateFilename(input.getOriginalFilename(), "." + format),
+                type);
+    }
 
     public static boolean supports(String format) {
         return FORMATS.containsKey(format) || "ppt".equals(format);
@@ -96,11 +134,89 @@ public class OfficeConversionService {
         }
         try (OutputStream out = Files.newOutputStream(target)) {
             if ("ppt".equals(format)) {
-                // Binary PowerPoint comes from the legacy module, outside OfficeConvert's timeout.
-                PdfToPpt.convert(document, out, slides(settings));
+                convertToPpt(document, out, settings);
             } else {
                 OfficeConvert.convert(document, out, FORMATS.get(format), settings);
             }
+        }
+    }
+
+    /** A .ppt holds one slide per page; the legacy writer creates them up front. */
+    static final int MAX_PPT_SLIDES = 5000;
+
+    /**
+     * Binary PowerPoint comes from the legacy module, which the shared {@link OfficeConvert} path
+     * does not cover, so the page count is bounded and the work runs under {@code
+     * settings.timeout()} like every other format.
+     */
+    private void convertToPpt(
+            PDDocument document, OutputStream out, OfficeConvert.Settings settings)
+            throws IOException {
+        int total = document.getNumberOfPages();
+        int first = settings.firstPage() > 0 ? settings.firstPage() : 1;
+        int last = settings.lastPage() > 0 ? Math.min(settings.lastPage(), total) : total;
+        if (last - first + 1 >= MAX_PPT_SLIDES) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.pptTooManyPages",
+                    "A .ppt holds at most {0} pages; convert to .pptx instead.",
+                    MAX_PPT_SLIDES);
+        }
+        FutureTask<Void> task =
+                new FutureTask<>(
+                        () -> {
+                            PdfToPpt.convert(document, out, slides(settings));
+                            return null;
+                        });
+        Thread worker = Thread.ofPlatform().name("office-convert-ppt").daemon().unstarted(task);
+        worker.start();
+        awaitPptConversion(task, worker, settings.timeout());
+    }
+
+    static void awaitPptConversion(FutureTask<Void> task, Thread worker, Duration timeout)
+            throws IOException {
+        try {
+            task.get(timeout.toNanos(), TimeUnit.NANOSECONDS);
+        } catch (TimeoutException e) {
+            task.cancel(true);
+            awaitWorkerTermination(worker);
+            throw new IOException(
+                    "The conversion took longer than "
+                            + timeout.toMillis()
+                            + " ms and was stopped");
+        } catch (InterruptedException e) {
+            task.cancel(true);
+            awaitWorkerTermination(worker);
+            Thread.currentThread().interrupt();
+            throw new IOException("Conversion interrupted", e);
+        } catch (ExecutionException e) {
+            task.cancel(true);
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException io) {
+                throw io;
+            }
+            if (cause instanceof RuntimeException re) {
+                throw re;
+            }
+            throw new IOException("PDF to .ppt conversion failed", cause);
+        }
+    }
+
+    /**
+     * Waits for the cancelled worker to stop touching {@code out} and the document before the
+     * caller closes them. The legacy writer's final POI write may ignore interruption, so even a
+     * further interruption must not release resources that the worker still owns.
+     */
+    private static void awaitWorkerTermination(Thread worker) {
+        boolean interrupted = false;
+        while (worker.isAlive()) {
+            try {
+                worker.join();
+            } catch (InterruptedException e) {
+                interrupted = true;
+            }
+        }
+        if (interrupted) {
+            Thread.currentThread().interrupt();
         }
     }
 
