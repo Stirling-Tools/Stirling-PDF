@@ -79,6 +79,7 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
+import stirling.software.SPDF.utils.text.WidthCalculator;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
@@ -477,9 +478,11 @@ public class CertSignController {
             }
         }
 
-        // The name shown in the visible signature. Certificates without a CN fall
-        // back to the full subject, and the CN is read as stored so RFC 4514 escapes
-        // (e.g. "García\, Ana") are not shown.
+        /**
+         * The name shown in the visible signature. Certificates without a CN fall back to the
+         * full subject, and the CN is read as stored so RFC 4514 escapes (e.g. "García\, Ana")
+         * are not shown.
+         */
         static String getSignerName(X509Certificate cert) {
             X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
             RDN[] cn = x500Name.getRDNs(BCStyle.CN);
@@ -492,6 +495,24 @@ public class CertSignController {
                     : IETFUtils.valueToString(value);
         }
 
+        /**
+         * Shrinks the font so {@code text} fits within {@code maxWidth} points, never below 6pt.
+         * The signature box is 200 points wide and the text starts 10 points in, so the
+         * "Signed by" label has 190 points; a long signer name (in particular the
+         * full-subject fallback for certificates without a CN) would otherwise be clipped.
+         */
+        static float fitSignerFontSize(PDFont font, String text, float fontSize, float maxWidth) {
+            float width = WidthCalculator.calculateAccurateWidth(font, text, fontSize);
+            if (width <= maxWidth) {
+                return fontSize;
+            }
+            return Math.max(6f, fontSize * maxWidth / width);
+        }
+
+        /**
+         * Builds the visible signature appearance (a 200 by 50 point box showing the signer
+         * name, the signing date and, when present, the reason) as a standalone PDF.
+         */
         public InputStream createVisibleSignature(
                 PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showLogo)
                 throws IOException {
@@ -558,11 +579,19 @@ public class CertSignController {
 
                     // https://stackoverflow.com/questions/2914521/
                     String name = getSignerName(cert);
+                    String signedBy = "Signed by " + name;
 
                     String date = signature.getSignDate().getTime().toString();
                     String reason = signature.getReason();
 
-                    cs.showText("Signed by " + name);
+                    // The box is 200 points wide and the text starts 10 points in, so
+                    // this line has 190 points. Shrink the font for this line only so a
+                    // long signer name fits instead of being clipped; the date and the
+                    // reason stay at the regular size.
+                    float maxLabelWidth = rect.getWidth() - fontSize;
+                    cs.setFont(font, fitSignerFontSize(font, signedBy, fontSize, maxLabelWidth));
+                    cs.showText(signedBy);
+                    cs.setFont(font, fontSize);
                     cs.newLine();
                     cs.showText(date);
                     if (StringUtils.isNotBlank(reason)) {
