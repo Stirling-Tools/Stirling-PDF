@@ -4,7 +4,6 @@ import { createAppQueryClient } from "@editor/query/queryClient";
 import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
 import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
 import { ThemeProvider } from "@editor/components/shared/ThemeProvider";
-import { AppMantineProvider } from "@editor/components/shared/AppMantineProvider";
 import {
   AppConfigProvider,
   AppConfigProviderProps,
@@ -36,16 +35,14 @@ export function PlatformProviders({
   return (
     <PreferencesProvider>
       <ThemeProvider>
-        <AppMantineProvider>
-          <QueryClientProvider client={queryClient}>
-            <AppConfigProvider
-              retryOptions={appConfigRetryOptions}
-              {...appConfigProviderProps}
-            >
-              <ToolRegistryProvider>{children}</ToolRegistryProvider>
-            </AppConfigProvider>
-          </QueryClientProvider>
-        </AppMantineProvider>
+        <QueryClientProvider client={queryClient}>
+          <AppConfigProvider
+            retryOptions={appConfigRetryOptions}
+            {...appConfigProviderProps}
+          >
+            <ToolRegistryProvider>{children}</ToolRegistryProvider>
+          </AppConfigProvider>
+        </QueryClientProvider>
       </ThemeProvider>
     </PreferencesProvider>
   );

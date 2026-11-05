@@ -6,10 +6,17 @@ import {
   useState,
   ReactNode,
 } from "react";
+import { MantineProvider } from "@mantine/core";
 import { useIsomorphicEffect } from "@mantine/hooks";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
 import {
-  type ColorScheme,
+  mantineTheme,
+  appCssVariablesResolver,
+} from "@editor/theme/mantineTheme";
+import { ToastProvider } from "@editor/components/toast";
+import ToastRenderer from "@editor/components/toast/ToastRenderer";
+import { ToastPortalBinder } from "@editor/components/toast";
+import {
   type ThemeMode,
   getSystemTheme,
   resolveColorScheme,
@@ -20,8 +27,6 @@ import "@editor/theme/index.css";
 
 interface ThemeContextType {
   themeMode: ThemeMode;
-  /** The mode resolved to a concrete base, following the OS while on "system". */
-  colorScheme: ColorScheme;
   setTheme: (mode: ThemeMode) => void;
 }
 
@@ -80,11 +85,24 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }, [colorScheme]);
 
   const value = useMemo<ThemeContextType>(
-    () => ({ themeMode, colorScheme, setTheme }),
-    [themeMode, colorScheme, setTheme],
+    () => ({ themeMode, setTheme }),
+    [themeMode, setTheme],
   );
 
   return (
-    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+    <ThemeContext.Provider value={value}>
+      <MantineProvider
+        theme={mantineTheme}
+        cssVariablesResolver={appCssVariablesResolver}
+        defaultColorScheme={colorScheme}
+        forceColorScheme={colorScheme}
+      >
+        <ToastProvider>
+          <ToastPortalBinder />
+          {children}
+          <ToastRenderer />
+        </ToastProvider>
+      </MantineProvider>
+    </ThemeContext.Provider>
   );
 }

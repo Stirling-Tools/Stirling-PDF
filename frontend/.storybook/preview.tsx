@@ -23,11 +23,6 @@ import {
 import { PreferencesProvider } from "@editor-core/contexts/PreferencesContext";
 import { UIProvider } from "@processor/contexts/UIContext";
 import { AppConfigProvider } from "@editor-core/contexts/AppConfigContext";
-import { MantineProvider } from "@mantine/core";
-import {
-  mantineTheme,
-  appCssVariablesResolver,
-} from "@editor-core/theme/mantineTheme";
 import { handlers } from "@processor/mocks/handlers";
 import { configureSupabase } from "@editor-proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
@@ -222,18 +217,13 @@ const withProviders: Decorator = (Story, context) => {
         <PreferencesProvider>
           <ThemeProvider>
             <ThemeBridge theme={colorScheme}>
-              <MantineProvider
-                theme={mantineTheme}
-                cssVariablesResolver={appCssVariablesResolver}
-                forceColorScheme={colorScheme}
-              >
-                {/* The app mounts this with the platform providers; without it the config never
+              {/* The app mounts this with the platform providers; without it the config never
                     loads and anything waiting on it (the portal's connect gate) never settles.
                     Seeded rather than fetched; a story can mount its own to vary it. */}
-                <AppConfigProvider
-                  initialConfig={STORY_APP_CONFIG}
-                  autoFetch={false}
-                >
+              <AppConfigProvider
+                initialConfig={STORY_APP_CONFIG}
+                autoFetch={false}
+              >
                 {/* LinkProvider must wrap TierProvider: TierContext derives its tier
                   from useLink() (matches App.tsx's nesting). */}
                 <LinkProvider key={linkState} initialState={linkState}>
@@ -251,8 +241,7 @@ const withProviders: Decorator = (Story, context) => {
                     </UIProvider>
                   </TierKey>
                 </LinkProvider>
-                </AppConfigProvider>
-              </MantineProvider>
+              </AppConfigProvider>
             </ThemeBridge>
           </ThemeProvider>
         </PreferencesProvider>
