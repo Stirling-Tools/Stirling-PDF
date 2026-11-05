@@ -381,6 +381,10 @@ button.ent__company[aria-expanded="true"] {
   padding-block: 3.5rem 0;
 }
 
+.ent__hero:has(.ent__back) {
+  padding-top: 1.25rem;
+}
+
 .ent__hero-main {
   display: flex;
   flex-direction: column;
