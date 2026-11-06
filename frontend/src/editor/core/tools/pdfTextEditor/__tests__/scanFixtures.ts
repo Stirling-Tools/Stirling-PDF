@@ -17,6 +17,7 @@ import {
   spanOf,
 } from "@editor/tools/pdfTextEditor/commands/scanStyle";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import { moveAllObjects } from "@editor/tools/pdfTextEditor/commands/scanFrame";
 import { createBitmapImageObject } from "@editor/utils/pdfiumBitmapUtils";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import {
@@ -246,10 +247,13 @@ export async function buildScan(
   lines: ScanLineSpec[],
   opts: ScanOptions,
   pitch = 48,
+  sideways = false,
 ): Promise<{ doc: EditorDocument; page: Page }> {
   const height = Math.ceil(pitch * lines.length + 20);
   const clean = await EditorDocument.open(blankPdf(PAGE_W, height));
-  const scanned = await EditorDocument.open(blankPdf(PAGE_W, height));
+  const scanned = await EditorDocument.open(
+    sideways ? blankPdf(height, PAGE_W) : blankPdf(PAGE_W, height),
+  );
   try {
     const cleanPage = clean.page(0);
     PdfiumTextReader.populate(clean, cleanPage);
@@ -300,6 +304,8 @@ export async function buildScan(
       for (const p of ptrs)
         transformObject(m, p, sx, 0, 0, 1, box.left * (1 - sx), 0);
     }
+    if (sideways)
+      moveAllObjects(m, page, { a: 0, b: 1, c: -1, d: 0, e: height, f: 0 });
     page.markDirty();
     page.markNeedsGenerate();
     const { blob } = await exportToBlob(scanned, "scan.pdf");

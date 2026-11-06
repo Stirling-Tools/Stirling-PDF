@@ -1,4 +1,13 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import {
+  applyRect,
+  applyVector,
+  compose,
+  moveAllObjects,
+  scanFrameFor,
+  type ScanFrame,
+} from "@editor/tools/pdfTextEditor/commands/scanFrame";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
@@ -95,6 +104,7 @@ interface ScanStyle {
   ink: RGBA;
   /** Outline that thickens the strokes to the scan's weight, in points. */
   weight: number;
+  hollow: number;
   /** Blur, in render pixels, that softens drawn text to the scan's focus. */
   softness: number;
 }
@@ -152,6 +162,8 @@ export interface ScanEditState {
   nearbyFace?: Face | null;
   neighbours?: PlacedWord[];
   atlas?: GlyphAtlas | null;
+  frame?: ScanFrame;
+  upright?: boolean;
 }
 
 interface PlacedWord {
@@ -164,12 +176,81 @@ export function isScanRun(run: TextRun): boolean {
   return run.renderMode === INVISIBLE;
 }
 
+function emptyState(lines: ScanLine[], fontPtr: number): ScanEditState {
+  return {
+    lines,
+    fontPtr,
+    created: [],
+    textPtrs: [],
+    lifted: new Set(),
+    inks: new Map(),
+    patches: new Map(),
+    override: { dx: 0, dy: 0 },
+    classes: [],
+  };
+}
+
+function captureRotatedScanEdit(
+  m: WrappedPdfiumModule,
+  run: TextRun,
+  frame: ScanFrame,
+): ScanEditState | null {
+  if (run.text.includes("\n")) return null;
+  const ptrs = run.mergedFromPtrs.length
+    ? run.mergedFromPtrs
+    : [run.pdfiumObjPtr];
+  const texts = run.mergedFromTexts.length ? run.mergedFromTexts : [run.text];
+  const starts = run.mergedFromCharStarts.length
+    ? run.mergedFromCharStarts
+    : [0];
+  if (texts.length !== ptrs.length || starts.length !== ptrs.length)
+    return null;
+  const baseline = compose(frame.toUpright, run.matrix).f;
+  const box = applyRect(frame.toUpright, run.bounds);
+  const length = Math.max(1, run.text.trimEnd().length);
+  const words: ScanWord[] = ptrs.map((ptr, w) => {
+    const start = starts[w];
+    const end = start + texts[w].trimEnd().length;
+    return {
+      text: texts[w],
+      start,
+      x: box.x + (box.width * start) / length,
+      right: box.x + (box.width * Math.min(end, length)) / length,
+      ptr,
+      container: run.containerPtr,
+      fontSize: run.fontSize,
+    };
+  });
+  let fontPtr = 0;
+  try {
+    fontPtr = m.FPDFTextObj_GetFont(ptrs[0]);
+  } catch {
+    fontPtr = 0;
+  }
+  const state = emptyState(
+    [
+      {
+        text: run.text,
+        baseline,
+        height: Math.max(2, box.y + box.height - baseline),
+        words,
+      },
+    ],
+    fontPtr,
+  );
+  state.frame = frame;
+  return state;
+}
+
 // Snapshot a run's OCR words. Null when the run carries no per-word geometry,
 // which leaves the caller on the whole-run rewrite.
 export function captureScanEdit(
   m: WrappedPdfiumModule,
   run: TextRun,
+  page?: Page,
 ): ScanEditState | null {
+  const frame = page ? scanFrameFor(page, run.matrix, run.bounds) : null;
+  if (frame) return captureRotatedScanEdit(m, run, frame);
   const texts = run.text.split("\n");
   const slots =
     run.paragraphLineSlots.length === texts.length
@@ -231,17 +312,7 @@ export function captureScanEdit(
   } catch {
     fontPtr = 0;
   }
-  return {
-    lines,
-    fontPtr,
-    created: [],
-    textPtrs: [],
-    lifted: new Set(),
-    inks: new Map(),
-    patches: new Map(),
-    override: { dx: 0, dy: 0 },
-    classes: [],
-  };
+  return emptyState(lines, fontPtr);
 }
 
 /** Where word `w` of a line ends in the line's text, its trailing space included. */
@@ -272,6 +343,7 @@ function nearbyFace(
   state: ScanEditState,
 ): Face | null {
   if (state.nearbyFace !== undefined) return state.nearbyFace;
+  if (state.frame) return (state.nearbyFace = null);
   const own = state.lines[0];
   const pooled: Array<{ text: string; width: number }> = [];
   const others = page.runs
@@ -303,6 +375,17 @@ function nearbyFace(
 function otherWords(page: Page, state: ScanEditState): PlacedWord[] {
   if (state.neighbours) return state.neighbours;
   const out: PlacedWord[] = [];
+  if (state.frame) {
+    const frame = state.frame;
+    for (const run of page.runs) {
+      if (!isScanRun(run) || run.scanEdit === state) continue;
+      const box = applyRect(frame.toUpright, run.bounds);
+      const turned = compose(frame.toUpright, run.matrix);
+      if (Math.abs(turned.b) > 1e-6 || turned.a <= 0) continue;
+      out.push({ x: box.x, right: box.x + box.width, baseline: turned.f });
+    }
+    return (state.neighbours = out);
+  }
   for (const run of page.runs) {
     if (!isScanRun(run) || run.scanEdit === state) continue;
     const slots = run.paragraphLineSlots.length
@@ -615,7 +698,7 @@ export function prefitScanRun(
   if (!state || state.block !== undefined) return true;
   fitDeadline = deadline;
   try {
-    styleFor(doc, page, state, null);
+    upright(doc, page, state, () => styleFor(doc, page, state, null));
     return true;
   } catch (e) {
     if (e === FIT_PAUSED) return false;
@@ -803,6 +886,7 @@ function finishStyle(
     .reduce((p, q) =>
       Math.abs(Math.log(q.ratio)) < Math.abs(Math.log(p.ratio)) ? q : p,
     ).w;
+  const hollow = hollowStroke(doc, page, ref, chosen, weight);
   // One size for every line; the median shrugs off a line of lowercase.
   const blockSizes = spans
     .map((s) => sizeFor(chosen.face, s))
@@ -813,9 +897,45 @@ function finishStyle(
     stretch: chosen.stretch,
     // Softened text is blurred again, so it starts from the scan's darkest ink.
     ink: softness > 0 ? ref.ink.core : ref.ink.fill,
-    weight,
+    weight: hollow > 0 ? 0 : weight,
+    hollow,
     softness,
   };
+}
+
+const HOLLOW_STROKES = [0.025, 0.05];
+const HOLLOW_HEAVIER = 2;
+const HOLLOW_FIT = Math.log(1.5);
+
+function hollowStroke(
+  doc: EditorDocument,
+  page: Page,
+  ref: SpanInk,
+  chosen: Candidate,
+  weight: number,
+): number {
+  const strokeRatio = (extra: { weight?: number; hollow?: number }) =>
+    matchScan(
+      doc,
+      page,
+      ref.ink,
+      {
+        text: ref.original,
+        x: ref.ink.body.x,
+        baseline: ref.baseline,
+        family: chosen.family,
+        size: chosen.size,
+        stretch: chosen.stretch,
+        ...extra,
+      },
+      chosen.softness,
+      true,
+    ).weight;
+  if (strokeRatio({ weight }) < HOLLOW_HEAVIER) return 0;
+  const best = HOLLOW_STROKES.map((k) => k * chosen.size)
+    .map((w) => ({ w, misfit: Math.abs(Math.log(strokeRatio({ hollow: w }))) }))
+    .reduce((p, q) => (q.misfit < p.misfit ? q : p));
+  return best.misfit < HOLLOW_FIT ? best.w : 0;
 }
 
 // The face, weight, size and letter width that redraw `ref` most like the
@@ -843,6 +963,28 @@ function preferredOf(
   return pick.score >= ranked[0].score - 0.1 ? pick.style : null;
 }
 
+const REFERENCE_CHARS = 72;
+const MIN_WORD_GAP = 0.15;
+const MAX_SQUEEZE = 0.85;
+
+function referenceSpan(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  line: { li: number; ink: SpanInk },
+): SpanInk {
+  if (line.ink.original.length <= REFERENCE_CHARS) return line.ink;
+  const words = state.lines[line.li].words;
+  let last = 0;
+  while (
+    last + 1 < words.length &&
+    wordEnd(state.lines[line.li], last + 1) <= REFERENCE_CHARS
+  )
+    last++;
+  if (last < 2) return line.ink;
+  return spanInk(doc, page, state, line.li, 0, last) ?? line.ink;
+}
+
 function styleFor(
   doc: EditorDocument,
   page: Page,
@@ -850,12 +992,19 @@ function styleFor(
   span: SpanInk | null,
 ): ScanStyle | null {
   if (state.block === undefined) {
-    const lines = state.lines
-      .map((_, li) => lineInk(doc, page, state, li))
-      .filter((s): s is SpanInk => s !== null && s.original.length > 0);
-    const ref = lines.length
-      ? lines.reduce((p, q) => (q.original.length > p.original.length ? q : p))
+    const inked = state.lines
+      .map((_, li) => ({ li, ink: lineInk(doc, page, state, li) }))
+      .filter(
+        (l): l is { li: number; ink: SpanInk } =>
+          l.ink !== null && l.ink.original.length > 0,
+      );
+    const lines = inked.map((l) => l.ink);
+    const longest = inked.length
+      ? inked.reduce((p, q) =>
+          q.ink.original.length > p.ink.original.length ? q : p,
+        )
       : null;
+    const ref = longest ? referenceSpan(doc, page, state, longest) : null;
     const ranked = ref ? rankStyles(doc, page, state, lines, ref) : [];
     state.block =
       ref && ranked.length > 0
@@ -945,6 +1094,7 @@ function fallbackStyle(state: ScanEditState): ScanStyle {
     stretch: 1,
     ink: BLACK,
     weight: 0,
+    hollow: 0,
     softness: 0,
   };
 }
@@ -1012,14 +1162,43 @@ export function renderScanEdit(
   state: ScanEditState,
   text: string,
 ): void {
+  upright(doc, page, state, () =>
+    renderUprightScanEdit(doc, page, run, state, text),
+  );
+}
+
+function implausibleLine(line: ScanLine): boolean {
+  const chars = line.text.replace(/\s/g, "").length;
+  if (chars <= 3 || line.words.length === 0) return false;
+  const span = line.words[line.words.length - 1].right - line.words[0].x;
+  return span < chars * line.height * 0.15;
+}
+
+function renderUprightScanEdit(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  state: ScanEditState,
+  text: string,
+): void {
   const m = doc.module;
   for (const p of state.created) removeAndDestroyObject(m, page.pagePtr, p);
   state.created = [];
   state.textPtrs = [];
 
-  const o = state.override;
+  const shift = state.frame
+    ? applyVector(state.frame.toUpright, state.override.dx, state.override.dy)
+    : { dx: state.override.dx, dy: state.override.dy };
+  const o = { ...state.override, ...shift };
   const restyle =
     o.family !== undefined || o.fontSize !== undefined || o.fill !== undefined;
+  if (state.lines.some(implausibleLine)) {
+    const original = state.lines.map((l) => l.text).join(" ");
+    recordUndrawableChars(
+      [...text].filter((ch) => !original.includes(ch)).join(""),
+    );
+    return;
+  }
   const fittedStyle = styleFor(doc, page, state, null);
   if (
     !fittedStyle &&
@@ -1049,6 +1228,7 @@ export function renderScanEdit(
               ...o.style,
               fontSize: o.style.fontSize * scale,
               weight: o.style.weight * scale,
+              hollow: o.style.hollow * scale,
               ink: own.ink,
             }
           : own;
@@ -1058,6 +1238,7 @@ export function renderScanEdit(
       ink: o.fill ?? base.ink,
       stretch: o.family !== undefined ? 1 : base.stretch,
       weight: o.family !== undefined ? 0 : base.weight,
+      hollow: o.family !== undefined ? 0 : base.hollow,
       softness: base.softness,
     };
   };
@@ -1140,6 +1321,36 @@ export function renderScanEdit(
   for (const w of layout.removed) coverWord(w);
   for (const k of moving) coverWord(k.word);
 
+  const nextWordLimit = (start: number, baseline: number, size: number) => {
+    const next = kept
+      .filter((k) => Math.abs(k.baseline - baseline) < 1 && k.x > start + 0.5)
+      .map((k) => k.x);
+    return next.length === 0
+      ? Infinity
+      : Math.min(...next) - Math.max(1, size * MIN_WORD_GAP);
+  };
+
+  const squeezeToFit = (left: number, right: number, limit: number) =>
+    right <= limit || limit <= left
+      ? 1
+      : Math.max(MAX_SQUEEZE, (limit - left) / (right - left));
+
+  const keepClearOfNextWord = (
+    ptrs: number[],
+    start: number,
+    baseline: number,
+    size: number,
+  ) => {
+    const limit = nextWordLimit(start, baseline, size);
+    if (limit === Infinity) return;
+    const span = measureObjSpanPt(m, ptrs);
+    if (!span) return;
+    const scale = squeezeToFit(span.left, span.right, limit);
+    if (scale === 1) return;
+    for (const p of ptrs)
+      transformObject(m, p, scale, 0, 0, 1, span.left * (1 - scale), 0);
+  };
+
   const drawText = (
     t: string,
     x: number,
@@ -1166,7 +1377,9 @@ export function renderScanEdit(
       inkLeft: atAnchor && ink ? ink.ink.body.x + o.dx : x,
       fill: st.ink,
       weight: st.weight,
+      hollow: st.hollow,
     });
+    keepClearOfNextWord(ptrs, start, baseline, st.fontSize);
     const soft =
       st.softness > 0
         ? softened(ptrs, st, baseline, ink?.ink.rect, ink?.paper)
@@ -1204,14 +1417,21 @@ export function renderScanEdit(
   ): boolean => {
     const glyphs = atlas ? composed(s) : null;
     if (!glyphs || !atlas) return false;
+    const left = start - glyphs.inkLeft / atlas.scale;
+    const width = glyphs.width / atlas.scale;
+    const scale = squeezeToFit(
+      left,
+      left + width,
+      nextWordLimit(start, baseline, st.fontSize),
+    );
     const img = createBitmapImageObject(
       m,
       doc.docPtr,
       page.pagePtr,
       glyphs,
-      start - glyphs.inkLeft / atlas.scale,
+      left,
       baseline - atlas.descent,
-      glyphs.width / atlas.scale,
+      width * scale,
       glyphs.height / atlas.scale,
     );
     if (!img) return false;
@@ -1383,8 +1603,26 @@ export function scanEditOf(
   run: TextRun,
 ): ScanEditState | null {
   if (!isScanRun(run)) return run.scanEdit;
-  run.scanEdit ??= captureScanEdit(doc.module, run);
+  run.scanEdit ??= captureScanEdit(doc.module, run, doc.page(run.pageIndex));
   return run.scanEdit;
+}
+
+function upright<T>(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  fn: () => T,
+): T {
+  const frame = state.frame;
+  if (!frame || state.upright) return fn();
+  moveAllObjects(doc.module, page, frame.toUpright);
+  state.upright = true;
+  try {
+    return fn();
+  } finally {
+    state.upright = false;
+    moveAllObjects(doc.module, page, frame.fromUpright);
+  }
 }
 
 /** The size the block is drawn at, fitting its style first if need be. */
@@ -1398,7 +1636,10 @@ export function scanDrawnSize(
   return (
     state.override.fontSize ??
     state.override.style?.fontSize ??
-    (styleFor(doc, page, state, null) ?? fallbackStyle(state)).fontSize
+    (
+      upright(doc, page, state, () => styleFor(doc, page, state, null)) ??
+      fallbackStyle(state)
+    ).fontSize
   );
 }
 
@@ -1442,7 +1683,7 @@ export function scanStyleChoices(
 ): RankedStyle[] {
   const state = scanEditOf(doc, run);
   if (!state) return [];
-  styleFor(doc, page, state, null);
+  upright(doc, page, state, () => styleFor(doc, page, state, null));
   return state.block?.ranked ?? [];
 }
 
@@ -1460,6 +1701,14 @@ export function rerankScanStyles(
 ): RankedStyle[] {
   const state = scanEditOf(doc, run);
   if (!state) return [];
+  return upright(doc, page, state, () => rerankUpright(doc, page, state));
+}
+
+function rerankUpright(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+): RankedStyle[] {
   const before = state.block;
   if (before === null) state.block = undefined;
   if (before === undefined || before === null)
@@ -1500,8 +1749,10 @@ export function previewScanStyle(
   const state = scanEditOf(doc, run);
   const ref = state?.block?.ref;
   if (!state || !ref) return null;
-  return onOriginalScan(doc, page, state, () =>
-    previewOnScan(doc, page, ref, style),
+  return upright(doc, page, state, () =>
+    onOriginalScan(doc, page, state, () =>
+      previewOnScan(doc, page, ref, style),
+    ),
   );
 }
 
@@ -1526,6 +1777,7 @@ function previewOnScan(
     inkLeft: ref.ink.body.x,
     fill: style.ink,
     weight: style.weight,
+    hollow: style.hollow,
   });
   const drawn = capturePatch(m, page, rect);
   for (const p of [cover, ...ptrs])

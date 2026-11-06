@@ -853,6 +853,7 @@ export function TextRunOverlay({
     <div
       ref={ref}
       data-testid={`pdf-editor-run-${run.id}`}
+      data-run-id={run.id}
       className={`pdf-editor-run${pristine ? " is-pristine" : ""}`}
       contentEditable={!run.locked}
       suppressContentEditableWarning

@@ -160,6 +160,7 @@ export interface Placement {
   fill: RGBA;
   /** Outline in the fill colour that thickens the strokes, in points. */
   weight?: number;
+  hollow?: number;
 }
 
 /**
@@ -203,11 +204,13 @@ export function placeText(
     // copy as well would have assistive technology read the words twice.
     tagMarks: [],
     // Fill and stroke (Tr 2): blur makes scanned strokes heavier than any bold.
-    ...(p.weight
-      ? { renderMode: 2, stroke: p.fill, strokeWidth: p.weight }
-      : {}),
+    ...(p.hollow
+      ? { renderMode: 1, stroke: p.fill, strokeWidth: p.hollow }
+      : p.weight
+        ? { renderMode: 2, stroke: p.fill, strokeWidth: p.weight }
+        : {}),
   });
-  if (!p.weight) opaqueStroke(m, ptrs);
+  if (!p.weight && !p.hollow) opaqueStroke(m, ptrs);
   for (const ptr of ptrs)
     transformObject(m, ptr, p.stretch, 0, 0, 1, p.x * (1 - p.stretch), 0);
   const drawn = measureObjSpanPt(m, ptrs);
@@ -396,6 +399,7 @@ function placementKey(
     c.size,
     c.stretch,
     c.weight ?? 0,
+    c.hollow ?? 0,
     ...extra,
   ].join("|");
 }

@@ -307,6 +307,53 @@ async function savedText(doc: EditorDocument): Promise<string> {
   }
 }
 
+describe("editing sideways scanned text", () => {
+  const SCAN: ScanOptions = { dpi: 200, blur: 0.5, noise: 6 };
+  const line: ScanLineSpec = {
+    family: "Carlito",
+    text: "Invoice 4471 for Jane Example is due on 30 June",
+    size: 12,
+  };
+
+  test(
+    "fits the face upright and draws the edit turned back",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan([line], SCAN, 48, true);
+      try {
+        const run = page.runs.find(
+          (r) => isScanRun(r) && r.text.includes("Jane"),
+        )!;
+        expect(scanStyleChoices(doc, page, run)[0]?.face.label).toBe(
+          "Calibri (Carlito)",
+        );
+        const band = {
+          x: run.bounds.x - 4,
+          y: run.bounds.y,
+          width: run.bounds.width + 8,
+          height: run.bounds.height,
+        };
+        const before = renderLuma(doc.module, page, band, 0)!.data;
+        renderScanEdit(
+          doc,
+          page,
+          run,
+          scanEditOf(doc, run)!,
+          run.text.replace("Jane", "Mary"),
+        );
+        const after = renderLuma(doc.module, page, band, 0)!.data;
+        let changed = 0;
+        for (let i = 0; i < before.length; i++)
+          if (Math.abs(before[i] - after[i]) > 40) changed++;
+        expect(changed).toBeGreaterThan(50);
+        expect(await savedText(doc)).toContain("Mary");
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+});
+
 describe("matching scanned text in other scripts", () => {
   const SCAN: ScanOptions = { dpi: 200, blur: 0.6, noise: 8 };
   const russian: ScanLineSpec = {

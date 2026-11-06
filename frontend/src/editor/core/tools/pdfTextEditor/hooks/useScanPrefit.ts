@@ -34,12 +34,29 @@ export function useScanPrefit(
     let stopped = false;
     let timer = 0;
     const done = new WeakSet<object>();
+    let hovered: string | null = null;
+    const onPointerOver = (e: PointerEvent) => {
+      const el =
+        e.target instanceof Element ? e.target.closest("[data-run-id]") : null;
+      hovered = el?.getAttribute("data-run-id") ?? hovered;
+    };
+    document.addEventListener("pointerover", onPointerOver);
     const step = () => {
       const doc = store.document;
       if (stopped || !doc) return;
-      for (const snapshot of state.pages) {
+      const selected = hovered
+        ? [...store.selection.value.runIds, hovered]
+        : store.selection.value.runIds;
+      const ordered = [
+        ...state.pages.filter((p) =>
+          p.runs.some((r) => selected.includes(r.id)),
+        ),
+        ...state.pages,
+      ];
+      for (const snapshot of ordered) {
         const page = doc.page(snapshot.pageIndex);
-        const run = page.runs.find((r) => isScanRun(r) && !done.has(r));
+        const scan = page.runs.filter((r) => isScanRun(r) && !done.has(r));
+        const run = scan.find((r) => selected.includes(r.id)) ?? scan[0];
         if (!run) continue;
         try {
           if (prefitScanRun(doc, page, run, performance.now() + SLICE_MS))
@@ -60,6 +77,7 @@ export function useScanPrefit(
     return () => {
       stopped = true;
       window.clearTimeout(timer);
+      document.removeEventListener("pointerover", onPointerOver);
     };
   }, [store, hasScannedText, scannedText, state.pages]);
 }
