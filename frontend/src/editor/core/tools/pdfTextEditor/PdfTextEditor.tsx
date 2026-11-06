@@ -2,7 +2,7 @@ import {
   assertFilesNotBlocked,
   policySourceIds,
 } from "@editor/services/policyFileGuard";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
@@ -59,7 +59,7 @@ import {
   type SaveRisks,
 } from "@editor/tools/pdfTextEditor/util/documentRisks";
 import { preloadFallbackFontBytes } from "@editor/tools/pdfTextEditor/util/fallbackFont";
-import { loadBundledScanFaces } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
+import { useScanPrefit } from "@editor/tools/pdfTextEditor/hooks/useScanPrefit";
 import { visiblePageNumber } from "@editor/tools/pdfTextEditor/util/dom";
 import type {
   GroupingMode,
@@ -149,14 +149,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     void preloadFallbackFontBytes();
   }, []);
 
-  const hasScannedText = useMemo(
-    () =>
-      state.pages.some((page) => page.runs.some((run) => run.renderMode === 3)),
-    [state.pages],
-  );
-  useEffect(() => {
-    if (hasScannedText) void loadBundledScanFaces();
-  }, [hasScannedText]);
+  useScanPrefit(store, state);
 
   const sel = useSelectionActions(store);
 

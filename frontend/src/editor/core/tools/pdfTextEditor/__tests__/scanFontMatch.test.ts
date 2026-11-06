@@ -16,6 +16,7 @@ import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import { renderLuma } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   isScanRun,
+  prefitScanRun,
   renderScanEdit,
   scanEditOf,
   scanStyleChoices,
@@ -140,6 +141,23 @@ describe("matching a face to scanned text", () => {
             bold: s.bold,
           })),
         );
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
+    "fits a block in short slices and reaches the same face",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan([samples[0]], SCAN);
+      try {
+        const run = page.runs.find(isScanRun)!;
+        let slices = 0;
+        while (!prefitScanRun(doc, page, run, performance.now() + 5)) slices++;
+        expect(slices).toBeGreaterThan(1);
+        expect(scanEditOf(doc, run)!.block?.style.family).toBe("Carlito");
       } finally {
         doc.dispose();
       }

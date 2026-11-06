@@ -336,15 +336,68 @@ export interface ScanMatch {
 /** How much `c` drawn on the spot looks like the scanned pixels there. */
 type ScanImage = { img: Luma; stroke: number } | null;
 
-const scanImages = new WeakMap<object, Map<number, ScanImage>>();
+interface FitMemory {
+  scans: Map<number, ScanImage>;
+  matches: Map<string, ScanMatch>;
+  softness: Map<string, number>;
+}
 
-export function withScanCache<T>(ink: object, fit: () => T): T {
-  scanImages.set(ink, new Map());
+const fitMemory = new WeakMap<object, FitMemory>();
+let fitDeadline = Infinity;
+let measuredThisSlice = false;
+
+export const FIT_PAUSED = Symbol("fit paused");
+
+export function withScanCache<T>(
+  ink: object,
+  fit: () => T,
+  deadline = Infinity,
+): T {
+  if (!fitMemory.has(ink))
+    fitMemory.set(ink, {
+      scans: new Map(),
+      matches: new Map(),
+      softness: new Map(),
+    });
+  const outer = fitDeadline;
+  fitDeadline = deadline;
+  measuredThisSlice = false;
   try {
-    return fit();
+    const result = fit();
+    fitMemory.delete(ink);
+    return result;
+  } catch (e) {
+    if (e !== FIT_PAUSED) fitMemory.delete(ink);
+    throw e;
   } finally {
-    scanImages.delete(ink);
+    fitDeadline = outer;
   }
+}
+
+function checkDeadline(): void {
+  if (
+    measuredThisSlice &&
+    fitDeadline !== Infinity &&
+    performance.now() > fitDeadline
+  )
+    throw FIT_PAUSED;
+  measuredThisSlice = true;
+}
+
+function placementKey(
+  c: Omit<Placement, "inkLeft" | "fill">,
+  ...extra: unknown[]
+): string {
+  return [
+    c.text,
+    c.x,
+    c.baseline,
+    c.family,
+    c.size,
+    c.stretch,
+    c.weight ?? 0,
+    ...extra,
+  ].join("|");
 }
 
 function scanImage(
@@ -354,9 +407,10 @@ function scanImage(
   probe: PageRect,
   blur: number,
 ): ScanImage {
-  const cache = scanImages.get(ink);
+  const cache = fitMemory.get(ink)?.scans;
   const hit = cache?.get(blur);
   if (hit !== undefined) return hit;
+  checkDeadline();
   const img = renderLuma(doc.module, page, probe, blur);
   const out = img ? { img, stroke: strokeWidth(img, midTone(img)) } : null;
   cache?.set(blur, out);
@@ -377,6 +431,23 @@ export function matchScan(
   softness?: number,
   rough = false,
 ): ScanMatch {
+  const memory = fitMemory.get(ink)?.matches;
+  const key = memory && placementKey(c, softness, rough);
+  const known = key ? memory.get(key) : undefined;
+  if (known) return known;
+  const match = measureMatch(doc, page, ink, c, softness, rough);
+  if (key) memory.set(key, match);
+  return match;
+}
+
+function measureMatch(
+  doc: EditorDocument,
+  page: Page,
+  ink: { rect: PageRect; body: PageRect },
+  c: Omit<Placement, "inkLeft" | "fill">,
+  softness: number | undefined,
+  rough: boolean,
+): ScanMatch {
   const m = doc.module;
   const probe = {
     x: ink.rect.x - 1,
@@ -394,6 +465,7 @@ export function matchScan(
   );
   if (!scanned) return none;
   const scan = scanned.img;
+  checkDeadline();
   const cover = emitFillRect(m, page, probe, { r: 255, g: 255, b: 255 }, 1);
   const ptrs = placeText(doc, page, { ...c, inkLeft: ink.body.x, fill: BLACK });
   const drawn = renderLuma(m, page, probe, softness ?? 2);
@@ -438,6 +510,21 @@ export function softnessOf(
   ink: { rect: PageRect; body: PageRect },
   c: Omit<Placement, "inkLeft" | "fill">,
 ): number {
+  const memory = fitMemory.get(ink)?.softness;
+  const key = memory && placementKey(c);
+  const known = key ? memory.get(key) : undefined;
+  if (known !== undefined) return known;
+  const softness = measureSoftness(doc, page, ink, c);
+  if (key) memory.set(key, softness);
+  return softness;
+}
+
+function measureSoftness(
+  doc: EditorDocument,
+  page: Page,
+  ink: { rect: PageRect; body: PageRect },
+  c: Omit<Placement, "inkLeft" | "fill">,
+): number {
   const m = doc.module;
   const probe = {
     x: ink.rect.x - 1,
@@ -448,6 +535,7 @@ export function softnessOf(
   const scan = scanImage(doc, page, ink, probe, 0);
   if (!scan) return 0;
   const target = edgeWidth(scan.img);
+  checkDeadline();
   const cover = emitFillRect(m, page, probe, { r: 255, g: 255, b: 255 }, 1);
   const ptrs = placeText(doc, page, { ...c, inkLeft: ink.body.x, fill: BLACK });
   let best = { r: 0, err: Infinity };

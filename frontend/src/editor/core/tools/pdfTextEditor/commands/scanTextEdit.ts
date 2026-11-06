@@ -31,6 +31,7 @@ import {
   isEvenlySpaced,
   matchScan,
   withScanCache,
+  FIT_PAUSED,
   median,
   placeText,
   blurRgba,
@@ -593,9 +594,33 @@ function rankStyles(
   spans: SpanInk[],
   ref: SpanInk,
 ): RankedStyle[] {
-  return withScanCache(ref.ink, () =>
-    rankStylesUncached(doc, page, state, spans, ref),
+  return withScanCache(
+    ref.ink,
+    () => rankStylesUncached(doc, page, state, spans, ref),
+    fitDeadline,
   );
+}
+
+let fitDeadline = Infinity;
+
+export function prefitScanRun(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  deadline: number,
+): boolean {
+  const state = isScanRun(run) ? scanEditOf(doc, run) : null;
+  if (!state || state.block !== undefined) return true;
+  fitDeadline = deadline;
+  try {
+    styleFor(doc, page, state, null);
+    return true;
+  } catch (e) {
+    if (e === FIT_PAUSED) return false;
+    throw e;
+  } finally {
+    fitDeadline = Infinity;
+  }
 }
 
 function rankStylesUncached(

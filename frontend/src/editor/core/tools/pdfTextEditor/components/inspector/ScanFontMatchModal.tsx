@@ -74,6 +74,16 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
                   alt={t("pdfTextEditor.scanFont.scanAlt", "The scanned line")}
                   style={lineImage}
                 />
+                <Text
+                  size="xs"
+                  c="dimmed"
+                  data-testid="pdf-editor-scan-font-note"
+                >
+                  {t(
+                    "pdfTextEditor.scanFont.scanNote",
+                    "Scans often look blurrier or bolder than the font really is. Compare letter shapes rather than thickness.",
+                  )}
+                </Text>
               </Stack>
             )}
             <Stack gap={6} role="radiogroup" aria-labelledby={choicesLabelId}>
