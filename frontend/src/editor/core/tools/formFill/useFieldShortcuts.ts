@@ -9,12 +9,12 @@ import {
   pendingIdFrom,
   pendingSelectionName,
 } from "@editor/tools/formFill/pendingSelection";
-import type { NewFieldDefinition } from "@editor/tools/formFill/types";
-
-/** Enough offset that the copy is visibly its own field rather than hiding the original. */
-const PASTE_OFFSET_PT = 12;
-
-type Copied = Omit<NewFieldDefinition, "name"> & { name?: string };
+import {
+  duplicateInPlace,
+  takenFieldNames,
+  templateFromField,
+  type FieldTemplate,
+} from "@editor/tools/formFill/fieldDuplication";
 
 export function useFieldShortcuts() {
   const {
@@ -27,10 +27,11 @@ export function useFieldShortcuts() {
     addPendingField,
     removePendingField,
     toggleFieldDeleted,
+    modifiedFields,
     undo,
   } = useFormFill();
 
-  const clipboardRef = useRef<Copied | null>(null);
+  const clipboardRef = useRef<FieldTemplate | null>(null);
 
   // Refs, so the listener is installed once instead of on every selection change.
   const latest = useRef({
@@ -43,6 +44,7 @@ export function useFieldShortcuts() {
     addPendingField,
     removePendingField,
     toggleFieldDeleted,
+    modifiedFields,
     undo,
   });
   latest.current = {
@@ -55,6 +57,7 @@ export function useFieldShortcuts() {
     addPendingField,
     removePendingField,
     toggleFieldDeleted,
+    modifiedFields,
     undo,
   };
 
@@ -87,20 +90,11 @@ export function useFieldShortcuts() {
           return;
         }
         const field = ctx.state.fields.find((f) => f.name === selected);
-        const widget = field?.widgets?.[0];
-        if (!field || !widget) return;
-        clipboardRef.current = {
-          name: field.name,
-          type: field.type,
-          pageIndex: widget.pageIndex,
-          x: widget.x,
-          y: widget.y,
-          width: widget.width,
-          height: widget.height,
-          options: field.options ?? undefined,
-          required: field.required,
-          multiline: field.multiline,
-        };
+        const copied = field
+          ? templateFromField(field, ctx.modifiedFields[field.name])
+          : null;
+        if (!copied) return;
+        clipboardRef.current = copied;
         event.preventDefault();
         return;
       }
@@ -108,13 +102,12 @@ export function useFieldShortcuts() {
       if (copyOrPaste && event.key.toLowerCase() === "v") {
         const copied = clipboardRef.current;
         if (!copied) return;
-        // The name is dropped: two fields cannot share one, and the queue names it.
-        const { name: _name, ...geometry } = copied;
-        const id = ctx.addPendingField({
-          ...geometry,
-          x: geometry.x + PASTE_OFFSET_PT,
-          y: geometry.y - PASTE_OFFSET_PT,
-        });
+        const taken = takenFieldNames(
+          ctx.state.fields,
+          ctx.pendingFields,
+          ctx.modifiedFields,
+        );
+        const id = ctx.addPendingField(duplicateInPlace(copied, taken));
         ctx.setSelectedField(pendingSelectionName(id));
         event.preventDefault();
         return;

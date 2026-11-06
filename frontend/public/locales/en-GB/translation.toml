@@ -5175,6 +5175,11 @@ preview = "Hold to preview"
 previewHelp = "Hold to see the fields as they will look once added, without the editing outlines."
 removeField = "Remove field"
 
+[formFill.duplicate]
+allPages = "Duplicate to all pages"
+inPlace = "Duplicate in place"
+label = "Duplicate"
+
 [formFill.editor]
 action = "Button action"
 actionHelp = "What the button does when clicked."

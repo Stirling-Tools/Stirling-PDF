@@ -472,6 +472,74 @@ test.describe("Form field editor", () => {
     await expect(commit).toBeDisabled();
   });
 
+  test("modify mode: duplicating a field in place adds an offset copy", async ({
+    page,
+  }) => {
+    await stubFormEndpoints(page, STUB_FIELDS);
+    await openFormTool(page);
+
+    await selectMode(page, "Modify");
+    await page
+      .getByTestId("form-modify-duplicate-firstName-menu")
+      .click({ timeout: 30_000 });
+    await page.getByTestId("form-modify-duplicate-firstName-in-place").click();
+
+    const commit = page.getByTestId("form-modify-commit");
+    await expect(commit).toContainText("1");
+    await commit.click();
+
+    const batch = await readEditBatch(page);
+    expect(batch.add).toHaveLength(1);
+    // Same size, nudged right and down from the original (lower-left y = 792 - 100 - 20).
+    expect(batch.add?.[0]).toMatchObject({
+      name: "firstName_copy1",
+      type: "text",
+      pageIndex: 0,
+      x: 112,
+      y: 660,
+      width: 180,
+      height: 20,
+    });
+    // The original is untouched.
+    expect(batch.modify ?? []).toHaveLength(0);
+  });
+
+  test("modify mode: duplicating a field to all pages adds one copy per other page", async ({
+    page,
+  }) => {
+    await stubFormEndpoints(page, STUB_FIELDS);
+    await page.goto("/form-fill");
+    await page.waitForLoadState("domcontentloaded");
+    await uploadFiles(
+      page,
+      path.join(import.meta.dirname, "../test-fixtures/many-pages-sample.pdf"),
+    );
+
+    await selectMode(page, "Modify");
+    await page
+      .getByTestId("form-modify-duplicate-firstName-menu")
+      .click({ timeout: 30_000 });
+    const allPages = page.getByTestId(
+      "form-modify-duplicate-firstName-all-pages",
+    );
+    await expect(allPages).toBeEnabled();
+    await allPages.click();
+
+    const commit = page.getByTestId("form-modify-commit");
+    await expect(commit).toContainText("7");
+    await commit.click();
+
+    const batch = await readEditBatch(page);
+    expect(batch.add?.map((f) => f.pageIndex)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(batch.add?.[0]).toMatchObject({
+      name: "firstName_copy1",
+      x: 100,
+      y: 672,
+      width: 180,
+      height: 20,
+    });
+  });
+
   test("Create and Modify share a draft and Ctrl+S saves both", async ({
     page,
   }) => {

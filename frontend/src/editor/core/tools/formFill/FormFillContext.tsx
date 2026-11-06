@@ -43,6 +43,7 @@ import type {
   SkippedFieldEdit,
 } from "@editor/tools/formFill/types";
 import { pendingIdFrom } from "@editor/tools/formFill/pendingSelection";
+import type { FieldTemplate } from "@editor/tools/formFill/fieldDuplication";
 import type { IFormDataProvider } from "@editor/tools/formFill/providers/types";
 import { PdfBoxFormProvider } from "@editor/tools/formFill/providers/PdfBoxFormProvider";
 import { PdfiumFormProvider } from "@editor/tools/formFill/providers/PdfiumFormProvider";
@@ -264,9 +265,9 @@ export interface FormFillContextValue {
   /** Fields drawn but not yet committed to the PDF. */
   pendingFields: PendingField[];
   /** Queue a new field (id + default name auto-assigned). Returns the new id. */
-  addPendingField: (
-    field: Omit<NewFieldDefinition, "name"> & { name?: string },
-  ) => string;
+  addPendingField: (field: FieldTemplate) => string;
+  /** Queue several fields as a single undo step. Returns their ids in order. */
+  addPendingFields: (fields: FieldTemplate[]) => string[];
   updatePendingField: (id: string, patch: Partial<NewFieldDefinition>) => void;
   removePendingField: (id: string) => void;
   clearPendingFields: () => void;
@@ -501,6 +502,22 @@ export function FormFillProvider({
     values: Record<string, string>;
   } | null>(null);
 
+  /**
+   * Values the user changed from what the document holds. Carrying anything more across a
+   * re-fetch is wrong: pdfium and PDFBox spell some untouched values differently (an unselected
+   * radio is "" to one and "Off" to the other), so the stale spelling would read as an edit.
+   */
+  const userEditedValues = useCallback((): Record<string, string> => {
+    const stored = new Map(
+      fieldsRef.current.map((field) => [field.name, field.value ?? ""]),
+    );
+    const edited: Record<string, string> = {};
+    for (const [name, value] of Object.entries(valuesStore.values)) {
+      if (stored.get(name) !== value) edited[name] = value;
+    }
+    return edited;
+  }, [valuesStore]);
+
   const clearEditingState = useCallback(() => {
     undoStackRef.current = [];
     setCanUndo(false);
@@ -555,7 +572,7 @@ export function FormFillProvider({
         retainedValuesRef.current?.fileId === (fileId ?? null)
           ? retainedValuesRef.current.values
           : sameDocument
-            ? { ...valuesStore.values }
+            ? userEditedValues()
             : {};
       retainedValuesRef.current = null;
 
@@ -637,7 +654,7 @@ export function FormFillProvider({
         dispatch({ type: "FETCH_ERROR", error: msg });
       }
     },
-    [valuesStore, clearEditingState],
+    [valuesStore, clearEditingState, userEditedValues],
   );
 
   const validateFieldDebounced = useDebouncedCallback((fieldName: string) => {
@@ -714,14 +731,14 @@ export function FormFillProvider({
       // The viewer re-fetches straight after this, and that fetch is where they are restored.
       retainedValuesRef.current = {
         fileId: lastKnownFileIdRef.current,
-        values: { ...valuesStore.values },
+        values: userEditedValues(),
       };
       valuesStore.reset({});
       dispatch({ type: "RESET" });
 
       setProviderModeState(mode);
     },
-    [valuesStore],
+    [valuesStore, userEditedValues],
   );
 
   const getField = useCallback(
@@ -770,12 +787,12 @@ export function FormFillProvider({
   }, []);
 
   // --- Create mode ---
-  const addPendingField = useCallback(
-    (field: Omit<NewFieldDefinition, "name"> & { name?: string }): string => {
+  const addPendingFields = useCallback(
+    (fields: FieldTemplate[]): string[] => {
+      if (fields.length === 0) return [];
+      // One undo step for the batch, so a duplicate across pages comes back off in one go.
       rememberForUndo();
       editedFileIdRef.current = lastKnownFileIdRef.current;
-      const seq = ++pendingCounterRef.current;
-      const id = `pending-${seq}`;
       // Friendly, readable default names that match how the viewer labels
       // fields, instead of cryptic "Field_5".
       const TYPE_DEFAULT_NAME: Record<string, string> = {
@@ -787,23 +804,30 @@ export function FormFillProvider({
         button: "Button",
         signature: "Signature",
       };
-      const defaultName =
-        field.name?.trim() ||
-        `${TYPE_DEFAULT_NAME[field.type] ?? "Field"} ${seq}`;
-      // Choice/radio fields are useless without options, so seed defaults.
-      const needsOptions =
-        field.type === "combobox" ||
-        field.type === "listbox" ||
-        field.type === "radio";
-      const options =
-        field.options ?? (needsOptions ? ["Option 1", "Option 2"] : undefined);
-      setPendingFields((prev) => [
-        ...prev,
-        { ...field, name: defaultName, options, id },
-      ]);
-      return id;
+      const added: PendingField[] = fields.map((field) => {
+        const seq = ++pendingCounterRef.current;
+        const defaultName =
+          field.name?.trim() ||
+          `${TYPE_DEFAULT_NAME[field.type] ?? "Field"} ${seq}`;
+        // Choice/radio fields are useless without options, so seed defaults.
+        const needsOptions =
+          field.type === "combobox" ||
+          field.type === "listbox" ||
+          field.type === "radio";
+        const options =
+          field.options ??
+          (needsOptions ? ["Option 1", "Option 2"] : undefined);
+        return { ...field, name: defaultName, options, id: `pending-${seq}` };
+      });
+      setPendingFields((prev) => [...prev, ...added]);
+      return added.map((f) => f.id);
     },
-    [],
+    [rememberForUndo],
+  );
+
+  const addPendingField = useCallback(
+    (field: FieldTemplate): string => addPendingFields([field])[0],
+    [addPendingFields],
   );
 
   const updatePendingField = useCallback(
@@ -964,6 +988,7 @@ export function FormFillProvider({
       setCreationType,
       pendingFields,
       addPendingField,
+      addPendingFields,
       updatePendingField,
       removePendingField,
       clearPendingFields,
@@ -1011,6 +1036,7 @@ export function FormFillProvider({
       canUndo,
       pendingFields,
       addPendingField,
+      addPendingFields,
       updatePendingField,
       removePendingField,
       clearPendingFields,

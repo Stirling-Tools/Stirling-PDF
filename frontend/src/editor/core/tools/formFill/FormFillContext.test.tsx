@@ -379,6 +379,33 @@ describe("FormFillContext value retention", () => {
     expect(hook.current.state.isDirty).toBe(false);
   });
 
+  it("does not report unsaved changes when the new provider spells an untouched value differently", async () => {
+    // pdfium leaves an unselected radio group empty; PDFBox reports its "Off" state.
+    fetchFields.mockResolvedValueOnce([
+      { name: "choice", type: "radio", value: "", widgets: [{ pageIndex: 0 }] },
+    ]);
+    fetchFields.mockResolvedValueOnce([
+      {
+        name: "choice",
+        type: "radio",
+        value: "Off",
+        widgets: [{ pageIndex: 0 }],
+      },
+    ]);
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+
+    act(() => hook.current.setProviderMode("pdfbox"));
+    await act(async () => {
+      await hook.current.fetchFields(blob(), "file-A");
+    });
+
+    expect(hook.current.getValue("choice")).toBe("Off");
+    expect(hook.current.state.isDirty).toBe(false);
+  });
+
   it("still reports unsaved changes when something was typed", async () => {
     const { result: hook } = renderHook(() => useFormFill(), { wrapper });
     await act(async () => {

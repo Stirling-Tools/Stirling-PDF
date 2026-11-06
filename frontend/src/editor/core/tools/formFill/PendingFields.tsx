@@ -15,6 +15,7 @@ import {
   FIELD_TYPE_COLOR,
 } from "@editor/tools/formFill/fieldMeta";
 import { FormFieldPropertyEditor } from "@editor/tools/formFill/FormFieldPropertyEditor";
+import { DuplicateFieldMenu } from "@editor/tools/formFill/DuplicateFieldMenu";
 import type { NewFieldDefinition } from "@editor/tools/formFill/types";
 import styles from "@editor/tools/formFill/FormFill.module.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
@@ -103,6 +104,13 @@ export function PendingFields() {
                     </Text>
                   </Group>
                   <Group gap={2} wrap="nowrap">
+                    <DuplicateFieldMenu
+                      getSource={() => {
+                        const { id: _id, ...definition } = pf;
+                        return definition;
+                      }}
+                      testId={`form-pending-duplicate-${pf.id}`}
+                    />
                     <Tooltip
                       label={t("formFill.create.goToField", "Go to this field")}
                       withArrow
