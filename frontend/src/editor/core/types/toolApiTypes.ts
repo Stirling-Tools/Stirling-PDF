@@ -945,7 +945,7 @@ export interface PageSizeRequest {
 }
 export interface PdfToPdfARequest {
   /**
-   * pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors instead); pdfx = PDF/X.
+   * pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors instead); pdfx = PDF/X-4 alias; pdfx-1a = PDF/X-1a; pdfx-3 = PDF/X-3; pdfx-4 = PDF/X-4; pdfx-6 = PDF/X-6.
    */
   outputFormat:
     | "pdfa"
@@ -957,13 +957,17 @@ export interface PdfToPdfARequest {
     | "pdfa-1a"
     | "pdfa-2a"
     | "pdfa-3a"
-    | "pdfx";
+    | "pdfx"
+    | "pdfx-1a"
+    | "pdfx-3"
+    | "pdfx-4"
+    | "pdfx-6";
   /**
    * Also declare PDF/UA accessibility alongside PDF/A. Only applies to the level A formats, and the claim is written only if it validates.
    */
   pdfUa?: boolean;
   /**
-   * If true, the conversion will fail if the output is not perfectly compliant
+   * PDF/A: fail if the output is not perfectly compliant. PDF/X: fail if a font is not embedded.
    */
   strict?: boolean;
   /**
