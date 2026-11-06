@@ -609,6 +609,8 @@ class PasswordControllerTest {
             request.setOwnerPassword("owner123");
             request.setPassword("");
             request.setKeyLength(256);
+            request.setPreventPrinting(true);
+            request.setPreventModify(true);
 
             when(pdfDocumentFactory.load(any(MultipartFile.class), eq(""), eq(true)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
@@ -616,6 +618,17 @@ class PasswordControllerTest {
             ResponseEntity<Resource> response = passwordController.addPassword(request);
 
             assertNotNull(response.getBody());
+            byte[] protectedBytes = drainBody(response);
+            try (PDDocument reader = Loader.loadPDF(protectedBytes);
+                    PDDocument owner = Loader.loadPDF(protectedBytes, "owner123")) {
+                assertTrue(reader.isEncrypted());
+                assertFalse(reader.getCurrentAccessPermission().isOwnerPermission());
+                assertFalse(reader.getCurrentAccessPermission().canPrint());
+                assertFalse(reader.getCurrentAccessPermission().canModify());
+                assertTrue(owner.getCurrentAccessPermission().isOwnerPermission());
+                assertTrue(owner.getCurrentAccessPermission().canPrint());
+                assertTrue(owner.getCurrentAccessPermission().canModify());
+            }
         }
 
         @Test

@@ -3,6 +3,10 @@ import { render, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import LoggedInState from "@editor/routes/login/LoggedInState";
 import { resolveLandingPath } from "@editor/utils/loginLanding";
+import {
+  rememberPendingDestination,
+  resetPendingDestinationForTests,
+} from "@editor/services/pendingDestination";
 
 vi.mock("@editor/utils/loginLanding", () => ({
   resolveLandingPath: vi.fn(),
@@ -21,6 +25,24 @@ vi.mock("react-router-dom", async () => {
 describe("LoggedInState", () => {
   beforeEach(() => {
     mockNavigate.mockClear();
+    window.localStorage.clear();
+    resetPendingDestinationForTests();
+  });
+
+  it("returns to the destination remembered before an auth detour", async () => {
+    rememberPendingDestination("/enterprise");
+    render(
+      <MemoryRouter>
+        <LoggedInState />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/enterprise", {
+        replace: true,
+      });
+    });
+    expect(resolveLandingPath).not.toHaveBeenCalled();
   });
 
   it("navigates to the resolved landing path", async () => {

@@ -20,6 +20,8 @@ import { LicenseInfo } from "@editor/services/licenseService";
 import licenseService from "@editor/services/licenseService";
 import { useLicense } from "@editor/contexts/LicenseContext";
 import { useLoginRequired } from "@editor/hooks/useLoginRequired";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface LicenseKeySectionProps {
   currentLicenseInfo?: LicenseInfo;
@@ -182,7 +184,14 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                 "Active License",
               )}
             </Text>
-            <Text size="xs">
+            <Text
+              size="xs"
+              className={
+                currentLicenseInfo.licenseKey.startsWith("file:")
+                  ? privateContentClassName
+                  : undefined
+              }
+            >
               {currentLicenseInfo.licenseKey.startsWith("file:")
                 ? t(
                     "admin.settings.premium.currentLicense.file",
@@ -259,6 +268,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                   : undefined) || "00000000-0000-0000-0000-000000000000"
               }
               type="password"
+              className={privateContentClassName}
               disabled={!loginEnabled || savingLicense}
             />
           ) : (
@@ -283,15 +293,19 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                 variant="secondary"
                 leftSection={<Icon name="file-up" size="1rem" />}
               >
-                {licenseFile
-                  ? licenseFile.name
-                  : t(
-                      "admin.settings.premium.file.choose",
-                      "Choose License File",
-                    )}
+                {licenseFile ? (
+                  <PrivateContent>{licenseFile.name}</PrivateContent>
+                ) : (
+                  t("admin.settings.premium.file.choose", "Choose License File")
+                )}
               </FilePicker>
               {licenseFile && (
-                <Text size="xs" c="dimmed" mt="xs">
+                <Text
+                  size="xs"
+                  c="dimmed"
+                  mt="xs"
+                  className={privateContentClassName}
+                >
                   {t(
                     "admin.settings.premium.file.selected",
                     "Selected: {{filename}} ({{size}})",

@@ -5,17 +5,34 @@ import {
   openRawDocument,
 } from "@editor/services/pdfiumService";
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
-import { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  PageStructure,
+  isInlineType,
+  type ReadOnlyReason,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  effectiveLanguage,
+  type TextLanguage,
+} from "@editor/tools/pdfTextEditor/model/languageTag";
 import type { StructureEdit } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
-import { readPageStructure } from "@editor/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
+import {
+  readPageStructure,
+  readString,
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
+import { carriedMcids } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
   readFileStructure,
-  type FilePageStructure,
+  type FileStructure,
 } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import {
-  imagesInReadingOrder,
+  isHeadingType,
+  type StructureType,
+} from "@editor/tools/pdfTextEditor/model/structureTypes";
+import type { DocumentHeading } from "@editor/tools/pdfTextEditor/util/headingOutline";
+import {
   precedingTaggedMcid,
-} from "@editor/tools/pdfTextEditor/util/figurePlacement";
+  taggedContentInReadingOrder,
+} from "@editor/tools/pdfTextEditor/util/elementPlacement";
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { prepareForEditing } from "@editor/tools/pdfTextEditor/pdfdoc/prepareForEditing";
@@ -36,8 +53,27 @@ export class EditorDocument {
   readonly openedBytes: Uint8Array;
   private readonly pageCache: Map<number, Page>;
   private readonly structureCache = new Map<number, PageStructure>();
-  /** Each page's elements from the file's own ParentTree; null when only PDFium's view is available. */
-  private readonly fileStructure: Map<number, FilePageStructure> | null;
+  /**
+   * Unsaved retags by block key, each with the content the save addresses it
+   * by. Held here rather than per page: an element spanning a page break is
+   * one element.
+   */
+  private readonly retags = new Map<
+    string,
+    { pageIndex: number; mcid: number; type: StructureType }
+  >();
+  /** Unsaved /Lang changes to the file's blocks, by block key, held here as retags are. */
+  private readonly blockLangs = new Map<
+    string,
+    { pageIndex: number; mcid: number; lang: string | null }
+  >();
+  /** The catalog /Lang as the file has it; null when it has none. */
+  private readonly fileDocumentLang: string | null;
+  /** The session's catalog /Lang; undefined when unchanged. */
+  private documentLangEdit: string | null | undefined;
+  /** The file's own structure tree; null when only PDFium's view is available. */
+  private readonly fileStructure: FileStructure | null;
+  private marked: boolean;
   private readonly ownedFonts: Map<string, FontRef>;
   private _disposed: boolean;
   // Form-fill environment. Widgets with no appearance stream are drawn ONLY by
@@ -52,12 +88,14 @@ export class EditorDocument {
     module: WrappedPdfiumModule,
     docPtr: number,
     openedBytes: Uint8Array,
-    fileStructure: Map<number, FilePageStructure> | null,
+    fileStructure: FileStructure | null,
   ) {
     this.module = module;
     this.docPtr = docPtr;
     this.openedBytes = openedBytes;
     this.fileStructure = fileStructure;
+    this.fileDocumentLang = readCatalogLang(module, docPtr);
+    this.marked = fileStructure?.marked ?? false;
     this.pageCache = new Map();
     this.ownedFonts = new Map();
     this._disposed = false;
@@ -75,9 +113,7 @@ export class EditorDocument {
     // footprint; past a point the gradient repair is not worth that.
     const keep = prepared.length <= MAX_RETAINED_BYTES ? prepared : EMPTY;
     const fileStructure =
-      keep.length > 0 && module.FPDFCatalog_IsTagged(docPtr)
-        ? await readFileStructure(keep).catch(() => null)
-        : null;
+      keep.length > 0 ? await readFileStructure(keep).catch(() => null) : null;
     return new EditorDocument(module, docPtr, keep, fileStructure);
   }
 
@@ -176,19 +212,275 @@ export class EditorDocument {
         this.encrypted() ? "encrypted" : "unreadable",
       );
     }
-    const page = this.fileStructure.get(pageIndex);
-    if (!page) return new PageStructure([]);
+    const page = this.fileStructure.pages.get(pageIndex);
+    if (!page) return new PageStructure([], null, 0);
     if (page.slotCount === null) return new PageStructure([], "unreadable");
-    return new PageStructure(page.elements, null, page.slotCount);
+    return new PageStructure(page.elements, null, page.slotCount, (key) =>
+      this.retaggedAs(key),
+    );
   }
 
-  /** True when the catalog marks the file as tagged (ISO 32000-1 14.7.1). */
-  isTagged(): boolean {
+  /**
+   * The headings in reading order, the session's retags and added elements
+   * applied. Null when the file's structure tree could not be read, which
+   * leaves nothing to check them against.
+   */
+  headings(): DocumentHeading[] | null {
+    if (!this.fileStructure) return null;
+    const blocks: OutlineBlock[] = this.fileStructure.blocks.map(
+      ({ key, type, pageIndex, mcids }) => ({
+        key,
+        type: this.retaggedAs(key) ?? type,
+        pageIndex,
+        mcids,
+      }),
+    );
+    for (const [pageIndex, structure] of this.structureCache) {
+      for (const edit of this.addedElementEdits(pageIndex, structure)) {
+        const { type, after } = edit.newElement!;
+        const anchor = after === null ? null : structure.block(after)?.key;
+        blocks.splice(insertionPoint(blocks, pageIndex, anchor ?? null), 0, {
+          key: structure.block(edit.mcid)!.key,
+          type,
+          pageIndex,
+          mcids: [edit.mcid],
+        });
+      }
+      for (const edit of this.cutEdits(pageIndex, structure)) {
+        const owner = structure.element(edit.cut!.from[0])!.block.key;
+        applyCut(blocks, pageIndex, edit, owner, structure);
+      }
+    }
+    return blocks.flatMap(({ type, pageIndex, mcids, partOf }) =>
+      isHeadingType(type)
+        ? [{ type, pageIndex, mcids, ...(partOf && { partOf }) }]
+        : [],
+    );
+  }
+
+  /** The type the session has retagged block `key` as; null when it has not. */
+  retaggedAs(key: string): StructureType | null {
+    return this.retags.get(key)?.type ?? null;
+  }
+
+  /**
+   * Retag the block the text `mcid` marks belongs to as `type`. Null, or the
+   * type it has in the file, drops the change. Throws when cannotRetag
+   * refuses it: a retag the save cannot write would fail every later save.
+   */
+  setRetag(pageIndex: number, mcid: number, type: StructureType | null): void {
+    const structure = this.structure(pageIndex);
+    const blocker = structure.cannotRetag(mcid);
+    if (blocker) throw new Error(`MCID ${mcid} cannot be retagged: ${blocker}`);
+    const block = structure.element(mcid)!.block;
+    // An added element is not in the file yet: its type is just changed.
+    const added = structure.addedBlockMcid(block.key);
+    if (added !== null) {
+      if (type !== null) structure.setAddedType(added, type);
+      return;
+    }
+    if (type === null || type === block.type) {
+      this.retags.delete(block.key);
+    } else {
+      // The save climbs from the element owning this to the same block.
+      const address = structure.fileMcid(mcid)!;
+      this.retags.set(block.key, { pageIndex, mcid: address, type });
+    }
+  }
+
+  /** The language the document is read in, as the session has it; null when unknown. */
+  documentLanguage(): string | null {
+    return this.documentLangEdit === undefined
+      ? this.fileDocumentLang
+      : this.documentLangEdit;
+  }
+
+  /** Why the save cannot write the document's language, or null when it can. */
+  cannotSetDocumentLanguage(): ReadOnlyReason | null {
+    return this.encrypted() ? "encrypted" : null;
+  }
+
+  /** Set or, with null, remove the document's language. Throws when cannotSetDocumentLanguage refuses it. */
+  setDocumentLanguage(lang: string | null): void {
+    const blocker = this.cannotSetDocumentLanguage();
+    if (blocker) throw new Error(`The document language is ${blocker}`);
+    this.documentLangEdit = lang === this.fileDocumentLang ? undefined : lang;
+  }
+
+  /** The unsaved document language, for the save; undefined when unchanged. */
+  documentLanguageEdit(): string | null | undefined {
+    return this.documentLangEdit;
+  }
+
+  /**
+   * Every language the document is read in as the session has it: its own
+   * and each element's. An element's from the file is left out once the
+   * session changes it; one PDFium alone reads is left out unless set here.
+   */
+  languagesInUse(): string[] {
+    const edited = new Map<string, string | null>();
+    for (const structure of this.structureCache.values()) {
+      for (const [key, lang] of structure.ownLangEdits()) edited.set(key, lang);
+    }
+    for (const [key, { lang }] of this.blockLangs) edited.set(key, lang);
+    const fromFile = [...(this.fileStructure?.languages ?? [])].map(
+      ([key, { lang }]) => (edited.has(key) ? null : lang),
+    );
+    return [
+      ...new Set(
+        [this.documentLanguage(), ...fromFile, ...edited.values()].filter(
+          (lang): lang is string => lang !== null,
+        ),
+      ),
+    ];
+  }
+
+  /**
+   * The language of the block the text `mcid` marks belongs to; null when no
+   * element owns it.
+   */
+  textLanguage(pageIndex: number, mcid: number): TextLanguage | null {
+    const block = this.structure(pageIndex).block(mcid);
+    if (!block) return null;
+    const structure = this.structure(pageIndex);
+    // An added block's parent is chosen by the save, so it is read as the
+    // document's.
+    if (structure.addedBlockMcid(block.key) !== null) {
+      return {
+        own: structure.ownLang(block.key),
+        inherited: this.documentLanguage(),
+      };
+    }
+    const file = this.fileStructure?.languages.get(block.key);
+    const edit = this.blockLangs.get(block.key);
+    return {
+      own: edit ? edit.lang : (file?.lang ?? null),
+      inherited: this.inheritedLanguage(
+        pageIndex,
+        block.key,
+        this.documentLanguage(),
+      ),
+    };
+  }
+
+  /**
+   * The language of element `key`, one marking part of the text `mcid`
+   * marks, read inside that text's block. Throws when the page has no such
+   * element.
+   */
+  innerLanguage(pageIndex: number, mcid: number, key: string): TextLanguage {
+    const block = this.textLanguage(pageIndex, mcid);
+    return {
+      own: this.structure(pageIndex).ownLang(key),
+      inherited: this.inheritedLanguage(
+        pageIndex,
+        key,
+        block ? effectiveLanguage(block) : this.documentLanguage(),
+      ),
+    };
+  }
+
+  private inheritedLanguage(
+    pageIndex: number,
+    key: string,
+    fallback: string | null,
+  ): string | null {
+    const languages = this.fileStructure?.languages;
+    const element = languages?.get(key);
+    if (!languages || !element) return fallback;
+    const edits = this.structure(pageIndex).ownLangEdits();
+    const seen = new Set([key]);
+    let parent = element.parent;
+    while (parent !== null && !seen.has(parent)) {
+      seen.add(parent);
+      const ancestor = languages.get(parent);
+      if (!ancestor) break;
+      const blockEdit = this.blockLangs.get(parent);
+      const lang = blockEdit
+        ? blockEdit.lang
+        : edits.has(parent)
+          ? edits.get(parent)!
+          : ancestor.lang;
+      if (lang !== null) return lang;
+      parent = ancestor.parent;
+    }
+    return this.documentLanguage();
+  }
+
+  /**
+   * Set or, with null, remove the /Lang of the block the text `mcid` marks
+   * belongs to. Throws when cannotRetag refuses the block, or the page's
+   * save cannot write it.
+   */
+  setTextLanguage(pageIndex: number, mcid: number, lang: string | null): void {
+    const structure = this.structure(pageIndex);
+    const blocker = structure.cannotSetLanguage(mcid);
+    if (blocker) {
+      throw new Error(`MCID ${mcid} cannot take a language: ${blocker}`);
+    }
+    const block = structure.block(mcid)!;
+    if (structure.addedBlockMcid(block.key) !== null) {
+      structure.setOwnLang(block.key, lang);
+      return;
+    }
+    const fileLang = this.fileStructure?.languages.get(block.key)?.lang ?? null;
+    if (lang === fileLang) {
+      this.blockLangs.delete(block.key);
+    } else {
+      // The save climbs from the element owning this to the same block.
+      const address = structure.fileMcid(mcid)!;
+      this.blockLangs.set(block.key, { pageIndex, mcid: address, lang });
+    }
+  }
+
+  /**
+   * True when the catalog marks the file as tagged (ISO 32000-1 14.7.1), or
+   * the save can write tags into it, creating its structure tree if need be.
+   * Not a promise that tags can be edited: an encrypted tagged file is true
+   * here and read-only in its PageStructure, which decides that.
+   */
+  treatAsTagged(): boolean {
+    if (this.fileStructure) return true;
     try {
       return this.module.FPDFCatalog_IsTagged(this.docPtr);
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Whether the saved file declares itself tagged (/MarkInfo /Marked). Kept
+   * apart from the tags themselves so unfinished tags do not claim the file is
+   * tagged, which readers that honour the flag would then read by.
+   */
+  markedTagged(): boolean {
+    return this.marked;
+  }
+
+  /** False when the file cannot be parsed or is encrypted: the flag is fixed. */
+  canSetMarkedTagged(): boolean {
+    return this.fileStructure !== null;
+  }
+
+  /** Throws when canSetMarkedTagged() is false. */
+  setMarkedTagged(marked: boolean): void {
+    if (!this.canSetMarkedTagged()) {
+      throw new Error("this file's tagged flag can't be changed");
+    }
+    this.marked = marked;
+  }
+
+  /** True when the save must write /MarkInfo /Marked. */
+  markedTaggedChanged(): boolean {
+    return (
+      this.fileStructure !== null && this.marked !== this.fileStructure.marked
+    );
+  }
+
+  /** True when the saved file will have a structure tree, the file's own or one the save creates. */
+  hasStructureTree(): boolean {
+    if (this.fileStructure?.hasTree) return true;
+    return this.structureEdits().some((edit) => edit.newElement);
   }
 
   private encrypted(): boolean {
@@ -202,33 +494,109 @@ export class EditorDocument {
 
   /** Every unsaved structure edit, in the form the save pass takes. */
   structureEdits(): StructureEdit[] {
-    return [...this.structureCache].flatMap(([pageIndex, structure]) => [
-      ...structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
-      ...this.addedFigureEdits(pageIndex, structure),
-    ]);
+    const retags = [...this.retags.values()].map(
+      ({ pageIndex, mcid, type }) => ({
+        pageIndex,
+        mcid,
+        type,
+        decorative: false,
+      }),
+    );
+    const blockLangs = [...this.blockLangs.values()].map(
+      ({ pageIndex, mcid, lang }) => ({
+        pageIndex,
+        mcid,
+        blockLang: lang,
+        decorative: false,
+      }),
+    );
+    return [
+      ...[...this.structureCache].flatMap(([pageIndex, structure]) => [
+        ...structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
+        ...structure.innerEdits().map(({ mcid, type }) => ({
+          pageIndex,
+          mcid,
+          ownType: type,
+          decorative: false,
+        })),
+        ...structure.langEdits().map(({ mcid, lang }) => ({
+          pageIndex,
+          mcid,
+          lang,
+          decorative: false,
+        })),
+        ...this.addedElementEdits(pageIndex, structure),
+        ...this.cutEdits(pageIndex, structure),
+      ]),
+      ...retags,
+      ...blockLangs,
+    ];
   }
 
   /**
-   * The page's added figures in reading order, so one placed after another
-   * finds it already in the tree. A figure whose image was deleted is left
-   * out: there is nothing left for it to describe.
+   * The page's added elements, each after the added element it reads after,
+   * so it finds that already in the tree. An element whose content was
+   * deleted is left out: there is nothing left for it to tag.
    */
-  private addedFigureEdits(
+  private addedElementEdits(
     pageIndex: number,
     structure: PageStructure,
   ): StructureEdit[] {
     const page = this.pageCache.get(pageIndex);
-    if (!page) return [];
-    const figures = structure.addedFigures();
-    return imagesInReadingOrder(page).flatMap((image) => {
-      const figure = figures.find((f) => f.mcid === image.mcid);
-      if (!figure) return [];
+    const added = new Map(
+      structure.addedElements().map((element) => [element.mcid, element]),
+    );
+    if (!page || added.size === 0) return [];
+    const content = taggedContentInReadingOrder(page);
+    const carried = new Set(content.map(({ mcid }) => mcid));
+    const edits = new Map<number, StructureEdit>();
+    for (const item of content) {
+      const element = added.get(item.mcid);
+      if (!element) continue;
+      added.delete(item.mcid);
+      const { follows } = element;
+      const after =
+        follows === null || (follows !== undefined && carried.has(follows))
+          ? follows
+          : precedingTaggedMcid(page, item);
+      edits.set(element.mcid, {
+        pageIndex,
+        mcid: element.mcid,
+        alt: element.alt,
+        lang: element.lang,
+        decorative: false,
+        newElement: { type: element.type, after },
+      });
+    }
+    return anchorsFirst(edits);
+  }
+
+  /**
+   * The page's cuts, in the order made. One whose text was since deleted is
+   * left out, and a part before or after it that was deleted is not kept.
+   */
+  private cutEdits(
+    pageIndex: number,
+    structure: PageStructure,
+  ): StructureEdit[] {
+    const page = this.pageCache.get(pageIndex);
+    const cuts = structure.cutElements();
+    if (!page || cuts.length === 0) return [];
+    const carried = carriedMcids(this.module, page.pagePtr);
+    return cuts.flatMap(({ mcid, type, alt, lang, cut }) => {
+      if (!carried.has(mcid)) return [];
+      const kept = (part: number | null) =>
+        part !== null && carried.has(part) ? part : null;
+      const before = kept(cut.before);
+      const after = kept(cut.after);
       return [
         {
           pageIndex,
-          ...figure,
+          mcid,
+          alt,
+          lang,
           decorative: false,
-          newFigure: { after: precedingTaggedMcid(page, image) },
+          cut: { type, from: cut.from, before, after },
         },
       ];
     });
@@ -286,4 +654,130 @@ export class EditorDocument {
     closeDocAndFreeBuffer(this.module, this.docPtr);
     releaseScratch(this.module);
   }
+}
+
+/** The catalog /Lang; null when absent, empty, or unreadable. */
+function readCatalogLang(
+  module: WrappedPdfiumModule,
+  docPtr: number,
+): string | null {
+  try {
+    return readString(module, docPtr, module.FPDFCatalog_GetLanguage) || null;
+  } catch {
+    return null;
+  }
+}
+
+interface OutlineBlock {
+  key: string;
+  /** Null for an untyped block. */
+  type: StructureType | null;
+  pageIndex: number | null;
+  /** In reading order. */
+  mcids: number[];
+  partOf?: number[];
+}
+
+/**
+ * Change `blocks` as cutElements changes the tree for `edit`: an inline or
+ * removed cut stays in its owner; any other splits the owner around it, the
+ * owner keeping what is read before, a block of the owner's type taking what
+ * is read after. Must stay in step with cutElements.
+ */
+function applyCut(
+  blocks: OutlineBlock[],
+  pageIndex: number,
+  edit: StructureEdit,
+  ownerKey: string,
+  structure: PageStructure,
+): void {
+  const { type, from, before, after } = edit.cut!;
+  // By MCID before key: a split owner's key stays on only one of its parts.
+  let at = blocks.findIndex(
+    (block) => block.pageIndex === pageIndex && block.mcids.includes(from[0]),
+  );
+  if (at < 0) at = blocks.findIndex((block) => block.key === ownerKey);
+  const owner = blocks.at(at);
+  const first = owner?.mcids.indexOf(from[0]) ?? -1;
+  const last = owner?.mcids.indexOf(from.at(-1)!) ?? -1;
+  const read = owner
+    ? [...owner.mcids.slice(0, first), ...(before === null ? [] : [before])]
+    : [];
+  const later = owner
+    ? [...(after === null ? [] : [after]), ...owner.mcids.slice(last + 1)]
+    : [];
+
+  if (type === null || isInlineType(type)) {
+    if (owner && first >= 0) owner.mcids = [...read, edit.mcid, ...later];
+    return;
+  }
+  const cut: OutlineBlock = {
+    key: structure.block(edit.mcid)!.key,
+    type,
+    pageIndex,
+    mcids: [edit.mcid],
+  };
+  if (!owner || first < 0 || last < 0) {
+    blocks.splice(at < 0 ? blocks.length : at + 1, 0, cut);
+    return;
+  }
+  cut.partOf = [...owner.mcids, ...read, ...later];
+  if (read.length === 0 && later.length === 0) {
+    blocks[at] = { ...cut, key: owner.key };
+  } else if (read.length === 0) {
+    owner.mcids = later;
+    blocks.splice(at, 0, cut);
+  } else if (later.length === 0) {
+    owner.mcids = read;
+    blocks.splice(at + 1, 0, cut);
+  } else {
+    owner.mcids = read;
+    const rest = { ...owner, key: `${owner.key}:rest`, mcids: later };
+    blocks.splice(at + 1, 0, cut, rest);
+  }
+}
+
+/**
+ * Where an added element goes among `blocks`, as the save places it: after
+ * the block `anchor` names on its page, else before the page's first block,
+ * else before the next page's.
+ */
+function insertionPoint(
+  blocks: readonly { key: string; pageIndex: number | null }[],
+  pageIndex: number,
+  anchor: string | null,
+): number {
+  // Added keys repeat across pages; a file block spanning pages is listed
+  // under its first.
+  const onPage = blocks.findIndex(
+    (block) => block.key === anchor && block.pageIndex === pageIndex,
+  );
+  const at =
+    onPage >= 0 ? onPage : blocks.findIndex((block) => block.key === anchor);
+  if (at >= 0) return at + 1;
+  const next = blocks.findIndex(
+    (block) => block.pageIndex !== null && block.pageIndex >= pageIndex,
+  );
+  return next >= 0 ? next : blocks.length;
+}
+
+/**
+ * `edits`, keyed by MCID, reordered so each comes after the edit adding the
+ * element it is placed after. A cycle is broken where it closes, that element
+ * placing as though its anchor were not added.
+ */
+function anchorsFirst(edits: Map<number, StructureEdit>): StructureEdit[] {
+  const ordered: StructureEdit[] = [];
+  for (const start of [...edits.keys()]) {
+    const chain: StructureEdit[] = [];
+    let mcid: number | null = start;
+    while (mcid !== null && edits.has(mcid)) {
+      const edit: StructureEdit = edits.get(mcid)!;
+      edits.delete(mcid);
+      chain.push(edit);
+      mcid = edit.newElement!.after;
+    }
+    ordered.push(...chain.reverse());
+  }
+  return ordered;
 }

@@ -1,6 +1,7 @@
 package stirling.software.SPDF.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +17,8 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.poi.hslf.usermodel.HSLFSlideShow;
+import org.apache.poi.hslf.usermodel.HSLFTextParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +40,7 @@ class OfficeConversionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new OfficeConversionService(properties, endpoints);
+        service = new OfficeConversionService(properties, endpoints, null, null);
     }
 
     @ParameterizedTest(name = "legacy={0}, LibreOffice={1} -> Stirling Office Convert {2}")
@@ -75,6 +78,24 @@ class OfficeConversionServiceTest {
     }
 
     @Test
+    void convertsPdfToLegacyPowerPoint() throws Exception {
+        Path ppt = dir.resolve("out.ppt");
+        try (PDDocument pdf = textPdf("Hello from Stirling")) {
+            service.convert(pdf, ppt, "ppt", service.settings());
+        }
+
+        try (var in = Files.newInputStream(ppt);
+                HSLFSlideShow slides = new HSLFSlideShow(in)) {
+            assertThat(slides.getSlides()).hasSize(1);
+            assertThat(slides.getSlides().getFirst().getTextParagraphs())
+                    .anySatisfy(
+                            paragraphs ->
+                                    assertThat(HSLFTextParagraph.getText(paragraphs))
+                                            .contains("Hello from Stirling"));
+        }
+    }
+
+    @Test
     void convertsWordToPdf() throws Exception {
         Path docx = dir.resolve("in.docx");
         try (XWPFDocument word = new XWPFDocument();
@@ -84,7 +105,7 @@ class OfficeConversionServiceTest {
         }
         Path pdf = dir.resolve("out.pdf");
         properties.getSystem().setStirlingOfficeConversion(true);
-        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties);
+        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties, null);
 
         assertThat(toPdf.handles("docx")).isTrue();
         toPdf.convert(docx, pdf);
@@ -96,7 +117,7 @@ class OfficeConversionServiceTest {
 
     @Test
     void leavesUnknownFormatsAndLegacyToLibreOffice() {
-        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties);
+        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties, null);
         assertThat(toPdf.handles("html")).isFalse();
 
         properties.getSystem().setStirlingOfficeConversion(false);
@@ -106,7 +127,7 @@ class OfficeConversionServiceTest {
 
     @Test
     void fallsBackOnlyWhenLibreOfficeCanHelp() {
-        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties);
+        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties, null);
         when(endpoints.isGroupEnabled("LibreOffice")).thenReturn(true);
 
         assertThat(toPdf.canFallBack(new IOException("bad file"))).isTrue();
@@ -115,6 +136,18 @@ class OfficeConversionServiceTest {
 
         when(endpoints.isGroupEnabled("LibreOffice")).thenReturn(false);
         assertThat(toPdf.canFallBack(new IOException("bad file"))).isFalse();
+    }
+
+    @Test
+    void refusesPptBeyondThePageCap() throws Exception {
+        Path target = dir.resolve("out.ppt");
+        try (PDDocument pdf = new PDDocument()) {
+            for (int i = 0; i < OfficeConversionService.MAX_PPT_SLIDES; i++) {
+                pdf.addPage(new PDPage());
+            }
+            assertThatThrownBy(() -> service.convert(pdf, target, "ppt", service.settings()))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
     }
 
     private static PDDocument textPdf(String text) throws Exception {
