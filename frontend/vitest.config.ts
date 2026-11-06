@@ -5,7 +5,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
-import { embedpdfFontFallbackPlugin } from "./scripts/embedpdfFontFallbackPatch.mts";
+import { embedpdfEnginesPlugin } from "./scripts/embedpdfEnginesPatch.mts";
 
 const frontendPackage: { dependencies: Record<string, string> } = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
@@ -70,11 +70,11 @@ export default defineConfig({
           environment: "jsdom",
           globals: true,
           setupFiles: ["./src/editor/core/setupTests.ts"],
-          // Transformed rather than externalized, so the font fallback patch applies.
+          // Transformed rather than externalized, so the engine patches apply.
           server: { deps: { inline: [/@embedpdf\/engines/] } },
         },
         plugins: [
-          embedpdfFontFallbackPlugin(),
+          embedpdfEnginesPlugin(),
           iconSvgr(),
           react(),
           tsconfigPaths({
@@ -172,6 +172,21 @@ export default defineConfig({
         esbuild: {
           target: "es2020",
         },
+      },
+      {
+        test: {
+          name: "scripts",
+          include: ["scripts/**/*.test.ts"],
+          environment: "node",
+          testTimeout: 10000,
+          hookTimeout: 10000,
+          pool: process.env.CI ? "forks" : "threads",
+        },
+        plugins: [
+          tsconfigPaths({
+            projects: ["./tsconfig.core.vite.json"],
+          }),
+        ],
       },
     ],
   },

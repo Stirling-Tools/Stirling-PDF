@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
 import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useTranslation } from "react-i18next";
@@ -55,6 +55,7 @@ export function PdfViewerToolbar({
   const [pageInput, setPageInput] = useState(
     scrollState.currentPage || currentPage,
   );
+  const committedPageRef = useRef(pageInput);
   const [displayZoomPercent, setDisplayZoomPercent] = useState(
     () => zoomState.zoomPercent || 100,
   );
@@ -64,18 +65,22 @@ export function PdfViewerToolbar({
   const isDualPageActive = spreadMode !== SpreadMode.None;
   const isCoverPageActive = spreadMode === SpreadMode.Even;
 
-  // Register for immediate scroll updates and sync with actual scroll state
+  // Keep the subscription; sync live state in a separate effect.
   useEffect(() => {
     const unregister = registerImmediateScrollUpdate(
       (currentPage, _totalPages) => {
         setPageInput(currentPage);
       },
     );
-    setPageInput(scrollState.currentPage);
     return () => {
       unregister?.();
     };
-  }, [registerImmediateScrollUpdate, scrollState.currentPage]);
+  }, [registerImmediateScrollUpdate]);
+
+  useEffect(() => {
+    setPageInput(scrollState.currentPage);
+    committedPageRef.current = scrollState.currentPage;
+  }, [scrollState.currentPage]);
 
   // A carried zoom's fit pass is intermediate, so the readout holds until its
   // settled tick re-syncs from the live state.
@@ -85,16 +90,17 @@ export function PdfViewerToolbar({
       setDisplayZoomPercent(percent);
       setZoomLevel(getZoomState().level);
     });
+    return () => {
+      unregister?.();
+    };
+  }, [registerImmediateZoomUpdate, getZoomState]);
+
+  useEffect(() => {
     if (!zoomRestorePendingRef.current) {
       setDisplayZoomPercent(zoomState.zoomPercent || 100);
       setZoomLevel(zoomState.level);
     }
-    return () => {
-      unregister?.();
-    };
   }, [
-    registerImmediateZoomUpdate,
-    getZoomState,
     zoomState.zoomPercent,
     zoomState.level,
     zoomRestorePendingRef,
@@ -108,11 +114,14 @@ export function PdfViewerToolbar({
     const unregister = registerImmediateSpreadUpdate((mode) => {
       setSpreadMode(mode);
     });
-    setSpreadMode(spreadState.spreadMode);
     return () => {
       unregister?.();
     };
-  }, [registerImmediateSpreadUpdate, spreadState.spreadMode]);
+  }, [registerImmediateSpreadUpdate]);
+
+  useEffect(() => {
+    setSpreadMode(spreadState.spreadMode);
+  }, [spreadState.spreadMode]);
 
   const handleZoomOut = () => {
     zoomActions.zoomOut();
@@ -136,6 +145,20 @@ export function PdfViewerToolbar({
       onPageChange(page);
     }
     setPageInput(page);
+  };
+
+  // Commit on Enter or blur so typing "120" scrolls once.
+  const commitPageInput = () => {
+    const page = Number(pageInput);
+    if (!isNaN(page) && page >= 1 && page <= scrollState.totalPages) {
+      // Enter already committed; don't scroll again on the following blur.
+      if (page !== committedPageRef.current) {
+        committedPageRef.current = page;
+        handlePageNavigation(page);
+      }
+    } else {
+      setPageInput(scrollState.currentPage);
+    }
   };
 
   const handleDualPageToggle = () => {
@@ -223,12 +246,14 @@ export function PdfViewerToolbar({
       <NumberInput
         value={pageInput}
         onChange={(value) => {
-          const page = Number(value);
-          setPageInput(page);
-          if (!isNaN(page) && page >= 1 && page <= scrollState.totalPages) {
-            handlePageNavigation(page);
+          setPageInput(Number(value));
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+            commitPageInput();
           }
         }}
+        onBlur={commitPageInput}
         min={1}
         max={scrollState.totalPages}
         hideControls
