@@ -1,8 +1,10 @@
+import { Blob as NodeBlob } from "node:buffer";
 import { describe, it, expect, vi } from "vitest";
 import {
   containsEncryptMarker,
   looksEncryptedFromTrailer,
 } from "@editor/utils/pdfEncryptionProbe";
+import { markStoredBlob } from "@editor/utils/storedBlob";
 
 /** PDF-shaped bytes with `trailer` written at the very end. */
 function bytesEndingWith(trailer: string, size: number): Uint8Array {
@@ -75,4 +77,15 @@ describe("bounded encryption reads", () => {
       expect(slices).toHaveBeenCalledTimes(location === "tail" ? 1 : 2);
     },
   );
+
+  it("never slices a stored blob", async () => {
+    // Node's Blob: jsdom's has no stream(), which is how a stored blob is read.
+    const blob = new NodeBlob([
+      bytesEndingWith("trailer << /Encrypt 8 0 R >>", 256 * 1024),
+    ]) as unknown as Blob;
+    markStoredBlob(blob);
+    const slices = vi.spyOn(blob, "slice");
+    expect(await looksEncryptedFromTrailer(blob)).toBe(true);
+    expect(slices).not.toHaveBeenCalled();
+  });
 });

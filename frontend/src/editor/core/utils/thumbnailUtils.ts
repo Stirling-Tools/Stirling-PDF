@@ -11,6 +11,7 @@ import {
 } from "@editor/utils/pdfiumPageRender";
 import { jpegExifOrientation } from "@editor/utils/jpegOrientation";
 import { getDocumentBytes } from "@editor/services/documentBytesCache";
+import { readBlobSlice } from "@editor/utils/blobSlice";
 import { getPdfAccess } from "@editor/services/pdfAccessService";
 import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
 import { isDamagedPdfError } from "@editor/utils/pdfDamage";
@@ -258,9 +259,7 @@ async function readImageDimensions(
 ): Promise<{ width: number; height: number } | null> {
   let bytes: Uint8Array;
   try {
-    bytes = new Uint8Array(
-      await file.slice(0, IMAGE_HEADER_PROBE_BYTES).arrayBuffer(),
-    );
+    bytes = await readBlobSlice(file, 0, IMAGE_HEADER_PROBE_BYTES);
   } catch {
     return null;
   }
@@ -342,9 +341,7 @@ async function readImageDimensions(
     const limit = Math.min(file.size, IMAGE_HEADER_PROBE_LIMIT);
     for (let end = bytes.length; ; end = Math.min(end * 2, limit)) {
       const window =
-        end === bytes.length
-          ? bytes
-          : new Uint8Array(await file.slice(0, end).arrayBuffer());
+        end === bytes.length ? bytes : await readBlobSlice(file, 0, end);
       const dimensions = readJpegDimensions(
         window,
         new DataView(window.buffer, window.byteOffset, window.byteLength),
@@ -521,8 +518,11 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
     const scale = calculateScaleFromFileSize(file.size);
 
     // Only read first 2MB for thumbnail generation to save memory
-    const chunk = file.slice(0, Math.min(LINEARIZED_PREFIX_BYTES, file.size));
-    const arrayBuffer = await chunk.arrayBuffer();
+    const { buffer: arrayBuffer } = await readBlobSlice(
+      file,
+      0,
+      LINEARIZED_PREFIX_BYTES,
+    );
 
     try {
       return await generatePDFThumbnail(
@@ -578,7 +578,11 @@ export async function generateThumbnailWithMetadata(
       if (!getPdfAccess(file) && (await looksEncryptedFromTrailer(file))) {
         return { thumbnail: "", pageCount: 1, isEncrypted: true };
       }
-      const chunk = await file.slice(0, LINEARIZED_PREFIX_BYTES).arrayBuffer();
+      const { buffer: chunk } = await readBlobSlice(
+        file,
+        0,
+        LINEARIZED_PREFIX_BYTES,
+      );
       const result = await renderPdfThumbnailPdfium(
         chunk,
         scale,
@@ -661,7 +665,7 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
       return { unrotated: encrypted, rotated: { ...encrypted } };
     }
     const buffer = isLarge
-      ? await file.slice(0, LINEARIZED_PREFIX_BYTES).arrayBuffer()
+      ? (await readBlobSlice(file, 0, LINEARIZED_PREFIX_BYTES)).buffer
       : await getDocumentBytes(file);
     parsedBytes = buffer.byteLength;
     const pair = await renderPdfThumbnailPairPdfium(
