@@ -198,7 +198,7 @@ export function SetupChecklist({
               : [],
             done: teamSize > 1,
           },
-          // No single sign-on step: on Stirling Cloud it needs self-hosting (see DeploymentOptions).
+          // No single sign-on step: on Stirling Cloud it needs self-hosting (see DeploymentDetails).
         ]
       : kind === "selfhost"
         ? [

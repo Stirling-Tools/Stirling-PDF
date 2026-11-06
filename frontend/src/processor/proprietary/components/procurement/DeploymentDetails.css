@@ -1,0 +1,65 @@
+/* The deployment choices stacked on the left, the chosen one's details beside them; one column
+   when the form is too narrow for both. */
+.ent-deploy-wrap {
+  container-type: inline-size;
+}
+
+.ent-deploy-choice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.ent-deploy-choice .portal-qb__opts {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.ent-deploy-choice .portal-qb__opt {
+  flex: none;
+  min-width: 0;
+}
+
+@container (max-width: 26rem) {
+  .ent-deploy-choice {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ent-deploy {
+  padding: 0.875rem 1rem;
+  border-radius: 9px;
+  background: var(--c-surface-sunken);
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+}
+
+.ent-deploy__tagline {
+  margin: 0;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.ent-deploy__points {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0.625rem 0 0;
+  padding-left: 1.125rem;
+}
+
+.ent-deploy__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+  font-weight: 600;
+  color: var(--c-accent-text);
+  text-decoration: none;
+}
+
+.ent-deploy__more:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}

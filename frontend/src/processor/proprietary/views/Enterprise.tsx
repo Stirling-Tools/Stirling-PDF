@@ -38,7 +38,6 @@ import {
   StageTracker,
   TrialPanel,
 } from "@processor/components/procurement/DealPanels";
-import { DeploymentOptions } from "@processor/components/procurement/DeploymentOptions";
 import { LicensePanel } from "@processor/components/procurement/ProcurementStages";
 import { SetupChecklist } from "@processor/components/procurement/SetupChecklist";
 import { trialLeftLabel } from "@processor/components/procurement/format";
@@ -488,7 +487,6 @@ function Landing({ children }: { children: ReactNode }) {
             </li>
           ))}
         </ul>
-        <DeploymentOptions />
       </section>
       <Card padding="loose" className="ent__panel">
         {children}

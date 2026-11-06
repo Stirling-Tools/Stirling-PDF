@@ -9235,19 +9235,12 @@ tickCompliance = "SCIM, data residency and uptime SLAs"
 tickDeploy = "Run it on Stirling Cloud, your own servers, or fully air-gapped"
 title = "Stirling Enterprise"
 
-[portal.enterprise.options]
-label = "Ways to run it"
-next = "Next"
-previous = "Previous"
-slideOf = "{{n}} of {{total}}"
-
 [portal.enterprise.options.airgap]
 more = "Offline licence docs"
 point1 = "Activated with a licence file that works offline, not a key checked online"
 point2 = "Installs like self-hosted, from an image you bring across"
 point3 = "Sign-in stays inside your network"
 tagline = "Self-hosted on a network with no internet access."
-title = "Air-gapped"
 
 [portal.enterprise.options.cloud]
 more = "Stirling Cloud docs"
@@ -9255,7 +9248,6 @@ point1 = "Your team signs in at stirling.com/app"
 point2 = "Runs on AWS, with stored files encrypted at rest"
 point3 = "Single sign-on through your own identity provider needs self-hosting"
 tagline = "Hosted for you, with nothing to install."
-title = "Stirling Cloud"
 
 [portal.enterprise.options.selfhost]
 more = "Self-hosting docs"
@@ -9263,7 +9255,6 @@ point1 = "Install with Docker, or the Helm chart on Kubernetes"
 point2 = "Documents are processed on your own infrastructure"
 point3 = "OAuth2, OIDC or SAML single sign-on"
 tagline = "On your own servers, on-premises or in your own cloud."
-title = "Self-hosted"
 
 [portal.enterprise.review]
 back = "Return to {{stage}}"
