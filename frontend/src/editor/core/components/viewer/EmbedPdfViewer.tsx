@@ -2150,7 +2150,9 @@ const EmbedPdfViewerContent = ({
           (isAttachmentSidebarVisible ? sidebarWidthRem : 0)
         }
         file={effectiveFile?.file ?? null}
-        documentCacheKey={bookmarkCacheKey}
+        documentCacheKey={
+          rightsManagedOpened ? `${bookmarkCacheKey}:opened` : bookmarkCacheKey
+        }
         onApplyLayers={handleLayerApply}
         onLayersDetected={setHasLayers}
       />
