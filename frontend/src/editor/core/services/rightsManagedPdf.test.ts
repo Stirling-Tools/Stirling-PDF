@@ -110,22 +110,61 @@ function protectionHeader(value: RightsManagedProtection): string {
     .replace(/=+$/, "");
 }
 
-async function openedFile(
+function openResponse(
   permissions: Partial<RightsManagedProtection["permissions"]>,
 ) {
-  const original = createStirlingFile(
-    new File([await wrapper("MicrosoftIRMServices")], "secret.pdf", {
-      type: "application/pdf",
-    }),
-  );
-  post.mockResolvedValueOnce({
+  return {
     data: new Blob(["%PDF-1.7 plaintext"]),
     headers: {
       "x-stirling-protection": protectionHeader(protection(permissions)),
     },
+  };
+}
+
+function statusWith(
+  accounts: { id: number; status: string }[],
+  available = true,
+) {
+  get.mockResolvedValue({
+    data: {
+      enabled: available,
+      available,
+      accounts: accounts.map((account) => ({
+        ...account,
+        email: `user${account.id}@contoso.com`,
+      })),
+    },
   });
+}
+
+async function lockedFile(name = "secret.pdf") {
+  return createStirlingFile(
+    new File([await wrapper("MicrosoftIRMServices")], name, {
+      type: "application/pdf",
+    }),
+  );
+}
+
+async function openedFile(
+  permissions: Partial<RightsManagedProtection["permissions"]>,
+) {
+  const original = await lockedFile();
+  post.mockResolvedValueOnce(openResponse(permissions));
   await openRightsManagedPdf(original, 7);
   return original;
+}
+
+function preflight(
+  files: Parameters<typeof preflightPdfOperation>[0],
+  endpoint = rotate,
+  combinesFiles = false,
+) {
+  return preflightPdfOperation(
+    files,
+    endpoint,
+    combinesFiles,
+    async () => true,
+  );
 }
 
 beforeEach(() => {
@@ -170,14 +209,9 @@ describe("Microsoft Purview detection", () => {
   });
 
   it("remembers which library files are protected so their rows can say so", async () => {
-    const file = createStirlingFile(
-      new File([await wrapper("MicrosoftIRMServices")], "a.pdf", {
-        type: "application/pdf",
-      }),
-    );
+    const file = await lockedFile("a.pdf");
     expect(isKnownRightsManagedPdf(file.fileId)).toBe(false);
     await isMicrosoftProtectedPdf(file);
-    await Promise.resolve();
     expect(isKnownRightsManagedPdf(file.fileId)).toBe(true);
     forgetRightsManagedPdfs([file.fileId]);
     expect(isKnownRightsManagedPdf(file.fileId)).toBe(false);
@@ -211,10 +245,7 @@ describe("opening a protected PDF", () => {
   });
 
   it("reports who to ask when the user has no rights", async () => {
-    const original = new File(
-      [await wrapper("MicrosoftIRMServices")],
-      "secret.pdf",
-    );
+    const original = await lockedFile();
     post.mockRejectedValueOnce(
       new AxiosError("Forbidden", "ERR_BAD_REQUEST", undefined, undefined, {
         status: 403,
@@ -269,30 +300,11 @@ describe("opening a protected PDF", () => {
 });
 
 describe("tools on protected PDFs", () => {
-  async function lockedFile(name = "secret.pdf") {
-    return createStirlingFile(
-      new File([await wrapper("MicrosoftIRMServices")], name, {
-        type: "application/pdf",
-      }),
-    );
-  }
-
   it("opens the document with the only connected Microsoft account", async () => {
-    get.mockResolvedValue({
-      data: {
-        enabled: true,
-        available: true,
-        accounts: [{ id: 7, email: "bob@contoso.com", status: "CONNECTED" }],
-      },
-    });
-    post.mockResolvedValueOnce({
-      data: new Blob(["%PDF-1.7 plaintext"]),
-      headers: {
-        "x-stirling-protection": protectionHeader(protection({ edit: true })),
-      },
-    });
+    statusWith([{ id: 7, status: "CONNECTED" }]);
+    post.mockResolvedValueOnce(openResponse({ edit: true }));
     const file = await lockedFile();
-    await preflightPdfOperation([file], rotate, false, async () => true);
+    await preflight([file]);
     expect(post).toHaveBeenCalledWith(
       "/api/v1/rights-management/open",
       expect.any(FormData),
@@ -302,19 +314,8 @@ describe("tools on protected PDFs", () => {
   });
 
   it("opens each selected document only once when several callers ask together", async () => {
-    get.mockResolvedValue({
-      data: {
-        enabled: true,
-        available: true,
-        accounts: [{ id: 7, email: "bob@contoso.com", status: "CONNECTED" }],
-      },
-    });
-    post.mockResolvedValue({
-      data: new Blob(["%PDF-1.7 plaintext"]),
-      headers: {
-        "x-stirling-protection": protectionHeader(protection({ edit: true })),
-      },
-    });
+    statusWith([{ id: 7, status: "CONNECTED" }]);
+    post.mockResolvedValue(openResponse({ edit: true }));
     const board = await lockedFile("board.pdf");
     const minutes = await lockedFile("minutes.pdf");
     await Promise.all([
@@ -327,98 +328,63 @@ describe("tools on protected PDFs", () => {
     expect(getOpenedRightsManagedPdf(minutes)).toBeTruthy();
   });
 
-  it("asks the user to open the document when more than one Microsoft account is connected", async () => {
-    get.mockResolvedValue({
-      data: {
-        enabled: true,
-        available: true,
-        accounts: [
-          { id: 7, email: "bob@contoso.com", status: "CONNECTED" },
-          { id: 8, email: "bob@fabrikam.com", status: "CONNECTED" },
-        ],
-      },
-    });
-    await expect(
-      preflightPdfOperation(
-        [await lockedFile()],
-        rotate,
-        false,
-        async () => true,
-      ),
-    ).rejects.toThrow("Open this Microsoft Purview protected PDF");
-    expect(post).not.toHaveBeenCalled();
-  });
-
-  it("says the server cannot open the document instead of sending the user to the viewer", async () => {
-    get.mockResolvedValue({
-      data: { enabled: false, available: false, accounts: [] },
-    });
-    await expect(
-      preflightPdfOperation(
-        [await lockedFile()],
-        rotate,
-        false,
-        async () => true,
-      ),
-    ).rejects.toThrow(
-      "This server cannot open Microsoft Purview protected PDFs",
-    );
-  });
-
-  it("asks the user to sign in when no Microsoft account is connected", async () => {
-    get.mockResolvedValue({
-      data: {
-        enabled: true,
-        available: true,
-        accounts: [{ id: 7, email: "bob@contoso.com", status: "EXPIRED" }],
-      },
-    });
-    await expect(
-      preflightPdfOperation(
-        [await lockedFile()],
-        rotate,
-        false,
-        async () => true,
-      ),
-    ).rejects.toThrow("Sign in with Microsoft in the viewer");
-  });
+  it.each([
+    {
+      situation: "more than one Microsoft account is connected",
+      accounts: [
+        { id: 7, status: "CONNECTED" },
+        { id: 8, status: "CONNECTED" },
+      ],
+      available: true,
+      message: "Open this Microsoft Purview protected PDF",
+    },
+    {
+      situation: "the server cannot open protected PDFs",
+      accounts: [],
+      available: false,
+      message: "This server cannot open Microsoft Purview protected PDFs",
+    },
+    {
+      situation: "no Microsoft account is connected",
+      accounts: [{ id: 7, status: "EXPIRED" }],
+      available: true,
+      message: "Sign in with Microsoft in the viewer",
+    },
+  ])(
+    "tells the user what to do when $situation",
+    async ({ accounts, available, message }) => {
+      statusWith(accounts, available);
+      await expect(preflight([await lockedFile()])).rejects.toThrow(message);
+      expect(post).not.toHaveBeenCalled();
+    },
+  );
 
   it("names the protected files when a tool would combine them", async () => {
     await expect(
-      preflightPdfOperation(
+      preflight(
         [await lockedFile("board.pdf"), await lockedFile("minutes.pdf")],
         "/api/v1/general/merge-pdfs",
         true,
-        async () => true,
       ),
     ).rejects.toThrow("Protected files: board.pdf, minutes.pdf.");
   });
 
   it("refuses when the user's rights do not include editing", async () => {
     const original = await openedFile({});
-    await expect(
-      preflightPdfOperation([original], rotate, false, async () => true),
-    ).rejects.toThrow("do not allow changes");
+    await expect(preflight([original])).rejects.toThrow("do not allow changes");
   });
 
   it("refuses tools that cannot keep the protection", async () => {
     const original = await openedFile({ edit: true });
     await expect(
-      preflightPdfOperation(
-        [original],
-        "/api/v1/convert/pdf/img",
-        false,
-        async () => true,
-      ),
+      preflight([original], "/api/v1/convert/pdf/img"),
     ).rejects.toThrow("cannot keep Microsoft Purview protection");
   });
 
   it("runs on the decrypted copy and re-protects every result like the original", async () => {
     const original = await openedFile({ edit: true });
     rememberUnencryptedPdf(original, 1);
-    await expect(
-      preflightPdfOperation([original], rotate, false, async () => true),
-    ).resolves.toBe(true);
+    await expect(preflight([original])).resolves.toBe(true);
 
     const working = await prepareUnlockedFile(original, rotate);
     expect(await working.text()).toBe("%PDF-1.7 plaintext");
