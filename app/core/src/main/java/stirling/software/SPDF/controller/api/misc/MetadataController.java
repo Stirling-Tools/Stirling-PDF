@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
-import java.util.Calendar;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -68,9 +67,10 @@ public class MetadataController {
     @Operation(
             summary = "Update a PDF's metadata",
             description =
-                    "Standard fields left out are cleared, so send the current values of"
-                            + " the others too (see get-info-on-pdf). Dates use yyyy/MM/dd HH:mm:ss."
-                            + " deleteAll=true removes all metadata.")
+                    "Standard fields left out are cleared unless keepOmitted=true, so"
+                            + " otherwise send the current values of the others too (see"
+                            + " get-info-on-pdf). Dates use yyyy/MM/dd HH:mm:ss. deleteAll=true"
+                            + " removes all metadata.")
     public ResponseEntity<Resource> metadata(@ModelAttribute MetadataRequest request)
             throws IOException {
 
@@ -79,6 +79,7 @@ public class MetadataController {
 
         // Extract metadata information
         boolean deleteAll = Boolean.TRUE.equals(request.getDeleteAll());
+        boolean keepOmitted = !deleteAll && Boolean.TRUE.equals(request.getKeepOmitted());
         String author = request.getAuthor();
         String creationDate = request.getCreationDate();
         String creator = request.getCreator();
@@ -110,6 +111,14 @@ public class MetadataController {
             subject = checkUndefined(subject);
             title = checkUndefined(title);
             trapped = checkUndefined(trapped);
+            if (keepOmitted) {
+                author = author != null ? author : info.getAuthor();
+                creator = creator != null ? creator : info.getCreator();
+                keywords = keywords != null ? keywords : info.getKeywords();
+                producer = producer != null ? producer : info.getProducer();
+                subject = subject != null ? subject : info.getSubject();
+                title = title != null ? title : info.getTitle();
+            }
 
             // If the "deleteAll" flag is set, remove all metadata from the document
             // information
@@ -169,20 +178,21 @@ public class MetadataController {
                     }
                 }
             }
-            // Set creation date using utility method
-            Calendar creationDateCal = PdfMetadataService.parseToCalendar(creationDate);
-            info.setCreationDate(creationDateCal);
-
-            // Set modification date using utility method
-            Calendar modificationDateCal = PdfMetadataService.parseToCalendar(modificationDate);
-            info.setModificationDate(modificationDateCal);
+            if (!keepOmitted || creationDate != null) {
+                info.setCreationDate(PdfMetadataService.parseToCalendar(creationDate));
+            }
+            if (!keepOmitted || modificationDate != null) {
+                info.setModificationDate(PdfMetadataService.parseToCalendar(modificationDate));
+            }
             info.setCreator(creator);
             info.setKeywords(keywords);
             info.setAuthor(author);
             info.setProducer(producer);
             info.setSubject(subject);
             info.setTitle(title);
-            info.setTrapped(trapped);
+            if (!keepOmitted || trapped != null) {
+                info.setTrapped(trapped);
+            }
 
             document.setDocumentInformation(info);
             return WebResponseUtils.pdfDocToWebResponse(

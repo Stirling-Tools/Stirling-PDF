@@ -1755,7 +1755,7 @@ class UnlockPdfFormsParams(ApiModel):
 
 class Trapped(StrEnum):
     """
-    The trapped status of the document. Omit to remove it, which readers treat as Unknown.
+    The trapped status of the document. Omit to remove it unless keepOmitted=true; readers treat a missing value as Unknown.
     """
 
     true = "True"
@@ -1765,44 +1765,60 @@ class Trapped(StrEnum):
 
 class UpdateMetadataParams(ApiModel):
     """
-    Standard fields left out are cleared, so send the current values of the others too (see get-info-on-pdf). Dates use yyyy/MM/dd HH:mm:ss. deleteAll=true removes all metadata. Input:PDF Output:PDF Type:SISO
+    Standard fields left out are cleared unless keepOmitted=true, so otherwise send the current values of the others too (see get-info-on-pdf). Dates use yyyy/MM/dd HH:mm:ss. deleteAll=true removes all metadata. Input:PDF Output:PDF Type:SISO
     """
 
     all_request_params: dict[str, str] | None = Field(
         None,
         description='Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept. customKeyN/customValueN pairs also work.',
     )
-    author: str | None = Field(None, description="The author of the document. Omit to remove it.", examples=["author"])
+    author: str | None = Field(
+        None, description="The author of the document. Omit to remove it unless keepOmitted=true.", examples=["author"]
+    )
     creation_date: str | None = Field(
         None,
-        description="The creation date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.",
+        description="The creation date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it unless keepOmitted=true.",
         examples=["2023/10/01 12:00:00"],
         pattern="yyyy/MM/dd HH:mm:ss",
     )
     creator: str | None = Field(
-        None, description="The creator of the document. Omit to remove it.", examples=["creator"]
+        None,
+        description="The creator of the document. Omit to remove it unless keepOmitted=true.",
+        examples=["creator"],
     )
     delete_all: bool = Field(
         False, description="True removes all metadata, including XMP, and ignores the other fields"
     )
+    keep_omitted: bool = Field(
+        False, description="True keeps the current value of every standard field left out, instead of removing it"
+    )
     keywords: str | None = Field(
-        None, description="The keywords for the document. Omit to remove it.", examples=["keywords"]
+        None,
+        description="The keywords for the document. Omit to remove it unless keepOmitted=true.",
+        examples=["keywords"],
     )
     modification_date: str | None = Field(
         None,
-        description="The modification date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.",
+        description="The modification date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it unless keepOmitted=true.",
         examples=["2023/10/01 12:00:00"],
         pattern="yyyy/MM/dd HH:mm:ss",
     )
     producer: str | None = Field(
-        None, description="The producer of the document. Omit to remove it.", examples=["producer"]
+        None,
+        description="The producer of the document. Omit to remove it unless keepOmitted=true.",
+        examples=["producer"],
     )
     subject: str | None = Field(
-        None, description="The subject of the document. Omit to remove it.", examples=["subject"]
+        None,
+        description="The subject of the document. Omit to remove it unless keepOmitted=true.",
+        examples=["subject"],
     )
-    title: str | None = Field(None, description="The title of the document. Omit to remove it.", examples=["title"])
+    title: str | None = Field(
+        None, description="The title of the document. Omit to remove it unless keepOmitted=true.", examples=["title"]
+    )
     trapped: Trapped | None = Field(
-        None, description="The trapped status of the document. Omit to remove it, which readers treat as Unknown."
+        None,
+        description="The trapped status of the document. Omit to remove it unless keepOmitted=true; readers treat a missing value as Unknown.",
     )
 
 
