@@ -639,6 +639,31 @@ describe("Login", () => {
     expect(screen.getByText(/session.*expired/i)).toBeInTheDocument();
   });
 
+  it.each([
+    ["oAuth2AutoCreateDisabled", /automatic account creation is disabled/i],
+    ["oAuth2AdminBlockedUser", /registration of new users is blocked/i],
+    ["userAlreadyExistsWeb", /already exists and uses password sign-in/i],
+    ["maxUsersReached", /maximum number of users/i],
+    ["userIsDisabled", /this account has been disabled/i],
+    ["__proto__", "__proto__"],
+    ["constructor", "constructor"],
+    ["toString", "toString"],
+    ["hasOwnProperty", "hasOwnProperty"],
+    ["unexpected_provider_error", "unexpected_provider_error"],
+  ])("should display the SSO error %s", async (code, message) => {
+    await act(async () => {
+      render(
+        <TestWrapper>
+          <MemoryRouter initialEntries={[`/login?errorOAuth=${code}`]}>
+            <Login />
+          </MemoryRouter>
+        </TestWrapper>,
+      );
+    });
+
+    expect(screen.getByText(message)).toBeInTheDocument();
+  });
+
   it("should display account created success message", async () => {
     await act(async () => {
       render(
