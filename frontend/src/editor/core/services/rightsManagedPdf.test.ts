@@ -16,6 +16,7 @@ import {
   isKnownRightsManagedPdf,
   isMicrosoftProtectedPdf,
   openRightsManagedPdf,
+  openWithOnlyConnectedAccount,
   RightsManagementError,
   rightsManagedSaveBlocked,
   type RightsManagedProtection,
@@ -276,12 +277,65 @@ describe("tools on protected PDFs", () => {
     );
   }
 
-  it("refuses to run before the user opens the document", async () => {
-    get.mockResolvedValueOnce({
+  it("opens the document with the only connected Microsoft account", async () => {
+    get.mockResolvedValue({
       data: {
         enabled: true,
         available: true,
         accounts: [{ id: 7, email: "bob@contoso.com", status: "CONNECTED" }],
+      },
+    });
+    post.mockResolvedValueOnce({
+      data: new Blob(["%PDF-1.7 plaintext"]),
+      headers: {
+        "x-stirling-protection": protectionHeader(protection({ edit: true })),
+      },
+    });
+    const file = await lockedFile();
+    await preflightPdfOperation([file], rotate, false, async () => true);
+    expect(post).toHaveBeenCalledWith(
+      "/api/v1/rights-management/open",
+      expect.any(FormData),
+      expect.objectContaining({ params: { accountId: 7 } }),
+    );
+    expect(getOpenedRightsManagedPdf(file)?.accountId).toBe(7);
+  });
+
+  it("opens each selected document only once when several callers ask together", async () => {
+    get.mockResolvedValue({
+      data: {
+        enabled: true,
+        available: true,
+        accounts: [{ id: 7, email: "bob@contoso.com", status: "CONNECTED" }],
+      },
+    });
+    post.mockResolvedValue({
+      data: new Blob(["%PDF-1.7 plaintext"]),
+      headers: {
+        "x-stirling-protection": protectionHeader(protection({ edit: true })),
+      },
+    });
+    const board = await lockedFile("board.pdf");
+    const minutes = await lockedFile("minutes.pdf");
+    await Promise.all([
+      openWithOnlyConnectedAccount(board),
+      openWithOnlyConnectedAccount(board),
+      openWithOnlyConnectedAccount(minutes),
+    ]);
+    expect(post).toHaveBeenCalledTimes(2);
+    expect(getOpenedRightsManagedPdf(board)).toBeTruthy();
+    expect(getOpenedRightsManagedPdf(minutes)).toBeTruthy();
+  });
+
+  it("asks the user to open the document when more than one Microsoft account is connected", async () => {
+    get.mockResolvedValue({
+      data: {
+        enabled: true,
+        available: true,
+        accounts: [
+          { id: 7, email: "bob@contoso.com", status: "CONNECTED" },
+          { id: 8, email: "bob@fabrikam.com", status: "CONNECTED" },
+        ],
       },
     });
     await expect(
@@ -292,10 +346,11 @@ describe("tools on protected PDFs", () => {
         async () => true,
       ),
     ).rejects.toThrow("Open this Microsoft Purview protected PDF");
+    expect(post).not.toHaveBeenCalled();
   });
 
   it("says the server cannot open the document instead of sending the user to the viewer", async () => {
-    get.mockResolvedValueOnce({
+    get.mockResolvedValue({
       data: { enabled: false, available: false, accounts: [] },
     });
     await expect(
@@ -311,7 +366,7 @@ describe("tools on protected PDFs", () => {
   });
 
   it("asks the user to sign in when no Microsoft account is connected", async () => {
-    get.mockResolvedValueOnce({
+    get.mockResolvedValue({
       data: {
         enabled: true,
         available: true,

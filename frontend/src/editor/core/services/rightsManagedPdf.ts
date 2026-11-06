@@ -405,6 +405,33 @@ export async function openRightsManagedPdf(
   }
 }
 
+const openingWithOnlyAccount = new WeakMap<
+  Blob,
+  Promise<OpenedRightsManagedPdf | null>
+>();
+
+export function openWithOnlyConnectedAccount(
+  original: File,
+): Promise<OpenedRightsManagedPdf | null> {
+  const existing = getOpenedRightsManagedPdf(original);
+  if (existing) return Promise.resolve(existing);
+  const pending = openingWithOnlyAccount.get(original);
+  if (pending) return pending;
+  const opening = (async () => {
+    const status = await fetchRightsManagementStatus();
+    const connected = status.accounts.filter(
+      (account) => account.status === "CONNECTED",
+    );
+    if (!status.available || connected.length !== 1) return null;
+    return openRightsManagedPdf(original, connected[0].id);
+  })().catch(() => null);
+  openingWithOnlyAccount.set(original, opening);
+  void opening.then((opened) => {
+    if (!opened) openingWithOnlyAccount.delete(original);
+  });
+  return opening;
+}
+
 export async function protectLikeOriginal(
   opened: OpenedRightsManagedPdf,
   output: File,

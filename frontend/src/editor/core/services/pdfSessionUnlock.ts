@@ -11,6 +11,7 @@ import i18n from "i18next";
 import {
   fetchRightsManagementStatus,
   getOpenedRightsManagedPdf,
+  openWithOnlyConnectedAccount,
   isMicrosoftProtectedPdf,
   protectLikeOriginal,
   type OpenedRightsManagedPdf,
@@ -143,7 +144,9 @@ async function preflightRightsManaged(
       ),
     );
   for (const file of protectedFiles) {
-    const opened = getOpenedRightsManagedPdf(file);
+    const opened =
+      getOpenedRightsManagedPdf(file) ??
+      (await openWithOnlyConnectedAccount(file));
     if (!opened) throw new Error(await unopenedRightsManagedMessage());
     if (!opened.protection.permissions.edit)
       throw new Error(

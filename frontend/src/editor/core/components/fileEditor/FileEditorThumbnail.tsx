@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+  useEffect,
+} from "react";
 import { Text, Modal, Group, Loader, Stack, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Button } from "@editor/ui/Button";
@@ -39,6 +45,7 @@ import { useAuth } from "@editor/auth/UseSession";
 import { useFileThumbnail } from "@editor/hooks/useFileThumbnail";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import { useRightsManagedPdf } from "@editor/hooks/useRightsManagedPdf";
+import { openWithOnlyConnectedAccount } from "@editor/services/rightsManagedPdf";
 import { Tooltip as StirlingTooltip } from "@editor/components/shared/Tooltip";
 import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
 import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
@@ -119,6 +126,11 @@ const FileEditorThumbnail = ({
   const rightsManaged = useRightsManagedPdf(actualFile);
   const isRightsManaged =
     rightsManaged.status === "locked" || rightsManaged.status === "opened";
+
+  useEffect(() => {
+    if (rightsManaged.status === "locked" && actualFile)
+      void openWithOnlyConnectedAccount(actualFile);
+  }, [rightsManaged.status, actualFile]);
 
   const isZipFile = zipFileService.isZipFileStub(file);
 
