@@ -1,28 +1,94 @@
-const IN_MEMORY_COPY_BUDGET_BYTES = 512 * 1024 * 1024;
+import type { AxiosInstance } from "axios";
 
+/**
+ * Works around WebKit sending a File as an empty request body (Content-Length: 0), which the
+ * backend reports as "unexpected EOF in PREAMBLE". It hits files restored from IndexedDB and
+ * files picked from disk alike, in Safari and in every browser built on WebKit: DuckDuckGo on
+ * macOS and all iOS browsers. An in-memory copy of the bytes always uploads. Fixed upstream in
+ * WebKit 323318@main (https://bugs.webkit.org/show_bug.cgi?id=319985); harmless once fixed,
+ * since a copy is an ordinary in-memory file.
+ */
+
+const DESKTOP_COPY_BUDGET_BYTES = 512 * 1024 * 1024;
+// iOS kills a tab well short of 1 GB on many devices, and the copy sits beside the original.
+const TOUCH_COPY_BUDGET_BYTES = 192 * 1024 * 1024;
+
+export function uploadsNeedInMemoryFiles(userAgent: string): boolean {
+  return /AppleWebKit/.test(userAgent) && !/Chrome\//.test(userAgent);
+}
+
+/** iPadOS reports a desktop Safari user agent, so touch support is what tells it apart. */
+export function copyBudgetBytes(maxTouchPoints: number): number {
+  return maxTouchPoints > 1
+    ? TOUCH_COPY_BUDGET_BYTES
+    : DESKTOP_COPY_BUDGET_BYTES;
+}
+
+/**
+ * A copy of `form` with files read into memory, in entry order, until their combined size would
+ * pass `budgetBytes`. Files past the budget are re-wrapped instead of copied: the WebKit bug
+ * thread reports a fresh File over the same bytes uploading correctly, which costs no memory but
+ * has not been confirmed here. String fields are kept as they are.
+ */
 export async function inMemoryFormData(
   form: FormData,
-  budgetBytes = IN_MEMORY_COPY_BUDGET_BYTES,
+  budgetBytes: number,
 ): Promise<FormData> {
   const copy = new FormData();
   let remaining = budgetBytes;
   for (const [key, value] of form.entries()) {
-    if (typeof value === "string" || value.size > remaining) {
+    if (typeof value === "string") {
       copy.append(key, value);
+      continue;
+    }
+    const options = { type: value.type, lastModified: value.lastModified };
+    if (value.size > remaining) {
+      copy.append(
+        key,
+        new File([value.slice(0, value.size, value.type)], value.name, options),
+      );
       continue;
     }
     remaining -= value.size;
     copy.append(
       key,
-      new File([await value.arrayBuffer()], value.name, {
-        type: value.type,
-        lastModified: value.lastModified,
-      }),
+      new File([await value.arrayBuffer()], value.name, options),
     );
   }
   return copy;
 }
 
-export function uploadsNeedInMemoryFiles(userAgent: string): boolean {
-  return /AppleWebKit/.test(userAgent) && !/Chrome\//.test(userAgent);
+/**
+ * The form to send from this browser: `form` itself outside WebKit, otherwise its in-memory copy.
+ * For uploads that bypass the API clients, such as a raw `fetch`.
+ */
+export async function uploadSafeFormData(form: FormData): Promise<FormData> {
+  if (
+    typeof navigator === "undefined" ||
+    !uploadsNeedInMemoryFiles(navigator.userAgent)
+  ) {
+    return form;
+  }
+  return inMemoryFormData(form, copyBudgetBytes(navigator.maxTouchPoints ?? 0));
+}
+
+/**
+ * Makes every FormData request `client` sends upload-safe. Installs nothing outside WebKit, so
+ * other browsers keep streaming the original file. Install it last: axios runs the most recently
+ * added request interceptor first, so the copy is in place before auth or any other interceptor.
+ */
+export function installInMemoryUploads(
+  client: Pick<AxiosInstance, "interceptors">,
+): void {
+  if (
+    typeof navigator === "undefined" ||
+    !uploadsNeedInMemoryFiles(navigator.userAgent)
+  ) {
+    return;
+  }
+  client.interceptors.request.use(async (config) =>
+    config.data instanceof FormData
+      ? { ...config, data: await uploadSafeFormData(config.data) }
+      : config,
+  );
 }
