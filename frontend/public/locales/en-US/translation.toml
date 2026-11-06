@@ -9269,7 +9269,7 @@ body = "Bring in the people who'll use it, so the trial reflects real work."
 title = "Invite your team"
 
 [portal.enterprise.setup.licence]
-body = "Open http://your-server:8080/settings/adminPlan, where your Enterprise licence should show as active. Installed another way? Add the key under premium.key in settings.yml and restart."
+body = "Open <code>http://your-server:8080/settings/adminPlan</code>, where your Enterprise licence should show as active. Installed another way? Add the key under <code>premium.key</code> in <code>settings.yml</code> and restart."
 title = "Check your licence is active"
 
 [portal.enterprise.setup.links]
@@ -9296,13 +9296,13 @@ body = "An air-gapped server can't reach our licence service, so it checks this 
 title = "Download your offline licence"
 
 [portal.enterprise.setup.people]
-bodyAirgap = "Create accounts at /settings/people, or point Stirling at your internal identity provider so sign-in never leaves your network."
-bodySelfHosted = "Create accounts at /settings/people, or connect your identity provider so your team signs in with their work accounts. They use Stirling in the browser at your server's address, or in the desktop app pointed at it."
+bodyAirgap = "Create accounts at <code>/settings/people</code>, or point Stirling at your internal identity provider so sign-in never leaves your network."
+bodySelfHosted = "Create accounts at <code>/settings/people</code>, or connect your identity provider so your team signs in with their work accounts. They use Stirling in the browser at your server's address, or in the desktop app pointed at it."
 title = "Add your people"
 
 [portal.enterprise.setup.signIn]
-body = "Open http://your-server:8080 and sign in with admin / stirling. You'll be asked to choose a new password straight away."
-bodyAirgap = "Open http://your-server:8080 and sign in with admin / stirling, choose a new password, then check /settings/adminPlan shows your licence as active."
+body = "Open <code>http://your-server:8080</code> and sign in with <code>admin</code> / <code>stirling</code>. You'll be asked to choose a new password straight away."
+bodyAirgap = "Open <code>http://your-server:8080</code> and sign in with <code>admin</code> / <code>stirling</code>, choose a new password, then check <code>/settings/adminPlan</code> shows your licence as active."
 title = "Sign in as the admin"
 
 [portal.errorBoundary]
