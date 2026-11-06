@@ -78,8 +78,7 @@ public class ConnectedDriveWriter {
                             .PUT(HttpRequest.BodyPublishers.ofFile(content));
             ifMatch(request, target);
             HttpResponse<String> response = send(request.build());
-            requireNoConflict(response, target);
-            requireSuccess(response, "save " + describe(target));
+            requireSaved(response, target, "save");
             return fetch(token, parse(response.body()));
         }
         return saveInSession(token, target, content, size);
@@ -93,8 +92,7 @@ public class ConnectedDriveWriter {
                         .POST(HttpRequest.BodyPublishers.ofString(sessionBody(target)));
         ifMatch(start, target);
         HttpResponse<String> created = send(start.build());
-        requireNoConflict(created, target);
-        requireSuccess(created, "start saving " + describe(target));
+        requireSaved(created, target, "start saving");
         String uploadUrl = text(parse(created.body()), "uploadUrl");
         if (uploadUrl == null) {
             throw new IOException("Microsoft Graph returned no upload URL");
@@ -111,12 +109,9 @@ public class ConnectedDriveWriter {
                                         .timeout(Duration.ofMinutes(10))
                                         .header(
                                                 "Content-Range",
-                                                "bytes "
-                                                        + offset
-                                                        + "-"
-                                                        + (offset + length - 1)
-                                                        + "/"
-                                                        + size)
+                                                "bytes %d-%d/%d"
+                                                        .formatted(
+                                                                offset, offset + length - 1, size))
                                         .PUT(
                                                 HttpRequest.BodyPublishers.ofByteArray(
                                                         buffer, 0, length))
@@ -124,8 +119,7 @@ public class ConnectedDriveWriter {
                 offset += length;
                 if (chunk.statusCode() >= 300) {
                     cancelSession(uploadUrl);
-                    requireNoConflict(chunk, target);
-                    requireSuccess(chunk, "save " + describe(target));
+                    requireSaved(chunk, target, "save");
                 }
                 if (offset >= size) {
                     return fetch(token, parse(chunk.body()));
@@ -143,15 +137,7 @@ public class ConnectedDriveWriter {
         }
         HttpResponse<String> response =
                 send(
-                        authorized(
-                                        token,
-                                        endpoints.graphUrl()
-                                                + "/drives/"
-                                                + segment(driveId)
-                                                + "/items/"
-                                                + segment(itemId)
-                                                + "?$select="
-                                                + ITEM_FIELDS)
+                        authorized(token, itemUrl(driveId, itemId) + "?$select=" + ITEM_FIELDS)
                                 .GET()
                                 .build());
         requireSuccess(response, "read the saved file");
@@ -171,7 +157,7 @@ public class ConnectedDriveWriter {
             case Create create ->
                     childUrl(create)
                             + ":/content?@microsoft.graph.conflictBehavior="
-                            + (create.renameOnConflict() ? "rename" : "fail");
+                            + conflictBehavior(create);
         };
     }
 
@@ -184,14 +170,16 @@ public class ConnectedDriveWriter {
     }
 
     private static String sessionBody(Target target) {
-        return switch (target) {
-            case Replace replace ->
-                    "{\"item\":{\"@microsoft.graph.conflictBehavior\":\"replace\"}}";
-            case Create create ->
-                    "{\"item\":{\"@microsoft.graph.conflictBehavior\":\""
-                            + (create.renameOnConflict() ? "rename" : "fail")
-                            + "\"}}";
-        };
+        String behavior =
+                switch (target) {
+                    case Replace replace -> "replace";
+                    case Create create -> conflictBehavior(create);
+                };
+        return "{\"item\":{\"@microsoft.graph.conflictBehavior\":\"" + behavior + "\"}}";
+    }
+
+    private static String conflictBehavior(Create create) {
+        return create.renameOnConflict() ? "rename" : "fail";
     }
 
     private String itemUrl(String driveId, String itemId) {
@@ -208,6 +196,12 @@ public class ConnectedDriveWriter {
                 && !replace.eTag().isBlank()) {
             request.header("If-Match", replace.eTag());
         }
+    }
+
+    private static void requireSaved(HttpResponse<String> response, Target target, String action)
+            throws IOException {
+        requireNoConflict(response, target);
+        requireSuccess(response, action + " " + describe(target));
     }
 
     private static void requireNoConflict(HttpResponse<String> response, Target target)

@@ -183,7 +183,7 @@ public class ConnectedAccountController {
         }
         if (provider == CloudProvider.GOOGLE) {
             if (!"drive".equals(resource)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported resource");
+                throw unsupportedResource();
             }
             return List.of();
         }
@@ -194,16 +194,20 @@ public class ConnectedAccountController {
         try {
             uri = URI.create(resource);
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported resource");
+            throw unsupportedResource();
         }
-        String origin = uri.getScheme() + "://" + uri.getAuthority();
-        if (origin.equals(graphOrigin())) {
+        String origin = origin(uri);
+        if (origin.equals(origin(URI.create(graphEndpoints.graphUrl())))) {
             return List.of(MicrosoftOAuthClient.BROWSER_SCOPE);
         }
         if (!isSharePoint(uri)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported resource");
+            throw unsupportedResource();
         }
         return List.of(origin + "/.default");
+    }
+
+    private static ResponseStatusException unsupportedResource() {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported resource");
     }
 
     private static boolean isSharePoint(URI uri) {
@@ -212,9 +216,8 @@ public class ConnectedAccountController {
                 && SHAREPOINT_HOST_SUFFIXES.stream().anyMatch(host::endsWith);
     }
 
-    private String graphOrigin() {
-        URI graph = URI.create(graphEndpoints.graphUrl());
-        return graph.getScheme() + "://" + graph.getAuthority();
+    private static String origin(URI uri) {
+        return uri.getScheme() + "://" + uri.getAuthority();
     }
 
     private String publicBaseUrl() {
