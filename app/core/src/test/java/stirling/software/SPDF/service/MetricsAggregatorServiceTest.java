@@ -1,9 +1,12 @@
 package stirling.software.SPDF.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,11 +14,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.springframework.scheduling.TaskScheduler;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import stirling.software.SPDF.config.EndpointInspector;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.PostHogService;
 
 class MetricsAggregatorServiceTest {
@@ -23,6 +28,8 @@ class MetricsAggregatorServiceTest {
     private SimpleMeterRegistry meterRegistry;
     private PostHogService postHogService;
     private EndpointInspector endpointInspector;
+    private ApplicationProperties applicationProperties;
+    private TaskScheduler scheduler;
     private MetricsAggregatorService metricsAggregatorService;
 
     @BeforeEach
@@ -30,10 +37,39 @@ class MetricsAggregatorServiceTest {
         meterRegistry = new SimpleMeterRegistry();
         postHogService = mock(PostHogService.class);
         endpointInspector = mock(EndpointInspector.class);
+        applicationProperties = new ApplicationProperties();
+        scheduler = mock(TaskScheduler.class);
         when(endpointInspector.getValidGetEndpoints()).thenReturn(Set.of("/getEndpoint"));
         when(endpointInspector.isValidGetEndpoint("/getEndpoint")).thenReturn(true);
         metricsAggregatorService =
-                new MetricsAggregatorService(meterRegistry, postHogService, endpointInspector);
+                new MetricsAggregatorService(
+                        meterRegistry,
+                        postHogService,
+                        endpointInspector,
+                        applicationProperties,
+                        scheduler);
+    }
+
+    @Test
+    void onRequestTracked_enabled_registersAggregationOnce() {
+        applicationProperties.getSystem().setEnableAnalytics(true);
+
+        metricsAggregatorService.onRequestTracked();
+        metricsAggregatorService.onRequestTracked();
+
+        verify(scheduler, times(1))
+                .scheduleAtFixedRate(
+                        any(Runnable.class), any(Instant.class), eq(Duration.ofHours(2)));
+    }
+
+    @Test
+    void onRequestTracked_disabled_doesNotRegister() {
+        applicationProperties.getSystem().setEnableAnalytics(false);
+
+        metricsAggregatorService.onRequestTracked();
+
+        verify(scheduler, never())
+                .scheduleAtFixedRate(any(Runnable.class), any(Instant.class), any(Duration.class));
     }
 
     @Captor private ArgumentCaptor<Map<String, Object>> captor;

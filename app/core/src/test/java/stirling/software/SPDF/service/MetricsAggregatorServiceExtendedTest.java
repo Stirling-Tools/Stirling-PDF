@@ -10,11 +10,13 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.scheduling.TaskScheduler;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import stirling.software.SPDF.config.EndpointInspector;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.PostHogService;
 
 class MetricsAggregatorServiceExtendedTest {
@@ -22,6 +24,8 @@ class MetricsAggregatorServiceExtendedTest {
     private SimpleMeterRegistry meterRegistry;
     private PostHogService postHogService;
     private EndpointInspector endpointInspector;
+    private ApplicationProperties applicationProperties;
+    private TaskScheduler scheduler;
     private MetricsAggregatorService service;
 
     @BeforeEach
@@ -29,12 +33,20 @@ class MetricsAggregatorServiceExtendedTest {
         meterRegistry = new SimpleMeterRegistry();
         postHogService = mock(PostHogService.class);
         endpointInspector = mock(EndpointInspector.class);
+        applicationProperties = new ApplicationProperties();
+        scheduler = mock(TaskScheduler.class);
         when(endpointInspector.getValidGetEndpoints())
                 .thenReturn(Set.of("/home", "/about", "/settings"));
         when(endpointInspector.isValidGetEndpoint("/home")).thenReturn(true);
         when(endpointInspector.isValidGetEndpoint("/about")).thenReturn(true);
         when(endpointInspector.isValidGetEndpoint("/settings")).thenReturn(true);
-        service = new MetricsAggregatorService(meterRegistry, postHogService, endpointInspector);
+        service =
+                new MetricsAggregatorService(
+                        meterRegistry,
+                        postHogService,
+                        endpointInspector,
+                        applicationProperties,
+                        scheduler);
     }
 
     @Test
@@ -158,7 +170,12 @@ class MetricsAggregatorServiceExtendedTest {
         EndpointInspector emptyInspector = mock(EndpointInspector.class);
         when(emptyInspector.getValidGetEndpoints()).thenReturn(Set.of());
         MetricsAggregatorService serviceNoValidation =
-                new MetricsAggregatorService(meterRegistry, postHogService, emptyInspector);
+                new MetricsAggregatorService(
+                        meterRegistry,
+                        postHogService,
+                        emptyInspector,
+                        applicationProperties,
+                        scheduler);
 
         meterRegistry
                 .counter("http.requests", "method", "GET", "uri", "/any-endpoint")

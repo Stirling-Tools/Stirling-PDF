@@ -51,6 +51,7 @@ import stirling.software.saas.repository.TeamInvitationRepository;
 import stirling.software.saas.security.TeamSecurityExpressions;
 import stirling.software.saas.service.SaasTeamExtensionService;
 import stirling.software.saas.service.SaasTeamService;
+import stirling.software.saas.service.TeamInvitationCleanupService;
 
 /**
  * Pure-Mockito unit tests for {@link SaasTeamController}.
@@ -84,6 +85,7 @@ class SaasTeamControllerTest {
     private stirling.software.saas.procurement.service.EnterpriseEntitlementService enterprise;
 
     @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+    @Mock private TeamInvitationCleanupService invitationCleanup;
 
     @InjectMocks private SaasTeamController controller;
 

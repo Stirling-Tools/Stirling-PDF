@@ -19,6 +19,7 @@ import org.springframework.boot.actuate.audit.AuditEvent;
 
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
+import stirling.software.proprietary.service.AuditCleanupService;
 
 import tools.jackson.databind.json.JsonMapper;
 
@@ -33,7 +34,8 @@ class CustomAuditEventRepositoryTest {
     void sourceIsPopulatedFromMdcAuditSource() {
         PersistentAuditEventRepository repo = mock(PersistentAuditEventRepository.class);
         CustomAuditEventRepository writer =
-                new CustomAuditEventRepository(repo, JsonMapper.builder().build());
+                new CustomAuditEventRepository(
+                        repo, JsonMapper.builder().build(), mock(AuditCleanupService.class));
 
         MDC.put("auditSource", "WEB");
         writer.add(new AuditEvent(Instant.now(), "admin", "PDF_PROCESS", Map.of("k", "v")));
@@ -48,7 +50,8 @@ class CustomAuditEventRepositoryTest {
     void sourceIsNullWhenMdcAbsent() {
         PersistentAuditEventRepository repo = mock(PersistentAuditEventRepository.class);
         CustomAuditEventRepository writer =
-                new CustomAuditEventRepository(repo, JsonMapper.builder().build());
+                new CustomAuditEventRepository(
+                        repo, JsonMapper.builder().build(), mock(AuditCleanupService.class));
 
         writer.add(new AuditEvent(Instant.now(), "admin", "PDF_PROCESS", Map.of("k", "v")));
 

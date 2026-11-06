@@ -6,8 +6,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,17 +19,33 @@ import org.springframework.stereotype.Component;
 
 import jakarta.transaction.Transactional;
 
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 
 @Component
-@RequiredArgsConstructor
+@Slf4j
 public class SessionPersistentRegistry implements SessionRegistry {
 
     private final SessionRepository sessionRepository;
+    private final Runnable onFirstUse;
+    private final AtomicBoolean firstUseSignalled = new AtomicBoolean();
+
+    /** Construction without a first-use callback. */
+    public SessionPersistentRegistry(SessionRepository sessionRepository) {
+        this(sessionRepository, () -> {});
+    }
+
+    /**
+     * @param onFirstUse runs at most once, on the first persisted session; a callback that fails is
+     *     retried by the next registration
+     */
+    public SessionPersistentRegistry(SessionRepository sessionRepository, Runnable onFirstUse) {
+        this.sessionRepository = sessionRepository;
+        this.onFirstUse = onFirstUse;
+    }
 
     @Value("${server.servlet.session.timeout:30m}")
     private Duration defaultMaxInactiveInterval;
@@ -101,6 +120,27 @@ public class SessionPersistentRegistry implements SessionRegistry {
             sessionEntity.setLastRequest(Instant.now()); // Set lastRequest to the current date
             sessionEntity.setExpired(false);
             sessionRepository.save(sessionEntity);
+            signalFirstUse();
+        }
+    }
+
+    /** Sessions restored from the database still need the expiry sweep. */
+    @EventListener(ApplicationReadyEvent.class)
+    public void armIfSessionsExist() {
+        if (sessionRepository.count() > 0) {
+            signalFirstUse();
+        }
+    }
+
+    private void signalFirstUse() {
+        if (firstUseSignalled.get()) {
+            return;
+        }
+        try {
+            onFirstUse.run();
+            firstUseSignalled.set(true);
+        } catch (RuntimeException e) {
+            log.warn("First-use callback failed; a later registration will retry", e);
         }
     }
 
@@ -118,6 +158,8 @@ public class SessionPersistentRegistry implements SessionRegistry {
             SessionEntity sessionEntity = sessionEntityOpt.get();
             sessionEntity.setLastRequest(Instant.now()); // Update lastRequest to the current date
             sessionRepository.save(sessionEntity);
+            // Registration can fail after startup; restored sessions only touch this path.
+            signalFirstUse();
         }
     }
 
