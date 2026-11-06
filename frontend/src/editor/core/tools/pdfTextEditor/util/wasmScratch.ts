@@ -41,18 +41,20 @@ export const SCRATCH = {
   readerCharY: key(),
   readerBounds: key(),
   readerMatrix: key(),
+  readerRuleDrawMode: key(),
+  readerRuleStrokeWidth: key(),
+  readerSegmentPoint: key(),
   writerBbox: key(),
   editBbox: key(),
+  editMeasureBox: key(),
   reflowBbox: key(),
   reflowMatrix: key(),
   partialBbox: key(),
   imageMatrix: key(),
   annotRect: key(),
   shapeDrawMode: key(),
-  colourR: key(),
-  colourG: key(),
-  colourB: key(),
-  colourA: key(),
+  shapeStrokeAlpha: key(),
+  colourRGBA: key(),
   outlineW: key(),
   faceL: key(),
   faceB: key(),
@@ -80,6 +82,7 @@ export const SCRATCH = {
   readerSize: key(),
   reflowText: key(),
   charcodes: key(),
+  scanImageSize: key(),
   tagName: key(),
   tagNameLen: key(),
   tagMcid: key(),
@@ -117,7 +120,12 @@ export function scratchPtr(
   const arena = arenaFor(m);
   const slot = arena.slots[key.id];
   if (slot && slot.size >= bytes) return slot.ptr;
-  if (slot) arena.exports.free(slot.ptr);
+  if (slot) {
+    arena.exports.free(slot.ptr);
+    // Drop the slot together with the block it named: an allocator that
+    // throws would leave the freed pointer cached for the next caller.
+    arena.slots[key.id] = undefined;
+  }
   // Double rather than fit exactly: text buffers grow a character at a time,
   // and refitting would put a malloc/free pair back on every keystroke.
   const size = Math.max(4, bytes, slot ? slot.size * 2 : 0);
@@ -125,7 +133,6 @@ export function scratchPtr(
   // malloc only returns 0 when memory.grow failed, so a retry cannot help. A
   // cached 0 would be handed to PDFium as a null out-param and never retried.
   if (!ptr) {
-    arena.slots[key.id] = undefined;
     throw new Error(`WASM scratch allocation failed (${size} bytes)`);
   }
   arena.slots[key.id] = { ptr, size };
