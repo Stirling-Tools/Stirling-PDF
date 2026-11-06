@@ -66,22 +66,23 @@ export function useSaveStoredFile(): SaveStoredFile {
               "This browser lost this file's contents. Upload it again to keep working with it.",
             ),
           );
-        const [data] = await enforceExportPolicies([source], [stub.id]);
+        const [enforced] = await enforceExportPolicies([source], [stub.id]);
+        const data = enforced ?? source;
         const target = local === "save" ? targetFor(stub) : undefined;
         if (target) {
-          const outcome = await target.save(stub, data ?? source);
+          const outcome = await target.save(stub, data);
           if (outcome !== "fallback") return outcome;
         }
+        const linksToDisk = local === "save" && !target;
         const result = await downloadFile({
-          data: data ?? source,
+          data,
           // Stub name, not File.name: a rename only writes the stub.
           filename: stub.name,
-          localPath:
-            local === "save" && !target ? stub.localFilePath : undefined,
+          localPath: linksToDisk ? stub.localFilePath : undefined,
           fileId: stub.id,
         });
         if (result.cancelled) return "cancelled";
-        if (local === "save" && !target && result.savedPath)
+        if (linksToDisk && result.savedPath)
           actions.updateStirlingFileStub(stub.id, {
             localFilePath: stub.localFilePath ?? result.savedPath,
             isDirty: false,
