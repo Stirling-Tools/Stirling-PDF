@@ -11,6 +11,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -127,6 +128,11 @@ public class CertSignController {
         this.hardwareKeyStoreService = hardwareKeyStoreService;
     }
 
+    /**
+     * Signs {@code input} into {@code output}. Failures propagate: {@code output} may hold partial
+     * bytes afterwards, and catching them here would let the endpoint answer 200 with an empty
+     * PDF.
+     */
     public static void sign(
             CustomPDFDocumentFactory pdfDocumentFactory,
             MultipartFile input,
@@ -545,7 +551,8 @@ public class CertSignController {
                     String name = IETFUtils.valueToString(cn.getFirst().getValue());
 
                     String date = signature.getSignDate().getTime().toString();
-                    String reason = signature.getReason();
+                    // reason is optional in the API, and showText rejects null.
+                    String reason = Objects.toString(signature.getReason(), "");
 
                     cs.showText("Signed by " + name);
                     cs.newLine();
