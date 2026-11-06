@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import type {
   EditorStore,
   EditorViewState,
@@ -21,9 +21,6 @@ export function useScanPrefit(
       state.pages.some((page) => page.runs.some((run) => run.renderMode === 3)),
     [state.pages],
   );
-  const pagesRef = useRef(state.pages);
-  pagesRef.current = state.pages;
-
   useEffect(() => {
     if (!hasScannedText) return;
     let stopped = false;
@@ -32,12 +29,16 @@ export function useScanPrefit(
     const step = () => {
       const doc = store.document;
       if (stopped || !doc) return;
-      for (const snapshot of pagesRef.current) {
+      for (const snapshot of state.pages) {
         const page = doc.page(snapshot.pageIndex);
         const run = page.runs.find((r) => isScanRun(r) && !done.has(r));
         if (!run) continue;
-        if (prefitScanRun(doc, page, run, performance.now() + SLICE_MS))
+        try {
+          if (prefitScanRun(doc, page, run, performance.now() + SLICE_MS))
+            done.add(run);
+        } catch {
           done.add(run);
+        }
         timer = window.setTimeout(step, GAP_MS);
         return;
       }
