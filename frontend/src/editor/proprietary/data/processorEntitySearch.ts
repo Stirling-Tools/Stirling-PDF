@@ -7,6 +7,7 @@ import type {
   PortalEntityScopeId,
 } from "@processor/search/entitySearch";
 import { HAS_PORTAL } from "@editor/routes/hasPortal";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 type EntitySearchModule = typeof import("@processor/search/entitySearch");
 
@@ -38,6 +39,10 @@ export function useProcessorEntityGroups(
   const modRef = useRef<EntitySearchModule | null>(null);
   // Without the portal these entities have nowhere to open, so don't fetch them.
   const active = enabled && HAS_PORTAL;
+  // useAiEngineEnabled's rule, inlined: that hook is portal code, and a static
+  // import here would pull the portal into the main bundle (see above).
+  const { config } = useAppConfig();
+  const aiEngineEnabled = config ? Boolean(config.aiEngineEnabled) : undefined;
   const hasQuery = trimmed.length > 0;
 
   useEffect(() => {
@@ -88,6 +93,17 @@ export function useProcessorEntityGroups(
     if (!mod || !entities || !active || !hasQuery) return NO_GROUPS;
     return mod.buildProcessorEntityGroups(entities, trimmed, t, navigate, {
       scopeEnabled,
+      aiEngineEnabled,
     });
-  }, [mod, entities, active, hasQuery, trimmed, t, navigate, scopeEnabled]);
+  }, [
+    mod,
+    entities,
+    active,
+    hasQuery,
+    trimmed,
+    t,
+    navigate,
+    scopeEnabled,
+    aiEngineEnabled,
+  ]);
 }
