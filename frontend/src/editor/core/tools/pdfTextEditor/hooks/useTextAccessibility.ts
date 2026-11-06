@@ -150,14 +150,14 @@ export function useTextAccessibility(
     (index: number, type: StructureType | null) => {
       const picked = inner[index];
       if (!run || !picked) return;
-      store.dispatch(
-        new RetagInnerCommand({
-          pageIndex: run.pageIndex,
-          key: picked.key,
-          type,
-        }),
-      );
-      if (type === null) store.selection.setTextRange(run.id, null);
+      const retag = new RetagInnerCommand({
+        pageIndex: run.pageIndex,
+        key: picked.key,
+        type,
+      });
+      store.dispatch(retag);
+      if (retag.movedToRunId) store.selection.selectOne(retag.movedToRunId);
+      else if (type === null) store.selection.setTextRange(run.id, null);
     },
     [store, run, inner],
   );
@@ -167,16 +167,19 @@ export function useTextAccessibility(
     (type: StructureType) => {
       const range = selection.textRange;
       if (!run || !range) return;
-      store.dispatch(
-        new TagTextRangeCommand({
-          pageIndex: run.pageIndex,
-          runId: run.id,
-          ...range,
-          as: type,
-        }),
-      );
-      // The cut redraws the text, so the range no longer names what it did.
-      store.selection.setTextRange(run.id, null);
+      const cut = new TagTextRangeCommand({
+        pageIndex: run.pageIndex,
+        runId: run.id,
+        ...range,
+        as: type,
+      });
+      store.dispatch(cut);
+      if (cut.movedToRunId) {
+        store.selection.selectOne(cut.movedToRunId);
+      } else {
+        // The cut redraws the text, so the range no longer names what it did.
+        store.selection.setTextRange(run.id, null);
+      }
     },
     [store, run, selection.textRange],
   );
