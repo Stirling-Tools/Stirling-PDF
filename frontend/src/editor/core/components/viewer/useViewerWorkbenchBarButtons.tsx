@@ -119,7 +119,7 @@ export function useViewerWorkbenchBarButtons(
 
   const isFormFillActive = (selectedTool as string) === "formFill";
   const access = usePdfAccess(viewer.activeFileId);
-  const restricted = access?.encrypted === true;
+  const restricted = access?.rightsManaged === true;
   const annotationsRestricted =
     restricted && !pdfAllows(access, PdfPermissionFlag.ModifyAnnotations);
   const formFillRestricted =
