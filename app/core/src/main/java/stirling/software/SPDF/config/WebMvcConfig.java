@@ -84,12 +84,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // so a one-year immutable policy would strand a browser on one release's
         // bytes. A day of freshness plus SWR keeps repeat opens cheap without
         // pinning an update.
-        registry.addResourceHandler("/images/**", "/fonts/**")
-                .addResourceLocations(
-                        staticPath + "images/",
-                        "classpath:/static/images/",
-                        staticPath + "fonts/",
-                        "classpath:/static/fonts/")
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations(staticPath + "images/", "classpath:/static/images/")
+                .setCacheControl(STABLE_ONE_DAY)
+                .resourceChain(true)
+                .addResolver(new PreferredEncodingResourceResolver());
+        registry.addResourceHandler("/fonts/**")
+                .addResourceLocations("classpath:/static/fonts/")
                 .setCacheControl(STABLE_ONE_DAY)
                 .resourceChain(true)
                 .addResolver(new PreferredEncodingResourceResolver());

@@ -101,8 +101,8 @@ class WebMvcConfigTest {
     class AddResourceHandlers {
 
         @Test
-        @DisplayName("registers all five resource handler groups")
-        void registersFiveHandlerGroups() {
+        @DisplayName("registers all six resource handler groups")
+        void registersSixHandlerGroups() {
             ResourceHandlerRegistry registry = mock(ResourceHandlerRegistry.class);
             ResourceHandlerRegistration registration =
                     mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
@@ -110,8 +110,8 @@ class WebMvcConfigTest {
 
             config.addResourceHandlers(registry);
 
-            // SW/PWA, assets, media+fonts, branding, catch-all = 5 handler registrations.
-            verify(registry, times(5)).addResourceHandler(any(String[].class));
+            // SW/PWA, assets, images, fonts, branding, catch-all = 6 handler registrations.
+            verify(registry, times(6)).addResourceHandler(any(String[].class));
         }
 
         @Test
@@ -139,6 +139,8 @@ class WebMvcConfigTest {
                     mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
             ResourceHandlerRegistration assets =
                     mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            ResourceHandlerRegistration images =
+                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
             ResourceHandlerRegistration media =
                     mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
             ResourceHandlerRegistration branding =
@@ -146,28 +148,52 @@ class WebMvcConfigTest {
             ResourceHandlerRegistration catchAll =
                     mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
             when(registry.addResourceHandler(any(String[].class)))
-                    .thenReturn(sw, assets, media, branding, catchAll);
+                    .thenReturn(sw, assets, images, media, branding, catchAll);
             // addResourceLocations is the chain link before setCacheControl.
             when(sw.addResourceLocations(any(String[].class))).thenReturn(sw);
             when(assets.addResourceLocations(any(String[].class))).thenReturn(assets);
+            when(images.addResourceLocations(any(String[].class))).thenReturn(images);
             when(media.addResourceLocations(any(String[].class))).thenReturn(media);
             when(branding.addResourceLocations(any(String[].class))).thenReturn(branding);
             when(catchAll.addResourceLocations(any(String[].class))).thenReturn(catchAll);
 
             config.addResourceHandlers(registry);
 
-            // Third registration is the media/fonts group. The names never change
+            // Fourth registration is the fonts group. The names never change
             // across releases, so the tier has to allow revalidation; repeating a
             // 17 MB CJK face is still cheap because an unchanged file answers the
             // conditional request with 304.
             ArgumentCaptor<String[]> patterns = ArgumentCaptor.forClass(String[].class);
-            verify(registry, times(5)).addResourceHandler(patterns.capture());
-            assertThat(patterns.getAllValues().get(2)).contains("/fonts/**");
+            verify(registry, times(6)).addResourceHandler(patterns.capture());
+            assertThat(patterns.getAllValues().get(3)).containsExactly("/fonts/**");
 
             ArgumentCaptor<CacheControl> caches = ArgumentCaptor.forClass(CacheControl.class);
             verify(media).setCacheControl(caches.capture());
             String header = caches.getValue().getHeaderValue();
             assertThat(header).contains("max-age=86400").doesNotContain("immutable");
+        }
+
+        @Test
+        @DisplayName("serves only the bundled fonts, never the custom folder")
+        void fontsComeOnlyFromTheJar() {
+            ResourceHandlerRegistry registry = mock(ResourceHandlerRegistry.class);
+            ResourceHandlerRegistration other =
+                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            ResourceHandlerRegistration fonts =
+                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            when(registry.addResourceHandler(any(String[].class)))
+                    .thenAnswer(
+                            call ->
+                                    List.of(call.getArguments()).contains("/fonts/**")
+                                            ? fonts
+                                            : other);
+            when(fonts.addResourceLocations(any(String[].class))).thenReturn(fonts);
+
+            config.addResourceHandlers(registry);
+
+            ArgumentCaptor<String[]> locations = ArgumentCaptor.forClass(String[].class);
+            verify(fonts).addResourceLocations(locations.capture());
+            assertThat(locations.getValue()).containsExactly("classpath:/static/fonts/");
         }
     }
 
