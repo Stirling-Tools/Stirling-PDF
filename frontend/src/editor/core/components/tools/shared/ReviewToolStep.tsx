@@ -15,8 +15,8 @@ import { useFileActions, useFileSelectors } from "@editor/contexts/FileContext";
 import i18n from "@editor/i18n";
 import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
+import { sharedSaveTarget } from "@editor/services/saveTargets";
 import type { FileId } from "@editor/types/file";
-import type { StirlingFileStub } from "@editor/types/fileContext";
 
 /**
  * Nearest scrolling ancestor - in the right rail that is the tool panel's
@@ -66,23 +66,18 @@ function ReviewStepContent<TParams = unknown>({
   const { actions: fileActions } = useFileActions();
   const selectors = useFileSelectors();
   const saver = useSaveStoredFile();
-  const outputStubs = (operation.outputFileIds ?? [])
-    .map((id) => selectors.getStirlingFileStub(id as FileId))
-    .filter((stub): stub is StirlingFileStub => Boolean(stub));
-  const targets = outputStubs.map(saver.targetFor);
+  const outputStubs = selectors.getStirlingFileStubs(
+    (operation.outputFileIds ?? []) as FileId[],
+  );
   // Results inherit their source's home, so Save sends them back there too.
-  const savesToTarget = targets.length > 0 && targets.every(Boolean);
-  const oneTarget =
-    savesToTarget && targets.every((target) => target === targets[0])
-      ? targets[0]
-      : undefined;
+  const savesToTarget =
+    outputStubs.length > 0 &&
+    outputStubs.every((stub) => saver.targetFor(stub));
+  const oneTarget = sharedSaveTarget(outputStubs, saver.targetFor);
   const saveLabel = oneTarget
     ? outputStubs.length > 1
       ? oneTarget.saveAllLabel()
-      : oneTarget.saveLabel(
-          outputStubs[0],
-          saver.planFor(outputStubs[0]) ?? "replace",
-        )
+      : saver.targetSaveLabel(outputStubs[0])
     : terminology.download;
   const saveButton = useSaveButton({
     saver,

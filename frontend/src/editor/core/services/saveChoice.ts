@@ -17,11 +17,16 @@ export interface SaveChoiceResult {
   remember: boolean;
 }
 
-type Pending = SaveChoiceRequest & {
+export interface OpenSaveChoice extends SaveChoiceRequest {
+  id: number;
+}
+
+type Pending = OpenSaveChoice & {
   resolve: (result: SaveChoiceResult | null) => void;
 };
 
 let pending: Pending | null = null;
+let lastId = 0;
 const listeners = new Set<() => void>();
 
 function emit(): void {
@@ -34,7 +39,7 @@ export function requestSaveChoice(
 ): Promise<SaveChoiceResult | null> {
   pending?.resolve(null);
   return new Promise((resolve) => {
-    pending = { ...request, resolve };
+    pending = { ...request, id: ++lastId, resolve };
     emit();
   });
 }
@@ -51,6 +56,6 @@ export function subscribeSaveChoice(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
-export function getSaveChoice(): SaveChoiceRequest | null {
+export function getSaveChoice(): OpenSaveChoice | null {
   return pending;
 }

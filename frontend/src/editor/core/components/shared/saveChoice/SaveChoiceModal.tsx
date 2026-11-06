@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal } from "@editor/ui/Modal";
 import { Button } from "@editor/ui/Button";
@@ -8,36 +8,37 @@ import {
   answerSaveChoice,
   getSaveChoice,
   subscribeSaveChoice,
+  type OpenSaveChoice,
   type SaveChoice,
 } from "@editor/services/saveChoice";
 
+const dismiss = () => answerSaveChoice(null);
+
 /** The "Ask me" dialog: where this Save goes. */
 export function SaveChoiceModal() {
-  const { t } = useTranslation();
   const request = useSyncExternalStore(subscribeSaveChoice, getSaveChoice);
+  return request ? (
+    <SaveChoiceDialog key={request.id} request={request} />
+  ) : null;
+}
+
+function SaveChoiceDialog({ request }: { request: OpenSaveChoice }) {
+  const { t } = useTranslation();
   const [choice, setChoice] = useState<SaveChoice>("replace");
   const [remember, setRemember] = useState(false);
-
-  useEffect(() => {
-    if (!request) return;
-    setChoice("replace");
-    setRemember(false);
-  }, [request]);
-
-  const cancel = () => answerSaveChoice(null);
-  const home = request?.homeName ?? "";
+  const home = request.homeName;
 
   return (
     <Modal
-      open={request !== null}
-      onClose={cancel}
+      open
+      onClose={dismiss}
       width="sm"
       title={t("saveFile.ask.title", 'Save "{{name}}"', {
-        name: request?.fileName ?? "",
+        name: request.fileName,
       })}
       footer={
         <>
-          <Button variant="secondary" onClick={cancel}>
+          <Button variant="secondary" onClick={dismiss}>
             {t("cancel", "Cancel")}
           </Button>
           <Button onClick={() => answerSaveChoice({ choice, remember })}>
@@ -57,9 +58,7 @@ export function SaveChoiceModal() {
             description: t(
               "saveFile.ask.replaceHint",
               "Replaces it in {{home}}.",
-              {
-                home,
-              },
+              { home },
             ),
           },
           {
@@ -68,23 +67,21 @@ export function SaveChoiceModal() {
             description: t(
               "saveFile.ask.copyHint",
               "Saves {{name}} in {{home}}. Later saves update that copy.",
-              { name: request?.copyName ?? "", home },
+              { name: request.copyName, home },
             ),
           },
           {
             value: "other",
-            label: request?.otherLabel ?? "",
+            label: request.otherLabel,
             description: t(
               "saveFile.ask.otherHint",
               "Leaves {{home}} untouched.",
-              {
-                home,
-              },
+              { home },
             ),
           },
         ]}
       />
-      {request?.canRemember && (
+      {request.canRemember && (
         <Checkbox
           label={t("saveFile.ask.remember", "Remember my choice")}
           description={t(

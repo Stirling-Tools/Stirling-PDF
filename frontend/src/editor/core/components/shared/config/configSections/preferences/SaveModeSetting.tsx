@@ -5,7 +5,8 @@ import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useSaveMode } from "@editor/hooks/useSaveMode";
 import { useSaveTargets } from "@editor/hooks/useSaveTargets";
 import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
-import { parseSaveMode, type SaveMode } from "@editor/services/saveMode";
+import { useSaveModeOptions } from "@editor/hooks/useSaveModeOptions";
+import { parseSaveMode } from "@editor/services/saveMode";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 /** What Save does for a file that came from somewhere. */
@@ -14,15 +15,10 @@ export function SaveModeSetting() {
   const labelId = useId();
   const { mode, locked, setMode } = useSaveMode();
   const targets = useSaveTargets();
+  const options = useSaveModeOptions();
   // Desktop files live on disk; on the web only a save target gives a file a home.
   const savesToDisk = Boolean(useFileActionIcons().saveAs);
   if (!savesToDisk && targets.length === 0) return null;
-
-  const options: { value: SaveMode; label: string }[] = [
-    { value: "replace", label: t("saveFile.mode.replace", "Update it") },
-    { value: "copy", label: t("saveFile.mode.copy", "Save a copy next to it") },
-    { value: "ask", label: t("saveFile.mode.ask", "Ask me") },
-  ];
 
   return (
     <div

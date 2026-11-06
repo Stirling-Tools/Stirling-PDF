@@ -1,15 +1,16 @@
-/** What Save does for a file that has a home (disk, or a save target). */
-export type SaveMode = "replace" | "copy" | "ask";
+/** Save straight to a file's home: update it, or write a copy beside it. */
+export type SaveHomeMode = "replace" | "copy";
 
-export const SAVE_MODES: readonly SaveMode[] = ["replace", "copy", "ask"];
+/** What Save does for a file that has a home (disk, or a save target). */
+export type SaveMode = SaveHomeMode | "ask";
+
+const SAVE_MODES: readonly SaveMode[] = ["replace", "copy", "ask"];
 
 export const DEFAULT_SAVE_MODE: SaveMode = "replace";
 
 export function parseSaveMode(value: unknown): SaveMode | undefined {
   const mode = typeof value === "string" ? value.toLowerCase() : "";
-  return (SAVE_MODES as readonly string[]).includes(mode)
-    ? (mode as SaveMode)
-    : undefined;
+  return SAVE_MODES.find((candidate) => candidate === mode);
 }
 
 /** "Report.pdf" -> "Report (edited).pdf", then "(edited 2)" and so on. */
