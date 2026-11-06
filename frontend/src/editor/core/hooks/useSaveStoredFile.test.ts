@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   taken: new Set<string>(),
   askChoice: vi.fn(),
   rename: vi.fn(async () => true),
+  getStirlingFile: vi.fn(async (): Promise<File | null> => null),
 }));
 
 vi.mock("@editor/components/toast", () => ({ alert: mocks.alert }));
@@ -34,7 +35,7 @@ vi.mock("@editor/services/downloadService", () => ({
   downloadFile: mocks.download,
 }));
 vi.mock("@editor/services/fileStorage", () => ({
-  fileStorage: { getStirlingFile: async () => null },
+  fileStorage: { getStirlingFile: mocks.getStirlingFile },
 }));
 vi.mock("@editor/services/policyExport", () => ({
   enforceExportPolicies: mocks.enforce,
@@ -147,6 +148,13 @@ it("reports a missing file instead of saving nothing", async () => {
   expect(mocks.alert).toHaveBeenCalledWith(
     expect.objectContaining({ alertType: "error" }),
   );
+});
+
+it("reports a storage error as a failed save", async () => {
+  mocks.getStirlingFile.mockRejectedValueOnce(new Error("IndexedDB closed"));
+  const { result } = renderHook(() => useSaveStoredFile());
+  expect(await result.current.saveStoredFile(stub())).toBe("failed");
+  expect(mocks.alert).toHaveBeenCalled();
 });
 
 it("counts unsaved disk edits and asks the target for its own files", () => {
