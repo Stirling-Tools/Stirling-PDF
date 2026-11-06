@@ -7,6 +7,10 @@ import { useNotificationActions } from "@editor/components/notifications/notific
 import { useNotificationPasswordPrompt } from "@editor/components/notifications/useNotificationPasswordPrompt";
 import { useQuickNavToolReasons } from "@editor/components/shared/quickNav/useQuickNavToolReasons";
 import { useSyncQuickNavAccount } from "@editor/components/shared/quickNav/useSyncQuickNavAccount";
+import { useAccountMenuShortcuts } from "@editor/components/shared/quickNav/useAccountMenuShortcuts";
+import { useAuth } from "@editor/auth/UseSession";
+import { useAccountLogout } from "@editor/extensions/accountLogout";
+import { withBasePath } from "@editor/constants/app";
 import { useBrandFlourish } from "@editor/components/easterEgg/useBrandFlourish";
 import { useNotificationsAvailable } from "@editor/components/notifications/useNotificationsAvailable";
 import {
@@ -48,6 +52,10 @@ export function QuickNavHostBridge({
   onOpenFromComputer,
 }: QuickNavHostBridgeProps) {
   useSyncQuickNavAccount();
+  const accountShortcuts = useAccountMenuShortcuts();
+  const { user, isAnonymous, signOut } = useAuth();
+  const accountLogout = useAccountLogout();
+  const canSignOut = Boolean(user) && !isAnonymous;
   const notificationsAvailable = useNotificationsAvailable();
   // Built even when closed: it carries a one-shot document pickup that would sit unclaimed.
   const notificationActions = useNotificationActions();
@@ -84,6 +92,17 @@ export function QuickNavHostBridge({
       openFromComputer: onOpenFromComputer,
       toggleNotifications: () => setNotificationsOpen((open) => !open),
       onBrandFlourish: brandFlourish.trigger,
+      accountMenu: {
+        shortcuts: accountShortcuts,
+        signOut: canSignOut
+          ? () =>
+              void accountLogout({
+                signOut,
+                redirectToLogin: () =>
+                  window.location.assign(withBasePath("/login")),
+              })
+          : undefined,
+      },
     },
   );
 
