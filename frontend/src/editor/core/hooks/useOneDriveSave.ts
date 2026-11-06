@@ -19,6 +19,7 @@ import {
   copyName,
   OneDriveSaveError,
   saveToOneDrive,
+  withLiveAccount,
   type OneDriveSaveTarget,
 } from "@editor/services/oneDriveSave";
 import { openExternal } from "@editor/platform/openExternal";
@@ -93,9 +94,20 @@ export function useOneDriveSave(): OneDriveSave {
   const run = useCallback(
     async (
       stub: StirlingFileStub,
-      target: OneDriveSaveTarget,
+      requested: OneDriveSaveTarget,
       content?: File,
     ): Promise<boolean> => {
+      const target = withLiveAccount(requested, connected.accounts);
+      if (!target) {
+        alert({
+          alertType: "error",
+          title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
+          body: failureMessage("reconnect"),
+          expandable: false,
+          ...reconnectAction(),
+        });
+        return false;
+      }
       const stored = content ?? (await fileStorage.getStirlingFile(stub.id));
       if (!stored) {
         alert({
@@ -173,7 +185,7 @@ export function useOneDriveSave(): OneDriveSave {
             code === "conflict"
               ? t(
                   "oneDriveSave.conflict",
-                  "Someone changed this file in OneDrive after you opened it. Save your version as a copy instead.",
+                  "This file has changed in OneDrive since this version was opened or saved. Save your version as a copy instead.",
                 )
               : code === "unprotected"
                 ? t(
@@ -208,7 +220,7 @@ export function useOneDriveSave(): OneDriveSave {
         setSaving(null);
       }
     },
-    [actions, failureMessage, reconnectAction, t],
+    [actions, connected.accounts, failureMessage, reconnectAction, t],
   );
 
   const save = useCallback(

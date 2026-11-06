@@ -4,6 +4,7 @@ import apiClient from "@editor/services/apiClient";
 import type { CloudOrigin } from "@editor/types/file";
 import { isMicrosoftProtectedPdf } from "@editor/services/rightsManagedPdf";
 import { inMemoryFile } from "@editor/utils/inMemoryFile";
+import type { ConnectedAccount } from "@editor/services/connectedAccountsService";
 
 export type OneDriveSaveTarget =
   | { kind: "replace"; origin: CloudOrigin }
@@ -38,6 +39,22 @@ interface SavedItem {
   name: string;
   eTag: string | null;
   webUrl: string | null;
+}
+
+export function withLiveAccount(
+  target: OneDriveSaveTarget,
+  accounts: readonly ConnectedAccount[],
+): OneDriveSaveTarget | null {
+  const live = accounts.filter(
+    (account) =>
+      account.provider === "microsoft" && account.status === "CONNECTED",
+  );
+  const accountId =
+    target.kind === "folder" ? target.accountId : target.origin.accountId;
+  if (live.some((account) => account.id === accountId)) return target;
+  if (live.length !== 1) return null;
+  if (target.kind === "folder") return { ...target, accountId: live[0].id };
+  return { ...target, origin: { ...target.origin, accountId: live[0].id } };
 }
 
 export async function saveToOneDrive(

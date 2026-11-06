@@ -30,7 +30,11 @@ vi.mock("@editor/contexts/FileContext", () => ({
   useFileActions: () => ({ actions: { updateStirlingFileStub: vi.fn() } }),
 }));
 vi.mock("@editor/hooks/useConnectedAccounts", () => ({
-  useConnectedAccounts: () => ({ available: () => true, connect: vi.fn() }),
+  useConnectedAccounts: () => ({
+    available: () => true,
+    connect: vi.fn(),
+    accounts: [{ id: 9, provider: "microsoft", status: "CONNECTED" }],
+  }),
   ensureConnectedAccount: async () => ({ account: mocks.account }),
 }));
 vi.mock("@editor/hooks/useOneDrivePicker", () => ({
