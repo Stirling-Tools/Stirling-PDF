@@ -22,27 +22,38 @@ import org.springframework.stereotype.Service;
 
 import com.posthog.java.PostHog;
 
+import jakarta.annotation.PreDestroy;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.configuration.PostHogClientFactory;
 import stirling.software.common.model.ApplicationProperties;
 
 @Service
+@Slf4j
 public class PostHogService {
-    private final PostHog postHog;
+    private final PostHogClientFactory postHogClientFactory;
+    private final Object postHogClientLock = new Object();
     private final String uniqueId;
     private final String appVersion;
     private final ApplicationProperties applicationProperties;
     private final UserServiceInterface userService;
     private final Environment env;
     private boolean configDirMounted;
+    // Under postHogClientLock. shutdown() is final: a late capture must not resurrect the queue
+    // thread, while a runtime telemetry disable stays recoverable by design.
+    private boolean closed;
+    private volatile PostHog postHog;
 
     public PostHogService(
-            PostHog postHog,
+            PostHogClientFactory postHogClientFactory,
             @Qualifier("UUID") String uuid,
             @Qualifier("configDirMounted") boolean configDirMounted,
             @Qualifier("appVersion") String appVersion,
             ApplicationProperties applicationProperties,
             @Autowired(required = false) UserServiceInterface userService,
             Environment env) {
-        this.postHog = postHog;
+        this.postHogClientFactory = postHogClientFactory;
         this.uniqueId = uuid;
         this.appVersion = appVersion;
         this.applicationProperties = applicationProperties;
@@ -52,24 +63,82 @@ public class PostHogService {
         captureSystemInfo();
     }
 
-    private void captureSystemInfo() {
-        if (!applicationProperties.getSystem().isPosthogEnabled()) {
-            return;
+    /**
+     * Creates the client on first use so that its QueueManager thread only exists while telemetry
+     * is enabled. The constructor's system-info capture creates it during startup when telemetry is
+     * on, so an enabled install still reports its startup snapshot as the first event.
+     */
+    private PostHog client() {
+        PostHog client = postHog;
+        if (client == null) {
+            synchronized (postHogClientLock) {
+                client = postHog;
+                if (client == null) {
+                    if (closed) {
+                        throw new IllegalStateException("PostHogService is shut down");
+                    }
+                    client = postHogClientFactory.create();
+                    postHog = client;
+                }
+            }
         }
+        return client;
+    }
+
+    private boolean telemetryEnabled() {
+        return applicationProperties.getSystem().isPosthogEnabled();
+    }
+
+    /** Telemetry is best-effort: failures must never reach PDF-processing callers. */
+    private void captureQuietly(String eventName, Map<String, Object> properties) {
         try {
-            postHog.capture(uniqueId, "system_info_captured", captureServerMetrics());
+            client().capture(uniqueId, eventName, properties);
         } catch (Exception e) {
-            // Handle exceptions
+            log.debug("PostHog capture of {} failed", eventName, e);
         }
     }
 
+    private void shutdownClientIfDisabled() {
+        PostHog client;
+        synchronized (postHogClientLock) {
+            if (postHog == null || telemetryEnabled()) {
+                return;
+            }
+            client = postHog;
+            postHog = null;
+        }
+        // shutdown() joins the queue thread, so run it outside the lock.
+        client.shutdown();
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        PostHog client;
+        synchronized (postHogClientLock) {
+            closed = true;
+            client = postHog;
+            postHog = null;
+        }
+        if (client != null) {
+            client.shutdown();
+        }
+    }
+
+    private void captureSystemInfo() {
+        if (!telemetryEnabled()) {
+            return;
+        }
+        captureQuietly("system_info_captured", captureServerMetrics());
+    }
+
     public void captureEvent(String eventName, Map<String, Object> properties) {
-        if (!applicationProperties.getSystem().isPosthogEnabled()) {
+        if (!telemetryEnabled()) {
+            shutdownClientIfDisabled();
             return;
         }
 
         properties.put("app_version", appVersion);
-        postHog.capture(uniqueId, eventName, properties);
+        captureQuietly(eventName, properties);
     }
 
     public Map<String, Object> captureServerMetrics() {
