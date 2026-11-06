@@ -1329,9 +1329,7 @@ public class ApplicationProperties {
         private String tessdataDir;
         private boolean enableAlphaFunctionality;
         private Boolean enableAnalytics;
-        // True unless the settings file says otherwise: a file from before the wizard
-        // belongs to a configured server, and a read-only one cannot take the upgrade
-        // migration's explicit true, so a false default would trap its admin in setup.
+        // True when absent: older and read-only settings files belong to servers already set up.
         private boolean setupCompleted = true;
         private Boolean enablePosthog;
         private Boolean enableScarf;

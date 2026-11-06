@@ -1,9 +1,5 @@
-/**
- * Set by the login page after it signs a fresh server's admin in with the
- * default login, so the app holds the sign-in card until its config shows the
- * signed-in admin, instead of flashing the editor while that config loads.
- * Per tab, and only ever a display hint: setup itself is gated on the server.
- */
+// Set by the login page after its automatic default sign-in, so the app holds
+// the sign-in card rather than flash the editor. Per tab; a display hint only.
 const KEY = "stirling.setupSignInHandoff";
 
 /** Past this the hint is stale, so the app is never held up for long. */

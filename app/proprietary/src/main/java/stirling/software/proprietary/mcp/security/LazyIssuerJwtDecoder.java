@@ -13,14 +13,7 @@ import org.springframework.security.oauth2.jwt.JwtException;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Builds the issuer-backed decoder on first use rather than at startup, so an issuer that is down
- * or mistyped stops MCP sign-in, not the server. Until it is built every token is rejected with
- * {@link BadJwtException}, which the resource server answers with a 401; Spring's own
- * SupplierJwtDecoder throws a plain runtime exception there, which surfaces as a 500. Discovery
- * runs on one request at a time, requests that arrive meanwhile are rejected at once rather than
- * queued behind it, and a failed attempt is not repeated for {@link #RETRY_AFTER}.
- */
+/** Builds the issuer decoder on first use, so an unreachable issuer stops MCP sign-in, not boot. */
 @Slf4j
 final class LazyIssuerJwtDecoder implements JwtDecoder {
 
@@ -47,6 +40,8 @@ final class LazyIssuerJwtDecoder implements JwtDecoder {
         return (ready != null ? ready : resolve()).decode(token);
     }
 
+    // Fails as BadJwtException, a 401 (SupplierJwtDecoder's error is a 500). One lookup at a time;
+    // requests meanwhile are rejected, not queued, and a failed lookup waits RETRY_AFTER.
     private JwtDecoder resolve() {
         if (!building.tryLock()) {
             throw new BadJwtException("MCP issuer discovery is still in progress");

@@ -335,9 +335,8 @@ public class UserController {
                     .body(Map.of("error", "incorrectPassword", "message", "Incorrect password"));
         }
         userService.changePassword(user, newPassword);
-        // The login page advertises, and signs in with, the default admin login while the first
-        // login is outstanding; left set, every visit would count a failed attempt against
-        // this account until it locked.
+        // The login page signs in with the default login until first login ends; left set, every
+        // visit would count a failed attempt until this account locked.
         if (Boolean.TRUE.equals(user.getIsFirstLogin())) {
             userService.changeFirstUse(user, false);
         }

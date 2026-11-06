@@ -114,9 +114,8 @@
   transition: height var(--motion-slow);
 }
 
-/* A new formatting context, so child margins stay inside the measured height.
-   Otherwise they collapse through only once overflow: hidden comes off at the
-   end of the animation, and the content jumps by that margin. */
+/* A new formatting context, so child margins stay inside the measured height
+   instead of collapsing through, and jumping, as the animation ends. */
 .animatedContent {
   display: flow-root;
 }
@@ -293,9 +292,8 @@
   background: var(--auth-card-bg);
 }
 
-/* Only a setting that can open more fields is boxed, so its fields read as its
-   own. The box reaches out by its own padding and border, so its label, control
-   and fields stay in line with the settings around it. */
+/* Only a setting that can open more fields is boxed. The box reaches out by its
+   padding and border, so its contents line up with the settings around it. */
 .group[data-expandable="true"] {
   margin-inline: calc(-1 * var(--setup-box-bleed));
   border: 1px solid var(--c-border-subtle);

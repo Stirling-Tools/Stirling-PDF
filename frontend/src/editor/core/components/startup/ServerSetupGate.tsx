@@ -7,19 +7,14 @@ export function useServerSetupPending(): boolean {
 
 export interface ServerSetupGateProps {
   children: ReactNode;
-  /**
-   * The signed-in account must replace its password. Setup then starts by
-   * setting it, in place of the separate first-login password screen.
-   */
+  /** The account must replace its password; setup then opens on that card. */
   passwordChange?: { usingDefaultCredentials: boolean };
   /** Called once setup has set the new password. */
   onPasswordChanged?: () => void;
 }
 
-/**
- * What to show while startup checks load, in place of nothing: a build whose
- * login can hand straight over to setup keeps that hand-off's screen up.
- */
+/** Shown while startup checks load; a build whose login hands over to setup
+ *  keeps that hand-off's screen up. */
 export function ServerSetupLoading() {
   return null;
 }

@@ -38,10 +38,8 @@ export class UsernameChangeError extends Error {
   }
 }
 
-/**
- * The details were saved but signing in under the new username failed, so the
- * admin's old token no longer names an account and they must sign in again.
- */
+/** The details saved, but signing in under the new username failed, so the
+ *  admin must sign in again. */
 export class SignInAgainError extends Error {
   constructor() {
     super("Sign in again");
@@ -60,11 +58,8 @@ function serverErrorCode(error: unknown): string | undefined {
   return typeof data?.error === "string" ? data.error : undefined;
 }
 
-/**
- * Saves every answer in one write, records setup as done, then restarts once,
- * since almost every setting only applies on restart. A server that cannot
- * restart itself gets a "restart it yourself" card instead.
- */
+/** Saves every answer in one write, records setup as done, then restarts once;
+ *  a server that can't restart itself gets a "restart it yourself" card. */
 async function applySettings(
   initial: ServerSetupDraft,
   draft: ServerSetupDraft,
@@ -87,20 +82,8 @@ async function applySettings(
   return restart === "unsupported" ? "manualRestart" : "restartFailed";
 }
 
-/**
- * Saves the admin's new account details, and later the settings. Changing
- * the password keeps the admin signed in, since the server leaves their token
- * valid; that token is swapped for a fresh one only as setup closes, because a
- * session refresh puts the whole app into its loading state, which would
- * unmount the wizard.
- *
- * A rename is different: tokens name the username, so the old one stops
- * working at once and `saveAccount` signs straight back in with the new
- * details. The password goes first so the rename can prove it with the new
- * one, and a retry after a refused username does not change it again.
- * `saveAccount` rejects with PasswordChangeError or UsernameChangeError for a
- * refusal the admin can fix, and SignInAgainError once only a fresh sign-in helps.
- */
+/** Saves the account (password, then any rename, with a fresh sign-in) and
+ *  settings. The token refreshes only on close: a refresh unmounts setup. */
 export function useSetupFinish({
   onDone,
   onPasswordChanged,

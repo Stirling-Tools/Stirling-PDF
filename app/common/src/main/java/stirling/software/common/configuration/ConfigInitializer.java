@@ -175,11 +175,7 @@ public class ConfigInitializer {
         return false;
     }
 
-    /**
-     * A settings file from before the setup wizard has no {@code system.setupCompleted}. That
-     * server is already configured, so it merges in as set up rather than taking the template's
-     * {@code false}, which would show the first-run wizard after an upgrade.
-     */
+    /** A settings file from before the wizard lacks setupCompleted: that server is set up. */
     boolean markExistingServerSetUp(YamlHelper yaml, YamlHelper template) {
         if (yaml.getValueByExactKeyPath("system", "setupCompleted") != null) {
             return false;

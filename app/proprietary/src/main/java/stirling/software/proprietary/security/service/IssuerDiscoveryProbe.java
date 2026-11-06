@@ -20,11 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * Checks that an OpenID Connect issuer answers discovery. OAuth sign-in and MCP's OAuth mode both
- * read {@code <issuer>/.well-known/openid-configuration}; an issuer that does not answer stops
- * sign-in from being registered, so the setup wizard checks it before saving.
- */
+/** Whether an OpenID Connect issuer answers discovery; setup checks one before saving it. */
 @Service
 @Slf4j
 public class IssuerDiscoveryProbe {
@@ -52,12 +48,7 @@ public class IssuerDiscoveryProbe {
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * True when {@code issuer} is an http(s) URL whose discovery document names that same issuer,
-     * compared exactly apart from surrounding whitespace: Spring matches the saved value against
-     * the advertised one the same way, and some providers (Auth0) advertise a trailing slash. Never
-     * throws: an unreachable, slow or malformed issuer is simply false.
-     */
+    /** True when the issuer's discovery document names it exactly, as Spring does. Never throws. */
     public boolean answersDiscovery(String issuer) {
         if (issuer == null) {
             return false;

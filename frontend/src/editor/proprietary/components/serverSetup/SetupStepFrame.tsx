@@ -18,20 +18,14 @@ interface SetupStepFrameProps {
   primaryLabel?: ReactNode;
   onPrimary?: () => void;
   primaryLoading?: boolean;
-  /**
-   * With `onSecondary`, turns the actions into a two-way choice: this button on
-   * the left, the primary on the right, and neither focused when it appears.
-   */
+  /** With `onSecondary`, a two-way choice: this button left, the primary
+   *  right, neither focused when it appears. */
   secondaryLabel?: ReactNode;
   onSecondary?: () => void;
 }
 
-/**
- * One wizard card. Keep it mounted across steps: only the header and body
- * sit inside AnimatedHeight, so when a step changes size the actions ride the
- * card's bottom edge instead of jumping to their new place first. Past the
- * card's max height the header and body scroll and the actions stay put.
- */
+/** One wizard card; keep it mounted across steps so the actions ride its edge
+ *  as it resizes. Past its max height the header and body scroll. */
 export function SetupStepFrame({
   progress,
   onBack,

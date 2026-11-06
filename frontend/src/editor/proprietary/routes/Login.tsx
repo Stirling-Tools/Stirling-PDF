@@ -40,9 +40,8 @@ import {
 import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
 import loginHeader from "@editor/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
-// A failed default sign-in counts against the admin's lockout, so a tab that
-// has seen one fail never tries again. Unreadable storage counts as failed:
-// without the record a broken attempt would repeat on every view.
+// A failed default sign-in counts towards the admin's lockout, so a tab that
+// saw one fail (or can't read storage) never tries again.
 const DEFAULT_SIGN_IN_FAILED_KEY = "stirling_default_sign_in_failed";
 
 function defaultSignInFailedInThisTab(): boolean {
@@ -313,9 +312,8 @@ export default function Login() {
     awaitsPasswordSignIn,
   ]);
 
-  // A server still in first-run setup on the default admin login signs in by
-  // itself: the credentials are printed on this page anyway, and setup's first
-  // card replaces them. The server decides; anything else gets the form.
+  // A server still in setup on the default login signs in by itself: the page
+  // prints those credentials anyway. The server decides; otherwise, the form.
   const defaultSignInDue =
     defaultSignIn === "idle" &&
     defaultSignInAllowed &&

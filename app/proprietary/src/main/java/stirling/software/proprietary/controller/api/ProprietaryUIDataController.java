@@ -665,11 +665,7 @@ public class ProprietaryUIDataController {
         private boolean firstTimeSetup;
         private boolean showDefaultCredentials;
 
-        /**
-         * The login page may sign in with the default admin login by itself: only before first-run
-         * setup is complete, while that login is still in use, so a set-up server never has a
-         * failed attempt counted against its admin.
-         */
+        /** Login may sign in as the default admin: only before setup, while that login works. */
         private boolean defaultSignIn;
 
         private List<String> languages;

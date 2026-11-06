@@ -68,11 +68,8 @@ function Wizard({ owesPassword = false }: WizardProps) {
   );
 }
 
-/**
- * First-run server setup, rendered by the real wizard against a mocked new
- * server. Each story reaches its card by clicking through the flow, so it
- * shows what the app shows.
- */
+/** First-run setup, rendered by the real wizard against a mocked new server;
+ *  each story clicks through the flow to reach its card. */
 const meta = {
   title: "Server Setup/Steps",
   component: Wizard,

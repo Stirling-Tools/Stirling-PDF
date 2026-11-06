@@ -1,7 +1,4 @@
-/**
- * The admin account a fresh server creates. Must match InitialSecuritySetup's
- * defaults; the backend only reports `showDefaultCredentials` while they work.
- */
+/** The admin a fresh server creates; must match InitialSecuritySetup. */
 export const DEFAULT_ADMIN_CREDENTIALS = {
   username: "admin",
   password: "stirling",

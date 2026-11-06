@@ -1,10 +1,7 @@
 import { withBasePath } from "@editor/constants/app";
 
-/**
- * The address setup offers for the server's web and server address fields:
- * where this page is served from. Empty where the page is not served over
- * http(s), so there is nothing to offer.
- */
+/** The address setup offers for the server: this page's origin, or empty when
+ *  the page isn't served over http(s). */
 export function setupAddressPrefill(): string {
   if (!/^https?:$/.test(window.location.protocol)) return "";
   return `${window.location.origin}${withBasePath("/")}`.replace(/\/+$/, "");

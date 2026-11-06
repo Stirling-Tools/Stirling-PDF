@@ -6,24 +6,8 @@ import {
   DEFAULT_TEST_PASSWORD,
 } from "@editor/tests/helpers/login";
 
-/**
- * Live-suite bootstrap. Two responsibilities:
- *
- *   1. **Pristine CI path** — a fresh server signs its default
- *      `admin / stirling` user in by itself and opens first-run setup on
- *      the account card. Set `admin / adminadmin` there, then mark the rest
- *      of setup complete through the API: setup has no skip, and finishing
- *      it in the UI would restart the server under the suite. Real coverage
- *      of the account card, and the API call proves the new password took.
- *
- *   2. **Already-seeded path** — for local dev where `admin / adminadmin`
- *      already exists (e.g. the developer's settings.yml provisions it
- *      directly), skip the UI flow and only mark setup complete through the
- *      API, so the wizard does not stand in front of every other live spec.
- *
- * Configured as a Playwright `setup` project; the `live` project
- * depends on it so it runs once before every other live spec.
- */
+/** Runs once before the live suite: sets admin/adminadmin on a fresh server's
+ *  account card (or reuses a seeded one), then marks setup complete. */
 
 async function signInSeededAdmin(
   request: import("@playwright/test").APIRequestContext,

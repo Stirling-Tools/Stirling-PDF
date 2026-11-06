@@ -4,14 +4,8 @@ import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 /** Resizes closer together than this are one continuous change. */
 const FOLLOW_WINDOW_MS = 100;
 
-/**
- * Eases its height to fit whatever it holds. CSS cannot transition to `auto`,
- * so the content is measured and the measured height applied. Clipping is only
- * on mid-transition: left on, it would cut off focus rings at the edges.
- * Content that resizes frame by frame (an animating child) is followed
- * directly; easing each of those steps too would trail behind it. Under
- * reduced motion there is no transition, so there is nothing to clip for.
- */
+/** Eases its height to fit its content, which CSS can't do to `auto`; clips
+ *  only mid-transition, so focus rings show, and follows animating children. */
 export function AnimatedHeight({
   children,
   className,

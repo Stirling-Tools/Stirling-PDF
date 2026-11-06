@@ -1,9 +1,5 @@
-/**
- * The answers the first-run setup wizard collects, and how they map onto
- * settings.yml keys. The wizard only ever saves keys whose value differs from
- * what the server already has, so a skipped step or an untouched field leaves
- * the server's own default (including env overrides) in place.
- */
+// The setup wizard's answers and their settings.yml keys. Only keys that differ
+// from the server's are saved, so untouched fields keep the server's values.
 
 import { EMBEDDING_MODEL_SUGGESTIONS } from "@editor/components/shared/config/configSections/aiEngineSettings";
 
@@ -42,20 +38,14 @@ export const QUICK_SUMMARY_STEPS: SetupStepId[] = [
   "ai",
 ];
 
-/**
- * The numbered cards after the mode choice. Quick start's settings share one
- * summary card before Analytics. The password, when one is owed, is set on
- * its own card before any of these and is not a setting.
- */
+/** The numbered cards after the mode choice; Quick start's settings share one
+ *  summary card. An owed password has its own card before these. */
 export function stepsFor(mode: SetupMode): SetupStepId[] {
   return mode === "quick" ? ["summary", "analytics"] : SETUP_STEPS.custom;
 }
 
-/**
- * Issuer fields `step` would save with a new value. Each must answer OIDC
- * discovery before saving: the server reads them on boot, and one it cannot
- * reach stops sign-in from registering. Unchanged ones are already in use.
- */
+/** Issuer fields `step` would save with a new value; each must answer OIDC
+ *  discovery first, since one the server can't reach stops sign-in. */
 export function issuersToCheck(
   step: SetupStepId,
   draft: ServerSetupDraft,
@@ -69,11 +59,8 @@ export function issuersToCheck(
     : [];
 }
 
-/**
- * The sign-in fields for switching to `login`: the server's own values when
- * going back to the method it already uses, blank otherwise. Carrying values
- * over would hand one provider's (often masked) secret to another.
- */
+/** Sign-in fields for switching to `login`: the server's own on its current
+ *  method, blank otherwise, so no provider is handed another's secret. */
 export function loginChange(
   login: LoginMethod,
   initial: ServerSetupDraft,
@@ -96,10 +83,8 @@ export function loginChange(
   };
 }
 
-/**
- * The same for the AI model provider, whose API key, base URL and model names
- * are its own: another provider's model names would make every AI call fail.
- */
+/** The same for the AI provider, whose key, base URL and model names are its
+ *  own: another provider's model names would fail every AI call. */
 export function aiProviderChange(
   provider: AiProvider,
   initial: ServerSetupDraft,
@@ -121,11 +106,8 @@ export function aiProviderChange(
       };
 }
 
-/**
- * Whether the AI card shows the model names. Quick start keeps the server's,
- * so it asks only once there are none to keep: a new provider, or a server
- * without them.
- */
+/** Whether the AI card shows model names: Quick start keeps the server's and
+ *  asks only when there are none to keep (a new provider, or none set). */
 export function asksForModels(
   mode: SetupMode,
   draft: ServerSetupDraft,
@@ -139,10 +121,8 @@ export function asksForModels(
   );
 }
 
-/**
- * The same for the embedding provider. A new provider starts on its first
- * suggested model, since the previous provider's model name means nothing to it.
- */
+/** The same for the embedding provider: a new one starts on its first
+ *  suggested model, since the previous provider's means nothing to it. */
 export function embeddingProviderChange(
   provider: EmbeddingProvider,
   initial: ServerSetupDraft,
@@ -291,11 +271,8 @@ export function loginNeedsIssuer(login: LoginMethod): boolean {
   return login === "keycloak" || login === "oidc";
 }
 
-/**
- * The OAuth callback the identity provider must allow. Mirrors
- * OAuth2Configuration.REDIRECT_URI_PATH, whose registration id is the provider
- * key for the named providers and the provider name for generic OIDC.
- */
+/** The OAuth callback the provider must allow. Must match the backend's
+ *  OAuth2Configuration.REDIRECT_URI_PATH (provider key, or OIDC name). */
 export function oauthRedirectUri(draft: ServerSetupDraft): string {
   const registrationId =
     draft.login === "oidc" ? draft.oauthProviderName.trim() : draft.login;
@@ -371,11 +348,8 @@ const MASKED_SECRET = "********";
 /** settings.yml.template's sample host; shown empty so it is never saved as real. */
 const TEMPLATE_SMTP_HOST = "smtp.example.com";
 
-/**
- * The draft as the server currently stands. `settings` is the body of
- * GET /api/v1/admin/settings, where secrets come back masked; a masked secret
- * left untouched is never written back.
- */
+/** The draft as the server stands, from GET /api/v1/admin/settings; masked
+ *  secrets left untouched are never written back. */
 export function draftFromSettings(settings: Settings): ServerSetupDraft {
   const login = readLogin(settings);
   const prefix = oauthPrefix(login);
@@ -432,10 +406,8 @@ export function draftFromSettings(settings: Settings): ServerSetupDraft {
   };
 }
 
-/**
- * Fills addresses the server has not set from the page's own origin. Applied
- * to the draft only, so the prefilled value counts as a change and is saved.
- */
+/** Fills addresses the server hasn't set from `origin`; draft-only, so the
+ *  prefilled value counts as a change and is saved. */
 export function prefillAddresses(
   draft: ServerSetupDraft,
   origin: string,
@@ -566,12 +538,8 @@ export function revertStep(
   return next;
 }
 
-/**
- * What Finish saves: steps outside the chosen mode go back to the server's
- * values, so Custom answers are dropped if the admin switches to Quick start.
- * MCP switched on here uses API keys, the one mode that needs no identity
- * provider; a server that already had MCP keeps its own mode.
- */
+/** What Finish saves: steps outside the chosen mode revert to the server's.
+ *  MCP switched on here uses API keys; one already running keeps its mode. */
 export function draftToSave(
   draft: ServerSetupDraft,
   initial: ServerSetupDraft,
@@ -638,10 +606,7 @@ const MIN_PASSWORD_LENGTH = 8;
 
 export type StepErrors = Partial<Record<keyof ServerSetupDraft, ErrorCode>>;
 
-/**
- * Field errors for `step`, as codes the step translates; empty when it can
- * continue. Quick start hides the model names, so it does not require them.
- */
+/** Field errors for `step` as codes it translates; empty when it can go on. */
 export function validateStep(
   step: SetupStepId,
   draft: ServerSetupDraft,

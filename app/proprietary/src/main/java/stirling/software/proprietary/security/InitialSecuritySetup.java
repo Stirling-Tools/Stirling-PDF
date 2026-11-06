@@ -116,12 +116,8 @@ public class InitialSecuritySetup {
         }
     }
 
-    /**
-     * A server whose admin already has their own password was set up another way: provisioned
-     * through security.initialLogin, or its database outlived its settings file. First-run setup
-     * has nothing to offer it, and without a persistent settings file it would return on every
-     * boot. Applied in memory first, so a settings file that cannot be written still counts.
-     */
+    // An admin with their own password means the server was set up some other way (initialLogin, or
+    // a database that outlived settings.yml). In memory first, so a read-only file still counts.
     private void markProvisionedServerSetUp() {
         if (applicationProperties.getSystem().isSetupCompleted()
                 || !userService.hasAdminPastFirstLogin()) {

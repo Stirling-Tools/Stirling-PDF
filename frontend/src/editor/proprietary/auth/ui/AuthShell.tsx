@@ -5,10 +5,8 @@ export interface AuthShellProps {
   children: ReactNode;
   /** Optional fixed footer slot (the editor passes its legal/cookie footer). */
   footer?: ReactNode;
-  /**
-   * `medium` fits a setting's label and control side by side; `wide` fits code
-   * samples or side-by-side rows. Default `narrow`.
-   */
+  /** `medium` fits a setting's label beside its control; `wide` fits code
+   *  samples or side-by-side rows. Default `narrow`. */
   size?: "narrow" | "medium" | "wide";
 }
 

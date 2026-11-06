@@ -8,11 +8,8 @@ import {
   isSetupSignInPending,
 } from "@editor/components/serverSetup/setupSignInHandoff";
 
-/**
- * Pending for an admin of a server with login on that has not finished setup.
- * Without login there is no admin and most of these settings do nothing, so
- * the wizard never shows. An older server that sends no flag is never pending.
- */
+/** Pending for an admin of a server with login on that hasn't finished setup;
+ *  never without login, nor for an older server that sends no flag. */
 export function useServerSetupPending(): boolean {
   const { config } = useAppConfig();
   return (
@@ -45,9 +42,8 @@ export function ServerSetupGate({
     if (signedInConfig && !pending) clearSetupSignIn();
   }, [signedInConfig, pending]);
 
-  // Setup stays up until the server reports it complete, never on a local flag:
-  // while it is pending StartupSetup holds back the forced password screen, so
-  // showing the app early would let a default password through.
+  // Up until the server reports setup complete, never on a local flag: showing
+  // the app early would let the default password through.
   if (holdingSignIn) return <SetupSignInScreen />;
   if (!pending) return <>{children}</>;
   return (

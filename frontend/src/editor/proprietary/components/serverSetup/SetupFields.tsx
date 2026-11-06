@@ -125,10 +125,8 @@ export interface SetupStepProps {
 const prefersReducedMotion = () =>
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
 
-/**
- * Scrolls the card just enough to show all of `group`, or its top when it is
- * taller than the card, below the sticky bar that holds Back and the step count.
- */
+/** Scrolls the card just enough to show `group` (or its top, if taller) below
+ *  the sticky bar holding Back and the step count. */
 function revealInCard(group: HTMLElement) {
   const scroller = group.closest<HTMLElement>(`.${styles.frameScroll}`);
   if (!scroller) return;
@@ -147,14 +145,8 @@ function revealInCard(group: HTMLElement) {
   });
 }
 
-/**
- * One setting: its label and control, then, for settings that open more
- * fields, those fields in a panel that animates open and shut. A setting with
- * `details` is boxed even while switched off, so the fields it opens read as
- * its own.
- * `details` stays mounted while closed so it can animate; `inert` keeps its
- * fields out of the tab order meanwhile. Opening it scrolls the card to show it.
- */
+/** A setting's label and control, plus any `details` it opens in an animated
+ *  panel; boxed whenever it has `details`, so those fields read as its own. */
 export function SettingRow({
   label,
   children,
@@ -164,10 +156,8 @@ export function SettingRow({
 }: {
   label: string;
   children: (labelId: string) => ReactNode;
-  /**
-   * Shows `details` while open, with a Save button under them; omit while
-   * there is nothing to show. The control opens and shuts it, unless `chevron`.
-   */
+  /** Shows `details` with a Save button while open. The control opens and
+   *  shuts it, unless `chevron`. */
   expand?: SectionExpand;
   /** Adds a chevron that opens and shuts `details`, for a control that cannot. */
   chevron?: boolean;
@@ -180,9 +170,8 @@ export function SettingRow({
   const groupRef = useRef<HTMLDivElement>(null);
   const wasOpen = useRef(open);
 
-  // Scrolled once fully open, when the card has grown to fit it. Without
-  // motion there is no transition to wait for. Not on mount: a card that
-  // shows with a section open is already at its top.
+  // Scrolled once fully open (at once without motion), when the card has grown;
+  // not on mount, where a card that opens with it showing is at its top.
   useEffect(() => {
     const opened = open && !wasOpen.current;
     wasOpen.current = open;
@@ -290,10 +279,8 @@ export function sectionToggle(
   };
 }
 
-/**
- * A segmented choice whose `expandValue` segment, once chosen, also opens and
- * shuts the setting's fields. It reads Configured once they have been shut.
- */
+/** A segmented choice whose `expandValue` segment also opens and shuts the
+ *  setting's fields; it reads Configured once they have been shut. */
 export function SetupChoice<T extends string>({
   options,
   value,
@@ -472,10 +459,8 @@ export function TextField({
   autoComplete?: string;
   placeholder?: string;
   required?: boolean;
-  /**
-   * Takes focus when the setup dialog opens. Without one the dialog focuses
-   * the first focusable element, which may be an (i) whose tooltip opens on focus.
-   */
+  /** Takes focus when the dialog opens; otherwise it focuses the first
+   *  focusable, which may be an (i) whose tooltip opens on focus. */
   initialFocus?: boolean;
 }) {
   const errorText = useErrorText();

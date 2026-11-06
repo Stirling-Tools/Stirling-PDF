@@ -6,11 +6,8 @@ import { Z_INDEX_ONBOARDING_CARD } from "@editor/styles/zIndex";
 import { SetupStepFrame } from "@editor/components/serverSetup/SetupStepFrame";
 import styles from "@editor/components/shared/setupCard/SetupCard.module.css";
 
-/**
- * Covers the whole app as a modal: setup runs before anything else is usable,
- * so focus stays inside it and the app shell around it (banners, toasts) is
- * out of reach until it closes.
- */
+/** Covers the app as a modal: focus stays inside, and the app shell around it
+ *  (banners, toasts) is out of reach until setup closes. */
 export function SetupScreen({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   return (
@@ -29,11 +26,8 @@ export function SetupScreen({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * The card shown from the automatic first sign-in until setup's first card is
- * ready. The login page, the app's config load and the wizard's settings load
- * each render it in turn, so the hand-off reads as one card, not three screens.
- */
+/** The card from the automatic first sign-in until setup's first card is
+ *  ready; each load along the way renders it, so it reads as one card. */
 export function SetupSignInScreen() {
   const { t } = useTranslation();
   return (

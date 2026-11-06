@@ -20,11 +20,8 @@ export async function saveServerSettings(
   await putAdminSettings(settings);
 }
 
-/**
- * Answers the first-launch analytics question. Unlike a settings write it
- * applies at once, so the separate analytics prompt does not come back if the
- * restart afterwards fails.
- */
+/** Answers the first-launch analytics question. It applies at once, so that
+ *  prompt doesn't return if the restart afterwards fails. */
 export async function answerAnalytics(enabled: boolean): Promise<void> {
   const formData = new FormData();
   formData.append("enabled", String(enabled));
@@ -46,11 +43,8 @@ export async function markSetupComplete(): Promise<void> {
   await apiClient.post("/api/v1/admin/settings/setup-complete");
 }
 
-/**
- * Sets the signed-in admin's new password in place of the default one. Errors
- * surface to the caller rather than as a toast, since setup shows them on its
- * Password step.
- */
+/** Replaces the signed-in admin's default password. Errors reach the caller,
+ *  not a toast, since setup shows them on its account card. */
 export async function changeAdminPassword(
   currentPassword: string,
   newPassword: string,
@@ -64,10 +58,8 @@ export async function changeAdminPassword(
   });
 }
 
-/**
- * Renames the signed-in admin. The server signs the session out afterwards,
- * and tokens name the old username, so the caller must sign in again.
- */
+/** Renames the signed-in admin. Tokens name the old username, so the caller
+ *  must sign in again. */
 export async function changeAdminUsername(
   currentPassword: string,
   newUsername: string,
@@ -87,10 +79,8 @@ export function httpStatus(error: unknown): number | undefined {
   return typeof status === "number" ? status : undefined;
 }
 
-/**
- * Asks the server to restart. "unsupported" is the server saying it cannot
- * restart itself (503, as outside a packaged JAR); "failed" is anything else.
- */
+/** Asks the server to restart: "unsupported" is its 503 when it can't restart
+ *  itself (outside a packaged JAR); "failed" is anything else. */
 export async function requestRestart(): Promise<
   "restarting" | "unsupported" | "failed"
 > {
@@ -117,11 +107,8 @@ async function serverAnswers(): Promise<boolean> {
   }
 }
 
-/**
- * Resolves once the server has gone down and come back, so the reload never
- * lands on the old process in its last seconds. Gives up after two minutes so
- * the caller can reload anyway and let the normal startup screens take over.
- */
+/** Resolves once the server has gone down and come back, so the reload never
+ *  hits the old process; gives up after two minutes. */
 export async function waitForServer(): Promise<void> {
   const giveUpAt = Date.now() + RESTART_GIVE_UP_MS;
   while (Date.now() < giveUpAt && (await serverAnswers())) {
