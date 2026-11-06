@@ -29,7 +29,10 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    fallbackLng: "en-US",
+    // i18next fetches fallbackLng resources at init and suspense waits for all
+    // of them, so fallbackLng stays false here; loadFallbackInBackground fetches
+    // the fallback after first paint instead.
+    fallbackLng: false,
     supportedLngs: Object.keys(supportedLanguages),
     load: "currentOnly",
     nonExplicitSupportedLngs: false,
@@ -80,6 +83,65 @@ i18n.on("languageChanged", (lng) => {
   document.documentElement.lang = lng;
 });
 
+// Languages whose background fetch was already requested, so a second trigger
+// (init completing after the server config lands, or vice versa) does not fetch
+// the same file twice.
+const backgroundFallbacks = new Set<string>();
+
+const DEFAULT_FALLBACK_LANGUAGE = "en-US";
+
+// loadLanguages resolves even on failure, reporting the error only through its
+// callback while recording the attempt in `options.preload` and the connector
+// state. Clear all three so a later trigger retries instead of skipping it.
+function resetFallbackForRetry(fallback: string): void {
+  backgroundFallbacks.delete(fallback);
+  if (Array.isArray(i18n.options.preload)) {
+    i18n.options.preload = i18n.options.preload.filter(
+      (lng) => lng !== fallback,
+    );
+  }
+  const connector = i18n.services.backendConnector as unknown as {
+    state?: Record<string, number>;
+  };
+  if (connector.state) {
+    for (const key of Object.keys(connector.state)) {
+      if (key.startsWith(`${fallback}|`)) {
+        delete connector.state[key];
+      }
+    }
+  }
+}
+
+// Fetch the fallback without blocking paint; late keys re-render through the
+// `loaded` binding above, and missing keys stay empty per transEmptyNodeValue
+// until then.
+function loadFallbackInBackground(): void {
+  if (!i18n.options.fallbackLng) {
+    i18n.options.fallbackLng = DEFAULT_FALLBACK_LANGUAGE;
+  }
+  const configured = i18n.options.fallbackLng;
+  const fallback =
+    typeof configured === "string"
+      ? configured
+      : Array.isArray(configured)
+        ? configured[0]
+        : undefined;
+  const current = normalizeLanguageCode(i18n.language || "");
+  if (
+    !fallback ||
+    backgroundFallbacks.has(fallback) ||
+    normalizeLanguageCode(fallback) === current
+  ) {
+    return;
+  }
+  backgroundFallbacks.add(fallback);
+  void i18n.loadLanguages(fallback, (err) => {
+    if (err) {
+      resetFallbackForRetry(fallback);
+    }
+  });
+}
+
 // Track browser-detected language on first initialization
 i18n.on("initialized", () => {
   // If no source is set yet, mark current language as browser-detected
@@ -93,6 +155,7 @@ i18n.on("initialized", () => {
       );
     }
   }
+  loadFallbackInBackground();
 });
 
 /**
@@ -168,6 +231,7 @@ export function updateSupportedLanguages(
     if (validDefault) {
       applyDefaultLocale(validDefault);
     }
+    loadFallbackInBackground();
     return;
   }
 
@@ -177,6 +241,7 @@ export function updateSupportedLanguages(
 
   // If no valid languages were provided, keep existing configuration
   if (validLanguages.length === 0) {
+    loadFallbackInBackground();
     return;
   }
 
@@ -200,6 +265,7 @@ export function updateSupportedLanguages(
     // Apply server default (respects user choice if already set)
     setLanguageWithPriority(validDefault, LanguageSource.ServerDefault);
   }
+  loadFallbackInBackground();
 }
 
 /**
