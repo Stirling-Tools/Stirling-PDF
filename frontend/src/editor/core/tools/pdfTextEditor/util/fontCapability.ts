@@ -6,13 +6,15 @@ import {
 import { helveticaVariantFor } from "@editor/tools/pdfTextEditor/util/helveticaVariant";
 import {
   faceStyleFlags,
-  getLocalFontBytes,
-  loadLocalFontBytes,
-  loadedLocalFonts,
   pickLocalFontFace,
   splitRequested,
   type LocalFont,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
+import {
+  getExternalFontBytes,
+  loadExternalFontBytes,
+  loadedExternalFonts,
+} from "@editor/tools/pdfTextEditor/util/externalFonts";
 
 // Whether a style change is actually possible for a run's face, and in which
 // family. The toolbar asks before offering the control: replacing a document's
@@ -31,10 +33,12 @@ const NONE: StyleCapability = { family: null, source: null };
 
 /** Families {@link warmDocumentDeviceFonts} has already looked up this session. */
 const attempted = new Set<string>();
+let attemptedAgainst: LocalFont[] | null = null;
 
 /** Test hook: forget which document families have been matched. */
 export function resetDocumentFontMatchCache(): void {
   attempted.clear();
+  attemptedAgainst = null;
 }
 
 /** The installed face for `family` in the requested style, or null. */
@@ -67,7 +71,7 @@ function deviceFaceFor(
 export function italicCapability(
   fontId: string,
   italic: boolean,
-  fonts: LocalFont[] | null = loadedLocalFonts(),
+  fonts: LocalFont[] | null = loadedExternalFonts(),
 ): StyleCapability {
   const family = familyOf(fontId);
   if (!family) return NONE;
@@ -81,7 +85,7 @@ export function italicCapability(
 /** Whether every one of these runs can be flipped to the other italic state. */
 export function canToggleItalic(
   fontIds: string[],
-  fonts: LocalFont[] | null = loadedLocalFonts(),
+  fonts: LocalFont[] | null = loadedExternalFonts(),
 ): boolean {
   if (fontIds.length === 0) return false;
   // Deduped: each miss costs a linear scan of every installed face, and a
@@ -106,7 +110,7 @@ export function fallbackFamilyFor(fontId: string): string {
   const family = familyOf(fontId);
   // Readiness IS the opt-in: bytes only exist for a family the user has loaded
   // their device fonts for.
-  if (family && getLocalFontBytes(family)) return family;
+  if (family && getExternalFontBytes(family)) return family;
   return helveticaVariantFor(fontId);
 }
 
@@ -117,7 +121,7 @@ export function fallbackFamilyFor(fontId: string): string {
  * prefix is how {@link fallbackFamilyFor} recognises a face worth keeping.
  */
 export function fallbackFontIdFor(family: string): string {
-  return `${getLocalFontBytes(family) ? "device" : "base14"}:${family}`;
+  return `${getExternalFontBytes(family) ? "device" : "base14"}:${family}`;
 }
 
 /**
@@ -130,8 +134,12 @@ export function fallbackFontIdFor(family: string): string {
 export async function warmDocumentDeviceFonts(
   fontIds: Iterable<string>,
 ): Promise<string[]> {
-  const fonts = loadedLocalFonts();
+  const fonts = loadedExternalFonts();
   if (!fonts || fonts.length === 0) return [];
+  if (fonts !== attemptedAgainst) {
+    attempted.clear();
+    attemptedAgainst = fonts;
+  }
   const wanted = new Set<string>();
   for (const id of fontIds) {
     const family = familyOf(id);
@@ -141,12 +149,12 @@ export async function warmDocumentDeviceFonts(
     // thousand installed faces per keystroke is not free.
     if (attempted.has(family)) continue;
     attempted.add(family);
-    if (getLocalFontBytes(family)) continue;
+    if (getExternalFontBytes(family)) continue;
     if (pickLocalFontFace(fonts, family)) wanted.add(family);
   }
   const matched: string[] = [];
   for (const family of wanted) {
-    if (await loadLocalFontBytes(family)) matched.push(family);
+    if (await loadExternalFontBytes(family)) matched.push(family);
   }
   return matched;
 }

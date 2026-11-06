@@ -5,9 +5,9 @@ import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 import { writeUtf16 } from "@editor/services/pdfiumService";
 import {
-  getLocalFontBytes,
-  loadLocalFontBytes,
-} from "@editor/tools/pdfTextEditor/util/localFonts";
+  getExternalFontBytes,
+  loadExternalFontBytes,
+} from "@editor/tools/pdfTextEditor/util/externalFonts";
 import {
   isBoldFamily,
   isItalicFamily,
@@ -109,13 +109,13 @@ function deviceFontCovers(
 // Read the family's font file so a later synchronous emit can embed it. The UI
 // must AWAIT this before dispatching a font-family change.
 export async function ensureDeviceFontReady(family: string): Promise<boolean> {
-  const bytes = await loadLocalFontBytes(family);
+  const bytes = await loadExternalFontBytes(family);
   return !!bytes && bytes.length > 0;
 }
 
 /** Whether a synchronous emit can embed this family right now. */
 export function isDeviceFontReady(family: string): boolean {
-  const bytes = getLocalFontBytes(family);
+  const bytes = getExternalFontBytes(family);
   return !!bytes && bytes.length > 0;
 }
 
@@ -158,7 +158,7 @@ export function loadDeviceFontInto(
   // A refusal is permanent for this document; retrying would re-malloc the
   // whole font file on every keystroke.
   if (refused.has(id)) return 0;
-  const bytes = getLocalFontBytes(family);
+  const bytes = getExternalFontBytes(family);
   if (!bytes || bytes.length === 0) return 0;
 
   const m = doc.module;
@@ -251,7 +251,7 @@ export function emitDeviceFontTextObject(
   y: number,
 ): number {
   if (text.length === 0) return 0;
-  const bytes = getLocalFontBytes(family);
+  const bytes = getExternalFontBytes(family);
   if (!bytes || bytes.length === 0) return 0;
   if (!deviceFontCovers(family, bytes, text)) return 0;
   const fontPtr = loadDeviceFontInto(doc, family);
