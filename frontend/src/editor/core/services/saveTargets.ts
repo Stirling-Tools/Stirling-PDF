@@ -40,3 +40,20 @@ export interface SaveTarget {
   /** The file being saved right now, if any. */
   saving?: FileId | null;
 }
+
+export function sharedSaveTarget(
+  stubs: StirlingFileStub[],
+  targetFor: (stub: StirlingFileStub) => SaveTarget | undefined,
+): SaveTarget | undefined {
+  const first = stubs.length > 0 ? targetFor(stubs[0]) : undefined;
+  return first && stubs.every((stub) => targetFor(stub) === first)
+    ? first
+    : undefined;
+}
+
+export function saveTargetLabel(
+  target: SaveTarget,
+  stubs: StirlingFileStub[],
+): string {
+  return stubs.length > 1 ? target.saveAllLabel() : target.saveLabel(stubs[0]);
+}

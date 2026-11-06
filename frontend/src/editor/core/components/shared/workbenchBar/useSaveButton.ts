@@ -1,7 +1,11 @@
 import { useTranslation } from "react-i18next";
 import type { IconName } from "@editor/ui/Icon";
 import type { SaveStoredFile } from "@editor/hooks/useSaveStoredFile";
-import type { SaveMenuItem } from "@editor/services/saveTargets";
+import {
+  saveTargetLabel,
+  sharedSaveTarget,
+  type SaveMenuItem,
+} from "@editor/services/saveTargets";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 
 export interface SaveButton {
@@ -36,26 +40,13 @@ export function useSaveButton({
 }: Options): SaveButton {
   const { t } = useTranslation();
   const unsaved = targets.some(saver.isUnsaved);
-  const handled = targets
-    .map((stub) => ({ stub, target: saver.targetFor(stub) }))
-    .filter((entry) => entry.target);
-  const first = handled[0]?.target;
-  const allOneTarget =
-    handled.length > 0 &&
-    handled.length === targets.length &&
-    handled.every((entry) => entry.target === first);
-
-  let label: string | undefined;
-  if (allOneTarget && first) {
-    label =
-      handled.length > 1 ? first.saveAllLabel() : first.saveLabel(targets[0]);
-  } else if (handled.length > 0) {
-    label = t(
-      "saveFile.toolbar.mixed",
-      "Save all, each back to where it came from",
-    );
-  }
-  const icon = allOneTarget ? first?.icon : undefined;
+  const shared = sharedSaveTarget(targets, saver.targetFor);
+  const label = shared
+    ? saveTargetLabel(shared, targets)
+    : targets.some((stub) => saver.targetFor(stub))
+      ? t("saveFile.toolbar.mixed", "Save all, each back to where it came from")
+      : undefined;
+  const icon = shared?.icon;
 
   const stub = singleFile ? targets[0] : undefined;
   const target = stub ? saver.targetFor(stub) : undefined;
