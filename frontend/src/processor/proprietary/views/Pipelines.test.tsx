@@ -35,6 +35,10 @@ const render = (
 
 // Deterministic i18n: keys returned verbatim. initReactI18next/Trans are exported too because the
 // unified page pulls in modules (the policy wizard/catalogue) that reference them at import time.
+vi.mock("@processor/components/pipelines/ActivityPipelineSuggestions", () => ({
+  ActivityPipelineSuggestions: () => null,
+}));
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,

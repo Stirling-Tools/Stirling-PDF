@@ -31,8 +31,11 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.RecommendationsResponse;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.UsageRequest;
+import stirling.software.proprietary.controller.api.ToolRecommendationController.WorkflowsResponse;
 import stirling.software.proprietary.service.ToolRecommendationService;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolRecommendation;
+import stirling.software.proprietary.service.ToolRecommendationService.ToolWorkflow;
+import stirling.software.proprietary.service.ToolRecommendationService.WorkflowScope;
 import stirling.software.proprietary.service.ToolUsageTrackingService;
 
 @ExtendWith(MockitoExtension.class)
@@ -140,6 +143,61 @@ class ToolRecommendationControllerTest {
     }
 
     @Nested
+    @DisplayName("GET workflows")
+    class GetWorkflows {
+
+        @Test
+        @DisplayName("returns the service's workflows for the logged-in user")
+        void returnsWorkflows() {
+            ToolWorkflow workflow =
+                    new ToolWorkflow(List.of("compress", "flatten"), 4, WorkflowScope.TEAM);
+            when(userService.getCurrentUsername()).thenReturn("alice");
+            when(recommendationService.getWorkflows("alice", 2, 6)).thenReturn(List.of(workflow));
+
+            ResponseEntity<WorkflowsResponse> response = controller.getWorkflows(2, 6);
+
+            assertThat(response.getStatusCode().value()).isEqualTo(200);
+            assertThat(response.getBody().workflows()).containsExactly(workflow);
+        }
+
+        @Test
+        @DisplayName("a service failure degrades to an empty list, never an error page")
+        void serviceFailureDegrades() {
+            when(userService.getCurrentUsername()).thenReturn("alice");
+            when(recommendationService.getWorkflows(anyString(), anyInt(), anyInt()))
+                    .thenThrow(new RuntimeException("db down"));
+
+            ResponseEntity<WorkflowsResponse> response = controller.getWorkflows(2, 6);
+
+            assertThat(response.getStatusCode().value()).isEqualTo(200);
+            assertThat(response.getBody().workflows()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("with nobody signed in it answers 501 and never reads usage")
+        void noPrincipalReturns501() {
+            when(userService.getCurrentUsername()).thenReturn(null);
+
+            ResponseEntity<WorkflowsResponse> response = controller.getWorkflows(2, 6);
+
+            assertThat(response.getStatusCode().value()).isEqualTo(501);
+            verifyNoInteractions(recommendationService);
+        }
+
+        @Test
+        @DisplayName("with recording disabled it answers 501")
+        void recordingDisabledReturns501() {
+            when(userService.getCurrentUsername()).thenReturn("alice");
+            when(trackingService.isRecordingEnabled()).thenReturn(false);
+
+            ResponseEntity<WorkflowsResponse> response = controller.getWorkflows(2, 6);
+
+            assertThat(response.getStatusCode().value()).isEqualTo(501);
+            verifyNoInteractions(recommendationService);
+        }
+    }
+
+    @Nested
     @DisplayName("POST usage")
     class RecordUsage {
 
@@ -191,14 +249,20 @@ class ToolRecommendationControllerTest {
     @DisplayName("Cross-principal exposure")
     class CrossPrincipalExposure {
 
-        /** The chain queries carry no tenant predicate, so no HTTP route may reach them. */
         @Test
-        @DisplayName("no route serves other principals' chains")
-        void workflowsRouteIsGone() throws Exception {
-            mockMvc.perform(get(BASE_PATH + "/workflows").param("minLength", "2"))
-                    .andExpect(status().isNotFound());
+        @DisplayName("workflows are read for the signed-in user only, never a requested one")
+        void workflowsAreScopedToCaller() throws Exception {
+            when(userService.getCurrentUsername()).thenReturn("alice");
+            when(recommendationService.getWorkflows(anyString(), anyInt(), anyInt()))
+                    .thenReturn(List.of());
 
-            verifyNoInteractions(recommendationService);
+            mockMvc.perform(
+                            get(BASE_PATH + "/workflows")
+                                    .param("minLength", "2")
+                                    .param("principal", "mallory"))
+                    .andExpect(status().isOk());
+
+            verify(recommendationService).getWorkflows("alice", 2, 6);
         }
     }
 

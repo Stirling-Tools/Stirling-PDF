@@ -1,11 +1,34 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
+import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
 import { Pipelines } from "@processor/views/Pipelines";
 
 const meta: Meta<typeof Pipelines> = {
   title: "Portal/Views/Pipelines",
   component: Pipelines,
-  parameters: { layout: "padded" },
+  parameters: {
+    layout: "padded",
+    msw: {
+      handlers: {
+        workflows: http.get(
+          "/api/v1/proprietary/ui-data/tool-recommendations/workflows",
+          () =>
+            HttpResponse.json({
+              workflows: [
+                { tools: ["compress", "flatten"], count: 6, scope: "TEAM" },
+              ],
+            }),
+        ),
+      },
+    },
+  },
+  decorators: [
+    (Story) => (
+      <ToolRegistryProvider>
+        <Story />
+      </ToolRegistryProvider>
+    ),
+  ],
 };
 export default meta;
 type Story = StoryObj<typeof Pipelines>;
@@ -21,8 +44,8 @@ export const Default: Story = {};
 export const Empty: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("/api/v1/policies/overview", () =>
+      handlers: {
+        overview: http.get("/api/v1/policies/overview", () =>
           HttpResponse.json({
             kpis: [
               { value: 0, description: "" },
@@ -32,7 +55,7 @@ export const Empty: Story = {
             pipelines: [],
           }),
         ),
-      ],
+      },
     },
   },
 };

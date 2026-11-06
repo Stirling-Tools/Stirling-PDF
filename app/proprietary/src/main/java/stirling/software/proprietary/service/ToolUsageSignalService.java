@@ -48,6 +48,10 @@ public class ToolUsageSignalService {
 
     private static final Duration TTL = Duration.ofMinutes(5);
 
+    static final long MIN_HABIT_RUNS = 3;
+
+    static final double MIN_HABIT_SHARE = 0.05;
+
     /** Bounded so a long-lived node cannot accumulate a cache entry per team per day forever. */
     private static final int MAX_LOCAL_ENTRIES = 10_000;
 
@@ -177,7 +181,10 @@ public class ToolUsageSignalService {
 
     public List<ToolChainSummary> userChains(
             String principal, long cutoff, int minLength, int limit) {
-        return chains(chainRepository.topByPrincipal(principal, cutoff, minLength, page(limit)));
+        long runs = chainRepository.countMultiStepRunsByPrincipal(principal, cutoff);
+        return chains(
+                chainRepository.topByPrincipal(
+                        principal, cutoff, minLength, minHabitRuns(runs), page(limit)));
     }
 
     public List<ToolChainSummary> teamChains(
@@ -185,17 +192,34 @@ public class ToolUsageSignalService {
         return cached(
                 key("teamChains", scope.cacheKey(), cutoff, minLength, limit),
                 CHAIN_SUMMARIES,
-                () ->
-                        chains(
-                                chainRepository.topByPrincipals(
-                                        scope.principals(), cutoff, minLength, page(limit))));
+                () -> {
+                    long runs =
+                            chainRepository.countMultiStepRunsByPrincipals(
+                                    scope.principals(), cutoff);
+                    return chains(
+                            chainRepository.topByPrincipals(
+                                    scope.principals(),
+                                    cutoff,
+                                    minLength,
+                                    minHabitRuns(runs),
+                                    page(limit)));
+                });
     }
 
     public List<ToolChainSummary> globalChains(long cutoff, int minLength, int limit) {
         return cached(
                 key("globalChains", cutoff, minLength, limit),
                 CHAIN_SUMMARIES,
-                () -> chains(chainRepository.topGlobal(cutoff, minLength, page(limit))));
+                () -> {
+                    long runs = chainRepository.countMultiStepRunsGlobal(cutoff);
+                    return chains(
+                            chainRepository.topGlobal(
+                                    cutoff, minLength, minHabitRuns(runs), page(limit)));
+                });
+    }
+
+    static long minHabitRuns(long multiStepRuns) {
+        return Math.max(MIN_HABIT_RUNS, (long) Math.ceil(multiStepRuns * MIN_HABIT_SHARE));
     }
 
     private static String key(Object... parts) {

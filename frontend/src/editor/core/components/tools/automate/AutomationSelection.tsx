@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Title, Stack, Divider } from "@mantine/core";
 import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
 import AutomationImportModal from "@editor/components/tools/automate/AutomationImportModal";
 import { useSuggestedAutomations } from "@editor/hooks/tools/automate/useSuggestedAutomations";
+import { useActivityAutomations } from "@editor/hooks/tools/automate/useActivityAutomations";
+import { useActivityChainText } from "@editor/hooks/useToolWorkflowSuggestions";
 import {
   AutomationConfig,
   SuggestedAutomation,
@@ -11,6 +13,7 @@ import {
 import { iconMap } from "@editor/components/tools/automate/iconMap";
 import { iconKeyForSuggestedAutomation } from "@editor/components/tools/automate/suggestedAutomationIcon";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
+import { ActivityChain } from "@editor/utils/activityChains";
 import {
   downloadAutomationConfig,
   downloadFolderScanningConfig,
@@ -24,6 +27,7 @@ interface AutomationSelectionProps {
   onEdit: (automation: AutomationConfig) => void;
   onDelete: (automation: AutomationConfig) => void;
   onCopyFromSuggested: (automation: SuggestedAutomation) => void;
+  onCreateFromActivity: (automation: AutomationConfig) => void;
   onImportAutomation: (
     automation: ImportableAutomation,
   ) => Promise<AutomationConfig>;
@@ -39,6 +43,7 @@ export default function AutomationSelection({
   onEdit,
   onDelete,
   onCopyFromSuggested,
+  onCreateFromActivity,
   onImportAutomation,
   onImportError,
   onImportSuccess,
@@ -46,6 +51,36 @@ export default function AutomationSelection({
 }: AutomationSelectionProps) {
   const { t } = useTranslation();
   const suggestedAutomations = useSuggestedAutomations();
+  const existingOperationLists = useMemo(
+    () =>
+      [...savedAutomations, ...suggestedAutomations].map((automation) =>
+        automation.operations.map((op) =>
+          typeof op === "string" ? op : op.operation,
+        ),
+      ),
+    [savedAutomations, suggestedAutomations],
+  );
+  const activityChains = useActivityAutomations(
+    toolRegistry,
+    existingOperationLists,
+  );
+
+  const { name: activityChainName, ranBy } = useActivityChainText(toolRegistry);
+
+  const activityChainConfig = (chain: ActivityChain): AutomationConfig => {
+    const now = new Date().toISOString();
+    return {
+      id: `activity-${chain.operations.join("-")}`,
+      name: activityChainName(chain),
+      icon: "SettingsIcon",
+      operations: chain.operations.map((operation) => ({
+        operation,
+        parameters: {},
+      })),
+      createdAt: now,
+      updatedAt: now,
+    };
+  };
 
   const [importModalOpen, setImportModalOpen] = useState(false);
 
@@ -135,6 +170,39 @@ export default function AutomationSelection({
           );
         })}
         <Divider pb="sm" />
+
+        {activityChains.length > 0 && (
+          <div>
+            <Title
+              order={3}
+              size="h4"
+              fw={600}
+              mb="md"
+              style={{ color: "var(--mantine-color-dimmed)" }}
+            >
+              {t("automate.selection.activity.title", "From your activity")}
+            </Title>
+            <Stack gap="xs">
+              {activityChains.map((chain) => (
+                <AutomationEntry
+                  key={chain.operations.join("-")}
+                  title={activityChainName(chain)}
+                  description={`${ranBy(chain)} ${t(
+                    "automate.selection.activity.description",
+                    "Save it as an automation and run it with one click.",
+                  )}`}
+                  badgeIcon="activity"
+                  operations={chain.operations}
+                  onClick={() =>
+                    onCreateFromActivity(activityChainConfig(chain))
+                  }
+                  toolRegistry={toolRegistry}
+                />
+              ))}
+            </Stack>
+            <Divider pb="sm" mt="xs" />
+          </div>
+        )}
 
         {/* Suggested Automations */}
         <div>

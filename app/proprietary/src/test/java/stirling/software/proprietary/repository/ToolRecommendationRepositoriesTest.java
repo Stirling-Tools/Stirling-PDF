@@ -204,9 +204,9 @@ class ToolRecommendationRepositoriesTest {
         chainRepository.save(new ToolChainStat("alice", "compress>ocr", DAY - 60, 2, 900));
 
         List<Object[]> top =
-                chainRepository.topByPrincipal("alice", DAY - 30, 2, PageRequest.of(0, 10));
+                chainRepository.topByPrincipal("alice", DAY - 30, 2, 1, PageRequest.of(0, 10));
         List<Object[]> longOnly =
-                chainRepository.topByPrincipal("alice", DAY - 30, 3, PageRequest.of(0, 10));
+                chainRepository.topByPrincipal("alice", DAY - 30, 3, 1, PageRequest.of(0, 10));
 
         assertThat(top).hasSize(2);
         assertThat(top.get(0)[0]).isEqualTo("compress>ocr");
@@ -222,7 +222,7 @@ class ToolRecommendationRepositoriesTest {
         chainRepository.save(new ToolChainStat("alice", "c>d", DAY, 2, 8));
         chainRepository.save(new ToolChainStat("alice", "e>f", DAY, 2, 7));
 
-        assertThat(chainRepository.topByPrincipal("alice", DAY - 30, 2, PageRequest.of(0, 2)))
+        assertThat(chainRepository.topByPrincipal("alice", DAY - 30, 2, 1, PageRequest.of(0, 2)))
                 .hasSize(2);
     }
 
@@ -235,11 +235,42 @@ class ToolRecommendationRepositoriesTest {
 
         List<Object[]> team =
                 chainRepository.topByPrincipals(
-                        List.of("alice", "bob"), DAY - 30, 2, PageRequest.of(0, 10));
-        List<Object[]> global = chainRepository.topGlobal(DAY - 30, 2, PageRequest.of(0, 10));
+                        List.of("alice", "bob"), DAY - 30, 2, 1, PageRequest.of(0, 10));
+        List<Object[]> global = chainRepository.topGlobal(DAY - 30, 2, 1, PageRequest.of(0, 10));
 
         assertThat(((Number) team.get(0)[2]).longValue()).isEqualTo(3);
         assertThat(((Number) global.get(0)[2]).longValue()).isEqualTo(7);
+    }
+
+    @Test
+    @DisplayName("chains below the minimum run count never take a slot in the page")
+    void chainsBelowMinimumRunsAreExcluded() {
+        chainRepository.save(new ToolChainStat("alice", "a>b", DAY, 2, 1));
+        chainRepository.save(new ToolChainStat("alice", "c>d", DAY, 2, 1));
+        chainRepository.save(new ToolChainStat("alice", "e>f", DAY, 2, 6));
+
+        List<Object[]> top =
+                chainRepository.topByPrincipal("alice", DAY - 30, 2, 3, PageRequest.of(0, 2));
+
+        assertThat(top).hasSize(1);
+        assertThat(top.get(0)[0]).isEqualTo("e>f");
+    }
+
+    @Test
+    @DisplayName("multi-step runs are counted once per run, from the two-step prefixes")
+    void multiStepRunsCountTwoStepPrefixes() {
+        chainRepository.save(new ToolChainStat("alice", "ocr>compress", DAY, 2, 4));
+        chainRepository.save(new ToolChainStat("alice", "ocr>compress>flatten", DAY, 3, 4));
+        chainRepository.save(new ToolChainStat("bob", "rotate>flatten", DAY, 2, 2));
+        chainRepository.save(new ToolChainStat("bob", "rotate>flatten", DAY - 60, 2, 50));
+
+        assertThat(chainRepository.countMultiStepRunsByPrincipal("alice", DAY - 30)).isEqualTo(4);
+        assertThat(
+                        chainRepository.countMultiStepRunsByPrincipals(
+                                List.of("alice", "bob"), DAY - 30))
+                .isEqualTo(6);
+        assertThat(chainRepository.countMultiStepRunsGlobal(DAY - 30)).isEqualTo(6);
+        assertThat(chainRepository.countMultiStepRunsByPrincipal("nobody", DAY - 30)).isZero();
     }
 
     @Test
