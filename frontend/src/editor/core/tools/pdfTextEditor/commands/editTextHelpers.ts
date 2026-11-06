@@ -15,6 +15,12 @@ import {
 import { getActiveCharcodeStrategy } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { emitFallbackTextObject } from "@editor/tools/pdfTextEditor/util/fallbackFont";
 import { emitDeviceFontTextObject } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import { getExternalFontBytes } from "@editor/tools/pdfTextEditor/util/externalFonts";
+import {
+  advanceWidth,
+  parseFontMetrics,
+  type FontMetrics,
+} from "@editor/tools/pdfTextEditor/util/fontMetrics";
 import {
   applyTagMarks,
   type TagMark,
@@ -85,6 +91,10 @@ export function resetDroppedBase14Chars(): void {
 /** Test-only alias for {@link resetDroppedBase14Chars}. */
 export function _clearDroppedBase14CharsForTests(): void {
   resetDroppedBase14Chars();
+}
+
+export function recordUndrawableChars(chars: string): void {
+  recordDroppedChars(chars, "");
 }
 
 /** Record every VISIBLE char present in `original` but missing from `kept`. */
@@ -309,14 +319,42 @@ export function cssFontSpecFor(fontFamily: string, sizePx: number): string {
   return `${italic}${bold}${sizePx}px ${stack}`;
 }
 
+const embeddedMetrics = new WeakMap<Uint8Array, FontMetrics | null>();
+
+function embeddedMetricsFor(family: string): FontMetrics | null {
+  const bytes = getExternalFontBytes(family);
+  if (!bytes) return null;
+  if (!embeddedMetrics.has(bytes))
+    embeddedMetrics.set(bytes, parseFontMetrics(bytes));
+  return embeddedMetrics.get(bytes) ?? null;
+}
+
+const BASE14_SPACE: Array<[RegExp, number]> = [
+  [/^times/i, 250],
+  [/^courier/i, 600],
+  [/^helvetica/i, 278],
+];
+
+export function base14SpaceAdvance(family: string): number | null {
+  return BASE14_SPACE.find(([re]) => re.test(family))?.[1] ?? null;
+}
+
 /** Measure the natural advance width of `s` in PDF points. */
 function measureAdvancePt(
   text: string,
   fontFamily: string,
   fontSizePt: number,
 ): number {
+  const metrics = embeddedMetricsFor(fontFamily);
+  const embedded = metrics ? advanceWidth(metrics, text) : null;
+  if (embedded !== null) return (embedded * fontSizePt) / 1000;
   const ctx = measureCtx();
-  if (!ctx) return text.length * fontSizePt * 0.5;
+  if (!ctx) {
+    const space = base14SpaceAdvance(fontFamily) ?? 500;
+    let sum = 0;
+    for (const ch of text) sum += /\s/.test(ch) ? space : 500;
+    return (sum * fontSizePt) / 1000;
+  }
   ctx.font = cssFontSpecFor(fontFamily, fontSizePt);
   return ctx.measureText(text).width;
 }

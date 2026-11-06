@@ -183,7 +183,7 @@ export class EditTextCommand implements Command {
     if (this.prevText === this.nextText) return;
 
     if (this.scanEdited || isScanRun(run)) {
-      run.scanEdit ??= captureScanEdit(doc.module, run);
+      run.scanEdit ??= captureScanEdit(doc.module, run, page);
       if (run.scanEdit) {
         this.scanEdited = true;
         renderScanEdit(doc, page, run, run.scanEdit, this.nextText);

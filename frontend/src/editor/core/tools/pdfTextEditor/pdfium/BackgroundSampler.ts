@@ -175,6 +175,7 @@ export interface ScanInk {
   density: number;
   /** Centre x of each separate glyph, raw page space, left to right. */
   glyphCenters: number[];
+  glyphSpans: Array<{ left: number; right: number }>;
   /** A box edge sits just left / right of the glyphs (OCR may read it as "["). */
   edgeLeft: boolean;
   edgeRight: boolean;
@@ -411,13 +412,13 @@ export function measureScanInk(
     while (right < x1 && colSoft(right + 1)) right++;
 
     // Separate glyphs: runs of solid columns split by at least one blank.
-    const centers: number[] = [];
+    const spans: Array<[number, number]> = [];
     let runStart = -1;
     for (let x = left; x <= right + 1; x++) {
       const on = x <= right && colInk(x);
       if (on && runStart < 0) runStart = x;
       if (!on && runStart >= 0) {
-        centers.push((runStart + x - 1) / 2);
+        spans.push([runStart, x - 1]);
         runStart = -1;
       }
     }
@@ -479,7 +480,11 @@ export function measureScanInk(
       baseline: pageY(baseRow),
       xLine: lowercaseBand ? pageY(xRow) : null,
       density: dark.length / ((right - left + 1) * (bottom - top + 1)),
-      glyphCenters: centers.map((c) => pageX(c + 0.5)),
+      glyphCenters: spans.map(([l, r]) => pageX((l + r + 1) / 2)),
+      glyphSpans: spans.map(([l, r]) => ({
+        left: pageX(l),
+        right: pageX(r + 1),
+      })),
       edgeLeft: edgeCols.some(
         (c) => c < solidLeft && solidLeft - c < scale * 6,
       ),

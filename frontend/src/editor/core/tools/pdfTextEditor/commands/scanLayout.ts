@@ -89,6 +89,8 @@ function align(
   return ops;
 }
 
+const SNAP_BACK = 0.75;
+
 export function layoutScanEdit(input: LayoutInput): Layout {
   const { lines } = input;
   const words = lines.flatMap((l) => l.words).filter((w) => w.text);
@@ -175,7 +177,12 @@ export function layoutScanEdit(input: LayoutInput): Layout {
     startLine(op.line);
     flushTyped();
     const w = op.word;
-    const x: number = pen === null ? lineStart(op.line) : pen + gap(prev, w);
+    const flowed: number =
+      pen === null ? lineStart(op.line) : pen + gap(prev, w);
+    const x =
+      w.line === op.line && Math.abs(flowed - w.x) < input.space * SNAP_BACK
+        ? w.x
+        : flowed;
     const baseline = baselineOf(op.line);
     layout.kept.push({
       word: w,

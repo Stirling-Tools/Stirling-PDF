@@ -9,17 +9,16 @@ import {
   removeAndDestroyObject,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import { advanceWidth } from "@editor/tools/pdfTextEditor/util/fontMetrics";
+import {
+  BASE14_FACES,
+  COURIER,
+  HELVETICA,
+  TIMES,
+  type Face,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 
 // Picking and placing a face that passes for scanned text.
-
-// Base-14 metrics (AFM, per 1000 em) for the faces we can draw in.
-export const FACES = [
-  { family: "Helvetica", bold: "Helvetica-Bold", cap: 718, asc: 718, xh: 523 },
-  { family: "Times-Roman", bold: "Times-Bold", cap: 662, asc: 683, xh: 450 },
-  { family: "Courier", bold: "Courier-Bold", cap: 562, asc: 629, xh: 426 },
-];
-export const [HELVETICA, TIMES, COURIER] = FACES;
-export type Face = (typeof FACES)[number];
 
 const BLACK: RGBA = { r: 0, g: 0, b: 0, a: 255 };
 
@@ -65,6 +64,44 @@ export function spanOf(
   return span ? span.right - span.left : 0;
 }
 
+const measuredAdvances = new Map<string, Map<string, number>>();
+
+function measuredAdvance(
+  doc: EditorDocument,
+  page: Page,
+  family: string,
+  ch: string,
+): number {
+  let byChar = measuredAdvances.get(family);
+  if (!byChar) {
+    byChar = new Map();
+    measuredAdvances.set(family, byChar);
+  }
+  let adv = byChar.get(ch);
+  if (adv === undefined) {
+    adv =
+      (spanOf(doc, page, `H${ch}H`, family, 100) -
+        spanOf(doc, page, "HH", family, 100)) *
+      10;
+    byChar.set(ch, adv);
+  }
+  return adv;
+}
+
+export function textAdvance(
+  doc: EditorDocument,
+  page: Page,
+  face: Face,
+  family: string,
+  text: string,
+): number | null {
+  const metrics = face.metrics?.get(family);
+  if (metrics) return advanceWidth(metrics, text);
+  let sum = 0;
+  for (const ch of text) sum += measuredAdvance(doc, page, family, ch);
+  return sum > 0 ? sum : null;
+}
+
 // The face whose letter widths explain these OCR word widths best. A single
 // scale absorbs size; what is left is the face's shape, which is what tells a
 // typewriter face from a proportional one. Null when the words cannot tell.
@@ -86,7 +123,7 @@ export function fitFace(
     const k = median(ratios);
     return median(ratios.map((r) => Math.abs(r / k - 1)));
   };
-  const [sans, serif, mono] = FACES.map(err);
+  const [sans, serif, mono] = BASE14_FACES.map(err);
   // Three words line up with any face by chance often enough; ask for four.
   if (usable.length >= 4 && mono < Math.min(sans, serif) * 0.7) return COURIER;
   // Serif and sans widths differ little, so a few words cannot settle it.
@@ -101,11 +138,12 @@ export function isEvenlySpaced(centers: number[], text: string): boolean {
   const chars = text.replace(/\s/g, "");
   if (centers.length < 8 || /^\d+$/.test(chars)) return false;
   if (centers.length > chars.length * 1.1 + 1) return false;
+  if (centers.length < chars.length * 0.9) return false;
   const steps = centers.slice(1).map((c, i) => c - centers[i]);
   const pitch = (centers[centers.length - 1] - centers[0]) / (chars.length - 1);
   const onGrid = steps.filter((st) => {
     const n = Math.max(1, Math.round(st / pitch));
-    return Math.abs(st / pitch - n) / n < 0.15;
+    return Math.abs(st / pitch - n) < 0.15;
   });
   return onGrid.length >= steps.length * 0.85;
 }
@@ -122,6 +160,7 @@ export interface Placement {
   fill: RGBA;
   /** Outline in the fill colour that thickens the strokes, in points. */
   weight?: number;
+  hollow?: number;
 }
 
 /**
@@ -165,11 +204,13 @@ export function placeText(
     // copy as well would have assistive technology read the words twice.
     tagMarks: [],
     // Fill and stroke (Tr 2): blur makes scanned strokes heavier than any bold.
-    ...(p.weight
-      ? { renderMode: 2, stroke: p.fill, strokeWidth: p.weight }
-      : {}),
+    ...(p.hollow
+      ? { renderMode: 1, stroke: p.fill, strokeWidth: p.hollow }
+      : p.weight
+        ? { renderMode: 2, stroke: p.fill, strokeWidth: p.weight }
+        : {}),
   });
-  if (!p.weight) opaqueStroke(m, ptrs);
+  if (!p.weight && !p.hollow) opaqueStroke(m, ptrs);
   for (const ptr of ptrs)
     transformObject(m, ptr, p.stretch, 0, 0, 1, p.x * (1 - p.stretch), 0);
   const drawn = measureObjSpanPt(m, ptrs);
@@ -179,29 +220,88 @@ export function placeText(
   return ptrs;
 }
 
-// Pearson correlation of two same-sized luma images.
-function correlation(a: Float32Array, b: Float32Array): number {
-  const n = a.length;
-  let ma = 0;
-  let mb = 0;
-  for (let i = 0; i < n; i++) {
-    ma += a[i];
-    mb += b[i];
+type Luma = { data: Float32Array; width: number; height: number };
+
+function windowCorrelation(
+  scan: Luma,
+  drawn: Luma,
+  x0: number,
+  x1: number,
+  shift: number,
+): { r: number; spread: number } {
+  const { width, height } = scan;
+  const from = Math.max(x0, -shift);
+  const to = Math.min(x1, width - shift);
+  if (to <= from) return { r: 0, spread: 0 };
+  let n = 0;
+  let sa = 0;
+  let sb = 0;
+  let sab = 0;
+  let saa = 0;
+  let sbb = 0;
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    for (let x = from; x < to; x++) {
+      const a = scan.data[row + x];
+      const b = drawn.data[row + x + shift];
+      sa += a;
+      sb += b;
+      sab += a * b;
+      saa += a * a;
+      sbb += b * b;
+    }
+    n += to - from;
   }
-  ma /= n;
-  mb /= n;
-  let ab = 0;
-  let aa = 0;
-  let bb = 0;
-  for (let i = 0; i < n; i++) {
-    const da = a[i] - ma;
-    const db = b[i] - mb;
-    ab += da * db;
-    aa += da * da;
-    bb += db * db;
-  }
-  return aa > 0 && bb > 0 ? ab / Math.sqrt(aa * bb) : 0;
+  const aa = saa - (sa * sa) / n;
+  const bb = sbb - (sb * sb) / n;
+  const ab = sab - (sa * sb) / n;
+  return {
+    r: aa > 0 && bb > 0 ? ab / Math.sqrt(aa * bb) : 0,
+    spread: Math.sqrt(Math.max(0, aa) / n),
+  };
 }
+
+function bestShift(
+  scan: Luma,
+  drawn: Luma,
+  x0: number,
+  x1: number,
+  reach: number,
+): number {
+  let best = -1;
+  let at = 0;
+  for (let shift = -reach; shift <= reach; shift += 2) {
+    const r = windowCorrelation(scan, drawn, x0, x1, shift).r;
+    if (r > best) {
+      best = r;
+      at = shift;
+    }
+  }
+  for (const shift of [at - 1, at + 1]) {
+    if (Math.abs(shift) > reach) continue;
+    best = Math.max(best, windowCorrelation(scan, drawn, x0, x1, shift).r);
+  }
+  return best;
+}
+
+function slidingCorrelation(scan: Luma, drawn: Luma): number {
+  const { width, height } = scan;
+  const span = Math.max(8, Math.round(height * SLIDE_WINDOW));
+  const reach = Math.max(1, Math.round(height * SLIDE_REACH));
+  let total = 0;
+  let weight = 0;
+  for (let x0 = 0; x0 < width; x0 += Math.round(span / 2)) {
+    const x1 = Math.min(width, x0 + span);
+    const spread = windowCorrelation(scan, drawn, x0, x1, 0).spread;
+    if (spread === 0) continue;
+    total += bestShift(scan, drawn, x0, x1, reach) * spread;
+    weight += spread;
+  }
+  return weight > 0 ? total / weight : 0;
+}
+
+const SLIDE_WINDOW = 2;
+const SLIDE_REACH = 0.25;
 
 // Average stroke thickness: ink pixels per horizontal run of ink, cut halfway
 // between paper and ink. Unlike total darkness, paper grain and the grey core
@@ -236,6 +336,113 @@ export interface ScanMatch {
   weight: number;
 }
 
+type ScanImage = { img: Luma; stroke: number } | null;
+
+interface FitMemory {
+  scans: Map<number, ScanImage>;
+  matches: Map<string, ScanMatch>;
+  softness: Map<string, number>;
+}
+
+const fitMemory = new WeakMap<object, FitMemory>();
+let fitDeadline = Infinity;
+let measuredThisSlice = false;
+
+export const FIT_PAUSED = Symbol("fit paused");
+
+export function withFitDeadline<T>(deadline: number, fit: () => T): T {
+  const outer = fitDeadline;
+  fitDeadline = deadline;
+  try {
+    return fit();
+  } finally {
+    fitDeadline = outer;
+  }
+}
+
+export function withScanCache<T>(ink: object, fit: () => T): T {
+  if (!fitMemory.has(ink))
+    fitMemory.set(ink, {
+      scans: new Map(),
+      matches: new Map(),
+      softness: new Map(),
+    });
+  measuredThisSlice = false;
+  try {
+    const result = fit();
+    fitMemory.delete(ink);
+    return result;
+  } catch (e) {
+    if (e !== FIT_PAUSED) fitMemory.delete(ink);
+    throw e;
+  }
+}
+
+function remember<K, V>(
+  memory: Map<K, V> | undefined,
+  key: K,
+  measure: () => V,
+): V {
+  const known = memory?.get(key);
+  if (known !== undefined) return known;
+  const value = measure();
+  memory?.set(key, value);
+  return value;
+}
+
+const probeOf = (rect: PageRect): PageRect => ({
+  x: rect.x - 1,
+  y: rect.y - 1,
+  width: rect.width + 2,
+  height: rect.height + 2,
+});
+
+function checkDeadline(): void {
+  if (
+    measuredThisSlice &&
+    fitDeadline !== Infinity &&
+    performance.now() > fitDeadline
+  )
+    throw FIT_PAUSED;
+  measuredThisSlice = true;
+}
+
+function placementKey(
+  c: Omit<Placement, "inkLeft" | "fill">,
+  ...extra: unknown[]
+): string {
+  return [
+    c.text,
+    c.x,
+    c.baseline,
+    c.family,
+    c.size,
+    c.stretch,
+    c.weight ?? 0,
+    c.hollow ?? 0,
+    ...extra,
+  ].join("|");
+}
+
+function scanImage(
+  doc: EditorDocument,
+  page: Page,
+  ink: { rect: PageRect },
+  probe: PageRect,
+  blur: number,
+): ScanImage {
+  return remember(fitMemory.get(ink)?.scans, blur, () => {
+    checkDeadline();
+    const img = renderLuma(doc.module, page, probe, blur);
+    return img ? { img, stroke: strokeWidth(img, midTone(img)) } : null;
+  });
+}
+
+// Each image cut halfway between its own paper and its own darkest ink.
+function midTone(img: { data: Float32Array }): number {
+  return (percentile(img.data, 0.85) + percentile(img.data, 0.01)) / 2;
+}
+
 /** How much `c` drawn on the spot looks like the scanned pixels there. */
 export function matchScan(
   doc: EditorDocument,
@@ -244,30 +451,46 @@ export function matchScan(
   c: Omit<Placement, "inkLeft" | "fill">,
   /** Blur for the drawn copy; the scan is compared unblurred when set. */
   softness?: number,
+  rough = false,
+): ScanMatch {
+  return remember(
+    fitMemory.get(ink)?.matches,
+    placementKey(c, softness, rough),
+    () => measureMatch(doc, page, ink, c, softness, rough),
+  );
+}
+
+function measureMatch(
+  doc: EditorDocument,
+  page: Page,
+  ink: { rect: PageRect; body: PageRect },
+  c: Omit<Placement, "inkLeft" | "fill">,
+  softness: number | undefined,
+  rough: boolean,
 ): ScanMatch {
   const m = doc.module;
-  const probe = {
-    x: ink.rect.x - 1,
-    y: ink.rect.y - 1,
-    width: ink.rect.width + 2,
-    height: ink.rect.height + 2,
-  };
+  const probe = probeOf(ink.rect);
   const none = { score: 0, weight: 1 };
-  const scan = renderLuma(m, page, probe, softness === undefined ? 2 : 0);
-  if (!scan) return none;
+  const scanned = scanImage(
+    doc,
+    page,
+    ink,
+    probe,
+    softness === undefined ? 2 : 0,
+  );
+  if (!scanned) return none;
+  const scan = scanned.img;
+  checkDeadline();
   const cover = emitFillRect(m, page, probe, { r: 255, g: 255, b: 255 }, 1);
   const ptrs = placeText(doc, page, { ...c, inkLeft: ink.body.x, fill: BLACK });
   const drawn = renderLuma(m, page, probe, softness ?? 2);
   for (const p of [cover, ...ptrs]) removeAndDestroyObject(m, page.pagePtr, p);
   if (!drawn || drawn.data.length !== scan.data.length) return none;
-  // Each image cut halfway between its own paper and its own darkest ink.
-  const mid = (img: { data: Float32Array }) =>
-    (percentile(img.data, 0.85) + percentile(img.data, 0.01)) / 2;
   return {
-    score: correlation(scan.data, drawn.data),
-    weight:
-      strokeWidth(drawn, mid(drawn)) /
-      Math.max(0.5, strokeWidth(scan, mid(scan))),
+    score: rough
+      ? windowCorrelation(scan, drawn, 0, scan.width, 0).r
+      : slidingCorrelation(scan, drawn),
+    weight: strokeWidth(drawn, midTone(drawn)) / Math.max(0.5, scanned.stroke),
   };
 }
 
@@ -302,16 +525,23 @@ export function softnessOf(
   ink: { rect: PageRect; body: PageRect },
   c: Omit<Placement, "inkLeft" | "fill">,
 ): number {
+  return remember(fitMemory.get(ink)?.softness, placementKey(c), () =>
+    measureSoftness(doc, page, ink, c),
+  );
+}
+
+function measureSoftness(
+  doc: EditorDocument,
+  page: Page,
+  ink: { rect: PageRect; body: PageRect },
+  c: Omit<Placement, "inkLeft" | "fill">,
+): number {
   const m = doc.module;
-  const probe = {
-    x: ink.rect.x - 1,
-    y: ink.rect.y - 1,
-    width: ink.rect.width + 2,
-    height: ink.rect.height + 2,
-  };
-  const scan = renderLuma(m, page, probe, 0);
+  const probe = probeOf(ink.rect);
+  const scan = scanImage(doc, page, ink, probe, 0);
   if (!scan) return 0;
-  const target = edgeWidth(scan);
+  const target = edgeWidth(scan.img);
+  checkDeadline();
   const cover = emitFillRect(m, page, probe, { r: 255, g: 255, b: 255 }, 1);
   const ptrs = placeText(doc, page, { ...c, inkLeft: ink.body.x, fill: BLACK });
   let best = { r: 0, err: Infinity };
