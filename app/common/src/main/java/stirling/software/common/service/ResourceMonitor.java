@@ -134,9 +134,11 @@ public class ResourceMonitor {
     /** Updates the resource metrics by sampling current system state. */
     private void updateResourceMetrics() {
         try {
-            // Get CPU usage
-            double cpuUsage = osMXBean.getSystemLoadAverage() / osMXBean.getAvailableProcessors();
-            if (cpuUsage < 0) cpuUsage = getAlternativeCpuLoad(); // Fallback if not available
+            double cpuUsage = getCpuUsage();
+            boolean cpuAvailable = isAvailableCpuSample(cpuUsage);
+            if (!cpuAvailable) {
+                log.trace("Could not retrieve CPU usage");
+            }
 
             // Get memory usage
             long heapUsed = memoryMXBean.getHeapMemoryUsage().getUsed();
@@ -162,9 +164,11 @@ public class ResourceMonitor {
 
             // Determine system status
             ResourceStatus newStatus;
-            if (cpuUsage > cpuCriticalThreshold || memoryUsage > memoryCriticalThreshold) {
+            if (memoryUsage > memoryCriticalThreshold
+                    || (cpuAvailable && cpuUsage > cpuCriticalThreshold)) {
                 newStatus = ResourceStatus.CRITICAL;
-            } else if (cpuUsage > cpuHighThreshold || memoryUsage > memoryHighThreshold) {
+            } else if (memoryUsage > memoryHighThreshold
+                    || (cpuAvailable && cpuUsage > cpuHighThreshold)) {
                 newStatus = ResourceStatus.WARNING;
             } else {
                 newStatus = ResourceStatus.OK;
@@ -175,8 +179,10 @@ public class ResourceMonitor {
             if (oldStatus != newStatus) {
                 log.info("System resource status changed from {} to {}", oldStatus, newStatus);
                 log.info(
-                        "Current metrics - CPU: {}%, Memory: {}%, Free Memory: {} MB",
-                        String.format(Locale.ROOT, "%.1f", cpuUsage * 100),
+                        "Current metrics - CPU: {}, Memory: {}%, Free Memory: {} MB",
+                        cpuAvailable
+                                ? String.format(Locale.ROOT, "%.1f%%", cpuUsage * 100)
+                                : "unavailable",
                         String.format(Locale.ROOT, "%.1f", memoryUsage * 100),
                         freeMemory / (1024 * 1024));
             }
@@ -185,38 +191,25 @@ public class ResourceMonitor {
         }
     }
 
-    /**
-     * Alternative method to estimate CPU load if getSystemLoadAverage() is not available. This is a
-     * fallback and less accurate than the official JMX method.
-     *
-     * @return Estimated CPU load as a value between 0.0 and 1.0
-     */
-    private double getAlternativeCpuLoad() {
-        try {
-            // Try to get CPU time if available through reflection
-            // This is a fallback since we can't directly cast to platform-specific classes
-            try {
-                java.lang.reflect.Method m =
-                        osMXBean.getClass().getDeclaredMethod("getProcessCpuLoad");
-                m.setAccessible(true);
-                return (double) m.invoke(osMXBean);
-            } catch (Exception e) {
-                // Try the older method
-                try {
-                    java.lang.reflect.Method m =
-                            osMXBean.getClass().getDeclaredMethod("getSystemCpuLoad");
-                    m.setAccessible(true);
-                    return (double) m.invoke(osMXBean);
-                } catch (Exception e2) {
-                    log.trace(
-                            "Could not get CPU load through reflection, assuming moderate load (0.5)");
-                    return 0.5;
-                }
+    private double getCpuUsage() {
+        if (osMXBean instanceof com.sun.management.OperatingSystemMXBean extendedOsMXBean) {
+            double cpuUsage = extendedOsMXBean.getCpuLoad();
+            if (isAvailableCpuSample(cpuUsage)) {
+                return Math.min(cpuUsage, 1.0);
             }
-        } catch (Exception e) {
-            log.trace("Could not get CPU load, assuming moderate load (0.5)");
-            return 0.5; // Default to moderate load
         }
+
+        double loadAverage = osMXBean.getSystemLoadAverage();
+        int availableProcessors = osMXBean.getAvailableProcessors();
+        if (isAvailableCpuSample(loadAverage) && availableProcessors > 0) {
+            return Math.min(loadAverage / availableProcessors, 1.0);
+        }
+
+        return Double.NaN;
+    }
+
+    private static boolean isAvailableCpuSample(double cpuSample) {
+        return Double.isFinite(cpuSample) && cpuSample >= 0;
     }
 
     /**
