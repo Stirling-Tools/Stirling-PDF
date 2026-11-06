@@ -18,6 +18,7 @@ import {
   isScanRun,
   prefitScanRun,
   renderScanEdit,
+  setPreferredScanFace,
   scanEditOf,
   scanStyleChoices,
   type RankedStyle,
@@ -90,6 +91,21 @@ function choicesByLine(
   });
 }
 
+function drawnFontNames(doc: EditorDocument, ptrs: number[]): string[] {
+  const m = doc.module;
+  return ptrs.map((p) => {
+    const font = m.FPDFTextObj_GetFont(p);
+    const len = m.FPDFFont_GetBaseFontName(font, 0, 0);
+    const buf = m.pdfium.wasmExports.malloc(len);
+    try {
+      m.FPDFFont_GetBaseFontName(font, buf, len);
+      return m.pdfium.UTF8ToString(buf);
+    } finally {
+      m.pdfium.wasmExports.free(buf);
+    }
+  });
+}
+
 function boldCut(choice: RankedStyle | undefined): boolean {
   if (!choice) return false;
   const { face, style } = choice;
@@ -158,6 +174,33 @@ describe("matching a face to scanned text", () => {
         while (!prefitScanRun(doc, page, run, performance.now() + 5)) slices++;
         expect(slices).toBeGreaterThan(1);
         expect(scanEditOf(doc, run)!.block?.style.family).toBe("Carlito");
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
+    "a face picked in one block wins close calls in blocks fitted before",
+    { timeout: 120_000 },
+    async () => {
+      const lines = [samples[0], { ...samples[0], text: "Quarterly review" }];
+      const { doc, page } = await buildScan(lines, SCAN);
+      try {
+        const runs = page.runs.filter(isScanRun);
+        for (const run of runs)
+          while (!prefitScanRun(doc, page, run, Infinity));
+        const later = runs[1];
+        const ranked = scanEditOf(doc, later)!.block!.ranked;
+        const runnerUp = ranked.find(
+          (r) => r !== ranked[0] && r.score >= ranked[0].score - 0.1,
+        )!;
+        setPreferredScanFace(doc, runnerUp.face.label);
+        const state = scanEditOf(doc, later)!;
+        renderScanEdit(doc, page, later, state, "Quiz");
+        expect(drawnFontNames(doc, state.textPtrs)).toContain(
+          runnerUp.style.family.replace(/ /g, ""),
+        );
       } finally {
         doc.dispose();
       }

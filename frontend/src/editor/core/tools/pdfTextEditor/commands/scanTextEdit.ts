@@ -830,6 +830,16 @@ function fitStyle(
 // One style for the whole block, fitted to its longest line, so an edit never
 // switches face or size part way through a sentence. Only text the scan itself
 // sets at another size (a label and its value on one OCR line) gets its own.
+function preferredOf(
+  doc: EditorDocument,
+  ranked: RankedStyle[],
+): ScanStyle | null {
+  const preferred = preferredScanFace(doc);
+  const pick = ranked.find((r) => r.face.label === preferred);
+  if (!pick || pick === ranked[0]) return null;
+  return pick.score >= ranked[0].score - 0.1 ? pick.style : null;
+}
+
 function styleFor(
   doc: EditorDocument,
   page: Page,
@@ -854,10 +864,12 @@ function styleFor(
           }
         : null;
   }
-  if (!state.block || !span) return state.block?.style ?? null;
+  if (!state.block) return null;
+  const blockStyle = preferredOf(doc, state.block.ranked) ?? state.block.style;
+  if (!span) return blockStyle;
   const top = inkTop(span);
   const near = (t: number) => Math.abs(top / t - 1) < 0.25;
-  if (near(state.block.top)) return state.block.style;
+  if (near(state.block.top)) return blockStyle;
   const known = state.classes.find((c) => near(c.top));
   if (known) return known.style;
   const style = fitStyle(doc, page, state, [span], span);
