@@ -19,7 +19,7 @@ export const useSignatureAppearanceTips = (): TooltipContent => {
         ),
         description: t(
           "certSign.appearance.tooltip.invisible.text",
-          "The signature is added to the PDF for security but won't be visible when viewing the document. Perfect for legal requirements without changing the document's appearance.",
+          "The signature is added to the PDF but isn't visible when viewing it. The document's appearance does not change.",
         ),
         bullets: [
           t(

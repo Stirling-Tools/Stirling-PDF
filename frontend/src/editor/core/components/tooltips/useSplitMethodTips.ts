@@ -19,7 +19,7 @@ export const useSplitMethodTips = (): TooltipContent => {
         ),
         description: t(
           "split.methodSelection.tooltip.header.text",
-          "Choose how you want to split your PDF document. Each method is optimized for different use cases and document types.",
+          "Choose how you want to split your PDF.",
         ),
         bullets: [
           t(

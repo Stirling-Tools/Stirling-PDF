@@ -191,7 +191,10 @@ for (const role of ["ROLE_ADMIN", "ROLE_TEAM_LEAD", "ROLE_USER"]) {
       });
       await page.goto(path);
       await expect(
-        page.getByRole("button", { name: "colleague — Account", exact: true }),
+        page.getByRole("button", {
+          name: "colleague (Account settings)",
+          exact: true,
+        }),
       ).toBeVisible();
       await page.evaluate(() =>
         window.dispatchEvent(new Event("stirling:portal-free-tier-exhausted")),
@@ -344,7 +347,10 @@ for (const connectionState of [
     }
     if (linked) {
       await page
-        .getByRole("button", { name: "owner — Account", exact: true })
+        .getByRole("button", {
+          name: "owner (Account settings)",
+          exact: true,
+        })
         .click();
       await page
         .getByRole("button", { name: "Usage & Billing", exact: true })

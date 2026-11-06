@@ -541,7 +541,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         icon: <Icon name="rotate-cw" size="1.5rem" />,
         name: t("home.rotate.title", "Rotate"),
         component: lazy(() => import("@editor/tools/Rotate")),
-        description: t("home.rotate.desc", "Easily rotate your PDFs."),
+        description: t("home.rotate.desc", "Rotate your PDFs."),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         maxFiles: -1,

@@ -46,7 +46,7 @@ export function ToolPickerFooterExtensions() {
       }}
     >
       <Text size="xs" c="dimmed" style={{ flex: 1, minWidth: 0 }}>
-        {t("localMode.toolPicker.message", "Sign in to unlock all tools.")}
+        {t("localMode.toolPicker.message", "Sign in to use all tools.")}
       </Text>
       <Button
         size="sm"

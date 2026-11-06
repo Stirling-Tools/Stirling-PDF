@@ -142,7 +142,7 @@ export function FreeLimitReachedModal({ onClose }: FreeLimitReachedModalProps) {
               <div className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
                 {t(
                   "plan.freeLimit.message",
-                  "That's your whole free allowance for automation, AI and the API this month. Seriously impressive! It resets next month, or keep the momentum going now for just pennies a day.",
+                  "You've used this month's free allowance for automation, AI and the API. It resets next month, or upgrade now to keep going.",
                 )}
               </div>
             </div>

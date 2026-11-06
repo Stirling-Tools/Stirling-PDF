@@ -136,7 +136,7 @@ export function SpendCapReachedModal({ onClose }: SpendCapReachedModalProps) {
               <div className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
                 {t(
                   "plan.spendCap.message",
-                  "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going.",
+                  "You've reached this month's spend cap. Raise it to keep running automation, AI and API work.",
                 )}
               </div>
             </div>

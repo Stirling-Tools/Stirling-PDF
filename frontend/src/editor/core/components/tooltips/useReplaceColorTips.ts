@@ -55,7 +55,7 @@ export const useReplaceColorTips = (): TooltipContent => {
         title: t("replaceColor.tooltip.custom.title", "Custom Colours"),
         description: t(
           "replaceColor.tooltip.custom.text",
-          "Define your own text and background colours using the colour pickers. Perfect for creating branded documents or specific accessibility requirements.",
+          "Pick your own text and background colors, for example to match branding or meet accessibility needs.",
         ),
         bullets: [
           t(

@@ -77,7 +77,7 @@ function EditorPlanCard({ pill, leader }: EditorPlanCardProps) {
       <p className="payg-planhead__body">
         {t(
           "payg.free.header.freeBody",
-          "View, edit, merge, split, sign, watermark, compress, convert and manual OCR, as much as you want, no matter where you trigger it.",
+          "View, edit, merge, split, sign, watermark, compress, convert and run manual OCR as much as you want, wherever you start them.",
         )}
       </p>
     </div>
@@ -109,7 +109,7 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
           <p className="paygf-cta__subtitle">
             {t(
               "payg.free.cta.subtitleWithAllowance",
-              "Keep going past your {{limit}} free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control.",
+              "Keep using automation, AI and the API past your {{limit}} free PDFs. Set a monthly cap to limit spend.",
               { limit: snap.billableLimit.toLocaleString() },
             )}
           </p>
@@ -145,7 +145,7 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
                 <strong>
                   {t("payg.free.cta.benefit3Title", "API access")}
                 </strong>
-                {" — "}
+                {": "}
                 {t(
                   "payg.free.cta.benefit3Body",
                   "call any Stirling endpoint programmatically",

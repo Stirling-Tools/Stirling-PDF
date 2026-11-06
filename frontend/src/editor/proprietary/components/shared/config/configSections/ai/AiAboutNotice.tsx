@@ -30,7 +30,7 @@ export function AiAboutNotice({ cloud = false }: { cloud?: boolean }) {
         <Text size="xs">
           {t(
             "admin.settings.ai.general.cloudNote.body",
-            "The reasoning runs on Stirling's infrastructure, billed to the account this server is linked to. There is no container to run and no provider key to hold here. Whatever the AI reads is processed by Stirling Cloud rather than on your own hardware.",
+            "AI runs on Stirling's infrastructure and is billed to the account this server is linked to. Documents the AI reads are processed by Stirling Cloud, not on your own hardware.",
           )}
         </Text>
       </Alert>
@@ -53,7 +53,7 @@ export function AiAboutNotice({ cloud = false }: { cloud?: boolean }) {
           <Code>STIRLING_ENGINE_SHARED_SECRET</Code>{" "}
           {t(
             "admin.settings.ai.general.note.outro",
-            "on both containers and a model provider key. Whatever the AI reads is sent to the provider you pick - an Ollama you host keeps every page in-house.",
+            "on both containers and a model provider key. Documents the AI reads are sent to the provider you choose. Host your own Ollama to keep them in-house.",
           )}
         </Text>
         {AI_ENGINE_DOCS_URL && (
