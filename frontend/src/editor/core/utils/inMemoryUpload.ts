@@ -58,18 +58,25 @@ export async function inMemoryFormData(
   return copy;
 }
 
+function thisBrowserNeedsInMemoryFiles(): boolean {
+  return (
+    typeof navigator !== "undefined" &&
+    uploadsNeedInMemoryFiles(navigator.userAgent)
+  );
+}
+
+function inMemoryFormDataForThisDevice(form: FormData): Promise<FormData> {
+  return inMemoryFormData(form, copyBudgetBytes(navigator.maxTouchPoints ?? 0));
+}
+
 /**
  * The form to send from this browser: `form` itself outside WebKit, otherwise its in-memory copy.
  * For uploads that bypass the API clients, such as a raw `fetch`.
  */
 export async function uploadSafeFormData(form: FormData): Promise<FormData> {
-  if (
-    typeof navigator === "undefined" ||
-    !uploadsNeedInMemoryFiles(navigator.userAgent)
-  ) {
-    return form;
-  }
-  return inMemoryFormData(form, copyBudgetBytes(navigator.maxTouchPoints ?? 0));
+  return thisBrowserNeedsInMemoryFiles()
+    ? inMemoryFormDataForThisDevice(form)
+    : form;
 }
 
 /**
@@ -80,15 +87,10 @@ export async function uploadSafeFormData(form: FormData): Promise<FormData> {
 export function installInMemoryUploads(
   client: Pick<AxiosInstance, "interceptors">,
 ): void {
-  if (
-    typeof navigator === "undefined" ||
-    !uploadsNeedInMemoryFiles(navigator.userAgent)
-  ) {
-    return;
-  }
+  if (!thisBrowserNeedsInMemoryFiles()) return;
   client.interceptors.request.use(async (config) =>
     config.data instanceof FormData
-      ? { ...config, data: await uploadSafeFormData(config.data) }
+      ? { ...config, data: await inMemoryFormDataForThisDevice(config.data) }
       : config,
   );
 }

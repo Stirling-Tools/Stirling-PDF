@@ -27,32 +27,31 @@ afterEach(() => {
 });
 
 describe("uploadsNeedInMemoryFiles", () => {
-  it("copies uploads in Safari, DuckDuckGo on macOS and every iOS browser", () => {
-    expect(uploadsNeedInMemoryFiles(SAFARI)).toBe(true);
-    expect(
-      uploadsNeedInMemoryFiles(
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15 Ddg/26.0",
-      ),
-    ).toBe(true);
-    expect(
-      uploadsNeedInMemoryFiles(
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/141.0 Mobile/15E148 Safari/604.1",
-      ),
-    ).toBe(true);
-  });
-
-  it("leaves Chrome, Edge and Firefox streaming the original file", () => {
-    expect(uploadsNeedInMemoryFiles(CHROME)).toBe(false);
-    expect(
-      uploadsNeedInMemoryFiles(
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0",
-      ),
-    ).toBe(false);
-    expect(
-      uploadsNeedInMemoryFiles(
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 15.0; rv:144.0) Gecko/20100101 Firefox/144.0",
-      ),
-    ).toBe(false);
+  it.each([
+    ["Safari", SAFARI, true],
+    [
+      "DuckDuckGo on macOS",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15 Ddg/26.0",
+      true,
+    ],
+    [
+      "Chrome on iOS",
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/141.0 Mobile/15E148 Safari/604.1",
+      true,
+    ],
+    ["Chrome", CHROME, false],
+    [
+      "Edge",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0",
+      false,
+    ],
+    [
+      "Firefox",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 15.0; rv:144.0) Gecko/20100101 Firefox/144.0",
+      false,
+    ],
+  ])("%s → %s", (_browser, userAgent, expected) => {
+    expect(uploadsNeedInMemoryFiles(userAgent)).toBe(expected);
   });
 });
 
