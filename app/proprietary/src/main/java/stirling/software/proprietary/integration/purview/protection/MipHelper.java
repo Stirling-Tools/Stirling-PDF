@@ -104,13 +104,15 @@ public class MipHelper {
                 }
             }
             process.waitFor(5, TimeUnit.SECONDS);
+            if (process.isAlive() || watchdog.isDone()) {
+                throw new RightsManagementException(
+                        RightsManagementException.FAILED,
+                        "The Microsoft Information Protection helper timed out");
+            }
+            log.warn("Protection helper exited without a result: {}", tail(stderr));
             throw new RightsManagementException(
                     RightsManagementException.FAILED,
-                    process.isAlive() || watchdog.isDone()
-                            ? "The Microsoft Information Protection helper timed out"
-                            : "The Microsoft Information Protection helper exited without a"
-                                    + " result: "
-                                    + tail(stderr));
+                    "The Microsoft Information Protection helper exited without a result");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("Interrupted waiting for the protection helper", e);

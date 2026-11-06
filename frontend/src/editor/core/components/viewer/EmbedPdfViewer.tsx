@@ -720,6 +720,13 @@ const EmbedPdfViewerContent = ({
         : undefined,
     [rightsManagedOpened],
   );
+  const protectExportedFile = React.useMemo(
+    () =>
+      rightsManagedOpened
+        ? (plain: File) => protectLikeOriginal(rightsManagedOpened, plain)
+        : undefined,
+    [rightsManagedOpened],
+  );
 
   // Lineage root of the open document: saves and tool outputs add a child record,
   // so mounting on the root keeps the engine alive across reloads.
@@ -1258,14 +1265,8 @@ const EmbedPdfViewerContent = ({
         const plain = new File([filledBlob], filename, {
           type: "application/pdf",
         });
-        const file = exportProtect
-          ? new File(
-              [await exportProtect(await plain.arrayBuffer())],
-              filename,
-              {
-                type: "application/pdf",
-              },
-            )
+        const file = protectExportedFile
+          ? await protectExportedFile(plain)
           : plain;
         rememberPlainPdfExport(currentFile, file);
 
@@ -1316,7 +1317,7 @@ const EmbedPdfViewerContent = ({
     [
       versionFileName,
       currentFile,
-      exportProtect,
+      protectExportedFile,
       currentFileStableId,
       selectedTool,
       fetchFormFields,
@@ -1354,14 +1355,8 @@ const EmbedPdfViewerContent = ({
         const plain = new File([modifiedBlob], filename, {
           type: "application/pdf",
         });
-        const file = exportProtect
-          ? new File(
-              [await exportProtect(await plain.arrayBuffer())],
-              filename,
-              {
-                type: "application/pdf",
-              },
-            )
+        const file = protectExportedFile
+          ? await protectExportedFile(plain)
           : plain;
         rememberPlainPdfExport(currentFile, file);
 
@@ -1390,7 +1385,7 @@ const EmbedPdfViewerContent = ({
     [
       versionFileName,
       currentFile,
-      exportProtect,
+      protectExportedFile,
       activeFiles,
       actions,
       selectors,

@@ -1091,7 +1091,7 @@ function FileContextInner({
       inputStirlingFileStubs: StirlingFileStub[],
       outputFileIds: FileId[],
     ): Promise<void> => {
-      return undoConsumeFiles(
+      await undoConsumeFiles(
         inputFiles,
         inputStirlingFileStubs,
         outputFileIds,
@@ -1100,6 +1100,7 @@ function FileContextInner({
         indexedDB,
         outputFileIds.map((id) => stateRef.current.files.byId[id]),
       );
+      forgetRightsManagedPdfs(outputFileIds);
     },
     [indexedDB, dispatchWithUnlock],
   );

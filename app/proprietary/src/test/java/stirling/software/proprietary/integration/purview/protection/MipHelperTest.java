@@ -118,7 +118,8 @@ class MipHelperTest {
 
         assertThatThrownBy(() -> helper.run("inspect", Map.of(), scope -> "t"))
                 .isInstanceOf(RightsManagementException.class)
-                .hasMessageContaining("libmip_core.so");
+                .hasMessageContaining("exited without a result")
+                .hasMessageNotContaining("libmip_core.so");
     }
 
     @Test

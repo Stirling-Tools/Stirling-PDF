@@ -30,5 +30,9 @@ class RightsManagementControllerTest {
                 .isInstanceOf(RightsManagementException.class)
                 .extracting("code")
                 .isEqualTo(RightsManagementException.BAD_INPUT);
+        assertThatThrownBy(() -> RightsManagementController.normalizeGrants("a@example.com=,"))
+                .isInstanceOf(RightsManagementException.class)
+                .extracting("code")
+                .isEqualTo(RightsManagementException.BAD_INPUT);
     }
 }

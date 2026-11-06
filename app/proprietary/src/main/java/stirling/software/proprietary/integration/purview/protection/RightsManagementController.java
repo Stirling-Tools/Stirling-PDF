@@ -286,14 +286,26 @@ public class RightsManagementController {
                         : "Choose which connected Microsoft account to open this PDF with");
     }
 
+    private static Path uploadToTemp(MultipartFile file, String prefix) throws IOException {
+        Path copy = Files.createTempFile(prefix, ".pdf");
+        try {
+            file.transferTo(copy);
+        } catch (IOException | RuntimeException e) {
+            Files.deleteIfExists(copy);
+            throw e;
+        }
+        return copy;
+    }
+
     private static Path protectedCopy(MultipartFile file) throws IOException {
-        Path copy = Files.createTempFile("stirling-mip-in-", ".pdf");
-        file.transferTo(copy);
+        Path copy = uploadToTemp(file, "stirling-mip-in-");
         boolean isProtected;
         try (PDDocument document = Loader.loadPDF(copy.toFile())) {
             isProtected = ProtectedPdfDetector.isMicrosoftProtected(document);
         } catch (IOException e) {
-            isProtected = false;
+            Files.deleteIfExists(copy);
+            throw new RightsManagementException(
+                    RightsManagementException.BAD_INPUT, "This file is not a readable PDF");
         }
         if (!isProtected) {
             Files.deleteIfExists(copy);
@@ -305,8 +317,7 @@ public class RightsManagementController {
     }
 
     private static Path plainCopy(MultipartFile file) throws IOException {
-        Path copy = Files.createTempFile("stirling-mip-plain-", ".pdf");
-        file.transferTo(copy);
+        Path copy = uploadToTemp(file, "stirling-mip-plain-");
         boolean isProtected;
         try (PDDocument document = Loader.loadPDF(copy.toFile())) {
             isProtected = ProtectedPdfDetector.isMicrosoftProtected(document);
@@ -342,6 +353,11 @@ public class RightsManagementController {
                             "Unknown usage right '" + right.trim() + "'");
                 }
                 rights.add(upper);
+            }
+            if (rights.isEmpty()) {
+                throw new RightsManagementException(
+                        RightsManagementException.BAD_INPUT,
+                        "Give " + grant.substring(0, equals).trim() + " at least one usage right");
             }
             normalized.add(grant.substring(0, equals).trim() + "=" + String.join(",", rights));
         }
