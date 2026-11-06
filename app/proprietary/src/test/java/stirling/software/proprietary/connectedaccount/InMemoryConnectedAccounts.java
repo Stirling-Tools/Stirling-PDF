@@ -64,6 +64,14 @@ public final class InMemoryConnectedAccounts {
                         })
                 .when(repository)
                 .delete(any(ConnectedAccount.class));
+        doAnswer(
+                        call -> {
+                            rows.values()
+                                    .removeIf(a -> a.getOwnerUserId().equals(call.getArgument(0)));
+                            return null;
+                        })
+                .when(repository)
+                .deleteByOwnerUserId(anyLong());
     }
 
     public ConnectedAccount add(long ownerUserId, CloudProvider provider, String refreshToken) {

@@ -262,6 +262,7 @@ public class ConfigController {
                     enableLogin
                             && googleDrive.isEnabled()
                             && googleDrive.isAllowAccountConnections()
+                            && !googleDrive.getClientId().isBlank()
                             && !googleDrive.getClientSecret().isBlank());
             ApplicationProperties.Premium.ProFeatures.Microsoft microsoft =
                     applicationProperties.getPremium().getProFeatures().getMicrosoft();
@@ -270,6 +271,7 @@ public class ConfigController {
                     enableLogin
                             && microsoft.isEnabled()
                             && microsoft.isAllowAccountConnections()
+                            && !microsoft.getClientId().isBlank()
                             && !microsoft.getClientSecret().isBlank());
             configData.put(
                     "honorOwnerPasswords",

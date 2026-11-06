@@ -15,6 +15,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -138,12 +140,43 @@ public class ConnectedAccountService {
         ConnectedAccount account =
                 findOwned(user, accountId)
                         .orElseThrow(() -> new IllegalArgumentException("no such account"));
+        revoke(account);
+        accounts.delete(account);
+        evict(accountId);
+    }
+
+    public void removeAllFor(long userId) {
+        List<ConnectedAccount> owned = accounts.findByOwnerUserIdOrderByCreatedAtAsc(userId);
+        if (owned.isEmpty()) {
+            return;
+        }
+        accounts.deleteByOwnerUserId(userId);
+        owned.forEach(account -> evict(account.getId()));
+        Runnable afterDelete =
+                () ->
+                        owned.forEach(
+                                account -> {
+                                    evict(account.getId());
+                                    revoke(account);
+                                });
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            afterDelete.run();
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        afterDelete.run();
+                    }
+                });
+    }
+
+    private void revoke(ConnectedAccount account) {
         CloudOAuthClient client = clients.get(account.cloudProvider());
         if (client != null && account.getRefreshToken() != null) {
             client.revoke(account.getRefreshToken());
         }
-        accounts.delete(account);
-        evict(accountId);
     }
 
     public String accessToken(long accountId, List<String> scopes) throws IOException {
