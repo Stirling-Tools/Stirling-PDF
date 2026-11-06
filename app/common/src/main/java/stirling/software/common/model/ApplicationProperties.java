@@ -1894,6 +1894,13 @@ public class ApplicationProperties {
                 @ToString.Exclude private String clientSecret = "";
                 private boolean allowAccountConnections = true;
                 private String accountScope = "drive";
+
+                public boolean accountConnectionsReady() {
+                    return enabled
+                            && allowAccountConnections
+                            && !clientId.isBlank()
+                            && !clientSecret.isBlank();
+                }
             }
 
             @Data
@@ -1903,6 +1910,13 @@ public class ApplicationProperties {
                 private String tenant = "common";
                 @ToString.Exclude private String clientSecret = "";
                 private boolean allowAccountConnections = true;
+
+                public boolean accountConnectionsReady() {
+                    return enabled
+                            && allowAccountConnections
+                            && !clientId.isBlank()
+                            && !clientSecret.isBlank();
+                }
             }
 
             @Data
