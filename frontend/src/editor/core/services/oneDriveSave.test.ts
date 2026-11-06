@@ -6,7 +6,7 @@ import type { CloudOrigin } from "@editor/types/file";
 const post = vi.fn();
 vi.mock("@editor/services/apiClient", () => ({ default: { post } }));
 
-const { saveToOneDrive, copyName } =
+const { saveToOneDrive, copyName, withLiveAccount } =
   await import("@editor/services/oneDriveSave");
 
 const origin: CloudOrigin = {
@@ -143,5 +143,50 @@ describe("saveToOneDrive", () => {
     await expect(
       saveToOneDrive(file, { kind: "replace", origin }),
     ).rejects.toMatchObject({ code: "reconnect" });
+  });
+});
+
+describe("withLiveAccount", () => {
+  const account = (id: number, status: "CONNECTED" | "NEEDS_RECONNECT") => ({
+    id,
+    provider: "microsoft" as const,
+    email: null,
+    displayName: null,
+    status,
+    personal: false,
+    lastError: null,
+    createdAt: null,
+  });
+
+  it("keeps the account the file was opened with while it is connected", () => {
+    const target = { kind: "replace" as const, origin };
+    expect(withLiveAccount(target, [account(33, "CONNECTED")])).toBe(target);
+  });
+
+  it("moves a file to the reconnected account when its old one is gone", () => {
+    const next = withLiveAccount({ kind: "replace", origin }, [
+      account(34, "CONNECTED"),
+    ]);
+    expect(next).toEqual({
+      kind: "replace",
+      origin: { ...origin, accountId: 34 },
+    });
+  });
+
+  it("refuses to guess between several connected accounts", () => {
+    expect(
+      withLiveAccount({ kind: "replace", origin }, [
+        account(34, "CONNECTED"),
+        account(35, "CONNECTED"),
+      ]),
+    ).toBeNull();
+  });
+
+  it("asks for a reconnect when no account is connected", () => {
+    expect(
+      withLiveAccount({ kind: "replace", origin }, [
+        account(33, "NEEDS_RECONNECT"),
+      ]),
+    ).toBeNull();
   });
 });
