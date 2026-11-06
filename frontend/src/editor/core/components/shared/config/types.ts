@@ -43,6 +43,7 @@ export const VALID_NAV_KEYS = [
   "help",
   "feedback",
   "legal",
+  "privacy",
   "backendThirdPartyLicenses",
   "frontendThirdPartyLicenses",
   // Holds all four of the rows above; they stay listed so their deep links alias.
