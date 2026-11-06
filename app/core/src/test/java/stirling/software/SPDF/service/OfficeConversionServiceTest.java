@@ -40,7 +40,7 @@ class OfficeConversionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new OfficeConversionService(properties, endpoints);
+        service = new OfficeConversionService(properties, endpoints, null, null);
     }
 
     @ParameterizedTest(name = "legacy={0}, LibreOffice={1} -> Stirling Office Convert {2}")
@@ -105,7 +105,7 @@ class OfficeConversionServiceTest {
         }
         Path pdf = dir.resolve("out.pdf");
         properties.getSystem().setStirlingOfficeConversion(true);
-        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties);
+        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties, null);
 
         assertThat(toPdf.handles("docx")).isTrue();
         toPdf.convert(docx, pdf);
@@ -117,7 +117,7 @@ class OfficeConversionServiceTest {
 
     @Test
     void leavesUnknownFormatsAndLegacyToLibreOffice() {
-        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties);
+        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties, null);
         assertThat(toPdf.handles("html")).isFalse();
 
         properties.getSystem().setStirlingOfficeConversion(false);
@@ -127,7 +127,7 @@ class OfficeConversionServiceTest {
 
     @Test
     void fallsBackOnlyWhenLibreOfficeCanHelp() {
-        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties);
+        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties, null);
         when(endpoints.isGroupEnabled("LibreOffice")).thenReturn(true);
 
         assertThat(toPdf.canFallBack(new IOException("bad file"))).isTrue();

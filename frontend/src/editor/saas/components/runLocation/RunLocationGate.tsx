@@ -4,21 +4,38 @@ import { normalizePath } from "@editor/utils/pathUtils";
 import { PublicRouteProviders } from "@editor/components/PublicRouteProviders";
 import { RunLocationChooser } from "@editor/components/runLocation/RunLocationChooser";
 import { hasChosenRunLocation } from "@editor/components/runLocation/runLocationChosen";
+import {
+  ENTERPRISE_PATH,
+  LEGACY_ENTERPRISE_PATH,
+} from "@editor/portal/components/procurement/enterprisePath";
 
 // Links that finish a flow already in progress (an emailed sign-in, an OAuth
 // redirect, a shared file). Interrupting them with the chooser in a fresh
 // browser would strand the visitor mid-flow, or lose the token in the URL.
+// The Enterprise page is a landing link from campaigns and sales replies, and
+// asks where Stirling will be deployed itself.
 const FLOW_PATHS = [
   "/auth/callback",
   "/auth/reset",
   "/oauth/consent",
   "/link",
   "/account-link/callback",
+  ENTERPRISE_PATH,
+  LEGACY_ENTERPRISE_PATH,
 ];
 
-export function bypassesRunLocation(pathname: string): boolean {
+// Signing in from the Enterprise page detours through these, naming it as `next`.
+const AUTH_PATHS = ["/login", "/signup"];
+
+export function bypassesRunLocation(pathname: string, search = ""): boolean {
   const path = normalizePath(pathname);
-  return FLOW_PATHS.includes(path) || path.startsWith("/share/");
+  if (FLOW_PATHS.includes(path) || path.startsWith("/share/")) return true;
+  const next = new URLSearchParams(search).get("next");
+  const nextPath = next?.split(/[?#]/)[0];
+  return (
+    AUTH_PATHS.includes(path) &&
+    (nextPath === ENTERPRISE_PATH || nextPath === LEGACY_ENTERPRISE_PATH)
+  );
 }
 
 /**
@@ -26,10 +43,10 @@ export function bypassesRunLocation(pathname: string): boolean {
  * auth included, until this browser has confirmed a choice once.
  */
 export function RunLocationGate() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const [showChooser, setShowChooser] = useState(() => !hasChosenRunLocation());
 
-  if (!showChooser || bypassesRunLocation(pathname)) {
+  if (!showChooser || bypassesRunLocation(pathname, search)) {
     return <Outlet />;
   }
 
