@@ -8,6 +8,8 @@ export interface ToggleSwitchProps {
   label?: string;
   /** Names the switch from text rendered elsewhere (e.g. a SettingsRow label). */
   "aria-labelledby"?: string;
+  /** Identifies the element that describes the switch (e.g. helper/explanation text). */
+  "aria-describedby"?: string;
   /** Optional helper text rendered next to the label. */
   description?: string;
   /** Accessible name when the label lives outside the switch (e.g. a SettingsRow's label). */
@@ -30,6 +32,7 @@ export function ToggleSwitch({
   onChange,
   label,
   "aria-labelledby": ariaLabelledBy,
+  "aria-describedby": ariaDescribedBy,
   description,
   "aria-label": ariaLabel,
   disabled,
@@ -50,6 +53,7 @@ export function ToggleSwitch({
         type="checkbox"
         role="switch"
         aria-labelledby={ariaLabelledBy}
+        aria-describedby={ariaDescribedBy}
         checked={checked}
         disabled={disabled}
         aria-label={label ? undefined : ariaLabel}

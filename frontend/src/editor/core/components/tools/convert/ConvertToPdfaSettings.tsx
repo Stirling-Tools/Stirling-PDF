@@ -1,11 +1,14 @@
 import { useId } from "react";
-import { Stack, Text, Select, Alert, Checkbox } from "@mantine/core";
+import { Stack, Text, Select, Alert } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 import { usePdfSignatureDetection } from "@editor/hooks/usePdfSignatureDetection";
 import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
 import { StirlingFile } from "@editor/types/fileContext";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
+import { Icon } from "@editor/ui/Icon";
+import styles from "@editor/components/tools/convert/ConvertToPdfaSettings.module.css";
 
 interface ConvertToPdfaSettingsProps {
   parameters: ConvertParameters;
@@ -117,21 +120,53 @@ const ConvertToPdfaSettings = ({
         </Text>
       </Stack>
 
-      <Checkbox
-        label={t("convert.strictMode", "Strict Mode")}
-        description={t(
-          "convert.strictModeDesc",
-          "Error if conversion is not perfect (uses VeraPDF verification)",
-        )}
-        checked={parameters.pdfaOptions.strict}
-        onChange={(event) =>
-          onParameterChange("pdfaOptions", {
-            ...parameters.pdfaOptions,
-            strict: event.currentTarget.checked,
-          })
-        }
-        disabled={disabled || isChecking}
-      />
+      <div className={styles["pdfa-card"]}>
+        <div className={styles["pdfa-strict-toggle"]}>
+          <div className={styles["pdfa-strict-info"]}>
+            <div className={styles["pdfa-strict-icon"]}>
+              <Icon
+                name={
+                  parameters.pdfaOptions.strict
+                    ? "shield-check"
+                    : "shield-alert"
+                }
+                size={18}
+              />
+            </div>
+            <div className={styles["pdfa-strict-text"]}>
+              <label
+                htmlFor="pdfa-strict-mode-switch"
+                className={styles["pdfa-strict-title"]}
+              >
+                {t("convert.strictMode", "Strict Mode")}
+              </label>
+              <span
+                id="pdfa-strict-mode-desc"
+                className={styles["pdfa-strict-desc"]}
+              >
+                {t(
+                  "convert.strictModeDesc",
+                  "Enforces 100% VeraPDF compliance and rejects non-conforming outputs",
+                )}
+              </span>
+            </div>
+          </div>
+          <ToggleSwitch
+            id="pdfa-strict-mode-switch"
+            checked={parameters.pdfaOptions.strict ?? false}
+            onChange={(checked) =>
+              onParameterChange("pdfaOptions", {
+                ...parameters.pdfaOptions,
+                strict: checked,
+              })
+            }
+            disabled={disabled || isChecking}
+            aria-describedby="pdfa-strict-mode-desc"
+            aria-label={t("convert.strictMode", "Strict Mode")}
+            data-testid="pdfa-strict-mode-toggle"
+          />
+        </div>
+      </div>
     </Stack>
   );
 };
