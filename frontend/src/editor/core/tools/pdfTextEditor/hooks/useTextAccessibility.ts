@@ -1,5 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import { RetagInnerCommand } from "@editor/tools/pdfTextEditor/commands/RetagInnerCommand";
 import { RetagTextCommand } from "@editor/tools/pdfTextEditor/commands/RetagTextCommand";
 import { SetInnerLanguageCommand } from "@editor/tools/pdfTextEditor/commands/SetInnerLanguageCommand";
@@ -26,8 +28,10 @@ import type {
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
   innerTags,
+  sharedTextTag,
   textTag,
   type InnerTag,
+  type TextTag,
 } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 
 /** The tags marking parts of the selected text, and the selection inside it. */
@@ -55,10 +59,11 @@ export interface TextLanguageControl {
 }
 
 /**
- * The tag of the selected text (null unless exactly one run and nothing else
- * is selected), the tags marking parts of it, and ways to change both. A
- * selection inside the text that is exactly one inner tag's text picks that
- * tag; any other is offered as new text to tag.
+ * The tag of the selected text, the one shared by every selected run (null
+ * unless only runs are selected), and a way to set it on all of them. For one
+ * run, also the tags marking parts of it and ways to change them: a selection
+ * inside the text that is exactly one inner tag's text picks that tag; any
+ * other is offered as new text to tag.
  */
 export function useTextAccessibility(
   store: EditorStore,
@@ -74,29 +79,39 @@ export function useTextAccessibility(
         : null,
     [store, state, selection],
   );
-  const { run, tag, inner, newTagTypes } = useMemo(() => {
+  const { run, targets, tag, inner, newTagTypes } = useMemo(() => {
     const doc = store.document;
+    const ids = new Set(selection.runIds);
     const selected =
       ACCESSIBILITY_EDITING &&
-      selection.runIds.length === 1 &&
       selection.imageIds.length === 0 &&
       selection.shapeIds.length === 0
-        ? (state.pages
-            .flatMap((page) => page.runs)
-            .find((r) => r.id === selection.runIds[0]) ?? null)
-        : null;
-    if (!doc || !selected) {
-      return { run: null, tag: null, inner: [], newTagTypes: null };
+        ? state.pages.flatMap((page) => page.runs).filter((r) => ids.has(r.id))
+        : [];
+    if (!doc || selected.length === 0) {
+      return {
+        run: null,
+        targets: [],
+        tag: null,
+        inner: [],
+        newTagTypes: null,
+      };
     }
-    const tags = innerTags(doc, selected);
+    const targets = selected.map((r) => ({ run: r, tag: textTag(doc, r) }));
+    const shared = sharedTextTag(targets.map((target) => target.tag));
+    const only = selected.length === 1 ? selected[0] : null;
+    if (!only) {
+      return { run: null, targets, tag: shared, inner: [], newTagTypes: null };
+    }
+    const tags = innerTags(doc, only);
     const range = selection.textRange;
     const picksTag = tags.some((t) => sameRange(t, range));
     return {
-      run: selected,
-      tag: textTag(doc, selected),
+      run: only,
+      targets,
+      tag: shared,
       inner: tags,
-      newTagTypes:
-        range && !picksTag ? tagTypesFor(doc, selected, range) : null,
+      newTagTypes: range && !picksTag ? tagTypesFor(doc, only, range) : null,
     };
   }, [store, state.pages, selection]);
 
@@ -105,29 +120,16 @@ export function useTextAccessibility(
     [inner, selection.textRange],
   );
 
-  /** Retags the text's block, or gives untagged text an element of its own. */
+  /**
+   * Retags each selected run's block, or gives its untagged text an element of
+   * its own, as one undo step.
+   */
   const setTag = useCallback(
     (type: StructureType) => {
-      if (!run || !tag) return;
-      if (tag.kind === "tagged" && run.mcid !== undefined) {
-        store.dispatch(
-          new RetagTextCommand({
-            pageIndex: run.pageIndex,
-            mcid: run.mcid,
-            type,
-          }),
-        );
-      } else if (tag.kind === "untagged" && tag.taggable) {
-        store.dispatch(
-          new TagTextCommand({
-            pageIndex: run.pageIndex,
-            runId: run.id,
-            as: type,
-          }),
-        );
-      }
+      const command = setTextTagCommand(targets, type);
+      if (command) store.dispatch(command);
     },
-    [store, run, tag],
+    [store, targets],
   );
 
   /** Selects inner tag `index`'s text. */
@@ -288,6 +290,44 @@ function textLanguageTargets(
       : [],
   );
   return targets.length > 0 && targets.length === ids.size ? targets : null;
+}
+
+/**
+ * One undo step setting `type` on every run whose tag can be set; null when
+ * none can.
+ */
+export function setTextTagCommand(
+  targets: readonly { run: TextRunSnapshot; tag: TextTag }[],
+  type: StructureType,
+): Command | null {
+  const commands = targets.flatMap(({ run, tag }) => {
+    const command = runTagCommand(run, tag, type);
+    return command ? [command] : [];
+  });
+  if (commands.length <= 1) return commands[0] ?? null;
+  return new CompositeCommand(commands);
+}
+
+function runTagCommand(
+  run: TextRunSnapshot,
+  tag: TextTag,
+  type: StructureType,
+): Command | null {
+  if (tag.kind === "tagged" && run.mcid !== undefined) {
+    return new RetagTextCommand({
+      pageIndex: run.pageIndex,
+      mcid: run.mcid,
+      type,
+    });
+  }
+  if (tag.kind === "untagged" && tag.taggable) {
+    return new TagTextCommand({
+      pageIndex: run.pageIndex,
+      runId: run.id,
+      as: type,
+    });
+  }
+  return null;
 }
 
 function sameRange(a: TextRange, b: TextRange | null): boolean {

@@ -192,7 +192,7 @@ export function ImageHandle({
           }
         >
           <span
-            data-testid={`pdf-editor-image-attention-${image.id}`}
+            data-testid={`pdf-editor-attention-image-${image.id}`}
             data-attention={attention}
             style={{
               position: "absolute",
