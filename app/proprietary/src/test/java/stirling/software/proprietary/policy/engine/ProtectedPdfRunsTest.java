@@ -20,6 +20,9 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 
@@ -88,7 +91,7 @@ class ProtectedPdfRunsTest {
 
     @Test
     void runsWithoutStepsNeverOpenProtectedInputs() throws IOException {
-        PolicyInputs inputs = PolicyInputs.of(List.of(named(wrapper, "secret.pdf")));
+        PolicyInputs inputs = protectedInput();
 
         try (ProtectedPdfRuns.Unlocked unlocked = runs.unlock(inputs, sourceAccount(), false)) {
             assertThat(unlocked.inputs()).isSameAs(inputs);
@@ -113,14 +116,7 @@ class ProtectedPdfRunsTest {
             Resource plainOut = named("%PDF-1.7 a".getBytes(StandardCharsets.UTF_8), "a.pdf");
             Resource secretOut =
                     named("%PDF-1.7 b".getBytes(StandardCharsets.UTF_8), "secret_rotated.pdf");
-            List<Resource> delivered =
-                    unlocked.protect(
-                            new PolicyExecutionResult(
-                                    List.of(plainOut, secretOut),
-                                    List.of(0, 1),
-                                    null,
-                                    null,
-                                    List.of()));
+            List<Resource> delivered = unlocked.protect(result(List.of(plainOut, secretOut), 0, 1));
 
             assertThat(delivered.get(0)).isSameAs(plainOut);
             assertThat(delivered.get(1).getFilename()).isEqualTo("secret_rotated.pdf");
@@ -131,7 +127,7 @@ class ProtectedPdfRunsTest {
 
     @Test
     void decryptedCopiesAreDeletedOnClose() throws IOException {
-        PolicyInputs inputs = PolicyInputs.of(List.of(named(wrapper, "secret.pdf")));
+        PolicyInputs inputs = protectedInput();
         Path decrypted;
         try (ProtectedPdfRuns.Unlocked unlocked = runs.unlock(inputs, sourceAccount(), true)) {
             decrypted = unlocked.inputs().primary().getFirst().getFile().toPath();
@@ -144,7 +140,7 @@ class ProtectedPdfRunsTest {
     void aViewOnlyAccountCannotRunStepsAndIsToldWhoToAsk() throws IOException {
         when(rightsManagement.open(eq(account), any()))
                 .thenReturn(new RightsManagementService.Opened(PLAINTEXT, protection(false)));
-        PolicyInputs inputs = PolicyInputs.of(List.of(named(wrapper, "secret.pdf")));
+        PolicyInputs inputs = protectedInput();
 
         assertThatThrownBy(() -> runs.unlock(inputs, sourceAccount(), true))
                 .isInstanceOf(IOException.class)
@@ -155,7 +151,7 @@ class ProtectedPdfRunsTest {
     @Test
     void aServerWithoutRightsManagementRefusesInsteadOfProcessingTheWrapper() throws IOException {
         when(rightsManagement.available()).thenReturn(false);
-        PolicyInputs inputs = PolicyInputs.of(List.of(named(wrapper, "secret.pdf")));
+        PolicyInputs inputs = protectedInput();
 
         assertThatThrownBy(() -> runs.unlock(inputs, sourceAccount(), true))
                 .isInstanceOf(IOException.class)
@@ -165,7 +161,7 @@ class ProtectedPdfRunsTest {
     @Test
     void uploadsUseTheOwnersOnlyMicrosoftAccount() throws IOException {
         when(accounts.list(any())).thenReturn(List.of(account));
-        PolicyInputs inputs = PolicyInputs.of(List.of(named(wrapper, "secret.pdf")));
+        PolicyInputs inputs = protectedInput();
 
         try (ProtectedPdfRuns.Unlocked unlocked =
                 runs.unlock(inputs, new ProtectedPdfRuns.RunAccount(null, "pat"), true)) {
@@ -177,7 +173,7 @@ class ProtectedPdfRunsTest {
     @Test
     void uploadsWithSeveralMicrosoftAccountsAreRefused() throws IOException {
         when(accounts.list(any())).thenReturn(List.of(account, microsoftAccount(34L, 7L)));
-        PolicyInputs inputs = PolicyInputs.of(List.of(named(wrapper, "secret.pdf")));
+        PolicyInputs inputs = protectedInput();
 
         assertThatThrownBy(
                         () ->
@@ -190,25 +186,23 @@ class ProtectedPdfRunsTest {
     @Test
     void anotherUsersSourceAccountIsNeverUsed() throws IOException {
         when(accounts.find(33L)).thenReturn(Optional.of(microsoftAccount(33L, 99L)));
-        PolicyInputs inputs = PolicyInputs.of(List.of(named(wrapper, "secret.pdf")));
+        PolicyInputs inputs = protectedInput();
 
         assertThatThrownBy(() -> runs.unlock(inputs, sourceAccount(), true))
                 .isInstanceOf(IOException.class);
     }
 
-    @Test
-    void anExplicitAccountIsRefusedWhenTheOwnerIsUnknown() throws IOException {
-        PolicyInputs inputs = PolicyInputs.of(List.of(named(wrapper, "secret.pdf")));
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "someone-deleted")
+    void anExplicitAccountIsRefusedWhenTheOwnerIsUnknown(String owner) throws IOException {
+        PolicyInputs inputs = protectedInput();
 
-        for (String owner : new String[] {null, "someone-deleted"}) {
-            assertThatThrownBy(
-                            () ->
-                                    runs.unlock(
-                                            inputs,
-                                            new ProtectedPdfRuns.RunAccount(33L, owner),
-                                            true))
-                    .isInstanceOf(IOException.class);
-        }
+        assertThatThrownBy(
+                        () ->
+                                runs.unlock(
+                                        inputs, new ProtectedPdfRuns.RunAccount(33L, owner), true))
+                .isInstanceOf(IOException.class);
         verify(rightsManagement, never()).open(any(), any());
     }
 
@@ -219,12 +213,7 @@ class ProtectedPdfRunsTest {
 
         try (ProtectedPdfRuns.Unlocked unlocked = runs.unlock(inputs, sourceAccount(), true)) {
             PolicyExecutionResult merged =
-                    new PolicyExecutionResult(
-                            List.of(named(PLAINTEXT, "merged.pdf")),
-                            Arrays.asList((Integer) null),
-                            null,
-                            null,
-                            List.of());
+                    result(List.of(named(PLAINTEXT, "merged.pdf")), (Integer) null);
             assertThatThrownBy(() -> unlocked.protect(merged))
                     .isInstanceOf(IOException.class)
                     .hasMessageContaining("merged.pdf");
@@ -242,32 +231,30 @@ class ProtectedPdfRunsTest {
         try (ProtectedPdfRuns.Unlocked unlocked = runs.unlock(inputs, sourceAccount(), true)) {
             List<Resource> delivered =
                     unlocked.protect(
-                            new PolicyExecutionResult(
-                                    List.of(named(PLAINTEXT, "merged.pdf")),
-                                    Arrays.asList((Integer) null),
-                                    null,
-                                    null,
-                                    List.of()));
+                            result(List.of(named(PLAINTEXT, "merged.pdf")), (Integer) null));
             assertThat(delivered.getFirst().getContentAsByteArray()).isEqualTo(PROTECTED_OUTPUT);
         }
     }
 
     @Test
     void nonPdfOutputsOfAProtectedInputAreNeverDelivered() throws IOException {
-        PolicyInputs inputs = PolicyInputs.of(List.of(named(wrapper, "secret.pdf")));
+        PolicyInputs inputs = protectedInput();
 
         try (ProtectedPdfRuns.Unlocked unlocked = runs.unlock(inputs, sourceAccount(), true)) {
             PolicyExecutionResult images =
-                    new PolicyExecutionResult(
-                            List.of(named(new byte[] {(byte) 0x89, 'P', 'N', 'G'}, "page1.png")),
-                            List.of(0),
-                            null,
-                            null,
-                            List.of());
+                    result(List.of(named(new byte[] {(byte) 0x89, 'P', 'N', 'G'}, "page1.png")), 0);
             assertThatThrownBy(() -> unlocked.protect(images))
                     .isInstanceOf(IOException.class)
                     .hasMessageContaining("page1.png");
         }
+    }
+
+    private PolicyInputs protectedInput() {
+        return PolicyInputs.of(List.of(named(wrapper, "secret.pdf")));
+    }
+
+    private static PolicyExecutionResult result(List<Resource> files, Integer... origins) {
+        return new PolicyExecutionResult(files, Arrays.asList(origins), null, null, List.of());
     }
 
     private static ProtectedPdfRuns.RunAccount sourceAccount() {

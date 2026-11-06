@@ -32,6 +32,7 @@ import stirling.software.proprietary.integration.purview.protection.RightsManage
 import stirling.software.proprietary.integration.purview.protection.RightsManagementService;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.User;
 
 @Slf4j
 @Service
@@ -102,10 +103,7 @@ public class ProtectedPdfRuns {
 
         private Resource protectLike(Original original, Resource file) throws IOException {
             String name = nameOf(file);
-            Path derived = Files.createTempFile(workDir, "derived-", ".pdf");
-            try (InputStream in = file.getInputStream()) {
-                Files.copy(in, derived, StandardCopyOption.REPLACE_EXISTING);
-            }
+            Path derived = copyToTemp(file, Files.createTempFile(workDir, "derived-", ".pdf"));
             if (!startsWith(derived, PDF_HEADER)) {
                 throw ExceptionUtils.createRightsManagedInputException(
                         name
@@ -179,10 +177,8 @@ public class ProtectedPdfRuns {
             for (int index : protectedIndexes) {
                 Resource input = inputs.primary().get(index);
                 String name = nameOf(input);
-                Path original = Files.createTempFile(workDir, "original-", ".pdf");
-                try (InputStream in = input.getInputStream()) {
-                    Files.copy(in, original, StandardCopyOption.REPLACE_EXISTING);
-                }
+                Path original =
+                        copyToTemp(input, Files.createTempFile(workDir, "original-", ".pdf"));
                 RightsManagementService.Opened opened = open(account, original, name);
                 requireEdit(name, opened.protection());
                 Path plaintext =
@@ -220,27 +216,29 @@ public class ProtectedPdfRuns {
                 runAccount.fileOwner() == null
                         ? null
                         : users.findByUsernameIgnoreCase(runAccount.fileOwner())
-                                .map(user -> user.getId())
+                                .map(User::getId)
                                 .orElse(null);
         if (ownerId == null) {
             throw needsAccount(fileName);
         }
         if (runAccount.accountId() != null) {
             return accounts.find(runAccount.accountId())
-                    .filter(account -> CloudProvider.MICROSOFT.id().equals(account.getProvider()))
+                    .filter(ProtectedPdfRuns::isMicrosoft)
                     .filter(account -> account.getOwnerUserId().equals(ownerId))
                     .orElseThrow(() -> needsAccount(fileName));
         }
         List<ConnectedAccount> microsoft =
                 users.findById(ownerId).map(accounts::list).orElse(List.of()).stream()
-                        .filter(
-                                account ->
-                                        CloudProvider.MICROSOFT.id().equals(account.getProvider()))
+                        .filter(ProtectedPdfRuns::isMicrosoft)
                         .toList();
         if (microsoft.size() != 1) {
             throw needsAccount(fileName);
         }
         return microsoft.getFirst();
+    }
+
+    private static boolean isMicrosoft(ConnectedAccount account) {
+        return CloudProvider.MICROSOFT.id().equals(account.getProvider());
     }
 
     private static IOException needsAccount(String fileName) {
@@ -271,10 +269,7 @@ public class ProtectedPdfRuns {
             Path file = fileOf(resource);
             if (file == null) {
                 copy = Files.createTempFile("stirling-protected-check-", ".pdf");
-                try (InputStream in = resource.getInputStream()) {
-                    Files.copy(in, copy, StandardCopyOption.REPLACE_EXISTING);
-                }
-                file = copy;
+                file = copyToTemp(resource, copy);
             }
             if (!startsWith(file, PDF_2_HEADER)) {
                 return false;
@@ -289,6 +284,13 @@ public class ProtectedPdfRuns {
                 Files.deleteIfExists(copy);
             }
         }
+    }
+
+    private static Path copyToTemp(Resource resource, Path target) throws IOException {
+        try (InputStream in = resource.getInputStream()) {
+            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return target;
     }
 
     private static Path fileOf(Resource resource) {
