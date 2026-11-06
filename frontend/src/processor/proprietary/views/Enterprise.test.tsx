@@ -62,6 +62,10 @@ vi.mock("@processor/components/procurement/trialDraft", () => ({
   saveTrialDraft,
   takeTrialDraft: () => state.draft,
 }));
+vi.mock("@processor/components/procurement/CalendlyInline", async (actual) => ({
+  ...(await actual<object>()),
+  warmCalendly: vi.fn(),
+}));
 
 vi.mock("@processor/components/procurement/useProcurement", () => ({
   useProcurement: () => state.useProcurement(),

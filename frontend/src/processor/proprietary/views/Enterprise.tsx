@@ -35,6 +35,7 @@ import {
   ScheduleCallModal,
   TrialSetupForm,
 } from "@processor/components/procurement/ProcurementExtras";
+import { warmCalendly } from "@processor/components/procurement/CalendlyInline";
 import { DeploymentOptions } from "@processor/components/procurement/DeploymentOptions";
 import { LicensePanel } from "@processor/components/procurement/ProcurementStages";
 import { SetupChecklist } from "@processor/components/procurement/SetupChecklist";
@@ -195,6 +196,10 @@ function SignedIn() {
   }, [data, isLinked, queryClient]);
 
   const schedule = () => procurement.setExtra("schedule");
+  // Every view of the page offers a call.
+  useEffect(() => {
+    warmCalendly();
+  }, []);
 
   // While the trial starts from the saved answers the page stays on its placeholder rather than
   // flashing the form it is about to leave. Settled by the attempt ending as well as by an error:
