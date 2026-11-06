@@ -1012,7 +1012,18 @@ export function renderScanEdit(
   const styleOf = (anchor: LayoutWord | null): ScanStyle => {
     const own =
       styleFor(doc, page, state, anchor ? inkOf(anchor) : null) ?? fitted;
-    const base = own === fitted ? block : own;
+    const scale = own.fontSize / fitted.fontSize;
+    const base =
+      own === fitted
+        ? block
+        : o.style
+          ? {
+              ...o.style,
+              fontSize: o.style.fontSize * scale,
+              weight: o.style.weight * scale,
+              ink: own.ink,
+            }
+          : own;
     return {
       family: o.family ?? base.family,
       fontSize: o.fontSize ?? base.fontSize,
