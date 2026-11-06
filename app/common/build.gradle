@@ -25,9 +25,9 @@ dependencies {
     api 'org.snakeyaml:snakeyaml-engine:3.1.1'
     api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
-    api 'org.simplejavamail:simple-java-mail:9.3.5'
+    api 'org.simplejavamail:simple-java-mail:9.3.8'
     // MSG file support; exclude commons-math3 (only HSSF/formula needs it, MSG parsing doesn't)
-    api('org.simplejavamail:outlook-module:9.3.5') {
+    api('org.simplejavamail:outlook-module:9.3.8') {
         exclude group: 'org.apache.commons', module: 'commons-math3'
     }
     api 'jakarta.mail:jakarta.mail-api:2.1.5'
@@ -43,9 +43,9 @@ dependencies {
 
     api "com.stirling:jpdfium:${jpdfiumVersion}"
 
-    // -PjpdfiumPlatforms=auto|all|none|<csv of linux-x64,linux-arm64,linux-musl-x64,linux-musl-arm64,darwin-x64,darwin-arm64,windows-x64> (windows-arm64 natives not published yet)
+    // -PjpdfiumPlatforms=auto|all|none|<csv of linux-x64,linux-arm64,linux-musl-x64,linux-musl-arm64,darwin-x64,darwin-arm64,windows-x64,windows-arm64>
     def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'auto').toString().trim()
-    def jpdfiumAllPlatforms = ['linux-x64', 'linux-arm64', 'linux-musl-x64', 'linux-musl-arm64', 'darwin-x64', 'darwin-arm64', 'windows-x64']
+    def jpdfiumAllPlatforms = ['linux-x64', 'linux-arm64', 'linux-musl-x64', 'linux-musl-arm64', 'darwin-x64', 'darwin-arm64', 'windows-x64', 'windows-arm64']
     def jpdfiumPlatforms
     if (jpdfiumPlatformsProp == 'auto') {
         def osName = System.getProperty('os.name').toLowerCase()
@@ -56,12 +56,7 @@ dependencies {
         } else if (osName.contains('mac')) {
             jpdfiumPlatforms = isArm64 ? ['darwin-arm64'] : ['darwin-x64']
         } else if (osName.contains('win')) {
-            if (isArm64) {
-                logger.lifecycle("JPDFium natives are not available for windows-arm64; set -PjpdfiumPlatforms=none to skip bundling natives.")
-                jpdfiumPlatforms = []
-            } else {
-                jpdfiumPlatforms = ['windows-x64']
-            }
+            jpdfiumPlatforms = isArm64 ? ['windows-arm64'] : ['windows-x64']
         } else {
             // Fallback: bundle all platforms when host can't be determined
             jpdfiumPlatforms = jpdfiumAllPlatforms

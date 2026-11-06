@@ -7,6 +7,7 @@ import {
   ILLEGAL_FILE_NAME_CHARS,
   splitFileName,
 } from "@editor/utils/fileUtils";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface RenameFileDialogProps {
   opened: boolean;
@@ -90,6 +91,7 @@ export function RenameFileDialog({
       <Stack gap="sm">
         <TextInput
           autoFocus
+          className={privateContentClassName}
           value={value}
           onChange={(e) => setValue(e.currentTarget.value)}
           onFocus={(e) => e.currentTarget.select()}

@@ -23,6 +23,7 @@ import {
 
 import { Icon, isIconName } from "@editor/ui/Icon";
 import { copyText } from "@editor/utils/copyText";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 interface ProviderCardProps {
   provider: Provider;
   isConfigured: boolean;
@@ -175,6 +176,7 @@ export default function ProviderCard({
       case "textarea":
         return (
           <Textarea
+            className={privateContentClassName}
             key={field.key}
             label={
               <SettingsFieldLabel info={field.description}>
@@ -212,6 +214,7 @@ export default function ProviderCard({
 
         return (
           <TagsInput
+            className={privateContentClassName}
             key={field.key}
             label={
               <SettingsFieldLabel info={field.description}>
@@ -229,6 +232,7 @@ export default function ProviderCard({
       default:
         return (
           <TextInput
+            className={privateContentClassName}
             key={field.key}
             label={
               <SettingsFieldLabel info={field.description}>

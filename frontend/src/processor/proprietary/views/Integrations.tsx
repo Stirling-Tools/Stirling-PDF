@@ -260,6 +260,7 @@ export function Integrations() {
         icon: (r) => <BrandMark id={r.brandId} size={22} />,
         primary: (r) => r.title,
         note: (r) => r.subtitle || undefined,
+        privateNote: (r) => r.kind === "instance",
       }),
       column.text({
         key: "worksWith",
