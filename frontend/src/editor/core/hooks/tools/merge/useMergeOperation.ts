@@ -62,6 +62,9 @@ export const mergeOperationConfig = defineMultiFileTool({
   operationType: "merge",
   endpoint: ENDPOINT,
   filePrefix: "merged_",
+  // Merge always returns a PDF (MergeController produces ToolFormat.PDF and
+  // answers application/pdf), so unidentified content may still be named .pdf.
+  expectedOutputExtension: "pdf",
   defaultParameters,
 });
 
