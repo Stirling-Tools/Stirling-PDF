@@ -465,7 +465,10 @@ function halfDensityXHeight(
   if (!img) return null;
   const { data, width, height } = img;
   const paper = 0.299 * s.paper.r + 0.587 * s.paper.g + 0.114 * s.paper.b;
-  const depth = Math.max(30, paper - Math.min(...data));
+  let darkest = paper;
+  for (let i = 0; i < data.length; i++)
+    if (data[i] < darkest) darkest = data[i];
+  const depth = Math.max(30, paper - darkest);
   const row = (y: number) => {
     let sum = 0;
     for (let x = 0; x < width; x++)
