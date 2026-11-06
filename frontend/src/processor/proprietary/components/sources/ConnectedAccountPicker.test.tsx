@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import { ConnectedAccountPicker } from "@processor/components/sources/ConnectedAccountPicker";
@@ -41,6 +41,12 @@ function renderPicker(onChange = vi.fn(), onUnavailable?: () => void) {
 }
 
 describe("ConnectedAccountPicker", () => {
+  beforeEach(() => {
+    state.available = true;
+    state.accounts = [];
+    state.connect.mockReset();
+  });
+
   it("preselects the only account when it is connected", async () => {
     state.accounts = [account("CONNECTED")];
     const onChange = renderPicker();
@@ -54,7 +60,6 @@ describe("ConnectedAccountPicker", () => {
   });
 
   it("explains a blocked sign-in window", async () => {
-    state.accounts = [];
     state.connect.mockRejectedValueOnce(new PopupBlockedError());
     renderPicker();
     fireEvent.click(
@@ -69,18 +74,12 @@ describe("ConnectedAccountPicker", () => {
 
   it("reports when connecting your own account is turned off", async () => {
     state.available = false;
-    try {
-      state.accounts = [];
-      const onUnavailable = vi.fn();
-      renderPicker(vi.fn(), onUnavailable);
-      await waitFor(() => expect(onUnavailable).toHaveBeenCalled());
-    } finally {
-      state.available = true;
-    }
+    const onUnavailable = vi.fn();
+    renderPicker(vi.fn(), onUnavailable);
+    await waitFor(() => expect(onUnavailable).toHaveBeenCalled());
   });
 
   it("does not report an available provider", () => {
-    state.accounts = [];
     const onUnavailable = vi.fn();
     renderPicker(vi.fn(), onUnavailable);
     expect(onUnavailable).not.toHaveBeenCalled();
