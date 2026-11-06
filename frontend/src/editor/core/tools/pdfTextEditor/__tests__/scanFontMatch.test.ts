@@ -19,12 +19,12 @@ import {
   resetDroppedBase14Chars,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { renderLuma } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   isScanRun,
   prefitScanRun,
   renderScanEdit,
-  rerankScanStyles,
   scanEditOf,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import {
@@ -85,17 +85,31 @@ interface Sample extends ScanLineSpec {
   bold: boolean;
 }
 
-function choicesByLine(
+const nextTick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+async function choicesFor(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+): Promise<RankedStyle[]> {
+  while (!prefitScanRun(doc, page, run, performance.now() + 50))
+    await nextTick();
+  return scanEditOf(doc, run)?.block?.ranked ?? [];
+}
+
+async function choicesByLine(
   doc: EditorDocument,
   page: Page,
   samples: Sample[],
-): Array<RankedStyle[]> {
+): Promise<Array<RankedStyle[]>> {
   const runs = page.runs.filter(isScanRun);
-  return samples.map((_, i) => {
+  const out: Array<RankedStyle[]> = [];
+  for (const [i] of samples.entries()) {
     const baseline = page.height - 48 * (i + 0.7);
     const run = runs.find((r) => Math.abs(r.matrix.f - baseline) < 6);
-    return run ? rerankScanStyles(doc, page, run) : [];
-  });
+    out.push(run ? await choicesFor(doc, page, run) : []);
+  }
+  return out;
 }
 
 function drawnFontNames(doc: EditorDocument, ptrs: number[]): string[] {
@@ -151,7 +165,7 @@ describe("matching a face to scanned text", () => {
     async () => {
       const { doc, page } = await buildScan(samples, SCAN);
       try {
-        const picked = choicesByLine(doc, page, samples);
+        const picked = await choicesByLine(doc, page, samples);
         const report = samples.map((s, i) => ({
           set: s.family,
           picked: picked[i][0]?.face.label ?? null,
@@ -178,7 +192,10 @@ describe("matching a face to scanned text", () => {
       try {
         const run = page.runs.find(isScanRun)!;
         let slices = 0;
-        while (!prefitScanRun(doc, page, run, 0)) slices++;
+        while (!prefitScanRun(doc, page, run, 0)) {
+          slices++;
+          await nextTick();
+        }
         expect(slices).toBeGreaterThan(1);
         expect(scanEditOf(doc, run)!.block?.style.family).toBe("Carlito");
       } finally {
@@ -195,8 +212,7 @@ describe("matching a face to scanned text", () => {
       const { doc, page } = await buildScan(lines, SCAN);
       try {
         const runs = page.runs.filter(isScanRun);
-        for (const run of runs)
-          while (!prefitScanRun(doc, page, run, Infinity));
+        for (const run of runs) await choicesFor(doc, page, run);
         const later = runs[1];
         const ranked = scanEditOf(doc, later)!.block!.ranked;
         const runnerUp = ranked.find(
@@ -217,7 +233,7 @@ describe("matching a face to scanned text", () => {
   test("offers the runners-up, best first", { timeout: 120_000 }, async () => {
     const { doc, page } = await buildScan([samples[0]], SCAN);
     try {
-      const [choices] = choicesByLine(doc, page, [samples[0]]);
+      const [choices] = await choicesByLine(doc, page, [samples[0]]);
       expect(choices.length).toBe(3);
       const scores = choices.map((c) => c.score);
       expect([...scores].sort((a, b) => b - a)).toEqual(scores);
@@ -327,7 +343,7 @@ describe("editing sideways scanned text", () => {
         const run = page.runs.find(
           (r) => isScanRun(r) && r.text.includes("Jane"),
         )!;
-        expect(rerankScanStyles(doc, page, run)[0]?.face.label).toBe(
+        expect((await choicesFor(doc, page, run))[0]?.face.label).toBe(
           "Calibri (Carlito)",
         );
         const band = {
@@ -373,7 +389,7 @@ describe("matching scanned text in other scripts", () => {
       const { doc, page } = await buildScan([russian], SCAN);
       try {
         const run = page.runs.find(isScanRun)!;
-        const [top] = rerankScanStyles(doc, page, run);
+        const [top] = await choicesFor(doc, page, run);
         expect(top.face.label).toBe("DejaVu Sans");
         renderScanEdit(
           doc,
@@ -411,7 +427,7 @@ describe("matching scanned text in other scripts", () => {
       );
       try {
         const run = page.runs.find(isScanRun)!;
-        expect(rerankScanStyles(doc, page, run)[0]?.face.label).toBe(
+        expect((await choicesFor(doc, page, run))[0]?.face.label).toBe(
           "Noto Sans JP",
         );
       } finally {
@@ -440,7 +456,7 @@ describe("matching scanned text in other scripts", () => {
       );
       try {
         const run = page.runs.find(isScanRun)!;
-        expect(rerankScanStyles(doc, page, run)).toEqual([]);
+        expect(await choicesFor(doc, page, run)).toEqual([]);
         const line = scanEditOf(doc, run)!.lines[0];
         const region = {
           x: 20,
@@ -487,8 +503,8 @@ describe("drawing typed words from the scan's own letters", () => {
       const baseline = state.lines[0].baseline;
       const width = jane.right - jane.x + 3;
       const scanned = inkProfile(page, doc, jane.x - 2, width, baseline);
-      if (forceFont)
-        state.override.style = rerankScanStyles(doc, page, run)[0].style;
+      const [best] = await choicesFor(doc, page, run);
+      if (forceFont) state.override.style = best.style;
       renderScanEdit(doc, page, run, state, run.text.replace("June", "Jane"));
       return likeness(
         scanned,
