@@ -30,6 +30,7 @@ import {
   type Face,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { fontFace } from "@editor/tools/pdfTextEditor/util/fontCollection";
+import { registerFontBytes } from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
   buildScan,
   readBundledFaces,
@@ -616,10 +617,13 @@ async function systemFace(
 ): Promise<Face | null> {
   const regularBytes = await readFace(regular);
   if (!regularBytes) return null;
+  const boldBytes = bold ? await readFace(bold) : null;
+  registerFontBytes(label, regularBytes);
+  if (boldBytes) registerFontBytes(`${label} Bold`, boldBytes);
   return faceFromBytes(
     { label, family: label, bold: `${label} Bold`, source: "device" },
     regularBytes,
-    bold ? await readFace(bold) : null,
+    boldBytes,
   );
 }
 

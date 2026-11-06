@@ -15,7 +15,7 @@ import {
 import { getActiveCharcodeStrategy } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { emitFallbackTextObject } from "@editor/tools/pdfTextEditor/util/fallbackFont";
 import { emitDeviceFontTextObject } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
-import { getLocalFontBytes } from "@editor/tools/pdfTextEditor/util/localFonts";
+import { getExternalFontBytes } from "@editor/tools/pdfTextEditor/util/externalFonts";
 import {
   advanceWidth,
   parseFontMetrics,
@@ -318,7 +318,7 @@ export function cssFontSpecFor(fontFamily: string, sizePx: number): string {
 const embeddedMetrics = new WeakMap<Uint8Array, FontMetrics | null>();
 
 function embeddedMetricsFor(family: string): FontMetrics | null {
-  const bytes = getLocalFontBytes(family);
+  const bytes = getExternalFontBytes(family);
   if (!bytes) return null;
   if (!embeddedMetrics.has(bytes))
     embeddedMetrics.set(bytes, parseFontMetrics(bytes));

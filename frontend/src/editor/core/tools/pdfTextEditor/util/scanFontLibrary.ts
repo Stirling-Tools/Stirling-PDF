@@ -1,12 +1,11 @@
-import { BASE_PATH } from "@editor/constants/app";
 import {
   faceStyleFlags,
   retryLocalFonts,
   loadLocalFontBytes,
   loadedLocalFonts,
   pickLocalFontFace,
-  registerFontBytes,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
+import { loadServerFontBytes } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import {
   parseFontMetrics,
   type FaceKind,
@@ -59,42 +58,28 @@ export const COURIER: Face = {
 };
 export const BASE14_FACES: Face[] = [HELVETICA, TIMES, COURIER];
 
-export interface BundledSpec {
-  label: string;
-  family: string;
-  bold: string;
-  regularFile: string;
-  boldFile: string;
-}
-
-export const BUNDLED_SCAN_FONTS: BundledSpec[] = [
+export const BUNDLED_SCAN_FONTS: Array<
+  Pick<Face, "label" | "family" | "bold">
+> = [
   {
     label: "Calibri (Carlito)",
     family: "Carlito",
     bold: "Carlito Bold",
-    regularFile: "Carlito-Regular.ttf",
-    boldFile: "Carlito-Bold.ttf",
   },
   {
     label: "Cambria (Caladea)",
     family: "Caladea",
     bold: "Caladea Bold",
-    regularFile: "Caladea-Regular.ttf",
-    boldFile: "Caladea-Bold.ttf",
   },
   {
     label: "DejaVu Sans",
     family: "DejaVu Sans",
     bold: "DejaVu Sans Bold",
-    regularFile: "DejaVuSans.ttf",
-    boldFile: "DejaVuSans-Bold.ttf",
   },
   {
     label: "DejaVu Serif",
     family: "DejaVu Serif",
     bold: "DejaVu Serif Bold",
-    regularFile: "DejaVuSerif.ttf",
-    boldFile: "DejaVuSerif-Bold.ttf",
   },
 ];
 
@@ -185,12 +170,10 @@ export function faceFromBytes(
   const regularMetrics = parseFontMetrics(regular);
   if (!regularMetrics || regularMetrics.restricted) return null;
   const metrics = new Map<string, FontMetrics>([[spec.family, regularMetrics]]);
-  registerFontBytes(spec.family, regular);
   let bold = spec.bold;
   const boldMetrics = boldBytes ? parseFontMetrics(boldBytes) : null;
   if (boldBytes && boldMetrics && !boldMetrics.restricted) {
     metrics.set(spec.bold, boldMetrics);
-    registerFontBytes(spec.bold, boldBytes);
   } else {
     bold = spec.family;
   }
@@ -205,24 +188,14 @@ export function faceFromBytes(
   };
 }
 
-async function fetchFont(file: string): Promise<Uint8Array | null> {
-  try {
-    const res = await fetch(`${BASE_PATH}/fonts/${file}`);
-    if (!res.ok) return null;
-    return new Uint8Array(await res.arrayBuffer());
-  } catch {
-    return null;
-  }
-}
-
 export function loadBundledScanFaces(): Promise<void> {
   if (bundledJob) return bundledJob;
   const job = (async () => {
     const faces = await Promise.all(
       BUNDLED_SCAN_FONTS.map(async (spec) => {
         const [regular, boldBytes] = await Promise.all([
-          fetchFont(spec.regularFile),
-          fetchFont(spec.boldFile),
+          loadServerFontBytes(spec.family),
+          loadServerFontBytes(spec.bold),
         ]);
         if (!regular) return null;
         return faceFromBytes(
