@@ -8,24 +8,24 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static stirling.software.proprietary.policy.remote.CloudDriveFixtures.ledgerContext;
+import static stirling.software.proprietary.policy.remote.CloudDriveFixtures.named;
+import static stirling.software.proprietary.policy.remote.CloudDriveFixtures.signIn;
+import static stirling.software.proprietary.policy.remote.CloudDriveFixtures.user;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.function.Supplier;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -55,13 +55,17 @@ class MicrosoftDriveGraphTest {
 
     private static final String POLICY = "p1";
     private static final long CONNECTION = 7L;
+    private static final String ORGANISATION_ONEDRIVE =
+            "{\"drive\":\"onedrive\",\"tenantId\":\"contoso.onmicrosoft.com\",\"clientId\":\"c\","
+                    + "\"clientSecret\":\"s\",\"user\":\""
+                    + FakeGraphServer.USER
+                    + "\",\"siteUrl\":\"https://contoso.sharepoint.com/sites/x\"}";
 
     private FakeGraphServer graph;
     private IntegrationConfigRepository connections;
     private MicrosoftDriveInputSource source;
     private MicrosoftDriveOutputSink sink;
-    private InProcessProcessedLedger ledger;
-    private LedgerContext ctx;
+    private ResolveContext ctx;
 
     private InMemoryConnectedAccounts accounts;
     private ApplicationProperties properties;
@@ -75,12 +79,7 @@ class MicrosoftDriveGraphTest {
         TestCredentialKey.install();
         graph = new FakeGraphServer();
         GraphEndpoints endpoints = graph.endpoints();
-        properties = new ApplicationProperties();
-        ApplicationProperties.Premium.ProFeatures.Microsoft app =
-                properties.getPremium().getProFeatures().getMicrosoft();
-        app.setEnabled(true);
-        app.setClientId("client-1");
-        app.setClientSecret("server-secret");
+        properties = FakeGraphServer.serverApp();
         accounts = new InMemoryConnectedAccounts();
         ConnectedAccountService connectedAccounts =
                 new ConnectedAccountService(
@@ -90,7 +89,7 @@ class MicrosoftDriveGraphTest {
                 new GraphDriveClient(
                         endpoints, new GraphTokenProvider(endpoints, connectedAccounts));
         connections = mock(IntegrationConfigRepository.class);
-        storeConnection("onedrive", true);
+        storeConnection(true, ORGANISATION_ONEDRIVE);
         UserService users = mock(UserService.class);
         when(ownership.canUse(any(), any(), eq(alice))).thenReturn(true);
         signIn(alice);
@@ -99,14 +98,12 @@ class MicrosoftDriveGraphTest {
         ConnectionLookup lookup = new ConnectionLookup(connections, ownership, users);
         MicrosoftConnectionResolver resolver =
                 new MicrosoftConnectionResolver(
-                        lookup,
-                        new ConnectedAccountAccess(connectedAccounts, lookup, users),
-                        properties);
+                        lookup, new ConnectedAccountAccess(connectedAccounts, lookup), properties);
         MicrosoftCloudDrive drive = new MicrosoftCloudDrive(resolver, client);
-        ledger = new InProcessProcessedLedger();
+        InProcessProcessedLedger ledger = new InProcessProcessedLedger();
         source = new MicrosoftDriveInputSource(drive);
         sink = new MicrosoftDriveOutputSink(drive, ledger);
-        ctx = new LedgerContext(POLICY);
+        ctx = ledgerContext(ledger, POLICY);
     }
 
     @AfterEach
@@ -115,31 +112,13 @@ class MicrosoftDriveGraphTest {
         SecurityContextHolder.clearContext();
     }
 
-    private static User user(long id, String username) {
-        User user = new User();
-        user.setId(id);
-        user.setUsername(username);
-        return user;
-    }
-
-    private static void signIn(User user) {
-        SecurityContextHolder.getContext()
-                .setAuthentication(new UsernamePasswordAuthenticationToken(user, null, List.of()));
-    }
-
-    private void storeConnection(String drive, boolean enabled) {
+    private void storeConnection(boolean enabled, String config) {
         IntegrationConfig connection = new IntegrationConfig();
         connection.setId(CONNECTION);
         connection.setName("Finance OneDrive");
         connection.setIntegrationType(IntegrationType.MICROSOFT_365);
         connection.setEnabled(enabled);
-        connection.setConfig(
-                "{\"drive\":\""
-                        + drive
-                        + "\",\"tenantId\":\"contoso.onmicrosoft.com\",\"clientId\":\"c\","
-                        + "\"clientSecret\":\"s\",\"user\":\""
-                        + FakeGraphServer.USER
-                        + "\",\"siteUrl\":\"https://contoso.sharepoint.com/sites/x\"}");
+        connection.setConfig(config);
         when(connections.findById(CONNECTION)).thenReturn(Optional.of(connection));
     }
 
@@ -219,7 +198,7 @@ class MicrosoftDriveGraphTest {
 
     @Test
     void aDisabledConnectionCannotBeUsed() {
-        storeConnection("onedrive", false);
+        storeConnection(false, ORGANISATION_ONEDRIVE);
         assertThrows(IllegalArgumentException.class, () -> source.resolve(onedrive(Map.of()), ctx));
     }
 
@@ -283,7 +262,7 @@ class MicrosoftDriveGraphTest {
         assertEquals(1, source.resolve(new InputSpec("sharepoint", options), ctx).size());
         sink.deliver(
                 new OutputDelivery("run-1", POLICY),
-                List.of(named(bytes("processed"), "march-done.pdf")),
+                List.of(named("processed", "march-done.pdf")),
                 new OutputSpec("sharepoint", options));
 
         assertEquals("processed", graph.content("Sites/Finance/Invoices/march-done.pdf"));
@@ -310,7 +289,7 @@ class MicrosoftDriveGraphTest {
 
         sink.deliver(
                 new OutputDelivery("run-1", POLICY, null, null, null, "alice"),
-                List.of(named(bytes("processed"), "done.pdf")),
+                List.of(named("processed", "done.pdf")),
                 new OutputSpec(
                         "onedrive", Map.of("accountId", account.getId(), "directory", "Out")));
 
@@ -326,7 +305,7 @@ class MicrosoftDriveGraphTest {
                 () ->
                         sink.deliver(
                                 new OutputDelivery("run-1", POLICY, null, null, null, "mallory"),
-                                List.of(named(bytes("planted"), "done.pdf")),
+                                List.of(named("planted", "done.pdf")),
                                 new OutputSpec(
                                         "onedrive",
                                         Map.of("accountId", account.getId(), "directory", "Out"))));
@@ -347,7 +326,7 @@ class MicrosoftDriveGraphTest {
 
         sink.deliver(
                 new OutputDelivery("run-1", POLICY, null, null, null, "alice"),
-                List.of(named(bytes("processed"), "done.pdf")),
+                List.of(named("processed", "done.pdf")),
                 onedriveOut("Out"));
 
         assertEquals("processed", graph.content("Out/done.pdf"));
@@ -362,7 +341,7 @@ class MicrosoftDriveGraphTest {
                 () ->
                         sink.deliver(
                                 new OutputDelivery("run-1", POLICY, null, null, null, "mallory"),
-                                List.of(named(bytes("planted"), "done.pdf")),
+                                List.of(named("planted", "done.pdf")),
                                 onedriveOut("Out")));
     }
 
@@ -398,60 +377,15 @@ class MicrosoftDriveGraphTest {
 
     @Test
     void aBlankConnectionSecretUsesTheServersApp() throws Exception {
-        IntegrationConfig connection = new IntegrationConfig();
-        connection.setId(CONNECTION);
-        connection.setName("Pinned OneDrive");
-        connection.setIntegrationType(IntegrationType.MICROSOFT_365);
-        connection.setEnabled(true);
-        connection.setConfig(
+        storeConnection(
+                true,
                 "{\"drive\":\"onedrive\",\"tenantId\":\"contoso.onmicrosoft.com\",\"user\":\""
                         + FakeGraphServer.USER
                         + "\"}");
-        when(connections.findById(CONNECTION)).thenReturn(Optional.of(connection));
         graph.put("Inbox/a.pdf", "a");
 
         assertEquals(1, source.resolve(onedrive(Map.of("mode", "snapshot")), ctx).size());
         assertEquals("client-1", graph.tokenForms.getLast().get("client_id"));
         assertEquals("server-secret", graph.tokenForms.getLast().get("client_secret"));
-    }
-
-    private static byte[] bytes(String text) {
-        return text.getBytes(StandardCharsets.UTF_8);
-    }
-
-    private static Resource named(byte[] content, String name) {
-        return new ByteArrayResource(content) {
-            @Override
-            public String getFilename() {
-                return name;
-            }
-        };
-    }
-
-    private final class LedgerContext implements ResolveContext {
-        private final String policyId;
-
-        private LedgerContext(String policyId) {
-            this.policyId = policyId;
-        }
-
-        @Override
-        public boolean claim(String identity, String gate, Supplier<String> contentHash) {
-            return ledger.claim(policyId, identity, gate, contentHash);
-        }
-
-        @Override
-        public void settle(
-                String identity, String finalGate, String finalContentHash, boolean success) {
-            ledger.settle(policyId, identity, finalGate, finalContentHash, success);
-        }
-
-        @Override
-        public boolean allSettledDone(String identity) {
-            return ledger.allSettledDone(identity);
-        }
-
-        @Override
-        public void reportPresent(Collection<String> identities) {}
     }
 }

@@ -34,12 +34,7 @@ class ConnectedAccountServiceTest {
     void setUp() throws Exception {
         TestCredentialKey.install();
         microsoft = new FakeGraphServer();
-        properties = new ApplicationProperties();
-        ApplicationProperties.Premium.ProFeatures.Microsoft app =
-                properties.getPremium().getProFeatures().getMicrosoft();
-        app.setEnabled(true);
-        app.setClientId("client-1");
-        app.setClientSecret("server-secret");
+        properties = FakeGraphServer.serverApp();
         store = new InMemoryConnectedAccounts();
         service =
                 new ConnectedAccountService(
