@@ -72,15 +72,15 @@ export const BUNDLED_SCAN_FONTS: BundledSpec[] = [
     label: "Calibri (Carlito)",
     family: "Carlito",
     bold: "Carlito Bold",
-    regularFile: "Carlito-Regular.ttf",
-    boldFile: "Carlito-Bold.ttf",
+    regularFile: "scan/Carlito-Regular.ttf",
+    boldFile: "scan/Carlito-Bold.ttf",
   },
   {
     label: "Cambria (Caladea)",
     family: "Caladea",
     bold: "Caladea Bold",
-    regularFile: "Caladea-Regular.ttf",
-    boldFile: "Caladea-Bold.ttf",
+    regularFile: "scan/Caladea-Regular.ttf",
+    boldFile: "scan/Caladea-Bold.ttf",
   },
   {
     label: "DejaVu Sans",
@@ -207,7 +207,7 @@ export function faceFromBytes(
 
 async function fetchFont(file: string): Promise<Uint8Array | null> {
   try {
-    const res = await fetch(`${BASE_PATH}/fonts/scan/${file}`);
+    const res = await fetch(`${BASE_PATH}/fonts/${file}`);
     if (!res.ok) return null;
     return new Uint8Array(await res.arrayBuffer());
   } catch {
