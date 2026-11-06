@@ -8,6 +8,7 @@ import { useCopyFeedback } from "@processor/hooks/useCopyFeedback";
 import { useEditorInstalled } from "@processor/hooks/useEditorInstalled";
 import {
   DOCKER_IMAGE,
+  dockerRunCommand,
   type DockerImageTag,
 } from "@editor/constants/selfHosting";
 import type { Deployment } from "@processor/api/procurement";
@@ -16,10 +17,9 @@ import "@processor/views/Procurement.css";
 import "@processor/components/procurement/SetupChecklist.css";
 
 const DOC = ENTERPRISE_DOCS;
-const image = (tag: DockerImageTag) => `${DOCKER_IMAGE}:${tag}`;
-const IMAGE = image("latest");
 /** Bundles the fonts an offline server cannot download. */
-const FULL_IMAGE = image("latest-fat");
+const FULL_TAG: DockerImageTag = "latest-fat";
+const FULL_IMAGE = `${DOCKER_IMAGE}:${FULL_TAG}`;
 
 interface StepLink {
   label: string;
@@ -86,16 +86,12 @@ export function SetupChecklist({
     deployment === "selfhost" || deployment === "airgap" ? deployment : "cloud";
   const key = licenseKey ?? "YOUR-LICENCE-KEY";
 
-  const runCommand = (image: string, licence: string) =>
-    [
-      "docker run -d --name stirling-pdf -p 8080:8080 \\",
-      '  -v "$(pwd)/stirling/configs:/configs" \\',
-      '  -v "$(pwd)/stirling/logs:/logs" \\',
-      "  -e SECURITY_ENABLELOGIN=true \\",
-      "  -e PREMIUM_ENABLED=true \\",
-      `  -e PREMIUM_KEY=${licence} \\`,
-      `  ${image}`,
-    ].join("\n");
+  const runCommand = (tag: DockerImageTag, licence: string) =>
+    dockerRunCommand(tag, {
+      SECURITY_ENABLELOGIN: "true",
+      PREMIUM_ENABLED: "true",
+      PREMIUM_KEY: licence,
+    });
 
   // Copy naming addresses, paths or settings, which it marks <code> so they read as typed.
   const withCode = (key: string, defaults: string) => (
@@ -216,7 +212,7 @@ export function SetupChecklist({
                 "portal.enterprise.setup.install.body",
                 "Run this on your server. It starts Stirling with your licence applied, and the image includes OCR and office conversion. For larger teams, use Kubernetes.",
               ),
-              code: runCommand(IMAGE, key),
+              code: runCommand("latest", key),
               links: [
                 {
                   label: t(
@@ -305,9 +301,9 @@ export function SetupChecklist({
                 `docker pull ${FULL_IMAGE}`,
                 `docker save -o stirling-pdf.tar ${FULL_IMAGE}`,
                 "",
-                "# On the air-gapped server, with stirling-enterprise.lic in ./stirling/configs",
+                "# On the air-gapped server, with stirling-enterprise.lic in ./stirling-data",
                 "docker load -i stirling-pdf.tar",
-                runCommand(FULL_IMAGE, "file:/configs/stirling-enterprise.lic"),
+                runCommand(FULL_TAG, "file:/configs/stirling-enterprise.lic"),
               ].join("\n"),
               links: [
                 {
