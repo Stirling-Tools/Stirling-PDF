@@ -183,7 +183,7 @@ class SupabaseSecurityConfigMoreTest {
         /**
          * Through the interface: the bean's concrete type depends on whether account linking is on,
          * so a downcast here breaks the moment a test in this class turns it on. A path outside
-         * LINKED_INSTANCE_PATHS always resolves to the "/**" config either way.
+         * LINKED_INSTANCE_PATHS always resolves to the allow-list config either way.
          */
         private CorsConfiguration cors(CorsConfigurationSource source) {
             return source.getCorsConfiguration(
@@ -395,6 +395,28 @@ class SupabaseSecurityConfigMoreTest {
             MockHttpServletRequest request = new MockHttpServletRequest("GET", path);
             request.addHeader(HttpHeaders.ORIGIN, origin);
             return source.getCorsConfiguration(request);
+        }
+
+        @Test
+        @DisplayName("a path outside the cross-origin allow-list gets no CORS config")
+        void unlistedPathHasNoCorsConfig() {
+            assertThat(resolve(source(true), "/index.html", SELF_HOSTED)).isNull();
+        }
+
+        @Test
+        @DisplayName("the SPA root stays cacheable even with account linking enabled")
+        void rootHasNoCorsConfig() {
+            assertThat(resolve(source(true), "/", SELF_HOSTED)).isNull();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"/fonts/NotoSans-Regular.ttf", "/error", "/logout"})
+        @DisplayName("paths the desktop webview calls keep their CORS config")
+        void desktopCalledPathsResolve(String path) {
+            CorsConfiguration cfg = resolve(source(true), path, FIRST_PARTY);
+
+            assertThat(cfg).isNotNull();
+            assertThat(cfg.checkOrigin(FIRST_PARTY)).isEqualTo(FIRST_PARTY);
         }
 
         @ParameterizedTest
