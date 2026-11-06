@@ -372,6 +372,12 @@ public class UserService implements UserServiceInterface {
         return userRepository.existsByUsernameIgnoreCaseAndIdNot(username, userId);
     }
 
+    /** True when an enabled admin is not waiting on a first-login password change. */
+    public boolean hasAdminPastFirstLogin() {
+        return userRepository.findEnabledAdminsByIdAsc().stream()
+                .anyMatch(user -> !user.isFirstLogin());
+    }
+
     public boolean hasUsers() {
         long userCount = userRepository.count();
         if (findByUsernameIgnoreCase(Role.INTERNAL_API_USER.getRoleId()).isPresent()) {
