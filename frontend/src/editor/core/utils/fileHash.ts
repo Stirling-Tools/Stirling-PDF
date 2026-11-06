@@ -5,6 +5,14 @@
 export class FileHasher {
   private static readonly CHUNK_SIZE = 64 * 1024; // 64KB chunks for hashing
 
+  // A File object is an immutable snapshot, so its hybrid hash never changes for the
+  // lifetime of the object. Callers poll hashes on a timer; caching the in-flight
+  // promise keeps repeated lookups from re-reading file chunks every tick.
+  private static readonly hybridHashCache = new WeakMap<
+    File,
+    Promise<string>
+  >();
+
   /**
    * Generate a content-based hash for a file
    * Uses first + last + middle chunks to create a reasonably unique hash
@@ -29,7 +37,18 @@ export class FileHasher {
    * Generate a hybrid hash that balances speed and uniqueness
    * Uses metadata + small content sample
    */
-  static async generateHybridHash(file: File): Promise<string> {
+  static generateHybridHash(file: File): Promise<string> {
+    const cached = this.hybridHashCache.get(file);
+    if (cached) return cached;
+
+    const pending = this.computeHybridHash(file);
+    this.hybridHashCache.set(file, pending);
+    // Do not cache failures: a transient read error must not poison later attempts.
+    pending.catch(() => this.hybridHashCache.delete(file));
+    return pending;
+  }
+
+  private static async computeHybridHash(file: File): Promise<string> {
     const metadataHash = this.generateMetadataHash(file);
 
     // For small files, use full content hash
