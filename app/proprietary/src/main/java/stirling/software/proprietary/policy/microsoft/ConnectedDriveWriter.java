@@ -3,11 +3,9 @@ package stirling.software.proprietary.policy.microsoft;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -19,6 +17,7 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.connectedaccount.ConnectedAccountService;
+import stirling.software.proprietary.connectedaccount.OAuthHttp;
 import stirling.software.proprietary.policy.remote.CloudHttp;
 
 import tools.jackson.databind.JsonNode;
@@ -265,7 +264,7 @@ public class ConnectedDriveWriter {
     }
 
     private static String segment(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
+        return OAuthHttp.encode(value);
     }
 
     private static JsonNode parse(String body) {
