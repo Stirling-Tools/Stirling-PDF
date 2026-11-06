@@ -31,15 +31,22 @@ const FLOW_PATHS = [
 // Signing in from a landing link detours through these, naming it as `next`.
 const AUTH_PATHS = ["/login", "/signup"];
 
-export function bypassesRunLocation(pathname: string, search = ""): boolean {
+/** On a landing link, or signing in on the way to one. */
+function isLanding(pathname: string, search: string): boolean {
   const path = normalizePath(pathname);
-  if (FLOW_PATHS.includes(path) || path.startsWith("/share/")) return true;
+  if (LANDING_PATHS.includes(path)) return true;
   const nextPath = nextPathOf(new URLSearchParams(search).get("next"));
   return (
     AUTH_PATHS.includes(path) &&
     nextPath !== undefined &&
     LANDING_PATHS.includes(nextPath)
   );
+}
+
+export function bypassesRunLocation(pathname: string, search = ""): boolean {
+  const path = normalizePath(pathname);
+  if (FLOW_PATHS.includes(path) || path.startsWith("/share/")) return true;
+  return isLanding(pathname, search);
 }
 
 /**
@@ -49,6 +56,9 @@ export function bypassesRunLocation(pathname: string, search = ""): boolean {
 export function RunLocationGate() {
   const { pathname, search } = useLocation();
   const [showChooser, setShowChooser] = useState(() => !hasChosenRunLocation());
+  // A landing link hands the visitor on into the app (checkout, the editor), so it settles the
+  // question for the rest of the visit, not just its own page.
+  if (showChooser && isLanding(pathname, search)) setShowChooser(false);
 
   if (!showChooser || bypassesRunLocation(pathname, search)) {
     return <Outlet />;

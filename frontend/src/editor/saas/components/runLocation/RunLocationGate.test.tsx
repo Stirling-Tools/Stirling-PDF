@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import type { ReactNode } from "react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Navigate, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RunLocationGate } from "@editor/components/runLocation/RunLocationGate";
 import { startDownload } from "@editor/components/runLocation/startDownload";
@@ -101,6 +101,28 @@ describe("RunLocationGate", () => {
     renderAt("/login?next=%2Fenterprise%3Fsource%3Dsales");
     expect(screen.getByText("The app")).toBeInTheDocument();
   });
+
+  it.each(["/team", "/login?next=%2Fteam"])(
+    "stays out of the way once %s hands the visitor on into the app",
+    (path) => {
+      render(
+        <MemoryRouter initialEntries={[path]}>
+          <Routes>
+            <Route element={<RunLocationGate />}>
+              {/* Each step of the Team link moves on, as TeamRedirect and sign-in do. */}
+              <Route path="/login" element={<Navigate to="/team" replace />} />
+              <Route
+                path="/team"
+                element={<Navigate to="/settings/billing" replace />}
+              />
+              <Route path="*" element={<div>The app</div>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>,
+      );
+      expect(screen.getByText("The app")).toBeInTheDocument();
+    },
+  );
 
   it("still asks on sign-in headed anywhere else", () => {
     renderAt("/login");
