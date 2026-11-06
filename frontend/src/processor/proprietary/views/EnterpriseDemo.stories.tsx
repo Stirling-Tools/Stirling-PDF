@@ -283,8 +283,6 @@ const DEMO_BAR_CSS = `
   align-items: center;
   gap: 0.375rem;
   padding: 0.375rem 0.5rem;
-  opacity: 0.55;
-  transition: opacity 120ms;
   border: 1px solid var(--c-border-strong);
   border-radius: var(--radius-pill);
   background: var(--c-floating-menu-bg);
@@ -296,17 +294,12 @@ const DEMO_BAR_CSS = `
 .ent-demo-bar:not(:hover, :has(:focus-visible)) > :not(:first-child) {
   display: none;
 }
-.ent-demo-bar:hover,
-.ent-demo-bar:has(:focus-visible) {
-  opacity: 1;
-}
 .ent-demo-auth__switch {
   margin-top: 1rem;
   text-align: center;
 }
 .ent-demo-bar__label {
   padding: 0 0.375rem;
-  opacity: 0.7;
 }
 .ent-demo-bar__sep {
   width: 1px;
