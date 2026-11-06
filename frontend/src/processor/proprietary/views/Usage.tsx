@@ -44,6 +44,7 @@ import {
   requestsTeamCheckout,
 } from "@editor/routes/teamCheckoutLink";
 import { markTeamWelcome } from "@editor/billing/teamWelcome";
+import { useOpenEnterprise } from "@processor/components/procurement/enterprisePath";
 import { SubscribedPlanView } from "@editor/portal/components/billing/SubscribedPlanView";
 import {
   HttpError,
@@ -124,14 +125,7 @@ export function Usage({
   const navigate = useNavigate();
   const handledProcurementRequest = useRef(false);
   const canManageProcurement = wallet?.role === "leader";
-  const exploreEnterprise =
-    canManageProcurement &&
-    procurement.isLinked &&
-    !procurement.loading &&
-    !procurement.loadError &&
-    !procurement.started
-      ? procurement.onExploreEnterprise
-      : undefined;
+  const openEnterprise = useOpenEnterprise();
   const bundleFlow = useBundleFlowState(
     wallet?.teamId,
     canManageProcurement && wallet?.status === "free",
@@ -300,7 +294,7 @@ export function Usage({
           !serverPlan && !wallet?.team?.held && overLocalLimit
             ? { users: localUsersInUse, limit: localUserLimit }
             : undefined,
-        onContactSales: exploreEnterprise,
+        onContactSales: openEnterprise,
         onSuccess: refresh,
         onClose: (paid) => {
           if (paid) afterPurchase?.();
@@ -310,7 +304,7 @@ export function Usage({
     [
       checkout,
       refresh,
-      exploreEnterprise,
+      openEnterprise,
       heldLimit,
       usersInUse,
       serverPlan,
@@ -572,7 +566,15 @@ export function Usage({
           />
         ) : undefined
       }
-      onEnterpriseQuote={exploreEnterprise}
+      onEnterpriseQuote={
+        canManageProcurement &&
+        procurement.isLinked &&
+        !procurement.loading &&
+        !procurement.loadError &&
+        !procurement.started
+          ? procurement.onExploreEnterprise
+          : undefined
+      }
       paymentSection={
         paying || ownsLegacySubscription ? (
           <>
