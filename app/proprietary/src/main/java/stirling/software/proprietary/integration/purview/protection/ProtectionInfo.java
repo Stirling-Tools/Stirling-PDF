@@ -75,7 +75,7 @@ public record ProtectionInfo(
                 Permissions.from(rights));
     }
 
-    private static Label label(JsonNode node) {
+    static Label label(JsonNode node) {
         if (node == null || node.isNull()) {
             return null;
         }

@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermissions;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
@@ -28,16 +27,12 @@ class RightsManagementServiceTest {
     @TempDir Path dir;
 
     private RightsManagementService serviceRunning(String script) throws IOException {
-        Path helper = dir.resolve("fake-mip");
-        Files.writeString(helper, "#!/bin/sh\n" + script, StandardCharsets.UTF_8);
-        Files.setPosixFilePermissions(helper, PosixFilePermissions.fromString("rwx------"));
-        ApplicationProperties properties = new ApplicationProperties();
+        ApplicationProperties properties = FakeMipHelper.propertiesRunning(dir, script);
         ApplicationProperties.Premium.ProFeatures.Microsoft microsoft =
                 properties.getPremium().getProFeatures().getMicrosoft();
         microsoft.setEnabled(true);
         microsoft.setClientId("client");
         microsoft.getRightsManagement().setEnabled(true);
-        microsoft.getRightsManagement().setHelperPath(helper.toString());
         ConnectedAccountService accounts = mock(ConnectedAccountService.class);
         when(accounts.isAvailable(CloudProvider.MICROSOFT)).thenReturn(true);
         when(accounts.accessToken(eq(7L), anyList())).thenReturn("token");
@@ -63,10 +58,8 @@ class RightsManagementServiceTest {
 
         assertThat(service.labels(account()))
                 .containsExactly(
-                        new RightsManagementService.AvailableLabel(
-                                "l1", "Confidential", null, "#A4262C", 2),
-                        new RightsManagementService.AvailableLabel(
-                                "l2", "Board", "Confidential", null, 3));
+                        new ProtectionInfo.Label("l1", "Confidential", null, "#A4262C", 2),
+                        new ProtectionInfo.Label("l2", "Board", "Confidential", null, 3));
     }
 
     @Test

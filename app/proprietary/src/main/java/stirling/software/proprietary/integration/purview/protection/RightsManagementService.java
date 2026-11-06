@@ -25,9 +25,6 @@ public class RightsManagementService {
 
     public record Opened(byte[] pdf, ProtectionInfo protection) {}
 
-    public record AvailableLabel(
-            String id, String name, String parentName, String color, int sensitivity) {}
-
     private final MipHelper helper;
     private final ConnectedAccountService accounts;
     private final ApplicationProperties applicationProperties;
@@ -49,49 +46,27 @@ public class RightsManagementService {
 
     public Opened open(ConnectedAccount account, Path protectedPdf) throws IOException {
         requireAvailable();
-        Path output = Files.createTempFile("stirling-mip-open-", ".pdf");
-        try {
-            Map<String, String> args = arguments(account, protectedPdf);
-            args.put("output", output.toString());
-            ProtectionInfo protection =
-                    ProtectionInfo.fromHelper(helper.run("decrypt", args, tokensFor(account)));
-            return new Opened(Files.readAllBytes(output), protection);
-        } finally {
-            Files.deleteIfExists(output);
-        }
+        HelperOutput output =
+                runWritingPdf(
+                        "decrypt", "stirling-mip-open-", account, arguments(account, protectedPdf));
+        return new Opened(output.pdf(), ProtectionInfo.fromHelper(output.result()));
     }
 
     public byte[] protectLike(ConnectedAccount account, Path original, Path derived)
             throws IOException {
         requireAvailable();
-        Path output = Files.createTempFile("stirling-mip-protect-", ".pdf");
-        try {
-            Map<String, String> args = arguments(account, derived);
-            args.put("original", original.toString());
-            args.put("output", output.toString());
-            helper.run("protect", args, tokensFor(account));
-            return Files.readAllBytes(output);
-        } finally {
-            Files.deleteIfExists(output);
-        }
+        Map<String, String> args = arguments(account, derived);
+        args.put("original", original.toString());
+        return runWritingPdf("protect", "stirling-mip-protect-", account, args).pdf();
     }
 
-    public List<AvailableLabel> labels(ConnectedAccount account) throws IOException {
+    public List<ProtectionInfo.Label> labels(ConnectedAccount account) throws IOException {
         requireAvailable();
-        Map<String, String> args = arguments(account, null);
-        JsonNode result = helper.run("labels", args, tokensFor(account));
-        List<AvailableLabel> labels = new ArrayList<>();
+        JsonNode result = helper.run("labels", arguments(account, null), tokensFor(account));
+        List<ProtectionInfo.Label> labels = new ArrayList<>();
         JsonNode list = result.get("labels");
         if (list != null) {
-            list.forEach(
-                    label ->
-                            labels.add(
-                                    new AvailableLabel(
-                                            MipHelper.text(label, "id"),
-                                            MipHelper.text(label, "name"),
-                                            emptyToNull(MipHelper.text(label, "parentName")),
-                                            emptyToNull(MipHelper.text(label, "color")),
-                                            label.path("sensitivity").asInt(0))));
+            list.forEach(label -> labels.add(ProtectionInfo.label(label)));
         }
         return labels;
     }
@@ -99,35 +74,32 @@ public class RightsManagementService {
     public byte[] applyLabel(ConnectedAccount account, Path pdf, String labelId)
             throws IOException {
         requireAvailable();
-        Path output = Files.createTempFile("stirling-mip-label-", ".pdf");
-        try {
-            Map<String, String> args = arguments(account, pdf);
-            args.put("label-id", labelId);
-            args.put("output", output.toString());
-            helper.run("apply", args, tokensFor(account));
-            return Files.readAllBytes(output);
-        } finally {
-            Files.deleteIfExists(output);
-        }
+        Map<String, String> args = arguments(account, pdf);
+        args.put("label-id", labelId);
+        return runWritingPdf("apply", "stirling-mip-label-", account, args).pdf();
     }
 
     public byte[] protectForUsers(ConnectedAccount account, Path pdf, String grants)
             throws IOException {
         requireAvailable();
-        Path output = Files.createTempFile("stirling-mip-adhoc-", ".pdf");
+        Map<String, String> args = arguments(account, pdf);
+        args.put("grants", grants);
+        return runWritingPdf("adhoc", "stirling-mip-adhoc-", account, args).pdf();
+    }
+
+    private record HelperOutput(JsonNode result, byte[] pdf) {}
+
+    private HelperOutput runWritingPdf(
+            String operation, String prefix, ConnectedAccount account, Map<String, String> args)
+            throws IOException {
+        Path output = Files.createTempFile(prefix, ".pdf");
         try {
-            Map<String, String> args = arguments(account, pdf);
-            args.put("grants", grants);
             args.put("output", output.toString());
-            helper.run("adhoc", args, tokensFor(account));
-            return Files.readAllBytes(output);
+            JsonNode result = helper.run(operation, args, tokensFor(account));
+            return new HelperOutput(result, Files.readAllBytes(output));
         } finally {
             Files.deleteIfExists(output);
         }
-    }
-
-    private static String emptyToNull(String value) {
-        return value == null || value.isBlank() ? null : value;
     }
 
     private Map<String, String> arguments(ConnectedAccount account, Path input) {
