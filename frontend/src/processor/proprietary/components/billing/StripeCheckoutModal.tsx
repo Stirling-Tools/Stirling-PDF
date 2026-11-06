@@ -10,12 +10,12 @@ import {
   createCheckoutSession,
   fetchCheckoutPricing,
   getStripePublishableKey,
-  loadStripeOnce,
   type CheckoutPricing,
 } from "@processor/billing/stripe";
 import { CardPlaceholder } from "@processor/components/billing/CardPlaceholder";
 import { ProcessorSpendFields } from "@processor/components/billing/ProcessorSpendFields";
 import { PrepayModalHeader } from "@processor/components/billing/PrepayModalHeader";
+import { useStripeJs } from "@editor/hooks/useStripeJs";
 
 interface Props {
   open: boolean;
@@ -220,8 +220,11 @@ export function StripeCheckoutModal({
     t,
   ]);
 
-  const stripe = publishableKey ? loadStripeOnce(publishableKey) : null;
-  const canRender = Boolean(stripe && clientSecret);
+  const {
+    stripe,
+    failed: stripeFailed,
+    retry: retryStripe,
+  } = useStripeJs(publishableKey || null, "processor_checkout");
 
   // Apply the chosen ceiling, then advance to payment. Applying it up front keeps
   // "you're never billed past it" true from the first processed PDF.
@@ -415,13 +418,35 @@ export function StripeCheckoutModal({
                 {error}
               </Banner>
             )}
-            {publishableKey && loading && !error && (
-              <div className="portal-billing__skeleton" aria-hidden>
-                <Skeleton height="3rem" />
-                <Skeleton height="18rem" />
-              </div>
+            {stripeFailed && (
+              <Banner
+                tone="danger"
+                title={t(
+                  "payment.stripeLoadFailed.title",
+                  "Payment form could not load",
+                )}
+                action={
+                  <Button variant="secondary" onClick={retryStripe}>
+                    {t("payment.stripeLoadFailed.retry", "Try again")}
+                  </Button>
+                }
+              >
+                {t(
+                  "payment.stripeLoadFailed.body",
+                  "Your browser could not reach Stripe. Turn off ad or script blockers for this site, check your connection, then try again.",
+                )}
+              </Banner>
             )}
-            {publishableKey && canRender && stripe && clientSecret && (
+            {publishableKey &&
+              !error &&
+              !stripeFailed &&
+              (loading || (clientSecret && !stripe)) && (
+                <div className="portal-billing__skeleton" aria-hidden>
+                  <Skeleton height="3rem" />
+                  <Skeleton height="18rem" />
+                </div>
+              )}
+            {stripe && clientSecret && (
               <div className="portal-billing__checkout-embed">
                 <EmbeddedCheckoutProvider
                   stripe={stripe}

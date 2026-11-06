@@ -13,13 +13,12 @@
  * );
  * </pre>
  *
- * The {@code loadStripe()} call inside this module deferred-imports the SDK
- * itself, so the chunk graph is:
+ * {@link useStripeJs} deferred-imports the SDK itself, so the chunk graph is:
  *
  * <pre>
  *   StripeCheckoutPanel.chunk.js
  *     └─ @stripe/react-stripe-js  (pulled in by ESM static import here)
- *     └─ @stripe/stripe-js        (pulled in by loadStripe inside fetchStripe)
+ *     └─ @stripe/stripe-js        (pulled in by loadStripeJs inside useStripeJs)
  * </pre>
  *
  * Both chunks are eligible for Vite tree-shaking + lazy load; nothing in the
@@ -55,7 +54,8 @@
  *       to the system browser via {@link openExternal}.
  *   <li>Otherwise render the real {@code <EmbeddedCheckoutProvider>} +
  *       {@code <EmbeddedCheckout>} iframe. The Tauri webview has no CSP, so
- *       embedded checkout works on desktop too.
+ *       embedded checkout works on desktop too. If Stripe.js can't load
+ *       (blocker, firewall, offline), render an error with a retry button.
  * </ol>
  *
  * The parent {@link UpgradeModal} passes {@code onComplete} which fires when
@@ -72,6 +72,7 @@ import {
 } from "@editor/services/billing";
 import { openExternal } from "@editor/platform/openExternal";
 import { getWalletDevPreview } from "@editor/hooks/walletDevPreview";
+import { useStripeJs } from "@editor/hooks/useStripeJs";
 
 // Eager static imports here are OK because this whole module is itself lazy-
 // imported by the modal. They land in the same lazy chunk.
@@ -79,7 +80,6 @@ import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js";
-import type { Stripe } from "@stripe/stripe-js";
 
 export interface StripeCheckoutPanelProps {
   /**
@@ -97,19 +97,6 @@ export interface StripeCheckoutPanelProps {
   onComplete: () => void;
   /** Called when the call to /api/v1/payg/checkout fails. */
   onError?: (message: string) => void;
-}
-
-// Singleton Stripe promise — created on first use and reused for the lifetime
-// of the tab. {@code loadStripe} is dynamically imported so the actual SDK
-// chunk is only pulled when this code path runs.
-let stripePromise: Promise<Stripe | null> | null = null;
-function getStripe(publishableKey: string): Promise<Stripe | null> {
-  if (stripePromise === null) {
-    stripePromise = import("@stripe/stripe-js").then((mod) =>
-      mod.loadStripe(publishableKey),
-    );
-  }
-  return stripePromise;
 }
 
 const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
@@ -151,6 +138,14 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
   // the walletDevPreview seam since cloud may not read either directly; it is
   // a saas-only affordance and resolves to null on desktop / prod.
   const devPreview = getWalletDevPreview() !== null;
+
+  const liveCheckout =
+    clientSecret !== null && !isMock && publishableKey.length > 0;
+  const {
+    stripe,
+    failed: stripeFailed,
+    retry: retryStripe,
+  } = useStripeJs(liveCheckout ? publishableKey : null, "upgrade_modal");
 
   useEffect(() => {
     if (devPreview) {
@@ -223,7 +218,7 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
     };
   }, [teamId, currency, devPreview, billingEmail]);
 
-  if (loading) {
+  if (loading || (liveCheckout && !stripe && !stripeFailed)) {
     return (
       <div className="upm-stripe-mount" data-state="loading">
         <div className="upm-stripe-mount__title">
@@ -281,10 +276,33 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
 
   if (!clientSecret) return null;
 
+  if (stripeFailed) {
+    return (
+      <div className="upm-stripe-mount" data-state="error">
+        <div className="upm-stripe-mount__title">
+          {t("payment.stripeLoadFailed.title", "Payment form could not load")}
+        </div>
+        <div>
+          {t(
+            "payment.stripeLoadFailed.body",
+            "Your browser could not reach Stripe. Turn off ad or script blockers for this site, check your connection, then try again.",
+          )}
+        </div>
+        <div style={{ marginTop: 12 }}>
+          <Button onClick={retryStripe}>
+            {t("payment.stripeLoadFailed.retry", "Try again")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stripe) return null;
+
   return (
     <div className="upm-stripe-mount" data-state="live">
       <EmbeddedCheckoutProvider
-        stripe={getStripe(publishableKey)}
+        stripe={stripe}
         options={{ clientSecret, onComplete }}
       >
         <EmbeddedCheckout />
