@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Stack } from "@mantine/core";
+import { Menu, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -14,6 +14,7 @@ import { saveOperationResults } from "@editor/services/operationResultsSaveServi
 import { useFileActions, useFileSelectors } from "@editor/contexts/FileContext";
 import i18n from "@editor/i18n";
 import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
+import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
 import type { FileId } from "@editor/types/file";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 
@@ -80,6 +81,18 @@ function ReviewStepContent<TParams = unknown>({
       ? oneTarget.saveAllLabel()
       : oneTarget.saveLabel(outputStubs[0])
     : terminology.download;
+  const saveButton = useSaveButton({
+    saver,
+    targets: outputStubs,
+    singleFile: outputStubs.length === 1,
+    savesToDisk: Boolean(icons.saveAs),
+    onSaveLocalCopy: () =>
+      void (async () => {
+        for (const stub of outputStubs)
+          await saver.saveLocalCopy(stub, selectors.getFile(stub.id));
+      })(),
+    fileFor: async (stub) => selectors.getFile(stub.id),
+  });
 
   const handleUndo = async () => {
     try {
@@ -195,7 +208,7 @@ function ReviewStepContent<TParams = unknown>({
           </Button>
         </Tooltip>
       )}
-      {operation.downloadUrl && (
+      {operation.downloadUrl && !saveButton.menu && (
         <Button
           data-testid="download-result-button"
           leftSection={<Icon name={oneTarget?.icon ?? icons.download} />}
@@ -205,6 +218,45 @@ function ReviewStepContent<TParams = unknown>({
         >
           {saveLabel}
         </Button>
+      )}
+      {operation.downloadUrl && saveButton.menu && (
+        <Button.Group style={{ marginBottom: "1rem", width: "100%" }}>
+          <Button
+            data-testid="download-result-button"
+            leftSection={<Icon name={oneTarget?.icon ?? icons.download} />}
+            style={{ flex: 1, minWidth: 0 }}
+            onClick={handleDownload}
+          >
+            {saveLabel}
+          </Button>
+          <Menu shadow="md" width={270} position="bottom-end">
+            <Menu.Target>
+              <Button
+                data-testid="download-result-menu"
+                px="sm"
+                aria-label={t("saveFile.menu.more", "More save options")}
+              >
+                <Icon name="chevron-down" />
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              {saveButton.menu.map((item) => (
+                <Menu.Item
+                  key={item.key}
+                  leftSection={<Icon name={item.icon} size="1rem" />}
+                  onClick={item.onClick}
+                >
+                  {item.label}
+                  {item.description && (
+                    <Text size="xs" c="dimmed">
+                      {item.description}
+                    </Text>
+                  )}
+                </Menu.Item>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+        </Button.Group>
       )}
 
       <SuggestedToolsSection />
