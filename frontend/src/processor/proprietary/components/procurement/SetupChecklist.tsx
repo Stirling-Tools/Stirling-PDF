@@ -65,7 +65,8 @@ export function SetupChecklist({
   teamSize: number;
   /** Absent for members, who cannot invite. */
   onInvite?: () => void;
-  onDownloadOfflineLicense: () => void;
+  /** Absent for members: the licence file is the team leader's to download. */
+  onDownloadOfflineLicense?: () => void;
   downloadingLicense: boolean;
 }) {
   const { t } = useTranslation();
@@ -263,20 +264,22 @@ export function SetupChecklist({
                 "portal.enterprise.setup.offlineLicence.body",
                 "An air-gapped server can't reach our licence service, so it checks this signed file instead. Keep it with the image you carry across.",
               ),
-              links: [
-                {
-                  label: downloadingLicense
-                    ? t(
-                        "portal.enterprise.setup.links.downloading",
-                        "Downloading...",
-                      )
-                    : t(
-                        "portal.enterprise.setup.links.downloadLicence",
-                        "Download licence file",
-                      ),
-                  onClick: onDownloadOfflineLicense,
-                },
-              ],
+              links: onDownloadOfflineLicense
+                ? [
+                    {
+                      label: downloadingLicense
+                        ? t(
+                            "portal.enterprise.setup.links.downloading",
+                            "Downloading...",
+                          )
+                        : t(
+                            "portal.enterprise.setup.links.downloadLicence",
+                            "Download licence file",
+                          ),
+                      onClick: onDownloadOfflineLicense,
+                    },
+                  ]
+                : [],
             },
             {
               id: "install",

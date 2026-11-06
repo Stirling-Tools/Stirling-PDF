@@ -832,7 +832,9 @@ function Deal({
             live={isLive}
             teamSize={teamSize}
             onInvite={onInvite}
-            onDownloadOfflineLicense={controller.onDownloadOfflineLicense}
+            onDownloadOfflineLicense={
+              canManage ? controller.onDownloadOfflineLicense : undefined
+            }
             downloadingLicense={downloadingLicense}
           />
         )}
