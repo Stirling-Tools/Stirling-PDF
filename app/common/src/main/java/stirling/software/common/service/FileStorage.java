@@ -76,8 +76,8 @@ public class FileStorage {
 
     public MultipartFile retrieveFile(String fileId) throws IOException {
         enforceOwnership(fileId);
-        byte[] fileData = fileStore.retrieveBytes(fileId);
-        return fileOrUploadService.toMockMultipartFile(fileId, fileData);
+        return fileOrUploadService.toStreamingMultipartFile(
+                fileId, fileStore.size(fileId), () -> fileStore.retrieve(fileId));
     }
 
     public byte[] retrieveBytes(String fileId) throws IOException {
@@ -187,8 +187,8 @@ public class FileStorage {
      * unauthenticated scheduled task. Routing those through {@link #deleteFile(String)} makes the
      * ownership check throw and silently orphans the files on disk.
      *
-     * <p>Only ever pass file ids read back off a job that the caller has already been authorised
-     * for; never a caller-supplied id.
+     * <p>Only pass file ids from an authorised job, or ids just returned by {@link #storeFile} for
+     * trusted pre-submission copies; never a caller-supplied id.
      */
     public boolean deleteFileAsSystem(String fileId) {
         return fileStore.delete(fileId);

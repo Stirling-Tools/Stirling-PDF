@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -140,13 +141,15 @@ public class JobController {
                 List<ResultFile> files = result.getAllResultFiles();
                 ResultFile singleFile = files.getFirst();
 
-                byte[] fileContent = fileStorage.retrieveBytes(singleFile.getFileId());
                 return ResponseEntity.ok()
                         .header("Content-Type", singleFile.getContentType())
                         .header(
                                 "Content-Disposition",
                                 createContentDispositionHeader(singleFile.getFileName()))
-                        .body(fileContent);
+                        .contentLength(fileStorage.getFileSize(singleFile.getFileId()))
+                        .body(
+                                new InputStreamResource(
+                                        fileStorage.retrieveInputStream(singleFile.getFileId())));
             } catch (Exception e) {
                 log.error("Error retrieving file for job {}: {}", jobId, e.getMessage(), e);
                 return ResponseEntity.internalServerError()
@@ -368,12 +371,11 @@ public class JobController {
                             ? resultFile.getContentType()
                             : MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
-            byte[] fileContent = fileStorage.retrieveBytes(fileId);
-
             return ResponseEntity.ok()
                     .header("Content-Type", contentType)
                     .header("Content-Disposition", createContentDispositionHeader(fileName))
-                    .body(fileContent);
+                    .contentLength(fileStorage.getFileSize(fileId))
+                    .body(new InputStreamResource(fileStorage.retrieveInputStream(fileId)));
         } catch (Exception e) {
             log.error("Error retrieving file {}: {}", fileId, e.getMessage(), e);
             return ResponseEntity.internalServerError().body("Error retrieving file");

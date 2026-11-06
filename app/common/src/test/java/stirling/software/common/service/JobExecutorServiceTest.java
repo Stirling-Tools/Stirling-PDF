@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.when;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
@@ -207,6 +209,34 @@ class JobExecutorServiceTest {
         // Verify job was queued
         verify(jobQueue).queueJob(anyString(), eq(80), any(), eq(5000L));
         verify(taskManager).createTask(anyString());
+    }
+
+    @Test
+    void rejectedQueuedJobFailsItsTask() {
+        when(resourceMonitor.shouldQueueJob(80)).thenReturn(true);
+        when(jobQueue.queueJob(anyString(), eq(80), any(), anyLong()))
+                .thenReturn(
+                        CompletableFuture.failedFuture(
+                                new RejectedExecutionException("Job queue full")));
+
+        ResponseEntity<?> response =
+                jobExecutorService.runJobGeneric(true, () -> "unused", 5000, true, 80);
+
+        String jobId = ((JobResponse<?>) response.getBody()).getJobId();
+        verify(taskManager).setError(jobId, "Job queue full");
+    }
+
+    @Test
+    void failedQueuedJobIsNotTreatedAsRejected() {
+        when(resourceMonitor.shouldQueueJob(80)).thenReturn(true);
+        when(jobQueue.queueJob(anyString(), eq(80), any(), anyLong()))
+                .thenReturn(
+                        CompletableFuture.failedFuture(
+                                new RuntimeException("Job cancelled by user")));
+
+        jobExecutorService.runJobGeneric(true, () -> "unused", 5000, true, 80);
+
+        verify(taskManager, never()).setError(anyString(), anyString());
     }
 
     @Test
