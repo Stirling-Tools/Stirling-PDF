@@ -96,6 +96,21 @@ class EditorFontRegistryTest {
     }
 
     @Test
+    void ignoresLinksThatLeadOutOfTheFolder(@TempDir Path outside) throws IOException {
+        Path elsewhere = outside.resolve("DejaVuSans.ttf");
+        copyFixture("DejaVuSans.ttf", elsewhere);
+        Files.createSymbolicLink(root.resolve("linked.ttf"), elsewhere);
+        Files.createSymbolicLink(root.resolve("linked-folder"), outside);
+        copyFixture("LiberationSans-Regular.ttf", root.resolve("LiberationSans-Regular.ttf"));
+
+        List<EditorFontFamily> families = registry.snapshot().manifest().families();
+
+        assertThat(families)
+                .extracting(EditorFontFamily::family)
+                .containsExactly("Liberation Sans");
+    }
+
+    @Test
     void identicalFilesAreListedOnce() throws IOException {
         copyFixture("DejaVuSans.ttf", root.resolve("a/DejaVuSans.ttf"));
         copyFixture("DejaVuSans.ttf", root.resolve("b/DejaVuSans.ttf"));

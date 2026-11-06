@@ -195,14 +195,29 @@ public class EditorFontRegistry {
         if (!Files.isDirectory(root)) {
             return List.of();
         }
+        Path realRoot;
+        try {
+            realRoot = root.toRealPath();
+        } catch (IOException e) {
+            return List.of();
+        }
         try (Stream<Path> walk = Files.walk(root, MAX_DEPTH)) {
             return walk.filter(Files::isRegularFile)
                     .filter(p -> formatOf(p) != null)
+                    .filter(p -> resolvesInside(p, realRoot))
                     .sorted()
                     .toList();
         } catch (IOException | RuntimeException e) {
             log.warn("Could not list editor fonts in {}: {}", root, e.getMessage());
             return List.of();
+        }
+    }
+
+    private static boolean resolvesInside(Path path, Path realRoot) {
+        try {
+            return path.toRealPath().startsWith(realRoot);
+        } catch (IOException e) {
+            return false;
         }
     }
 
