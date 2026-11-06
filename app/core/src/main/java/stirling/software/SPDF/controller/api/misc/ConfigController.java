@@ -256,6 +256,15 @@ public class ConfigController {
             boolean enableLogin =
                     applicationProperties.getSecurity().isEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
+
+            configData.put(
+                    "googleDriveAccountConnections",
+                    enableLogin && googleDrive.accountConnectionsReady());
+            ApplicationProperties.Premium.ProFeatures.Microsoft microsoft =
+                    applicationProperties.getPremium().getProFeatures().getMicrosoft();
+            configData.put(
+                    "microsoftAccountConnections",
+                    enableLogin && microsoft.accountConnectionsReady());
             configData.put(
                     "honorOwnerPasswords",
                     applicationProperties.getSecurity().isHonorOwnerPasswords());
