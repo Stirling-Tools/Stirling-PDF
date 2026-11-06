@@ -49,26 +49,20 @@ export interface ScanOptions {
   noise: number;
 }
 
-const FRONTEND_FONTS = path.join(
-  import.meta.dirname,
-  "../../../../../../public/fonts",
-);
-const BACKEND_FONTS = path.join(
+const FONT_DIR = path.join(
   import.meta.dirname,
   "../../../../../../../app/core/src/main/resources/static/fonts",
 );
 
-function fontPath(file: string): string {
-  return file.startsWith("scan/")
-    ? path.join(FRONTEND_FONTS, file)
-    : path.join(BACKEND_FONTS, file);
-}
-
 export async function readBundledFaces(): Promise<Face[]> {
   const faces: Face[] = [];
   for (const { regularFile, boldFile, ...spec } of BUNDLED_SCAN_FONTS) {
-    const regular = new Uint8Array(await readFile(fontPath(regularFile)));
-    const boldBytes = new Uint8Array(await readFile(fontPath(boldFile)));
+    const regular = new Uint8Array(
+      await readFile(path.join(FONT_DIR, regularFile)),
+    );
+    const boldBytes = new Uint8Array(
+      await readFile(path.join(FONT_DIR, boldFile)),
+    );
     const face = faceFromBytes(
       { ...spec, source: "bundled" },
       regular,

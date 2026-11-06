@@ -10,7 +10,7 @@ import { parseFontMetrics } from "@editor/tools/pdfTextEditor/util/fontMetrics";
 
 const FONTS = path.join(
   import.meta.dirname,
-  "../../../../../../public/fonts/scan",
+  "../../../../../../../app/core/src/main/resources/static/fonts",
 );
 
 function collect(fonts: Uint8Array[]): Uint8Array {
