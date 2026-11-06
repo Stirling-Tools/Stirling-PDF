@@ -54,4 +54,18 @@ describe("inMemoryFormData", () => {
     expect(file.type).toBe("application/pdf");
     expect(await file.text()).toBe("%PDF-1.7");
   });
+
+  it("sends files past the memory budget as they are", async () => {
+    const small = new File(["1234"], "small.pdf");
+    const large = new File(["12345678"], "large.pdf");
+    const form = new FormData();
+    form.append("fileInput", small);
+    form.append("fileInput", large);
+    const [copiedSmall, keptLarge] = (await inMemoryFormData(form, 10)).getAll(
+      "fileInput",
+    ) as File[];
+    expect(copiedSmall).not.toBe(small);
+    expect(await copiedSmall.text()).toBe("1234");
+    expect(keptLarge).toBe(large);
+  });
 });
