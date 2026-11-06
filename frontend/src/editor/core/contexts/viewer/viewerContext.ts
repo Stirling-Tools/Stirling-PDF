@@ -52,8 +52,6 @@ export interface ViewerContextType {
   toggleAttachmentSidebar: () => void;
   isLayerSidebarVisible: boolean;
   toggleLayerSidebar: () => void;
-  hasLayers: boolean;
-  setHasLayers: (value: boolean) => void;
   isCommentsSidebarVisible: boolean;
   setCommentsSidebarVisible: (visible: boolean) => void;
   toggleCommentsSidebar: () => void;
