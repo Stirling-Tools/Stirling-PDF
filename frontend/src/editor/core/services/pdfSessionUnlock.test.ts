@@ -310,9 +310,8 @@ describe("session PDF access", () => {
     const files = ["first", "second"].map((name) =>
       createStirlingFile(new File(["encrypted"], `${name}.pdf`)),
     );
-    files.forEach((file) =>
-      rememberPdfAccess(file, { ...access, permissions: 0 }),
-    );
+    rememberPdfAccess(files[0], { ...access, permissions: 0 });
+    rememberPdfAccess(files[1], { ...access, permissions: -4 });
     const requestOwner = vi.fn();
     await expect(
       preflightPdfOperation(
@@ -450,8 +449,31 @@ describe("session PDF access", () => {
         [first, second],
         merge,
       ),
-    ).rejects.toThrow("output protection policy");
+    ).rejects.toThrow("separate protection settings");
     expect(post).toHaveBeenCalledTimes(2);
+  });
+
+  it("merges identically protected inputs and restores the first input's protection", async () => {
+    const files = ["first", "second"].map((name) =>
+      createStirlingFile(new File(["encrypted"], `${name}.pdf`)),
+    );
+    const ownerOnly = { ...access, password: "" };
+    files.forEach((file) => rememberPdfAccess(file, ownerOnly));
+    const merge = "/api/v1/general/merge-pdfs";
+    const requestOwner = vi.fn();
+    expect(await preflightPdfOperation(files, merge, true, requestOwner)).toBe(
+      true,
+    );
+    expect(requestOwner).not.toHaveBeenCalled();
+    post.mockResolvedValue({ data: new Blob(["protected merge"]) });
+    await protectUnlockedResults(
+      [new File(["merged"], "merged.pdf")],
+      files,
+      merge,
+    );
+    expect(post).toHaveBeenCalledTimes(1);
+    const form = post.mock.calls[0][1] as FormData;
+    expect((form.get("sourceFile") as File).name).toBe("first.pdf");
   });
 
   it("returns no partial output if protection restoration fails", async () => {
