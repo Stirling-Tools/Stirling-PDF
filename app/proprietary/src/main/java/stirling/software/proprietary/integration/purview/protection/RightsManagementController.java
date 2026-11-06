@@ -83,12 +83,8 @@ public class RightsManagementController {
     @GetMapping("/status")
     @Operation(summary = "Whether this server can open Purview protected PDFs for the caller")
     public StatusResponse status(@AuthenticationPrincipal User user) {
-        requireUser(user);
         List<AccountOption> options =
-                accounts.list(user).stream()
-                        .filter(
-                                account ->
-                                        CloudProvider.MICROSOFT.id().equals(account.getProvider()))
+                microsoftAccounts(user).stream()
                         .map(
                                 account ->
                                         new AccountOption(
@@ -130,9 +126,7 @@ public class RightsManagementController {
         Path input = protectedCopy(file);
         try {
             RightsManagementService.Opened opened = service.open(account, input);
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
+            return pdfResponse()
                     .header(PROTECTION_HEADER, encode(opened.protection()))
                     .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, PROTECTION_HEADER)
                     .body(opened.pdf());
@@ -162,11 +156,7 @@ public class RightsManagementController {
             throw e;
         }
         try {
-            byte[] protectedPdf = service.protectLike(account, originalCopy, derived);
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                    .body(protectedPdf);
+            return pdfResponse().body(service.protectLike(account, originalCopy, derived));
         } finally {
             Files.deleteIfExists(originalCopy);
             Files.deleteIfExists(derived);
@@ -175,7 +165,7 @@ public class RightsManagementController {
 
     @GetMapping("/labels")
     @Operation(summary = "Sensitivity labels the caller's Microsoft account may apply")
-    public List<RightsManagementService.AvailableLabel> labels(
+    public List<ProtectionInfo.Label> labels(
             @AuthenticationPrincipal User user, @RequestParam(required = false) Long accountId)
             throws IOException {
         return service.labels(account(user, accountId));
@@ -194,10 +184,7 @@ public class RightsManagementController {
         ConnectedAccount account = account(user, accountId);
         Path input = plainCopy(file);
         try {
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                    .body(service.applyLabel(account, input, labelId));
+            return pdfResponse().body(service.applyLabel(account, input, labelId));
         } finally {
             Files.deleteIfExists(input);
         }
@@ -219,10 +206,7 @@ public class RightsManagementController {
         ConnectedAccount account = account(user, accountId);
         Path input = plainCopy(file);
         try {
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                    .body(service.protectForUsers(account, input, normalizedGrants));
+            return pdfResponse().body(service.protectForUsers(account, input, normalizedGrants));
         } finally {
             Files.deleteIfExists(input);
         }
@@ -239,9 +223,10 @@ public class RightsManagementController {
                     case RightsManagementException.NOT_PROTECTED,
                             RightsManagementException.ALREADY_PROTECTED,
                             RightsManagementException.BAD_INPUT,
-                            "not_supported" ->
+                            RightsManagementException.NOT_SUPPORTED ->
                             HttpStatus.UNPROCESSABLE_CONTENT;
-                    case RightsManagementException.UNAVAILABLE, "service_disabled" ->
+                    case RightsManagementException.UNAVAILABLE,
+                            RightsManagementException.SERVICE_DISABLED ->
                             HttpStatus.SERVICE_UNAVAILABLE;
                     case RightsManagementException.NETWORK -> HttpStatus.BAD_GATEWAY;
                     default -> HttpStatus.INTERNAL_SERVER_ERROR;
@@ -262,14 +247,15 @@ public class RightsManagementController {
                                 RightsManagementException.SIGN_IN_REQUIRED, e.getMessage(), null));
     }
 
-    private ConnectedAccount account(User user, Long accountId) {
+    private List<ConnectedAccount> microsoftAccounts(User user) {
         requireUser(user);
-        List<ConnectedAccount> microsoft =
-                accounts.list(user).stream()
-                        .filter(
-                                account ->
-                                        CloudProvider.MICROSOFT.id().equals(account.getProvider()))
-                        .toList();
+        return accounts.list(user).stream()
+                .filter(account -> CloudProvider.MICROSOFT.id().equals(account.getProvider()))
+                .toList();
+    }
+
+    private ConnectedAccount account(User user, Long accountId) {
+        List<ConnectedAccount> microsoft = microsoftAccounts(user);
         if (accountId != null) {
             return microsoft.stream()
                     .filter(account -> account.getId().equals(accountId))
@@ -298,7 +284,31 @@ public class RightsManagementController {
     }
 
     private static Path protectedCopy(MultipartFile file) throws IOException {
-        Path copy = uploadToTemp(file, "stirling-mip-in-");
+        return checkedCopy(
+                file,
+                "stirling-mip-in-",
+                true,
+                RightsManagementException.NOT_PROTECTED,
+                "This PDF is not protected by Microsoft Purview");
+    }
+
+    private static Path plainCopy(MultipartFile file) throws IOException {
+        return checkedCopy(
+                file,
+                "stirling-mip-plain-",
+                false,
+                RightsManagementException.ALREADY_PROTECTED,
+                "This PDF is already protected by Microsoft Purview");
+    }
+
+    private static Path checkedCopy(
+            MultipartFile file,
+            String prefix,
+            boolean mustBeProtected,
+            String wrongProtectionCode,
+            String wrongProtectionMessage)
+            throws IOException {
+        Path copy = uploadToTemp(file, prefix);
         boolean isProtected;
         try (PDDocument document = Loader.loadPDF(copy.toFile())) {
             isProtected = ProtectedPdfDetector.isMicrosoftProtected(document);
@@ -307,32 +317,17 @@ public class RightsManagementController {
             throw new RightsManagementException(
                     RightsManagementException.BAD_INPUT, "This file is not a readable PDF");
         }
-        if (!isProtected) {
+        if (isProtected != mustBeProtected) {
             Files.deleteIfExists(copy);
-            throw new RightsManagementException(
-                    RightsManagementException.NOT_PROTECTED,
-                    "This PDF is not protected by Microsoft Purview");
+            throw new RightsManagementException(wrongProtectionCode, wrongProtectionMessage);
         }
         return copy;
     }
 
-    private static Path plainCopy(MultipartFile file) throws IOException {
-        Path copy = uploadToTemp(file, "stirling-mip-plain-");
-        boolean isProtected;
-        try (PDDocument document = Loader.loadPDF(copy.toFile())) {
-            isProtected = ProtectedPdfDetector.isMicrosoftProtected(document);
-        } catch (IOException e) {
-            Files.deleteIfExists(copy);
-            throw new RightsManagementException(
-                    RightsManagementException.BAD_INPUT, "This file is not a readable PDF");
-        }
-        if (isProtected) {
-            Files.deleteIfExists(copy);
-            throw new RightsManagementException(
-                    RightsManagementException.ALREADY_PROTECTED,
-                    "This PDF is already protected by Microsoft Purview");
-        }
-        return copy;
+    private static ResponseEntity.BodyBuilder pdfResponse() {
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CACHE_CONTROL, "no-store");
     }
 
     static String normalizeGrants(String grants) {

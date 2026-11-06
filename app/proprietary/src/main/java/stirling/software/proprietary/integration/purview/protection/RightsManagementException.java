@@ -11,7 +11,9 @@ public class RightsManagementException extends RuntimeException {
     public static final String NOT_PROTECTED = "not_protected";
     public static final String ALREADY_PROTECTED = "already_protected";
     public static final String BAD_INPUT = "bad_input";
+    public static final String NOT_SUPPORTED = "not_supported";
     public static final String UNAVAILABLE = "unavailable";
+    public static final String SERVICE_DISABLED = "service_disabled";
     public static final String NETWORK = "network";
     public static final String FAILED = "failed";
 

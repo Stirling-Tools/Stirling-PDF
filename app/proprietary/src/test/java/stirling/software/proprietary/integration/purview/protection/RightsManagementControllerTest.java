@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class RightsManagementControllerTest {
 
@@ -24,13 +26,10 @@ class RightsManagementControllerTest {
                 .isEqualTo(RightsManagementException.BAD_INPUT);
     }
 
-    @Test
-    void rejectsGrantsWithoutRights() {
-        assertThatThrownBy(() -> RightsManagementController.normalizeGrants("a@example.com"))
-                .isInstanceOf(RightsManagementException.class)
-                .extracting("code")
-                .isEqualTo(RightsManagementException.BAD_INPUT);
-        assertThatThrownBy(() -> RightsManagementController.normalizeGrants("a@example.com=,"))
+    @ParameterizedTest
+    @ValueSource(strings = {"a@example.com", "a@example.com=,"})
+    void rejectsGrantsWithoutRights(String grants) {
+        assertThatThrownBy(() -> RightsManagementController.normalizeGrants(grants))
                 .isInstanceOf(RightsManagementException.class)
                 .extracting("code")
                 .isEqualTo(RightsManagementException.BAD_INPUT);
