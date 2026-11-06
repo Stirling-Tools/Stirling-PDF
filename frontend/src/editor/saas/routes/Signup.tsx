@@ -6,6 +6,8 @@ import { useTranslation } from "@editor/hooks/useTranslation";
 import { useDocumentMeta } from "@editor/hooks/useDocumentMeta";
 import { getBaseUrl, withBasePath } from "@editor/constants/app";
 import { rememberPendingDestination } from "@editor/services/pendingDestination";
+import { nextPathOf } from "@editor/routes/authShared/nextPath";
+import { TEAM_PATH } from "@editor/routes/teamPath";
 import AuthLayout from "@editor/routes/authShared/AuthLayout";
 import "@editor/auth/ui/auth.css";
 import "@editor/routes/authShared/saas-auth.css";
@@ -36,18 +38,15 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agree, setAgree] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
+  const next = new URLSearchParams(location.search).get("next");
+  // Skipping makes a guest, and a guest cannot buy Team.
+  const buyingTeam = nextPathOf(next) === TEAM_PATH;
 
   // Stashed rather than threaded onward: Supabase builds the confirmation link and
   // it cannot carry a `next`.
   useEffect(() => {
-    try {
-      rememberPendingDestination(
-        new URL(window.location.href).searchParams.get("next"),
-      );
-    } catch (_) {
-      // Unparseable URL; the visitor just lands on the default.
-    }
-  }, []);
+    rememberPendingDestination(next);
+  }, [next]);
 
   // Check if we were redirected here with an auto-auth error
   useEffect(() => {
@@ -169,7 +168,7 @@ export default function Signup() {
           location: "top-right",
           durationMs: 3000,
         });
-        setTimeout(() => navigate("/login"), 2000);
+        setTimeout(() => navigate(`/login${location.search}`), 2000);
       }
     } catch (err) {
       console.error("[Signup] Unexpected error:", err);
@@ -276,25 +275,27 @@ export default function Signup() {
       </div>
 
       {/* Skip — small + muted, at the very bottom */}
-      <div style={{ textAlign: "center", margin: "0.5rem 0 0.25rem" }}>
-        <Button
-          variant="tertiary"
-          onClick={handleAnonymousSignIn}
-          disabled={isSigningUp}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "0.8125rem",
-            fontWeight: 500,
-            color: "var(--c-text-subtle)",
-          }}
-        >
-          {isSigningUp
-            ? t("login.signingIn", "Signing in...")
-            : `${t("signup.skip", "Skip")} →`}
-        </Button>
-      </div>
+      {!buyingTeam && (
+        <div style={{ textAlign: "center", margin: "0.5rem 0 0.25rem" }}>
+          <Button
+            variant="tertiary"
+            onClick={handleAnonymousSignIn}
+            disabled={isSigningUp}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.8125rem",
+              fontWeight: 500,
+              color: "var(--c-text-subtle)",
+            }}
+          >
+            {isSigningUp
+              ? t("login.signingIn", "Signing in...")
+              : `${t("signup.skip", "Skip")} →`}
+          </Button>
+        </div>
+      )}
     </AuthLayout>
   );
 }

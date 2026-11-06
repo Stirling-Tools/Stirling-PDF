@@ -12,7 +12,7 @@ import {
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Banner, Button } from "@editor/ui";
 import { BillingScreen, KvRow, formatPeriodDate } from "@editor/billing";
 import { useLegacySubscriptions } from "@editor/hooks/useLegacySubscriptions";
@@ -37,6 +37,12 @@ import { useFleetStats } from "@editor/portal/queries/infrastructure";
 import { qk } from "@editor/portal/queries/keys";
 import { walletQuery, WALLET_POLL_MS } from "@editor/portal/queries/wallet";
 import { useCheckoutOptional } from "@editor/contexts/CheckoutContext";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
+import {
+  TEAM_CHECKOUT_PARAM,
+  requestsTeamCheckout,
+} from "@editor/routes/teamCheckoutLink";
+import { TEAM_WELCOME_STATE } from "@editor/billing/teamWelcome";
 import { SubscribedPlanView } from "@editor/portal/components/billing/SubscribedPlanView";
 import {
   HttpError,
@@ -121,6 +127,7 @@ export function Usage({
       : null;
   const openEnterprise = useOpenEnterprise();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const isLeader = wallet?.role === "leader";
   const bundleFlow = useBundleFlowState(
     wallet?.teamId,
@@ -207,6 +214,10 @@ export function Usage({
   // The same flow the settings plan section uses, so there is one purchase implementation.
   // Optional on purpose: a build that mounts no provider must lose the door, not the page.
   const checkout = useCheckoutOptional();
+  const overLocalLimit =
+    localUsersInUse != null &&
+    localUserLimit != null &&
+    localUsersInUse > localUserLimit;
   const heldLimit = wallet?.team?.held ? wallet.team.licensedUsers : null;
   const usersInUse = wallet?.team?.fleet
     ? fleetUsersInUse(
@@ -217,44 +228,55 @@ export function Usage({
     : localUsersInUse === undefined
       ? wallet?.team?.usersInUse
       : localUsersInUse;
-  const addCapacity = useCallback(() => {
-    const teamId = wallet?.teamId;
-    // No email: the only one this instance holds is its local admin record, which is a Spring
-    // username and not an address the buyer owns. The checkout asks for one instead.
-    void checkout?.openCheckout("server", {
-      combinedChoose: true,
-      currentLimit: heldLimit,
-      minimumSeats: usersInUse ?? undefined,
-      resolveCurrency:
-        teamId != null
-          ? (preferredCurrency) =>
-              fetchCheckoutPricing(teamId, "currency", preferredCurrency)
-          : undefined,
-      capacityNotice:
-        !serverPlan &&
-        !wallet?.team?.held &&
-        localUsersInUse != null &&
-        localUserLimit != null &&
-        localUsersInUse > localUserLimit
-          ? { users: localUsersInUse, limit: localUserLimit }
-          : undefined,
-      onSuccess: refresh,
-    });
-  }, [
-    checkout,
-    refresh,
-    heldLimit,
-    usersInUse,
-    serverPlan,
-    wallet?.team?.held,
-    wallet?.teamId,
-    localUsersInUse,
-    localUserLimit,
-  ]);
+  const addCapacity = useCallback(
+    (afterPurchase?: () => void) => {
+      const teamId = wallet?.teamId;
+      // No email: the only one this instance holds is its local admin record, which is a Spring
+      // username and not an address the buyer owns. The checkout asks for one instead.
+      void checkout?.openCheckout("server", {
+        combinedChoose: true,
+        currentLimit: heldLimit,
+        minimumSeats: usersInUse ?? undefined,
+        resolveCurrency:
+          teamId != null
+            ? (preferredCurrency) =>
+                fetchCheckoutPricing(teamId, "currency", preferredCurrency)
+            : undefined,
+        capacityNotice:
+          !serverPlan && !wallet?.team?.held && overLocalLimit
+            ? { users: localUsersInUse, limit: localUserLimit }
+            : undefined,
+        onContactSales: openEnterprise,
+        onSuccess: refresh,
+        onClose: (paid) => {
+          if (paid) afterPurchase?.();
+        },
+      });
+    },
+    [
+      checkout,
+      refresh,
+      openEnterprise,
+      heldLimit,
+      usersInUse,
+      serverPlan,
+      wallet?.team?.held,
+      wallet?.teamId,
+      localUsersInUse,
+      localUserLimit,
+      overLocalLimit,
+    ],
+  );
+
+  // Someone who came to buy Team is done with billing once they have it; the editor is where they
+  // invite their team.
+  const welcomeToTeam = useCallback(() => {
+    navigate(EDITOR_BASENAME, { state: TEAM_WELCOME_STATE });
+  }, [navigate]);
 
   const handledTeamRequest = useRef(false);
   useEffect(() => {
-    if (searchParams.get("upgrade") !== "team") {
+    if (!requestsTeamCheckout(searchParams)) {
       handledTeamRequest.current = false;
       return;
     }
@@ -267,26 +289,25 @@ export function Usage({
       return;
     handledTeamRequest.current = true;
     const next = new URLSearchParams(searchParams);
-    next.delete("upgrade");
+    next.delete(TEAM_CHECKOUT_PARAM);
     setSearchParams(next, { replace: true });
-    if (
-      wallet.role === "leader" &&
-      !wallet.team?.held &&
-      !serverPlan &&
-      localUsersInUse != null &&
-      localUserLimit != null &&
-      localUsersInUse > localUserLimit
-    )
-      addCapacity();
+    if (wallet.role !== "leader" || wallet.team?.held || serverPlan) return;
+    // Hosted billing has no local server: the link is a buyer asking for Team.
+    if (!hasLocalInstance) {
+      addCapacity(welcomeToTeam);
+      return;
+    }
+    if (overLocalLimit) addCapacity();
   }, [
     searchParams,
     setSearchParams,
     wallet,
     checkout,
     localUsersInUse,
-    localUserLimit,
+    overLocalLimit,
     serverPlan,
     addCapacity,
+    welcomeToTeam,
     hasLocalInstance,
   ]);
 
@@ -452,7 +473,7 @@ export function Usage({
       licenseSection={renderLicenseSection?.(refreshAfterLicense)}
       onAddCapacity={
         !enterpriseProcessor && checkout && wallet?.role === "leader"
-          ? addCapacity
+          ? () => addCapacity()
           : undefined
       }
       onActivateProcessor={
