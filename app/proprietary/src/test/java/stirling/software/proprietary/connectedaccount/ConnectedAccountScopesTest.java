@@ -1,12 +1,12 @@
 package stirling.software.proprietary.connectedaccount;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
-import java.util.List;
-
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -21,11 +21,10 @@ class ConnectedAccountScopesTest {
                     new GraphEndpoints(
                             GraphEndpoints.DEFAULT_GRAPH_URL, GraphEndpoints.DEFAULT_LOGIN_URL));
 
-    @Test
-    void graphTokensForTheBrowserAreReadOnly() {
-        assertThat(controller.scopesFor(CloudProvider.MICROSOFT, "graph"))
-                .containsExactly(MicrosoftOAuthClient.BROWSER_SCOPE);
-        assertThat(controller.scopesFor(CloudProvider.MICROSOFT, "https://graph.microsoft.com"))
+    @ParameterizedTest
+    @ValueSource(strings = {"graph", "https://graph.microsoft.com"})
+    void graphTokensForTheBrowserAreReadOnly(String resource) {
+        assertThat(controller.scopesFor(CloudProvider.MICROSOFT, resource))
                 .containsExactly(MicrosoftOAuthClient.BROWSER_SCOPE);
     }
 
@@ -34,19 +33,13 @@ class ConnectedAccountScopesTest {
         assertThat(
                         controller.scopesFor(
                                 CloudProvider.MICROSOFT, "https://contoso-my.sharepoint.com"))
-                .isEqualTo(List.of("https://contoso-my.sharepoint.com/.default"));
+                .containsExactly("https://contoso-my.sharepoint.com/.default");
     }
 
-    @Test
-    void otherHostsAreRefused() {
-        assertThrows(
-                ResponseStatusException.class,
-                () -> controller.scopesFor(CloudProvider.MICROSOFT, "https://evil.example"));
-        assertThrows(
-                ResponseStatusException.class,
-                () ->
-                        controller.scopesFor(
-                                CloudProvider.MICROSOFT,
-                                "https://contoso.sharepoint.com.evil.test"));
+    @ParameterizedTest
+    @ValueSource(strings = {"https://evil.example", "https://contoso.sharepoint.com.evil.test"})
+    void otherHostsAreRefused(String resource) {
+        assertThatThrownBy(() -> controller.scopesFor(CloudProvider.MICROSOFT, resource))
+                .isInstanceOf(ResponseStatusException.class);
     }
 }

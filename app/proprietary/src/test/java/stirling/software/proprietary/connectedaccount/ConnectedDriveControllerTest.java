@@ -4,6 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -17,13 +21,13 @@ class ConnectedDriveControllerTest {
                 .isEqualTo(new ConnectedDriveWriter.Replace("d", "i", "\"e\""));
     }
 
-    @Test
-    void aReplaceWithoutAVersionIsRefused() {
-        for (String eTag : new String[] {null, " "}) {
-            assertThatThrownBy(() -> ConnectedDriveController.target("d", "i", eTag, "p", "x.pdf"))
-                    .isInstanceOf(ResponseStatusException.class)
-                    .hasMessageContaining("eTag");
-        }
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = " ")
+    void aReplaceWithoutAVersionIsRefused(String eTag) {
+        assertThatThrownBy(() -> ConnectedDriveController.target("d", "i", eTag, "p", "x.pdf"))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("eTag");
     }
 
     @Test
@@ -32,19 +36,22 @@ class ConnectedDriveControllerTest {
                 .isEqualTo(new ConnectedDriveWriter.Create("d", "p", "Report.pdf", true));
     }
 
-    @Test
-    void namesThatCouldEscapeTheFolderAreRefused() {
-        for (String name : new String[] {"../x.pdf", "a/b.pdf", "a\\b.pdf", "..", "."}) {
-            assertThatThrownBy(() -> ConnectedDriveController.target("d", null, null, "p", name))
-                    .isInstanceOf(ResponseStatusException.class);
-        }
+    @ParameterizedTest
+    @ValueSource(strings = {"../x.pdf", "a/b.pdf", "a\\b.pdf", "..", "."})
+    void namesThatCouldEscapeTheFolderAreRefused(String name) {
+        assertThatThrownBy(() -> ConnectedDriveController.target("d", null, null, "p", name))
+                .isInstanceOf(ResponseStatusException.class);
     }
 
-    @Test
-    void aDriveAndATargetAreRequired() {
-        assertThatThrownBy(() -> ConnectedDriveController.target(" ", "i", null, null, null))
-                .isInstanceOf(ResponseStatusException.class);
-        assertThatThrownBy(() -> ConnectedDriveController.target("d", null, null, null, "x.pdf"))
+    @ParameterizedTest
+    @CsvSource(
+            nullValues = "null",
+            value = {"' ', i, null, null", "d, null, null, x.pdf"})
+    void aDriveAndATargetAreRequired(String driveId, String itemId, String parentId, String name) {
+        assertThatThrownBy(
+                        () ->
+                                ConnectedDriveController.target(
+                                        driveId, itemId, null, parentId, name))
                 .isInstanceOf(ResponseStatusException.class);
     }
 
