@@ -106,11 +106,7 @@
 
 .settings-page .modal-nav-item.active {
   background: var(--c-primary-subtle);
-  color: var(--c-accent-fg, var(--c-primary));
-}
-
-.settings-page .modal-nav-item.active .settings-page__nav-label {
-  font-weight: 600;
+  color: var(--c-accent-text);
 }
 
 .settings-page .modal-nav-item[aria-disabled="true"] {
@@ -280,13 +276,12 @@
 .settings-page__subnav {
   list-style: none;
   margin: 0.125rem 0 0.375rem;
-  padding: 0 0 0 1.75rem;
+  /* Aligns the heading text with the rail rows' labels, which sit past the icon. */
+  padding: 0;
+  padding-inline-start: 1.875rem;
   display: flex;
   flex-direction: column;
   gap: 0.0625rem;
-  /* One rule down the group, so the children read as belonging to the row. */
-  border-inline-start: 1px solid var(--c-border-subtle);
-  margin-inline-start: 1rem;
 }
 
 .settings-page__subnav-item {
@@ -310,9 +305,8 @@
 
 /* Follows the scroll, so the rail always says where you are. */
 .settings-page__subnav-item[aria-current="true"] {
-  color: var(--c-text);
-  font-weight: 600;
-  box-shadow: inset 2px 0 0 var(--c-accent-fg, var(--c-primary));
+  color: var(--c-accent-text);
+  font-weight: 500;
 }
 
 .settings-page__subnav-item:focus-visible {
