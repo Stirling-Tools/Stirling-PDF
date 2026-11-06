@@ -7341,6 +7341,8 @@ label = "Font family"
 mixed = "Mixed"
 noMatch = "No matching font"
 placeholder = "Font family"
+serverFontFailed = "That server font could not be downloaded. The text was left unchanged."
+serverGroup = "Server fonts"
 useDeviceFonts = "Use device fonts"
 
 [pdfTextEditor.fonts]
