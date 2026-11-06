@@ -8,6 +8,9 @@ import type { Decorator, Preview } from "@storybook/react-vite";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { MemoryRouter } from "react-router-dom";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
+// Before any component import, as in src/index.tsx: component CSS overrides
+// Mantine's at equal specificity, so Mantine's must load first.
+import "@mantine/core/styles.css";
 
 // Reference React so the import isn't dropped as unused by the bundler — the
 // classic runtime needs it present even though it's not named in the JSX.
@@ -30,7 +33,6 @@ import { initReactI18next } from "react-i18next";
 import { parse as parseToml } from "smol-toml";
 import { rtlLanguages, supportedLanguages } from "@editor-core/i18n/languages";
 
-import "@mantine/core/styles.css";
 import "@editor-core/tokens/tokens.css";
 import "@editor-core/theme/index.css";
 // The editor's semantic token layer (--bg-surface, --onboarding-title, …).
