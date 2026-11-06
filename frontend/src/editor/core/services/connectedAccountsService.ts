@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import apiClient from "@editor/services/apiClient";
 
 export type CloudProvider = "microsoft" | "google";
@@ -20,6 +21,14 @@ export interface ConnectedAccountsState {
 
 const BASE = "/api/v1/connected-accounts";
 const CONNECT_MESSAGE_SOURCE = "stirling-connected-account";
+
+export function connectCallbackPath(provider: CloudProvider): string {
+  return `${BASE}/callback/${provider}`;
+}
+
+export function accountLabel(account: ConnectedAccount): string {
+  return account.email ?? account.displayName ?? String(account.id);
+}
 
 export async function fetchConnectedAccounts(): Promise<ConnectedAccountsState> {
   const response = await apiClient.get<ConnectedAccountsState>(BASE, {
@@ -63,6 +72,16 @@ export function isPopupBlocked(error: unknown): boolean {
   const failure = error as { code?: string; errorCode?: string } | null;
   const code = failure?.errorCode ?? failure?.code;
   return code === "popup_blocked" || code === "popup_window_error";
+}
+
+export function connectErrorMessage(error: unknown, t: TFunction): string {
+  if (isPopupBlocked(error)) {
+    return t(
+      "connectedAccounts.popupBlocked",
+      "Your browser blocked the sign-in window. Allow pop-ups for this site and try again.",
+    );
+  }
+  return error instanceof Error ? error.message : String(error);
 }
 
 export class PopupBlockedError extends Error {

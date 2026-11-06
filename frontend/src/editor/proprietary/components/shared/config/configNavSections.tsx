@@ -45,6 +45,7 @@ import AdminUsageSection from "@editor/components/shared/config/configSections/A
 import ApiKeys from "@editor/components/shared/config/configSections/ApiKeys";
 import ConnectedAccountsSection from "@editor/components/shared/config/configSections/ConnectedAccountsSection";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { accountConnectionsOffered } from "@editor/hooks/useConnectedAccounts";
 
 /**
  * Self-hosted settings, grouped by who reaches for them and what they do there:
@@ -94,11 +95,7 @@ export const useConfigNavSections = (
         component: <ApiKeys />,
       });
     }
-    if (
-      loginEnabled &&
-      (config?.microsoftAccountConnections ||
-        config?.googleDriveAccountConnections)
-    ) {
+    if (loginEnabled && accountConnectionsOffered(config)) {
       preferences.items.push({
         key: "connectedAccounts",
         label: t("settings.connectedAccounts.title", "Connected accounts"),
