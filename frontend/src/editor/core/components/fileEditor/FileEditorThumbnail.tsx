@@ -13,7 +13,7 @@ import { alert } from "@editor/components/toast";
 import { useTranslation } from "react-i18next";
 import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
-import { Icon } from "@editor/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import {
   draggable,
   dropTargetForElements,
@@ -80,6 +80,33 @@ interface FileEditorThumbnailProps {
   toolMode?: boolean;
   isSupported?: boolean;
   policies?: FileItemPolicyRef[];
+}
+
+function FileNameBadge({
+  icon,
+  tooltip,
+  label,
+  testId,
+}: {
+  icon: IconName;
+  tooltip: string;
+  label: string;
+  testId?: string;
+}) {
+  return (
+    <StirlingTooltip content={tooltip} position="top" maxWidth={230} arrow>
+      <span
+        className={styles.unlockedIndicator}
+        role="img"
+        aria-label={label}
+        tabIndex={0}
+        data-no-select
+        data-testid={testId}
+      >
+        <Icon name={icon} size={14} />
+      </span>
+    </StirlingTooltip>
+  );
 }
 
 const FileEditorThumbnail = ({
@@ -765,53 +792,31 @@ const FileEditorThumbnail = ({
             <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
           </span>
           {isRightsManaged ? (
-            <StirlingTooltip
-              content={t(
+            <FileNameBadge
+              icon="shield"
+              tooltip={t(
                 "rightsManagedPdf.title",
                 "Protected by Microsoft Purview",
               )}
-              position="top"
-              maxWidth={230}
-              arrow
-            >
-              <span
-                className={styles.unlockedIndicator}
-                role="img"
-                aria-label={t(
-                  "rightsManagedPdf.title",
-                  "Protected by Microsoft Purview",
-                )}
-                tabIndex={0}
-                data-no-select
-                data-testid="rights-managed-badge"
-              >
-                <Icon name="shield" size={14} />
-              </span>
-            </StirlingTooltip>
+              label={t(
+                "rightsManagedPdf.title",
+                "Protected by Microsoft Purview",
+              )}
+              testId="rights-managed-badge"
+            />
           ) : (
             pdfAccess?.encrypted && (
-              <StirlingTooltip
-                content={t(
+              <FileNameBadge
+                icon="lock-open"
+                tooltip={t(
                   "encryptedPdfUnlock.sessionSuccessBody",
                   "Unlocked for this session. Password protection is retained.",
                 )}
-                position="top"
-                maxWidth={230}
-                arrow
-              >
-                <span
-                  className={styles.unlockedIndicator}
-                  role="img"
-                  aria-label={t(
-                    "encryptedPdfUnlock.sessionSuccessTitle",
-                    "PDF unlocked",
-                  )}
-                  tabIndex={0}
-                  data-no-select
-                >
-                  <Icon name="lock-open" size={14} />
-                </span>
-              </StirlingTooltip>
+                label={t(
+                  "encryptedPdfUnlock.sessionSuccessTitle",
+                  "PDF unlocked",
+                )}
+              />
             )
           )}
           <PolicyBadges policies={policies} className={styles.fileNameBadges} />

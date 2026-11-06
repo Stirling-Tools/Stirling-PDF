@@ -251,6 +251,10 @@ export const FileItem = React.memo(function FileItem({
   hasVersionHistory = false,
 }: FileItemProps) {
   const { t } = useTranslation();
+  const rightsManagedLabel = t(
+    "rightsManagedPdf.title",
+    "Protected by Microsoft Purview",
+  );
   const oneDriveBadgeLabel = oneDriveUnsaved
     ? t("oneDriveSave.status.unsaved", "Changes not saved to OneDrive yet")
     : t("oneDriveSave.fromOneDrive", "From OneDrive");
@@ -428,22 +432,12 @@ export const FileItem = React.memo(function FileItem({
               </Tooltip>
             )}
             {isRightsManaged && (
-              <Tooltip
-                label={t(
-                  "rightsManagedPdf.title",
-                  "Protected by Microsoft Purview",
-                )}
-                withArrow
-                position="top"
-              >
+              <Tooltip label={rightsManagedLabel} withArrow position="top">
                 <span
                   className="file-sidebar-cloud-badge"
                   data-no-select
                   data-testid="rights-managed-badge"
-                  aria-label={t(
-                    "rightsManagedPdf.title",
-                    "Protected by Microsoft Purview",
-                  )}
+                  aria-label={rightsManagedLabel}
                 >
                   <Icon name="shield" size={"0.85rem"} />
                 </span>
