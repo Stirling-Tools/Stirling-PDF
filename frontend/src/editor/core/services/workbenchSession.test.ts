@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   originalIdOf,
+  readViewedPage,
   readWorkbenchSession,
   writeWorkbenchSession,
   saveEditorReturnPath,
@@ -9,6 +10,7 @@ import {
   clearWorkbenchSession,
   suspendWorkbenchSession,
   resumeWorkbenchSession,
+  writeViewedPage,
 } from "@editor/services/workbenchSession";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 
@@ -156,6 +158,68 @@ describe("record hygiene", () => {
     });
 
     expect(readWorkbenchSession()?.userId).toBe("user-a");
+  });
+
+  it("remembers the page per file, and forgets it on page 1", () => {
+    writeViewedPage("a", 7);
+    writeViewedPage("b", 3);
+    writeViewedPage("b", 1);
+
+    expect(readViewedPage("a")).toBe(7);
+    expect(readViewedPage("b")).toBeNull();
+  });
+
+  it("keeps the pages when the workbench is written without them", () => {
+    writeViewedPage("a", 7);
+    writeWorkbenchSession({ fileIds: ["b"], selectedFileIds: [] });
+
+    expect(readViewedPage("a")).toBe(7);
+  });
+
+  it("evicts the least recently read page once full", () => {
+    for (let i = 0; i < 200; i++) writeViewedPage(`file-${i}`, 2);
+    writeViewedPage("file-0", 5);
+    writeViewedPage("newest", 4);
+
+    expect(readViewedPage("file-1")).toBeNull();
+    expect(readViewedPage("file-0")).toBe(5);
+    expect(readViewedPage("newest")).toBe(4);
+  });
+
+  it("treats refused storage as no remembered page instead of throwing", () => {
+    const storage = Object.getPrototypeOf(sessionStorage);
+    const refuse = () => {
+      throw new Error("SecurityError");
+    };
+    const spies = [
+      vi.spyOn(storage, "getItem").mockImplementation(refuse),
+      vi.spyOn(storage, "setItem").mockImplementation(refuse),
+      vi.spyOn(storage, "removeItem").mockImplementation(refuse),
+    ];
+
+    expect(() => writeViewedPage("a", 7)).not.toThrow();
+    expect(readViewedPage("a")).toBeNull();
+
+    for (const spy of spies) spy.mockRestore();
+  });
+
+  it("ignores a stored page that is not a page number", () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        v: 2,
+        fileIds: [],
+        pages: { a: 0, b: -3, c: 2.5, d: "4", e: 6 },
+      }),
+    );
+
+    expect(["a", "b", "c", "d"].map(readViewedPage)).toEqual([
+      null,
+      null,
+      null,
+      null,
+    ]);
+    expect(readViewedPage("e")).toBe(6);
   });
 
   it("still records for a genuinely anonymous session", () => {
