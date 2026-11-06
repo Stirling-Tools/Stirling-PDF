@@ -586,6 +586,13 @@
   margin-left: auto;
 }
 
+.file-sidebar-selection-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
 /* Rows are conditionally rendered, so they fade in with an animation rather than
    a transition, which has nothing to run from. */
 @keyframes sidebar-content-in {
