@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { IconName } from "@editor/ui/Icon";
 import type { SaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import type { SaveMenuItem } from "@editor/services/saveTargets";
+import type { SaveHomeMode } from "@editor/services/saveMode";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 
 export interface SaveButton {
@@ -54,7 +55,7 @@ export function useSaveButton({
     label =
       handled.length > 1
         ? first.saveAllLabel()
-        : first.saveLabel(targets[0], saver.planFor(targets[0]) ?? "replace");
+        : saver.targetSaveLabel(targets[0]);
   } else if (handled.length > 0) {
     label = t(
       "saveFile.toolbar.mixed",
@@ -98,7 +99,7 @@ export function useSaveButton({
           home: target.homeName(stub),
         })
       : t("saveFile.menu.sameFolder", "In the same folder");
-    const saveHome = (how: "replace" | "copy") => () =>
+    const saveHome = (how: SaveHomeMode) => () =>
       void fileFor(stub).then((file) => saver.saveToHome(stub, how, file));
     if (plan !== "replace")
       menu.push({

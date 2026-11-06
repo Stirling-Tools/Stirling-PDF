@@ -79,10 +79,7 @@ function ReviewStepContent<TParams = unknown>({
   const saveLabel = oneTarget
     ? outputStubs.length > 1
       ? oneTarget.saveAllLabel()
-      : oneTarget.saveLabel(
-          outputStubs[0],
-          saver.planFor(outputStubs[0]) ?? "replace",
-        )
+      : saver.targetSaveLabel(outputStubs[0])
     : terminology.download;
   const saveButton = useSaveButton({
     saver,

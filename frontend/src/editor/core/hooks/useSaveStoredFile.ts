@@ -14,6 +14,7 @@ import { renameStoredFile } from "@editor/services/renameStoredFile";
 import {
   copyFileName,
   siblingPath,
+  type SaveHomeMode,
   type SaveMode,
 } from "@editor/services/saveMode";
 import type { SaveOutcome, SaveTarget } from "@editor/services/saveTargets";
@@ -24,6 +25,8 @@ export interface SaveStoredFile {
   targetFor: (stub: StirlingFileStub) => SaveTarget | undefined;
   /** What Save does for this file, or null when it has no home yet. */
   planFor: (stub: StirlingFileStub) => SaveMode | null;
+  /** The target's Save label for this file, or undefined when no target handles it. */
+  targetSaveLabel: (stub: StirlingFileStub) => string | undefined;
   /** Unsaved against where Save sends this file. */
   isUnsaved: (stub: StirlingFileStub) => boolean;
   /** Save where the toolbar's Save would. */
@@ -35,7 +38,7 @@ export interface SaveStoredFile {
   /** Update the file's home, or save a copy next to it, whatever the setting. */
   saveToHome: (
     stub: StirlingFileStub,
-    how: "replace" | "copy",
+    how: SaveHomeMode,
     file?: File,
     options?: SaveOptions,
   ) => Promise<SaveOutcome>;
@@ -63,12 +66,16 @@ async function freeCopyPath(
   return null;
 }
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 /** The toolbar's Save for one stored file, for every place that saves. */
 export function useSaveStoredFile(): SaveStoredFile {
   const { t } = useTranslation();
   const { actions } = useFileActions();
   const targets = useSaveTargets();
-  const saveMode = useSaveMode();
+  const { mode, locked, setMode } = useSaveMode();
   const savesToDisk = Boolean(useFileActionIcons().saveAs);
 
   const targetFor = useCallback(
@@ -79,12 +86,20 @@ export function useSaveStoredFile(): SaveStoredFile {
   const planFor = useCallback(
     (stub: StirlingFileStub): SaveMode | null => {
       const target = targetFor(stub);
-      if (target) return target.plan?.(stub, saveMode.mode) ?? saveMode.mode;
+      if (target) return target.plan?.(stub, mode) ?? mode;
       if (!stub.localFilePath) return null;
       // A copy Stirling wrote is ours to keep updating.
-      return stub.localFileIsCopy ? "replace" : saveMode.mode;
+      return stub.localFileIsCopy ? "replace" : mode;
     },
-    [targetFor, saveMode.mode],
+    [targetFor, mode],
+  );
+
+  const targetSaveLabel = useCallback(
+    (stub: StirlingFileStub) => {
+      const target = targetFor(stub);
+      return target?.saveLabel(stub, target.plan?.(stub, mode) ?? mode);
+    },
+    [targetFor, mode],
   );
 
   const isUnsaved = useCallback(
@@ -160,8 +175,12 @@ export function useSaveStoredFile(): SaveStoredFile {
   );
 
   const writeDiskCopy = useCallback(
-    async (stub: StirlingFileStub, data: File): Promise<SaveOutcome> => {
-      const copy = await freeCopyPath(stub.localFilePath!, stub.name);
+    async (
+      stub: StirlingFileStub,
+      localFilePath: string,
+      data: File,
+    ): Promise<SaveOutcome> => {
+      const copy = await freeCopyPath(localFilePath, stub.name);
       if (!copy)
         return fail(
           t(
@@ -191,7 +210,7 @@ export function useSaveStoredFile(): SaveStoredFile {
   const saveToHome = useCallback(
     async (
       stub: StirlingFileStub,
-      how: "replace" | "copy",
+      how: SaveHomeMode,
       file?: File,
       options?: SaveOptions,
     ): Promise<SaveOutcome> => {
@@ -201,15 +220,15 @@ export function useSaveStoredFile(): SaveStoredFile {
         const target = targetFor(stub);
         if (target) {
           const outcome = await target.save(stub, data, how);
-          if (outcome !== "fallback") return outcome;
-          return writeLocal(stub, data, "elsewhere");
+          return outcome === "fallback"
+            ? writeLocal(stub, data, "elsewhere")
+            : outcome;
         }
-        if (!stub.localFilePath) return writeLocal(stub, data, "home");
-        return how === "copy"
-          ? writeDiskCopy(stub, data)
+        return how === "copy" && stub.localFilePath
+          ? writeDiskCopy(stub, stub.localFilePath, data)
           : writeLocal(stub, data, "home");
       } catch (error) {
-        return fail(error instanceof Error ? error.message : String(error));
+        return fail(errorMessage(error));
       }
     },
     [prepare, targetFor, writeLocal, writeDiskCopy, fail],
@@ -225,7 +244,7 @@ export function useSaveStoredFile(): SaveStoredFile {
         const data = await prepare(stub, file, options);
         return data ? writeLocal(stub, data, "elsewhere") : "failed";
       } catch (error) {
-        return fail(error instanceof Error ? error.message : String(error));
+        return fail(errorMessage(error));
       }
     },
     [prepare, writeLocal, fail],
@@ -238,9 +257,8 @@ export function useSaveStoredFile(): SaveStoredFile {
       options?: SaveOptions,
     ): Promise<SaveOutcome> => {
       const plan = planFor(stub);
-      if (plan === null || plan === "replace")
-        return saveToHome(stub, "replace", file, options);
-      if (plan === "copy") return saveToHome(stub, "copy", file, options);
+      if (plan !== "ask")
+        return saveToHome(stub, plan ?? "replace", file, options);
 
       const target = targetFor(stub);
       const answer = await requestSaveChoice({
@@ -252,27 +270,43 @@ export function useSaveStoredFile(): SaveStoredFile {
         otherLabel: savesToDisk
           ? t("saveFile.menu.saveCopyElsewhere", "Save a copy somewhere else…")
           : t("saveFile.ask.download", "Download instead"),
-        canRemember: !saveMode.locked,
+        canRemember: !locked,
       });
       if (!answer) return "cancelled";
-      if (answer.remember && answer.choice !== "other")
-        saveMode.setMode(answer.choice);
-      return answer.choice === "other"
-        ? saveLocalCopy(stub, file, options)
-        : saveToHome(stub, answer.choice, file, options);
+      if (answer.choice === "other") return saveLocalCopy(stub, file, options);
+      if (answer.remember) setMode(answer.choice);
+      return saveToHome(stub, answer.choice, file, options);
     },
-    [planFor, saveToHome, saveLocalCopy, targetFor, savesToDisk, saveMode, t],
+    [
+      planFor,
+      saveToHome,
+      saveLocalCopy,
+      targetFor,
+      savesToDisk,
+      locked,
+      setMode,
+      t,
+    ],
   );
 
   return useMemo(
     () => ({
       targetFor,
       planFor,
+      targetSaveLabel,
       isUnsaved,
       saveStoredFile,
       saveToHome,
       saveLocalCopy,
     }),
-    [targetFor, planFor, isUnsaved, saveStoredFile, saveToHome, saveLocalCopy],
+    [
+      targetFor,
+      planFor,
+      targetSaveLabel,
+      isUnsaved,
+      saveStoredFile,
+      saveToHome,
+      saveLocalCopy,
+    ],
   );
 }
