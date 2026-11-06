@@ -11,7 +11,11 @@ import {
   test,
   vi,
 } from "vitest";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { MergeRunsCommand } from "@editor/tools/pdfTextEditor/commands/MergeRunsCommand";
 import { RetagInnerCommand } from "@editor/tools/pdfTextEditor/commands/RetagInnerCommand";
+import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
+import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
 import { TagTextRangeCommand } from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
@@ -25,6 +29,7 @@ import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextR
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { innerTags } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import { singleContentPdf } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 const SAMPLE = path.join(
   import.meta.dirname,
@@ -61,6 +66,59 @@ function retag(
   type: StructureType | null,
 ) {
   history.execute(new RetagInnerCommand({ pageIndex: PAGE, key, type }), doc);
+}
+
+/** Replace `from` with `to` in the run holding `within`, as typing would. */
+function edit(
+  doc: EditorDocument,
+  history: HistoryStack,
+  within: string,
+  from: string,
+  to: string,
+) {
+  const run = runWith(doc, within);
+  history.execute(
+    new EditTextCommand({
+      pageIndex: PAGE,
+      runId: run.id,
+      nextText: run.text.replace(from, to),
+    }),
+    doc,
+  );
+}
+
+function tagRange(
+  doc: EditorDocument,
+  history: HistoryStack,
+  within: string,
+  fragment: string,
+  as: StructureType,
+) {
+  const run = runWith(doc, within);
+  const start = run.text.indexOf(fragment);
+  history.execute(
+    new TagTextRangeCommand({
+      pageIndex: PAGE,
+      runId: run.id,
+      start,
+      end: start + fragment.length,
+      as,
+    }),
+    doc,
+  );
+}
+
+/** How many elements of `type` the saved file has in the block holding `within`'s text. */
+async function savedIn(
+  doc: EditorDocument,
+  within: string,
+  type: StructureType,
+): Promise<number> {
+  const block = doc
+    .structure(PAGE)
+    .block(runWith(doc, within).snapshot().mcid!)!.key;
+  const { structure } = await saved(doc);
+  return elementsIn(structure.pages.get(PAGE)!.elements, block, type).length;
 }
 
 async function saved(doc: EditorDocument) {
@@ -222,5 +280,143 @@ describe("tags inside a run's text", () => {
     const [label] = tagsIn(doc, "Close the two delayed");
     expect(() => retag(doc, new HistoryStack(), label.key, null)).toThrow();
     expect(doc.structureEdits()).toEqual([]);
+  });
+});
+
+describe("tags inside a run grouped from several paragraphs", () => {
+  const TWO_PARAGRAPHS = singleContentPdf(
+    "BT /F1 12 Tf 72 700 Td (The first paragraph.) Tj ET\n" +
+      "BT /F1 12 Tf 72 640 Td (The second paragraph.) Tj ET\n",
+  );
+
+  async function openFirstPage(bytes: Uint8Array) {
+    const doc = await EditorDocument.open(bytes);
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(0));
+    return doc;
+  }
+
+  function tagEachAsParagraph(doc: EditorDocument, history: HistoryStack) {
+    for (const run of [...doc.page(0).runs]) {
+      history.execute(
+        new TagTextCommand({ pageIndex: 0, runId: run.id, as: "P" }),
+        doc,
+      );
+    }
+  }
+
+  function groupAndListTags(doc: EditorDocument, history: HistoryStack) {
+    const runIds = doc.page(0).runs.map((run) => run.id);
+    expect(runIds).toHaveLength(2);
+    history.execute(new MergeRunsCommand({ pageIndex: 0, runIds }), doc);
+    return innerTags(doc, doc.page(0).runs[0].snapshot());
+  }
+
+  test("lists no tags for paragraphs the session tagged", async () => {
+    const doc = await openFirstPage(TWO_PARAGRAPHS);
+    const history = new HistoryStack();
+    tagEachAsParagraph(doc, history);
+    expect(groupAndListTags(doc, history)).toEqual([]);
+  });
+
+  test("lists no tags for the file's paragraphs", async () => {
+    const tagging = await openFirstPage(TWO_PARAGRAPHS);
+    tagEachAsParagraph(tagging, new HistoryStack());
+    const doc = await openFirstPage((await saved(tagging)).bytes);
+    expect(groupAndListTags(doc, new HistoryStack())).toEqual([]);
+  });
+});
+
+describe("tags inside a run's text through edits to it", () => {
+  test.each([
+    ["a line redrawn whole", "German subsidiaries", "German", "Austrian"],
+    ["a line of a paragraph", "All three regions", "end of", "close of"],
+  ])("keeps a file's inline element in %s", async (_case, within, from, to) => {
+    const doc = await open();
+    const [before] = tagsIn(doc, within);
+    edit(doc, new HistoryStack(), within, from, to);
+
+    const [after] = tagsIn(doc, to);
+    expect(after.text.trim()).toBe(before.text.trim());
+    expect(after.role).toEqual(before.role);
+    expect(await savedIn(doc, to, before.role.type!)).toBe(1);
+  });
+
+  test("keeps an element the session tagged", async () => {
+    const doc = await open();
+    const history = new HistoryStack();
+    tagRange(doc, history, "Growth slowed", "two large contracts", "Span");
+    edit(doc, history, "Growth slowed", "Growth", "Sales");
+
+    expect(tagsIn(doc, "Sales slowed")).toMatchObject([
+      { text: "two large contracts", role: { type: "Span" } },
+      { role: { type: "Quote" } },
+    ]);
+    expect(await savedIn(doc, "Sales slowed", "Span")).toBe(1);
+  });
+
+  test("keeps the element through one edit after another", async () => {
+    const doc = await open();
+    const history = new HistoryStack();
+    edit(doc, history, "German subsidiaries", "German", "Austrian");
+    edit(doc, history, "Austrian subsidiaries", "this line", "this row");
+
+    expect(tagsIn(doc, "this row")).toMatchObject([
+      { text: "Umsatzerlöse", role: { type: "Span" } },
+    ]);
+    expect(await savedIn(doc, "this row", "Span")).toBe(1);
+  });
+
+  test("gives text typed inside an element to it, and text typed after it to its block", async () => {
+    const doc = await open();
+    const history = new HistoryStack();
+    tagRange(doc, history, "Growth slowed", "two large contracts", "Span");
+    edit(doc, history, "Growth slowed", "large", "big");
+    edit(doc, history, "Growth slowed", "contracts moved", "contracts, moved");
+
+    expect(tagsIn(doc, "Growth slowed")[0]).toMatchObject({
+      text: "two big contracts",
+      role: { type: "Span" },
+    });
+  });
+
+  test("puts the element back on undo", async () => {
+    const doc = await open();
+    const history = new HistoryStack();
+    edit(doc, history, "German subsidiaries", "German", "Austrian");
+    history.undo(doc);
+
+    expect(tagsIn(doc, "German subsidiaries")).toMatchObject([
+      { text: "Umsatzerlöse", role: { type: "Span" } },
+    ]);
+    expect(await savedIn(doc, "German subsidiaries", "Span")).toBe(1);
+  });
+
+  test("keeps a list item's label and body apart", async () => {
+    const doc = await open();
+    edit(doc, new HistoryStack(), "Close the two delayed", "Close", "Sign");
+
+    expect(tagsIn(doc, "Sign the two delayed")).toMatchObject([
+      { text: "1. ", role: { type: "Lbl" } },
+      { role: { type: "LBody" } },
+    ]);
+  });
+
+  test("keeps the element when the text changes font", async () => {
+    const doc = await open();
+    const run = runWith(doc, "German subsidiaries");
+    new HistoryStack().execute(
+      new SetFontFamilyCommand({
+        pageIndex: PAGE,
+        runId: run.id,
+        nextFamily: "Times-Roman",
+      }),
+      doc,
+    );
+
+    expect(tagsIn(doc, "German subsidiaries")).toMatchObject([
+      { text: "Umsatzerlöse", role: { type: "Span" } },
+    ]);
+    expect(await savedIn(doc, "German subsidiaries", "Span")).toBe(1);
   });
 });

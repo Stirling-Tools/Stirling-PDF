@@ -261,7 +261,7 @@ export default function Signup() {
       >
         <Button
           variant="tertiary"
-          onClick={() => navigate("/login")}
+          onClick={() => navigate(`/login${location.search}`)}
           style={{
             background: "none",
             border: "none",

@@ -6,10 +6,15 @@ import { RunLocationChooser } from "@editor/components/runLocation/RunLocationCh
 import { hasChosenRunLocation } from "@editor/components/runLocation/runLocationChosen";
 import { TEAM_PATH } from "@editor/routes/teamPath";
 import { nextPathOf } from "@editor/routes/authShared/nextPath";
+import {
+  ENTERPRISE_PATH,
+  LEGACY_ENTERPRISE_PATH,
+} from "@editor/portal/components/procurement/enterprisePath";
 
 // Landing links from campaigns and sales replies. Team is bought for a Stirling
-// account, so it settles where Stirling runs on its own.
-const LANDING_PATHS = [TEAM_PATH];
+// account, so it settles where Stirling runs on its own; the Enterprise page
+// asks where Stirling will be deployed itself.
+const LANDING_PATHS = [TEAM_PATH, ENTERPRISE_PATH, LEGACY_ENTERPRISE_PATH];
 
 // Links that finish a flow already in progress (an emailed sign-in, an OAuth
 // redirect, a shared file). Interrupting them with the chooser in a fresh
