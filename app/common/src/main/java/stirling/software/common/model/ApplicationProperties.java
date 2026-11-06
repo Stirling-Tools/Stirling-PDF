@@ -1893,7 +1893,7 @@ public class ApplicationProperties {
                 private String clientId = "";
                 private String apiKey = "";
                 private String appId = "";
-                private String clientSecret = "";
+                @ToString.Exclude private String clientSecret = "";
                 private boolean allowAccountConnections = true;
                 private String accountScope = "drive";
             }
@@ -1903,7 +1903,7 @@ public class ApplicationProperties {
                 private boolean enabled = false;
                 private String clientId = "";
                 private String tenant = "common";
-                private String clientSecret = "";
+                @ToString.Exclude private String clientSecret = "";
                 private boolean allowAccountConnections = true;
                 private boolean allowEditorSaves = true;
                 private RightsManagement rightsManagement = new RightsManagement();

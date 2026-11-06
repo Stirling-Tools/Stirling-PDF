@@ -78,7 +78,7 @@ function ReviewStepContent<TParams = unknown>({
     .filter((stub): stub is StirlingFileStub => Boolean(stub));
   const targets = outputStubs.map(saver.targetFor);
   // Results inherit their source's home, so Save sends them back there too.
-  const savesToTarget = targets.some(Boolean);
+  const savesToTarget = targets.length > 0 && targets.every(Boolean);
   const oneTarget =
     savesToTarget && targets.every((target) => target === targets[0])
       ? targets[0]
@@ -131,8 +131,13 @@ function ReviewStepContent<TParams = unknown>({
   const handleDownload = async () => {
     if (!operation.downloadUrl) return;
     if (savesToTarget) {
-      for (const stub of outputStubs)
-        await saver.saveStoredFile(stub, selectors.getFile(stub.id));
+      for (const stub of outputStubs) {
+        const outcome = await saver.saveStoredFile(
+          stub,
+          selectors.getFile(stub.id),
+        );
+        if (outcome !== "saved") break;
+      }
       return;
     }
     try {

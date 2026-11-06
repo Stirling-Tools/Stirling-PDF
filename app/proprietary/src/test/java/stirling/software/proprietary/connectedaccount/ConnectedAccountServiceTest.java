@@ -197,6 +197,19 @@ class ConnectedAccountServiceTest {
         assertThat(store.rows).isEmpty();
     }
 
+    @Test
+    void removingAUsersAccountsDropsTheirCachedTokens() throws Exception {
+        ConnectedAccount account = connect();
+        service.accessToken(account.getId(), List.of());
+
+        service.removeAllFor(pat.getId());
+
+        assertThat(store.rows).isEmpty();
+        assertThrows(
+                AccountReconnectRequiredException.class,
+                () -> service.accessToken(account.getId(), List.of()));
+    }
+
     private ConnectedAccount connect() throws Exception {
         ConnectedAccountService.ConnectStart start =
                 service.startConnect(pat, CloudProvider.MICROSOFT, REDIRECT);
