@@ -43,11 +43,16 @@ import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfSplit;
 import stirling.software.jpdfium.model.SaveOptions;
+import stirling.software.jpdfium.model.StorageOptions;
 
 @GeneralApi
 @Slf4j
 @RequiredArgsConstructor
 public class SplitPdfBySizeController {
+
+    // The source document is opened from the upload and never edited, so probes may read its file.
+    private static final StorageOptions UNTOUCHED_SOURCE =
+            StorageOptions.builder().reuseSourceFile(true).build();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -256,7 +261,7 @@ public class SplitPdfBySizeController {
     }
 
     private long rangeSize(PdfDocument sourceDoc, int from, int to, Path probe) throws IOException {
-        try (PdfDocument split = PdfSplit.extractPageRange(sourceDoc, from, to)) {
+        try (PdfDocument split = PdfSplit.extractPageRange(sourceDoc, from, to, UNTOUCHED_SOURCE)) {
             split.saveTo(probe, SaveOptions.ephemeral());
         }
         return Files.size(probe);
