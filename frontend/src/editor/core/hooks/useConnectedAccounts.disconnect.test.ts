@@ -58,4 +58,57 @@ describe("disconnecting a connected account", () => {
 
     expect(result.current.accounts.map((account) => account.id)).toEqual([3]);
   });
+
+  it("ignores a refresh that started before the disconnect finished", async () => {
+    const both = {
+      providers: { microsoft: true, google: false },
+      accounts: [
+        { id: 3, provider: "microsoft", status: "CONNECTED" },
+        { id: 4, provider: "microsoft", status: "CONNECTED" },
+      ],
+    };
+    fetchConnectedAccounts.mockResolvedValueOnce(both);
+    await refreshConnectedAccounts();
+    const { result } = renderHook(() => useConnectedAccounts());
+
+    let finishStale: (value: typeof both) => void = () => undefined;
+    fetchConnectedAccounts.mockReturnValueOnce(
+      new Promise((resolve) => (finishStale = resolve)),
+    );
+    void refreshConnectedAccounts();
+    disconnectAccount.mockResolvedValueOnce(undefined);
+    fetchConnectedAccounts.mockResolvedValueOnce({
+      ...both,
+      accounts: [both.accounts[1]],
+    });
+
+    await act(() => result.current.disconnect(3));
+    await act(async () => finishStale(both));
+
+    expect(result.current.accounts.map((account) => account.id)).toEqual([4]);
+  });
+
+  it("publishes nothing when the user signed out during the disconnect", async () => {
+    fetchConnectedAccounts.mockResolvedValueOnce({
+      providers: { microsoft: true, google: false },
+      accounts: [{ id: 3, provider: "microsoft", status: "CONNECTED" }],
+    });
+    await refreshConnectedAccounts();
+    const { result } = renderHook(() => useConnectedAccounts());
+    let finishDisconnect: () => void = () => undefined;
+    disconnectAccount.mockReturnValueOnce(
+      new Promise<void>((resolve) => (finishDisconnect = resolve)),
+    );
+    fetchConnectedAccounts.mockClear();
+
+    const pending = result.current.disconnect(3);
+    act(() => clearConnectedAccounts());
+    await act(async () => {
+      finishDisconnect();
+      await pending;
+    });
+
+    expect(result.current.accounts).toEqual([]);
+    expect(fetchConnectedAccounts).not.toHaveBeenCalled();
+  });
 });

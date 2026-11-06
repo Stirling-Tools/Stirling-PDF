@@ -33,6 +33,7 @@ export interface UserPreferences {
   hasCompletedOnboarding: boolean;
   hasSeenIntroOnboarding: boolean;
   hasSeenCookieBanner: boolean;
+  hasDismissedFeedbackTag: boolean;
   hideUnavailableTools: boolean;
   hideUnavailableConversions: boolean;
   pdfRenderMode: PdfRenderMode;
@@ -52,6 +53,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   hasCompletedOnboarding: false,
   hasSeenIntroOnboarding: false,
   hasSeenCookieBanner: false,
+  hasDismissedFeedbackTag: false,
   hideUnavailableTools: false,
   hideUnavailableConversions: false,
   pdfRenderMode: "normal",

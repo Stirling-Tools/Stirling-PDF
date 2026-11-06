@@ -1335,6 +1335,7 @@ public class ApplicationProperties {
         private boolean enableEasterEggs = true;
         private String saveMode = "replace";
         private boolean allowUserSaveMode = true;
+        private boolean enableFeedback = true;
         private Datasource datasource;
         private boolean disableSanitize;
         private boolean stirlingOfficeConversion;
