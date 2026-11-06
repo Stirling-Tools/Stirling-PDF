@@ -325,6 +325,7 @@ class PipelineControllerGapTest {
             Map<String, String> entries = readZip(response.getBody());
             // Two distinct zip entry names despite the same source filename.
             assertEquals(2, entries.size());
+            assertEquals("second", entries.get("dup (1).pdf"));
         }
 
         private Map<String, String> readZip(Resource zipResource) throws IOException {
