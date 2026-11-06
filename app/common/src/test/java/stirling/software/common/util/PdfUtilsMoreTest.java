@@ -9,6 +9,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -450,6 +451,56 @@ class PdfUtilsMoreTest {
 
             try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(pdfOut)) {
                 assertThat(doc.getNumberOfPages()).isEqualTo(2);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("looksImageOnly")
+    class LooksImageOnly {
+
+        private PDDocument docWithImagePage() throws IOException {
+            PDDocument doc = new PDDocument();
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            PDImageXObject image =
+                    LosslessFactory.createFromImage(
+                            doc, new BufferedImage(20, 20, BufferedImage.TYPE_INT_RGB));
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                cs.drawImage(image, 50, 50);
+            }
+            return doc;
+        }
+
+        @Test
+        void scannedPageIsImageOnly() throws IOException {
+            try (PDDocument doc = docWithImagePage()) {
+                assertThat(PdfUtils.looksImageOnly(doc, List.of(1))).isTrue();
+            }
+        }
+
+        @Test
+        void pageWithTextIsNot() throws IOException {
+            try (PDDocument doc = docWithText("Invoice total")) {
+                assertThat(PdfUtils.looksImageOnly(doc, List.of(1))).isFalse();
+            }
+        }
+
+        @Test
+        void blankPageIsNot() throws IOException {
+            try (PDDocument doc = new PDDocument()) {
+                doc.addPage(new PDPage());
+                assertThat(PdfUtils.looksImageOnly(doc, List.of(1))).isFalse();
+            }
+        }
+
+        @Test
+        void textOnAnySelectedPageRulesItOut() throws IOException {
+            try (PDDocument doc = docWithImagePage();
+                    PDDocument text = docWithText("Row 1")) {
+                doc.importPage(text.getPage(0));
+                assertThat(PdfUtils.looksImageOnly(doc, List.of(1, 2))).isFalse();
+                assertThat(PdfUtils.looksImageOnly(doc, List.of(1))).isTrue();
             }
         }
     }
