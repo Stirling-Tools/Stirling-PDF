@@ -2,18 +2,16 @@ package stirling.software.proprietary.policy.remote;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static stirling.software.proprietary.policy.remote.CloudDriveFixtures.named;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.ByteArrayResource;
 
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
@@ -51,7 +49,7 @@ public abstract class CloudDriveContract<L extends CloudLocation, F extends Clou
 
     private List<ResolvedInput> sweep(String mode, String policy) throws IOException {
         return source.resolve(
-                new InputSpec(type(), options("Inbox", Map.of("mode", mode))), new Ctx(policy));
+                new InputSpec(type(), options("Inbox", Map.of("mode", mode))), ctx(policy));
     }
 
     @Test
@@ -75,7 +73,7 @@ public abstract class CloudDriveContract<L extends CloudLocation, F extends Clou
         put("Inbox", "a.pdf", "first");
 
         List<ResolvedInput> work =
-                source.resolve(new InputSpec(type(), options("Inbox", Map.of())), new Ctx(POLICY));
+                source.resolve(new InputSpec(type(), options("Inbox", Map.of())), ctx(POLICY));
         work.getFirst().onComplete().accept(true);
 
         assertThat(content("Inbox", "a.pdf")).isEqualTo("first");
@@ -178,42 +176,11 @@ public abstract class CloudDriveContract<L extends CloudLocation, F extends Clou
     @Test
     void aMissingFolderIsAnErrorNotAnEmptyListing() {
         InputSpec missing = new InputSpec(type(), options("Nowhere", Map.of()));
-        assertThrows(IOException.class, () -> source.resolve(missing, new Ctx(POLICY)));
+        assertThrows(IOException.class, () -> source.resolve(missing, ctx(POLICY)));
         assertThrows(IllegalArgumentException.class, () -> source.validate(missing));
     }
 
-    protected static ByteArrayResource named(String text, String name) {
-        return new ByteArrayResource(text.getBytes(StandardCharsets.UTF_8)) {
-            @Override
-            public String getFilename() {
-                return name;
-            }
-        };
-    }
-
-    private final class Ctx implements ResolveContext {
-        private final String policyId;
-
-        private Ctx(String policyId) {
-            this.policyId = policyId;
-        }
-
-        @Override
-        public boolean claim(String identity, String gate, Supplier<String> contentHash) {
-            return ledger.claim(policyId, identity, gate, contentHash);
-        }
-
-        @Override
-        public void settle(String identity, String gate, String hash, boolean success) {
-            ledger.settle(policyId, identity, gate, hash, success);
-        }
-
-        @Override
-        public boolean allSettledDone(String identity) {
-            return ledger.allSettledDone(identity);
-        }
-
-        @Override
-        public void reportPresent(Collection<String> identities) {}
+    private ResolveContext ctx(String policyId) {
+        return CloudDriveFixtures.ledgerContext(ledger, policyId);
     }
 }

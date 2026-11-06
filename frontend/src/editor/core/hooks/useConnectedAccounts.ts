@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import type { AppConfig } from "@editor/types/appConfig";
 import {
   connectAccount,
   disconnectAccount,
@@ -20,6 +21,39 @@ let loaded = false;
 let inflight: Promise<void> | null = null;
 let generation = 0;
 const listeners = new Set<() => void>();
+
+const CONFIG_FLAG: Record<
+  CloudProvider,
+  "microsoftAccountConnections" | "googleDriveAccountConnections"
+> = {
+  microsoft: "microsoftAccountConnections",
+  google: "googleDriveAccountConnections",
+};
+
+function providerOffered(
+  config: AppConfig | null | undefined,
+  provider: CloudProvider,
+): boolean {
+  return Boolean(config?.[CONFIG_FLAG[provider]]);
+}
+
+export function accountConnectionsOffered(
+  config: AppConfig | null | undefined,
+): boolean {
+  return (
+    providerOffered(config, "microsoft") || providerOffered(config, "google")
+  );
+}
+
+function findConnected(
+  accounts: ConnectedAccount[],
+  provider: CloudProvider,
+): ConnectedAccount | undefined {
+  return accounts.find(
+    (account) =>
+      account.provider === provider && account.status === "CONNECTED",
+  );
+}
 
 function publish(next: ConnectedAccountsState) {
   snapshot = next;
@@ -59,10 +93,7 @@ export function clearConnectedAccounts() {
 export function connectedAccountFor(
   provider: CloudProvider,
 ): ConnectedAccount | undefined {
-  return snapshot.accounts.find(
-    (account) =>
-      account.provider === provider && account.status === "CONNECTED",
-  );
+  return findConnected(snapshot.accounts, provider);
 }
 
 export function latestConnectedAccounts(): ConnectedAccount[] {
@@ -93,10 +124,9 @@ export interface UseConnectedAccounts {
 
 export function useConnectedAccounts(): UseConnectedAccounts {
   const { config } = useAppConfig();
-  const offered = Boolean(
-    config?.microsoftAccountConnections ||
-    config?.googleDriveAccountConnections,
-  );
+  const microsoftOffered = providerOffered(config, "microsoft");
+  const googleOffered = providerOffered(config, "google");
+  const offered = microsoftOffered || googleOffered;
   const state = useSyncExternalStore(subscribe, () => snapshot);
 
   useEffect(() => {
@@ -107,23 +137,12 @@ export function useConnectedAccounts(): UseConnectedAccounts {
 
   const available = useCallback(
     (provider: CloudProvider) =>
-      offered &&
-      (provider === "microsoft"
-        ? Boolean(config?.microsoftAccountConnections)
-        : Boolean(config?.googleDriveAccountConnections)),
-    [
-      offered,
-      config?.microsoftAccountConnections,
-      config?.googleDriveAccountConnections,
-    ],
+      provider === "microsoft" ? microsoftOffered : googleOffered,
+    [microsoftOffered, googleOffered],
   );
 
   const accountFor = useCallback(
-    (provider: CloudProvider) =>
-      state.accounts.find(
-        (account) =>
-          account.provider === provider && account.status === "CONNECTED",
-      ),
+    (provider: CloudProvider) => findConnected(state.accounts, provider),
     [state.accounts],
   );
 

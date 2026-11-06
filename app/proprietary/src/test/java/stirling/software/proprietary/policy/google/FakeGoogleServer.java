@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
+import stirling.software.common.model.ApplicationProperties;
+
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -81,6 +83,16 @@ public final class FakeGoogleServer implements AutoCloseable {
 
     public String baseUrl() {
         return "http://127.0.0.1:" + server.getAddress().getPort();
+    }
+
+    public static ApplicationProperties serverApp() {
+        ApplicationProperties properties = new ApplicationProperties();
+        ApplicationProperties.Premium.ProFeatures.GoogleDrive app =
+                properties.getPremium().getProFeatures().getGoogleDrive();
+        app.setEnabled(true);
+        app.setClientId("google-client");
+        app.setClientSecret(CLIENT_SECRET);
+        return properties;
     }
 
     public GoogleEndpoints endpoints() {

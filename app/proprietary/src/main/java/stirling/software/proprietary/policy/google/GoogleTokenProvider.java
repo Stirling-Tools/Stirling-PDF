@@ -22,7 +22,6 @@ import stirling.software.proprietary.connectedaccount.ConnectedAccountService;
 import stirling.software.proprietary.connectedaccount.OAuthHttp;
 import stirling.software.proprietary.policy.remote.ExpiringTokenCache;
 
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
@@ -59,10 +58,8 @@ public class GoogleTokenProvider {
                     Map<String, String> form = new LinkedHashMap<>();
                     form.put("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
                     form.put("assertion", assertion(service));
-                    JsonNode body = OAuthHttp.postTokenRequest(endpoints.tokenUrl(), form);
-                    return new ExpiringTokenCache.Token(
-                            OAuthHttp.text(body, "access_token"),
-                            body.hasNonNull("expires_in") ? body.get("expires_in").asLong() : 3599);
+                    return OAuthHttp.accessToken(
+                            OAuthHttp.postTokenRequest(endpoints.tokenUrl(), form));
                 });
     }
 

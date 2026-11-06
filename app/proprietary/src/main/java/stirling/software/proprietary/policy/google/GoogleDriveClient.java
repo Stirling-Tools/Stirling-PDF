@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import stirling.software.proprietary.connectedaccount.OAuthHttp;
+import stirling.software.proprietary.policy.remote.CloudDrive;
 import stirling.software.proprietary.policy.remote.CloudHttp;
 
 import tools.jackson.databind.JsonNode;
@@ -34,7 +35,6 @@ import tools.jackson.databind.node.ObjectNode;
 @Component
 public class GoogleDriveClient {
 
-    public static final int MAX_FILES = 10_000;
     static final long SIMPLE_UPLOAD_LIMIT = 5L * 1024 * 1024;
     static final int UPLOAD_CHUNK = 256 * 1024 * 32;
 
@@ -124,7 +124,7 @@ public class GoogleDriveClient {
         List<GoogleFile> files = new ArrayList<>();
         Deque<String> folders = new ArrayDeque<>();
         folders.add(folderId(config));
-        while (!folders.isEmpty() && files.size() < MAX_FILES) {
+        while (!folders.isEmpty() && files.size() < CloudDrive.MAX_FILES) {
             String folder = folders.removeFirst();
             String pageToken = null;
             do {
@@ -154,13 +154,13 @@ public class GoogleDriveClient {
                         }
                     } else if (mime == null || !mime.startsWith(NATIVE_PREFIX)) {
                         files.add(toFile(folder, item));
-                        if (files.size() >= MAX_FILES) {
+                        if (files.size() >= CloudDrive.MAX_FILES) {
                             break;
                         }
                     }
                 }
                 pageToken = text(page, "nextPageToken");
-            } while (pageToken != null && files.size() < MAX_FILES);
+            } while (pageToken != null && files.size() < CloudDrive.MAX_FILES);
         }
         return files;
     }

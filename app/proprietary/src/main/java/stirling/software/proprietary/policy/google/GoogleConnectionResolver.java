@@ -1,7 +1,6 @@
 package stirling.software.proprietary.policy.google;
 
 import java.util.Map;
-import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
@@ -12,12 +11,11 @@ import stirling.software.proprietary.connectedaccount.ConnectedAccount;
 import stirling.software.proprietary.connectedaccount.ConnectedAccountAccess;
 import stirling.software.proprietary.integration.model.IntegrationType;
 import stirling.software.proprietary.integration.service.ConnectionLookup;
+import stirling.software.proprietary.policy.remote.LocationOptions;
 
 @Service
 @RequiredArgsConstructor
 public class GoogleConnectionResolver {
-
-    private static final Set<String> PER_USE_KEYS = Set.of("directory", "mode", "recursive");
 
     private final ConnectionLookup connections;
     private final ConnectedAccountAccess accountAccess;
@@ -32,7 +30,7 @@ public class GoogleConnectionResolver {
                         options,
                         IntegrationType.GOOGLE_WORKSPACE,
                         "Google Workspace",
-                        PER_USE_KEYS,
+                        LocationOptions.PER_USE_KEYS,
                         owner));
     }
 }

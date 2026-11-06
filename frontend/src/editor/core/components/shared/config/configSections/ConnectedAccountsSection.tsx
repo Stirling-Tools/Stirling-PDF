@@ -6,7 +6,8 @@ import { Icon } from "@editor/ui/Icon";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import { useConnectedAccounts } from "@editor/hooks/useConnectedAccounts";
 import {
-  isPopupBlocked,
+  accountLabel,
+  connectErrorMessage,
   type CloudProvider,
   type ConnectedAccount,
 } from "@editor/services/connectedAccountsService";
@@ -43,16 +44,7 @@ export default function ConnectedAccountsSection() {
         );
       }
     } catch (e) {
-      setError(
-        isPopupBlocked(e)
-          ? t(
-              "connectedAccounts.popupBlocked",
-              "Your browser blocked the sign-in window. Allow pop-ups for this site and try again.",
-            )
-          : e instanceof Error
-            ? e.message
-            : String(e),
-      );
+      setError(connectErrorMessage(e, t));
     } finally {
       setBusy(null);
     }
@@ -137,7 +129,7 @@ export default function ConnectedAccountsSection() {
         zIndex={Z_INDEX_OVER_CONFIG_MODAL}
         title={t("connectedAccounts.disconnectConfirm.title", {
           defaultValue: "Disconnect {{account}}?",
-          account: pendingDisconnect ? accountName(pendingDisconnect) : "",
+          account: pendingDisconnect ? accountLabel(pendingDisconnect) : "",
         })}
         footer={
           <Group justify="flex-end" gap="sm">
@@ -176,10 +168,6 @@ export default function ConnectedAccountsSection() {
   );
 }
 
-function accountName(account: ConnectedAccount): string {
-  return account.email ?? account.displayName ?? String(account.id);
-}
-
 interface AccountRowProps {
   account: ConnectedAccount;
   busy: string | null;
@@ -204,7 +192,7 @@ function AccountRow({
       <Stack gap={4} style={{ flex: "1 1 16rem", minWidth: 0 }}>
         <Group gap="xs">
           <Text size="sm" style={{ overflowWrap: "anywhere" }}>
-            {accountName(account)}
+            {accountLabel(account)}
           </Text>
           <StatusBadge tone={needsReconnect ? "danger" : "success"} size="sm">
             {needsReconnect

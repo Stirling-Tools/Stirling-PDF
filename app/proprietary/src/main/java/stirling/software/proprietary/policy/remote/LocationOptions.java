@@ -1,8 +1,11 @@
 package stirling.software.proprietary.policy.remote;
 
 import java.util.Map;
+import java.util.Set;
 
 public final class LocationOptions {
+
+    public static final Set<String> PER_USE_KEYS = Set.of("directory", "mode", "recursive");
 
     private LocationOptions() {}
 

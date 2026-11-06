@@ -1,20 +1,26 @@
 package stirling.software.proprietary.policy.microsoft;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Random;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class QuickXorHashTest {
 
-    @Test
-    void matchesPublishedVectors() {
-        assertEquals("AAAAAAAAAAAAAAAAAAAAAAAAAAA=", hash(new byte[0]));
-        assertEquals("SgAAAAAAAAAAAAAAAQAAAAAAAAA=", hash(Base64.getDecoder().decode("Sg==")));
-        assertEquals("taAFAAAAAAAAAAAAAgAAAAAAAAA=", hash(Base64.getDecoder().decode("tbQ=")));
+    @ParameterizedTest
+    @CsvSource({
+        "'', AAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+        "Sg==, SgAAAAAAAAAAAAAAAQAAAAAAAAA=",
+        "tbQ=, taAFAAAAAAAAAAAAAgAAAAAAAAA="
+    })
+    void matchesPublishedVectors(String contentBase64, String expected) {
+        assertEquals(expected, hash(Base64.getDecoder().decode(contentBase64)));
     }
 
     @Test
@@ -38,7 +44,7 @@ class QuickXorHashTest {
     void differsWhenContentDiffers() {
         String a = hash("a".repeat(500).getBytes(StandardCharsets.UTF_8));
         String b = hash(("a".repeat(499) + "b").getBytes(StandardCharsets.UTF_8));
-        org.junit.jupiter.api.Assertions.assertNotEquals(a, b);
+        assertNotEquals(a, b);
     }
 
     private static String hash(byte[] content) {

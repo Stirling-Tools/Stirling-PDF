@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -58,11 +60,8 @@ public class ConnectedAccountController {
     public ConnectedAccountsResponse list(@AuthenticationPrincipal User user) {
         requireUser(user);
         return new ConnectedAccountsResponse(
-                Map.of(
-                        CloudProvider.MICROSOFT.id(),
-                        service.isAvailable(CloudProvider.MICROSOFT),
-                        CloudProvider.GOOGLE.id(),
-                        service.isAvailable(CloudProvider.GOOGLE)),
+                Arrays.stream(CloudProvider.values())
+                        .collect(Collectors.toMap(CloudProvider::id, service::isAvailable)),
                 service.list(user).stream().map(ConnectedAccountController::view).toList());
     }
 

@@ -67,7 +67,13 @@ public class ConnectionLookup {
         return merged;
     }
 
-    public User currentUser() {
+    public User actingUser(String pipelineOwner) {
+        return pipelineOwner != null
+                ? userService.findByUsername(pipelineOwner).orElse(null)
+                : currentUser();
+    }
+
+    private User currentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             return null;
@@ -83,12 +89,6 @@ public class ConnectionLookup {
             return userService.findByUsername(username).orElse(null);
         }
         return null;
-    }
-
-    private User actingUser(String pipelineOwner) {
-        return pipelineOwner != null
-                ? userService.findByUsername(pipelineOwner).orElse(null)
-                : currentUser();
     }
 
     private boolean usableBy(User user, IntegrationConfig connection) {

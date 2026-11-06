@@ -18,8 +18,6 @@ import stirling.software.proprietary.connectedaccount.ConnectedAccountService;
 import stirling.software.proprietary.connectedaccount.OAuthHttp;
 import stirling.software.proprietary.policy.remote.ExpiringTokenCache;
 
-import tools.jackson.databind.JsonNode;
-
 @Component
 @RequiredArgsConstructor
 public class GraphTokenProvider {
@@ -46,11 +44,8 @@ public class GraphTokenProvider {
                     form.put("client_id", app.clientId());
                     form.put("client_secret", app.clientSecret());
                     form.put("scope", endpoints.graphScope());
-                    JsonNode body =
-                            OAuthHttp.postTokenRequest(endpoints.tokenUrl(app.tenantId()), form);
-                    return new ExpiringTokenCache.Token(
-                            OAuthHttp.text(body, "access_token"),
-                            body.hasNonNull("expires_in") ? body.get("expires_in").asLong() : 3599);
+                    return OAuthHttp.accessToken(
+                            OAuthHttp.postTokenRequest(endpoints.tokenUrl(app.tenantId()), form));
                 });
     }
 

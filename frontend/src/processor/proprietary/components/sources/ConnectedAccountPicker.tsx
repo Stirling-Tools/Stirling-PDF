@@ -6,7 +6,10 @@ import {
   latestConnectedAccounts,
   useConnectedAccounts,
 } from "@editor/hooks/useConnectedAccounts";
-import { isPopupBlocked } from "@editor/services/connectedAccountsService";
+import {
+  accountLabel,
+  connectErrorMessage,
+} from "@editor/services/connectedAccountsService";
 import type { CloudAccountProvider } from "@processor/components/sources/sourceTypes";
 import "@processor/components/sources/connections.css";
 
@@ -78,16 +81,7 @@ export function ConnectedAccountPicker({
         onChange(String(added.id));
       }
     } catch (e) {
-      setError(
-        isPopupBlocked(e)
-          ? t(
-              "connectedAccounts.popupBlocked",
-              "Your browser blocked the sign-in window. Allow pop-ups for this site and try again.",
-            )
-          : e instanceof Error
-            ? e.message
-            : String(e),
-      );
+      setError(connectErrorMessage(e, t));
     } finally {
       setConnecting(false);
     }
@@ -106,8 +100,8 @@ export function ConnectedAccountPicker({
             value: String(account.id),
             label:
               account.status === "NEEDS_RECONNECT"
-                ? `${account.email ?? account.displayName} (${t("portal.sources.cloudFields.account.reconnect", "sign in again")})`
-                : (account.email ?? account.displayName ?? String(account.id)),
+                ? `${accountLabel(account)} (${t("portal.sources.cloudFields.account.reconnect", "sign in again")})`
+                : accountLabel(account),
           }))}
           onChange={(selected) => onChange(selected ?? "")}
         />
