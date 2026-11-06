@@ -264,11 +264,11 @@ export default function WorkbenchBar({
           : undefined;
         const target =
           !forceNewFile && stub ? saver.targetFor(stub) : undefined;
-        if (target && stub) {
-          const viewerFile = await enforcedViewerFile(buffer, stub);
-          if ((await target.save(stub, viewerFile)) !== "fallback") return;
-        }
         try {
+          if (target && stub) {
+            const viewerFile = await enforcedViewerFile(buffer, stub);
+            if ((await target.save(stub, viewerFile)) !== "fallback") return;
+          }
           const result = await downloadFile({
             data: new Blob([buffer], { type: "application/pdf" }),
             // Stub name, not File.name: a rename only writes the stub.
@@ -329,10 +329,11 @@ export default function WorkbenchBar({
         const stub = stubs[idx];
         const target =
           !forceNewFile && stub ? saver.targetFor(stub) : undefined;
-        if (target && stub) {
-          if ((await target.save(stub, enforced[idx])) !== "fallback") continue;
-        }
         try {
+          if (target && stub) {
+            if ((await target.save(stub, enforced[idx])) !== "fallback")
+              continue;
+          }
           const result = await downloadRaw({
             data: enforced[idx],
             // Stub name, not File.name: a rename only writes the stub.

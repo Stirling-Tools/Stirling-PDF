@@ -57,15 +57,15 @@ export function useSaveStoredFile(): SaveStoredFile {
         });
         return "failed";
       };
-      const source = file ?? (await fileStorage.getStirlingFile(stub.id));
-      if (!source)
-        return fail(
-          t(
-            "fileSidebar.dataLostBody",
-            "This browser lost this file's contents. Upload it again to keep working with it.",
-          ),
-        );
       try {
+        const source = file ?? (await fileStorage.getStirlingFile(stub.id));
+        if (!source)
+          return fail(
+            t(
+              "fileSidebar.dataLostBody",
+              "This browser lost this file's contents. Upload it again to keep working with it.",
+            ),
+          );
         const [data] = await enforceExportPolicies([source], [stub.id]);
         const target = local === "save" ? targetFor(stub) : undefined;
         if (target) {
