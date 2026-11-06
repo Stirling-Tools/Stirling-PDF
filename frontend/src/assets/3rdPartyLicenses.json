@@ -183,6 +183,48 @@
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
+      "moduleName": "@fontsource/allura",
+      "moduleUrl": "https://github.com/fontsource/font-files",
+      "moduleVersion": "5.3.0",
+      "moduleLicense": "OFL-1.1",
+      "moduleLicenseUrl": "https://openfontlicense.org/open-font-license-official-text/"
+    },
+    {
+      "moduleName": "@fontsource/caveat",
+      "moduleUrl": "https://github.com/fontsource/font-files",
+      "moduleVersion": "5.3.0",
+      "moduleLicense": "OFL-1.1",
+      "moduleLicenseUrl": "https://openfontlicense.org/open-font-license-official-text/"
+    },
+    {
+      "moduleName": "@fontsource/dancing-script",
+      "moduleUrl": "https://github.com/fontsource/font-files",
+      "moduleVersion": "5.3.0",
+      "moduleLicense": "OFL-1.1",
+      "moduleLicenseUrl": "https://openfontlicense.org/open-font-license-official-text/"
+    },
+    {
+      "moduleName": "@fontsource/great-vibes",
+      "moduleUrl": "https://github.com/fontsource/font-files",
+      "moduleVersion": "5.3.0",
+      "moduleLicense": "OFL-1.1",
+      "moduleLicenseUrl": "https://openfontlicense.org/open-font-license-official-text/"
+    },
+    {
+      "moduleName": "@fontsource/homemade-apple",
+      "moduleUrl": "https://github.com/fontsource/font-files",
+      "moduleVersion": "5.3.0",
+      "moduleLicense": "Apache-2.0",
+      "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+    },
+    {
+      "moduleName": "@fontsource/mrs-saint-delafield",
+      "moduleUrl": "https://github.com/fontsource/font-files",
+      "moduleVersion": "5.3.0",
+      "moduleLicense": "OFL-1.1",
+      "moduleLicenseUrl": "https://openfontlicense.org/open-font-license-official-text/"
+    },
+    {
       "moduleName": "@mantine/core",
       "moduleUrl": "https://github.com/mantinedev/mantine",
       "moduleVersion": "8.3.18",
@@ -332,7 +374,7 @@
     {
       "moduleName": "axios",
       "moduleUrl": "https://github.com/axios/axios",
-      "moduleVersion": "1.18.1",
+      "moduleVersion": "1.20.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
