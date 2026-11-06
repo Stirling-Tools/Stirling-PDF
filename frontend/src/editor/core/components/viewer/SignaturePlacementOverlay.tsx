@@ -6,6 +6,7 @@ import {
   SignaturePreview,
 } from "@editor/utils/signaturePreview";
 import { useSignature } from "@editor/contexts/SignatureContext";
+import { useViewer } from "@editor/contexts/ViewerContext";
 import {
   MAX_PREVIEW_WIDTH_RATIO,
   MAX_PREVIEW_HEIGHT_RATIO,
@@ -13,6 +14,8 @@ import {
   MAX_PREVIEW_HEIGHT_REM,
   MIN_SIGNATURE_DIMENSION_REM,
   OVERLAY_EDGE_PADDING_REM,
+  SIGNATURE_RESIZE_STEP,
+  SIGNATURE_RESIZE_WHEEL_THRESHOLD,
 } from "@editor/constants/signConstants";
 
 // Convert rem to pixels using browser's base font size (typically 16px)
@@ -28,23 +31,38 @@ interface SignaturePlacementOverlayProps {
 export const SignaturePlacementOverlay: React.FC<
   SignaturePlacementOverlayProps
 > = ({ containerRef, isActive, signatureConfig }) => {
-  const [preview, setPreview] = useState<SignaturePreview | null>(null);
+  const [previewResult, setPreviewResult] = useState<{
+    preview: SignaturePreview | null;
+    signatureConfig: SignParameters | null;
+  }>({ preview: null, signatureConfig: null });
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null);
-  const { setPlacementPreviewSize } = useSignature();
+  const { placementSize, setPlacementSize } = useSignature();
+  const { getZoomState, registerImmediateZoomUpdate } = useViewer();
+  const [currentZoom, setCurrentZoom] = useState(
+    () => getZoomState()?.currentZoom ?? 1,
+  );
+
+  useEffect(() => {
+    setCurrentZoom(getZoomState()?.currentZoom ?? 1);
+    return registerImmediateZoomUpdate((percent) => {
+      setCurrentZoom(Math.max(percent / 100, 0.01));
+    });
+  }, [getZoomState, registerImmediateZoomUpdate]);
 
   useEffect(() => {
     let cancelled = false;
 
     const buildPreview = async () => {
+      const previewConfig = signatureConfig ?? null;
       try {
-        const value = await buildSignaturePreview(signatureConfig ?? null);
+        const value = await buildSignaturePreview(previewConfig);
         if (!cancelled) {
-          setPreview(value);
+          setPreviewResult({ preview: value, signatureConfig: previewConfig });
         }
       } catch (error) {
         console.error("Failed to build signature preview:", error);
         if (!cancelled) {
-          setPreview(null);
+          setPreviewResult({ preview: null, signatureConfig: previewConfig });
         }
       }
     };
@@ -55,6 +73,11 @@ export const SignaturePlacementOverlay: React.FC<
       cancelled = true;
     };
   }, [signatureConfig]);
+
+  const preview =
+    previewResult.signatureConfig === signatureConfig
+      ? previewResult.preview
+      : null;
 
   useEffect(() => {
     const element = containerRef.current;
@@ -82,7 +105,7 @@ export const SignaturePlacementOverlay: React.FC<
     };
   }, [containerRef, isActive]);
 
-  const scaledSize = useMemo(() => {
+  const initialPlacementSize = useMemo(() => {
     if (!preview || !containerRef.current) {
       return null;
     }
@@ -118,19 +141,73 @@ export const SignaturePlacementOverlay: React.FC<
     };
   }, [preview, containerRef]);
 
-  useEffect(() => {
-    if (!isActive || !scaledSize) {
-      setPlacementPreviewSize(null);
-    } else {
-      setPlacementPreviewSize(scaledSize);
+  const scaledSize = useMemo(() => {
+    const pdfSize = placementSize ?? initialPlacementSize;
+    if (!pdfSize) {
+      return null;
     }
-  }, [isActive, scaledSize, setPlacementPreviewSize]);
+
+    return {
+      width: pdfSize.width * currentZoom,
+      height: pdfSize.height * currentZoom,
+    };
+  }, [placementSize, initialPlacementSize, currentZoom]);
 
   useEffect(() => {
-    return () => {
-      setPlacementPreviewSize(null);
+    if (isActive && initialPlacementSize && !placementSize) {
+      setPlacementSize(initialPlacementSize);
+    }
+  }, [isActive, initialPlacementSize, placementSize, setPlacementSize]);
+
+  useEffect(() => {
+    const element = containerRef.current;
+    const startingSize = placementSize ?? initialPlacementSize;
+    if (!isActive || !element || !startingSize) {
+      return;
+    }
+
+    let accumulatedDelta = 0;
+    let currentSize = startingSize;
+
+    const handleWheel = (event: WheelEvent) => {
+      if (!event.shiftKey) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      accumulatedDelta += event.deltaY;
+
+      if (Math.abs(accumulatedDelta) < SIGNATURE_RESIZE_WHEEL_THRESHOLD) {
+        return;
+      }
+
+      const requestedScale =
+        accumulatedDelta < 0
+          ? 1 + SIGNATURE_RESIZE_STEP
+          : 1 - SIGNATURE_RESIZE_STEP;
+      const minimumDimension = remToPx(MIN_SIGNATURE_DIMENSION_REM);
+      const minimumScale =
+        minimumDimension / Math.min(currentSize.width, currentSize.height);
+      const scale = Math.max(requestedScale, minimumScale);
+
+      currentSize = {
+        width: currentSize.width * scale,
+        height: currentSize.height * scale,
+      };
+      setPlacementSize(currentSize);
+      accumulatedDelta = 0;
     };
-  }, [setPlacementPreviewSize]);
+
+    element.addEventListener("wheel", handleWheel, { passive: false });
+    return () => element.removeEventListener("wheel", handleWheel);
+  }, [
+    containerRef,
+    isActive,
+    placementSize,
+    initialPlacementSize,
+    setPlacementSize,
+  ]);
 
   const display = useMemo(() => {
     if (!preview || !scaledSize || !cursor || !containerRef.current) {
