@@ -671,6 +671,12 @@ const EmbedPdfViewerContent = ({
   // consume/undo paths below pass it back as a FileId.
   const currentFileStableId =
     currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
+  const versionFileName = useCallback(() => {
+    const stub = currentFileStableId
+      ? selectors.getStirlingFileStub(currentFileStableId)
+      : undefined;
+    return stub?.name || currentFile?.name || "document.pdf";
+  }, [currentFileStableId, currentFile, selectors]);
   const previousActiveFileIdsRef = useRef(activeFileIds);
   // Follow removals, but do not overwrite a save's new id before its bytes enter FileContext.
   useEffect(() => {
@@ -1125,7 +1131,7 @@ const EmbedPdfViewerContent = ({
 
       // Step 2: Convert ArrayBuffer to File
       const blob = new Blob([arrayBuffer], { type: "application/pdf" });
-      const filename = currentFile.name || "document.pdf";
+      const filename = versionFileName();
       const file = new File([blob], filename, { type: "application/pdf" });
       rememberPlainPdfExport(currentFile, file);
 
@@ -1191,6 +1197,7 @@ const EmbedPdfViewerContent = ({
     applyChangesInFlightRef.current = savePromise;
     return savePromise;
   }, [
+    versionFileName,
     currentFile,
     activeFiles,
     exportActions,
@@ -1220,7 +1227,7 @@ const EmbedPdfViewerContent = ({
         );
 
         // Convert Blob to File
-        const filename = currentFile.name || "document.pdf";
+        const filename = versionFileName();
         const file = new File([filledBlob], filename, {
           type: "application/pdf",
         });
@@ -1271,6 +1278,7 @@ const EmbedPdfViewerContent = ({
       }
     },
     [
+      versionFileName,
       currentFile,
       currentFileStableId,
       selectedTool,
@@ -1305,7 +1313,7 @@ const EmbedPdfViewerContent = ({
 
       layerApplyInProgressRef.current = true;
       try {
-        const filename = currentFile.name || "document.pdf";
+        const filename = versionFileName();
         const file = new File([modifiedBlob], filename, {
           type: "application/pdf",
         });
@@ -1334,6 +1342,7 @@ const EmbedPdfViewerContent = ({
       }
     },
     [
+      versionFileName,
       currentFile,
       activeFiles,
       actions,
@@ -1366,7 +1375,7 @@ const EmbedPdfViewerContent = ({
 
       // Convert ArrayBuffer to File
       const blob = new Blob([arrayBuffer], { type: "application/pdf" });
-      const filename = currentFile.name || "document.pdf";
+      const filename = versionFileName();
       const file = new File([blob], filename, { type: "application/pdf" });
       rememberPlainPdfExport(currentFile, file);
 
@@ -1396,6 +1405,7 @@ const EmbedPdfViewerContent = ({
       console.error("Failed to save applied redactions:", error);
     }
   }, [
+    versionFileName,
     redactionsApplied,
     currentFile,
     activeFiles,
