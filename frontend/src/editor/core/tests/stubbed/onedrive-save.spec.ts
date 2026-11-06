@@ -266,6 +266,48 @@ test.describe("Saving files opened from OneDrive", () => {
     });
   });
 
+  test("the result of a tool offers the same save menu", async ({ page }) => {
+    const calls = await stubMicrosoft(page);
+    await page.route("**/api/v1/general/rotate-pdf", (route: Route) =>
+      route.fulfill({
+        path: SAMPLE_PDF,
+        headers: {
+          "content-type": "application/pdf",
+          "content-disposition": 'attachment; filename="Report.pdf"',
+        },
+      }),
+    );
+    await page.goto("/editor");
+    await openFromOneDrive(page, false);
+    await openInViewer(page);
+
+    await page.getByText("Rotate", { exact: true }).first().click();
+    await page.getByRole("button", { name: "Rotate Clockwise" }).click();
+    await page.getByRole("button", { name: /Apply Rotation/ }).click();
+    await expect(page.getByTestId("download-result-button")).toHaveText(
+      "Update Report.pdf in OneDrive",
+      { timeout: 15_000 },
+    );
+
+    await page.getByTestId("download-result-menu").click();
+    await expect(
+      page.getByRole("menuitem", { name: /Download a copy/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("menuitem", { name: /Save to a OneDrive folder/ }),
+    ).toBeVisible();
+    await shot(page, "7-result-save-menu");
+    await page
+      .getByRole("menuitem", { name: /Save a copy next to it/ })
+      .click();
+
+    await expect.poll(() => calls.length).toBe(1);
+    expect(calls[0]).toMatchObject({
+      itemId: null,
+      name: "Report (edited).pdf",
+    });
+  });
+
   test("turning off editor saves hides OneDrive saving", async ({ page }) => {
     const calls = await stubMicrosoft(page, { allowEditorSaves: false });
     await page.goto("/editor");
