@@ -18,6 +18,17 @@ const {
   useConnectedAccounts,
 } = await import("@editor/hooks/useConnectedAccounts");
 
+function accountsState(...ids: number[]) {
+  return {
+    providers: { microsoft: true, google: false },
+    accounts: ids.map((id) => ({
+      id,
+      provider: "microsoft",
+      status: "CONNECTED",
+    })),
+  };
+}
+
 describe("disconnecting a connected account", () => {
   beforeEach(() => {
     clearConnectedAccounts();
@@ -26,13 +37,7 @@ describe("disconnecting a connected account", () => {
   });
 
   it("removes it even when the refresh afterwards fails", async () => {
-    fetchConnectedAccounts.mockResolvedValue({
-      providers: { microsoft: true, google: false },
-      accounts: [
-        { id: 3, provider: "microsoft", status: "CONNECTED" },
-        { id: 4, provider: "microsoft", status: "CONNECTED" },
-      ],
-    });
+    fetchConnectedAccounts.mockResolvedValue(accountsState(3, 4));
     await refreshConnectedAccounts();
     const { result } = renderHook(() => useConnectedAccounts());
     disconnectAccount.mockResolvedValueOnce(undefined);
@@ -44,10 +49,7 @@ describe("disconnecting a connected account", () => {
   });
 
   it("keeps it when the disconnect itself fails", async () => {
-    fetchConnectedAccounts.mockResolvedValue({
-      providers: { microsoft: true, google: false },
-      accounts: [{ id: 3, provider: "microsoft", status: "CONNECTED" }],
-    });
+    fetchConnectedAccounts.mockResolvedValue(accountsState(3));
     await refreshConnectedAccounts();
     const { result } = renderHook(() => useConnectedAccounts());
     disconnectAccount.mockRejectedValueOnce(new Error("500"));
@@ -60,13 +62,7 @@ describe("disconnecting a connected account", () => {
   });
 
   it("ignores a refresh that started before the disconnect finished", async () => {
-    const both = {
-      providers: { microsoft: true, google: false },
-      accounts: [
-        { id: 3, provider: "microsoft", status: "CONNECTED" },
-        { id: 4, provider: "microsoft", status: "CONNECTED" },
-      ],
-    };
+    const both = accountsState(3, 4);
     fetchConnectedAccounts.mockResolvedValueOnce(both);
     await refreshConnectedAccounts();
     const { result } = renderHook(() => useConnectedAccounts());
@@ -77,10 +73,7 @@ describe("disconnecting a connected account", () => {
     );
     void refreshConnectedAccounts();
     disconnectAccount.mockResolvedValueOnce(undefined);
-    fetchConnectedAccounts.mockResolvedValueOnce({
-      ...both,
-      accounts: [both.accounts[1]],
-    });
+    fetchConnectedAccounts.mockResolvedValueOnce(accountsState(4));
 
     await act(() => result.current.disconnect(3));
     await act(async () => finishStale(both));
@@ -89,10 +82,7 @@ describe("disconnecting a connected account", () => {
   });
 
   it("publishes nothing when the user signed out during the disconnect", async () => {
-    fetchConnectedAccounts.mockResolvedValueOnce({
-      providers: { microsoft: true, google: false },
-      accounts: [{ id: 3, provider: "microsoft", status: "CONNECTED" }],
-    });
+    fetchConnectedAccounts.mockResolvedValueOnce(accountsState(3));
     await refreshConnectedAccounts();
     const { result } = renderHook(() => useConnectedAccounts());
     let finishDisconnect: () => void = () => undefined;

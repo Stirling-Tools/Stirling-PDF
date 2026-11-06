@@ -108,18 +108,17 @@ it("offers a Reconnect button that opens the connected accounts settings", async
   expect(mocks.navigate).toHaveBeenCalledWith(CONNECTED_ACCOUNTS_SETTINGS_PATH);
 });
 
-it("words a server failure differently from a lost connection", async () => {
-  mocks.save
-    .mockRejectedValueOnce(new OneDriveSaveError("network", "offline"))
-    .mockRejectedValueOnce(new OneDriveSaveError("server", "500"));
+it.each([
+  ["network", "unreachable"],
+  ["server", "serverError"],
+] as const)("words a %s failure as %s", async (code, message) => {
+  mocks.save.mockRejectedValue(new OneDriveSaveError(code, code));
   const { result } = renderHook(useOneDriveSave);
 
   await act(() => result.current.save(stub));
-  expect(lastToast().body).toBe("provider.onedrive.errors.unreachable");
-  expect(lastToast().buttonText).toBeUndefined();
 
-  await act(() => result.current.save(stub));
-  expect(lastToast().body).toBe("provider.onedrive.errors.serverError");
+  expect(lastToast().body).toBe(`provider.onedrive.errors.${message}`);
+  expect(lastToast().buttonText).toBeUndefined();
 });
 
 it("offers Reconnect when the folder picker's token is refused", async () => {

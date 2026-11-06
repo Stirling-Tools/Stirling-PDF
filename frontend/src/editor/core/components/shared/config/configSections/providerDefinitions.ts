@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { absoluteWithBasePath } from "@editor/constants/app";
 import { ONEDRIVE_REDIRECT_PATH } from "@editor/services/oneDrivePickerService";
+import { connectCallbackPath } from "@editor/services/connectedAccountsService";
 export type ProviderType =
   | "oauth2"
   | "saml2"
@@ -898,9 +899,7 @@ const useGoogleDriveProvider = (): Provider => {
           "provider.googledrive.redirectUri.description",
           "Add this as an authorised redirect URI of the OAuth client in Google Cloud Console.",
         ),
-        value: absoluteWithBasePath(
-          "/api/v1/connected-accounts/callback/google",
-        ),
+        value: absoluteWithBasePath(connectCallbackPath("google")),
       },
       {
         key: "allowAccountConnections",
@@ -933,9 +932,6 @@ const useGoogleDriveProvider = (): Provider => {
 const useMicrosoftProvider = (): Provider => {
   const { t } = useTranslation();
   const pickerRedirect = absoluteWithBasePath(ONEDRIVE_REDIRECT_PATH);
-  const accountRedirect = absoluteWithBasePath(
-    "/api/v1/connected-accounts/callback/microsoft",
-  );
 
   return {
     id: "microsoft",
@@ -979,7 +975,7 @@ const useMicrosoftProvider = (): Provider => {
           "provider.microsoft.redirectUri.description",
           "Add this as a Web redirect URI on the Entra app registration.",
         ),
-        value: accountRedirect,
+        value: absoluteWithBasePath(connectCallbackPath("microsoft")),
       },
       {
         key: "pickerRedirectUri",

@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.integration.service.ConnectionLookup;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.proprietary.security.service.UserService;
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +17,6 @@ public class ConnectedAccountAccess {
 
     private final ConnectedAccountService service;
     private final ConnectionLookup connections;
-    private final UserService userService;
 
     public static boolean usesAccount(Map<String, Object> options) {
         Object value = options.get(ACCOUNT_OPTION);
@@ -40,10 +38,7 @@ public class ConnectedAccountAccess {
                             + " account is turned off on this server; use an organisation"
                             + " connection");
         }
-        User actingUser =
-                owner != null
-                        ? userService.findByUsername(owner).orElse(null)
-                        : connections.currentUser();
+        User actingUser = connections.actingUser(owner);
         if (actingUser == null) {
             throw new IllegalArgumentException(
                     "a connected "

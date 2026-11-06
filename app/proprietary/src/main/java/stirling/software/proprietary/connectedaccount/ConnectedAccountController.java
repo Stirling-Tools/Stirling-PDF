@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -58,11 +60,8 @@ public class ConnectedAccountController {
     public ConnectedAccountsResponse list(@AuthenticationPrincipal User user) {
         requireUser(user);
         return new ConnectedAccountsResponse(
-                Map.of(
-                        CloudProvider.MICROSOFT.id(),
-                        service.isAvailable(CloudProvider.MICROSOFT),
-                        CloudProvider.GOOGLE.id(),
-                        service.isAvailable(CloudProvider.GOOGLE)),
+                Arrays.stream(CloudProvider.values())
+                        .collect(Collectors.toMap(CloudProvider::id, service::isAvailable)),
                 service.list(user).stream().map(ConnectedAccountController::view).toList());
     }
 
@@ -183,7 +182,7 @@ public class ConnectedAccountController {
         }
         if (provider == CloudProvider.GOOGLE) {
             if (!"drive".equals(resource)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported resource");
+                throw unsupportedResource();
             }
             return List.of();
         }
@@ -194,16 +193,20 @@ public class ConnectedAccountController {
         try {
             uri = URI.create(resource);
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported resource");
+            throw unsupportedResource();
         }
-        String origin = uri.getScheme() + "://" + uri.getAuthority();
-        if (origin.equals(graphOrigin())) {
+        String origin = origin(uri);
+        if (origin.equals(origin(URI.create(graphEndpoints.graphUrl())))) {
             return List.of(MicrosoftOAuthClient.BROWSER_SCOPE);
         }
         if (!isSharePoint(uri)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported resource");
+            throw unsupportedResource();
         }
         return List.of(origin + "/.default");
+    }
+
+    private static ResponseStatusException unsupportedResource() {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported resource");
     }
 
     private static boolean isSharePoint(URI uri) {
@@ -212,9 +215,8 @@ public class ConnectedAccountController {
                 && SHAREPOINT_HOST_SUFFIXES.stream().anyMatch(host::endsWith);
     }
 
-    private String graphOrigin() {
-        URI graph = URI.create(graphEndpoints.graphUrl());
-        return graph.getScheme() + "://" + graph.getAuthority();
+    private static String origin(URI uri) {
+        return uri.getScheme() + "://" + uri.getAuthority();
     }
 
     private String publicBaseUrl() {

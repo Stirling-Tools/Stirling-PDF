@@ -773,38 +773,19 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     );
 
     const oneDriveSave = useOneDriveSave();
-    const stubById = useCallback(
-      (fileId: FileId) => allFileStubs.find((s) => s.id === fileId),
-      [allFileStubs],
-    );
-    const handleSaveToOneDrive = useCallback(
-      (fileId: FileId) => {
-        const stub = stubById(fileId);
-        if (stub) void oneDriveSave.save(stub);
-      },
-      [oneDriveSave, stubById],
-    );
-    const handleSaveCopyToOneDrive = useCallback(
-      (fileId: FileId) => {
-        const stub = stubById(fileId);
-        if (stub) void oneDriveSave.saveCopy(stub);
-      },
-      [oneDriveSave, stubById],
-    );
-    const handleOpenInOneDrive = useCallback(
-      (fileId: FileId) => {
-        const stub = stubById(fileId);
-        if (stub) oneDriveSave.openInOneDrive(stub);
-      },
-      [oneDriveSave, stubById],
-    );
-    const handleSaveToOneDriveFolder = useCallback(
-      (fileId: FileId) => {
-        const stub = stubById(fileId);
-        if (stub) void oneDriveSave.saveToFolder(stub);
-      },
-      [oneDriveSave, stubById],
-    );
+    const oneDriveHandlers = useMemo(() => {
+      const forStub =
+        (act: (stub: StirlingFileStub) => unknown) => (fileId: FileId) => {
+          const stub = allFileStubs.find((s) => s.id === fileId);
+          if (stub) void act(stub);
+        };
+      return {
+        save: forStub(oneDriveSave.save),
+        saveCopy: forStub(oneDriveSave.saveCopy),
+        saveToFolder: forStub(oneDriveSave.saveToFolder),
+        open: forStub(oneDriveSave.openInOneDrive),
+      };
+    }, [allFileStubs, oneDriveSave]);
 
     const handleDuplicate = useCallback(
       async (fileId: FileId) => {
@@ -1204,17 +1185,17 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           }
           oneDriveName={stub.cloudOrigin?.name}
           onOpenInOneDrive={
-            stub.cloudOrigin?.webUrl ? handleOpenInOneDrive : undefined
+            stub.cloudOrigin?.webUrl ? oneDriveHandlers.open : undefined
           }
           savingToOneDrive={oneDriveSave.saving === stub.id}
           onSaveToOneDrive={
-            oneDriveSave.available ? handleSaveToOneDrive : undefined
+            oneDriveSave.available ? oneDriveHandlers.save : undefined
           }
           onSaveCopyToOneDrive={
-            oneDriveSave.available ? handleSaveCopyToOneDrive : undefined
+            oneDriveSave.available ? oneDriveHandlers.saveCopy : undefined
           }
           onSaveToOneDriveFolder={
-            oneDriveSave.available ? handleSaveToOneDriveFolder : undefined
+            oneDriveSave.available ? oneDriveHandlers.saveToFolder : undefined
           }
           onVersionHistory={handleVersionHistory}
           hasVersionHistory={(stub.versionNumber ?? 1) > 1}

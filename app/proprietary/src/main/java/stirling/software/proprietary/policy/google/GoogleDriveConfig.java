@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import stirling.software.proprietary.policy.remote.CloudHttp;
 import stirling.software.proprietary.policy.remote.CloudLocation;
 import stirling.software.proprietary.policy.remote.LocationOptions;
 
@@ -133,8 +134,7 @@ public record GoogleDriveConfig(
     }
 
     private static String text(JsonNode node, String field) {
-        JsonNode value = node.get(field);
-        return value == null || value.isNull() ? null : value.asString();
+        return CloudHttp.text(node, field);
     }
 
     @Override

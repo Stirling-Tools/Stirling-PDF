@@ -20,6 +20,8 @@ import {
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import type { GeneralCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { useSaveModeOptions } from "@editor/hooks/useSaveModeOptions";
+import { DEFAULT_SAVE_MODE } from "@editor/services/saveMode";
 
 /** Branding, languages and the system-wide toggles. Writes ui.* and system.*. */
 export function SystemCard({
@@ -29,6 +31,7 @@ export function SystemCard({
   loginEnabled,
 }: GeneralCardProps) {
   const { t } = useTranslation();
+  const saveModeOptions = useSaveModeOptions();
 
   const languageOptions = useMemo(
     () =>
@@ -321,24 +324,17 @@ export function SystemCard({
                 />
               </Group>
             }
-            value={settings.system?.saveMode || "replace"}
+            value={settings.system?.saveMode || DEFAULT_SAVE_MODE}
             onChange={(value) =>
               setSettings({
                 ...settings,
-                system: { ...settings.system, saveMode: value || "replace" },
+                system: {
+                  ...settings.system,
+                  saveMode: value || DEFAULT_SAVE_MODE,
+                },
               })
             }
-            data={[
-              {
-                value: "replace",
-                label: t("saveFile.mode.replace", "Update it"),
-              },
-              {
-                value: "copy",
-                label: t("saveFile.mode.copy", "Save a copy next to it"),
-              },
-              { value: "ask", label: t("saveFile.mode.ask", "Ask me") },
-            ]}
+            data={saveModeOptions}
             allowDeselect={false}
             comboboxProps={{
               withinPortal: true,

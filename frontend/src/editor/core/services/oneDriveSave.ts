@@ -41,6 +41,10 @@ interface SavedItem {
   webUrl: string | null;
 }
 
+function targetAccountId(target: OneDriveSaveTarget): number {
+  return target.kind === "folder" ? target.accountId : target.origin.accountId;
+}
+
 export function withLiveAccount(
   target: OneDriveSaveTarget,
   accounts: readonly ConnectedAccount[],
@@ -49,8 +53,7 @@ export function withLiveAccount(
     (account) =>
       account.provider === "microsoft" && account.status === "CONNECTED",
   );
-  const accountId =
-    target.kind === "folder" ? target.accountId : target.origin.accountId;
+  const accountId = targetAccountId(target);
   if (live.some((account) => account.id === accountId)) return target;
   if (live.length !== 1) return null;
   if (target.kind === "folder") return { ...target, accountId: live[0].id };
@@ -69,8 +72,7 @@ export async function saveToOneDrive(
       "This copy is no longer protected with Microsoft Purview, so it was not saved to OneDrive.",
     );
   }
-  const accountId =
-    target.kind === "folder" ? target.accountId : target.origin.accountId;
+  const accountId = targetAccountId(target);
   const form = new FormData();
   form.append("fileInput", await inMemoryFile(file));
   if (target.kind === "replace") {
@@ -119,35 +121,36 @@ export async function saveToOneDrive(
         target.kind !== "replace" || Boolean(target.origin.stirlingCopy),
     };
   } catch (error) {
-    if (isAxiosError(error) && error.response?.status === 409) {
-      const body = error.response.data as { code?: string } | undefined;
-      throw new OneDriveSaveError(
-        body?.code === "conflict" ? "conflict" : "reconnect",
-        body?.code === "conflict"
-          ? "The file changed in OneDrive since you opened it."
-          : "Your Microsoft account needs to sign in again.",
-      );
-    }
-    if (isAxiosError(error) && !error.response) {
-      throw new OneDriveSaveError(
-        "network",
-        "Couldn't reach OneDrive. Check your connection and try again.",
-      );
-    }
-    if (
-      isAxiosError(error) &&
-      (error.response?.status === 401 || error.response?.status === 403)
-    ) {
-      throw new OneDriveSaveError(
-        "reconnect",
-        "Your Microsoft account needs to sign in again.",
-      );
-    }
-    throw new OneDriveSaveError(
-      "server",
-      "OneDrive or the Stirling server had a problem saving the file.",
+    throw saveError(error);
+  }
+}
+
+function saveError(error: unknown): OneDriveSaveError {
+  const server = new OneDriveSaveError(
+    "server",
+    "OneDrive or the Stirling server had a problem saving the file.",
+  );
+  if (!isAxiosError<{ code?: string } | undefined>(error)) return server;
+  const response = error.response;
+  if (!response) {
+    return new OneDriveSaveError(
+      "network",
+      "Couldn't reach OneDrive. Check your connection and try again.",
     );
   }
+  if (response.status === 409 && response.data?.code === "conflict") {
+    return new OneDriveSaveError(
+      "conflict",
+      "The file changed in OneDrive since you opened it.",
+    );
+  }
+  if ([401, 403, 409].includes(response.status)) {
+    return new OneDriveSaveError(
+      "reconnect",
+      "Your Microsoft account needs to sign in again.",
+    );
+  }
+  return server;
 }
 
 export function copyName(name: string): string {

@@ -137,7 +137,7 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
         setIsLoading(false);
       }
     },
-    [isEnabled, initializeService, useAccounts, connected, t],
+    [isEnabled, initializeService, useAccounts, connected.connect, t],
   );
 
   return {

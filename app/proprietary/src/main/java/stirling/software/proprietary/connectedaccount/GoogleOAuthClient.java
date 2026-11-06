@@ -40,11 +40,7 @@ public class GoogleOAuthClient implements CloudOAuthClient {
 
     @Override
     public boolean available() {
-        ApplicationProperties.Premium.ProFeatures.GoogleDrive app = app();
-        return app.isEnabled()
-                && app.isAllowAccountConnections()
-                && !app.getClientId().isBlank()
-                && !app.getClientSecret().isBlank();
+        return app().accountConnectionsReady();
     }
 
     @Override
@@ -66,12 +62,15 @@ public class GoogleOAuthClient implements CloudOAuthClient {
     @Override
     public OAuthTokens exchangeCode(String code, String codeVerifier, String redirectUri)
             throws IOException {
-        Map<String, String> form = credentials();
-        form.put("grant_type", "authorization_code");
-        form.put("code", code);
-        form.put("code_verifier", codeVerifier);
-        form.put("redirect_uri", redirectUri);
-        JsonNode body = OAuthHttp.postTokenRequest(endpoints.tokenUrl(), form);
+        JsonNode body =
+                OAuthHttp.postTokenRequest(
+                        endpoints.tokenUrl(),
+                        OAuthHttp.authorizationCodeGrant(
+                                app().getClientId(),
+                                app().getClientSecret(),
+                                code,
+                                codeVerifier,
+                                redirectUri));
         JsonNode claims = OAuthHttp.idTokenClaims(OAuthHttp.text(body, "id_token"));
         String subject = OAuthHttp.text(claims, "sub");
         if (subject == null) {
@@ -88,10 +87,12 @@ public class GoogleOAuthClient implements CloudOAuthClient {
 
     @Override
     public OAuthTokens refresh(String refreshToken, List<String> scopes) throws IOException {
-        Map<String, String> form = credentials();
-        form.put("grant_type", "refresh_token");
-        form.put("refresh_token", refreshToken);
-        return OAuthHttp.tokens(OAuthHttp.postTokenRequest(endpoints.tokenUrl(), form), null);
+        return OAuthHttp.tokens(
+                OAuthHttp.postTokenRequest(
+                        endpoints.tokenUrl(),
+                        OAuthHttp.refreshGrant(
+                                app().getClientId(), app().getClientSecret(), refreshToken)),
+                null);
     }
 
     @Override
@@ -120,13 +121,6 @@ public class GoogleOAuthClient implements CloudOAuthClient {
                         ? "drive"
                         : configured.trim();
         return "https://www.googleapis.com/auth/" + scope;
-    }
-
-    private Map<String, String> credentials() {
-        Map<String, String> form = new LinkedHashMap<>();
-        form.put("client_id", app().getClientId());
-        form.put("client_secret", app().getClientSecret());
-        return form;
     }
 
     private ApplicationProperties.Premium.ProFeatures.GoogleDrive app() {

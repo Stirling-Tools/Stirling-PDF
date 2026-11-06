@@ -45,6 +45,7 @@ function saver(
   return {
     targetFor,
     planFor: (s) => (targetFor(s) || s.localFilePath ? mode : null),
+    targetSaveLabel: (s) => targetFor(s)?.saveLabel(s, mode),
     saveToHome: async () => "saved",
     isUnsaved: (s) =>
       targetFor(s)?.isUnsaved(s) ?? Boolean(s.isDirty && s.localFilePath),

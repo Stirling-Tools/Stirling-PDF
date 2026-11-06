@@ -39,21 +39,11 @@ function sent(): Record<string, FormDataEntryValue> {
   return Object.fromEntries(form.entries());
 }
 
-function failure(status: number) {
+function failure(status: number, data: object = {}) {
   return new AxiosError("failed", "ERR", undefined, undefined, {
     status,
     statusText: "Failed",
-    data: {},
-    headers: {},
-    config: { headers: new AxiosHeaders() },
-  });
-}
-
-function conflict(code?: string) {
-  return new AxiosError("conflict", "ERR", undefined, undefined, {
-    status: 409,
-    statusText: "Conflict",
-    data: code ? { code } : { detail: "reconnect" },
+    data,
     headers: {},
     config: { headers: new AxiosHeaders() },
   });
@@ -116,40 +106,23 @@ describe("saveToOneDrive", () => {
     expect(sent().itemId).toBeUndefined();
   });
 
-  it("reports a changed file as a conflict so the user can save a copy", async () => {
-    post.mockRejectedValue(conflict("conflict"));
+  it.each([
+    ["a changed file", failure(409, { code: "conflict" }), "conflict"],
+    ["an account that must sign in again", failure(409), "reconnect"],
+    ["a rejected account", failure(401), "reconnect"],
+    [
+      "a lost connection",
+      new AxiosError("Network Error", "ERR_NETWORK"),
+      "network",
+    ],
+    ["a server failure", failure(502), "server"],
+    ["an unexpected error", new Error("boom"), "server"],
+  ])("reports %s as %s", async (_label, error, code) => {
+    post.mockRejectedValue(error);
 
     await expect(
       saveToOneDrive(file, { kind: "replace", origin }),
-    ).rejects.toMatchObject({ code: "conflict" });
-  });
-
-  it("asks to reconnect when the account needs to sign in again", async () => {
-    post.mockRejectedValue(conflict());
-
-    await expect(
-      saveToOneDrive(file, { kind: "replace", origin }),
-    ).rejects.toMatchObject({ code: "reconnect" });
-  });
-
-  it("tells a lost connection apart from a server failure", async () => {
-    post.mockRejectedValueOnce(new AxiosError("Network Error", "ERR_NETWORK"));
-    await expect(
-      saveToOneDrive(file, { kind: "replace", origin }),
-    ).rejects.toMatchObject({ code: "network" });
-
-    post.mockRejectedValueOnce(failure(502));
-    await expect(
-      saveToOneDrive(file, { kind: "replace", origin }),
-    ).rejects.toMatchObject({ code: "server" });
-  });
-
-  it("asks to reconnect when the server rejects the account", async () => {
-    post.mockRejectedValue(failure(401));
-
-    await expect(
-      saveToOneDrive(file, { kind: "replace", origin }),
-    ).rejects.toMatchObject({ code: "reconnect" });
+    ).rejects.toMatchObject({ code });
   });
 
   it("never uploads plaintext over a Purview-protected original", async () => {

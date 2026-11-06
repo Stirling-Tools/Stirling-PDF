@@ -9,9 +9,13 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import stirling.software.proprietary.policy.remote.CloudHttp;
+import stirling.software.proprietary.policy.remote.ExpiringTokenCache;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -36,6 +40,35 @@ public final class OAuthHttp {
 
     public static String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
+    }
+
+    public static Map<String, String> authorizationCodeGrant(
+            String clientId,
+            String clientSecret,
+            String code,
+            String codeVerifier,
+            String redirectUri) {
+        Map<String, String> form = clientGrant(clientId, clientSecret, "authorization_code");
+        form.put("code", code);
+        form.put("code_verifier", codeVerifier);
+        form.put("redirect_uri", redirectUri);
+        return form;
+    }
+
+    public static Map<String, String> refreshGrant(
+            String clientId, String clientSecret, String refreshToken) {
+        Map<String, String> form = clientGrant(clientId, clientSecret, "refresh_token");
+        form.put("refresh_token", refreshToken);
+        return form;
+    }
+
+    private static Map<String, String> clientGrant(
+            String clientId, String clientSecret, String grantType) {
+        Map<String, String> form = new LinkedHashMap<>();
+        form.put("client_id", clientId);
+        form.put("client_secret", clientSecret);
+        form.put("grant_type", grantType);
+        return form;
     }
 
     public static JsonNode postTokenRequest(String url, Map<String, String> fields)
@@ -92,25 +125,28 @@ public final class OAuthHttp {
     }
 
     public static String text(JsonNode node, String field) {
-        JsonNode value = node == null ? null : node.get(field);
-        return value == null || value.isNull() ? null : value.asString();
+        return CloudHttp.text(node, field);
     }
 
     public static OAuthTokens tokens(JsonNode body, OAuthTokens.AccountIdentity identity) {
         return new OAuthTokens(
                 text(body, "access_token"),
                 text(body, "refresh_token"),
-                body.hasNonNull("expires_in") ? body.get("expires_in").asLong() : 3599,
+                expiresInSeconds(body),
                 text(body, "scope"),
                 identity);
     }
 
-    static JsonNode parse(String body) {
-        try {
-            return JSON.readTree(body == null || body.isBlank() ? "{}" : body);
-        } catch (RuntimeException e) {
-            return JSON.createObjectNode();
-        }
+    public static ExpiringTokenCache.Token accessToken(JsonNode body) {
+        return new ExpiringTokenCache.Token(text(body, "access_token"), expiresInSeconds(body));
+    }
+
+    private static long expiresInSeconds(JsonNode body) {
+        return body.hasNonNull("expires_in") ? body.get("expires_in").asLong() : 3599;
+    }
+
+    private static JsonNode parse(String body) {
+        return CloudHttp.parse(body);
     }
 
     private static String firstLine(String text) {

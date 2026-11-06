@@ -19,15 +19,16 @@ const oneDrive = vi.hoisted(() => ({
   openPicker: vi.fn(async () => []),
 }));
 vi.mock("@editor/hooks/useGoogleDrivePicker", () => ({
-  useGoogleDrivePicker: () => google,
+  useGoogleDrivePicker: () => ({ ...google }),
 }));
 vi.mock("@editor/hooks/useOneDrivePicker", () => ({
-  useOneDrivePicker: () => oneDrive,
+  useOneDrivePicker: () => ({ ...oneDrive }),
 }));
 
 beforeEach(() => {
   google.isEnabled = true;
   oneDrive.isEnabled = true;
+  oneDrive.reconnectNeeded = false;
   google.openPicker.mockClear();
 });
 
@@ -64,5 +65,4 @@ it("only the OneDrive picker can ask the user to reconnect", () => {
     false,
     true,
   ]);
-  oneDrive.reconnectNeeded = false;
 });

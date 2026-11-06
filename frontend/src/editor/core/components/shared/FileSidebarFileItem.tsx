@@ -302,6 +302,19 @@ export const FileItem = React.memo(function FileItem({
     return null;
   };
 
+  const oneDriveBlockedReason = (action: string): React.ReactNode | null =>
+    savingToOneDrive
+      ? t("oneDriveSave.saving", "Saving to OneDrive…")
+      : blockedReason(action);
+  const updateInOneDriveLabel = t(
+    "oneDriveSave.updateOriginal",
+    "Update original in OneDrive",
+  );
+  const saveToOneDriveFolderLabel = t(
+    "oneDriveSave.saveToFolder",
+    "Save to a OneDrive folder…",
+  );
+
   const viewerLabel = isViewedInViewer
     ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
     : t("fileSidebar.fileItem.openInViewer", "Open in viewer");
@@ -622,27 +635,13 @@ export const FileItem = React.memo(function FileItem({
 
               {hasOneDriveOrigin && onSaveToOneDrive && (
                 <FileMenuItem
-                  disabledReason={
-                    savingToOneDrive
-                      ? t("oneDriveSave.saving", "Saving to OneDrive…")
-                      : blockedReason(
-                          t(
-                            "oneDriveSave.updateOriginal",
-                            "Update original in OneDrive",
-                          ),
-                        )
-                  }
+                  disabledReason={oneDriveBlockedReason(updateInOneDriveLabel)}
                   icon={<Icon name="onedrive" size={16} />}
                   onClick={() => onSaveToOneDrive(fileId)}
                   testId="file-save-onedrive"
                 >
                   <span className="file-sidebar-kebab-item-stack">
-                    <span>
-                      {t(
-                        "oneDriveSave.updateOriginal",
-                        "Update original in OneDrive",
-                      )}
-                    </span>
+                    <span>{updateInOneDriveLabel}</span>
                     {oneDriveName && (
                       <span
                         className="file-sidebar-kebab-item-detail"
@@ -658,11 +657,9 @@ export const FileItem = React.memo(function FileItem({
               )}
               {hasOneDriveOrigin && onSaveCopyToOneDrive && (
                 <FileMenuItem
-                  disabledReason={
-                    savingToOneDrive
-                      ? t("oneDriveSave.saving", "Saving to OneDrive…")
-                      : blockedReason(t("oneDriveSave.saveCopy", "Save a copy"))
-                  }
+                  disabledReason={oneDriveBlockedReason(
+                    t("oneDriveSave.saveCopy", "Save a copy"),
+                  )}
                   icon={<Icon name="copy-plus" size={16} />}
                   onClick={() => onSaveCopyToOneDrive(fileId)}
                   testId="file-save-onedrive-copy"
@@ -675,21 +672,14 @@ export const FileItem = React.memo(function FileItem({
               )}
               {onSaveToOneDriveFolder && (
                 <FileMenuItem
-                  disabledReason={
-                    savingToOneDrive
-                      ? t("oneDriveSave.saving", "Saving to OneDrive…")
-                      : blockedReason(
-                          t(
-                            "oneDriveSave.saveToFolder",
-                            "Save to a OneDrive folder…",
-                          ),
-                        )
-                  }
+                  disabledReason={oneDriveBlockedReason(
+                    saveToOneDriveFolderLabel,
+                  )}
                   icon={<Icon name="folder-up" size={16} />}
                   onClick={() => onSaveToOneDriveFolder(fileId)}
                   testId="file-save-onedrive-folder"
                 >
-                  {t("oneDriveSave.saveToFolder", "Save to a OneDrive folder…")}
+                  {saveToOneDriveFolderLabel}
                 </FileMenuItem>
               )}
               {hasOneDriveOrigin && onOpenInOneDrive && (

@@ -36,11 +36,15 @@ class ConnectedDriveWriterTest {
                     + "\"webUrl\":\"https://contoso/Report.pdf\","
                     + "\"parentReference\":{\"driveId\":\"drive-1\",\"id\":\"folder-1\"}}";
 
+    private static final ConnectedDriveWriter.Replace REPLACE =
+            new ConnectedDriveWriter.Replace("drive-1", "item-1", "\"{E},1\"");
+
     record Seen(String method, String uri, String ifMatch, String auth, String range, int size) {}
 
     @TempDir Path temp;
 
     private HttpServer server;
+    private String base;
     private final List<Seen> seen = new CopyOnWriteArrayList<>();
     private Function<Seen, Response> respond;
     private ConnectedDriveWriter writer;
@@ -52,7 +56,7 @@ class ConnectedDriveWriterTest {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/", this::handle);
         server.start();
-        String base = "http://127.0.0.1:" + server.getAddress().getPort();
+        base = "http://127.0.0.1:" + server.getAddress().getPort();
         ConnectedAccountService accounts = mock(ConnectedAccountService.class);
         when(accounts.accessToken(eq(33L), anyList())).thenReturn("write-token");
         writer =
@@ -69,17 +73,9 @@ class ConnectedDriveWriterTest {
 
     @Test
     void replacingSendsTheEtagSoANewerVersionIsNeverOverwritten() throws IOException {
-        respond =
-                request ->
-                        request.method().equals("PUT")
-                                ? new Response(200, SAVED_ITEM)
-                                : new Response(200, SAVED_DETAILS);
+        respond = savedWith(200);
 
-        ConnectedDriveWriter.SavedItem saved =
-                writer.save(
-                        33L,
-                        new ConnectedDriveWriter.Replace("drive-1", "item-1", "\"{E},1\""),
-                        file(10));
+        ConnectedDriveWriter.SavedItem saved = writer.save(33L, REPLACE, file(10));
 
         Seen put = seen.getFirst();
         assertThat(put.method()).isEqualTo("PUT");
@@ -96,23 +92,14 @@ class ConnectedDriveWriterTest {
     void aChangedFileIsAConflictNotAnOverwrite() throws IOException {
         respond = request -> new Response(412, "{\"error\":{\"code\":\"resourceModified\"}}");
 
-        assertThatThrownBy(
-                        () ->
-                                writer.save(
-                                        33L,
-                                        new ConnectedDriveWriter.Replace(
-                                                "drive-1", "item-1", "\"{E},1\""),
-                                        file(10)))
+        Path content = file(10);
+        assertThatThrownBy(() -> writer.save(33L, REPLACE, content))
                 .isInstanceOf(ConnectedDriveWriter.ConflictException.class);
     }
 
     @Test
     void creatingAFileRenamesRatherThanReplacingAnExistingOne() throws IOException {
-        respond =
-                request ->
-                        request.method().equals("PUT")
-                                ? new Response(201, SAVED_ITEM)
-                                : new Response(200, SAVED_DETAILS);
+        respond = savedWith(201);
 
         writer.save(
                 33L,
@@ -130,7 +117,6 @@ class ConnectedDriveWriterTest {
     @Test
     void largeFilesGoThroughAnUploadSessionInChunks() throws IOException {
         int size = (int) GraphDriveClient.SIMPLE_UPLOAD_LIMIT + GraphDriveClient.UPLOAD_CHUNK + 5;
-        String base = "http://127.0.0.1:" + server.getAddress().getPort();
         respond =
                 request -> {
                     if (request.method().equals("POST")) {
@@ -146,10 +132,7 @@ class ConnectedDriveWriterTest {
                     return new Response(200, SAVED_DETAILS);
                 };
 
-        writer.save(
-                33L,
-                new ConnectedDriveWriter.Replace("drive-1", "item-1", "\"{E},1\""),
-                file(size));
+        writer.save(33L, REPLACE, file(size));
 
         assertThat(seen.getFirst().uri())
                 .isEqualTo("/v1.0/drives/drive-1/items/item-1/createUploadSession");
@@ -158,6 +141,13 @@ class ConnectedDriveWriterTest {
         assertThat(chunks).hasSize(2);
         assertThat(chunks.get(0).auth()).isNull();
         assertThat(chunks.stream().mapToInt(Seen::size).sum()).isEqualTo(size);
+    }
+
+    private static Function<Seen, Response> savedWith(int putStatus) {
+        return request ->
+                request.method().equals("PUT")
+                        ? new Response(putStatus, SAVED_ITEM)
+                        : new Response(200, SAVED_DETAILS);
     }
 
     private Path file(int size) throws IOException {

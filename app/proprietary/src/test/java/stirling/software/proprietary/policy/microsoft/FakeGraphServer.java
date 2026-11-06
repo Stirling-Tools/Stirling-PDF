@@ -21,6 +21,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
+import stirling.software.common.model.ApplicationProperties;
+
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -58,6 +60,16 @@ public final class FakeGraphServer implements AutoCloseable {
 
     public String baseUrl() {
         return "http://127.0.0.1:" + server.getAddress().getPort();
+    }
+
+    public static ApplicationProperties serverApp() {
+        ApplicationProperties properties = new ApplicationProperties();
+        ApplicationProperties.Premium.ProFeatures.Microsoft app =
+                properties.getPremium().getProFeatures().getMicrosoft();
+        app.setEnabled(true);
+        app.setClientId("client-1");
+        app.setClientSecret("server-secret");
+        return properties;
     }
 
     public GraphEndpoints endpoints() {

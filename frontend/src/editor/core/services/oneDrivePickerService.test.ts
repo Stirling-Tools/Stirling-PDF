@@ -36,6 +36,8 @@ vi.mock("@azure/msal-browser", () => ({
   createStandardPublicClientApplication: vi.fn(async () => msal.app),
 }));
 
+const GRAPH_URL = "https://graph.microsoft.com/v1.0";
+
 describe("config helpers", () => {
   it("needs the switch and a client id", () => {
     expect(getOneDriveConfig({ microsoftEnabled: true })).toBeNull();
@@ -45,7 +47,7 @@ describe("config helpers", () => {
     ).toEqual({
       clientId: "id",
       tenant: "common",
-      graphUrl: "https://graph.microsoft.com/v1.0",
+      graphUrl: GRAPH_URL,
     });
   });
 
@@ -103,9 +105,19 @@ describe("picker protocol", () => {
     document.body.innerHTML = "";
   });
 
+  async function initializedService() {
+    const service = getOneDrivePickerService();
+    await service.initialize({
+      clientId: "app-id",
+      tenant: "common",
+      graphUrl: GRAPH_URL,
+    });
+    return service;
+  }
+
   async function connectPicker(): Promise<{
     send: (id: string, data: unknown) => void;
-    replies: unknown[];
+    tokenReply: (id: string, token: string) => Promise<void>;
   }> {
     await vi.waitFor(() =>
       expect(
@@ -137,9 +149,16 @@ describe("picker protocol", () => {
       expect(replies).toContainEqual({ type: "activate" }),
     );
     return {
-      replies,
       send: (id, data) =>
         channel.port2.postMessage({ type: "command", id, data }),
+      tokenReply: (id, token) =>
+        vi.waitFor(() =>
+          expect(replies).toContainEqual({
+            type: "result",
+            id,
+            data: { result: "token", token },
+          }),
+        ),
     };
   }
 
@@ -151,7 +170,7 @@ describe("picker protocol", () => {
     const config = {
       clientId: "concurrent-app",
       tenant: "organizations",
-      graphUrl: "https://graph.microsoft.com/v1.0",
+      graphUrl: GRAPH_URL,
     };
 
     await Promise.all([
@@ -164,12 +183,7 @@ describe("picker protocol", () => {
   });
 
   it("answers token requests and downloads the picked files", async () => {
-    const service = getOneDrivePickerService();
-    await service.initialize({
-      clientId: "app-id",
-      tenant: "common",
-      graphUrl: "https://graph.microsoft.com/v1.0",
-    });
+    const service = await initializedService();
     const picked = service.pick({ extensions: [".pdf"] });
 
     const picker = await connectPicker();
@@ -178,15 +192,9 @@ describe("picker protocol", () => {
       resource: "https://contoso-my.sharepoint.com",
       type: "SharePoint",
     });
-    await vi.waitFor(() =>
-      expect(picker.replies).toContainEqual({
-        type: "result",
-        id: "1",
-        data: {
-          result: "token",
-          token: "token:https://contoso-my.sharepoint.com/.default",
-        },
-      }),
+    await picker.tokenReply(
+      "1",
+      "token:https://contoso-my.sharepoint.com/.default",
     );
     picker.send("2", {
       command: "pick",
@@ -208,12 +216,7 @@ describe("picker protocol", () => {
   });
 
   it("resolves to nothing when the picker is closed", async () => {
-    const service = getOneDrivePickerService();
-    await service.initialize({
-      clientId: "app-id",
-      tenant: "common",
-      graphUrl: "https://graph.microsoft.com/v1.0",
-    });
+    const service = await initializedService();
     const picked = service.pick();
 
     const picker = await connectPicker();
@@ -235,12 +238,7 @@ describe("picker protocol", () => {
       }
       throw new Error(`unexpected fetch ${url}`);
     });
-    const service = getOneDrivePickerService();
-    await service.initialize({
-      clientId: "app-id",
-      tenant: "common",
-      graphUrl: "https://graph.microsoft.com/v1.0",
-    });
+    const service = await initializedService();
     const picked = service.pick({}, { accountId: 3 });
 
     const picker = await connectPicker();
@@ -248,16 +246,7 @@ describe("picker protocol", () => {
       command: "authenticate",
       resource: "https://contoso-my.sharepoint.com/personal/pat",
     });
-    await vi.waitFor(() =>
-      expect(picker.replies).toContainEqual({
-        type: "result",
-        id: "1",
-        data: {
-          result: "token",
-          token: "server:https://contoso-my.sharepoint.com",
-        },
-      }),
-    );
+    await picker.tokenReply("1", "server:https://contoso-my.sharepoint.com");
     picker.send("2", { command: "close" });
 
     expect(await picked).toEqual([]);

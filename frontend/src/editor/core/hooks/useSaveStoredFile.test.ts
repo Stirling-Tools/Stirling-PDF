@@ -1,6 +1,7 @@
 import { renderHook } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { beforeEach, expect, it, vi, type Mock } from "vitest";
 import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
+import type { SaveMode } from "@editor/services/saveMode";
 import type { SaveTarget } from "@editor/services/saveTargets";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
@@ -12,9 +13,9 @@ const mocks = vi.hoisted(() => ({
   enforce: vi.fn(async (files: File[]) => files),
   targets: [] as SaveTarget[],
   saveMode: { mode: "replace", locked: false, setMode: vi.fn() } as {
-    mode: string;
+    mode: SaveMode;
     locked: boolean;
-    setMode: ReturnType<typeof vi.fn>;
+    setMode: Mock<(mode: SaveMode) => void>;
   },
   taken: new Set<string>(),
   askChoice: vi.fn(),

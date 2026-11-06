@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { alert, dismissToast } from "@editor/components/toast";
+import type { ToastOptions } from "@editor/components/toast/types";
 import { useFileActions } from "@editor/contexts/FileContext";
 import {
   ensureConnectedAccount,
@@ -13,18 +14,23 @@ import { enforceExportPolicies } from "@editor/services/policyExport";
 import {
   classifyOneDriveFailure,
   getOneDrivePickerService,
-  type OneDriveFailure,
+  isUserCancelled,
 } from "@editor/services/oneDrivePickerService";
 import {
   copyName,
+  hasUnsavedCloudChanges,
   OneDriveSaveError,
   saveToOneDrive,
   withLiveAccount,
   type OneDriveSaveTarget,
 } from "@editor/services/oneDriveSave";
+import {
+  oneDriveConnectFailedMessage,
+  oneDriveFailureMessage,
+  oneDrivePickerLabels,
+} from "@editor/services/oneDriveMessages";
 import { openExternal } from "@editor/platform/openExternal";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
-import { hasUnsavedCloudChanges } from "@editor/services/oneDriveSave";
 import type { SaveTarget } from "@editor/services/saveTargets";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
@@ -55,40 +61,24 @@ export function useOneDriveSave(): OneDriveSave {
     connected.available("microsoft") &&
     config?.microsoftAllowEditorSaves !== false;
 
-  const failureMessage = useCallback(
-    (failure: OneDriveFailure | "failed" | null): string => {
-      switch (failure) {
-        case "popupBlocked":
-          return t(
-            "provider.onedrive.errors.popupBlocked",
-            "Your browser blocked the Microsoft sign-in window. Allow pop-ups for this site and try again.",
-          );
-        case "reconnect":
-          return t(
-            "provider.onedrive.errors.reconnect",
-            "Your Microsoft account needs to sign in again. Reconnect it in Settings > Connected accounts.",
-          );
-        case "network":
-          return t(
-            "provider.onedrive.errors.unreachable",
-            "Couldn't reach OneDrive. Check your connection and try again.",
-          );
-        default:
-          return t(
-            "provider.onedrive.errors.serverError",
-            "OneDrive or the Stirling server had a problem. Try again, or ask your administrator if it keeps happening.",
-          );
-      }
-    },
-    [t],
-  );
-
   const reconnectAction = useCallback(
     () => ({
       buttonText: t("oneDriveSave.reconnect", "Reconnect"),
       buttonCallback: () => navigate(CONNECTED_ACCOUNTS_SETTINGS_PATH),
     }),
     [navigate, t],
+  );
+
+  const saveFailed = useCallback(
+    (body: string, extra?: Partial<ToastOptions>): string =>
+      alert({
+        alertType: "error",
+        title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
+        body,
+        expandable: false,
+        ...extra,
+      }),
+    [t],
   );
 
   const run = useCallback(
@@ -99,26 +89,17 @@ export function useOneDriveSave(): OneDriveSave {
     ): Promise<boolean> => {
       const target = withLiveAccount(requested, connected.accounts);
       if (!target) {
-        alert({
-          alertType: "error",
-          title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
-          body: failureMessage("reconnect"),
-          expandable: false,
-          ...reconnectAction(),
-        });
+        saveFailed(oneDriveFailureMessage(t, "reconnect"), reconnectAction());
         return false;
       }
       const stored = content ?? (await fileStorage.getStirlingFile(stub.id));
       if (!stored) {
-        alert({
-          alertType: "error",
-          title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
-          body: t(
+        saveFailed(
+          t(
             "fileSidebar.dataLostBody",
             "This browser lost this file's contents. Upload it again to keep working with it.",
           ),
-          expandable: false,
-        });
+        );
         return false;
       }
       let file: File = stored;
@@ -127,12 +108,7 @@ export function useOneDriveSave(): OneDriveSave {
         try {
           [file] = await enforceExportPolicies([stored], [stub.id]);
         } catch (error) {
-          alert({
-            alertType: "error",
-            title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
-            body: error instanceof Error ? error.message : String(error),
-            expandable: false,
-          });
+          saveFailed(error instanceof Error ? error.message : String(error));
           return false;
         }
       }
@@ -178,23 +154,19 @@ export function useOneDriveSave(): OneDriveSave {
           code === "conflict" && target.kind === "replace"
             ? target.origin
             : null;
-        const toastId: string = alert({
-          alertType: "error",
-          title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
-          body:
-            code === "conflict"
+        const toastId: string = saveFailed(
+          code === "conflict"
+            ? t(
+                "oneDriveSave.conflict",
+                "This file has changed in OneDrive since this version was opened or saved. Save your version as a copy instead.",
+              )
+            : code === "unprotected"
               ? t(
-                  "oneDriveSave.conflict",
-                  "This file has changed in OneDrive since this version was opened or saved. Save your version as a copy instead.",
+                  "oneDriveSave.unprotected",
+                  "This version is no longer protected with Microsoft Purview, so it was not saved to OneDrive.",
                 )
-              : code === "unprotected"
-                ? t(
-                    "oneDriveSave.unprotected",
-                    "This version is no longer protected with Microsoft Purview, so it was not saved to OneDrive.",
-                  )
-                : failureMessage(code),
-          expandable: false,
-          ...(copyTarget
+              : oneDriveFailureMessage(t, code),
+          copyTarget
             ? {
                 isPersistentPopup: true,
                 buttonText: t("oneDriveSave.saveCopy", "Save a copy"),
@@ -213,14 +185,14 @@ export function useOneDriveSave(): OneDriveSave {
               }
             : code === "reconnect"
               ? reconnectAction()
-              : {}),
-        });
+              : {},
+        );
         return false;
       } finally {
         setSaving(null);
       }
     },
-    [actions, connected.accounts, failureMessage, reconnectAction, t],
+    [actions, connected.accounts, reconnectAction, saveFailed, t],
   );
 
   const save = useCallback(
@@ -246,16 +218,14 @@ export function useOneDriveSave(): OneDriveSave {
 
   const saveToFolder = useCallback(
     async (stub: StirlingFileStub, file?: File) => {
-      const fail = (failure: OneDriveFailure | null) =>
-        alert({
-          alertType: "error",
-          title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
-          body: failureMessage(failure),
-          expandable: false,
-          ...(failure === "reconnect" ? reconnectAction() : {}),
-        });
-      const cancelled = (err: unknown) =>
-        (err as { errorCode?: string } | null)?.errorCode === "user_cancelled";
+      const fail = (err: unknown) => {
+        if (isUserCancelled(err)) return;
+        const failure = classifyOneDriveFailure(err);
+        saveFailed(
+          oneDriveFailureMessage(t, failure),
+          failure === "reconnect" ? reconnectAction() : undefined,
+        );
+      };
       let account;
       try {
         ({ account } = await ensureConnectedAccount(
@@ -263,31 +233,20 @@ export function useOneDriveSave(): OneDriveSave {
           connected.connect,
         ));
       } catch (err) {
-        if (!cancelled(err)) fail(classifyOneDriveFailure(err));
+        fail(err);
         return;
       }
       if (!account) {
-        alert({
-          alertType: "error",
-          title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
-          body: t(
-            "provider.onedrive.errors.connectFailed",
-            "Couldn't connect your Microsoft account. Try again from Settings > Connected accounts.",
-          ),
-          expandable: false,
-        });
+        saveFailed(oneDriveConnectFailedMessage(t));
         return;
       }
       if (account.personal) {
-        alert({
-          alertType: "error",
-          title: t("oneDriveSave.failedTitle", "Couldn't save to OneDrive"),
-          body: t(
+        saveFailed(
+          t(
             "oneDriveSave.personalUnsupported",
             "Saving to a chosen folder needs a work or school Microsoft account.",
           ),
-          expandable: false,
-        });
+        );
         return;
       }
       let folder;
@@ -295,22 +254,18 @@ export function useOneDriveSave(): OneDriveSave {
         folder = await getOneDrivePickerService().pickFolder(
           {
             locale: i18n?.language,
-            labels: {
-              title: t(
+            labels: oneDrivePickerLabels(
+              t,
+              t(
                 "oneDriveSave.chooseFolder",
                 "Choose a OneDrive folder to save to",
               ),
-              close: t("close", "Close"),
-              loading: t(
-                "provider.onedrive.pickerLoading",
-                "Connecting to OneDrive…",
-              ),
-            },
+            ),
           },
           { accountId: account.id },
         );
       } catch (err) {
-        if (!cancelled(err)) fail(classifyOneDriveFailure(err));
+        fail(err);
         return;
       }
       if (!folder) return;
@@ -326,14 +281,7 @@ export function useOneDriveSave(): OneDriveSave {
         file,
       );
     },
-    [
-      connected.connect,
-      failureMessage,
-      i18n?.language,
-      reconnectAction,
-      run,
-      t,
-    ],
+    [connected.connect, i18n?.language, reconnectAction, run, saveFailed, t],
   );
 
   const openInOneDrive = useCallback((stub: StirlingFileStub) => {
@@ -399,13 +347,16 @@ export function useOneDriveSave(): OneDriveSave {
     };
   }, [available, save, saveCopy, saveToFolder, saving, t]);
 
-  return {
-    available,
-    saving,
-    target,
-    save,
-    saveCopy,
-    saveToFolder,
-    openInOneDrive,
-  };
+  return useMemo(
+    () => ({
+      available,
+      saving,
+      target,
+      save,
+      saveCopy,
+      saveToFolder,
+      openInOneDrive,
+    }),
+    [available, saving, target, save, saveCopy, saveToFolder, openInOneDrive],
+  );
 }

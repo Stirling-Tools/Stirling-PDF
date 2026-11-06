@@ -5,26 +5,25 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static stirling.software.proprietary.policy.remote.CloudDriveFixtures.ledgerContext;
+import static stirling.software.proprietary.policy.remote.CloudDriveFixtures.named;
+import static stirling.software.proprietary.policy.remote.CloudDriveFixtures.signIn;
+import static stirling.software.proprietary.policy.remote.CloudDriveFixtures.user;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.function.Supplier;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.access.service.OwnershipService;
 import stirling.software.proprietary.connectedaccount.CloudProvider;
 import stirling.software.proprietary.connectedaccount.ConnectedAccount;
@@ -44,7 +43,6 @@ import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.output.GoogleDriveOutputSink;
 import stirling.software.proprietary.policy.output.OutputDelivery;
-import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 
 import tools.jackson.databind.ObjectMapper;
@@ -59,8 +57,7 @@ class GoogleDriveTest {
     private IntegrationConfigRepository connections;
     private GoogleDriveInputSource source;
     private GoogleDriveOutputSink sink;
-    private InProcessProcessedLedger ledger;
-    private Ctx ctx;
+    private ResolveContext ctx;
     private ConnectedAccount account;
     private String inbox;
     private final OwnershipService ownership = mock(OwnershipService.class);
@@ -69,17 +66,13 @@ class GoogleDriveTest {
     void setUp() throws Exception {
         TestCredentialKey.install();
         google = new FakeGoogleServer();
-        ApplicationProperties properties = new ApplicationProperties();
-        ApplicationProperties.Premium.ProFeatures.GoogleDrive app =
-                properties.getPremium().getProFeatures().getGoogleDrive();
-        app.setEnabled(true);
-        app.setClientId("google-client");
-        app.setClientSecret(FakeGoogleServer.CLIENT_SECRET);
         accounts = new InMemoryConnectedAccounts();
         ConnectedAccountService connected =
                 new ConnectedAccountService(
                         accounts.repository,
-                        List.of(new GoogleOAuthClient(properties, google.endpoints())));
+                        List.of(
+                                new GoogleOAuthClient(
+                                        FakeGoogleServer.serverApp(), google.endpoints())));
         GoogleDriveClient drive =
                 new GoogleDriveClient(
                         google.endpoints(), new GoogleTokenProvider(google.endpoints(), connected));
@@ -87,18 +80,14 @@ class GoogleDriveTest {
         connections = mock(IntegrationConfigRepository.class);
         ConnectionLookup lookup = new ConnectionLookup(connections, ownership, users);
         GoogleConnectionResolver resolver =
-                new GoogleConnectionResolver(
-                        lookup, new ConnectedAccountAccess(connected, lookup, users));
+                new GoogleConnectionResolver(lookup, new ConnectedAccountAccess(connected, lookup));
         GoogleCloudDrive cloud = new GoogleCloudDrive(resolver, drive);
-        ledger = new InProcessProcessedLedger();
+        InProcessProcessedLedger ledger = new InProcessProcessedLedger();
         source = new GoogleDriveInputSource(cloud);
         sink = new GoogleDriveOutputSink(cloud, ledger);
-        ctx = new Ctx(POLICY);
+        ctx = ledgerContext(ledger, POLICY);
         account = accounts.add(5L, CloudProvider.GOOGLE, "google-refresh");
-        User owner = new User();
-        owner.setId(5L);
-        SecurityContextHolder.getContext()
-                .setAuthentication(new UsernamePasswordAuthenticationToken(owner, null, List.of()));
+        signIn(user(5L, "pat"));
         String scans = google.folder("root", "Scans");
         inbox = google.folder(scans, "Inbox");
     }
@@ -206,44 +195,5 @@ class GoogleDriveTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> GoogleDriveConfig.serviceAccount(Map.of("credentialsJson", "not json")));
-    }
-
-    private static ByteArrayResource named(String text, String name) {
-        return named(text.getBytes(StandardCharsets.UTF_8), name);
-    }
-
-    private static ByteArrayResource named(byte[] content, String name) {
-        return new ByteArrayResource(content) {
-            @Override
-            public String getFilename() {
-                return name;
-            }
-        };
-    }
-
-    private final class Ctx implements ResolveContext {
-        private final String policyId;
-
-        private Ctx(String policyId) {
-            this.policyId = policyId;
-        }
-
-        @Override
-        public boolean claim(String identity, String gate, Supplier<String> contentHash) {
-            return ledger.claim(policyId, identity, gate, contentHash);
-        }
-
-        @Override
-        public void settle(String identity, String finalGate, String hash, boolean success) {
-            ledger.settle(policyId, identity, finalGate, hash, success);
-        }
-
-        @Override
-        public boolean allSettledDone(String identity) {
-            return ledger.allSettledDone(identity);
-        }
-
-        @Override
-        public void reportPresent(Collection<String> identities) {}
     }
 }

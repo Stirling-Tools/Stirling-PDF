@@ -198,14 +198,8 @@ class OneDrivePickerService {
     return {
       personal: false,
       graph: () => fetchAccessToken(accountId, "graph"),
-      forResource: (resource) => {
-        if (!resource) {
-          throw new Error(
-            "The picker asked for a token without naming a resource",
-          );
-        }
-        return fetchAccessToken(accountId, new URL(resource).origin);
-      },
+      forResource: (resource) =>
+        fetchAccessToken(accountId, resourceOrigin(resource)),
     };
   }
 
@@ -282,13 +276,9 @@ class OneDrivePickerService {
     personal: boolean,
     resource: string | undefined,
   ): string[] {
-    if (personal) {
-      return PERSONAL_PICKER_SCOPES;
-    }
-    if (!resource) {
-      throw new Error("The picker asked for a token without naming a resource");
-    }
-    return [`${new URL(resource).origin}/.default`];
+    return personal
+      ? PERSONAL_PICKER_SCOPES
+      : [`${resourceOrigin(resource)}/.default`];
   }
 
   private async showPicker(
@@ -474,6 +464,13 @@ class OneDrivePickerService {
     });
     return { file, details };
   }
+}
+
+function resourceOrigin(resource: string | undefined): string {
+  if (!resource) {
+    throw new Error("The picker asked for a token without naming a resource");
+  }
+  return new URL(resource).origin;
 }
 
 interface PickerOverlay {
@@ -667,4 +664,10 @@ export function classifyOneDriveFailure(
   }
   if (error instanceof TypeError) return "network";
   return null;
+}
+
+export function isUserCancelled(error: unknown): boolean {
+  return (
+    (error as { errorCode?: string } | null)?.errorCode === "user_cancelled"
+  );
 }

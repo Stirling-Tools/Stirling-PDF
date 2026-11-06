@@ -1,3 +1,4 @@
+import type { CloudProvider } from "@editor/services/connectedAccountsService";
 import type { ChipAccent } from "@editor/ui";
 
 /**
@@ -108,7 +109,7 @@ export interface SourceFieldDef {
   provider?: CloudAccountProvider;
 }
 
-export type CloudAccountProvider = "microsoft" | "google";
+export type CloudAccountProvider = CloudProvider;
 
 /** A source type the wizard can create, with the fields its config needs. */
 export interface CreatableSourceType {
@@ -120,19 +121,12 @@ export interface CreatableSourceType {
   readable?: boolean;
 }
 
-const SERVER_FOLDER_COPY = {
-  placeholderKey: "portal.sources.networkFields.directory.placeholder",
-  helperTextKey: "portal.sources.networkFields.directory.helperText",
-};
-
 /**
  * The config a network source (SFTP/FTP/SMB) needs: a stored connection of the matching protocol,
- * the folder to poll, and the same consume/snapshot + recursion choices as a folder source.
+ * the folder to poll, and the same consume/snapshot + recursion choices as a folder source. Shared
+ * copy across the three protocols, since only the connection type differs.
  */
-function networkSourceFields(
-  connectionTypeId: string,
-  folderCopy = SERVER_FOLDER_COPY,
-): SourceFieldDef[] {
+function networkSourceFields(connectionTypeId: string): SourceFieldDef[] {
   return [
     {
       key: "connectionId",
@@ -146,7 +140,8 @@ function networkSourceFields(
       key: "directory",
       labelKey: "portal.sources.networkFields.directory.label",
       control: "text",
-      ...folderCopy,
+      placeholderKey: "portal.sources.networkFields.directory.placeholder",
+      helperTextKey: "portal.sources.networkFields.directory.helperText",
     },
     {
       key: "mode",

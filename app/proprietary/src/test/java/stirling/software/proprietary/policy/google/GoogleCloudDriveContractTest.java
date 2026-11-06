@@ -8,10 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.access.service.OwnershipService;
 import stirling.software.proprietary.connectedaccount.CloudProvider;
 import stirling.software.proprietary.connectedaccount.ConnectedAccountAccess;
@@ -23,7 +21,7 @@ import stirling.software.proprietary.integration.repository.IntegrationConfigRep
 import stirling.software.proprietary.integration.service.ConnectionLookup;
 import stirling.software.proprietary.policy.remote.CloudDrive;
 import stirling.software.proprietary.policy.remote.CloudDriveContract;
-import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.policy.remote.CloudDriveFixtures;
 import stirling.software.proprietary.security.service.UserService;
 
 class GoogleCloudDriveContractTest extends CloudDriveContract<GoogleDriveConfig, GoogleFile> {
@@ -36,22 +34,15 @@ class GoogleCloudDriveContractTest extends CloudDriveContract<GoogleDriveConfig,
     protected CloudDrive<GoogleDriveConfig, GoogleFile> drive() throws Exception {
         TestCredentialKey.install();
         google = new FakeGoogleServer();
-        ApplicationProperties properties = new ApplicationProperties();
-        ApplicationProperties.Premium.ProFeatures.GoogleDrive app =
-                properties.getPremium().getProFeatures().getGoogleDrive();
-        app.setEnabled(true);
-        app.setClientId("google-client");
-        app.setClientSecret(FakeGoogleServer.CLIENT_SECRET);
         InMemoryConnectedAccounts accounts = new InMemoryConnectedAccounts();
         accountId = accounts.add(5L, CloudProvider.GOOGLE, "google-refresh").getId();
-        User owner = new User();
-        owner.setId(5L);
-        SecurityContextHolder.getContext()
-                .setAuthentication(new UsernamePasswordAuthenticationToken(owner, null, List.of()));
+        CloudDriveFixtures.signIn(CloudDriveFixtures.user(5L, "pat"));
         ConnectedAccountService connected =
                 new ConnectedAccountService(
                         accounts.repository,
-                        List.of(new GoogleOAuthClient(properties, google.endpoints())));
+                        List.of(
+                                new GoogleOAuthClient(
+                                        FakeGoogleServer.serverApp(), google.endpoints())));
         ConnectionLookup lookup =
                 new ConnectionLookup(
                         mock(IntegrationConfigRepository.class),
@@ -61,9 +52,7 @@ class GoogleCloudDriveContractTest extends CloudDriveContract<GoogleDriveConfig,
         folders.put("Inbox", google.folder(scans, "Inbox"));
         folders.put("Done", google.folder(scans, "Done"));
         return new GoogleCloudDrive(
-                new GoogleConnectionResolver(
-                        lookup,
-                        new ConnectedAccountAccess(connected, lookup, mock(UserService.class))),
+                new GoogleConnectionResolver(lookup, new ConnectedAccountAccess(connected, lookup)),
                 new GoogleDriveClient(
                         google.endpoints(),
                         new GoogleTokenProvider(google.endpoints(), connected)));

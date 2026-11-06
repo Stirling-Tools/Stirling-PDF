@@ -223,9 +223,9 @@ export default function WorkbenchBar({
   const totalItems = activeFiles.length;
   const selectedCount = selectedFileIds.length;
   const saver = useSaveStoredFile();
-  const exportTargetStubs = exportTargetIds
-    .map((id) => selectors.getStirlingFileStub(id as FileId))
-    .filter((stub): stub is StirlingFileStub => Boolean(stub));
+  const exportTargetStubs = selectors.getStirlingFileStubs(
+    exportTargetIds as FileId[],
+  );
 
   // Registered into the bar's own row rather than the tool row below it. Already
   // sorted by order when registered.

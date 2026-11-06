@@ -762,10 +762,6 @@ export async function consumeFiles(
   return outputStirlingFileStubs.map((stub) => stub.id);
 }
 
-/**
-/**
- * Undoes a previous consumeFiles operation by restoring input files and removing output files (unless pinned)
- */
 export function withLatestCloudOrigins(
   inputs: StirlingFileStub[],
   outputs: readonly (StirlingFileStub | undefined)[],
@@ -782,6 +778,10 @@ export function withLatestCloudOrigins(
   });
 }
 
+/**
+/**
+ * Undoes a previous consumeFiles operation by restoring input files and removing output files (unless pinned)
+ */
 export async function undoConsumeFiles(
   inputFiles: File[],
   inputStirlingFileStubs: StirlingFileStub[],

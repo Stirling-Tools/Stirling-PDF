@@ -39,11 +39,7 @@ public class MicrosoftOAuthClient implements CloudOAuthClient {
 
     @Override
     public boolean available() {
-        ApplicationProperties.Premium.ProFeatures.Microsoft app = app();
-        return app.isEnabled()
-                && app.isAllowAccountConnections()
-                && !app.getClientId().isBlank()
-                && !app.getClientSecret().isBlank();
+        return app().accountConnectionsReady();
     }
 
     @Override
@@ -64,11 +60,13 @@ public class MicrosoftOAuthClient implements CloudOAuthClient {
     @Override
     public OAuthTokens exchangeCode(String code, String codeVerifier, String redirectUri)
             throws IOException {
-        Map<String, String> form = credentials();
-        form.put("grant_type", "authorization_code");
-        form.put("code", code);
-        form.put("code_verifier", codeVerifier);
-        form.put("redirect_uri", redirectUri);
+        Map<String, String> form =
+                OAuthHttp.authorizationCodeGrant(
+                        app().getClientId(),
+                        app().getClientSecret(),
+                        code,
+                        codeVerifier,
+                        redirectUri);
         form.put("scope", SIGN_IN_SCOPES);
         JsonNode body = OAuthHttp.postTokenRequest(endpoints.tokenUrl(tenant()), form);
         JsonNode claims = OAuthHttp.idTokenClaims(OAuthHttp.text(body, "id_token"));
@@ -94,9 +92,8 @@ public class MicrosoftOAuthClient implements CloudOAuthClient {
 
     @Override
     public OAuthTokens refresh(String refreshToken, List<String> scopes) throws IOException {
-        Map<String, String> form = credentials();
-        form.put("grant_type", "refresh_token");
-        form.put("refresh_token", refreshToken);
+        Map<String, String> form =
+                OAuthHttp.refreshGrant(app().getClientId(), app().getClientSecret(), refreshToken);
         form.put(
                 "scope",
                 scopes == null || scopes.isEmpty()
@@ -113,13 +110,6 @@ public class MicrosoftOAuthClient implements CloudOAuthClient {
         return app().getRightsManagement().isEnabled()
                 ? SIGN_IN_SCOPES + " " + RIGHTS_MANAGEMENT_CONSENT_SCOPES
                 : SIGN_IN_SCOPES;
-    }
-
-    private Map<String, String> credentials() {
-        Map<String, String> form = new LinkedHashMap<>();
-        form.put("client_id", app().getClientId());
-        form.put("client_secret", app().getClientSecret());
-        return form;
     }
 
     private String tenant() {

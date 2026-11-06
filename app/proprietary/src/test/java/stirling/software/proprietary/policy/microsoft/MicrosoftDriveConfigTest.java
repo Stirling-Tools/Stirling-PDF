@@ -10,6 +10,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import stirling.software.proprietary.policy.microsoft.MicrosoftDriveConfig.AppDefaults;
 
@@ -68,38 +71,28 @@ class MicrosoftDriveConfigTest {
         assertNull(config.library());
     }
 
-    @Test
-    void rejectsSiteUrlsThatAreNotPlainHttps() {
-        for (String url :
-                new String[] {
-                    "http://contoso.sharepoint.com/sites/a",
-                    "https://contoso.sharepoint.com/sites/a?x=1",
-                    "https://user@contoso.sharepoint.com/sites/a",
-                    "not a url"
-                }) {
-            Map<String, Object> options = credentials("sharepoint");
-            options.put("siteUrl", url);
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> MicrosoftDriveConfig.fromConnection(options, NONE));
-        }
-    }
-
-    @Test
-    void rejectsFoldersThatEscapeTheirLibrary() {
-        Map<String, Object> options = credentials("onedrive");
-        options.put("user", "finance@contoso.com");
-        options.put("directory", "Inbox/../../Other");
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "http://contoso.sharepoint.com/sites/a",
+                "https://contoso.sharepoint.com/sites/a?x=1",
+                "https://user@contoso.sharepoint.com/sites/a",
+                "not a url"
+            })
+    void rejectsSiteUrlsThatAreNotPlainHttps(String url) {
+        Map<String, Object> options = credentials("sharepoint");
+        options.put("siteUrl", url);
         assertThrows(
                 IllegalArgumentException.class,
                 () -> MicrosoftDriveConfig.fromConnection(options, NONE));
     }
 
-    @Test
-    void rejectsATenantThatIsNotAnIdOrDomain() {
+    @ParameterizedTest
+    @CsvSource({"directory, Inbox/../../Other", "tenantId, evil/../x"})
+    void rejectsAnEscapingFolderOrTenant(String key, String value) {
         Map<String, Object> options = credentials("onedrive");
         options.put("user", "finance@contoso.com");
-        options.put("tenantId", "evil/../x");
+        options.put(key, value);
         assertThrows(
                 IllegalArgumentException.class,
                 () -> MicrosoftDriveConfig.fromConnection(options, NONE));
