@@ -25,12 +25,18 @@ export interface CloudFilePicker {
 
 export function useCloudFilePickers(): CloudFilePicker[] {
   const { t } = useTranslation();
-  const google = useGoogleDrivePicker();
+  const {
+    isEnabled: googleEnabled,
+    isLoading: googleLoading,
+    error: googleError,
+    clearError: clearGoogleError,
+    openPicker: openGooglePicker,
+  } = useGoogleDrivePicker();
   const oneDrive = useOneDrivePicker();
 
   return useMemo(() => {
     const pickers: CloudFilePicker[] = [];
-    if (google.isEnabled) {
+    if (googleEnabled) {
       pickers.push({
         id: "googledrive",
         icon: "googledrive",
@@ -41,12 +47,12 @@ export function useCloudFilePickers(): CloudFilePicker[] {
           "Failed to open Google Drive picker",
         ),
         testId: "google-drive-button",
-        isLoading: google.isLoading,
-        error: google.error,
+        isLoading: googleLoading,
+        error: googleError,
         reconnectNeeded: false,
-        clearError: google.clearError,
+        clearError: clearGoogleError,
         openPicker: (options = {}) =>
-          google.openPicker({
+          openGooglePicker({
             multiple: options.multiple,
             mimeTypes: options.accept,
           }),
@@ -68,5 +74,13 @@ export function useCloudFilePickers(): CloudFilePicker[] {
       });
     }
     return pickers;
-  }, [google, oneDrive, t]);
+  }, [
+    googleEnabled,
+    googleLoading,
+    googleError,
+    clearGoogleError,
+    openGooglePicker,
+    oneDrive,
+    t,
+  ]);
 }
