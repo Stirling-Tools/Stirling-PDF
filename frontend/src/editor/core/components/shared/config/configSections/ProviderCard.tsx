@@ -126,6 +126,7 @@ export default function ProviderCard({
             onFocus={(e) => e.currentTarget.select()}
             data-testid={`provider-copy-${field.key}`}
             rightSectionWidth="auto"
+            rightSectionPointerEvents="all"
             rightSection={
               <Button
                 size="sm"

@@ -134,7 +134,11 @@ export function useConnectedAccounts(): UseConnectedAccounts {
   }, []);
 
   const disconnect = useCallback(async (id: number) => {
+    const started = generation;
     await disconnectAccount(id);
+    if (started !== generation) return;
+    generation++;
+    inflight = null;
     publish({
       ...snapshot,
       accounts: snapshot.accounts.filter((account) => account.id !== id),
