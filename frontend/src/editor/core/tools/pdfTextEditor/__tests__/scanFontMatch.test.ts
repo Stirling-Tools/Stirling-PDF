@@ -26,6 +26,7 @@ import {
   prefitScanRun,
   renderScanEdit,
   scanEditOf,
+  scanRunNeedsFit,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import {
   setPreferredScanFace,
@@ -224,6 +225,26 @@ describe("matching a face to scanned text", () => {
         expect(drawnFontNames(doc, state.textPtrs)).toContain(
           runnerUp.style.family.replace(/ /g, ""),
         );
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
+    "refits an untouched block when the picked font was not among its choices",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan([samples[0]], SCAN);
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const before = await choicesFor(doc, page, run);
+        expect(before.map((c) => c.face.label)).not.toContain("Courier");
+        setPreferredScanFace(doc, "Courier");
+        expect(scanRunNeedsFit(doc, run)).toBe(true);
+        await choicesFor(doc, page, run);
+        expect(scanRunNeedsFit(doc, run)).toBe(false);
+        expect(scanEditOf(doc, run)!.block!.preferred).toBe("Courier");
       } finally {
         doc.dispose();
       }

@@ -5,9 +5,10 @@ import type {
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
-  isScanRun,
   prefitScanRun,
+  scanRunNeedsFit,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { subscribePreferredScanFace } from "@editor/tools/pdfTextEditor/commands/scanFit";
 import {
   loadBundledScanFaces,
   loadScriptScanFaces,
@@ -18,13 +19,13 @@ const GAP_MS = 4;
 
 function nextScanRun(
   doc: EditorDocument,
-  done: WeakSet<object>,
+  skipped: WeakSet<object>,
   wanted: string[],
 ) {
   let fallback = null;
   for (const page of doc.loadedPages())
     for (const run of page.runs) {
-      if (!isScanRun(run) || done.has(run)) continue;
+      if (skipped.has(run) || !scanRunNeedsFit(doc, run)) continue;
       if (wanted.includes(run.id)) return { page, run };
       fallback ??= { page, run };
     }
@@ -55,7 +56,7 @@ export function useScanPrefit(
     let timer = 0;
     let idle = true;
     let hovered: string | null = null;
-    const done = new WeakSet<object>();
+    const skipped = new WeakSet<object>();
     const onPointerOver = (e: PointerEvent) => {
       const el =
         e.target instanceof Element ? e.target.closest("[data-run-id]") : null;
@@ -65,18 +66,21 @@ export function useScanPrefit(
       const doc = store.document;
       const wanted = [...store.selection.value.runIds];
       if (hovered) wanted.push(hovered);
-      const next = !stopped && doc ? nextScanRun(doc, done, wanted) : null;
+      const next = !stopped && doc ? nextScanRun(doc, skipped, wanted) : null;
       if (!doc || !next) {
         idle = true;
         return;
       }
       try {
-        if (
-          prefitScanRun(doc, next.page, next.run, performance.now() + SLICE_MS)
-        )
-          done.add(next.run);
+        const finished = prefitScanRun(
+          doc,
+          next.page,
+          next.run,
+          performance.now() + SLICE_MS,
+        );
+        if (finished && scanRunNeedsFit(doc, next.run)) skipped.add(next.run);
       } catch {
-        done.add(next.run);
+        skipped.add(next.run);
       }
       timer = window.setTimeout(step, GAP_MS);
     };
@@ -86,6 +90,7 @@ export function useScanPrefit(
       timer = window.setTimeout(step, GAP_MS);
     };
     document.addEventListener("pointerover", onPointerOver);
+    const unsubscribe = subscribePreferredScanFace(() => resume.current());
     void Promise.all([
       loadBundledScanFaces(),
       loadScriptScanFaces(text.current),
@@ -94,6 +99,7 @@ export function useScanPrefit(
       stopped = true;
       resume.current = () => {};
       window.clearTimeout(timer);
+      unsubscribe();
       document.removeEventListener("pointerover", onPointerOver);
     };
   }, [store, hasScannedText]);

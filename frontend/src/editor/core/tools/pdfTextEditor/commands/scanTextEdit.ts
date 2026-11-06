@@ -39,6 +39,7 @@ import {
 } from "@editor/tools/pdfTextEditor/commands/scanStyle";
 import {
   inkTop,
+  preferredScanFace,
   preferredStyle,
   rankStyles,
   type FitWord,
@@ -128,6 +129,7 @@ export interface ScanEditState {
     top: number;
     ranked: RankedStyle[];
     ref: SpanInk;
+    preferred: string | null;
   } | null;
   /** Styles for text in the block that the scan sets at another size. */
   classes: Array<{ style: ScanStyle; top: number }>;
@@ -137,6 +139,7 @@ export interface ScanEditState {
   atlas?: GlyphAtlas | null;
   frame?: ScanFrame;
   upright?: boolean;
+  edited?: boolean;
 }
 
 interface PlacedWord {
@@ -438,6 +441,27 @@ function rank(
   });
 }
 
+function fittedForOtherPreference(
+  doc: EditorDocument,
+  state: ScanEditState,
+): boolean {
+  const block = state.block;
+  if (!block || state.edited) return false;
+  const preferred = preferredScanFace(doc);
+  return (
+    block.preferred !== preferred &&
+    !block.ranked.some((r) => r.face.label === preferred)
+  );
+}
+
+export function scanRunNeedsFit(doc: EditorDocument, run: TextRun): boolean {
+  if (!isScanRun(run)) return false;
+  const state = run.scanEdit;
+  return (
+    !state || state.block === undefined || fittedForOtherPreference(doc, state)
+  );
+}
+
 export function prefitScanRun(
   doc: EditorDocument,
   page: Page,
@@ -445,7 +469,7 @@ export function prefitScanRun(
   deadline: number,
 ): boolean {
   const state = isScanRun(run) ? scanEditOf(doc, run) : null;
-  if (!state || state.block !== undefined) return true;
+  if (!state || !scanRunNeedsFit(doc, run)) return true;
   try {
     withFitDeadline(deadline, () =>
       upright(doc, page, state, () => styleFor(doc, page, state, null)),
@@ -494,6 +518,7 @@ function fitBlock(
     top: median(spans.map(inkTop)),
     ranked,
     ref,
+    preferred: preferredScanFace(doc),
   };
 }
 
@@ -506,6 +531,10 @@ function styleFor(
   state: ScanEditState,
   span: SpanInk | null,
 ): ScanStyle | null {
+  if (fittedForOtherPreference(doc, state)) {
+    state.block = undefined;
+    state.classes = [];
+  }
   if (state.block === undefined) state.block = fitBlock(doc, page, state);
   if (!state.block) return null;
   const blockStyle =
@@ -866,6 +895,7 @@ function renderUprightScanEdit(
     ),
   );
   attachToRun(run, state);
+  state.edited = true;
   // Show what is drawn, not OCR's guesses, so size and colour controls start
   // from the right values.
   run.fontSize = o.fontSize ?? block.fontSize;

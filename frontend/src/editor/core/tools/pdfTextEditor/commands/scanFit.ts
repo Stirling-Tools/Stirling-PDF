@@ -95,6 +95,12 @@ export function sizeFor(face: Face, s: SpanInk): number {
 }
 
 const preferredFaces = new WeakMap<EditorDocument, string>();
+const preferenceListeners = new Set<() => void>();
+
+export function subscribePreferredScanFace(listener: () => void): () => void {
+  preferenceListeners.add(listener);
+  return () => preferenceListeners.delete(listener);
+}
 
 export function preferredScanFace(doc: EditorDocument): string | null {
   return preferredFaces.get(doc) ?? null;
@@ -106,6 +112,7 @@ export function setPreferredScanFace(
 ): void {
   if (label) preferredFaces.set(doc, label);
   else preferredFaces.delete(doc);
+  for (const listener of [...preferenceListeners]) listener();
 }
 
 export function preferredStyle(
