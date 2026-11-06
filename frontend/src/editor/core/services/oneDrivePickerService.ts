@@ -465,8 +465,7 @@ class OneDrivePickerService {
     }
     const bytes = await content.arrayBuffer();
     const file = new File([bytes], details.name, {
-      type:
-        details.file?.mimeType ?? content.headers.get("content-type") ?? "",
+      type: details.file?.mimeType ?? content.headers.get("content-type") ?? "",
       lastModified: details.lastModifiedDateTime
         ? Date.parse(details.lastModifiedDateTime)
         : Date.now(),
