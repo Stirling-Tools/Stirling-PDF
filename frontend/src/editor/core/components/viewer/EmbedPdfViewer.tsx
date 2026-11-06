@@ -905,7 +905,11 @@ const EmbedPdfViewerContent = ({
             // Ctrl+S: Save/apply changes
             if (!event.shiftKey) {
               event.preventDefault();
-              if (viewerApplyChanges) {
+              const hasViewerEdits =
+                hasAnnotationChangesRef.current ||
+                (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0 ||
+                redactionsAppliedRef.current;
+              if (viewerApplyChanges && hasViewerEdits) {
                 viewerApplyChanges();
               }
             }
