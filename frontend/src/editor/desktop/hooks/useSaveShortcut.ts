@@ -23,7 +23,8 @@ export function useSaveShortcut() {
         currentSelectedFileIds.length > 0 ? currentSelectedFileIds : undefined;
       for (const stub of selectors.getStirlingFileStubs(ids)) {
         const file = selectors.getFile(stub.id);
-        if (file) await saveStoredFile(stub, file);
+        if (!file) continue;
+        if ((await saveStoredFile(stub, file)) === "cancelled") break;
       }
     };
 
