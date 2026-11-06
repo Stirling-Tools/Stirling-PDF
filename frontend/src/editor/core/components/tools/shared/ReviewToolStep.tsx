@@ -17,6 +17,7 @@ import {
   getOpenedRightsManagedPdf,
   getRightsManagedThumbnail,
   rightsManagedPdfRevision,
+  rightsManagedSaveBlocked,
   subscribeRightsManagedPdfs,
 } from "@editor/services/rightsManagedPdf";
 import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
@@ -124,6 +125,8 @@ function ReviewStepContent<TParams = unknown>({
     })) || [];
   const rightsManagedOutput =
     operation.files?.some((file) => getOpenedRightsManagedPdf(file)) ?? false;
+  const copyBlocked =
+    operation.files?.some((file) => rightsManagedSaveBlocked(file)) ?? false;
 
   const handleDownload = async () => {
     if (!operation.downloadUrl) return;
@@ -250,6 +253,7 @@ function ReviewStepContent<TParams = unknown>({
               <Button
                 data-testid="download-result-menu"
                 px="sm"
+                disabled={copyBlocked}
                 aria-label={t("saveFile.menu.more", "More save options")}
               >
                 <Icon name="chevron-down" />
