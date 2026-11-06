@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { readFileSync } from "node:fs";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import path from "path";
 
@@ -269,6 +270,416 @@ test.describe("PDF text editor - tables", () => {
     expect(afterUndo.rows).toEqual(start.rows);
   });
 
+  test("deletes the selected middle row from a detected PDF table", async ({ page }) => {
+    test.setTimeout(180_000);
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page
+      .locator('[data-testid="pdf-editor-file-input"]')
+      .setInputFiles(
+        path.join(
+          import.meta.dirname,
+          "../test-fixtures/merged-table-sample.pdf",
+        ),
+      );
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForFunction(
+      () =>
+        (
+          window as unknown as { __editor_store: EditorStore }
+        ).__editor_store.getState().firstPageRendered,
+      undefined,
+      { timeout: 30_000 },
+    );
+
+    // Exercise the same recognized-PDF-table -> Edit -> Delete workflow as
+    // the reported issue, rather than inserting a synthetic editor table.
+    const editTable = page
+      .locator('[data-testid^="pdf-editor-recognized-table-edit-"]')
+      .first();
+    await expect(editTable).toBeVisible({ timeout: 15_000 });
+    await editTable.click();
+
+    const readTable = () =>
+      page.evaluate(() => {
+        const store = (
+          window as unknown as { __editor_store: EditorStore }
+        ).__editor_store;
+        const documentPage = store.document?.page(0);
+        const table = documentPage?.tables[0];
+        if (!documentPage || !table) throw new Error("Table adoption failed");
+        const snapshot = table.snapshot();
+        return {
+          id: table.id,
+          rows: table.rows,
+          text: snapshot.cells
+            .flatMap((cell) =>
+              cell.runIds.map(
+                (id) =>
+                  documentPage.runs.find((run) => run.id === id)?.text ?? "",
+              ),
+            )
+            .join(" "),
+        };
+      });
+
+    const before = await readTable();
+    expect(before.rows).toBe(7);
+    expect(before.text).toContain("Needs");
+    expect(before.text).toContain("Shared checkpoint");
+    // Handle 5 selects body row 4; the final row is Shared checkpoint.
+    await page
+      .getByTestId(`pdf-editor-table-row-handle-${before.id}-5`)
+      .click();
+    await page
+      .getByTestId(`pdf-editor-table-del-row-${before.id}`)
+      .click();
+
+    await expect.poll(async () => (await readTable()).rows).toBe(6);
+    const after = await readTable();
+    expect(after.text).not.toContain("Needs");
+    expect(after.text).toContain("Export proof");
+    expect(after.text).toContain("Shared checkpoint");
+  });
+
+  test("deletes the selected middle column from a detected PDF table", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page
+      .locator('[data-testid="pdf-editor-file-input"]')
+      .setInputFiles(
+        path.join(
+          import.meta.dirname,
+          "../test-fixtures/merged-table-sample.pdf",
+        ),
+      );
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForFunction(
+      () =>
+        (
+          window as unknown as { __editor_store: EditorStore }
+        ).__editor_store.getState().firstPageRendered,
+      undefined,
+      { timeout: 30_000 },
+    );
+
+    const editTable = page
+      .locator('[data-testid^="pdf-editor-recognized-table-edit-"]')
+      .first();
+    await expect(editTable).toBeVisible({ timeout: 15_000 });
+    await editTable.click();
+
+    const readTable = () =>
+      page.evaluate(() => {
+        const store = (
+          window as unknown as { __editor_store: EditorStore }
+        ).__editor_store;
+        const documentPage = store.document?.page(0);
+        const table = documentPage?.tables[0];
+        if (!documentPage || !table) throw new Error("Table adoption failed");
+        const snapshot = table.snapshot();
+        return {
+          id: table.id,
+          cols: table.cols,
+          text: snapshot.cells
+            .flatMap((cell) =>
+              cell.runIds.map(
+                (id) =>
+                  documentPage.runs.find((run) => run.id === id)?.text ?? "",
+              ),
+            )
+            .join(" "),
+        };
+      });
+
+    const before = await readTable();
+    expect(before.cols).toBe(5);
+    expect(before.text).toContain("Active");
+    expect(before.text).toContain("18.5");
+    // Handle 4 selects middle column 3 (State), not the final Hours column.
+    await page
+      .getByTestId(`pdf-editor-table-col-handle-${before.id}-4`)
+      .click();
+    await page
+      .getByTestId(`pdf-editor-table-del-col-${before.id}`)
+      .click();
+
+    await expect.poll(async () => (await readTable()).cols).toBe(4);
+    const after = await readTable();
+    expect(after.text).not.toContain("Active");
+    expect(after.text).not.toContain("Ready");
+    expect(after.text).toContain("18.5");
+    expect(after.text).toContain("45.25");
+  });
+
+  test("deletes the row selected by its row handle", async ({ page }) => {
+    test.setTimeout(180_000);
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page
+      .locator('[data-testid="pdf-editor-file-input"]')
+      .setInputFiles(
+        path.join(
+          import.meta.dirname,
+          "../test-fixtures",
+          "paragraph-sample.pdf",
+        ),
+      );
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    await page.getByTestId("pdf-editor-add-table").click();
+    const box = await page.getByTestId("pdf-editor-page-0").boundingBox();
+    expect(box).not.toBeNull();
+    await page.mouse.click(
+      box!.x + box!.width * 0.35,
+      box!.y + box!.height * 0.45,
+    );
+    await page.waitForFunction(
+      `(${STORE}.state.pages[0].tables ? ${STORE}.state.pages[0].tables.length : 0) > 0`,
+      undefined,
+      { timeout: 10_000 },
+    );
+    const tableId = (await page.evaluate(
+      `${STORE}.state.pages[0].tables[0].id`,
+    )) as string;
+
+    const fillCell = async (row: number, text: string) => {
+      const cell = page.getByTestId(
+        `pdf-editor-table-cell-${tableId}-${row}-0`,
+      );
+      await cell.click();
+      await cell.type(text);
+      await cell.press("Enter");
+      await expect(cell).toHaveCount(0);
+    };
+    await fillCell(1, "middle");
+    await fillCell(2, "last");
+    const runIds = (await page.evaluate(
+      `(t => ({ middle: t.cells.find(c => c.row === 1 && c.col === 0)?.runIds[0], last: t.cells.find(c => c.row === 2 && c.col === 0)?.runIds[0] }))(${STORE}.state.pages[0].tables[0])`,
+    )) as { middle: string; last: string };
+
+    // Handle 2 is the lower edge of body row 1. It must also be selectable
+    // without a pointer so keyboard users can choose the deletion target.
+    const otherRowHandle = page.getByTestId(
+      `pdf-editor-table-row-handle-${tableId}-3`,
+    );
+    await otherRowHandle.focus();
+    await page.keyboard.press("Enter");
+    await expect(otherRowHandle).toHaveAttribute("data-selected", "true");
+
+    const rowHandle = page.getByTestId(
+      `pdf-editor-table-row-handle-${tableId}-2`,
+    );
+    await expect(rowHandle).toHaveAttribute(
+      "aria-label",
+      "Select row 1 for deletion",
+    );
+    // Assistive technology can activate the handle with a click that has no
+    // preceding pointer or keyboard event; it must still change the target.
+    await rowHandle.dispatchEvent("click", { detail: 0 });
+    await expect(rowHandle).toHaveAttribute("data-selected", "true");
+    await page.getByTestId(`pdf-editor-table-del-row-${tableId}`).click();
+    await page.waitForFunction(
+      `(${STORE}.state.pages[0].tables[0].rows) === 2`,
+    );
+
+    const result = (await page.evaluate(
+      `(t => ({ rows: t.rows, row: t.cells.find(c => c.row === 1 && c.col === 0)?.runIds[0] }))(${STORE}.state.pages[0].tables[0])`,
+    )) as { rows: number; row: string };
+    expect(result).toEqual({ rows: 2, row: runIds.last });
+    expect(result.row).not.toBe(runIds.middle);
+  });
+
+  test("keeps row selection isolated when switching between tables", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page
+      .locator('[data-testid="pdf-editor-file-input"]')
+      .setInputFiles(
+        path.join(
+          import.meta.dirname,
+          "../test-fixtures",
+          "paragraph-sample.pdf",
+        ),
+      );
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const pageBox = await page.getByTestId("pdf-editor-page-0").boundingBox();
+    expect(pageBox).not.toBeNull();
+    const addTable = async (x: number, y: number) => {
+      await page.getByTestId("pdf-editor-add-table").click();
+      await page.mouse.click(
+        pageBox!.x + pageBox!.width * x,
+        pageBox!.y + pageBox!.height * y,
+      );
+      await page.waitForFunction(
+        `(${STORE}.state.pages[0].tables ? ${STORE}.state.pages[0].tables.length : 0) > 0`,
+        undefined,
+        { timeout: 10_000 },
+      );
+    };
+    await addTable(0.25, 0.35);
+    await addTable(0.7, 0.65);
+    await page.waitForFunction(
+      `(${STORE}.state.pages[0].tables ? ${STORE}.state.pages[0].tables.length : 0) === 2`,
+      undefined,
+      { timeout: 10_000 },
+    );
+
+    const tableIds = (await page.evaluate(
+      `${STORE}.state.pages[0].tables.map(t => t.id)`,
+    )) as string[];
+    const [firstId, secondId] = tableIds;
+    const fillCell = async (tableId: string, row: number, text: string) => {
+      const cell = page.getByTestId(
+        `pdf-editor-table-cell-${tableId}-${row}-0`,
+      );
+      await cell.click();
+      await cell.type(text);
+      await cell.press("Enter");
+      await expect(cell).toHaveCount(0);
+    };
+    await fillCell(firstId, 1, "first-table-body");
+    await fillCell(firstId, 2, "first-table-last");
+    await fillCell(secondId, 1, "second-table-body");
+    await fillCell(secondId, 2, "second-table-last");
+
+    // Select a non-default row in the first table and delete it.
+    await page.getByTestId(`pdf-editor-table-row-handle-${firstId}-2`).click();
+    await page.getByTestId(`pdf-editor-table-del-row-${firstId}`).click();
+    await page.waitForFunction(
+      `(${STORE}.state.pages[0].tables.find(t => t.id === "${firstId}").rows) === 2`,
+    );
+
+    // Without selecting a handle in the second table, its own default
+    // selection must remove its final body row, not the first table's row.
+    await page.getByTestId(`pdf-editor-table-del-row-${secondId}`).click();
+    await page.waitForFunction(
+      `(${STORE}.state.pages[0].tables.find(t => t.id === "${secondId}").rows) === 2`,
+    );
+
+    const result = (await page.evaluate(
+      `(s => s.state.pages[0].tables.map(t => ({ id: t.id, rows: t.rows, texts: t.cells.map(c => c.runIds[0]).filter(Boolean).map(id => s.state.pages[0].runs.find(r => r.id === id)?.text) })) )(${STORE})`,
+    )) as { id: string; rows: number; texts: string[] }[];
+    expect(result).toEqual([
+      { id: firstId, rows: 2, texts: ["first-table-last"] },
+      { id: secondId, rows: 2, texts: ["second-table-body"] },
+    ]);
+  });
+
+  test("selects an added row and deletes the selected column", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page
+      .locator('[data-testid="pdf-editor-file-input"]')
+      .setInputFiles(
+        path.join(
+          import.meta.dirname,
+          "../test-fixtures",
+          "paragraph-sample.pdf",
+        ),
+      );
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    await page.getByTestId("pdf-editor-add-table").click();
+    const box = await page.getByTestId("pdf-editor-page-0").boundingBox();
+    expect(box).not.toBeNull();
+    await page.mouse.click(
+      box!.x + box!.width * 0.35,
+      box!.y + box!.height * 0.45,
+    );
+    await page.waitForFunction(
+      `(${STORE}.state.pages[0].tables ? ${STORE}.state.pages[0].tables.length : 0) > 0`,
+      undefined,
+      { timeout: 10_000 },
+    );
+    const tableId = (await page.evaluate(
+      `${STORE}.state.pages[0].tables[0].id`,
+    )) as string;
+    const fillCell = async (row: number, col: number, text: string) => {
+      const cell = page.getByTestId(
+        `pdf-editor-table-cell-${tableId}-${row}-${col}`,
+      );
+      await cell.click();
+      await cell.type(text);
+      await cell.press("Enter");
+      await expect(cell).toHaveCount(0);
+    };
+
+    await fillCell(2, 0, "old-last-row");
+    await page.getByTestId(`pdf-editor-table-add-row-${tableId}`).click();
+    await expect
+      .poll(() =>
+        page.evaluate(`(t => t.rows)(${STORE}.state.pages[0].tables[0])`),
+      )
+      .toBe(4);
+    await page.getByTestId(`pdf-editor-table-del-row-${tableId}`).click();
+    await expect
+      .poll(() =>
+        page.evaluate(`(t => t.rows)(${STORE}.state.pages[0].tables[0])`),
+      )
+      .toBe(3);
+    const afterAddedRowDelete = (await page.evaluate(
+      `(s => { const t = s.state.pages[0].tables[0]; return { rows: t.rows, runIds: t.cells.find(c => c.row === 2 && c.col === 0)?.runIds ?? [] }; })(${STORE})`,
+    )) as { rows: number; runIds: string[] };
+    expect(afterAddedRowDelete.rows).toBe(3);
+    expect(afterAddedRowDelete.runIds).toHaveLength(1);
+
+    await fillCell(1, 1, "selected-column");
+    await fillCell(1, 2, "remaining-column");
+    const columnRuns = (await page.evaluate(
+      `(t => ({ selected: t.cells.find(c => c.row === 1 && c.col === 1)?.runIds, remaining: t.cells.find(c => c.row === 1 && c.col === 2)?.runIds }))(${STORE}.state.pages[0].tables[0])`,
+    )) as { selected: string[]; remaining: string[] };
+    const colHandle = page.getByTestId(`pdf-editor-table-col-handle-${tableId}-2`);
+    await expect(colHandle).toHaveAttribute("aria-label", "Select column 1 for deletion");
+    await colHandle.focus();
+    await page.keyboard.press("Enter");
+    await expect(colHandle).toHaveAttribute("data-selected", "true");
+    await page.getByTestId(`pdf-editor-table-del-col-${tableId}`).click();
+    await expect
+      .poll(() =>
+        page.evaluate(`(t => t.cols)(${STORE}.state.pages[0].tables[0])`),
+      )
+      .toBe(2);
+    const afterColumnDelete = (await page.evaluate(
+      `(t => ({ cols: t.cols, runIds: t.cells.find(c => c.row === 1 && c.col === 1)?.runIds ?? [] }))(${STORE}.state.pages[0].tables[0])`,
+    )) as { cols: number; runIds: string[] };
+    expect(afterColumnDelete).toEqual({
+      cols: 2,
+      runIds: columnRuns.remaining,
+    });
+    expect(afterColumnDelete.runIds).not.toEqual(columnRuns.selected);
+  });
+
   test("recognizes a borderless table and makes it editable", async ({
     page,
   }) => {
@@ -376,4 +787,95 @@ test.describe("PDF text editor - tables", () => {
       page.locator('[data-testid^="pdf-editor-recognized-table-select-"]'),
     ).toHaveCount(1);
   });
+  test("reproduces issue #8678 on the reporter-style six-column table", async ({ page }) => {
+    test.setTimeout(180_000);
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page
+      .locator('[data-testid="pdf-editor-file-input"]')
+      .setInputFiles({
+        name: "issue-8678-row-deletion-sample.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from(
+          readFileSync(
+            path.join(
+              import.meta.dirname,
+              "../test-fixtures/issue-8678-row-deletion-sample.pdf.base64",
+            ),
+            "utf8",
+          ),
+          "base64",
+        ),
+      });
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForFunction(
+      () =>
+        (
+          window as unknown as { __editor_store: EditorStore }
+        ).__editor_store.getState().firstPageRendered,
+      undefined,
+      { timeout: 30_000 },
+    );
+
+    const editTable = page
+      .locator('[data-testid^="pdf-editor-recognized-table-edit-"]')
+      .first();
+    await expect(editTable).toBeVisible({ timeout: 15_000 });
+    await editTable.click();
+
+    const readTable = () =>
+      page.evaluate(() => {
+        const store = (
+          window as unknown as { __editor_store: EditorStore }
+        ).__editor_store;
+        const documentPage = store.document?.page(0);
+        const table = documentPage?.tables[0];
+        if (!documentPage || !table) throw new Error("Table adoption failed");
+        const snapshot = table.snapshot();
+        const rowTexts = Array.from({ length: table.rows }, (_, row) =>
+          snapshot.cells
+            .filter((cell) => cell.row === row)
+            .flatMap((cell) =>
+              cell.runIds.map(
+                (id) =>
+                  documentPage.runs.find((run) => run.id === id)?.text ?? "",
+              ),
+            )
+            .join(" "),
+        );
+        return { id: table.id, rows: table.rows, cols: table.cols, rowTexts };
+      });
+
+    const before = await readTable();
+    expect(before.cols).toBe(6);
+    const targetRow = before.rowTexts.findIndex((text) => text.includes("14:00"));
+    expect(targetRow).toBeGreaterThan(0);
+    expect(before.rowTexts.at(-1)).toContain("30,00");
+    expect(before.rowTexts.at(-1)).toContain("53,00");
+
+    // The issue sample has repeated colored bands; select the row containing
+    // 14:00 rather than relying on a hard-coded final-track deletion.
+    await page
+      .getByTestId(
+        `pdf-editor-table-row-handle-${before.id}-${targetRow + 1}`,
+      )
+      .click();
+    await page
+      .getByTestId(`pdf-editor-table-del-row-${before.id}`)
+      .click();
+
+    await expect
+      .poll(async () => (await readTable()).rows)
+      .toBe(before.rows - 1);
+    const after = await readTable();
+    expect(after.rowTexts.join(" ")).not.toContain("14:00");
+    expect(after.rowTexts.at(-1)).toContain("30,00");
+    expect(after.rowTexts.at(-1)).toContain("53,00");
+    expect(after.rowTexts.at(-1)).toContain("-390,00");
+  });
+
 });
