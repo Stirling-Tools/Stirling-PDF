@@ -32,6 +32,7 @@ import { zipFileService } from "@editor/services/zipFileService";
 import { FileAnalyzer } from "@editor/services/fileAnalyzer";
 import { trackPdfUploaded } from "@editor/services/analytics";
 import { cloudOriginOf } from "@editor/services/cloudOrigin";
+import { assertOutputsKeepPurviewProtection } from "@editor/services/purviewVersionGuard";
 import {
   reportBulkAddProgress,
   clearBulkAddProgress,
@@ -703,6 +704,18 @@ export async function consumeFiles(
       `Mismatch between output files (${outputStirlingFiles.length}) and stubs (${outputStirlingFileStubs.length})`,
     );
   }
+
+  const parentIds = new Set<FileId>(inputFileIds);
+  for (const stub of outputStirlingFileStubs) {
+    if (stub.parentFileId) parentIds.add(stub.parentFileId);
+    for (const id of stub.sourceFileIds ?? []) parentIds.add(id);
+  }
+  await assertOutputsKeepPurviewProtection(
+    [...parentIds]
+      .map((id) => filesRef.current.get(id))
+      .filter((file): file is File => Boolean(file)),
+    outputStirlingFiles,
+  );
 
   // Store StirlingFiles in filesRef using their existing IDs (no ID generation needed)
   for (let i = 0; i < outputStirlingFiles.length; i++) {

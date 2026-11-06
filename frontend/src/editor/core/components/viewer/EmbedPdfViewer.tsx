@@ -1248,9 +1248,18 @@ const EmbedPdfViewerContent = ({
 
         // Convert Blob to File
         const filename = currentFile.name || "document.pdf";
-        const file = new File([filledBlob], filename, {
+        const plain = new File([filledBlob], filename, {
           type: "application/pdf",
         });
+        const file = exportProtect
+          ? new File(
+              [await exportProtect(await plain.arrayBuffer())],
+              filename,
+              {
+                type: "application/pdf",
+              },
+            )
+          : plain;
         rememberPlainPdfExport(currentFile, file);
 
         // Get current file info for creating the updated version
@@ -1299,6 +1308,7 @@ const EmbedPdfViewerContent = ({
     },
     [
       currentFile,
+      exportProtect,
       currentFileStableId,
       selectedTool,
       fetchFormFields,
@@ -1333,9 +1343,18 @@ const EmbedPdfViewerContent = ({
       layerApplyInProgressRef.current = true;
       try {
         const filename = currentFile.name || "document.pdf";
-        const file = new File([modifiedBlob], filename, {
+        const plain = new File([modifiedBlob], filename, {
           type: "application/pdf",
         });
+        const file = exportProtect
+          ? new File(
+              [await exportProtect(await plain.arrayBuffer())],
+              filename,
+              {
+                type: "application/pdf",
+              },
+            )
+          : plain;
         rememberPlainPdfExport(currentFile, file);
 
         const currentFileId = currentFileStableId;
@@ -1362,6 +1381,7 @@ const EmbedPdfViewerContent = ({
     },
     [
       currentFile,
+      exportProtect,
       activeFiles,
       actions,
       selectors,

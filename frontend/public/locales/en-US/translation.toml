@@ -11955,6 +11955,7 @@ title = "Protected by Microsoft Purview"
 toolUnsupported = "This tool cannot keep Microsoft Purview protection yet."
 tryAgain = "Try again"
 unavailable = "This server cannot open Microsoft Purview protected PDFs. Ask your administrator to turn it on, or open the file in a Microsoft 365 app."
+unprotectedVersionBlocked = "This change was not saved because it would keep an unprotected copy of a Microsoft Purview protected PDF."
 
 [rotate]
 rotateLeft = "Rotate Counterclockwise"
