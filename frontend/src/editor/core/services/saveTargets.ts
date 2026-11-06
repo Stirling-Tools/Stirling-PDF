@@ -1,7 +1,7 @@
 import type { IconName } from "@editor/ui/Icon";
 import type { FileId } from "@editor/types/file";
 import type { StirlingFileStub } from "@editor/types/fileContext";
-import type { SaveMode } from "@editor/services/saveMode";
+import type { SaveHomeMode, SaveMode } from "@editor/services/saveMode";
 
 export type SaveOutcome = "saved" | "cancelled" | "failed";
 
@@ -36,7 +36,7 @@ export interface SaveTarget {
   save: (
     stub: StirlingFileStub,
     file: File,
-    how: "replace" | "copy",
+    how: SaveHomeMode,
   ) => Promise<SaveOutcome | "fallback">;
   /** Other destinations this target offers for one file. */
   menuItems?: (
