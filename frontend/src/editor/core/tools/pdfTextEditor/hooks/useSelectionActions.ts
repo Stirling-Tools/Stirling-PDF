@@ -28,6 +28,10 @@ interface SelectedRun {
 }
 
 /** Bundle of callbacks that operate on the current selection. */
+async function serverFontUnavailable(family: string): Promise<boolean> {
+  return !(await ensureDeviceFontReady(family)) && isServerFontFamily(family);
+}
+
 export function useSelectionActions(store: EditorStore) {
   const forEachSelectedRun = useCallback(
     (visit: (run: SelectedRun) => void) => {
@@ -115,8 +119,7 @@ export function useSelectionActions(store: EditorStore) {
     async (family: string): Promise<boolean> => {
       // Embedding is async and Command.apply is not, so warm the bytes first.
       // A no-op for the built-in families.
-      const ready = await ensureDeviceFontReady(family);
-      if (!ready && isServerFontFamily(family)) return false;
+      if (await serverFontUnavailable(family)) return false;
       dispatchPerRun(
         (run) =>
           new SetFontFamilyCommand({
@@ -157,13 +160,8 @@ export function useSelectionActions(store: EditorStore) {
     // Embedding is async and Command.apply is not, so warm the bytes first.
     const ready: typeof targets = [];
     for (const target of targets) {
-      if (
-        target.device &&
-        !(await ensureDeviceFontReady(target.family)) &&
-        isServerFontFamily(target.family)
-      ) {
+      if (target.device && (await serverFontUnavailable(target.family)))
         continue;
-      }
       ready.push(target);
     }
     const cmds = ready.map(

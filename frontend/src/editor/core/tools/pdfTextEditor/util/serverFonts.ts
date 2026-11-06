@@ -132,9 +132,27 @@ export function getServerFontBytes(requested: string): Uint8Array | null {
   return bytesByName.get(normaliseName(requested)) ?? null;
 }
 
-async function fetchFaceBytes(id: string): Promise<Uint8Array | null> {
+const facePending = new Map<string, Promise<Uint8Array | null>>();
+
+function shared<T>(
+  pending: Map<string, Promise<T>>,
+  key: string,
+  run: () => Promise<T>,
+): Promise<T> {
+  const inFlight = pending.get(key);
+  if (inFlight) return inFlight;
+  const job = run().finally(() => pending.delete(key));
+  pending.set(key, job);
+  return job;
+}
+
+function fetchFaceBytes(id: string): Promise<Uint8Array | null> {
   const cached = bytesByFaceId.get(id);
-  if (cached) return cached;
+  if (cached) return Promise.resolve(cached);
+  return shared(facePending, id, () => downloadFace(id));
+}
+
+async function downloadFace(id: string): Promise<Uint8Array | null> {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await apiClient.get<ArrayBuffer>(
@@ -188,9 +206,7 @@ export async function loadServerFontBytes(
   if (!key) return null;
   const cached = bytesByName.get(key);
   if (cached) return cached;
-  const inFlight = bytesPending.get(key);
-  if (inFlight) return inFlight;
-  const job = (async (): Promise<Uint8Array | null> => {
+  return shared(bytesPending, key, async () => {
     await loadServerFonts();
     const face = serverFaceFor(requested);
     if (!face) return null;
@@ -199,13 +215,7 @@ export async function loadServerFontBytes(
     await registerCssFace(requested.trim(), face, bytes);
     bytesByName.set(key, bytes);
     return bytes;
-  })();
-  bytesPending.set(key, job);
-  try {
-    return await job;
-  } finally {
-    bytesPending.delete(key);
-  }
+  });
 }
 
 export function resetServerFontsCache(): void {
@@ -215,5 +225,6 @@ export function resetServerFontsCache(): void {
   bytesByFaceId.clear();
   bytesByName.clear();
   bytesPending.clear();
+  facePending.clear();
   cssFacesRegistered.clear();
 }

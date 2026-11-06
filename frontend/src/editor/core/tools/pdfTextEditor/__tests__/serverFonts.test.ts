@@ -137,6 +137,18 @@ describe("server fonts", () => {
     expect(getServerFontBytes("acme sans")?.[0]).toBe(1);
   });
 
+  it("downloads a face once when two names ask for it together", async () => {
+    serveManifestAndFaces();
+    await loadServerFonts();
+
+    await Promise.all([
+      loadServerFontBytes("Acme Sans Bold"),
+      loadServerFontBytes("AcmeSans-Bold"),
+    ]);
+
+    expect(faceRequests()).toEqual([`${SERVER_FONTS_URL}/${BOLD}`]);
+  });
+
   it("retries a face download once, then gives up without throwing", async () => {
     let faceCalls = 0;
     get.mockImplementation(async (url: string) => {

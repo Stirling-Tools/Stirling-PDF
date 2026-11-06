@@ -11,6 +11,7 @@ import {
   loadedLocalFonts,
   normaliseName,
   subscribeLocalFonts,
+  type LocalFont,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
   loadedServerFonts,
@@ -33,6 +34,16 @@ export const BUILT_IN_FONT_FAMILIES: FontFamilyOption[] = [
   { value: "Courier", label: "Courier" },
   { value: "Courier-Bold", label: "Courier Bold" },
 ];
+
+const BUILT_IN_NAMES = BUILT_IN_FONT_FAMILIES.map((option) => option.value);
+
+function familiesExcept(fonts: LocalFont[] | null, taken: string[]): string[] {
+  if (!fonts) return [];
+  const hidden = new Set(taken.map(normaliseName));
+  return groupByFamily(fonts)
+    .map((family) => family.family)
+    .filter((family) => !hidden.has(normaliseName(family)));
+}
 
 type DeviceFontNotice = "unavailable" | "none" | "serverFontFailed";
 
@@ -71,26 +82,15 @@ export function FontFamilySelect({
     loadedServerFonts,
   );
 
-  const serverFamilies = useMemo(() => {
-    if (!serverFonts) return [];
-    const builtIn = new Set(
-      BUILT_IN_FONT_FAMILIES.map((option) => option.value.toLowerCase()),
-    );
-    return groupByFamily(serverFonts)
-      .map((family) => family.family)
-      .filter((family) => !builtIn.has(family.toLowerCase()));
-  }, [serverFonts]);
+  const serverFamilies = useMemo(
+    () => familiesExcept(serverFonts, BUILT_IN_NAMES),
+    [serverFonts],
+  );
 
-  const deviceFamilies = useMemo(() => {
-    if (!localFonts) return [];
-    const hidden = new Set([
-      ...BUILT_IN_FONT_FAMILIES.map((option) => normaliseName(option.value)),
-      ...serverFamilies.map(normaliseName),
-    ]);
-    return groupByFamily(localFonts)
-      .map((family) => family.family)
-      .filter((family) => !hidden.has(normaliseName(family)));
-  }, [localFonts, serverFamilies]);
+  const deviceFamilies = useMemo(
+    () => familiesExcept(localFonts, [...BUILT_IN_NAMES, ...serverFamilies]),
+    [localFonts, serverFamilies],
+  );
 
   const loadDeviceFonts = useCallback(async () => {
     setLoading(true);
