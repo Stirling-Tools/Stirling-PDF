@@ -4,6 +4,12 @@ import { normalizePath } from "@editor/utils/pathUtils";
 import { PublicRouteProviders } from "@editor/components/PublicRouteProviders";
 import { RunLocationChooser } from "@editor/components/runLocation/RunLocationChooser";
 import { hasChosenRunLocation } from "@editor/components/runLocation/runLocationChosen";
+import { TEAM_PATH } from "@editor/routes/teamPath";
+import { nextPathOf } from "@editor/routes/authShared/nextPath";
+
+// Landing links from campaigns and sales replies. Team is bought for a Stirling
+// account, so it settles where Stirling runs on its own.
+const LANDING_PATHS = [TEAM_PATH];
 
 // Links that finish a flow already in progress (an emailed sign-in, an OAuth
 // redirect, a shared file). Interrupting them with the chooser in a fresh
@@ -14,11 +20,21 @@ const FLOW_PATHS = [
   "/oauth/consent",
   "/link",
   "/account-link/callback",
+  ...LANDING_PATHS,
 ];
 
-export function bypassesRunLocation(pathname: string): boolean {
+// Signing in from a landing link detours through these, naming it as `next`.
+const AUTH_PATHS = ["/login", "/signup"];
+
+export function bypassesRunLocation(pathname: string, search = ""): boolean {
   const path = normalizePath(pathname);
-  return FLOW_PATHS.includes(path) || path.startsWith("/share/");
+  if (FLOW_PATHS.includes(path) || path.startsWith("/share/")) return true;
+  const nextPath = nextPathOf(new URLSearchParams(search).get("next"));
+  return (
+    AUTH_PATHS.includes(path) &&
+    nextPath !== undefined &&
+    LANDING_PATHS.includes(nextPath)
+  );
 }
 
 /**
@@ -26,10 +42,10 @@ export function bypassesRunLocation(pathname: string): boolean {
  * auth included, until this browser has confirmed a choice once.
  */
 export function RunLocationGate() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const [showChooser, setShowChooser] = useState(() => !hasChosenRunLocation());
 
-  if (!showChooser || bypassesRunLocation(pathname)) {
+  if (!showChooser || bypassesRunLocation(pathname, search)) {
     return <Outlet />;
   }
 

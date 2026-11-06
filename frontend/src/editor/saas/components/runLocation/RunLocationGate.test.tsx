@@ -74,6 +74,25 @@ describe("RunLocationGate", () => {
     expect(screen.getByText("The app")).toBeInTheDocument();
   });
 
+  it("lets the Team link through without recording a choice", () => {
+    renderAt("/team");
+    expect(screen.getByText("The app")).toBeInTheDocument();
+    expect(window.localStorage.getItem(SEEN_KEY)).toBeNull();
+  });
+
+  it.each(["/login?next=%2Fteam%3Futm_campaign%3Dnov", "/signup?next=%2Fteam"])(
+    "lets sign-in through on the way back to the Team link: %s",
+    (path) => {
+      renderAt(path);
+      expect(screen.getByText("The app")).toBeInTheDocument();
+    },
+  );
+
+  it("still asks on sign-in headed anywhere else", () => {
+    renderAt("/login");
+    expect(screen.queryByText("The app")).not.toBeInTheDocument();
+  });
+
   it("lets flow links through without recording a choice", () => {
     renderAt("/auth/callback");
     expect(screen.getByText("The app")).toBeInTheDocument();

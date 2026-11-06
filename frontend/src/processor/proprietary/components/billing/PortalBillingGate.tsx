@@ -15,6 +15,7 @@ import { SaasSessionBanner } from "@editor/portal/components/account-link/SaasSe
 import { FreeTierPlanView } from "@editor/portal/components/billing/FreeTierPlanView";
 import { Usage } from "@editor/portal/views/Usage";
 import type { Wallet } from "@editor/portal/api/billing";
+import { requestsTeamCheckout } from "@editor/routes/teamCheckoutLink";
 
 /**
  * The seam the SaaS build shadows: picks which usage page this instance has one of.
@@ -41,7 +42,7 @@ export function PortalBillingGate() {
   const accountLinkRequested =
     trialSetupRequested ||
     searchParams.get("procurement") === "start" ||
-    searchParams.get("upgrade") === "team";
+    requestsTeamCheckout(searchParams);
 
   useEffect(() => {
     if (!accountLinkRequested || link?.isLinked) prompted.current = false;
