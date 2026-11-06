@@ -23,6 +23,7 @@ import {
 import type { ProcurementSnapshot } from "@editor/portal/api/procurement";
 import type { LegacyBillingState } from "@editor/types/legacyBilling";
 import { formatPeriodDate } from "@editor/billing";
+import { isTeamWelcome } from "@editor/billing/teamWelcome";
 
 const fetchCheckoutPricing = vi.hoisted(() => vi.fn());
 vi.mock("@editor/portal/billing/stripe", () => ({ fetchCheckoutPricing }));
@@ -40,10 +41,13 @@ vi.mock("@editor/hooks/useLegacySubscriptions", () => ({
   useLegacySubscriptions: () => legacyBilling,
 }));
 
+let locationState: unknown;
+
 // Usage renders Mantine-backed @editor/ui components (e.g. the "Manage Payment"
 // Button in the subscribed header), which need a MantineProvider in the tree.
 function Location() {
   const location = useLocation();
+  locationState = location.state;
   return (
     <output data-testid="location">
       {location.pathname}
@@ -294,6 +298,78 @@ describe("Usage — link-free wallet renderer", () => {
       expect(screen.getByTestId("location")).not.toHaveTextContent("upgrade="),
     );
     expect(checkout.openCheckout).not.toHaveBeenCalled();
+  });
+
+  it("opens Team for a hosted buyer arriving from the Team link", async () => {
+    checkoutEnabled = true;
+    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
+    renderUsage(<Usage />, "/settings/billing?upgrade=team");
+    await waitFor(() => expect(checkout.openCheckout).toHaveBeenCalledTimes(1));
+    expect(checkout.openCheckout).toHaveBeenCalledWith(
+      "server",
+      expect.objectContaining({
+        combinedChoose: true,
+        onContactSales: expect.any(Function),
+        onClose: expect.any(Function),
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("location")).not.toHaveTextContent("upgrade="),
+    );
+  });
+
+  it.each([
+    ["an active Team", true, "leader"],
+    ["a member", false, "member"],
+  ] as const)(
+    "leaves a hosted account with %s on billing",
+    async (_label, held, role) => {
+      checkoutEnabled = true;
+      fetchWallet.mockResolvedValue({
+        ...walletOf("free"),
+        role,
+        team: { held, licensedUsers: 100 },
+      });
+      renderUsage(<Usage />, "/settings/billing?upgrade=team");
+      await waitFor(() =>
+        expect(screen.getByTestId("location")).not.toHaveTextContent(
+          "upgrade=",
+        ),
+      );
+      expect(checkout.openCheckout).not.toHaveBeenCalled();
+    },
+  );
+
+  it("sends a Team-link buyer to the editor once they close a paid checkout", async () => {
+    checkoutEnabled = true;
+    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
+    renderUsage(<Usage />, "/settings/billing?upgrade=team");
+    await waitFor(() => expect(checkout.openCheckout).toHaveBeenCalledTimes(1));
+    const options = checkout.openCheckout.mock.calls[0][1];
+
+    act(() => options.onClose(true));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location")).toHaveTextContent("/editor"),
+    );
+    expect(isTeamWelcome(locationState)).toBe(true);
+  });
+
+  it("keeps a Team-link buyer on billing when they close without paying", async () => {
+    checkoutEnabled = true;
+    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
+    renderUsage(<Usage />, "/settings/billing?upgrade=team");
+    await waitFor(() => expect(checkout.openCheckout).toHaveBeenCalledTimes(1));
+
+    act(() => checkout.openCheckout.mock.calls[0][1].onClose(false));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location")).not.toHaveTextContent("upgrade="),
+    );
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/settings/billing",
+    );
+    expect(isTeamWelcome(locationState)).toBe(false);
   });
 
   it("loads the wallet on mount and reports it via onWalletLoaded (no link gate)", async () => {
