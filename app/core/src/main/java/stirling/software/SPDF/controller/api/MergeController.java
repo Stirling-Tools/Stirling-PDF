@@ -5,12 +5,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
-import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
@@ -59,6 +58,7 @@ import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
 public class MergeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final String contextPath;
 
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
@@ -389,10 +389,31 @@ public class MergeController {
 
     private File generateTocPage() throws IOException {
         File tocPage = tempFileManager.createTempFile(".pdf");
+        PDType1Font titleFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
 
         try (PDDocument document = new PDDocument()) {
 
             PDPage blankPage = new PDPage(PDRectangle.A4);
+
+            try (PDPageContentStream contentStream =
+                    new PDPageContentStream(
+                            document,
+                            blankPage,
+                            PDPageContentStream.AppendMode.APPEND,
+                            false,
+                            false)) {
+                contentStream.beginText();
+                int fontSize = 18;
+                contentStream.setFont(titleFont, fontSize);
+                String title = "Contents";
+
+                float centeredTitle =
+                        PDRectangle.A4.getWidth() / 2
+                                - (titleFont.getStringWidth(title) / 1000f * fontSize / 2);
+
+                contentStream.newLineAtOffset(centeredTitle, PDRectangle.A4.getHeight() - fontSize);
+                contentStream.showText(title);
+            }
 
             document.addPage(blankPage);
 
