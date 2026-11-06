@@ -15,8 +15,8 @@ import {
   rerankScanStyles,
   scanBlockUndrawable,
   scanEditOf,
-  type RankedStyle,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import type { RankedStyle } from "@editor/tools/pdfTextEditor/commands/scanFit";
 import { SetScanStyleCommand } from "@editor/tools/pdfTextEditor/commands/SetScanStyleCommand";
 import type { PixelPatch } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
@@ -85,9 +85,10 @@ interface ScanRunRef {
   pageIndex: number;
 }
 
-function wasRedrawn(store: EditorStore, ref: ScanRunRef): boolean {
-  const run = store.document?.page(ref.pageIndex).findRun(ref.runId);
-  return !!run?.scanEdit && run.scanEdit.created.length > 0;
+function runOf(store: EditorStore, ref: ScanRunRef | null) {
+  const doc = store.document;
+  const run = ref ? doc?.page(ref.pageIndex).findRun(ref.runId) : null;
+  return doc && run ? { doc, run } : null;
 }
 
 export function useScanFontMatch(
@@ -181,13 +182,9 @@ export function useScanFontMatch(
     };
   }, [store, picking, facesVersion]);
 
-  const activeStyle = (() => {
-    if (!target) return null;
-    const doc = store.document;
-    const run = doc?.page(target.pageIndex).findRun(target.runId);
-    const state = doc && run ? scanEditOf(doc, run) : null;
-    return state?.override.style ?? state?.block?.style ?? null;
-  })();
+  const targetRun = runOf(store, target);
+  const scanState = targetRun ? scanEditOf(targetRun.doc, targetRun.run) : null;
+  const activeStyle = scanState?.override.style ?? scanState?.block?.style;
 
   const choose = useCallback(
     (index: number) => {
@@ -207,13 +204,10 @@ export function useScanFontMatch(
   );
 
   if (!target) return null;
-  const selectedRun =
-    selected &&
-    store.document?.page(selected.pageIndex).findRun(selected.runId);
+  const selectedRun = runOf(store, selected);
   const undrawable =
-    !!selectedRun &&
-    !!store.document &&
-    scanBlockUndrawable(store.document, selectedRun);
+    !!selectedRun && scanBlockUndrawable(selectedRun.doc, selectedRun.run);
+  const redrawn = !!selectedRun?.run.scanEdit?.created.length;
   const current = ranked && ranked.runId === target.runId ? ranked : null;
   return {
     status: !current
@@ -235,7 +229,7 @@ export function useScanFontMatch(
     })),
     choose,
     open: !!picking,
-    canShow: !!selected && (wasRedrawn(store, selected) || undrawable),
+    canShow: redrawn || undrawable,
     undrawable,
     show: () => setPicking(selected),
     close: () => setPicking(null),

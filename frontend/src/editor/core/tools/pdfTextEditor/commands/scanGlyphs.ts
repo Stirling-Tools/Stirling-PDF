@@ -100,10 +100,6 @@ function sampleOf(atlas: GlyphAtlas, ch: string): GlyphImage | null {
   return sorted[sorted.length >> 1];
 }
 
-export function canCompose(atlas: GlyphAtlas, text: string): boolean {
-  return [...text].every((ch) => /\s/.test(ch) || atlas.glyphs.has(ch));
-}
-
 export interface ComposedText {
   rgba: Uint8Array;
   width: number;

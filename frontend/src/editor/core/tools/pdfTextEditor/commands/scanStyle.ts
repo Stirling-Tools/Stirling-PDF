@@ -336,7 +336,6 @@ export interface ScanMatch {
   weight: number;
 }
 
-/** How much `c` drawn on the spot looks like the scanned pixels there. */
 type ScanImage = { img: Luma; stroke: number } | null;
 
 interface FitMemory {
@@ -351,19 +350,23 @@ let measuredThisSlice = false;
 
 export const FIT_PAUSED = Symbol("fit paused");
 
-export function withScanCache<T>(
-  ink: object,
-  fit: () => T,
-  deadline = Infinity,
-): T {
+export function withFitDeadline<T>(deadline: number, fit: () => T): T {
+  const outer = fitDeadline;
+  fitDeadline = deadline;
+  try {
+    return fit();
+  } finally {
+    fitDeadline = outer;
+  }
+}
+
+export function withScanCache<T>(ink: object, fit: () => T): T {
   if (!fitMemory.has(ink))
     fitMemory.set(ink, {
       scans: new Map(),
       matches: new Map(),
       softness: new Map(),
     });
-  const outer = fitDeadline;
-  fitDeadline = deadline;
   measuredThisSlice = false;
   try {
     const result = fit();
@@ -372,10 +375,27 @@ export function withScanCache<T>(
   } catch (e) {
     if (e !== FIT_PAUSED) fitMemory.delete(ink);
     throw e;
-  } finally {
-    fitDeadline = outer;
   }
 }
+
+function remember<K, V>(
+  memory: Map<K, V> | undefined,
+  key: K,
+  measure: () => V,
+): V {
+  const known = memory?.get(key);
+  if (known !== undefined) return known;
+  const value = measure();
+  memory?.set(key, value);
+  return value;
+}
+
+const probeOf = (rect: PageRect): PageRect => ({
+  x: rect.x - 1,
+  y: rect.y - 1,
+  width: rect.width + 2,
+  height: rect.height + 2,
+});
 
 function checkDeadline(): void {
   if (
@@ -411,14 +431,11 @@ function scanImage(
   probe: PageRect,
   blur: number,
 ): ScanImage {
-  const cache = fitMemory.get(ink)?.scans;
-  const hit = cache?.get(blur);
-  if (hit !== undefined) return hit;
-  checkDeadline();
-  const img = renderLuma(doc.module, page, probe, blur);
-  const out = img ? { img, stroke: strokeWidth(img, midTone(img)) } : null;
-  cache?.set(blur, out);
-  return out;
+  return remember(fitMemory.get(ink)?.scans, blur, () => {
+    checkDeadline();
+    const img = renderLuma(doc.module, page, probe, blur);
+    return img ? { img, stroke: strokeWidth(img, midTone(img)) } : null;
+  });
 }
 
 // Each image cut halfway between its own paper and its own darkest ink.
@@ -426,6 +443,7 @@ function midTone(img: { data: Float32Array }): number {
   return (percentile(img.data, 0.85) + percentile(img.data, 0.01)) / 2;
 }
 
+/** How much `c` drawn on the spot looks like the scanned pixels there. */
 export function matchScan(
   doc: EditorDocument,
   page: Page,
@@ -435,13 +453,11 @@ export function matchScan(
   softness?: number,
   rough = false,
 ): ScanMatch {
-  const memory = fitMemory.get(ink)?.matches;
-  const key = memory && placementKey(c, softness, rough);
-  const known = key ? memory.get(key) : undefined;
-  if (known) return known;
-  const match = measureMatch(doc, page, ink, c, softness, rough);
-  if (key) memory.set(key, match);
-  return match;
+  return remember(
+    fitMemory.get(ink)?.matches,
+    placementKey(c, softness, rough),
+    () => measureMatch(doc, page, ink, c, softness, rough),
+  );
 }
 
 function measureMatch(
@@ -453,12 +469,7 @@ function measureMatch(
   rough: boolean,
 ): ScanMatch {
   const m = doc.module;
-  const probe = {
-    x: ink.rect.x - 1,
-    y: ink.rect.y - 1,
-    width: ink.rect.width + 2,
-    height: ink.rect.height + 2,
-  };
+  const probe = probeOf(ink.rect);
   const none = { score: 0, weight: 1 };
   const scanned = scanImage(
     doc,
@@ -514,13 +525,9 @@ export function softnessOf(
   ink: { rect: PageRect; body: PageRect },
   c: Omit<Placement, "inkLeft" | "fill">,
 ): number {
-  const memory = fitMemory.get(ink)?.softness;
-  const key = memory && placementKey(c);
-  const known = key ? memory.get(key) : undefined;
-  if (known !== undefined) return known;
-  const softness = measureSoftness(doc, page, ink, c);
-  if (key) memory.set(key, softness);
-  return softness;
+  return remember(fitMemory.get(ink)?.softness, placementKey(c), () =>
+    measureSoftness(doc, page, ink, c),
+  );
 }
 
 function measureSoftness(
@@ -530,12 +537,7 @@ function measureSoftness(
   c: Omit<Placement, "inkLeft" | "fill">,
 ): number {
   const m = doc.module;
-  const probe = {
-    x: ink.rect.x - 1,
-    y: ink.rect.y - 1,
-    width: ink.rect.width + 2,
-    height: ink.rect.height + 2,
-  };
+  const probe = probeOf(ink.rect);
   const scan = scanImage(doc, page, ink, probe, 0);
   if (!scan) return 0;
   const target = edgeWidth(scan.img);

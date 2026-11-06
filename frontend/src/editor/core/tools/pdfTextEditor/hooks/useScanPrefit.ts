@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type {
   EditorStore,
   EditorViewState,
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
   isScanRun,
   prefitScanRun,
@@ -14,6 +15,21 @@ import {
 
 const SLICE_MS = 12;
 const GAP_MS = 4;
+
+function nextScanRun(
+  doc: EditorDocument,
+  done: WeakSet<object>,
+  wanted: string[],
+) {
+  let fallback = null;
+  for (const page of doc.loadedPages())
+    for (const run of page.runs) {
+      if (!isScanRun(run) || done.has(run)) continue;
+      if (wanted.includes(run.id)) return { page, run };
+      fallback ??= { page, run };
+    }
+  return fallback;
+}
 
 export function useScanPrefit(
   store: EditorStore,
@@ -29,55 +45,61 @@ export function useScanPrefit(
     [state.pages],
   );
   const hasScannedText = scannedText.length > 0;
+  const resume = useRef<() => void>(() => {});
+  const text = useRef(scannedText);
+  text.current = scannedText;
+
   useEffect(() => {
     if (!hasScannedText) return;
     let stopped = false;
     let timer = 0;
-    const done = new WeakSet<object>();
+    let idle = true;
     let hovered: string | null = null;
+    const done = new WeakSet<object>();
     const onPointerOver = (e: PointerEvent) => {
       const el =
         e.target instanceof Element ? e.target.closest("[data-run-id]") : null;
       hovered = el?.getAttribute("data-run-id") ?? hovered;
     };
-    document.addEventListener("pointerover", onPointerOver);
     const step = () => {
       const doc = store.document;
-      if (stopped || !doc) return;
-      const selected = hovered
-        ? [...store.selection.value.runIds, hovered]
-        : store.selection.value.runIds;
-      const ordered = [
-        ...state.pages.filter((p) =>
-          p.runs.some((r) => selected.includes(r.id)),
-        ),
-        ...state.pages,
-      ];
-      for (const snapshot of ordered) {
-        const page = doc.page(snapshot.pageIndex);
-        const scan = page.runs.filter((r) => isScanRun(r) && !done.has(r));
-        const run = scan.find((r) => selected.includes(r.id)) ?? scan[0];
-        if (!run) continue;
-        try {
-          if (prefitScanRun(doc, page, run, performance.now() + SLICE_MS))
-            done.add(run);
-        } catch {
-          done.add(run);
-        }
-        timer = window.setTimeout(step, GAP_MS);
+      const wanted = [...store.selection.value.runIds];
+      if (hovered) wanted.push(hovered);
+      const next = !stopped && doc ? nextScanRun(doc, done, wanted) : null;
+      if (!doc || !next) {
+        idle = true;
         return;
       }
+      try {
+        if (
+          prefitScanRun(doc, next.page, next.run, performance.now() + SLICE_MS)
+        )
+          done.add(next.run);
+      } catch {
+        done.add(next.run);
+      }
+      timer = window.setTimeout(step, GAP_MS);
     };
+    resume.current = () => {
+      if (stopped || !idle) return;
+      idle = false;
+      timer = window.setTimeout(step, GAP_MS);
+    };
+    document.addEventListener("pointerover", onPointerOver);
     void Promise.all([
       loadBundledScanFaces(),
-      loadScriptScanFaces(scannedText),
-    ]).then(() => {
-      if (!stopped) timer = window.setTimeout(step, GAP_MS);
-    });
+      loadScriptScanFaces(text.current),
+    ]).then(() => resume.current());
     return () => {
       stopped = true;
+      resume.current = () => {};
       window.clearTimeout(timer);
       document.removeEventListener("pointerover", onPointerOver);
     };
-  }, [store, hasScannedText, scannedText, state.pages]);
+  }, [store, hasScannedText]);
+
+  useEffect(() => {
+    if (!hasScannedText) return;
+    void loadScriptScanFaces(scannedText).then(() => resume.current());
+  }, [hasScannedText, scannedText]);
 }

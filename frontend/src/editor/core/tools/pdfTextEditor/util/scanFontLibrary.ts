@@ -302,36 +302,32 @@ export function deviceScanFaceCount(): number | null {
   return deviceRead ? device.length : null;
 }
 
+type FaceSpec = Pick<Face, "label" | "family" | "bold" | "source">;
+
+function drawableMetrics(
+  bytes: Uint8Array | null,
+  weight: (variable: number) => boolean,
+): FontMetrics | null {
+  const metrics = bytes ? parseFontMetrics(bytes) : null;
+  if (!metrics || metrics.restricted || metrics.cff) return null;
+  if (metrics.variableWeight !== null && !weight(metrics.variableWeight))
+    return null;
+  return metrics;
+}
+
 export function faceFromBytes(
-  spec: Pick<Face, "label" | "family" | "bold" | "source">,
+  spec: FaceSpec,
   regular: Uint8Array,
   boldBytes: Uint8Array | null,
 ): Face | null {
-  const regularMetrics = parseFontMetrics(regular);
-  if (
-    !regularMetrics ||
-    regularMetrics.restricted ||
-    regularMetrics.cff ||
-    (regularMetrics.variableWeight ?? 400) < 300
-  )
-    return null;
+  const regularMetrics = drawableMetrics(regular, (w) => w >= 300);
+  if (!regularMetrics) return null;
   const metrics = new Map<string, FontMetrics>([[spec.family, regularMetrics]]);
-  let bold = spec.bold;
-  const boldMetrics = boldBytes ? parseFontMetrics(boldBytes) : null;
-  if (
-    boldBytes &&
-    boldMetrics &&
-    !boldMetrics.restricted &&
-    !boldMetrics.cff &&
-    (boldMetrics.variableWeight ?? 700) >= 600
-  ) {
-    metrics.set(spec.bold, boldMetrics);
-  } else {
-    bold = spec.family;
-  }
+  const boldMetrics = drawableMetrics(boldBytes, (w) => w >= 600);
+  if (boldMetrics) metrics.set(spec.bold, boldMetrics);
   return {
     ...spec,
-    bold,
+    bold: boldMetrics ? spec.bold : spec.family,
     cap: regularMetrics.cap,
     asc: regularMetrics.asc,
     xh: regularMetrics.xh,
@@ -340,22 +336,25 @@ export function faceFromBytes(
   };
 }
 
+async function loadFace(
+  spec: FaceSpec,
+  load: (family: string) => Promise<Uint8Array | null>,
+  hasBold = true,
+): Promise<Face | null> {
+  const [regular, boldBytes] = await Promise.all([
+    load(spec.family),
+    hasBold ? load(spec.bold) : Promise.resolve(null),
+  ]);
+  return regular ? faceFromBytes(spec, regular, boldBytes) : null;
+}
+
 export function loadBundledScanFaces(): Promise<void> {
   if (bundledJob) return bundledJob;
   const job = (async () => {
     const faces = await Promise.all(
-      BUNDLED_SCAN_FONTS.map(async (spec) => {
-        const [regular, boldBytes] = await Promise.all([
-          loadServerFontBytes(spec.family),
-          loadServerFontBytes(spec.bold),
-        ]);
-        if (!regular) return null;
-        return faceFromBytes(
-          { ...spec, source: "bundled" },
-          regular,
-          boldBytes,
-        );
-      }),
+      BUNDLED_SCAN_FONTS.map((spec) =>
+        loadFace({ ...spec, source: "bundled" }, loadServerFontBytes),
+      ),
     );
     bundled = faces.filter((f): f is Face => f !== null);
     if (bundled.length < BUNDLED_SCAN_FONTS.length) bundledJob = null;
@@ -376,18 +375,10 @@ async function loadServerScript(script: ScriptFonts): Promise<void> {
   );
   for (const family of families) serverFamiliesTaken.add(family);
   for (const family of families) {
-    const hasBold = fonts.some(
-      (f) => f.family === family && faceStyleFlags(f).bold,
-    );
-    const [regular, boldBytes] = await Promise.all([
-      loadServerFontBytes(family),
-      hasBold ? loadServerFontBytes(`${family} Bold`) : Promise.resolve(null),
-    ]);
-    if (!regular) continue;
-    const face = faceFromBytes(
+    const face = await loadFace(
       { label: family, family, bold: `${family} Bold`, source: "bundled" },
-      regular,
-      boldBytes,
+      loadServerFontBytes,
+      fonts.some((f) => f.family === family && faceStyleFlags(f).bold),
     );
     if (face) {
       scriptFaces = [...scriptFaces, face];
@@ -434,18 +425,12 @@ async function deviceFace(family: string): Promise<Face | null> {
   const regularFace = pickLocalFontFace(fonts, family);
   if (!regularFace || regularFace.family.toLowerCase() !== family.toLowerCase())
     return null;
-  const boldName = `${family} Bold`;
-  const boldFace = pickLocalFontFace(fonts, boldName);
-  const hasBold = !!boldFace && faceStyleFlags(boldFace).bold;
-  const [regular, boldBytes] = await Promise.all([
-    loadLocalFontBytes(family),
-    hasBold ? loadLocalFontBytes(boldName) : Promise.resolve(null),
-  ]);
-  if (!regular) return null;
-  return faceFromBytes(
-    { label: family, family, bold: boldName, source: "device" },
-    regular,
-    boldBytes,
+  const bold = `${family} Bold`;
+  const boldFace = pickLocalFontFace(fonts, bold);
+  return loadFace(
+    { label: family, family, bold, source: "device" },
+    loadLocalFontBytes,
+    !!boldFace && faceStyleFlags(boldFace).bold,
   );
 }
 
@@ -457,21 +442,17 @@ export function loadDeviceScanFaces(): Promise<number> {
       deviceJob = null;
       return 0;
     }
-    const faces: Face[] = [];
     const families = new Set([
       ...DEVICE_TEXT_FAMILIES,
       ...SCRIPTS.filter((s) => neededScripts.has(s.script)).flatMap(
         (s) => s.device,
       ),
     ]);
-    for (const family of families) {
-      const face = await deviceFace(family);
-      if (face) faces.push(face);
-    }
-    device = faces;
+    const faces = await Promise.all([...families].map(deviceFace));
+    device = faces.filter((f): f is Face => f !== null);
     deviceRead = true;
     notify();
-    return faces.length;
+    return device.length;
   })();
   deviceJob = job;
   return job;

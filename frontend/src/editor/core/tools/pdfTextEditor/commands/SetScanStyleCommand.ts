@@ -1,12 +1,14 @@
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
-  preferredScanFace,
-  setPreferredScanFace,
   setScanOverride,
-  type RankedStyle,
   type ScanOverride,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import {
+  preferredScanFace,
+  setPreferredScanFace,
+  type RankedStyle,
+} from "@editor/tools/pdfTextEditor/commands/scanFit";
 
 export class SetScanStyleCommand implements Command {
   readonly type = "set-scan-style";

@@ -29,12 +29,14 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
       data-testid="pdf-editor-scan-font-match"
     >
       <Stack gap="sm">
-        <Text size="sm" c="dimmed">
-          {t(
-            "pdfTextEditor.scanFont.hint",
-            "Your typing is drawn in the closest font found. Pick another if it looks more like the scan.",
-          )}
-        </Text>
+        {match.status !== "noFont" && (
+          <Text size="sm" c="dimmed">
+            {t(
+              "pdfTextEditor.scanFont.hint",
+              "Your typing is drawn in the closest font found. Pick another if it looks more like the scan.",
+            )}
+          </Text>
+        )}
         {match.status === "matching" && (
           <Group gap="xs" data-testid="pdf-editor-scan-font-matching">
             <Loader size="xs" />

@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 import {
@@ -24,23 +24,23 @@ import {
   isScanRun,
   prefitScanRun,
   renderScanEdit,
-  setPreferredScanFace,
+  rerankScanStyles,
   scanEditOf,
-  scanStyleChoices,
-  type RankedStyle,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import {
+  setPreferredScanFace,
+  type RankedStyle,
+} from "@editor/tools/pdfTextEditor/commands/scanFit";
 import {
   faceFromBytes,
   resetScanFaces,
   setBundledScanFaces,
   type Face,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
-import { fontFace } from "@editor/tools/pdfTextEditor/util/fontCollection";
 import { registerFontBytes } from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
   buildScan,
   readBundledFaces,
-  registerTruthFont,
   type ScanLineSpec,
   type ScanOptions,
 } from "@editor/tools/pdfTextEditor/__tests__/scanFixtures";
@@ -94,7 +94,7 @@ function choicesByLine(
   return samples.map((_, i) => {
     const baseline = page.height - 48 * (i + 0.7);
     const run = runs.find((r) => Math.abs(r.matrix.f - baseline) < 6);
-    return run ? scanStyleChoices(doc, page, run) : [];
+    return run ? rerankScanStyles(doc, page, run) : [];
   });
 }
 
@@ -178,7 +178,7 @@ describe("matching a face to scanned text", () => {
       try {
         const run = page.runs.find(isScanRun)!;
         let slices = 0;
-        while (!prefitScanRun(doc, page, run, performance.now() + 5)) slices++;
+        while (!prefitScanRun(doc, page, run, 0)) slices++;
         expect(slices).toBeGreaterThan(1);
         expect(scanEditOf(doc, run)!.block?.style.family).toBe("Carlito");
       } finally {
@@ -319,12 +319,15 @@ describe("editing sideways scanned text", () => {
     "fits the face upright and draws the edit turned back",
     { timeout: 120_000 },
     async () => {
-      const { doc, page } = await buildScan([line], SCAN, 48, true);
+      const { doc, page } = await buildScan([line], {
+        ...SCAN,
+        sideways: true,
+      });
       try {
         const run = page.runs.find(
           (r) => isScanRun(r) && r.text.includes("Jane"),
         )!;
-        expect(scanStyleChoices(doc, page, run)[0]?.face.label).toBe(
+        expect(rerankScanStyles(doc, page, run)[0]?.face.label).toBe(
           "Calibri (Carlito)",
         );
         const band = {
@@ -370,7 +373,7 @@ describe("matching scanned text in other scripts", () => {
       const { doc, page } = await buildScan([russian], SCAN);
       try {
         const run = page.runs.find(isScanRun)!;
-        const [top] = scanStyleChoices(doc, page, run);
+        const [top] = rerankScanStyles(doc, page, run);
         expect(top.face.label).toBe("DejaVu Sans");
         renderScanEdit(
           doc,
@@ -408,7 +411,7 @@ describe("matching scanned text in other scripts", () => {
       );
       try {
         const run = page.runs.find(isScanRun)!;
-        expect(scanStyleChoices(doc, page, run)[0]?.face.label).toBe(
+        expect(rerankScanStyles(doc, page, run)[0]?.face.label).toBe(
           "Noto Sans JP",
         );
       } finally {
@@ -437,7 +440,7 @@ describe("matching scanned text in other scripts", () => {
       );
       try {
         const run = page.runs.find(isScanRun)!;
-        expect(scanStyleChoices(doc, page, run)).toEqual([]);
+        expect(rerankScanStyles(doc, page, run)).toEqual([]);
         const line = scanEditOf(doc, run)!.lines[0];
         const region = {
           x: 20,
@@ -485,7 +488,7 @@ describe("drawing typed words from the scan's own letters", () => {
       const width = jane.right - jane.x + 3;
       const scanned = inkProfile(page, doc, jane.x - 2, width, baseline);
       if (forceFont)
-        state.override.style = scanStyleChoices(doc, page, run)[0].style;
+        state.override.style = rerankScanStyles(doc, page, run)[0].style;
       renderScanEdit(doc, page, run, state, run.text.replace("June", "Jane"));
       return likeness(
         scanned,
@@ -504,381 +507,6 @@ describe("drawing typed words from the scan's own letters", () => {
       const fromFont = await retypeAsJane(true);
       expect(fromScan).toBeGreaterThan(0.75);
       expect(fromScan).toBeGreaterThan(fromFont + 0.2);
-    },
-  );
-});
-
-const SYSTEM_TRUTH: Array<[string, string, string[], Sample["kind"]]> = [
-  [
-    "Arial",
-    "/System/Library/Fonts/Supplemental/Arial.ttf",
-    ["Helvetica / Arial"],
-    "sans",
-  ],
-  [
-    "Arial Bold",
-    "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
-    ["Helvetica / Arial"],
-    "sans",
-  ],
-  [
-    "Times New Roman",
-    "/System/Library/Fonts/Supplemental/Times New Roman.ttf",
-    ["Times"],
-    "serif",
-  ],
-  [
-    "Courier New",
-    "/System/Library/Fonts/Supplemental/Courier New.ttf",
-    ["Courier"],
-    "mono",
-  ],
-  ["Georgia", "/System/Library/Fonts/Supplemental/Georgia.ttf", [], "serif"],
-  [
-    "Verdana",
-    "/System/Library/Fonts/Supplemental/Verdana.ttf",
-    ["DejaVu Sans"],
-    "sans",
-  ],
-  [
-    "Tahoma",
-    "/System/Library/Fonts/Supplemental/Tahoma.ttf",
-    ["DejaVu Sans"],
-    "sans",
-  ],
-  [
-    "Trebuchet MS",
-    "/System/Library/Fonts/Supplemental/Trebuchet MS.ttf",
-    [],
-    "sans",
-  ],
-];
-
-const BENCH_SENTENCES = [
-  "Invoice 4471 for Jane Example is due on 30 June",
-  "Please return the signed copy to our Leeds office",
-  "Quarterly revenue grew by 12% after the merger",
-  "My dog quickly jumped over seven brown boxes",
-  "Shipping address: 18 Kingsway, Bristol BS2 9QZ",
-  "We regret to inform you that the policy has lapsed",
-];
-
-const HELDOUT_SENTENCES = [
-  "Minutes of the annual general meeting held in March",
-  "Total amount payable within fourteen days: 2,380.95",
-  "Kindly sign below to acknowledge receipt of goods",
-  "Our reference XK-5513/B, your letter of 9 August",
-  "The tenant shall keep the property in good repair",
-  "Questions? Call 0161 496 0723 or visit our website",
-];
-
-describe.skipIf(!process.env.SCAN_FONT_BENCH)("scan font benchmark", () => {
-  test(
-    "reports accuracy per scan quality",
-    { timeout: 3_600_000 },
-    async () => {
-      const faces: Sample[] = [
-        line("Helvetica", ["Helvetica / Arial"], "sans", 0),
-        line("Helvetica-Bold", ["Helvetica / Arial"], "sans", 1, true),
-        line("Times-Roman", ["Times"], "serif", 0),
-        line("Times-Bold", ["Times"], "serif", 1, true),
-        line("Courier", ["Courier"], "mono", 0),
-        line("Carlito", ["Calibri (Carlito)"], "sans", 1),
-        line("Carlito Bold", ["Calibri (Carlito)"], "sans", 0, true),
-        line("Caladea", ["Cambria (Caladea)"], "serif", 1),
-        line("Caladea Bold", ["Cambria (Caladea)"], "serif", 0, true),
-        line("DejaVu Sans", ["DejaVu Sans"], "sans", 1),
-        line("DejaVu Serif", ["DejaVu Serif"], "serif", 0),
-      ];
-      for (const [family, file, accept, kind] of SYSTEM_TRUTH) {
-        if (await registerTruthFont(family, file))
-          faces.push(
-            line(family, accept, kind, faces.length, family.endsWith("Bold")),
-          );
-      }
-      const samples = [0, 3].flatMap((offset) =>
-        faces.map((f, i) => ({
-          ...f,
-          text: (process.env.SCAN_FONT_BENCH_HELDOUT
-            ? HELDOUT_SENTENCES
-            : BENCH_SENTENCES)[(i + offset) % BENCH_SENTENCES.length],
-          size: Number(process.env.SCAN_FONT_BENCH_SIZE ?? f.size),
-        })),
-      );
-      const qualities: Array<[string, ScanOptions]> = [
-        ["300dpi crisp", { dpi: 300, blur: 0.3, noise: 4 }],
-        ["200dpi", { dpi: 200, blur: 0.6, noise: 8 }],
-        ["150dpi soft", { dpi: 150, blur: 0.9, noise: 10 }],
-      ];
-      const rows: string[] = [];
-      const header =
-        "faces      | quality       | face top-1 | face top-3 | class | weight";
-      rows.push(header, "-".repeat(header.length));
-      const misses: string[] = [];
-      const device: Face[] = [];
-      if (process.env.SCAN_FONT_BENCH_DEVICE)
-        for (const [family, file] of SYSTEM_TRUTH) {
-          if (family.endsWith("Bold")) continue;
-          const name = path.basename(file);
-          const face = await systemFace(
-            family,
-            [name, ""],
-            [name.replace(".ttf", " Bold.ttf"), ""],
-          );
-          if (face) device.push(face);
-        }
-      if (device.length > 0)
-        for (const s of samples) {
-          const own = s.family.replace(/ Bold$/, "");
-          if (device.some((f) => f.label === own)) s.accept = [own];
-          if (own === "Arial") s.accept.push("Helvetica / Arial");
-          if (own === "Helvetica") s.accept.push("Arial");
-        }
-      let sets: Array<[string, Face[]]> = process.env.SCAN_FONT_BENCH_BASE14
-        ? [
-            ["base-14", []],
-            ["+bundled", bundled],
-          ]
-        : [["+bundled", bundled]];
-      if (device.length > 0) sets = [["+device", [...bundled, ...device]]];
-      for (const [setName, faceSet] of sets) {
-        setBundledScanFaces(faceSet);
-        for (const [qualityName, opts] of qualities) {
-          const { doc, page } = await buildScan(samples, opts);
-          try {
-            const started = performance.now();
-            const picked = choicesByLine(doc, page, samples);
-            const msPerLine = (performance.now() - started) / samples.length;
-            let top1 = 0;
-            let top3 = 0;
-            let named = 0;
-            let cls = 0;
-            let weight = 0;
-            samples.forEach((s, i) => {
-              const choices = picked[i];
-              const first = choices[0];
-              if (s.accept.length > 0) {
-                named++;
-                if (first && s.accept.includes(first.face.label)) top1++;
-                else
-                  misses.push(
-                    `${setName} ${qualityName}: ${s.family} "${s.text.slice(0, 12)}" -> ${first?.face.label ?? "none"} (${choices.map((c) => `${c.face.label} ${c.score.toFixed(3)}`).join(", ")})`,
-                  );
-                if (choices.some((c) => s.accept.includes(c.face.label)))
-                  top3++;
-              }
-              if (first?.face.kind === s.kind) cls++;
-              if (boldCut(first) === s.bold) weight++;
-              else
-                misses.push(
-                  `${setName} ${qualityName}: ${s.family} weight -> ${first ? `${first.style.family} +${first.style.weight.toFixed(2)}pt` : "none"}`,
-                );
-            });
-            const pct = (n: number, d: number) =>
-              `${n}/${d}`.padStart(5) +
-              ` ${Math.round((100 * n) / Math.max(1, d))}%`.padStart(5);
-            rows.push(
-              `${setName.padEnd(10)} | ${qualityName.padEnd(13)} | ${pct(top1, named).padEnd(10)} | ${pct(top3, named).padEnd(10)} | ${pct(cls, samples.length)} | ${pct(weight, samples.length)} | ${Math.round(msPerLine)}ms/line`,
-            );
-          } finally {
-            doc.dispose();
-          }
-        }
-      }
-      await writeFile(
-        process.env.SCAN_FONT_BENCH!,
-        `${rows.join("\n")}\n\nmisses:\n${misses.join("\n")}\n`,
-      );
-    },
-  );
-});
-
-type FontFile = [file: string, postscriptName: string];
-
-const FUNKY: Array<[string, FontFile, FontFile | null]> = [
-  ["Zapfino", ["Zapfino.ttf", ""], null],
-  ["Brush Script", ["Brush Script.ttf", ""], null],
-  [
-    "Snell Roundhand",
-    ["SnellRoundhand.ttc", "SnellRoundhand"],
-    ["SnellRoundhand.ttc", "SnellRoundhand-Bold"],
-  ],
-  ["Savoye LET", ["Savoye LET.ttc", "SavoyeLetPlain"], null],
-  [
-    "SignPainter",
-    ["SignPainter.ttc", "SignPainter-HouseScript"],
-    ["SignPainter.ttc", "SignPainter-HouseScriptSemibold"],
-  ],
-  ["Apple Chancery", ["Apple Chancery.ttf", ""], null],
-  ["Luminari", ["Luminari.ttf", ""], null],
-  ["Trattatello", ["Trattatello.ttf", ""], null],
-  ["Herculanum", ["Herculanum.ttf", ""], null],
-  ["Chalkduster", ["Chalkduster.ttf", ""], null],
-  ["Party LET", ["PartyLET-plain.ttf", ""], null],
-  ["Bradley Hand", ["Bradley Hand Bold.ttf", ""], null],
-  ["Comic Sans MS", ["Comic Sans MS.ttf", ""], ["Comic Sans MS Bold.ttf", ""]],
-  [
-    "Marker Felt",
-    ["MarkerFelt.ttc", "MarkerFelt-Thin"],
-    ["MarkerFelt.ttc", "MarkerFelt-Wide"],
-  ],
-  [
-    "Noteworthy",
-    ["Noteworthy.ttc", "Noteworthy-Light"],
-    ["Noteworthy.ttc", "Noteworthy-Bold"],
-  ],
-  [
-    "Chalkboard SE",
-    ["ChalkboardSE.ttc", "ChalkboardSE-Regular"],
-    ["ChalkboardSE.ttc", "ChalkboardSE-Bold"],
-  ],
-  ["Papyrus", ["Papyrus.ttc", "Papyrus"], null],
-  ["Phosphate", ["Phosphate.ttc", "Phosphate-Solid"], null],
-  ["Impact", ["Impact.ttf", ""], null],
-  ["Arial Black", ["Arial Black.ttf", ""], null],
-  [
-    "Copperplate",
-    ["Copperplate.ttc", "Copperplate"],
-    ["Copperplate.ttc", "Copperplate-Bold"],
-  ],
-  ["Didot", ["Didot.ttc", "Didot"], ["Didot.ttc", "Didot-Bold"]],
-  [
-    "Bodoni 72",
-    ["Bodoni 72.ttc", "BodoniSvtyTwoITCTT-Book"],
-    ["Bodoni 72.ttc", "BodoniSvtyTwoITCTT-Bold"],
-  ],
-  [
-    "Rockwell",
-    ["Rockwell.ttc", "Rockwell-Regular"],
-    ["Rockwell.ttc", "Rockwell-Bold"],
-  ],
-  ["Futura", ["Futura.ttc", "Futura-Medium"], ["Futura.ttc", "Futura-Bold"]],
-  [
-    "Gill Sans",
-    ["GillSans.ttc", "GillSans"],
-    ["GillSans.ttc", "GillSans-Bold"],
-  ],
-  ["Optima", ["Optima.ttc", "Optima-Regular"], ["Optima.ttc", "Optima-Bold"]],
-  [
-    "Palatino",
-    ["Palatino.ttc", "Palatino-Roman"],
-    ["Palatino.ttc", "Palatino-Bold"],
-  ],
-  [
-    "Baskerville",
-    ["Baskerville.ttc", "Baskerville"],
-    ["Baskerville.ttc", "Baskerville-Bold"],
-  ],
-  ["Cochin", ["Cochin.ttc", "Cochin"], ["Cochin.ttc", "Cochin-Bold"]],
-  [
-    "Hoefler Text",
-    ["Hoefler Text.ttc", "HoeflerText-Regular"],
-    ["Hoefler Text.ttc", "HoeflerText-Black"],
-  ],
-  [
-    "American Typewriter",
-    ["AmericanTypewriter.ttc", "AmericanTypewriter"],
-    ["AmericanTypewriter.ttc", "AmericanTypewriter-Bold"],
-  ],
-  [
-    "Avenir Next",
-    ["Avenir Next.ttc", "AvenirNext-Regular"],
-    ["Avenir Next.ttc", "AvenirNext-Bold"],
-  ],
-  ["Andale Mono", ["Andale Mono.ttf", ""], null],
-  ["Big Caslon", ["BigCaslon.ttf", ""], null],
-  ["Skia", ["Skia.ttf", ""], null],
-  ["Academy Engraved", ["Academy Engraved LET Fonts.ttf", ""], null],
-];
-
-function sentenceSlot(label: string): number {
-  let hash = 0;
-  for (const ch of label) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
-  return hash;
-}
-
-async function readFace([file, ps]: FontFile): Promise<Uint8Array | null> {
-  for (const dir of [
-    "/System/Library/Fonts/Supplemental/",
-    "/System/Library/Fonts/",
-  ]) {
-    const raw = await readFile(dir + file).catch(() => null);
-    if (raw) return fontFace(new Uint8Array(raw), ps || undefined);
-  }
-  return null;
-}
-
-async function systemFace(
-  label: string,
-  regular: FontFile,
-  bold: FontFile | null,
-): Promise<Face | null> {
-  const regularBytes = await readFace(regular);
-  if (!regularBytes) return null;
-  const boldBytes = bold ? await readFace(bold) : null;
-  registerFontBytes(label, regularBytes);
-  if (boldBytes) registerFontBytes(`${label} Bold`, boldBytes);
-  return faceFromBytes(
-    { label, family: label, bold: `${label} Bold`, source: "device" },
-    regularBytes,
-    boldBytes,
-  );
-}
-
-describe.skipIf(!process.env.SCAN_FONT_FUNKY)("funky font benchmark", () => {
-  test(
-    "reports what odd faces are read as",
-    { timeout: 3_600_000 },
-    async () => {
-      const offered: Face[] = [];
-      const truths: string[] = [];
-      for (const [label, regular, bold] of FUNKY) {
-        const face = await systemFace(label, regular, bold);
-        if (!face) continue;
-        offered.push(face);
-        truths.push(label);
-      }
-      const samples: Sample[] = [0, 3].flatMap((offset) =>
-        truths.map((label) => ({
-          family: label,
-          text: HELDOUT_SENTENCES[
-            (sentenceSlot(label) + offset) % HELDOUT_SENTENCES.length
-          ],
-          size: 12,
-          accept: [label],
-          kind: "sans" as const,
-          bold: false,
-        })),
-      );
-      const opts: ScanOptions = { dpi: 200, blur: 0.6, noise: 8 };
-      const rows: string[] = [];
-      const sets: Array<[string, Face[]]> = [
-        ["absent", bundled],
-        ["offered", [...bundled, ...offered]],
-      ];
-      for (const [setName, faceSet] of sets) {
-        setBundledScanFaces(faceSet);
-        const { doc, page } = await buildScan(samples, opts);
-        try {
-          const picked = choicesByLine(doc, page, samples);
-          let top1 = 0;
-          let top3 = 0;
-          samples.forEach((s, i) => {
-            const choices = picked[i];
-            if (choices[0]?.face.label === s.family) top1++;
-            if (choices.some((c) => c.face.label === s.family)) top3++;
-            rows.push(
-              `${setName} | ${s.family.padEnd(20)} | ${s.text.slice(0, 14)} | ${choices.map((c) => `${c.face.label} ${Math.round(c.score * 100)}%`).join(", ") || "none"}`,
-            );
-          });
-          rows.push(
-            `${setName}: exact first ${top1}/${samples.length}, in top 3 ${top3}/${samples.length}`,
-          );
-        } finally {
-          doc.dispose();
-        }
-      }
-      await writeFile(process.env.SCAN_FONT_FUNKY!, `${rows.join("\n")}\n`);
     },
   );
 });

@@ -49,6 +49,7 @@ export interface ScanOptions {
   dpi: number;
   blur: number;
   noise: number;
+  sideways?: boolean;
 }
 
 const FONT_DIR = path.join(
@@ -83,18 +84,6 @@ export async function readBundledFaces(): Promise<Face[]> {
     if (face) faces.push(face);
   }
   return faces;
-}
-
-export async function registerTruthFont(
-  family: string,
-  file: string,
-): Promise<boolean> {
-  try {
-    registerFontBytes(family, new Uint8Array(await readFile(file)));
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function blankPdf(width: number, height: number): Uint8Array {
@@ -247,12 +236,11 @@ export async function buildScan(
   lines: ScanLineSpec[],
   opts: ScanOptions,
   pitch = 48,
-  sideways = false,
 ): Promise<{ doc: EditorDocument; page: Page }> {
   const height = Math.ceil(pitch * lines.length + 20);
   const clean = await EditorDocument.open(blankPdf(PAGE_W, height));
   const scanned = await EditorDocument.open(
-    sideways ? blankPdf(height, PAGE_W) : blankPdf(PAGE_W, height),
+    opts.sideways ? blankPdf(height, PAGE_W) : blankPdf(PAGE_W, height),
   );
   try {
     const cleanPage = clean.page(0);
@@ -304,7 +292,7 @@ export async function buildScan(
       for (const p of ptrs)
         transformObject(m, p, sx, 0, 0, 1, box.left * (1 - sx), 0);
     }
-    if (sideways)
+    if (opts.sideways)
       moveAllObjects(m, page, { a: 0, b: 1, c: -1, d: 0, e: height, f: 0 });
     page.markDirty();
     page.markNeedsGenerate();
