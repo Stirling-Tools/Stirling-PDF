@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from "react";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
 import {
@@ -21,11 +22,11 @@ export function useSaveMode(): SaveModeState {
   const mode = locked
     ? serverMode
     : (parseSaveMode(preferences.saveMode) ?? serverMode);
-  return {
-    mode,
-    locked,
-    setMode: (next) => {
+  const setMode = useCallback(
+    (next: SaveMode) => {
       if (!locked) updatePreference("saveMode", next);
     },
-  };
+    [locked, updatePreference],
+  );
+  return useMemo(() => ({ mode, locked, setMode }), [mode, locked, setMode]);
 }
