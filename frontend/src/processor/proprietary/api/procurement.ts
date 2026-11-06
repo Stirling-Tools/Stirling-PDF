@@ -457,10 +457,3 @@ export function goLive(): Promise<ProcurementSnapshot> {
     { method: "POST" },
   );
 }
-
-/** Reset the team's procurement (delete the deal) and get the fresh empty snapshot. */
-export function resetProcurement(): Promise<ProcurementSnapshot> {
-  return apiClient.saas.json<ProcurementSnapshot>("/api/v1/procurement/reset", {
-    method: "POST",
-  });
-}

@@ -38,7 +38,6 @@ import {
 import { DeploymentOptions } from "@processor/components/procurement/DeploymentOptions";
 import { LicensePanel } from "@processor/components/procurement/ProcurementStages";
 import { SetupChecklist } from "@processor/components/procurement/SetupChecklist";
-import { ConfirmModal } from "@processor/components/users/ConfirmModal";
 import {
   daysLeft,
   longDate,
@@ -803,11 +802,6 @@ function Deal({
                     ? controller.onExtendTrial
                     : undefined
                 }
-                onCancel={
-                  canManage && stage === "trial"
-                    ? controller.onReset
-                    : undefined
-                }
               />
             )}
 
@@ -880,7 +874,7 @@ function Deal({
   );
 }
 
-/** The trial's clock, and extending or ending it while the deal is still at the trial stage. */
+/** The trial's clock, and extending it while the deal is still at the trial stage. */
 function TrialPanel({
   trialStartedAt,
   trialEndsAt,
@@ -888,7 +882,6 @@ function TrialPanel({
   maxExtensions,
   busy,
   onExtend,
-  onCancel,
 }: {
   trialStartedAt: string | null;
   trialEndsAt: string;
@@ -897,10 +890,8 @@ function TrialPanel({
   maxExtensions: number;
   busy: boolean;
   onExtend?: () => void;
-  onCancel?: () => void;
 }) {
   const { t } = useTranslation();
-  const [confirmingCancel, setConfirmingCancel] = useState(false);
   const ends = longDate(trialEndsAt);
   const maxed = extensionsUsed >= maxExtensions;
   const start = trialStartedAt ? new Date(trialStartedAt).getTime() : null;
@@ -928,7 +919,7 @@ function TrialPanel({
       <p className="ent__text">
         {t("portal.procurement.trial.subtitle", { date: ends })}
       </p>
-      {onExtend && onCancel && (
+      {onExtend && (
         <>
           <p className="ent__hint">
             {maxed
@@ -946,34 +937,7 @@ function TrialPanel({
                 ? t("portal.procurement.trial.maxed")
                 : t("portal.procurement.trial.extend")}
             </Button>
-            <Button
-              variant="tertiary"
-              disabled={busy}
-              onClick={() => setConfirmingCancel(true)}
-            >
-              {t("portal.procurement.trial.cancel")}
-            </Button>
           </div>
-          {/* Cancelling ends the deal along with its licence, quote and progress. */}
-          <ConfirmModal
-            open={confirmingCancel}
-            danger
-            busy={busy}
-            title={t(
-              "portal.procurement.trial.cancelTitle",
-              "Cancel your trial?",
-            )}
-            body={t(
-              "portal.procurement.trial.cancelBody",
-              "Your trial licence stops working and the deal starts over. You can start a new trial later.",
-            )}
-            confirmLabel={t("portal.procurement.trial.cancel")}
-            onCancel={() => setConfirmingCancel(false)}
-            onConfirm={() => {
-              setConfirmingCancel(false);
-              onCancel();
-            }}
-          />
         </>
       )}
     </div>

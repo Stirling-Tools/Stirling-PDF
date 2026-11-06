@@ -15,7 +15,6 @@ import {
   issueQuote,
   recordInterest,
   recordLegalConsent,
-  resetProcurement,
   startAgreement,
   startTrial,
   type ProcurementSnapshot,
@@ -67,7 +66,6 @@ export interface ProcurementController {
     details: TrialSetupDetails,
   ) => void;
   onExtendTrial: () => void;
-  onReset: () => void;
   /** Issue the priced draft. Leaves the modal open: the issued quote becomes the review step. */
   onGenerate: (draft: QuoteResult) => Promise<void>;
   /**
@@ -188,12 +186,6 @@ export function useProcurement(): ProcurementController {
       return startTrial(deployment, seats, details);
     });
   const onExtendTrial = () => run(extendTrial);
-  const onReset = () =>
-    run(async () => {
-      await resetProcurement();
-      setEditing(false);
-      setInvoicePdf(null);
-    });
   // Deliberately does not close: the issued quote returns through the snapshot and becomes the
   // builder's review step, so the buyer reads the paper they just generated instead of being dropped
   // back on the page to find it again.
@@ -327,7 +319,6 @@ export function useProcurement(): ProcurementController {
     onExploreEnterprise,
     onConfirmSetup,
     onExtendTrial,
-    onReset,
     onGenerate,
     onAcceptQuote,
     onAgree,

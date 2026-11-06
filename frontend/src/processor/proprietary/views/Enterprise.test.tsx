@@ -151,7 +151,6 @@ function controller(
     onExploreEnterprise: vi.fn(),
     onConfirmSetup: vi.fn(),
     onExtendTrial: vi.fn(),
-    onReset: vi.fn(),
     onGenerate: vi.fn(),
     onAcceptQuote: vi.fn(),
     onAgree: vi.fn(),

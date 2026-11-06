@@ -100,7 +100,6 @@ function makeController(
     invoicePdf: null,
     onConfirmSetup: () => {},
     onExtendTrial: () => {},
-    onReset: () => {},
     onGenerate: async () => {},
     onAgree: () => {},
     onDownloadPdf: async () => {},
