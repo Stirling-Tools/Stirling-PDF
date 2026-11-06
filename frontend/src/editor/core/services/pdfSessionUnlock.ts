@@ -9,6 +9,7 @@ import apiClient from "@editor/services/apiClient";
 import axios, { type CancelToken } from "axios";
 import i18n from "i18next";
 import {
+  connectedAccounts,
   fetchRightsManagementStatus,
   getOpenedRightsManagedPdf,
   openWithOnlyConnectedAccount,
@@ -99,6 +100,15 @@ export function supportsRightsManaged(endpoint: string | undefined): boolean {
   );
 }
 
+function editNotAllowedError(): Error {
+  return new Error(
+    i18n.t(
+      "rightsManagedPdf.editNotAllowed",
+      "Your permissions on this protected PDF do not allow changes.",
+    ),
+  );
+}
+
 async function unopenedRightsManagedMessage(): Promise<string> {
   const status = await fetchRightsManagementStatus();
   if (!status.available)
@@ -106,7 +116,7 @@ async function unopenedRightsManagedMessage(): Promise<string> {
       "rightsManagedPdf.unavailable",
       "This server cannot open Microsoft Purview protected PDFs. Ask your administrator to turn it on, or open the file in a Microsoft 365 app.",
     );
-  if (!status.accounts.some((account) => account.status === "CONNECTED"))
+  if (connectedAccounts(status).length === 0)
     return i18n.t(
       "rightsManagedPdf.signInFirst",
       "Sign in with Microsoft in the viewer to open this Microsoft Purview protected PDF, then run the tool again.",
@@ -148,13 +158,7 @@ async function preflightRightsManaged(
       getOpenedRightsManagedPdf(file) ??
       (await openWithOnlyConnectedAccount(file));
     if (!opened) throw new Error(await unopenedRightsManagedMessage());
-    if (!opened.protection.permissions.edit)
-      throw new Error(
-        i18n.t(
-          "rightsManagedPdf.editNotAllowed",
-          "Your permissions on this protected PDF do not allow changes.",
-        ),
-      );
+    if (!opened.protection.permissions.edit) throw editNotAllowedError();
   }
 }
 
@@ -262,12 +266,7 @@ export async function prepareUnlockedFile(
       !supportsRightsManaged(endpoint) ||
       !rightsManaged.protection.permissions.edit
     )
-      throw new Error(
-        i18n.t(
-          "rightsManagedPdf.editNotAllowed",
-          "Your permissions on this protected PDF do not allow changes.",
-        ),
-      );
+      throw editNotAllowedError();
     return rightsManaged.plaintext;
   }
   if (

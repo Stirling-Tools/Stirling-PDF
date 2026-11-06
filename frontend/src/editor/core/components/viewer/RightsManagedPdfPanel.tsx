@@ -19,6 +19,7 @@ import {
   useConnectedAccounts,
 } from "@editor/hooks/useConnectedAccounts";
 import {
+  connectedAccounts,
   fetchRightsManagementStatus,
   openRightsManagedPdf,
   RightsManagementError,
@@ -55,17 +56,14 @@ export function RightsManagedPdfPanel({
     void fetchRightsManagementStatus().then((next) => {
       if (controller.signal.aborted) return;
       setStatus(next);
-      const connected = next.accounts.filter(
-        (account) => account.status === "CONNECTED",
-      );
+      const connected = connectedAccounts(next);
       if (connected.length > 0) setAccountId(connected[0].id);
       if (connected.length === 1 && next.available) void open(connected[0].id);
     });
     return () => controller.abort();
   }, [connectedServer, file]);
 
-  const connectedAccounts =
-    status?.accounts.filter((account) => account.status === "CONNECTED") ?? [];
+  const signedIn = status ? connectedAccounts(status) : [];
 
   const describe = (cause: unknown): PanelError => {
     if (cause instanceof RightsManagementError) {
@@ -148,7 +146,7 @@ export function RightsManagedPdfPanel({
   };
 
   const unavailable = status !== null && !status.available;
-  const needsAccount = status?.available && connectedAccounts.length === 0;
+  const needsAccount = status?.available && signedIn.length === 0;
 
   return (
     <Center style={{ flex: 1, padding: "var(--space-6, 1.5rem)" }}>
@@ -203,10 +201,10 @@ export function RightsManagedPdfPanel({
             )}
           </Stack>
         )}
-        {connectedAccounts.length > 1 && (
+        {signedIn.length > 1 && (
           <Select
             label={t("rightsManagedPdf.account", "Microsoft account")}
-            data={connectedAccounts.map((account) => ({
+            data={signedIn.map((account) => ({
               value: String(account.id),
               label: account.email ?? String(account.id),
             }))}
@@ -227,7 +225,7 @@ export function RightsManagedPdfPanel({
               {t("rightsManagedPdf.tryAgain", "Try again")}
             </Button>
           </Group>
-        ) : error?.reconnect && connectedAccounts.length > 0 ? (
+        ) : error?.reconnect && signedIn.length > 0 ? (
           <Group gap="sm" justify="center">
             <Button onClick={() => void connectThenOpen()} loading={busy}>
               {t("rightsManagedPdf.signInAgain", "Sign in again")}
@@ -245,7 +243,7 @@ export function RightsManagedPdfPanel({
             <Button
               onClick={() => void open(accountId)}
               loading={busy}
-              disabled={connectedAccounts.length > 1 && accountId === undefined}
+              disabled={signedIn.length > 1 && accountId === undefined}
             >
               {t("rightsManagedPdf.open", "Open with Microsoft")}
             </Button>

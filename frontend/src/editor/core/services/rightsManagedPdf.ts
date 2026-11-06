@@ -205,9 +205,9 @@ export function getOpenedRightsManagedPdf(
   if (!file) return undefined;
   const blob = typeof file === "string" ? filesById.get(file) : file;
   const opened = blob ? openedByFile.get(blob) : undefined;
-  if (opened && typeof file !== "string" && "fileId" in file) {
-    const fileId = (file as { fileId?: unknown }).fileId;
-    if (typeof fileId === "string") filesById.set(fileId, file);
+  if (opened && typeof file !== "string") {
+    const fileId = fileIdOf(file);
+    if (fileId) filesById.set(fileId, file);
   }
   return opened;
 }
@@ -240,8 +240,8 @@ function rememberOpened(opened: OpenedRightsManagedPdf): void {
   rememberPdfAccess(opened.plaintext, access);
   rememberPdfAccess(opened.original, access);
   openedByFile.set(opened.original, opened);
-  const fileId = (opened.original as { fileId?: unknown }).fileId;
-  if (typeof fileId === "string") filesById.set(fileId, opened.original);
+  const fileId = fileIdOf(opened.original);
+  if (fileId) filesById.set(fileId, opened.original);
   publish();
   void generatePlaintextThumbnail(opened);
 }
@@ -355,6 +355,12 @@ async function toRightsError(error: unknown): Promise<Error> {
   );
 }
 
+export function connectedAccounts(
+  status: RightsManagementStatus,
+): RightsManagementAccount[] {
+  return status.accounts.filter((account) => account.status === "CONNECTED");
+}
+
 export async function fetchRightsManagementStatus(): Promise<RightsManagementStatus> {
   try {
     const response = await apiClient.get<RightsManagementStatus>(
@@ -419,9 +425,7 @@ export function openWithOnlyConnectedAccount(
   if (pending) return pending;
   const opening = (async () => {
     const status = await fetchRightsManagementStatus();
-    const connected = status.accounts.filter(
-      (account) => account.status === "CONNECTED",
-    );
+    const connected = connectedAccounts(status);
     if (!status.available || connected.length !== 1) return null;
     return openRightsManagedPdf(original, connected[0].id);
   })().catch(() => null);
