@@ -1,26 +1,24 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,8 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -41,18 +37,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 /**
- * Additional branch coverage for {@link CropController}: the Ghostscript routing decision (enabled
- * vs disabled when removeDataOutsideCrop is set), the Ghostscript execution path with the external
- * process mocked, and the large-image sampling-step branch of detectContentBounds. The gs binary is
- * never invoked.
+ * Additional branch coverage for {@link CropController}: the JPDFium routing decision (removeData
+ * runs the content-removing crop regardless of Ghostscript availability), the per-page selection
+ * behavior of the JPDFium path, and the large-image sampling-step branch of detectContentBounds.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -62,7 +55,6 @@ class CropControllerMoreTest {
     @TempDir Path tempDir;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
-    @Mock private EndpointConfiguration endpointConfiguration;
     @InjectMocks private CropController cropController;
 
     @BeforeEach
@@ -81,6 +73,29 @@ class CropControllerMoreTest {
                             lenient().when(tf.getAbsolutePath()).thenReturn(f.getAbsolutePath());
                             return tf;
                         });
+    }
+
+    private MockMultipartFile pdfWithBoundaryText() throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            try (PDPageContentStream content = new PDPageContentStream(doc, page)) {
+                content.beginText();
+                content.setFont(
+                        new org.apache.pdfbox.pdmodel.font.PDType1Font(
+                                org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName.HELVETICA),
+                        12);
+                content.newLineAtOffset(50, 200);
+                content.showText("Inside");
+                content.newLineAtOffset(140, 0);
+                content.showText("BoundaryWord");
+                content.endText();
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            doc.save(out);
+            return new MockMultipartFile(
+                    "fileInput", "boundary.pdf", "application/pdf", out.toByteArray());
+        }
     }
 
     private MockMultipartFile pdf(int pages) throws IOException {
@@ -107,121 +122,99 @@ class CropControllerMoreTest {
         return f;
     }
 
+    private static void assertRect(
+            PDRectangle actual, float x, float y, float width, float height) {
+        // PDRectangle does not override equals, so compare components.
+        assertThat(actual.getLowerLeftX()).isEqualTo(x);
+        assertThat(actual.getLowerLeftY()).isEqualTo(y);
+        assertThat(actual.getWidth()).isEqualTo(width);
+        assertThat(actual.getHeight()).isEqualTo(height);
+    }
+
     @Nested
-    @DisplayName("Ghostscript routing")
-    class GhostscriptRouting {
+    @DisplayName("JPDFium routing")
+    class JpdfiumRouting {
 
         @Test
-        @DisplayName(
-                "removeDataOutsideCrop with Ghostscript disabled falls back to the PDFBox path")
-        void disabledFallsBackToPdfBox() throws Exception {
-            MockMultipartFile file = pdf(1);
+        @DisplayName("removeDataOutsideCrop runs the JPDFium path, not the PDFBox path")
+        void removeDataRunsJpdfium() throws Exception {
+            MockMultipartFile file = pdf(3);
             CropPdfForm request = form(file, true);
 
-            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
-            PDDocument source = spy(Loader.loadPDF(file.getBytes()));
-            PDDocument out = spy(new PDDocument());
-            when(pdfDocumentFactory.load(request)).thenReturn(source);
-            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(source)).thenReturn(out);
+            when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
 
             ResponseEntity<Resource> response = cropController.cropPdf(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            // PDFBox path constructs a new document; gs path would not.
-            verify(pdfDocumentFactory).createNewDocumentBasedOnOldDocument(source);
-            verify(source).close();
-            verify(out).close();
-        }
-
-        @Test
-        @DisplayName("removeDataOutsideCrop with Ghostscript enabled runs the gs command path")
-        void enabledRunsGhostscript() throws Exception {
-            MockMultipartFile file = pdf(2);
-            CropPdfForm request = form(file, true);
-
-            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
-            // Real document so setCropBox + save() succeed inside the gs branch.
-            when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
-            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
-                    .thenAnswer(invocation -> new PDDocument());
-
-            ProcessExecutor executor = mock(ProcessExecutor.class);
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT))
-                        .thenReturn(executor);
-                // Identity Ghostscript: the mock copies its input to the -o
-                // path so the merge step reads back a valid document.
-                when(executor.runCommandWithOutputHandling(any()))
-                        .thenAnswer(
-                                invocation -> {
-                                    List<String> command = invocation.getArgument(0);
-                                    Path in = Path.of(command.get(command.size() - 1));
-                                    Path out = Path.of(command.get(command.indexOf("-o") + 1));
-                                    Files.copy(in, out, StandardCopyOption.REPLACE_EXISTING);
-                                    return null;
-                                });
-
-                ResponseEntity<Resource> response = cropController.cropPdf(request);
-
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-                assertThat(response.getBody()).isNotNull();
-                verify(executor).runCommandWithOutputHandling(any());
+            assertThat(response.getBody()).isNotNull();
+            byte[] body = response.getBody().getInputStream().readAllBytes();
+            try (PDDocument out = Loader.loadPDF(body)) {
+                assertThat(out.getNumberOfPages()).isEqualTo(3);
+                // All pages selected: every page hard-cropped to the request rect.
+                for (int i = 0; i < 3; i++) {
+                    assertRect(out.getPage(i).getMediaBox(), 20f, 20f, 200f, 300f);
+                }
             }
         }
 
         @Test
-        @DisplayName("Ghostscript processes only selected pages and merges pristine originals")
-        void ghostscriptMergesUnselectedPagesPristine() throws Exception {
+        @DisplayName("JPDFium crops only selected pages and leaves the rest pristine")
+        void jpdfiumKeepsUnselectedPagesPristine() throws Exception {
             MockMultipartFile file = pdf(3);
             CropPdfForm request = form(file, true);
             request.setPageNumbers("2");
 
-            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
             when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
-            when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
-                    .thenAnswer(invocation -> new PDDocument());
 
-            ProcessExecutor executor = mock(ProcessExecutor.class);
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT))
-                        .thenReturn(executor);
-                when(executor.runCommandWithOutputHandling(any()))
-                        .thenAnswer(
-                                invocation -> {
-                                    List<String> command = invocation.getArgument(0);
-                                    Path in = Path.of(command.get(command.size() - 1));
-                                    Path out = Path.of(command.get(command.indexOf("-o") + 1));
-                                    Files.copy(in, out, StandardCopyOption.REPLACE_EXISTING);
-                                    return null;
-                                });
+            ResponseEntity<Resource> response = cropController.cropPdf(request);
 
-                ResponseEntity<Resource> response = cropController.cropPdf(request);
-
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-                assertThat(response.getBody()).isNotNull();
-                verify(executor).runCommandWithOutputHandling(any());
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            byte[] body = response.getBody().getInputStream().readAllBytes();
+            try (PDDocument out = Loader.loadPDF(body)) {
+                assertThat(out.getNumberOfPages()).isEqualTo(3);
+                assertRect(out.getPage(1).getMediaBox(), 20f, 20f, 200f, 300f);
+                assertRect(out.getPage(0).getMediaBox(), 0f, 0f, 612f, 792f);
+                assertRect(out.getPage(2).getMediaBox(), 0f, 0f, 612f, 792f);
             }
         }
 
         @Test
-        @DisplayName("Ghostscript interruption is wrapped and surfaced")
-        void interruptedIsWrapped() throws Exception {
+        @DisplayName("boundary-crossing text is removed before the crop")
+        void boundaryTextIsRemoved() throws Exception {
+            MockMultipartFile file = pdfWithBoundaryText();
+            CropPdfForm request = form(file, true);
+
+            when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = cropController.cropPdf(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            byte[] body = response.getBody().getInputStream().readAllBytes();
+            try (PDDocument out = Loader.loadPDF(body)) {
+                String text = new org.apache.pdfbox.text.PDFTextStripper().getText(out);
+                assertThat(text).contains("Inside");
+                assertThat(text).doesNotContain("BoundaryWord");
+            }
+        }
+
+        @Test
+        @DisplayName("JPDFium failure is wrapped and surfaced as IOException")
+        void jpdfiumFailureIsWrapped() throws Exception {
             MockMultipartFile file = pdf(1);
             CropPdfForm request = form(file, true);
 
-            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
-            when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
+            // A source that saves nothing: JPDFium cannot open the empty bytes.
+            // Asserting the wrapper's message and cause keeps this pinned to the
+            // controller's own IOException rather than to any failure on the path.
+            PDDocument source = mock(PDDocument.class);
+            when(source.getNumberOfPages()).thenReturn(1);
+            when(pdfDocumentFactory.load(request)).thenReturn(source);
 
-            ProcessExecutor executor = mock(ProcessExecutor.class);
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT))
-                        .thenReturn(executor);
-                when(executor.runCommandWithOutputHandling(any()))
-                        .thenThrow(new InterruptedException("stop"));
-
-                org.junit.jupiter.api.Assertions.assertThrows(
-                        Exception.class, () -> cropController.cropPdf(request));
-            }
+            assertThatThrownBy(() -> cropController.cropPdf(request))
+                    .isInstanceOf(IOException.class)
+                    .hasMessage("JPDFium crop failed")
+                    .hasCauseInstanceOf(RuntimeException.class);
         }
     }
 
