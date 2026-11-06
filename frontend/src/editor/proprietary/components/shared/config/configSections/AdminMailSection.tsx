@@ -23,6 +23,7 @@ import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsS
 import EditableSecretField from "@editor/components/shared/EditableSecretField";
 import apiClient from "@editor/services/apiClient";
 import { useLoginRequired } from "@editor/hooks/useLoginRequired";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 type MailSettingsData = {
   enabled?: boolean;
@@ -202,6 +203,7 @@ export default function AdminMailSection() {
 
             <div>
               <TextInput
+                className={privateContentClassName}
                 label={
                   <Group gap="xs">
                     <span>
@@ -251,6 +253,7 @@ export default function AdminMailSection() {
 
             <div>
               <TextInput
+                className={privateContentClassName}
                 label={
                   <Group gap="xs">
                     <span>
@@ -297,6 +300,7 @@ export default function AdminMailSection() {
 
             <div>
               <TextInput
+                className={privateContentClassName}
                 label={
                   <Group gap="xs">
                     <span>

@@ -25,10 +25,12 @@ import { NoAppChrome } from "@editor/components/layout/NoAppChrome";
 import OnboardingBootstrap from "@editor/components/OnboardingBootstrap";
 import SignupRequiredBootstrap from "@editor/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@editor/components/UsageLimitModalHost";
+import UserbackWidget from "@editor/components/feedback/UserbackWidget";
 import { RootGate } from "@editor/routes/RootGate";
 
 const MobileScannerPage = lazy(() => import("@editor/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@editor/pages/MobileSignPage"));
+const FeedbackPage = lazy(() => import("@editor/pages/FeedbackPage"));
 
 // Import global styles
 import "@editor/styles/tailwind.css";
@@ -58,6 +60,7 @@ function NonAuthBootstraps() {
       <OnboardingBootstrap />
       <SignupRequiredBootstrap />
       <UsageLimitModalHost />
+      <UserbackWidget />
     </>
   );
 }
@@ -117,6 +120,15 @@ export default function App() {
           element={
             <PublicRouteProviders>
               <MobileScannerPage />
+            </PublicRouteProviders>
+          }
+        />
+
+        <Route
+          path="/feedback"
+          element={
+            <PublicRouteProviders>
+              <FeedbackPage />
             </PublicRouteProviders>
           }
         />
