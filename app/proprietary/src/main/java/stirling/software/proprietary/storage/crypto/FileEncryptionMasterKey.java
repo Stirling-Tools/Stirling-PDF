@@ -30,8 +30,10 @@ import stirling.software.common.configuration.InstallationPathConfig;
  *
  * <p>Resolution order mirrors {@code CredentialEncryption}: {@code
  * stirling.security.fileEncryptionKey} property, {@code STIRLING_FILE_ENCRYPTION_KEY} env var, then
- * an auto-generated owner-only {@code file-encryption.key} in the config dir. Cluster mode requires
- * an explicitly shared key.
+ * an auto-generated owner-only {@code file-encryption.key} in the config dir. A deployment whose
+ * nodes or disks are not one machine (cluster mode, the hosted service) must supply the key
+ * explicitly: a key generated onto one node's disk is unreadable from every other node and does not
+ * survive the container, which leaves every encrypted blob unrecoverable.
  */
 @Slf4j
 public class FileEncryptionMasterKey {
@@ -68,8 +70,8 @@ public class FileEncryptionMasterKey {
         }
     }
 
-    public FileEncryptionMasterKey(String configuredKey, boolean clusterEnabled) {
-        this(configuredKey, null, CURRENT_VERSION, clusterEnabled);
+    public FileEncryptionMasterKey(String configuredKey, boolean sharedKeyRequired) {
+        this(configuredKey, null, CURRENT_VERSION, sharedKeyRequired);
     }
 
     /**
@@ -78,13 +80,14 @@ public class FileEncryptionMasterKey {
      *     re-wraps them under the primary key.
      * @param currentVersion admin-bumped version stamped on newly wrapped KEK rows ({@code
      *     stirling.security.fileEncryptionKeyVersion}); rotation re-wraps rows below it.
+     * @param sharedKeyRequired refuse to generate a key file; the key must be configured
      */
     public FileEncryptionMasterKey(
             String configuredKey,
             String previousKeyBase64,
             int currentVersion,
-            boolean clusterEnabled) {
-        Resolved resolved = resolveKey(configuredKey, clusterEnabled);
+            boolean sharedKeyRequired) {
+        Resolved resolved = resolveKey(configuredKey, sharedKeyRequired);
         this.key = resolved.key();
         this.source = resolved.source();
         this.previousKey =
@@ -120,7 +123,7 @@ public class FileEncryptionMasterKey {
 
     private record Resolved(SecretKey key, Source source) {}
 
-    private static Resolved resolveKey(String configuredKey, boolean clusterEnabled) {
+    private static Resolved resolveKey(String configuredKey, boolean sharedKeyRequired) {
         String configured = configuredKey;
         String source = "stirling.security.fileEncryptionKey";
         Source provenance = Source.CONFIG;
@@ -132,12 +135,13 @@ public class FileEncryptionMasterKey {
         if (configured != null && !configured.isBlank()) {
             return new Resolved(decodeKey(configured, source), provenance);
         }
-        if (clusterEnabled) {
+        if (sharedKeyRequired) {
             throw new IllegalStateException(
-                    "cluster.enabled=true requires a shared file encryption key. Set"
+                    "This deployment (cluster.enabled=true or the saas profile) requires an"
+                            + " explicitly configured file encryption key. Set"
                             + " STIRLING_FILE_ENCRYPTION_KEY (or"
                             + " stirling.security.fileEncryptionKey) to the same value on every"
-                            + " node.");
+                            + " node; generate one with: openssl rand -base64 32");
         }
         return new Resolved(loadOrCreateKeyFile(), Source.GENERATED);
     }

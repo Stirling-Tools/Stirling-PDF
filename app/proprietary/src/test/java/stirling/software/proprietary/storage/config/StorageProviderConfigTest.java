@@ -17,6 +17,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -112,6 +113,30 @@ class StorageProviderConfigTest {
         assertThatThrownBy(() -> newState(cfg))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("storage.encryption requires a Pro or Enterprise license");
+    }
+
+    @Test
+    void saas_encryptionOn_isLicensedAsAWholeAndNotWrappedForEntitlement() {
+        MockEnvironment saas = new MockEnvironment();
+        saas.setActiveProfiles("saas");
+        StorageProviderConfig cfg = newConfig("local", License.NORMAL, true, false, saas);
+
+        StorageEncryptionState state = newState(cfg);
+
+        assertThat(state.isWriteEnabled()).isTrue();
+        assertThat(cfg.storageProvider(state, Optional.empty()))
+                .isInstanceOf(EncryptingStorageProvider.class);
+    }
+
+    @Test
+    void saas_encryptionOn_refusesToGenerateAKeyOntoItsOwnDisk() {
+        MockEnvironment saas = new MockEnvironment();
+        saas.setActiveProfiles("saas");
+        StorageProviderConfig cfg = newConfig("local", License.NORMAL, true, false, saas);
+
+        assertThatThrownBy(() -> cfg.storageEncryptionState("", "", 1, false, txManager))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("STIRLING_FILE_ENCRYPTION_KEY");
     }
 
     @Test
@@ -227,6 +252,16 @@ class StorageProviderConfigTest {
 
     private StorageProviderConfig newConfig(
             String provider, License license, boolean encryptionEnabled, boolean storageEnabled) {
+        return newConfig(
+                provider, license, encryptionEnabled, storageEnabled, new MockEnvironment());
+    }
+
+    private StorageProviderConfig newConfig(
+            String provider,
+            License license,
+            boolean encryptionEnabled,
+            boolean storageEnabled,
+            MockEnvironment environment) {
         ApplicationProperties props = new ApplicationProperties();
         props.getStorage().setProvider(provider);
         props.getStorage().setEnabled(storageEnabled);
@@ -248,6 +283,6 @@ class StorageProviderConfigTest {
                     .when(checker)
                     .requireProOrEnterprise(anyString());
         }
-        return new StorageProviderConfig(props, repo, keyRepo.mock, checker, audit);
+        return new StorageProviderConfig(props, repo, keyRepo.mock, checker, audit, environment);
     }
 }

@@ -57,6 +57,12 @@ public interface InputSource {
     }
 
     /**
+     * Called after a persisted source of this kind is deleted, to release anything held for it.
+     * Failures are logged by the caller and never undo the deletion.
+     */
+    default void sourceDeleted(Source source) {}
+
+    /**
      * Filesystem dirs this source draws from, for the folder-watch trigger. Advisory: resolving is
      * still done by {@link #resolve}. Non-filesystem sources return empty and are not watchable.
      */
