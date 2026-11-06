@@ -609,6 +609,13 @@ export function FormFillProvider({
           }
         }
 
+        const activeProvider = providerRef.current as {
+          setFields?: (f: FormField[]) => void;
+        };
+        if (typeof activeProvider.setFields === "function") {
+          activeProvider.setFields(fields);
+        }
+
         // Initialise values in the external store
         const values: Record<string, string> = {};
         let edited = false;
