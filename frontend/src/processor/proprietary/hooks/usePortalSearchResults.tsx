@@ -272,7 +272,7 @@ export function usePortalSearchResults(
     const editorGroups = assembleSuperSearchGroups(
       {
         tools: scopeEnabled("tools")
-          ? rankToolResults(allTools, trimmed, openTool)
+          ? rankToolResults(allTools, trimmed, openTool, undefined, t)
           : [],
       },
       t,
