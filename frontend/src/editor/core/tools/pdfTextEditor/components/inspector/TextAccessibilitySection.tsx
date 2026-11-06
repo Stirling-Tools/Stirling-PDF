@@ -16,9 +16,13 @@ import type {
   StructureType,
 } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
+  ARTIFACT_CHOICE,
+  canBeArtifact,
   canSetTextTag,
+  canTypeText,
   type InnerTag,
   type TextTag,
+  type TextTagChoice,
 } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import type {
   InnerTagsControl,
@@ -30,8 +34,8 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
 
 /**
  * What the selected text is tagged as and the language it is read in, with
- * pickers to change them: retagging its block, or giving untagged text an
- * element of its own. Beneath them, the tags marking parts of the text, and
+ * pickers to change them: retagging its block, giving untagged text an
+ * element of its own, or making it an artifact. Beneath them, the tags marking parts of the text, and
  * pickers for characters selected in it. With several runs selected, the tag
  * they share and their language.
  */
@@ -42,7 +46,7 @@ export function TextAccessibilitySection({
   language,
 }: {
   tag: TextTag | null;
-  onSetTag: (type: StructureType) => void;
+  onSetTag: (choice: TextTagChoice) => void;
   inner: InnerTagsControl;
   language: TextLanguageControl | null;
 }) {
@@ -72,19 +76,17 @@ function TagField({
   onSetTag,
 }: {
   tag: TextTag;
-  onSetTag: (type: StructureType) => void;
+  onSetTag: (choice: TextTagChoice) => void;
 }) {
   const { t } = useTranslation();
   const label = t("pdfTextEditor.inspector.accessibility.tagLabel", "Tag");
   return canSetTextTag(tag) ? (
     <Field label={label}>
-      <TagPicker
-        types={TEXT_BLOCK_TYPES}
-        current={tag.kind === "tagged" ? tag.block : null}
+      <BlockTagPicker
+        tag={tag}
         placeholder={tagText(t, tag)}
         onSetTag={onSetTag}
         label={label}
-        testId="pdf-editor-text-tag-picker"
       />
     </Field>
   ) : (
@@ -92,6 +94,58 @@ function TagField({
       label={label}
       value={<span data-testid="pdf-editor-text-tag">{tagText(t, tag)}</span>}
     />
+  );
+}
+
+function BlockTagPicker({
+  tag,
+  placeholder,
+  onSetTag,
+  label,
+}: {
+  tag: TextTag;
+  placeholder: string;
+  onSetTag: (choice: TextTagChoice) => void;
+  label: string;
+}) {
+  const { t } = useTranslation();
+  const typed = canTypeText(tag);
+  const choices: { value: TextTagChoice; label: string; disabled: boolean }[] =
+    [
+      ...TEXT_BLOCK_TYPES.map((type) => ({
+        value: type,
+        label: typeName(t, type),
+        disabled: !typed,
+      })),
+      {
+        value: ARTIFACT_CHOICE,
+        label: t(
+          "pdfTextEditor.inspector.accessibility.artifactText",
+          "Decorative",
+        ),
+        disabled: !canBeArtifact(tag),
+      },
+    ];
+  const current =
+    tag.kind === "artifact"
+      ? ARTIFACT_CHOICE
+      : (TEXT_BLOCK_TYPES.find(
+          (type) => tag.kind === "tagged" && type === tag.block.type,
+        ) ?? null);
+  return (
+    <div data-testid="pdf-editor-text-tag-picker">
+      <Select
+        inputSize="sm"
+        options={choices}
+        value={current}
+        placeholder={placeholder}
+        onChange={(value) => {
+          const picked = choices.find((choice) => choice.value === value);
+          if (picked) onSetTag(picked.value);
+        }}
+        aria-label={label}
+      />
+    </div>
   );
 }
 

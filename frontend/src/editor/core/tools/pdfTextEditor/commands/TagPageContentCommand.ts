@@ -14,35 +14,32 @@ import type { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStruct
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
   ARTIFACT_TAG,
-  addTagMark,
   highestMcid,
   innermostMcid,
   readTagMarks,
-  removeTagMark,
   type TagMark,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import {
+  restoreObject,
+  retagObject,
+  type ObjectRetag,
+} from "@editor/tools/pdfTextEditor/commands/retagObjects";
 
 const FPDF_PAGEOBJ_PATH = 2;
 const FPDF_PAGEOBJ_SHADING = 4;
 const TEXT_TAG: StructureType = "P";
 const IMAGE_TAG: StructureType = "Figure";
 
-/** An object to retag, and the marks it loses: an MCID no element owns. */
-interface Retag {
-  ptr: number;
-  dropped: TagMark[];
-}
-
 type Step =
   | {
       kind: "text";
       runId: string;
       mcid: number;
-      objects: Retag[];
+      objects: ObjectRetag[];
       runMarks: readonly TagMark[];
     }
-  | { kind: "image"; imageId: string; mcid: number; object: Retag }
-  | { kind: "artifact"; object: Retag };
+  | { kind: "image"; imageId: string; mcid: number; object: ObjectRetag }
+  | { kind: "artifact"; object: ObjectRetag };
 
 interface Plan {
   steps: Step[];
@@ -278,7 +275,7 @@ function applyStep(
       const run = page.runs.find((r) => r.id === step.runId);
       if (!run) throw new Error(`no run ${step.runId}`);
       const tag = { name: TEXT_TAG, mcid: step.mcid };
-      for (const object of step.objects) retag(doc, object, tag);
+      for (const object of step.objects) retagObject(doc, object, tag);
       run.tagMarks = [tag];
       structure.addElement(step.mcid, TEXT_TAG, follows.get(step.mcid));
       return;
@@ -286,13 +283,13 @@ function applyStep(
     case "image": {
       const image = page.findImage(step.imageId);
       if (!image) throw new Error(`no image ${step.imageId}`);
-      retag(doc, step.object, { name: IMAGE_TAG, mcid: step.mcid });
+      retagObject(doc, step.object, { name: IMAGE_TAG, mcid: step.mcid });
       image.mcid = step.mcid;
       structure.addElement(step.mcid, IMAGE_TAG, follows.get(step.mcid));
       return;
     }
     case "artifact":
-      retag(doc, step.object, { name: ARTIFACT_TAG, mcid: null });
+      retagObject(doc, step.object, { name: ARTIFACT_TAG, mcid: null });
   }
 }
 
@@ -305,38 +302,20 @@ function revertStep(
 ): void {
   switch (step.kind) {
     case "text": {
-      for (const object of step.objects) restore(doc, object, TEXT_TAG);
+      for (const object of step.objects) restoreObject(doc, object, TEXT_TAG);
       const run = page.runs.find((r) => r.id === step.runId);
       if (run) run.tagMarks = step.runMarks;
       structure.removeElement(step.mcid);
       return;
     }
     case "image": {
-      restore(doc, step.object, IMAGE_TAG);
+      restoreObject(doc, step.object, IMAGE_TAG);
       const image = page.findImage(step.imageId);
       if (image) image.mcid = innermostMcid(step.object.dropped);
       structure.removeElement(step.mcid);
       return;
     }
     case "artifact":
-      restore(doc, step.object, ARTIFACT_TAG);
-  }
-}
-
-function retag(doc: EditorDocument, object: Retag, tag: TagMark): void {
-  for (const dropped of [...object.dropped].reverse()) {
-    if (!removeTagMark(doc.module, object.ptr, dropped.name)) {
-      throw new Error("PDFium could not remove a tag");
-    }
-  }
-  if (!addTagMark(doc.module, doc.docPtr, object.ptr, tag)) {
-    throw new Error("PDFium could not tag the content");
-  }
-}
-
-function restore(doc: EditorDocument, object: Retag, name: string): void {
-  removeTagMark(doc.module, object.ptr, name);
-  for (const dropped of object.dropped) {
-    addTagMark(doc.module, doc.docPtr, object.ptr, dropped);
+      restoreObject(doc, step.object, ARTIFACT_TAG);
   }
 }

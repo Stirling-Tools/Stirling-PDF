@@ -830,11 +830,27 @@ describe("SetDecorativeCommand", () => {
     ]);
   });
 
-  test("refuses a paragraph", async () => {
+  test("marks a paragraph decorative", async () => {
     const doc = await openSample();
+    new HistoryStack().execute(
+      new SetDecorativeCommand({ pageIndex: 0, mcid: 1, decorative: true }),
+      doc,
+    );
+    expect(doc.structureEdits()).toEqual([
+      { pageIndex: 0, mcid: 1, alt: null, decorative: true },
+    ]);
+  });
+
+  test("refuses text in a list item", async () => {
+    const doc = await openSample();
+    const body = doc.structure(1).elements.find((el) => el.type === "LBody")!;
     expect(() =>
       new HistoryStack().execute(
-        new SetDecorativeCommand({ pageIndex: 0, mcid: 1, decorative: true }),
+        new SetDecorativeCommand({
+          pageIndex: 1,
+          mcid: body.mcids[0],
+          decorative: true,
+        }),
         doc,
       ),
     ).toThrow(HistoryStepError);

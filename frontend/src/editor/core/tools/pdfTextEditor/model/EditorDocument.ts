@@ -221,20 +221,22 @@ export class EditorDocument {
   }
 
   /**
-   * The headings in reading order, the session's retags and added elements
-   * applied. Null when the file's structure tree could not be read, which
-   * leaves nothing to check them against.
+   * The headings in reading order, the session's retags, decorative marks
+   * and added elements applied. Null when the file's structure tree could not
+   * be read, which leaves nothing to check them against.
    */
   headings(): DocumentHeading[] | null {
     if (!this.fileStructure) return null;
-    const blocks: OutlineBlock[] = this.fileStructure.blocks.map(
-      ({ key, type, pageIndex, mcids }) => ({
+    const blocks: OutlineBlock[] = this.fileStructure.blocks
+      .filter(
+        ({ pageIndex, mcids }) => !this.markedDecorative(pageIndex, mcids),
+      )
+      .map(({ key, type, pageIndex, mcids }) => ({
         key,
         type: this.retaggedAs(key) ?? type,
         pageIndex,
         mcids,
-      }),
-    );
+      }));
     for (const [pageIndex, structure] of this.structureCache) {
       for (const edit of this.addedElementEdits(pageIndex, structure)) {
         const { type, after } = edit.newElement!;
@@ -256,6 +258,12 @@ export class EditorDocument {
         ? [{ type, pageIndex, mcids, ...(partOf && { partOf }) }]
         : [],
     );
+  }
+
+  /** True when the session marked the block owning `mcids` decorative. */
+  private markedDecorative(pageIndex: number | null, mcids: number[]): boolean {
+    if (pageIndex === null || mcids.length === 0) return false;
+    return this.structureCache.get(pageIndex)?.decorative(mcids[0]) ?? false;
   }
 
   /** The type the session has retagged block `key` as; null when it has not. */

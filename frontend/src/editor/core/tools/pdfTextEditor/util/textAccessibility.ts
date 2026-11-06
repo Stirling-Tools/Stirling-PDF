@@ -1,10 +1,14 @@
 import { elementStretches } from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type {
+  AddedElement,
   InnerOptions,
   RetagBlocker,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
-import type { StructureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
+import type {
+  StructureRole,
+  StructureType,
+} from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type { TextLanguage } from "@editor/tools/pdfTextEditor/model/languageTag";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { innermostMcid } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
@@ -14,42 +18,60 @@ import type {
   HeadingText,
 } from "@editor/tools/pdfTextEditor/util/headingOutline";
 
+export const ARTIFACT_CHOICE = "artifact";
+
+/** What text can be tagged as: a type, or an artifact that screen readers skip. */
+export type TextTagChoice = StructureType | typeof ARTIFACT_CHOICE;
+
 /** How a run's text is tagged. */
 export type TextTag =
   /** The block the text belongs to, so a Link in a P reads as the P. */
-  | { kind: "tagged"; block: StructureRole; cannotRetag: RetagBlocker | null }
-  | { kind: "artifact" }
-  /** `taggable` when TagTextCommand can give the text an element. */
+  | {
+      kind: "tagged";
+      block: StructureRole;
+      cannotRetag: RetagBlocker | null;
+      canBeArtifact: boolean;
+    }
+  /** `taggable` when the text can be given a type again. */
+  | { kind: "artifact"; taggable: boolean }
+  /** `taggable` when TagTextCommand can give the text an element, or make it an artifact. */
   | { kind: "untagged"; documentTagged: boolean; taggable: boolean }
   /** Drawn by a form XObject, whose marks the editor does not read. */
   | { kind: "unknown" }
-  /** Several runs' text, not all tagged alike; `settable` when every run's tag can be set. */
-  | { kind: "mixed"; settable: boolean };
+  /** Several runs' text, not all tagged alike; each flag holds when it does for every run. */
+  | { kind: "mixed"; settable: boolean; canBeArtifact: boolean };
 
 export function textTag(doc: EditorDocument, run: TextRunSnapshot): TextTag {
   if (run.inForm) return { kind: "unknown" };
-  if (run.artifact) return { kind: "artifact" };
+  const retaggable = retaggableText(doc, run) !== null;
+  if (run.artifact) return { kind: "artifact", taggable: retaggable };
   const untagged = {
     kind: "untagged",
     documentTagged: doc.treatAsTagged(),
-    taggable: canTagText(doc, run),
+    taggable: retaggable,
   } as const;
   if (run.mcid === undefined) return untagged;
   const structure = doc.structure(run.pageIndex);
   const block = structure.block(run.mcid);
   if (!block) return untagged;
+  if (structure.decorative(run.mcid)) {
+    return { kind: "artifact", taggable: true };
+  }
   return {
     kind: "tagged",
     block: { role: block.role, type: block.type },
     cannotRetag: structure.cannotRetag(run.mcid),
+    canBeArtifact:
+      retaggable || structure.cannotMarkDecorative(run.mcid) === null,
   };
 }
 
-/** True when the tag picker can set the text's tag: retag it, or tag it. */
-export function canSetTextTag(tag: TextTag): boolean {
+/** True when the tag picker can give the text a type: retag it, or tag it. */
+export function canTypeText(tag: TextTag): boolean {
   switch (tag.kind) {
     case "tagged":
       return tag.cannotRetag === null;
+    case "artifact":
     case "untagged":
       return tag.taggable;
     case "mixed":
@@ -59,22 +81,50 @@ export function canSetTextTag(tag: TextTag): boolean {
   }
 }
 
+/** True when the text is an artifact, or the tag picker can make it one. */
+export function canBeArtifact(tag: TextTag): boolean {
+  switch (tag.kind) {
+    case "artifact":
+      return true;
+    case "tagged":
+    case "mixed":
+      return tag.canBeArtifact;
+    case "untagged":
+      return tag.taggable;
+    default:
+      return false;
+  }
+}
+
+/** True when the tag picker can change the text's tag at all. */
+export function canSetTextTag(tag: TextTag): boolean {
+  return canTypeText(tag) || (tag.kind !== "artifact" && canBeArtifact(tag));
+}
+
 /**
  * How several runs' text is tagged together: the tag they share, or mixed.
- * Shared, it is settable only when every run's is.
+ * Shared, it can change only as every run's can.
  */
 export function sharedTextTag(tags: readonly TextTag[]): TextTag {
   const [first, ...rest] = tags;
-  const settable = tags.every(canSetTextTag);
+  const settable = tags.every(canTypeText);
+  const artifactable = tags.every(canBeArtifact);
   if (!rest.every((tag) => sameTagShown(first, tag))) {
-    return { kind: "mixed", settable };
+    return { kind: "mixed", settable, canBeArtifact: artifactable };
   }
   switch (first.kind) {
-    case "tagged":
-      return settable
-        ? { ...first, cannotRetag: null }
-        : (tags.find((tag) => tag.kind === "tagged" && tag.cannotRetag) ??
-            first);
+    case "tagged": {
+      const blocked = tags.find(
+        (tag) => tag.kind === "tagged" && tag.cannotRetag !== null,
+      );
+      return {
+        ...first,
+        cannotRetag:
+          blocked?.kind === "tagged" ? blocked.cannotRetag : first.cannotRetag,
+        canBeArtifact: artifactable,
+      };
+    }
+    case "artifact":
     case "untagged":
       return { ...first, taggable: settable };
     default:
@@ -92,18 +142,30 @@ function sameTagShown(a: TextTag, b: TextTag): boolean {
   return a.kind === b.kind;
 }
 
+/** How a run's text is tagged, where TagTextCommand can change it. */
+export type RetaggableText =
+  | { kind: "untagged" }
+  | { kind: "artifact" }
+  | { kind: "added"; element: AddedElement };
+
 /**
- * True when the run's text can be given an element of its own: it is drawn
- * by the page itself, whose save can add one, and has no tag or artifact
- * mark.
+ * The run's tag when TagTextCommand can change it: text the page itself
+ * draws, whose save can add an element, that is untagged, an artifact, or in
+ * an element the session added that nothing else depends on. Null
+ * otherwise, for text the file's elements own among the rest.
  */
-export function canTagText(doc: EditorDocument, run: TextRunSnapshot): boolean {
-  return (
-    !run.inForm &&
-    !run.artifact &&
-    run.mcid === undefined &&
-    doc.structure(run.pageIndex).cannotAddElement() === null
-  );
+export function retaggableText(
+  doc: EditorDocument,
+  run: TextRunSnapshot,
+): RetaggableText | null {
+  if (run.inForm) return null;
+  const structure = doc.structure(run.pageIndex);
+  if (structure.cannotAddElement() !== null) return null;
+  if (run.mcid === undefined) {
+    return run.artifact ? { kind: "artifact" } : { kind: "untagged" };
+  }
+  const element = structure.standaloneAdded(run.mcid);
+  return element ? { kind: "added", element } : null;
 }
 
 /** An element marking part of a run's text, rather than the run's own block. */

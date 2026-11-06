@@ -4,6 +4,7 @@ import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import { RetagInnerCommand } from "@editor/tools/pdfTextEditor/commands/RetagInnerCommand";
 import { RetagTextCommand } from "@editor/tools/pdfTextEditor/commands/RetagTextCommand";
+import { SetDecorativeCommand } from "@editor/tools/pdfTextEditor/commands/SetDecorativeCommand";
 import { SetInnerLanguageCommand } from "@editor/tools/pdfTextEditor/commands/SetInnerLanguageCommand";
 import {
   SetTextLanguageCommand,
@@ -27,11 +28,13 @@ import type {
 } from "@editor/tools/pdfTextEditor/types";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
+  ARTIFACT_CHOICE,
   innerTags,
   sharedTextTag,
   textTag,
   type InnerTag,
   type TextTag,
+  type TextTagChoice,
 } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 
 /** The tags marking parts of the selected text, and the selection inside it. */
@@ -106,12 +109,13 @@ export function useTextAccessibility(
     const tags = innerTags(doc, only);
     const range = selection.textRange;
     const picksTag = tags.some((t) => sameRange(t, range));
+    const offersNew = range && !picksTag && shared.kind !== "artifact";
     return {
       run: only,
       targets,
       tag: shared,
       inner: tags,
-      newTagTypes: range && !picksTag ? tagTypesFor(doc, only, range) : null,
+      newTagTypes: offersNew ? tagTypesFor(doc, only, range) : null,
     };
   }, [store, state.pages, selection]);
 
@@ -121,12 +125,13 @@ export function useTextAccessibility(
   );
 
   /**
-   * Retags each selected run's block, or gives its untagged text an element of
-   * its own, as one undo step.
+   * Retags each selected run's block, gives its untagged text an element of
+   * its own, or makes it an artifact, as one undo step.
    */
   const setTag = useCallback(
-    (type: StructureType) => {
-      const command = setTextTagCommand(targets, type);
+    (choice: TextTagChoice) => {
+      const doc = store.document;
+      const command = doc ? setTextTagCommand(doc, targets, choice) : null;
       if (command) store.dispatch(command);
     },
     [store, targets],
@@ -285,50 +290,93 @@ function textLanguageTargets(
   const runs = state.pages
     .flatMap((page) => page.runs)
     .filter((r) => ids.has(r.id));
-  const targets = runs.flatMap((r) =>
-    r.mcid !== undefined &&
-    !r.inForm &&
-    doc.structure(r.pageIndex).cannotSetLanguage(r.mcid) === null
+  const targets = runs.flatMap((r) => {
+    const structure = doc.structure(r.pageIndex);
+    return r.mcid !== undefined &&
+      !r.inForm &&
+      structure.cannotSetLanguage(r.mcid) === null &&
+      !structure.decorative(r.mcid)
       ? [{ pageIndex: r.pageIndex, mcid: r.mcid }]
-      : [],
-  );
+      : [];
+  });
   return targets.length > 0 && targets.length === ids.size ? targets : null;
 }
 
 /**
- * One undo step setting `type` on every run whose tag can be set; null when
+ * One undo step setting `choice` on every run whose tag can be set; null when
  * none can.
  */
 export function setTextTagCommand(
+  doc: EditorDocument,
   targets: readonly { run: TextRunSnapshot; tag: TextTag }[],
-  type: StructureType,
+  choice: TextTagChoice,
 ): Command | null {
   const commands = targets.flatMap(({ run, tag }) => {
-    const command = runTagCommand(run, tag, type);
+    const command =
+      choice === ARTIFACT_CHOICE
+        ? artifactCommand(doc, run, tag)
+        : typeCommand(run, tag, choice);
     return command ? [command] : [];
   });
   if (commands.length <= 1) return commands[0] ?? null;
   return new CompositeCommand(commands);
 }
 
-function runTagCommand(
+/**
+ * Text in the file's own element becomes an artifact through that element;
+ * any other is retagged.
+ */
+function artifactCommand(
+  doc: EditorDocument,
+  run: TextRunSnapshot,
+  tag: TextTag,
+): Command | null {
+  const { pageIndex } = run;
+  if (tag.kind === "untagged" && tag.taggable) {
+    return new TagTextCommand({
+      pageIndex,
+      runId: run.id,
+      as: ARTIFACT_CHOICE,
+    });
+  }
+  if (tag.kind !== "tagged" || !tag.canBeArtifact || run.mcid === undefined) {
+    return null;
+  }
+  if (doc.structure(pageIndex).isAdded(run.mcid)) {
+    return new TagTextCommand({
+      pageIndex,
+      runId: run.id,
+      as: ARTIFACT_CHOICE,
+    });
+  }
+  return new SetDecorativeCommand({
+    pageIndex,
+    mcid: run.mcid,
+    decorative: true,
+  });
+}
+
+function typeCommand(
   run: TextRunSnapshot,
   tag: TextTag,
   type: StructureType,
 ): Command | null {
-  if (tag.kind === "tagged" && run.mcid !== undefined) {
-    return new RetagTextCommand({
-      pageIndex: run.pageIndex,
-      mcid: run.mcid,
-      type,
-    });
+  const { pageIndex, mcid } = run;
+  if (tag.kind === "tagged") {
+    if (tag.cannotRetag !== null || mcid === undefined) return null;
+    return new RetagTextCommand({ pageIndex, mcid, type });
   }
-  if (tag.kind === "untagged" && tag.taggable) {
-    return new TagTextCommand({
-      pageIndex: run.pageIndex,
-      runId: run.id,
-      as: type,
-    });
+  if (tag.kind === "untagged" || tag.kind === "artifact") {
+    if (!tag.taggable) return null;
+    // An artifact by mark has no MCID; one by the session's decorative mark
+    // keeps its element, which unmarking returns to the tree.
+    if (mcid === undefined) {
+      return new TagTextCommand({ pageIndex, runId: run.id, as: type });
+    }
+    return new CompositeCommand([
+      new SetDecorativeCommand({ pageIndex, mcid, decorative: false }),
+      new RetagTextCommand({ pageIndex, mcid, type }),
+    ]);
   }
   return null;
 }

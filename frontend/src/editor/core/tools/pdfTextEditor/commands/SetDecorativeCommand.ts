@@ -10,9 +10,10 @@ import type {
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 
 /**
- * Mark or unmark the structure element owning `mcid` as decorative. Like a
- * description, the mark is held on the document's structure index and written
- * by the save pass, which turns the element's content into an artifact.
+ * Mark or unmark the structure element owning `mcid` as decorative: a figure,
+ * or a block of text such as a running header. Like a description, the mark
+ * is held on the document's structure index and written by the save pass,
+ * which turns the element's content into an artifact.
  */
 export class SetDecorativeCommand implements Command {
   readonly type = "set-decorative";
@@ -35,8 +36,8 @@ export class SetDecorativeCommand implements Command {
       throw new RolledBackError(
         new Error(
           i18n.t(
-            "pdfTextEditor.inspector.accessibility.cannotChange",
-            "This image's accessibility can't be changed.",
+            "pdfTextEditor.inspector.accessibility.cannotSetDecorative",
+            "This can't be marked or unmarked as decorative.",
           ),
         ),
       );
@@ -49,13 +50,10 @@ export class SetDecorativeCommand implements Command {
   }
 
   private refused(structure: PageStructure): boolean {
-    // An added figure has no element in the file to drop: TagImageCommand
-    // retags its content instead.
+    // An added element has no element in the file to drop: TagImageCommand
+    // and TagTextCommand retag its content instead.
     if (structure.isAdded(this.mcid)) return true;
-    const blocker = this.decorative
-      ? structure.cannotMarkDecorative(this.mcid)
-      : structure.cannotDescribe(this.mcid);
-    return blocker !== null;
+    return structure.cannotMarkDecorative(this.mcid) !== null;
   }
 
   revert(doc: EditorDocument): void {

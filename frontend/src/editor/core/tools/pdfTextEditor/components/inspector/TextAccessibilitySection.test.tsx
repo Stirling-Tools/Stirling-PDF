@@ -40,6 +40,7 @@ const tagged = (role: string): TextTag => ({
   kind: "tagged",
   block: structureRole(role),
   cannotRetag: "not-text",
+  canBeArtifact: false,
 });
 
 describe("TextAccessibilitySection", () => {
@@ -58,7 +59,7 @@ describe("TextAccessibilitySection", () => {
   });
 
   it.each([
-    [{ kind: "artifact" } as const, "artifactText"],
+    [{ kind: "artifact", taggable: false } as const, "artifactText"],
     [
       { kind: "untagged", documentTagged: true, taggable: false } as const,
       "untaggedBadge",
@@ -68,7 +69,10 @@ describe("TextAccessibilitySection", () => {
       "untaggedDocument",
     ],
     [{ kind: "unknown" } as const, "unknownTag"],
-    [{ kind: "mixed", settable: false } as const, "mixedTags"],
+    [
+      { kind: "mixed", settable: false, canBeArtifact: false } as const,
+      "mixedTags",
+    ],
   ])("explains text with no element (%o)", (tag, message) => {
     expect(tagShown(tag)).toHaveTextContent(`${KEY}.${message}`);
   });
@@ -78,7 +82,12 @@ describe("TextAccessibilitySection", () => {
     render(
       <MantineProvider env="test">
         <TextAccessibilitySection
-          tag={{ kind: "tagged", block: structureRole("P"), cannotRetag: null }}
+          tag={{
+            kind: "tagged",
+            block: structureRole("P"),
+            cannotRetag: null,
+            canBeArtifact: true,
+          }}
           onSetTag={onRetag}
           inner={NO_INNER}
           language={null}
@@ -92,12 +101,74 @@ describe("TextAccessibilitySection", () => {
     expect(onRetag).toHaveBeenCalledWith("Code");
   });
 
+  it("offers making the text decorative", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{
+            kind: "untagged",
+            documentTagged: true,
+            taggable: true,
+          }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+        />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByRole("textbox", { name: `${KEY}.tagLabel` }));
+    fireEvent.click(screen.getByText(`${KEY}.artifactText`));
+    expect(onSetTag).toHaveBeenCalledWith("artifact");
+  });
+
+  it("shows decorative text as decorative, and offers it a type again", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "artifact", taggable: true }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+        />
+      </MantineProvider>,
+    );
+    const input = screen.getByRole("textbox", { name: `${KEY}.tagLabel` });
+    expect(input).toHaveValue(`${KEY}.artifactText`);
+    fireEvent.click(input);
+    fireEvent.click(screen.getByText(`${KEY}.tagName.paragraph`));
+    expect(onSetTag).toHaveBeenCalledWith("P");
+  });
+
+  it("does not offer decorative where the text cannot become an artifact", () => {
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{
+            kind: "tagged",
+            block: structureRole("P"),
+            cannotRetag: null,
+            canBeArtifact: false,
+          }}
+          onSetTag={vi.fn()}
+          inner={NO_INNER}
+          language={null}
+        />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByRole("textbox", { name: `${KEY}.tagLabel` }));
+    expect(
+      screen.getByRole("option", { name: `${KEY}.artifactText` }),
+    ).toHaveAttribute("data-combobox-disabled", "true");
+  });
+
   it("offers a picker for runs tagged differently, set on all of them", () => {
     const onSetTag = vi.fn();
     render(
       <MantineProvider env="test">
         <TextAccessibilitySection
-          tag={{ kind: "mixed", settable: true }}
+          tag={{ kind: "mixed", settable: true, canBeArtifact: true }}
           onSetTag={onSetTag}
           inner={NO_INNER}
           language={null}
@@ -119,6 +190,7 @@ describe("TextAccessibilitySection", () => {
             kind: "tagged",
             block: structureRole("Callout"),
             cannotRetag: null,
+            canBeArtifact: true,
           }}
           onSetTag={vi.fn()}
           inner={NO_INNER}
@@ -316,7 +388,12 @@ function renderSection(
   render(
     <MantineProvider env="test">
       <TextAccessibilitySection
-        tag={{ kind: "tagged", block: structureRole("P"), cannotRetag: null }}
+        tag={{
+          kind: "tagged",
+          block: structureRole("P"),
+          cannotRetag: null,
+          canBeArtifact: true,
+        }}
         onSetTag={vi.fn()}
         inner={inner}
         language={language}
