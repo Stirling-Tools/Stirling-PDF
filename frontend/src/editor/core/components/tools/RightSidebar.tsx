@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMeasurementDocked } from "../../../features/measurement";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@editor/contexts/SidebarContext";
@@ -49,6 +50,8 @@ export default function RightSidebar() {
   });
 
   const [allToolsView, setAllToolsView] = useState(false);
+  const measurementDocked = useMeasurementDocked();
+
 
   const handleShowAllTools = () => {
     withViewTransition(() => setAllToolsView(true));
@@ -112,6 +115,11 @@ export default function RightSidebar() {
             position: "relative",
           }}
         >
+          <div id="stirling-measure-native-slot"
+            className="stirling-measure-native-slot"
+            style={{ display: measurementDocked ? "flex" : "none", flex: 1, minHeight: 0, flexDirection: "column", overflow: "hidden" }}
+          />
+          <div style={{ display: measurementDocked ? "none" : "flex", flex: 1, minHeight: 0, flexDirection: "column" }}>
           <>
             {policiesEnabled && <EditorPipelinesPanel />}
             {activeTool ? (
@@ -167,6 +175,7 @@ export default function RightSidebar() {
               showSearch={isMobile}
             />
           </>
+          </div>
         </div>
       )}
 

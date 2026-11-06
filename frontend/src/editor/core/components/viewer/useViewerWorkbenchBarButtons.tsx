@@ -31,6 +31,7 @@ import type { StirlingFile } from "@editor/types/fileContext";
 export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,
   setIsRulerActive?: (v: boolean) => void,
+  openMeasurementPanel?: () => void,
   customScale?: MeasureScale | null,
   setCustomScale?: (scale: MeasureScale | null) => void,
   isScaleCalibrationActive?: boolean,
@@ -239,9 +240,9 @@ export function useViewerWorkbenchBarButtons(
         order: 25,
         active: Boolean(isRulerActive),
         onClick: () => {
-          const next = !isRulerActive;
-          setIsRulerActive?.(next);
-          if (next && isPanning) {
+          openMeasurementPanel?.();
+          if (!isRulerActive) setIsRulerActive?.(true);
+          if (!isRulerActive && isPanning) {
             viewer.panActions.disablePan();
           }
         },
@@ -583,6 +584,7 @@ export function useViewerWorkbenchBarButtons(
     isFormFillActive,
     rulerLabel,
     rulerSettingsLabel,
+    openMeasurementPanel,
     isRulerActive,
     setIsRulerActive,
     handleStartScaleCalibration,

@@ -1,0 +1,277 @@
+.measurement-panel {
+  position: fixed !important;
+  z-index: 10000;
+  box-sizing: border-box;
+
+  overflow: auto;
+  isolation: isolate;
+
+  border: 1px solid var(--c-border);
+
+}
+
+.measurement-panel__drag { cursor: move; user-select: none; }
+.measurement-panel__actions { display: flex; align-items: center;  }
+.measurement-panel__section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  margin-bottom: 5px;
+}
+.measurement-panel__control { width: 100%; }
+.measurement-panel__export { margin-top: 5px; }
+.measurement-panel__tool { min-height: 30px; }
+.measurement-panel__calibrate { margin-bottom: 8px; }
+
+/* Shared editor design tokens. */
+.measurement-panel {
+  background: var(--c-surface);
+  color: var(--c-text);
+  border-color: var(--c-border);
+  border-radius: var(--mantine-radius-md);
+  box-shadow: var(--mantine-shadow-md);
+  padding: 12px;
+  font-size: 13px;
+}
+.measurement-panel__section {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--c-border);
+}
+.measurement-panel__groups { border-top: 0; padding-top: 0; }
+.measurement-panel__layout { gap: 12px !important; }
+.measurement-panel__select,
+.measurement-panel__control,
+.measurement-panel__actions select {
+  min-height: 34px;
+  border: 1px solid var(--c-border) !important;
+  border-radius: var(--mantine-radius-sm) !important;
+  background: var(--c-surface-raised) !important;
+  color: var(--c-text) !important;
+  font: inherit;
+  padding: 6px 9px !important;
+  opacity: 1;
+}
+.measurement-panel__button,
+.measurement-panel__control,
+.measurement-panel__actions button,
+.measurement-panel__tool {
+  min-height: 32px;
+  border: 1px solid var(--c-border) !important;
+  border-radius: var(--mantine-radius-sm) !important;
+  background: var(--c-surface-raised) !important;
+  color: var(--c-text) !important;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color .12s ease, border-color .12s ease;
+}
+.measurement-panel__button:hover:not(:disabled),
+.measurement-panel__actions button:hover:not(:disabled),
+.measurement-panel__tool:hover:not(:disabled) {
+  border-color: var(--c-accent-solid) !important;
+}
+.measurement-panel__tool[aria-pressed="true"] {
+  background: var(--c-accent-solid) !important;
+  border-color: var(--c-accent-solid) !important;
+  color: var(--mantine-color-white, #fff) !important;
+  font-weight: 600;
+}
+.measurement-panel__button:disabled,
+.measurement-panel__tool:disabled { opacity: .55; cursor: default; }
+.measurement-panel button:focus-visible,
+.measurement-panel select:focus-visible {
+  outline: 2px solid var(--c-accent-solid);
+  outline-offset: 2px;
+}
+.measurement-panel__drag {
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--c-border);
+}
+.measurement-panel__actions { gap: 6px; }
+.measurement-panel__actions button,
+.measurement-panel__actions select { width: auto; min-height: 30px; }
+/* Detached windows and contextual menus follow the same tokens. */
+.measurement-panel__floating,
+.measurement-panel__menu {
+  background: var(--c-surface);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: var(--mantine-radius-md);
+  box-shadow: var(--mantine-shadow-md);
+}
+
+/* Pinned workbench: no dragging or resizing while docked. */
+.measurement-panel--docked { border-radius: 0; box-shadow: var(--mantine-shadow-sm); }
+.measurement-panel--docked .measurement-panel__drag { cursor: default; }
+
+/* Native right-rail layout: no fixed overlay, all content scrollable. */
+.measurement-panel--native {
+  position: relative !important;
+  inset: auto !important;
+  z-index: auto !important;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+.measurement-panel--native .measurement-panel__drag {
+  flex-shrink: 0;
+  cursor: default;
+
+}
+.measurement-panel__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 10px;
+  overscroll-behavior: contain;
+}
+.measurement-panel--native .measurement-panel__layout { min-width: 0; }
+.measurement-panel--native button,
+.measurement-panel--native select { max-width: 100%; }
+.measurement-panel--floating-main { display: flex !important; flex-direction: column; overflow: hidden !important; }
+
+/* Native sidebar: the header wraps instead of clipping controls. */
+.measurement-panel--native .measurement-panel__header-wrap {
+  width: 100%;
+  min-width: 0;
+  flex-shrink: 0;
+
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+.measurement-panel--native .measurement-panel__drag {
+
+  cursor: grab !important;
+}
+.measurement-panel--native .measurement-panel__actions {
+  display: flex;
+
+  justify-content: flex-start;
+  align-items: center;
+
+  min-width: 0;
+  max-width: 100%;
+}
+.measurement-panel--native .measurement-panel__actions button,
+.measurement-panel--native .measurement-panel__actions select {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+.measurement-panel--native .measurement-panel__actions select { min-width: 58px; }
+.measurement-panel--native .measurement-panel__scroll { width: 100%; box-sizing: border-box; }
+.measurement-panel--floating-main .measurement-panel__header-wrap { flex-shrink: 0; }
+
+/* Compact sidebar header */
+.measurement-panel--native .measurement-panel__header-wrap {
+  padding: 0;
+  cursor: grab;
+}
+.measurement-panel--native .measurement-panel__drag {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+  padding: 8px 9px;
+  margin: 0;
+  box-sizing: border-box;
+}
+.measurement-panel--native .measurement-panel__actions {
+  flex-wrap: nowrap;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.measurement-panel--native .measurement-panel__actions button {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 2px 4px;
+  line-height: 1;
+}
+.measurement-panel__quickbar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 9px;
+  min-width: 0;
+}
+.measurement-panel__quickbar button {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 29px;
+  padding: 4px 8px;
+  text-align: center;
+}
+.measurement-panel__quickbar select {
+  flex: 0 0 67px;
+  width: 67px;
+  min-width: 0;
+  min-height: 29px;
+  padding: 3px 5px !important;
+  font-size: 12px;
+}
+.measurement-panel--native .measurement-panel__scroll { padding: 8px 9px; }
+.measurement-panel--native .measurement-panel__section:first-child {
+  padding-bottom: 8px;
+  margin-bottom: 9px;
+}
+.measurement-panel--native .measurement-panel__section:first-child .measurement-panel__section-label {
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+.measurement-panel--native .measurement-panel__section:first-child select.measurement-panel__control {
+  min-height: 29px;
+  height: 29px;
+  padding: 3px 7px !important;
+  margin-bottom: 3px !important;
+  font-size: 11px;
+}
+.measurement-panel--native .measurement-panel__export {
+  min-height: 29px;
+  height: 29px;
+  padding: 3px 7px !important;
+  margin-top: 2px;
+  font-size: 11px !important;
+}
+
+/* Shared workbench controls: avoid duplicated inline declarations. */
+.measurement-panel__tools { display:flex; gap:5px; margin-bottom:8px; }
+.measurement-panel__tool { flex:1; padding:5px 3px; }
+.measurement-panel__calibrate, .measurement-panel__export { width:100%; }
+.measurement-panel__scale { margin-bottom:12px; }
+.measurement-panel__scale label { display:block; font-size:12px; margin-bottom:6px; }
+.measurement-panel__scale select, .measurement-panel__groups > select { width:100%; }
+.measurement-panel__group-header { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+.measurement-panel__color { width:28px; height:26px; padding:0; border:0; background:transparent; }
+.measurement-panel__group-toggle { background:transparent !important; border:0 !important; font-weight:700; text-align:left; }
+.measurement-panel__detach { background:transparent !important; border:0 !important; color:var(--c-text-muted) !important; }
+.measurement-panel__line-width { margin-left:auto; padding:3px; font-size:11px; }
+
+/* Floating windows use the same react-rnd drag handling as the main panel. */
+.measurement-panel__detached,
+.measurement-panel__results {
+  position: fixed !important;
+  overflow-y: auto;
+  background: var(--c-surface);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: var(--mantine-radius-md);
+  box-shadow: var(--mantine-shadow-md);
+  padding: 10px;
+}
+.measurement-panel__detached { z-index: 100001; max-height: 55vh; }
+.measurement-panel__results { z-index: 100003; max-height: 65vh; padding: 12px; }

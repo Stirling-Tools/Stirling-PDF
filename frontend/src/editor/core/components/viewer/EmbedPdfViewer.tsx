@@ -1,3 +1,8 @@
+import { createPortal } from "react-dom";
+import type { Measurement } from "../../../features/measurement/utils/measurementTypes";
+import { embedMeasurementsInPdf } from "../../../features/measurement/utils/measurementPdfStorage";
+import { setActiveMeasurementExport, clearActiveMeasurementExport } from "../../../features/measurement/utils/measurementExportBridge";
+import { MeasurementPanel, useMeasurementGroups, useMeasurementBackup, useMeasurementControls, useMeasurementPanelVisibility } from "../../../features/measurement";
 import React, {
   useCallback,
   useEffect,
@@ -60,7 +65,7 @@ import { StampPlacementOverlay } from "@editor/components/viewer/StampPlacementO
 import {
   RulerOverlay,
   type RulerOverlayHandle,
-} from "@editor/components/viewer/RulerOverlay";
+} from "../../../features/measurement";
 import { useWheelZoom } from "@editor/hooks/useWheelZoom";
 import { useFormFill } from "@editor/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@editor/tools/formFill/FormSaveBar";
@@ -783,6 +788,7 @@ const EmbedPdfViewerContent = ({
   const policyEnforcingRef = useRef(false);
   policyEnforcingRef.current = policyEnforcing;
 
+  const measurementHistoryEnabledRef = useRef(false);
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -876,16 +882,16 @@ const EmbedPdfViewerContent = ({
             // Ctrl+Z: Undo; Ctrl+Shift+Z: Redo
             event.preventDefault();
             if (event.shiftKey) {
-              historyApiRef.current?.redo?.();
+              if (!measurementHistoryEnabledRef.current || !rulerOverlayRef.current?.redoMeasurement()) historyApiRef.current?.redo?.();
             } else {
-              historyApiRef.current?.undo?.();
+              if (!measurementHistoryEnabledRef.current || !rulerOverlayRef.current?.undoMeasurement()) historyApiRef.current?.undo?.();
             }
             return;
           case "y":
           case "Y":
             // Ctrl+Y: Redo
             event.preventDefault();
-            historyApiRef.current?.redo?.();
+            if (!measurementHistoryEnabledRef.current || !rulerOverlayRef.current?.redoMeasurement()) historyApiRef.current?.redo?.();
             return;
         }
         return;
@@ -1077,7 +1083,16 @@ const EmbedPdfViewerContent = ({
     redactionsApplied,
   ]);
 
+  // Editable measurement data follows Stirling's existing PDF save action.
+  const measurementPdfSnapshotRef = useRef({
+    measurements: [] as Measurement[],
+    groups: [] as typeof measurementGroups,
+    pageScales: [] as Array<[number, import("../../../features/measurement/utils/measurementTypes").PageScaleInfo]>,
+  });
+
   // Save changes - save annotations and redactions to file (overwrites active file)
+  const measurementSnapshotRef = useRef<Measurement[]>([]);
+
   const applyChanges = useCallback(async () => {
     if (applyChangesInFlightRef.current) {
       return applyChangesInFlightRef.current;
@@ -1118,10 +1133,14 @@ const EmbedPdfViewerContent = ({
       // Step 1: Export PDF with annotations using EmbedPDF
       suppressHistoryDirtyRef.current = true;
       const exportRevision = historyRevisionRef.current;
-      const arrayBuffer = await exportActions.saveAsCopy();
+      let arrayBuffer = await exportActions.saveAsCopy();
       if (!arrayBuffer) {
         throw new Error("Failed to export PDF");
       }
+
+      // Store editable measurement geometry in the PDF catalog.
+      // No measurements: preserve the exported bytes unchanged.
+      arrayBuffer = await embedMeasurementsInPdf(arrayBuffer, measurementPdfSnapshotRef.current);
 
       // Step 2: Convert ArrayBuffer to File
       const blob = new Blob([arrayBuffer], { type: "application/pdf" });
@@ -1359,7 +1378,10 @@ const EmbedPdfViewerContent = ({
       );
 
       // Export PDF WITHOUT committing pending marks - this saves only applied redactions
-      const arrayBuffer = await exportActions.saveAsCopy();
+      const exportedPdfBytes = await exportActions.saveAsCopy();
+      const arrayBuffer = exportedPdfBytes
+        ? await embedMeasurementsInPdf(exportedPdfBytes, measurementPdfSnapshotRef.current)
+        : exportedPdfBytes;
       if (!arrayBuffer) {
         throw new Error("Failed to export PDF");
       }
@@ -1775,6 +1797,7 @@ const EmbedPdfViewerContent = ({
     isRulerActive,
     setIsRulerActive,
     pageMeasureScales,
+    restoreEmbeddedPageScales,
     customScale,
     handleSetCustomScale,
     isScaleCalibrationActive,
@@ -1789,10 +1812,84 @@ const EmbedPdfViewerContent = ({
     rulerOverlayRef,
   });
 
+  measurementHistoryEnabledRef.current = isRulerActive;
+
+  const { measurementPanelVisible, setMeasurementPanelVisible, toggleMeasurementPanel } =
+    useMeasurementPanelVisibility(isRulerActive);
+  const { panelMeasurements, subscribeToMeasurements, embeddedGroups, embeddedPageScales } = useMeasurementBackup({
+    documentName: currentFile?.name,
+    stableId: currentFileStableId,
+    overlayRef: rulerOverlayRef,
+    sourceFile: effectiveFile?.file instanceof File ? effectiveFile.file : null,
+  });
+  useEffect(() => { measurementSnapshotRef.current = panelMeasurements; }, [panelMeasurements]);
+  const { measurementUnit, setMeasurementUnit, measurementTool, setMeasurementTool } = useMeasurementControls();
+  const {
+    measurementGroups,
+    setMeasurementGroups,
+    activeMeasurementGroup,
+    setActiveMeasurementGroup,
+    setSavedGroupMembership,
+    changeMeasurementGroup,
+  } = useMeasurementGroups({
+    documentName: currentFile?.name,
+    stableId: currentFileStableId,
+    legacyFileId: currentFileId,
+    measurements: panelMeasurements,
+    overlayRef: rulerOverlayRef,
+  });
+
+  // Restore page-specific calibration stored in the PDF, not only its measurement geometry.
+  useEffect(() => {
+    restoreEmbeddedPageScales(embeddedPageScales);
+  }, [embeddedPageScales, restoreEmbeddedPageScales]);
+
+  // PDF-embedded groups override stale localStorage groups when a PDF is opened.
+  useEffect(() => {
+    if (embeddedGroups?.length) setMeasurementGroups(embeddedGroups);
+  }, [embeddedGroups, setMeasurementGroups]);
+
+  measurementPdfSnapshotRef.current = {
+    measurements: panelMeasurements,
+    groups: measurementGroups,
+    pageScales: pageMeasureScales ? Array.from(pageMeasureScales.entries()) : [],
+  };
+
+  // Exports go through Stirling's policy/download pipeline; keep its PDF snapshot current.
+  useEffect(() => {
+    if (previewFile || !currentFile) return;
+    setActiveMeasurementExport(currentFileStableId, currentFile.name, measurementPdfSnapshotRef.current);
+    return () => clearActiveMeasurementExport(currentFileStableId);
+  }, [previewFile, currentFile, currentFileStableId, panelMeasurements, measurementGroups, pageMeasureScales]);
+
+  useEffect(() => subscribeToMeasurements(setSavedGroupMembership), [subscribeToMeasurements, setSavedGroupMembership]);
+
+
+  useEffect(() => {
+    const escapeToNavigation = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || !isRulerActive) return;
+
+      const overlay = rulerOverlayRef.current;
+      if (overlay?.hasSelection()) {
+        event.preventDefault();
+        event.stopPropagation();
+        overlay.clearSelection();
+        return;
+      }
+
+      event.preventDefault();
+      overlay?.cancelMove();
+      setIsRulerActive(false);
+    };
+    document.addEventListener("keydown", escapeToNavigation);
+    return () => document.removeEventListener("keydown", escapeToNavigation);
+  }, [isRulerActive, setIsRulerActive]);
+
   // Register workbench bar buttons for the viewer
   useViewerWorkbenchBarButtons(
     isRulerActive,
     setIsRulerActive,
+    toggleMeasurementPanel,
     customScale,
     handleSetCustomScale,
     isScaleCalibrationActive,
@@ -2009,12 +2106,39 @@ const EmbedPdfViewerContent = ({
               signatureConfig={signatureConfig}
               signatureLineZoom={signatureLineZoom}
             />
+            {measurementPanelVisible && createPortal(
+              <MeasurementPanel
+                onClose={() => setMeasurementPanelVisible(false)}
+                measurements={panelMeasurements}
+                tool={measurementTool}
+                onToolChange={(next) => { setMeasurementTool(next); setIsRulerActive(true); }}
+                groups={measurementGroups}
+                onGroupsChange={setMeasurementGroups}
+                activeGroup={activeMeasurementGroup}
+                onActiveGroupChange={setActiveMeasurementGroup}
+                onDeleteMeasurement={(id) => rulerOverlayRef.current?.deleteById(id)}
+                onMoveMeasurement={(id) => rulerOverlayRef.current?.moveById(id)}
+                onSelectMeasurement={(id) => rulerOverlayRef.current?.selectById(id)}
+                onChangeMeasurementGroup={changeMeasurementGroup}
+                unit={measurementUnit}
+                onUnitChange={setMeasurementUnit}
+                scale={customScale}
+                onSetScale={handleSetCustomScale}
+                onCalibrate={startScaleCalibration}
+                isCalibrating={isScaleCalibrationActive}
+              />,
+              document.body
+            )}
             <RulerOverlay
               ref={rulerOverlayRef}
               containerRef={pdfContainerRef}
               isActive={isRulerActive}
               pageMeasureScales={pageMeasureScales}
               customScale={customScale}
+              displayUnit={measurementUnit}
+              tool={measurementTool}
+              groups={measurementGroups}
+              activeGroup={activeMeasurementGroup}
               isCalibrationActive={isScaleCalibrationActive}
               onCalibrationMeasure={handleScaleCalibrationMeasurement}
             />

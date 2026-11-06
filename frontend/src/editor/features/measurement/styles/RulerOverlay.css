@@ -1,0 +1,53 @@
+/* Ruler overlay geometry is page-relative; presentation follows the editor theme. */
+.ruler-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 100;
+}
+
+.ruler-overlay__areas { pointer-events: none; }
+.ruler-overlay__shape { pointer-events: none; cursor: crosshair; }
+.ruler-overlay__shape--interactive { pointer-events: visiblePainted; cursor: pointer; }
+.ruler-overlay__label {
+  stroke: var(--c-surface);
+  paint-order: stroke;
+}
+.ruler-overlay__snap {
+  fill: none;
+  stroke: var(--mantine-color-yellow-5, #ffcc00);
+  pointer-events: none;
+}
+.ruler-overlay__menu {
+  position: fixed;
+  z-index: 100000;
+  min-width: 180px;
+  padding: 5px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-body);
+  color: var(--mantine-color-text);
+  box-shadow: var(--mantine-shadow-md);
+}
+.ruler-overlay__menu-item {
+  display: block;
+  width: 100%;
+  padding: 9px 18px;
+  text-align: left;
+  border: 0;
+  border-radius: var(--mantine-radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.ruler-overlay__menu-item:hover,
+.ruler-overlay__menu-item:focus-visible {
+  background: var(--mantine-color-default-hover);
+}
+.ruler-overlay__menu-item--close {
+  padding: 6px;
+  color: var(--mantine-color-dimmed);
+}
