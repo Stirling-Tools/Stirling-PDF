@@ -182,7 +182,10 @@
   border: 1px solid var(--c-border, var(--mantine-color-default-border));
   background: var(--c-surface, var(--mantine-color-body));
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .fieldCard:hover {
