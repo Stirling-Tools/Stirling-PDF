@@ -17,6 +17,7 @@ import { ToastProvider } from "@editor/components/toast";
 import ToastRenderer from "@editor/components/toast/ToastRenderer";
 import { ToastPortalBinder } from "@editor/components/toast";
 import {
+  type ColorScheme,
   type ThemeMode,
   getSystemTheme,
   resolveColorScheme,
@@ -42,15 +43,22 @@ export function useTheme() {
 
 interface ThemeProviderProps {
   children: ReactNode;
+  /**
+   * Pins the scheme without reading or saving the preference, for hosts that
+   * own the theme such as Storybook's toolbar. setTheme is a no-op while set.
+   */
+  forcedTheme?: ColorScheme;
 }
 
-export function ThemeProvider({ children }: ThemeProviderProps) {
+export function ThemeProvider({ children, forcedTheme }: ThemeProviderProps) {
   // preferences.theme is the single source of truth.
   const { preferences, updatePreference } = usePreferences();
-  const themeMode = preferences.theme;
+  const themeMode = forcedTheme ?? preferences.theme;
   const setTheme = useCallback(
-    (mode: ThemeMode) => updatePreference("theme", mode),
-    [updatePreference],
+    (mode: ThemeMode) => {
+      if (!forcedTheme) updatePreference("theme", mode);
+    },
+    [forcedTheme, updatePreference],
   );
 
   // Track the OS scheme so "system" updates live; only subscribe while on system.

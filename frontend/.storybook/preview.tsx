@@ -19,10 +19,7 @@ void React;
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TierProvider, type Tier } from "@processor/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
-import {
-  ThemeProvider,
-  useTheme,
-} from "@editor-core/components/shared/ThemeProvider";
+import { ThemeProvider } from "@editor-core/components/shared/ThemeProvider";
 import { PreferencesProvider } from "@editor-core/contexts/PreferencesContext";
 import { UIProvider } from "@processor/contexts/UIContext";
 import { AppConfigProvider } from "@editor-core/contexts/AppConfigContext";
@@ -161,23 +158,6 @@ function TierKey({
   );
 }
 
-/**
- * Makes the Storybook toolbar the SINGLE source of truth for the theme.
- */
-function ThemeBridge({
-  theme,
-  children,
-}: {
-  theme: "light" | "dark";
-  children: React.ReactNode;
-}) {
-  const { setTheme } = useTheme();
-  useEffect(() => {
-    setTheme(theme);
-  }, [theme, setTheme]);
-  return <>{children}</>;
-}
-
 /** Switches i18next to the toolbar locale and keeps document dir/lang in sync. */
 const withLocale: Decorator = (Story, context) => {
   const locale = (context.globals.locale as string) ?? "en-US";
@@ -217,34 +197,32 @@ const withProviders: Decorator = (Story, context) => {
     <MemoryRouter initialEntries={["/"]}>
       <QueryClientProvider client={queryClient}>
         <PreferencesProvider>
-          <ThemeProvider>
-            <ThemeBridge theme={colorScheme}>
-              {/* The app mounts this with the platform providers; without it the config never
-                    loads and anything waiting on it (the portal's connect gate) never settles.
-                    Seeded rather than fetched; a story can mount its own to vary it. */}
-              <AppConfigProvider
-                initialConfig={STORY_APP_CONFIG}
-                autoFetch={false}
-              >
-                {/* LinkProvider must wrap TierProvider: TierContext derives its tier
+          <ThemeProvider forcedTheme={colorScheme}>
+            {/* The app mounts this with the platform providers; without it the config never
+                loads and anything waiting on it (the portal's connect gate) never settles.
+                Seeded rather than fetched; a story can mount its own to vary it. */}
+            <AppConfigProvider
+              initialConfig={STORY_APP_CONFIG}
+              autoFetch={false}
+            >
+              {/* LinkProvider must wrap TierProvider: TierContext derives its tier
                   from useLink() (matches App.tsx's nesting). */}
-                <LinkProvider key={linkState} initialState={linkState}>
-                  <TierKey tier={tier}>
-                    <UIProvider>
-                      <Suspense fallback={null}>
-                        {isPortalStory ? (
-                          <div className="portal-scope">
-                            <Story />
-                          </div>
-                        ) : (
+              <LinkProvider key={linkState} initialState={linkState}>
+                <TierKey tier={tier}>
+                  <UIProvider>
+                    <Suspense fallback={null}>
+                      {isPortalStory ? (
+                        <div className="portal-scope">
                           <Story />
-                        )}
-                      </Suspense>
-                    </UIProvider>
-                  </TierKey>
-                </LinkProvider>
-              </AppConfigProvider>
-            </ThemeBridge>
+                        </div>
+                      ) : (
+                        <Story />
+                      )}
+                    </Suspense>
+                  </UIProvider>
+                </TierKey>
+              </LinkProvider>
+            </AppConfigProvider>
           </ThemeProvider>
         </PreferencesProvider>
       </QueryClientProvider>
