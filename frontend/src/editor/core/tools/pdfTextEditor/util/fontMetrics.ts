@@ -10,6 +10,8 @@ export interface FontMetrics {
   kind: FaceKind;
   weight: number;
   restricted: boolean;
+  variableWeight: number | null;
+  cff: boolean;
 }
 
 const TAG = (s: string) =>
@@ -17,10 +19,6 @@ const TAG = (s: string) =>
   (s.charCodeAt(1) << 16) |
   (s.charCodeAt(2) << 8) |
   s.charCodeAt(3);
-
-const LATIN_EXTRAS = [
-  0x2013, 0x2014, 0x2018, 0x2019, 0x201c, 0x201d, 0x2022, 0x2026, 0x20ac,
-];
 
 function tables(dv: DataView): Map<number, { offset: number; length: number }> {
   const out = new Map<number, { offset: number; length: number }>();
@@ -44,6 +42,23 @@ function kindOf(fixedPitch: boolean, panose: number[] | null): FaceKind {
   return "sans";
 }
 
+function defaultWeight(
+  dv: DataView,
+  fvar: { offset: number } | undefined,
+): number | null {
+  if (!fvar) return null;
+  const axes = fvar.offset + dv.getUint16(fvar.offset + 4);
+  const count = dv.getUint16(fvar.offset + 8);
+  const size = dv.getUint16(fvar.offset + 10);
+  for (let i = 0; i < count; i++) {
+    const axis = axes + i * size;
+    if (dv.getUint32(axis) !== TAG("wght") >>> 0) continue;
+    const max = dv.getInt32(axis + 12) / 65536;
+    return max >= 100 ? dv.getInt32(axis + 8) / 65536 : null;
+  }
+  return null;
+}
+
 export function parseFontMetrics(bytes: Uint8Array): FontMetrics | null {
   if (bytes.length < 12) return null;
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -65,14 +80,9 @@ export function parseFontMetrics(bytes: Uint8Array): FontMetrics | null {
       dv.getUint16(hmtx.offset + Math.min(gid, numHMetrics - 1) * 4);
 
     const advances = new Map<number, number>();
-    const codes = [...Array.from({ length: 224 }, (_, i) => i + 32)].concat(
-      LATIN_EXTRAS,
-    );
-    for (const cp of codes) {
-      const gid = cmap.get(cp);
-      if (gid !== undefined && gid > 0) advances.set(cp, em(advanceOf(gid)));
-    }
-    if (!advances.has(0x20) || !advances.has(0x61)) return null;
+    for (const [cp, gid] of cmap)
+      if (gid > 0) advances.set(cp, em(advanceOf(gid)));
+    if (!advances.has(0x20)) return null;
 
     const glyphTop = glyphTopReader(dv, t, head.offset);
     const top = (ch: string) => {
@@ -113,6 +123,8 @@ export function parseFontMetrics(bytes: Uint8Array): FontMetrics | null {
       kind: kindOf(fixedPitch, panose),
       weight,
       restricted,
+      variableWeight: defaultWeight(dv, t.get(TAG("fvar"))),
+      cff: t.has(TAG("CFF ")) || t.has(TAG("CFF2")),
     };
   } catch {
     return null;

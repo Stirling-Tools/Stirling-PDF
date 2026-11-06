@@ -94,6 +94,10 @@ export function _clearDroppedBase14CharsForTests(): void {
 }
 
 /** Record every VISIBLE char present in `original` but missing from `kept`. */
+export function recordUndrawableChars(chars: string): void {
+  recordDroppedChars(chars, "");
+}
+
 function recordDroppedChars(original: string, kept: string): void {
   const keptSet = new Set(kept);
   for (const ch of original) {

@@ -5,7 +5,10 @@ import {
   loadedLocalFonts,
   pickLocalFontFace,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
-import { loadServerFontBytes } from "@editor/tools/pdfTextEditor/util/serverFonts";
+import {
+  loadServerFontBytes,
+  loadServerFonts,
+} from "@editor/tools/pdfTextEditor/util/serverFonts";
 import {
   parseFontMetrics,
   type FaceKind,
@@ -138,7 +141,144 @@ const DEVICE_TEXT_FAMILIES = [
   "Rockwell",
 ];
 
+type Script =
+  | "hangul"
+  | "kana"
+  | "han"
+  | "arabic"
+  | "hebrew"
+  | "thai"
+  | "devanagari"
+  | "malayalam"
+  | "tibetan";
+
+interface ScriptFonts {
+  script: Script;
+  chars: RegExp;
+  server: RegExp;
+  device: string[];
+}
+
+const SCRIPTS: ScriptFonts[] = [
+  {
+    script: "hangul",
+    chars: /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/,
+    server: /\b(KR|Korean)\b/i,
+    device: [
+      "Malgun Gothic",
+      "AppleGothic",
+      "Gulim",
+      "Dotum",
+      "Batang",
+      "NanumGothic",
+      "Noto Sans KR",
+      "UnDotum",
+    ],
+  },
+  {
+    script: "kana",
+    chars: /[\u3040-\u30ff]/,
+    server: /\b(JP|Japanese)\b/i,
+    device: [
+      "Yu Gothic",
+      "Meiryo",
+      "MS Gothic",
+      "MS PGothic",
+      "MS Mincho",
+      "Osaka",
+      "Noto Sans JP",
+      "TakaoGothic",
+    ],
+  },
+  {
+    script: "han",
+    chars: /[\u3400-\u4dbf\u4e00-\u9fff]/,
+    server: /\b(SC|TC|HK|JP|Chinese)\b/i,
+    device: [
+      "Microsoft YaHei",
+      "SimSun",
+      "SimHei",
+      "Microsoft JhengHei",
+      "PMingLiU",
+      "MingLiU",
+      "Heiti SC",
+      "Heiti TC",
+      "STHeiti",
+      "Noto Sans SC",
+      "Noto Sans TC",
+      "WenQuanYi Micro Hei",
+      "AR PL UMing CN",
+    ],
+  },
+  {
+    script: "arabic",
+    chars: /[\u0600-\u06ff\u0750-\u077f]/,
+    server: /Arabic/i,
+    device: ["Noto Naskh Arabic", "Geeza Pro", "Segoe UI"],
+  },
+  {
+    script: "hebrew",
+    chars: /[\u0590-\u05ff]/,
+    server: /Hebrew/i,
+    device: ["Noto Sans Hebrew", "Arial Hebrew", "David"],
+  },
+  {
+    script: "thai",
+    chars: /[\u0e00-\u0e7f]/,
+    server: /Thai/i,
+    device: ["Noto Sans Thai", "Tahoma", "Leelawadee UI", "Thonburi"],
+  },
+  {
+    script: "devanagari",
+    chars: /[\u0900-\u097f]/,
+    server: /Devanagari/i,
+    device: ["Noto Sans Devanagari", "Mangal", "Kohinoor Devanagari"],
+  },
+  {
+    script: "malayalam",
+    chars: /[\u0d00-\u0d7f]/,
+    server: /Malayalam/i,
+    device: ["Noto Sans Malayalam", "Kartika"],
+  },
+  {
+    script: "tibetan",
+    chars: /[\u0f00-\u0fff]/,
+    server: /Tibetan/i,
+    device: ["Noto Serif Tibetan", "Microsoft Himalaya"],
+  },
+];
+
+const WIN_ANSI_EXTRAS = new Set([
+  0x0152, 0x0153, 0x0160, 0x0161, 0x0178, 0x017d, 0x017e, 0x0192, 0x02c6,
+  0x02dc, 0x2013, 0x2014, 0x2018, 0x2019, 0x201a, 0x201c, 0x201d, 0x201e,
+  0x2020, 0x2021, 0x2022, 0x2026, 0x2030, 0x2039, 0x203a, 0x20ac, 0x2122,
+]);
+
+const COVERAGE = 0.9;
+
+export function faceCovers(face: Face, text: string): boolean {
+  const advances = face.metrics?.get(face.family)?.advances;
+  let total = 0;
+  let drawable = 0;
+  for (const ch of text) {
+    if (/\s/.test(ch)) continue;
+    const cp = ch.codePointAt(0)!;
+    total++;
+    if (advances ? advances.has(cp) : cp <= 0xff || WIN_ANSI_EXTRAS.has(cp))
+      drawable++;
+  }
+  return drawable >= total * COVERAGE;
+}
+
+function scriptsOf(text: string): ScriptFonts[] {
+  return SCRIPTS.filter((s) => s.chars.test(text));
+}
+
 let bundled: Face[] = [];
+let scriptFaces: Face[] = [];
+const neededScripts = new Set<Script>();
+const scriptJobs = new Map<Script, Promise<void>>();
+const serverFamiliesTaken = new Set<string>();
 let device: Face[] = [];
 let deviceRead = false;
 let bundledJob: Promise<void> | null = null;
@@ -155,7 +295,7 @@ export function subscribeScanFaces(listener: () => void): () => void {
 }
 
 export function scanFaces(): Face[] {
-  return [...BASE14_FACES, ...bundled, ...device];
+  return [...BASE14_FACES, ...bundled, ...scriptFaces, ...device];
 }
 
 export function deviceScanFaceCount(): number | null {
@@ -168,11 +308,23 @@ export function faceFromBytes(
   boldBytes: Uint8Array | null,
 ): Face | null {
   const regularMetrics = parseFontMetrics(regular);
-  if (!regularMetrics || regularMetrics.restricted) return null;
+  if (
+    !regularMetrics ||
+    regularMetrics.restricted ||
+    regularMetrics.cff ||
+    (regularMetrics.variableWeight ?? 400) < 300
+  )
+    return null;
   const metrics = new Map<string, FontMetrics>([[spec.family, regularMetrics]]);
   let bold = spec.bold;
   const boldMetrics = boldBytes ? parseFontMetrics(boldBytes) : null;
-  if (boldBytes && boldMetrics && !boldMetrics.restricted) {
+  if (
+    boldBytes &&
+    boldMetrics &&
+    !boldMetrics.restricted &&
+    !boldMetrics.cff &&
+    (boldMetrics.variableWeight ?? 700) >= 600
+  ) {
     metrics.set(spec.bold, boldMetrics);
   } else {
     bold = spec.family;
@@ -213,6 +365,50 @@ export function loadBundledScanFaces(): Promise<void> {
   return job;
 }
 
+async function loadServerScript(script: ScriptFonts): Promise<void> {
+  const fonts = await loadServerFonts();
+  if (!fonts) return;
+  const families = [...new Set(fonts.map((f) => f.family))].filter(
+    (family) =>
+      script.server.test(family) &&
+      !serverFamiliesTaken.has(family) &&
+      !scanFaces().some((face) => face.family === family),
+  );
+  for (const family of families) serverFamiliesTaken.add(family);
+  for (const family of families) {
+    const hasBold = fonts.some(
+      (f) => f.family === family && faceStyleFlags(f).bold,
+    );
+    const [regular, boldBytes] = await Promise.all([
+      loadServerFontBytes(family),
+      hasBold ? loadServerFontBytes(`${family} Bold`) : Promise.resolve(null),
+    ]);
+    if (!regular) continue;
+    const face = faceFromBytes(
+      { label: family, family, bold: `${family} Bold`, source: "bundled" },
+      regular,
+      boldBytes,
+    );
+    if (face) {
+      scriptFaces = [...scriptFaces, face];
+      notify();
+    }
+  }
+}
+
+export function loadScriptScanFaces(text: string): Promise<void> {
+  const jobs = scriptsOf(text).map((script) => {
+    neededScripts.add(script.script);
+    let job = scriptJobs.get(script.script);
+    if (!job) {
+      job = loadServerScript(script).catch(() => undefined);
+      scriptJobs.set(script.script, job);
+    }
+    return job;
+  });
+  return Promise.all(jobs).then(() => undefined);
+}
+
 export function setBundledScanFaces(faces: Face[]): void {
   bundled = faces;
   bundledJob = Promise.resolve();
@@ -221,6 +417,10 @@ export function setBundledScanFaces(faces: Face[]): void {
 
 export function resetScanFaces(): void {
   bundled = [];
+  scriptFaces = [];
+  neededScripts.clear();
+  scriptJobs.clear();
+  serverFamiliesTaken.clear();
   device = [];
   deviceRead = false;
   bundledJob = null;
@@ -258,7 +458,13 @@ export function loadDeviceScanFaces(): Promise<number> {
       return 0;
     }
     const faces: Face[] = [];
-    for (const family of DEVICE_TEXT_FAMILIES) {
+    const families = new Set([
+      ...DEVICE_TEXT_FAMILIES,
+      ...SCRIPTS.filter((s) => neededScripts.has(s.script)).flatMap(
+        (s) => s.device,
+      ),
+    ]);
+    for (const family of families) {
       const face = await deviceFace(family);
       if (face) faces.push(face);
     }

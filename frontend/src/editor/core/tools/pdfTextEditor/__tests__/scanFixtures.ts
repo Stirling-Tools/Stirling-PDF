@@ -41,6 +41,7 @@ export interface ScanLineSpec {
   family: string;
   text: string;
   size: number;
+  ocrFamily?: string;
 }
 
 export interface ScanOptions {
@@ -116,6 +117,7 @@ interface WordBox {
   right: number;
   baseline: number;
   size: number;
+  ocrFamily: string;
 }
 
 function spaceAdvance(family: string): number {
@@ -158,6 +160,7 @@ function typeset(
         right: span.right,
         baseline,
         size: line.size,
+        ocrFamily: line.ocrFamily ?? "Helvetica",
       });
       x += spanOf(doc, page, `H${word}H`, line.family, line.size) - hh + space;
     }
@@ -285,7 +288,7 @@ export async function buildScan(
         fontSize: box.size,
         fill: BLACK,
         originalFontPtr: 0,
-        fallbackFamily: "Helvetica",
+        fallbackFamily: box.ocrFamily,
         renderMode: 3,
         tagMarks: [],
       });

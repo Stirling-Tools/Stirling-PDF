@@ -43,6 +43,14 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
             </Text>
           </Group>
         )}
+        {match.status === "noFont" && (
+          <Text size="sm" c="dimmed" data-testid="pdf-editor-scan-font-none">
+            {t(
+              "pdfTextEditor.scanFont.noFont",
+              "None of the available fonts can draw this script, so typed text cannot be redrawn yet. Allow fonts on this computer to add one.",
+            )}
+          </Text>
+        )}
         {match.status === "unmeasurable" && (
           <Text size="sm" c="dimmed">
             {t(
@@ -279,7 +287,12 @@ export function ScanFontMatchRow({ match }: { match: ScanFontMatch }) {
         onClick={match.show}
         data-testid="pdf-editor-scan-font-open"
       >
-        {t("pdfTextEditor.scanFont.change", "Font not looking right?")}
+        {match.undrawable
+          ? t(
+              "pdfTextEditor.scanFont.chooseMissing",
+              "Choose a font for this text…",
+            )
+          : t("pdfTextEditor.scanFont.change", "Font not looking right?")}
       </Button>
     </Section>
   );

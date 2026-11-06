@@ -24,6 +24,7 @@ import {
   measureObjSpanPt,
   removeAndDestroyObject,
   removeMemberPtrs,
+  recordUndrawableChars,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   clampStretch,
@@ -45,6 +46,7 @@ import {
 import {
   COURIER,
   HELVETICA,
+  faceCovers,
   scanFaces,
   type Face,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
@@ -641,7 +643,8 @@ function rankStylesUncached(
   const typewriter =
     faceFor(doc, page, state) === COURIER ||
     isEvenlySpaced(ref.ink.glyphCenters, ref.original);
-  const all = scanFaces();
+  const all = scanFaces().filter((f) => faceCovers(f, ref.original));
+  if (all.length === 0) return [];
   const mono = all.filter((f) => f.kind === "mono");
   const familiesOf = (face: Face) => [...new Set([face.family, face.bold])];
   const quickScore = (face: Face) =>
@@ -1017,7 +1020,20 @@ export function renderScanEdit(
   const o = state.override;
   const restyle =
     o.family !== undefined || o.fontSize !== undefined || o.fill !== undefined;
-  const fitted = styleFor(doc, page, state, null) ?? fallbackStyle(state);
+  const fittedStyle = styleFor(doc, page, state, null);
+  if (
+    !fittedStyle &&
+    !o.style &&
+    o.family === undefined &&
+    !scanFaces().some((f) => faceCovers(f, text))
+  ) {
+    const original = state.lines.map((l) => l.text).join(" ");
+    recordUndrawableChars(
+      [...text].filter((ch) => !original.includes(ch)).join(""),
+    );
+    return;
+  }
+  const fitted = fittedStyle ?? fallbackStyle(state);
   const block = o.style ?? fitted;
   const inkOf = (w: LayoutWord) =>
     spanInk(doc, page, state, w.line, w.index, w.index);
@@ -1430,6 +1446,13 @@ export function scanStyleChoices(
   return state.block?.ranked ?? [];
 }
 
+export function scanBlockUndrawable(
+  doc: EditorDocument,
+  run: TextRun,
+): boolean {
+  return scanEditOf(doc, run)?.block === null;
+}
+
 export function rerankScanStyles(
   doc: EditorDocument,
   page: Page,
@@ -1438,8 +1461,11 @@ export function rerankScanStyles(
   const state = scanEditOf(doc, run);
   if (!state) return [];
   const before = state.block;
+  if (before === null) state.block = undefined;
   if (before === undefined || before === null)
-    return scanStyleChoices(doc, page, run);
+    return onOriginalScan(doc, page, state, () =>
+      styleFor(doc, page, state, null) ? (state.block?.ranked ?? []) : [],
+    );
   const ranked = onOriginalScan(doc, page, state, () =>
     rankStyles(
       doc,

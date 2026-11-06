@@ -11,7 +11,13 @@ import {
   test,
   vi,
 } from "vitest";
-import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
+import {
+  getDroppedBase14Chars,
+  resetDroppedBase14Chars,
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import { renderLuma } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
@@ -271,6 +277,145 @@ function likeness(
   }
   return ab / Math.sqrt(aa * bb);
 }
+
+const STATIC_FONTS = path.join(
+  import.meta.dirname,
+  "../../../../../../../app/core/src/main/resources/static/fonts",
+);
+
+async function staticFace(family: string, file: string): Promise<Face | null> {
+  const bytes = new Uint8Array(await readFile(path.join(STATIC_FONTS, file)));
+  registerFontBytes(family, bytes);
+  return faceFromBytes(
+    { label: family, family, bold: `${family} Bold`, source: "bundled" },
+    bytes,
+    null,
+  );
+}
+
+async function savedText(doc: EditorDocument): Promise<string> {
+  const { blob } = await exportToBlob(doc, "scan.pdf");
+  const back = await EditorDocument.open(
+    new Uint8Array(await blob.arrayBuffer()),
+  );
+  try {
+    const page = back.page(0);
+    PdfiumTextReader.populate(back, page);
+    return page.runs.map((r) => r.text).join(" ");
+  } finally {
+    back.dispose();
+  }
+}
+
+describe("matching scanned text in other scripts", () => {
+  const SCAN: ScanOptions = { dpi: 200, blur: 0.6, noise: 8 };
+  const russian: ScanLineSpec = {
+    family: "DejaVu Sans",
+    text: "Счёт 4471 для Ивана Петрова к оплате до 30 июня",
+    size: 14,
+    ocrFamily: "DejaVu Sans",
+  };
+
+  test(
+    "picks a face that can draw Cyrillic and the edit survives a save",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan([russian], SCAN);
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const [top] = scanStyleChoices(doc, page, run);
+        expect(top.face.label).toBe("DejaVu Sans");
+        renderScanEdit(
+          doc,
+          page,
+          run,
+          scanEditOf(doc, run)!,
+          run.text.replace("Ивана", "Марии"),
+        );
+        expect(await savedText(doc)).toContain("Марии");
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
+    "picks the script's own face when the server has one",
+    { timeout: 120_000 },
+    async () => {
+      const japanese = await staticFace(
+        "Noto Sans JP",
+        "NotoSansJP-Regular.ttf",
+      );
+      setBundledScanFaces([...bundled, japanese!]);
+      const { doc, page } = await buildScan(
+        [
+          {
+            family: "Noto Sans JP",
+            text: "請求書 4471 六月 三十日 までに お支払い ください",
+            size: 14,
+            ocrFamily: "Noto Sans JP",
+          },
+        ],
+        SCAN,
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        expect(scanStyleChoices(doc, page, run)[0]?.face.label).toBe(
+          "Noto Sans JP",
+        );
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
+    "offers nothing it cannot draw and leaves the scan alone when an edit cannot be drawn",
+    { timeout: 120_000 },
+    async () => {
+      const korean = await staticFace("Noto Sans KR", "NotoSansKR-Regular.ttf");
+      expect(korean).toBeNull();
+      resetDroppedBase14Chars();
+      const { doc, page } = await buildScan(
+        [
+          {
+            family: "Noto Sans KR",
+            text: "청구서 4471 김민준 님 6월 30일까지 납부",
+            size: 14,
+            ocrFamily: "Noto Sans KR",
+          },
+        ],
+        SCAN,
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        expect(scanStyleChoices(doc, page, run)).toEqual([]);
+        const line = scanEditOf(doc, run)!.lines[0];
+        const region = {
+          x: 20,
+          y: line.baseline - 6,
+          width: 500,
+          height: line.height + 8,
+        };
+        const before = renderLuma(doc.module, page, region, 0)!.data;
+        renderScanEdit(
+          doc,
+          page,
+          run,
+          scanEditOf(doc, run)!,
+          run.text.replace("김민준", "이서연"),
+        );
+        expect(getDroppedBase14Chars()).toEqual(
+          expect.arrayContaining(["이", "서", "연"]),
+        );
+        expect(renderLuma(doc.module, page, region, 0)!.data).toEqual(before);
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+});
 
 describe("drawing typed words from the scan's own letters", () => {
   const SCAN: ScanOptions = { dpi: 200, blur: 0.5, noise: 6 };
@@ -599,6 +744,12 @@ const FUNKY: Array<[string, FontFile, FontFile | null]> = [
   ["Academy Engraved", ["Academy Engraved LET Fonts.ttf", ""], null],
 ];
 
+function sentenceSlot(label: string): number {
+  let hash = 0;
+  for (const ch of label) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  return hash;
+}
+
 async function readFace([file, ps]: FontFile): Promise<Uint8Array | null> {
   for (const dir of [
     "/System/Library/Fonts/Supplemental/",
@@ -641,9 +792,11 @@ describe.skipIf(!process.env.SCAN_FONT_FUNKY)("funky font benchmark", () => {
         truths.push(label);
       }
       const samples: Sample[] = [0, 3].flatMap((offset) =>
-        truths.map((label, i) => ({
+        truths.map((label) => ({
           family: label,
-          text: HELDOUT_SENTENCES[(i + offset) % HELDOUT_SENTENCES.length],
+          text: HELDOUT_SENTENCES[
+            (sentenceSlot(label) + offset) % HELDOUT_SENTENCES.length
+          ],
           size: 12,
           accept: [label],
           kind: "sans" as const,

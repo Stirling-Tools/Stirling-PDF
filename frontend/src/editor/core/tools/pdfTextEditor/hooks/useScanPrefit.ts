@@ -7,7 +7,10 @@ import {
   isScanRun,
   prefitScanRun,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
-import { loadBundledScanFaces } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
+import {
+  loadBundledScanFaces,
+  loadScriptScanFaces,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 
 const SLICE_MS = 12;
 const GAP_MS = 4;
@@ -16,11 +19,16 @@ export function useScanPrefit(
   store: EditorStore,
   state: EditorViewState,
 ): void {
-  const hasScannedText = useMemo(
+  const scannedText = useMemo(
     () =>
-      state.pages.some((page) => page.runs.some((run) => run.renderMode === 3)),
+      state.pages
+        .flatMap((page) => page.runs)
+        .filter((run) => run.renderMode === 3)
+        .map((run) => run.text)
+        .join(" "),
     [state.pages],
   );
+  const hasScannedText = scannedText.length > 0;
   useEffect(() => {
     if (!hasScannedText) return;
     let stopped = false;
@@ -43,12 +51,15 @@ export function useScanPrefit(
         return;
       }
     };
-    void loadBundledScanFaces().then(() => {
+    void Promise.all([
+      loadBundledScanFaces(),
+      loadScriptScanFaces(scannedText),
+    ]).then(() => {
       if (!stopped) timer = window.setTimeout(step, GAP_MS);
     });
     return () => {
       stopped = true;
       window.clearTimeout(timer);
     };
-  }, [store, hasScannedText, state.pages]);
+  }, [store, hasScannedText, scannedText, state.pages]);
 }

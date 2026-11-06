@@ -13,6 +13,7 @@ import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import {
   previewScanStyle,
   rerankScanStyles,
+  scanBlockUndrawable,
   scanEditOf,
   type RankedStyle,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
@@ -25,6 +26,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
   deviceScanFaceCount,
+  faceCovers,
   loadDeviceScanFaces,
   scanFaces,
   subscribeScanFaces,
@@ -38,12 +40,13 @@ export interface ScanFontChoice {
 }
 
 export interface ScanFontMatch {
-  status: "matching" | "ready" | "unmeasurable";
+  status: "matching" | "ready" | "unmeasurable" | "noFont";
   scan: string | null;
   choices: ScanFontChoice[];
   choose: (index: number) => void;
   open: boolean;
   canShow: boolean;
+  undrawable: boolean;
   show: () => void;
   close: () => void;
   deviceFonts: {
@@ -71,6 +74,7 @@ function patchUrl(patch: PixelPatch): string | null {
 
 interface Ranked {
   runId: string;
+  drawable: boolean;
   ranked: RankedStyle[];
   scan: string | null;
   previews: Array<string | null>;
@@ -146,13 +150,23 @@ export function useScanFontMatch(
       if (!doc || cancelled) return;
       const page = doc.page(picking.pageIndex);
       const run = page.findRun(picking.runId);
+      const undrawable = !!run && scanBlockUndrawable(doc, run);
       const fitted = run ? rerankScanStyles(doc, page, run) : [];
+      if (undrawable && fitted[0])
+        store.dispatch(
+          new SetScanStyleCommand({
+            pageIndex: picking.pageIndex,
+            runId: picking.runId,
+            choice: fitted[0],
+          }),
+        );
       const ref =
         run && fitted[0]
           ? previewScanStyle(doc, page, run, fitted[0].style)
           : null;
       setRanked({
         runId: picking.runId,
+        drawable: !!run && scanFaces().some((f) => faceCovers(f, run.text)),
         ranked: fitted,
         scan: ref ? patchUrl(ref.scan) : null,
         previews: fitted.map((choice) => {
@@ -193,13 +207,22 @@ export function useScanFontMatch(
   );
 
   if (!target) return null;
+  const selectedRun =
+    selected &&
+    store.document?.page(selected.pageIndex).findRun(selected.runId);
+  const undrawable =
+    !!selectedRun &&
+    !!store.document &&
+    scanBlockUndrawable(store.document, selectedRun);
   const current = ranked && ranked.runId === target.runId ? ranked : null;
   return {
     status: !current
       ? "matching"
-      : current.ranked.length === 0
-        ? "unmeasurable"
-        : "ready",
+      : current.ranked.length > 0
+        ? "ready"
+        : current.drawable
+          ? "unmeasurable"
+          : "noFont",
     scan: current?.scan ?? null,
     choices: (current?.ranked ?? []).map((choice, i) => ({
       label: choice.face.label,
@@ -212,7 +235,8 @@ export function useScanFontMatch(
     })),
     choose,
     open: !!picking,
-    canShow: !!selected && wasRedrawn(store, selected),
+    canShow: !!selected && (wasRedrawn(store, selected) || undrawable),
+    undrawable,
     show: () => setPicking(selected),
     close: () => setPicking(null),
     deviceFonts: {
