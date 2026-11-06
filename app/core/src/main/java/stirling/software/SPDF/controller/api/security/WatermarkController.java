@@ -42,6 +42,7 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ImageProcessingUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFileManager;
@@ -305,6 +306,9 @@ public class WatermarkController {
             int heightSpacer,
             float fontSize)
             throws IOException {
+
+        // Reject a pixel bomb before the raster is allocated
+        ImageProcessingUtils.assertWithinPixelLimit(watermarkImage);
 
         // Load the watermark image
         BufferedImage image = ImageIO.read(watermarkImage.getInputStream());

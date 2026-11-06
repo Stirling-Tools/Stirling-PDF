@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import java.awt.geom.AffineTransform;
 import java.awt.image.*;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -24,6 +25,62 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ImageProcessingUtils {
+
+    // A tiny file can declare a huge canvas that only balloons into memory once rasterized
+    // (a pixel bomb); ~10000x10000 is a generous ceiling for any real scan or photo.
+    public static final long MAX_IMAGE_PIXELS = 100_000_000L;
+
+    /** Rejects an upload whose declared pixels exceed the limit, read from the header alone. */
+    public static void assertWithinPixelLimit(MultipartFile file) throws IOException {
+        if (file == null) {
+            return;
+        }
+        try (InputStream input = file.getInputStream()) {
+            assertWithinPixelLimit(input);
+        }
+    }
+
+    public static void assertWithinPixelLimit(byte[] imageBytes) throws IOException {
+        if (imageBytes == null) {
+            return;
+        }
+        assertWithinPixelLimit(new ByteArrayInputStream(imageBytes));
+    }
+
+    private static void assertWithinPixelLimit(InputStream input) throws IOException {
+        try (ImageInputStream stream = ImageIO.createImageInputStream(input)) {
+            if (stream == null) {
+                return;
+            }
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(stream);
+            if (!readers.hasNext()) {
+                // No decoder claims it; the normal read path raises its own error.
+                return;
+            }
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(stream, true, true);
+                assertReaderWithinPixelLimit(reader, 0);
+            } finally {
+                reader.dispose();
+            }
+        }
+    }
+
+    /** Header dimensions are widened to long before multiplying so the product cannot overflow. */
+    static void assertReaderWithinPixelLimit(ImageReader reader, int imageIndex)
+            throws IOException {
+        long width = reader.getWidth(imageIndex);
+        long height = reader.getHeight(imageIndex);
+        if (width > 0 && height > 0 && width * height > MAX_IMAGE_PIXELS) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.imageTooLarge",
+                    "Image dimensions {0}x{1} exceed the maximum of {2} pixels",
+                    width,
+                    height,
+                    MAX_IMAGE_PIXELS);
+        }
+    }
 
     static BufferedImage convertColorType(BufferedImage sourceImage, String colorType) {
         return switch (colorType) {
@@ -117,6 +174,8 @@ public class ImageProcessingUtils {
             throws IOException {
         BufferedImage image = null;
         String filename = file.getOriginalFilename();
+
+        assertWithinPixelLimit(file);
 
         if (filename != null && filename.toLowerCase(Locale.ROOT).endsWith(".psd")) {
             // For PSD files, try explicit ImageReader
