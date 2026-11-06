@@ -40,9 +40,7 @@ export function templateFromField(
 
   return {
     name: staged?.name ?? field.name,
-    // Only a label the user typed: the extracted one may be derived from the name, and writing
-    // it into the copy would give every copy the original's label.
-    label: staged?.label,
+    label: staged?.label ?? field.label,
     type: effective.type,
     pageIndex: anchor.pageIndex,
     x: left,
@@ -107,15 +105,32 @@ export function takenFieldNames(
   ]);
 }
 
+/**
+ * Name and label for each copy, numbered alike. The editor lists fields by label, so a copy
+ * that kept the source's label would be indistinguishable from it.
+ */
+function copyIdentities(
+  source: FieldTemplate,
+  count: number,
+  taken: Set<string>,
+): { name: string; label: string }[] {
+  const base = copyBase(source.name);
+  const labelBase = source.label?.trim().replace(COPY_SUFFIX, "") || base;
+  return copyNames(base, count, taken).map((name) => ({
+    name,
+    label: labelBase + name.slice(base.length),
+  }));
+}
+
 /** One copy beside the source. */
 export function duplicateInPlace(
   source: FieldTemplate,
   taken: Set<string>,
 ): FieldTemplate {
-  const [name] = copyNames(copyBase(source.name), 1, taken);
+  const [identity] = copyIdentities(source, 1, taken);
   return {
     ...source,
-    name,
+    ...identity,
     x: source.x + COPY_OFFSET_PT,
     y: source.y - COPY_OFFSET_PT,
   };
@@ -134,10 +149,10 @@ export function duplicateToAllPages(
   for (let page = 0; page < totalPages; page++) {
     if (page !== source.pageIndex) pages.push(page);
   }
-  const names = copyNames(copyBase(source.name), pages.length, taken);
+  const identities = copyIdentities(source, pages.length, taken);
   return pages.map((page, i) => ({
     ...source,
-    name: names[i],
+    ...identities[i],
     pageIndex: page,
   }));
 }

@@ -493,6 +493,7 @@ test.describe("Form field editor", () => {
     // Same size, nudged right and down from the original (lower-left y = 792 - 100 - 20).
     expect(batch.add?.[0]).toMatchObject({
       name: "firstName_copy1",
+      label: "First name_copy1",
       type: "text",
       pageIndex: 0,
       x: 112,
@@ -533,6 +534,7 @@ test.describe("Form field editor", () => {
     expect(batch.add?.map((f) => f.pageIndex)).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(batch.add?.[0]).toMatchObject({
       name: "firstName_copy1",
+      label: "First name_copy1",
       x: 100,
       y: 672,
       width: 180,

@@ -52,12 +52,9 @@ describe("templateFromField", () => {
     });
   });
 
-  it("leaves out the filled-in value and the extracted label", () => {
-    const template = templateFromField(
-      field({ value: "Ada Lovelace", label: "Name" }),
-    );
+  it("leaves out the filled-in value", () => {
+    const template = templateFromField(field({ value: "Ada Lovelace" }));
     expect(template?.defaultValue).toBeUndefined();
-    expect(template?.label).toBeUndefined();
   });
 
   it("uses staged geometry and properties", () => {
@@ -130,6 +127,15 @@ describe("duplicateInPlace", () => {
     expect(copy.x).toBe(50 + COPY_OFFSET_PT);
     expect(copy.y).toBe(680 - COPY_OFFSET_PT);
     expect(copy.pageIndex).toBe(1);
+  });
+
+  it("labels the copy after the source's label, numbered like its name", () => {
+    const copy = duplicateInPlace(
+      templateFromField(field({ name: "firstName", label: "First name" }))!,
+      new Set(["firstName_copy1"]),
+    );
+    expect(copy.name).toBe("firstName_copy2");
+    expect(copy.label).toBe("First name_copy2");
   });
 
   it("takes the next free number", () => {
