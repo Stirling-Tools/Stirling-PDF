@@ -20,6 +20,7 @@ const origin = (itemId: string, eTag: string): CloudOrigin => ({
   name: `${itemId}.pdf`,
   eTag,
   webUrl: null,
+  protected: false,
 });
 
 const stub = (id: string, cloudOrigin?: CloudOrigin) =>
